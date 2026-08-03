@@ -95,6 +95,33 @@ RSpec.describe EventRegistration, type: :model do
       source.destroy
       expect(incoming.reload.transferred_from_registration_id).to be_nil
     end
+
+    it "scopes .transferred_in to registrations with a back-link" do
+      plain = create(:event_registration, status: "registered")
+      expect(EventRegistration.transferred_in).to include(incoming)
+      expect(EventRegistration.transferred_in).not_to include(plain, source)
+    end
+
+    it "routes the transferred_in filter value through .attendance_status to the FK" do
+      plain = create(:event_registration, status: "registered")
+      results = EventRegistration.attendance_status("transferred_in")
+      expect(results).to include(incoming)
+      expect(results).not_to include(plain, source)
+    end
+
+    it "still filters real statuses through .attendance_status" do
+      expect(EventRegistration.attendance_status("transferred_out")).to include(source)
+      expect(EventRegistration.attendance_status("transferred_out")).not_to include(incoming)
+    end
+
+    it "annotates the reporting label for an incoming registration" do
+      expect(incoming.attendance_status_report_label).to eq("Registered (transferred in)")
+      expect(source.attendance_status_report_label).to eq("Transferred out")
+    end
+
+    it "offers a Transferred in filter option backed by the FK value" do
+      expect(EventRegistration::ATTENDANCE_FILTER_OPTIONS).to include([ "Transferred in", "transferred_in" ])
+    end
   end
 
   describe ".registrant_name" do

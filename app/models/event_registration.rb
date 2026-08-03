@@ -57,11 +57,15 @@ class EventRegistration < ApplicationRecord
   # that defaults to something specific (the attendees index defaults to attended
   # registrations on trainings, so it needs a way to say "all of them").
   FILTER_ALL = "all".freeze
-  # Attendance-outcome filter options, shared by the registrations index and the
-  # attendees index so the vocabulary can't drift between them.
+  # Sentinel filter value for the FK-backed "transferred in" dimension — an
+  # incoming reg keeps its own real status, so "transferred in" is a filter (routed
+  # through the attendance_status scope to the transfer FK), not a status. (#1944)
+  TRANSFERRED_IN_FILTER = "transferred_in".freeze
+  # Attendance-outcome filter options, shared by the registrations index, the
+  # attendees index, and the registrant roster so the vocabulary can't drift.
   ATTENDANCE_FILTER_OPTIONS = (
     ATTENDANCE_STATUSES.map { |status| [ status.humanize, status ] } +
-    [ [ "Other (registered, transfers, cancellations)", "other" ] ]
+    [ [ "Transferred in", TRANSFERRED_IN_FILTER ], [ "Other (registered, transfers, cancellations)", "other" ] ]
   ).freeze
   # Event-type filter options, matching the .event_type scope's vocabulary and the
   # report suite's Event type select (events/_event_type_filter), so the same value
@@ -169,8 +173,16 @@ class EventRegistration < ApplicationRecord
   scope :inactive, -> { where(status: INACTIVE_STATUSES) }
   scope :attended, -> { where(status: "attended") }
   scope :registrant_ids, ->(ids) { where(registrant_id: ids.to_s.split("-").map(&:to_i)) }
+  scope :transferred_in, -> { where.not(transferred_from_registration_id: nil) }
+  # "other" = any status outside the named attendance outcomes; the virtual
+  # "transferred_in" (an FK-backed dimension, not a status) routes to the
+  # transfer scope; every real value filters the status column.
   scope :attendance_status, ->(status) {
-    status == "other" ? where.not(status: NAMED_OUTCOME_STATUSES) : where(status: status)
+    case status.to_s
+    when "other" then where.not(status: NAMED_OUTCOME_STATUSES)
+    when TRANSFERRED_IN_FILTER then transferred_in
+    else where(status: status)
+    end
   }
   # Registrations on facilitator-training events ("trainings", narrowable to the
   # "live"/"on_demand" delivery formats) vs everything else ("other"); any other
@@ -894,6 +906,14 @@ class EventRegistration < ApplicationRecord
   def attendance_status_label
     return "—" if status.blank?
     ATTENDANCE_STATUS_LABELS.fetch(status, status.humanize)
+  end
+
+  # Status label for reporting (CSV exports), annotated when the registration
+  # transferred in — an incoming reg keeps its own status, so the transfer trail
+  # would otherwise be invisible in exports.
+  def attendance_status_report_label
+    return attendance_status_label unless transferred_in?
+    "#{attendance_status_label} (transferred in)"
   end
 
   # The completion record for a checklist step, or nil. Reads from the loaded

@@ -63,6 +63,17 @@ class EventDashboard
     attendance_count_for("no_show")
   end
 
+  # Registrations transferred in from another event. FK-backed (an incoming reg
+  # keeps its own real status), so it's counted via the transfer link rather than
+  # the status column — parallel to the status rows in the attendance breakdown.
+  def transferred_in_count
+    transferred_in_registrant_ids.size
+  end
+
+  def transferred_in_registrants
+    people_sorted(transferred_in_registrant_ids)
+  end
+
   # Registrations with an attendance outcome on record (attended / incomplete /
   # no-show).
   def attendance_outcome_count
@@ -1017,6 +1028,11 @@ class EventDashboard
       .each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |(status, registrant_id), map|
         map[status] << registrant_id
       end
+  end
+
+  # Registrant (Person) ids for registrations transferred in from another event.
+  def transferred_in_registrant_ids
+    @transferred_in_registrant_ids ||= event.event_registrations.transferred_in.pluck(:registrant_id)
   end
 
   # The event's own start date, not #reference_date's today-fallback: an undated

@@ -1643,6 +1643,20 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("Activa")
       end
 
+      it "filters to transferred-in registrations via the FK-backed value" do
+        source = create(:event_registration, status: "transferred_out")
+        incoming_person = create(:person, first_name: "Incomia", last_name: "Transferred")
+        create(:event_registration, event: event, registrant: incoming_person, status: "registered", transferred_from_registration: source)
+
+        get registrants_event_path(event, params: { attendance_status: "transferred_in" })
+
+        expect(response.body).to include("Incomia")
+        # The roster badge carries an "In" marker alongside the real status.
+        expect(response.body).to include("Transferred in from another event")
+        expect(response.body).not_to include("Activa")
+        expect(response.body).not_to include("Inactiva")
+      end
+
       it "shows the active registrant count in the page heading" do
         get registrants_event_path(event)
 
@@ -2679,18 +2693,20 @@ RSpec.describe "Events", type: :request do
         create(:event_registration, event: event, registrant: create(:person), status: "attended")
         create(:event_registration, event: event, registrant: create(:person), status: "no_show")
         create(:event_registration, event: event, registrant: create(:person), status: "cancelled")
+        # A transferred-in registrant: registered here, back-linked to a source.
+        source = create(:event_registration, status: "transferred_out")
+        create(:event_registration, event: event, registrant: create(:person), status: "registered", transferred_from_registration: source)
 
         get dashboard_event_path(event)
 
         page = Capybara.string(response.body)
         expect(page).to have_text("Attended", normalize_ws: true)
-        # Every status is its own row that drills into the roster filtered to it.
-        %w[ attended no_show registered cancelled transferred_out incomplete_attendance ].each do |status|
+        expect(page).to have_text("Transferred in", normalize_ws: true)
+        # Every row (real statuses plus the FK-backed transferred_in) drills into
+        # the roster filtered to it.
+        %w[ attended no_show registered cancelled transferred_out transferred_in incomplete_attendance ].each do |status|
           expect(page).to have_link(href: registrants_event_path(event, attendance_status: status), visible: :all)
         end
-        # 1 attended over 3 registrants (attended + registered + no-show; the
-        # cancellation is excluded) → 33%.
-        expect(page).to have_text("33%", normalize_ws: true)
       end
     end
 

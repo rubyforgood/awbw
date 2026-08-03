@@ -185,6 +185,16 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(query_count.call).to eq(baseline)
       end
 
+      it "annotates the CSV Status column for a transferred-in registration" do
+        source = create(:event_registration, status: "transferred_out")
+        create(:event_registration, event: new_event, registrant: source.registrant, status: "attended", transferred_from_registration: source)
+
+        get event_registrations_path, params: { format: :csv }
+
+        status_cells = CSV.parse(response.body).drop(1).map { |row| row[5] }
+        expect(status_cells).to include("Attended (transferred in)")
+      end
+
       context "registration form icon" do
         let(:reg_form) { create(:form, :standalone, name: "Registration Form") }
         let(:person) { existing_registration.registrant }

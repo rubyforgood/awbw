@@ -1184,7 +1184,7 @@ class EventsController < ApplicationController
     (1..day_count).each do |day|
       row << (registration.public_send("completed_day_#{day}") ? "Yes" : "No")
     end
-    row << registration.attendance_status_label
+    row << registration.attendance_status_report_label
     row << registration.comments.map { |comment| comment.body.to_s.strip }.reject(&:blank?).join(" ::: ")
     row << (registration.comments.any?(&:flagged?) ? "Yes" : "No")
     row

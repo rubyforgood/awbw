@@ -1131,6 +1131,12 @@ RSpec.describe EventDashboard do
         expect(dashboard.attendance_registrants("registered").map(&:first_name)).to eq(%w[ Da Ea ])
         expect(dashboard.attendance_registrants("cancelled").map(&:first_name)).to eq(%w[ Fa ])
       end
+
+      it "counts and lists transferred-in registrations via the FK, not a status" do
+        # "Ea" is the sole incoming registration (registered here, back-linked).
+        expect(dashboard.transferred_in_count).to eq(1)
+        expect(dashboard.transferred_in_registrants.map(&:first_name)).to eq(%w[ Ea ])
+      end
     end
 
     context "before any outcome is recorded" do

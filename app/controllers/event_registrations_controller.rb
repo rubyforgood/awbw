@@ -98,9 +98,6 @@ class EventRegistrationsController < ApplicationController
       respond_to do |format|
         format.turbo_stream
         format.html {
-          # Just marked transferred out with no destination on record yet? Send
-          # the admin straight to the transfer screen to create/link the
-          # incoming registration (issue #1944).
           if @event_registration.saved_change_to_status? &&
              @event_registration.transfer_destination_pending? &&
              allowed_to?(:transfer?, @event_registration)
@@ -489,7 +486,7 @@ class EventRegistrationsController < ApplicationController
           r&.preferred_email.to_s,
           r&.phone_number.to_s,
           e&.title.to_s,
-          er.attendance_status_label,
+          er.attendance_status_report_label,
           er.scholarships.any? ? "Yes" : "No",
           er.scholarships.any?(&:tasks_completed?) ? "Yes" : "No",
           cost_required ? er.payment_status_label : "",
