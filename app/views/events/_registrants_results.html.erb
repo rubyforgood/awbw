@@ -207,16 +207,26 @@
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
 
                   <div class="flex items-center gap-1">
-                    <% reg_edit_classes = "group flex flex-col justify-center w-full px-2 py-1 border #{DomainTheme.border_class_for(:event_registrations)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100, hover: true)} rounded-lg transition-colors duration-200 shadow-sm leading-tight overflow-hidden" %>
+                    <% reg_edit_classes = "group flex items-center gap-2 w-full px-2 py-1 border #{DomainTheme.border_class_for(:event_registrations)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100, hover: true)} rounded-lg transition-colors duration-200 shadow-sm leading-tight overflow-hidden" %>
                     <% display_email = person.preferred_email if show_email %>
+                    <%# Mirror person_profile_button: warn admins/the person of a pending email change. %>
+                    <% unconfirmed_email = person.user&.unconfirmed_email if allowed_to?(:show_email_change?, person) %>
                     <div class="w-60 min-w-0">
                       <%= link_to edit_event_registration_path(registration, return_to: "registrants"),
                                   title: [ person.name, display_email ].compact_blank.join(" — "),
                                   class: reg_edit_classes,
                                   data: { turbo_frame: "_top", turbo_prefetch: false } do %>
-                        <span class="font-semibold text-xs <%= DomainTheme.text_class_for(:event_registrations) %> truncate"><%= truncate(person.name.to_s, length: 30) %></span>
-                        <% if display_email.present? %>
-                          <!--email_off--><span class="text-xs text-gray-500 font-normal truncate"><%= display_email %></span><!--email_on-->
+                        <div class="flex flex-col justify-center min-w-0">
+                          <span class="font-semibold text-xs <%= DomainTheme.text_class_for(:event_registrations) %> truncate"><%= truncate(person.name.to_s, length: 30) %></span>
+                          <% if display_email.present? %>
+                            <!--email_off--><span class="text-xs text-gray-500 font-normal truncate"><%= display_email %></span><!--email_on-->
+                          <% end %>
+                        </div>
+                        <% if unconfirmed_email.present? %>
+                          <span class="flex-shrink-0 ml-auto text-yellow-500"
+                                title="Email change to <%= unconfirmed_email %> awaiting confirmation. Only the person and admins can see this; it is hidden from other profile visitors.">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                          </span>
                         <% end %>
                       <% end %>
                     </div>
