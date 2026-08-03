@@ -20,12 +20,11 @@
       </p>
     </div>
 
-    <%# Filters driving both summary cards — event, time period and event type —
+    <%# Filters driving both summary cards — time period, event type and event —
         matching the filter selects on the full revenue and participation reports. %>
     <%= form_with url: statistics_events_path, method: :get, local: true,
           class: "flex flex-wrap items-end gap-4 mb-6" do %>
       <%= hidden_field_tag :return_to, params[:return_to] %>
-      <%= render "event_filter" %>
       <div class="flex flex-col gap-1">
         <label class="text-xs font-medium text-gray-600" for="period">Time period</label>
         <%= select_tag :period,
@@ -34,6 +33,7 @@
               onchange: "this.form.submit()" %>
       </div>
       <%= render "event_type_filter" %>
+      <%= render "event_filter" %>
     <% end %>
 
     <div class="flex flex-col md:flex-row gap-6">

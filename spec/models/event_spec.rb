@@ -49,6 +49,13 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#date_title" do
+    it "labels the event by date and title, without the time or parens" do
+      event = build(:event, title: "Youth Creativity Day", start_date: Time.zone.local(2026, 9, 14, 14, 9))
+      expect(event.date_title).to eq("2026-09-14 — Youth Creativity Day")
+    end
+  end
+
   describe "#ended?" do
     it "returns true when end_date is in the past" do
       event = build(:event, end_date: 1.day.ago)

@@ -186,6 +186,11 @@ class Event < ApplicationRecord
     "(#{ start_text }) #{ name }"
   end
 
+  # Like time_title but date only — no time or parens — for filter dropdowns.
+  def date_title
+    start_date ? "#{start_date.to_date.iso8601} — #{name}" : name
+  end
+
   def full_name
     "#{ name } (#{ start_text })"
   end

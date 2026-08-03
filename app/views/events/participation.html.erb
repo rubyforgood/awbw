@@ -20,21 +20,14 @@
       </p>
     </div>
 
-    <%# Ahoy-style filters — event, time period and event type — each
+    <%# Ahoy-style filters — time period, event type and event — each
         auto-submitting a GET form so the report reshapes on change. %>
     <%= form_with url: participation_events_path, method: :get, local: true,
           class: "flex flex-wrap items-end gap-4 mb-8" do %>
       <%= hidden_field_tag :return_to, params[:return_to] %>
-      <%= render "event_filter" %>
-      <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-gray-600" for="time_period">Time period</label>
-        <% year_choices = @year_options.map { |year| [ year.to_s, year.to_s ] } %>
-        <%= select_tag :time_period,
-              options_for_select([ [ "All time", "all_time" ], [ "This year", "this_year" ] ] + year_choices, @time_period),
-              class: "px-3 py-2 rounded-md border-gray-300 shadow-sm text-sm text-gray-700",
-              onchange: "this.form.submit()" %>
-      </div>
+      <%= render "time_period_filter" %>
       <%= render "event_type_filter" %>
+      <%= render "event_filter" %>
     <% end %>
 
     <% if @report.any? %>
