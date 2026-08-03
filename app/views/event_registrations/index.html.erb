@@ -80,7 +80,7 @@
                         <%= link_to edit_event_registration_path(event_registration, return_to: "index"),
                                     class: "group relative flex items-center gap-2 w-full px-4 py-2 border #{DomainTheme.border_class_for(:event_registrations)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100, hover: true)} rounded-lg transition-colors duration-200 font-medium shadow-sm leading-none overflow-hidden" do %>
                           <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border #{DomainTheme.border_class_for(:event_registrations)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 200)} #{DomainTheme.text_class_for(:event_registrations, intensity: 700)} shadow-sm">
-                            <i class="fa-solid fa-clipboard-list"></i>
+                            <i class="fa-solid fa-user-pen"></i>
                           </span>
                           <span class="truncate font-semibold <%= DomainTheme.text_class_for(:event_registrations) %>">Edit registration</span>
                         <% end %>

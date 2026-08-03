@@ -101,6 +101,13 @@ module EventHelper
                     overflow-hidden" do
       event = event.decorate if event.respond_to?(:decorate)
 
+      icon_tag = content_tag(:span,
+                             content_tag(:i, "", class: "fa-solid fa-calendar-days"),
+                             class: "flex h-10 w-10 shrink-0 items-center justify-center rounded-full
+                                     border #{DomainTheme.border_class_for(:events)}
+                                     #{DomainTheme.bg_class_for(:events, intensity: 200)}
+                                     #{DomainTheme.text_class_for(:events, intensity: 700)} shadow-sm")
+
       display_name = truncate_at ? truncate(event.name.to_s, length: truncate_at) : event.name.to_s
 
       name = content_tag(
@@ -122,7 +129,7 @@ module EventHelper
         class: "flex flex-col leading-tight text-left min-w-0"
       )
 
-      text_block
+      icon_tag + text_block
     end
   end
 
