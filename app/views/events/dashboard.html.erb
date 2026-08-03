@@ -38,8 +38,10 @@
     </div>
   </div>
 
-  <%# Money cards (paid events only) — shown first %>
-  <% if @dashboard.free? %>
+  <%# Money cards — shown first. Hidden only when there's genuinely no money:
+      free registration AND no CE fees or scholarships (a free event can still
+      charge for CE). %>
+  <% if @dashboard.free? && @dashboard.cont_ed_total_cents.zero? && @dashboard.scholarship_total_cents.zero? %>
     <div class="bg-white rounded-xl border border-gray-200 p-4 text-center text-sm text-gray-500 mb-4">
       <i class="fa-solid fa-tag text-gray-400 mr-1"></i> Free event — no payments or scholarships
     </div>
@@ -221,9 +223,9 @@
               </div>
               <%= link_to registrants_event_path(@event),
                     class: "inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:border-gray-300 hover:text-gray-800 transition-colors",
-                    title: "View all registrants" do %>
+                    title: "View registrants with continuing education" do %>
                 <i class="fa-solid fa-users text-gray-400"></i>
-                <%= pluralize(@dashboard.registrant_count, "registrant") %>
+                <%= pluralize(@dashboard.ce_registrant_count, "registrant") %>
               <% end %>
             </div>
             <div class="mt-2 flex items-center justify-between gap-2">
@@ -239,12 +241,14 @@
             <%= render "dashboard_money_row", label: "Paid", icon: "fa-money-bill-wave",
                   amount_cents: @dashboard.cont_ed_paid_cents,
                   count: @dashboard.cont_ed_paid_count, registrants: @dashboard.cont_ed_paid_registrants,
+                  amounts_by_registrant_id: @dashboard.cont_ed_paid_by_registrant,
                   filter_path: registrants_event_path(@event, ce_status: "paid") %>
             <%= render "dashboard_money_row", label: "Due", icon: "fa-hourglass-half",
                   icon_color: @dashboard.cont_ed_unpaid_count.positive? ? "text-white" : "text-gray-400",
                   icon_bg: @dashboard.cont_ed_unpaid_count.positive? ? "bg-orange-500" : nil,
                   amount_cents: @dashboard.cont_ed_outstanding_cents,
                   count: @dashboard.cont_ed_unpaid_count, registrants: @dashboard.cont_ed_unpaid_registrants,
+                  amounts_by_registrant_id: @dashboard.cont_ed_due_by_registrant,
                   filter_path: registrants_event_path(@event, ce_status: "requested") %>
           </div>
         </details>

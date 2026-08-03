@@ -2,37 +2,35 @@
 # org subsidized from its own pocket, and the net — per event, grouped by
 # calendar year for an over-time view and annual-report figures.
 #
-# Money in   = registration payments collected + projected CE + grant-funded
-#              scholarships (grant money the org received).
+# Money in   = registration payments collected + CE payments collected +
+#              grant-funded scholarships (grant money the org received).
 # Org subsidy = unfunded scholarships + discounts (cost the org absorbs).
 # Net         = money in - org subsidy.
 #
-# Projected CE is the CE fees owed across active registrants (each CE
-# registration's own cost), flagged in the UI. It's counted in money in (and
-# therefore net) per the report's definition, and treated as outstanding — CE
-# payments collected aren't netted out here yet.
+# CE fees are billed per ContinuingEducationRegistration. CE cash collected
+# counts as fees (money in); CE cost still owed counts as outstanding. Both come
+# from EventDashboard so the per-event figures agree with the event dashboard.
 class EventRevenueReport
   # Raw per-event component figures, with the bucket totals derived from them.
   Row = Struct.new(
     :event,
     :registration_payments_cents,
-    :ce_projected_cents,
+    :ce_paid_cents,
+    :ce_outstanding_cents,
     :funded_scholarship_cents,
     :unfunded_scholarship_cents,
     :discount_cents,
     :registration_outstanding_cents,
     keyword_init: true
   ) do
-    # Fees actually collected: registration payments plus CE paid. CE payments
-    # aren't netted here yet, so the CE portion is $0 today.
+    # Fees actually collected: registration payments plus CE cash collected.
     def fees_cents
-      registration_payments_cents
+      registration_payments_cents + ce_paid_cents
     end
 
-    # Fees still owed: unpaid registration cost plus projected CE (none of which
-    # is collected yet).
+    # Fees still owed: unpaid registration cost plus CE cost not yet collected.
     def outstanding_cents
-      registration_outstanding_cents + ce_projected_cents
+      registration_outstanding_cents + ce_outstanding_cents
     end
 
     # Money that's in or counted toward revenue: collected fees plus grant-funded
@@ -63,7 +61,7 @@ class EventRevenueReport
   # The figures that get summed — raw components plus derived buckets — so a year
   # subtotal or the grand total is just a sum over rows.
   SUMMABLE = %i[
-    registration_payments_cents ce_projected_cents funded_scholarship_cents
+    registration_payments_cents ce_paid_cents ce_outstanding_cents funded_scholarship_cents
     unfunded_scholarship_cents discount_cents registration_outstanding_cents
     fees_cents outstanding_cents money_in_cents org_subsidy_cents net_cents total_expected_cents
   ].freeze
@@ -151,22 +149,13 @@ class EventRevenueReport
     Row.new(
       event: event,
       registration_payments_cents: dashboard.received_cents,
-      ce_projected_cents: ce_projected_cents_for(event),
+      ce_paid_cents: dashboard.cont_ed_paid_cents,
+      ce_outstanding_cents: dashboard.cont_ed_outstanding_cents,
       funded_scholarship_cents: dashboard.funded_scholarship_cents,
       unfunded_scholarship_cents: dashboard.unfunded_scholarship_cents,
       discount_cents: dashboard.discount_cents,
       registration_outstanding_cents: dashboard.outstanding_cents
     )
-  end
-
-  # Projected CE revenue: the CE fees owed across this event's active registrants
-  # — each ContinuingEducationRegistration's own cost. Treated as outstanding, not
-  # netted against any CE payments collected.
-  def ce_projected_cents_for(event)
-    ContinuingEducationRegistration
-      .joins(:event_registration)
-      .where(event_registrations: { event_id: event.id, status: EventRegistration::ACTIVE_STATUSES })
-      .sum(:cost_cents)
   end
 
   def to_dollars(cents)

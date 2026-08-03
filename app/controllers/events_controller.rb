@@ -529,7 +529,7 @@ class EventsController < ApplicationController
     cost_required = @event.cost_cents.to_i > 0
     include_ce = @event.ce_eligible?
     headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Intends to pay", "Payment total" ]
-    headers << "CE status" if include_ce
+    headers += [ "CE status", "CE paid", "CE due" ] if include_ce
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
       @event_registrations.each do |registration|
         csv_out << event_registration_csv_row(registration, cost_required, include_ce)
@@ -558,8 +558,18 @@ class EventsController < ApplicationController
       registration.intends_to_pay? ? "Yes" : "No",
       payment_total
     ]
-    row << registration.ce_status_label.to_s if include_ce
+    if include_ce
+      row << registration.ce_status_label.to_s
+      row << ce_dollars(registration.ce_amount_paid_cents)
+      row << ce_dollars(registration.ce_amount_due_cents)
+    end
     row
+  end
+
+  # CE dollar cell for a CSV: the money helper's formatting when there's an
+  # amount, blank when there's nothing (so empty cells read cleanly).
+  def ce_dollars(cents)
+    cents.positive? ? helpers.dollars_from_cents(cents) : ""
   end
 
   def onboarding_csv_string
@@ -571,7 +581,7 @@ class EventsController < ApplicationController
     headers += [ "Payment status", "Fees due", "Paid amount" ] if cost_required
     headers << "Fee note"
     headers += [ "Discounted amount", "Scholarship amount", "Scholarship grant", "Scholarship tasks completed" ]
-    headers += [ "CE requested", "CE hours", "CE amount", "CE license" ] if include_ce
+    headers += [ "CE requested", "CE hours", "CE amount", "CE paid", "CE due", "CE license" ] if include_ce
     headers += EventRegistration::CHECKLIST_STEPS.values
     headers += [ "Portal user status", "Portal access" ]
     headers += (1..day_count).map { |day| "Day #{day}" }
@@ -612,7 +622,9 @@ class EventsController < ApplicationController
       ce_hours = registration.ce_hours_total
       row << (registration.ce_registered? ? "Yes" : "No")
       row << (ce_hours.positive? ? helpers.plain_number(ce_hours) : "")
-      row << (registration.ce_amount_owed_cents.positive? ? helpers.dollars_from_cents(registration.ce_amount_owed_cents) : "")
+      row << ce_dollars(registration.ce_amount_owed_cents)
+      row << ce_dollars(registration.ce_amount_paid_cents)
+      row << ce_dollars(registration.ce_amount_due_cents)
       row << registration.ce_license_numbers.join("; ")
     end
     EventRegistration::CHECKLIST_STEPS.each_key do |step|

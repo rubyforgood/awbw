@@ -1615,7 +1615,7 @@ RSpec.describe "Events", type: :request do
       expect(response.media_type).to eq("text/csv")
       expect(response.body).to include("First name,Last name,Email")
       expect(response.body).to include("Mailchimp")
-      expect(response.body).to include("CE requested,CE hours,CE amount,CE license")
+      expect(response.body).to include("CE requested,CE hours,CE amount,CE paid,CE due,CE license")
       expect(response.body).to include("Portal user status,Portal access")
       expect(response.body).to include("Comments,Flagged comments")
       expect(response.body).to include("Ready")
@@ -1668,6 +1668,21 @@ RSpec.describe "Events", type: :request do
 
       expect(paid_amount).to eq("$5")        # the $5 payment, NOT the $15 scholarship
       expect(scholarship_amount).to eq("$15")
+    end
+
+    it "reports CE paid and CE due from CE payments" do
+      ce = create(:continuing_education_registration, event_registration: registration, cost_cents: 6_000)
+      create(:allocation, source: create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000),
+                          allocatable: ce, amount: 5_000)
+
+      get onboarding_event_path(event, format: :csv)
+
+      rows = CSV.parse(response.body)
+      headers = rows.first
+      row = rows.find { |r| r[1] == person.last_name }
+
+      expect(row[headers.index("CE paid")]).to eq("$50")   # $50 collected
+      expect(row[headers.index("CE due")]).to eq("$10")    # $10 still owed
     end
 
     it "redirects a non-admin" do

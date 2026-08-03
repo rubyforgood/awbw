@@ -478,6 +478,12 @@ class EventRegistration < ApplicationRecord
     continuing_education_registrations.sum { |c| c.remaining_cost }
   end
 
+  # CE cash collected across this registration's CE registrations (payments only,
+  # excluding discounts) — the CE analogue of payments_sum, for revenue reporting.
+  def ce_amount_paid_cents
+    continuing_education_registrations.sum { |c| c.payments_sum }
+  end
+
   # True only when every CE registration has a known license number on file.
   def ce_license_provided?
     return false unless ce_registered?
