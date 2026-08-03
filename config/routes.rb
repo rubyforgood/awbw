@@ -131,6 +131,8 @@ Rails.application.routes.draw do
   resources :events do
     collection do
       get :revenue
+      get :participation
+      get :statistics
     end
     member do
       get :dashboard

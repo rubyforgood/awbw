@@ -93,4 +93,51 @@ module EventsHelper
       entries[attr] = attr == "days" ? "Attendance days" : column[:label]
     end
   end
+
+  # The statistics hub and the full revenue/participation reports share the
+  # event-type and specific-event filters directly, but express the time window
+  # differently: the hub's `period` select offers this_year/last_year/all_time,
+  # while the reports use `time_period` where a specific window is the calendar
+  # year "YYYY". These helpers translate a page's active filters into the query
+  # params for its cross-link so filters carry across — and back — between the
+  # summaries' "Full report" links and the reports' "Events statistics" eyebrow.
+
+  # Statistics hub filters → full report query params.
+  def statistics_to_report_params
+    {
+      return_to: params[:return_to],
+      event_type: params[:event_type].presence,
+      event_id: params[:event_id].presence,
+      time_period: statistics_period_to_time_period(@period)
+    }.compact
+  end
+
+  # Full report filters → statistics hub query params.
+  def report_to_statistics_params
+    {
+      return_to: params[:return_to],
+      event_type: params[:event_type].presence,
+      event_id: params[:event_id].presence,
+      period: time_period_to_statistics_period(@time_period)
+    }.compact
+  end
+
+  # "last_year" becomes the prior calendar year (reports name specific years
+  # "YYYY"); this_year/all_time pass through unchanged.
+  def statistics_period_to_time_period(period)
+    return (Date.current.year - 1).to_s if period == "last_year"
+    period
+  end
+
+  # Inverse: the prior year maps back to "last_year", the current year to
+  # "this_year"; any other specific year has no hub equivalent, so fall back to
+  # "all_time".
+  def time_period_to_statistics_period(time_period)
+    case time_period
+    when "this_year", "all_time" then time_period
+    when (Date.current.year - 1).to_s then "last_year"
+    when Date.current.year.to_s then "this_year"
+    else "all_time"
+    end
+  end
 end

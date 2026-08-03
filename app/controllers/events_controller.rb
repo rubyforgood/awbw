@@ -3,6 +3,7 @@ class EventsController < ApplicationController
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
   before_action :set_event, only: %i[ show edit update destroy preview dashboard sample_ticket background registrants onboarding staff edit_staff update_staff recipients preview_reminder confirm_reminder send_reminder copy_registration_form ]
+  before_action :set_report_filters, only: %i[ revenue participation statistics ]
 
   def index
     authorize!
@@ -17,14 +18,32 @@ class EventsController < ApplicationController
     track_view(@event)
   end
 
-  # Cross-event revenue report across every paid event (those that charge a
-  # registration fee). The KPI strip leads with the year of the event the CEO
-  # navigated from (when arriving from a dashboard), otherwise the current year.
+  # Cross-event revenue report over paid events, grouped by year. Shares the
+  # event-type + time-period filters with the participation report, and leads the
+  # KPI strip with the year of the event navigated from (when arriving from a
+  # dashboard), otherwise the current year.
   def revenue
     authorize!
-    @events = Event.paid.order(start_date: :desc).map(&:decorate)
-    origin_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
-    @report = EventRevenueReport.new(@events, featured_year: origin_event&.start_date&.year)
+    events, selected_year = filtered_report_events(Event.paid)
+    @report = EventRevenueReport.new(events, featured_year: selected_year || @filter_event&.start_date&.year)
+  end
+
+  # Cross-event participation report: how many people completed each training,
+  # grouped by year. Scopes to all events by default, narrowable to facilitator
+  # trainings, and to a single year via the ahoy-style time-period select.
+  def participation
+    authorize!
+    events, selected_year = filtered_report_events(Event.all)
+    @report = EventParticipationReport.new(events, featured_year: selected_year)
+  end
+
+  # Events statistics hub: the revenue and participation report summaries side by
+  # side, each linking to its full report.
+  def statistics
+    authorize!
+    @period = params[:period].presence_in(%w[ this_year last_year all_time ]) || "this_year"
+    @revenue_report = EventRevenueReport.new(report_events(Event.paid))
+    @participation_report = EventParticipationReport.new(report_events(Event.all))
   end
 
   def new
@@ -427,6 +446,56 @@ class EventsController < ApplicationController
       params[:reg].present? ? registration_staff_path(params[:reg]) : staff_event_path(@event)
     else staff_event_path(@event)
     end
+  end
+
+  # Shared filter state for the revenue/participation/statistics report pages: the
+  # event-type and specific-event filters, plus the event list for the Event
+  # dropdown.
+  def set_report_filters
+    @event_type = params[:event_type].presence_in(%w[ trainings other ])
+    @filter_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
+    # The revenue report only covers paid events, so its Event dropdown lists only
+    # those; the others list every event.
+    dropdown_scope = action_name == "revenue" ? Event.paid : Event.all
+    @filter_events = dropdown_scope.order(start_date: :desc)
+  end
+
+  # Applies the shared report filters (event type, specific event) plus a
+  # calendar-year time period to `base` (the report's unfiltered relation, e.g.
+  # Event.paid or Event.all). Sets @year_options and @time_period for the filter
+  # form, and returns the decorated events plus the selected year (nil for "all
+  # time").
+  def filtered_report_events(base)
+    base = scoped_report_base(base)
+    @year_options = base.where.not(start_date: nil)
+      .distinct
+      .pluck(Arel.sql("YEAR(start_date)"))
+      .sort
+      .reverse
+    @time_period = params[:time_period].presence || "all_time"
+    selected_year = selected_report_year(@time_period)
+    events = selected_year ? base.in_year(selected_year) : base
+    [ events.order(start_date: :desc).map(&:decorate), selected_year ]
+  end
+
+  # Decorated events for a report, scoped by the shared filters, newest first.
+  def report_events(base)
+    scoped_report_base(base).order(start_date: :desc).map(&:decorate)
+  end
+
+  # Narrows `base` by the event-type and specific-event filters.
+  def scoped_report_base(base)
+    base = base.facilitator_trainings if @event_type == "trainings"
+    base = base.where(facilitator_training: false) if @event_type == "other"
+    base = base.where(id: @filter_event.id) if @filter_event
+    base
+  end
+
+  # The calendar year a report is scoped to: the current year for "this_year", a
+  # specific year for a "2025"-style value, or nil for "all_time".
+  def selected_report_year(time_period)
+    return Date.current.year if time_period == "this_year"
+    Integer(time_period, exception: false)
   end
 
   # The registrations the admin checked on the recipient picker, narrowed to those

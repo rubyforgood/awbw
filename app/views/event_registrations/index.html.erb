@@ -7,6 +7,10 @@
               <%= EventRegistration.model_name.human.pluralize %> (<%= @event_registrations_count %>)
             </h1>
             <div class="flex gap-2">
+              <% if @filtered_event %>
+                <%= link_to "#{@filtered_event.decorate.compact_label} event dashboard", dashboard_event_path(@filtered_event),
+                            class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+              <% end %>
               <%= link_to "Events", events_path,
                           class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
               <% if params[:admin] == "true" %>

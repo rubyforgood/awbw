@@ -253,8 +253,17 @@
   <% end %>
 
   <%# Headcount cards — each expands to reveal its full list. One row of five on
-      large screens, wrapping to three then two as the viewport narrows. %>
-  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-[minmax(0,4fr)_minmax(0,4fr)_minmax(0,5fr)_minmax(0,4fr)_minmax(0,3fr)] gap-3 sm:gap-4">
+      large screens (Organizations widest, States narrowest), wrapping to three
+      then two as the viewport narrows. The lg proportional widths are set by the
+      scoped rule below rather than an arbitrary Tailwind class
+      (lg:grid-cols-[minmax(0,4fr)_…]), which this project's Vite/Tailwind build
+      silently drops from the compiled CSS. %>
+  <style>
+    @media (min-width: 1024px) {
+      .event-headcount-cards { grid-template-columns: minmax(0, 4fr) minmax(0, 4fr) minmax(0, 5fr) minmax(0, 4fr) minmax(0, 3fr); }
+    }
+  </style>
+  <div class="event-headcount-cards grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
     <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:people, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">

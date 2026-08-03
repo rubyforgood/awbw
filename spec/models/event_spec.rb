@@ -49,6 +49,27 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#date_title" do
+    it "labels the event by date and title, without the time or parens" do
+      event = build(:event, title: "Youth Creativity Day", start_date: Time.zone.local(2026, 9, 14, 14, 9))
+      expect(event.date_title).to eq("2026-09-14 — Youth Creativity Day")
+    end
+  end
+
+  describe ".in_year" do
+    it "matches events by the calendar year of their start date" do
+      in_year = create(:event, start_date: Time.zone.parse("2025-06-01 09:00"))
+      other_year = create(:event, start_date: Time.zone.parse("2024-06-01 09:00"))
+      expect(Event.in_year(2025)).to include(in_year)
+      expect(Event.in_year(2025)).not_to include(other_year)
+    end
+
+    it "includes a same-day start time on Dec 31 (not just midnight)" do
+      nye = create(:event, start_date: Time.zone.parse("2025-12-31 09:00"))
+      expect(Event.in_year(2025)).to include(nye)
+    end
+  end
+
   describe "#ended?" do
     it "returns true when end_date is in the past" do
       event = build(:event, end_date: 1.day.ago)

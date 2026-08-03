@@ -10,6 +10,15 @@
                      onchange: "this.form.submit();" %>
     </div>
     <div class="w-full md:flex-1">
+      <%= label_tag :event_type, "Event type", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag :event_type,
+                     options_for_select([ [ "Trainings", "trainings" ], [ "Other", "other" ] ], params[:event_type]),
+                     include_blank: "All events",
+                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                     onchange: "this.form.submit();" %>
+    </div>
+    <div class="w-full md:flex-1">
       <%= label_tag :registrant_id, "Registrant", class: "block text-sm font-medium text-gray-700 mb-1" %>
       <%= select_tag :registrant_id,
                      options_for_select(
@@ -30,6 +39,24 @@
       <%= select_tag :organization_id,
                      options_from_collection_for_select(@organizations, :id, :name, params[:organization_id]),
                      include_blank: "All organizations",
+                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                     onchange: "this.form.submit();" %>
+    </div>
+    <div class="w-full md:flex-1">
+      <%= label_tag :attendance_status, "Attendance", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag :attendance_status,
+                     options_for_select(EventRegistration::ATTENDANCE_STATUSES.map { |status| [ status.humanize, status ] } + [ [ "Other (registered, transfers, cancellations)", "other" ] ], params[:attendance_status]),
+                     include_blank: "All statuses",
+                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                     onchange: "this.form.submit();" %>
+    </div>
+    <div class="w-full md:flex-1">
+      <%= label_tag :event_year, "Year", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag :event_year,
+                     options_for_select(@event_years.map { |year| [ year.to_s, year ] }, params[:event_year].presence&.to_i),
+                     include_blank: "All years",
                      class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                              focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
                      onchange: "this.form.submit();" %>
