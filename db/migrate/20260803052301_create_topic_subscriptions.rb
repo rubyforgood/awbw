@@ -3,7 +3,7 @@ class CreateTopicSubscriptions < ActiveRecord::Migration[8.1]
     create_table :topic_subscriptions do |t|
       t.references :person, null: false, foreign_key: true
       # Topic the person subscribed to, constrained by TopicSubscription::TOPICS.
-      t.string :topic, null: false, default: "trainings"
+      t.string :topic, null: false, default: "facilitator_trainings"
       # Optional narrowing: a specific event the subscription is about. Null =
       # the topic broadly (e.g. all future trainings).
       t.references :interested_event, null: true, foreign_key: { to_table: :events }

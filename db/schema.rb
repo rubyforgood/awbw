@@ -1306,7 +1306,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_052301) do
     t.bigint "person_id", null: false
     t.string "source"
     t.datetime "subscribed_at", null: false
-    t.string "topic", default: "trainings", null: false
+    t.string "topic", default: "facilitator_trainings", null: false
     t.datetime "unsubscribed_at"
     t.datetime "updated_at", null: false
     t.bigint "updated_by_id"

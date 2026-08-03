@@ -1,7 +1,7 @@
 FactoryBot.define do
   factory :topic_subscription do
     association :person
-    topic { "trainings" }
+    topic { "facilitator_trainings" }
     interested_event { nil }
     source { "Facilitator Training registration" }
 

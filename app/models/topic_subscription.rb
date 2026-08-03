@@ -1,11 +1,14 @@
 class TopicSubscription < ApplicationRecord
   # Topics a person can subscribe to. Add new list topics here.
-  TOPICS = %w[ trainings news resources ].freeze
+  TOPICS = %w[ facilitator_trainings news resources ].freeze
   TOPIC_LABELS = {
-    "trainings" => "Trainings",
+    "facilitator_trainings" => "Facilitator trainings",
     "news" => "News",
     "resources" => "Resources"
   }.freeze
+  # The registration form's `interested_in_more` answer ("upcoming trainings or
+  # resources?") backfills/auto-captures into this topic (see follow-up).
+  INTERESTED_IN_MORE_TOPIC = "facilitator_trainings"
 
   belongs_to :person
   # Optional narrowing to a specific event (e.g. one training). Null = the topic

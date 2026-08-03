@@ -19,7 +19,7 @@ RSpec.describe "TopicSubscriptions", type: :request do
       other_event = create(:event, title: "Community Open House", facilitator_training: false)
       create(:event_registration, registrant: person, event: training)
       create(:event_registration, registrant: person, event: other_event)
-      create(:topic_subscription, person: person, topic: "trainings", interested_event: nil)
+      create(:topic_subscription, person: person, topic: "facilitator_trainings", interested_event: nil)
 
       get topic_subscriptions_path, headers: { "Turbo-Frame" => "topic_subscriptions_results" }
 
@@ -31,7 +31,7 @@ RSpec.describe "TopicSubscriptions", type: :request do
     end
 
     it "filters by topic via the frame request" do
-      create(:topic_subscription, person: create(:person, first_name: "Tara", last_name: "Trainings"), topic: "trainings")
+      create(:topic_subscription, person: create(:person, first_name: "Tara", last_name: "Trainings"), topic: "facilitator_trainings")
       create(:topic_subscription, :news, person: create(:person, first_name: "Nora", last_name: "News"))
 
       get topic_subscriptions_path(topic: "news"), headers: { "Turbo-Frame" => "topic_subscriptions_results" }
@@ -62,7 +62,7 @@ RSpec.describe "TopicSubscriptions", type: :request do
 
       expect {
         post topic_subscriptions_path, params: {
-          topic_subscription: { person_id: person.id, topic: "trainings", source: "admin" }
+          topic_subscription: { person_id: person.id, topic: "facilitator_trainings", source: "admin" }
         }
       }.to change(TopicSubscription, :count).by(1)
 
