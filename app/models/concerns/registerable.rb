@@ -1,19 +1,11 @@
 module Registerable
   extend ActiveSupport::Concern
 
-  # Shared behaviour for the two registration records that money is allocated to
-  # and that grant a certificate: EventRegistration and
-  # ContinuingEducationRegistration. Keeps their payment + certificate interfaces
-  # identical so they can't drift.
-  #
   # Includers must:
   #   - have an `allocations` association (as: :allocatable)
   #   - respond to `cost_cents` (EventRegistration delegates to event.cost_cents;
   #     ContinuingEducationRegistration has its own column)
-  #   - define their own `certificate_available?` (the eligibility rules differ)
   #
-  # The payment reads use the loaded `allocations` association when present, so
-  # callers that preload it (rosters, onboarding matrix) pay no per-row queries.
 
   # Total covered by every allocation — payments, discounts, scholarships.
   def allocations_sum
@@ -57,16 +49,5 @@ module Registerable
 
   def partially_paid?
     !paid_in_full? && payments_sum.to_i.positive?
-  end
-
-  # Certificate delivery. Sending the certificate email is how it's issued, so
-  # certificate_sent_at doubles as the "issued" marker. Each includer defines its
-  # own #certificate_available? eligibility.
-  def certificate_sent?
-    certificate_sent_at.present?
-  end
-
-  def mark_certificate_sent!(at: Time.current)
-    update!(certificate_sent_at: at)
   end
 end

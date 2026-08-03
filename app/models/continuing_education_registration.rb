@@ -1,5 +1,6 @@
 class ContinuingEducationRegistration < ApplicationRecord
   include Registerable
+  include Certifiable
 
   has_paper_trail
 
