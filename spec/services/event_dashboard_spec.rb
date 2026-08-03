@@ -1100,7 +1100,10 @@ RSpec.describe EventDashboard do
         create(:event_registration, event: event, registrant: create(:person, first_name: "Ba"), status: "incomplete_attendance")
         create(:event_registration, event: event, registrant: create(:person, first_name: "Ca"), status: "no_show")
         create(:event_registration, event: event, registrant: create(:person, first_name: "Da"), status: "registered")
-        create(:event_registration, event: event, registrant: create(:person, first_name: "Ea"), status: "transferred_in")
+        # "Ea" transferred in from another event: an incoming registration keeps
+        # its own real status (registered here), identified by the back-link.
+        source = create(:event_registration, status: "transferred_out")
+        create(:event_registration, event: event, registrant: create(:person, first_name: "Ea"), status: "registered", transferred_from_registration: source)
         create(:event_registration, event: event, registrant: create(:person, first_name: "Fa"), status: "cancelled")
       end
 
@@ -1108,8 +1111,7 @@ RSpec.describe EventDashboard do
         expect(dashboard.attendance_count_for("attended")).to eq(2)
         expect(dashboard.attendance_count_for("incomplete_attendance")).to eq(1)
         expect(dashboard.attendance_count_for("no_show")).to eq(1)
-        expect(dashboard.attendance_count_for("registered")).to eq(1)
-        expect(dashboard.attendance_count_for("transferred_in")).to eq(1)
+        expect(dashboard.attendance_count_for("registered")).to eq(2)
         expect(dashboard.attendance_count_for("cancelled")).to eq(1)
         expect(dashboard.attendance_count_for("transferred_out")).to eq(0)
       end
@@ -1117,8 +1119,8 @@ RSpec.describe EventDashboard do
       it "rates full attendance over every registrant (active + no-shows, excluding cancellations)" do
         expect(dashboard.attendance_recorded?).to be(true)
         expect(dashboard.attendance_outcome_count).to eq(4)
-        # 5 active registrants (attended ×2, incomplete, registered, transferred_in)
-        # + 1 no-show; the cancellation is excluded.
+        # 5 active registrants (attended ×2, incomplete, registered ×2 incl. the
+        # transferred-in one) + 1 no-show; the cancellation is excluded.
         expect(dashboard.expected_attendee_count).to eq(6)
         expect(dashboard.attendance_rate).to eq(2.0 / 6)
       end
@@ -1126,7 +1128,7 @@ RSpec.describe EventDashboard do
       it "lists the registrants behind each status" do
         expect(dashboard.attendance_registrants("attended").map(&:first_name)).to eq(%w[ Aa Ab ])
         expect(dashboard.attendance_registrants("no_show").map(&:first_name)).to eq(%w[ Ca ])
-        expect(dashboard.attendance_registrants("registered", "transferred_in").map(&:first_name)).to eq(%w[ Da Ea ])
+        expect(dashboard.attendance_registrants("registered").map(&:first_name)).to eq(%w[ Da Ea ])
         expect(dashboard.attendance_registrants("cancelled").map(&:first_name)).to eq(%w[ Fa ])
       end
     end
