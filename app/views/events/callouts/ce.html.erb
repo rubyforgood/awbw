@@ -15,10 +15,7 @@
    end %>
 
 <%= render layout: "events/callouts/callout_page", locals: { title: @event.ce_hours_label, **callout_eyebrow } do %>
-  <%#
-    Payment instruction banner: the fee and deadline the admin set on the event,
-    shown at the top while payment is still expected (hidden once paid in full).
-  %>
+  <%# Payment instruction banner: the event's fee + deadline, hidden once paid in full. %>
   <% if @event.ce_eligible? && @event.ce_hours_cost_cents.to_i.positive? && !ce_registration&.paid_in_full? %>
     <% due_text = @event.decorate.ce_payment_due_deadline_display %>
     <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">

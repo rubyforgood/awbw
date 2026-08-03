@@ -293,8 +293,7 @@ class BuiltinCalloutCards
   end
 
   # Short month/day for a deadline shown inline on the CE card, e.g. "Jul 1".
-  # Cast to the viewer's zone first so a datetime deadline (the payment due date
-  # carries a time) reports the same day it's displayed as elsewhere.
+  # in_time_zone first so a datetime deadline reports the same day it's displayed as.
   def ce_deadline_text(deadline)
     deadline.in_time_zone(Time.zone).strftime("%b %-d")
   end
