@@ -199,11 +199,13 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("← Dashboard")
       end
 
-      it "carries the statistics origin back through the eyebrow" do
+      it "carries the statistics origin and active filters back through the eyebrow" do
         sign_in admin
-        get revenue_events_path(return_to: "events")
+        get revenue_events_path(return_to: "events", event_type: "trainings", event_id: paid_training.id)
         expect(response.body).to include("← Events statistics")
-        expect(response.body).to include(statistics_events_path(return_to: "events"))
+        expect(response.body).to include(
+          CGI.escapeHTML(statistics_events_path(return_to: "events", event_type: "trainings", event_id: paid_training.id, period: "all_time"))
+        )
       end
     end
 
@@ -268,11 +270,13 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include(dashboard_event_path(training_2026))
       end
 
-      it "carries the statistics origin back through the eyebrow and the filter form" do
+      it "carries the statistics origin and active filters back through the eyebrow and the filter form" do
         sign_in admin
-        get participation_events_path(return_to: "events")
+        get participation_events_path(return_to: "events", event_type: "trainings", event_id: training_2026.id)
         expect(response.body).to include("← Events statistics")
-        expect(response.body).to include(statistics_events_path(return_to: "events"))
+        expect(response.body).to include(
+          CGI.escapeHTML(statistics_events_path(return_to: "events", event_type: "trainings", event_id: training_2026.id, period: "all_time"))
+        )
         expect(response.body).to match(/<input[^>]*name="return_to"[^>]*value="events"/)
       end
     end
@@ -305,6 +309,13 @@ RSpec.describe "Events", type: :request do
         # The trainings/other split links into the filtered registrants index.
         expect(response.body).to include("event_type=trainings", "attendance_status=attended")
         expect(response.body).to include(revenue_events_path, participation_events_path)
+      end
+
+      it "carries the active filters into the full report links" do
+        sign_in admin
+        get statistics_events_path(period: "all_time", event_type: "trainings")
+        expect(response.body).to include(CGI.escapeHTML(revenue_events_path(event_type: "trainings", time_period: "all_time")))
+        expect(response.body).to include(CGI.escapeHTML(participation_events_path(event_type: "trainings", time_period: "all_time")))
       end
 
       it "toggles the summary figures to all time via the period select" do
