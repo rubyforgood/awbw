@@ -574,7 +574,8 @@ RSpec.describe "Events", type: :request do
       create(:form, :standalone, role: "continuing_education", name: "CE")
       get edit_event_path(event)
       expect(response.body).to include('name="event[ce_hours_request_deadline]"')
-      expect(response.body).to include('name="event[ce_payment_due_deadline]"')
+      expect(response.body).to include('name="event[ce_payment_due_deadline_date]"')
+      expect(response.body).to include('name="event[ce_payment_due_deadline_time]"')
       expect(response.body).to include("Request CE credit by")
     end
 
@@ -764,10 +765,12 @@ RSpec.describe "Events", type: :request do
       it "persists the CE deadlines" do
         patch event_path(event), params: { event: {
           ce_hours_request_deadline: "2026-07-01",
-          ce_payment_due_deadline: "2026-08-15"
+          ce_payment_due_deadline_date: "2026-08-15",
+          ce_payment_due_deadline_time: "09:00"
         } }
         expect(event.reload.ce_hours_request_deadline).to eq(Date.new(2026, 7, 1))
-        expect(event.ce_payment_due_deadline).to eq(Date.new(2026, 8, 15))
+        pacific = event.ce_payment_due_deadline.in_time_zone("Pacific Time (US & Canada)")
+        expect(pacific.strftime("%Y-%m-%d %H:%M")).to eq("2026-08-15 09:00")
       end
     end
 

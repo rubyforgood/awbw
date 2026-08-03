@@ -293,8 +293,10 @@ class BuiltinCalloutCards
   end
 
   # Short month/day for a deadline shown inline on the CE card, e.g. "Jul 1".
+  # Cast to the viewer's zone first so a datetime deadline (the payment due date
+  # carries a time) reports the same day it's displayed as elsewhere.
   def ce_deadline_text(deadline)
-    deadline.strftime("%b %-d")
+    deadline.in_time_zone(Time.zone).strftime("%b %-d")
   end
 
   # Always shown once published — the roster page (which shares its card grid

@@ -26,10 +26,14 @@
           class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 bg-white focus:ring-blue-500 focus:border-blue-500" %>
   </div>
   <div>
-    <%= f.label :ce_payment_due_deadline, class: "block text-xs font-medium text-gray-600 mb-1" do %>
+    <%= f.label :ce_payment_due_deadline_date, class: "block text-xs font-medium text-gray-600 mb-1" do %>
       Payment due by <span class="font-normal text-gray-400">(optional)</span>
     <% end %>
-    <%= f.text_field :ce_payment_due_deadline, type: "date",
-          class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 bg-white focus:ring-blue-500 focus:border-blue-500" %>
+    <div class="flex gap-2">
+      <%= f.text_field :ce_payment_due_deadline_date, type: "date",
+            class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 bg-white focus:ring-blue-500 focus:border-blue-500" %>
+      <%= f.text_field :ce_payment_due_deadline_time, type: "time",
+            class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 bg-white focus:ring-blue-500 focus:border-blue-500" %>
+    </div>
   </div>
 </div>
