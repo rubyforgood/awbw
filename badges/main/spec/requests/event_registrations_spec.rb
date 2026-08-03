@@ -324,9 +324,12 @@ RSpec.describe "EventRegistrations", type: :request do
         patch event_registration_path(existing_registration),
               params: { event_registration: { event_id: new_event.id } }
 
-        # No explicit return_to: admins land back on the management roster, not
-        # the public registration show.
-        expect(response).to redirect_to(registrants_event_path(new_event))
+        # No explicit return_to: admins land back on the management roster,
+        # scrolled to and highlighting the row they just edited, not the public
+        # registration show.
+        expect(response).to redirect_to(
+          registrants_event_path(new_event, anchor: "registrant-row-#{existing_registration.id}", highlight: existing_registration.id)
+        )
         expect(existing_registration.reload.event_id).to eq(new_event.id)
       end
 

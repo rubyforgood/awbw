@@ -92,7 +92,7 @@ class EventRegistrationsController < ApplicationController
         format.turbo_stream
         format.html {
           case params[:return_to]
-          when "registrants" then redirect_to registrants_event_path(@event_registration.event), notice: notice, status: :see_other
+          when "registrants" then redirect_to helpers.registrants_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
           when "index" then redirect_to event_registrations_path, notice: notice, status: :see_other
           when "ticket" then redirect_to registration_ticket_path(@event_registration.slug), notice: notice, status: :see_other
           when "preview_reminder" then redirect_to preview_reminder_event_path(@event_registration.event), notice: notice, status: :see_other
@@ -101,7 +101,7 @@ class EventRegistrationsController < ApplicationController
             # No explicit origin: keep admins in the management context (the
             # roster) rather than dropping them on the public registration show.
             if allowed_to?(:manage?, with: EventRegistrationPolicy)
-              redirect_to registrants_event_path(@event_registration.event), notice: notice, status: :see_other
+              redirect_to helpers.registrants_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
             else
               redirect_to registration_ticket_path(@event_registration.slug), notice: notice, status: :see_other
             end
