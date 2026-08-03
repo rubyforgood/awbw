@@ -216,7 +216,7 @@
                                   title: [ person.name, display_email ].compact_blank.join(" — "),
                                   class: reg_edit_classes,
                                   data: { turbo_frame: "_top", turbo_prefetch: false } do %>
-                        <i class="fa-solid fa-ticket flex-shrink-0 <%= DomainTheme.text_class_for(:event_registrations) %>"></i>
+                        <i class="fa-solid fa-user-pen flex-shrink-0 <%= DomainTheme.text_class_for(:event_registrations) %>"></i>
                         <div class="flex flex-col justify-center min-w-0">
                           <span class="font-semibold text-xs <%= DomainTheme.text_class_for(:event_registrations) %> truncate"><%= truncate(person.name.to_s, length: 30) %></span>
                           <% if display_email.present? %>
