@@ -244,6 +244,14 @@
     </div>
   <% end %>
 
+  <%# ---- Registrants by city (of the org linked on their registration), with
+      each city's scholarship count — shared with the background dashboard. ---- %>
+  <% if @dashboard.registrant_city_breakdown.any? %>
+    <div class="mt-10 max-w-xl break-inside-avoid">
+      <%= render "events/registrant_city_breakdown", breakdown: @dashboard.registrant_city_breakdown, metrics: :both %>
+    </div>
+  <% end %>
+
   <%# ---- Shout outs: registrants who opted in, with their shout-out text ---- %>
   <% if @dashboard.shoutouts.any? %>
     <div class="mt-10 break-inside-avoid">

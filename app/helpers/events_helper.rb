@@ -25,6 +25,15 @@ module EventsHelper
     registrants_event_path(event_or_id, anchor: registrant_row_id(registration_id), highlight: registration_id)
   end
 
+  # Stamp a registrants-page link reached from the background dashboard with the
+  # context its eyebrow needs to send the user back to the exact section they
+  # drilled in from: return_to marks the origin page, return_anchor the section id
+  # (matching that section's `id`/`scroll-mt-*` on the background page).
+  def background_return_path(path, anchor)
+    separator = path.include?("?") ? "&" : "?"
+    "#{path}#{separator}#{{ return_to: "background", return_anchor: anchor }.to_query}"
+  end
+
   # Ordered column descriptors for the event Onboarding matrix. The array index
   # is the table-sort column index, so the header row and every body row iterate
   # this same list — keeping header buttons and cell positions aligned no matter

@@ -705,6 +705,22 @@ RSpec.describe "Events", type: :request do
 
     before { sign_in admin }
 
+    context "eyebrow back link" do
+      it "returns to the originating background section when arrived from it" do
+        get registrants_event_path(event, return_to: "background", return_anchor: "all-cities")
+
+        expect(response.body).to include("← Background")
+        expect(response.body).to include("#{background_event_path(event)}#all-cities")
+        expect(response.body).not_to include("← Dashboard")
+      end
+
+      it "falls back to the dashboard without background return context" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include("← Dashboard")
+      end
+    end
+
     context "with unknown filter params" do
       it "does not crash on an invalid payment_status" do
         get registrants_event_path(event, payment_status: "bogus")
@@ -1758,6 +1774,38 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(person_path(person))
       end
 
+      it "shows each registrant's Primary sector and Primary age group in the roster" do
+        registration_form = create(:form, name: "Registration")
+        create(:event_form, event: event, form: registration_form, role: "registration")
+        submission = create(:form_submission, person: person, form: registration_form)
+
+        sector = create(:sector, name: "Sexual Assault")
+        sector_field = create(:form_field, form: registration_form, field_identifier: "primary_sector_single")
+        create(:form_answer, form_submission: submission, form_field: sector_field, submitted_answer: sector.id.to_s)
+
+        age_range = create(:category_type, name: "AgeRange")
+        teens = create(:category, name: "Teens", category_type: age_range)
+        age_field = create(:form_field, form: registration_form, field_identifier: "primary_age_group")
+        create(:form_answer, form_submission: submission, form_field: age_field, submitted_answer: teens.id.to_s)
+
+        get background_event_path(event)
+
+        expect(response.body).to include("Primary sector")
+        expect(response.body).to include("Primary age group")
+        expect(response.body).to include("Sexual Assault")
+        expect(response.body).to include("Teens")
+      end
+
+      it "links a registrant's organization to its profile and the CE icon to the CE registration edit" do
+        ce_registration = create(:continuing_education_registration, event_registration: registration)
+
+        get background_event_path(event)
+
+        # Background Org is linked to Ada via the affiliation in the registration let!.
+        expect(response.body).to include(organization_path(organization))
+        expect(response.body).to include(edit_continuing_education_registration_path(ce_registration))
+      end
+
       it "shows a countries breakdown from registrant addresses" do
         create(:address, addressable: person, state: "CA", country: "Canada", inactive: false)
 
@@ -1843,6 +1891,58 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("States")
         expect(response.body).to include('data-controller="us-map-chart"')
         expect(response.body).to include("CA")
+      end
+
+      it "flags scholarship-recipient orgs in the Organizations breakdown and offers a CSS filter toggle" do
+        scholarship = create(:scholarship, recipient: person, amount_cents: 500)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 500)
+
+        get background_event_path(event)
+
+        # Pure-CSS toggle: a `peer` checkbox reveals the scholarship-only list.
+        expect(response.body).to include("Only scholarship orgs")
+        expect(response.body).to include('id="org-scholarship-filter"')
+        expect(response.body).to include("peer-checked:table")
+        # The recipient's org (Background Org) is flagged with the grad-cap icon.
+        expect(response.body).to include("fa-graduation-cap")
+      end
+
+      it "omits the scholarship-org filter toggle when no org has a recipient" do
+        get background_event_path(event)
+
+        expect(response.body).to include("Organizations")
+        expect(response.body).not_to include("Only scholarship orgs")
+      end
+
+      it "groups registrants by the city of the org linked on their registration" do
+        city_org = create(:organization, name: "City Org")
+        create(:address, addressable: city_org, city: "Los Angeles", state: "CA", inactive: false)
+        create(:event_registration_organization, event_registration: registration, organization: city_org)
+        scholarship = create(:scholarship, recipient: person, amount_cents: 500)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 500)
+
+        get background_event_path(event)
+
+        # On the background page the city card is titled "All cities".
+        expect(response.body).to include("All cities")
+        expect(response.body).to include("Los Angeles, CA")
+        # Scholarship recipient in that city renders in the "(🎓 1)" parenthetical.
+        expect(response.body).to include("fa-graduation-cap")
+        # Same pure-CSS toggle as the Organizations card.
+        expect(response.body).to include('id="city-scholarship-filter"')
+      end
+
+      it "anchors its sections and stamps registrants drill-downs with a back-to-section eyebrow" do
+        get background_event_path(event)
+
+        # Sections carry stable ids so a drill-down can scroll back to them.
+        expect(response.body).to include('id="overview"')
+        expect(response.body).to include('id="all-organizations"')
+        expect(response.body).to include('id="primary-sector"')
+        # Registrants links carry the origin page + section so the eyebrow returns here.
+        expect(response.body).to include("return_to=background")
+        expect(response.body).to include("return_anchor=overview")
+        expect(response.body).to include("return_anchor=all-organizations")
       end
 
       it "excludes registrants with an inactive status" do
@@ -2028,6 +2128,18 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Sexual Assault")
         expect(response.body).to include("How will this help the people you serve?")
         expect(response.body).to include("It will let me reach more survivors.")
+      end
+
+      it "shows a Registrants by city breakdown grouped by the registration-linked org" do
+        org = create(:organization, name: "Reach Org")
+        create(:address, addressable: org, city: "Richmond", state: "CA", inactive: false)
+        registration = EventRegistration.find_by!(registrant: applicant, event: event)
+        create(:event_registration_organization, event_registration: registration, organization: org)
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include("Registrants by city")
+        expect(response.body).to include("Richmond, CA")
       end
 
       it "renders the collapsible card controls and an expand/collapse-all button" do

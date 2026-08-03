@@ -17,7 +17,10 @@
 <% map_color = local_assigns.fetch(:map_color, nil) %>
 <% row_paths = local_assigns.fetch(:row_paths, {}) %>
 <% total = data.sum { |_, count| count } %>
-<div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4">
+<%# Stable section id (derived from the title) so registrants-page drill-downs can
+    return here, with scroll-mt so the section clears the sticky header on return. %>
+<% anchor = title.parameterize %>
+<div id="<%= anchor %>" class="scroll-mt-24 bg-white border border-gray-200 rounded-xl shadow-sm p-4">
   <div class="flex items-center justify-between mb-3">
     <h2 class="text-sm font-semibold text-gray-700"><%= title %></h2>
     <span class="text-xs text-gray-500"><%= data.size %></span>
@@ -49,6 +52,9 @@
       <tbody>
         <% data.each_with_index do |(label, count), i| %>
           <% path = row_paths[label] %>
+          <%# Registrants links carry a back-to-this-section eyebrow; leave other
+              destinations (e.g. the recipients page) untouched. %>
+          <% path = background_return_path(path, anchor) if path&.include?("/registrants") %>
           <tr class="border-t border-gray-100 <%= "group hover:bg-gray-50 cursor-pointer transition-colors" if path %>"
               <% if path %>onclick="window.location='<%= path %>'"<% end %>>
             <td class="py-1 text-gray-700">

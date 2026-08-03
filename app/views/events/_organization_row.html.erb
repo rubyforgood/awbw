@@ -1,0 +1,23 @@
+<%# One row of the Organizations breakdown. Locals: row (a { name:, count:,
+    scholarship_count:, path: } hash) and total (registrant sum, for the %). The
+    leading grad-cap sits in a fixed-width slot so scholarship-org names line up
+    with the (empty-slot, indented) non-scholarship ones. The hover jump-link
+    arrow sits after the percentage, matching the other breakdown cards. %>
+<% is_scholarship = row[:scholarship_count].positive? %>
+<tr class="border-t border-gray-100 group hover:bg-gray-50 cursor-pointer transition-colors"
+    onclick="window.location='<%= row[:path] %>'">
+  <td class="py-1 text-gray-700 w-full">
+    <span class="inline-block w-5 mr-1 text-center align-middle">
+      <% if is_scholarship %>
+        <i class="fa-solid fa-graduation-cap <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>"
+           title="<%= pluralize(row[:scholarship_count], "scholarship recipient") %>" aria-hidden="true"></i>
+      <% end %>
+    </span>
+    <%= link_to row[:name], row[:path], class: "group-hover:underline align-middle" %>
+  </td>
+  <td class="py-1 pl-3 text-right text-gray-500 tabular-nums whitespace-nowrap">
+    <span class="group-hover:underline"><%= row[:count] %><span class="text-gray-400"> · <%= total.zero? ? 0 : (row[:count] * 100.0 / total).round(1) %>%</span></span>
+    <%# Jump-link affordance: invisible (white) until the row is hovered, matching the other breakdown cards. %>
+    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-white group-hover:text-gray-400 ml-1 align-middle" aria-hidden="true"></i>
+  </td>
+</tr>
