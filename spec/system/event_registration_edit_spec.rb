@@ -161,7 +161,7 @@ RSpec.describe "Event registration edit page", type: :system do
 
       click_on "Save changes"
 
-      expect(page).to have_current_path(registrants_event_path(event))
+      expect(page).to have_current_path(registrants_event_path(event, highlight: registration.id))
       expect(registration.reload.shoutout).to be(true)
       expect(registration.registrant.reload.shoutout_text).to eq("Grateful to bring art to the survivors we serve.")
     end
@@ -198,7 +198,7 @@ RSpec.describe "Event registration edit page", type: :system do
       check "Day 2", allow_label_click: true
       click_on "Save changes"
 
-      expect(page).to have_current_path(registrants_event_path(event))
+      expect(page).to have_current_path(registrants_event_path(event, highlight: registration.id))
       expect(registration.reload.completed_day_1).to be(true)
       expect(registration.completed_day_2).to be(true)
     end
@@ -221,7 +221,7 @@ RSpec.describe "Event registration edit page", type: :system do
       click_on "Save changes"
 
       # Wait for the save round-trip to land before reading the database.
-      expect(page).to have_current_path(registrants_event_path(event))
+      expect(page).to have_current_path(registrants_event_path(event, highlight: registration.id))
       expect(registration.reload.status).to eq("attended")
       expect(registration.completed_day_count).to eq(3)
     end
