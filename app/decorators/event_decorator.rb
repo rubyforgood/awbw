@@ -45,7 +45,7 @@ class EventDecorator < ApplicationDecorator
   # The CE payment deadline rendered like the event's own times: in the viewer's
   # zone with a zone abbreviation, e.g. "9:00 AM PDT on July 22, 2026". Returns
   # nil when no deadline is set. Drives the CE callout page's payment instruction.
-  def ce_payment_due_deadline_text
+  def ce_payment_due_deadline_display
     return if ce_payment_due_deadline.blank?
     ce_payment_due_deadline.in_time_zone(Time.zone).strftime("%-l:%M %p %Z on %B %-d, %Y")
   end
