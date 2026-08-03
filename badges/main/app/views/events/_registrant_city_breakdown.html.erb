@@ -1,0 +1,57 @@
+<%# Registrants grouped by the city of the organization linked on their
+    registration — shared by the event background dashboard and the
+    scholarship-recipients page. A pure-CSS `peer` toggle swaps between all cities
+    and scholarship-only cities: both lists render server-side and are shown/hidden
+    via `peer-checked:` (no JS). Locals:
+      breakdown: a RegistrantCityBreakdown
+      metrics:   :registrants, :scholarships, or :both (default :both) — which
+                 figure(s) each city row shows. Grouping is always by city.
+      title:     heading (default "Registrants by city")
+      return_anchor: optional section id — when set (background dashboard), the card
+                 gets that id/scroll-mt and its row links carry a back-to-here
+                 eyebrow. Omit it elsewhere (recipients page) for plain links. %>
+<% metrics = local_assigns.fetch(:metrics, :both) %>
+<% title = local_assigns.fetch(:title, "Registrants by city") %>
+<% return_anchor = local_assigns[:return_anchor] %>
+<% rows = breakdown.rows %>
+<% scholarship_rows = rows.select { |row| row.scholarship_count.positive? } %>
+<div <%= tag.attributes(id: return_anchor, class: "#{"scroll-mt-24 " if return_anchor}bg-white border border-gray-200 rounded-xl shadow-sm p-4") %>>
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-sm font-semibold text-gray-700"><%= title %></h2>
+    <span class="text-xs text-gray-500"><%= rows.size %></span>
+  </div>
+
+  <% if rows.empty? %>
+    <p class="text-sm text-gray-400 italic text-center py-8">No cities yet.</p>
+  <% else %>
+    <% if scholarship_rows.any? %>
+      <% scholarship_pct = (scholarship_rows.size.to_f / rows.size * 100).round %>
+      <%# Slider toggle (matching the app's switch pattern) that filters the list to
+          scholarship cities. The input must stay a direct sibling before the tables
+          so the pure-CSS peer-checked: swap works; both labels are siblings too, so
+          the track picks up peer-checked styling and either one toggles the input. %>
+      <input type="checkbox" id="city-scholarship-filter" class="sr-only peer">
+      <label for="city-scholarship-filter"
+             class="relative inline-block h-6 w-11 rounded-full bg-gray-200 align-middle transition-colors cursor-pointer after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></label>
+      <label for="city-scholarship-filter" class="ml-2 mb-3 inline-flex items-center gap-1 align-middle text-xs text-gray-600 cursor-pointer select-none">
+        <i class="fa-solid fa-graduation-cap <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>" aria-hidden="true"></i>
+        Only scholarship cities (<%= scholarship_rows.size %> of <%= rows.size %> · <%= scholarship_pct %>%)
+      </label>
+    <% end %>
+
+    <%# Full list — hidden once the toggle is checked. %>
+    <table class="w-full text-sm peer-checked:hidden">
+      <tbody>
+        <%= render partial: "events/registrant_city_row", collection: rows, as: :row, locals: { metrics: metrics, event: @event, return_anchor: return_anchor } %>
+      </tbody>
+    </table>
+    <%# Scholarship-cities-only list — revealed when the toggle is checked. %>
+    <% if scholarship_rows.any? %>
+      <table class="hidden w-full text-sm peer-checked:table">
+        <tbody>
+          <%= render partial: "events/registrant_city_row", collection: scholarship_rows, as: :row, locals: { metrics: metrics, event: @event, return_anchor: return_anchor } %>
+        </tbody>
+      </table>
+    <% end %>
+  <% end %>
+</div>

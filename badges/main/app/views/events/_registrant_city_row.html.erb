@@ -1,0 +1,29 @@
+<%# One row of the Registrants-by-city breakdown. Locals: row (a
+    RegistrantCityBreakdown::Row), metrics (:registrants/:scholarships/:both), and
+    event. The whole row links to that city's filtered registrant list; the
+    scholarship figure links to just its scholarship recipients. Registrant total
+    and scholarship figure get their own right-aligned columns so counts line up;
+    tabular-nums + a 3-digit min-width keep padding even. %>
+<%# return_anchor (set only on the background dashboard) makes each registrants
+    link carry a back-to-this-card eyebrow; nil elsewhere leaves links plain. %>
+<% return_anchor = local_assigns[:return_anchor] %>
+<% row_path = registrants_event_path(event, registrant_ids: row.registrant_ids.join("-")) %>
+<% row_path = background_return_path(row_path, return_anchor) if return_anchor %>
+<tr class="border-t border-gray-100 group hover:bg-gray-50 cursor-pointer transition-colors"
+    onclick="window.location='<%= row_path %>'">
+  <td class="py-1 text-gray-700 w-full"><span class="group-hover:underline"><%= row.city %></span></td>
+  <% unless metrics == :scholarships %>
+    <td class="py-1 pl-3 text-right tabular-nums whitespace-nowrap font-medium text-gray-700 min-w-[3ch]"><%= row.registrant_count %></td>
+  <% end %>
+  <% unless metrics == :registrants %>
+    <td class="py-1 pl-2 text-right tabular-nums whitespace-nowrap text-gray-400 min-w-[4ch]">
+      <% if row.scholarship_count.positive? %>
+        <% scholarship_path = registrants_event_path(event, registrant_ids: row.scholarship_recipient_ids.join("-")) %>
+        <% scholarship_path = background_return_path(scholarship_path, return_anchor) if return_anchor %>
+        <%= link_to scholarship_path,
+                    class: "hover:underline", title: "Scholarship recipients in #{row.city}",
+                    onclick: "event.stopPropagation()" do %><% if metrics == :both %>(<% end %><i class="fa-solid fa-graduation-cap <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>" aria-hidden="true"></i> <span class="font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>"><%= row.scholarship_count %></span><% if metrics == :both %>)<% end %><% end %>
+      <% end %>
+    </td>
+  <% end %>
+</tr>

@@ -14,7 +14,6 @@
 <% state_data = @dashboard.state_counts.sort_by { |_, count| -count } %>
 <% country_data = @dashboard.country_counts.sort_by { |_, count| -count } %>
 <% school_district_data = @dashboard.school_district_counts.sort_by { |_, count| -count } %>
-<% org_data = @dashboard.organizations.map { |o| [ o.name, @dashboard.organization_counts.fetch(o.id, 0) ] }.sort_by { |_, count| -count } %>
 <%# Program-status breakdown of the represented orgs. Each status carries its own
     swatch (green/blue/purple) matching the OrganizationDecorator badge colors, and
     zero-count statuses drop out so data and palette stay aligned. %>
@@ -67,31 +66,30 @@
       single "Locations" total with per-type subtotals. ---- %>
   <% ps = @dashboard.program_status_counts %>
   <% program_breakdown = @dashboard.organization_count.positive? ? "#{ps[:new]} new · #{ps[:ongoing]} ongoing · #{ps[:reinstated]} reinstated" : nil %>
-  <%# CE is a placeholder until real continuing-education data lands; mirror the
-      roster's per-row rule so this subtotal matches the CE column. %>
-  <% ce_registrants = @dashboard.registrants.select { |person| (person.id % 3).zero? } %>
+  <% ce_registrant_ids = @dashboard.ce_registrant_ids %>
+  <%# Every stat-bar link returns to the stat bar itself (anchor "overview"). %>
   <% leading_metrics = [
        { label: "Organizations", value: @dashboard.organization_count, icon: "fa-building", theme: :organizations,
-         path: registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids.join("-")), sub: program_breakdown },
+         path: background_return_path(registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids.join("-")), "overview"), sub: program_breakdown },
        { label: "Sectors", value: @dashboard.sectors.size, icon: "fa-hand-holding-heart", theme: :sectors,
-         path: registrants_event_path(@event, registrant_ids: @dashboard.sector_registrant_ids.join("-")),
+         path: background_return_path(registrants_event_path(@event, registrant_ids: @dashboard.sector_registrant_ids.join("-")), "overview"),
          sub: @dashboard.sectors.any? ? "#{@dashboard.primary_sector_count} primary · #{@dashboard.additional_sector_count} additional" : nil }
      ] %>
-  <div class="flex flex-wrap items-stretch divide-y sm:divide-y-0 sm:divide-x divide-gray-100 rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+  <div id="overview" class="scroll-mt-24 flex flex-wrap items-stretch divide-y sm:divide-y-0 sm:divide-x divide-gray-100 rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
     <%# Registrants, with scholarship recipients and CE as subtotals drilling into their lists. %>
     <div class="flex items-center gap-3 px-4 py-3 grow basis-44">
       <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:people, intensity: 100) %> <%= DomainTheme.text_class_for(:people, intensity: 600) %>">
         <i class="fa-solid fa-users"></i>
       </span>
       <span class="min-w-0">
-        <%= link_to registrants_event_path(@event), class: "block hover:underline leading-tight" do %>
+        <%= link_to background_return_path(registrants_event_path(@event), "overview"), class: "block hover:underline leading-tight" do %>
           <span class="text-xl font-bold text-gray-900 tabular-nums"><%= @dashboard.registrant_count %></span>
           <span class="text-xs text-gray-500">Registrants</span>
         <% end %>
         <span class="block text-xs text-gray-400 mt-0.5">
           <%= link_to recipients_event_path(@event), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.scholarship_recipient_count, "scholarship") %><% end %>
           <span class="text-gray-300" aria-hidden="true">·</span>
-          <%= link_to registrants_event_path(@event, registrant_ids: ce_registrants.map(&:id).join("-")), class: "hover:underline whitespace-nowrap" do %><%= ce_registrants.size %> CE<% end %>
+          <%= link_to background_return_path(registrants_event_path(@event, registrant_ids: ce_registrant_ids.join("-")), "overview"), class: "hover:underline whitespace-nowrap" do %><%= ce_registrant_ids.size %> CE<% end %>
         </span>
       </span>
     </div>
@@ -111,9 +109,9 @@
           <span class="text-xs <%= DomainTheme.text_class_for(:addresses, intensity: 600) %>">Locations</span>
         </span>
         <span class="block text-xs text-gray-400 mt-0.5">
-          <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.state_registrant_ids.join("-")), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.states.size, "state") %><% end %>
+          <%= link_to background_return_path(registrants_event_path(@event, registrant_ids: @dashboard.state_registrant_ids.join("-")), "overview"), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.states.size, "state") %><% end %>
           <span class="text-gray-300" aria-hidden="true">·</span>
-          <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.country_registrant_ids.join("-")), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.countries.size, "country") %><% end %>
+          <%= link_to background_return_path(registrants_event_path(@event, registrant_ids: @dashboard.country_registrant_ids.join("-")), "overview"), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.countries.size, "country") %><% end %>
         </span>
       </span>
     </div>
@@ -127,16 +125,20 @@
     </div>
     <% if @dashboard.registrants.any? %>
       <div class="overflow-x-auto">
-        <table class="w-full border-collapse" data-controller="table-sort">
-          <thead class="bg-gray-100">
+        <%# Below sm the whole table chain reflows to block so each row stacks into
+            a labeled card (header hidden; per-cell mobile_label supplies the name).
+            At sm+ it returns to a normal sortable table. %>
+        <table class="block sm:table w-full border-collapse" data-controller="table-sort">
+          <thead class="hidden sm:table-header-group bg-gray-100">
             <tr>
               <% columns = [
                    { index: 0, align: "text-left", parts: [ { label: "First", key: "first" }, { label: "Last", key: "last" } ] },
-                   { label: "Organization", index: 1, align: "text-left" },
-                   { label: "Status", index: 2, align: "text-left" },
-                   { label: "Location", index: 3, align: "text-left" },
-                   { label: "Scholarship", index: 4, align: "text-center" },
-                   { label: "CE", index: 5, align: "text-center" }
+                   { index: 1, align: "text-left", parts: [ { label: "Primary sector", key: "sector" }, { label: "Primary age group", key: "age" } ] },
+                   { label: "Organization", index: 2, align: "text-left" },
+                   { label: "Status", index: 3, align: "text-left" },
+                   { label: "Location", index: 4, align: "text-left" },
+                   { label: "Scholarship", index: 5, align: "text-center" },
+                   { label: "CE", index: 6, align: "text-center" }
                  ] %>
               <% columns.each do |col| %>
                 <th class="px-4 py-2 <%= col[:align] %> text-xs font-semibold text-gray-700" aria-sort="none">
@@ -150,48 +152,87 @@
               <% end %>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100" data-table-sort-target="body">
+          <tbody class="block sm:table-row-group divide-y divide-gray-100" data-table-sort-target="body">
+            <% orgs_by_id = @dashboard.organizations.index_by(&:id) %>
+            <% lime_chip_class = "inline-flex items-center whitespace-nowrap rounded-md border border-lime-300 bg-lime-200 px-2 py-0.5 text-xs font-medium text-lime-800" %>
+            <%# Per-cell label shown only in the stacked mobile card; the column
+                header supplies it at sm+, so it's hidden there. %>
+            <% mobile_label = ->(text) { tag.span(text, class: "sm:hidden shrink-0 w-24 pt-0.5 text-xs font-semibold uppercase tracking-wide text-gray-400") } %>
             <% @dashboard.registrants.each do |person| %>
-              <% programs = @dashboard.organization_names_by_registrant[person.id] %>
-              <% org_text = programs.present? ? programs.join(", ") : "" %>
+              <% person_orgs = (@dashboard.organization_ids_by_registrant[person.id] || []).filter_map { |org_id| orgs_by_id[org_id] } %>
               <% location = @dashboard.location_label_by_registrant[person.id] %>
+              <% person_sectors = @dashboard.primary_sector_names_by_registrant[person.id] || [] %>
+              <% person_age_groups = @dashboard.primary_age_group_names_by_registrant[person.id] || [] %>
               <% scholarship = @dashboard.scholarship_by_recipient[person.id] %>
-              <%# CE is a placeholder until real continuing-education data lands;
-                  deterministic by id so it stays put across sorts and reloads. %>
-              <% ce = (person.id % 3).zero? %>
-              <tr class="hover:bg-blue-50 transition-colors cursor-pointer"
+              <% ce_registration = @dashboard.ce_registration_by_registrant[person.id] %>
+              <tr class="block sm:table-row hover:bg-blue-50 transition-colors cursor-pointer"
                   onclick="window.location='<%= person_path(person) %>'">
-                <td class="px-4 py-1.5 text-sm whitespace-nowrap"
+                <%# Card title on mobile (larger, allowed to wrap); plain name cell at sm+. %>
+                <td class="block sm:table-cell px-4 pt-3 pb-1 sm:py-1.5 text-sm sm:whitespace-nowrap"
                     data-sort-first="<%= person.first_name.to_s.downcase %>"
                     data-sort-last="<%= person.last_name.to_s.downcase %>">
-                  <%= link_to person.name, person_path(person), class: "font-bold text-gray-900 hover:underline" %>
+                  <%= link_to person.name, person_path(person), class: "font-bold text-gray-900 hover:underline text-base sm:text-sm" %>
                 </td>
-                <td class="px-4 py-1.5 text-sm text-gray-600 break-words" data-sort-value="<%= org_text.downcase %>">
-                  <%= org_text.presence || "—" %>
+                <%# Primary sector + age group — one column, each independently
+                    sortable (data-sort-sector / data-sort-age), mirroring the
+                    First/Last name cell. Sector and age-group chips share a single
+                    wrapping row. %>
+                <td class="flex sm:table-cell gap-3 px-4 py-1 sm:py-1.5 text-sm"
+                    data-sort-sector="<%= person_sectors.join(", ").downcase %>"
+                    data-sort-age="<%= person_age_groups.join(", ").downcase %>">
+                  <%= mobile_label.("Sector / age") %>
+                  <div class="min-w-0 flex-1">
+                    <% if person_sectors.any? || person_age_groups.any? %>
+                      <div class="flex flex-wrap items-center gap-1">
+                        <% (person_sectors + person_age_groups).each do |name| %>
+                          <span class="<%= lime_chip_class %>"><%= name %></span>
+                        <% end %>
+                      </div>
+                    <% else %>
+                      <span class="text-gray-300">—</span>
+                    <% end %>
+                  </div>
+                </td>
+                <td class="flex sm:table-cell gap-3 px-4 py-1 sm:py-1.5 text-sm text-gray-600" data-sort-value="<%= person_orgs.map(&:name).join(", ").downcase %>">
+                  <%= mobile_label.("Organization") %>
+                  <div class="min-w-0 flex-1 break-words">
+                    <% if person_orgs.any? %>
+                      <% person_orgs.each_with_index do |org, i| %><%= ", " if i.positive? %><%= link_to org.name, organization_path(org), class: "hover:underline", onclick: "event.stopPropagation()" %><% end %>
+                    <% else %>
+                      <span class="text-gray-300">—</span>
+                    <% end %>
+                  </div>
                 </td>
                 <% statuses = @dashboard.program_statuses_by_registrant[person.id] || [] %>
-                <td class="px-4 py-1.5 text-sm" data-sort-value="<%= statuses.join(", ") %>">
-                  <% if statuses.any? %>
-                    <span class="flex flex-wrap gap-1">
-                      <% statuses.each do |status| %>
-                        <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= OrganizationDecorator.program_status_classes(status) %>"><%= status.to_s.titleize %></span>
-                      <% end %>
-                    </span>
-                  <% else %>
-                    <span class="text-gray-300">—</span>
-                  <% end %>
+                <td class="flex sm:table-cell gap-3 px-4 py-1 sm:py-1.5 text-sm" data-sort-value="<%= statuses.join(", ") %>">
+                  <%= mobile_label.("Status") %>
+                  <div class="min-w-0 flex-1">
+                    <% if statuses.any? %>
+                      <span class="flex flex-wrap gap-1">
+                        <% statuses.each do |status| %>
+                          <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= OrganizationDecorator.program_status_classes(status) %>"><%= status.to_s.titleize %></span>
+                        <% end %>
+                      </span>
+                    <% else %>
+                      <span class="text-gray-300">—</span>
+                    <% end %>
+                  </div>
                 </td>
-                <td class="px-4 py-1.5 text-sm" data-sort-value="<%= location.to_s.downcase %>">
-                  <% if location.present? %>
-                    <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= DomainTheme.bg_class_for(:addresses, intensity: 100) %> <%= DomainTheme.text_class_for(:addresses, intensity: 700) %> <%= DomainTheme.border_class_for(:addresses, intensity: 200) %>">
-                      <%= location %>
-                    </span>
-                  <% else %>
-                    <span class="text-gray-300">—</span>
-                  <% end %>
+                <td class="flex sm:table-cell gap-3 px-4 py-1 sm:py-1.5 text-sm" data-sort-value="<%= location.to_s.downcase %>">
+                  <%= mobile_label.("Location") %>
+                  <div class="min-w-0 flex-1">
+                    <% if location.present? %>
+                      <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= DomainTheme.bg_class_for(:addresses, intensity: 100) %> <%= DomainTheme.text_class_for(:addresses, intensity: 700) %> <%= DomainTheme.border_class_for(:addresses, intensity: 200) %>">
+                        <%= location %>
+                      </span>
+                    <% else %>
+                      <span class="text-gray-300">—</span>
+                    <% end %>
+                  </div>
                 </td>
                 <% participant_slug = @dashboard.registration_slug_by_registrant[person.id] %>
-                <td class="px-4 py-1.5 text-sm text-center" data-sort-value="<%= scholarship ? 1 : 0 %>">
+                <td class="flex sm:table-cell items-center gap-3 px-4 py-1 sm:py-1.5 text-sm sm:text-center" data-sort-value="<%= scholarship ? 1 : 0 %>">
+                  <%= mobile_label.("Scholarship") %>
                   <% if scholarship %>
                     <%= link_to recipients_event_path(@event, anchor: ("participant-#{participant_slug}" if participant_slug)),
                                 class: "#{DomainTheme.text_class_for(:scholarships, intensity: 600)} hover:#{DomainTheme.text_class_for(:scholarships)}",
@@ -199,11 +240,23 @@
                                 onclick: "event.stopPropagation()" do %>
                       <i class="fa-solid fa-graduation-cap"></i>
                     <% end %>
+                  <% else %>
+                    <span class="sm:hidden text-gray-300">—</span>
                   <% end %>
                 </td>
-                <td class="px-4 py-1.5 text-sm text-center" data-sort-value="<%= ce ? 1 : 0 %>">
-                  <% if ce %>
-                    <i class="fa-solid fa-certificate <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>" title="Continuing education"></i>
+                <%# CE: the icon shows for registrants with a CE registration and
+                    links to that record's edit page. %>
+                <td class="flex sm:table-cell items-center gap-3 px-4 pt-1 pb-3 sm:py-1.5 text-sm sm:text-center" data-sort-value="<%= ce_registration ? 1 : 0 %>">
+                  <%= mobile_label.("CE") %>
+                  <% if ce_registration %>
+                    <%= link_to edit_continuing_education_registration_path(ce_registration),
+                                class: "#{DomainTheme.text_class_for(:continuing_education, intensity: 600)} hover:#{DomainTheme.text_class_for(:continuing_education)}",
+                                title: "Edit continuing education",
+                                onclick: "event.stopPropagation()" do %>
+                      <i class="fa-solid fa-certificate"></i>
+                    <% end %>
+                  <% else %>
+                    <span class="sm:hidden text-gray-300">—</span>
                   <% end %>
                 </td>
               </tr>
@@ -230,59 +283,94 @@
   <% school_district_paths = @dashboard.school_district_registrant_ids_by_district.transform_values { |ids| registrants_event_path(@event, registrant_ids: ids.join("-")) } %>
   <% life_experience_paths = @dashboard.life_experiences.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.life_experience_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
   <% settings_paths = @dashboard.settings.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.settings_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
-  <% org_paths = @dashboard.organizations.to_h { |o| [ o.name, registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(o.id, []).to_a.join("-")) ] } %>
   <% program_status_paths = @dashboard.program_status_registrant_ids.to_h { |status, ids| [ status.to_s.titleize, registrants_event_path(@event, registrant_ids: ids.join("-")) ] } %>
   <%# States and countries use the addresses theme color (slate) for their map ramps. %>
   <% addresses_color = "#475569" %>
-  <%# On lg the three topic columns share row tracks via subgrid, so the primary
-      cards (row 1) line up in height with each other and the "all"/org cards
-      (row 2) line up with each other — across all three columns. %>
+  <%# Organizations breakdown rows: distinct-registrant count + scholarship-
+      recipient count per org, sorted by registrants desc, each linking to its
+      filtered registrant list. %>
+  <% org_rows = @dashboard.organizations.map { |o|
+       { name: o.name,
+         count: @dashboard.organization_counts.fetch(o.id, 0),
+         scholarship_count: @dashboard.scholarship_recipient_count_by_org.fetch(o.id, 0),
+         path: background_return_path(registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(o.id, []).to_a.join("-")), "all-organizations") }
+     }.sort_by { |row| -row[:count] } %>
+  <%# Two-slice % pies for row 1: scholarship recipients and CE as a share of all
+      registrants. Each slice links into its filtered registrant list. %>
+  <%# Complement id lists so the "No …" slices link to everyone outside the slice. %>
+  <% all_registrant_ids = @dashboard.registrants.map(&:id) %>
+  <% non_scholarship_ids = all_registrant_ids - @dashboard.scholarship_registrants.map(&:id) %>
+  <% non_ce_ids = all_registrant_ids - ce_registrant_ids %>
+  <% scholarship_pie_data = [ [ "Scholarship", @dashboard.scholarship_recipient_count ], [ "No scholarship", @dashboard.registrant_count - @dashboard.scholarship_recipient_count ] ] %>
+  <% scholarship_pie_paths = {
+       "Scholarship" => recipients_event_path(@event),
+       "No scholarship" => registrants_event_path(@event, registrant_ids: non_scholarship_ids.join("-")) } %>
+  <% ce_pie_data = [ [ "CE", ce_registrant_ids.size ], [ "No CE", @dashboard.registrant_count - ce_registrant_ids.size ] ] %>
+  <% ce_pie_paths = {
+       "CE" => registrants_event_path(@event, registrant_ids: ce_registrant_ids.join("-")),
+       "No CE" => registrants_event_path(@event, registrant_ids: non_ce_ids.join("-")) } %>
+  <%# Scholarship (fuchsia) and CE (teal) fill their first slice; the remainder is neutral gray. %>
+  <% scholarship_pie_palette = %w[#c026d3 #e5e7eb] %>
+  <% ce_pie_palette = %w[#14b8a6 #e5e7eb] %>
+  <%# Three columns share four subgrid row tracks so cards line up in height across
+      columns: % pies (row 1), primary breakdowns (row 2), the "all" lists (row 3),
+      and locations (row 4). "All organizations" spans rows 2–3 (2× tall) to fill
+      the primary+all stack beside it. Secondary breakdowns flow below. %>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-    <%# Col 1: sectors — primary on top, all sectors stacked below. %>
-    <% if primary_sector_data.any? || sector_data.any? %>
-      <div class="flex flex-col gap-6 lg:grid lg:grid-rows-subgrid lg:row-span-2">
-        <% if primary_sector_data.any? %>
-          <%= render "breakdown_card", title: "Primary sector", data: primary_sector_data, chart: :pie, palette: palette, row_paths: primary_sector_paths %>
-        <% end %>
-        <% if sector_data.any? %>
-          <%= render "breakdown_card", title: "All sectors", data: sector_data, chart: :pie, palette: palette, row_paths: sector_paths %>
-        <% end %>
-      </div>
-    <% end %>
-    <%# Col 2: age groups — primary on top, all age groups stacked below. Primary
-        always shows (no-data box when empty); "All age groups" (primary +
-        additional questions) appears only when someone answered either. %>
-    <div class="flex flex-col gap-6 lg:grid lg:grid-rows-subgrid lg:row-span-2">
-      <%= render "breakdown_card", title: "Primary age group", data: age_group_data, chart: :pie, palette: palette,
-                                   empty_message: "No age group responses from registration answers yet.", row_paths: age_group_paths %>
-      <% if all_age_group_data.any? %>
-        <%= render "breakdown_card", title: "All age groups", data: all_age_group_data, chart: :pie, palette: palette, row_paths: all_age_group_paths %>
+    <%# Col 1: scholarships % → primary sector → all sectors → countries %>
+    <div class="flex flex-col gap-6 lg:grid lg:grid-rows-subgrid lg:row-span-4">
+      <% if @dashboard.registrant_count.positive? %>
+        <%= render "breakdown_card", title: "Scholarships", data: scholarship_pie_data, chart: :pie, palette: scholarship_pie_palette, row_paths: scholarship_pie_paths %>
+      <% end %>
+      <%= render "breakdown_card", title: "Primary sector", data: primary_sector_data, chart: :pie, palette: palette,
+                                   empty_message: "No sector responses from registration answers yet.", row_paths: primary_sector_paths %>
+      <% if sector_data.any? %>
+        <%= render "breakdown_card", title: "All sectors", data: sector_data, chart: :pie, palette: palette, row_paths: sector_paths %>
+      <% end %>
+      <% if country_data.any? %>
+        <%= render "breakdown_card", title: "Countries", data: country_data, chart: :world_map, palette: palette, map_color: addresses_color, row_paths: country_paths %>
       <% end %>
     </div>
-    <%# Col 3: organizations — program-status breakdown (new/ongoing/reinstated)
-        charted on top, the full org list below. %>
-    <% if org_data.any? %>
-      <div class="flex flex-col gap-6 lg:grid lg:grid-rows-subgrid lg:row-span-2">
-        <% if program_status_data.any? %>
-          <%= render "breakdown_card", title: "Organization/program status", data: program_status_data, chart: :pie, palette: program_status_palette, row_paths: program_status_paths %>
-        <% end %>
-        <%= render "breakdown_card", title: "All organizations", data: org_data, chart: nil, palette: palette, row_paths: org_paths %>
-      </div>
-    <% end %>
-    <%# --- Remaining breakdowns flow below row 1 --- %>
+    <%# Col 2: CE % → primary age group → all age groups → states %>
+    <div class="flex flex-col gap-6 lg:grid lg:grid-rows-subgrid lg:row-span-4">
+      <% if @dashboard.registrant_count.positive? %>
+        <%= render "breakdown_card", title: "Continuing education", data: ce_pie_data, chart: :pie, palette: ce_pie_palette, row_paths: ce_pie_paths %>
+      <% end %>
+      <%= render "breakdown_card", title: "Primary age group", data: age_group_data, chart: :pie, palette: palette,
+                                   empty_message: "No age group responses from registration answers yet.", row_paths: age_group_paths %>
+      <%# Row 3 splits into two stacked cards so School districts fills the space the
+          short "All age groups" pie leaves beside the tall "All sectors" list. %>
+      <% if all_age_group_data.any? || school_district_data.any? %>
+        <div class="flex flex-col gap-6">
+          <% if all_age_group_data.any? %>
+            <%= render "breakdown_card", title: "All age groups", data: all_age_group_data, chart: :pie, palette: palette, row_paths: all_age_group_paths %>
+          <% end %>
+          <% if school_district_data.any? %>
+            <%= render "breakdown_card", title: "School districts (via Address data)", data: school_district_data, chart: :bar, palette: palette, row_paths: school_district_paths %>
+          <% end %>
+        </div>
+      <% end %>
+      <% if state_data.any? %>
+        <%= render "breakdown_card", title: "States", data: state_data, chart: :map, palette: palette, map_color: addresses_color, row_paths: state_paths %>
+      <% end %>
+    </div>
+    <%# Col 3: org/program status → all organizations (2× tall) → all cities %>
+    <div class="flex flex-col gap-6 lg:grid lg:grid-rows-subgrid lg:row-span-4">
+      <% if program_status_data.any? %>
+        <%= render "breakdown_card", title: "Organization/program status", data: program_status_data, chart: :pie, palette: program_status_palette, row_paths: program_status_paths %>
+      <% end %>
+      <% if org_rows.any? %>
+        <%= render "events/organizations_breakdown", org_rows: org_rows, extra_class: "lg:row-span-2" %>
+      <% end %>
+      <% if @dashboard.registrant_city_breakdown.any? %>
+        <%= render "events/registrant_city_breakdown", breakdown: @dashboard.registrant_city_breakdown, metrics: :both, title: "All cities", return_anchor: "all-cities" %>
+      <% end %>
+    </div>
+    <%# --- Secondary breakdowns flow below the three aligned columns --- %>
     <%# The free-text values behind the "Other" sector slice — a list, since these
         are un-curated answers a curator later promotes into real sectors. %>
     <% if other_response_data.any? %>
       <%= render "breakdown_card", title: "Other sector responses", data: other_response_data, chart: nil, palette: palette, row_paths: other_response_paths %>
-    <% end %>
-    <% if country_data.any? %>
-      <%= render "breakdown_card", title: "Countries", data: country_data, chart: :world_map, palette: palette, map_color: addresses_color, row_paths: country_paths %>
-    <% end %>
-    <% if state_data.any? %>
-      <%= render "breakdown_card", title: "States", data: state_data, chart: :map, palette: palette, map_color: addresses_color, row_paths: state_paths %>
-    <% end %>
-    <% if school_district_data.any? %>
-      <%= render "breakdown_card", title: "School districts (via Address data)", data: school_district_data, chart: :bar, palette: palette, row_paths: school_district_paths %>
     <% end %>
     <%# Life experiences and settings come from registration answers; hide each
         card entirely when no one has answered those questions. %>
