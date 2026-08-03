@@ -5,7 +5,9 @@ export function rampTo(base) {
   const from = [ 241, 245, 249 ] // slate-100 floor for the lowest counts
   const to = hexToRgb(base)
   return (t) => {
-    const channels = from.map((value, i) => Math.round(value + (to[i] - value) * t))
+    // Clamp so out-of-range values pin to the base color instead of extrapolating past it.
+    const clamped = t < 0 ? 0 : t > 1 ? 1 : t
+    const channels = from.map((value, i) => Math.round(value + (to[i] - value) * clamped))
     return `rgb(${channels[0]}, ${channels[1]}, ${channels[2]})`
   }
 }
