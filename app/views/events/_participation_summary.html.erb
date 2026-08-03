@@ -20,8 +20,8 @@
         <div class="mt-1 text-xl font-bold tabular-nums text-blue-700"><%= number_with_delimiter(metrics.unique_people) %></div>
         <%# Each side links to the attended registrants of that event type. %>
         <div class="mt-1 text-xs text-gray-500 tabular-nums">
-          <%= link_to "#{number_with_delimiter(people[:trainings])} trainings", event_registrations_path(event_type: "trainings", attendance_status: "attended"), class: "hover:underline" %>
-          · <%= link_to "#{number_with_delimiter(people[:non_trainings])} other", event_registrations_path(event_type: "other", attendance_status: "attended"), class: "hover:underline" %>
+          <%= link_to "#{number_with_delimiter(people[:trainings])} trainings", event_registrations_path(event_type: "trainings", attendance_status: "attended", event_year: period.year), class: "hover:underline" %>
+          · <%= link_to "#{number_with_delimiter(people[:non_trainings])} other", event_registrations_path(event_type: "other", attendance_status: "attended", event_year: period.year), class: "hover:underline" %>
         </div>
       </div>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
@@ -29,8 +29,8 @@
         <div class="mt-1 text-xl font-bold tabular-nums text-gray-900"><%= number_with_delimiter(metrics.total_registrations) %></div>
         <%# Each side links to all registrants of that event type. %>
         <div class="mt-1 text-xs text-gray-500 tabular-nums">
-          <%= link_to "#{number_with_delimiter(registrations[:trainings])} trainings", event_registrations_path(event_type: "trainings"), class: "hover:underline" %>
-          · <%= link_to "#{number_with_delimiter(registrations[:non_trainings])} other", event_registrations_path(event_type: "other"), class: "hover:underline" %>
+          <%= link_to "#{number_with_delimiter(registrations[:trainings])} trainings", event_registrations_path(event_type: "trainings", event_year: period.year), class: "hover:underline" %>
+          · <%= link_to "#{number_with_delimiter(registrations[:non_trainings])} other", event_registrations_path(event_type: "other", event_year: period.year), class: "hover:underline" %>
         </div>
       </div>
     </div>

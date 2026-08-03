@@ -20,7 +20,7 @@
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Fees collected</div>
         <div class="mt-1 text-xl font-bold tabular-nums text-blue-700"><%= dollars_from_cents(metrics.fees_cents) %></div>
         <div class="mt-1 text-xs text-gray-500 tabular-nums">
-          <%= dollars_from_cents(metrics.registration_payments_cents) %> registration · <%= dollars_from_cents(ce_collected_cents) %> CE
+          <%= MoneyFormatter.compact_from_cents(metrics.registration_payments_cents, precision: 0) %> registration · <%= MoneyFormatter.compact_from_cents(ce_collected_cents, precision: 0) %> CE
         </div>
       </div>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">

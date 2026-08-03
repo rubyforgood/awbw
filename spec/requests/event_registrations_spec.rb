@@ -77,6 +77,16 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).not_to include(attended.registrant.first_name)
       end
 
+      it "filters registrations by event year" do
+        this_year = create(:event_registration, event: create(:event, start_date: Date.new(2026, 5, 1)))
+        last_year = create(:event_registration, event: create(:event, start_date: Date.new(2025, 5, 1)))
+
+        get event_registrations_path(event_year: 2026)
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include(this_year.registrant.first_name)
+        expect(response.body).not_to include(last_year.registrant.first_name)
+      end
+
       it "filters registrations by event type" do
         training_reg = create(:event_registration, event: create(:event, facilitator_training: true))
 

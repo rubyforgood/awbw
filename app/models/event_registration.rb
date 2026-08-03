@@ -85,6 +85,9 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
+  # Registrations whose event falls in the given calendar year. Uses a subquery
+  # (via Event.in_year) so it composes with the other filters without extra joins.
+  scope :in_event_year, ->(year) { where(event_id: Event.in_year(year.to_i)) }
   scope :registrant_state, ->(state) {
     joins(registrant: :addresses)
       .where(addresses: { inactive: false, state: state })
@@ -288,6 +291,9 @@ class EventRegistration < ApplicationRecord
     end
     if params[:event_type].present?
       registrations = registrations.event_type(params[:event_type])
+    end
+    if params[:event_year].present?
+      registrations = registrations.in_event_year(params[:event_year])
     end
     registrations
   end
