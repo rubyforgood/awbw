@@ -390,6 +390,17 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(response.body).to include("CE hours are available for $150.")
       end
 
+      it "links a locked license's 'Contact us' out of the Turbo frame to the contact page" do
+        license = create(:professional_license, person: registration.registrant, number: "LIC-7")
+        create(:continuing_education_registration, event_registration: registration,
+               professional_license: license, certificate_sent_at: Time.current)
+
+        get registration_ce_path(registration.slug)
+        link = Nokogiri::HTML(response.body).at_css("turbo-frame#license_section a[href='#{contact_us_path}']")
+        expect(link).to be_present
+        expect(link["data-turbo-frame"]).to eq("_top")
+      end
+
       context "once CE is registered with a balance due" do
         before do
           license = create(:professional_license, person: registration.registrant, number: "LIC-9")
