@@ -1572,6 +1572,16 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Overview Org")
       end
 
+      it "drills the active/inactive counts into the matching status filter, not a registrant_ids list" do
+        create(:event_registration, event: event, registrant: create(:person), status: "cancelled")
+
+        get dashboard_event_path(event)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link(href: registrants_event_path(event, status_filter: "active"), visible: :all)
+        expect(page).to have_link(href: registrants_event_path(event, status_filter: "inactive"), visible: :all)
+      end
+
       it "shows a program status badge next to each organization" do
         get dashboard_event_path(event)
 
@@ -1689,6 +1699,24 @@ RSpec.describe "Events", type: :request do
             expect(response.body).to include("Public bulk payment form")
           end
         end
+      end
+
+      it "renders the attendance breakdown with per-status drill-down links" do
+        create(:event_registration, event: event, registrant: create(:person), status: "attended")
+        create(:event_registration, event: event, registrant: create(:person), status: "no_show")
+        create(:event_registration, event: event, registrant: create(:person), status: "cancelled")
+
+        get dashboard_event_path(event)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_text("Attended", normalize_ws: true)
+        # Every status is its own row that drills into the roster filtered to it.
+        %w[ attended no_show registered cancelled transferred_in transferred_out incomplete_attendance ].each do |status|
+          expect(page).to have_link(href: registrants_event_path(event, attendance_status: status), visible: :all)
+        end
+        # 1 attended over 3 registrants (attended + registered + no-show; the
+        # cancellation is excluded) → 33%.
+        expect(page).to have_text("33%", normalize_ws: true)
       end
     end
 
@@ -2019,6 +2047,14 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include('data-action="scholarship-status-toggle#toggle"')
         expect(response.body).to include('data-scholarship-status-toggle-shown-value="true"')
         expect(response.body).to include("Hide scholarship status")
+      end
+
+      it "renders the Recipients and Statistics section headers with placeholder breakdowns" do
+        get recipients_event_path(event)
+
+        expect(response.body).to include("Statistics")
+        expect(response.body).to include("Recipients by city")
+        expect(response.body).to include("Recipients by organization")
       end
 
       it "shows each recipient's awarded amount and completed tasks status" do

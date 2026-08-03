@@ -28,6 +28,64 @@ class EventDashboard
     @registrants ||= people_sorted(registrant_ids)
   end
 
+  # --- Attendance ------------------------------------------------------------
+  # Attendance outcomes are recorded per registration (see
+  # EventRegistration#status). Before the event happens everyone is still
+  # "registered", so there's nothing meaningful to show until an outcome lands.
+
+  # Every registration status for this event, counted in one query.
+  def registration_status_counts
+    @registration_status_counts ||= event.event_registrations.group(:status).count
+  end
+
+  # Count of registrations in a single status.
+  def attendance_count_for(status)
+    registration_status_counts.fetch(status.to_s, 0)
+  end
+
+  def attended_count
+    attendance_count_for("attended")
+  end
+
+  def no_show_count
+    attendance_count_for("no_show")
+  end
+
+  # Registrations with an attendance outcome on record (attended / incomplete /
+  # no-show).
+  def attendance_outcome_count
+    attended_count + attendance_count_for("incomplete_attendance") + no_show_count
+  end
+
+  # Everyone expected at the event: active registrants (see #registrant_count)
+  # plus recorded no-shows. Cancellations and transfers out withdrew, so they're
+  # excluded. This is the denominator for the attendance rate.
+  def expected_attendee_count
+    registrant_count + no_show_count
+  end
+
+  # True once any attendance outcome has been recorded.
+  def attendance_recorded?
+    attendance_outcome_count.positive?
+  end
+
+  # Fraction (0.0–1.0) of everyone expected who fully attended, or nil when no
+  # outcome has been recorded yet. Only a full attendance counts in the
+  # numerator; the denominator is every registrant (#expected_attendee_count),
+  # so no-shows and not-yet-recorded registrants both pull the rate down.
+  def attendance_rate
+    return nil unless attendance_recorded?
+    return nil if expected_attendee_count.zero?
+    attended_count.fdiv(expected_attendee_count)
+  end
+
+  # Registrants (Person records, name-sorted) with the given attendance
+  # status(es), for drilling into an attendance row's list.
+  def attendance_registrants(*statuses)
+    ids = statuses.flat_map { |status| registrant_ids_by_status.fetch(status, []) }
+    people_sorted(ids)
+  end
+
   def scholarship_total_cents
     scholarships.sum(:amount_cents)
   end
@@ -447,6 +505,19 @@ class EventDashboard
     additional_sector_ids.size
   end
 
+  # Registrant (Person) ids who named a primary sector, and those who tagged a
+  # sector without naming it primary — drill targets for the sectors subtitle.
+  # A registrant can appear in both when their additional sectors differ from
+  # their primary one.
+  def primary_sector_registrant_ids
+    primary_sector_rows.map(&:first).uniq
+  end
+
+  def additional_sector_registrant_ids
+    primary_pairs = primary_sector_rows.to_set
+    registrant_sector_pairs.reject { |pair| primary_pairs.include?(pair) }.map(&:first).uniq
+  end
+
   # Free-text "Other" sectors registrants typed, kept as OtherResponse records
   # (never real sector tags). These back two things on the background report: a
   # single aggregate "Other" bucket in the "All sectors" chart (#..._count /
@@ -734,6 +805,16 @@ class EventDashboard
 
   def registrant_ids
     @registrant_ids ||= active_registrations.pluck(:registrant_id)
+  end
+
+  # Registrant (Person) ids grouped by registration status, for the attendance
+  # breakdown drill-downs.
+  def registrant_ids_by_status
+    @registrant_ids_by_status ||= event.event_registrations
+      .pluck(:status, :registrant_id)
+      .each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |(status, registrant_id), map|
+        map[status] << registrant_id
+      end
   end
 
   # Facilitator status for one represented organization, used by the

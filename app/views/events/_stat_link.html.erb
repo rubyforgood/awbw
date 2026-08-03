@@ -1,0 +1,2 @@
+<%# One subtitle stat, always clickable. On hover the text underlines and the otherwise-white jump icon appears. Locals: label, path. -%>
+<%= link_to path, class: "group/stat inline-flex items-center gap-1 no-underline hover:underline hover:text-gray-700" do %><%= label %> <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-white group-hover/stat:text-gray-500"></i><% end %>
