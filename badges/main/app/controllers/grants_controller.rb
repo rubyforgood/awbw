@@ -37,13 +37,11 @@ class GrantsController < ApplicationController
   def new
     @grant = Grant.new
     authorize! @grant
-    set_form_variables
   end
 
   def edit
     authorize! @grant
     set_scholarships
-    set_form_variables
   end
 
   def create
@@ -55,7 +53,6 @@ class GrantsController < ApplicationController
     if @grant.save
       redirect_to @grant, notice: "Grant was successfully created."
     else
-      set_form_variables
       render :new, status: :unprocessable_content
     end
   end
@@ -68,7 +65,6 @@ class GrantsController < ApplicationController
       redirect_to @grant, notice: "Grant was successfully updated.", status: :see_other
     else
       set_scholarships
-      set_form_variables
       render :edit, status: :unprocessable_content
     end
   end
@@ -81,13 +77,6 @@ class GrantsController < ApplicationController
     else
       redirect_to @grant, alert: "Can't delete a grant that has associated scholarships. Remove its scholarships first.", status: :see_other
     end
-  end
-
-  def set_form_variables
-    @donor_options = {
-      "Organizations" => Organization.order(:name).map { |o| [ o.name, o.to_signed_global_id.to_s ] },
-      "People" => Person.order(:last_name, :first_name).map { |p| [ p.full_name, p.to_signed_global_id.to_s ] }
-    }
   end
 
   private
