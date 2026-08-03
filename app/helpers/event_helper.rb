@@ -84,7 +84,7 @@ module EventHelper
     )
   end
 
-  def event_profile_button(event, truncate_at: nil, subtitle: nil, data: {}, path: nil, compact: false)
+  def event_show_button(event, truncate_at: nil, subtitle: nil, data: {}, path: nil, compact: false)
     bg = DomainTheme.bg_class_for(:events, intensity: 50)
     hover_bg = DomainTheme.bg_class_for(:events, intensity: 50, hover: true)
     text = DomainTheme.text_class_for(:events)

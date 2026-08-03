@@ -27,7 +27,7 @@
 
           <% if @filtered_event %>
             <div class="mb-4">
-              <%= event_profile_button(@filtered_event,
+              <%= event_show_button(@filtered_event,
                     subtitle: @filtered_event.decorate.short_date_range) %>
             </div>
           <% end %>
@@ -65,7 +65,7 @@
                       </td>
                       <% unless @filtered_event %>
                         <td class="px-3 py-1 text-sm text-gray-800 align-middle min-w-[50ch]">
-                          <%= event_profile_button(event_registration.event,
+                          <%= event_show_button(event_registration.event,
                                 truncate_at: 50,
                                 compact: true,
                                 path: dashboard_event_path(event_registration.event),
