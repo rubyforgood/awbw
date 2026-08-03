@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_160043) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_03_223803) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -443,6 +443,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_160043) do
     t.integer "amount_cents", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "dues_memberships", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "cancelled_at"
+    t.datetime "created_at", null: false
+    t.bigint "person_id", null: false
+    t.integer "rate_cents"
+    t.datetime "updated_at", null: false
+    t.index ["person_id"], name: "index_dues_memberships_on_person_id"
+  end
+
+  create_table "dues_registrations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "cost_cents", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "dues_membership_id", null: false
+    t.date "end_date", null: false
+    t.date "start_date", null: false
+    t.datetime "updated_at", null: false
+    t.index ["dues_membership_id"], name: "index_dues_registrations_on_dues_membership_id"
+    t.index ["start_date", "end_date"], name: "index_dues_registrations_on_start_date_and_end_date"
   end
 
   create_table "event_forms", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1734,6 +1754,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_160043) do
   add_foreign_key "contact_methods", "addresses"
   add_foreign_key "continuing_education_registrations", "event_registrations"
   add_foreign_key "continuing_education_registrations", "professional_licenses"
+  add_foreign_key "dues_memberships", "people"
+  add_foreign_key "dues_registrations", "dues_memberships"
   add_foreign_key "event_forms", "events"
   add_foreign_key "event_forms", "forms"
   add_foreign_key "event_registration_checklist_completions", "event_registrations"

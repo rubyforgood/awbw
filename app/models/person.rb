@@ -10,6 +10,8 @@ class Person < ApplicationRecord
   has_many :affiliations, dependent: :destroy
   has_many :organizations, through: :affiliations
   has_many :professional_licenses, dependent: :destroy
+  has_many :dues_memberships, dependent: :destroy
+  has_many :dues_registrations, through: :dues_memberships
   has_many :communal_reports, through: :organizations, source: :reports
   has_many :windows_types, through: :organizations
 
