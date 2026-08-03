@@ -91,8 +91,10 @@ class Event < ApplicationRecord
   scope :facilitator_trainings, -> { where(facilitator_training: true) }
   # Events that charge a registration fee (cost_cents may be nil for free ones).
   scope :paid, -> { where("cost_cents > 0") }
-  # Events whose start date falls in the given calendar year.
-  scope :in_year, ->(year) { where(start_date: Date.new(year).all_year) }
+  # Events whose start date falls in the given calendar year. Keyed off the year
+  # of start_date directly — a date range would miss same-day times on Dec 31,
+  # since start_date is a datetime and the range's upper bound is midnight.
+  scope :in_year, ->(year) { where("YEAR(start_date) = ?", year.to_i) }
 
   def self.search_by_params(params)
     stories = is_a?(ActiveRecord::Relation) ? self : all
