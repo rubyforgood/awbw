@@ -108,6 +108,7 @@ This codebase (Rails 8.1)
 | `Scholarship` | Award to a `Person`; optionally drawn from a `Grant`, syncs to event registration `Allocation` |
 | `ProfessionalLicense` | A license a `Person` holds (`number`, `kind`, `issuing_state`, `expires_on`); a null `number` is a placeholder. `find_or_create_for` keeps one license per (person, number) |
 | `ContinuingEducationRegistration` | A registrant's CE for one event against one `ProfessionalLicense`; billable `allocatable` (`Registerable`) with stored `hours` + `cost_cents` (default from the event). Payment is computed (no stored status); the certificate is delivered via `certificate_sent_at` and gated by its own `certificate_available?` |
+| `TrainingInterest` | A lightweight "I want an upcoming training" signal for a `Person`, distinct from an `EventRegistration` (which stays an actual enrollment). Optional `event` (null = general interest in future trainings, set = a specific scheduled one); `status` open/converted/closed (`STATUSES`); `expressed_at` + `source` mirror the `mailing_list_consent_*` provenance pattern. Interest *seeds* a registration (`convert!`), never becomes one. One open interest per (person, event) |
 | `Report` | STI base class for MonthlyReport |
 | `WorkshopLog` | Standalone model for workshop log submissions (attendance, form fields) |
 

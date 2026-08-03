@@ -14,6 +14,7 @@ class Event < ApplicationRecord
   belongs_to :location, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :event_registrations, dependent: :destroy
+  has_many :training_interests, dependent: :nullify
   has_many :event_staffs, dependent: :destroy
   has_many :event_forms, dependent: :destroy
   has_many :registration_ticket_callouts, -> { ordered }, dependent: :destroy, inverse_of: :event
