@@ -26,9 +26,34 @@ class TrainingInterest < ApplicationRecord
   scope :for_event, ->(event) { where(event: event) }
   scope :newest_first, -> { order(expressed_at: :desc) }
 
+  # Drives the interests index filters: status ("open"/"converted"/"closed"),
+  # "general" (no specific event), and a free-text match on the person.
+  def self.search_by_params(params)
+    scope = all
+    status = params[:status].to_s
+    scope = scope.public_send(status) if %w[ open converted closed general ].include?(status)
+
+    if params[:q].present?
+      term = "%#{params[:q].to_s.strip.downcase}%"
+      scope = scope.joins(:person).where(
+        "LOWER(people.first_name) LIKE :t OR LOWER(people.last_name) LIKE :t OR " \
+        "LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :t OR LOWER(people.email) LIKE :t",
+        t: term
+      )
+    end
+    scope
+  end
+
   # Interest not tied to a specific scheduled training.
   def general?
     event_id.nil?
+  end
+
+  # The person's registrations for facilitator-training events, shown in the
+  # index's Registrations column. Selected in memory so the controller's eager
+  # load (person → event_registrations → event) prevents an N+1.
+  def person_facilitator_training_registrations
+    person.event_registrations.select { |registration| registration.event&.facilitator_training? }
   end
 
   def status_label

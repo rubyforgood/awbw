@@ -107,6 +107,7 @@ Rails.application.routes.draw do
     end
     resources :comments, only: [ :index, :create, :update ]
   end
+  resources :training_interests, except: [ :show ]
   resources :forms do
     member do
       patch :reorder_field

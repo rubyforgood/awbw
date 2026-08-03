@@ -94,6 +94,13 @@
           <span>Organizations</span>
         <% end %>
       <% end %>
+      <% if allowed_to?(:index?, TrainingInterest) %>
+        <%= link_to training_interests_path,
+                    class: "admin-only bg-blue-100 flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+          <i class="fas fa-hand"></i>
+          <span>Training interest</span>
+        <% end %>
+      <% end %>
 
       <%= link_to video_recordings_path(video_type: "other"),
                   class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>

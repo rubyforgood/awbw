@@ -1,0 +1,28 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
+  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
+    <%= link_to "← Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+    <div>
+      <h1 class="flex items-center gap-2 text-2xl font-semibold text-gray-900">
+        <i class="fa-solid fa-hand text-teal-600"></i>
+        Training interest
+      </h1>
+      <p class="text-gray-600 mt-1">People who want to hear about upcoming trainings — a signal, not a registration</p>
+    </div>
+    <%= link_to new_training_interest_path, class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+      <i class="fa-solid fa-plus text-xs"></i>
+      New interest
+    <% end %>
+  </div>
+
+  <%= render "search_boxes" %>
+
+  <% result_src = training_interests_path + "?" + request.query_string %>
+  <%= turbo_frame_tag :training_interests_results, src: result_src, data: { turbo: "temporary" } do %>
+    <%= render "results_skeleton" %>
+  <% end %>
+</div>
