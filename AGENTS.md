@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (75) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (76) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -311,6 +311,7 @@ end
 - `edit_toggle` — Inline view/edit toggle for the comments and communications boxes (configurable view/edit CSS classes)
 - `event_staff_bio` — Loads a selected person's read-only profile bio (with edit link) alongside the editable event-specific bio on the staff form
 - `file_preview` — File upload preview
+- `flip_field` — Shows a field value read-only with an edit pencil that flips to a `<select>` picker and syncs the display (used for the topic + event fields on the subscription form)
 - `grant_details` — Swaps a grant's eligibility criteria + tasks when the grant picker changes
 - `grant_select` — Tom Select grant picker showing each grant's remaining-of-total funds
 - `inactive_toggle` — Gray out expired affiliations

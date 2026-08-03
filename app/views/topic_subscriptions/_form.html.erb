@@ -1,7 +1,24 @@
 <% field_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
 <% label_class = "block text-sm font-medium text-gray-700 mb-1" %>
+<% pencil_class = "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 cursor-pointer" %>
+<% value_class = "text-sm font-medium text-gray-900" %>
 
-<%= form_with model: @topic_subscription, class: "space-y-5" do |f| %>
+<%# Specific upcoming trainings to narrow to, plus the current selection so an
+    already-chosen (possibly past) event stays selectable. %>
+<% event_options = Event.upcoming.facilitator_trainings.order(:start_date).to_a %>
+<% current_event = @topic_subscription.interested_event %>
+<% event_options.unshift(current_event) if current_event && event_options.exclude?(current_event) %>
+
+<% cancel_path = case params[:return_to]
+     when "dashboard" then params[:event_id].present? ? dashboard_event_path(params[:event_id]) : topic_subscriptions_path
+     when "registrants" then params[:event_id].present? ? registrants_event_path(params[:event_id]) : topic_subscriptions_path
+     else topic_subscriptions_path
+   end %>
+
+<%= form_with model: @topic_subscription, class: "space-y-5", data: { controller: "dirty-form" } do |f| %>
+  <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to].present? %>
+  <%= hidden_field_tag :event_id, params[:event_id] if params[:event_id].present? %>
+
   <% if @topic_subscription.errors.any? %>
     <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
       <ul class="list-disc list-inside space-y-1">
@@ -21,22 +38,42 @@
       data: { controller: "remote-select", remote_select_model_value: "person" } %>
   </div>
 
-  <div>
+  <%# Topic — shown as a value with a pencil that flips to a picker. %>
+  <div data-controller="flip-field">
     <%= f.label :topic, class: label_class %>
-    <%= f.select :topic,
-      options_for_select(TopicSubscription::TOPICS.map { |t| [ TopicSubscription::TOPIC_LABELS.fetch(t, t.humanize), t ] }, @topic_subscription.topic),
-      {},
-      class: field_class %>
+    <div class="flex items-center gap-2">
+      <span class="<%= value_class %>" data-flip-field-target="display"><%= @topic_subscription.topic_label %></span>
+      <div class="hidden flex-1" data-flip-field-target="picker">
+        <%= f.select :topic,
+          options_for_select(TopicSubscription::TOPICS.map { |t| [ TopicSubscription::TOPIC_LABELS.fetch(t, t.humanize), t ] }, @topic_subscription.topic),
+          {},
+          class: field_class,
+          data: { flip_field_target: "select" } %>
+      </div>
+      <button type="button" class="<%= pencil_class %>" data-action="flip-field#toggle" aria-label="Change topic">
+        <i class="fa-solid fa-pen text-[0.6rem]"></i>
+      </button>
+    </div>
   </div>
 
-  <div>
-    <%= f.label :interested_event_id, "Event (optional)", class: label_class %>
-    <%= f.select :interested_event_id,
-      options_for_select(Event.where(id: @topic_subscription.interested_event_id).map { |e| [ e.title, e.id ] }, @topic_subscription.interested_event_id),
-      { include_blank: "Any — the topic broadly" },
-      class: field_class,
-      data: { controller: "remote-select", remote_select_model_value: "event" } %>
-    <p class="mt-1 text-xs text-gray-500">Leave blank to subscribe to the topic broadly (e.g. all future trainings).</p>
+  <%# Event — prefilled from the originating event; pencil flips to a picker to
+      choose a different upcoming training or "All upcoming events". %>
+  <div data-controller="flip-field">
+    <%= f.label :interested_event_id, "Event", class: label_class %>
+    <div class="flex items-center gap-2">
+      <span class="<%= value_class %>" data-flip-field-target="display"><%= current_event&.title || "All upcoming events" %></span>
+      <div class="hidden flex-1" data-flip-field-target="picker">
+        <%= f.select :interested_event_id,
+          options_for_select(event_options.map { |e| [ e.title, e.id ] }, @topic_subscription.interested_event_id),
+          { include_blank: "All upcoming events" },
+          class: field_class,
+          data: { flip_field_target: "select" } %>
+      </div>
+      <button type="button" class="<%= pencil_class %>" data-action="flip-field#toggle" aria-label="Change event">
+        <i class="fa-solid fa-pen text-[0.6rem]"></i>
+      </button>
+    </div>
+    <p class="mt-1 text-xs text-gray-500">Choose a specific upcoming training, or “All upcoming events”.</p>
   </div>
 
   <div>
@@ -50,7 +87,7 @@
   </div>
 
   <div class="flex gap-2 justify-end">
-    <%= link_to "Cancel", topic_subscriptions_path, class: "btn btn-utility-outline" %>
+    <%= link_to "Cancel", cancel_path, class: "btn btn-utility-outline", data: { action: "dirty-form#confirmCancel" } %>
     <%= f.submit submit_label, class: "btn btn-primary" %>
   </div>
 <% end %>

@@ -43,5 +43,6 @@
     <% end %>
     <div class="my-1 border-t border-gray-100"></div>
     <%= link_to "Sample ticket", sample_ticket_event_path(@event, return_to: sample_return_to), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
+    <%= link_to "Interest form", new_topic_subscription_path(interested_event_id: @event.id, topic: "facilitator_trainings", event_id: @event.id, return_to: sample_return_to), class: item_class %>
   </div>
 </div>

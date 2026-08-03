@@ -48,6 +48,21 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).to include("New subscription")
     end
 
+    it "prefills the event and topic when opened from an event's Forms menu" do
+      event = create(:event, title: "TAC263 Spring Training", facilitator_training: true)
+
+      get new_topic_subscription_path(
+        interested_event_id: event.id, topic: "facilitator_trainings", event_id: event.id, return_to: "dashboard"
+      )
+
+      expect(response).to have_http_status(:success)
+      # Event + topic shown as flip-field display values, and the eyebrow returns to the event.
+      expect(response.body).to include("TAC263 Spring Training")
+      expect(response.body).to include("Facilitator trainings")
+      expect(response.body).to include("← Dashboard")
+      expect(response.body).to include(dashboard_event_path(event))
+    end
+
     it "renders the edit form" do
       subscription = create(:topic_subscription)
       get edit_topic_subscription_path(subscription)
@@ -71,6 +86,19 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(subscription.created_by).to eq(admin)
       expect(subscription).to be_general
       expect(subscription).to be_active
+    end
+
+    it "returns to the originating event after creating from its Forms menu" do
+      person = create(:person)
+      event = create(:event, facilitator_training: true)
+
+      post topic_subscriptions_path, params: {
+        return_to: "dashboard", event_id: event.id,
+        topic_subscription: { person_id: person.id, topic: "facilitator_trainings", interested_event_id: event.id }
+      }
+
+      expect(response).to redirect_to(dashboard_event_path(event))
+      expect(TopicSubscription.last.interested_event).to eq(event)
     end
   end
 

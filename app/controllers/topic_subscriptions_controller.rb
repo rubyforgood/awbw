@@ -14,7 +14,10 @@ class TopicSubscriptionsController < ApplicationController
 
   def new
     authorize! TopicSubscription
-    @topic_subscription = TopicSubscription.new(topic: "trainings", interested_event_id: params[:interested_event_id])
+    @topic_subscription = TopicSubscription.new(
+      topic: params[:topic].presence || "facilitator_trainings",
+      interested_event_id: params[:interested_event_id]
+    )
   end
 
   def create
@@ -24,7 +27,7 @@ class TopicSubscriptionsController < ApplicationController
     @topic_subscription.updated_by = current_user
 
     if @topic_subscription.save
-      redirect_to topic_subscriptions_path, notice: "Subscription added."
+      redirect_to save_return_path, notice: "Subscription added."
     else
       render :new, status: :unprocessable_content
     end
@@ -39,7 +42,7 @@ class TopicSubscriptionsController < ApplicationController
     @topic_subscription.updated_by = current_user
 
     if @topic_subscription.update(topic_subscription_params)
-      redirect_to topic_subscriptions_path, notice: "Subscription updated."
+      redirect_to save_return_path, notice: "Subscription updated."
     else
       render :edit, status: :unprocessable_content
     end
@@ -71,5 +74,15 @@ class TopicSubscriptionsController < ApplicationController
 
   def topic_subscription_params
     params.require(:topic_subscription).permit(:person_id, :topic, :interested_event_id, :source, :note)
+  end
+
+  # When the form was opened from an event's Forms menu, return there; otherwise
+  # fall back to the subscriptions index.
+  def save_return_path
+    case params[:return_to]
+    when "dashboard" then params[:event_id].present? ? dashboard_event_path(params[:event_id]) : topic_subscriptions_path
+    when "registrants" then params[:event_id].present? ? registrants_event_path(params[:event_id]) : topic_subscriptions_path
+    else topic_subscriptions_path
+    end
   end
 end

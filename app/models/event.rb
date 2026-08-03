@@ -90,6 +90,7 @@ class Event < ApplicationRecord
   # Events flagged as facilitator trainings (the "TAC" a scholarship recipient
   # attends). Drives the scholarship index's training column.
   scope :facilitator_trainings, -> { where(facilitator_training: true) }
+  scope :upcoming, -> { where("start_date >= ?", Time.current) }
   # Events that charge a registration fee (cost_cents may be nil for free ones).
   scope :paid, -> { where("cost_cents > 0") }
   # Events whose start date falls in the given calendar year. Keyed off the year

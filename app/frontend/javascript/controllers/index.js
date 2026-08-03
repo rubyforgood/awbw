@@ -66,6 +66,9 @@ application.register("dismiss", DismissController)
 import FlipCardController from "./flip_card_controller"
 application.register("flip-card", FlipCardController)
 
+import FlipFieldController from "./flip_field_controller"
+application.register("flip-field", FlipFieldController)
+
 import EventStaffBioController from "./event_staff_bio_controller"
 application.register("event-staff-bio", EventStaffBioController)
 
