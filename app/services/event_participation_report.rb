@@ -27,8 +27,9 @@ class EventParticipationReport
   STATUSES = STATUS_LABELS.keys.freeze
   # The outcomes with no headline card/column of their own (registered, transfers,
   # cancellations). With attended, partial and no-show they total the registration
-  # count, so the four buckets read across to Registrations.
-  OTHER_STATUSES = (STATUSES - %w[ attended incomplete_attendance no_show ]).freeze
+  # count, so the four buckets read across to Registrations. Matches the
+  # registrants index "other" attendance filter.
+  OTHER_STATUSES = (STATUSES - EventRegistration::NAMED_OUTCOME_STATUSES).freeze
 
   # Per-event outcome counts. Unique people equals attended seats here: the
   # [registrant_id, event_id] uniqueness index means a person holds one

@@ -16,7 +16,7 @@
     <div class="mb-6">
       <h1 class="text-2xl font-semibold text-gray-900">Events participation</h1>
       <p class="text-gray-600 mt-1">
-        People who completed each training by year — counted as unique people, not seats.
+        People who attended each event by year — counted as unique people, not seats.
       </p>
     </div>
 
@@ -66,7 +66,8 @@
                 href: event_registrations_path(attendance_status: "no_show") %>
           <%= render "participation_kpi", label: "Other", value: featured.count_other,
                 value_class: "text-purple-700", card_class: "border-purple-300 bg-purple-50", note: "registered, transfers, cancels",
-                prior: prior&.count_other, prior_year: prior&.year %>
+                prior: prior&.count_other, prior_year: prior&.year,
+                href: event_registrations_path(attendance_status: "other") %>
           <%= render "participation_kpi", label: "Registrations", value: featured.total_registrations,
                 value_class: "text-gray-900", card_class: "border-gray-300 bg-gray-50", note: "all outcomes",
                 prior: prior&.total_registrations, prior_year: prior&.year,

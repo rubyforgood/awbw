@@ -66,6 +66,17 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).not_to include(existing_registration.registrant.first_name)
       end
 
+      it "filters registrations to 'other' outcomes (not attended/partial/no-show)" do
+        cancelled = create(:event_registration, status: "cancelled")
+        attended = create(:event_registration, status: "attended")
+
+        get event_registrations_path(attendance_status: "other")
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include(cancelled.registrant.first_name)
+        expect(response.body).to include(existing_registration.registrant.first_name) # registered
+        expect(response.body).not_to include(attended.registrant.first_name)
+      end
+
       it "filters registrations by event type" do
         training_reg = create(:event_registration, event: create(:event, facilitator_training: true))
 

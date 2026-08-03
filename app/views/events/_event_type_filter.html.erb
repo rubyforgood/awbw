@@ -1,10 +1,11 @@
 <%# Event-type filter (all events / trainings / other) shared by the
-    revenue/participation/statistics report forms. %>
+    revenue/participation/statistics report forms. `all_label` overrides the
+    blank option (revenue lists paid events only). %>
 <div class="flex flex-col gap-1">
   <label class="text-xs font-medium text-gray-600" for="event_type">Event type</label>
   <%= select_tag :event_type,
         options_for_select([ [ "Trainings", "trainings" ], [ "Other", "other" ] ], @event_type),
-        include_blank: "All events",
+        include_blank: local_assigns.fetch(:all_label, "All events"),
         class: "px-3 py-2 rounded-md border-gray-300 shadow-sm text-sm text-gray-700",
         onchange: "this.form.submit()" %>
 </div>

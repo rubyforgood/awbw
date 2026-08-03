@@ -27,6 +27,9 @@ class EventRegistration < ApplicationRecord
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance transferred_in ].freeze
   INACTIVE_STATUSES = %w[ cancelled no_show transferred_out ].freeze
   ATTENDANCE_STATUSES = (ACTIVE_STATUSES + INACTIVE_STATUSES).freeze
+  # Attendance outcomes surfaced as their own participation buckets; every other
+  # status falls into "other" (registered, transfers, cancellations).
+  NAMED_OUTCOME_STATUSES = %w[ attended incomplete_attendance no_show ].freeze
 
   # Human labels for each attendance status — the single source of truth for
   # status display (badges, filters, the dashboard breakdown).
@@ -70,7 +73,9 @@ class EventRegistration < ApplicationRecord
   scope :inactive, -> { where(status: INACTIVE_STATUSES) }
   scope :attended, -> { where(status: "attended") }
   scope :registrant_ids, ->(ids) { where(registrant_id: ids.to_s.split("-").map(&:to_i)) }
-  scope :attendance_status, ->(status) { where(status: status) }
+  scope :attendance_status, ->(status) {
+    status == "other" ? where.not(status: NAMED_OUTCOME_STATUSES) : where(status: status)
+  }
   # Registrations on facilitator-training events ("trainings") vs everything else
   # ("other"); any other value is a no-op so "all events" passes through.
   scope :event_type, ->(type) {
