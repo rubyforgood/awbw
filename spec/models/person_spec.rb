@@ -1,6 +1,70 @@
 require "rails_helper"
 
 RSpec.describe Person, type: :model do
+  describe "#dues_current?" do
+    let(:person) { create(:person) }
+    let(:membership) { create(:dues_membership, person: person) }
+
+    def term(cost_cents:, start_date: Date.current, membership: nil)
+      create(:dues_registration,
+        dues_membership: membership || create(:dues_membership, person: person),
+        cost_cents: cost_cents,
+        start_date: start_date,
+        end_date: start_date + 1.year - 1.day)
+    end
+
+    it "is false with no dues at all" do
+      expect(person).not_to be_dues_current
+    end
+
+    it "is true on a comped term" do
+      term(cost_cents: 0, membership: membership)
+      expect(person).to be_dues_current
+    end
+
+    it "is true on a paid term" do
+      paid = term(cost_cents: 2_500, membership: membership)
+      create(:allocation, source: create(:payment, amount_cents: 2_500), allocatable: paid, amount: 2_500)
+
+      expect(person).to be_dues_current
+    end
+
+    it "is true on an unpaid term still inside the grace window" do
+      term(cost_cents: 2_500, start_date: Date.current - 1, membership: membership)
+      expect(person).to be_dues_current
+    end
+
+    it "is false on an unpaid term past the grace window" do
+      term(cost_cents: 2_500,
+        start_date: Date.current - Dues::GRACE_PERIOD_DAYS - 1,
+        membership: membership)
+
+      expect(person).not_to be_dues_current
+    end
+
+    it "is false when the only comped term has expired" do
+      term(cost_cents: 0, start_date: Date.current - 2.years, membership: membership)
+      expect(person).not_to be_dues_current
+    end
+
+    it "is false when a comped term has not started yet" do
+      term(cost_cents: 0, start_date: Date.current + 1.day, membership: membership)
+      expect(person).not_to be_dues_current
+    end
+
+    it "still counts a term whose membership was cancelled, until the term ends" do
+      term(cost_cents: 0, membership: membership)
+      membership.update!(cancelled_at: Time.current)
+
+      expect(person.reload).to be_dues_current
+    end
+
+    it "answers for a past date too" do
+      term(cost_cents: 0, start_date: Date.current - 2.years, membership: membership)
+      expect(person.dues_current?(as_of: Date.current - 18.months)).to be(true)
+    end
+  end
+
   describe "associations" do
     it { should have_one(:user) }
     it { should belong_to(:created_by).class_name("User").optional(true) }

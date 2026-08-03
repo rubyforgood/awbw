@@ -175,6 +175,10 @@ class Person < ApplicationRecord
     profile_is_searchable? && affiliations.active.exists?
   end
 
+  def dues_current?(as_of: Date.current)
+    dues_registrations.active_on(as_of).paid_or_within_grace(as_of).exists?
+  end
+
   def sector_list
     sectors.pluck(:name)
   end

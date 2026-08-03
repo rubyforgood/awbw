@@ -9,11 +9,60 @@ class DuesRegistration < ApplicationRecord
 
   delegate :person, to: :dues_membership
 
+  scope :active_on, ->(date = Date.current) { where(start_date: ..date, end_date: date..) }
+  scope :expiring_between, ->(from, to) { where(end_date: from..to) }
+
+  scope :paid_in_full, -> { where(cost_covered_by_allocations) }
+  scope :not_paid_in_full, -> { where(chargeable.and(cost_covered_by_allocations.not)) }
+  scope :overdue, ->(as_of = Date.current) {
+    not_paid_in_full.where(start_date: ...(as_of - Dues::GRACE_PERIOD_DAYS))
+  }
+  # Defined as the complement to `overdue` so it can't drift.
+  scope :paid_or_within_grace, ->(as_of = Date.current) {
+    where.not(id: DuesRegistration.overdue(as_of))
+  }
+
   validates :start_date, :end_date, presence: true
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :end_date_not_before_start_date
   validate :no_overlapping_term_for_person
   validate :cost_not_below_allocations, on: :update
+
+  def self.chargeable
+    arel_table[:cost_cents].gt(0)
+  end
+
+  def self.cost_covered_by_allocations
+    arel_table[:cost_cents].lteq(allocated_cents)
+  end
+
+  def self.allocated_cents
+    allocations = Allocation.arel_table
+    allocated = allocations.project(allocations[:amount].sum)
+      .where(allocations[:allocatable_type].eq(polymorphic_name))
+      .where(allocations[:allocatable_id].eq(arel_table[:id]))
+    Arel::Nodes::NamedFunction.new("COALESCE", [ allocated, Arel.sql("0") ])
+  end
+
+  private_class_method :allocated_cents
+
+  def active_on?(date = Date.current)
+    return false if start_date.blank? || end_date.blank?
+
+    (start_date..end_date).cover?(date)
+  end
+
+  def overdue?(as_of = Date.current)
+    return false if paid_in_full? || start_date.blank?
+
+    as_of > start_date + Dues::GRACE_PERIOD_DAYS
+  end
+
+  def within_grace?(as_of = Date.current)
+    return false if paid_in_full?
+
+    !overdue?(as_of)
+  end
 
   private
 
