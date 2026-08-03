@@ -94,11 +94,11 @@
           <span>Organizations</span>
         <% end %>
       <% end %>
-      <% if allowed_to?(:index?, TrainingInterest) %>
-        <%= link_to training_interests_path,
+      <% if allowed_to?(:index?, TopicSubscription) %>
+        <%= link_to topic_subscriptions_path,
                     class: "admin-only bg-blue-100 flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
-          <i class="fas fa-hand"></i>
-          <span>Training interest</span>
+          <i class="fas fa-envelope-open-text"></i>
+          <span>Subscriptions</span>
         <% end %>
       <% end %>
 

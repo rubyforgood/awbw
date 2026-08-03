@@ -1,2 +1,0 @@
-class TrainingInterestPolicy < ApplicationPolicy
-end

@@ -8,21 +8,21 @@
   <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
     <div>
       <h1 class="flex items-center gap-2 text-2xl font-semibold text-gray-900">
-        <i class="fa-solid fa-hand text-teal-600"></i>
-        Training interest
+        <i class="fa-solid fa-envelope-open-text text-teal-600"></i>
+        Subscriptions
       </h1>
-      <p class="text-gray-600 mt-1">People who want to hear about upcoming trainings — a signal, not a registration</p>
+      <p class="text-gray-600 mt-1">People subscribed to hear about a topic — trainings, news, resources. A signal, not a registration.</p>
     </div>
-    <%= link_to new_training_interest_path, class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+    <%= link_to new_topic_subscription_path, class: "btn btn-primary inline-flex items-center gap-1.5" do %>
       <i class="fa-solid fa-plus text-xs"></i>
-      New interest
+      New subscription
     <% end %>
   </div>
 
   <%= render "search_boxes" %>
 
-  <% result_src = training_interests_path + "?" + request.query_string %>
-  <%= turbo_frame_tag :training_interests_results, src: result_src, data: { turbo: "temporary" } do %>
+  <% result_src = topic_subscriptions_path + "?" + request.query_string %>
+  <%= turbo_frame_tag :topic_subscriptions_results, src: result_src, data: { turbo: "temporary" } do %>
     <%= render "results_skeleton" %>
   <% end %>
 </div>

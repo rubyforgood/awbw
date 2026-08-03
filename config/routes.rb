@@ -107,7 +107,12 @@ Rails.application.routes.draw do
     end
     resources :comments, only: [ :index, :create, :update ]
   end
-  resources :training_interests, except: [ :show ]
+  resources :topic_subscriptions, except: [ :show ] do
+    member do
+      patch :unsubscribe
+      patch :resubscribe
+    end
+  end
   resources :forms do
     member do
       patch :reorder_field

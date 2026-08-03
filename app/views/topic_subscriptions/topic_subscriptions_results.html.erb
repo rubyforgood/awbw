@@ -1,0 +1,107 @@
+<%= turbo_frame_tag :topic_subscriptions_results do %>
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit">
+    <% if @topic_subscriptions.any? %>
+      <% total = @topic_subscriptions.respond_to?(:total_entries) ? @topic_subscriptions.total_entries : @topic_subscriptions.size %>
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <p class="text-sm text-gray-500"><%= total %> subscription<%= "s" if total != 1 %></p>
+      </div>
+
+      <div class="overflow-x-auto animate-fade">
+        <table class="w-full border-collapse border border-gray-200">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Person</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Topic</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Event</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">State</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Training registrations</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Source</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Subscribed</th>
+              <th class="px-4 py-2"></th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-gray-200">
+            <% @topic_subscriptions.each do |subscription| %>
+              <% subscription = subscription.decorate %>
+              <tr class="hover:bg-gray-50 transition-colors duration-150 align-top <%= "opacity-60" unless subscription.active? %>">
+                <td class="px-4 py-2 text-sm text-gray-800">
+                  <%= link_to subscription.person.full_name, person_path(subscription.person), class: "text-blue-600 hover:text-blue-800 hover:underline", data: { turbo_frame: "_top" } %>
+                </td>
+
+                <td class="px-4 py-2 text-sm text-gray-800"><%= subscription.topic_label %></td>
+
+                <td class="px-4 py-2 text-sm text-gray-800">
+                  <% if subscription.general? %>
+                    <span class="inline-flex items-center gap-1.5 text-gray-500">
+                      <i class="fa-solid fa-layer-group text-xs"></i>
+                      <%= subscription.event_label %>
+                    </span>
+                  <% else %>
+                    <%= subscription.event_label %>
+                  <% end %>
+                </td>
+
+                <td class="px-4 py-2 text-sm"><%= subscription.state_badge %></td>
+
+                <td class="px-4 py-2 text-sm text-gray-800">
+                  <% registrations = subscription.person_facilitator_training_registrations %>
+                  <% if registrations.any? %>
+                    <ul class="space-y-1">
+                      <% registrations.each do |registration| %>
+                        <li class="flex flex-wrap items-center gap-2">
+                          <%= link_to registration.event.title, edit_event_registration_path(registration), class: "text-blue-600 hover:text-blue-800 hover:underline", data: { turbo_frame: "_top" } %>
+                          <span class="text-xs text-gray-500">(<%= registration.attendance_status_label %>)</span>
+                        </li>
+                      <% end %>
+                    </ul>
+                  <% else %>
+                    <span class="text-gray-400">—</span>
+                  <% end %>
+                </td>
+
+                <td class="px-4 py-2 text-sm text-gray-500"><%= subscription.source.presence || "—" %></td>
+
+                <td class="px-4 py-2 text-sm text-gray-500 text-nowrap"><%= subscription.subscribed_at.strftime("%B %d, %Y") %></td>
+
+                <td class="px-4 py-2 text-left text-sm font-medium text-nowrap">
+                  <% link_class = "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer" %>
+                  <%= link_to edit_topic_subscription_path(subscription), class: link_class, data: { turbo_frame: "_top" } do %>
+                    <i class="fa-solid fa-pen text-[0.7rem] text-gray-400"></i>
+                    Edit
+                  <% end %>
+                  <% if subscription.active? %>
+                    <%= button_to unsubscribe_topic_subscription_path(subscription), method: :patch,
+                          class: "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-amber-50 hover:text-amber-700 cursor-pointer",
+                          data: { turbo_frame: "_top" } do %>
+                      <i class="fa-solid fa-bell-slash text-[0.7rem]"></i>
+                      Unsubscribe
+                    <% end %>
+                  <% else %>
+                    <%= button_to resubscribe_topic_subscription_path(subscription), method: :patch,
+                          class: link_class, data: { turbo_frame: "_top" } do %>
+                      <i class="fa-solid fa-bell text-[0.7rem] text-gray-400"></i>
+                      Resubscribe
+                    <% end %>
+                  <% end %>
+                  <%= button_to topic_subscription_path(subscription), method: :delete,
+                        class: "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-red-700 cursor-pointer",
+                        data: { turbo_confirm: "Remove this subscription?", turbo_frame: "_top" } do %>
+                    <i class="fa-solid fa-trash-can text-[0.7rem]"></i>
+                    Remove
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-gray-500 text-center py-8">No subscriptions match your search.</p>
+    <% end %>
+  </div>
+
+  <% if @topic_subscriptions.respond_to?(:total_pages) && @topic_subscriptions.total_pages > 1 %>
+    <div class="pagination flex justify-center mt-6"><%= tailwind_paginate @topic_subscriptions %></div>
+  <% end %>
+<% end %>

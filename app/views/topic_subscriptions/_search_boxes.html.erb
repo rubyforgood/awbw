@@ -1,0 +1,31 @@
+<% field_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+<% label_class = "block text-sm font-medium text-gray-700 mb-1" %>
+<div class="mb-6 p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+  <%= form_tag topic_subscriptions_path, method: :get, class: "space-y-4",
+    data: { turbo_frame: "topic_subscriptions_results" }, autocomplete: "off" do %>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label for="q" class="<%= label_class %>">Person</label>
+        <%= text_field_tag :q, params[:q], class: field_class, placeholder: "Search by name or email" %>
+      </div>
+      <div>
+        <label for="topic" class="<%= label_class %>">Topic</label>
+        <%= select_tag :topic,
+          options_for_select([ [ "All topics", "" ] ] + TopicSubscription::TOPICS.map { |t| [ TopicSubscription::TOPIC_LABELS.fetch(t, t.humanize), t ] }, params[:topic]),
+          class: field_class %>
+      </div>
+      <div>
+        <label for="state" class="<%= label_class %>">State</label>
+        <%= select_tag :state,
+          options_for_select(
+            [ [ "All", "" ], [ "Active", "active" ], [ "Unsubscribed", "unsubscribed" ], [ "General (no event)", "general" ] ],
+            params[:state]),
+          class: field_class %>
+      </div>
+    </div>
+    <div class="flex gap-2 justify-end">
+      <%= submit_tag "Search", class: "btn btn-primary" %>
+      <%= link_to "Clear filters", topic_subscriptions_path, class: "btn btn-utility-outline" %>
+    </div>
+  <% end %>
+</div>

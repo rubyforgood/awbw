@@ -54,6 +54,9 @@ en:
       workshop_variation_idea:
         rhino_body: "Details"
     models:
+      topic_subscription:
+        one: "Subscription"
+        other: "Subscriptions"
       video_recording:
         one: "Video"
         other: "Videos"

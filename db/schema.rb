@@ -1298,22 +1298,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_052301) do
     t.index ["workshop_id"], name: "index_story_ideas_on_workshop_id"
   end
 
-  create_table "training_interests", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+  create_table "topic_subscriptions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "created_by_id"
-    t.bigint "event_id"
-    t.datetime "expressed_at", null: false
+    t.bigint "interested_event_id"
     t.text "note"
     t.bigint "person_id", null: false
     t.string "source"
-    t.string "status", default: "open", null: false
+    t.datetime "subscribed_at", null: false
+    t.string "topic", default: "trainings", null: false
+    t.datetime "unsubscribed_at"
     t.datetime "updated_at", null: false
     t.bigint "updated_by_id"
-    t.index ["created_by_id"], name: "index_training_interests_on_created_by_id"
-    t.index ["event_id"], name: "index_training_interests_on_event_id"
-    t.index ["person_id"], name: "index_training_interests_on_person_id"
-    t.index ["status"], name: "index_training_interests_on_status"
-    t.index ["updated_by_id"], name: "index_training_interests_on_updated_by_id"
+    t.index ["created_by_id"], name: "index_topic_subscriptions_on_created_by_id"
+    t.index ["interested_event_id"], name: "index_topic_subscriptions_on_interested_event_id"
+    t.index ["person_id"], name: "index_topic_subscriptions_on_person_id"
+    t.index ["topic"], name: "index_topic_subscriptions_on_topic"
+    t.index ["unsubscribed_at"], name: "index_topic_subscriptions_on_unsubscribed_at"
+    t.index ["updated_by_id"], name: "index_topic_subscriptions_on_updated_by_id"
   end
 
   create_table "user_form_form_fields", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1825,8 +1827,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_052301) do
   add_foreign_key "story_ideas", "users", column: "updated_by_id"
   add_foreign_key "story_ideas", "windows_types"
   add_foreign_key "story_ideas", "workshops"
-  add_foreign_key "training_interests", "events"
-  add_foreign_key "training_interests", "people"
+  add_foreign_key "topic_subscriptions", "events", column: "interested_event_id"
+  add_foreign_key "topic_subscriptions", "people"
   add_foreign_key "user_form_form_fields", "form_fields"
   add_foreign_key "user_form_form_fields", "user_forms"
   add_foreign_key "user_forms", "forms"
