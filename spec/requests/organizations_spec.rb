@@ -186,6 +186,25 @@ RSpec.describe "/organizations", type: :request do
 
       expect(response.body).to include("2010-2012, 2013-2015")
     end
+
+    it "renders per-event program-status chips only for facilitator-training events" do
+      organization = Organization.create!(valid_attributes)
+      create(:affiliation, organization: organization, person: create(:person),
+                           title: "Facilitator", start_date: Date.new(2020, 1, 1))
+      training = create(:event, title: "Qwultz Training", facilitator_training: true,
+                                start_date: Date.new(2026, 8, 1))
+      non_training = create(:event, title: "Zibberpicnic Social", facilitator_training: false,
+                                    start_date: Date.new(2026, 8, 2))
+      [ training, non_training ].each do |event|
+        registration = create(:event_registration, registrant: create(:person), event: event, status: "registered")
+        registration.event_registration_organizations.create!(organization: organization)
+      end
+
+      get edit_organization_url(organization)
+
+      expect(response.body).to include("Qwultz Training")
+      expect(response.body).not_to include("Zibberpicnic Social")
+    end
   end
 
   describe "POST /create" do

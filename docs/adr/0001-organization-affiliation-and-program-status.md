@@ -1,0 +1,147 @@
+# ADR-0001 — Organization affiliation dates & program status
+
+- **Status:** Accepted
+- **Date:** 2026-08-03
+
+## Context
+
+The organization profile/edit page surfaces several affiliation-derived figures
+that are easy to confuse with one another:
+
+- **Affiliated since**
+- **Facilitations/program since**
+- an org-wide **status chip** (Active / Formerly active / Never active)
+- per-event **program-status chips** (New / Ongoing / Reinstate)
+
+Several code paths compute overlapping-but-distinct classifications with subtle
+differences — different reference dates, whether the "registrant's own"
+affiliation is excluded, and strict-vs-inclusive date boundaries. We kept
+re-deriving these rules from scratch. This ADR pins the definitions and the
+decisions that resolve the ambiguities so they're written down once.
+
+## Vocabulary
+
+- **Affiliation** — an Org ↔ Person link (`affiliations` table) with `title`,
+  `start_date`, `end_date`, and a cached `inactive` flag. **Not tied to any
+  event** (there is no `event_id` on an affiliation).
+- **Facilitator affiliation** — an affiliation whose `title` is **exactly
+  `"Facilitator"`** (trimmed, case-sensitive). No fuzzy/`LIKE` matching; "Lead
+  Facilitator" and "facilitator" do **not** count. See `Affiliation#facilitator?`
+  and the `.facilitators` scope.
+- **Active affiliation** — `inactive == false` **and** (`end_date` is null or
+  `>= today`). `inactive` is a cached column derived from the dates on save
+  (`set_inactive_from_dates`: `inactive = end_date.present? && end_date < today`),
+  so in practice "active" reduces to **no end date, or end date ≥ today**.
+- **Facilitator-training event** — `events.facilitator_training == true`. The
+  only events for which per-event program status is meaningful.
+
+## Decisions
+
+### D1 — "Affiliated since": all affiliations, org-only
+
+Keyed off **all** of the org's affiliations (any title), with **nothing to do
+with a registrant**. Rendered as merged year-based periods
+(`AffiliationPeriods.label`), e.g. `2010-2012, 2026`; falls back to the org's own
+`start_date`, then blank. See `OrganizationDecorator#affiliated_since_display`.
+
+### D2 — "Facilitations/program since": facilitator affiliations only
+
+Same merged-year-period rendering as D1, but over **facilitator** affiliations
+only. Blank when the org has never facilitated. See
+`OrganizationDecorator#program_since_display`.
+
+### D3 — Org-wide status chip: Active / Formerly active / Never active
+
+Three display buckets (`OrganizationDecorator#organization_status_bucket`), **not
+event-relative**:
+
+- When the org has **any** facilitator affiliation: any **active** one → **Active**;
+  otherwise → **Formerly active**.
+- When the org has **no** facilitator affiliation: fall back to the stored
+  `OrganizationStatus`, bucketed via `PROGRAM_STATUS_BUCKETS`:
+  - `Active`, `Reinstate` → **Active**
+  - `Inactive`, `Suspended` → **Formerly active**
+  - `Pending`, `Unknown` → **Never active**
+
+On the edit form this chip **live-updates** from the visible facilitator rows.
+
+### D4 — Per-event program status: New / Ongoing / Reinstate
+
+**One value per (org, event)**, keyed off the **event's start date**, computed
+over **all** of the org's facilitator affiliations as of that date
+(`Organization#facilitator_status_on` / `OrganizationDecorator#facilitator_status_as_of`):
+
+- **New** — no facilitator affiliation started **before** the event date
+  (strict `<`). An affiliation starting **on** the event date, if it is the org's
+  first, reads **New**. _(e.g. event starts Feb 14, the org's first facilitator
+  affiliation starts Feb 14 → New as of that event.)_
+- **Ongoing** — an earlier facilitator affiliation is **still active** at the
+  event date.
+- **Reinstate** — earlier facilitator affiliation(s) existed but **all ended**
+  before the event date (a lapse, now returning).
+
+### D5 — Per-event status is per-EVENT, not per-registrant (no self-exclusion)
+
+Program status includes **all** of the org's facilitator affiliations, including
+those held by the registrants at the event. We do **not** exclude "the
+registrant's own affiliation."
+
+Previously `EventRegistration#program_statuses` and
+`EventDashboard#program_status_for` excluded it (to answer "was the org already a
+program *before I joined*"); that per-registrant framing is **dropped**. The
+question is per-event: "at this event, was the org New / Ongoing / Reinstate?"
+
+### D6 — Per-event chips only on facilitator-training events
+
+The org-profile per-event chips render **only** for events where
+`facilitator_training == true` (among the events the org is represented at via
+active registrations). Attendance at a non-training event does **not** produce a
+program-status chip — this is what stops attendance-only events from reading
+"New" or "Reinstate".
+
+### D7 — Reference date = the event's start date
+
+The classification anchors on the event's actual `start_date`.
+
+## Boundary conventions
+
+- **Strict `<`** for "earlier": `start_date == event date` is **not** earlier
+  (so a same-day first affiliation is **New**, not Ongoing).
+- **Active-at-date** uses `end_date IS NULL OR end_date >= reference`.
+
+## The classifiers (map)
+
+| Method | Role |
+|---|---|
+| `Organization#facilitator_status_on(date, excluding_affiliation_id:)` | Canonical SQL classifier. |
+| `OrganizationDecorator#facilitator_status_as_of(date)` | In-memory mirror for the org-profile chips. |
+| `Organization#facilitator_status(affiliation)` | Thin wrapper — **no callers, retire it**. |
+| `Organization#program_status(recipient)` | Scholarship-index string variant, **recipient-relative** — a distinct context (see below). |
+
+## Consequences / follow-up code changes
+
+1. **Remove self-exclusion (D5):** `EventRegistration#program_statuses` →
+   `organization.facilitator_status_on(reference_date)` (drop the `own` lookup);
+   `EventDashboard#program_status_for` collapses to
+   `organization.facilitator_status_on(reference_date)`. Update their specs (they
+   currently assert the exclusion).
+2. **Gate org-profile chips to facilitator-training events (D6):** filter
+   `@organization_events` by `facilitator_training: true`.
+3. **Align the reference date (D7):** `EventRegistration#program_statuses`
+   currently anchors on `event.start_date.beginning_of_month`; the org-profile
+   chip and `EventDashboard#reference_date` use the raw `event.start_date`.
+   Standardize on the **raw start date**.
+4. **Retire** the dead `Organization#facilitator_status(affiliation)` wrapper.
+
+## Notes / open items
+
+- **Scholarship `program_status(recipient)`** stays recipient-relative (it
+  excludes the recipient's own affiliations to answer a scholarship-specific
+  question). It is intentionally **not** covered by D5; reconcile with the
+  per-event model later if the two need to agree.
+- **Affiliation date precision:** if facilitator affiliations are ever recorded
+  at month precision (e.g. the 1st of the month) rather than the actual event
+  date, the raw-start-date anchor (D7) can read a same-month affiliation as
+  Ongoing instead of New. Observed data uses the actual event start date;
+  revisit if month-precision data appears (this is why `program_statuses`
+  originally used `beginning_of_month`).

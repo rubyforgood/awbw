@@ -47,9 +47,13 @@ class OrganizationsController < ApplicationController
     track_view(@organization)
 
     # Events for the admin-only "Program status" block (facilitator status as of
-    # each event). Skip the query for non-managers, who don't see the block.
+    # each event). Only facilitator-training events — program status is meaningless
+    # for other events (see ADR-0001). Skip the query for non-managers, who don't
+    # see the block.
     @organization_events = if allowed_to?(:manage?, @organization)
-      Event.where(id: @organization.event_registrations.active.select(:event_id)).order(start_date: :desc)
+      Event.where(id: @organization.event_registrations.active.select(:event_id))
+           .where(facilitator_training: true)
+           .order(start_date: :desc)
     else
       Event.none
     end
@@ -185,11 +189,13 @@ class OrganizationsController < ApplicationController
       @organization.affiliations.proxy_association.target.replace(sorted)
     end
 
-    # Events the org is represented at, newest first — drives the per-event
-    # "Program status by event" chips in the Affiliations section. Program status
-    # (New/Ongoing/Reinstate) is only meaningful relative to a specific event date.
+    # Facilitator-training events the org is represented at, newest first — drives
+    # the per-event "Program status by event" chips in the Affiliations section.
+    # Program status (New/Ongoing/Reinstate) is only meaningful for a facilitator-
+    # training event, relative to its start date (see ADR-0001).
     @organization_events = if @organization.persisted?
       Event.where(id: @organization.event_registrations.active.select(:event_id))
+           .where(facilitator_training: true)
            .order(start_date: :desc)
     else
       Event.none
