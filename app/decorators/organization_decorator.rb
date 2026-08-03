@@ -124,13 +124,22 @@ class OrganizationDecorator < ApplicationDecorator
     facilitators.any?(&:active?) ? :active : :formerly_active
   end
 
+  # The stored-status bucket, used as the fallback when an org has no facilitator
+  # affiliations (mirrors organization_status_bucket's fallback branch). Exposed
+  # so the edit form's Stimulus controller can restore it live if the last
+  # facilitator row is removed.
+  def stored_status_bucket
+    OrganizationStatus.program_bucket(object.organization_status&.name)
+  end
+
   def organization_status_label
     ORG_STATUS_BUCKET_LABELS.fetch(organization_status_bucket)
   end
 
-  # Pill classes for the org-wide status chip, keyed off the program-status bucket.
-  def organization_status_classes
-    theme_key = ORG_STATUS_BUCKET_THEMES.fetch(organization_status_bucket)
+  # Pill classes for a given program-status bucket, built from the DomainTheme
+  # swatch so the colours stay consistent with the rest of the app.
+  def self.status_classes_for_bucket(bucket)
+    theme_key = ORG_STATUS_BUCKET_THEMES.fetch(bucket)
     [
       DomainTheme.bg_class_for(theme_key, intensity: 100),
       DomainTheme.text_class_for(theme_key, intensity: 700),
@@ -138,9 +147,24 @@ class OrganizationDecorator < ApplicationDecorator
     ].join(" ")
   end
 
+  # Every bucket's label + pill classes, so the edit form's Stimulus controller
+  # can re-render the status chip live as facilitator rows change without
+  # hard-coding any theme classes in JS.
+  def self.status_bucket_styles
+    ORG_STATUS_BUCKET_LABELS.each_key.to_h do |bucket|
+      [ bucket, { label: ORG_STATUS_BUCKET_LABELS.fetch(bucket), classes: status_classes_for_bucket(bucket) } ]
+    end
+  end
+
+  # Pill classes for the org-wide status chip, keyed off the program-status bucket.
+  def organization_status_classes
+    self.class.status_classes_for_bucket(organization_status_bucket)
+  end
+
   # Rendered org-wide status chip (Active / Formerly active / Never active).
-  def organization_status_chip
+  def organization_status_chip(data: {})
     h.content_tag(:span, organization_status_label,
+                  data: data,
                   class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{organization_status_classes}")
   end
 

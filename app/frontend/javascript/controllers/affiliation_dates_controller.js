@@ -1,11 +1,20 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["affiliatedSince", "facilitatorSince", "affiliationsContainer"]
+  static targets = ["affiliatedSince", "facilitatorSince", "affiliationsContainer", "programStatus"]
   // Orgs render "Affiliated since" server-side as merged periods (AffiliationPeriods),
   // so the controller leaves that field alone; the person form keeps the live single
   // Mon YYYY – Mon YYYY range.
-  static values = { serverAffiliatedSince: Boolean }
+  //
+  // Program status (org edit form): derived live from the visible Facilitator rows,
+  // mirroring OrganizationDecorator#organization_status_bucket. statusBuckets holds
+  // each bucket's label + pill classes (from DomainTheme) and statusFallback is the
+  // stored-status bucket to show when there are no facilitator rows.
+  static values = {
+    serverAffiliatedSince: Boolean,
+    statusBuckets: Object,
+    statusFallback: String
+  }
 
   initialize() {
     this.boundRecalculate = () => this.recalculate()
@@ -79,6 +88,26 @@ export default class extends Controller {
     if (this.hasFacilitatorSinceTarget) {
       this.updateDisplay(this.facilitatorSinceTarget, facilitatorSince, facilitatorEnd)
     }
+
+    // Program status — active when any Facilitator row is still active, formerly
+    // active when they've all ended, else the stored-status fallback.
+    if (this.hasProgramStatusTarget) {
+      let bucket
+      if (facilitatorAffiliations.length === 0) {
+        bucket = this.statusFallbackValue
+      } else {
+        bucket = allFacInactive ? "formerly_active" : "active"
+      }
+      this.updateProgramStatus(bucket)
+    }
+  }
+
+  updateProgramStatus(bucket) {
+    const style = this.statusBucketsValue[bucket]
+    if (!style) return
+    const base = "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5"
+    this.programStatusTarget.textContent = style.label
+    this.programStatusTarget.className = `${base} ${style.classes}`
   }
 
   getVisibleAffiliations() {

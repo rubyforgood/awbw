@@ -1,4 +1,9 @@
-<%= simple_form_for(@organization, html: { data: { controller: "affiliation-facilitator-warning" } }) do |f| %>
+<%= simple_form_for(@organization, html: { data: {
+      controller: "affiliation-dates affiliation-facilitator-warning",
+      affiliation_dates_server_affiliated_since_value: true,
+      affiliation_dates_status_buckets_value: OrganizationDecorator.status_bucket_styles.to_json,
+      affiliation_dates_status_fallback_value: @organization.decorate.stored_status_bucket
+    } }) do |f| %>
   <%= render 'shared/errors', resource: @organization if @organization.errors.any? %>
   <%= render "duplicate_organizations_warning" %>
   <% has_affiliations = f.object.persisted? && f.object.affiliations.any? %>
@@ -334,13 +339,13 @@
                 • <span class="font-medium">Reinstated</span> — had facilitators but all have ended.</p>
             </div>
             <div class="pt-1 flex flex-wrap items-center gap-2 max-w-md">
-              <%= org_decorated.organization_status_chip %>
+              <%= org_decorated.organization_status_chip(data: { affiliation_dates_target: "programStatus" }) %>
               <% org_events.each do |event| %>
                 <% status = org_decorated.facilitator_status_as_of(event.start_date) %>
                 <%= link_to participation_events_path(event_id: event.id, return_to: "dashboard"), target: "_blank", rel: "noopener noreferrer",
                             title: event.title,
                             class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{OrganizationDecorator.program_status_classes(status)}" do %>
-                  <%= event.decorate.compact_label.truncate(24) %> · <%= status.to_s.titleize %>
+                  <%= status.to_s.titleize %> · <%= event.decorate.dated_compact_label.truncate(24) %>
                 <% end %>
               <% end %>
             </div>
@@ -348,7 +353,7 @@
         <% end %>
       </div>
       <% if allowed_to?(:manage?, Organization) %>
-        <div class="p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10">
+        <div class="p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10" data-affiliation-dates-target="affiliationsContainer">
           <%= f.fields_for :affiliations do |affiliation_form| %>
             <div data-paginated-fields-target="item">
               <%= render "affiliation_fields",
