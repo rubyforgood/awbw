@@ -140,22 +140,32 @@ class EventParticipationReport
   end
 
   # The reach of the scoped registrants: how many distinct organizations,
-  # sectors, states and countries they span, for a given calendar year (nil =
-  # every year in scope). Read "via registrants", like the event dashboard's
-  # breakdown cards.
-  Demographics = Struct.new(:organizations, :sectors, :states, :countries, keyword_init: true)
+  # sectors, states, countries and cities they span, for a given calendar year
+  # (nil = every year in scope). Read "via registrants", like the event
+  # dashboard's breakdown cards. States/countries come from registrant addresses;
+  # cities come from the linked organizations' addresses.
+  Demographics = Struct.new(:organizations, :sectors, :states, :countries, :cities, keyword_init: true)
 
   def demographics(year: nil)
     registrations = active_registrations(year: year)
     person_ids = registrations.distinct.pluck(:registrant_id)
+    organization_ids = EventRegistrationOrganization
+      .where(event_registration_id: registrations.select(:id))
+      .distinct
+      .pluck(:organization_id)
     addresses = Address.active
       .where(addressable_type: "Person", addressable_id: person_ids)
       .pluck(:state, :country)
     Demographics.new(
-      organizations: EventRegistrationOrganization.where(event_registration_id: registrations.select(:id)).distinct.count(:organization_id),
+      organizations: organization_ids.size,
       sectors: SectorableItem.where(sectorable_type: "Person", sectorable_id: person_ids).distinct.count(:sector_id),
       states: addresses.map(&:first).reject(&:blank?).uniq.size,
-      countries: addresses.map(&:last).reject(&:blank?).uniq.size
+      countries: addresses.map(&:last).reject(&:blank?).uniq.size,
+      cities: Address.active
+        .where(addressable_type: "Organization", addressable_id: organization_ids)
+        .where.not(city: [ nil, "" ])
+        .distinct
+        .count(:city)
     )
   end
 

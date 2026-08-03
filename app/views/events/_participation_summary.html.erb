@@ -35,8 +35,8 @@
       </div>
     </div>
     <%# Reach of the scoped registrants, like the dashboard's breakdown cards. %>
-    <div class="grid grid-cols-4 gap-2 mb-4">
-      <% [ [ "Orgs", reach.organizations ], [ "Sectors", reach.sectors ], [ "States", reach.states ], [ "Countries", reach.countries ] ].each do |label, value| %>
+    <div class="grid grid-cols-5 gap-2 mb-4">
+      <% [ [ "Orgs", reach.organizations ], [ "Sectors", reach.sectors ], [ "Cities", reach.cities ], [ "States", reach.states ], [ "Countries", reach.countries ] ].each do |label, value| %>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-2 text-center">
           <div class="text-lg font-bold tabular-nums text-gray-900"><%= number_with_delimiter(value) %></div>
           <div class="text-xs text-gray-500"><%= label %></div>

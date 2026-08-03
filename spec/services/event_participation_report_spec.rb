@@ -130,11 +130,14 @@ RSpec.describe EventParticipationReport do
 
     subject(:report) { described_class.new([ event ], current_year: 2026) }
 
+    let(:organization) { create(:organization) }
+
     before do
       registration = create(:event_registration, event: event, registrant: person, status: "attended")
-      create(:event_registration_organization, event_registration: registration, organization: create(:organization))
+      create(:event_registration_organization, event_registration: registration, organization: organization)
       create(:sectorable_item, sectorable: person, sector: create(:sector))
       create(:address, addressable: person, state: "CA", country: "US")
+      create(:address, addressable: organization, city: "Los Angeles")
     end
 
     it "counts distinct orgs, sectors, states and countries via registrants" do
@@ -143,6 +146,10 @@ RSpec.describe EventParticipationReport do
       expect(reach.sectors).to eq(1)
       expect(reach.states).to eq(1)
       expect(reach.countries).to eq(1)
+    end
+
+    it "counts distinct cities from the linked organizations' addresses" do
+      expect(report.demographics.cities).to eq(1)
     end
   end
 
