@@ -1,12 +1,14 @@
 <%# ---- Read-only display of one communication: channel icon + subject (always
     visible), then the body. The body of a hand-noted communication (any channel
-    but "autoemail") is an internal staff note — admin-only, shown with the
-    admin-only blue styling and hidden from non-admins (no inline text, nothing
-    in the hover title). An automated ("autoemail") message is the recipient's
-    own email, so its body stays visible to everyone. Pass admin: false for a
-    non-admin viewer. Shared by the notifications box and the view mode of an
-    editable communication. ---- %>
+    but "autoemail") is an internal staff note — admin-only, hidden from non-admins
+    (no inline text, nothing in the hover title). On a page non-admins can view,
+    pass mark_admin_only: true to give the body the `admin-only bg-blue-100` wash;
+    on admin-only pages it renders plainly. An automated ("autoemail") message is
+    the recipient's own email, so its body stays visible to everyone. Pass admin:
+    false for a non-admin viewer. Shared by the notifications box and the view mode
+    of an editable communication. ---- %>
 <% admin = local_assigns.fetch(:admin, true) %>
+<% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
 <% body_admin_only = notification.channel != "autoemail" %>
 <% show_body = admin || !body_admin_only %>
 <% subject = notification.email_subject.presence || notification.kind.to_s.humanize %>
@@ -21,9 +23,12 @@
     <%= notification.decorate.channel_icon %>
     <span class="font-semibold text-gray-900"><%= subject %></span>
     <% if body.present? %>
-      <% if body_admin_only %>
-        <%# Internal staff note — admin-only, marked with the admin-only blue styling. Only the body is hoverable. %>
+      <% if body_admin_only && mark_admin_only %>
+        <%# Internal staff note on a page non-admins can view — flag it admin-only. %>
         <span class="admin-only bg-blue-100 rounded px-1 text-gray-700" title="<%= body %>"><%= body %></span>
+      <% elsif body_admin_only %>
+        <%# Internal staff note on an admin-only page — rendered plainly like a comment. %>
+        <span class="text-gray-900" title="<%= body %>"><%= body %></span>
       <% else %>
         <span class="text-gray-500" title="<%= body %>"><%= body %></span>
       <% end %>

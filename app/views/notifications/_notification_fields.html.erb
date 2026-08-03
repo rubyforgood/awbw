@@ -7,6 +7,7 @@
     notifications box. The sender defaults to whoever logs it. ---- %>
 <% channel_default = Notification::MANUAL_CHANNELS.include?(f.object.channel) ? f.object.channel : "email" %>
 <% record = local_assigns[:record] %>
+<% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
 <div class="nested-fields" data-paginated-fields-target="item">
   <%# Record this communication against its parent (the "Record" column in the
       notifications index) — e.g. an event registration or a person. %>
@@ -21,7 +22,7 @@
   <% if f.object.persisted? %>
     <%= f.hidden_field :id %>
     <div data-edit-toggle-target="view">
-      <%= render "notifications/notification_row", notification: f.object, admin: true %>
+      <%= render "notifications/notification_row", notification: f.object, admin: true, mark_admin_only: mark_admin_only %>
     </div>
     <div class="hidden rounded-md border border-amber-200 bg-amber-50 p-3" data-edit-toggle-target="edit">
       <%= render "notifications/notification_form", f: f, channel_default: channel_default %>

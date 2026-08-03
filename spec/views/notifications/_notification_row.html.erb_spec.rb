@@ -17,10 +17,18 @@ RSpec.describe "notifications/_notification_row", type: :view do
     expect(rendered).to include("Called them")
   end
 
-  it "shows a hand-noted body only to admins, with the admin-only blue styling" do
-    render partial: "notifications/notification_row", locals: { notification: hand_noted, admin: true }
+  it "flags a hand-noted body with the admin-only blue wash when mark_admin_only is set" do
+    render partial: "notifications/notification_row",
+           locals: { notification: hand_noted, admin: true, mark_admin_only: true }
 
     expect(rendered).to have_css("span.admin-only.bg-blue-100", text: "Left a voicemail about the deadline")
+  end
+
+  it "renders a hand-noted body plainly (no blue) on an admin-only page" do
+    render partial: "notifications/notification_row", locals: { notification: hand_noted, admin: true }
+
+    expect(rendered).to include("Left a voicemail about the deadline")
+    expect(rendered).not_to have_css("span.bg-blue-100")
   end
 
   it "hides a hand-noted body from non-admins (no inline text, nothing to hover)" do
