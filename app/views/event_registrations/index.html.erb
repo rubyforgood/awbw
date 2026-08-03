@@ -1,5 +1,5 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:event_registrations) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:event_registrations, intensity: 100) %> border border-gray-200 rounded-xl shadow p-6">
   <div class="space-y-6">
           <!-- Header -->
           <div class="flex items-center justify-between mb-6">
@@ -79,7 +79,7 @@
                       <!-- Actions -->
                       <td class="px-3 py-1 align-middle">
                         <%= link_to edit_event_registration_path(event_registration, return_to: "index"),
-                                    class: "group relative flex items-center gap-2 w-full px-2 py-1 border #{DomainTheme.border_class_for(:event_registrations)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100, hover: true)} rounded-lg transition-colors duration-200 font-medium shadow-sm leading-none overflow-hidden" do %>
+                                    class: "group relative flex items-center gap-2 w-full px-2 py-1 border #{DomainTheme.border_class_for(:event_registrations)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 200)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 200, hover: true)} rounded-lg transition-colors duration-200 font-medium shadow-sm leading-none overflow-hidden" do %>
                           <i class="fa-solid fa-user-pen shrink-0 text-sm <%= DomainTheme.text_class_for(:event_registrations) %>"></i>
                           <span class="truncate text-xs font-semibold <%= DomainTheme.text_class_for(:event_registrations) %>">Edit registration</span>
                         <% end %>

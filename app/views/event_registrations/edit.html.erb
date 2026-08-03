@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:event_registrations) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:event_registrations, intensity: 100) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
   <%# Top bar: back link + secondary links, matching the event pages. When the
       admin arrived from the bulk payments page, the back link returns there with
       the originating submission re-expanded instead of the registrants roster. %>
