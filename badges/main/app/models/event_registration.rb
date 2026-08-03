@@ -27,6 +27,9 @@ class EventRegistration < ApplicationRecord
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance transferred_in ].freeze
   INACTIVE_STATUSES = %w[ cancelled no_show transferred_out ].freeze
   ATTENDANCE_STATUSES = (ACTIVE_STATUSES + INACTIVE_STATUSES).freeze
+  # Attendance outcomes surfaced as their own participation buckets; every other
+  # status falls into "other" (registered, transfers, cancellations).
+  NAMED_OUTCOME_STATUSES = %w[ attended incomplete_attendance no_show ].freeze
 
   # Human labels for each attendance status — the single source of truth for
   # status display (badges, filters, the dashboard breakdown).
@@ -70,7 +73,21 @@ class EventRegistration < ApplicationRecord
   scope :inactive, -> { where(status: INACTIVE_STATUSES) }
   scope :attended, -> { where(status: "attended") }
   scope :registrant_ids, ->(ids) { where(registrant_id: ids.to_s.split("-").map(&:to_i)) }
-  scope :attendance_status, ->(status) { where(status: status) }
+  scope :attendance_status, ->(status) {
+    status == "other" ? where.not(status: NAMED_OUTCOME_STATUSES) : where(status: status)
+  }
+  # Registrations on facilitator-training events ("trainings") vs everything else
+  # ("other"); any other value is a no-op so "all events" passes through.
+  scope :event_type, ->(type) {
+    case type
+    when "trainings" then joins(:event).where(events: { facilitator_training: true })
+    when "other" then joins(:event).where(events: { facilitator_training: false })
+    else all
+    end
+  }
+  # Registrations whose event falls in the given calendar year. Uses a subquery
+  # (via Event.in_year) so it composes with the other filters without extra joins.
+  scope :in_event_year, ->(year) { where(event_id: Event.in_year(year.to_i)) }
   scope :registrant_state, ->(state) {
     joins(registrant: :addresses)
       .where(addresses: { inactive: false, state: state })
@@ -268,6 +285,15 @@ class EventRegistration < ApplicationRecord
     end
     if params[:ce_status].present?
       registrations = registrations.ce_status(params[:ce_status])
+    end
+    if params[:attendance_status].present?
+      registrations = registrations.attendance_status(params[:attendance_status])
+    end
+    if params[:event_type].present?
+      registrations = registrations.event_type(params[:event_type])
+    end
+    if params[:event_year].present?
+      registrations = registrations.in_event_year(params[:event_year])
     end
     registrations
   end

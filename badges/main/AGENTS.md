@@ -187,6 +187,8 @@ end
 
 - `EventDashboard` — Aggregates per-event dashboard metrics (registrant/org/sector/state/county counts, scholarship totals, payment received/outstanding/total)
 - `EventRevenueReport` — Cross-event revenue report grouped by calendar year (money in vs org subsidy vs net, projected CE, chart series) for the CEO revenue page
+- `EventParticipationReport` — Cross-event participation report grouped by calendar year (unique people trained vs attended seats vs per-status outcome counts, chart series) for the events participation page; sibling of `EventRevenueReport`
+- `ReportPeriods` — Shared module (included by `EventRevenueReport` and `EventParticipationReport`) resolving the reporting-hub period toggle (this year / last year / all time) to a metric scope + label for the summary cards
 - `ScholarshipApplication` — Gathers one person's scholarship-application answers for an event by field across all their submissions, so answers surface whether captured on a dedicated scholarship form, an embedded registration section, or the registration submission itself (used by the scholarship edit page and the public submission view)
 - `WorkshopSearchService` — Complex filtering, sorting, pagination with ActionPolicy
 - `WorkshopFromIdeaService` — Converts WorkshopIdea to Workshop with asset migration

@@ -80,6 +80,7 @@ class EventRevenueReport
   end
 
   include Summable
+  include ReportPeriods
 
   def initialize(events, current_year: Date.current.year, featured_year: nil)
     @events = events
@@ -134,6 +135,12 @@ class EventRevenueReport
   end
 
   private
+
+  # A zeroed year group for a period with no events, so the summary card renders
+  # $0 rather than blank.
+  def empty_year_group(year)
+    YearGroup.new(year: year, rows: [], in_progress: false)
+  end
 
   def years_by_value
     @years_by_value ||= years.index_by(&:year)

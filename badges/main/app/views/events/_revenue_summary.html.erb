@@ -1,0 +1,50 @@
+<%# Compact revenue headline for the statistics hub, linking to the full report.
+    Expects `report` (an EventRevenueReport) and `period` (its resolved
+    PeriodScope: #label, #year and #metrics). %>
+<div class="h-full flex flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-base font-semibold text-gray-900">Revenue</h3>
+    <%= link_to "Full report →", revenue_events_path(statistics_to_report_params),
+          class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+  </div>
+
+  <% if report.any? %>
+    <% metrics = period.metrics %>
+    <div class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2"><%= period.label %></div>
+    <% ce_collected_cents = metrics.fees_cents - metrics.registration_payments_cents %>
+    <% net_parts = [ "Fees" ]
+       net_parts << "+ #{MoneyFormatter.compact_from_cents(metrics.funded_scholarship_cents, precision: 0)} scholarships" if metrics.funded_scholarship_cents.positive?
+       net_parts << "− #{MoneyFormatter.compact_from_cents(metrics.org_subsidy_cents, precision: 0)} subsidy" %>
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Fees collected</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-blue-700"><%= dollars_from_cents(metrics.fees_cents) %></div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums">
+          <%= MoneyFormatter.compact_from_cents(metrics.registration_payments_cents, precision: 0) %> registration + <%= MoneyFormatter.compact_from_cents(ce_collected_cents, precision: 0) %> CE
+        </div>
+      </div>
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Net</div>
+        <div class="mt-1 text-xl font-bold tabular-nums <%= metrics.net_cents.negative? ? "text-rose-700" : "text-gray-900" %>"><%= signed_dollars_from_cents(metrics.net_cents) %></div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= net_parts.join(" ") %></div>
+      </div>
+      <div class="rounded-lg border border-orange-200 bg-orange-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Outstanding</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-orange-600"><%= dollars_from_cents(metrics.outstanding_cents) %></div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums">registration + CE owed</div>
+      </div>
+      <div class="rounded-lg border border-green-300 bg-green-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Total expected</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-gray-900"><%= dollars_from_cents(metrics.total_expected_cents) %></div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums">net once all paid</div>
+      </div>
+    </div>
+    <div class="mt-auto">
+      <%= column_chart report.chart_series, stacked: true, prefix: "$", thousands: ",",
+            colors: [ "#2563eb", "#c026d3", "#dc2626" ], height: "120px", legend: false,
+            library: { borderRadius: 3 } %>
+    </div>
+  <% else %>
+    <p class="text-sm text-gray-500 my-auto">No paid events yet.</p>
+  <% end %>
+</div>
