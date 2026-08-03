@@ -224,7 +224,7 @@ RSpec.describe Organization do
 
   describe '.search_by_params' do
     let!(:active_status) { create(:organization_status, name: "Active") }
-    let!(:inactive_status) { create(:organization_status, name: "Formerly active") }
+    let!(:inactive_status) { create(:organization_status, name: "Inactive") }
 
     let!(:active_org) { create(:organization, name: "Community Center", organization_status: active_status) }
     let!(:inactive_org) { create(:organization, name: "Old Program", organization_status: inactive_status) }
