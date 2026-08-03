@@ -8,7 +8,7 @@ class OrganizationsController < ApplicationController
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
       base_scope = authorized_scope(Organization.includes(
-        :windows_type, :organization_status, :sectors, :addresses, :affiliations,
+        :organization_status, :sectors, :addresses, :affiliations,
         { categorizable_items: { category: :category_type } },
         logo_attachment: :blob
       ))

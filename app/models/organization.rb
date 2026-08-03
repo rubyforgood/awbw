@@ -169,7 +169,6 @@ class Organization < ApplicationRecord
     organizations = organizations.sector_name_including_people(params[:sector_name]) if params[:sector_name].present?
     organizations = organizations.age_group_name_including_people(params[:age_group_name]) if params[:age_group_name].present?
     organizations = organizations.address(params[:address]) if params[:address].present?
-    organizations = organizations.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?
     organizations = organizations.program_status(params[:program_status]) if params[:program_status].present?
     organizations
