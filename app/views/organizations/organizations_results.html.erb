@@ -21,7 +21,7 @@
           <tbody class="divide-y divide-gray-100">
           <% @organizations.each do |organization| %>
             <% cache [organization, @program_since_display[organization.id], organization.organization_status_id, @active_people_counts[organization.id], current_user.super_user?] do %>
-            <tr class="hover:bg-gray-50 transition">
+            <tr class="hover:bg-gray-50 transition <%= "admin-only bg-blue-100" unless organization.published? %>">
               <td class="px-4 py-2">
                 <% status_label = organization.published? ? nil : organization.organization_status&.name %>
                 <%= organization_profile_button(organization, truncate_at: 30, subtitle: organization.organization_locality, label: status_label, data: { turbo_frame: "_top" }) %>
@@ -46,12 +46,7 @@
               </td>
 
               <td class="px-4 py-2 text-sm text-gray-700 whitespace-nowrap">
-                <% program_since = @program_since_display[organization.id] %>
-                <% if allowed_to?(:manage?, Organization) %>
-                  <span class="admin-only"><%= organization.decorate.program_since_chip(program_since) %></span>
-                <% elsif program_since.present? %>
-                  <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 bg-yellow-100 text-yellow-800 border-yellow-200"><%= program_since %></span>
-                <% end %>
+                <%= organization.decorate.program_since_chip(@program_since_display[organization.id]) %>
               </td>
 
               <td class="px-4 py-2 text-center text-sm">
