@@ -1,17 +1,97 @@
 <% content_for(:page_bg_class, "public") %>
 <% content_for(:page_title, "Certificate of completion — #{@event.title}") %>
-<%= render layout: "events/callouts/callout_page", locals: { title: "Certificate of completion" } do %>
-  <% if sample_preview? || @event_registration.certificate_available? %>
-    <div class="rounded-xl border-2 border-purple-200 bg-purple-50/40 px-6 py-10 text-center space-y-4">
-      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-purple-700">Certificate of completion</p>
-      <p class="text-sm text-gray-500">This certifies that</p>
-      <p class="text-2xl font-semibold text-gray-900"><%= @event_registration.registrant.full_name %></p>
-      <p class="text-sm text-gray-500">has completed</p>
-      <p class="text-lg font-medium text-gray-800"><%= @event.title %></p>
-      <p class="text-sm text-gray-500"><%= @event.decorate.date_range %></p>
-    </div>
-    <p class="mt-4 text-center text-xs text-gray-400">A starter template — final certificate design to follow.</p>
-  <% else %>
+<% if sample_preview? || @event_registration.certificate_available? %>
+  <%
+    event = @event.decorate
+    back_path = sample_preview? ? sample_ticket_event_path(@event) : registration_ticket_path(@event_registration.slug)
+    # The CE clause certifies issued credit, so it only shows once CE is requested and
+    # paid in full. The admin sample preview always shows it (with all options on) so
+    # the CE variant can be previewed even though the sample balance isn't settled.
+    show_ce_clause = @event_registration.ce_registered? && (@event_registration.ce_paid_in_full? || sample_preview?)
+    ce_hours = @event_registration.ce_hours_total
+    ce_hours_label = ce_hours == ce_hours.to_i ? ce_hours.to_i : ce_hours
+  %>
+
+  <% content_for :head do %>
+    <style>
+      @media print {
+        /* A certificate reads as landscape and fills the sheet. */
+        @page { size: landscape; margin: 0.4in; }
+        /* The layout's global print logo would duplicate the certificate's own. */
+        .printed-logo { display: none !important; }
+        /* Color is the point here — force it to survive the print pipeline. */
+        .certificate { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      }
+    </style>
+  <% end %>
+
+  <%# Screen-only controls: return link + print. Hidden from the printed page. %>
+  <div class="max-w-4xl mx-auto flex flex-wrap items-center gap-2 px-4 sm:px-8 pt-4 print:hidden">
+    <%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to ticket
+    <% end %>
+    <button onclick="window.print();"
+            class="ml-auto inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
+      <i class="fa-solid fa-file-arrow-down"></i> Download PDF
+    </button>
+  </div>
+
+  <div class="px-4 sm:px-8 py-6 print:p-0">
+    <article class="certificate relative mx-auto max-w-4xl overflow-hidden rounded-2xl bg-white text-center text-gray-800 shadow-xl ring-1 ring-black/5 print:max-w-none print:rounded-none print:shadow-none print:ring-0">
+      <%# Decorative double frame: deep AWBW purple outer, thin gold inner. %>
+      <span class="pointer-events-none absolute inset-0 rounded-2xl border-[3px] border-purple-950 print:rounded-none"></span>
+      <span class="pointer-events-none absolute inset-[10px] rounded-xl border border-amber-400 print:rounded-none"></span>
+      <%# Purple-to-gold corner flourishes echoing the brand's header accent. %>
+      <span class="pointer-events-none absolute -left-16 -top-16 h-40 w-40 rounded-full bg-gradient-to-br from-purple-700 to-purple-950 opacity-10"></span>
+      <span class="pointer-events-none absolute -bottom-16 -right-16 h-40 w-40 rounded-full bg-gradient-to-tr from-amber-400 to-purple-700 opacity-10"></span>
+
+      <div class="relative flex flex-col items-center gap-6 px-10 py-14 sm:px-16 print:min-h-[6.6in] print:justify-center">
+        <%= image_tag "logo-with-tagline.png",
+              alt: "A Window Between Worlds — art transforming trauma",
+              class: "h-16 w-auto" %>
+
+        <div class="h-1 w-44 rounded bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
+
+        <p class="text-sm font-semibold uppercase tracking-[0.35em] text-purple-800">Certificate of completion</p>
+
+        <div class="space-y-2">
+          <p class="text-sm text-gray-500">This certifies that</p>
+          <p class="text-4xl font-bold tracking-tight text-gray-900"><%= @event_registration.registrant.full_name %></p>
+        </div>
+
+        <div class="h-px w-56 bg-gray-200"></div>
+
+        <div class="space-y-1">
+          <p class="text-sm text-gray-500">has successfully completed</p>
+          <p class="text-2xl font-semibold text-purple-900"><%= event.title %></p>
+          <p class="text-base text-gray-600"><%= event.date_range %></p>
+        </div>
+
+        <% if show_ce_clause %>
+          <p class="mt-1 max-w-2xl text-sm leading-relaxed text-gray-600">
+            A Window Between Worlds has issued <span class="font-semibold text-gray-800"><%= ce_hours_label %> hours</span>
+            of continuing education (CE) credit for this training, in accordance with our accreditation by
+            <%= link_to "CAMFT", ContinuingEducationRegistration::ACCREDITATION_URL,
+                  target: "_blank", rel: "noopener",
+                  class: "font-medium text-purple-800 underline decoration-amber-400 underline-offset-2 hover:text-purple-950" %>.
+          </p>
+        <% end %>
+
+        <div class="mt-6 flex w-full max-w-md items-end justify-between gap-8 text-left">
+          <div class="flex-1">
+            <p class="border-t border-gray-300 pt-2 text-xs uppercase tracking-wide text-gray-500">Date completed</p>
+            <p class="text-sm font-medium text-gray-800"><%= event.date_range %></p>
+          </div>
+          <div class="flex-1">
+            <p class="border-t border-gray-300 pt-2 text-xs uppercase tracking-wide text-gray-500">Issued by</p>
+            <p class="text-sm font-medium text-gray-800">A Window Between Worlds</p>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+<% else %>
+  <%= render layout: "events/callouts/callout_page", locals: { title: "Certificate of completion" } do %>
     <%# Not yet unlocked: show each condition and which are met, like the videoconference page. %>
     <% ended = @event.end_date&.past? %>
     <% attended = @event_registration.attended? %>

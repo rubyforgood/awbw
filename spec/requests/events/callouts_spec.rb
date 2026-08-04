@@ -576,6 +576,23 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).to include("Your attendance is confirmed")
       expect(response.body).not_to include("This certifies that")
     end
+
+    it "adds the CE accreditation clause once CE credit is registered and paid" do
+      event.update!(ce_hours_offered: 6)
+      license = create(:professional_license, person: registration.registrant, number: "LIC-1")
+      registration.continuing_education_registrations.create!(professional_license: license, hours: 6, cost_cents: 0)
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("continuing education (CE) credit")
+      expect(response.body).to include(ContinuingEducationRegistration::ACCREDITATION_URL)
+    end
+
+    it "omits the CE clause when no CE credit was earned" do
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).not_to include(ContinuingEducationRegistration::ACCREDITATION_URL)
+    end
   end
 
   describe "POST /registration/:slug/ce/license" do

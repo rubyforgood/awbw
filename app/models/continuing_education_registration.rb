@@ -1,6 +1,12 @@
 class ContinuingEducationRegistration < ApplicationRecord
   include Registerable
 
+  # AWBW's continuing-education accreditation, referenced by the CE callout copy
+  # and the completion certificate's CE clause. Kept here as the single source of
+  # truth so the certificate and any callout text point at the same body + link.
+  ACCREDITATION_BODY = "the California Association of Marriage and Family Therapists (CAMFT)".freeze
+  ACCREDITATION_URL = "https://awbw.org/programs/ce-hours-for-facilitator-trainings/".freeze
+
   has_paper_trail
 
   belongs_to :event_registration
