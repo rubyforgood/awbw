@@ -459,7 +459,7 @@
     </div>
   </div>
 
-  <div class="profile-preferences-section">
+  <div id="profile-preferences" class="profile-preferences-section scroll-mt-4">
     <div class="mb-2 block font-medium text-gray-700">
       Profile display preferences
     </div>
@@ -474,12 +474,8 @@
 
           <%= f.input :display_name_preference,
                     as: :select,
-                    collection: [
-                      ["First and Last Name", "full_name"],
-                      ["First Name and Last Initial", "first_name_last_initial"],
-                      ["First Name Only", "first_name_only"],
-                      ["Last Name Only", "last_name_only"]
-                    ],
+                    collection: Person::DISPLAY_NAME_PREFERENCE_LABELS.invert.to_a,
+                    hint: "Applies everywhere this person's name appears, including author credits",
                     selected: f.object.display_name_preference || "full_name" %>
 
           <%= f.input :anonymous_contributions,

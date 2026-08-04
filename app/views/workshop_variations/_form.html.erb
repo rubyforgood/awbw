@@ -90,15 +90,7 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <%= f.input :author_credit_preference,
-                      as: :select,
-                      required: true,
-                      collection: AuthorCreditable::ADMIN_FORM_OPTIONS,
-                      include_blank: "Select a preference",
-                      selected: f.object.author_credit_preference || "full_name",
-                      label: "Author credit preference",
-                      hint: "Controls how the author’s name is displayed",
-                      input_html: { class: "h-10 rounded-md" } %>
+          <%= render "shared/author_credit_warning", record: f.object %>
 
           <% if allowed_to?(:manage?, WorkshopVariation) %>
             <div class="admin-only bg-blue-100 p-4 rounded-lg mt-4">

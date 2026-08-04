@@ -1,0 +1,36 @@
+<%= form_with url: author_credit_divergences_path, method: :get,
+              data: { turbo_frame: "author_credit_divergences_results" },
+              class: "flex flex-wrap items-end gap-3 mb-6" do |f| %>
+  <div>
+    <%= f.label :type, "Content type", class: "block text-sm font-medium text-gray-700" %>
+    <%= f.select :type,
+                 options_for_select(AuthorCreditDivergenceQuery::MODEL_NAMES.map { |name| [ name.underscore.humanize, name ] }, params[:type]),
+                 { include_blank: "All types" },
+                 class: "mt-1 rounded-md border-gray-300 text-sm" %>
+  </div>
+
+  <div>
+    <%= f.label :preference, "Stored preference", class: "block text-sm font-medium text-gray-700" %>
+    <%= f.select :preference,
+                 options_for_select(AuthorCreditable::ADMIN_FORM_OPTIONS.to_a, params[:preference]),
+                 { include_blank: "Any preference" },
+                 class: "mt-1 rounded-md border-gray-300 text-sm" %>
+  </div>
+
+  <div>
+    <%= f.label :person_id, "Person ID", class: "block text-sm font-medium text-gray-700" %>
+    <%= f.number_field :person_id, value: params[:person_id], placeholder: "Any person",
+                       class: "mt-1 rounded-md border-gray-300 text-sm w-32" %>
+  </div>
+
+  <label class="flex items-center gap-2 text-sm text-gray-700 pb-2">
+    <%= check_box_tag :include_reconciled, "1", params[:include_reconciled].present?,
+                      class: "rounded border-gray-300" %>
+    Include already reconciled
+  </label>
+
+  <%= f.submit "Filter", class: "rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 cursor-pointer" %>
+  <%= link_to "Clear", author_credit_divergences_path,
+              data: { turbo_frame: "author_credit_divergences_results" },
+              class: "text-sm text-gray-600 underline pb-2" %>
+<% end %>

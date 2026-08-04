@@ -128,11 +128,10 @@ RSpec.describe "stories/new", type: :view do
       expect(rendered).to include(story_idea.author_credit)
     end
 
-    it "displays story idea author credit preference" do
+    it "does not offer a per-item credit preference select" do
       render
 
-      expect(rendered).to include("author credit preference")
-      expect(rendered).to include(story_idea.author_credit_preference)
+      assert_select "select[name=?]", "story[author_credit_preference]", count: 0
     end
 
     context "with sectors and categories from story idea" do

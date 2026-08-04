@@ -1,0 +1,23 @@
+<%# Renders only when the stored consent snapshot disagrees with the author's profile.
+    Credits render from the profile, so on most records this is silent. %>
+<% if record.persisted? && record.author_credit_diverged? %>
+  <% stored = AuthorCreditable::ADMIN_FORM_OPTIONS.key(record.author_credit_preference) %>
+  <% person = record.author_person %>
+  <% profile = AuthorCreditable::ADMIN_FORM_OPTIONS.key(person.effective_author_credit_preference) %>
+
+  <% if record.author_credit_preference == AuthorCreditable::ANONYMOUS %>
+    <div class="rounded-md bg-gray-50 border border-gray-200 p-3 mb-4 text-sm text-gray-500">
+      <i class="fa-solid fa-circle-info mr-1"></i>
+      Submitted anonymously. This item stays anonymous regardless of the profile setting.
+      <%= link_to "Reconcile", author_credit_divergences_path(person_id: person.id),
+                  class: "underline hover:text-gray-700" %>
+    </div>
+  <% else %>
+    <div class="rounded-md bg-amber-50 border border-amber-200 p-3 mb-4 text-sm text-amber-700 font-medium">
+      &#9888; Submitted as "<%= stored %>", but this profile is now set to "<%= profile %>".
+      This item is credited using the profile setting.
+      <%= link_to "Reconcile", author_credit_divergences_path(person_id: person.id),
+                  class: "underline hover:text-amber-900" %>
+    </div>
+  <% end %>
+<% end %>

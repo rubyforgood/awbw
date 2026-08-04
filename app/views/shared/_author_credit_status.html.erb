@@ -1,0 +1,7 @@
+<%# Idea forms are reached both by submitters (new) and admins (edit), so show the
+    submitter-facing preview on a new record and the divergence warning on a saved one. %>
+<% if record.new_record? %>
+  <%= render "shared/author_credit_preview" %>
+<% else %>
+  <%= render "shared/author_credit_warning", record: record %>
+<% end %>

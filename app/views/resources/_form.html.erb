@@ -79,15 +79,7 @@
     </div>
 
     <div class="flex-1 mb-4 md:mb-0">
-      <%= f.input :author_credit_preference,
-                  as: :select,
-                  collection: AuthorCreditable::ADMIN_FORM_OPTIONS,
-                  include_blank: "Select a preference",
-                  selected: f.object.author_credit_preference || "full_name",
-                  label: "Author credit preference",
-                  hint: "Controls how the author’s name is displayed",
-                  label_html: { class: "block font-medium mb-1 text-gray-700" },
-                  input_html: { class: "w-full rounded border-gray-300" } %>
+      <%= render "shared/author_credit_warning", record: f.object %>
     </div>
   </div>
 

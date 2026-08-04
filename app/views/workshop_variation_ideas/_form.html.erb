@@ -103,13 +103,7 @@
     <% end %>
 
     <div class="flex my-6 gap-4">
-      <%= f.input :author_credit_preference,
-                  as: :select,
-                  required: true,
-                  collection: AuthorCreditable::IDEA_FORM_OPTIONS,
-                  include_blank: "Select a preference",
-                  selected: f.object.author_credit_preference,
-                  input_html: { class: "block w-full h-10 rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+      <%= render "shared/author_credit_status", record: f.object %>
       <%= f.input :youtube_url,
                   as: :text,
                   label: "YouTube link <span class='text-normal text-sm text-gray-400'>(optional)</span>".html_safe,

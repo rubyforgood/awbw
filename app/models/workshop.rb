@@ -202,10 +202,6 @@ class Workshop < ApplicationRecord
     "AWBW Facilitator"
   end
 
-  def author_name
-    author_person&.full_name.presence || full_name.presence
-  end
-
   def date
     if month.present? && year.present?
       Date.new(year.to_i, month.to_i).strftime("%B %Y")

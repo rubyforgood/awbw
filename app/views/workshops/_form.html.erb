@@ -71,13 +71,7 @@
                           data: { controller: "remote-select",
                                   remote_select_model_value: "person" } } %>
           </div>
-          <%= f.input :author_credit_preference,
-                      as: :select,
-                      collection: AuthorCreditable::ADMIN_FORM_OPTIONS,
-                      include_blank: "Select a preference",
-                      selected: f.object.author_credit_preference,
-                      label: "Author credit preference",
-                      hint: "Controls how the author's name is displayed" %>
+          <%= render "shared/author_credit_warning", record: f.object %>
         </div>
         <div class="admin-only bg-blue-100 p-3 space-y-4">
           <%= f.input :workshop_idea_id,

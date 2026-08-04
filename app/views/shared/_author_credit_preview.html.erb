@@ -1,0 +1,14 @@
+<%# Submitter-facing. A new record has no stored snapshot to diverge from, so this is
+    unconditional — it's the only place a submitter learns how they'll be credited. %>
+<% person = current_user&.person %>
+<div class="rounded-md bg-gray-50 border border-gray-200 p-3 mb-4 text-sm text-gray-700">
+  <% if person %>
+    You'll be credited as <strong><%= person.contributions_anonymous? ? "Anonymous" : person.name %></strong>.
+  <% else %>
+    You'll be credited as <strong>Anonymous</strong>.
+  <% end %>
+  <p class="text-gray-500 mt-1">
+    This comes from your profile and applies to everything you share.
+    <%= link_to "Contact us", contact_us_path, class: "underline hover:text-gray-700" %> to change it.
+  </p>
+</div>

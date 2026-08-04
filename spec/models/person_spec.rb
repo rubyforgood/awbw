@@ -232,7 +232,7 @@ RSpec.describe Person, type: :model do
     context "when display_name_preference is first_name_last_initial" do
       it "returns first name and last initial" do
         person.display_name_preference = "first_name_last_initial"
-        expect(person.name).to eq("Jane D")
+        expect(person.name).to eq("Jane D.")
       end
     end
 
@@ -255,6 +255,48 @@ RSpec.describe Person, type: :model do
         person.display_name_preference = nil
         expect(person.name).to eq("Jane Doe")
       end
+    end
+
+    it "is unaffected by contributions_anonymous" do
+      person.display_name_preference = "full_name"
+      person.contributions_anonymous = true
+      expect(person.name).to eq("Jane Doe")
+    end
+  end
+
+  describe "display_name_preference validation" do
+    it "accepts each allowed value" do
+      Person::DISPLAY_NAME_PREFERENCES.each do |value|
+        expect(build(:person, display_name_preference: value)).to be_valid
+      end
+    end
+
+    it "allows blank" do
+      expect(build(:person, display_name_preference: nil)).to be_valid
+    end
+
+    it "rejects anything else" do
+      person = build(:person, display_name_preference: "anonymous")
+      expect(person).not_to be_valid
+      expect(person.errors[:display_name_preference]).to be_present
+    end
+  end
+
+  describe "#effective_author_credit_preference" do
+    let(:person) { build(:person, display_name_preference: "first_name_only") }
+
+    it "is the display name preference by default" do
+      expect(person.effective_author_credit_preference).to eq("first_name_only")
+    end
+
+    it "falls back to full_name when unset" do
+      person.display_name_preference = nil
+      expect(person.effective_author_credit_preference).to eq("full_name")
+    end
+
+    it "is anonymous when contributions are anonymous, whatever the format" do
+      person.contributions_anonymous = true
+      expect(person.effective_author_credit_preference).to eq("anonymous")
     end
   end
 

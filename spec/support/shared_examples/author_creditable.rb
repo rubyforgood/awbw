@@ -4,68 +4,64 @@ RSpec.shared_examples "author_creditable" do |factory:|
     let(:person) { author_user.person }
     let(:record) { create(factory, created_by: author_user) }
 
-    context "when author_credit_preference is full_name" do
-      it "returns the person's full name" do
-        record.update!(author_credit_preference: "full_name")
+    context "when the profile formats the name" do
+      it "returns the full name for full_name" do
+        person.update!(display_name_preference: "full_name")
+        expect(record.author_credit).to eq(person.full_name)
+      end
+
+      it "returns first name and last initial with period for first_name_last_initial" do
+        person.update!(display_name_preference: "first_name_last_initial")
+        expect(record.author_credit).to eq("#{person.first_name} #{person.last_name.first}.")
+      end
+
+      it "returns the first name for first_name_only" do
+        person.update!(display_name_preference: "first_name_only")
+        expect(record.author_credit).to eq(person.first_name)
+      end
+
+      it "returns the last name for last_name_only" do
+        person.update!(display_name_preference: "last_name_only")
+        expect(record.author_credit).to eq(person.last_name)
+      end
+
+      it "falls back to the full name when the profile has no preference" do
+        person.update!(display_name_preference: nil)
         expect(record.author_credit).to eq(person.full_name)
       end
     end
 
-    context "when author_credit_preference is first_name_last_initial" do
-      it "returns first name and last initial with period" do
-        record.update!(author_credit_preference: "first_name_last_initial")
-        expect(record.author_credit).to eq("#{person.first_name} #{person.last_name.first}.")
-      end
-    end
+    context "when the profile marks contributions anonymous" do
+      before { person.update!(contributions_anonymous: true) }
 
-    context "when author_credit_preference is first_name_only" do
-      it "returns the person's first name" do
-        record.update!(author_credit_preference: "first_name_only")
-        expect(record.author_credit).to eq(person.first_name)
-      end
-    end
-
-    context "when author_credit_preference is last_name_only" do
-      it "returns the person's last name" do
-        record.update!(author_credit_preference: "last_name_only")
-        expect(record.author_credit).to eq(person.last_name)
-      end
-    end
-
-    context "when author_credit_preference is anonymous" do
-      it "returns Anonymous" do
-        record.update!(author_credit_preference: "anonymous")
+      it "returns Anonymous regardless of the name format" do
+        person.update!(display_name_preference: "full_name")
         expect(record.author_credit).to eq("Anonymous")
       end
+
+      it "does not link the credit to a profile" do
+        expect(record.author_credit_person).to be_nil
+      end
     end
 
-    if described_class.require_author_credit_preference?
-      context "when the preference is unset (required)" do
-        it "is invalid without a credit preference" do
-          record.author_credit_preference = nil
-          expect(record).not_to be_valid
-          expect(record.errors[:author_credit_preference]).to be_present
-        end
+    context "when the record itself was submitted anonymously" do
+      before { record.update!(author_credit_preference: "anonymous") }
 
-        it "does not default new records" do
-          expect(described_class.new.author_credit_preference).to be_blank
-        end
+      it "stays anonymous even though the profile says otherwise" do
+        person.update!(display_name_preference: "full_name", contributions_anonymous: false)
+        expect(record.author_credit).to eq("Anonymous")
       end
-    else
-      context "when the preference is unset (defaulted)" do
-        it "defaults new records to full_name" do
-          expect(described_class.new.author_credit_preference).to eq("full_name")
-        end
 
-        it "treats a blank preference as full_name at read time" do
-          record.author_credit_preference = nil
-          expect(record.author_credit).to eq(person.full_name)
-        end
+      it "does not link the credit to a profile" do
+        expect(record.author_credit_person).to be_nil
+      end
+    end
 
-        it "normalizes a blank preference to full_name on save (no backfill)" do
-          record.update!(author_credit_preference: nil)
-          expect(record.reload.author_credit_preference).to eq("full_name")
-        end
+    context "when the stored preference is a name format" do
+      it "is ignored in favor of the profile" do
+        record.update!(author_credit_preference: "first_name_only")
+        person.update!(display_name_preference: "full_name")
+        expect(record.author_credit).to eq(person.full_name)
       end
     end
 
@@ -87,19 +83,89 @@ RSpec.shared_examples "author_creditable" do |factory:|
     end
   end
 
+  describe "the consent snapshot" do
+    let(:author_user) { create(:user, :with_person) }
+    let(:person) { author_user.person }
+
+    it "records the profile's preference on create" do
+      person.update!(display_name_preference: "first_name_only")
+      record = create(factory, created_by: author_user, author_credit_preference: nil)
+      expect(record.reload.author_credit_preference).to eq("first_name_only")
+    end
+
+    it "records anonymous when the profile suppresses credits" do
+      person.update!(contributions_anonymous: true)
+      record = create(factory, created_by: author_user, author_credit_preference: nil)
+      expect(record.reload.author_credit_preference).to eq("anonymous")
+    end
+
+    it "does not overwrite a preference carried forward from an idea" do
+      record = create(factory, created_by: author_user, author_credit_preference: "last_name_only")
+      expect(record.reload.author_credit_preference).to eq("last_name_only")
+    end
+
+    it "is left alone when the profile later changes, and reports the divergence" do
+      person.update!(display_name_preference: "first_name_only")
+      record = create(factory, created_by: author_user, author_credit_preference: nil)
+
+      person.update!(display_name_preference: "full_name")
+
+      expect(record.reload.author_credit_preference).to eq("first_name_only")
+      expect(record.author_credit_diverged?).to be(true)
+      expect(record.author_credit).to eq(person.full_name)
+    end
+
+    it "reports no divergence when the snapshot matches the profile" do
+      person.update!(display_name_preference: "full_name")
+      record = create(factory, created_by: author_user, author_credit_preference: nil)
+      expect(record.author_credit_diverged?).to be(false)
+    end
+  end
+
   describe ".by_credited_person_name" do
     let(:author_user) { create(:user, :with_person) }
+    let(:person) { author_user.person }
     let!(:record) { create(factory, created_by: author_user) }
 
+    before { person.update!(first_name: "Zephyrine", last_name: "Quixotel") }
+
     it "matches the creating user's person by name" do
-      author_user.person.update!(first_name: "Zephyrine", last_name: "Quixotel")
       expect(described_class.by_credited_person_name("Zephyrine")).to include(record)
       expect(described_class.by_credited_person_name("Quixotel")).to include(record)
     end
 
     it "does not match an unrelated name" do
-      author_user.person.update!(first_name: "Zephyrine", last_name: "Quixotel")
       expect(described_class.by_credited_person_name("Nonexistententry")).not_to include(record)
+    end
+
+    it "matches nothing when the profile marks contributions anonymous" do
+      person.update!(contributions_anonymous: true)
+      expect(described_class.by_credited_person_name("Zephyrine")).not_to include(record)
+      expect(described_class.by_credited_person_name("Quixotel")).not_to include(record)
+    end
+
+    it "matches nothing when the record was submitted anonymously" do
+      record.update!(author_credit_preference: "anonymous")
+      expect(described_class.by_credited_person_name("Zephyrine")).not_to include(record)
+    end
+
+    it "does not match on last name when only the first name is shown" do
+      person.update!(display_name_preference: "first_name_only")
+      expect(described_class.by_credited_person_name("Zephyrine")).to include(record)
+      expect(described_class.by_credited_person_name("Quixotel")).not_to include(record)
+    end
+
+    it "does not match on first name when only the last name is shown" do
+      person.update!(display_name_preference: "last_name_only")
+      expect(described_class.by_credited_person_name("Quixotel")).to include(record)
+      expect(described_class.by_credited_person_name("Zephyrine")).not_to include(record)
+    end
+
+    it "matches only the initial when the last name is reduced to one" do
+      person.update!(display_name_preference: "first_name_last_initial")
+      expect(described_class.by_credited_person_name("Zephyrine")).to include(record)
+      expect(described_class.by_credited_person_name("ZephyrineQ")).to include(record)
+      expect(described_class.by_credited_person_name("Quixotel")).not_to include(record)
     end
   end
 

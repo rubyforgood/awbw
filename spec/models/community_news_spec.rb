@@ -58,22 +58,13 @@ RSpec.describe CommunityNews, type: :model do
       end
     end
 
+    # Author names are no longer in the SearchCop index — see .search_by_params below,
+    # which ORs in `by_credited_person_name` so person search honors the credit
+    # preference. Indexing people.first_name/last_name here could not.
     context 'when searching by person name' do
-      it 'finds records by person first name' do
-        results = CommunityNews.search('John')
-        expect(results).to include(community_news_with_person)
-        expect(results).not_to include(community_news_without_person)
-      end
-
-      it 'finds records by person last name' do
-        results = CommunityNews.search('Doe')
-        expect(results).to include(community_news_with_person)
-        expect(results).not_to include(community_news_without_person)
-      end
-
-      it 'finds records by partial person name' do
-        results = CommunityNews.search('Joh')
-        expect(results).to include(community_news_with_person)
+      it 'does not match on the author name' do
+        expect(CommunityNews.search('John')).to be_empty
+        expect(CommunityNews.search('Doe')).to be_empty
       end
     end
 
@@ -97,15 +88,36 @@ RSpec.describe CommunityNews, type: :model do
     end
 
     context 'when searching with multiple terms' do
-      it 'finds records matching all terms across different fields' do
-        results = CommunityNews.search('John Breaking')
+      it 'finds records matching all terms across title and content' do
+        results = CommunityNews.search('Breaking technology')
         expect(results).to include(community_news_with_person)
         expect(results).not_to include(community_news_without_person)
       end
 
-      it 'finds records matching content and person name' do
-        results = CommunityNews.search('John technology')
+      # Deliberate tradeoff: an author name can no longer be one term of an AND
+      # query, because honoring the credit preference needs per-person branching
+      # that a flat SearchCop index can't express.
+      it 'does not combine an author name with a content term' do
+        expect(CommunityNews.search('John technology')).to be_empty
+      end
+    end
+
+    context 'via search_by_params (the user-facing path)' do
+      it 'finds records by the credited author name' do
+        results = CommunityNews.search_by_params(query: 'John')
         expect(results).to include(community_news_with_person)
+        expect(results).not_to include(community_news_without_person)
+      end
+
+      it 'stops matching once the author marks contributions anonymous' do
+        person.update!(contributions_anonymous: true)
+        expect(CommunityNews.search_by_params(query: 'John')).to be_empty
+      end
+
+      it 'stops matching the last name when only the first name is credited' do
+        person.update!(display_name_preference: 'first_name_only')
+        expect(CommunityNews.search_by_params(query: 'John')).to include(community_news_with_person)
+        expect(CommunityNews.search_by_params(query: 'Doe')).to be_empty
       end
     end
 
@@ -118,13 +130,13 @@ RSpec.describe CommunityNews, type: :model do
 
     context 'AND operator behavior for multiple search terms' do
       it 'requires all search terms to match across different fields' do
-        results = CommunityNews.search('John Breaking')
+        results = CommunityNews.search('Breaking important')
         expect(results).to include(community_news_with_person)
         expect(results).not_to include(community_news_without_person)
       end
 
       it 'finds no results when terms match different records' do
-        results = CommunityNews.search('John Report')
+        results = CommunityNews.search('technology Report')
         expect(results).to be_empty
       end
 

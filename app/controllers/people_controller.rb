@@ -527,7 +527,6 @@ class PeopleController < ApplicationController
       :display_name_preference,
       :anonymous_contributions,
       :pronouns,
-      :profile_show_name_preference,
       :profile_is_searchable,
       :profile_show_pronouns,
       :profile_show_credentials,

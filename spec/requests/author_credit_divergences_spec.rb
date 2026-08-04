@@ -1,0 +1,104 @@
+require "rails_helper"
+
+RSpec.describe "AuthorCreditDivergences", type: :request do
+  let(:admin) { create(:user, :admin) }
+  let(:regular_user) { create(:user) }
+  let(:author_user) { create(:user, :with_person) }
+  let(:person) { author_user.person }
+
+  let!(:story) do
+    person.update!(display_name_preference: "first_name_only")
+    record = create(:story, created_by: author_user, author: person, author_credit_preference: nil)
+    person.update!(display_name_preference: "full_name")
+    record
+  end
+
+  describe "GET /author_credit_divergences" do
+    it "requires an admin" do
+      sign_in regular_user
+      get author_credit_divergences_path
+      expect(response).not_to have_http_status(:ok)
+    end
+
+    it "renders the page shell for an admin" do
+      sign_in admin
+      get author_credit_divergences_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Author credit divergences")
+    end
+
+    it "renders just the results inside the turbo frame" do
+      sign_in admin
+      get author_credit_divergences_path, headers: { "Turbo-Frame" => "author_credit_divergences_results" }
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(person.full_name)
+      expect(response.body).to include(story.title)
+    end
+  end
+
+  describe "PATCH /author_credit_divergences/update_person" do
+    before { sign_in admin }
+
+    it "updates the profile and stamps the person reconciled" do
+      patch update_person_author_credit_divergences_path,
+            params: { id: person.id, person: { display_name_preference: "first_name_only", contributions_anonymous: "0" } }
+
+      expect(person.reload.display_name_preference).to eq("first_name_only")
+      expect(person.author_credit_reconciled_at).to be_present
+    end
+
+    it "can mark contributions anonymous" do
+      patch update_person_author_credit_divergences_path,
+            params: { id: person.id, person: { display_name_preference: "full_name", contributions_anonymous: "1" } }
+
+      expect(person.reload.contributions_anonymous).to be(true)
+      expect(story.reload.author_credit).to eq("Anonymous")
+    end
+
+    it "carries the active filters through the redirect" do
+      patch update_person_author_credit_divergences_path,
+            params: { id: person.id, type: "Story",
+                      person: { display_name_preference: "full_name", contributions_anonymous: "0" } }
+
+      expect(response).to redirect_to(author_credit_divergences_path(type: "Story"))
+    end
+
+    it "rejects a non-admin" do
+      sign_out admin
+      sign_in regular_user
+      patch update_person_author_credit_divergences_path,
+            params: { id: person.id, person: { display_name_preference: "first_name_only" } }
+
+      expect(person.reload.display_name_preference).to eq("full_name")
+    end
+  end
+
+  describe "PATCH /author_credit_divergences/update_item" do
+    before { sign_in admin }
+
+    it "rewrites a single record's stored snapshot" do
+      patch update_item_author_credit_divergences_path,
+            params: { record_type: "Story", record_id: story.id, author_credit_preference: "full_name" }
+
+      expect(story.reload.author_credit_preference).to eq("full_name")
+    end
+
+    it "makes one item anonymous without touching the person's others" do
+      other = create(:story, created_by: author_user, author: person)
+
+      patch update_item_author_credit_divergences_path,
+            params: { record_type: "Story", record_id: story.id, author_credit_preference: "anonymous" }
+
+      expect(story.reload.author_credit).to eq("Anonymous")
+      expect(other.reload.author_credit).to eq(person.full_name)
+    end
+
+    it "refuses a type outside the allowlist instead of constantizing it" do
+      patch update_item_author_credit_divergences_path,
+            params: { record_type: "User", record_id: admin.id, author_credit_preference: "anonymous" }
+
+      expect(response).to redirect_to(author_credit_divergences_path)
+      expect(flash[:alert]).to eq("Unknown record type.")
+    end
+  end
+end

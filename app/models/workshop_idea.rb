@@ -73,9 +73,12 @@ class WorkshopIdea < ApplicationRecord
 
   # Scopes
   scope :title, ->(title) { where("workshop_ideas.title like ?", "%#{ title }%") }
-  scope :author_name, ->(author_name) { joins(:created_by).
-    where("users.first_name like ? or users.last_name like ? or users.email like ?",
-          "%#{author_name}%", "%#{author_name}%", "%#{author_name}%") }
+  # Goes through by_credited_person_name so the filter honors the credit preference —
+  # matching users.first_name/last_name/email directly would surface ideas whose
+  # credit renders "Anonymous".
+  scope :author_name, ->(author_name) {
+    where(id: by_credited_person_name(author_name).select("workshop_ideas.id"))
+  }
 
   def self.search(params)
     results = is_a?(ActiveRecord::Relation) ? self : all

@@ -137,7 +137,7 @@ This codebase (Rails 8.1)
 |---|---|
 | `AgeGroupTaggable` | Splits AgeRange category taggings into primary/additional via `categorizable_items.is_primary` (Person, Organization) |
 | `AhoyTrackable` | Event tracking integration |
-| `AuthorCreditable` | Author attribution |
+| `AuthorCreditable` | Author attribution. Credits are formatted by the credited **person's profile** (`Person#display_name_preference`), not by the record. The record's `author_credit_preference` is the consent snapshot taken at create time and is human-editable only on the author credit divergences page — it no longer drives display, except `"anonymous"`, which is always honored (anonymity is a one-way latch: profile or record can set it, neither can strip it) |
 | `Featureable` | `featured`, `publicly_featured` scopes |
 | `Mentioner` | ActionText @mention extraction and grouping |
 | `NameFilterable` | Name-based filtering |
@@ -222,6 +222,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `WorkshopSearchService` — Complex filtering, sorting, pagination with ActionPolicy
 - `WorkshopFromIdeaService` — Converts WorkshopIdea to Workshop with asset migration
 - `WorkshopVariationFromIdeaService` — Variation creation from ideas
+- `AuthorCreditDivergenceQuery` — Finds content whose stored `author_credit_preference` no longer matches the credited person's profile, grouped by person, for the admin reconciliation page. `MODEL_NAMES` doubles as the allowlist for the `type` param (never constantize a raw param)
 - `TaggingSearchService` — Search and filter tagging data
 - `PersonFromUserService` — Create Person from User account
 - `PersonCommentAggregator` — Unifies every comment connected to a person (their profile, event registrations, scholarships, CE registrations, topic subscriptions, and user account) into one newest-first `Comment` relation for the aggregated `/people/:id/all_comments` page
