@@ -164,11 +164,17 @@ class ApplicationController < ActionController::Base
   verify_authorized                    # ActionPolicy enforcement
 
   # Common helpers:
-  # authorize! @record               — check policy
+  # authorize! @record               — check policy (rule inferred from the action name)
+  # authorize! @record, to: :other?  — only when checking a rule ≠ the current action
   # authorized_scope(Model.all)      — filtered relation
   # @record.decorate                 — Draper decorator
 end
 ```
+
+`authorize!` infers the rule from the controller action (`create` → `create?`, `update` →
+`update?`), so `authorize! @record` in the `update` action already checks `update?`. Pass `to:`
+only to check a *different* rule (e.g. `authorize! @scholarship, to: :update?` from a non-`update`
+action, or `authorize! :workshop, to: :summary?`).
 
 ### Controller Concerns
 
