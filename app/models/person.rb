@@ -38,6 +38,7 @@ class Person < ApplicationRecord
   has_many :event_staffs, dependent: :destroy
   has_many :scholarships, foreign_key: :recipient_id, dependent: :destroy
   has_many :grants, as: :donor, dependent: :destroy
+  has_many :payments, dependent: :restrict_with_error
   has_many :events, through: :event_registrations
   has_many :staffed_events, through: :event_staffs, source: :event
   has_many :categories, through: :categorizable_items
@@ -325,6 +326,33 @@ class Person < ApplicationRecord
   # shouldn't reshuffle them). Display surfaces lead with the primary instead.
   def age_range_items_ordered
     age_range_categorizable_items.sort_by { |item| [ item.category&.position || 0, item.category&.name.to_s ] }
+  end
+
+  # True only when removing this person would neither cascade-destroy nor orphan
+  # any associated record. Gates PersonPolicy#destroy?; the decorator's
+  # deletion_blocked_reason turns a false result into a human explanation.
+  def deletable?
+    user.blank? &&
+      !affiliations.exists? &&
+      !authored_content? &&
+      !financial_records?
+  end
+
+  # Content this person is credited on. These associations are
+  # dependent: :restrict_with_error, so they'd have to be reassigned first.
+  def authored_content?
+    stories_as_spotlighted_facilitator.exists? ||
+      stories_as_author.exists? ||
+      workshop_variations_as_author.exists? ||
+      workshops_as_author.exists? ||
+      community_news_as_author.exists? ||
+      resources_as_author.exists?
+  end
+
+  # Money tied to this person as payer, scholarship recipient, or grant donor.
+  # Deleting the person would erase this financial history, so it blocks deletion.
+  def financial_records?
+    payments.exists? || scholarships.exists? || grants.exists?
   end
 
   private

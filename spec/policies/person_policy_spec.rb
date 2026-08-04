@@ -212,6 +212,62 @@ RSpec.describe PersonPolicy, type: :policy do
         expect(policy).not_to be_allowed_to(:destroy?)
       end
     end
+
+    context "when person has payments" do
+      let(:admin) { create(:user, :admin) }
+      let(:person) { create(:person, user: nil) }
+
+      before do
+        create(:payment, person: person)
+      end
+
+      it "is not allowed" do
+        policy = policy_for(record: person, user: admin)
+
+        expect(policy).not_to be_allowed_to(:destroy?)
+      end
+    end
+
+    context "when person has scholarships" do
+      let(:admin) { create(:user, :admin) }
+      let(:person) { create(:person, user: nil) }
+
+      before do
+        create(:scholarship, recipient: person)
+      end
+
+      it "is not allowed" do
+        policy = policy_for(record: person, user: admin)
+
+        expect(policy).not_to be_allowed_to(:destroy?)
+      end
+    end
+
+    context "when person has grants" do
+      let(:admin) { create(:user, :admin) }
+      let(:person) { create(:person, user: nil) }
+
+      before do
+        create(:grant, donor: person)
+      end
+
+      it "is not allowed" do
+        policy = policy_for(record: person, user: admin)
+
+        expect(policy).not_to be_allowed_to(:destroy?)
+      end
+    end
+
+    context "when person has no associated data" do
+      let(:admin) { create(:user, :admin) }
+      let(:person) { create(:person, user: nil) }
+
+      it "is allowed" do
+        policy = policy_for(record: person, user: admin)
+
+        expect(policy).to be_allowed_to(:destroy?)
+      end
+    end
   end
 
   describe "relation_scope" do

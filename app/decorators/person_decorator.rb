@@ -83,6 +83,20 @@ class PersonDecorator < ApplicationDecorator
     end
   end
 
+  # Human-readable explanation of why the Delete button is unavailable, or nil
+  # when the person is deletable. Mirrors the model's deletable? checks so the
+  # edit form can tell an admin exactly what's holding the record in place.
+  def deletion_blocked_reason
+    return if deletable?
+
+    reasons = []
+    reasons << "a linked user account" if user.present?
+    reasons << "organization affiliations" if affiliations.exists?
+    reasons << "authored content (stories, workshops, news, or resources)" if authored_content?
+    reasons << "financial records (payments, scholarships, or grants)" if financial_records?
+    "Can't be deleted — this person has #{reasons.to_sentence}."
+  end
+
   def affiliated_since_date
     # Compute in Ruby from the (eager-loaded) association so list pages that
     # preload affiliations don't fire a MIN(start_date) query per row.

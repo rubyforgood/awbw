@@ -523,4 +523,35 @@ RSpec.describe Person, "scholarship index helpers" do
       expect(person.completed_facilitator_trainings).to contain_exactly(training)
     end
   end
+
+  describe "#deletable?" do
+    it "is true for a person with no user, affiliations, content, or financial records" do
+      expect(create(:person, user: nil)).to be_deletable
+    end
+
+    it "is false when the person has a linked user account" do
+      expect(create(:person)).not_to be_deletable
+    end
+
+    it "is false when the person has payments" do
+      person = create(:person, user: nil)
+      create(:payment, person: person)
+
+      expect(person).not_to be_deletable
+    end
+
+    it "is false when the person is a scholarship recipient" do
+      person = create(:person, user: nil)
+      create(:scholarship, recipient: person)
+
+      expect(person).not_to be_deletable
+    end
+
+    it "is false when the person is a grant donor" do
+      person = create(:person, user: nil)
+      create(:grant, donor: person)
+
+      expect(person).not_to be_deletable
+    end
+  end
 end

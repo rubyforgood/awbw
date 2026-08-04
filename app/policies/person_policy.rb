@@ -30,7 +30,7 @@ class PersonPolicy < ApplicationPolicy
   end
 
   def destroy?
-    admin? && record.persisted? && !has_associated_data?
+    admin? && record.persisted? && record.deletable?
   end
 
   def search?
@@ -50,16 +50,5 @@ class PersonPolicy < ApplicationPolicy
   def owner?
     return false unless authenticated?
     record.user == user
-  end
-
-  def has_associated_data?
-    record.user.present? ||
-      record.affiliations.exists? ||
-      record.stories_as_spotlighted_facilitator.exists? ||
-      record.stories_as_author.exists? ||
-      record.workshop_variations_as_author.exists? ||
-      record.workshops_as_author.exists? ||
-      record.community_news_as_author.exists? ||
-      record.resources_as_author.exists?
   end
 end

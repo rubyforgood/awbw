@@ -52,4 +52,28 @@ RSpec.describe PersonDecorator do
       expect(person.decorate.affiliated_since_date).to be_nil
     end
   end
+
+  describe "#deletion_blocked_reason" do
+    it "is nil when the person has no blocking associations" do
+      person = create(:person, user: nil)
+
+      expect(person.decorate.deletion_blocked_reason).to be_nil
+    end
+
+    it "names financial records when the person has payments" do
+      person = create(:person, user: nil)
+      create(:payment, person: person)
+
+      expect(person.decorate.deletion_blocked_reason)
+        .to eq("Can't be deleted — this person has financial records (payments, scholarships, or grants).")
+    end
+
+    it "names a linked user account and financial records together" do
+      person = create(:person)
+      create(:scholarship, recipient: person)
+
+      expect(person.decorate.deletion_blocked_reason)
+        .to eq("Can't be deleted — this person has a linked user account and financial records (payments, scholarships, or grants).")
+    end
+  end
 end
