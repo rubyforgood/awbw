@@ -55,12 +55,26 @@ class EventAttendanceReport
     entries_on(registration, date).sum { |entry| entry.duration_minutes.to_i }
   end
 
+  # Sum of the per-day (event-day) minutes, so a registrant's Total logged always
+  # equals its day columns. Time logged on dates outside the training's days isn't
+  # part of the training, so it's excluded here (the certificate gate keeps its own
+  # broader tally on EventRegistration).
   def total_minutes(registration)
-    registration.event_attendance_time_entries.sum { |entry| entry.duration_minutes.to_i }
+    dates.sum { |date| day_minutes(registration, date) }
   end
 
   def grand_total_minutes
     registrations.sum { |reg| total_minutes(reg) }
+  end
+
+  # Everyone's logged minutes on one day — the day column's total in the All row.
+  def day_grand_minutes(date)
+    registrations.sum { |reg| day_minutes(reg, date) }
+  end
+
+  # Total CE hours awarded across all reported registrants — the All row's awarded figure.
+  def total_hours_awarded
+    registrations.sum { |reg| ce_hours(reg) }
   end
 
   # A registration with an entry still open (signed in, no sign-out) — flagged on

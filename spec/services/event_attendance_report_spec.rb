@@ -81,6 +81,19 @@ RSpec.describe EventAttendanceReport do
       expect(report.ce_hours(alice)).to eq(6)
     end
 
+    it "totals minutes per day and hours awarded across all registrants" do
+      expect(report.day_grand_minutes(Date.new(2026, 7, 23))).to eq(188)
+      expect(report.day_grand_minutes(Date.new(2026, 7, 24))).to eq(420)
+      expect(report.total_hours_awarded).to eq(12) # Alice 6 + Bob 6
+    end
+
+    it "excludes time logged outside the event's days from a registrant's total" do
+      # 8 hours on a date the training doesn't run — must not inflate the total.
+      create(:event_attendance_time_entry, event_registration: alice,
+        signed_in_at: Time.zone.local(2026, 8, 1, 9, 0), signed_out_at: Time.zone.local(2026, 8, 1, 17, 0))
+      expect(report.total_minutes(alice)).to eq(608) # still just Jul 23 (188) + Jul 24 (420)
+    end
+
     it "flags a registrant with an open (not signed out) entry" do
       create(:event_attendance_time_entry, :open, event_registration: bob)
       expect(report.open?(bob)).to be(true)

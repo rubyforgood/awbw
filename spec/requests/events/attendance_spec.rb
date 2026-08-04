@@ -38,11 +38,12 @@ RSpec.describe "Events attendance report", type: :request do
       expect(response.body).not_to include("CE sign-in report")
     end
 
-    it "shows a per-registrant Edit link to the CE edit page in the CE report" do
+    it "makes each row link to the CE edit page and the name link to the CE callout" do
       log_ce_time!
       ce = registration.continuing_education_registrations.first
       get attendance_event_path(event, ce: "true")
-      expect(response.body).to include(edit_continuing_education_registration_path(ce))
+      expect(response.body).to include(edit_continuing_education_registration_path(ce)) # whole-row link
+      expect(response.body).to include(registration_ce_path(registration.slug))         # name link
     end
 
     it "returns to the registrants page when opened from there" do
