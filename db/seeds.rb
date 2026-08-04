@@ -128,8 +128,8 @@ OrganizationStatus::ORGANIZATION_STATUSES.each do |status|
 end
 
 puts "Creating TopicSubscriptionTypes…"
-TopicSubscriptionType::CANONICAL.each do |key, name|
-  TopicSubscriptionType.where(key: key).first_or_create!(name: name)
+TopicSubscriptionType::CANONICAL.each do |key, attrs|
+  TopicSubscriptionType.where(key: key).first_or_create!(name: attrs[:name], event_selector: attrs[:event_selector])
 end
 
 puts "Creating Organization…"

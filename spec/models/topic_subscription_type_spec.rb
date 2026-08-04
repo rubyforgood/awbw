@@ -25,6 +25,12 @@ RSpec.describe TopicSubscriptionType, type: :model do
     end
   end
 
+  describe "event_selector" do
+    it "defaults to false" do
+      expect(create(:topic_subscription_type).event_selector?).to be(false)
+    end
+  end
+
   describe ".interested_in_more" do
     it "returns the facilitator_trainings type" do
       type = create(:topic_subscription_type, :facilitator_trainings)

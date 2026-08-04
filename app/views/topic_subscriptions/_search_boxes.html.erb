@@ -5,10 +5,19 @@
         data: { controller: "collection", turbo_frame: "topic_subscriptions_results" },
         autocomplete: "off", class: "space-y-2" do |f| %>
     <div class="flex flex-wrap md:flex-nowrap items-end gap-4">
+      <%# Remote person picker rather than a free-text box: it lives inside the
+          filter form, so a person scope arrived at from the person page (and any
+          person picked here) is resubmitted with every other filter change
+          instead of being dropped. %>
       <div class="flex-1 min-w-[200px]">
-        <%= f.label :q, "Person", class: label_class %>
-        <%= f.text_field :q, value: params[:q], placeholder: "Search by name or email",
-              class: field_class, oninput: "this.form.requestSubmit()" %>
+        <%= f.label :person_id, "Person", class: label_class %>
+        <%= select_tag :person_id,
+              options_for_select(Person.where(id: params[:person_id]).map { |person| [ person.full_name, person.id ] }, params[:person_id]),
+              include_blank: true,
+              prompt: "Search for a person",
+              class: field_class,
+              onchange: "this.form.requestSubmit()",
+              data: { controller: "remote-select", remote_select_model_value: "person" } %>
       </div>
       <div class="min-w-[180px]">
         <%= f.label :topic_subscription_type_id, "Topic", class: label_class %>

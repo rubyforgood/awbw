@@ -13,8 +13,17 @@ class TopicSubscriptionDecorator < ApplicationDecorator
       class: "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium #{classes}")
   end
 
-  # The specific event this subscription narrows to, or a general marker.
+  # The specific event this subscription narrows to, "Any — <topic>" for a broad
+  # subscription to an event-oriented topic, or "N/A" for topics with no event
+  # dimension (e.g. News).
   def event_label
-    general? ? "Any — #{topic_label.downcase}" : interested_event.title
+    return interested_event.title if interested_event
+    topic_subscription_type&.event_selector? ? "Any — #{topic_label.downcase}" : "N/A"
+  end
+
+  # A broad ("Any") subscription to an event-oriented topic — the case the index
+  # flags with a layers icon.
+  def general_event_scope?
+    general? && topic_subscription_type&.event_selector?
   end
 end

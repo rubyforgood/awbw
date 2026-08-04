@@ -7,6 +7,7 @@ FactoryBot.define do
 
     trait :for_event do
       association :interested_event, factory: :event
+      association :topic_subscription_type, event_selector: true
     end
 
     trait :unsubscribed do

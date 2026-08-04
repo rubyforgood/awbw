@@ -14,14 +14,9 @@
 <% current_type = @topic_subscription.topic_subscription_type %>
 <% type_options.unshift(current_type) if current_type && type_options.exclude?(current_type) %>
 
-<% cancel_path = case params[:return_to]
-     when "dashboard" then params[:event_id].present? ? dashboard_event_path(params[:event_id]) : topic_subscriptions_path
-     when "registrants" then params[:event_id].present? ? registrants_event_path(params[:event_id]) : topic_subscriptions_path
-     when "person" then params[:person_id].present? ? edit_person_path(params[:person_id]) : topic_subscriptions_path
-     else topic_subscriptions_path
-   end %>
+<% cancel_path = topic_subscription_return_path %>
 
-<%= form_with model: @topic_subscription, class: "space-y-5", data: { controller: "dirty-form" } do |f| %>
+<%= form_with model: @topic_subscription, class: "space-y-5", data: { controller: "dirty-form conditional-fields" } do |f| %>
   <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to].present? %>
   <%= hidden_field_tag :event_id, params[:event_id] if params[:event_id].present? %>
   <%= hidden_field_tag :person_id, params[:person_id] if params[:person_id].present? %>
@@ -52,10 +47,12 @@
       <span class="<%= value_class %>" data-flip-field-target="display"><%= current_type&.name || "—" %></span>
       <div class="hidden flex-1" data-flip-field-target="picker">
         <%= f.select :topic_subscription_type_id,
-          options_from_collection_for_select(type_options, :id, :name, @topic_subscription.topic_subscription_type_id),
+          options_for_select(
+            type_options.map { |type| [ type.name, type.id, { "data-event-selector": type.event_selector } ] },
+            @topic_subscription.topic_subscription_type_id),
           { include_blank: true },
           class: field_class,
-          data: { flip_field_target: "select" } %>
+          data: { flip_field_target: "select", conditional_fields_target: "source", action: "change->conditional-fields#toggle" } %>
       </div>
       <button type="button" class="<%= pencil_class %>" data-action="flip-field#toggle" aria-label="Change topic">
         <i class="fa-solid fa-pen text-[0.6rem]"></i>
@@ -63,9 +60,11 @@
     </div>
   </div>
 
-  <%# Event — prefilled from the originating event; pencil flips to a picker to
-      choose a different upcoming training or "All upcoming events". %>
-  <div data-controller="flip-field">
+  <%# Event — only for event-oriented topics (shown/hidden as the topic changes).
+      Prefilled from the originating event; pencil flips to a picker to choose a
+      different upcoming training or "All upcoming events". %>
+  <div data-controller="flip-field" data-conditional-fields-target="field"
+       data-show-when-attr="eventSelector"<%= " hidden".html_safe unless current_type&.event_selector? %>>
     <%= f.label :interested_event_id, "Event", class: label_class %>
     <div class="flex items-center gap-2">
       <span class="<%= value_class %>" data-flip-field-target="display"><%= current_event&.title || "All upcoming events" %></span>

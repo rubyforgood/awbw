@@ -36,6 +36,13 @@ RSpec.describe "TopicSubscriptionTypes", type: :request do
       post topic_subscription_types_path, params: { topic_subscription_type: { name: "" } }
       expect(response).to have_http_status(:unprocessable_content)
     end
+
+    it "sets the event_selector flag" do
+      post topic_subscription_types_path, params: {
+        topic_subscription_type: { name: "Regional trainings", event_selector: "1" }
+      }
+      expect(TopicSubscriptionType.last.event_selector?).to be(true)
+    end
   end
 
   describe "PATCH archive / unarchive" do

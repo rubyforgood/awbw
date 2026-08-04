@@ -42,6 +42,23 @@ RSpec.describe TopicSubscription, type: :model do
       fresh = build(:topic_subscription, person: person, topic_subscription_type: trainings, interested_event: nil)
       expect(fresh).to be_valid
     end
+
+    it "rejects an edit that collides with another active subscription" do
+      person = create(:person)
+      news = create(:topic_subscription_type, :news)
+      create(:topic_subscription, person: person, topic_subscription_type: trainings)
+      other = create(:topic_subscription, person: person, topic_subscription_type: news)
+
+      other.topic_subscription_type = trainings
+
+      expect(other).not_to be_valid
+      expect(other.errors[:base]).to include("already has an active subscription for this topic")
+    end
+
+    it "still allows saving an unrelated edit to an active subscription" do
+      subscription = create(:topic_subscription)
+      expect(subscription.update(note: "Called in")).to be(true)
+    end
   end
 
   describe "subscribed_at" do
@@ -67,10 +84,19 @@ RSpec.describe TopicSubscription, type: :model do
       expect(subscription.reload).not_to be_active
     end
 
-    it "resubscribe! clears unsubscribed_at" do
+    it "resubscribe clears unsubscribed_at" do
       subscription = create(:topic_subscription, :unsubscribed)
-      subscription.resubscribe!
+      expect(subscription.resubscribe).to be(true)
       expect(subscription.reload).to be_active
+    end
+
+    it "refuses to resubscribe onto an existing active subscription" do
+      person = create(:person)
+      stale = create(:topic_subscription, :unsubscribed, person: person, topic_subscription_type: trainings)
+      create(:topic_subscription, person: person, topic_subscription_type: trainings)
+
+      expect(stale.resubscribe).to be(false)
+      expect(stale.reload).not_to be_active
     end
   end
 
@@ -78,6 +104,20 @@ RSpec.describe TopicSubscription, type: :model do
     it "is the type's name" do
       subscription = build(:topic_subscription, topic_subscription_type: trainings)
       expect(subscription.topic_label).to eq("Facilitator trainings")
+    end
+  end
+
+  describe "event scope" do
+    it "keeps the event for an event-selector topic" do
+      event = create(:event)
+      subscription = create(:topic_subscription, topic_subscription_type: trainings, interested_event: event)
+      expect(subscription.interested_event).to eq(event)
+    end
+
+    it "drops the event for a topic with no event dimension" do
+      news = create(:topic_subscription_type, :news)
+      subscription = create(:topic_subscription, topic_subscription_type: news, interested_event: create(:event))
+      expect(subscription.interested_event).to be_nil
     end
   end
 

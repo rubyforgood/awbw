@@ -32,7 +32,7 @@
                 <td class="px-4 py-2 text-sm text-gray-800"><%= subscription.topic_label %></td>
 
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <% if subscription.general? %>
+                  <% if subscription.general_event_scope? %>
                     <span class="inline-flex items-center gap-1.5 text-gray-500">
                       <i class="fa-solid fa-layer-group text-xs"></i>
                       <%= subscription.event_label %>

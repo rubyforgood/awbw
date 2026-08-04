@@ -25,6 +25,14 @@
     <%= f.text_area :description, rows: 3, class: field_class %>
   </div>
 
+  <div class="flex items-start gap-2">
+    <%= f.check_box :event_selector, class: "mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
+    <div>
+      <%= f.label :event_selector, "Tied to events", class: "block text-sm font-medium text-gray-700" %>
+      <p class="text-xs text-gray-500">Lets a subscription narrow to a specific event. Leave off for topics with no event dimension (e.g. News).</p>
+    </div>
+  </div>
+
   <div class="flex gap-2 justify-end">
     <%= link_to "Cancel", topic_subscription_types_path, class: "btn btn-utility-outline" %>
     <%= f.submit submit_label, class: "btn btn-primary" %>

@@ -22,6 +22,7 @@
         <tr>
           <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
           <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Key</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Events</th>
           <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Subscriptions</th>
           <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Status</th>
           <th class="px-4 py-2"></th>
@@ -32,6 +33,16 @@
           <tr class="hover:bg-gray-50 transition-colors duration-150 <%= "opacity-60" if type.archived? %>">
             <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= type.name %></td>
             <td class="px-4 py-2 text-sm text-gray-500"><code><%= type.key %></code></td>
+            <td class="px-4 py-2 text-sm text-gray-500">
+              <% if type.event_selector? %>
+                <span class="inline-flex items-center gap-1 text-gray-700">
+                  <i class="fa-solid fa-check text-xs text-green-600"></i>
+                  Tied to events
+                </span>
+              <% else %>
+                <span class="text-gray-400">—</span>
+              <% end %>
+            </td>
             <td class="px-4 py-2 text-sm text-gray-700">
               <%= link_to type.topic_subscriptions.count, topic_subscriptions_path(topic_subscription_type_id: type.id),
                     class: "text-blue-600 hover:text-blue-800 hover:underline" %>

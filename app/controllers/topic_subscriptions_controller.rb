@@ -6,18 +6,35 @@ class TopicSubscriptionsController < ApplicationController
     authorize! TopicSubscription
     @topic_subscriptions = TopicSubscription
       .search_by_params(params)
-      .includes(:interested_event, person: { event_registrations: :event })
+      .includes(:topic_subscription_type, :interested_event, person: [ :user, { event_registrations: :event } ])
       .newest_first
       .paginate(page: params[:page], per_page: 25)
     render :topic_subscriptions_results if turbo_frame_request?
   end
 
+  # This list gets pasted into a mail client, so it narrows the index's filter
+  # rather than mirroring it: an unsubscribe holds whatever status was selected,
+  # and people already registered for the event their subscription names have had
+  # the interest answered. Both exclusions are opt-out via a toggle on the page.
   def email_addresses
     authorize! TopicSubscription, to: :index?
-    @email_addresses = TopicSubscription
+    @include_unsubscribed = params[:include_unsubscribed] == "1"
+    @include_registered = params[:include_registered] == "1"
+
+    matching = TopicSubscription
       .search_by_params(params)
-      .includes(:person)
-      .filter_map { |subscription| subscription.person.email.presence }
+      .includes(person: [ :user, :event_registrations ])
+      .to_a
+
+    still_subscribed = matching.select(&:active?)
+    @unsubscribed_count = matching.size - still_subscribed.size
+
+    candidates = @include_unsubscribed ? matching : still_subscribed
+    answered, outstanding = candidates.partition(&:interest_already_answered?)
+    @registered_count = answered.size
+
+    @email_addresses = (@include_registered ? candidates : outstanding)
+      .filter_map { |subscription| subscription.person.preferred_email.presence }
       .uniq
       .sort
   end
@@ -67,8 +84,13 @@ class TopicSubscriptionsController < ApplicationController
 
   def resubscribe
     authorize! @topic_subscription, to: :update?
-    @topic_subscription.resubscribe!
-    redirect_to topic_subscriptions_path, notice: "Resubscribed."
+
+    if @topic_subscription.resubscribe
+      redirect_to topic_subscriptions_path, notice: "Resubscribed."
+    else
+      redirect_to topic_subscriptions_path,
+        alert: "Can't resubscribe — this person #{@topic_subscription.errors.full_messages.to_sentence}."
+    end
   end
 
   def destroy
@@ -100,11 +122,6 @@ class TopicSubscriptionsController < ApplicationController
   # When the form was opened from an event's Forms menu, return there; otherwise
   # fall back to the subscriptions index.
   def save_return_path
-    case params[:return_to]
-    when "dashboard" then params[:event_id].present? ? dashboard_event_path(params[:event_id]) : topic_subscriptions_path
-    when "registrants" then params[:event_id].present? ? registrants_event_path(params[:event_id]) : topic_subscriptions_path
-    when "person" then params[:person_id].present? ? edit_person_path(params[:person_id]) : topic_subscriptions_path
-    else topic_subscriptions_path
-    end
+    helpers.topic_subscription_return_path
   end
 end

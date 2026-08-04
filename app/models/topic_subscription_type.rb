@@ -1,9 +1,11 @@
 class TopicSubscriptionType < ApplicationRecord
   # Canonical types seeded for all environments. Admins can add/edit/archive more.
+  # event_selector marks topics tied to events (subscriptions can narrow to one);
+  # topics without it have no event dimension.
   CANONICAL = {
-    "facilitator_trainings" => "Facilitator trainings",
-    "news" => "News",
-    "resources" => "Resources"
+    "facilitator_trainings" => { name: "Facilitator trainings", event_selector: true },
+    "news" => { name: "News", event_selector: false },
+    "resources" => { name: "Resources", event_selector: false }
   }.freeze
   # The type the registration form's `interested_in_more` answer maps to when we
   # backfill/auto-capture subscriptions (see follow-up).
