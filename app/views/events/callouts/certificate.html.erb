@@ -1,13 +1,38 @@
 <% content_for(:page_bg_class, "public") %>
 <% content_for(:page_title, "Certificate of completion — #{@event.title}") %>
 <%= render layout: "events/callouts/callout_page", locals: { title: "Certificate of completion" } do %>
-  <div class="rounded-xl border-2 border-purple-200 bg-purple-50/40 px-6 py-10 text-center space-y-4">
-    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-purple-700">Certificate of completion</p>
-    <p class="text-sm text-gray-500">This certifies that</p>
-    <p class="text-2xl font-semibold text-gray-900"><%= @event_registration.registrant.full_name %></p>
-    <p class="text-sm text-gray-500">has completed</p>
-    <p class="text-lg font-medium text-gray-800"><%= @event.title %></p>
-    <p class="text-sm text-gray-500"><%= @event.decorate.date_range %></p>
-  </div>
-  <p class="mt-4 text-center text-xs text-gray-400">A starter template — final certificate design to follow.</p>
+  <% if sample_preview? || @event_registration.certificate_available? %>
+    <div class="rounded-xl border-2 border-purple-200 bg-purple-50/40 px-6 py-10 text-center space-y-4">
+      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-purple-700">Certificate of completion</p>
+      <p class="text-sm text-gray-500">This certifies that</p>
+      <p class="text-2xl font-semibold text-gray-900"><%= @event_registration.registrant.full_name %></p>
+      <p class="text-sm text-gray-500">has completed</p>
+      <p class="text-lg font-medium text-gray-800"><%= @event.title %></p>
+      <p class="text-sm text-gray-500"><%= @event.decorate.date_range %></p>
+    </div>
+    <p class="mt-4 text-center text-xs text-gray-400">A starter template — final certificate design to follow.</p>
+  <% else %>
+    <%# Not yet unlocked: show each condition and which are met, like the videoconference page. %>
+    <% ended = @event.end_date&.past? %>
+    <% attended = @event_registration.attended? %>
+    <div class="rounded-lg bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-gray-600 space-y-2">
+      <p class="font-medium text-gray-700">Your certificate of completion unlocks once these are met:</p>
+      <ul class="space-y-1">
+        <li class="flex items-center gap-2">
+          <i class="fa-solid <%= ended ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
+          The training has ended<%= " (#{@event.end_date.to_date.strftime("%B %-d, %Y")})" if @event.end_date %>
+        </li>
+        <li class="flex items-center gap-2">
+          <i class="fa-solid <%= attended ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
+          Your attendance is confirmed
+        </li>
+        <% if @event_registration.scholarships.any? %>
+          <li class="flex items-center gap-2">
+            <i class="fa-solid <%= @event_registration.scholarship_tasks_met? ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
+            Your scholarship tasks are complete
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
 <% end %>

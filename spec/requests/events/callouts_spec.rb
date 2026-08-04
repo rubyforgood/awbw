@@ -548,17 +548,21 @@ RSpec.describe "Events::Callouts", type: :request do
     let(:event) { create(:event, end_date: 2.days.ago) }
     let(:registration) { create(:event_registration, event: event, status: "attended") }
 
-    it "renders once the certificate is unlocked" do
+    it "renders the certificate once it is unlocked" do
       get registration_certificate_path(registration.slug)
       expect(response).to have_http_status(:success)
+      expect(response.body).to include("This certifies that")
     end
 
-    it "redirects to the ticket when the certificate isn't unlocked yet" do
+    it "shows the pending unlock conditions when the certificate isn't unlocked yet" do
       registration.update!(status: "registered")
 
       get registration_certificate_path(registration.slug)
 
-      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("unlocks once these are met")
+      expect(response.body).to include("Your attendance is confirmed")
+      expect(response.body).not_to include("This certifies that")
     end
   end
 

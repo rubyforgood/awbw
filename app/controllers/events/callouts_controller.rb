@@ -34,16 +34,11 @@ module Events
       @document_cards = sample_preview? ? [] : payment_document_cards
     end
 
-    # Certificate of completion, rendered like the invoice. Only reachable once
-    # the certificate is unlocked.
+    # Certificate of completion: the certificate once unlocked, otherwise the
+    # pending unlock conditions.
     def certificate
-      # The sample preview always shows the template; a real registrant only sees
-      # it once the certificate is unlocked.
-      return if sample_preview?
-
-      unless @event_registration.certificate_available?
-        redirect_to registration_ticket_path(@event_registration.slug)
-      end
+      # The page shows the certificate once unlocked, or the pending unlock
+      # conditions until then, so there's nothing to gate here.
     end
 
     # Scholarship status: the award (amount, funder, criteria, tasks) once a

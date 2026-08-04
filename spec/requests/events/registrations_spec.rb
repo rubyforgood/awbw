@@ -354,9 +354,10 @@ RSpec.describe "Events::Registrations", type: :request do
   describe "GET /registration/:slug/certificate" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
-    it "redirects to the ticket when the certificate is not yet available" do
+    it "shows the pending unlock conditions when the certificate is not yet available" do
       get registration_certificate_path(registration.slug)
-      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("unlocks once these are met")
     end
 
     it "renders the certificate once the training is complete and attended" do
