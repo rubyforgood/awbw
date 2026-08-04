@@ -414,23 +414,28 @@ end
 flagship_ce = flagship&.registration_ticket_callouts&.find_by(builtin_key: "ce_hours")
 if flagship_ce && flagship_ce.description.blank?
   flagship_ce.update!(hidden: false, title: "Continuing education", description: <<~HTML.strip)
-    <p>This training is approved by the California Association of Marriage and Family Therapists (CAMFT, provider #000000) for <strong>12 CE hours</strong>. AWBW is approved to sponsor continuing education for LMFTs, LCSWs, LPCCs, and LEPs.</p>
+    <p>AWBW is approved by the <a href="https://www.camft.org/" target="_blank" rel="noopener">California Association of Marriage and Family Therapists (CAMFT)</a> to sponsor continuing education for LMFTs, LCSWs, LPCCs, and LEPs in California.</p>
+    <p>While these CE hours are automatically accepted for professionals licensed in California, each state has its own licensing board requirements regarding CE provider approval. Participants outside of California are responsible for confirming whether these hours meet the requirements for their specific license and state.</p>
     <h3>Before the training</h3>
     <ul>
-      <li>Provide your license type and license number when you register — we cannot issue a CE certificate without it.</li>
-      <li>CE hours carry a separate $25 processing fee, payable with your registration.</li>
+      <li>Provide your LMFT / LCSW / LPCC / LEP license number.</li>
+      <li>Submit payment of $120 for CE hours before the training begins.</li>
     </ul>
     <h3>During the training</h3>
     <ul>
-      <li>You must sign in and out each day. CE hours are awarded only for full attendance — partial credit is not available.</li>
-      <li>Arrive on time; late arrivals or early departures may forfeit CE eligibility.</li>
+      <li>Sign in and out at the beginning and end of each day, and when returning from all breaks (including the hour-long meal break). A link to the sign-in sheet is emailed before the training.</li>
+      <li>Keep your camera on at all times during the training.</li>
     </ul>
     <h3>After the training</h3>
     <ul>
-      <li>Complete the post-training evaluation within one week.</li>
-      <li>Your CE certificate will be emailed within three weeks of the training.</li>
+      <li>Complete the CE Hours Training Evaluation. A link is emailed before the training.</li>
     </ul>
-    <p>Questions about continuing education? Reach out by email or Portal contact us form, and our team will follow up with details.</p>
+    <h3>Important notes</h3>
+    <ul>
+      <li>CE hours cannot be issued if payment is not received by the deadline, even if sign-in requirements are completed.</li>
+      <li>If participation minutes indicate that fewer than 12 CE hours can be awarded, refunds are not issued.</li>
+    </ul>
+    <p>Email <a href="mailto:trainings@awbw.org" target="_blank" rel="noopener">trainings@awbw.org</a> if you have any questions.</p>
   HTML
 end
 
@@ -439,7 +444,7 @@ trauma = Event.find_by(title: "Facilitator Training: Trauma-Informed Art Practic
 trauma_ce = trauma&.registration_ticket_callouts&.find_by(builtin_key: "ce_hours")
 if trauma_ce && trauma_ce.description.blank?
   trauma_ce.update!(hidden: false, description: <<~HTML.strip)
-    <p>This training is approved by CAMFT (provider #000000) for <strong>18 CE hours</strong> across its three days.</p>
+    <p>This training is approved by <a href="https://www.camft.org/" target="_blank" rel="noopener">CAMFT</a> for <strong>18 CE hours</strong> across its three days.</p>
     <ul>
       <li>Provide your license type and number at registration; a $25 CE processing fee applies.</li>
       <li>Daily sign-in/sign-out is required — CE hours are awarded for full attendance only.</li>
@@ -746,7 +751,7 @@ registrations_data = []
 #   so she can reach her training materials (the intends_to_pay scenario). Pairs
 #   with Amy on this same event, who DOES have payments, for side-by-side review.
 if facilitator_training
-  facilitator_training.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
+  facilitator_training.update!(ce_hours_offered: 12, ce_hours_cost_cents: 12_000)
   [
     { person: amy_person, status: "registered", scholarship_requested: true, w9_requested: true, invoice_requested: true, ce_credit_requested: true, ce_license_number: "LMFT 90210" },
     { person: maria_j, status: "registered", invoice_requested: true, ce_credit_requested: true, intends_to_pay: true },
@@ -766,7 +771,7 @@ end
 # Angel Garcia: registered, no form (no user)
 # Linda Williams: no_show (no user)
 if trauma_training
-  trauma_training.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
+  trauma_training.update!(ce_hours_offered: 18, ce_hours_cost_cents: 15_000)
   [
     { person: sarah_s, status: "registered", invoice_requested: true, ce_credit_requested: true, ce_license_number: "LPCC 44556" },
     { person: jessica_b, status: "registered", scholarship_requested: true, ce_credit_requested: true },
