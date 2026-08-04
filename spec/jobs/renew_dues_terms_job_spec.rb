@@ -14,7 +14,7 @@ RSpec.describe RenewDuesTermsJob, type: :job do
 
       expect { described_class.new.perform }.to change(DuesRegistration, :count).by(1)
 
-      renewal = term.dues_subscription.dues_registrations.order(:start_date).last
+      renewal = term.dues_subscription.dues_registrations.reorder(:start_date).last
       expect(renewal.start_date).to eq(term.end_date + 1.day)
       expect(renewal.end_date).to eq(term.end_date + 1.year)
       expect(renewal.cost_cents).to eq(Dues::ANNUAL_COST_CENTS)
@@ -44,7 +44,7 @@ RSpec.describe RenewDuesTermsJob, type: :job do
 
       described_class.new.perform
 
-      expect(subscription.dues_registrations.order(:start_date).last.cost_cents).to eq(1_500)
+      expect(subscription.dues_registrations.reorder(:start_date).last.cost_cents).to eq(1_500)
     end
 
     it "charges the standard rate after a comped year" do
@@ -56,7 +56,7 @@ RSpec.describe RenewDuesTermsJob, type: :job do
 
       described_class.new.perform
 
-      expect(subscription.dues_registrations.order(:start_date).last.cost_cents)
+      expect(subscription.dues_registrations.reorder(:start_date).last.cost_cents)
         .to eq(Dues::ANNUAL_COST_CENTS)
     end
 
@@ -71,6 +71,22 @@ RSpec.describe RenewDuesTermsJob, type: :job do
       described_class.new.perform
 
       expect { described_class.new.perform }.not_to change(DuesRegistration, :count)
+    end
+
+    it "measures the window in Pacific, not UTC" do
+      travel_to Time.utc(2026, 8, 4, 2, 0) do
+        term_ending(Date.new(2026, 9, 3))
+
+        expect { described_class.new.perform }.not_to change(DuesRegistration, :count)
+      end
+    end
+
+    it "still renews a term inside the Pacific window" do
+      travel_to Time.utc(2026, 8, 4, 2, 0) do
+        term_ending(Date.new(2026, 9, 2))
+
+        expect { described_class.new.perform }.to change(DuesRegistration, :count).by(1)
+      end
     end
 
     it "handles several subscriptions in one pass" do

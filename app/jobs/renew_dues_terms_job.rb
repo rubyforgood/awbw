@@ -2,8 +2,10 @@ class RenewDuesTermsJob < ApplicationJob
   queue_as :default
 
   def perform
-    expiring_terms.find_each do |term|
-      Dues::EnsureTerm.call(dues_subscription: term.dues_subscription, covering: term.end_date + 1.day)
+    Time.use_zone(Dues::TIME_ZONE) do
+      expiring_terms.find_each do |term|
+        Dues::EnsureTerm.call(dues_subscription: term.dues_subscription, covering: term.end_date + 1.day)
+      end
     end
   end
 

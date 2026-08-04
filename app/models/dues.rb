@@ -1,4 +1,6 @@
 module Dues
+  TIME_ZONE = "Pacific Time (US & Canada)".freeze
+
   ANNUAL_COST_CENTS = 2_500
   GRACE_PERIOD_DAYS = 30
   RENEWAL_WINDOW_DAYS = 30

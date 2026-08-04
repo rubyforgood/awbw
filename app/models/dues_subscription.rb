@@ -2,7 +2,7 @@ class DuesSubscription < ApplicationRecord
   has_paper_trail
 
   belongs_to :person
-  has_many :dues_registrations, dependent: :destroy
+  has_many :dues_registrations, -> { order(start_date: :desc) }, dependent: :destroy
 
   # A nil rate_cents means "charge the standard rate, whatever it currently is", so
   # a rate rise moves these members automatically. A stored value is a rate this
