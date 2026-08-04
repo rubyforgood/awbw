@@ -10,7 +10,7 @@ module Dues
       @cost_cents = cost_cents
     end
 
-    # Locked so a webhook and the nightly sweep arriving together can't each create one.
+    # Locked so a webhook and nightly job arriving together can't each create one.
     def call
       @dues_membership.with_lock do
         terms.active_on(@covering).first || create_term
