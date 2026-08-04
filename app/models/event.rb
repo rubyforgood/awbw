@@ -76,7 +76,7 @@ class Event < ApplicationRecord
   end
 
   def remote_search_label
-    label = start_date ? "#{title} (#{start_date.to_date.to_fs(:long)})" : title
+    label = start_date ? "#{title} (#{start_date.in_time_zone(event_zone).to_date.to_fs(:long)})" : title
     { id: id, label: label }
   end
 
@@ -180,8 +180,8 @@ class Event < ApplicationRecord
   def day_count
     return 1 if start_date.blank?
 
-    last_day = (end_date.presence || start_date).to_date
-    span = (last_day - start_date.to_date).to_i + 1
+    last_day = (end_date.presence || start_date).in_time_zone(event_zone).to_date
+    span = (last_day - start_date.in_time_zone(event_zone).to_date).to_i + 1
     span.clamp(1, 5)
   end
 
@@ -191,7 +191,7 @@ class Event < ApplicationRecord
 
   # Like time_title but date only — no time or parens — for filter dropdowns.
   def date_title
-    start_date ? "#{start_date.to_date.iso8601} — #{name}" : name
+    start_date ? "#{start_date.in_time_zone(event_zone).to_date.iso8601} — #{name}" : name
   end
 
   def full_name
@@ -199,7 +199,7 @@ class Event < ApplicationRecord
   end
 
   def start_text
-    start_date.strftime("%Y-%m-%d @ %I:%M %p")
+    start_date.in_time_zone(event_zone).strftime("%Y-%m-%d @ %I:%M %p")
   end
 
   def name

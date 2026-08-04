@@ -36,36 +36,34 @@ RSpec.describe "Events", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
-    context "when user time_zone is set" do
-      # 19:00 UTC = 12:00 noon PT = 15:00 (3 pm) ET (June 15, 2031 with DST)
-      let(:utc_start) { Time.utc(2031, 6, 15, 19, 0, 0) }
-      let(:utc_end)   { Time.utc(2031, 6, 15, 20, 0, 0) }
-      let!(:event_with_fixed_times) do
+    context "when the event has its own time zone" do
+      # 19:00-20:00 UTC = 12:00-1:00 pm PDT on June 15, 2031. The event is pinned
+      # to Pacific, so every viewer sees the same event-local time — it no longer
+      # shifts to the viewer's own zone.
+      let!(:pacific_event) do
         create(:event, :published,
-          start_date: utc_start,
-          end_date: utc_end,
+          time_zone: "Pacific Time (US & Canada)",
+          start_date: Time.utc(2031, 6, 15, 19, 0, 0),
+          end_date: Time.utc(2031, 6, 15, 20, 0, 0),
           title: "Timezone test event")
       end
 
-      it "displays start time in Pacific (PT) for user with time_zone PT" do
-        user_pt = create(:user)
-        sign_in user_pt
-        get event_url(event_with_fixed_times)
+      it "displays the event's zone to a Pacific viewer" do
+        sign_in create(:user, time_zone: "Pacific Time (US & Canada)")
+        get event_url(pacific_event)
         expect(response).to be_successful
-        # 19:00 UTC = 12:00 noon PT (styled format on show page)
         expect(response.body).to include("June 15, 2031")
         expect(response.body).to include("12 pm - 1 pm")
+        expect(response.body).to include("PDT")
       end
 
-      it "displays start time in Eastern for user with time_zone America/New_York" do
-        user_et = create(:user, time_zone: "Eastern Time (US & Canada)")
-        sign_in user_et
-        get event_url(event_with_fixed_times)
-
+      it "displays the same event-zone time to an Eastern viewer (no per-viewer shift)" do
+        sign_in create(:user, time_zone: "Eastern Time (US & Canada)")
+        get event_url(pacific_event)
         expect(response).to be_successful
-        # 19:00 UTC = 3:00 pm ET (styled format on show page)
         expect(response.body).to include("June 15, 2031")
-        expect(response.body).to include("3 pm - 4 pm")
+        expect(response.body).to include("12 pm - 1 pm")
+        expect(response.body).to include("PDT")
       end
     end
   end

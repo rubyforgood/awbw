@@ -72,7 +72,7 @@ module ApplicationHelper
   # reminder page (admins can edit it). Mirrors the mailer's fallback subject; the
   # event date is event-level, resolved here in the app default time zone.
   def default_reminder_subject(event)
-    date_suffix = event.start_date.present? ? " – #{event.start_date.in_time_zone.strftime('%B %-d, %Y')}" : ""
+    date_suffix = event.start_date.present? ? " – #{event.start_date.in_time_zone(event.event_zone).strftime('%B %-d, %Y')}" : ""
     "AWBW Portal: Reminder: #{event.title}#{date_suffix}"
   end
 
@@ -121,8 +121,8 @@ module ApplicationHelper
   # "Thursday-Friday, July 23-24". Nil when the event has no start date.
   def event_dates_detail_label(event)
     return unless event&.start_date
-    s = event.start_date.in_time_zone(Time.zone)
-    e = (event.end_date || event.start_date).in_time_zone(Time.zone)
+    s = event.start_date.in_time_zone(event.event_zone)
+    e = (event.end_date || event.start_date).in_time_zone(event.event_zone)
     return s.strftime("%A, %B %-d") if s.to_date == e.to_date
     if s.year == e.year && s.month == e.month
       "#{s.strftime("%A")}-#{e.strftime("%A")}, #{s.strftime("%B %-d")}-#{e.strftime("%-d")}"
@@ -135,8 +135,8 @@ module ApplicationHelper
   # event show page's date line, or nil when the event has no start date.
   def event_dates_label(event)
     return unless event&.start_date
-    s = event.start_date.in_time_zone(Time.zone)
-    e = (event.end_date || event.start_date).in_time_zone(Time.zone)
+    s = event.start_date.in_time_zone(event.event_zone)
+    e = (event.end_date || event.start_date).in_time_zone(event.event_zone)
     return s.strftime("%B %-d, %Y") if s.to_date == e.to_date
     if s.year == e.year && s.month == e.month
       "#{s.strftime("%B %-d")}-#{e.strftime("%-d")}, #{s.year}"
@@ -151,8 +151,8 @@ module ApplicationHelper
   # event show page's time formatting (minutes hidden when :00), or nil with no start.
   def event_times_label(event)
     return unless event&.start_date
-    s = event.start_date.in_time_zone(Time.zone)
-    e = (event.end_date || event.start_date).in_time_zone(Time.zone)
+    s = event.start_date.in_time_zone(event.event_zone)
+    e = (event.end_date || event.start_date).in_time_zone(event.event_zone)
     format = ->(d) do
       t = d.strftime("%-l")
       t += ":#{d.strftime("%M")}" unless d.strftime("%M") == "00"
@@ -197,7 +197,7 @@ module ApplicationHelper
   def event_registration_close_date_label(event)
     close = event&.registration_close_date
     return unless close
-    close.in_time_zone(Time.zone).strftime("%B %-d")
+    close.in_time_zone(event.event_zone).strftime("%B %-d")
   end
 
   # Just the time portion of the registration close, prefixed with "at" and
@@ -206,7 +206,7 @@ module ApplicationHelper
   def event_registration_close_time_label(event)
     close = event&.registration_close_date
     return unless close
-    local = close.in_time_zone(Time.zone)
+    local = close.in_time_zone(event.event_zone)
     time = local.strftime("%-l")
     time += ":#{local.strftime("%M")}" unless local.strftime("%M") == "00"
     time += local.strftime("%P")
@@ -218,7 +218,7 @@ module ApplicationHelper
   # fall back to two days out at 9am.
   def event_registration_close_default(event)
     start = event&.start_date
-    base = start ? (start.in_time_zone(Time.zone) - 1.day).beginning_of_week(:monday) : 2.days.from_now
+    base = start ? (start.in_time_zone(event.event_zone) - 1.day).beginning_of_week(:monday) : 2.days.from_now
     base.change(hour: 9, min: 0)
   end
 

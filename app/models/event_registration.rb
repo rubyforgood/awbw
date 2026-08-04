@@ -299,7 +299,7 @@ class EventRegistration < ApplicationRecord
   end
 
   def name
-    "(#{ registrant&.full_name }) #{ event.start_date.strftime("%Y-%m-%d @ %I:%M %p") }: #{ event.title }"
+    "(#{ registrant&.full_name }) #{ event.start_date.in_time_zone(event.event_zone).strftime("%Y-%m-%d @ %I:%M %p") }: #{ event.title }"
   end
 
   # Email the communications box matches notifications against. Uniform accessor
