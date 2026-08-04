@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~80 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~30 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~40 files |
 | `app/jobs/` | SolidQueue background jobs | 4 files |
 | `app/models/concerns/` | Shared model modules | 16 concerns |
 
@@ -62,7 +62,7 @@ This codebase (Rails 8.1)
 | `app/decorators/` | Draper decorators for view logic | ~40 files |
 | `app/policies/` | ActionPolicy authorization rules | ~55 files |
 | `app/presenters/` | Presentation objects | 6 files |
-| `app/helpers/` | View helpers | ~25 files |
+| `app/helpers/` | View helpers | ~29 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (75) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (76) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -108,6 +108,8 @@ This codebase (Rails 8.1)
 | `Scholarship` | Award to a `Person`; optionally drawn from a `Grant`, syncs to event registration `Allocation` |
 | `ProfessionalLicense` | A license a `Person` holds (`number`, `kind`, `issuing_state`, `expires_on`); a null `number` is a placeholder. `find_or_create_for` keeps one license per (person, number) |
 | `ContinuingEducationRegistration` | A registrant's CE for one event against one `ProfessionalLicense`; billable `allocatable` (`Registerable`) with stored `hours` + `cost_cents` (default from the event). Payment is computed (no stored status); the certificate is delivered via `certificate_sent_at` and gated by its own `certificate_available?` |
+| `TopicSubscription` | A `Person`'s standing subscription to a `TopicSubscriptionType`, optionally narrowed to a specific `interested_event` (null = the topic broadly). State is timestamp-driven (`unsubscribed_at IS NULL` = active — `active?`/`unsubscribe!`/`resubscribe` — non-bang, since reviving can collide with a newer active row, no status column); `subscribed_at` + `source` mirror the `mailing_list_consent_*` provenance pattern. Distinct from the `mailing_list_consent_*` flag (consent = "you may email me"; subscription = "what I want to hear about") and from an `EventRegistration` (an actual enrollment). One active subscription per (person, type, event) |
+| `TopicSubscriptionType` | Admin-editable list of subscribable topics (`TopicSubscriptionTypesController` CRUD). Editable `name` + immutable derived `key` slug (stable for code lookups like `interested_in_more` → `INTERESTED_IN_MORE_KEY`); `archived_at` retires a topic without deleting it (`active`/`archived` scopes) since types in use can't be destroyed (`restrict_with_error`). Seeded (all envs) from `CANONICAL` — facilitator_trainings/news/resources |
 | `Report` | STI base class for MonthlyReport |
 | `WorkshopLog` | Standalone model for workshop log submissions (attendance, form fields) |
 
@@ -162,11 +164,17 @@ class ApplicationController < ActionController::Base
   verify_authorized                    # ActionPolicy enforcement
 
   # Common helpers:
-  # authorize! @record               — check policy
+  # authorize! @record               — check policy (rule inferred from the action name)
+  # authorize! @record, to: :other?  — only when checking a rule ≠ the current action
   # authorized_scope(Model.all)      — filtered relation
   # @record.decorate                 — Draper decorator
 end
 ```
+
+`authorize!` infers the rule from the controller action (`create` → `create?`, `update` →
+`update?`), so `authorize! @record` in the `update` action already checks `update?`. Pass `to:`
+only to check a *different* rule (e.g. `authorize! @scholarship, to: :update?` from a non-`update`
+action, or `authorize! :workshop, to: :summary?`).
 
 ### Controller Concerns
 
@@ -186,7 +194,8 @@ end
 ### Business Logic
 
 - `EventDashboard` — Aggregates per-event dashboard metrics (registrant/org/sector/state/county counts, scholarship totals, payment received/outstanding/total)
-- `EventRevenueReport` — Cross-event revenue report grouped by calendar year (money in vs org subsidy vs net, projected CE, chart series) for the CEO revenue page
+- `EventRevenueReport` — Cross-event revenue report grouped by calendar year (money in vs org subsidy vs net, CE fees, chart series) for the CEO revenue page
+- `EventRevenueFigures` — Batch-loads the per-event money components `EventRevenueReport` rows are built from (registration payments/outstanding, funded/unfunded scholarships, discounts, CE paid/outstanding) in a fixed number of grouped queries; mirrors the `EventDashboard` definitions
 - `EventParticipationReport` — Cross-event participation report grouped by calendar year (unique people trained vs attended seats vs per-status outcome counts, chart series) for the events participation page; sibling of `EventRevenueReport`
 - `ReportPeriods` — Shared module (included by `EventRevenueReport` and `EventParticipationReport`) resolving the reporting-hub period toggle (this year / last year / all time) to a metric scope + label for the summary cards
 - `ScholarshipApplication` — Gathers one person's scholarship-application answers for an event by field across all their submissions, so answers surface whether captured on a dedicated scholarship form, an embedded registration section, or the registration submission itself (used by the scholarship edit page and the public submission view)
@@ -210,9 +219,9 @@ end
 - `EventRegistrationServices::PublicRegistration` — Public registration handling
 - `EventRegistrationReadiness` — Computes a registration's lifecycle `status` (`:not_ready` → `:ready` → `:certificate_due` → `:completed`) from a pre-event "event ready" checklist, a post-event "completion work" checklist (attendance, scholarship tasks), and certificate delivery, returning the specific outstanding reasons. Reads payment/certificate state via `Registerable` (`paid_in_full?`, `certificate_sent?`) on both the registration and its `continuing_education_registrations`. Drives the registrants roster's single far-right Status badge column (with a short reason under "Not ready" and a cert-type note under "Certificate pending") and its matching filter
 - `ReminderRecipientFilter` — Decides which event registrations stay checked on the bulk reminder page given the admin's filters (matches in memory, returns matching ids)
-- `BuiltinCalloutCards` — Renders the live, per-registration ticket callout cards (payment, certificate, scholarship, CE hours, videoconference), overlaying dynamic status (badge, colour, visibility guard, destination) on each materialized built-in row via `#card_for`. Rendered through the same `_callout_card` partial as `RegistrationTicketCallout`s. Skips any card an event has materialized (see `BuiltinCallouts`) so the two paths never double-render, and `#cards` serves as the fallback for events not yet seeded; `.editor_cards` builds the editor's preview cards. Art supplies, Handouts, and FAQ are pure content cards with no builder here — they render from their row. Public show pages live under `app/views/events/callouts/` (`Events::CalloutsController`, slug-authorized)
-- `BuiltinCallouts` — Owns the built-in callout definitions and materializes them into `RegistrationTicketCallout` rows in canonical ticket order: `seed` persists (on create, and lazily on edit so older events heal with no backfill), `build` makes the same rows in memory for the new-event form (with `builtin_key` round-tripped through nested attributes), `reset`/`customized?` back the "Restore default" control. All eight seed **hidden** by default — admins publish the ones they want; there's no config-based auto-publish. Built-ins are edited in the **same** callout-fields row as custom callouts (pre-filled title/subtitle/colour/icon/callout-page-text/resources; hidden instead of deleted; "Restore default" shown only when `.customized?`). "Content" cards (Art supplies, Handouts, FAQ) render their own copy/resources on the generic callout page; "behavioral" cards render live status through `BuiltinCalloutCards#card_for`, which overlays the app's badge/visibility/destination on the row's editable presentation. Behavioral pages show the row's callout-page-text as an intro (`@builtin_intro`) and any linked resources below it. Videoconference drips a week before start via `display_from`. CE hours and Art supplies are edited like every other built-in — their title/text live entirely on the row (the legacy `event_details*`/`ce_hours_details*` event columns were dropped); the CE hours-offered/cost config still edits the event inline via `event_f` (`ce_config?`). The registrant CE page reads the row's title/description. Built-ins always seed and also materialize lazily on `edit`, so the editor shows the full set; the editor shows "Restore default" (or a static "Matches default") per row via `.customized?`. The visibility control is a `published` toggle (inverse of `hidden`)
-- `CalloutContent` — Parses admin-authored callout HTML into ordered segments so **every** callout content page renders the same way: plain rich text, with each standard `<details><summary>…</summary>…</details>` disclosure (the markup any HTML generator/LLM produces; `<toggle>` and a `title` attribute are accepted aliases; `<details open>` starts expanded) rebuilt into a styled collapsible card. `<details>`/`<summary>` are also on the `form_label_html` allowlist (`FORM_LABEL_TAGS`, plus the `open` attribute), so a disclosure is never stripped on save — the parser only upgrades its styling. Rendered through the shared `app/views/events/callouts/_rich_content.html.erb` partial (which wraps each disclosure in `_toggle.html.erb`), used by the art-supplies ("Art supplies & what to bring", a content callout on the generic page), CE hours, custom-callout, behavioural-card-intro, and FAQ pages. The FAQ page renders the editable `faq` callout `description` (each question a `<details>`), falling back to `BuiltinCallouts.faq_html` when the card isn't materialized. Content with no disclosure renders unchanged
+- `BuiltinCalloutCards` — Renders the live, per-registration ticket callout cards (payment, certificate, scholarship, CE hours, videoconference), overlaying dynamic status (badge, colour, visibility guard, destination) on each materialized built-in row via `#card_for`. Rendered through the same `_callout_card` partial as `RegistrationTicketCallout`s. Skips any card an event has materialized (see `BuiltinCallouts`) so the two paths never double-render, and `#cards` serves as the fallback for events not yet seeded; `.editor_cards` builds the editor's preview cards. Handouts and FAQ are pure content cards with no builder here — they render from their row. Public show pages live under `app/views/events/callouts/` (`Events::CalloutsController`, slug-authorized)
+- `BuiltinCallouts` — Owns the built-in callout definitions and materializes them into `RegistrationTicketCallout` rows in canonical ticket order: `seed` persists (on create, and lazily on edit so older events heal with no backfill), `build` makes the same rows in memory for the new-event form (with `builtin_key` round-tripped through nested attributes), `reset`/`customized?` back the "Restore default" control. All eight seed **hidden** by default — admins publish the ones they want; there's no config-based auto-publish. Built-ins are edited in the **same** callout-fields row as custom callouts (pre-filled title/subtitle/colour/icon/callout-page-text/resources; hidden instead of deleted; "Restore default" shown only when `.customized?`). "Content" cards (Handouts, FAQ) render their own copy/resources on the generic callout page; "behavioral" cards render live status through `BuiltinCalloutCards#card_for`, which overlays the app's badge/visibility/destination on the row's editable presentation. Behavioral pages show the row's callout-page-text as an intro (`@builtin_intro`) and any linked resources below it. Videoconference drips a week before start via `display_from`. CE hours is edited like every other built-in — its title/text live entirely on the row (the legacy `event_details*`/`ce_hours_details*` event columns were dropped); the CE hours-offered/cost config still edits the event inline via `event_f` (`ce_config?`). The registrant CE page reads the row's title/description. Built-ins always seed and also materialize lazily on `edit`, so the editor shows the full set; the editor shows "Restore default" (or a static "Matches default") per row via `.customized?`. The visibility control is a `published` toggle (inverse of `hidden`)
+- `CalloutContent` — Parses admin-authored callout HTML into ordered segments so **every** callout content page renders the same way: plain rich text, with each standard `<details><summary>…</summary>…</details>` disclosure (the markup any HTML generator/LLM produces; `<toggle>` and a `title` attribute are accepted aliases; `<details open>` starts expanded) rebuilt into a styled collapsible card. `<details>`/`<summary>` are also on the `form_label_html` allowlist (`FORM_LABEL_TAGS`, plus the `open` attribute), so a disclosure is never stripped on save — the parser only upgrades its styling. Rendered through the shared `app/views/events/callouts/_rich_content.html.erb` partial (which wraps each disclosure in `_toggle.html.erb`), used by the CE hours, custom-callout, behavioural-card-intro, and FAQ pages. The FAQ page renders the editable `faq` callout `description` (each question a `<details>`); the default questions hydrate onto the row when it's materialized (from `BuiltinCallouts.faq_html`), so a blanked description shows blank with no render-time fallback. Content with no disclosure renders unchanged
 - `SampleTicketRegistration` — Builds the **unsaved, data-free** `EventRegistration` ("Sample Person") that the sample ticket and its admin-only callout-page previews render from; nothing is ever persisted, so the preview can't read from or write to a real registrant or leak into counts/revenue/rosters/reminders. `all_options:` mirrors the ticket's "Show all options" toggle (turns on scholarship/CE/W-9 so those cards and preview pages render). Shared by `EventsController#sample_ticket` and `Events::CalloutsController`'s sample mode (the `sample` param → admin-authed in-memory previews of the behavioral built-in pages, linked from the sample ticket via `EventHelper#sample_callout_path`)
 
 ### Affiliations
@@ -310,6 +319,7 @@ end
 - `edit_toggle` — Inline view/edit toggle for the comments and communications boxes (configurable view/edit CSS classes)
 - `event_staff_bio` — Loads a selected person's read-only profile bio (with edit link) alongside the editable event-specific bio on the staff form
 - `file_preview` — File upload preview
+- `conditional_fields` — Shows/hides fields based on a source `<select>` (via `data-show-when` value match, or `data-show-when-attr` reading a `data-*` flag on the selected option — e.g. the subscription form's event field appears only for event-oriented topics)
 - `grant_details` — Swaps a grant's eligibility criteria + tasks when the grant picker changes
 - `grant_select` — Tom Select grant picker showing each grant's remaining-of-total funds
 - `inactive_toggle` — Gray out expired affiliations

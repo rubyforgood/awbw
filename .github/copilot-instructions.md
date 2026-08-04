@@ -57,7 +57,8 @@ When changing a model or controller, check whether these related files need upda
 - **In service objects and POROs, read constructor arguments from instance variables (`@foo`) — don't add `private attr_reader`** for them. Reserve `attr_reader` for values the object deliberately exposes to callers (e.g. `BulkInviteService#results`).
 - **Prefer decorators (Draper, app/decorators/) over view helpers for model-specific presentation** — when display logic is "about a record" (labels, badges, formatted attributes, status pills), put it on that model's decorator and call `record.decorate.thing`. Reserve `app/helpers/` for generic, cross-model view utilities that aren't tied to one model. Decorators keep presentation testable and out of ERB.
 - Use `after_commit` instead of `after_save` for side effects
-- **Comment only when the reason isn't obvious from the code** — don't restate what the code already says. When a comment is warranted (a non-obvious why, a gotcha), keep it brief and clear.
+- **Don't pass `to:` to `authorize!` when the rule matches the controller action** — ActionPolicy infers the rule from the action name (`create` → `create?`, `update` → `update?`), so `authorize! @record` in the `update` action already checks `update?`. Only pass `to:` when checking a *different* rule than the current action (e.g. `authorize! @scholarship, to: :update?` from a non-`update` action, or `authorize! :workshop, to: :summary?`).
+- **Comment only when the reason isn't obvious from the code** — don't restate what the code already says. When a comment is warranted (a non-obvious why, a gotcha), keep it brief and clear. **Keep it to one line** unless the logic is genuinely complex and can't be inferred from the code plus domain knowledge that the comment needs to capture — only then let it run longer.
 
 ## RuboCop (rubocop-rails-omakase)
 

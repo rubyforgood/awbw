@@ -81,12 +81,12 @@ RSpec.describe RegistrationTicketCallout, type: :model do
       expect(custom.payment?).to be(false)
     end
 
-    it "treats art_supplies as a content built-in (renders its own page), not behavioral" do
+    it "treats handouts as a content built-in (renders its own page), not behavioral" do
       event = create(:event)
-      art_supplies = create(:registration_ticket_callout, event:, builtin_key: "art_supplies")
+      handouts = create(:registration_ticket_callout, event:, builtin_key: "handouts")
       certificate = create(:registration_ticket_callout, event:, builtin_key: "certificate")
 
-      expect(art_supplies.behavioral_builtin?).to be(false)
+      expect(handouts.behavioral_builtin?).to be(false)
       expect(certificate.behavioral_builtin?).to be(true)
     end
   end

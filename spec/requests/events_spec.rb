@@ -12,6 +12,24 @@ RSpec.describe "Events", type: :request do
     target_event
   end
 
+  def query_count
+    count = 0
+    counter = ->(_name, _start, _finish, _id, payload) { count += 1 unless payload[:name].to_s.match?(/SCHEMA|TRANSACTION/) }
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { yield }
+    count
+  end
+
+  # A registrant carrying every column the CSV exports read per row: a phone, a
+  # partly paid CE registration, and the allocations behind the money cells.
+  def add_ce_registrant(target_event)
+    registration = create(:event_registration, event: target_event, registrant: create(:person), status: "registered")
+    ce = create(:continuing_education_registration, event_registration: registration, cost_cents: 5_000)
+    create(:allocation, source: create(:payment, amount_cents: 2_000, amount_cents_remaining: 2_000),
+                        allocatable: ce, amount: 2_000)
+    ContactMethod.create!(contactable: registration.registrant, kind: "phone", value: "555-0100")
+    registration
+  end
+
   let(:valid_params) do
     {
       event: {
@@ -370,7 +388,7 @@ RSpec.describe "Events", type: :request do
 
       it "materializes the built-in callouts so the preview reads from real rows" do
         expect { get sample_ticket_event_path(event) }
-          .to change { event.registration_ticket_callouts.builtin.count }.from(0).to(9)
+          .to change { event.registration_ticket_callouts.builtin.count }.from(0).to(8)
       end
 
       it "renders a published custom callout as a link to its detail page" do
@@ -557,10 +575,10 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:public_registration_enabled][:description])
     end
 
-    it "renders the built-in 'Art supplies & what to bring' card as an editable row" do
+    it "renders the built-in 'Handouts' content card as an editable row" do
       get edit_event_path(event)
       expect(response.body).to include("Registration ticket callouts")
-      expect(response.body).to include("Art supplies &amp; what to bring")
+      expect(response.body).to include("Handouts")
       # Its text lives on the callout row, not the removed event columns.
       expect(response.body).not_to include("event[event_details_label]")
     end
@@ -574,7 +592,8 @@ RSpec.describe "Events", type: :request do
       create(:form, :standalone, role: "continuing_education", name: "CE")
       get edit_event_path(event)
       expect(response.body).to include('name="event[ce_hours_request_deadline]"')
-      expect(response.body).to include('name="event[ce_payment_due_deadline]"')
+      expect(response.body).to include('name="event[ce_payment_due_deadline_date]"')
+      expect(response.body).to include('name="event[ce_payment_due_deadline_time]"')
       expect(response.body).to include("Request CE credit by")
     end
 
@@ -611,8 +630,10 @@ RSpec.describe "Events", type: :request do
 
         created = Event.order(created_at: :desc).first
         # The two submitted built-ins persist their edits, and the post-save seed
-        # fills the remaining six — every built-in key present exactly once.
-        expect(created.registration_ticket_callouts.builtin.pluck(:builtin_key).sort).to eq(RegistrationTicketCallout::BUILTIN_KEYS.sort)
+        # fills the remaining six — every seeded built-in key present exactly once.
+        expect(created.registration_ticket_callouts.builtin.pluck(:builtin_key)).to contain_exactly(
+          "payment", "certificate", "scholarship", "ce_hours", "videoconference", "staff", "handouts", "faq"
+        )
         payment = created.registration_ticket_callouts.find_by(builtin_key: "payment")
         expect(payment.title).to eq("Pay your balance")
         expect(payment.published?).to be true
@@ -764,10 +785,12 @@ RSpec.describe "Events", type: :request do
       it "persists the CE deadlines" do
         patch event_path(event), params: { event: {
           ce_hours_request_deadline: "2026-07-01",
-          ce_payment_due_deadline: "2026-08-15"
+          ce_payment_due_deadline_date: "2026-08-15",
+          ce_payment_due_deadline_time: "09:00"
         } }
         expect(event.reload.ce_hours_request_deadline).to eq(Date.new(2026, 7, 1))
-        expect(event.ce_payment_due_deadline).to eq(Date.new(2026, 8, 15))
+        pacific = event.ce_payment_due_deadline.in_time_zone("Pacific Time (US & Canada)")
+        expect(pacific.strftime("%Y-%m-%d %H:%M")).to eq("2026-08-15 09:00")
       end
     end
 
@@ -968,13 +991,13 @@ RSpec.describe "Events", type: :request do
         create(:form_answer, form_submission: submission, form_field: field, submitted_answer: name)
       end
 
-      it "links a linked organization to the edit page rather than its profile" do
+      it "links a linked organization chip to its profile with a pencil to the edit page" do
         create(:event_registration_organization, event_registration: registration, organization: organization)
 
         get registrants_event_path(event)
 
+        expect(response.body).to include(organization_path(organization))
         expect(response.body).to include(link_organization_event_registration_path(registration, return_to: "registrants"))
-        expect(response.body).not_to include(organization_path(organization))
       end
 
       it "shows a 'Pending' chip when a registrant submitted an org name but has no linked org" do
@@ -1437,6 +1460,21 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("CE status")
       expect(response.body).to include("Needs license")
     end
+
+    # Every cell the exports read is preloaded, so a bigger roster costs no more
+    # queries than a small one. Guards the CE, scholarship, payment and phone
+    # columns, each of which used to query per row.
+    %i[registrants onboarding].each do |action|
+      it "exports the #{action} CSV without querying per registrant" do
+        path = public_send(:"#{action}_event_path", event, format: :csv)
+        add_ce_registrant(event)
+        get path # warm up: the first request of a session also loads the signed-in user
+        baseline = query_count { get path }
+        3.times { add_ce_registrant(event) }
+
+        expect(query_count { get path }).to eq(baseline)
+      end
+    end
   end
 
   describe "GET /events/:id/registrants CE status column states" do
@@ -1612,7 +1650,7 @@ RSpec.describe "Events", type: :request do
       expect(response.media_type).to eq("text/csv")
       expect(response.body).to include("First name,Last name,Email")
       expect(response.body).to include("Mailchimp")
-      expect(response.body).to include("CE requested,CE hours,CE amount,CE license")
+      expect(response.body).to include("CE requested,CE hours,CE amount,CE paid,CE due,CE license")
       expect(response.body).to include("Portal user status,Portal access")
       expect(response.body).to include("Comments,Flagged comments")
       expect(response.body).to include("Ready")
@@ -1665,6 +1703,21 @@ RSpec.describe "Events", type: :request do
 
       expect(paid_amount).to eq("$5")        # the $5 payment, NOT the $15 scholarship
       expect(scholarship_amount).to eq("$15")
+    end
+
+    it "reports CE paid and CE due from CE payments" do
+      ce = create(:continuing_education_registration, event_registration: registration, cost_cents: 6_000)
+      create(:allocation, source: create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000),
+                          allocatable: ce, amount: 5_000)
+
+      get onboarding_event_path(event, format: :csv)
+
+      rows = CSV.parse(response.body)
+      headers = rows.first
+      row = rows.find { |r| r[1] == person.last_name }
+
+      expect(row[headers.index("CE paid")]).to eq("$50")   # $50 collected
+      expect(row[headers.index("CE due")]).to eq("$10")    # $10 still owed
     end
 
     it "redirects a non-admin" do
@@ -1766,6 +1819,15 @@ RSpec.describe "Events", type: :request do
         page = Capybara.string(response.body)
         expect(page).to have_link(href: registrants_event_path(event, status_filter: "active"), visible: :all)
         expect(page).to have_link(href: registrants_event_path(event, status_filter: "inactive"), visible: :all)
+      end
+
+      it "drills the CE card into the registrants filtered to continuing education" do
+        create(:continuing_education_registration, event_registration: registration, cost_cents: 6_000)
+
+        get dashboard_event_path(event)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link(href: registrants_event_path(event, ce_status: "registered"), visible: :all)
       end
 
       it "shows a program status badge next to each organization" do

@@ -9,13 +9,23 @@ RSpec.describe "Events::Callouts", type: :request do
   let(:event) { create(:event) }
 
   describe "GET /registration/:slug/faq" do
-    it "renders the FAQ as collapsible toggles from the default content when published" do
+    it "renders the FAQ as collapsible toggles from the row's hydrated default content when published" do
       BuiltinCallouts.seed(event)
       event.registration_ticket_callouts.find_by(builtin_key: "faq").update!(hidden: false)
       get registration_faq_path(registration.slug)
       expect(response).to have_http_status(:success)
       expect(response.body).to include("<details")
       expect(response.body).to include("Who is this training designed for?")
+    end
+
+    it "shows no content (no code fallback) once the FAQ description is blanked" do
+      BuiltinCallouts.seed(event)
+      event.registration_ticket_callouts.find_by(builtin_key: "faq").update!(description: "", hidden: false)
+      get registration_faq_path(registration.slug)
+      expect(response).to have_http_status(:success)
+      # The default questions live on the row (hydrated), so blanking it shows
+      # blank — the same as every other callout, not the code-defined default.
+      expect(response.body).not_to include("Who is this training designed for?")
     end
 
     it "renders the editable FAQ callout copy when the card is materialized" do
@@ -36,9 +46,9 @@ RSpec.describe "Events::Callouts", type: :request do
   end
 
   # The intro copy an admin types into a built-in's materialized callout row (its
-  # "Callout page text" / description) renders on that built-in's public page. CE
-  # and scholarship previously had no request-layer coverage of this; the FAQ case
-  # is covered above, and handouts has no description intro (resource cards only).
+  # "Callout page text" / description) renders on that built-in's public page —
+  # including its <details> dropdowns as styled toggles — the same way regardless
+  # of which built-in it was entered into.
   describe "built-in page copy from the callout row description" do
     it "renders the CE callout's description on the CE page" do
       BuiltinCallouts.seed(event)
@@ -49,6 +59,19 @@ RSpec.describe "Events::Callouts", type: :request do
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Bring your license number.")
+    end
+
+    it "renders the handouts callout's description (with dropdowns) on the handouts page" do
+      create(:registration_ticket_callout, event:, builtin_key: "handouts", hidden: false,
+             description: "<details><summary>What to bring</summary><p>Scissors and glue.</p></details>")
+
+      get registration_handouts_path(registration.slug)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("What to bring")
+      expect(response.body).to include("Scissors and glue.")
+      # Rendered through _rich_content, so the disclosure becomes a styled toggle.
+      expect(response.body).to include("<details")
     end
 
     it "renders the scholarship callout's description on the scholarship page" do
@@ -370,12 +393,70 @@ RSpec.describe "Events::Callouts", type: :request do
     end
 
     context "when CE is not registered" do
-      let(:event) { create(:event) }
+      let(:event) { create(:event, ce_hours_offered: 6) }
 
-      it "renders the opt-in form" do
+      it "renders the opt-in form inside the flip frame" do
         get registration_ce_path(registration.slug)
         expect(response).to have_http_status(:success)
-        expect(response.body).to include("Request CE credit")
+        button = Nokogiri::HTML(response.body).at_css("turbo-frame#ce_request_section input[value='Request CE credit']")
+        expect(button).to be_present
+      end
+
+      it "flips the frame to the license section once CE is requested" do
+        post registration_ce_request_path(registration.slug)
+
+        # Turbo re-fetches the redirect target for the frame; the same frame now
+        # carries the license-entry section instead of the opt-in button.
+        get registration_ce_path(registration.slug), headers: { "Turbo-Frame" => "ce_request_section" }
+        frame = Nokogiri::HTML(response.body).at_css("turbo-frame#ce_request_section")
+        expect(frame.text).to include("Your CE credit")
+        expect(frame.text).not_to include("Request CE credit")
+      end
+    end
+
+    context "when the event has a CE fee" do
+      let(:event) do
+        create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 15_000,
+               ce_payment_due_deadline: Time.zone.local(2026, 7, 22, 9, 0))
+      end
+
+      it "states the concrete fee on the opt-in page before registering" do
+        get registration_ce_path(registration.slug)
+        expect(response.body).to include("CE hours are available for $150.")
+      end
+
+      it "links a locked license's 'Contact us' out of the Turbo frame to the contact page" do
+        license = create(:professional_license, person: registration.registrant, number: "LIC-7")
+        create(:continuing_education_registration, event_registration: registration,
+               professional_license: license, certificate_sent_at: Time.current)
+
+        get registration_ce_path(registration.slug)
+        link = Nokogiri::HTML(response.body).at_css("turbo-frame#license_section a[href='#{contact_us_path}']")
+        expect(link).to be_present
+        expect(link["data-turbo-frame"]).to eq("_top")
+      end
+
+      context "once CE is registered with a balance due" do
+        before do
+          license = create(:professional_license, person: registration.registrant, number: "LIC-9")
+          create(:continuing_education_registration, event_registration: registration,
+                 professional_license: license, cost_cents: 15_000)
+        end
+
+        it "surfaces the payment-due deadline as a stat" do
+          get registration_ce_path(registration.slug)
+          expect(response.body).to include("Payment due")
+          expect(response.body).to include("on July 22, 2026")
+        end
+
+        it "omits the payment-due deadline once paid in full" do
+          ce = registration.continuing_education_registrations.first
+          payment = create(:payment, person: registration.registrant, amount_cents: 15_000, amount_cents_remaining: nil)
+          create(:allocation, source: payment, allocatable: ce, amount: 15_000)
+
+          get registration_ce_path(registration.slug)
+          expect(response.body).not_to include("on July 22, 2026")
+        end
       end
     end
   end
@@ -502,17 +583,76 @@ RSpec.describe "Events::Callouts", type: :request do
     let(:event) { create(:event, end_date: 2.days.ago) }
     let(:registration) { create(:event_registration, event: event, status: "attended") }
 
-    it "renders once the certificate is unlocked" do
+    it "renders the certificate once it is unlocked" do
       get registration_certificate_path(registration.slug)
       expect(response).to have_http_status(:success)
+      expect(response.body).to include("This certifies that")
     end
 
-    it "redirects to the ticket when the certificate isn't unlocked yet" do
+    it "shows the pending unlock conditions when the certificate isn't unlocked yet" do
       registration.update!(status: "registered")
 
       get registration_certificate_path(registration.slug)
 
-      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("unlocks once these are met")
+      expect(response.body).to include("Your attendance is confirmed")
+      expect(response.body).not_to include("This certifies that")
+    end
+
+    it "adds the CE accreditation clause once CE credit is registered and paid" do
+      event.update!(ce_hours_offered: 6)
+      license = create(:professional_license, person: registration.registrant, number: "LIC-1")
+      registration.continuing_education_registrations.create!(professional_license: license, hours: 6, cost_cents: 0)
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("continuing education (CE) credit")
+      expect(response.body).to include(ContinuingEducationRegistration::ACCREDITATION_URL)
+      expect(response.body).to include("provider ##{ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER}")
+    end
+
+    it "unlocks the certificate when the CE credit was issued even without tracked attendance" do
+      registration.update!(status: "registered")
+      event.update!(ce_hours_offered: 6, end_date: 2.days.from_now)
+      license = create(:professional_license, person: registration.registrant, number: "LIC-3")
+      ce = registration.continuing_education_registrations.create!(professional_license: license, hours: 6)
+      ce.mark_certificate_sent!
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("This certifies that")
+      expect(response.body).to include("continuing education (CE) credit")
+    end
+
+    it "adds the CE clause when the credit was issued even if a balance remains" do
+      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 12_000)
+      license = create(:professional_license, person: registration.registrant, number: "LIC-2")
+      ce = registration.continuing_education_registrations.create!(professional_license: license, hours: 6)
+      ce.mark_certificate_sent!
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("continuing education (CE) credit")
+    end
+
+    it "surfaces CE status above the certificate (screen-only) when CE isn't earned yet" do
+      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 12_000)
+      license = create(:professional_license, person: registration.registrant, number: "LIC-4")
+      registration.continuing_education_registrations.create!(professional_license: license, hours: 6)
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("This certifies that")
+      expect(response.body).to include("isn't shown on this certificate yet")
+      # The gated note never joins the printed CE clause.
+      expect(response.body).not_to include("in accordance with our approval by")
+    end
+
+    it "omits the CE clause when no CE credit was earned" do
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).not_to include(ContinuingEducationRegistration::ACCREDITATION_URL)
     end
   end
 

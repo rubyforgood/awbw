@@ -84,7 +84,7 @@ module EventHelper
     )
   end
 
-  def event_show_button(event, truncate_at: nil, subtitle: nil, data: {}, path: nil, compact: false)
+  def event_show_button(event, truncate_at: nil, subtitle: nil, data: {}, path: nil, compact: false, icon: "fa-calendar-days")
     bg = DomainTheme.bg_class_for(:events, intensity: 50)
     hover_bg = DomainTheme.bg_class_for(:events, intensity: 50, hover: true)
     text = DomainTheme.text_class_for(:events)
@@ -104,7 +104,7 @@ module EventHelper
                     overflow-hidden" do
       event = event.decorate if event.respond_to?(:decorate)
 
-      icon_tag = content_tag(:i, "", class: "fa-solid fa-calendar-days shrink-0 #{icon_size} #{DomainTheme.text_class_for(:events)}")
+      icon_tag = content_tag(:i, "", class: "fa-solid #{icon} shrink-0 #{icon_size} #{DomainTheme.text_class_for(:events)}")
 
       display_name = truncate_at ? truncate(event.name.to_s, length: truncate_at) : event.name.to_s
 

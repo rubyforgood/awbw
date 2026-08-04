@@ -1,0 +1,42 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
+  <div class="mb-6">
+    <%= link_to "← Subscription topics", topic_subscription_types_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+  <h1 class="text-2xl font-semibold text-gray-900 mb-6">Edit topic</h1>
+  <%= render "form", submit_label: "Save changes" %>
+
+  <%# Archive/restore and delete moved off the index — the topic's actions live on
+      its own page now. Delete is only offered when nothing depends on the topic. %>
+  <div class="mt-8 border-t border-gray-200 pt-6">
+    <h2 class="text-sm font-semibold text-gray-700 mb-3">Actions</h2>
+    <div class="flex flex-wrap gap-2">
+      <% if @topic_subscription_type.archived? %>
+        <%= button_to unarchive_topic_subscription_type_path(@topic_subscription_type), method: :patch,
+              class: "btn btn-utility-outline inline-flex items-center gap-1.5" do %>
+          <i class="fa-solid fa-box-open"></i>
+          Restore
+        <% end %>
+      <% else %>
+        <%= button_to archive_topic_subscription_type_path(@topic_subscription_type), method: :patch,
+              class: "btn btn-utility-outline inline-flex items-center gap-1.5" do %>
+          <i class="fa-solid fa-box-archive"></i>
+          Archive
+        <% end %>
+      <% end %>
+
+      <% if @topic_subscription_type.topic_subscriptions.none? %>
+        <%= button_to topic_subscription_type_path(@topic_subscription_type), method: :delete,
+              class: "btn btn-danger-outline inline-flex items-center gap-1.5",
+              data: { turbo_confirm: "Delete this topic?" } do %>
+          <i class="fa-solid fa-trash-can"></i>
+          Delete
+        <% end %>
+      <% end %>
+    </div>
+    <% if @topic_subscription_type.topic_subscriptions.any? %>
+      <p class="mt-2 text-xs text-gray-500">Topics with subscriptions can't be deleted — archive to retire without losing them.</p>
+    <% end %>
+  </div>
+</div>

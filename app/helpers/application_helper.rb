@@ -286,7 +286,10 @@ module ApplicationHelper
     notifications:       "fa-bell",
     grants:              "fa-hand-holding-dollar",
     form_submissions:    "fa-file-signature",
-    payments:            "fa-money-check-dollar"
+    payments:            "fa-money-check-dollar",
+    topic_subscriptions: "fa-envelope-open-text",
+    workshop_ideas:          "fa-lightbulb",
+    workshop_variation_ideas: "fa-lightbulb"
   }.freeze
 
   # Themed card-style link to a filtered index. The collection drives the

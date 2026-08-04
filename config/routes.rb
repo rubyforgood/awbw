@@ -107,6 +107,21 @@ Rails.application.routes.draw do
     end
     resources :comments, only: [ :index, :create, :update ]
   end
+  resources :topic_subscriptions, except: [ :show ] do
+    collection do
+      get :email_addresses
+    end
+    member do
+      patch :unsubscribe
+      patch :resubscribe
+    end
+  end
+  resources :topic_subscription_types, except: [ :show ] do
+    member do
+      patch :archive
+      patch :unarchive
+    end
+  end
   resources :forms do
     member do
       patch :reorder_field
@@ -190,7 +205,7 @@ Rails.application.routes.draw do
       post :curate
     end
   end
-  resources :notifications, only: [ :index, :show, :update ] do
+  resources :notifications, only: [ :index, :new, :create, :show, :update ] do
     member do
       post :resend
     end

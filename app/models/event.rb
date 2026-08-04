@@ -14,6 +14,7 @@ class Event < ApplicationRecord
   belongs_to :location, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :event_registrations, dependent: :destroy
+  has_many :topic_subscriptions, foreign_key: :interested_event_id, inverse_of: :interested_event, dependent: :nullify
   has_many :event_staffs, dependent: :destroy
   has_many :event_forms, dependent: :destroy
   has_many :registration_ticket_callouts, -> { ordered }, dependent: :destroy, inverse_of: :event
@@ -89,6 +90,9 @@ class Event < ApplicationRecord
   # Events flagged as facilitator trainings (the "TAC" a scholarship recipient
   # attends). Drives the scholarship index's training column.
   scope :facilitator_trainings, -> { where(facilitator_training: true) }
+  # start_date is a date column, so compare against a date — a Time would be cast
+  # to midnight and drop events starting today.
+  scope :upcoming, -> { where("start_date >= ?", Date.current) }
   # Events that charge a registration fee (cost_cents may be nil for free ones).
   scope :paid, -> { where("cost_cents > 0") }
   # Events whose start date falls in the given calendar year. Keyed off the year
@@ -215,7 +219,8 @@ class Event < ApplicationRecord
   # Virtual attributes for date/time inputs (Firefox datetime-local compat)
   attr_writer :start_date_date, :start_date_time,
               :end_date_date, :end_date_time,
-              :registration_close_date_date, :registration_close_date_time
+              :registration_close_date_date, :registration_close_date_time,
+              :ce_payment_due_deadline_date, :ce_payment_due_deadline_time
 
   def start_date_date
     @start_date_date || start_date&.strftime("%Y-%m-%d")
@@ -239,6 +244,14 @@ class Event < ApplicationRecord
 
   def registration_close_date_time
     @registration_close_date_time || registration_close_date&.strftime("%H:%M")
+  end
+
+  def ce_payment_due_deadline_date
+    @ce_payment_due_deadline_date || ce_payment_due_deadline&.strftime("%Y-%m-%d")
+  end
+
+  def ce_payment_due_deadline_time
+    @ce_payment_due_deadline_time || ce_payment_due_deadline&.strftime("%H:%M")
   end
 
   # Virtual attribute for cost in dollars (converts to/from cost_cents)
@@ -305,6 +318,7 @@ class Event < ApplicationRecord
     merge_date_time(:start_date)
     merge_date_time(:end_date)
     merge_date_time(:registration_close_date)
+    merge_date_time(:ce_payment_due_deadline)
   end
 
   def merge_date_time(field)

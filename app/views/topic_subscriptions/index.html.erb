@@ -1,0 +1,37 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:topic_subscriptions) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
+    <%= link_to "← Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <div class="flex items-center gap-4">
+      <%= link_to "Email addresses", email_addresses_topic_subscriptions_path(request.query_parameters), class: "text-sm text-gray-500 hover:text-gray-700" %>
+      <%= link_to "Manage topics", topic_subscription_types_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+    <div>
+      <h1 class="flex items-center gap-2 text-2xl font-semibold text-gray-900">
+        <i class="fa-solid fa-envelope-open-text <%= DomainTheme.text_class_for(:topic_subscriptions, intensity: 600) %>"></i>
+        Subscriptions
+      </h1>
+      <p class="text-gray-600 mt-1">People subscribed to hear about a topic.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <%# Carry the index's filters so the form prefills from them (person, topic)
+          and the eyebrow/Cancel/post-save redirect land back on this filtered
+          list; a person filter reads as person context and returns to their page. %>
+      <%= link_to new_topic_subscription_path(topic_subscription_index_filters.merge(return_to: params[:person_id].present? ? "person" : "index")), class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+        <i class="fa-solid fa-plus text-xs"></i>
+        New subscription
+      <% end %>
+    </div>
+  </div>
+
+  <%= render "search_boxes" %>
+
+  <% result_src = topic_subscriptions_path + "?" + request.query_string %>
+  <%= turbo_frame_tag :topic_subscriptions_results, src: result_src, data: { turbo: "temporary" } do %>
+    <%= render "results_skeleton" %>
+  <% end %>
+</div>

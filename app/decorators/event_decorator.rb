@@ -42,6 +42,12 @@ class EventDecorator < ApplicationDecorator
     start_date.strftime("%B %d, %Y")
   end
 
+  # Display in the viewer's TZ. Returns nil when no deadline is set.
+  def ce_payment_due_deadline_display
+    return if ce_payment_due_deadline.blank?
+    ce_payment_due_deadline.in_time_zone(Time.zone).strftime("%-l:%M %p %Z on %B %-d, %Y")
+  end
+
   # Weekday-prefixed date range (e.g. "Thu-Fri, Jan 1-2, 2026") that collapses the
   # year — and the month/weekday where possible — so nothing repeats unnecessarily.
   def date_range

@@ -70,6 +70,20 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe ".upcoming" do
+    it "includes an event starting today" do
+      # start_date is a date column, so comparing against a time-of-day would
+      # drop today's events at midnight.
+      today = create(:event, start_date: Date.current)
+      expect(Event.upcoming).to include(today)
+    end
+
+    it "excludes an event that already started" do
+      past = create(:event, start_date: 1.day.ago)
+      expect(Event.upcoming).not_to include(past)
+    end
+  end
+
   describe "#ended?" do
     it "returns true when end_date is in the past" do
       event = build(:event, end_date: 1.day.ago)
@@ -391,6 +405,27 @@ RSpec.describe Event, type: :model do
 
     it "is false when CE hours are zero" do
       expect(build(:event, ce_hours_offered: 0)).not_to be_ce_eligible
+    end
+  end
+
+  describe "ce_payment_due_deadline date/time fields" do
+    it "merges the date and time inputs into the datetime column on save" do
+      event = create(:event,
+                     ce_payment_due_deadline_date: "2026-07-22",
+                     ce_payment_due_deadline_time: "09:00")
+      deadline = event.reload.ce_payment_due_deadline
+      expect(deadline.in_time_zone(Time.zone).strftime("%Y-%m-%d %H:%M")).to eq("2026-07-22 09:00")
+    end
+
+    it "exposes the stored deadline back through the virtual date/time readers" do
+      event = create(:event, ce_payment_due_deadline: Time.zone.local(2026, 7, 22, 9, 0))
+      expect(event.ce_payment_due_deadline_date).to eq("2026-07-22")
+      expect(event.ce_payment_due_deadline_time).to eq("09:00")
+    end
+
+    it "leaves the deadline nil when both inputs are blank" do
+      event = create(:event, ce_payment_due_deadline_date: "", ce_payment_due_deadline_time: "")
+      expect(event.reload.ce_payment_due_deadline).to be_nil
     end
   end
 

@@ -4,7 +4,7 @@
     Each field is labelled above its own white input so they read as distinct
     fields; the date inputs match the event start/end date style. locals: f
     (event form builder). %>
-<div class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+<div class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-[0.7fr_0.7fr_0.7fr_1.4fr]">
   <div>
     <%= f.label :ce_hours_offered, "CE hours offered", class: "block text-xs font-medium text-gray-600 mb-1" %>
     <%= f.number_field :ce_hours_offered, min: 0, step: 0.25,
@@ -26,10 +26,14 @@
           class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 bg-white focus:ring-blue-500 focus:border-blue-500" %>
   </div>
   <div>
-    <%= f.label :ce_payment_due_deadline, class: "block text-xs font-medium text-gray-600 mb-1" do %>
+    <%= f.label :ce_payment_due_deadline_date, class: "block text-xs font-medium text-gray-600 mb-1" do %>
       Payment due by <span class="font-normal text-gray-400">(optional)</span>
     <% end %>
-    <%= f.text_field :ce_payment_due_deadline, type: "date",
-          class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 bg-white focus:ring-blue-500 focus:border-blue-500" %>
+    <div class="flex gap-2">
+      <%= f.text_field :ce_payment_due_deadline_date, type: "date",
+            class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 bg-white focus:ring-blue-500 focus:border-blue-500" %>
+      <%= f.text_field :ce_payment_due_deadline_time, type: "time",
+            class: "w-28 shrink-0 rounded border-gray-300 shadow-sm px-3 py-2 bg-white focus:ring-blue-500 focus:border-blue-500" %>
+    </div>
   </div>
 </div>

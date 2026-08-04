@@ -8,7 +8,7 @@ class PeopleController < ApplicationController
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
       base_scope = authorized_scope(Person.includes(
-        :avatar_attachment,
+        { avatar_attachment: :blob },
         :user,
         sectorable_items: :sector,
         affiliations: :organization,

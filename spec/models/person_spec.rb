@@ -331,6 +331,43 @@ RSpec.describe Person, type: :model do
     end
   end
 
+  describe "#phone_number" do
+    let(:person) { create(:person) }
+
+    def add_phone(value, primary: false, inactive: false, kind: "phone")
+      ContactMethod.create!(contactable: person, kind: kind, value: value, primary: primary, inactive: inactive)
+    end
+
+    # The same answer whether the caller preloaded contact_methods or not — the
+    # loaded branch exists only to spare a query per row on rosters and exports.
+    def phone_numbers
+      [ person.reload.phone_number, Person.includes(:contact_methods).find(person.id).phone_number ]
+    end
+
+    it "returns nil with no phone on file" do
+      add_phone("nope", kind: "sms")
+      expect(phone_numbers).to all(be_nil)
+    end
+
+    it "prefers the primary phone over the others" do
+      add_phone("555-0001")
+      add_phone("555-0002", primary: true)
+      expect(phone_numbers).to all(eq("555-0002"))
+    end
+
+    it "falls back to the first phone when none is primary" do
+      add_phone("555-0001")
+      add_phone("555-0002")
+      expect(phone_numbers).to all(eq("555-0001"))
+    end
+
+    it "ignores inactive phones, including an inactive primary" do
+      add_phone("555-0001", primary: true, inactive: true)
+      add_phone("555-0002")
+      expect(phone_numbers).to all(eq("555-0002"))
+    end
+  end
+
   describe "#primary_organization" do
     let(:person) { create(:person) }
 

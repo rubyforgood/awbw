@@ -17,6 +17,36 @@ class NotificationsController < ApplicationController
     end
   end
 
+  def new
+    authorize! Notification, to: :new?
+    @notification = Notification.new
+  end
+
+  # Log a communication by hand against a person — mirrors the nested
+  # notifications flow (people_controller#update): the picked person is the
+  # noticeable and supplies the recipient_email; the model fills in the
+  # manual_log defaults (kind, recipient_role, notification_type, delivered_at).
+  def create
+    authorize! Notification, to: :create?
+
+    @person = Person.find_by(id: params[:person_id])
+    @notification = Notification.new(notification_params)
+    @notification.sender = current_user
+
+    if @person
+      @notification.noticeable = @person
+      @notification.recipient_email = @person.communications_email.presence || "n/a"
+    else
+      @notification.errors.add(:base, "Select a person to log this communication against")
+    end
+
+    if @person && @notification.save
+      redirect_to notifications_path, notice: "Communication logged."
+    else
+      render :new, status: :unprocessable_entity
+    end
+  end
+
   def show
     authorize! @notification
   end
@@ -61,6 +91,6 @@ class NotificationsController < ApplicationController
   end
 
   def notification_params
-    params.require(:notification).permit(:responded)
+    params.require(:notification).permit(:responded, :channel, :email_subject, :email_body_text)
   end
 end

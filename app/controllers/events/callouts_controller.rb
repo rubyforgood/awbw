@@ -34,16 +34,11 @@ module Events
       @document_cards = sample_preview? ? [] : payment_document_cards
     end
 
-    # Certificate of completion, rendered like the invoice. Only reachable once
-    # the certificate is unlocked.
+    # Certificate of completion: the certificate once unlocked, otherwise the
+    # pending unlock conditions.
     def certificate
-      # The sample preview always shows the template; a real registrant only sees
-      # it once the certificate is unlocked.
-      return if sample_preview?
-
-      unless @event_registration.certificate_available?
-        redirect_to registration_ticket_path(@event_registration.slug)
-      end
+      # The page shows the certificate once unlocked, or the pending unlock
+      # conditions until then, so there's nothing to gate here.
     end
 
     # Scholarship status: the award (amount, funder, criteria, tasks) once a
@@ -149,6 +144,7 @@ module Events
     def handouts
       return redirect_to registration_ticket_path(@event_registration.slug) unless builtin_published?("handouts")
       callout = @event.registration_ticket_callouts.find_by(builtin_key: "handouts")
+      @builtin_intro = callout&.description.presence
       @handout_cards = resource_cards_for(callout, icon: "fa-solid fa-file-pdf", return_to: "handouts")
     end
 
@@ -182,12 +178,13 @@ module Events
     # FAQ for the training, with a folded-in contact link. Only reachable when
     # the event shows the FAQ callout. Renders the editable FAQ callout copy (the
     # admin edits it like every other callout, using the <toggle> syntax for each
-    # question), falling back to the code-defined default for events that haven't
-    # materialized the card yet.
+    # question). The default questions are hydrated onto the row when it's
+    # materialized (seeded from BuiltinCallouts.faq_html), so a blanked
+    # description shows blank.
     def faq
       return redirect_to(registration_ticket_path(@event_registration.slug)) unless builtin_published?("faq")
       callout = @event.registration_ticket_callouts.find_by(builtin_key: "faq")
-      @faq_content = callout&.description.presence || BuiltinCallouts.faq_html
+      @faq_content = callout&.description
     end
 
     private

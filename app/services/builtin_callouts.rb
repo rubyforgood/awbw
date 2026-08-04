@@ -1,11 +1,11 @@
 # The catalog of built-in ticket callouts (Payment, Certificate, Scholarship, CE
-# hours, Event details, Videoconference, Handouts, FAQ) and the code that
+# hours, Videoconference, Handouts, FAQ) and the code that
 # materializes them onto an event as editable RegistrationTicketCallout rows:
 # `seed` persists them (on create, and lazily on edit so older events heal with no
 # backfill); `build` makes the same rows in memory for the new-event form; `reset`
 # restores a row to its default; `customized?` reports whether a row was edited.
 #
-# All eight seed hidden (unchecked) by default — admins publish the ones they want
+# All seven seed hidden (unchecked) by default — admins publish the ones they want
 # per event, edit them per row, and can restore a row to default. Custom callouts
 # live in the same list and can be reordered among the built-ins. Seeding is
 # idempotent so a re-run never clobbers admin edits.
@@ -211,17 +211,6 @@ class BuiltinCallouts
         }
       },
       {
-        builtin_key: "certificate",
-        title: "Certificate of completion",
-        subtitle: "View and download your certificate",
-        callout_type: "action",
-        icon_class: "fa-solid fa-certificate",
-        color_class: "green",
-        # Off by default except on facilitator trainings. When shown, it still only
-        # appears once the certificate unlocks (BuiltinCalloutCards guards this).
-        hidden: ->(_event) { true }
-      },
-      {
         builtin_key: "scholarship",
         title: "Scholarship",
         subtitle: "Your scholarship request and award",
@@ -243,20 +232,9 @@ class BuiltinCallouts
         hidden: ->(_event) { true }
       },
       {
-        builtin_key: "art_supplies",
-        # A content callout: renders its own editable copy on the generic callout
-        # page. Admins add the "what to bring" details per event.
-        title: "Art supplies & what to bring",
-        subtitle: "Important info for this event — please read",
-        callout_type: "reference",
-        icon_class: "fa-solid fa-palette",
-        color_class: "blue",
-        hidden: ->(_event) { true }
-      },
-      {
         builtin_key: "videoconference",
         title: "Videoconference",
-        subtitle: "Join link and how to add it to your calendar",
+        subtitle: "Join details and add to calendar links",
         callout_type: "action",
         icon_class: "fa-solid fa-video",
         color_class: "blue",
@@ -279,7 +257,7 @@ class BuiltinCallouts
       {
         builtin_key: "handouts",
         title: "Handouts",
-        subtitle: "Worksheets and resources for the training",
+        subtitle: "Worksheets and resources for the event",
         callout_type: "reference",
         icon_class: "fa-solid fa-folder-open",
         color_class: "blue",
@@ -287,6 +265,17 @@ class BuiltinCallouts
         resources: -> { handout_resources },
         # Per-link subtitle/page_content defaults, keyed by resource title.
         resource_content: HANDOUT_LINK_DEFAULTS
+      },
+      {
+        builtin_key: "certificate",
+        title: "Certificate of completion",
+        subtitle: "View and download your certificate",
+        callout_type: "action",
+        icon_class: "fa-solid fa-certificate",
+        color_class: "green",
+        # A published row shows before it unlocks as a pending card; once unlocked it
+        # links to the certificate (BuiltinCalloutCards guards this).
+        hidden: ->(_event) { true }
       },
       {
         builtin_key: "faq",
