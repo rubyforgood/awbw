@@ -401,8 +401,13 @@ class EventRegistration < ApplicationRecord
   end
 
   # The certificate of completion unlocks once the training has happened, the
-  # registrant attended, and any scholarship tasks are complete.
+  # registrant attended, and any scholarship tasks are complete. Issuing a CE
+  # certificate (an admin marking the credit sent) is itself an affirmation that
+  # the registrant completed the training, so it unlocks the certificate too —
+  # even when attendance was never tracked.
   def certificate_available?
+    return true if ce_certificate_issued?
+
     event.end_date.present? && event.end_date.past? && attended? && scholarship_tasks_met?
   end
 

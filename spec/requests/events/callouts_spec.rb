@@ -576,6 +576,61 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).to include("Your attendance is confirmed")
       expect(response.body).not_to include("This certifies that")
     end
+
+    it "adds the CE accreditation clause once CE credit is registered and paid" do
+      event.update!(ce_hours_offered: 6)
+      license = create(:professional_license, person: registration.registrant, number: "LIC-1")
+      registration.continuing_education_registrations.create!(professional_license: license, hours: 6, cost_cents: 0)
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("continuing education (CE) credit")
+      expect(response.body).to include(ContinuingEducationRegistration::ACCREDITATION_URL)
+      expect(response.body).to include("provider ##{ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER}")
+    end
+
+    it "unlocks the certificate when the CE credit was issued even without tracked attendance" do
+      registration.update!(status: "registered")
+      event.update!(ce_hours_offered: 6, end_date: 2.days.from_now)
+      license = create(:professional_license, person: registration.registrant, number: "LIC-3")
+      ce = registration.continuing_education_registrations.create!(professional_license: license, hours: 6)
+      ce.mark_certificate_sent!
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("This certifies that")
+      expect(response.body).to include("continuing education (CE) credit")
+    end
+
+    it "adds the CE clause when the credit was issued even if a balance remains" do
+      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 12_000)
+      license = create(:professional_license, person: registration.registrant, number: "LIC-2")
+      ce = registration.continuing_education_registrations.create!(professional_license: license, hours: 6)
+      ce.mark_certificate_sent!
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("continuing education (CE) credit")
+    end
+
+    it "surfaces CE status above the certificate (screen-only) when CE isn't earned yet" do
+      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 12_000)
+      license = create(:professional_license, person: registration.registrant, number: "LIC-4")
+      registration.continuing_education_registrations.create!(professional_license: license, hours: 6)
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("This certifies that")
+      expect(response.body).to include("isn't shown on this certificate yet")
+      # The gated note never joins the printed CE clause.
+      expect(response.body).not_to include("in accordance with our approval by")
+    end
+
+    it "omits the CE clause when no CE credit was earned" do
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).not_to include(ContinuingEducationRegistration::ACCREDITATION_URL)
+    end
   end
 
   describe "POST /registration/:slug/ce/license" do
