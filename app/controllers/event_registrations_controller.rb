@@ -368,10 +368,10 @@ class EventRegistrationsController < ApplicationController
           er.scholarships.completed.any? ? "Yes" : "No",
           cost_required ? er.payment_status_label : "",
           er.intends_to_pay? ? "Yes" : "No",
-          total_cents.positive? ? format("%.2f", total_cents / 100.0) : "",
+          csv_dollars(total_cents),
           er.ce_registered? ? er.ce_status_label.to_s : "",
-          er.ce_amount_paid_cents.positive? ? helpers.dollars_from_cents(er.ce_amount_paid_cents) : "",
-          er.ce_amount_due_cents.positive? ? helpers.dollars_from_cents(er.ce_amount_due_cents) : ""
+          csv_dollars(er.ce_amount_paid_cents),
+          csv_dollars(er.ce_amount_due_cents)
         ]
       end
     end

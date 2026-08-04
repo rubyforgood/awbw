@@ -544,7 +544,7 @@ class EventsController < ApplicationController
       .map(&:organization).compact.uniq
     org_names = orgs.map(&:name).join("; ")
     total_cents = registration.allocations_sum
-    payment_total = total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
+    payment_total = csv_dollars(total_cents)
     payment_status = cost_required ? registration.payment_status_label : ""
     row = [
       person.first_name,
@@ -560,16 +560,10 @@ class EventsController < ApplicationController
     ]
     if include_ce
       row << registration.ce_status_label.to_s
-      row << ce_dollars(registration.ce_amount_paid_cents)
-      row << ce_dollars(registration.ce_amount_due_cents)
+      row << csv_dollars(registration.ce_amount_paid_cents)
+      row << csv_dollars(registration.ce_amount_due_cents)
     end
     row
-  end
-
-  # CE dollar cell for a CSV: the money helper's formatting when there's an
-  # amount, blank when there's nothing (so empty cells read cleanly).
-  def ce_dollars(cents)
-    cents.positive? ? helpers.dollars_from_cents(cents) : ""
   end
 
   def onboarding_csv_string
@@ -622,9 +616,9 @@ class EventsController < ApplicationController
       ce_hours = registration.ce_hours_total
       row << (registration.ce_registered? ? "Yes" : "No")
       row << (ce_hours.positive? ? helpers.plain_number(ce_hours) : "")
-      row << ce_dollars(registration.ce_amount_owed_cents)
-      row << ce_dollars(registration.ce_amount_paid_cents)
-      row << ce_dollars(registration.ce_amount_due_cents)
+      row << csv_dollars(registration.ce_amount_owed_cents)
+      row << csv_dollars(registration.ce_amount_paid_cents)
+      row << csv_dollars(registration.ce_amount_due_cents)
       row << registration.ce_license_numbers.join("; ")
     end
     EventRegistration::CHECKLIST_STEPS.each_key do |step|
