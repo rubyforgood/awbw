@@ -26,11 +26,13 @@ module Dues
     def create_term
       return if @dues_subscription.cancelled?
 
-      terms.create!(
+      year = terms.new(
         start_date: @covering,
         end_date: @covering + 1.year - 1.day,
         cost_cents: @cost_cents || @dues_subscription.rate_cents || Dues::ANNUAL_COST_CENTS
       )
+
+      year if year.save
     end
   end
 end
