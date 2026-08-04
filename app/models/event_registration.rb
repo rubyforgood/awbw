@@ -689,6 +689,13 @@ class EventRegistration < ApplicationRecord
     event_attendance_time_entries.chronological.select { |entry| entry.attendance_date == date }
   end
 
+  # Total completed (signed-out) attendance minutes across all days — the figure the
+  # CE certificate gate compares against the awarded hours. Open entries contribute
+  # nothing until they're signed out.
+  def attendance_minutes_total
+    event_attendance_time_entries.sum { |entry| entry.duration_minutes.to_i }
+  end
+
   # CE is now tracked as one or more ContinuingEducationRegistration records,
   # each against a professional license. These aggregate across them so callers
   # (callouts, onboarding, CSV) read a single registration-level figure.
