@@ -68,13 +68,13 @@ RSpec.describe PersonDecorator do
         .to eq("Can't be deleted — this person has payments.")
     end
 
-    it "names event registrations with payments" do
+    it "names event registrations and form submissions" do
       person = create(:person, user: nil)
-      registration = create(:event_registration, registrant: person)
-      create(:allocation, allocatable: registration)
+      create(:event_registration, registrant: person)
+      create(:form_submission, person: person)
 
       expect(person.decorate.deletion_blocked_reason)
-        .to eq("Can't be deleted — this person has event registrations with payments.")
+        .to eq("Can't be deleted — this person has event registrations and form submissions.")
     end
 
     it "names each kind of blocking record the person actually has" do

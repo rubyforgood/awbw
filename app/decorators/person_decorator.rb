@@ -97,8 +97,9 @@ class PersonDecorator < ApplicationDecorator
     payments: "payments",
     scholarships: "scholarships",
     grants: "grants",
-    paid_event_registrations: "event registrations with payments",
-    event_staffing: "event staff assignments"
+    event_registrations: "event registrations",
+    event_staffing: "event staff assignments",
+    form_submissions: "form submissions"
   }.freeze
 
   # Human-readable explanation of why the Delete button is unavailable, or nil

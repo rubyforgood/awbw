@@ -345,8 +345,9 @@ class Person < ApplicationRecord
     blockers << :payments if payments.exists?
     blockers << :scholarships if scholarships.exists?
     blockers << :grants if grants.exists?
-    blockers << :paid_event_registrations if event_registrations.joins(:allocations).exists?
+    blockers << :event_registrations if event_registrations.exists?
     blockers << :event_staffing if event_staffs.exists?
+    blockers << :form_submissions if form_submissions.exists?
     blockers
   end
 

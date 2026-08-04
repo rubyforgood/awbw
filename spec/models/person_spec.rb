@@ -554,19 +554,25 @@ RSpec.describe Person, "scholarship index helpers" do
       expect(person).not_to be_deletable
     end
 
-    it "is false when the person has an event registration with a payment" do
+    it "is false when the person has an event registration" do
       person = create(:person, user: nil)
-      registration = create(:event_registration, registrant: person)
-      create(:allocation, allocatable: registration)
+      create(:event_registration, registrant: person)
 
       expect(person).not_to be_deletable
     end
 
-    it "is true when the person has only an unpaid event registration" do
+    it "is false when the person has staffed an event" do
       person = create(:person, user: nil)
-      create(:event_registration, registrant: person)
+      create(:event_staff, person: person)
 
-      expect(person).to be_deletable
+      expect(person).not_to be_deletable
+    end
+
+    it "is false when the person has a form submission" do
+      person = create(:person, user: nil)
+      create(:form_submission, person: person)
+
+      expect(person).not_to be_deletable
     end
   end
 end
