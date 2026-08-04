@@ -312,7 +312,7 @@ end
 - `edit_toggle` — Inline view/edit toggle for the comments and communications boxes (configurable view/edit CSS classes)
 - `event_staff_bio` — Loads a selected person's read-only profile bio (with edit link) alongside the editable event-specific bio on the staff form
 - `file_preview` — File upload preview
-- `flip_field` — Shows a field value read-only with an edit pencil that flips to a `<select>` picker and syncs the display (used for the topic + event fields on the subscription form)
+- `conditional_fields` — Shows/hides fields based on a source `<select>` (via `data-show-when` value match, or `data-show-when-attr` reading a `data-*` flag on the selected option — e.g. the subscription form's event field appears only for event-oriented topics)
 - `grant_details` — Swaps a grant's eligibility criteria + tasks when the grant picker changes
 - `grant_select` — Tom Select grant picker showing each grant's remaining-of-total funds
 - `inactive_toggle` — Gray out expired affiliations

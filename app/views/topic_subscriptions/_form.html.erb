@@ -40,21 +40,21 @@
       data: { controller: "remote-select", remote_select_model_value: "person" } %>
   </div>
 
-  <%# Topic — shown as a value with a pencil that flips to a picker. %>
-  <div data-controller="flip-field">
+  <%# Topic — shown as a value with a pencil that reveals a picker (edit-toggle). %>
+  <div data-controller="edit-toggle">
     <%= f.label :topic_subscription_type_id, "Topic", class: label_class %>
     <div class="flex items-center gap-2">
-      <span class="<%= value_class %>" data-flip-field-target="display"><%= current_type&.name || "—" %></span>
-      <div class="hidden flex-1" data-flip-field-target="picker">
+      <span class="<%= value_class %>" data-edit-toggle-target="view"><%= current_type&.name || "—" %></span>
+      <div class="hidden flex-1" data-edit-toggle-target="edit">
         <%= f.select :topic_subscription_type_id,
           options_for_select(
             type_options.map { |type| [ type.name, type.id, { "data-event-selector": type.event_selector } ] },
             @topic_subscription.topic_subscription_type_id),
           { include_blank: true },
           class: field_class,
-          data: { flip_field_target: "select", conditional_fields_target: "source", action: "change->conditional-fields#toggle" } %>
+          data: { conditional_fields_target: "source", action: "change->conditional-fields#toggle" } %>
       </div>
-      <button type="button" class="<%= pencil_class %>" data-action="flip-field#toggle" aria-label="Change topic">
+      <button type="button" class="<%= pencil_class %>" data-action="edit-toggle#toggle" aria-label="Change topic">
         <i class="fa-solid fa-pen text-[0.6rem]"></i>
       </button>
     </div>
@@ -63,19 +63,18 @@
   <%# Event — only for event-oriented topics (shown/hidden as the topic changes).
       Prefilled from the originating event; pencil flips to a picker to choose a
       different upcoming training or "All upcoming events". %>
-  <div data-controller="flip-field" data-conditional-fields-target="field"
+  <div data-controller="edit-toggle" data-conditional-fields-target="field"
        data-show-when-attr="eventSelector"<%= " hidden".html_safe unless current_type&.event_selector? %>>
     <%= f.label :interested_event_id, "Event", class: label_class %>
     <div class="flex items-center gap-2">
-      <span class="<%= value_class %>" data-flip-field-target="display"><%= current_event&.title || "All upcoming events" %></span>
-      <div class="hidden flex-1" data-flip-field-target="picker">
+      <span class="<%= value_class %>" data-edit-toggle-target="view"><%= current_event&.title || "All upcoming events" %></span>
+      <div class="hidden flex-1" data-edit-toggle-target="edit">
         <%= f.select :interested_event_id,
           options_for_select(event_options.map { |e| [ e.title, e.id ] }, @topic_subscription.interested_event_id),
           { include_blank: "All upcoming events" },
-          class: field_class,
-          data: { flip_field_target: "select" } %>
+          class: field_class %>
       </div>
-      <button type="button" class="<%= pencil_class %>" data-action="flip-field#toggle" aria-label="Change event">
+      <button type="button" class="<%= pencil_class %>" data-action="edit-toggle#toggle" aria-label="Change event">
         <i class="fa-solid fa-pen text-[0.6rem]"></i>
       </button>
     </div>

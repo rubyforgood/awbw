@@ -209,7 +209,7 @@ RSpec.describe "TopicSubscriptions", type: :request do
       )
 
       expect(response).to have_http_status(:success)
-      # Event + topic shown as flip-field display values, and the eyebrow returns to the event.
+      # Event + topic shown as read-only display values (edit-toggle), and the eyebrow returns to the event.
       expect(response.body).to include("TAC263 Spring Training")
       expect(response.body).to include("Facilitator trainings")
       expect(response.body).to include("← Dashboard")
