@@ -10,6 +10,25 @@ RSpec.describe TopicSubscriptionType, type: :model do
       create(:topic_subscription_type, name: "News")
       expect(build(:topic_subscription_type, name: "news")).not_to be_valid
     end
+
+    it "reports a key collision on the name, since the key isn't editable" do
+      create(:topic_subscription_type, name: "News & events")
+      dupe = build(:topic_subscription_type, name: "News, events")
+
+      expect(dupe).not_to be_valid
+      # The form has no key field, so the error must land on name and say which
+      # derived key collided.
+      expect(dupe.errors[:name].join).to include("news_events")
+      expect(dupe.errors[:key]).to be_empty
+    end
+
+    it "does not add a redundant key error when the name is blank" do
+      type = build(:topic_subscription_type, name: "")
+
+      expect(type).not_to be_valid
+      expect(type.errors[:name]).to be_present
+      expect(type.errors[:key]).to be_empty
+    end
   end
 
   describe "key" do

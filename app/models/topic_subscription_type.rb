@@ -18,7 +18,12 @@ class TopicSubscriptionType < ApplicationRecord
   before_validation :set_key, on: :create
 
   validates :name, presence: true, uniqueness: { case_sensitive: false }
-  validates :key, presence: true, uniqueness: true
+  # The key derives from the name and the form has no key field, so key errors
+  # surface where the admin can act: presence is redundant when the name is
+  # already blank, and a collision (two names that parameterize to the same
+  # slug) reads as a name problem naming the derived key.
+  validates :key, presence: true, if: -> { name.present? }
+  validate :no_key_collision
 
   scope :active, -> { where(archived_at: nil) }
   scope :archived, -> { where.not(archived_at: nil) }
@@ -50,5 +55,15 @@ class TopicSubscriptionType < ApplicationRecord
   # editable; the key doesn't.
   def set_key
     self.key ||= name.to_s.parameterize(separator: "_").presence
+  end
+
+  def no_key_collision
+    return if key.blank?
+
+    taken = TopicSubscriptionType.where(key: key)
+    taken = taken.where.not(id: id) if persisted?
+    return unless taken.exists?
+
+    errors.add(:name, "derives the key \"#{key}\", which another topic already uses — pick a more distinct name")
   end
 end

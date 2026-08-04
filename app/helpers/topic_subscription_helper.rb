@@ -61,9 +61,8 @@ module TopicSubscriptionHelper
       filters << [ "Topic", topic&.name || "Unknown" ]
     end
 
-    status_labels = { "active" => "Active", "unsubscribed" => "Unsubscribed" }
-    filters << [ "Status", status_labels[params[:status]] ] if status_labels.key?(params[:status])
-
+    # No status chip: the index's status param doesn't narrow this list (the
+    # page's toggles own that axis), so a chip would misdescribe its coverage.
     filters
   end
 end

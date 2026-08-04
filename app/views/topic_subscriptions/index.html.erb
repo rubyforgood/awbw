@@ -18,7 +18,10 @@
       <p class="text-gray-600 mt-1">People subscribed to hear about a topic.</p>
     </div>
     <div class="flex items-center gap-2">
-      <%= link_to new_topic_subscription_path(person_id: params[:person_id], return_to: ("person" if params[:person_id].present?)), class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+      <%# Carry the index's filters so the form prefills from them (person, topic)
+          and the eyebrow/Cancel/post-save redirect land back on this filtered
+          list; a person filter reads as person context and returns to their page. %>
+      <%= link_to new_topic_subscription_path(topic_subscription_index_filters.merge(return_to: params[:person_id].present? ? "person" : "index")), class: "btn btn-primary inline-flex items-center gap-1.5" do %>
         <i class="fa-solid fa-plus text-xs"></i>
         New subscription
       <% end %>

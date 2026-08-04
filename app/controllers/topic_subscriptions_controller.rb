@@ -22,14 +22,17 @@ class TopicSubscriptionsController < ApplicationController
   # This list gets pasted into a mail client, so it narrows the index's filter
   # rather than mirroring it: an unsubscribe holds whatever status was selected,
   # and people already registered for the event their subscription names have had
-  # the interest answered. Both exclusions are opt-out via a toggle on the page.
+  # the interest answered. Both exclusions are opt-out via a toggle on the page —
+  # so the index's status param must not narrow the base query (it rides along on
+  # the link here), or an incoming status=active would leave the unsubscribed
+  # toggle with nobody to add back.
   def email_addresses
     authorize! TopicSubscription, to: :index?
     @include_unsubscribed = params[:include_unsubscribed] == "1"
     @include_registered = params[:include_registered] == "1"
 
     matching = TopicSubscription
-      .search_by_params(params)
+      .search_by_params(params.except(:status))
       .includes(person: [ :user, :event_registrations ])
       .to_a
 

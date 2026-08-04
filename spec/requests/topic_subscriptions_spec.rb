@@ -224,6 +224,20 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).to include("optedout@example.com")
     end
 
+    it "adds back the unsubscribed even when the index carried status=active" do
+      # The index's Email addresses link forwards its query params, including the
+      # status the segmented toggle put in the URL. That status must not narrow
+      # the base query here, or the include toggle can't add anyone back.
+      opted_out = create(:person, email: "optedout@example.com", user: nil)
+      create(:topic_subscription, :unsubscribed, person: opted_out, topic_subscription_type: trainings)
+
+      get email_addresses_topic_subscriptions_path(status: "active")
+      expect(response.body).to include("(1 left out)")
+
+      get email_addresses_topic_subscriptions_path(status: "active", include_unsubscribed: "1")
+      expect(response.body).to include("optedout@example.com")
+    end
+
     it "omits people already registered for the event their subscription names" do
       training = create(:event, facilitator_training: true)
       enrolled = create(:person, email: "enrolled@example.com", user: nil)
@@ -260,14 +274,15 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).to include("general@example.com")
     end
 
-    it "shows grey chips describing the applied index filters" do
+    it "shows grey chips describing the applied index filters, without the inert status" do
+      # Status doesn't narrow this list (the toggles own that axis), so a status
+      # chip would misdescribe what the list covers.
       get email_addresses_topic_subscriptions_path(topic_subscription_type_id: trainings.id, status: "active")
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Topic:")
       expect(response.body).to include(trainings.name)
-      expect(response.body).to include("Status:")
-      expect(response.body).to include("Active")
+      expect(response.body).not_to include("Status:")
     end
 
     it "shows no filter chips when the list is unfiltered" do
@@ -298,6 +313,15 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).to include("Facilitator trainings")
       expect(response.body).to include("← Dashboard")
       expect(response.body).to include(dashboard_event_path(event))
+    end
+
+    it "prefills the topic from the index's topic filter" do
+      news = create(:topic_subscription_type, :news)
+
+      get new_topic_subscription_path(topic_subscription_type_id: news.id, return_to: "index")
+
+      # Shown as the read-only display value of the topic edit-toggle.
+      expect(response.body).to include(%(data-edit-toggle-target="view">News</span>))
     end
 
     it "prefills the person and returns to their edit page when opened from a person" do
@@ -365,6 +389,24 @@ RSpec.describe "TopicSubscriptions", type: :request do
 
       expect(response.body).to include(
         CGI.escapeHTML(edit_topic_subscription_path(subscription, filters.merge(return_to: "index")))
+      )
+    end
+
+    it "carries the topic filter into the New button so the form prefills and returns to the filtered list" do
+      news = create(:topic_subscription_type, :news)
+
+      get topic_subscriptions_path(topic_subscription_type_id: news.id)
+
+      expect(response.body).to include(
+        CGI.escapeHTML(new_topic_subscription_path(topic_subscription_type_id: news.id, return_to: "index"))
+      )
+    end
+
+    it "keeps the person origin on the New button when filtered by person" do
+      get topic_subscriptions_path(person_id: person.id)
+
+      expect(response.body).to include(
+        CGI.escapeHTML(new_topic_subscription_path(person_id: person.id, return_to: "person"))
       )
     end
 
