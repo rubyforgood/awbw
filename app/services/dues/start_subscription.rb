@@ -8,9 +8,9 @@ module Dues
       @person = person
     end
 
-    # Skips anyone who already has a subscription, cancelled or not: re-inviting must
-    # not hand out a second free year, and bringing a cancelled member back is an
-    # admin clearing `cancelled_at`, which keeps their original rate.
+    # Create initial subscription when user is `invited`
+    # Skips anyone who already has a subscription, cancelled or not
+
     def call
       return if @person.blank?
       return if @person.dues_subscriptions.exists?
