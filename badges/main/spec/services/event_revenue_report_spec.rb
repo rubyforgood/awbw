@@ -14,7 +14,7 @@ RSpec.describe EventRevenueReport do
     end
 
     before do
-      # reg2's CE fee: a $75 CE registration with no payment — outstanding, not collected.
+      # reg2's projected CE fee: a $75 CE registration.
       create(:continuing_education_registration, event_registration: reg2, cost_cents: 7_500)
 
       # A cancelled registration whose money/CE must be ignored everywhere.
@@ -41,19 +41,18 @@ RSpec.describe EventRevenueReport do
 
     it "reports the raw components" do
       expect(row.registration_payments_cents).to eq(9_000)
-      expect(row.ce_paid_cents).to eq(0)
-      expect(row.ce_outstanding_cents).to eq(7_500)
+      expect(row.ce_projected_cents).to eq(7_500)
       expect(row.funded_scholarship_cents).to eq(4_000)
       expect(row.unfunded_scholarship_cents).to eq(2_000)
       expect(row.discount_cents).to eq(1_000)
       expect(row.registration_outstanding_cents).to eq(4_000)
     end
 
-    it "collects registration payments plus CE paid (this event's CE is unpaid)" do
+    it "collects fees from registration payments (CE isn't collected yet)" do
       expect(row.fees_cents).to eq(9_000)
     end
 
-    it "owes registration plus uncollected CE as outstanding" do
+    it "owes registration plus projected CE as outstanding" do
       expect(row.outstanding_cents).to eq(11_500)
     end
 
@@ -75,63 +74,6 @@ RSpec.describe EventRevenueReport do
       expect(report.org_subsidy_cents).to eq(3_000)
       expect(report.net_cents).to eq(10_000)
       expect(report.total_expected_cents).to eq(21_500)
-    end
-  end
-
-  describe "collected CE payments" do
-    subject(:report) { described_class.new([ event ]) }
-
-    # Free-registration event to isolate CE money from registration fees.
-    let(:event) { create(:event, cost_cents: 0) }
-    let(:person) { create(:person) }
-    let!(:registration) { create(:event_registration, event: event, registrant: person, status: "registered") }
-    let(:row) { report.rows.first }
-
-    before do
-      # A $60 CE registration with $50 collected: $50 is fees, $10 stays outstanding.
-      ce = create(:continuing_education_registration, event_registration: registration, cost_cents: 6_000)
-      create(:allocation, source: create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000),
-                          allocatable: ce, amount: 5_000)
-    end
-
-    it "counts CE cash collected as fees" do
-      expect(row.ce_paid_cents).to eq(5_000)
-      expect(row.fees_cents).to eq(5_000)
-    end
-
-    it "leaves only the uncollected CE balance outstanding" do
-      expect(row.ce_outstanding_cents).to eq(1_000)
-      expect(row.outstanding_cents).to eq(1_000)
-    end
-
-    it "counts collected CE toward money in and net" do
-      expect(row.money_in_cents).to eq(5_000)
-      expect(row.net_cents).to eq(5_000)
-    end
-  end
-
-  # A discounted CE fee is cost the org absorbs, same as a discounted
-  # registration fee — it must land in org subsidy rather than disappear between
-  # "collected" and "owed".
-  describe "discounted CE fees" do
-    subject(:report) { described_class.new([ event ]) }
-
-    let(:event) { create(:event, cost_cents: 0) }
-    let!(:registration) { create(:event_registration, event: event, registrant: create(:person), status: "registered") }
-    let(:row) { report.rows.first }
-
-    before do
-      # A $60 CE registration comped in full.
-      ce = create(:continuing_education_registration, event_registration: registration, cost_cents: 6_000)
-      create(:allocation, source: create(:discount, amount_cents: 6_000), allocatable: ce, amount: 6_000)
-    end
-
-    it "counts the comped CE fee as org subsidy, not as collected or owed" do
-      expect(row.discount_cents).to eq(6_000)
-      expect(row.org_subsidy_cents).to eq(6_000)
-      expect(row.ce_paid_cents).to eq(0)
-      expect(row.ce_outstanding_cents).to eq(0)
-      expect(row.net_cents).to eq(-6_000)
     end
   end
 

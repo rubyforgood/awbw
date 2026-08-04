@@ -240,18 +240,14 @@ class Person < ApplicationRecord
     organizations.pluck(:id)
   end
 
-  # The primary active phone, or the first one on file. Reads the loaded
-  # contact_methods when a caller has preloaded it (rosters, CSV exports), so a
-  # page or export of people doesn't pay a query per row.
   def phone_number
-    phones =
-      if contact_methods.loaded?
-        contact_methods.to_a.select { |method| method.phone? && !method.inactive? }
-      else
-        contact_methods.where(kind: :phone, inactive: false).to_a
-      end
+    primary_phone = contact_methods.find_by(primary: true, inactive: false, kind: :phone)
+    return primary_phone.value if primary_phone.present?
 
-    (phones.find(&:primary?) || phones.first)&.value
+    first_phone = contact_methods.where(kind: :phone, inactive: false).first
+    return first_phone.value if first_phone.present?
+
+    nil
   end
 
   def has_liasion_position_for?(organization_id)

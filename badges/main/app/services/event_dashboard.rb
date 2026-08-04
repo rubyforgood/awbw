@@ -103,6 +103,12 @@ class EventDashboard
     scholarships.where(grant_id: nil).sum(:amount_cents)
   end
 
+  # Registration cost waived via discounts — money the org gives up from its own
+  # pocket (like an unfunded scholarship).
+  def discount_cents
+    registration_allocations.where(source_type: "Discount").sum(:amount)
+  end
+
   def scholarship_recipient_count
     scholarships.distinct.count(:recipient_id)
   end
@@ -320,57 +326,18 @@ class EventDashboard
     @unpaid_registrants ||= people_sorted(registrants_for(active_registration_ids - paid_registration_ids))
   end
 
-  # --- Continuing-education fees ---------------------------------------------
-  # CE is billed per ContinuingEducationRegistration (its own cost_cents),
-  # separate from the registration fee. These mirror the registration-fee
-  # methods above: paid is CE cash collected, outstanding is CE cost still owed
-  # after every allocation, and the total (paid + outstanding) is the CE addend
-  # in the grand total. Scoped to CE registrations tied to an active event
-  # registration, so cancelled registrants' CE is ignored like their fees.
-
-  # CE cash collected across this event's active CE registrations.
-  def cont_ed_paid_cents
-    ce_payment_allocated_by_ce_registration.values.sum
-  end
-
-  # CE cost still owed after every allocation (payments and discounts), floored
-  # per registration at zero.
-  def cont_ed_outstanding_cents
-    ce_registrations.sum { |ce_registration| ce_due_cents(ce_registration) }
-  end
-
-  # CE fee revenue: collected plus outstanding. Mirrors registration_subtotal_cents,
-  # so the CE card's Paid + Due sub-rows reconcile with this headline.
-  def cont_ed_total_cents
-    cont_ed_paid_cents + cont_ed_outstanding_cents
-  end
-
-  # Registrants whose CE balance is fully covered vs those still owing.
-  def cont_ed_paid_count
-    ce_paid_registrant_ids.size
-  end
-
-  def cont_ed_unpaid_count
-    ce_unpaid_registrant_ids.size
-  end
-
-  def cont_ed_paid_registrants
-    @cont_ed_paid_registrants ||= people_sorted(ce_paid_registrant_ids)
-  end
-
-  def cont_ed_unpaid_registrants
-    @cont_ed_unpaid_registrants ||= people_sorted(ce_unpaid_registrant_ids)
-  end
-
-  # Per-registrant CE cash collected / still owed, keyed by Person id — the
-  # per-person figures on the CE card's Paid / Due rows. Each sums to its total.
-  def cont_ed_paid_by_registrant
-    @cont_ed_paid_by_registrant ||= ce_cents_by_registrant { |ce_registration| ce_paid_cents(ce_registration) }
-  end
-
-  def cont_ed_due_by_registrant
-    @cont_ed_due_by_registrant ||= ce_cents_by_registrant { |ce_registration| ce_due_cents(ce_registration) }
-  end
+  # Continuing-education fee: a flat per-registrant add-on. Not yet implemented —
+  # the fee amount and per-registration paid/outstanding tracking will arrive
+  # with a future migration. Stubbed to zero so the dashboard renders the
+  # section without depending on columns that don't exist yet.
+  def cont_ed_fee_cents = 0
+  def cont_ed_total_cents = 0
+  def cont_ed_paid_count = 0
+  def cont_ed_unpaid_count = 0
+  def cont_ed_paid_cents = 0
+  def cont_ed_outstanding_cents = 0
+  def cont_ed_paid_registrants = []
+  def cont_ed_unpaid_registrants = []
 
   def free?
     event.cost_cents.to_i <= 0
@@ -535,9 +502,14 @@ class EventDashboard
   # First continuing-education registration per registrant (Person id), for the
   # roster's CE column: its icon links to editing this record when present.
   def ce_registration_by_registrant
-    @ce_registration_by_registrant ||= ce_registrations.each_with_object({}) do |ce_registration, map|
-      registrant_id = registrant_id_by_registration[ce_registration.event_registration_id]
-      map[registrant_id] ||= ce_registration if registrant_id
+    @ce_registration_by_registrant ||= begin
+      registrant_by_registration = active_registrations.to_h { |registration| [ registration.id, registration.registrant_id ] }
+      ContinuingEducationRegistration
+        .where(event_registration_id: active_registration_ids)
+        .each_with_object({}) do |ce_registration, map|
+          registrant_id = registrant_by_registration[ce_registration.event_registration_id]
+          map[registrant_id] ||= ce_registration if registrant_id
+        end
     end
   end
 
@@ -1018,67 +990,6 @@ class EventDashboard
 
   def allocated_by_registration
     @allocated_by_registration ||= registration_allocations.group(:allocatable_id).sum(:amount)
-  end
-
-  # Active continuing-education registrations for this event: those tied to an
-  # active event registration. The basis for every CE money figure and for the
-  # CE registrant counts / pie.
-  def ce_registrations
-    @ce_registrations ||= ContinuingEducationRegistration
-      .where(event_registration_id: active_registration_ids)
-      .to_a
-  end
-
-  def ce_allocations
-    Allocation.where(allocatable_type: "ContinuingEducationRegistration", allocatable_id: ce_registrations.map(&:id))
-  end
-
-  # Allocations against this event's CE registrations, grouped by CE registration
-  # id: all sources (for outstanding) and payments only (for collected).
-  def ce_allocated_by_ce_registration
-    @ce_allocated_by_ce_registration ||= ce_allocations.group(:allocatable_id).sum(:amount)
-  end
-
-  def ce_payment_allocated_by_ce_registration
-    @ce_payment_allocated_by_ce_registration ||= ce_allocations
-      .where(source_type: "Payment")
-      .group(:allocatable_id)
-      .sum(:amount)
-  end
-
-  # CE cash collected on one CE registration (payment allocations only).
-  def ce_paid_cents(ce_registration)
-    ce_payment_allocated_by_ce_registration.fetch(ce_registration.id, 0)
-  end
-
-  # CE cost still owed on one CE registration after every allocation, floored at zero.
-  def ce_due_cents(ce_registration)
-    [ ce_registration.cost_cents.to_i - ce_allocated_by_ce_registration.fetch(ce_registration.id, 0), 0 ].max
-  end
-
-  # Registrant (Person) ids with at least one CE registration still owing.
-  def ce_unpaid_registrant_ids
-    @ce_unpaid_registrant_ids ||= ce_registrations
-      .select { |ce_registration| ce_due_cents(ce_registration).positive? }
-      .filter_map { |ce_registration| registrant_id_by_registration[ce_registration.event_registration_id] }
-      .uniq
-  end
-
-  # Registrants with CE whose whole CE balance is covered — everyone with CE
-  # minus those with any unpaid CE registration.
-  def ce_paid_registrant_ids
-    @ce_paid_registrant_ids ||= ce_registrant_ids - ce_unpaid_registrant_ids
-  end
-
-  # Roll a per-CE-registration cents figure (from the block) up to a
-  # { Person id => cents } hash, dropping zeros.
-  def ce_cents_by_registrant
-    ce_registrations.each_with_object(Hash.new(0)) do |ce_registration, map|
-      registrant_id = registrant_id_by_registration[ce_registration.event_registration_id]
-      next unless registrant_id
-      cents = yield(ce_registration)
-      map[registrant_id] += cents if cents.positive?
-    end
   end
 
   # Payments tied to this event's bulk payment form submissions. Scoped by the

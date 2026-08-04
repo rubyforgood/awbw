@@ -175,8 +175,7 @@ class EventRegistration < ApplicationRecord
   # Filter by CE state. All derived (no stored CE status): payment (requested/paid)
   # is computed from allocations vs cost like the registration's own payment state;
   # issued/not_issued read the certificate delivery; needs_license is a CE
-  # registration sitting on a placeholder license. "registered" adds no condition
-  # of its own — the EXISTS alone means "signed up for CE, whatever its state".
+  # registration sitting on a placeholder license.
   scope :ce_status, ->(value) {
     paid_sql = <<~SQL.squish
       COALESCE((SELECT SUM(a.amount) FROM allocations a
@@ -185,7 +184,6 @@ class EventRegistration < ApplicationRecord
     SQL
     condition =
       case value
-      when "registered" then "TRUE"
       when "needs_license" then "pl.number IS NULL"
       when "paid" then paid_sql
       when "requested" then "NOT (#{paid_sql})"
@@ -483,12 +481,6 @@ class EventRegistration < ApplicationRecord
   # in Ruby.
   def ce_amount_due_cents
     continuing_education_registrations.sum { |c| c.remaining_cost }
-  end
-
-  # CE cash collected across this registration's CE registrations (payments only,
-  # excluding discounts) — the CE analogue of payments_sum, for revenue reporting.
-  def ce_amount_paid_cents
-    continuing_education_registrations.sum { |c| c.payments_sum }
   end
 
   # True only when every CE registration has a known license number on file.

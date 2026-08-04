@@ -353,12 +353,6 @@ RSpec.describe EventRegistration, type: :model do
       end
       let!(:no_ce) { create(:event_registration, event: event) }
 
-      it "maps 'registered' to everyone signed up for CE, whatever its state" do
-        results = EventRegistration.ce_status("registered")
-        expect(results).to include(paid_ce, requested_ce, needs_license_ce, issued_ce)
-        expect(results).not_to include(no_ce)
-      end
-
       it "maps 'needs_license' to CE on a placeholder license" do
         results = EventRegistration.ce_status("needs_license")
         expect(results).to include(needs_license_ce)
