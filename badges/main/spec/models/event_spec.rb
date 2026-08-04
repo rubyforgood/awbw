@@ -70,6 +70,20 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe ".upcoming" do
+    it "includes an event starting today" do
+      # start_date is a date column, so comparing against a time-of-day would
+      # drop today's events at midnight.
+      today = create(:event, start_date: Date.current)
+      expect(Event.upcoming).to include(today)
+    end
+
+    it "excludes an event that already started" do
+      past = create(:event, start_date: 1.day.ago)
+      expect(Event.upcoming).not_to include(past)
+    end
+  end
+
   describe "#ended?" do
     it "returns true when end_date is in the past" do
       event = build(:event, end_date: 1.day.ago)

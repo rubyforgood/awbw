@@ -1,0 +1,99 @@
+<% field_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+<% label_class = "block text-sm font-medium text-gray-700 mb-1" %>
+<% pencil_class = "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 cursor-pointer" %>
+<% value_class = "text-sm font-medium text-gray-900" %>
+
+<%# Specific upcoming events to narrow to, plus the current selection so an
+    already-chosen (possibly past) event stays selectable. %>
+<% event_options = Event.upcoming.order(:start_date).to_a %>
+<% current_event = @topic_subscription.interested_event %>
+<% event_options.unshift(current_event) if current_event && event_options.exclude?(current_event) %>
+
+<%# Active topics for the picker, plus the current one so an archived selection stays valid. %>
+<% type_options = TopicSubscriptionType.active.ordered.to_a %>
+<% current_type = @topic_subscription.topic_subscription_type %>
+<% type_options.unshift(current_type) if current_type && type_options.exclude?(current_type) %>
+
+<% cancel_path = topic_subscription_return_path %>
+
+<%= form_with model: @topic_subscription, class: "space-y-5", data: { controller: "dirty-form conditional-fields" } do |f| %>
+  <%# Where this form was opened from, so the redirect after save matches the eyebrow. %>
+  <% topic_subscription_return_params.each do |key, value| %>
+    <%= hidden_field_tag key, value, id: nil %>
+  <% end %>
+
+  <% if @topic_subscription.errors.any? %>
+    <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      <ul class="list-disc list-inside space-y-1">
+        <% @topic_subscription.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :person_id, "Person", class: label_class %>
+    <%= f.select :person_id,
+      options_for_select(Person.where(id: @topic_subscription.person_id).map { |p| [ p.full_name, p.id ] }, @topic_subscription.person_id),
+      { include_blank: true, prompt: "Search for a person" },
+      class: field_class,
+      data: { controller: "remote-select", remote_select_model_value: "person" } %>
+  </div>
+
+  <%# Topic — shown as a value with a pencil that reveals a picker (edit-toggle). %>
+  <div data-controller="edit-toggle">
+    <%= f.label :topic_subscription_type_id, "Topic", class: label_class %>
+    <div class="flex items-center gap-2">
+      <span class="<%= value_class %>" data-edit-toggle-target="view"><%= current_type&.name || "—" %></span>
+      <div class="hidden flex-1" data-edit-toggle-target="edit">
+        <%= f.select :topic_subscription_type_id,
+          options_for_select(
+            type_options.map { |type| [ type.name, type.id, { "data-event-selector": type.event_selector } ] },
+            @topic_subscription.topic_subscription_type_id),
+          { include_blank: true },
+          class: field_class,
+          data: { conditional_fields_target: "source", action: "change->conditional-fields#toggle" } %>
+      </div>
+      <button type="button" class="<%= pencil_class %>" data-action="edit-toggle#toggle" aria-label="Change topic">
+        <i class="fa-solid fa-pen text-[0.6rem]"></i>
+      </button>
+    </div>
+  </div>
+
+  <%# Event — only for event-oriented topics (shown/hidden as the topic changes).
+      Prefilled from the originating event; pencil flips to a picker to choose a
+      different upcoming training or "All upcoming events". %>
+  <div data-controller="edit-toggle" data-conditional-fields-target="field"
+       data-show-when-attr="eventSelector"<%= " hidden".html_safe unless current_type&.event_selector? %>>
+    <%= f.label :interested_event_id, "Event", class: label_class %>
+    <div class="flex items-center gap-2">
+      <span class="<%= value_class %>" data-edit-toggle-target="view"><%= current_event&.title || "All upcoming events" %></span>
+      <div class="hidden flex-1" data-edit-toggle-target="edit">
+        <%= f.select :interested_event_id,
+          options_for_select(event_options.map { |e| [ e.title, e.id ] }, @topic_subscription.interested_event_id),
+          { include_blank: "All upcoming events" },
+          class: field_class %>
+      </div>
+      <button type="button" class="<%= pencil_class %>" data-action="edit-toggle#toggle" aria-label="Change event">
+        <i class="fa-solid fa-pen text-[0.6rem]"></i>
+      </button>
+    </div>
+    <p class="mt-1 text-xs text-gray-500">Choose a specific upcoming event, or “All upcoming events”.</p>
+  </div>
+
+  <div>
+    <%= f.label :source, class: label_class %>
+    <%= f.text_field :source, class: field_class, placeholder: "e.g. Facilitator Training registration, admin" %>
+  </div>
+
+  <div>
+    <%= f.label :note, "Note (optional)", class: label_class %>
+    <%= f.text_area :note, rows: 3, class: field_class %>
+  </div>
+
+  <div class="flex gap-2 justify-end">
+    <%= link_to "Cancel", cancel_path, class: "btn btn-utility-outline", data: { action: "dirty-form#confirmCancel" } %>
+    <%= f.submit submit_label, class: "btn btn-primary" %>
+  </div>
+<% end %>

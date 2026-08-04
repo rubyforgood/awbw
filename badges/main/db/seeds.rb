@@ -127,6 +127,11 @@ OrganizationStatus::ORGANIZATION_STATUSES.each do |status|
   OrganizationStatus.where(name: status).first_or_create!
 end
 
+puts "Creating TopicSubscriptionTypes…"
+TopicSubscriptionType::CANONICAL.each do |key, attrs|
+  TopicSubscriptionType.where(key: key).first_or_create!(name: attrs[:name], event_selector: attrs[:event_selector])
+end
+
 puts "Creating Organization…"
 awbw_org = Organization.find_or_create_by!(name: ENV.fetch("ORGANIZATION_NAME", "AWBW")) do |org|
   org.organization_status = OrganizationStatus.find_by!(name: "Active")

@@ -30,6 +30,12 @@ module AuthorCreditable
     # Filter to content explicitly authored by a person (belongs_to :author);
     # no-op when person_id is blank. Only models with an author_id column use it.
     scope :authored_by, ->(person_id) { where(author_id: person_id) if person_id.present? }
+
+    # Filter to content whose creating user belongs to a person. This is the only
+    # authorship link the idea models have (they carry no author_id of their own),
+    # and it's keyed on the person rather than a user id so it stays correct — and
+    # empty — for a person with no user account.
+    scope :created_by_person, ->(person_id) { joins(:created_by).where(users: { person_id: person_id }) }
   end
 
   # The linkable credited person, in precedence order: the explicit/legacy author

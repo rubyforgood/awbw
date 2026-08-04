@@ -1,19 +1,41 @@
 <% return unless person.persisted? %>
 <% email = person.preferred_email %>
 <% notifications = email.present? ? Notification.email(email) : Notification.none %>
-<%# Multi-column layout so cards flow top-to-bottom then to the next column.
-    Keep the cards in alphabetical order by label. %>
-<ul class="columns-1 sm:columns-2 md:columns-3 gap-x-6">
-  <li class="break-inside-avoid mb-2"><%= index_button notifications, params: { email: email }, label: "#{t("communications.title")} (universal)" %></li>
-  <li class="break-inside-avoid mb-2"><%= index_button person.community_news_as_author, params: { author_id: person.id } %></li>
-  <li class="break-inside-avoid mb-2"><%= index_button person.event_registrations, params: { registrant_id: person.id } %></li>
-  <li class="break-inside-avoid mb-2"><%= index_button person.form_submissions, params: { person_id: person.id } %></li>
-  <li class="break-inside-avoid mb-2"><%= index_button person.grants, params: { donor_id: person.id, donor_type: "Person" }, label: "Grants (as donor)" %></li>
-  <li class="break-inside-avoid mb-2"><%= index_button Payment.where(person_id: person.id), params: { person_id: person.id } %></li>
-  <li class="break-inside-avoid mb-2"><%= index_button person.resources_as_author, params: { author_id: person.id } %></li>
-  <li class="break-inside-avoid mb-2"><%= index_button person.scholarships, params: { recipient_id: person.id } %></li>
-  <li class="break-inside-avoid mb-2"><%= index_button person.stories_as_author, params: { author_id: person.id } %></li>
-  <li class="break-inside-avoid mb-2"><%= index_button(person.user&.workshop_logs || WorkshopLog.none, path: workshop_logs_person_path(person)) %></li>
-  <li class="break-inside-avoid mb-2"><%= index_button person.workshop_variations_as_author, params: { author_id: person.id } %></li>
-  <li class="break-inside-avoid mb-2"><%= index_button person.workshops_as_author, params: { author_id: person.id } %></li>
-</ul>
+<%# Two clusters: administrative system records, then content the person authored
+    or submitted. Keep the cards alphabetical by label within each cluster. %>
+
+<div class="mb-5">
+  <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Administrative</h3>
+  <ul class="columns-1 sm:columns-2 md:columns-3 gap-x-6">
+    <li class="break-inside-avoid mb-2"><%= index_button notifications, params: { email: email }, label: "#{t("communications.title")} (universal)" %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button person.event_registrations, params: { registrant_id: person.id } %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button person.form_submissions, params: { person_id: person.id } %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button person.grants, params: { donor_id: person.id, donor_type: "Person" }, label: "Grants (as donor)" %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button Payment.where(person_id: person.id), params: { person_id: person.id } %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button person.scholarships, params: { recipient_id: person.id } %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button person.topic_subscriptions, params: { person_id: person.id }, label: "Subscriptions" %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button(person.user&.workshop_logs || WorkshopLog.none, path: workshop_logs_person_path(person)) %></li>
+  </ul>
+</div>
+
+<div>
+  <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Contributed content</h3>
+  <%# Column-flow (top-to-bottom) pairs each record type with its related idea:
+      community news / resources · stories / story ideas · workshops / workshop
+      ideas · workshop variations / workshop variation ideas. %>
+  <ul class="columns-1 sm:columns-2 md:columns-4 gap-x-6">
+    <%# Ideas carry no author_id of their own — the credited person is the
+        creating user's person, so they match through `created_by_person`. Keyed
+        on the person rather than person.user&.id: a person with no user account
+        authored nothing, and a nil user id would drop out of the path helper and
+        land the card on everyone's ideas. %>
+    <li class="break-inside-avoid mb-2"><%= index_button person.community_news_as_author, params: { author_id: person.id } %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button person.resources_as_author, params: { author_id: person.id } %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button person.stories_as_author, params: { author_id: person.id } %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button StoryIdea.created_by_person(person.id), params: { created_by_person_id: person.id } %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button person.workshops_as_author, params: { author_id: person.id } %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button WorkshopIdea.created_by_person(person.id), params: { created_by_person_id: person.id } %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button person.workshop_variations_as_author, params: { author_id: person.id } %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button WorkshopVariationIdea.created_by_person(person.id), params: { created_by_person_id: person.id } %></li>
+  </ul>
+</div>

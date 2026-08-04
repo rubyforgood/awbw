@@ -5,6 +5,11 @@ export default class extends Controller {
   static values = { model: String, exclude: String };
 
   connect() {
+    // TomSelect stamps itself on the element; bail if it's already initialized so
+    // a re-connect (Turbo cache restore, cocoon add) can't build a second wrapper
+    // + search icon on top of the first.
+    if (this.element.tomselect) return;
+
     this.select = new TomSelect(this.element, {
       valueField: "id",
       labelField: "label",
@@ -28,6 +33,13 @@ export default class extends Controller {
     });
     this.addSearchIcon();
     this.injectStyles();
+
+    // Turbo caches the page snapshot BEFORE disconnect runs, so the cached DOM
+    // would otherwise bake in the TomSelect wrapper + injected icon; the next
+    // connect then adds a second one. Tear down before caching so the snapshot
+    // holds the plain <select>.
+    this.beforeCache = () => this.teardown();
+    document.addEventListener("turbo:before-cache", this.beforeCache);
   }
 
   // Inject CSS to remove some default tom-select styles -might be a better way to do this.
@@ -103,6 +115,7 @@ export default class extends Controller {
     icon.className = "fa-solid fa-magnifying-glass remote-select-icon";
     icon.setAttribute("aria-hidden", "true");
     container.appendChild(icon);
+    this.container = container;
   }
 
   // Deselect the current value so the control is ready for the next pick.
@@ -113,6 +126,23 @@ export default class extends Controller {
   }
 
   disconnect() {
-    if (this.select) this.select.destroy();
+    document.removeEventListener("turbo:before-cache", this.beforeCache);
+    this.teardown();
+  }
+
+  // Destroy TomSelect and remove the wrapper container + injected icon, leaving
+  // the original <select> in place so a later connect rebuilds cleanly.
+  teardown() {
+    if (this.select) {
+      this.select.destroy();
+      this.select = null;
+    }
+    if (this.container?.parentNode) {
+      if (this.container.contains(this.element)) {
+        this.container.parentNode.insertBefore(this.element, this.container);
+      }
+      this.container.remove();
+    }
+    this.container = null;
   }
 }
