@@ -231,6 +231,75 @@
         <% end %>
       </section>
     <% end %>
+
+    <%#
+      Training sign-in/out — the in-portal replacement for the paper CE hour
+      sign-in sheet, shown only once CE is paid in full. One button at a time:
+      Sign in when signed out (only inside the day's window), Sign out while signed
+      in (always, so a forgotten sign-out can still be closed). Many entries per day
+      is expected (breaks, lunch). Staff correct times on the admin CE edit page.
+    %>
+    <% if ce_registration&.paid_in_full? %>
+      <% signed_in = @event_registration.signed_in? %>
+      <% open_entry = @event_registration.open_attendance_entry %>
+      <% todays_entries = @event_registration.attendance_entries_on(Time.zone.today) %>
+      <% todays_minutes = todays_entries.sum { |entry| entry.duration_minutes.to_i } %>
+
+      <section id="attendance" class="mt-7 scroll-mt-6 border-t border-gray-100 pt-6">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Training sign-in</h2>
+
+        <div class="mt-3 flex flex-wrap items-center gap-3">
+          <% if signed_in %>
+            <span class="inline-flex items-center gap-1.5 rounded-full border bg-teal-50 text-teal-700 border-teal-200 px-2.5 py-0.5 text-xs font-medium">
+              <i class="fa-solid fa-circle-check text-[0.6rem]"></i>
+              Signed in at <%= open_entry.decorate.signed_in_label %>
+            </span>
+            <% if sample_preview? %>
+              <button type="button" disabled
+                      class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-500 opacity-60 cursor-not-allowed">Sign out</button>
+            <% else %>
+              <%= button_to "Sign out", registration_ce_sign_out_path(@event_registration.slug), data: { turbo: false },
+                    class: "shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 cursor-pointer" %>
+            <% end %>
+          <% elsif @event.attendance_sign_in_open? %>
+            <span class="inline-flex items-center gap-1.5 rounded-full border bg-gray-50 text-gray-600 border-gray-200 px-2.5 py-0.5 text-xs font-medium">Signed out</span>
+            <% if sample_preview? %>
+              <button type="button" disabled
+                      class="shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white opacity-60 cursor-not-allowed">Sign in</button>
+            <% else %>
+              <%= button_to "Sign in", registration_ce_sign_in_path(@event_registration.slug), data: { turbo: false },
+                    class: "shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer" %>
+            <% end %>
+          <% else %>
+            <p class="text-sm text-gray-500">Sign-in opens 30 minutes before each training day starts.</p>
+          <% end %>
+        </div>
+
+        <% if todays_entries.any? %>
+          <dl class="mt-5 divide-y divide-gray-100 rounded-lg border border-gray-100">
+            <div class="grid grid-cols-3 gap-2 px-3 py-2 text-xs font-medium uppercase tracking-wide text-gray-400">
+              <dt>Time in</dt>
+              <dt>Time out</dt>
+              <dt class="text-right">Duration</dt>
+            </div>
+            <% todays_entries.each do |entry| %>
+              <% entry = entry.decorate %>
+              <div class="grid grid-cols-3 gap-2 px-3 py-2 text-sm text-gray-900 tabular-nums">
+                <dd><%= entry.signed_in_label %></dd>
+                <dd><%= entry.signed_out_label %></dd>
+                <dd class="text-right"><%= entry.duration_label %></dd>
+              </div>
+            <% end %>
+            <div class="grid grid-cols-3 gap-2 px-3 py-2 text-sm font-semibold text-gray-900 tabular-nums bg-gray-50">
+              <dt class="col-span-2 uppercase tracking-wide text-xs text-gray-500 self-center">Today's total</dt>
+              <dd class="text-right"><%= attendance_duration_label(todays_minutes) %></dd>
+            </div>
+          </dl>
+        <% end %>
+
+        <p class="mt-3 text-xs text-gray-400">Sign in when you arrive and sign out when you leave — including breaks and lunch — so your hours are recorded accurately.</p>
+      </section>
+    <% end %>
   <% else %>
     <p class="text-sm text-gray-600">You haven't requested continuing education credit for this training.
       <%= @event.ce_hours_cost_cents.to_i.positive? ? "CE hours are available for #{dollars_from_cents(@event.ce_hours_cost_cents)}." : "CE hours are available for an additional fee." %></p>

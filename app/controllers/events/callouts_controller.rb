@@ -137,6 +137,42 @@ module Events
       redirect_to registration_ce_path(@event_registration.slug), notice: "Continuing education credit requested."
     end
 
+    # Record the registrant signing in from their CE callout. Self-service and
+    # public (no login), so created_by stays nil — only staff edits are attributed.
+    # Gated on CE being paid in full and the day's sign-in window being open; a
+    # second sign-in while already signed in is a no-op.
+    def sign_in_ce
+      return redirect_to(registration_ce_path(@event_registration.slug)) if sample_preview?
+      unless attendance_enabled?
+        return redirect_to registration_ce_path(@event_registration.slug), alert: "Signing in isn't available yet."
+      end
+      if @event_registration.signed_in?
+        return redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"), notice: "You're already signed in."
+      end
+      unless @event.attendance_sign_in_open?
+        return redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"),
+          alert: "Sign-in is only open during the training day."
+      end
+
+      entry = @event_registration.event_attendance_time_entries.create!(signed_in_at: Time.current)
+      redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"),
+        notice: "Signed in at #{local_time(entry.signed_in_at)}."
+    end
+
+    # Close the registrant's open attendance entry. Not windowed — a forgotten
+    # sign-out can always be recorded (staff can correct times later on the report).
+    def sign_out_ce
+      return redirect_to(registration_ce_path(@event_registration.slug)) if sample_preview?
+      entry = @event_registration.open_attendance_entry
+      unless entry
+        return redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"), alert: "You're not signed in."
+      end
+
+      entry.update!(signed_out_at: Time.current)
+      redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"),
+        notice: "Signed out at #{local_time(entry.signed_out_at)}."
+    end
+
     # Handouts page: callout-card links to the training worksheet/handout
     # resources, in display order, each opening its own registrant resource page
     # (PDF preview + download, with a back-to-handouts eyebrow). Cards read their
@@ -188,6 +224,17 @@ module Events
     end
 
     private
+
+    # Attendance sign-in/out is offered only once CE is paid in full — it's the CE
+    # sign-in sheet, so it follows the CE payment, and mirrors the callout view's gate.
+    def attendance_enabled?
+      @event_registration.ce_registered? && @event_registration.ce_paid_in_full?
+    end
+
+    # A datetime rendered in the app zone as "9:02 AM", for sign-in/out flash notices.
+    def local_time(time)
+      time.in_time_zone(Time.zone).strftime("%-l:%M %p")
+    end
 
     # Whether the event's built-in callout for this key is materialized and
     # published (visible). These public pages gate on that alone now — the admin's

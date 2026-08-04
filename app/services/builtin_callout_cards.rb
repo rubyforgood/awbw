@@ -289,16 +289,47 @@ class BuiltinCalloutCards
     # An outstanding CE balance turns the card orange (an action card), matching
     # the payment card, rather than the resting teal.
     due = registration.continuing_education_registrations.first&.remaining_cost.to_i.positive?
-    Card.new(icon_class: "fa-solid fa-graduation-cap", color: due ? "orange" : "teal",
+    # Once CE is paid, on a training day the badge becomes a live sign-in nudge
+    # (like the payment card's "$X due"), overriding the resting CE status chip.
+    reminder = ce_attendance_reminder
+    Card.new(icon_class: "fa-solid fa-graduation-cap", color: ce_card_color(due, reminder),
              title: event.ce_hours_label,
              subtitle: ce_hours_subtitle,
              href: registration_ce_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right",
-             badge: ce_hours_badge(complete),
-             # Amber while money is due or hours/license are still needed (nil
-             # badge_classes falls back to amber in _callout_card); teal once it's
-             # complete and paid.
-             badge_classes: complete && !due ? "bg-teal-100 text-teal-800 border border-teal-300" : nil)
+             badge: ce_hours_reminder_badge(reminder) || ce_hours_badge(complete),
+             # Amber while money is due, hours/license are still needed, or it's time
+             # to sign in (nil badge_classes falls back to amber in _callout_card);
+             # teal once complete and paid, or while currently signed in.
+             badge_classes: ce_card_badge_classes(complete, due, reminder))
+  end
+
+  # The live attendance nudge for the CE card on a training day, once CE is paid —
+  # :signed_in while an entry is open, :sign_in while sign-in is open and they're
+  # not signed in, nil otherwise (so the resting CE status chip shows instead).
+  def ce_attendance_reminder
+    return unless registration.ce_paid_in_full?
+    return :signed_in if registration.signed_in?
+
+    :sign_in if event.attendance_sign_in_open?
+  end
+
+  def ce_hours_reminder_badge(reminder)
+    { signed_in: "Signed in", sign_in: "Sign in for today" }[reminder]
+  end
+
+  def ce_card_color(due, reminder)
+    return "teal" if reminder == :signed_in
+    return "orange" if reminder == :sign_in || due
+
+    "teal"
+  end
+
+  def ce_card_badge_classes(complete, due, reminder)
+    return "bg-teal-100 text-teal-800 border border-teal-300" if reminder == :signed_in
+    return if reminder == :sign_in # amber default (action) via _callout_card
+
+    complete && !due ? "bg-teal-100 text-teal-800 border border-teal-300" : nil
   end
 
   # Before the registrant has requested CE, an invite card linking to the CE page
