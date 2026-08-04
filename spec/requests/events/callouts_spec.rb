@@ -370,12 +370,70 @@ RSpec.describe "Events::Callouts", type: :request do
     end
 
     context "when CE is not registered" do
-      let(:event) { create(:event) }
+      let(:event) { create(:event, ce_hours_offered: 6) }
 
-      it "renders the opt-in form" do
+      it "renders the opt-in form inside the flip frame" do
         get registration_ce_path(registration.slug)
         expect(response).to have_http_status(:success)
-        expect(response.body).to include("Request CE credit")
+        button = Nokogiri::HTML(response.body).at_css("turbo-frame#ce_request_section input[value='Request CE credit']")
+        expect(button).to be_present
+      end
+
+      it "flips the frame to the license section once CE is requested" do
+        post registration_ce_request_path(registration.slug)
+
+        # Turbo re-fetches the redirect target for the frame; the same frame now
+        # carries the license-entry section instead of the opt-in button.
+        get registration_ce_path(registration.slug), headers: { "Turbo-Frame" => "ce_request_section" }
+        frame = Nokogiri::HTML(response.body).at_css("turbo-frame#ce_request_section")
+        expect(frame.text).to include("Your CE credit")
+        expect(frame.text).not_to include("Request CE credit")
+      end
+    end
+
+    context "when the event has a CE fee" do
+      let(:event) do
+        create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 15_000,
+               ce_payment_due_deadline: Time.zone.local(2026, 7, 22, 9, 0))
+      end
+
+      it "states the concrete fee on the opt-in page before registering" do
+        get registration_ce_path(registration.slug)
+        expect(response.body).to include("CE hours are available for $150.")
+      end
+
+      it "links a locked license's 'Contact us' out of the Turbo frame to the contact page" do
+        license = create(:professional_license, person: registration.registrant, number: "LIC-7")
+        create(:continuing_education_registration, event_registration: registration,
+               professional_license: license, certificate_sent_at: Time.current)
+
+        get registration_ce_path(registration.slug)
+        link = Nokogiri::HTML(response.body).at_css("turbo-frame#license_section a[href='#{contact_us_path}']")
+        expect(link).to be_present
+        expect(link["data-turbo-frame"]).to eq("_top")
+      end
+
+      context "once CE is registered with a balance due" do
+        before do
+          license = create(:professional_license, person: registration.registrant, number: "LIC-9")
+          create(:continuing_education_registration, event_registration: registration,
+                 professional_license: license, cost_cents: 15_000)
+        end
+
+        it "surfaces the payment-due deadline as a stat" do
+          get registration_ce_path(registration.slug)
+          expect(response.body).to include("Payment due")
+          expect(response.body).to include("on July 22, 2026")
+        end
+
+        it "omits the payment-due deadline once paid in full" do
+          ce = registration.continuing_education_registrations.first
+          payment = create(:payment, person: registration.registrant, amount_cents: 15_000, amount_cents_remaining: nil)
+          create(:allocation, source: payment, allocatable: ce, amount: 15_000)
+
+          get registration_ce_path(registration.slug)
+          expect(response.body).not_to include("on July 22, 2026")
+        end
       end
     end
   end
@@ -502,17 +560,21 @@ RSpec.describe "Events::Callouts", type: :request do
     let(:event) { create(:event, end_date: 2.days.ago) }
     let(:registration) { create(:event_registration, event: event, status: "attended") }
 
-    it "renders once the certificate is unlocked" do
+    it "renders the certificate once it is unlocked" do
       get registration_certificate_path(registration.slug)
       expect(response).to have_http_status(:success)
+      expect(response.body).to include("This certifies that")
     end
 
-    it "redirects to the ticket when the certificate isn't unlocked yet" do
+    it "shows the pending unlock conditions when the certificate isn't unlocked yet" do
       registration.update!(status: "registered")
 
       get registration_certificate_path(registration.slug)
 
-      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("unlocks once these are met")
+      expect(response.body).to include("Your attendance is confirmed")
+      expect(response.body).not_to include("This certifies that")
     end
   end
 

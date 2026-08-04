@@ -211,17 +211,6 @@ class BuiltinCallouts
         }
       },
       {
-        builtin_key: "certificate",
-        title: "Certificate of completion",
-        subtitle: "View and download your certificate",
-        callout_type: "action",
-        icon_class: "fa-solid fa-certificate",
-        color_class: "green",
-        # Off by default except on facilitator trainings. When shown, it still only
-        # appears once the certificate unlocks (BuiltinCalloutCards guards this).
-        hidden: ->(_event) { true }
-      },
-      {
         builtin_key: "scholarship",
         title: "Scholarship",
         subtitle: "Your scholarship request and award",
@@ -287,6 +276,17 @@ class BuiltinCallouts
         resources: -> { handout_resources },
         # Per-link subtitle/page_content defaults, keyed by resource title.
         resource_content: HANDOUT_LINK_DEFAULTS
+      },
+      {
+        builtin_key: "certificate",
+        title: "Certificate of completion",
+        subtitle: "View and download your certificate",
+        callout_type: "action",
+        icon_class: "fa-solid fa-certificate",
+        color_class: "green",
+        # A published row shows before it unlocks as a pending card; once unlocked it
+        # links to the certificate (BuiltinCalloutCards guards this).
+        hidden: ->(_event) { true }
       },
       {
         builtin_key: "faq",

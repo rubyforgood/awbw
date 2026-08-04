@@ -15,6 +15,9 @@
    end %>
 
 <%= render layout: "events/callouts/callout_page", locals: { title: @event.ce_hours_label, **callout_eyebrow } do %>
+  <%# Requesting CE flips this frame in place: the POST redirects back here and
+      Turbo swaps in the license-entry branch — no full-page reload. %>
+  <%= turbo_frame_tag "ce_request_section" do %>
   <% if @event_registration.ce_registered? %>
     <% license = ce_registration&.professional_license %>
     <% license_kind = license&.kind %>
@@ -77,8 +80,11 @@
         </p>
 
         <% if ce_registration && ce_registration.remaining_cost.positive? %>
-          <% if @event.ce_payment_due_deadline %>
-            <p class="mt-3 text-sm text-amber-700">Payment due by <%= @event.ce_payment_due_deadline.to_fs(:long) %></p>
+          <% if (due_text = @event.decorate.ce_payment_due_deadline_display) %>
+            <p class="mt-3 flex items-baseline gap-2 text-sm">
+              <span class="text-xs font-medium uppercase tracking-wide text-gray-400">Payment due</span>
+              <span class="font-semibold text-amber-700"><%= due_text %></span>
+            </p>
           <% end %>
           <div class="mt-6 flex justify-center">
             <% if sample_preview? %>
@@ -149,7 +155,7 @@
           <% if license_locked %>
             <p class="mt-3 inline-flex items-center gap-1.5 text-xs text-gray-500">
               <i class="fa-solid fa-lock text-[0.65rem]"></i>
-              Your CE certificate has been issued, so your license is locked. Contact us if it needs correcting.
+              Your CE certificate has been issued, so your license is locked. <%= link_to "Contact us", contact_us_path, class: "text-blue-700 underline hover:text-blue-900", data: { turbo_frame: "_top" } %> if it needs correcting.
             </p>
           <% end %>
         <% else %>
@@ -226,13 +232,15 @@
       </section>
     <% end %>
   <% else %>
-    <p class="text-sm text-gray-600">You haven't requested continuing education credit for this training. CE hours are available for an additional fee.</p>
+    <p class="text-sm text-gray-600">You haven't requested continuing education credit for this training.
+      <%= @event.ce_hours_cost_cents.to_i.positive? ? "CE hours are available for #{dollars_from_cents(@event.ce_hours_cost_cents)}." : "CE hours are available for an additional fee." %></p>
     <% if @event.ce_hours_request_deadline %>
       <p class="mt-2 text-sm text-amber-700">Request CE credit by <%= @event.ce_hours_request_deadline.to_fs(:long) %>.</p>
     <% end %>
-    <%= form_with url: registration_ce_request_path(@event_registration.slug), method: :post, data: { turbo: false }, class: "mt-4" do |form| %>
+    <%= form_with url: registration_ce_request_path(@event_registration.slug), method: :post, class: "mt-4" do |form| %>
       <%= form.submit "Request CE credit", class: "rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer" %>
     <% end %>
+  <% end %>
   <% end %>
 
   <% if @ce_callout&.description.present? %>

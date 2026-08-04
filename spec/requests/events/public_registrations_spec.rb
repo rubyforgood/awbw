@@ -253,7 +253,8 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     it "surfaces the CE deadlines on the continuing education section" do
       ce = FormBuilderService.new(name: "CE", sections: %i[continuing_education], role: "continuing_education").call
       event.event_forms.create!(form: ce, role: "continuing_education")
-      event.update!(ce_hours_request_deadline: Date.new(2026, 7, 1), ce_payment_due_deadline: Date.new(2026, 8, 15))
+      event.update!(ce_hours_request_deadline: Date.new(2026, 7, 1),
+                    ce_payment_due_deadline: ActiveSupport::TimeZone["Pacific Time (US & Canada)"].local(2026, 8, 15, 9, 0))
 
       get new_event_public_registration_path(event)
 
