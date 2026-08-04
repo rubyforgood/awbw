@@ -8,8 +8,16 @@
     <%= link_to "All dues", dues_registrations_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
   </div>
 
-  <h1 class="text-2xl font-bold mb-1">Dues</h1>
-  <p class="text-sm text-gray-500 mb-6"><%= @person.full_name %></p>
+  <div class="flex flex-wrap items-end justify-between gap-2 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold mb-1">Dues</h1>
+      <p class="text-sm text-gray-500"><%= @person.full_name %></p>
+    </div>
+    <%= link_to new_person_dues_subscription_path(@person), class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+      <i class="fa-solid fa-plus text-xs"></i>
+      New subscription
+    <% end %>
+  </div>
 
   <% if @dues_subscriptions.none? %>
     <p class="text-gray-500 italic">No dues subscription yet.</p>

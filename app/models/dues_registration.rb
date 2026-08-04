@@ -22,6 +22,8 @@ class DuesRegistration < ApplicationRecord
     where.not(id: DuesRegistration.overdue(as_of))
   }
 
+  before_validation :derive_end_date, on: :create
+
   validates :start_date, :end_date, presence: true
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :end_date_not_before_start_date
@@ -64,7 +66,21 @@ class DuesRegistration < ApplicationRecord
     !overdue?(as_of)
   end
 
+  def cost_dollars
+    cost_cents.to_d / 100 if cost_cents
+  end
+
+  def cost_dollars=(value)
+    self.cost_cents = (value.to_d * 100).to_i if value.present?
+  end
+
   private
+
+  def derive_end_date
+    return if end_date.present? || start_date.blank?
+
+    self.end_date = start_date + 1.year - 1.day
+  end
 
   def end_date_not_before_start_date
     return if start_date.blank? || end_date.blank?

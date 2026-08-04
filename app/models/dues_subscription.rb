@@ -4,6 +4,8 @@ class DuesSubscription < ApplicationRecord
   belongs_to :person
   has_many :dues_registrations, -> { order(start_date: :desc) }, dependent: :destroy
 
+  accepts_nested_attributes_for :dues_registrations
+
   # A nil rate_cents means "charge the standard rate, whatever it currently is", so
   # a rate rise moves these members automatically. A stored value is a rate this
   # member is locked into — the distinction is what makes grandfathering possible.
@@ -15,6 +17,14 @@ class DuesSubscription < ApplicationRecord
   scope :cancelled, -> { where.not(cancelled_at: nil) }
 
   def cancelled? = cancelled_at.present?
+
+  def rate_dollars
+    rate_cents.to_d / 100 if rate_cents
+  end
+
+  def rate_dollars=(value)
+    self.rate_cents = value.present? ? (value.to_d * 100).to_i : nil
+  end
 
   private
 
