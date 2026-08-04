@@ -271,7 +271,17 @@
                     class: "shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer" %>
             <% end %>
           <% else %>
-            <p class="text-sm text-gray-500">Sign-in opens 30 minutes before each training day starts.</p>
+            <%# Sign-in window not open yet: standard gating notice (matching the
+                videoconference pending-note style) naming the concrete opening plus the
+                rule. Shown in the event's zone (Pacific), labeled — no JS to detect the
+                viewer's own zone. %>
+            <% opens_at = @event.next_attendance_sign_in_opens_at %>
+            <p class="flex items-start gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-sm text-gray-700 ring-1 ring-blue-200">
+              <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-blue-400"></i>
+              <span>Sign-in opens<% if opens_at %>
+                <time datetime="<%= opens_at.iso8601 %>" class="font-medium text-gray-900"><%= opens_at.strftime("%A, %B %-d at %-I:%M %p %Z") %></time> —<% end %>
+                30 minutes before each training day starts.</span>
+            </p>
           <% end %>
         </div>
 
@@ -297,7 +307,9 @@
           </dl>
         <% end %>
 
-        <p class="mt-3 text-xs text-gray-400">Sign in when you arrive and sign out when you leave — including breaks and lunch — so your hours are recorded accurately.</p>
+        <% if signed_in || @event.attendance_sign_in_open? %>
+          <p class="mt-3 text-xs text-gray-400">Sign in when you arrive and sign out when you leave.<br>Include breaks and lunch so your hours are recorded accurately.</p>
+        <% end %>
       </section>
     <% end %>
   <% else %>

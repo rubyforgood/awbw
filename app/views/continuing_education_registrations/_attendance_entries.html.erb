@@ -42,19 +42,17 @@
       </div>
     <% end %>
 
-    <%# Blank rows to add entries (leave empty to ignore). Save again for more. %>
-    <% 3.times do |j| %>
-      <% idx = entries.size + j %>
-      <div class="grid grid-cols-1 sm:grid-cols-[1fr_1fr_5rem_4rem] items-center gap-3 border-t border-gray-100 py-2">
-        <input type="datetime-local" class="<%= input_class %>"
-               name="continuing_education_registration[time_entries][<%= idx %>][signed_in_at]">
-        <input type="datetime-local" class="<%= input_class %>"
-               name="continuing_education_registration[time_entries][<%= idx %>][signed_out_at]">
-        <div class="text-right text-xs text-gray-300 tabular-nums">—</div>
-        <div></div>
-      </div>
-    <% end %>
+    <%# One blank row to add an entry — fill it and save; a fresh blank returns for the next. %>
+    <% idx = entries.size %>
+    <div class="grid grid-cols-1 sm:grid-cols-[1fr_1fr_5rem_4rem] items-center gap-3 border-t border-gray-100 py-2">
+      <input type="datetime-local" class="<%= input_class %>"
+             name="continuing_education_registration[time_entries][<%= idx %>][signed_in_at]">
+      <input type="datetime-local" class="<%= input_class %>"
+             name="continuing_education_registration[time_entries][<%= idx %>][signed_out_at]">
+      <div class="text-right text-xs text-gray-300 tabular-nums">—</div>
+      <div></div>
+    </div>
 
-    <p class="mt-3 text-xs text-gray-400">Add an entry by filling a blank row. Tick Remove to delete one. Sign-out must be after sign-in.</p>
+    <p class="mt-3 text-xs text-gray-400">Fill the blank row and save to add an entry. Tick Remove to delete one. Sign-out must be after sign-in.</p>
   </div>
 </section>

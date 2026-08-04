@@ -324,6 +324,16 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
         }.to change { registration.event_attendance_time_entries.count }.by(-1)
       end
 
+      it "ignores a remove for an entry that no longer exists (stale form / double submit)" do
+        expect {
+          patch continuing_education_registration_path(ce_registration),
+                params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
+                  time_entries: { "0" => { id: "999999", signed_in_at: "2026-07-23T08:50", signed_out_at: "2026-07-23T10:34", _destroy: "1" } } } }
+        }.not_to raise_error
+
+        expect(response).to redirect_to(edit_event_registration_path(registration))
+      end
+
       it "ignores blank rows" do
         expect {
           patch continuing_education_registration_path(ce_registration),

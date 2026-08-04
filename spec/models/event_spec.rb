@@ -532,5 +532,21 @@ RSpec.describe Event, type: :model do
         expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 25, 9, 0))).to be(false)
       end
     end
+
+    describe "#next_attendance_sign_in_opens_at" do
+      it "returns the first day's opening before the event" do
+        expect(event.next_attendance_sign_in_opens_at(Time.zone.local(2026, 7, 23, 7, 0)))
+          .to eq(Time.zone.local(2026, 7, 23, 8, 30))
+      end
+
+      it "skips to the next day's opening once the current window has opened" do
+        expect(event.next_attendance_sign_in_opens_at(Time.zone.local(2026, 7, 23, 10, 0)))
+          .to eq(Time.zone.local(2026, 7, 24, 8, 30))
+      end
+
+      it "is nil once the last day's window has opened" do
+        expect(event.next_attendance_sign_in_opens_at(Time.zone.local(2026, 7, 24, 12, 0))).to be_nil
+      end
+    end
   end
 end

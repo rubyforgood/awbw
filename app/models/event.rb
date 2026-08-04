@@ -240,6 +240,14 @@ class Event < ApplicationRecord
     at.between?(daily_start_at(date) - ATTENDANCE_SIGN_IN_LEAD, daily_end_at(date))
   end
 
+  # When sign-in next becomes available — the earliest upcoming day's window opening
+  # (day start − lead). Nil once the last day's window has already opened (or passed).
+  def next_attendance_sign_in_opens_at(at = Time.current)
+    event_dates
+      .map { |date| daily_start_at(date) - ATTENDANCE_SIGN_IN_LEAD }
+      .find { |opens_at| opens_at > at }
+  end
+
   def time_title
     "(#{ start_text }) #{ name }"
   end

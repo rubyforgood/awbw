@@ -123,6 +123,13 @@ class ContinuingEducationRegistrationsController < ApplicationController
     rows = time_entries_attributes
     return if rows.blank?
 
+    # Drop rows pointing at an entry that's no longer on this registration — a stale
+    # form or double-submit (it was already removed). Left in, nested attributes raise
+    # RecordNotFound and blow up the save.
+    existing_ids = registration.event_attendance_time_entries.pluck(:id).map(&:to_s)
+    rows = rows.reject { |row| row["id"].present? && existing_ids.exclude?(row["id"].to_s) }
+    return if rows.blank?
+
     registration.assign_attributes(event_attendance_time_entries_attributes: rows)
     registration.event_attendance_time_entries.each do |entry|
       next if entry.marked_for_destruction?
