@@ -181,9 +181,13 @@
         </div>
       </div>
 
+      <%# A transferred-in registration's scholarship/CE/payments live on the
+          source registration, so it shows a read-only summary of those instead
+          of its own editable cards (issue #1944). %>
+      <% transferred_in = f.object.transferred_in? %>
       <%# The org card widens to absorb a column for each of the other two cards that's hidden. %>
-      <% show_scholarship = f.object.event&.scholarship_eligible? || f.object.scholarships.any? %>
-      <% show_ce = f.object.event&.ce_eligible? %>
+      <% show_scholarship = !transferred_in && (f.object.event&.scholarship_eligible? || f.object.scholarships.any?) %>
+      <% show_ce = !transferred_in && f.object.event&.ce_eligible? %>
       <% org_span = 1 + (show_scholarship ? 0 : 1) + (show_ce ? 0 : 1) %>
       <% org_span_class = { 1 => "sm:col-span-1", 2 => "sm:col-span-2", 3 => "sm:col-span-3" }.fetch(org_span) %>
       <% active_orgs = f.object.registrant.affiliations.select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }.map(&:organization).compact.uniq.sort_by(&:name) %>
@@ -275,22 +279,26 @@
         <% end %>
       </div>
 
-      <% if f.object.payment_unresolved? %>
-        <div class="mt-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-          <i class="fa-solid fa-circle-exclamation"></i>
-          Automated payment creation error for Stripe checkout
-        </div>
-      <% elsif f.object.checkout_session_id.present? && f.object.payment_unresolved.nil? %>
-        <div class="mt-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-          <i class="fa-solid fa-clock"></i>
-          Automated payment/allocation creation may still be in progress
-          <% if @checkout_payment_status.present? %>
-            - Stripe checkout status:
-            <strong><%= @checkout_payment_status %></strong>
-          <% end %>
-        </div>
+      <% if transferred_in %>
+        <%= render "transferred_in_financials", event_registration: f.object %>
+      <% else %>
+        <% if f.object.payment_unresolved? %>
+          <div class="mt-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            Automated payment creation error for Stripe checkout
+          </div>
+        <% elsif f.object.checkout_session_id.present? && f.object.payment_unresolved.nil? %>
+          <div class="mt-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            <i class="fa-solid fa-clock"></i>
+            Automated payment/allocation creation may still be in progress
+            <% if @checkout_payment_status.present? %>
+              - Stripe checkout status:
+              <strong><%= @checkout_payment_status %></strong>
+            <% end %>
+          </div>
+        <% end %>
+        <%= render "payment_history", event_registration: f.object %>
       <% end %>
-      <%= render "payment_history", event_registration: f.object %>
 
       <% if allowed_to?(:index?, with: NotificationPolicy) %>
         <%= render "notifications/communications", f: f,

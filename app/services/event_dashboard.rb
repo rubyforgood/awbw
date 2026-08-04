@@ -360,7 +360,7 @@ class EventDashboard
   # Per-registrant cents still owed after payments and scholarships, keyed by
   # Person id. Aggregates across a person's registrations; sums to outstanding_cents.
   def registration_due_by_registrant
-    @registration_due_by_registrant ||= active_registration_ids.each_with_object(Hash.new(0)) do |id, map|
+    @registration_due_by_registrant ||= billable_registration_ids.each_with_object(Hash.new(0)) do |id, map|
       due = [ event.cost_cents.to_i - allocated_by_registration.fetch(id, 0), 0 ].max
       next if due.zero?
       registrant_id = registrant_id_by_registration[id]
@@ -373,16 +373,16 @@ class EventDashboard
     registration_allocations.where(source_type: "Payment").sum(:amount)
   end
 
-  # Still owed across all active registrations, after payments and scholarships.
+  # Still owed across all billable registrations, after payments and scholarships.
   def outstanding_cents
-    active_registration_ids.sum do |id|
+    billable_registration_ids.sum do |id|
       [ event.cost_cents.to_i - allocated_by_registration.fetch(id, 0), 0 ].max
     end
   end
 
-  # Full-price value of all active registrations (before scholarships/discounts).
+  # Full-price value of all billable registrations (before scholarships/discounts).
   def total_cents
-    event.cost_cents.to_i * registrant_count
+    event.cost_cents.to_i * billable_registration_ids.size
   end
 
   # Registration-fee subtotal: money received plus money still owed. This is the
@@ -423,13 +423,13 @@ class EventDashboard
   end
 
   def paid_count
-    return registrant_count if free?
-    active_registration_ids.count { |id| allocated_by_registration.fetch(id, 0) >= event.cost_cents.to_i }
+    return billable_registration_ids.size if free?
+    billable_registration_ids.count { |id| allocated_by_registration.fetch(id, 0) >= event.cost_cents.to_i }
   end
 
   def unpaid_count
     return 0 if free?
-    registrant_count - paid_count
+    billable_registration_ids.size - paid_count
   end
 
   # Registrants whose cost is fully covered (payments and/or completed
@@ -439,7 +439,7 @@ class EventDashboard
   end
 
   def unpaid_registrants
-    @unpaid_registrants ||= people_sorted(registrants_for(active_registration_ids - paid_registration_ids))
+    @unpaid_registrants ||= people_sorted(registrants_for(billable_registration_ids - paid_registration_ids))
   end
 
   # --- Continuing-education fees ---------------------------------------------
@@ -1016,6 +1016,14 @@ class EventDashboard
       .pluck(:event_registration_id)
   end
 
+  # The money basis: active registrations that owe THIS event, i.e. excluding
+  # transferred-in regs (whose balance lives on their source registration). Kept
+  # distinct from registrant_count/active ids — a transferred-in registrant still
+  # counts in the headcount and attendance, just not in the financial totals.
+  def billable_registration_ids
+    @billable_registration_ids ||= active_registrations.not_transferred_in.pluck(:id)
+  end
+
   def registrant_ids
     @registrant_ids ||= active_registrations.pluck(:registrant_id)
   end
@@ -1168,7 +1176,7 @@ class EventDashboard
   # CE registrant counts / pie.
   def ce_registrations
     @ce_registrations ||= ContinuingEducationRegistration
-      .where(event_registration_id: active_registration_ids)
+      .where(event_registration_id: billable_registration_ids)
       .to_a
   end
 
@@ -1300,7 +1308,7 @@ class EventDashboard
   end
 
   def paid_registration_ids
-    @paid_registration_ids ||= active_registration_ids.select do |id|
+    @paid_registration_ids ||= billable_registration_ids.select do |id|
       allocated_by_registration.fetch(id, 0) >= event.cost_cents.to_i
     end
   end

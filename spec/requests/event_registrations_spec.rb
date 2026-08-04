@@ -514,6 +514,26 @@ RSpec.describe "EventRegistrations", type: :request do
 
         expect(response.body).to include("Transferred in from")
       end
+
+      it "shows a source-financials summary (not editable cards) for a transferred-in reg" do
+        paid_event = create(:event, cost_cents: 10_000)
+        source = create(:event_registration, event: paid_event, status: "transferred_out")
+        create(:allocation, source: create(:payment, person: source.registrant, amount_cents: 4_000, amount_cents_remaining: 4_000),
+               allocatable: source, amount: 4_000)
+        scholarship = create(:scholarship, recipient: source.registrant, amount_cents: 6_000)
+        create(:allocation, source: scholarship, allocatable: source, amount: 6_000)
+        incoming = create(:event_registration, event: new_event, transferred_from_registration: source)
+
+        get edit_event_registration_path(incoming)
+
+        # The distinct read-only summary, linking back to the source reg's sections.
+        expect(response.body).to include("Financials on the original registration")
+        expect(response.body).to include("#{edit_event_registration_path(source)}#allocations-card")
+        expect(response.body).to include("#{edit_event_registration_path(source)}#scholarship-card")
+        # NOT the incoming reg's own editable payment/scholarship cards.
+        expect(response.body).not_to include("Registration payments and allocations")
+        expect(response.body).not_to include("name=\"event_registration[scholarship_requested]\"")
+      end
     end
 
     describe "PATCH /event_registrations/:id" do
@@ -588,6 +608,14 @@ RSpec.describe "EventRegistrations", type: :request do
       it "redirects to the transfer screen when newly marked transferred out" do
         patch event_registration_path(existing_registration),
               params: { event_registration: { status: "transferred_out" } }
+
+        expect(response).to redirect_to(transfer_event_registration_path(existing_registration, return_to: nil))
+      end
+
+      it "also redirects when the status is flipped via the inline (Turbo) badge" do
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { status: "transferred_out" } },
+              as: :turbo_stream
 
         expect(response).to redirect_to(transfer_event_registration_path(existing_registration, return_to: nil))
       end

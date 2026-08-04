@@ -1236,4 +1236,36 @@ RSpec.describe EventDashboard do
       expect(affiliation_queries).to be <= 3
     end
   end
+
+  describe "transferred-in registrations and financial totals" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:paid_person) { create(:person) }
+    let!(:paid_reg) do
+      reg = create(:event_registration, event: event, registrant: paid_person, status: "registered")
+      create(:allocation, source: create(:payment, amount_cents: 10_000, amount_cents_remaining: 10_000),
+                          allocatable: reg, amount: 10_000)
+      reg
+    end
+    # A transferred-in registrant whose money lives on the source (another event).
+    let(:source) { create(:event_registration, status: "transferred_out") }
+    let!(:incoming) do
+      create(:event_registration, event: event, registrant: create(:person),
+        status: "registered", transferred_from_registration: source)
+    end
+
+    it "counts the transferred-in registrant in the headcount" do
+      expect(dashboard.registrant_count).to eq(2)
+    end
+
+    it "excludes the transferred-in registrant from every financial total" do
+      # Only the fully-paid registrant is billable here; the transferred-in one
+      # owes nothing to this event (its balance is on the source registration).
+      expect(dashboard.total_cents).to eq(10_000)
+      expect(dashboard.outstanding_cents).to eq(0)
+      expect(dashboard.received_cents).to eq(10_000)
+      expect(dashboard.paid_count).to eq(1)
+      expect(dashboard.unpaid_count).to eq(0)
+      expect(dashboard.unpaid_registrants).to be_empty
+    end
+  end
 end

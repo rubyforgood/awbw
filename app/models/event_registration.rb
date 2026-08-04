@@ -174,6 +174,10 @@ class EventRegistration < ApplicationRecord
   scope :attended, -> { where(status: "attended") }
   scope :registrant_ids, ->(ids) { where(registrant_id: ids.to_s.split("-").map(&:to_i)) }
   scope :transferred_in, -> { where.not(transferred_from_registration_id: nil) }
+  # The billable basis for an event's financial reporting: a transferred-in reg's
+  # money lives on its source registration, so it owes nothing here and is
+  # excluded from this event's totals (issue #1944).
+  scope :not_transferred_in, -> { where(transferred_from_registration_id: nil) }
   # "other" = any status outside the named attendance outcomes; the virtual
   # "transferred_in" (an FK-backed dimension, not a status) routes to the
   # transfer scope; every real value filters the status column.
@@ -627,12 +631,18 @@ class EventRegistration < ApplicationRecord
   # Reporting surfaces (rosters, CSV exports, dashboard metrics) must keep using
   # `paid_in_full?` so they still reflect the real balance owed.
   def payment_access_granted?
+    # A transferred-in reg's payment lives on its source, so access to this
+    # event's paid content follows whatever the source registration grants.
+    return transferred_from_registration.payment_access_granted? if transferred_in?
     paid_in_full? || intends_to_pay?
   end
 
   # Human-readable payment status for rosters and CSV exports. Assumes the event
   # has a cost — callers show nothing for free events.
   def payment_status_label
+    # A transferred-in reg owes nothing here — its balance is tracked on the
+    # source registration — so it never reads as Paid/Due for this event.
+    return "Transferred in" if transferred_in?
     return "Paid" if paid_in_full?
     return "Intends to pay" if intends_to_pay?
     "Due"

@@ -122,6 +122,33 @@ RSpec.describe EventRegistration, type: :model do
     it "offers a Transferred in filter option backed by the FK value" do
       expect(EventRegistration::ATTENDANCE_FILTER_OPTIONS).to include([ "Transferred in", "transferred_in" ])
     end
+
+    it "scopes .not_transferred_in to registrations without a back-link" do
+      plain = create(:event_registration, status: "registered")
+      expect(EventRegistration.not_transferred_in).to include(plain, source)
+      expect(EventRegistration.not_transferred_in).not_to include(incoming)
+    end
+
+    describe "financials live on the source" do
+      let(:paid_event) { create(:event, cost_cents: 10_000) }
+      let(:source) { create(:event_registration, event: paid_event, status: "transferred_out") }
+      let!(:incoming) do
+        create(:event_registration, event: create(:event, cost_cents: 10_000),
+          status: "registered", transferred_from_registration: source)
+      end
+
+      it "labels payment status as transferred in rather than Due" do
+        expect(incoming.payment_status_label).to eq("Transferred in")
+      end
+
+      it "derives payment access from the source registration" do
+        expect(incoming.payment_access_granted?).to be(false)
+
+        create(:allocation, allocatable: source, amount: 10_000,
+          source: create(:payment, person: source.registrant, amount_cents: 10_000, amount_cents_remaining: nil))
+        expect(incoming.reload.payment_access_granted?).to be(true)
+      end
+    end
   end
 
   describe ".registrant_name" do

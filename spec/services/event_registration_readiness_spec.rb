@@ -42,6 +42,15 @@ RSpec.describe EventRegistrationReadiness do
       expect(readiness.event_ready_issues).not_to include("Payment due")
     end
 
+    it "does not flag payment for a transferred-in registration (paid on the source)" do
+      source = create(:event_registration, status: "transferred_out")
+      registration.update!(transferred_from_registration: source)
+      link_org(registration)
+
+      expect(readiness.event_ready_issues).not_to include("Payment due")
+      expect(readiness.event_ready?).to be(true)
+    end
+
     it "ignores the intends-to-pay flag (access only, not readiness)" do
       registration.update!(intends_to_pay: true)
 

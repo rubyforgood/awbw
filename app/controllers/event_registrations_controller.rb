@@ -94,37 +94,41 @@ class EventRegistrationsController < ApplicationController
     @event_registration.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
 
     if @event_registration.save
+      # Marking transferred out — from the edit-form save OR the inline roster/
+      # onboarding status chip (Turbo) — with no destination yet sends the admin
+      # to the transfer screen to create/link the incoming registration. Handled
+      # before respond_to so both the HTML and Turbo paths redirect (issue #1944).
+      if @event_registration.saved_change_to_status? &&
+         @event_registration.transfer_destination_pending? &&
+         allowed_to?(:transfer?, @event_registration)
+        return redirect_to transfer_event_registration_path(@event_registration, return_to: params[:return_to]), status: :see_other
+      end
+
       notice = "Registration was successfully updated."
       respond_to do |format|
         format.turbo_stream
         format.html {
-          if @event_registration.saved_change_to_status? &&
-             @event_registration.transfer_destination_pending? &&
-             allowed_to?(:transfer?, @event_registration)
-            redirect_to transfer_event_registration_path(@event_registration, return_to: params[:return_to]), status: :see_other
+          case params[:return_to]
+          when "registrants" then redirect_to helpers.registrants_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
+          when "index" then redirect_to event_registrations_path, notice: notice, status: :see_other
+          when "ticket" then redirect_to registration_ticket_path(@event_registration.slug), notice: notice, status: :see_other
+          when "preview_reminder" then redirect_to preview_reminder_event_path(@event_registration.event), notice: notice, status: :see_other
+          when "onboarding" then redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
+          when "attendees" then redirect_to attendees_events_path, notice: notice, status: :see_other
+          when "roster" then redirect_to roster_event_path(@event_registration.event), notice: notice, status: :see_other
+          # Two ways back to the recipients page: the shout-outs section (the
+          # feature-a-shout-out flow) or the recipient's own card (their name).
+          when "recipients" then redirect_to recipients_event_path(@event_registration.event, anchor: "shout-outs"), notice: notice, status: :see_other
+          when "recipient_card" then redirect_to helpers.recipients_event_card_path(@event_registration.event, @event_registration.slug), notice: notice, status: :see_other
+          when "attendance" then redirect_to attendance_event_path(@event_registration.event), notice: notice, status: :see_other
           else
-            case params[:return_to]
-            when "registrants" then redirect_to helpers.registrants_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
-            when "index" then redirect_to event_registrations_path, notice: notice, status: :see_other
-            when "ticket" then redirect_to registration_ticket_path(@event_registration.slug), notice: notice, status: :see_other
-            when "preview_reminder" then redirect_to preview_reminder_event_path(@event_registration.event), notice: notice, status: :see_other
-            when "onboarding" then redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
-            when "attendees" then redirect_to attendees_events_path, notice: notice, status: :see_other
-            when "roster" then redirect_to roster_event_path(@event_registration.event), notice: notice, status: :see_other
-            # Two ways back to the recipients page: the shout-outs section (the
-            # feature-a-shout-out flow) or the recipient's own card (their name).
-            when "recipients" then redirect_to recipients_event_path(@event_registration.event, anchor: "shout-outs"), notice: notice, status: :see_other
-            when "recipient_card" then redirect_to helpers.recipients_event_card_path(@event_registration.event, @event_registration.slug), notice: notice, status: :see_other
-            when "attendance" then redirect_to attendance_event_path(@event_registration.event), notice: notice, status: :see_other
+            # No explicit origin: keep admins in the management context (the
+            # registrants list) rather than dropping them on the public
+            # registration show.
+            if allowed_to?(:manage?, with: EventRegistrationPolicy)
+              redirect_to helpers.registrants_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
             else
-              # No explicit origin: keep admins in the management context (the
-              # registrants list) rather than dropping them on the public
-              # registration show.
-              if allowed_to?(:manage?, with: EventRegistrationPolicy)
-                redirect_to helpers.registrants_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
-              else
-                redirect_to registration_ticket_path(@event_registration.slug), notice: notice, status: :see_other
-              end
+              redirect_to registration_ticket_path(@event_registration.slug), notice: notice, status: :see_other
             end
           end
         }
