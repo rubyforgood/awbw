@@ -22,7 +22,7 @@
     <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
         <h1 class="text-2xl font-semibold text-gray-900"><%= title %></h1>
-        <p class="text-gray-600 mt-1"><%= @event.title %> · <%= event.date_range %></p>
+        <p class="text-gray-600 mt-1"><%= @event.title %> · <%= event.date_range %> · <%= event.times %></p>
       </div>
       <% if @report.ce_only? %>
         <span class="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
@@ -120,7 +120,7 @@
         <% signed_in_count = @report.registrations.count { |reg| @report.entries_for(reg, date).any? } %>
         <section class="mb-8">
           <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
-            <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Day <%= index + 1 %> · <%= date.strftime("%A, %b %-d") %></h2>
+            <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Day <%= index + 1 %> · <%= date.strftime("%A, %b %-d") %> · <%= event.times %></h2>
             <span class="text-xs text-gray-400"><%= signed_in_count %> of <%= @report.registrations.size %> signed in</span>
           </div>
 

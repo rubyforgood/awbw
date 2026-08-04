@@ -51,6 +51,16 @@ RSpec.describe "Events attendance report", type: :request do
       expect(response.body).to include("← Registrants")
     end
 
+    it "shows the event's daily times in the page header and each day header" do
+      # Pin the viewer to UTC so the times render exactly as the event was built
+      # (requests otherwise display in the admin's zone, Pacific by default).
+      sign_in create(:user, :admin, time_zone: "UTC")
+      log_ce_time!
+      get attendance_event_path(event, ce: "true")
+      expect(response.body).to include("#{event.decorate.date_range} · 9 am - 4 pm UTC")
+      expect(response.body).to include("Day 1 · #{Date.new(2026, 7, 23).strftime("%A, %b %-d")} · 9 am - 4 pm UTC")
+    end
+
     it "warns when the event runs longer than the report's 5-day cap" do
       event.update!(end_date: Time.zone.local(2026, 7, 30, 16, 0))
       get attendance_event_path(event)
