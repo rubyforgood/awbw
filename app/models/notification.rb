@@ -109,6 +109,10 @@ class Notification < ApplicationRecord
   validates :recipient_email, presence: true
   validates :notification_type, presence: true
   validates :channel, inclusion: { in: CHANNELS }, allow_nil: true
+  # A hand-logged communication must carry a subject (it's the line shown to the
+  # user); the nested flow drops blank-subject rows via reject_if, so this only
+  # bites the standalone "New communication" form.
+  validates :email_subject, presence: true, if: :manual_log?
 
   # A manually logged communication (created inline, e.g. from the registration
   # edit page) records a contact that already happened — fill in the sensible

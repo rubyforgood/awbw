@@ -50,6 +50,29 @@ RSpec.describe NotificationPolicy, type: :policy do
     end
   end
 
+  describe "#new? and #create?" do
+    context "with admin user" do
+      subject { policy_for(user: admin_user) }
+
+      it { is_expected.to be_allowed_to(:new?) }
+      it { is_expected.to be_allowed_to(:create?) }
+    end
+
+    context "with regular user" do
+      subject { policy_for(user: regular_user) }
+
+      it { is_expected.not_to be_allowed_to(:new?) }
+      it { is_expected.not_to be_allowed_to(:create?) }
+    end
+
+    context "with no user" do
+      subject { policy_for(user: nil) }
+
+      it { is_expected.not_to be_allowed_to(:new?) }
+      it { is_expected.not_to be_allowed_to(:create?) }
+    end
+  end
+
   describe "#update?" do
     context "with admin user" do
       subject { policy_for(record: notification, user: admin_user) }
