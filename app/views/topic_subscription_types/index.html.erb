@@ -1,0 +1,81 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
+  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
+    <%= link_to "← Subscriptions", topic_subscriptions_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-semibold text-gray-900">Subscription topics</h1>
+      <p class="text-gray-600 mt-1">The topics people can subscribe to. Archive a topic to retire it without losing existing subscriptions.</p>
+    </div>
+    <%= link_to new_topic_subscription_type_path, class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+      <i class="fa-solid fa-plus text-xs"></i>
+      New topic
+    <% end %>
+  </div>
+
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <table class="w-full border-collapse border border-gray-200">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Key</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Subscriptions</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Status</th>
+          <th class="px-4 py-2"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% @topic_subscription_types.each do |type| %>
+          <tr class="hover:bg-gray-50 transition-colors duration-150 <%= "opacity-60" if type.archived? %>">
+            <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= type.name %></td>
+            <td class="px-4 py-2 text-sm text-gray-500"><code><%= type.key %></code></td>
+            <td class="px-4 py-2 text-sm text-gray-700">
+              <%= link_to type.topic_subscriptions.count, topic_subscriptions_path(topic_subscription_type_id: type.id),
+                    class: "text-blue-600 hover:text-blue-800 hover:underline" %>
+            </td>
+            <td class="px-4 py-2 text-sm">
+              <% if type.archived? %>
+                <span class="inline-flex items-center rounded-full border bg-gray-50 text-gray-500 border-gray-200 px-2.5 py-0.5 text-xs font-medium">Archived</span>
+              <% else %>
+                <span class="inline-flex items-center rounded-full border bg-green-50 text-green-700 border-green-200 px-2.5 py-0.5 text-xs font-medium">Active</span>
+              <% end %>
+            </td>
+            <td class="px-4 py-2 text-left text-sm font-medium text-nowrap">
+              <% link_class = "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer" %>
+              <%= link_to edit_topic_subscription_type_path(type), class: link_class do %>
+                <i class="fa-solid fa-pen text-[0.7rem] text-gray-400"></i>
+                Edit
+              <% end %>
+              <% if type.archived? %>
+                <%= button_to unarchive_topic_subscription_type_path(type), method: :patch, class: link_class do %>
+                  <i class="fa-solid fa-box-open text-[0.7rem] text-gray-400"></i>
+                  Restore
+                <% end %>
+              <% else %>
+                <%= button_to archive_topic_subscription_type_path(type), method: :patch,
+                      class: "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-amber-50 hover:text-amber-700 cursor-pointer" do %>
+                  <i class="fa-solid fa-box-archive text-[0.7rem]"></i>
+                  Archive
+                <% end %>
+              <% end %>
+              <% if type.topic_subscriptions.none? %>
+                <%= button_to topic_subscription_type_path(type), method: :delete,
+                      class: "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-red-700 cursor-pointer",
+                      data: { turbo_confirm: "Delete this topic?" } do %>
+                  <i class="fa-solid fa-trash-can text-[0.7rem]"></i>
+                  Delete
+                <% end %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <% if @topic_subscription_types.none? %>
+      <p class="text-gray-500 text-center py-8">No topics yet.</p>
+    <% end %>
+  </div>
+</div>

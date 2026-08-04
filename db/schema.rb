@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_03_052301) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_002438) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -808,6 +808,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_052301) do
     t.string "email"
     t.date "end_date"
     t.string "filemaker_code"
+    t.boolean "high_profile", default: false, null: false
     t.string "internal_id"
     t.boolean "legacy", default: false
     t.integer "legacy_id"
@@ -1298,6 +1299,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_052301) do
     t.index ["workshop_id"], name: "index_story_ideas_on_workshop_id"
   end
 
+  create_table "topic_subscription_types", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "archived_at"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.text "description"
+    t.string "key", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.index ["archived_at"], name: "index_topic_subscription_types_on_archived_at"
+    t.index ["key"], name: "index_topic_subscription_types_on_key", unique: true
+    t.index ["name"], name: "index_topic_subscription_types_on_name", unique: true
+  end
+
   create_table "topic_subscriptions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "created_by_id"
@@ -1306,14 +1321,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_052301) do
     t.bigint "person_id", null: false
     t.string "source"
     t.datetime "subscribed_at", null: false
-    t.string "topic", default: "facilitator_trainings", null: false
+    t.bigint "topic_subscription_type_id", null: false
     t.datetime "unsubscribed_at"
     t.datetime "updated_at", null: false
     t.bigint "updated_by_id"
     t.index ["created_by_id"], name: "index_topic_subscriptions_on_created_by_id"
     t.index ["interested_event_id"], name: "index_topic_subscriptions_on_interested_event_id"
     t.index ["person_id"], name: "index_topic_subscriptions_on_person_id"
-    t.index ["topic"], name: "index_topic_subscriptions_on_topic"
+    t.index ["topic_subscription_type_id"], name: "index_topic_subscriptions_on_topic_subscription_type_id"
     t.index ["unsubscribed_at"], name: "index_topic_subscriptions_on_unsubscribed_at"
     t.index ["updated_by_id"], name: "index_topic_subscriptions_on_updated_by_id"
   end
@@ -1829,6 +1844,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_052301) do
   add_foreign_key "story_ideas", "workshops"
   add_foreign_key "topic_subscriptions", "events", column: "interested_event_id"
   add_foreign_key "topic_subscriptions", "people"
+  add_foreign_key "topic_subscriptions", "topic_subscription_types"
   add_foreign_key "user_form_form_fields", "form_fields"
   add_foreign_key "user_form_form_fields", "user_forms"
   add_foreign_key "user_forms", "forms"

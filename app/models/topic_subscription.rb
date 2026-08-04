@@ -1,16 +1,6 @@
 class TopicSubscription < ApplicationRecord
-  # Topics a person can subscribe to. Add new list topics here.
-  TOPICS = %w[ facilitator_trainings news resources ].freeze
-  TOPIC_LABELS = {
-    "facilitator_trainings" => "Facilitator trainings",
-    "news" => "News",
-    "resources" => "Resources"
-  }.freeze
-  # The registration form's `interested_in_more` answer ("upcoming trainings or
-  # resources?") backfills/auto-captures into this topic (see follow-up).
-  INTERESTED_IN_MORE_TOPIC = "facilitator_trainings"
-
   belongs_to :person
+  belongs_to :topic_subscription_type
   # Optional narrowing to a specific event (e.g. one training). Null = the topic
   # broadly.
   belongs_to :interested_event, class_name: "Event", optional: true
@@ -19,22 +9,21 @@ class TopicSubscription < ApplicationRecord
 
   before_validation :set_subscribed_at, on: :create
 
-  validates :topic, inclusion: { in: TOPICS }, allow_nil: false
   validate :no_duplicate_active_subscription, on: :create
 
   # State is timestamp-driven: unsubscribed_at IS NULL means active.
   scope :active, -> { where(unsubscribed_at: nil) }
   scope :unsubscribed, -> { where.not(unsubscribed_at: nil) }
-  scope :for_topic, ->(topic) { where(topic: topic) }
+  scope :for_topic_type, ->(type) { where(topic_subscription_type: type) }
   scope :general, -> { where(interested_event_id: nil) }
   scope :for_event, ->(event) { where(interested_event: event) }
   scope :newest_first, -> { order(subscribed_at: :desc) }
 
-  # Drives the subscriptions index filters: topic, status
+  # Drives the subscriptions index filters: topic type, status
   # ("active"/"unsubscribed"/"general"), and a free-text match on the person.
   def self.search_by_params(params)
     scope = all
-    scope = scope.for_topic(params[:topic]) if TOPICS.include?(params[:topic].to_s)
+    scope = scope.for_topic_type(params[:topic_subscription_type_id]) if params[:topic_subscription_type_id].present?
 
     case params[:status]
     when "active" then scope = scope.active
@@ -63,7 +52,7 @@ class TopicSubscription < ApplicationRecord
   end
 
   def topic_label
-    TOPIC_LABELS.fetch(topic, topic.humanize)
+    topic_subscription_type&.name
   end
 
   def unsubscribe!
@@ -94,7 +83,7 @@ class TopicSubscription < ApplicationRecord
     return unless active?
 
     dupes = TopicSubscription.active.where(
-      person_id: person_id, topic: topic, interested_event_id: interested_event_id
+      person_id: person_id, topic_subscription_type_id: topic_subscription_type_id, interested_event_id: interested_event_id
     )
     dupes = dupes.where.not(id: id) if persisted?
     return unless dupes.exists?

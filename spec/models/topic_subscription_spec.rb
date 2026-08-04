@@ -1,43 +1,45 @@
 require "rails_helper"
 
 RSpec.describe TopicSubscription, type: :model do
+  let(:trainings) { create(:topic_subscription_type, :facilitator_trainings) }
+
   describe "validations" do
-    it "requires a topic in TOPICS" do
-      subscription = build(:topic_subscription, topic: "bogus")
+    it "requires a topic subscription type" do
+      subscription = build(:topic_subscription, topic_subscription_type: nil)
       expect(subscription).not_to be_valid
-      expect(subscription.errors[:topic]).to be_present
+      expect(subscription.errors[:topic_subscription_type]).to be_present
     end
 
     it "rejects a second active subscription for the same person, topic, and general scope" do
       person = create(:person)
-      create(:topic_subscription, person: person, topic: "facilitator_trainings", interested_event: nil)
+      create(:topic_subscription, person: person, topic_subscription_type: trainings, interested_event: nil)
 
-      dupe = build(:topic_subscription, person: person, topic: "facilitator_trainings", interested_event: nil)
+      dupe = build(:topic_subscription, person: person, topic_subscription_type: trainings, interested_event: nil)
       expect(dupe).not_to be_valid
       expect(dupe.errors[:base]).to include("already has an active subscription for this topic")
     end
 
     it "allows the same person to subscribe to different topics" do
       person = create(:person)
-      create(:topic_subscription, person: person, topic: "facilitator_trainings")
+      create(:topic_subscription, person: person, topic_subscription_type: trainings)
 
-      news = build(:topic_subscription, person: person, topic: "news")
+      news = build(:topic_subscription, person: person, topic_subscription_type: create(:topic_subscription_type, :news))
       expect(news).to be_valid
     end
 
     it "allows a general and an event-specific subscription for the same topic" do
       person = create(:person)
-      create(:topic_subscription, person: person, topic: "facilitator_trainings", interested_event: nil)
+      create(:topic_subscription, person: person, topic_subscription_type: trainings, interested_event: nil)
 
-      specific = build(:topic_subscription, person: person, topic: "facilitator_trainings", interested_event: create(:event))
+      specific = build(:topic_subscription, person: person, topic_subscription_type: trainings, interested_event: create(:event))
       expect(specific).to be_valid
     end
 
     it "allows re-subscribing after an unsubscribe" do
       person = create(:person)
-      create(:topic_subscription, :unsubscribed, person: person, topic: "facilitator_trainings", interested_event: nil)
+      create(:topic_subscription, :unsubscribed, person: person, topic_subscription_type: trainings, interested_event: nil)
 
-      fresh = build(:topic_subscription, person: person, topic: "facilitator_trainings", interested_event: nil)
+      fresh = build(:topic_subscription, person: person, topic_subscription_type: trainings, interested_event: nil)
       expect(fresh).to be_valid
     end
   end
@@ -63,13 +65,19 @@ RSpec.describe TopicSubscription, type: :model do
       subscription = create(:topic_subscription)
       subscription.unsubscribe!
       expect(subscription.reload).not_to be_active
-      expect(subscription.unsubscribed_at).to be_present
     end
 
     it "resubscribe! clears unsubscribed_at" do
       subscription = create(:topic_subscription, :unsubscribed)
       subscription.resubscribe!
       expect(subscription.reload).to be_active
+    end
+  end
+
+  describe "#topic_label" do
+    it "is the type's name" do
+      subscription = build(:topic_subscription, topic_subscription_type: trainings)
+      expect(subscription.topic_label).to eq("Facilitator trainings")
     end
   end
 
@@ -81,17 +89,18 @@ RSpec.describe TopicSubscription, type: :model do
   end
 
   describe "scopes" do
-    it "filters by state, topic, and generality" do
-      active = create(:topic_subscription, topic: "facilitator_trainings", interested_event: nil)
-      gone = create(:topic_subscription, :unsubscribed, person: create(:person), topic: "facilitator_trainings")
-      news = create(:topic_subscription, :news, person: create(:person))
+    it "filters by state, topic type, and generality" do
+      active = create(:topic_subscription, topic_subscription_type: trainings, interested_event: nil)
+      gone = create(:topic_subscription, :unsubscribed, person: create(:person), topic_subscription_type: trainings)
+      news_type = create(:topic_subscription_type, :news)
+      news = create(:topic_subscription, person: create(:person), topic_subscription_type: news_type)
       event = create(:event)
-      specific = create(:topic_subscription, person: create(:person), topic: "facilitator_trainings", interested_event: event)
+      specific = create(:topic_subscription, person: create(:person), topic_subscription_type: trainings, interested_event: event)
 
       expect(described_class.active).to include(active, specific, news)
       expect(described_class.active).not_to include(gone)
       expect(described_class.unsubscribed).to contain_exactly(gone)
-      expect(described_class.for_topic("news")).to contain_exactly(news)
+      expect(described_class.for_topic_type(news_type)).to contain_exactly(news)
       expect(described_class.general).to include(active)
       expect(described_class.general).not_to include(specific)
       expect(described_class.for_event(event)).to contain_exactly(specific)

@@ -11,12 +11,15 @@
         <i class="fa-solid fa-envelope-open-text text-teal-600"></i>
         Subscriptions
       </h1>
-      <p class="text-gray-600 mt-1">People subscribed to hear about a topic — trainings, news, resources. A signal, not a registration.</p>
+      <p class="text-gray-600 mt-1">People subscribed to hear about a topic. A signal, not a registration.</p>
     </div>
-    <%= link_to new_topic_subscription_path, class: "btn btn-primary inline-flex items-center gap-1.5" do %>
-      <i class="fa-solid fa-plus text-xs"></i>
-      New subscription
-    <% end %>
+    <div class="flex items-center gap-2">
+      <%= link_to "Manage topics", topic_subscription_types_path, class: "btn btn-utility-outline" %>
+      <%= link_to new_topic_subscription_path, class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+        <i class="fa-solid fa-plus text-xs"></i>
+        New subscription
+      <% end %>
+    </div>
   </div>
 
   <%= render "search_boxes" %>

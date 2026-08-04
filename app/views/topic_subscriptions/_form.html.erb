@@ -9,6 +9,11 @@
 <% current_event = @topic_subscription.interested_event %>
 <% event_options.unshift(current_event) if current_event && event_options.exclude?(current_event) %>
 
+<%# Active topics for the picker, plus the current one so an archived selection stays valid. %>
+<% type_options = TopicSubscriptionType.active.ordered.to_a %>
+<% current_type = @topic_subscription.topic_subscription_type %>
+<% type_options.unshift(current_type) if current_type && type_options.exclude?(current_type) %>
+
 <% cancel_path = case params[:return_to]
      when "dashboard" then params[:event_id].present? ? dashboard_event_path(params[:event_id]) : topic_subscriptions_path
      when "registrants" then params[:event_id].present? ? registrants_event_path(params[:event_id]) : topic_subscriptions_path
@@ -40,13 +45,13 @@
 
   <%# Topic — shown as a value with a pencil that flips to a picker. %>
   <div data-controller="flip-field">
-    <%= f.label :topic, class: label_class %>
+    <%= f.label :topic_subscription_type_id, "Topic", class: label_class %>
     <div class="flex items-center gap-2">
-      <span class="<%= value_class %>" data-flip-field-target="display"><%= @topic_subscription.topic_label %></span>
+      <span class="<%= value_class %>" data-flip-field-target="display"><%= current_type&.name || "—" %></span>
       <div class="hidden flex-1" data-flip-field-target="picker">
-        <%= f.select :topic,
-          options_for_select(TopicSubscription::TOPICS.map { |t| [ TopicSubscription::TOPIC_LABELS.fetch(t, t.humanize), t ] }, @topic_subscription.topic),
-          {},
+        <%= f.select :topic_subscription_type_id,
+          options_from_collection_for_select(type_options, :id, :name, @topic_subscription.topic_subscription_type_id),
+          { include_blank: true },
           class: field_class,
           data: { flip_field_target: "select" } %>
       </div>

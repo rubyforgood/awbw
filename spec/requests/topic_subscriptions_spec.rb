@@ -2,6 +2,7 @@ require "rails_helper"
 
 RSpec.describe "TopicSubscriptions", type: :request do
   let(:admin) { create(:user, :with_person, super_user: true) }
+  let!(:trainings) { create(:topic_subscription_type, :facilitator_trainings) }
 
   before { sign_in admin }
 
@@ -19,7 +20,7 @@ RSpec.describe "TopicSubscriptions", type: :request do
       other_event = create(:event, title: "Community Open House", facilitator_training: false)
       create(:event_registration, registrant: person, event: training)
       create(:event_registration, registrant: person, event: other_event)
-      create(:topic_subscription, person: person, topic: "facilitator_trainings", interested_event: nil)
+      create(:topic_subscription, person: person, topic_subscription_type: trainings, interested_event: nil)
 
       get topic_subscriptions_path, headers: { "Turbo-Frame" => "topic_subscriptions_results" }
 
@@ -31,10 +32,11 @@ RSpec.describe "TopicSubscriptions", type: :request do
     end
 
     it "filters by topic via the frame request" do
-      create(:topic_subscription, person: create(:person, first_name: "Tara", last_name: "Trainings"), topic: "facilitator_trainings")
-      create(:topic_subscription, :news, person: create(:person, first_name: "Nora", last_name: "News"))
+      news = create(:topic_subscription_type, :news)
+      create(:topic_subscription, person: create(:person, first_name: "Tara", last_name: "Trainings"), topic_subscription_type: trainings)
+      create(:topic_subscription, person: create(:person, first_name: "Nora", last_name: "News"), topic_subscription_type: news)
 
-      get topic_subscriptions_path(topic: "news"), headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+      get topic_subscriptions_path(topic_subscription_type_id: news.id), headers: { "Turbo-Frame" => "topic_subscriptions_results" }
 
       expect(response.body).to include("Nora News")
       expect(response.body).not_to include("Tara Trainings")
@@ -52,7 +54,7 @@ RSpec.describe "TopicSubscriptions", type: :request do
       event = create(:event, title: "TAC263 Spring Training", facilitator_training: true)
 
       get new_topic_subscription_path(
-        interested_event_id: event.id, topic: "facilitator_trainings", event_id: event.id, return_to: "dashboard"
+        interested_event_id: event.id, topic_key: "facilitator_trainings", event_id: event.id, return_to: "dashboard"
       )
 
       expect(response).to have_http_status(:success)
@@ -77,7 +79,7 @@ RSpec.describe "TopicSubscriptions", type: :request do
 
       expect {
         post topic_subscriptions_path, params: {
-          topic_subscription: { person_id: person.id, topic: "facilitator_trainings", source: "admin" }
+          topic_subscription: { person_id: person.id, topic_subscription_type_id: trainings.id, source: "admin" }
         }
       }.to change(TopicSubscription, :count).by(1)
 
@@ -94,7 +96,7 @@ RSpec.describe "TopicSubscriptions", type: :request do
 
       post topic_subscriptions_path, params: {
         return_to: "dashboard", event_id: event.id,
-        topic_subscription: { person_id: person.id, topic: "facilitator_trainings", interested_event_id: event.id }
+        topic_subscription: { person_id: person.id, topic_subscription_type_id: trainings.id, interested_event_id: event.id }
       }
 
       expect(response).to redirect_to(dashboard_event_path(event))

@@ -113,6 +113,12 @@ Rails.application.routes.draw do
       patch :resubscribe
     end
   end
+  resources :topic_subscription_types, except: [ :show ] do
+    member do
+      patch :archive
+      patch :unarchive
+    end
+  end
   resources :forms do
     member do
       patch :reorder_field

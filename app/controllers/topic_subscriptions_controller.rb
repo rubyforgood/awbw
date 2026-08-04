@@ -15,7 +15,7 @@ class TopicSubscriptionsController < ApplicationController
   def new
     authorize! TopicSubscription
     @topic_subscription = TopicSubscription.new(
-      topic: params[:topic].presence || "facilitator_trainings",
+      topic_subscription_type_id: new_topic_type_id,
       interested_event_id: params[:interested_event_id]
     )
   end
@@ -73,7 +73,17 @@ class TopicSubscriptionsController < ApplicationController
   end
 
   def topic_subscription_params
-    params.require(:topic_subscription).permit(:person_id, :topic, :interested_event_id, :source, :note)
+    params.require(:topic_subscription).permit(:person_id, :topic_subscription_type_id, :interested_event_id, :source, :note)
+  end
+
+  # Prefill the topic when opened from an event's Forms menu: an explicit type id
+  # wins, then a stable key (e.g. "facilitator_trainings"), else the canonical
+  # interested_in_more type.
+  def new_topic_type_id
+    return params[:topic_subscription_type_id] if params[:topic_subscription_type_id].present?
+
+    type = params[:topic_key].present? ? TopicSubscriptionType.find_by(key: params[:topic_key]) : TopicSubscriptionType.interested_in_more
+    type&.id
   end
 
   # When the form was opened from an event's Forms menu, return there; otherwise

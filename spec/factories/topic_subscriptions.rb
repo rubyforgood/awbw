@@ -1,7 +1,7 @@
 FactoryBot.define do
   factory :topic_subscription do
     association :person
-    topic { "facilitator_trainings" }
+    topic_subscription_type
     interested_event { nil }
     source { "Facilitator Training registration" }
 
@@ -11,10 +11,6 @@ FactoryBot.define do
 
     trait :unsubscribed do
       unsubscribed_at { Time.current }
-    end
-
-    trait :news do
-      topic { "news" }
     end
   end
 end

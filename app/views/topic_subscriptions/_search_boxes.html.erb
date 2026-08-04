@@ -11,10 +11,10 @@
               class: field_class, oninput: "this.form.requestSubmit()" %>
       </div>
       <div class="min-w-[180px]">
-        <%= f.label :topic, "Topic", class: label_class %>
-        <%= f.select :topic,
-              options_for_select([ [ "All topics", "" ] ] + TopicSubscription::TOPICS.map { |t| [ TopicSubscription::TOPIC_LABELS.fetch(t, t.humanize), t ] }, params[:topic]),
-              {},
+        <%= f.label :topic_subscription_type_id, "Topic", class: label_class %>
+        <%= f.select :topic_subscription_type_id,
+              options_from_collection_for_select(TopicSubscriptionType.active.ordered, :id, :name, params[:topic_subscription_type_id]),
+              { include_blank: "All topics" },
               class: field_class, onchange: "this.form.requestSubmit()" %>
       </div>
       <div class="min-w-[160px]">
