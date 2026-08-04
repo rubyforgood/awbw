@@ -47,9 +47,11 @@ class CommunityNews < ApplicationRecord
   # SearchCop
   include SearchCop
   search_scope :search do
-    attributes :title, :published, person_first: "people.first_name", person_last: "people.last_name"
+    attributes :title, :published
 
-    scope { join_rich_texts.left_joins(:author) }
+    # Author names are deliberately not indexed here — see Story. Person-name
+    # search goes through `by_credited_person_name`, which honors the preference.
+    scope { join_rich_texts }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
   end
 

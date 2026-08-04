@@ -80,6 +80,20 @@ class Person < ApplicationRecord
   CONTACT_TYPES = [ "work", "personal" ].freeze
   validates :email_type, inclusion: { in: %w[work personal] }, allow_blank: true
   validates :email_2_type, inclusion: { in: %w[work personal] }, allow_blank: true
+
+  # How this person's name is formatted wherever it appears. Anonymity is not one of
+  # these — it's the separate `contributions_anonymous` flag, because a person still
+  # has to be listed *somehow* on the people index.
+  DISPLAY_NAME_PREFERENCES = %w[full_name first_name_last_initial first_name_only last_name_only].freeze
+
+  DISPLAY_NAME_PREFERENCE_LABELS = {
+    "full_name" => "First and last name",
+    "first_name_last_initial" => "First name and last initial",
+    "first_name_only" => "First name only",
+    "last_name_only" => "Last name only"
+  }.freeze
+
+  validates :display_name_preference, inclusion: { in: DISPLAY_NAME_PREFERENCES }, allow_blank: true
   # Mirrors SectorsTaggable's single-primary rule for age ranges — the chip
   # editor's single-star JS is the first line of defense, this guards imports,
   # the console, and bad form posts. Person-only: organizations aggregate
@@ -215,19 +229,28 @@ class Person < ApplicationRecord
     end
   end
 
+  # The single name formatter for this person — drives the people index, the profile
+  # header, and every author credit on content they've shared.
   def name
     case display_name_preference
-    when "full_name"
-      full_name
     when "first_name_last_initial"
-      "#{first_name} #{last_name.first}"
+      initial = last_name&.first
+      initial.present? ? "#{first_name} #{initial}." : first_name.to_s
     when "first_name_only"
       first_name
     when "last_name_only"
       last_name
-    else
+    else # full_name — the default, and the fallback for any unknown value
       full_name
     end
+  end
+
+  # How this person is credited on content they've shared. Anonymity is a separate
+  # axis from the name format: it suppresses author credits without affecting how
+  # they're listed on the people index. See AuthorCreditable.
+  def effective_author_credit_preference
+    return "anonymous" if contributions_anonymous?
+    display_name_preference.presence || "full_name"
   end
 
   def full_name

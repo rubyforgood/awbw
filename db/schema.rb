@@ -1052,9 +1052,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_010750) do
 
   create_table "people", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.boolean "anonymous_contributions", default: false, null: false
+    t.datetime "author_credit_reconciled_at"
     t.string "best_time_to_call"
     t.text "bio"
     t.boolean "blog_contributor", default: false, null: false
+    t.boolean "contributions_anonymous", default: false, null: false
     t.datetime "created_at", null: false
     t.integer "created_by_id"
     t.date "date_of_birth"

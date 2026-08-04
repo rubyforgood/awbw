@@ -1,15 +1,16 @@
 module AuthorCreditable
   extend ActiveSupport::Concern
 
+  # How a credit renders comes from the credited person's profile, not from the record.
+  # `author_credit_preference` is retained as the record of what the submitter consented
+  # to at submission time, and is human-editable only on the author credit divergences
+  # page. It no longer drives display — with one exception: a stored "anonymous" is
+  # always honored, because anonymity is inherently per-item (a person may want four
+  # stories credited and the fifth not) and because nothing should be able to
+  # de-anonymize an item that was submitted anonymously.
   AUTHOR_CREDIT_PREFERENCES = %w[full_name first_name_last_initial first_name_only last_name_only anonymous].freeze
 
-  IDEA_FORM_OPTIONS = {
-    "I would like my full name published with the story" => "full_name",
-    "I would like my first name and last initial published" => "first_name_last_initial",
-    "I would like only my first name published" => "first_name_only",
-    "I would like only my last name published" => "last_name_only",
-    "I do not want my name published with my story" => "anonymous"
-  }.freeze
+  ANONYMOUS = "anonymous"
 
   ADMIN_FORM_OPTIONS = {
     "Full name" => "full_name",
@@ -20,11 +21,9 @@ module AuthorCreditable
   }.freeze
 
   included do
-    # Admin-created records default a blank preference to full_name (in the UI and
-    # on save) — no data backfill. Public-submission models call
-    # `require_author_credit_preference` instead, to force a conscious choice.
-    attribute :author_credit_preference, :string, default: "full_name"
-    before_validation :apply_default_author_credit_preference
+    # Snapshot the credited person's profile preference on create, so the column keeps
+    # recording consent-at-submission without a human ever picking it.
+    before_create :snapshot_author_credit_preference
     validates :author_credit_preference, inclusion: { in: AUTHOR_CREDIT_PREFERENCES }, allow_blank: true
 
     # Filter to content explicitly authored by a person (belongs_to :author);
@@ -57,16 +56,15 @@ module AuthorCreditable
     nil
   end
 
-  # Display string for the credited author, honoring the credit preference.
-  # Precedence: an explicit "anonymous" preference always renders "Anonymous";
-  # then the primary author person, then the legacy free-text name, then the
+  # Display string for the credited author, formatted by that person's profile.
+  # Precedence: the primary author person, then the legacy free-text name, then the
   # creating user's person, then `missing_author_label`.
   def author_credit
-    return "Anonymous" if author_credit_preference == "anonymous"
     person = primary_author_person
-    return format_person_credit(person) if person
+    return credit_for(person) if person
     return legacy_author_name_text if legacy_author_name_text.present?
-    format_person_credit(created_by&.person)
+    creator = created_by&.person
+    creator ? credit_for(creator) : missing_author_label
   end
 
   # The person the credit should link to, or nil when the credit must not resolve
@@ -75,8 +73,23 @@ module AuthorCreditable
   # never declared authorship (and the record isn't listed on their profile
   # either). Anonymous never links.
   def author_credit_person
-    return nil if author_credit_preference == "anonymous"
-    primary_author_person
+    person = primary_author_person
+    person && !credit_anonymous?(person) ? person : nil
+  end
+
+  # Anonymity is a one-way latch: the profile can set it, the record can set it,
+  # and neither can strip it from the other.
+  def credit_anonymous?(person)
+    person.contributions_anonymous? || author_credit_preference == ANONYMOUS
+  end
+
+  # True when the stored consent snapshot no longer agrees with the credited
+  # person's current profile — surfaced as a warning on the record's form and as a
+  # row on the author credit divergences page.
+  def author_credit_diverged?
+    return false if author_credit_preference.blank?
+    person = author_person
+    person.present? && author_credit_preference != person.effective_author_credit_preference
   end
 
   # Shown when there is no credited person or legacy name. Overridable per model
@@ -85,44 +98,19 @@ module AuthorCreditable
     "Anonymous"
   end
 
-  # Default an unset preference to "full_name" (so legacy rows normalize on save,
-  # no backfill) — unless the model requires an explicit choice.
-  def apply_default_author_credit_preference
-    return if self.class.require_author_credit_preference?
-    self.author_credit_preference = "full_name" if author_credit_preference.blank?
+  def snapshot_author_credit_preference
+    # Promotion services copy the originating idea's snapshot forward — keep it.
+    return if author_credit_preference.present?
+    person = primary_author_person || created_by&.person
+    self.author_credit_preference = person.effective_author_credit_preference if person
   end
 
-  # Formats a person's name per the credit preference, falling back to
-  # `missing_author_label` when the person or the requested name part is missing.
-  private def format_person_credit(person)
-    case author_credit_preference
-    when "first_name_last_initial"
-      first = person&.first_name
-      first.present? ? "#{first} #{person.last_name&.first}." : missing_author_label
-    when "first_name_only"
-      person&.first_name.presence || missing_author_label
-    when "last_name_only"
-      person&.last_name.presence || missing_author_label
-    else # full_name — the default, and the fallback for any unknown value
-      person&.full_name.presence || missing_author_label
-    end
+  private def credit_for(person)
+    return "Anonymous" if credit_anonymous?(person)
+    person.name.presence || missing_author_label
   end
 
   class_methods do
-    # Require an explicit credit choice rather than defaulting to full_name — for
-    # public submissions where the preference is a privacy decision (the submitter
-    # must not be silently opted into publishing their full name). Used by the
-    # *_idea models.
-    def require_author_credit_preference
-      @require_author_credit_preference = true
-      attribute :author_credit_preference, :string, default: nil
-      validates :author_credit_preference, presence: true
-    end
-
-    def require_author_credit_preference?
-      @require_author_credit_preference == true
-    end
-
     # Legacy free-text columns (fully qualified, e.g. "resources.legacy_author_name")
     # that also hold an author's name. Overridden per model that has one.
     def legacy_author_name_columns
@@ -138,8 +126,8 @@ module AuthorCreditable
       sanitized = query.to_s.strip.gsub(/\s+/, "")
       return none if sanitized.blank?
 
-      clauses = credited_person_aliases.flat_map { |a| person_name_match_clauses(a) }
-      clauses += legacy_author_name_columns.map { |col| "LOWER(REPLACE(#{col}, ' ', '')) LIKE :name" }
+      clauses = credited_person_aliases.map { |a| credited_person_match_sql(a) }
+      clauses += legacy_author_name_columns.map { |col| legacy_author_name_match_sql(col) }
       joins(credited_person_join_sql).where(clauses.join(" OR "), name: "%#{sanitized}%")
     end
 
@@ -189,13 +177,40 @@ module AuthorCreditable
       ascending ? node.asc : node.desc
     end
 
-    def person_name_match_clauses(sql_alias)
-      [
-        "LOWER(REPLACE(CONCAT(#{sql_alias}.first_name, #{sql_alias}.last_name), ' ', '')) LIKE :name",
-        "LOWER(REPLACE(CONCAT(#{sql_alias}.last_name, #{sql_alias}.first_name), ' ', '')) LIKE :name",
-        "LOWER(REPLACE(#{sql_alias}.first_name, ' ', '')) LIKE :name",
-        "LOWER(REPLACE(#{sql_alias}.last_name, ' ', '')) LIKE :name"
-      ]
+    # Match only on the name parts the credit actually displays, so search can't
+    # surface what the credit hides: an anonymous credit matches nothing, a
+    # "first name only" credit isn't findable by last name, and a "first name,
+    # last initial" credit matches the initial rather than the whole last name.
+    def credited_person_match_sql(sql_alias)
+      first = "#{sql_alias}.first_name"
+      last = "#{sql_alias}.last_name"
+      preference = "COALESCE(#{sql_alias}.display_name_preference, 'full_name')"
+
+      by_preference = {
+        "full_name" => [ "CONCAT(#{first}, #{last})", "CONCAT(#{last}, #{first})", first, last ],
+        "first_name_last_initial" => [ "CONCAT(#{first}, LEFT(#{last}, 1))", first ],
+        "first_name_only" => [ first ],
+        "last_name_only" => [ last ]
+      }.map do |value, expressions|
+        "(#{preference} = '#{value}' AND (#{expressions.map { |e| name_like(e) }.join(' OR ')}))"
+      end
+
+      "(#{sql_alias}.contributions_anonymous = FALSE AND #{not_anonymous_sql} AND (#{by_preference.join(' OR ')}))"
+    end
+
+    # Legacy free-text author names have no person, so only the record's own
+    # anonymity applies.
+    def legacy_author_name_match_sql(column)
+      "(#{not_anonymous_sql} AND #{name_like(column)})"
+    end
+
+    def not_anonymous_sql
+      "(#{table_name}.author_credit_preference IS NULL OR " \
+        "#{table_name}.author_credit_preference <> '#{AuthorCreditable::ANONYMOUS}')"
+    end
+
+    def name_like(expression)
+      "LOWER(REPLACE(#{expression}, ' ', '')) LIKE :name"
     end
   end
 end

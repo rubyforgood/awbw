@@ -53,10 +53,13 @@ class Story < ApplicationRecord
   search_scope :search do
     attributes all: [ :title, :published ]
     attributes :title, :published
-    attributes person_first: "people.first_name", person_last: "people.last_name"
     options :all, type: :text, default: true, default_operator: :or
 
-    scope { join_rich_texts.left_joins(created_by: :person) }
+    # Author names are deliberately not indexed here. `by_credited_person_name` is
+    # the only person-name search path, because it honors the credit preference —
+    # indexing people.first_name/last_name would let a full-text query surface a
+    # credit that renders "Anonymous".
+    scope { join_rich_texts }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
     options :action_text_body, type: :text, default: true, default_operator: :or
   end
