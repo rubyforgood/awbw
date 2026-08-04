@@ -129,21 +129,17 @@ RSpec.describe TopicSubscription, type: :model do
   end
 
   describe "scopes" do
-    it "filters by state, topic type, and generality" do
+    it "filters by state and topic type" do
       active = create(:topic_subscription, topic_subscription_type: trainings, interested_event: nil)
       gone = create(:topic_subscription, :unsubscribed, person: create(:person), topic_subscription_type: trainings)
       news_type = create(:topic_subscription_type, :news)
       news = create(:topic_subscription, person: create(:person), topic_subscription_type: news_type)
-      event = create(:event)
-      specific = create(:topic_subscription, person: create(:person), topic_subscription_type: trainings, interested_event: event)
+      specific = create(:topic_subscription, person: create(:person), topic_subscription_type: trainings, interested_event: create(:event))
 
       expect(described_class.active).to include(active, specific, news)
       expect(described_class.active).not_to include(gone)
       expect(described_class.unsubscribed).to contain_exactly(gone)
       expect(described_class.for_topic_type(news_type)).to contain_exactly(news)
-      expect(described_class.general).to include(active)
-      expect(described_class.general).not_to include(specific)
-      expect(described_class.for_event(event)).to contain_exactly(specific)
     end
   end
 end
