@@ -173,7 +173,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :registrants?
     @event = @event.decorate
     scope = @event.event_registrations
-      .includes(:checklist_completions, :organizations, :allocations, :scholarships, :comments, { continuing_education_registrations: :professional_license }, registrant: [ :user, { affiliations: :organization } ])
+      .includes(:checklist_completions, :organizations, :allocations, :scholarships, :comments, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: [ :user, { affiliations: :organization } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
 
@@ -529,7 +529,7 @@ class EventsController < ApplicationController
     cost_required = @event.cost_cents.to_i > 0
     include_ce = @event.ce_eligible?
     headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Intends to pay", "Payment total" ]
-    headers << "CE status" if include_ce
+    headers += [ "CE status", "CE paid", "CE due" ] if include_ce
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
       @event_registrations.each do |registration|
         csv_out << event_registration_csv_row(registration, cost_required, include_ce)
@@ -544,7 +544,7 @@ class EventsController < ApplicationController
       .map(&:organization).compact.uniq
     org_names = orgs.map(&:name).join("; ")
     total_cents = registration.allocations_sum
-    payment_total = total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
+    payment_total = csv_dollars(total_cents)
     payment_status = cost_required ? registration.payment_status_label : ""
     row = [
       person.first_name,
@@ -553,12 +553,16 @@ class EventsController < ApplicationController
       person.phone_number.presence || "",
       org_names.presence || "",
       registration.scholarships.any? ? "Yes" : "No",
-      registration.scholarships.completed.any? ? "Yes" : "No",
+      registration.scholarships.any?(&:tasks_completed?) ? "Yes" : "No",
       payment_status,
       registration.intends_to_pay? ? "Yes" : "No",
       payment_total
     ]
-    row << registration.ce_status_label.to_s if include_ce
+    if include_ce
+      row << registration.ce_status_label.to_s
+      row << csv_dollars(registration.ce_amount_paid_cents)
+      row << csv_dollars(registration.ce_amount_due_cents)
+    end
     row
   end
 
@@ -571,7 +575,7 @@ class EventsController < ApplicationController
     headers += [ "Payment status", "Fees due", "Paid amount" ] if cost_required
     headers << "Fee note"
     headers += [ "Discounted amount", "Scholarship amount", "Scholarship grant", "Scholarship tasks completed" ]
-    headers += [ "CE requested", "CE hours", "CE amount", "CE license" ] if include_ce
+    headers += [ "CE requested", "CE hours", "CE amount", "CE paid", "CE due", "CE license" ] if include_ce
     headers += EventRegistration::CHECKLIST_STEPS.values
     headers += [ "Portal user status", "Portal access" ]
     headers += (1..day_count).map { |day| "Day #{day}" }
@@ -604,7 +608,7 @@ class EventsController < ApplicationController
       row << helpers.dollars_from_cents(registration.payments_sum)
     end
     row << registration.fee_note.to_s
-    row << (registration.discount_sum.positive? ? helpers.dollars_from_cents(registration.discount_sum) : "")
+    row << csv_dollars(registration.discount_sum)
     row << (scholarship ? helpers.dollars_from_cents(scholarship.amount_cents) : "")
     row << (scholarship ? (scholarship.grant&.name.presence || "Unfunded") : "")
     row << onboarding_scholarship_tasks_csv(registration)
@@ -612,7 +616,9 @@ class EventsController < ApplicationController
       ce_hours = registration.ce_hours_total
       row << (registration.ce_registered? ? "Yes" : "No")
       row << (ce_hours.positive? ? helpers.plain_number(ce_hours) : "")
-      row << (registration.ce_amount_owed_cents.positive? ? helpers.dollars_from_cents(registration.ce_amount_owed_cents) : "")
+      row << csv_dollars(registration.ce_amount_owed_cents)
+      row << csv_dollars(registration.ce_amount_paid_cents)
+      row << csv_dollars(registration.ce_amount_due_cents)
       row << registration.ce_license_numbers.join("; ")
     end
     EventRegistration::CHECKLIST_STEPS.each_key do |step|
