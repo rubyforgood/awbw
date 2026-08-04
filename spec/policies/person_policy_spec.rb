@@ -258,6 +258,22 @@ RSpec.describe PersonPolicy, type: :policy do
       end
     end
 
+    context "when person has an event registration with a payment" do
+      let(:admin) { create(:user, :admin) }
+      let(:person) { create(:person, user: nil) }
+
+      before do
+        registration = create(:event_registration, registrant: person)
+        create(:allocation, allocatable: registration)
+      end
+
+      it "is not allowed" do
+        policy = policy_for(record: person, user: admin)
+
+        expect(policy).not_to be_allowed_to(:destroy?)
+      end
+    end
+
     context "when person has no associated data" do
       let(:admin) { create(:user, :admin) }
       let(:person) { create(:person, user: nil) }

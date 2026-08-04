@@ -60,20 +60,30 @@ RSpec.describe PersonDecorator do
       expect(person.decorate.deletion_blocked_reason).to be_nil
     end
 
-    it "names financial records when the person has payments" do
+    it "names payments when the person has them" do
       person = create(:person, user: nil)
       create(:payment, person: person)
 
       expect(person.decorate.deletion_blocked_reason)
-        .to eq("Can't be deleted — this person has financial records (payments, scholarships, or grants).")
+        .to eq("Can't be deleted — this person has payments.")
     end
 
-    it "names a linked user account and financial records together" do
-      person = create(:person)
-      create(:scholarship, recipient: person)
+    it "names event registrations with payments" do
+      person = create(:person, user: nil)
+      registration = create(:event_registration, registrant: person)
+      create(:allocation, allocatable: registration)
 
       expect(person.decorate.deletion_blocked_reason)
-        .to eq("Can't be deleted — this person has a linked user account and financial records (payments, scholarships, or grants).")
+        .to eq("Can't be deleted — this person has event registrations with payments.")
+    end
+
+    it "names each kind of blocking record the person actually has" do
+      person = create(:person)
+      create(:scholarship, recipient: person)
+      create(:grant, donor: person)
+
+      expect(person.decorate.deletion_blocked_reason)
+        .to eq("Can't be deleted — this person has a user account, scholarships, and grants.")
     end
   end
 end

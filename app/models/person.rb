@@ -328,31 +328,30 @@ class Person < ApplicationRecord
     age_range_categorizable_items.sort_by { |item| [ item.category&.position || 0, item.category&.name.to_s ] }
   end
 
-  # True only when removing this person would neither cascade-destroy nor orphan
-  # any associated record. Gates PersonPolicy#destroy?; the decorator's
-  # deletion_blocked_reason turns a false result into a human explanation.
+  # Keys for each kind of record that deleting this person would cascade-destroy
+  # or orphan — the things worth keeping (identity, authored content, financial
+  # and event history), not disposable profile detail like addresses or tags.
+  # Empty means the person is safe to delete. Gates PersonPolicy#destroy?; the
+  # decorator maps each key to the label shown in the "Can't be deleted" notice.
+  def deletion_blockers
+    blockers = []
+    blockers << :user_account if user.present?
+    blockers << :affiliations if affiliations.exists?
+    blockers << :stories if stories_as_author.exists? || stories_as_spotlighted_facilitator.exists?
+    blockers << :workshops if workshops_as_author.exists?
+    blockers << :workshop_variations if workshop_variations_as_author.exists?
+    blockers << :community_news if community_news_as_author.exists?
+    blockers << :resources if resources_as_author.exists?
+    blockers << :payments if payments.exists?
+    blockers << :scholarships if scholarships.exists?
+    blockers << :grants if grants.exists?
+    blockers << :paid_event_registrations if event_registrations.joins(:allocations).exists?
+    blockers << :event_staffing if event_staffs.exists?
+    blockers
+  end
+
   def deletable?
-    user.blank? &&
-      !affiliations.exists? &&
-      !authored_content? &&
-      !financial_records?
-  end
-
-  # Content this person is credited on. These associations are
-  # dependent: :restrict_with_error, so they'd have to be reassigned first.
-  def authored_content?
-    stories_as_spotlighted_facilitator.exists? ||
-      stories_as_author.exists? ||
-      workshop_variations_as_author.exists? ||
-      workshops_as_author.exists? ||
-      community_news_as_author.exists? ||
-      resources_as_author.exists?
-  end
-
-  # Money tied to this person as payer, scholarship recipient, or grant donor.
-  # Deleting the person would erase this financial history, so it blocks deletion.
-  def financial_records?
-    payments.exists? || scholarships.exists? || grants.exists?
+    deletion_blockers.empty?
   end
 
   private

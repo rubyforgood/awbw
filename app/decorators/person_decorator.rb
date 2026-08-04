@@ -83,18 +83,31 @@ class PersonDecorator < ApplicationDecorator
     end
   end
 
-  # Human-readable explanation of why the Delete button is unavailable, or nil
-  # when the person is deletable. Mirrors the model's deletable? checks so the
-  # edit form can tell an admin exactly what's holding the record in place.
-  def deletion_blocked_reason
-    return if deletable?
+  # Label shown for each deletion-blocker key (see Person#deletion_blockers), so
+  # the "Can't be deleted" notice names the actual kinds of records the person
+  # has rather than a generic catch-all.
+  DELETION_BLOCKER_LABELS = {
+    user_account: "a user account",
+    affiliations: "organization affiliations",
+    stories: "authored stories",
+    workshops: "authored workshops",
+    workshop_variations: "authored workshop variations",
+    community_news: "authored community news",
+    resources: "authored resources",
+    payments: "payments",
+    scholarships: "scholarships",
+    grants: "grants",
+    paid_event_registrations: "event registrations with payments",
+    event_staffing: "event staff assignments"
+  }.freeze
 
-    reasons = []
-    reasons << "a linked user account" if user.present?
-    reasons << "organization affiliations" if affiliations.exists?
-    reasons << "authored content (stories, workshops, news, or resources)" if authored_content?
-    reasons << "financial records (payments, scholarships, or grants)" if financial_records?
-    "Can't be deleted — this person has #{reasons.to_sentence}."
+  # Human-readable explanation of why the Delete button is unavailable, or nil
+  # when the person is deletable — naming each kind of record that's blocking it.
+  def deletion_blocked_reason
+    labels = deletion_blockers.map { |key| DELETION_BLOCKER_LABELS.fetch(key) }
+    return if labels.empty?
+
+    "Can't be deleted — this person has #{labels.to_sentence}."
   end
 
   def affiliated_since_date
