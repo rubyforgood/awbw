@@ -1,6 +1,11 @@
 class EventDashboard
-  def initialize(event)
+  # scholarship_donor: when set, every scholarship figure (funded/unfunded cents
+  # and counts, totals, recipients) is scoped to grants that donor gave — for the
+  # funder-filtered scholarship report. Attendance/registration figures are
+  # unaffected. Default nil = every scholarship, as before.
+  def initialize(event, scholarship_donor: nil)
     @event = event
+    @scholarship_donor = scholarship_donor
   end
 
   attr_reader :event
@@ -1103,9 +1108,19 @@ class EventDashboard
   end
 
   def scholarships
-    @scholarships ||= Scholarship
-      .joins(:allocation)
-      .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: active_registration_ids })
+    @scholarships ||= begin
+      scope = Scholarship
+        .joins(:allocation)
+        .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: active_registration_ids })
+      scope = scope.where(grant_id: donor_grant_ids) if @scholarship_donor
+      scope
+    end
+  end
+
+  # Ids of grants the scoped donor gave — used to narrow scholarships to one
+  # funder. Empty (so no scholarships match) when the donor gave none.
+  def donor_grant_ids
+    @donor_grant_ids ||= Grant.where(donor: @scholarship_donor).ids
   end
 
   # Externally funded = backed by a grant whose donor isn't the org itself.

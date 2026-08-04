@@ -54,7 +54,7 @@ class EventsController < ApplicationController
   def scholarships
     authorize!
     events, selected_year = filtered_report_events(Event.facilitator_trainings)
-    @report = EventScholarshipReport.new(events, featured_year: selected_year)
+    @report = EventScholarshipReport.new(events, featured_year: selected_year, funder: @filter_funder)
   end
 
   def new
@@ -466,6 +466,7 @@ class EventsController < ApplicationController
     @event_type = params[:event_type].presence_in(%w[ trainings other ])
     @filter_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
     @event_abbreviation = params[:abbreviation].presence
+    @filter_funder = GlobalID::Locator.locate_signed(params[:funder_sgid]) if params[:funder_sgid].present?
     # The Event dropdown lists the report's own universe: paid events for revenue,
     # facilitator trainings for scholarships, every event otherwise.
     dropdown_scope = case action_name
@@ -506,6 +507,7 @@ class EventsController < ApplicationController
     base = base.where(facilitator_training: false) if @event_type == "other"
     base = base.where(id: @filter_event.id) if @filter_event
     base = base.where("events.abbreviation LIKE ?", "%#{Event.sanitize_sql_like(@event_abbreviation)}%") if @event_abbreviation
+    base = base.where(id: Scholarship.from_funder(@filter_funder).event_ids) if @filter_funder
     base
   end
 

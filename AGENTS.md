@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (76) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (77) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -304,6 +304,7 @@ end
 - `autosave` — Auto-save form state
 - `carousel` — Swiper-based carousels
 - `ce_license_picker` — Fill the CE license type/number/state/expiry fields from the picked license (or clear them for a new one)
+- `clickable_row` — Makes a whole element (e.g. a table row) navigate to a URL on click, leaving nested links/buttons and modifier-clicks alone (scholarships index rows → edit)
 - `cocoon` — Nested form handling (cocoon gem)
 - `collection` — Filter form auto-submit with debounce
 - `column_toggle` — Toggle table column visibility

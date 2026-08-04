@@ -398,6 +398,19 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("TAC261")
         expect(response.body).not_to include("OND100")
       end
+
+      it "narrows to trainings a selected funder scholarshipped" do
+        funder = create(:organization, name: "Community Trust")
+        person = create(:person)
+        reg = create(:event_registration, event: training, registrant: person, status: "attended")
+        award = create(:scholarship, recipient: person, amount_cents: 4_000, grant: create(:grant, donor: funder))
+        create(:allocation, source: award, allocatable: reg, amount: 4_000)
+
+        sign_in admin
+        get scholarships_events_path(funder_sgid: funder.to_signed_global_id.to_s)
+        expect(response.body).to include("TAC261")
+        expect(response.body).not_to include("OND100")
+      end
     end
 
     context "as non-admin" do

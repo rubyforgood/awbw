@@ -74,6 +74,36 @@ RSpec.describe EventScholarshipReport do
     end
   end
 
+  describe "funder scoping" do
+    let(:event) { create(:event, facilitator_training: true, cost_cents: 50_000, start_date: Date.new(2025, 3, 1)) }
+    let(:funder) { create(:organization, name: "Community Trust") }
+    let(:person1) { create(:person) }
+    let(:person2) { create(:person) }
+
+    before do
+      reg1 = create(:event_registration, event: event, registrant: person1, status: "attended")
+      reg2 = create(:event_registration, event: event, registrant: person2, status: "attended")
+
+      from_funder = create(:scholarship, recipient: person1, amount_cents: 4_000, grant: create(:grant, donor: funder))
+      create(:allocation, source: from_funder, allocatable: reg1, amount: 4_000)
+
+      other = create(:scholarship, recipient: person2, amount_cents: 2_000, grant: create(:grant))
+      create(:allocation, source: other, allocatable: reg2, amount: 2_000)
+    end
+
+    it "scopes scholarship figures to the given funder" do
+      report = described_class.new([ event.decorate ], funder: funder)
+      column = report.years.first.columns.first
+      expect(column.scholarship_cents).to eq(4_000)
+      expect(column.scholarship_count).to eq(1)
+    end
+
+    it "counts every funder's scholarships when unscoped" do
+      report = described_class.new([ event.decorate ])
+      expect(report.years.first.columns.first.scholarship_cents).to eq(6_000)
+    end
+  end
+
   describe "attendance split by delivery format" do
     let(:scheduled) { create(:event, facilitator_training: true, on_demand: false, start_date: Date.new(2025, 3, 1)) }
     let(:on_demand) { create(:event, facilitator_training: true, on_demand: true, start_date: Date.new(2025, 7, 1)) }

@@ -23,52 +23,11 @@
     <%= form_with url: scholarships_events_path, method: :get, local: true,
           class: "flex flex-wrap items-end gap-4 mb-8" do %>
       <%= hidden_field_tag :return_to, params[:return_to] %>
-      <%= render "time_period_filter" %>
-      <%= render "event_filter", all_label: "All trainings" %>
-      <%= render "abbreviation_filter" %>
+      <%= render "report_filters", event_all_label: "All trainings" %>
     <% end %>
 
     <% if @report.any? %>
-      <% featured = @report.featured_year %>
-      <% prior = @report.prior_year %>
-
-      <%# Headline figures for the featured year: funded vs unfunded scholarship
-          money and award counts, plus attended trainees. %>
-      <section class="mb-8">
-        <div class="flex items-baseline gap-2 mb-3">
-          <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500"><%= featured.year || "All trainings" %></h2>
-          <% if featured.in_progress %>
-            <span class="text-xs font-medium text-amber-700 bg-amber-100 rounded px-1.5 py-0.5">In progress</span>
-          <% end %>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <div class="rounded-lg border border-emerald-300 bg-emerald-50 p-3">
-            <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Funded</div>
-            <div class="mt-1 text-xl font-bold tabular-nums text-emerald-700"><%= dollars_from_cents(featured.funded_cents) %></div>
-            <div class="mt-1 text-xs text-gray-500">external grants</div>
-          </div>
-          <div class="rounded-lg border border-red-300 bg-red-50 p-3">
-            <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Unfunded</div>
-            <div class="mt-1 text-xl font-bold tabular-nums text-red-600"><%= dollars_from_cents(featured.unfunded_cents) %></div>
-            <div class="mt-1 text-xs text-gray-500">no grant or AWBW</div>
-          </div>
-          <div class="rounded-lg border border-gray-300 bg-gray-50 p-3">
-            <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Total awarded</div>
-            <div class="mt-1 text-xl font-bold tabular-nums text-gray-900"><%= dollars_from_cents(featured.scholarship_cents) %></div>
-            <div class="mt-1 text-xs text-gray-500">funded + unfunded</div>
-          </div>
-          <div class="rounded-lg border border-blue-300 bg-blue-50 p-3">
-            <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Awards</div>
-            <div class="mt-1 text-xl font-bold tabular-nums text-blue-700"><%= number_with_delimiter(featured.scholarship_count) %></div>
-            <div class="mt-1 text-xs text-gray-500"><%= featured.funded_count %> funded · <%= featured.unfunded_count %> unfunded</div>
-          </div>
-          <div class="rounded-lg border border-purple-300 bg-purple-50 p-3">
-            <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Attended</div>
-            <div class="mt-1 text-xl font-bold tabular-nums text-purple-700"><%= number_with_delimiter(featured.attended_count) %></div>
-            <div class="mt-1 text-xs text-gray-500"><%= featured.training_attended_count %> training · <%= featured.on_demand_attended_count %> on-demand</div>
-          </div>
-        </div>
-      </section>
+      <%= render "scholarship_kpis", report: @report %>
 
       <%= render "scholarships_report", report: @report %>
 

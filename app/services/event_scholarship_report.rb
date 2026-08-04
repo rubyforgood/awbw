@@ -56,14 +56,15 @@ class EventScholarshipReport
   include Aggregates
   include ReportPeriods
 
-  def initialize(events, current_year: Date.current.year, featured_year: nil)
+  def initialize(events, current_year: Date.current.year, featured_year: nil, funder: nil)
     @events = events.to_a
     @current_year = current_year
     @featured_year_value = featured_year || current_year
+    @funder = funder
   end
 
   def columns
-    @columns ||= @events.map { |event| Column.new(event: event, dashboard: EventDashboard.new(event)) }
+    @columns ||= @events.map { |event| Column.new(event: event, dashboard: EventDashboard.new(event, scholarship_donor: @funder)) }
   end
 
   def any?

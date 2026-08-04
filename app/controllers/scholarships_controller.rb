@@ -4,21 +4,11 @@ class ScholarshipsController < ApplicationController
 
   def index
     authorize! Scholarship
-    # Eager-load everything the grid derives so each row's funder, program,
-    # location, training, and status cells add no per-row queries:
-    #   * grant → donor for the funder grouping;
-    #   * recipient → affiliations → organization → addresses for program/location/status;
-    #   * recipient → event_registrations → event for the attended-training column.
-    scholarships = authorized_scope(Scholarship.all).includes(
-      { grant: :donor },
-      { recipient: [ { affiliations: { organization: :addresses } }, { event_registrations: :event } ] }
-    )
-    if params[:recipient_id].present?
-      scholarships = scholarships.where(recipient_id: params[:recipient_id])
-      @recipient = Person.find_by(id: params[:recipient_id])
-    end
+    set_report_filter_state
+    scholarships = filtered_scholarships
     @funder_groups = ScholarshipsGrouping.new(scholarships).funder_groups
     @scholarships_count = scholarships.size
+    @scholarship_report = EventScholarshipReport.new(report_training_events, featured_year: @selected_year, funder: @filter_funder)
   end
 
   def show
@@ -119,6 +109,66 @@ class ScholarshipsController < ApplicationController
   end
 
   private
+
+  # Filter state for the shared report filter partials (time period, event,
+  # abbreviation, funder). The Event dropdown and year options list facilitator
+  # trainings, matching the events scholarship report.
+  def set_report_filter_state
+    @filter_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
+    @event_abbreviation = params[:abbreviation].presence
+    @filter_funder = GlobalID::Locator.locate_signed(params[:funder_sgid]) if params[:funder_sgid].present?
+    @filter_events = Event.facilitator_trainings.order(start_date: :desc)
+    @year_options = Event.facilitator_trainings
+      .where.not(start_date: nil)
+      .distinct
+      .pluck(Arel.sql("YEAR(start_date)"))
+      .sort
+      .reverse
+    @time_period = params[:time_period].presence || "all_time"
+    @selected_year = @time_period == "this_year" ? Date.current.year : Integer(@time_period, exception: false)
+  end
+
+  # The scholarship list, narrowed by recipient, funder, and the event-centric
+  # filters (which resolve to the events a scholarship was awarded at).
+  def filtered_scholarships
+    # Eager-load everything the grid derives so each row's funder, program,
+    # location, training, and status cells add no per-row queries.
+    scope = authorized_scope(Scholarship.all).includes(
+      { grant: :donor },
+      { recipient: [ { affiliations: { organization: :addresses } }, { event_registrations: :event } ] }
+    )
+    if params[:recipient_id].present?
+      scope = scope.where(recipient_id: params[:recipient_id])
+      @recipient = Person.find_by(id: params[:recipient_id])
+    end
+    scope = scope.from_funder(@filter_funder) if @filter_funder
+    event_ids = filter_event_ids
+    scope = scope.for_events(event_ids) if event_ids
+    scope
+  end
+
+  # Event ids matching the year / specific-event / abbreviation filters, or nil
+  # when none are active (so the list isn't restricted by event).
+  def filter_event_ids
+    return unless @selected_year || @filter_event || @event_abbreviation
+    scoped_events.select(:id)
+  end
+
+  # Facilitator trainings for the summary report at the top of the index, scoped
+  # by the same filters (year / event / abbreviation / funder), decorated.
+  def report_training_events
+    events = scoped_events(Event.facilitator_trainings)
+    events = events.where(id: Scholarship.from_funder(@filter_funder).event_ids) if @filter_funder
+    events.order(start_date: :desc).map(&:decorate)
+  end
+
+  # Applies the year / specific-event / abbreviation filters to an event scope.
+  def scoped_events(base = Event.all)
+    base = base.in_year(@selected_year) if @selected_year
+    base = base.where(id: @filter_event.id) if @filter_event
+    base = base.where("events.abbreviation LIKE ?", "%#{Event.sanitize_sql_like(@event_abbreviation)}%") if @event_abbreviation
+    base
+  end
 
   def set_scholarship
     @scholarship = Scholarship.find(params[:id])
