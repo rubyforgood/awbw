@@ -1,0 +1,13 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="max-w-6xl mx-auto">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Dues</h1>
+  </div>
+
+  <% result_src = dues_registrations_path + "?" + request.query_string %>
+
+  <%= turbo_frame_tag :dues_registrations_results, src: result_src, data: { turbo: "temporary" } do %>
+    <%= render "results_skeleton" %>
+  <% end %>
+</div>

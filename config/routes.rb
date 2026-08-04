@@ -218,6 +218,8 @@ Rails.application.routes.draw do
     post :revert, on: :member
   end
 
+  resources :dues_registrations, only: :index
+
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
   resources :affiliations, only: :destroy
