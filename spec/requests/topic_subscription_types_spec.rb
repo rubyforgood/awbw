@@ -16,6 +16,36 @@ RSpec.describe "TopicSubscriptionTypes", type: :request do
       expect(response.body).to include("Facilitator trainings")
       expect(response.body).to include("facilitator_trainings")
     end
+
+    it "shows only active topics by default" do
+      create(:topic_subscription_type, name: "Live topic")
+      create(:topic_subscription_type, :archived, name: "Retired topic")
+
+      get topic_subscription_types_path
+
+      expect(response.body).to include("Live topic")
+      expect(response.body).not_to include("Retired topic")
+    end
+
+    it "shows archived topics when the toggle selects them" do
+      create(:topic_subscription_type, name: "Live topic")
+      create(:topic_subscription_type, :archived, name: "Retired topic")
+
+      get topic_subscription_types_path(status: "archived")
+
+      expect(response.body).to include("Retired topic")
+      expect(response.body).not_to include("Live topic")
+    end
+
+    it "shows the active and archived counts on the toggle" do
+      create(:topic_subscription_type)
+      2.times { create(:topic_subscription_type, :archived) }
+
+      get topic_subscription_types_path
+
+      expect(response.body).to include("Active <span class=\"text-gray-400\">(1)")
+      expect(response.body).to include("Archived <span class=\"text-gray-400\">(2)")
+    end
   end
 
   describe "POST /topic_subscription_types" do

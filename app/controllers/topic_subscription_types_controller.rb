@@ -4,7 +4,12 @@ class TopicSubscriptionTypesController < ApplicationController
 
   def index
     authorize! TopicSubscriptionType
-    @topic_subscription_types = TopicSubscriptionType.ordered
+    @active_count = TopicSubscriptionType.active.count
+    @archived_count = TopicSubscriptionType.archived.count
+    @status_filter = params[:status] == "archived" ? "archived" : "active"
+
+    scope = @status_filter == "archived" ? TopicSubscriptionType.archived : TopicSubscriptionType.active
+    @topic_subscription_types = scope.ordered
   end
 
   def new
