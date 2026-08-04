@@ -92,6 +92,20 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       expect(response.body).to include("Sign in")
     end
 
+    it "omits the Signed out chip until something has been logged today" do
+      pay_ce!
+      get registration_ce_path(registration.slug)
+      expect(response.body).not_to include("Signed out")
+    end
+
+    it "shows the Signed out chip after signing out today" do
+      pay_ce!
+      create(:event_attendance_time_entry, event_registration: registration,
+        signed_in_at: Time.current - 2.hours, signed_out_at: Time.current - 1.hour)
+      get registration_ce_path(registration.slug)
+      expect(response.body).to include("Signed out")
+    end
+
     it "shows a Sign out button and today's entries while signed in" do
       pay_ce!
       create(:event_attendance_time_entry, :open, event_registration: registration,
