@@ -30,13 +30,13 @@ class TopicSubscription < ApplicationRecord
   scope :for_event, ->(event) { where(interested_event: event) }
   scope :newest_first, -> { order(subscribed_at: :desc) }
 
-  # Drives the subscriptions index filters: topic, state
+  # Drives the subscriptions index filters: topic, status
   # ("active"/"unsubscribed"/"general"), and a free-text match on the person.
   def self.search_by_params(params)
     scope = all
     scope = scope.for_topic(params[:topic]) if TOPICS.include?(params[:topic].to_s)
 
-    case params[:state]
+    case params[:status]
     when "active" then scope = scope.active
     when "unsubscribed" then scope = scope.unsubscribed
     when "general" then scope = scope.general

@@ -13,7 +13,7 @@
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Person</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Topic</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Event</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">State</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Status</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Training registrations</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Source</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Subscribed</th>
@@ -42,7 +42,7 @@
                   <% end %>
                 </td>
 
-                <td class="px-4 py-2 text-sm"><%= subscription.state_badge %></td>
+                <td class="px-4 py-2 text-sm"><%= subscription.status_badge %></td>
 
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <% registrations = subscription.person_facilitator_training_registrations %>

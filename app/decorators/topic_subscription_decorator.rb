@@ -1,7 +1,7 @@
 class TopicSubscriptionDecorator < ApplicationDecorator
   delegate_all
 
-  def state_badge
+  def status_badge
     if active?
       classes = "bg-green-50 text-green-700 border-green-200"
       label = "Active"
