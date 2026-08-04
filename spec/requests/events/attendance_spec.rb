@@ -60,6 +60,23 @@ RSpec.describe "Events attendance report", type: :request do
       expect(response.body).to include("Day 1 ·")
     end
 
+    it "links session rows to the registration edit page on the generic report" do
+      log_ce_time!
+      get attendance_event_path(event)
+      expect(response.body).to include("#{edit_event_registration_path(registration)}?return_to=attendance")
+
+      get attendance_event_path(event, group: "day")
+      expect(response.body).to include("#{edit_event_registration_path(registration)}?return_to=attendance")
+    end
+
+    it "links session rows to the CE edit page on the CE report" do
+      log_ce_time!
+      ce = registration.continuing_education_registrations.first
+      get attendance_event_path(event, ce: "true")
+      expect(response.body).to include("#{edit_continuing_education_registration_path(ce)}?return_to=attendance")
+      expect(response.body).not_to include("#{edit_event_registration_path(registration)}?return_to=attendance")
+    end
+
     it "returns to the registrants page when opened from there" do
       get attendance_event_path(event, ce: "true", return_to: "registrants")
       expect(response.body).to include("← Registrants")

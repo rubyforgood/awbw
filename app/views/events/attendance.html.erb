@@ -132,6 +132,12 @@
 
       <% unless group_by_day %>
         <% @report.registrations.each do |reg| %>
+          <% ce_reg = @report.ce_registration_for(reg) %>
+          <%# Whole row → the CE edit page on the CE report, the registration edit
+              page otherwise (kept in sync with those pages' return_to handling). %>
+          <% row_path = @report.ce_only? && ce_reg ?
+               edit_continuing_education_registration_path(ce_reg, return_to: "attendance") :
+               edit_event_registration_path(reg, return_to: "attendance") %>
           <section class="mb-8">
             <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
               <h2 class="text-sm font-semibold text-gray-900">
@@ -153,8 +159,10 @@
               <div class="divide-y divide-gray-100">
                 <% @report.dates.each_with_index do |date, index| %>
                   <% entries = @report.entries_for(reg, date) %>
-                  <div class="grid items-center gap-x-3 px-4 py-2.5 text-sm"
+                  <div class="relative grid items-center gap-x-3 px-4 py-2.5 text-sm hover:bg-gray-50"
                        style="grid-template-columns: minmax(11rem,1.2fr) 3fr minmax(5rem,auto)">
+                    <%= link_to "", row_path, class: "absolute inset-0",
+                          "aria-label": "Edit #{@report.ce_only? ? "CE registration" : "registration"} for #{reg.registrant.full_name}" %>
                     <div class="text-gray-700">Day <%= index + 1 %> · <%= date.strftime("%a, %b %-d") %></div>
                     <div class="flex flex-wrap gap-1.5">
                       <% if entries.any? %>
@@ -196,12 +204,13 @@
               <% @report.registrations.each do |reg| %>
                 <% entries = @report.entries_for(reg, date) %>
                 <% ce_reg = @report.ce_registration_for(reg) %>
-                <div class="relative grid items-center gap-x-3 px-4 py-2.5 text-sm <%= "hover:bg-gray-50" if @report.ce_only? && ce_reg %>"
+                <% row_path = @report.ce_only? && ce_reg ?
+                     edit_continuing_education_registration_path(ce_reg, return_to: "attendance") :
+                     edit_event_registration_path(reg, return_to: "attendance") %>
+                <div class="relative grid items-center gap-x-3 px-4 py-2.5 text-sm hover:bg-gray-50"
                      style="grid-template-columns: <%= @report.ce_only? ? "minmax(9rem,1.2fr) minmax(6rem,0.8fr) 3fr minmax(5rem,auto)" : "minmax(9rem,1.4fr) 3fr minmax(5rem,auto)" %>">
-                  <% if @report.ce_only? && ce_reg %>
-                    <%= link_to "", edit_continuing_education_registration_path(ce_reg, return_to: "attendance"),
-                          class: "absolute inset-0", "aria-label": "Edit CE registration for #{reg.registrant.full_name}" %>
-                  <% end %>
+                  <%= link_to "", row_path, class: "absolute inset-0",
+                        "aria-label": "Edit #{@report.ce_only? && ce_reg ? "CE registration" : "registration"} for #{reg.registrant.full_name}" %>
                   <div class="relative z-10 min-w-0 justify-self-start">
                     <% if @report.ce_only? && ce_reg %>
                       <%= link_to reg.registrant.full_name, registration_ce_path(reg.slug, return_to: "ce_registration"),
