@@ -63,7 +63,7 @@ class OrganizationDecorator < ApplicationDecorator
     return unless object.high_profile?
 
     h.content_tag(:i, "",
-                  class: "fa-solid fa-star shrink-0 text-amber-400",
+                  class: "fa-solid fa-gem shrink-0 text-purple-600",
                   title: "High-profile organization",
                   "aria-hidden": true)
   end
