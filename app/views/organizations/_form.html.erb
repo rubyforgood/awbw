@@ -153,9 +153,10 @@
                     input_html: {
                       class: "rounded-md border-gray-300 bg-blue-100 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     } %>
+        <% high_profile_gem = tag.i(class: "fa-solid fa-gem text-purple-600", aria: { hidden: true }) %>
         <%= f.input :high_profile,
-                    label: "High profile",
-                    hint: "Shows a star next to the org on dashboards and reports" %>
+                    label: "High profile #{high_profile_gem}".html_safe,
+                    hint: "Shows a #{high_profile_gem} next to the org on dashboards and reports".html_safe %>
       </div>
     <% end %>
 
