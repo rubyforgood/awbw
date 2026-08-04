@@ -91,7 +91,7 @@
                 <p class="hidden lg:block text-xs text-gray-500">Scholarships</p>
               <% end %>
               <span class="text-2xl font-light text-gray-300 select-none">+</span>
-              <%= link_to registrants_event_path(@event), class: "#{addend_class.call(:continuing_education)} whitespace-nowrap", title: "Manage registrants" do %>
+              <%= link_to registrants_event_path(@event, ce_status: "registered"), class: "#{addend_class.call(:continuing_education)} whitespace-nowrap", title: "View registrants with continuing education" do %>
                 <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.cont_ed_total_cents) %></p>
                 <p class="hidden lg:block text-xs text-gray-500">CE fees</p>
               <% end %>
@@ -221,7 +221,7 @@
                 <i class="fa-solid fa-award"></i>
                 <span>CE fees</span>
               </div>
-              <%= link_to registrants_event_path(@event),
+              <%= link_to registrants_event_path(@event, ce_status: "registered"),
                     class: "inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:border-gray-300 hover:text-gray-800 transition-colors",
                     title: "View registrants with continuing education" do %>
                 <i class="fa-solid fa-users text-gray-400"></i>

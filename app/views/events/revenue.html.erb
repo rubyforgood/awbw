@@ -51,7 +51,7 @@
           <%= render "revenue_kpi", label: "Org subsidy", value: dollars_from_cents(featured.org_subsidy_cents),
                 value_class: "text-red-600", card_class: "border-red-300 bg-red-50", note: "discounts + unfunded", cents: featured.org_subsidy_cents,
                 prior_cents: prior&.org_subsidy_cents, prior_year: prior&.year %>
-          <%= render "revenue_kpi", label: "Outstanding*", value: dollars_from_cents(featured.outstanding_cents),
+          <%= render "revenue_kpi", label: "Outstanding", value: dollars_from_cents(featured.outstanding_cents),
                 value_class: "text-orange-600", card_class: "border-orange-300 bg-orange-50", note: "reg + CE owed", cents: featured.outstanding_cents,
                 prior_cents: prior&.outstanding_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Net", value: signed_dollars_from_cents(featured.net_cents),
@@ -90,7 +90,7 @@
           <div class="text-right">Fees collected</div>
           <div class="text-right">Scholarships</div>
           <div class="text-right">Org subsidy</div>
-          <div class="text-right">Outstanding*</div>
+          <div class="text-right">Outstanding</div>
           <div class="text-right">Total expected</div>
         </div>
 

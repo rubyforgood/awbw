@@ -103,12 +103,6 @@ class EventDashboard
     scholarships.where(grant_id: nil).sum(:amount_cents)
   end
 
-  # Registration cost waived via discounts — money the org gives up from its own
-  # pocket (like an unfunded scholarship).
-  def discount_cents
-    registration_allocations.where(source_type: "Discount").sum(:amount)
-  end
-
   def scholarship_recipient_count
     scholarships.distinct.count(:recipient_id)
   end

@@ -1786,6 +1786,15 @@ RSpec.describe "Events", type: :request do
         expect(page).to have_link(href: registrants_event_path(event, status_filter: "inactive"), visible: :all)
       end
 
+      it "drills the CE card into the registrants filtered to continuing education" do
+        create(:continuing_education_registration, event_registration: registration, cost_cents: 6_000)
+
+        get dashboard_event_path(event)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link(href: registrants_event_path(event, ce_status: "registered"), visible: :all)
+      end
+
       it "shows a program status badge next to each organization" do
         get dashboard_event_path(event)
 

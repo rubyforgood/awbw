@@ -173,7 +173,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :registrants?
     @event = @event.decorate
     scope = @event.event_registrations
-      .includes(:checklist_completions, :organizations, :allocations, :scholarships, :comments, { continuing_education_registrations: :professional_license }, registrant: [ :user, { affiliations: :organization } ])
+      .includes(:checklist_completions, :organizations, :allocations, :scholarships, :comments, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: [ :user, { affiliations: :organization } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
 
@@ -553,7 +553,7 @@ class EventsController < ApplicationController
       person.phone_number.presence || "",
       org_names.presence || "",
       registration.scholarships.any? ? "Yes" : "No",
-      registration.scholarships.completed.any? ? "Yes" : "No",
+      registration.scholarships.any?(&:tasks_completed?) ? "Yes" : "No",
       payment_status,
       registration.intends_to_pay? ? "Yes" : "No",
       payment_total
@@ -608,7 +608,7 @@ class EventsController < ApplicationController
       row << helpers.dollars_from_cents(registration.payments_sum)
     end
     row << registration.fee_note.to_s
-    row << (registration.discount_sum.positive? ? helpers.dollars_from_cents(registration.discount_sum) : "")
+    row << csv_dollars(registration.discount_sum)
     row << (scholarship ? helpers.dollars_from_cents(scholarship.amount_cents) : "")
     row << (scholarship ? (scholarship.grant&.name.presence || "Unfunded") : "")
     row << onboarding_scholarship_tasks_csv(registration)

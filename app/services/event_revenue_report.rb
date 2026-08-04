@@ -8,8 +8,10 @@
 # Net         = money in - org subsidy.
 #
 # CE fees are billed per ContinuingEducationRegistration. CE cash collected
-# counts as fees (money in); CE cost still owed counts as outstanding. Both come
-# from EventDashboard so the per-event figures agree with the event dashboard.
+# counts as fees (money in), CE cost still owed counts as outstanding, and a CE
+# discount is org subsidy like any other. Every component comes from
+# EventRevenueFigures, which loads them for all events at once and mirrors the
+# EventDashboard definitions so a row agrees with that event's dashboard.
 class EventRevenueReport
   # Raw per-event component figures, with the bucket totals derived from them.
   Row = Struct.new(
@@ -87,7 +89,10 @@ class EventRevenueReport
   end
 
   def rows
-    @rows ||= @events.map { |event| build_row(event) }
+    @rows ||= begin
+      figures = EventRevenueFigures.new(@events)
+      @events.map { |event| build_row(event, figures.for(event)) }
+    end
   end
 
   def any?
@@ -144,17 +149,16 @@ class EventRevenueReport
     @years_by_value ||= years.index_by(&:year)
   end
 
-  def build_row(event)
-    dashboard = EventDashboard.new(event)
+  def build_row(event, figures)
     Row.new(
       event: event,
-      registration_payments_cents: dashboard.received_cents,
-      ce_paid_cents: dashboard.cont_ed_paid_cents,
-      ce_outstanding_cents: dashboard.cont_ed_outstanding_cents,
-      funded_scholarship_cents: dashboard.funded_scholarship_cents,
-      unfunded_scholarship_cents: dashboard.unfunded_scholarship_cents,
-      discount_cents: dashboard.discount_cents,
-      registration_outstanding_cents: dashboard.outstanding_cents
+      registration_payments_cents: figures.registration_payments_cents,
+      ce_paid_cents: figures.ce_paid_cents,
+      ce_outstanding_cents: figures.ce_outstanding_cents,
+      funded_scholarship_cents: figures.funded_scholarship_cents,
+      unfunded_scholarship_cents: figures.unfunded_scholarship_cents,
+      discount_cents: figures.discount_cents,
+      registration_outstanding_cents: figures.registration_outstanding_cents
     )
   end
 

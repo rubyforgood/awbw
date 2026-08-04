@@ -53,7 +53,7 @@ RSpec.describe EventRevenueReport do
       expect(row.fees_cents).to eq(9_000)
     end
 
-    it "owes registration plus projected CE as outstanding" do
+    it "owes registration plus uncollected CE as outstanding" do
       expect(row.outstanding_cents).to eq(11_500)
     end
 
@@ -107,6 +107,31 @@ RSpec.describe EventRevenueReport do
     it "counts collected CE toward money in and net" do
       expect(row.money_in_cents).to eq(5_000)
       expect(row.net_cents).to eq(5_000)
+    end
+  end
+
+  # A discounted CE fee is cost the org absorbs, same as a discounted
+  # registration fee — it must land in org subsidy rather than disappear between
+  # "collected" and "owed".
+  describe "discounted CE fees" do
+    subject(:report) { described_class.new([ event ]) }
+
+    let(:event) { create(:event, cost_cents: 0) }
+    let!(:registration) { create(:event_registration, event: event, registrant: create(:person), status: "registered") }
+    let(:row) { report.rows.first }
+
+    before do
+      # A $60 CE registration comped in full.
+      ce = create(:continuing_education_registration, event_registration: registration, cost_cents: 6_000)
+      create(:allocation, source: create(:discount, amount_cents: 6_000), allocatable: ce, amount: 6_000)
+    end
+
+    it "counts the comped CE fee as org subsidy, not as collected or owed" do
+      expect(row.discount_cents).to eq(6_000)
+      expect(row.org_subsidy_cents).to eq(6_000)
+      expect(row.ce_paid_cents).to eq(0)
+      expect(row.ce_outstanding_cents).to eq(0)
+      expect(row.net_cents).to eq(-6_000)
     end
   end
 
