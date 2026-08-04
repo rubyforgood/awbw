@@ -33,6 +33,7 @@
     <%= simple_form_for @ce_registration, url: continuing_education_registration_path(@ce_registration, return_to: params[:return_to].presence),
           html: { id: "ce_registration_form", data: { turbo: false } } do |f| %>
       <%= render "details_section", f: f, license: license, ce_registration: @ce_registration, event: registration.event %>
+      <%= render "attendance_entries", registration: registration %>
       <%= render "payment_history", ce_registration: @ce_registration %>
 
       <%# ---- Comments (saved with the CE registration, like the other forms) ---- %>

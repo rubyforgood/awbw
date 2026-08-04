@@ -265,6 +265,64 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
         expect(response).to redirect_to(row_path)
       end
     end
+
+    describe "attendance time entries" do
+      it "adds an entry from a blank row, attributed to the editing admin" do
+        expect {
+          patch continuing_education_registration_path(ce_registration),
+                params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
+                  time_entries: { "0" => { signed_in_at: "2026-07-23T08:50", signed_out_at: "2026-07-23T10:34" } } } }
+        }.to change { registration.event_attendance_time_entries.count }.by(1)
+
+        entry = registration.event_attendance_time_entries.last
+        # Datetime-local values are parsed in the editing admin's zone (Pacific).
+        pt = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+        expect(entry.signed_in_at.in_time_zone(pt).strftime("%FT%R")).to eq("2026-07-23T08:50")
+        expect(entry.signed_out_at.in_time_zone(pt).strftime("%FT%R")).to eq("2026-07-23T10:34")
+        expect(entry.created_by).to eq(admin)
+        expect(entry.updated_by).to eq(admin)
+      end
+
+      it "corrects an existing entry's time and stamps updated_by" do
+        entry = create(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 23, 8, 50), signed_out_at: Time.zone.local(2026, 7, 23, 10, 0))
+
+        patch continuing_education_registration_path(ce_registration),
+              params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
+                time_entries: { "0" => { id: entry.id, signed_in_at: "2026-07-23T08:50", signed_out_at: "2026-07-23T10:34" } } } }
+
+        expect(entry.reload.signed_out_at.in_time_zone("Pacific Time (US & Canada)").strftime("%FT%R")).to eq("2026-07-23T10:34")
+        expect(entry.updated_by).to eq(admin)
+      end
+
+      it "removes an entry when its _destroy box is ticked" do
+        entry = create(:event_attendance_time_entry, event_registration: registration)
+
+        expect {
+          patch continuing_education_registration_path(ce_registration),
+                params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
+                  time_entries: { "0" => { id: entry.id, signed_in_at: "2026-07-23T08:50", _destroy: "1" } } } }
+        }.to change { registration.event_attendance_time_entries.count }.by(-1)
+      end
+
+      it "ignores blank rows" do
+        expect {
+          patch continuing_education_registration_path(ce_registration),
+                params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
+                  time_entries: { "0" => { signed_in_at: "", signed_out_at: "" } } } }
+        }.not_to change { registration.event_attendance_time_entries.count }
+      end
+
+      it "rejects a sign-out before the sign-in with a helpful error" do
+        patch continuing_education_registration_path(ce_registration),
+              params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
+                time_entries: { "0" => { signed_in_at: "2026-07-23T10:00", signed_out_at: "2026-07-23T09:00" } } } }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(flash[:alert]).to match(/after the sign-in/)
+        expect(registration.event_attendance_time_entries).to be_empty
+      end
+    end
   end
 
   it "forbids non-admins" do
