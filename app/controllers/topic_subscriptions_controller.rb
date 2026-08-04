@@ -16,7 +16,8 @@ class TopicSubscriptionsController < ApplicationController
     authorize! TopicSubscription
     @topic_subscription = TopicSubscription.new(
       topic_subscription_type_id: new_topic_type_id,
-      interested_event_id: params[:interested_event_id]
+      interested_event_id: params[:interested_event_id],
+      person_id: params[:person_id]
     )
   end
 
@@ -92,6 +93,7 @@ class TopicSubscriptionsController < ApplicationController
     case params[:return_to]
     when "dashboard" then params[:event_id].present? ? dashboard_event_path(params[:event_id]) : topic_subscriptions_path
     when "registrants" then params[:event_id].present? ? registrants_event_path(params[:event_id]) : topic_subscriptions_path
+    when "person" then params[:person_id].present? ? edit_person_path(params[:person_id]) : topic_subscriptions_path
     else topic_subscriptions_path
     end
   end

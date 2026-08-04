@@ -76,6 +76,17 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).to include(dashboard_event_path(event))
     end
 
+    it "prefills the person and returns to their edit page when opened from a person" do
+      person = create(:person, first_name: "Umberto", last_name: "User")
+
+      get new_topic_subscription_path(person_id: person.id, return_to: "person")
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Umberto User")
+      expect(response.body).to include("← Umberto User")
+      expect(response.body).to include(edit_person_path(person))
+    end
+
     it "renders the edit form" do
       subscription = create(:topic_subscription)
       get edit_topic_subscription_path(subscription)

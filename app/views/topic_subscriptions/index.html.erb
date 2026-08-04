@@ -15,7 +15,7 @@
     </div>
     <div class="flex items-center gap-2">
       <%= link_to "Manage topics", topic_subscription_types_path, class: "btn btn-utility-outline" %>
-      <%= link_to new_topic_subscription_path, class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+      <%= link_to new_topic_subscription_path(person_id: params[:person_id], return_to: ("person" if params[:person_id].present?)), class: "btn btn-primary inline-flex items-center gap-1.5" do %>
         <i class="fa-solid fa-plus text-xs"></i>
         New subscription
       <% end %>

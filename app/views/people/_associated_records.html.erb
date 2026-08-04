@@ -21,9 +21,13 @@
 <div>
   <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Contributed content</h3>
   <ul class="columns-1 sm:columns-2 md:columns-3 gap-x-6">
+    <% user_id = person.user&.id %>
     <li class="break-inside-avoid mb-2"><%= index_button person.community_news_as_author, params: { author_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.resources_as_author, params: { author_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.stories_as_author, params: { author_id: person.id } %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button StoryIdea.where(created_by_id: user_id), params: { created_by_id: user_id } %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button WorkshopIdea.where(created_by_id: user_id), params: { created_by_id: user_id } %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button WorkshopVariationIdea.where(created_by_id: user_id), params: { created_by_id: user_id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.workshop_variations_as_author, params: { author_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.workshops_as_author, params: { author_id: person.id } %></li>
   </ul>

@@ -17,12 +17,14 @@
 <% cancel_path = case params[:return_to]
      when "dashboard" then params[:event_id].present? ? dashboard_event_path(params[:event_id]) : topic_subscriptions_path
      when "registrants" then params[:event_id].present? ? registrants_event_path(params[:event_id]) : topic_subscriptions_path
+     when "person" then params[:person_id].present? ? edit_person_path(params[:person_id]) : topic_subscriptions_path
      else topic_subscriptions_path
    end %>
 
 <%= form_with model: @topic_subscription, class: "space-y-5", data: { controller: "dirty-form" } do |f| %>
   <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to].present? %>
   <%= hidden_field_tag :event_id, params[:event_id] if params[:event_id].present? %>
+  <%= hidden_field_tag :person_id, params[:person_id] if params[:person_id].present? %>
 
   <% if @topic_subscription.errors.any? %>
     <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
