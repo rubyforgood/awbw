@@ -12,6 +12,24 @@ RSpec.describe "Events", type: :request do
     target_event
   end
 
+  def query_count
+    count = 0
+    counter = ->(_name, _start, _finish, _id, payload) { count += 1 unless payload[:name].to_s.match?(/SCHEMA|TRANSACTION/) }
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { yield }
+    count
+  end
+
+  # A registrant carrying every column the CSV exports read per row: a phone, a
+  # partly paid CE registration, and the allocations behind the money cells.
+  def add_ce_registrant(target_event)
+    registration = create(:event_registration, event: target_event, registrant: create(:person), status: "registered")
+    ce = create(:continuing_education_registration, event_registration: registration, cost_cents: 5_000)
+    create(:allocation, source: create(:payment, amount_cents: 2_000, amount_cents_remaining: 2_000),
+                        allocatable: ce, amount: 2_000)
+    ContactMethod.create!(contactable: registration.registrant, kind: "phone", value: "555-0100")
+    registration
+  end
+
   let(:valid_params) do
     {
       event: {
@@ -1440,6 +1458,21 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("CE status")
       expect(response.body).to include("Needs license")
     end
+
+    # Every cell the exports read is preloaded, so a bigger roster costs no more
+    # queries than a small one. Guards the CE, scholarship, payment and phone
+    # columns, each of which used to query per row.
+    %i[registrants onboarding].each do |action|
+      it "exports the #{action} CSV without querying per registrant" do
+        path = public_send(:"#{action}_event_path", event, format: :csv)
+        add_ce_registrant(event)
+        get path # warm up: the first request of a session also loads the signed-in user
+        baseline = query_count { get path }
+        3.times { add_ce_registrant(event) }
+
+        expect(query_count { get path }).to eq(baseline)
+      end
+    end
   end
 
   describe "GET /events/:id/registrants CE status column states" do
@@ -1615,7 +1648,7 @@ RSpec.describe "Events", type: :request do
       expect(response.media_type).to eq("text/csv")
       expect(response.body).to include("First name,Last name,Email")
       expect(response.body).to include("Mailchimp")
-      expect(response.body).to include("CE requested,CE hours,CE amount,CE license")
+      expect(response.body).to include("CE requested,CE hours,CE amount,CE paid,CE due,CE license")
       expect(response.body).to include("Portal user status,Portal access")
       expect(response.body).to include("Comments,Flagged comments")
       expect(response.body).to include("Ready")
@@ -1668,6 +1701,21 @@ RSpec.describe "Events", type: :request do
 
       expect(paid_amount).to eq("$5")        # the $5 payment, NOT the $15 scholarship
       expect(scholarship_amount).to eq("$15")
+    end
+
+    it "reports CE paid and CE due from CE payments" do
+      ce = create(:continuing_education_registration, event_registration: registration, cost_cents: 6_000)
+      create(:allocation, source: create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000),
+                          allocatable: ce, amount: 5_000)
+
+      get onboarding_event_path(event, format: :csv)
+
+      rows = CSV.parse(response.body)
+      headers = rows.first
+      row = rows.find { |r| r[1] == person.last_name }
+
+      expect(row[headers.index("CE paid")]).to eq("$50")   # $50 collected
+      expect(row[headers.index("CE due")]).to eq("$10")    # $10 still owed
     end
 
     it "redirects a non-admin" do
@@ -1769,6 +1817,15 @@ RSpec.describe "Events", type: :request do
         page = Capybara.string(response.body)
         expect(page).to have_link(href: registrants_event_path(event, status_filter: "active"), visible: :all)
         expect(page).to have_link(href: registrants_event_path(event, status_filter: "inactive"), visible: :all)
+      end
+
+      it "drills the CE card into the registrants filtered to continuing education" do
+        create(:continuing_education_registration, event_registration: registration, cost_cents: 6_000)
+
+        get dashboard_event_path(event)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link(href: registrants_event_path(event, ce_status: "registered"), visible: :all)
       end
 
       it "shows a program status badge next to each organization" do

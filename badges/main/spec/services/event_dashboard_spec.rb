@@ -667,29 +667,81 @@ RSpec.describe EventDashboard do
     end
   end
 
-  # Continuing-education fees are stubbed to zero until the feature (and its
-  # migration) lands. The dashboard still renders the section, showing $0.
-  describe "continuing-education fees (stubbed)" do
-    let(:event) { create(:event, cost_cents: 10_000) }
+  # CE fees are billed per ContinuingEducationRegistration and flow through the
+  # generic payment/allocation system. The event is free-registration to isolate
+  # CE money (and prove CE still reports on a free event). Cancelled registrants'
+  # CE is ignored, like their registration fees.
+  describe "continuing-education fees" do
+    let(:event) { create(:event, cost_cents: 0) }
+    let(:paid_person) { create(:person) }
+    let(:partial_person) { create(:person) }
+    let(:unpaid_person) { create(:person) }
+
+    let!(:paid_reg) { create(:event_registration, event: event, registrant: paid_person, status: "registered") }
+    let!(:partial_reg) { create(:event_registration, event: event, registrant: partial_person, status: "registered") }
+    let!(:unpaid_reg) { create(:event_registration, event: event, registrant: unpaid_person, status: "registered") }
 
     before do
-      create(:event_registration, event: event, registrant: create(:person), status: "registered")
+      ce_paid = create(:continuing_education_registration, event_registration: paid_reg, cost_cents: 10_000)
+      create(:allocation, source: create(:payment, amount_cents: 10_000, amount_cents_remaining: 10_000),
+                          allocatable: ce_paid, amount: 10_000)
+
+      ce_partial = create(:continuing_education_registration, event_registration: partial_reg, cost_cents: 8_000)
+      create(:allocation, source: create(:payment, amount_cents: 3_000, amount_cents_remaining: 3_000),
+                          allocatable: ce_partial, amount: 3_000)
+
+      create(:continuing_education_registration, event_registration: unpaid_reg, cost_cents: 6_000)
+
+      cancelled = create(:event_registration, event: event, registrant: create(:person), status: "cancelled")
+      ce_cancelled = create(:continuing_education_registration, event_registration: cancelled, cost_cents: 20_000)
+      create(:allocation, source: create(:payment, amount_cents: 20_000, amount_cents_remaining: 20_000),
+                          allocatable: ce_cancelled, amount: 20_000)
     end
 
-    it "reports zero across totals, splits, and registrant lists" do
-      expect(dashboard.cont_ed_total_cents).to eq(0)
-      expect(dashboard.cont_ed_paid_cents).to eq(0)
-      expect(dashboard.cont_ed_outstanding_cents).to eq(0)
-      expect(dashboard.cont_ed_paid_count).to eq(0)
-      expect(dashboard.cont_ed_unpaid_count).to eq(0)
-      expect(dashboard.cont_ed_paid_registrants).to be_empty
-      expect(dashboard.cont_ed_unpaid_registrants).to be_empty
+    it "sums CE cash collected across active CE registrations" do
+      expect(dashboard.cont_ed_paid_cents).to eq(13_000)
     end
 
-    it "adds nothing to the grand total" do
+    it "sums CE cost still owed after allocations" do
+      expect(dashboard.cont_ed_outstanding_cents).to eq(11_000)
+    end
+
+    it "reports CE total as paid plus outstanding" do
+      expect(dashboard.cont_ed_total_cents).to eq(24_000)
+    end
+
+    it "counts registrants whose CE is fully paid vs still owing" do
+      expect(dashboard.cont_ed_paid_count).to eq(1)
+      expect(dashboard.cont_ed_unpaid_count).to eq(2)
+    end
+
+    it "lists the registrants behind each CE bucket" do
+      expect(dashboard.cont_ed_paid_registrants).to contain_exactly(paid_person)
+      expect(dashboard.cont_ed_unpaid_registrants).to contain_exactly(partial_person, unpaid_person)
+    end
+
+    it "maps each registrant to their CE paid / due amounts, reconciling with the totals" do
+      expect(dashboard.cont_ed_paid_by_registrant[paid_person.id]).to eq(10_000)
+      expect(dashboard.cont_ed_paid_by_registrant[partial_person.id]).to eq(3_000)
+      expect(dashboard.cont_ed_paid_by_registrant.values.sum).to eq(dashboard.cont_ed_paid_cents)
+
+      expect(dashboard.cont_ed_due_by_registrant[partial_person.id]).to eq(5_000)
+      expect(dashboard.cont_ed_due_by_registrant[unpaid_person.id]).to eq(6_000)
+      expect(dashboard.cont_ed_due_by_registrant.values.sum).to eq(dashboard.cont_ed_outstanding_cents)
+    end
+
+    it "counts distinct registrants with continuing education" do
+      expect(dashboard.ce_registrant_count).to eq(3)
+    end
+
+    it "adds CE fees to the grand total and cash breakdown" do
       expect(dashboard.grand_total_cents).to eq(
-        dashboard.scholarship_total_cents + dashboard.received_cents + dashboard.outstanding_cents
+        dashboard.registration_subtotal_cents + dashboard.scholarship_total_cents +
+          dashboard.cont_ed_total_cents + dashboard.unallocated_bulk_payment_cents
       )
+      expect(dashboard.grand_total_cents).to eq(24_000)
+      expect(dashboard.collected_cents).to eq(13_000)
+      expect(dashboard.due_cents).to eq(11_000)
     end
   end
 

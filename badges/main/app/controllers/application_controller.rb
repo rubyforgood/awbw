@@ -29,6 +29,12 @@ class ApplicationController < ActionController::Base
 
   private
 
+  # Dollar cell for a CSV export: the money helper's formatting when there's an
+  # amount, blank when there's nothing (so empty cells read cleanly).
+  def csv_dollars(cents)
+    cents.positive? ? helpers.dollars_from_cents(cents) : ""
+  end
+
   def after_sign_out_path_for(resource_or_scope)
     if params[:reset_password].present? # needed for custom "log out and reset it" flow
       new_user_password_path

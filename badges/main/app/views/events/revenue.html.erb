@@ -51,7 +51,7 @@
           <%= render "revenue_kpi", label: "Org subsidy", value: dollars_from_cents(featured.org_subsidy_cents),
                 value_class: "text-red-600", card_class: "border-red-300 bg-red-50", note: "discounts + unfunded", cents: featured.org_subsidy_cents,
                 prior_cents: prior&.org_subsidy_cents, prior_year: prior&.year %>
-          <%= render "revenue_kpi", label: "Outstanding*", value: dollars_from_cents(featured.outstanding_cents),
+          <%= render "revenue_kpi", label: "Outstanding", value: dollars_from_cents(featured.outstanding_cents),
                 value_class: "text-orange-600", card_class: "border-orange-300 bg-orange-50", note: "reg + CE owed", cents: featured.outstanding_cents,
                 prior_cents: prior&.outstanding_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Net", value: signed_dollars_from_cents(featured.net_cents),
@@ -90,7 +90,7 @@
           <div class="text-right">Fees collected</div>
           <div class="text-right">Scholarships</div>
           <div class="text-right">Org subsidy</div>
-          <div class="text-right">Outstanding*</div>
+          <div class="text-right">Outstanding</div>
           <div class="text-right">Total expected</div>
         </div>
 
@@ -135,11 +135,12 @@
                     <dl class="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-3 text-sm py-2">
                       <% columns = [
                            [ [ "Registration payments", row.registration_payments_cents, "text-gray-800" ],
-                             [ "Projected CE*", row.ce_projected_cents, ce_class ] ],
+                             [ "CE paid", row.ce_paid_cents, ce_class ] ],
                            [ [ "Funded scholarships", row.funded_scholarship_cents, "text-gray-800" ],
-                             [ "Unfunded scholarships", row.unfunded_scholarship_cents, "text-gray-800" ] ],
-                           [ [ "Discounts", row.discount_cents, "text-gray-800" ],
-                             [ "Registration owed", row.registration_outstanding_cents, "text-orange-600" ] ]
+                             [ "Unfunded scholarships", row.unfunded_scholarship_cents, "text-gray-800" ],
+                             [ "Discounts", row.discount_cents, "text-gray-800" ] ],
+                           [ [ "Registration owed", row.registration_outstanding_cents, "text-orange-600" ],
+                             [ "CE owed", row.ce_outstanding_cents, "text-orange-600" ] ]
                          ] %>
                       <% columns.each do |pair| %>
                         <div class="space-y-1.5">
@@ -178,8 +179,6 @@
           <span class="font-medium">Outstanding</span> = registration + CE still owed.
           <span class="font-medium">Net</span> = fees collected + scholarships − org subsidy.
           <span class="font-medium">Total expected</span> = net once all outstanding is paid.
-          <br>
-          * Outstanding includes projected CE — the CE fees owed by active registrants — not yet netted against CE payments collected.
         </p>
       </section>
     <% else %>
