@@ -59,9 +59,9 @@ RSpec.describe "Event registration show page", type: :system do
     end
   end
 
-  describe "art supplies call-out" do
+  describe "content call-out visibility" do
     it "links to its callout page when published with content" do
-      callout = create(:registration_ticket_callout, event:, builtin_key: "art_supplies",
+      callout = create(:registration_ticket_callout, event:,
         title: "Art supplies & what to bring", description: "<p>Bring scissors</p>", hidden: false)
 
       sign_in(user)
@@ -72,7 +72,7 @@ RSpec.describe "Event registration show page", type: :system do
     end
 
     it "is hidden when the callout is not published" do
-      create(:registration_ticket_callout, event:, builtin_key: "art_supplies",
+      create(:registration_ticket_callout, event:,
         title: "Art supplies & what to bring", description: "<p>Bring scissors</p>", hidden: true)
 
       sign_in(user)

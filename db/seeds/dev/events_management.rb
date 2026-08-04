@@ -336,14 +336,19 @@ flagship = Event.find_by(title: "AWBW Facilitator Training")
 # has a sensible default highlighted event after seeding.
 admin_user.update!(favorite_event: flagship) if admin_user && flagship
 
-# Fill in and publish the "Art supplies & what to bring" content callout on the
-# flagship training so the demo ticket links to a populated page. The row is
-# materialized when the event is created; here we just add the copy (its title
-# already defaults to "Art supplies & what to bring"). Only when blank so admin
-# edits survive a re-seed.
-flagship_art_supplies = flagship&.registration_ticket_callouts&.find_by(builtin_key: "art_supplies")
-if flagship_art_supplies && flagship_art_supplies.description.blank?
-  flagship_art_supplies.update!(hidden: false, description: <<~HTML.strip)
+# Add a published "Art supplies & what to bring" custom callout on the flagship
+# training so the demo ticket links to a populated page. This is no longer a
+# built-in callout, so the seed authors it like any admin-created one. Idempotent:
+# only created when the event doesn't already have it, so admin edits survive a re-seed.
+if flagship && flagship.registration_ticket_callouts.custom.find_by(title: "Art supplies & what to bring").nil?
+  flagship.registration_ticket_callouts.create!(
+    title: "Art supplies & what to bring",
+    subtitle: "Important info for this event — please read",
+    callout_type: "reference",
+    icon_class: "fa-solid fa-palette",
+    color_class: "blue",
+    hidden: false,
+    description: <<~HTML.strip)
     <p>Thank you for registering to join us for AWBW's Art Facilitator Training!</p>
     <p>Below you'll find information about the art supplies used in each of the five hands-on workshops included in the training, along with optional printable workshop worksheets. We're sharing these materials in advance in case you'd like to gather supplies or print resources ahead of time.</p>
     <p>You will receive additional training information as we get closer to the training dates.</p>
