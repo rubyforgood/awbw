@@ -40,6 +40,50 @@
     <% end %>
 
     <% if @report.any? %>
+      <%# Totals across all days lead the report — the headline figures the CE board
+          certifies — set apart from the per-day tables with a teal treatment. The id
+          anchors the return trip from the per-row CE edit links. %>
+      <section id="totals" class="mb-8 scroll-mt-6">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-teal-700 mb-3">Totals</h2>
+        <div class="overflow-hidden rounded-xl border border-teal-200 bg-white shadow-sm">
+          <div class="grid items-center gap-x-3 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-teal-700 bg-teal-50 border-b border-teal-100"
+               style="grid-template-columns: <%= @report.ce_only? ? "2fr minmax(6rem,1fr) minmax(6rem,auto) minmax(6rem,auto)" : "2fr minmax(6rem,auto)" %>">
+            <div>Name</div>
+            <% if @report.ce_only? %><div>License #</div><div class="text-right">Hours awarded</div><% end %>
+            <div class="text-right">Total logged</div>
+          </div>
+          <div class="divide-y divide-teal-50">
+            <% @report.registrations.each do |reg| %>
+              <div class="grid items-center gap-x-3 px-4 py-2.5 text-sm"
+                   style="grid-template-columns: <%= @report.ce_only? ? "2fr minmax(6rem,1fr) minmax(6rem,auto) minmax(6rem,auto)" : "2fr minmax(6rem,auto)" %>">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="font-medium text-gray-900 truncate"><%= reg.registrant.full_name %></span>
+                  <% ce_reg = @report.ce_registration_for(reg) %>
+                  <% if @report.ce_only? && ce_reg %>
+                    <%= link_to edit_continuing_education_registration_path(ce_reg, return_to: "attendance"),
+                          class: "shrink-0 inline-flex items-center gap-1 text-xs text-teal-700 hover:underline" do %>
+                      <i class="fa-solid fa-pen-to-square text-[0.65rem]"></i> Edit
+                    <% end %>
+                  <% end %>
+                </div>
+                <% if @report.ce_only? %>
+                  <div class="text-gray-600 tabular-nums truncate"><%= @report.license_numbers(reg).join(", ").presence || "—" %></div>
+                  <div class="text-right text-gray-600 tabular-nums"><%= plain_number(@report.ce_hours(reg)) %></div>
+                <% end %>
+                <div class="text-right font-semibold text-gray-900 tabular-nums"><%= attendance_duration_label(@report.total_minutes(reg)) %></div>
+              </div>
+            <% end %>
+          </div>
+          <div class="grid items-center gap-x-3 px-4 py-3 bg-teal-100 text-sm font-bold text-teal-900"
+               style="grid-template-columns: <%= @report.ce_only? ? "2fr minmax(6rem,1fr) minmax(6rem,auto) minmax(6rem,auto)" : "2fr minmax(6rem,auto)" %>">
+            <div class="uppercase tracking-wide text-xs text-teal-700">All registrants</div>
+            <% if @report.ce_only? %><div></div><div></div><% end %>
+            <div class="text-right tabular-nums"><%= attendance_duration_label(@report.grand_total_minutes) %></div>
+          </div>
+        </div>
+      </section>
+
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">By day</h2>
       <% @report.dates.each_with_index do |date, index| %>
         <% signed_in_count = @report.registrations.count { |reg| @report.entries_for(reg, date).any? } %>
         <section class="mb-8">
@@ -89,49 +133,6 @@
           </div>
         </section>
       <% end %>
-
-      <%# Totals across all days — the figure the CE board certifies, alongside the
-          hours the event awards so staff can reconcile the two. The id anchors the
-          return trip from the per-row CE edit links. %>
-      <section id="totals" class="mb-4 scroll-mt-6">
-        <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">Totals</h2>
-        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
-          <div class="grid items-center gap-x-3 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 border-b border-gray-100"
-               style="grid-template-columns: <%= @report.ce_only? ? "2fr minmax(6rem,1fr) minmax(6rem,auto) minmax(6rem,auto)" : "2fr minmax(6rem,auto)" %>">
-            <div>Name</div>
-            <% if @report.ce_only? %><div>License #</div><div class="text-right">Hours awarded</div><% end %>
-            <div class="text-right">Total logged</div>
-          </div>
-          <div class="divide-y divide-gray-100">
-            <% @report.registrations.each do |reg| %>
-              <div class="grid items-center gap-x-3 px-4 py-2.5 text-sm"
-                   style="grid-template-columns: <%= @report.ce_only? ? "2fr minmax(6rem,1fr) minmax(6rem,auto) minmax(6rem,auto)" : "2fr minmax(6rem,auto)" %>">
-                <div class="flex items-center gap-2 min-w-0">
-                  <span class="font-medium text-gray-900 truncate"><%= reg.registrant.full_name %></span>
-                  <% ce_reg = @report.ce_registration_for(reg) %>
-                  <% if @report.ce_only? && ce_reg %>
-                    <%= link_to edit_continuing_education_registration_path(ce_reg, return_to: "attendance"),
-                          class: "shrink-0 inline-flex items-center gap-1 text-xs text-teal-700 hover:underline" do %>
-                      <i class="fa-solid fa-pen-to-square text-[0.65rem]"></i> Edit
-                    <% end %>
-                  <% end %>
-                </div>
-                <% if @report.ce_only? %>
-                  <div class="text-gray-600 tabular-nums truncate"><%= @report.license_numbers(reg).join(", ").presence || "—" %></div>
-                  <div class="text-right text-gray-600 tabular-nums"><%= plain_number(@report.ce_hours(reg)) %></div>
-                <% end %>
-                <div class="text-right font-semibold text-gray-900 tabular-nums"><%= attendance_duration_label(@report.total_minutes(reg)) %></div>
-              </div>
-            <% end %>
-          </div>
-          <div class="grid items-center gap-x-3 px-4 py-3 bg-gray-100 text-sm font-bold text-gray-900"
-               style="grid-template-columns: <%= @report.ce_only? ? "2fr minmax(6rem,1fr) minmax(6rem,auto) minmax(6rem,auto)" : "2fr minmax(6rem,auto)" %>">
-            <div class="uppercase tracking-wide text-xs text-gray-600">All registrants</div>
-            <% if @report.ce_only? %><div></div><div></div><% end %>
-            <div class="text-right tabular-nums"><%= attendance_duration_label(@report.grand_total_minutes) %></div>
-          </div>
-        </div>
-      </section>
 
       <p class="text-xs text-gray-500">
         Registrants sign in and out from their private CE page; times here are in Pacific.
