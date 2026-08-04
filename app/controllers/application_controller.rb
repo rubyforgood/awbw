@@ -35,6 +35,16 @@ class ApplicationController < ActionController::Base
     cents.positive? ? helpers.dollars_from_cents(cents) : ""
   end
 
+  # A failed save's errors as one flash-ready sentence. Errors on a nested association
+  # arrive keyed "<association>.<attribute>", and their full message pastes the
+  # humanized association name in front — fine for "Hours can't be blank", wrong for a
+  # child validation written as a whole sentence, so those show verbatim.
+  def error_sentence(record)
+    record.errors.map { |error|
+      error.attribute.to_s.include?(".") ? error.message : error.full_message
+    }.to_sentence
+  end
+
   def after_sign_out_path_for(resource_or_scope)
     if params[:reset_password].present? # needed for custom "log out and reset it" flow
       new_user_password_path

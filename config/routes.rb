@@ -109,6 +109,7 @@ Rails.application.routes.draw do
       delete :unlink_organization
       patch :update_onboarding
       patch :toggle_certificate_issued
+      patch :update_attendance
     end
     resources :comments, only: [ :create, :update ]
   end

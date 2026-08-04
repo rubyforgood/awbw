@@ -1,0 +1,39 @@
+<%#
+  Inline editor for one registrant's sessions on one training day. Times are clock
+  times, not datetimes — the day is the section this sits in, so a correction is two
+  fields rather than two dates the admin has to retype and can get wrong. The trailing
+  blank row adds a session (fill it and save; a fresh blank comes back), and Remove
+  drops one, matching the CE edit page's table.
+  locals: registration, date, entries (decorated), state (page params), cell.
+%>
+<% rows = attendance_editor_rows(entries) %>
+<% input_class = "w-28 rounded-lg border border-gray-300 px-2 py-1 text-xs text-gray-900 shadow-sm tabular-nums focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+
+<%= form_with url: update_attendance_event_registration_path(registration, date: date.iso8601, **state),
+      method: :patch, data: { turbo: false }, class: "space-y-1.5" do %>
+  <% rows.each_with_index do |row, index| %>
+    <div class="flex flex-wrap items-center gap-2">
+      <% if row["id"].present? %>
+        <%= hidden_field_tag "attendance[entries][#{index}][id]", row["id"], id: nil %>
+      <% end %>
+      <%= text_field_tag "attendance[entries][#{index}][in]", row["in"], type: "time", id: nil,
+            class: input_class, "aria-label": "Time in" %>
+      <span class="text-xs text-gray-400">→</span>
+      <%= text_field_tag "attendance[entries][#{index}][out]", row["out"], type: "time", id: nil,
+            class: input_class, "aria-label": "Time out" %>
+      <% if row["id"].present? %>
+        <label class="inline-flex items-center gap-1 text-xs text-gray-500">
+          <%= check_box_tag "attendance[entries][#{index}][_destroy]", "1", false, id: nil,
+                class: "h-3.5 w-3.5 rounded border-gray-300 text-red-600 focus:ring-red-400" %>
+          Remove
+        </label>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="flex items-center gap-3 pt-1">
+    <button type="submit" class="rounded-lg bg-teal-600 px-3 py-1 text-xs font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer">Save</button>
+    <%= link_to "Cancel", attendance_event_path(@event, **state, anchor: cell), class: "text-xs text-gray-500 hover:text-gray-700" %>
+    <span class="text-[0.65rem] text-gray-400">Leave the sign-out blank to leave a session open.</span>
+  </div>
+<% end %>

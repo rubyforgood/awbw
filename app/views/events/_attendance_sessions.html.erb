@@ -1,0 +1,37 @@
+<%#
+  One registrant's sign-in/out sessions on one training day — the report's editable
+  unit, shared by the by-person and by-day groupings (same cell, different axis).
+  Read mode shows a chip per session; Edit swaps the cell for a form so staff can
+  correct a time, add the pair for a day nobody signed in on, or drop a stray row,
+  without leaving the report. Registrants still stamp their own times from the CE
+  callout — this is the correction surface, not a replacement for it.
+  locals: registration, date, entries (decorated), editing (Boolean), state (page params).
+%>
+<% cell = attendance_cell_id(registration, date) %>
+<%# z-10 lifts the cell above the row's whole-row link so the controls are clickable. %>
+<div id="<%= cell %>" class="relative z-10 scroll-mt-24">
+  <% if editing %>
+    <%= render "events/attendance_day_form", registration: registration, date: date,
+          entries: entries, state: state, cell: cell %>
+  <% else %>
+    <div class="flex flex-wrap items-center gap-1.5">
+      <% if entries.any? %>
+        <% entries.each do |entry| %>
+          <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-700 tabular-nums">
+            <%= entry.signed_in_label %>–<%= entry.signed_out_label %> · <%= entry.duration_label %>
+          </span>
+        <% end %>
+      <% else %>
+        <span class="text-xs text-gray-400">Not signed in</span>
+      <% end %>
+      <%# Muted until the row is hovered, rather than hidden: 30 people × 5 days of Edit
+          links shouldn't drown out the times, but a hover-only control is unreachable
+          on a touch screen. %>
+      <%= link_to attendance_event_path(@event, **state, edit: cell, anchor: cell),
+            class: "ml-1 rounded px-1.5 py-0.5 text-xs font-medium text-teal-700 opacity-50 transition-opacity hover:bg-teal-50 hover:underline group-hover:opacity-100 focus:opacity-100",
+            "aria-label": "Edit #{registration.registrant.full_name}'s times for #{date.strftime("%b %-d")}" do %>
+        <i class="fa-solid fa-pen text-[0.6rem]"></i> Edit
+      <% end %>
+    </div>
+  <% end %>
+</div>

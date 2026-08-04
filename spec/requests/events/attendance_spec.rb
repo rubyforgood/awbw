@@ -130,11 +130,121 @@ RSpec.describe "Events attendance report", type: :request do
       get attendance_event_path(event)
       expect(response.body).to include("only the first 5 days")
     end
+
+    # Staff fix a missed sign-in or a forgotten sign-out on the report itself rather
+    # than clicking out to the CE edit page for a single correction.
+    describe "editing a day's times in place" do
+      let(:day) { Date.new(2026, 7, 23) }
+      let(:cell) { "attendance-#{registration.id}-#{day.iso8601}" }
+
+      it "offers an Edit link on every day's sessions cell, including empty days" do
+        log_ce_time!
+        event.update!(end_date: Time.zone.local(2026, 7, 24, 16, 0))
+        empty_cell = "attendance-#{registration.id}-2026-07-24"
+
+        get attendance_event_path(event, ce: "true")
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link(href: attendance_event_path(event, ce: "true", edit: cell, anchor: cell))
+        expect(page).to have_link(href: attendance_event_path(event, ce: "true", edit: empty_cell, anchor: empty_cell))
+      end
+
+      it "opens the editor for one cell and leaves the rest read-only" do
+        log_ce_time!
+        get attendance_event_path(event, ce: "true", edit: cell)
+
+        expect(response.body).to include("attendance[entries][0][in]")
+        # One editor: the cell asked for, not every cell on the page.
+        expect(response.body.scan("attendance[entries][0][in]").size).to eq(1)
+      end
+
+      it "adds both times for a day nobody signed in on" do
+        license = create(:professional_license, person: registration.registrant, number: "AAA111")
+        create(:continuing_education_registration, event_registration: registration, professional_license: license)
+
+        expect {
+          patch update_attendance_event_registration_path(registration, date: day.iso8601, ce: "true"),
+                params: { attendance: { entries: { "0" => { in: "08:50", out: "16:00" } } } }
+        }.to change { registration.event_attendance_time_entries.count }.by(1)
+
+        entry = registration.event_attendance_time_entries.last
+        expect(attendance_clock(entry.signed_in_at)).to eq("08:50")
+        expect(attendance_clock(entry.signed_out_at)).to eq("16:00")
+        expect(entry.attendance_date).to eq(day)
+        expect(entry.created_by).to eq(admin)
+        expect(response).to redirect_to(attendance_event_path(event, ce: "true", anchor: cell))
+      end
+
+      it "corrects an existing time and closes a forgotten sign-out" do
+        log_ce_time!
+        entry = registration.event_attendance_time_entries.first
+
+        patch update_attendance_event_registration_path(registration, date: day.iso8601),
+              params: { attendance: { entries: { "0" => { id: entry.id, in: "08:50", out: "16:00" } } } }
+
+        expect(attendance_clock(entry.reload.signed_out_at)).to eq("16:00")
+        expect(entry.updated_by).to eq(admin)
+      end
+
+      it "removes a session when its Remove box is ticked" do
+        log_ce_time!
+        entry = registration.event_attendance_time_entries.first
+
+        expect {
+          patch update_attendance_event_registration_path(registration, date: day.iso8601),
+                params: { attendance: { entries: { "0" => { id: entry.id, in: "08:50", out: "10:34", _destroy: "1" } } } }
+        }.to change { registration.event_attendance_time_entries.count }.by(-1)
+      end
+
+      it "keeps a session open when the sign-out is left blank" do
+        log_ce_time!
+        expect {
+          patch update_attendance_event_registration_path(registration, date: day.iso8601),
+                params: { attendance: { entries: { "0" => { in: "13:00", out: "" } } } }
+        }.to change { registration.event_attendance_time_entries.count }.by(1)
+
+        expect(registration.event_attendance_time_entries.order(:signed_in_at).last).to be_open
+      end
+
+      # A rejected save reopens the cell with what was typed, rather than making the
+      # admin reconstruct it from the flash alone.
+      it "reopens the cell with the submitted times when the save is rejected" do
+        log_ce_time!
+
+        patch update_attendance_event_registration_path(registration, date: day.iso8601, ce: "true"),
+              params: { attendance: { entries: { "0" => { in: "16:00", out: "09:00" } } } }
+
+        expect(response).to redirect_to(attendance_event_path(event, ce: "true", edit: cell, anchor: cell))
+        expect(flash[:alert]).to eq("Sign-out must be after the sign-in time.")
+
+        follow_redirect!
+        expect(response.body).to include('value="16:00"')
+        expect(response.body).to include('value="09:00"')
+      end
+
+      it "rejects an unparseable date rather than guessing a day" do
+        patch update_attendance_event_registration_path(registration, date: "not-a-date"),
+              params: { attendance: { entries: { "0" => { in: "08:50", out: "16:00" } } } }
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
   end
 
   it "forbids users who are neither admin nor the event owner" do
     sign_in create(:user)
     get attendance_event_path(event, ce: "true")
     expect(response).not_to have_http_status(:ok)
+  end
+
+  it "forbids a non-admin from editing attendance times" do
+    sign_in create(:user)
+    patch update_attendance_event_registration_path(registration, date: "2026-07-23"),
+          params: { attendance: { entries: { "0" => { in: "08:50", out: "16:00" } } } }
+    expect(registration.event_attendance_time_entries).to be_empty
+  end
+
+  # Times are stored UTC and rendered in the viewing admin's zone (Pacific by default).
+  def attendance_clock(time)
+    time.in_time_zone("Pacific Time (US & Canada)").strftime("%H:%M")
   end
 end

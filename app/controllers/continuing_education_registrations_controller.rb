@@ -85,17 +85,6 @@ class ContinuingEducationRegistrationsController < ApplicationController
 
   private
 
-  # A failed save's errors as one sentence. Attendance-entry failures arrive on the
-  # parent registration keyed "event_attendance_time_entries.base", whose full message
-  # pastes the humanized association name onto a message already written as a whole
-  # sentence — show those verbatim, and keep full messages for the CE record's own
-  # attributes ("Hours can't be blank").
-  def error_sentence(record)
-    record.errors.map { |error|
-      error.attribute.to_s.include?(".") ? error.message : error.full_message
-    }.to_sentence
-  end
-
   def set_ce_registration
     @ce_registration = ContinuingEducationRegistration.find(params[:id])
   end
@@ -127,28 +116,10 @@ class ContinuingEducationRegistrationsController < ApplicationController
   end
 
   # Staff corrections to the registrant's attendance times, submitted alongside the
-  # CE form under continuing_education_registration[time_entries]. Mapped onto the
-  # registration's nested-attributes setter (create/update/destroy), then attributed
-  # to current_user — these are the only attributed entries (self-service is not).
+  # CE form under continuing_education_registration[time_entries] as full datetimes
+  # (this form spans every day, unlike the report's per-day editor).
   def apply_time_entries(registration)
-    rows = time_entries_attributes
-    return if rows.blank?
-
-    # Drop rows pointing at an entry that's no longer on this registration — a stale
-    # form or double-submit (it was already removed). Left in, nested attributes raise
-    # RecordNotFound and blow up the save.
-    existing_ids = registration.event_attendance_time_entries.pluck(:id).map(&:to_s)
-    rows = rows.reject { |row| row["id"].present? && existing_ids.exclude?(row["id"].to_s) }
-    return if rows.blank?
-
-    registration.assign_attributes(event_attendance_time_entries_attributes: rows)
-    registration.event_attendance_time_entries.each do |entry|
-      next if entry.marked_for_destruction?
-
-      entry.created_by ||= current_user if entry.new_record?
-      entry.updated_by = current_user if entry.new_record? || entry.changed?
-    end
-    registration.save!
+    EventAttendanceEntriesUpdate.new(registration, time_entries_attributes, editor: current_user).save!
   end
 
   def time_entries_attributes

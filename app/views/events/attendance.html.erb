@@ -120,6 +120,9 @@
           the ce/return_to params. %>
       <% group_by_day = params[:group] == "day" %>
       <% toggle_params = { ce: params[:ce].presence, return_to: params[:return_to].presence }.compact %>
+      <%# The page state every session-cell link has to carry so editing, saving and
+          cancelling all land back on the view the admin was looking at. %>
+      <% cell_state = toggle_params.merge(group: params[:group].presence).compact %>
       <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500"><%= group_by_day ? "Sessions by day" : "Sessions by person" %></h2>
         <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-xs font-medium" aria-label="Session grouping">
@@ -159,22 +162,18 @@
               <div class="divide-y divide-gray-100">
                 <% @report.dates.each_with_index do |date, index| %>
                   <% entries = @report.entries_for(reg, date) %>
-                  <div class="relative grid items-center gap-x-3 px-4 py-2.5 text-sm hover:bg-gray-50"
+                  <% editing = params[:edit] == attendance_cell_id(reg, date) %>
+                  <div class="group relative grid items-center gap-x-3 px-4 py-2.5 text-sm hover:bg-gray-50"
                        style="grid-template-columns: minmax(11rem,1.2fr) 3fr minmax(5rem,auto)">
-                    <%= link_to "", row_path, class: "absolute inset-0",
-                          "aria-label": "Edit #{@report.ce_only? ? "CE registration" : "registration"} for #{reg.registrant.full_name}" %>
+                    <%# No whole-row link while the cell is being edited — a stray click
+                        outside the inputs would navigate away mid-correction. %>
+                    <% unless editing %>
+                      <%= link_to "", row_path, class: "absolute inset-0",
+                            "aria-label": "Edit #{@report.ce_only? ? "CE registration" : "registration"} for #{reg.registrant.full_name}" %>
+                    <% end %>
                     <div class="text-gray-700">Day <%= index + 1 %> · <%= date.strftime("%a, %b %-d") %></div>
-                    <div class="flex flex-wrap gap-1.5">
-                      <% if entries.any? %>
-                        <% entries.each do |entry| %>
-                          <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-700 tabular-nums">
-                            <%= entry.signed_in_label %>–<%= entry.signed_out_label %> · <%= entry.duration_label %>
-                          </span>
-                        <% end %>
-                      <% else %>
-                        <span class="text-xs text-gray-400">Not signed in</span>
-                      <% end %>
-                    </div>
+                    <%= render "events/attendance_sessions", registration: reg, date: date,
+                          entries: entries, editing: editing, state: cell_state %>
                     <div class="text-right font-medium text-gray-900 tabular-nums"><%= attendance_duration_label(@report.day_minutes(reg, date)) %></div>
                   </div>
                 <% end %>
@@ -207,10 +206,15 @@
                 <% row_path = @report.ce_only? && ce_reg ?
                      edit_continuing_education_registration_path(ce_reg, return_to: "attendance") :
                      edit_event_registration_path(reg, return_to: "attendance") %>
-                <div class="relative grid items-center gap-x-3 px-4 py-2.5 text-sm hover:bg-gray-50"
+                <% editing = params[:edit] == attendance_cell_id(reg, date) %>
+                <div class="group relative grid items-center gap-x-3 px-4 py-2.5 text-sm hover:bg-gray-50"
                      style="grid-template-columns: <%= @report.ce_only? ? "minmax(9rem,1.2fr) minmax(6rem,0.8fr) 3fr minmax(5rem,auto)" : "minmax(9rem,1.4fr) 3fr minmax(5rem,auto)" %>">
-                  <%= link_to "", row_path, class: "absolute inset-0",
-                        "aria-label": "Edit #{@report.ce_only? && ce_reg ? "CE registration" : "registration"} for #{reg.registrant.full_name}" %>
+                  <%# No whole-row link while the cell is being edited — a stray click
+                      outside the inputs would navigate away mid-correction. %>
+                  <% unless editing %>
+                    <%= link_to "", row_path, class: "absolute inset-0",
+                          "aria-label": "Edit #{@report.ce_only? && ce_reg ? "CE registration" : "registration"} for #{reg.registrant.full_name}" %>
+                  <% end %>
                   <div class="relative z-10 min-w-0 justify-self-start">
                     <% if @report.ce_only? && ce_reg %>
                       <%= link_to reg.registrant.full_name, registration_ce_path(reg.slug, return_to: "attendance"),
@@ -228,17 +232,8 @@
                   <% if @report.ce_only? %>
                     <div class="text-gray-600 tabular-nums truncate"><%= @report.license_numbers(reg).join(", ").presence || "—" %></div>
                   <% end %>
-                  <div class="flex flex-wrap gap-1.5">
-                    <% if entries.any? %>
-                      <% entries.each do |entry| %>
-                        <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-700 tabular-nums">
-                          <%= entry.signed_in_label %>–<%= entry.signed_out_label %> · <%= entry.duration_label %>
-                        </span>
-                      <% end %>
-                    <% else %>
-                      <span class="text-xs text-gray-400">Not signed in</span>
-                    <% end %>
-                  </div>
+                  <%= render "events/attendance_sessions", registration: reg, date: date,
+                        entries: entries, editing: editing, state: cell_state %>
                   <div class="text-right font-medium text-gray-900 tabular-nums"><%= attendance_duration_label(@report.day_minutes(reg, date)) %></div>
                 </div>
               <% end %>
@@ -250,8 +245,9 @@
 
       <p class="text-xs text-gray-500">
         Registrants sign in and out from their private CE page; times here are in Pacific.
-        A <span class="font-medium text-teal-700">signed in</span> tag means an open entry with no sign-out yet —
-        correct it on the registrant's CE edit page. Totals sum every completed in/out pair.
+        Hover a day and hit <span class="font-medium text-teal-700">Edit</span> to correct its times, add a session,
+        or fill in a day nobody signed in on. A <span class="font-medium text-teal-700">signed in</span> tag means
+        that day has an entry with no sign-out yet. Totals sum every completed in/out pair.
       </p>
     <% else %>
       <div class="text-center py-12 text-gray-500">
