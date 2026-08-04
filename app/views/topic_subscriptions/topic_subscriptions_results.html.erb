@@ -1,12 +1,12 @@
 <%= turbo_frame_tag :topic_subscriptions_results do %>
-  <div class="bg-white border border-gray-200 rounded-xl shadow-sm blur-on-submit">
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit">
     <% if @topic_subscriptions.any? %>
       <% total = @topic_subscriptions.respond_to?(:total_entries) ? @topic_subscriptions.total_entries : @topic_subscriptions.size %>
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
         <p class="text-sm text-gray-500"><%= total %> subscription<%= "s" if total != 1 %></p>
       </div>
 
-      <div class="animate-fade">
+      <div class="overflow-x-auto animate-fade">
         <table class="w-full border-collapse border border-gray-200">
           <thead class="bg-gray-100">
             <tr>
@@ -64,47 +64,13 @@
 
                 <td class="px-4 py-2 text-sm text-gray-500 text-nowrap"><%= subscription.subscribed_at.strftime("%B %d, %Y") %></td>
 
-                <td class="px-4 py-2 text-right">
-                  <% dropdown_id = "subscription-actions-#{subscription.id}" %>
-                  <% item_class = "flex w-full items-center gap-2 px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 cursor-pointer" %>
-                  <div data-controller="dropdown" class="relative inline-block text-left">
-                    <button type="button"
-                            data-action="dropdown#toggle"
-                            data-dropdown-payload-param='[{"<%= dropdown_id %>":"hidden"}]'
-                            class="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
-                            aria-label="Actions">
-                      <i class="fa-solid fa-ellipsis-vertical"></i>
-                    </button>
-
-                    <div id="<%= dropdown_id %>"
-                         data-dropdown-target="content"
-                         class="hidden absolute right-0 z-10 mt-1 min-w-[160px] rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-                      <%= link_to edit_topic_subscription_path(subscription), class: item_class, data: { turbo_frame: "_top" } do %>
-                        <i class="fa-solid fa-pen text-[0.7rem] text-gray-400"></i>
-                        Edit
-                      <% end %>
-                      <% if subscription.active? %>
-                        <%= button_to unsubscribe_topic_subscription_path(subscription), method: :patch,
-                              class: item_class, form_class: "block", data: { turbo_frame: "_top" } do %>
-                          <i class="fa-solid fa-bell-slash text-[0.7rem] text-gray-400"></i>
-                          Unsubscribe
-                        <% end %>
-                      <% else %>
-                        <%= button_to resubscribe_topic_subscription_path(subscription), method: :patch,
-                              class: item_class, form_class: "block", data: { turbo_frame: "_top" } do %>
-                          <i class="fa-solid fa-bell text-[0.7rem] text-gray-400"></i>
-                          Resubscribe
-                        <% end %>
-                      <% end %>
-                      <%= button_to topic_subscription_path(subscription), method: :delete,
-                            class: "flex w-full items-center gap-2 px-4 py-2 text-sm text-left text-gray-700 hover:bg-red-50 hover:text-red-700 cursor-pointer",
-                            form_class: "block",
-                            data: { turbo_confirm: "Remove this subscription?", turbo_frame: "_top" } do %>
-                        <i class="fa-solid fa-trash-can text-[0.7rem]"></i>
-                        Remove
-                      <% end %>
-                    </div>
-                  </div>
+                <td class="px-4 py-2 align-middle">
+                  <%= link_to edit_topic_subscription_path(subscription, return_to: "index"),
+                              class: "group inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border shadow-sm font-medium leading-none transition-colors duration-200 #{DomainTheme.border_class_for(:topic_subscriptions)} #{DomainTheme.bg_class_for(:topic_subscriptions, intensity: 100)} #{DomainTheme.bg_class_for(:topic_subscriptions, intensity: 100, hover: true)}",
+                              data: { turbo_frame: "_top" } do %>
+                    <i class="fa-solid fa-pen shrink-0 text-sm <%= DomainTheme.text_class_for(:topic_subscriptions) %>"></i>
+                    <span class="text-xs font-semibold <%= DomainTheme.text_class_for(:topic_subscriptions) %>">Manage</span>
+                  <% end %>
                 </td>
               </tr>
             <% end %>

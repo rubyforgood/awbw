@@ -29,6 +29,8 @@ RSpec.describe "TopicSubscriptions", type: :request do
       # The registrations column surfaces only facilitator-training events.
       expect(response.body).to include("TAC263 Spring Training")
       expect(response.body).not_to include("Community Open House")
+      # Row action is a plain link (no JS) to the subscription's edit page.
+      expect(response.body).to include(edit_topic_subscription_path(TopicSubscription.last, return_to: "index"))
     end
 
     it "filters by person (from the person page's associated records)" do
@@ -103,11 +105,13 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).to include(edit_person_path(person))
     end
 
-    it "renders the edit form" do
+    it "renders the edit form with unsubscribe and remove actions" do
       subscription = create(:topic_subscription)
       get edit_topic_subscription_path(subscription)
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Edit subscription")
+      expect(response.body).to include("Unsubscribe")
+      expect(response.body).to include("Remove")
     end
   end
 
