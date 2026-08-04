@@ -968,13 +968,13 @@ RSpec.describe "Events", type: :request do
         create(:form_answer, form_submission: submission, form_field: field, submitted_answer: name)
       end
 
-      it "links a linked organization to the edit page rather than its profile" do
+      it "links a linked organization chip to its profile with a pencil to the edit page" do
         create(:event_registration_organization, event_registration: registration, organization: organization)
 
         get registrants_event_path(event)
 
+        expect(response.body).to include(organization_path(organization))
         expect(response.body).to include(link_organization_event_registration_path(registration, return_to: "registrants"))
-        expect(response.body).not_to include(organization_path(organization))
       end
 
       it "shows a 'Pending' chip when a registrant submitted an org name but has no linked org" do

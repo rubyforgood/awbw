@@ -286,14 +286,24 @@
                   <% editor_path = link_organization_event_registration_path(registration, return_to: "registrants") %>
                   <% pill_classes = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-3 py-0.5 transition hover:opacity-80 hover:shadow-sm" %>
                   <div class="flex flex-wrap gap-1.5">
+                    <%# Same grey style as the "None" chip below, but a rectangle
+                        (rounded-md) instead of a pill, and with the organization
+                        (emerald) hover color. %>
+                    <% org_btn_classes = "inline-flex items-center whitespace-nowrap rounded-md text-xs font-medium border px-3 py-0.5 transition bg-gray-50 text-gray-500 border-gray-200 hover:shadow-sm #{DomainTheme.bg_class_for(:organizations, intensity: 100, hover: true)} hover:text-emerald-800 hover:border-emerald-300" %>
                     <% linked_orgs.each do |org| %>
-                      <%= link_to editor_path,
-                                  title: org.name,
-                                  class: "#{pill_classes} bg-gray-50 text-gray-500 border-gray-200",
-                                  data: { turbo_frame: "_top" } do %>
-                        <span><%= truncate(org.name, length: 31) %></span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-                      <% end %>
+                      <span class="inline-flex items-center gap-1">
+                        <%= link_to truncate(org.name, length: 31),
+                                    organization_path(org),
+                                    title: org.name,
+                                    class: org_btn_classes,
+                                    data: { turbo_frame: "_top" } %>
+                        <%= link_to editor_path,
+                                    title: "Edit linked organizations",
+                                    class: "inline-flex h-6 w-6 items-center justify-center rounded-md text-gray-400 transition hover:bg-gray-100 hover:text-gray-600",
+                                    data: { turbo_frame: "_top" } do %>
+                          <i class="fa-solid fa-pencil text-[0.7rem]"></i>
+                        <% end %>
+                      </span>
                     <% end %>
                     <% if needs_linking %>
                       <%= link_to editor_path,
@@ -309,7 +319,7 @@
                                   class: "#{pill_classes} bg-gray-50 text-gray-500 border-gray-200",
                                   data: { turbo_frame: "_top" } do %>
                         <span>None</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
+                        <i class="fa-solid fa-pencil text-[0.6rem] opacity-70"></i>
                       <% end %>
                     <% end %>
                   </div>
