@@ -26,15 +26,9 @@
               { include_blank: "All topics" },
               class: field_class, onchange: "this.form.requestSubmit()" %>
       </div>
-      <div class="min-w-[160px]">
-        <%= f.label :status, "Status", class: label_class %>
-        <%= f.select :status,
-              options_for_select(
-                [ [ "All", "" ], [ "Active", "active" ], [ "Unsubscribed", "unsubscribed" ], [ "General (no event)", "general" ] ],
-                params[:status]),
-              {},
-              class: field_class, onchange: "this.form.requestSubmit()" %>
-      </div>
+      <%# Active/unsubscribed lives in the segmented toggle above the results;
+          carry the current selection so filtering here doesn't reset it. %>
+      <%= hidden_field_tag :status, params[:status], id: nil if params[:status].present? %>
       <div>
         <label class="<%= label_class %>">&nbsp;</label>
         <%= link_to "Clear filters", topic_subscriptions_path, class: "btn btn-utility", data: { action: "collection#clearAndSubmit" } %>

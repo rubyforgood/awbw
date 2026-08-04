@@ -2,7 +2,20 @@
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit">
     <% if @topic_subscriptions.any? %>
       <% total = @topic_subscriptions.respond_to?(:total_entries) ? @topic_subscriptions.total_entries : @topic_subscriptions.size %>
+      <% toggle_params = request.query_parameters.except("page") %>
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Status filter">
+          <%= link_to topic_subscriptions_path(toggle_params.merge(status: "active")),
+                data: { turbo_frame: "topic_subscriptions_results" },
+                class: "px-3 py-1 rounded-md transition-colors #{@status_filter == "active" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}" do %>
+            Active <span class="text-gray-400">(<%= @active_count %>)</span>
+          <% end %>
+          <%= link_to topic_subscriptions_path(toggle_params.merge(status: "unsubscribed")),
+                data: { turbo_frame: "topic_subscriptions_results" },
+                class: "px-3 py-1 rounded-md transition-colors #{@status_filter == "unsubscribed" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}" do %>
+            Unsubscribed <span class="text-gray-400">(<%= @unsubscribed_count %>)</span>
+          <% end %>
+        </nav>
         <p class="text-sm text-gray-500"><%= total %> subscription<%= "s" if total != 1 %></p>
       </div>
 
@@ -26,17 +39,28 @@
               <tr class="hover:bg-gray-50 transition-colors duration-150 align-middle <%= "text-gray-500" unless subscription.active? %>">
                 <td class="px-4 py-2 text-sm">
                   <% person = subscription.person %>
-                  <%# Carry the active filters so the edit page's eyebrow, Cancel, and post-save
-                      redirect all come back to this same filtered list. %>
+                  <%# Active is a light card with the page's stone tone; unsubscribed keeps a
+                      solid dark card so the ended state reads at a glance. Both use the
+                      subscription icon and carry the active filters so the edit page's
+                      eyebrow, Cancel, and post-save redirect return to this filtered list. %>
+                  <% if subscription.active? %>
+                    <% card_classes = "#{DomainTheme.border_class_for(:topic_subscriptions)} #{DomainTheme.bg_class_for(:topic_subscriptions, intensity: 100)} #{DomainTheme.bg_class_for(:topic_subscriptions, intensity: 100, hover: true)} #{DomainTheme.text_class_for(:topic_subscriptions, intensity: 600)}" %>
+                    <% icon_classes = DomainTheme.text_class_for(:topic_subscriptions, intensity: 600) %>
+                    <% email_classes = "text-gray-500" %>
+                  <% else %>
+                    <% card_classes = "border-gray-700 bg-gray-700 hover:bg-gray-800 text-white" %>
+                    <% icon_classes = "text-gray-300" %>
+                    <% email_classes = "text-gray-300" %>
+                  <% end %>
                   <%= link_to edit_topic_subscription_path(subscription, topic_subscription_index_filters.merge(return_to: "index")),
                               title: [ person.name, person.preferred_email ].compact_blank.join(" — "),
-                              class: "group flex items-center gap-2 w-56 max-w-full px-2 py-1 rounded-lg border border-gray-700 bg-gray-700 hover:bg-gray-800 text-white shadow-sm leading-tight transition-colors duration-200 overflow-hidden",
+                              class: "group flex items-center gap-2 w-56 max-w-full px-2 py-1 rounded-lg border shadow-sm leading-tight transition-colors duration-200 overflow-hidden #{card_classes}",
                               data: { turbo_frame: "_top", turbo_prefetch: false } do %>
-                    <i class="fa-solid fa-user-pen flex-shrink-0 text-gray-300"></i>
+                    <i class="fa-solid fa-envelope-open-text flex-shrink-0 <%= icon_classes %>"></i>
                     <div class="flex flex-col justify-center min-w-0">
-                      <span class="font-semibold text-xs text-white truncate"><%= truncate(person.name.to_s, length: 30) %></span>
+                      <span class="font-semibold text-xs truncate"><%= truncate(person.name.to_s, length: 30) %></span>
                       <% if person.preferred_email.present? %>
-                        <!--email_off--><span class="text-xs text-gray-300 font-normal truncate"><%= person.preferred_email %></span><!--email_on-->
+                        <!--email_off--><span class="text-xs font-normal truncate <%= email_classes %>"><%= person.preferred_email %></span><!--email_on-->
                       <% end %>
                     </div>
                   <% end %>

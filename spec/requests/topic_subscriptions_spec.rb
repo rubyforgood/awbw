@@ -79,6 +79,40 @@ RSpec.describe "TopicSubscriptions", type: :request do
       # One preload for the five rows' users, plus Devise's current_user lookup.
       expect(queries.size).to be <= 2
     end
+
+    it "shows only active subscriptions by default" do
+      active = create(:person, first_name: "Ada", last_name: "Active")
+      gone = create(:person, first_name: "Uma", last_name: "Unsub")
+      create(:topic_subscription, person: active, topic_subscription_type: trainings)
+      create(:topic_subscription, :unsubscribed, person: gone, topic_subscription_type: trainings)
+
+      get topic_subscriptions_path, headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+
+      expect(response.body).to include("Ada Active")
+      expect(response.body).not_to include("Uma Unsub")
+    end
+
+    it "shows unsubscribed subscriptions when the toggle selects them" do
+      active = create(:person, first_name: "Ada", last_name: "Active")
+      gone = create(:person, first_name: "Uma", last_name: "Unsub")
+      create(:topic_subscription, person: active, topic_subscription_type: trainings)
+      create(:topic_subscription, :unsubscribed, person: gone, topic_subscription_type: trainings)
+
+      get topic_subscriptions_path(status: "unsubscribed"), headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+
+      expect(response.body).to include("Uma Unsub")
+      expect(response.body).not_to include("Ada Active")
+    end
+
+    it "shows the active and unsubscribed counts on the toggle" do
+      create(:topic_subscription, person: create(:person), topic_subscription_type: trainings)
+      2.times { create(:topic_subscription, :unsubscribed, person: create(:person), topic_subscription_type: trainings) }
+
+      get topic_subscriptions_path, headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+
+      expect(response.body).to include("Active <span class=\"text-gray-400\">(1)")
+      expect(response.body).to include("Unsubscribed <span class=\"text-gray-400\">(2)")
+    end
   end
 
   describe "GET /topic_subscriptions/email_addresses" do

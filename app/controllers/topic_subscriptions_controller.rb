@@ -4,11 +4,18 @@ class TopicSubscriptionsController < ApplicationController
 
   def index
     authorize! TopicSubscription
-    @topic_subscriptions = TopicSubscription
-      .search_by_params(params)
+    # The active/unsubscribed segmented toggle owns the status axis (default
+    # active), so exclude status from the shared filter and apply it here.
+    base = TopicSubscription
+      .search_by_params(params.except(:status))
       .includes(:topic_subscription_type, :interested_event, person: [ :user, { event_registrations: :event } ])
-      .newest_first
-      .paginate(page: params[:page], per_page: 25)
+
+    @active_count = base.active.count
+    @unsubscribed_count = base.unsubscribed.count
+    @status_filter = params[:status].presence == "unsubscribed" ? "unsubscribed" : "active"
+
+    scope = @status_filter == "unsubscribed" ? base.unsubscribed : base.active
+    @topic_subscriptions = scope.newest_first.paginate(page: params[:page], per_page: 25)
     render :topic_subscriptions_results if turbo_frame_request?
   end
 
