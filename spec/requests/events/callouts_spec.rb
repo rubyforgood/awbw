@@ -586,6 +586,18 @@ RSpec.describe "Events::Callouts", type: :request do
 
       expect(response.body).to include("continuing education (CE) credit")
       expect(response.body).to include(ContinuingEducationRegistration::ACCREDITATION_URL)
+      expect(response.body).to include("provider ##{ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER}")
+    end
+
+    it "adds the CE clause when the credit was issued even if a balance remains" do
+      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 12_000)
+      license = create(:professional_license, person: registration.registrant, number: "LIC-2")
+      ce = registration.continuing_education_registrations.create!(professional_license: license, hours: 6)
+      ce.mark_certificate_sent!
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("continuing education (CE) credit")
     end
 
     it "omits the CE clause when no CE credit was earned" do

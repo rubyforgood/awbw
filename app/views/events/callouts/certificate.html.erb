@@ -4,10 +4,12 @@
   <%
     event = @event.decorate
     back_path = sample_preview? ? sample_ticket_event_path(@event) : registration_ticket_path(@event_registration.slug)
-    # The CE clause certifies issued credit, so it only shows once CE is requested and
-    # paid in full. The admin sample preview always shows it (with all options on) so
-    # the CE variant can be previewed even though the sample balance isn't settled.
-    show_ce_clause = @event_registration.ce_registered? && (@event_registration.ce_paid_in_full? || sample_preview?)
+    # The CE clause certifies issued credit, so it shows once CE is requested and the
+    # credit has been issued or the balance paid in full. The admin sample preview
+    # always shows it (with all options on) so the CE variant can be previewed even
+    # though the sample balance isn't settled.
+    show_ce_clause = @event_registration.ce_registered? &&
+      (@event_registration.ce_certificate_issued? || @event_registration.ce_paid_in_full? || sample_preview?)
     ce_hours = @event_registration.ce_hours_total
     ce_hours_label = ce_hours == ce_hours.to_i ? ce_hours.to_i : ce_hours
   %>
@@ -70,10 +72,11 @@
         <% if show_ce_clause %>
           <p class="mt-1 max-w-2xl text-sm leading-relaxed text-gray-600">
             A Window Between Worlds has issued <span class="font-semibold text-gray-800"><%= ce_hours_label %> hours</span>
-            of continuing education (CE) credit for this training, in accordance with our accreditation by
+            of continuing education (CE) credit for this training, in accordance with our approval by
             <%= link_to "CAMFT", ContinuingEducationRegistration::ACCREDITATION_URL,
                   target: "_blank", rel: "noopener",
-                  class: "font-medium text-purple-800 underline decoration-amber-400 underline-offset-2 hover:text-purple-950" %>.
+                  class: "font-medium text-purple-800 underline decoration-amber-400 underline-offset-2 hover:text-purple-950" %>
+            (provider #<%= ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER %>).
           </p>
         <% end %>
 

@@ -414,7 +414,7 @@ end
 flagship_ce = flagship&.registration_ticket_callouts&.find_by(builtin_key: "ce_hours")
 if flagship_ce && flagship_ce.description.blank?
   flagship_ce.update!(hidden: false, title: "Continuing education", description: <<~HTML.strip)
-    <p>AWBW is approved by the <a href="https://www.camft.org/" target="_blank" rel="noopener">California Association of Marriage and Family Therapists (CAMFT)</a> to sponsor continuing education for LMFTs, LCSWs, LPCCs, and LEPs in California.</p>
+    <p>AWBW is approved by the <a href="https://www.camft.org/" target="_blank" rel="noopener">California Association of Marriage and Family Therapists (CAMFT)</a>, provider ##{ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER}, to sponsor continuing education for LMFTs, LCSWs, LPCCs, and LEPs in California.</p>
     <p>While these CE hours are automatically accepted for professionals licensed in California, each state has its own licensing board requirements regarding CE provider approval. Participants outside of California are responsible for confirming whether these hours meet the requirements for their specific license and state.</p>
     <h3>Before the training</h3>
     <ul>
@@ -444,7 +444,7 @@ trauma = Event.find_by(title: "Facilitator Training: Trauma-Informed Art Practic
 trauma_ce = trauma&.registration_ticket_callouts&.find_by(builtin_key: "ce_hours")
 if trauma_ce && trauma_ce.description.blank?
   trauma_ce.update!(hidden: false, description: <<~HTML.strip)
-    <p>This training is approved by <a href="https://www.camft.org/" target="_blank" rel="noopener">CAMFT</a> for <strong>18 CE hours</strong> across its three days.</p>
+    <p>This training is approved by <a href="https://www.camft.org/" target="_blank" rel="noopener">CAMFT</a> (provider ##{ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER}) for <strong>18 CE hours</strong> across its three days.</p>
     <ul>
       <li>Provide your license type and number at registration; a $25 CE processing fee applies.</li>
       <li>Daily sign-in/sign-out is required — CE hours are awarded for full attendance only.</li>
