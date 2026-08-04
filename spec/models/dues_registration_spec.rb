@@ -32,17 +32,17 @@ RSpec.describe DuesRegistration, type: :model do
 
   describe "overlap" do
     let(:person) { create(:person) }
-    let(:membership) { create(:dues_membership, person: person) }
+    let(:subscription) { create(:dues_subscription, person: person) }
     let!(:existing) do
       create(:dues_registration,
-        dues_membership: membership,
+        dues_subscription: subscription,
         start_date: Date.new(2026, 10, 14),
         end_date: Date.new(2027, 10, 13))
     end
 
     it "rejects a term overlapping an existing one" do
       term = build(:dues_registration,
-        dues_membership: membership,
+        dues_subscription: subscription,
         start_date: Date.new(2027, 1, 1),
         end_date: Date.new(2027, 12, 31))
 
@@ -52,7 +52,7 @@ RSpec.describe DuesRegistration, type: :model do
 
     it "rejects a term that merely shares the last day" do
       term = build(:dues_registration,
-        dues_membership: membership,
+        dues_subscription: subscription,
         start_date: Date.new(2027, 10, 13),
         end_date: Date.new(2028, 10, 12))
 
@@ -61,19 +61,19 @@ RSpec.describe DuesRegistration, type: :model do
 
     it "accepts a term starting the day after the previous one ends" do
       term = build(:dues_registration,
-        dues_membership: membership,
+        dues_subscription: subscription,
         start_date: Date.new(2027, 10, 14),
         end_date: Date.new(2028, 10, 13))
 
       expect(term).to be_valid
     end
 
-    it "rejects an overlap that sits under a different membership for the same person" do
-      existing.dues_membership.update!(cancelled_at: Time.current)
-      rejoined = create(:dues_membership, person: person)
+    it "rejects an overlap that sits under a different subscription for the same person" do
+      existing.dues_subscription.update!(cancelled_at: Time.current)
+      rejoined = create(:dues_subscription, person: person)
 
       term = build(:dues_registration,
-        dues_membership: rejoined,
+        dues_subscription: rejoined,
         start_date: Date.new(2027, 1, 1),
         end_date: Date.new(2027, 12, 31))
 
@@ -83,7 +83,7 @@ RSpec.describe DuesRegistration, type: :model do
 
     it "allows another person to hold the same dates" do
       term = build(:dues_registration,
-        dues_membership: create(:dues_membership),
+        dues_subscription: create(:dues_subscription),
         start_date: existing.start_date,
         end_date: existing.end_date)
 
@@ -156,7 +156,7 @@ RSpec.describe DuesRegistration, type: :model do
     end
     let!(:present) do
       create(:dues_registration, :comped,
-        dues_membership: past.dues_membership,
+        dues_subscription: past.dues_subscription,
         start_date: Date.current - 1.year, end_date: Date.current - 1.day + 1.year)
     end
     let!(:future) do
@@ -272,9 +272,9 @@ RSpec.describe DuesRegistration, type: :model do
   end
 
   describe "#person" do
-    it "comes through the membership" do
-      membership = create(:dues_membership)
-      expect(create(:dues_registration, dues_membership: membership).person).to eq(membership.person)
+    it "comes through the subscription" do
+      subscription = create(:dues_subscription)
+      expect(create(:dues_registration, dues_subscription: subscription).person).to eq(subscription.person)
     end
   end
 end

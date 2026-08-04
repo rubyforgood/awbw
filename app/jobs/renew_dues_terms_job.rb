@@ -3,7 +3,7 @@ class RenewDuesTermsJob < ApplicationJob
 
   def perform
     expiring_terms.find_each do |term|
-      Dues::EnsureTerm.call(dues_membership: term.dues_membership, covering: term.end_date + 1.day)
+      Dues::EnsureTerm.call(dues_subscription: term.dues_subscription, covering: term.end_date + 1.day)
     end
   end
 
@@ -11,9 +11,9 @@ class RenewDuesTermsJob < ApplicationJob
 
   def expiring_terms
     DuesRegistration
-      .joins(:dues_membership)
-      .preload(:dues_membership)
-      .where(dues_memberships: { cancelled_at: nil })
+      .joins(:dues_subscription)
+      .preload(:dues_subscription)
+      .where(dues_subscriptions: { cancelled_at: nil })
       .expiring_between(Date.current, Date.current + Dues::RENEWAL_WINDOW_DAYS)
   end
 end

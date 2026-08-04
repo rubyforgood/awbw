@@ -1,6 +1,6 @@
-class CreateDuesMembershipsAndRegistrations < ActiveRecord::Migration[8.1]
+class CreateDuesSubscriptionsAndRegistrations < ActiveRecord::Migration[8.1]
   def change
-    create_table :dues_memberships do |t|
+    create_table :dues_subscriptions do |t|
       t.references :person, null: false, foreign_key: true
       t.integer :rate_cents
       t.datetime :cancelled_at
@@ -8,7 +8,7 @@ class CreateDuesMembershipsAndRegistrations < ActiveRecord::Migration[8.1]
     end
 
     create_table :dues_registrations do |t|
-      t.references :dues_membership, null: false, foreign_key: true
+      t.references :dues_subscription, null: false, foreign_key: true
       t.date :start_date, null: false
       t.date :end_date, null: false
       t.integer :cost_cents, null: false, default: 0

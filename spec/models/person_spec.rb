@@ -3,11 +3,11 @@ require "rails_helper"
 RSpec.describe Person, type: :model do
   describe "#dues_current?" do
     let(:person) { create(:person) }
-    let(:membership) { create(:dues_membership, person: person) }
+    let(:membership) { create(:dues_subscription, person: person) }
 
     def term(cost_cents:, start_date: Date.current, membership: nil)
       create(:dues_registration,
-        dues_membership: membership || create(:dues_membership, person: person),
+        dues_subscription: membership || create(:dues_subscription, person: person),
         cost_cents: cost_cents,
         start_date: start_date,
         end_date: start_date + 1.year - 1.day)

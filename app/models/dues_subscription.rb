@@ -1,4 +1,4 @@
-class DuesMembership < ApplicationRecord
+class DuesSubscription < ApplicationRecord
   has_paper_trail
 
   belongs_to :person
@@ -9,7 +9,7 @@ class DuesMembership < ApplicationRecord
   # member is locked into — the distinction is what makes grandfathering possible.
   validates :rate_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
-  validate :one_uncancelled_membership_per_person
+  validate :one_uncancelled_subscription_per_person
 
   scope :not_cancelled, -> { where(cancelled_at: nil) }
   scope :cancelled, -> { where.not(cancelled_at: nil) }
@@ -18,13 +18,13 @@ class DuesMembership < ApplicationRecord
 
   private
 
-  def one_uncancelled_membership_per_person
+  def one_uncancelled_subscription_per_person
     return if cancelled_at.present? || person_id.blank?
 
-    others = DuesMembership.not_cancelled.where(person_id: person_id)
+    others = DuesSubscription.not_cancelled.where(person_id: person_id)
     others = others.where.not(id: id) if persisted?
     return unless others.exists?
 
-    errors.add(:base, "This person already has a dues membership that hasn't been cancelled")
+    errors.add(:base, "This person already has a dues subscription that hasn't been cancelled")
   end
 end

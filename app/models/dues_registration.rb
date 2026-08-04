@@ -3,11 +3,11 @@ class DuesRegistration < ApplicationRecord
 
   has_paper_trail
 
-  belongs_to :dues_membership
+  belongs_to :dues_subscription
   has_many :allocations, as: :allocatable, dependent: :destroy
   has_many :payments, through: :allocations, source: :source, source_type: "Payment"
 
-  delegate :person, to: :dues_membership
+  delegate :person, to: :dues_subscription
 
   scope :active_on, ->(date = Date.current) { where(start_date: ..date, end_date: date..) }
   scope :expiring_between, ->(from, to) { where(end_date: from..to) }
@@ -73,13 +73,13 @@ class DuesRegistration < ApplicationRecord
     errors.add(:end_date, "can't be before the start date")
   end
 
-  # Spans every membership the person has, not just this one: a cancelled
-  # membership keeps its coverage to the term's end, so a rejoin can otherwise
-  # produce two memberships covering the same day.
+  # Spans every subscription the person has, not just this one: a cancelled
+  # subscription keeps its coverage to the term's end, so a rejoin can otherwise
+  # produce two subscriptions covering the same day.
   def no_overlapping_term_for_person
-    return if start_date.blank? || end_date.blank? || dues_membership&.person.blank?
+    return if start_date.blank? || end_date.blank? || dues_subscription&.person.blank?
 
-    overlapping = dues_membership.person.dues_registrations
+    overlapping = dues_subscription.person.dues_registrations
       .where(start_date: ..end_date, end_date: start_date..)
     overlapping = overlapping.where.not(id: id) if persisted?
     return unless overlapping.exists?

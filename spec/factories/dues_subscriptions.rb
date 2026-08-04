@@ -1,5 +1,5 @@
 FactoryBot.define do
-  factory :dues_membership do
+  factory :dues_subscription do
     association :person
 
     trait :cancelled do
