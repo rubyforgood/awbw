@@ -23,7 +23,7 @@ RSpec.describe "Person edit associated records", type: :request do
       expect(response.body).to include("Associated records")
       # Split into two clusters
       expect(response.body).to include("Administrative")
-      expect(response.body).to include("User-contributed content")
+      expect(response.body).to include("Contributed content")
       # Subscriptions card (general cluster), filtered to this person
       expect(response.body).to include("Subscriptions")
       expect(response.body).to include(topic_subscriptions_path(person_id: person.id))

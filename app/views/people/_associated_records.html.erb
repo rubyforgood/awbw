@@ -17,7 +17,7 @@
 </div>
 
 <div>
-  <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">User-contributed content</h3>
+  <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Contributed content</h3>
   <ul class="columns-1 sm:columns-2 md:columns-3 gap-x-6">
     <li class="break-inside-avoid mb-2"><%= index_button(person.user&.workshop_logs || WorkshopLog.none, path: workshop_logs_person_path(person)) %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.scholarships, params: { recipient_id: person.id } %></li>
