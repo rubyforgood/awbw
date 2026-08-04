@@ -54,11 +54,15 @@ export default class extends Controller {
 
     // Clone the pending-chip template (amber until saved). Keeping the markup in
     // the view means Tailwind reliably compiles its variants.
-    const label = this.templateTarget.content.firstElementChild.cloneNode(true)
-    label.querySelector("input").value = orgId
-    label.querySelector("[data-org-toggle-name]").textContent = orgName
+    const chip = this.templateTarget.content.firstElementChild.cloneNode(true)
+    chip.querySelector("input").value = orgId
+    const nameLink = chip.querySelector("[data-org-toggle-name]")
+    nameLink.textContent = orgName
+    // Point the name at the org profile (standard REST path) so it matches the
+    // server-rendered chips, which link to organization_path.
+    if (nameLink.tagName === "A") nameLink.href = `/organizations/${orgId}`
 
-    this.chipsTarget.appendChild(label)
+    this.chipsTarget.appendChild(chip)
 
     // Show the section if it was hidden, and drop the empty-state hint.
     this.chipsTarget.closest("[data-org-toggle-target='section']")?.classList.remove("hidden")
