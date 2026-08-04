@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_160043) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_002438) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -808,6 +808,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_160043) do
     t.string "email"
     t.date "end_date"
     t.string "filemaker_code"
+    t.boolean "high_profile", default: false, null: false
     t.string "internal_id"
     t.boolean "legacy", default: false
     t.integer "legacy_id"
