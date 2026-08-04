@@ -23,6 +23,7 @@ class TopicSubscription < ApplicationRecord
   # ("active"/"unsubscribed"/"general"), and a free-text match on the person.
   def self.search_by_params(params)
     scope = all
+    scope = scope.where(person_id: params[:person_id]) if params[:person_id].present?
     scope = scope.for_topic_type(params[:topic_subscription_type_id]) if params[:topic_subscription_type_id].present?
 
     case params[:status]

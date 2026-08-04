@@ -31,6 +31,17 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).not_to include("Community Open House")
     end
 
+    it "filters by person (from the person page's associated records)" do
+      mine = create(:person, first_name: "Mine", last_name: "Person")
+      create(:topic_subscription, person: mine, topic_subscription_type: trainings)
+      create(:topic_subscription, person: create(:person, first_name: "Other", last_name: "Person"), topic_subscription_type: trainings)
+
+      get topic_subscriptions_path(person_id: mine.id), headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+
+      expect(response.body).to include("Mine Person")
+      expect(response.body).not_to include("Other Person")
+    end
+
     it "filters by topic via the frame request" do
       news = create(:topic_subscription_type, :news)
       create(:topic_subscription, person: create(:person, first_name: "Tara", last_name: "Trainings"), topic_subscription_type: trainings)

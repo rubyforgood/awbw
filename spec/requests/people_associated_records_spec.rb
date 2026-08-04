@@ -15,11 +15,18 @@ RSpec.describe "Person edit associated records", type: :request do
       create(:form_submission, person: person)
       create(:payment, person: person)
       create(:notification, recipient_email: person.preferred_email)
+      create(:topic_subscription, person: person)
 
       get edit_person_path(person)
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Associated records")
+      # Split into two clusters
+      expect(response.body).to include("Administrative")
+      expect(response.body).to include("User-contributed content")
+      # Subscriptions card (general cluster), filtered to this person
+      expect(response.body).to include("Subscriptions")
+      expect(response.body).to include(topic_subscriptions_path(person_id: person.id))
       expect(response.body).to include(event_registrations_path(registrant_id: person.id))
       expect(response.body).to include(workshop_logs_person_path(person))
       expect(response.body).to include(stories_path(author_id: person.id))
