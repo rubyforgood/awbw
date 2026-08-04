@@ -37,6 +37,18 @@ RSpec.describe "Events attendance report", type: :request do
       expect(response.body).to include("Attendance sign-in")
       expect(response.body).not_to include("CE sign-in report")
     end
+
+    it "shows a per-registrant Edit link to the CE edit page in the CE report" do
+      log_ce_time!
+      ce = registration.continuing_education_registrations.first
+      get attendance_event_path(event, ce: "true")
+      expect(response.body).to include(edit_continuing_education_registration_path(ce))
+    end
+
+    it "returns to the registrants page when opened from there" do
+      get attendance_event_path(event, ce: "true", return_to: "registrants")
+      expect(response.body).to include("← Registrants")
+    end
   end
 
   it "forbids users who are neither admin nor the event owner" do

@@ -9,8 +9,11 @@
     <div class="mb-6">
       <%# Return to wherever the report was opened from (the participation report by
           default; the event dashboard when linked from there). %>
-      <% if params[:return_to] == "dashboard" %>
+      <% case params[:return_to] %>
+      <% when "dashboard" %>
         <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
+      <% when "registrants" %>
+        <%= link_to "← Registrants", registrants_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
       <% else %>
         <%= link_to "← Events participation", participation_events_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
       <% end %>
@@ -95,7 +98,16 @@
             <% @report.registrations.each do |reg| %>
               <div class="grid items-center gap-x-3 px-4 py-2.5 text-sm"
                    style="grid-template-columns: <%= @report.ce_only? ? "2fr minmax(6rem,1fr) minmax(6rem,auto) minmax(6rem,auto)" : "2fr minmax(6rem,auto)" %>">
-                <div class="font-medium text-gray-900"><%= reg.registrant.full_name %></div>
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="font-medium text-gray-900 truncate"><%= reg.registrant.full_name %></span>
+                  <% ce_reg = @report.ce_registration_for(reg) %>
+                  <% if @report.ce_only? && ce_reg %>
+                    <%= link_to edit_continuing_education_registration_path(ce_reg, return_to: "attendance"),
+                          class: "shrink-0 inline-flex items-center gap-1 text-xs text-teal-700 hover:underline" do %>
+                      <i class="fa-solid fa-pen-to-square text-[0.65rem]"></i> Edit
+                    <% end %>
+                  <% end %>
+                </div>
                 <% if @report.ce_only? %>
                   <div class="text-gray-600 tabular-nums truncate"><%= @report.license_numbers(reg).join(", ").presence || "—" %></div>
                   <div class="text-right text-gray-600 tabular-nums"><%= plain_number(@report.ce_hours(reg)) %></div>

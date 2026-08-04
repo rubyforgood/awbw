@@ -74,6 +74,12 @@ class EventAttendanceReport
     registration.continuing_education_registrations.sum { |ce| ce.hours.to_d }
   end
 
+  # The registration's CE record, for the report's per-row "Edit" link to the CE
+  # edit page. Nil for a non-CE registrant on the generic report.
+  def ce_registration_for(registration)
+    registration.continuing_education_registrations.first
+  end
+
   private
 
   def entries_on(registration, date)

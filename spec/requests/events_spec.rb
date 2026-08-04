@@ -1366,6 +1366,23 @@ RSpec.describe "Events", type: :request do
       expect(response.body).not_to include("Any status")
     end
 
+    context "CE sign-in report link in bulk actions" do
+      it "links to the CE attendance report for a CE-eligible event" do
+        event.update!(ce_hours_offered: 6)
+        get registrants_event_path(event)
+
+        expect(response.body).to include("CE sign-in report")
+        expect(response.body).to include(attendance_event_path(event))
+      end
+
+      it "omits the link when the event offers no CE" do
+        event.update!(ce_hours_offered: 0)
+        get registrants_event_path(event)
+
+        expect(response.body).not_to include("CE sign-in report")
+      end
+    end
+
     context "with unknown filter params" do
       it "does not crash on an invalid payment_status" do
         get registrants_event_path(event, payment_status: "bogus")

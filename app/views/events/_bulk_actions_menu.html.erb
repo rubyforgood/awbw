@@ -13,6 +13,9 @@
        data-dropdown-target="content"
        class="hidden absolute right-0 z-10 mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[180px]">
     <%= link_to "Onboarding tracker", onboarding_event_path(@event), class: item_class %>
+    <% if @event.ce_eligible? %>
+      <%= link_to "CE sign-in report", attendance_event_path(@event, ce: "true", return_to: "registrants"), class: item_class %>
+    <% end %>
     <% reminder_filters = reminder_recipient_filters %>
     <%= link_to reminder_filters.any? ? "Send bulk emails (filtered)" : "Send bulk emails",
         preview_reminder_event_path(@event, reminder_filters), class: item_class %>
