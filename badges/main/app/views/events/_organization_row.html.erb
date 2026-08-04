@@ -1,5 +1,5 @@
-<%# One row of the Organizations breakdown. Locals: row (a { name:, count:,
-    scholarship_count:, path: } hash) and total (registrant sum, for the %). The
+<%# One row of the Organizations breakdown. Locals: row (a { name:, high_profile:,
+    count:, scholarship_count:, path: } hash) and total (registrant sum, for the %). The
     leading grad-cap sits in a fixed-width slot so scholarship-org names line up
     with the (empty-slot, indented) non-scholarship ones. The hover jump-link
     arrow sits after the percentage, matching the other breakdown cards. %>
@@ -13,6 +13,9 @@
            title="<%= pluralize(row[:scholarship_count], "scholarship recipient") %>" aria-hidden="true"></i>
       <% end %>
     </span>
+    <% if row[:high_profile] %>
+      <i class="fa-solid fa-gem text-purple-600 mr-1 align-middle" title="High-profile organization" aria-hidden="true"></i>
+    <% end %>
     <%= link_to row[:name], row[:path], class: "group-hover:underline align-middle" %>
   </td>
   <td class="py-1 pl-3 text-right text-gray-500 tabular-nums whitespace-nowrap">

@@ -42,6 +42,19 @@ RSpec.describe OrganizationDecorator do
     end
   end
 
+  describe "#high_profile_icon" do
+    it "renders a starred marker with a tooltip when the org is high-profile" do
+      organization = create(:organization, high_profile: true)
+      icon = Capybara.string(organization.decorate.high_profile_icon)
+      expect(icon).to have_css("i.fa-gem[title='High-profile organization']")
+    end
+
+    it "is nil for an ordinary organization" do
+      organization = create(:organization, high_profile: false)
+      expect(organization.decorate.high_profile_icon).to be_nil
+    end
+  end
+
   describe "#facilitator_status_as_of" do
     let(:organization) { create(:organization) }
     let(:person) { create(:person) }

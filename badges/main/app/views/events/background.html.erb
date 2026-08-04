@@ -197,7 +197,7 @@
                   <%= mobile_label.("Organization") %>
                   <div class="min-w-0 flex-1 break-words">
                     <% if person_orgs.any? %>
-                      <% person_orgs.each_with_index do |org, i| %><%= ", " if i.positive? %><%= link_to org.name, organization_path(org), class: "hover:underline", onclick: "event.stopPropagation()" %><% end %>
+                      <% person_orgs.each_with_index do |org, i| %><%= ", " if i.positive? %><%= org.decorate.high_profile_icon %><%= link_to org.name, organization_path(org), class: "hover:underline", onclick: "event.stopPropagation()" %><% end %>
                     <% else %>
                       <span class="text-gray-300">—</span>
                     <% end %>
@@ -291,6 +291,7 @@
       filtered registrant list. %>
   <% org_rows = @dashboard.organizations.map { |o|
        { name: o.name,
+         high_profile: o.high_profile?,
          count: @dashboard.organization_counts.fetch(o.id, 0),
          scholarship_count: @dashboard.scholarship_recipient_count_by_org.fetch(o.id, 0),
          path: background_return_path(registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(o.id, []).to_a.join("-")), "all-organizations") }
