@@ -535,6 +535,10 @@ RSpec.describe EventRegistration, type: :model do
   end
 
   describe "#joinable?" do
+    # Freeze the clock so the join-window boundary cases (events placed exactly
+    # 1 minute inside the 30-minute buffer) can't flake on wall-clock drift.
+    before { freeze_time }
+
     let(:event) { create(:event, cost_cents: 1099, start_date: 1.hour.ago, end_date: 1.hour.from_now) }
     let(:user) { create(:user, :with_person) }
 
