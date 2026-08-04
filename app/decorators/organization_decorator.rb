@@ -56,6 +56,18 @@ class OrganizationDecorator < ApplicationDecorator
     Organization::AGENCY_TYPE_OTHER
   end
 
+  # Star marking a high-profile organization, shown next to the org name on list
+  # pages (event dashboard, background reporting). Nil for ordinary orgs so it
+  # renders nothing.
+  def high_profile_icon
+    return unless object.high_profile?
+
+    h.content_tag(:i, "",
+                  class: "fa-solid fa-star shrink-0 text-amber-400",
+                  title: "High-profile organization",
+                  "aria-hidden": true)
+  end
+
   def detail(length: nil)
     length ? description&.truncate(length) : description
   end

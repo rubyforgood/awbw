@@ -255,6 +255,12 @@ RSpec.describe "/organizations", type: :request do
         patch organization_url(organization), params: { organization: new_attributes }
         expect(response).to redirect_to(organization_url(organization))
       end
+
+      it "updates the high_profile flag" do
+        organization = Organization.create!(valid_attributes)
+        patch organization_url(organization), params: { organization: { high_profile: "1" } }
+        expect(organization.reload.high_profile).to be(true)
+      end
     end
 
     context "with invalid parameters" do
