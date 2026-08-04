@@ -101,6 +101,24 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       expect(response.body).to include("Signed in at")
     end
 
+    it "shows the event dates and daily times on their own header line" do
+      pay_ce!
+      get registration_ce_path(registration.slug)
+      # The event runs 9:00–16:00 UTC; the public page renders in Pacific (2–9 am).
+      expect(response.body).to include("Jul 23, 2026 · 2 - 9 am PDT")
+    end
+
+    it "shows the opening time and the event-start note before the window" do
+      pay_ce!
+      travel_to Time.zone.local(2026, 7, 23, 6, 30)
+      get registration_ce_path(registration.slug)
+      expect(response.body).to include("Sign-in opens")
+      # 8:30/9:00 UTC (open/start) shown in the page's Pacific zone.
+      expect(response.body).to include("1:30 AM PDT")
+      expect(response.body).to include("Event begins 30 min later, at 2:00 PDT.")
+      expect(response.body).not_to include("in about 2 hours")
+    end
+
     it "hides the attendance section until CE is paid in full" do
       license = create(:professional_license, person: registration.registrant, number: "LIC123")
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
