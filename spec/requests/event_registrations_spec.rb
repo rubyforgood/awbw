@@ -130,6 +130,31 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(data_rows).to include(expected_row)
       end
 
+      # The CE, scholarship, payment and phone cells each used to query per row;
+      # they're preloaded for the CSV only, so the export stays flat.
+      it "exports without querying per registration" do
+        add_registration = lambda do
+          registration = create(:event_registration, event: event, registrant: create(:person))
+          ce = create(:continuing_education_registration, event_registration: registration, cost_cents: 5_000)
+          create(:allocation, source: create(:payment, amount_cents: 2_000, amount_cents_remaining: 2_000),
+                              allocatable: ce, amount: 2_000)
+          ContactMethod.create!(contactable: registration.registrant, kind: "phone", value: "555-0100")
+        end
+        query_count = lambda do
+          count = 0
+          counter = ->(_name, _start, _finish, _id, payload) { count += 1 unless payload[:name].to_s.match?(/SCHEMA|TRANSACTION/) }
+          ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { get event_registrations_path(format: :csv) }
+          count
+        end
+
+        add_registration.call
+        get event_registrations_path(format: :csv) # warm up: the first request of a session also loads the signed-in user
+        baseline = query_count.call
+        3.times { add_registration.call }
+
+        expect(query_count.call).to eq(baseline)
+      end
+
       context "registration form icon" do
         let(:reg_form) { create(:form, :standalone, name: "Registration Form") }
         let(:person) { existing_registration.registrant }

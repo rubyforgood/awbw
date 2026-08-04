@@ -10,9 +10,11 @@ class EventRegistrationsController < ApplicationController
     base_scope = authorized_scope(EventRegistration.all)
     filtered = base_scope.search_by_params(params)
     @event_registrations_count = filtered.size
-    includes = [ { registrant: [ :user, { avatar_attachment: :blob } ] }, { event: :event_forms } ]
-    # The scholarship/payment/CE cells are CSV-only, so preload what they read
-    # (per-row queries otherwise) without eager-loading it for the HTML index.
+    registrant_includes = [ :user, { avatar_attachment: :blob } ]
+    # The phone/scholarship/payment/CE cells are CSV-only, so preload what they
+    # read (per-row queries otherwise) without eager-loading it for the HTML index.
+    registrant_includes << :contact_methods if request.format.csv?
+    includes = [ { registrant: registrant_includes }, { event: :event_forms } ]
     includes += [ :allocations, :scholarships, { continuing_education_registrations: [ :professional_license, :allocations ] } ] if request.format.csv?
     @event_registrations = filtered.includes(includes).paginate(page: params[:page], per_page: per_page)
     @events = Event.order(start_date: :desc)

@@ -12,6 +12,24 @@ RSpec.describe "Events", type: :request do
     target_event
   end
 
+  def query_count
+    count = 0
+    counter = ->(_name, _start, _finish, _id, payload) { count += 1 unless payload[:name].to_s.match?(/SCHEMA|TRANSACTION/) }
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { yield }
+    count
+  end
+
+  # A registrant carrying every column the CSV exports read per row: a phone, a
+  # partly paid CE registration, and the allocations behind the money cells.
+  def add_ce_registrant(target_event)
+    registration = create(:event_registration, event: target_event, registrant: create(:person), status: "registered")
+    ce = create(:continuing_education_registration, event_registration: registration, cost_cents: 5_000)
+    create(:allocation, source: create(:payment, amount_cents: 2_000, amount_cents_remaining: 2_000),
+                        allocatable: ce, amount: 2_000)
+    ContactMethod.create!(contactable: registration.registrant, kind: "phone", value: "555-0100")
+    registration
+  end
+
   let(:valid_params) do
     {
       event: {
@@ -1439,6 +1457,21 @@ RSpec.describe "Events", type: :request do
       get registrants_event_path(event, format: :csv)
       expect(response.body).to include("CE status")
       expect(response.body).to include("Needs license")
+    end
+
+    # Every cell the exports read is preloaded, so a bigger roster costs no more
+    # queries than a small one. Guards the CE, scholarship, payment and phone
+    # columns, each of which used to query per row.
+    %i[registrants onboarding].each do |action|
+      it "exports the #{action} CSV without querying per registrant" do
+        path = public_send(:"#{action}_event_path", event, format: :csv)
+        add_ce_registrant(event)
+        get path # warm up: the first request of a session also loads the signed-in user
+        baseline = query_count { get path }
+        3.times { add_ce_registrant(event) }
+
+        expect(query_count { get path }).to eq(baseline)
+      end
     end
   end
 
