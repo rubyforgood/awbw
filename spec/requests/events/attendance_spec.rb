@@ -77,6 +77,18 @@ RSpec.describe "Events attendance report", type: :request do
       expect(response.body).not_to include("#{edit_event_registration_path(registration)}?return_to=attendance")
     end
 
+    # The name link opens the registrant-facing callout; its eyebrow has to lead back
+    # to the report, not to the registration edit default two hops away.
+    it "sends the name link to a CE callout that points back at the report" do
+      log_ce_time!
+      get attendance_event_path(event, ce: "true")
+      expect(response.body).to include("#{registration_ce_path(registration.slug)}?return_to=attendance")
+
+      get registration_ce_path(registration.slug, return_to: "attendance")
+      expect(response.body).to include("Back to CE sign-in report")
+      expect(response.body).to include(attendance_event_path(event, ce: "true", anchor: "totals"))
+    end
+
     it "returns to the registrants page when opened from there" do
       get attendance_event_path(event, ce: "true", return_to: "registrants")
       expect(response.body).to include("← Registrants")
@@ -90,6 +102,27 @@ RSpec.describe "Events attendance report", type: :request do
       get attendance_event_path(event, ce: "true", group: "day")
       expect(response.body).to include("#{event.decorate.date_range} · 9 am - 4 pm UTC")
       expect(response.body).to include("Day 1 · #{Date.new(2026, 7, 23).strftime("%A, %b %-d")} · 9 am - 4 pm UTC")
+    end
+
+    # The chip flags an entry with no sign-out, so on a per-day table it has to be
+    # about that day — otherwise one forgotten sign-out lights up every later day too,
+    # which is exactly what staff are scanning the report to find.
+    it "flags 'signed in' only on the day whose entry is still open" do
+      event.update!(end_date: Time.zone.local(2026, 7, 24, 16, 0))
+      license = create(:professional_license, person: registration.registrant, number: "AAA111")
+      create(:continuing_education_registration, event_registration: registration, professional_license: license)
+      create(:event_attendance_time_entry, :open, event_registration: registration,
+        signed_in_at: Time.zone.local(2026, 7, 23, 9, 0))
+      create(:event_attendance_time_entry, event_registration: registration,
+        signed_in_at: Time.zone.local(2026, 7, 24, 9, 0), signed_out_at: Time.zone.local(2026, 7, 24, 12, 0))
+
+      get attendance_event_path(event, ce: "true", group: "day")
+
+      sections = Capybara.string(response.body).all("section")
+      day_one = sections.find { |section| section.text.squish.start_with?("Day 1 ·") }
+      day_two = sections.find { |section| section.text.squish.start_with?("Day 2 ·") }
+      expect(day_one).to have_css("span.bg-teal-50", text: "signed in")
+      expect(day_two).to have_no_css("span.bg-teal-50")
     end
 
     it "warns when the event runs longer than the report's 5-day cap" do

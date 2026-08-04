@@ -162,18 +162,19 @@ module Events
         alert: e.record.errors.full_messages.to_sentence
     end
 
-    # Close the registrant's open attendance entry. Not windowed — a forgotten
-    # sign-out can always be recorded (staff can correct times later on the report).
+    # Close an open attendance entry. Not windowed — a forgotten sign-out can always
+    # be recorded. Two cases: today's entry (stamped now) and the catch-up button for
+    # a day the registrant left open (stamped that day's scheduled end) — see
+    # #sign_out_target.
     def sign_out_ce
       return redirect_to(registration_ce_path(@event_registration.slug)) if sample_preview?
-      entry = @event_registration.open_attendance_entry
+      entry, signed_out_at = sign_out_target
       unless entry
         return redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"), alert: "You're not signed in."
       end
 
-      entry.update!(signed_out_at: Time.current)
-      redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"),
-        notice: "Signed out at #{local_time(entry.signed_out_at)}."
+      entry.update!(signed_out_at: signed_out_at)
+      redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"), notice: sign_out_notice(entry)
     rescue ActiveRecord::RecordInvalid => e
       redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"),
         alert: e.record.errors.full_messages.to_sentence
@@ -239,7 +240,29 @@ module Events
 
     # A datetime rendered in the app zone as "9:02 AM", for sign-in/out flash notices.
     def local_time(time)
-      time.in_time_zone(Time.zone).strftime("%-l:%M %p")
+      helpers.attendance_clock_time(time)
+    end
+
+    # Which open entry this sign-out closes, and the time to stamp it with. The
+    # catch-up button names an earlier day's entry explicitly (?entry_id) so it can't
+    # be confused with today's — it lands on that day's scheduled end rather than now,
+    # which would bank every hour since. Anything else closes today's entry at now.
+    def sign_out_target
+      return [ @event_registration.open_attendance_entry, Time.current ] if params[:entry_id].blank?
+
+      forgotten = @event_registration.forgotten_sign_out_entry
+      return [] unless forgotten && forgotten.id.to_s == params[:entry_id].to_s
+
+      [ forgotten, @event_registration.forgotten_sign_out_at(forgotten) ]
+    end
+
+    # Name the day when the sign-out isn't for today, so a catch-up close reads as
+    # what it is rather than looking like a stray time.
+    def sign_out_notice(entry)
+      time = local_time(entry.signed_out_at)
+      return "Signed out at #{time}." if entry.attendance_date == Time.zone.today
+
+      "Signed out for #{entry.attendance_date.strftime("%a, %b %-d")} at #{time}."
     end
 
     # Whether the event's built-in callout for this key is materialized and

@@ -45,11 +45,14 @@ class EventAttendanceTimeEntry < ApplicationRecord
 
   private
 
+  # On :base and phrased as a whole sentence like the other two guards: these reach
+  # the admin through the parent registration's nested attributes, which pastes the
+  # humanized association name in front of anything keyed to an attribute.
   def signed_out_after_signed_in
     return if signed_out_at.blank? || signed_in_at.blank?
     return if signed_out_at > signed_in_at
 
-    errors.add(:signed_out_at, "must be after the sign-in time")
+    errors.add(:base, "Sign-out must be after the sign-in time.")
   end
 
   # The day's total logged time (this entry plus its same-day siblings) can't exceed

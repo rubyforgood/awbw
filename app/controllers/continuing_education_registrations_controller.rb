@@ -40,7 +40,7 @@ class ContinuingEducationRegistrationsController < ApplicationController
     end
     redirect_to helpers.ce_registration_return_path(@ce_registration.event_registration), notice: "CE registration created.", status: :see_other
   rescue ActiveRecord::RecordInvalid => e
-    flash.now[:alert] = e.record.errors.full_messages.to_sentence
+    flash.now[:alert] = error_sentence(e.record)
     render :new, status: :unprocessable_content
   end
 
@@ -58,7 +58,7 @@ class ContinuingEducationRegistrationsController < ApplicationController
     end
     redirect_to helpers.ce_registration_return_path(@ce_registration.event_registration), notice: "CE registration updated.", status: :see_other
   rescue ActiveRecord::RecordInvalid => e
-    flash.now[:alert] = e.record.errors.full_messages.to_sentence
+    flash.now[:alert] = error_sentence(e.record)
     render :edit, status: :unprocessable_content
   end
 
@@ -84,6 +84,17 @@ class ContinuingEducationRegistrationsController < ApplicationController
   end
 
   private
+
+  # A failed save's errors as one sentence. Attendance-entry failures arrive on the
+  # parent registration keyed "event_attendance_time_entries.base", whose full message
+  # pastes the humanized association name onto a message already written as a whole
+  # sentence — show those verbatim, and keep full messages for the CE record's own
+  # attributes ("Hours can't be blank").
+  def error_sentence(record)
+    record.errors.map { |error|
+      error.attribute.to_s.include?(".") ? error.message : error.full_message
+    }.to_sentence
+  end
 
   def set_ce_registration
     @ce_registration = ContinuingEducationRegistration.find(params[:id])

@@ -8,4 +8,11 @@ module EventAttendanceHelper
 
     "#{hours}h #{mins}m"
   end
+
+  # A datetime as its clock time in the app zone — "9:02 AM". Shared by the entry
+  # decorator, the sign-in/out flash notices, and the callout's catch-up prompt so
+  # every attendance time on screen reads the same.
+  def attendance_clock_time(time)
+    time.in_time_zone(Time.zone).strftime("%-l:%M %p")
+  end
 end

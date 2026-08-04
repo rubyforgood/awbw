@@ -354,7 +354,9 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
         }.not_to change { registration.event_attendance_time_entries.count }
 
         expect(response).to have_http_status(:unprocessable_content)
-        expect(flash[:alert]).to match(/overlaps/)
+        # Verbatim: entry messages are whole sentences, so the nested-attributes
+        # association prefix ("Event attendance time entries …") must not be pasted on.
+        expect(flash[:alert]).to eq("This sign-in overlaps another entry on Jul 23.")
       end
 
       it "rejects a sign-out before the sign-in with a helpful error" do
@@ -363,8 +365,16 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
                 time_entries: { "0" => { signed_in_at: "2026-07-23T10:00", signed_out_at: "2026-07-23T09:00" } } } }
 
         expect(response).to have_http_status(:unprocessable_content)
-        expect(flash[:alert]).to match(/after the sign-in/)
+        expect(flash[:alert]).to eq("Sign-out must be after the sign-in time.")
         expect(registration.event_attendance_time_entries).to be_empty
+      end
+
+      it "still spells out the CE record's own attribute errors in full" do
+        patch continuing_education_registration_path(ce_registration),
+              params: { continuing_education_registration: { hours: "", cost_dollars: "120" } }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(flash[:alert]).to match(/\AHours /)
       end
 
       # The rejected save re-renders the form, so the admin's typed times have to

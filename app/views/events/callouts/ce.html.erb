@@ -3,16 +3,23 @@
 <% ce_registration = @event_registration.continuing_education_registrations.first %>
 
 <%#
-  Reached from the admin CE registration edit page (return_to=ce_registration):
-  point the eyebrow back there instead of the registrant's ticket. Gated on edit
-  access so a registrant who lands on this URL still gets the default ticket back.
+  Reached from an admin page (return_to): point the eyebrow back at that page
+  instead of the registrant's ticket — the CE registration edit page, or the event's
+  CE sign-in report, whose registrant links land here. Each gated on access to the
+  destination so a registrant who lands on one of these URLs still gets the default
+  ticket back.
 %>
 
-<% callout_eyebrow = if params[:return_to] == "ce_registration" && ce_registration && allowed_to?(:edit?, ce_registration)
-     { back_path: edit_continuing_education_registration_path(ce_registration), back_label: "Back to CE registration" }
-   else
-     {}
-   end %>
+<% callout_eyebrow = case params[:return_to]
+   when "ce_registration"
+     if ce_registration && allowed_to?(:edit?, ce_registration)
+       { back_path: edit_continuing_education_registration_path(ce_registration), back_label: "Back to CE registration" }
+     end
+   when "attendance"
+     if allowed_to?(:attendance?, @event)
+       { back_path: attendance_event_path(@event, ce: "true", anchor: "totals"), back_label: "Back to CE sign-in report" }
+     end
+   end || {} %>
 
 <%= render layout: "events/callouts/callout_page", locals: { title: @event.ce_hours_label, **callout_eyebrow } do %>
   <%# Requesting CE flips this frame in place: the POST redirects back here and
@@ -33,11 +40,13 @@
     <% simulate_ce_paid = params[:admin] == "true" && ce_registration && allowed_to?(:edit?, ce_registration) %>
     <%#
       Admin-only jump to the management surface for this CE registration. Hidden
-      from registrants; opens in a new tab so the registrant view is kept.
+      from registrants; opens in a new tab so the registrant view is kept. Carries
+      this page's origin through so the new tab's eyebrow returns where the admin
+      started rather than to the registration edit default.
     %>
     <% if ce_registration && allowed_to?(:edit?, ce_registration) && !sample_preview? %>
       <div class="mb-4 flex justify-end">
-        <%= render "events/callouts/admin_edit_link", path: edit_continuing_education_registration_path(ce_registration), label: "Edit CE registration" %>
+        <%= render "events/callouts/admin_edit_link", path: edit_continuing_education_registration_path(ce_registration, return_to: params[:return_to].presence), label: "Edit CE registration" %>
       </div>
     <% end %>
     <%= turbo_frame_tag "license_section" do %>
@@ -239,22 +248,25 @@
 
     <%#
       Training sign-in/out — the in-portal replacement for the paper CE hour
-      sign-in sheet, shown only once CE is paid in full. One button at a time:
-      Sign in when signed out (only inside the day's window), Sign out while signed
-      in today (always, so a forgotten sign-out can still be closed that day). Many
+      sign-in sheet, shown only once CE is paid in full. One button at a time for
+      today: Sign in when signed out (only inside the day's window), Sign out while
+      signed in (always, so a forgotten sign-out can still be closed that day). Many
       entries per day is expected (breaks, lunch). An entry left open overnight
-      doesn't carry over — the next day starts at Sign in, and the stale row is
-      staff's to close on the admin CE edit page, alongside any other correction.
+      doesn't carry into today's state — it gets its own catch-up button below,
+      stamped with that day's scheduled end rather than now.
     %>
     <% attendance_offered = ce_registration&.paid_in_full? %>
     <% open_entry = attendance_offered ? @event_registration.open_attendance_entry : nil %>
     <% signed_in = open_entry.present? %>
+    <% forgotten_entry = attendance_offered ? @event_registration.forgotten_sign_out_entry : nil %>
+    <% forgotten_at = forgotten_entry && @event_registration.forgotten_sign_out_at(forgotten_entry) %>
     <% todays_entries = attendance_offered ? @event_registration.attendance_entries_on(Time.zone.today) : [] %>
     <% todays_minutes = todays_entries.sum { |entry| entry.duration_minutes.to_i } %>
     <% opens_at = @event.next_attendance_sign_in_opens_at %>
     <%# Once the last day's window has passed there's no sign-in left to offer or
-        announce, so the section drops rather than nagging about a training that's over. %>
-    <% if attendance_offered && (signed_in || @event.attendance_sign_in_open? || opens_at || todays_entries.any?) %>
+        announce, so the section drops rather than nagging about a training that's
+        over — unless a day is still hanging open and waiting to be closed. %>
+    <% if attendance_offered && (signed_in || forgotten_entry || @event.attendance_sign_in_open? || opens_at || todays_entries.any?) %>
       <section id="attendance" class="mt-7 scroll-mt-6 border-t border-gray-100 pt-6">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Training sign-in</h2>
@@ -264,6 +276,28 @@
             <%= render "events/callouts/admin_edit_link", path: attendance_event_path(@event, ce: "true"), label: "Attendance report" %>
           <% end %>
         </div>
+
+        <%# A day left open: its own prompt above today's controls, naming the day and
+            the time it will be recorded as, so closing it can't be mistaken for
+            signing out of today. %>
+        <% if forgotten_entry %>
+          <div class="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-amber-50 px-3 py-2.5 ring-1 ring-amber-200">
+            <p class="flex items-start gap-2 text-sm text-gray-700">
+              <i class="fa-solid fa-triangle-exclamation mt-0.5 shrink-0 text-amber-500"></i>
+              <span>You never signed out on <span class="font-medium text-gray-900"><%= forgotten_entry.attendance_date.strftime("%A, %B %-d") %></span>, after signing in at <%= forgotten_entry.decorate.signed_in_label %>.
+                <span class="block mt-0.5 text-xs text-gray-500">Signing out records <%= attendance_clock_time(forgotten_at) %>, when that day's training ended.</span>
+              </span>
+            </p>
+            <% if sample_preview? %>
+              <button type="button" disabled
+                      class="shrink-0 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white opacity-60 cursor-not-allowed">Sign out for <%= forgotten_entry.attendance_date.strftime("%b %-d") %></button>
+            <% else %>
+              <%= button_to "Sign out for #{forgotten_entry.attendance_date.strftime("%b %-d")}",
+                    registration_ce_sign_out_path(@event_registration.slug, entry_id: forgotten_entry.id), data: { turbo: false },
+                    class: "shrink-0 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-300 cursor-pointer" %>
+            <% end %>
+          </div>
+        <% end %>
 
         <div class="mt-3 flex flex-wrap items-center gap-3">
           <% if signed_in %>
@@ -303,7 +337,7 @@
               <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-blue-400"></i>
               <span>Sign-in opens
                 <time datetime="<%= opens_at.iso8601 %>" class="font-medium text-gray-900"><%= opens_at.strftime("%A, %B %-d at %-I:%M %p %Z") %></time>.
-                <span class="block mt-0.5 text-xs text-gray-500">Event begins 30 min later, at <%= (opens_at + Event::ATTENDANCE_SIGN_IN_LEAD).strftime("%-l:%M %Z") %>.</span>
+                <span class="block mt-0.5 text-xs text-gray-500">Event begins 30 min later, at <%= (opens_at + Event::ATTENDANCE_SIGN_IN_LEAD).strftime("%-l:%M %p %Z") %>.</span>
               </span>
             </p>
           <% end %>

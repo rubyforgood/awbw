@@ -81,10 +81,10 @@
                   <% end %>
                   <div class="relative z-10 min-w-0 justify-self-start">
                     <% if @report.ce_only? && ce_reg %>
-                      <%= link_to reg.registrant.full_name, registration_ce_path(reg.slug, return_to: "ce_registration"),
+                      <%= link_to reg.registrant.full_name, registration_ce_path(reg.slug, return_to: "attendance"),
                             class: "font-medium text-gray-900 hover:text-teal-700 hover:underline" %>
                     <% else %>
-                      <%= link_to reg.registrant.full_name, edit_event_registration_path(reg),
+                      <%= link_to reg.registrant.full_name, edit_event_registration_path(reg, return_to: "attendance"),
                             class: "font-medium text-gray-900 hover:text-teal-700 hover:underline" %>
                     <% end %>
                   </div>
@@ -213,13 +213,15 @@
                         "aria-label": "Edit #{@report.ce_only? && ce_reg ? "CE registration" : "registration"} for #{reg.registrant.full_name}" %>
                   <div class="relative z-10 min-w-0 justify-self-start">
                     <% if @report.ce_only? && ce_reg %>
-                      <%= link_to reg.registrant.full_name, registration_ce_path(reg.slug, return_to: "ce_registration"),
+                      <%= link_to reg.registrant.full_name, registration_ce_path(reg.slug, return_to: "attendance"),
                             class: "font-medium text-gray-900 hover:text-teal-700 hover:underline" %>
                     <% else %>
-                      <%= link_to reg.registrant.full_name, edit_event_registration_path(reg),
+                      <%= link_to reg.registrant.full_name, edit_event_registration_path(reg, return_to: "attendance"),
                             class: "font-medium text-gray-900 hover:text-teal-700 hover:underline" %>
                     <% end %>
-                    <% if @report.open?(reg) %>
+                    <%# Day-scoped: this row is one day, so the flag has to be about
+                        this day's entries, not any open entry on any day. %>
+                    <% if entries.any?(&:open?) %>
                       <span class="ml-1.5 inline-flex items-center gap-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200 px-1.5 py-0.5 text-[0.65rem] font-medium">signed in</span>
                     <% end %>
                   </div>

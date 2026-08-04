@@ -1431,5 +1431,47 @@ RSpec.describe EventRegistration, type: :model do
         expect(registration.attendance_entries_on(Date.new(2026, 7, 23))).to eq([ first, second ])
       end
     end
+
+    describe "#forgotten_sign_out_entry / #forgotten_sign_out_at" do
+      # A two-day training running 9:00–16:00 each day.
+      let(:event) do
+        create(:event, start_date: Time.zone.local(2026, 7, 23, 9, 0), end_date: Time.zone.local(2026, 7, 24, 16, 0))
+      end
+      let(:registration) { create(:event_registration, event: event) }
+
+      around { |example| travel_to(Time.zone.local(2026, 7, 24, 10, 0)) { example.run } }
+
+      it "stamps an earlier day's forgotten sign-out with that day's scheduled end" do
+        stale = create(:event_attendance_time_entry, :open, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 23, 9, 5))
+
+        expect(registration.forgotten_sign_out_entry).to eq(stale)
+        expect(registration.forgotten_sign_out_at(stale)).to eq(Time.zone.local(2026, 7, 23, 16, 0))
+      end
+
+      it "ignores today's open entry — that one is closed by the ordinary Sign out" do
+        create(:event_attendance_time_entry, :open, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 24, 9, 5))
+
+        expect(registration.forgotten_sign_out_entry).to be_nil
+      end
+
+      it "ignores earlier days that were closed properly" do
+        create(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 23, 9, 0), signed_out_at: Time.zone.local(2026, 7, 23, 16, 0))
+
+        expect(registration.forgotten_sign_out_entry).to be_nil
+      end
+
+      # Nothing sensible to stamp, so it isn't offered as a one-click close — staff
+      # correct it on the attendance report instead.
+      it "declines a sign-in recorded after that day had already ended" do
+        late = create(:event_attendance_time_entry, :open, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 23, 18, 0))
+
+        expect(registration.forgotten_sign_out_at(late)).to be_nil
+        expect(registration.forgotten_sign_out_entry).to be_nil
+      end
+    end
   end
 end

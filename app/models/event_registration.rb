@@ -675,11 +675,32 @@ class EventRegistration < ApplicationRecord
   # one day, or nil when they're not signed in that day. Drives which sign-in/out
   # button the CE callout shows. Deliberately day-scoped: an entry left open when
   # someone forgets to sign out must not carry into the next training day, where it
-  # would block the new day's sign-in and, once closed, bank a 24-hour session. The
-  # stale row stays flagged on the attendance report for staff to correct.
+  # would block the new day's sign-in and, once closed, bank every hour since. The
+  # earlier day is closed separately, through #forgotten_sign_out_entry.
   # Uses the most recent open entry if more than one somehow exists.
   def open_attendance_entry(date = Time.zone.today)
     attendance_entries_on(date).select(&:open?).last
+  end
+
+  # A sign-out the registrant forgot on an earlier day: the most recent entry still
+  # open from before `date`. Offered on today's callout as its own catch-up button,
+  # separate from today's sign-in/out, so the two days can't be confused. Only when
+  # #forgotten_sign_out_at has something sensible to stamp — otherwise it's a staff
+  # correction on the attendance report, not a one-click fix.
+  def forgotten_sign_out_entry(date = Time.zone.today)
+    entry = event_attendance_time_entries.chronological
+      .select { |candidate| candidate.open? && candidate.attendance_date && candidate.attendance_date < date }
+      .last
+    entry if entry && forgotten_sign_out_at(entry)
+  end
+
+  # The time a forgotten sign-out is stamped with: the scheduled end of the training
+  # day it belongs to — what staff wrote on the paper sheet — never "now", which would
+  # bank every hour since. Nil when that end isn't after the sign-in (someone signed in
+  # after the day was over), leaving it for staff.
+  def forgotten_sign_out_at(entry)
+    close_at = event.daily_end_at(entry.attendance_date)
+    close_at if close_at > entry.signed_in_at
   end
 
   # Whether the registrant is currently signed in (today).
