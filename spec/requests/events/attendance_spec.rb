@@ -46,6 +46,20 @@ RSpec.describe "Events attendance report", type: :request do
       expect(response.body).to include(registration_ce_path(registration.slug))         # name link
     end
 
+    it "groups sessions by person by default" do
+      log_ce_time!
+      get attendance_event_path(event, ce: "true")
+      expect(response.body).to include("Sessions by person")
+      expect(response.body).not_to include("Sessions by day")
+    end
+
+    it "groups sessions by day when toggled" do
+      log_ce_time!
+      get attendance_event_path(event, ce: "true", group: "day")
+      expect(response.body).to include("Sessions by day")
+      expect(response.body).to include("Day 1 ·")
+    end
+
     it "returns to the registrants page when opened from there" do
       get attendance_event_path(event, ce: "true", return_to: "registrants")
       expect(response.body).to include("← Registrants")
@@ -56,7 +70,7 @@ RSpec.describe "Events attendance report", type: :request do
       # (requests otherwise display in the admin's zone, Pacific by default).
       sign_in create(:user, :admin, time_zone: "UTC")
       log_ce_time!
-      get attendance_event_path(event, ce: "true")
+      get attendance_event_path(event, ce: "true", group: "day")
       expect(response.body).to include("#{event.decorate.date_range} · 9 am - 4 pm UTC")
       expect(response.body).to include("Day 1 · #{Date.new(2026, 7, 23).strftime("%A, %b %-d")} · 9 am - 4 pm UTC")
     end

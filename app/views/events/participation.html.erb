@@ -169,6 +169,9 @@
                       <% if row.event.ce_eligible? %>
                         <%= link_to "CE sign-in report →", attendance_event_path(row.event, ce: "true", return_to: "participation"),
                               class: "text-xs font-medium text-teal-700 hover:underline" %>
+                      <% else %>
+                        <%= link_to "Sign-in report →", attendance_event_path(row.event, return_to: "participation"),
+                              class: "text-xs font-medium text-teal-700 hover:underline" %>
                       <% end %>
                     </div>
                   </div>

@@ -368,6 +368,16 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include(%(href="#{event_registrations_path}?))
       end
 
+      it "links each event to its sign-in report, CE-scoped only when CE is enabled" do
+        training_2026.update!(ce_hours_offered: 6)
+        sign_in admin
+        get participation_events_path
+        expect(response.body).to include("CE sign-in report")
+        expect(response.body).to include(attendance_event_path(training_2026))
+        expect(response.body).to include("Sign-in report →")
+        expect(response.body).to include(attendance_event_path(webinar_2025))
+      end
+
       # The Event dropdown lists every event, so the report rows are identified by
       # their per-event dashboard link rather than the title.
       it "narrows to facilitator trainings by event type" do
@@ -1375,11 +1385,13 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(attendance_event_path(event))
       end
 
-      it "omits the link when the event offers no CE" do
+      it "links the generic sign-in report when the event offers no CE" do
         event.update!(ce_hours_offered: 0)
         get registrants_event_path(event)
 
         expect(response.body).not_to include("CE sign-in report")
+        expect(response.body).to include("Sign-in report")
+        expect(response.body).to include(attendance_event_path(event))
       end
     end
 

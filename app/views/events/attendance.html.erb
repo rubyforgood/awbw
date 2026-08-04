@@ -115,7 +115,66 @@
         </div>
       </section>
 
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">By day</h2>
+      <%# Session detail grouped by person (default) or by day, toggled like the
+          registrants page's active/inactive filter — a full-page reload carrying
+          the ce/return_to params. %>
+      <% group_by_day = params[:group] == "day" %>
+      <% toggle_params = { ce: params[:ce].presence, return_to: params[:return_to].presence }.compact %>
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500"><%= group_by_day ? "Sessions by day" : "Sessions by person" %></h2>
+        <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-xs font-medium" aria-label="Session grouping">
+          <%= link_to "By person", attendance_event_path(@event, **toggle_params),
+                class: "px-3 py-1 rounded-md transition-colors #{group_by_day ? "text-gray-500 hover:text-gray-700" : "bg-white text-gray-800 shadow-sm"}" %>
+          <%= link_to "By day", attendance_event_path(@event, group: "day", **toggle_params),
+                class: "px-3 py-1 rounded-md transition-colors #{group_by_day ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}" %>
+        </nav>
+      </div>
+
+      <% unless group_by_day %>
+        <% @report.registrations.each do |reg| %>
+          <section class="mb-8">
+            <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+              <h2 class="text-sm font-semibold text-gray-900">
+                <%= reg.registrant.full_name %>
+                <% if @report.open?(reg) %>
+                  <span class="ml-1.5 inline-flex items-center gap-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200 px-1.5 py-0.5 text-[0.65rem] font-medium">signed in</span>
+                <% end %>
+              </h2>
+              <span class="text-xs text-gray-400">Total <%= attendance_duration_label(@report.total_minutes(reg)) %></span>
+            </div>
+
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+              <div class="grid items-center gap-x-3 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 border-b border-gray-100"
+                   style="grid-template-columns: minmax(11rem,1.2fr) 3fr minmax(5rem,auto)">
+                <div>Day</div>
+                <div>Sessions</div>
+                <div class="text-right">Day total</div>
+              </div>
+              <div class="divide-y divide-gray-100">
+                <% @report.dates.each_with_index do |date, index| %>
+                  <% entries = @report.entries_for(reg, date) %>
+                  <div class="grid items-center gap-x-3 px-4 py-2.5 text-sm"
+                       style="grid-template-columns: minmax(11rem,1.2fr) 3fr minmax(5rem,auto)">
+                    <div class="text-gray-700">Day <%= index + 1 %> · <%= date.strftime("%a, %b %-d") %></div>
+                    <div class="flex flex-wrap gap-1.5">
+                      <% if entries.any? %>
+                        <% entries.each do |entry| %>
+                          <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-700 tabular-nums">
+                            <%= entry.signed_in_label %>–<%= entry.signed_out_label %> · <%= entry.duration_label %>
+                          </span>
+                        <% end %>
+                      <% else %>
+                        <span class="text-xs text-gray-400">Not signed in</span>
+                      <% end %>
+                    </div>
+                    <div class="text-right font-medium text-gray-900 tabular-nums"><%= attendance_duration_label(@report.day_minutes(reg, date)) %></div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </section>
+        <% end %>
+      <% else %>
       <% @report.dates.each_with_index do |date, index| %>
         <% signed_in_count = @report.registrations.count { |reg| @report.entries_for(reg, date).any? } %>
         <section class="mb-8">
@@ -175,6 +234,7 @@
             </div>
           </div>
         </section>
+      <% end %>
       <% end %>
 
       <p class="text-xs text-gray-500">
