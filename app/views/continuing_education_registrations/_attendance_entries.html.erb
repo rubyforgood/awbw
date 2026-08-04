@@ -7,7 +7,10 @@
   event's local (Pacific) zone, matching the callout and report.
   locals: registration (EventRegistration).
 %>
-<% entries = registration.event_attendance_time_entries.chronological.to_a %>
+<%# The in-memory rows, not a fresh query: when a save is rejected (overlapping or
+    backwards times) the controller has already applied the submitted values to this
+    association, and re-reading the database here would throw the admin's edits away. %>
+<% entries = registration.event_attendance_time_entries.to_a.sort_by { |entry| entry.signed_in_at || Time.zone.at(0) } %>
 <% dt = ->(time) { time&.in_time_zone(Time.zone)&.strftime("%Y-%m-%dT%H:%M") } %>
 <% input_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
 
@@ -29,7 +32,9 @@
 
     <% entries.each_with_index do |entry, i| %>
       <div class="grid grid-cols-1 sm:grid-cols-[1fr_1fr_5rem_4rem] items-center gap-3 border-t border-gray-100 py-2">
-        <input type="hidden" name="continuing_education_registration[time_entries][<%= i %>][id]" value="<%= entry.id %>">
+        <% if entry.persisted? %>
+          <input type="hidden" name="continuing_education_registration[time_entries][<%= i %>][id]" value="<%= entry.id %>">
+        <% end %>
         <input type="datetime-local" class="<%= input_class %>"
                name="continuing_education_registration[time_entries][<%= i %>][signed_in_at]" value="<%= dt.call(entry.signed_in_at) %>">
         <input type="datetime-local" class="<%= input_class %>"
@@ -37,7 +42,8 @@
         <div class="text-right text-sm text-gray-500 tabular-nums"><%= entry.decorate.duration_label %></div>
         <label class="flex items-center justify-center">
           <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-400"
-                 name="continuing_education_registration[time_entries][<%= i %>][_destroy]" value="1">
+                 name="continuing_education_registration[time_entries][<%= i %>][_destroy]" value="1"
+                 <%= "checked" if entry.marked_for_destruction? %>>
         </label>
       </div>
     <% end %>

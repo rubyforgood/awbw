@@ -241,15 +241,20 @@
       Training sign-in/out — the in-portal replacement for the paper CE hour
       sign-in sheet, shown only once CE is paid in full. One button at a time:
       Sign in when signed out (only inside the day's window), Sign out while signed
-      in (always, so a forgotten sign-out can still be closed). Many entries per day
-      is expected (breaks, lunch). Staff correct times on the admin CE edit page.
+      in today (always, so a forgotten sign-out can still be closed that day). Many
+      entries per day is expected (breaks, lunch). An entry left open overnight
+      doesn't carry over — the next day starts at Sign in, and the stale row is
+      staff's to close on the admin CE edit page, alongside any other correction.
     %>
-    <% if ce_registration&.paid_in_full? %>
-      <% signed_in = @event_registration.signed_in? %>
-      <% open_entry = @event_registration.open_attendance_entry %>
-      <% todays_entries = @event_registration.attendance_entries_on(Time.zone.today) %>
-      <% todays_minutes = todays_entries.sum { |entry| entry.duration_minutes.to_i } %>
-
+    <% attendance_offered = ce_registration&.paid_in_full? %>
+    <% open_entry = attendance_offered ? @event_registration.open_attendance_entry : nil %>
+    <% signed_in = open_entry.present? %>
+    <% todays_entries = attendance_offered ? @event_registration.attendance_entries_on(Time.zone.today) : [] %>
+    <% todays_minutes = todays_entries.sum { |entry| entry.duration_minutes.to_i } %>
+    <% opens_at = @event.next_attendance_sign_in_opens_at %>
+    <%# Once the last day's window has passed there's no sign-in left to offer or
+        announce, so the section drops rather than nagging about a training that's over. %>
+    <% if attendance_offered && (signed_in || @event.attendance_sign_in_open? || opens_at || todays_entries.any?) %>
       <section id="attendance" class="mt-7 scroll-mt-6 border-t border-gray-100 pt-6">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Training sign-in</h2>
@@ -289,22 +294,17 @@
               <%= button_to sign_in_label, registration_ce_sign_in_path(@event_registration.slug), data: { turbo: false },
                     class: "shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer" %>
             <% end %>
-          <% else %>
+          <% elsif opens_at %>
             <%# Sign-in window not open yet: standard gating notice (matching the
                 videoconference pending-note style) naming the concrete opening time,
                 with the event's own start beneath it. Shown in the event's zone
                 (Pacific), labeled — no JS to detect the viewer's own zone. %>
-            <% opens_at = @event.next_attendance_sign_in_opens_at %>
             <p class="flex items-start gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-sm text-gray-700 ring-1 ring-blue-200">
               <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-blue-400"></i>
-              <% if opens_at %>
-                <span>Sign-in opens
-                  <time datetime="<%= opens_at.iso8601 %>" class="font-medium text-gray-900"><%= opens_at.strftime("%A, %B %-d at %-I:%M %p %Z") %></time>.
-                  <span class="block mt-0.5 text-xs text-gray-500">Event begins 30 min later, at <%= (opens_at + Event::ATTENDANCE_SIGN_IN_LEAD).strftime("%-l:%M %Z") %>.</span>
-                </span>
-              <% else %>
-                <span>Sign-in opens 30 minutes before.</span>
-              <% end %>
+              <span>Sign-in opens
+                <time datetime="<%= opens_at.iso8601 %>" class="font-medium text-gray-900"><%= opens_at.strftime("%A, %B %-d at %-I:%M %p %Z") %></time>.
+                <span class="block mt-0.5 text-xs text-gray-500">Event begins 30 min later, at <%= (opens_at + Event::ATTENDANCE_SIGN_IN_LEAD).strftime("%-l:%M %Z") %>.</span>
+              </span>
             </p>
           <% end %>
         </div>

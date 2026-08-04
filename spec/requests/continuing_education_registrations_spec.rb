@@ -366,6 +366,18 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
         expect(flash[:alert]).to match(/after the sign-in/)
         expect(registration.event_attendance_time_entries).to be_empty
       end
+
+      # The rejected save re-renders the form, so the admin's typed times have to
+      # survive it — otherwise their correction is thrown away with only the flash
+      # to explain, and they have to retype it from memory.
+      it "keeps the submitted times on screen when the save is rejected" do
+        patch continuing_education_registration_path(ce_registration),
+              params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
+                time_entries: { "0" => { signed_in_at: "2026-07-23T10:00", signed_out_at: "2026-07-23T09:00" } } } }
+
+        expect(response.body).to include('value="2026-07-23T10:00"')
+        expect(response.body).to include('value="2026-07-23T09:00"')
+      end
     end
   end
 

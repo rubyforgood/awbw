@@ -671,14 +671,18 @@ class EventRegistration < ApplicationRecord
     event.cost_cents
   end
 
-  # The registrant's currently-open attendance entry (signed in, not yet out), or
-  # nil when they're not signed in. Drives which sign-in/out button the CE callout
-  # shows. Uses the most recent open entry if more than one somehow exists.
-  def open_attendance_entry
-    event_attendance_time_entries.open.chronological.last
+  # The registrant's currently-open attendance entry (signed in, not yet out) for
+  # one day, or nil when they're not signed in that day. Drives which sign-in/out
+  # button the CE callout shows. Deliberately day-scoped: an entry left open when
+  # someone forgets to sign out must not carry into the next training day, where it
+  # would block the new day's sign-in and, once closed, bank a 24-hour session. The
+  # stale row stays flagged on the attendance report for staff to correct.
+  # Uses the most recent open entry if more than one somehow exists.
+  def open_attendance_entry(date = Time.zone.today)
+    attendance_entries_on(date).select(&:open?).last
   end
 
-  # Whether the registrant is currently signed in.
+  # Whether the registrant is currently signed in (today).
   def signed_in?
     open_attendance_entry.present?
   end

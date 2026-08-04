@@ -84,6 +84,46 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
     end
   end
 
+  # A sign-out someone forgot on day one must not carry into day two: it would block
+  # the new day's sign-in, and closing it then would bank a ~24-hour session against
+  # day one. It stays open for staff to correct on the attendance report.
+  describe "an entry left open on an earlier day" do
+    let(:event) do
+      create(:event,
+        ce_hours_offered: 6, ce_hours_cost_cents: 15_000,
+        start_date: Time.zone.local(2026, 7, 23, 9, 0),
+        end_date: Time.zone.local(2026, 7, 24, 16, 0),
+        registration_close_date: Time.zone.local(2026, 7, 20, 9, 0))
+    end
+    let!(:stale) do
+      create(:event_attendance_time_entry, :open, event_registration: registration,
+        signed_in_at: Time.zone.local(2026, 7, 23, 9, 0))
+    end
+
+    before do
+      pay_ce!
+      travel_to Time.zone.local(2026, 7, 24, 10, 0)
+    end
+
+    it "starts day two signed out, offering Sign in rather than Sign out" do
+      get registration_ce_path(registration.slug)
+      expect(response.body).to include(registration_ce_sign_in_path(registration.slug))
+      expect(response.body).not_to include(registration_ce_sign_out_path(registration.slug))
+    end
+
+    it "lets the registrant sign in for the new day" do
+      expect {
+        post registration_ce_sign_in_path(registration.slug)
+      }.to change { registration.event_attendance_time_entries.count }.by(1)
+    end
+
+    it "leaves the stale entry open rather than closing it with today's time" do
+      post registration_ce_sign_out_path(registration.slug)
+      expect(stale.reload.signed_out_at).to be_nil
+      expect(flash[:alert]).to be_present
+    end
+  end
+
   describe "GET /registration/:slug/ce (attendance section)" do
     it "shows a Sign in button once CE is paid and the window is open" do
       pay_ce!
@@ -156,6 +196,14 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       pay_ce!
       get registration_ce_path(registration.slug)
       expect(response.body).not_to include(attendance_event_path(event, ce: "true"))
+    end
+
+    it "drops the whole section once the training is over" do
+      pay_ce!
+      travel_to Time.zone.local(2026, 7, 30, 10, 0)
+      get registration_ce_path(registration.slug)
+      expect(response.body).not_to include("Training sign-in")
+      expect(response.body).not_to include("Sign-in opens")
     end
 
     it "hides the attendance section until CE is paid in full" do

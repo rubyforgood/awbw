@@ -1394,8 +1394,9 @@ RSpec.describe EventRegistration, type: :model do
     let(:registration) { create(:event_registration) }
 
     describe "#signed_in? / #open_attendance_entry" do
-      it "is signed in while an entry has no sign-out" do
-        entry = create(:event_attendance_time_entry, :open, event_registration: registration)
+      it "is signed in while today's entry has no sign-out" do
+        entry = create(:event_attendance_time_entry, :open, event_registration: registration,
+          signed_in_at: Time.zone.now.change(hour: 9))
         expect(registration.signed_in?).to be(true)
         expect(registration.open_attendance_entry).to eq(entry)
       end
@@ -1404,6 +1405,17 @@ RSpec.describe EventRegistration, type: :model do
         create(:event_attendance_time_entry, event_registration: registration)
         expect(registration.signed_in?).to be(false)
         expect(registration.open_attendance_entry).to be_nil
+      end
+
+      # A forgotten sign-out must not follow the registrant into the next training
+      # day, where it would block the new day's sign-in and, once closed, bank a
+      # ~24-hour session. Staff close it from the attendance report instead.
+      it "ignores an entry left open on an earlier day" do
+        stale = create(:event_attendance_time_entry, :open, event_registration: registration,
+          signed_in_at: 1.day.ago.change(hour: 9))
+        expect(registration.signed_in?).to be(false)
+        expect(registration.open_attendance_entry).to be_nil
+        expect(registration.open_attendance_entry(1.day.ago.to_date)).to eq(stale)
       end
     end
 
