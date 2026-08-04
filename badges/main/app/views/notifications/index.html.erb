@@ -2,8 +2,15 @@
 <div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
       <div class="flex justify-between items-center mb-6">
         <section class="w-full">
-          <div class="flex flex-col items-start mb-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
             <h1 class="text-3xl font-bold text-gray-900 my-2"><%= t("communications.title") %></h1>
+            <% if allowed_to?(:new?, with: NotificationPolicy) %>
+              <%= link_to new_notification_path,
+                          class: "inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700" do %>
+                <i class="fa-solid fa-plus text-xs"></i>
+                <%= t("communications.new") %>
+              <% end %>
+            <% end %>
           </div>
 
           <%= render "search_boxes" %>

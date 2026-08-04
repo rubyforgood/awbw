@@ -122,6 +122,108 @@ RSpec.describe "Notifications", type: :request do
     end
   end
 
+  describe "GET /notifications/new" do
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "renders the new communication form" do
+        get new_notification_path
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("New communication")
+        expect(response.body).to include("Search people by name or email")
+      end
+    end
+
+    context "as a regular user" do
+      before { sign_in regular_user }
+
+      it "is not authorized" do
+        get new_notification_path
+
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    context "as a guest" do
+      it "redirects to sign in" do
+        get new_notification_path
+
+        expect(response).to redirect_to(new_user_session_path)
+      end
+    end
+  end
+
+  describe "POST /notifications" do
+    let(:person) { create(:person, email: "logged@example.com") }
+    let(:valid_params) do
+      {
+        person_id: person.id,
+        notification: {
+          channel: "phone",
+          email_subject: "Called about registration",
+          email_body_text: "Left a voicemail."
+        }
+      }
+    end
+
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "logs a manual communication against the person, attributed to the sender" do
+        expect {
+          post notifications_path, params: valid_params
+        }.to change(Notification, :count).by(1)
+
+        notification = Notification.last
+        expect(notification.noticeable).to eq(person)
+        expect(notification.recipient_email).to eq(person.communications_email)
+        expect(notification.sender).to eq(admin)
+        expect(notification.channel).to eq("phone")
+        expect(notification.email_subject).to eq("Called about registration")
+        expect(notification.kind).to eq("manual_log")
+        expect(response).to redirect_to(notifications_path)
+      end
+
+      it "re-renders with an error when no person is selected" do
+        expect {
+          post notifications_path, params: valid_params.except(:person_id)
+        }.not_to change(Notification, :count)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.body).to include("Select a person")
+      end
+
+      it "re-renders when the subject is blank" do
+        expect {
+          post notifications_path, params: valid_params.deep_merge(notification: { email_subject: "" })
+        }.not_to change(Notification, :count)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+
+    context "as a regular user" do
+      before { sign_in regular_user }
+
+      it "is not authorized and creates nothing" do
+        expect {
+          post notifications_path, params: valid_params
+        }.not_to change(Notification, :count)
+
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    context "as a guest" do
+      it "redirects to sign in" do
+        post notifications_path, params: valid_params
+
+        expect(response).to redirect_to(new_user_session_path)
+      end
+    end
+  end
+
   describe "GET /notifications/:id" do
     let(:fyi)          { create(:notification, kind: "contact_us_fyi") }
     let(:user_confirm) { create(:notification, kind: "contact_us") }

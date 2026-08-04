@@ -1,0 +1,66 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="max-w-3xl mx-auto <%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
+  <%= link_to t("communications.back_link"), notifications_path,
+              class: "text-sm text-blue-600 hover:underline" %>
+
+  <h1 class="mt-3 mb-1 text-2xl font-semibold text-gray-900"><%= t("communications.new") %></h1>
+  <p class="mb-5 text-sm text-gray-500">
+    Log a communication you had with a person by hand (a call, text, or email sent outside the portal).
+  </p>
+
+  <div class="bg-white rounded-lg p-6">
+    <%= simple_form_for @notification, url: notifications_path do |f| %>
+      <%= render "shared/errors", resource: @notification if @notification.errors.any? %>
+
+      <div class="space-y-5">
+        <div>
+          <% person_label = @person&.remote_search_label %>
+          <label for="person_id" class="block text-sm font-medium text-gray-700 mb-1">Person</label>
+          <%= select_tag "person_id",
+                options_for_select(person_label ? [ [ person_label[:label], @person.id ] ] : [], @person&.id),
+                include_blank: "Search people by name or email",
+                data: { controller: "remote-select", remote_select_model_value: "person" },
+                class: "w-full bg-white rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" %>
+          <p class="mt-1 text-xs text-gray-500">The communication is logged against this person and their email.</p>
+        </div>
+
+        <div>
+          <span class="block text-sm font-medium text-gray-700 mb-1">From</span>
+          <span class="inline-flex items-center gap-2 rounded bg-sky-100 px-2 py-1 text-sm text-sky-800">
+            <i class="fa-solid fa-user text-xs"></i><%= current_user.full_name %>
+          </span>
+          <p class="mt-1 text-xs text-gray-500">You are recorded as the sender.</p>
+        </div>
+
+        <div>
+          <%= f.input :channel,
+                      collection: Notification::MANUAL_CHANNELS.map { |c| [ c.titleize, c ] },
+                      selected: @notification.channel.presence || "email",
+                      include_blank: false,
+                      label: "Channel",
+                      input_html: { class: "w-full sm:w-1/3 bg-white rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
+        </div>
+
+        <div>
+          <%= f.input :email_subject, as: :text, required: true,
+                      label: "Subject (visible to user)",
+                      input_html: { rows: 2, placeholder: "Topic or subject line",
+                                    class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
+        </div>
+
+        <div>
+          <%= f.input :email_body_text, as: :text,
+                      label: "Body (internal staff note, hidden from user)",
+                      input_html: { rows: 4, placeholder: "What happened? (e.g. left voicemail, sent reminder)",
+                                    class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
+        </div>
+      </div>
+
+      <div class="mt-6 flex items-center justify-end gap-3">
+        <%= link_to "Cancel", notifications_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+        <%= f.button :submit, t("communications.new"),
+                     class: "inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700" %>
+      </div>
+    <% end %>
+  </div>
+</div>
