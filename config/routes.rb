@@ -204,7 +204,7 @@ Rails.application.routes.draw do
       post :curate
     end
   end
-  resources :notifications, only: [ :index, :show, :update ] do
+  resources :notifications, only: [ :index, :new, :create, :show, :update ] do
     member do
       post :resend
     end
