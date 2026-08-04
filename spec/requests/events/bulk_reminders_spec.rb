@@ -92,5 +92,16 @@ RSpec.describe "Events::BulkReminders", type: :request do
 
       expect(response).to redirect_to(registrants_event_path(event))
     end
+
+    it "attributes each reminder to the admin who sent it, not the portal" do
+      post send_reminder_event_path(event), params: { registration_ids: [ jane.id, sam.id ] }
+
+      reminders = Notification.where(kind: "event_registration_reminder")
+      expect(reminders.count).to eq(2)
+      expect(reminders.map(&:sender)).to all(eq(admin))
+      # Guards the "FROM: AWBW Portal" regression — a sent-by-hand reminder must
+      # carry a sender so the index/show page name the admin.
+      expect(reminders.map(&:sender_id)).not_to include(nil)
+    end
   end
 end

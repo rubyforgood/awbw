@@ -249,6 +249,26 @@ RSpec.describe "Notifications", type: :request do
 
         expect(response.body).not_to match(/<input[^>]*name="notification\[responded\]"/)
       end
+
+      it "names the sending person in the From row when a sender is set" do
+        sender = create(:user, :admin, first_name: "Dana", last_name: "Sender")
+        sent = create(:notification, kind: "event_registration_reminder", sender: sender)
+
+        get notification_path(sent)
+
+        expect(response.body).to include("From")
+        expect(response.body).to include("Dana Sender")
+        expect(response.body).not_to include("AWBW Portal")
+      end
+
+      it "shows AWBW Portal in the From row for automated messages with no sender" do
+        automated = create(:notification, kind: "account_confirmation", sender: nil)
+
+        get notification_path(automated)
+
+        expect(response.body).to include("From")
+        expect(response.body).to include("AWBW Portal")
+      end
     end
 
     context "as a non-admin owner" do
@@ -327,6 +347,12 @@ RSpec.describe "Notifications", type: :request do
         expect(new_notification.root_notification_id).to eq(notification.id)
         expect(new_notification.kind).to eq(notification.kind)
         expect(new_notification.recipient_email).to eq(notification.recipient_email)
+      end
+
+      it "attributes the resent copy to the admin who resent it" do
+        post resend_notification_path(notification.id)
+
+        expect(Notification.last.sender).to eq(admin)
       end
 
       it "tracks resend chain correctly when resending a resent notification" do
