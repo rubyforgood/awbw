@@ -1,7 +1,7 @@
-<%# Shareable facilitator-training summary: scholarship dollars and award counts
-    (funded vs unfunded) plus trainee counts, one column per training, grouped by
-    year. Pass `report:` (a FacilitatorTrainingReport). Rendered on the event
-    revenue page and the standalone facilitator training report page. %>
+<%# Scholarship summary: dollars and award counts (funded vs unfunded) plus an
+    attended-trainee count, one column per facilitator training, grouped by year.
+    Pass `report:` (an EventScholarshipReport). Rendered on the scholarships
+    report page. %>
 <% if report.any? %>
   <div class="space-y-10">
     <% report.years.each do |group| %>
@@ -82,9 +82,9 @@
                 <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= group.scholarship_count %></td>
               </tr>
 
-              <%# ---- # of Trainees ---- %>
+              <%# ---- # of Trainees (attended) ---- %>
               <tr class="bg-yellow-100 text-gray-800">
-                <th class="text-left font-semibold px-3 py-2 border border-gray-200"># of trainees</th>
+                <th class="text-left font-semibold px-3 py-2 border border-gray-200"># of trainees attended</th>
                 <% events.each do |column| %>
                   <th class="text-right font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap">
                     <%= column.label %>
@@ -95,22 +95,22 @@
                 <% end %>
               </tr>
               <tr class="font-semibold text-gray-900">
-                <td class="px-3 py-2 border border-gray-200 text-gray-600">Trainees</td>
+                <td class="px-3 py-2 border border-gray-200 text-gray-600">Attended</td>
                 <% events.each do |column| %>
-                  <td class="px-3 py-2 border border-gray-200 text-right"><%= column.trainee_count %></td>
+                  <td class="px-3 py-2 border border-gray-200 text-right"><%= column.attended_count %></td>
                 <% end %>
               </tr>
               <tr>
-                <td class="px-3 py-2 border border-gray-200 text-gray-600">2-Day total</td>
-                <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= group.two_day_trainee_count %></td>
+                <td class="px-3 py-2 border border-gray-200 text-gray-600">Training</td>
+                <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= group.training_attended_count %></td>
               </tr>
               <tr>
-                <td class="px-3 py-2 border border-gray-200 text-gray-600">On-Demand total</td>
-                <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= group.on_demand_trainee_count %></td>
+                <td class="px-3 py-2 border border-gray-200 text-gray-600">On-demand</td>
+                <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= group.on_demand_attended_count %></td>
               </tr>
               <tr class="bg-gray-100 font-bold text-gray-900">
                 <td class="px-3 py-2 border border-gray-200">Overall total</td>
-                <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= group.trainee_count %></td>
+                <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= group.attended_count %></td>
               </tr>
             </tbody>
           </table>

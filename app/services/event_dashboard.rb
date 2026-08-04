@@ -90,28 +90,28 @@ class EventDashboard
     scholarships.sum(:amount_cents)
   end
 
-  # Scholarship dollars drawn from a funder/grant — money a grant pays toward
-  # registration cost, so it counts as revenue. Paired with
+  # Scholarship dollars drawn from an EXTERNAL funder/grant — money a grant pays
+  # toward registration cost, so it counts as revenue. Paired with
   # unfunded_scholarship_cents, these sum to scholarship_total_cents.
   def funded_scholarship_cents
-    scholarships.where.not(grant_id: nil).sum(:amount_cents)
+    funded_scholarships.sum(:amount_cents)
   end
 
-  # Scholarship dollars awarded without a grant behind them — cost the org comps
-  # directly, so no money actually changes hands.
+  # Scholarship dollars the org comps from its own pocket: awards with no grant,
+  # plus awards from a grant the org donated to itself (AWBW) — that's subsidy,
+  # not external funding.
   def unfunded_scholarship_cents
-    scholarships.where(grant_id: nil).sum(:amount_cents)
+    unfunded_scholarships.sum(:amount_cents)
   end
 
-  # Number of scholarship awards, split the same way as the dollar figures: a
-  # scholarship is funded when a grant backs it, unfunded otherwise. Together
-  # these sum to the event's total scholarship award count.
+  # Number of scholarship awards, split the same way as the dollar figures.
+  # Together these sum to the event's total scholarship award count.
   def funded_scholarship_count
-    scholarships.where.not(grant_id: nil).count
+    funded_scholarships.count
   end
 
   def unfunded_scholarship_count
-    scholarships.where(grant_id: nil).count
+    unfunded_scholarships.count
   end
 
   def scholarship_recipient_count
@@ -1106,6 +1106,22 @@ class EventDashboard
     @scholarships ||= Scholarship
       .joins(:allocation)
       .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: active_registration_ids })
+  end
+
+  # Externally funded = backed by a grant whose donor isn't the org itself.
+  def funded_scholarships
+    scholarships.where.not(grant_id: [ nil, *awbw_grant_ids ])
+  end
+
+  # Org-subsidized = no grant, or a grant the org (AWBW) donated to itself.
+  def unfunded_scholarships
+    scholarships.where(grant_id: [ nil, *awbw_grant_ids ])
+  end
+
+  # Ids of grants the org donated to itself; empty when the AWBW org isn't on
+  # file, collapsing the split back to grant-present vs grant-absent.
+  def awbw_grant_ids
+    @awbw_grant_ids ||= Grant.where(donor: Organization.awbw).ids
   end
 
   # [ [ organization_id, registrant_id ], ... ] from the organizations linked on

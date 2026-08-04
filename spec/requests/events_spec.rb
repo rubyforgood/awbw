@@ -329,12 +329,11 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(revenue_events_path, participation_events_path)
       end
 
-      it "embeds the facilitator training summary, linking to its full report" do
+      it "shows the scholarship summary card linking to its full report" do
         sign_in admin
         get statistics_events_path
-        expect(response.body).to include("Facilitator training summary")
-        expect(response.body).to include("$ of scholarships", "# of trainees")
-        expect(response.body).to include(facilitator_training_report_events_path)
+        expect(response.body).to include("Scholarships")
+        expect(response.body).to include(scholarships_events_path)
       end
 
       it "carries the active filters into the full report links" do
@@ -375,26 +374,36 @@ RSpec.describe "Events", type: :request do
     end
   end
 
-  describe "GET /facilitator_training_report" do
-    let!(:training) { create(:event, title: "TAC 261", facilitator_training: true, cost_cents: 10_000, start_date: Date.new(2026, 5, 1)) }
+  describe "GET /scholarships" do
+    let!(:training) { create(:event, title: "TAC 261", abbreviation: "TAC261", facilitator_training: true, cost_cents: 10_000, start_date: Date.new(2026, 5, 1)) }
+    let!(:on_demand) { create(:event, title: "Self-paced training", abbreviation: "OND100", facilitator_training: true, on_demand: true, start_date: Date.new(2026, 6, 1)) }
     let!(:webinar) { create(:event, title: "Paid webinar", facilitator_training: false, cost_cents: 5_000, start_date: Date.new(2026, 5, 1)) }
 
     context "as admin" do
-      it "renders the report with only facilitator trainings as columns" do
+      it "renders the report with only facilitator trainings" do
         sign_in admin
-        get facilitator_training_report_events_path
+        get scholarships_events_path
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Facilitator training report")
-        expect(response.body).to include("$ of scholarships", "# of scholarships", "# of trainees")
-        expect(response.body).to include("TAC 261")
+        expect(response.body).to include("Events scholarships")
+        expect(response.body).to include("$ of scholarships", "# of scholarships", "# of trainees attended")
+        expect(response.body).to include("TAC 261", "Self-paced training")
         expect(response.body).not_to include("Paid webinar")
+      end
+
+      it "narrows to trainings whose abbreviation matches the search" do
+        sign_in admin
+        get scholarships_events_path(abbreviation: "TAC")
+        # Abbreviations head the report columns; the excluded training's is absent
+        # (its title still appears in the always-full Event dropdown).
+        expect(response.body).to include("TAC261")
+        expect(response.body).not_to include("OND100")
       end
     end
 
     context "as non-admin" do
       it "redirects" do
         sign_in user
-        get facilitator_training_report_events_path
+        get scholarships_events_path
         expect(response).to redirect_to(root_path)
       end
     end

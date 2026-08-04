@@ -3,7 +3,7 @@ class EventsController < ApplicationController
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
   before_action :set_event, only: %i[ show edit update destroy preview dashboard sample_ticket background registrants onboarding staff edit_staff update_staff recipients preview_reminder confirm_reminder send_reminder copy_registration_form ]
-  before_action :set_report_filters, only: %i[ revenue participation statistics ]
+  before_action :set_report_filters, only: %i[ revenue participation statistics scholarships ]
 
   def index
     authorize!
@@ -37,22 +37,24 @@ class EventsController < ApplicationController
     @report = EventParticipationReport.new(events, featured_year: selected_year)
   end
 
-  # Events statistics hub: the revenue and participation report summaries side by
-  # side, each linking to its full report, plus the facilitator-training summary.
+  # Events statistics hub: the revenue, participation and scholarship report
+  # summaries side by side, each linking to its full report.
   def statistics
     authorize!
     @period = params[:period].presence_in(%w[ this_year last_year all_time ]) || "this_year"
     @revenue_report = EventRevenueReport.new(report_events(Event.paid))
     @participation_report = EventParticipationReport.new(report_events(Event.all))
-    @facilitator_report = FacilitatorTrainingReport.new(facilitator_training_events)
+    @scholarship_report = EventScholarshipReport.new(report_events(Event.facilitator_trainings))
   end
 
-  # Standalone, shareable summary of scholarship dollars/counts and trainee counts
-  # across facilitator trainings, grouped by year. Admin-only (aggregates money
-  # across every event), the same report partial the statistics hub embeds.
-  def facilitator_training_report
+  # Cross-event scholarship report: scholarship dollars and award counts (funded
+  # vs unfunded) per facilitator training, grouped by year, with an attended-
+  # trainee count split into Training vs On-demand. Sibling of the revenue and
+  # participation reports; admin-only.
+  def scholarships
     authorize!
-    @report = FacilitatorTrainingReport.new(facilitator_training_events)
+    events, selected_year = filtered_report_events(Event.facilitator_trainings)
+    @report = EventScholarshipReport.new(events, featured_year: selected_year)
   end
 
   def new
@@ -457,15 +459,20 @@ class EventsController < ApplicationController
     end
   end
 
-  # Shared filter state for the revenue/participation/statistics report pages: the
-  # event-type and specific-event filters, plus the event list for the Event
-  # dropdown.
+  # Shared filter state for the revenue/participation/statistics/scholarships
+  # report pages: the event-type, specific-event and abbreviation-search filters,
+  # plus the event list for the Event dropdown.
   def set_report_filters
     @event_type = params[:event_type].presence_in(%w[ trainings other ])
     @filter_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
-    # The revenue report only covers paid events, so its Event dropdown lists only
-    # those; the others list every event.
-    dropdown_scope = action_name == "revenue" ? Event.paid : Event.all
+    @event_abbreviation = params[:abbreviation].presence
+    # The Event dropdown lists the report's own universe: paid events for revenue,
+    # facilitator trainings for scholarships, every event otherwise.
+    dropdown_scope = case action_name
+    when "revenue" then Event.paid
+    when "scholarships" then Event.facilitator_trainings
+    else Event.all
+    end
     @filter_events = dropdown_scope.order(start_date: :desc)
   end
 
@@ -492,11 +499,13 @@ class EventsController < ApplicationController
     scoped_report_base(base).order(start_date: :desc).map(&:decorate)
   end
 
-  # Narrows `base` by the event-type and specific-event filters.
+  # Narrows `base` by the event-type, specific-event and abbreviation-search
+  # filters.
   def scoped_report_base(base)
     base = base.facilitator_trainings if @event_type == "trainings"
     base = base.where(facilitator_training: false) if @event_type == "other"
     base = base.where(id: @filter_event.id) if @filter_event
+    base = base.where("events.abbreviation LIKE ?", "%#{Event.sanitize_sql_like(@event_abbreviation)}%") if @event_abbreviation
     base
   end
 
@@ -694,13 +703,6 @@ class EventsController < ApplicationController
 
   def set_event
     @event = Event.find(params[:id])
-  end
-
-  # Facilitator-training events for the summary report, ordered by start date so
-  # columns read left-to-right chronologically within each year. Passed as plain
-  # records — the report decorates each for its column label/date range.
-  def facilitator_training_events
-    Event.facilitator_trainings.order(:start_date)
   end
 
   def event_params

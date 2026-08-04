@@ -1051,34 +1051,43 @@ RSpec.describe EventDashboard do
     end
   end
 
-  describe "scholarship funded/unfunded counts" do
+  describe "scholarship funded/unfunded split" do
     let(:event) { create(:event, cost_cents: 50_000) }
     let(:person1) { create(:person) }
     let(:person2) { create(:person) }
     let(:person3) { create(:person) }
+    let(:person4) { create(:person) }
 
     before do
       reg1 = create(:event_registration, event: event, registrant: person1, status: "registered")
       reg2 = create(:event_registration, event: event, registrant: person2, status: "registered")
+      reg4 = create(:event_registration, event: event, registrant: person4, status: "registered")
 
-      grant_backed = create(:scholarship, recipient: person1, amount_cents: 4_000, grant: create(:grant))
-      create(:allocation, source: grant_backed, allocatable: reg1, amount: 4_000)
+      external = create(:scholarship, recipient: person1, amount_cents: 4_000, grant: create(:grant))
+      create(:allocation, source: external, allocatable: reg1, amount: 4_000)
 
       comped = create(:scholarship, recipient: person2, amount_cents: 2_000, grant: nil)
       create(:allocation, source: comped, allocatable: reg2, amount: 2_000)
 
-      # A scholarship on a cancelled registration must be ignored by both counts.
+      # A grant the org donated to itself is subsidy, so it counts as UNFUNDED.
+      awbw = create(:organization, name: "A Window Between Worlds")
+      awbw_award = create(:scholarship, recipient: person4, amount_cents: 1_000, grant: create(:grant, donor: awbw))
+      create(:allocation, source: awbw_award, allocatable: reg4, amount: 1_000)
+
+      # A scholarship on a cancelled registration must be ignored everywhere.
       cancelled = create(:event_registration, event: event, registrant: person3, status: "cancelled")
-      ignored = create(:scholarship, recipient: person3, amount_cents: 3_000, grant: create(:grant))
-      create(:allocation, source: ignored, allocatable: cancelled, amount: 3_000)
+      ignored = create(:scholarship, recipient: person3, amount_cents: 9_000, grant: create(:grant))
+      create(:allocation, source: ignored, allocatable: cancelled, amount: 9_000)
     end
 
-    it "counts grant-backed scholarships as funded" do
+    it "counts only externally grant-backed scholarships as funded" do
       expect(dashboard.funded_scholarship_count).to eq(1)
+      expect(dashboard.funded_scholarship_cents).to eq(4_000)
     end
 
-    it "counts grant-free scholarships as unfunded" do
-      expect(dashboard.unfunded_scholarship_count).to eq(1)
+    it "counts grant-free and AWBW-donated scholarships as unfunded" do
+      expect(dashboard.unfunded_scholarship_count).to eq(2)
+      expect(dashboard.unfunded_scholarship_cents).to eq(3_000)
     end
   end
 end

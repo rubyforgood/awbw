@@ -31,9 +31,9 @@ class EventPolicy < ApplicationPolicy
     admin?
   end
 
-  # The facilitator-training report aggregates scholarship money and trainee
-  # counts across every training, so it's admin-only like the revenue report.
-  def facilitator_training_report?
+  # The scholarship report aggregates scholarship money and award counts across
+  # every training, so it's admin-only like the revenue report.
+  def scholarships?
     admin?
   end
 

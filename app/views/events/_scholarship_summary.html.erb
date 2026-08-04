@@ -1,0 +1,44 @@
+<%# Compact scholarship headline for the statistics hub, linking to the full
+    report. Expects `report` (an EventScholarshipReport) and `period` (its
+    resolved PeriodScope: #label, #year and #metrics). %>
+<div class="h-full flex flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-base font-semibold text-gray-900">Scholarships</h3>
+    <%= link_to "Full report →", scholarships_events_path(statistics_to_report_params),
+          class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+  </div>
+
+  <% if report.any? %>
+    <% metrics = period.metrics %>
+    <div class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2"><%= period.label %></div>
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Funded</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-emerald-700"><%= dollars_from_cents(metrics.funded_cents) %></div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= pluralize(metrics.funded_count, "award") %></div>
+      </div>
+      <div class="rounded-lg border border-red-200 bg-red-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Unfunded</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-red-600"><%= dollars_from_cents(metrics.unfunded_cents) %></div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= pluralize(metrics.unfunded_count, "award") %></div>
+      </div>
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Total awarded</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-gray-900"><%= dollars_from_cents(metrics.scholarship_cents) %></div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= pluralize(metrics.scholarship_count, "award") %></div>
+      </div>
+      <div class="rounded-lg border border-purple-200 bg-purple-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Attended</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-purple-700"><%= number_with_delimiter(metrics.attended_count) %></div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= metrics.training_attended_count %> training · <%= metrics.on_demand_attended_count %> on-demand</div>
+      </div>
+    </div>
+    <div class="mt-auto">
+      <%= column_chart report.chart_series, stacked: true, prefix: "$", thousands: ",",
+            colors: [ "#059669", "#dc2626" ], height: "120px", legend: false,
+            library: { borderRadius: 3 } %>
+    </div>
+  <% else %>
+    <p class="text-sm text-gray-500 my-auto">No facilitator trainings yet.</p>
+  <% end %>
+</div>

@@ -93,10 +93,6 @@ class Event < ApplicationRecord
   # start_date is a date column, so compare against a date — a Time would be cast
   # to midnight and drop events starting today.
   scope :upcoming, -> { where("start_date >= ?", Date.current) }
-  # On-demand (self-paced) events, as opposed to scheduled multi-day sessions.
-  # Splits the facilitator-training report's "2-Day" vs "On-Demand" trainee totals.
-  scope :on_demand, -> { where(on_demand: true) }
-  scope :scheduled, -> { where(on_demand: false) }
   # Events that charge a registration fee (cost_cents may be nil for free ones).
   scope :paid, -> { where("cost_cents > 0") }
   # Events whose start date falls in the given calendar year. Keyed off the year
