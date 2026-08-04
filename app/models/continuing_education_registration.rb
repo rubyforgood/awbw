@@ -6,8 +6,8 @@ class ContinuingEducationRegistration < ApplicationRecord
   # truth so the certificate and any callout text point at the same body + link.
   ACCREDITATION_BODY = "the California Association of Marriage and Family Therapists (CAMFT)".freeze
   ACCREDITATION_URL = "https://www.camft.org/".freeze
-  # CAMFT approved-provider number. PLACEHOLDER — replace with AWBW's real number.
-  ACCREDITATION_PROVIDER_NUMBER = "000000".freeze
+  # AWBW's CAMFT approved-provider number (per awbw.org's CE hours page).
+  ACCREDITATION_PROVIDER_NUMBER = "1000151".freeze
 
   has_paper_trail
 
