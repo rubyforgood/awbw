@@ -50,7 +50,8 @@
         <%= label_tag name.to_s.dasherize,
               class: "ml-2 inline-flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer select-none" do %>
           <i class="fa-solid <%= icon %> text-xs text-gray-400" aria-hidden="true"></i>
-          Include <%= label %><% if hidden_count.positive? && !checked %> (<%= hidden_count %> left out)<% end %>
+          <%# The count is already 0 once the toggle is on, so no `checked` guard. %>
+          Include <%= label %><% if hidden_count.positive? %> (<%= hidden_count %> left out)<% end %>
         <% end %>
       </div>
     <% end %>

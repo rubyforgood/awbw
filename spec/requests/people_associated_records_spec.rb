@@ -44,5 +44,31 @@ RSpec.describe "Person edit associated records", type: :request do
       expect(response.body).to include("Grants (as donor)")
       expect(response.body).to include("Communications (universal)")
     end
+
+    it "scopes the idea cards to the person, not their user account" do
+      person = create(:person)
+      create(:story_idea, created_by: person.user)
+      create(:story_idea, created_by: create(:user))
+
+      get edit_person_path(person)
+
+      expect(response.body).to include(story_ideas_path(created_by_person_id: person.id))
+      expect(response.body).to include(workshop_ideas_path(created_by_person_id: person.id))
+      expect(response.body).to include(workshop_variation_ideas_path(created_by_person_id: person.id))
+    end
+
+    it "keeps the idea cards filtered when the person has no user account" do
+      person = create(:person, user: nil)
+      create(:story_idea)
+
+      get edit_person_path(person)
+
+      # A person with no user authored nothing — the card must not fall through
+      # to the unfiltered index of everyone's ideas.
+      expect(response.body).to include(story_ideas_path(created_by_person_id: person.id))
+      expect(response.body).not_to include(%(href="#{story_ideas_path}"))
+      expect(response.body).not_to include(%(href="#{workshop_ideas_path}"))
+      expect(response.body).not_to include(%(href="#{workshop_variation_ideas_path}"))
+    end
   end
 end

@@ -17,16 +17,29 @@
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Training registrations</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Source</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Subscribed</th>
-              <th class="px-4 py-2"></th>
             </tr>
           </thead>
 
           <tbody class="divide-y divide-gray-200">
             <% @topic_subscriptions.each do |subscription| %>
               <% subscription = subscription.decorate %>
-              <tr class="hover:bg-gray-50 transition-colors duration-150 align-top <%= "opacity-60" unless subscription.active? %>">
-                <td class="px-4 py-2 text-sm text-gray-800">
-                  <%= person_profile_button(subscription.person, subtitle: subscription.person.preferred_email, compact: true, width_class: "w-56 max-w-full", data: { turbo_frame: "_top" }) %>
+              <tr class="hover:bg-gray-50 transition-colors duration-150 align-middle <%= "text-gray-500" unless subscription.active? %>">
+                <td class="px-4 py-2 text-sm">
+                  <% person = subscription.person %>
+                  <%# Carry the active filters so the edit page's eyebrow, Cancel, and post-save
+                      redirect all come back to this same filtered list. %>
+                  <%= link_to edit_topic_subscription_path(subscription, topic_subscription_index_filters.merge(return_to: "index")),
+                              title: [ person.name, person.preferred_email ].compact_blank.join(" — "),
+                              class: "group flex items-center gap-2 w-56 max-w-full px-2 py-1 rounded-lg border border-gray-700 bg-gray-700 hover:bg-gray-800 text-white shadow-sm leading-tight transition-colors duration-200 overflow-hidden",
+                              data: { turbo_frame: "_top", turbo_prefetch: false } do %>
+                    <i class="fa-solid fa-user-pen flex-shrink-0 text-gray-300"></i>
+                    <div class="flex flex-col justify-center min-w-0">
+                      <span class="font-semibold text-xs text-white truncate"><%= truncate(person.name.to_s, length: 30) %></span>
+                      <% if person.preferred_email.present? %>
+                        <!--email_off--><span class="text-xs text-gray-300 font-normal truncate"><%= person.preferred_email %></span><!--email_on-->
+                      <% end %>
+                    </div>
+                  <% end %>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-800"><%= subscription.topic_label %></td>
@@ -42,7 +55,7 @@
                   <% end %>
                 </td>
 
-                <td class="px-4 py-2 text-sm"><%= subscription.status_badge %></td>
+                <td class="px-4 py-2 text-sm"><%= subscription.status_badge(href: edit_topic_subscription_path(subscription, topic_subscription_index_filters.merge(return_to: "index"))) %></td>
 
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <% registrations = subscription.person_facilitator_training_registrations %>
@@ -63,15 +76,6 @@
                 <td class="px-4 py-2 text-sm text-gray-500"><%= subscription.source.presence || "—" %></td>
 
                 <td class="px-4 py-2 text-sm text-gray-500 text-nowrap"><%= subscription.subscribed_at.strftime("%B %d, %Y") %></td>
-
-                <td class="px-4 py-2 align-middle">
-                  <%= link_to edit_topic_subscription_path(subscription, return_to: "index"),
-                              class: "group inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border shadow-sm font-medium leading-none transition-colors duration-200 #{DomainTheme.border_class_for(:topic_subscriptions)} #{DomainTheme.bg_class_for(:topic_subscriptions, intensity: 100)} #{DomainTheme.bg_class_for(:topic_subscriptions, intensity: 100, hover: true)}",
-                              data: { turbo_frame: "_top" } do %>
-                    <i class="fa-solid fa-pen shrink-0 text-sm <%= DomainTheme.text_class_for(:topic_subscriptions) %>"></i>
-                    <span class="text-xs font-semibold <%= DomainTheme.text_class_for(:topic_subscriptions) %>">Manage</span>
-                  <% end %>
-                </td>
               </tr>
             <% end %>
           </tbody>

@@ -26,17 +26,13 @@ class TopicSubscriptionsController < ApplicationController
       .includes(person: [ :user, :event_registrations ])
       .to_a
 
-    still_subscribed = matching.select(&:active?)
-    @unsubscribed_count = matching.size - still_subscribed.size
+    @email_addresses = reachable_emails(matching, unsubscribed: @include_unsubscribed, registered: @include_registered)
 
-    candidates = @include_unsubscribed ? matching : still_subscribed
-    answered, outstanding = candidates.partition(&:interest_already_answered?)
-    @registered_count = answered.size
-
-    @email_addresses = (@include_registered ? candidates : outstanding)
-      .filter_map { |subscription| subscription.person.preferred_email.presence }
-      .uniq
-      .sort
+    # Each toggle reports the addresses switching it on would *add*, not the
+    # subscriptions it hides — someone still reachable through another
+    # subscription isn't left out, and counting rows would overstate both.
+    @unsubscribed_count = (reachable_emails(matching, unsubscribed: true, registered: @include_registered) - @email_addresses).size
+    @registered_count = (reachable_emails(matching, unsubscribed: @include_unsubscribed, registered: true) - @email_addresses).size
   end
 
   def new
@@ -79,16 +75,16 @@ class TopicSubscriptionsController < ApplicationController
   def unsubscribe
     authorize! @topic_subscription, to: :update?
     @topic_subscription.unsubscribe!
-    redirect_to topic_subscriptions_path, notice: "Unsubscribed."
+    redirect_to save_return_path, notice: "Unsubscribed."
   end
 
   def resubscribe
     authorize! @topic_subscription, to: :update?
 
     if @topic_subscription.resubscribe
-      redirect_to topic_subscriptions_path, notice: "Resubscribed."
+      redirect_to save_return_path, notice: "Resubscribed."
     else
-      redirect_to topic_subscriptions_path,
+      redirect_to save_return_path,
         alert: "Can't resubscribe — this person #{@topic_subscription.errors.full_messages.to_sentence}."
     end
   end
@@ -96,10 +92,19 @@ class TopicSubscriptionsController < ApplicationController
   def destroy
     authorize! @topic_subscription
     @topic_subscription.destroy
-    redirect_to topic_subscriptions_path, notice: "Subscription removed."
+    redirect_to save_return_path, notice: "Subscription removed."
   end
 
   private
+
+  # The distinct addresses reachable from these subscriptions under the two
+  # opt-in widenings. Deduped by address, since one person can hold several
+  # subscriptions and only needs to be emailed once.
+  def reachable_emails(subscriptions, unsubscribed:, registered:)
+    scoped = unsubscribed ? subscriptions : subscriptions.select(&:active?)
+    scoped = scoped.reject(&:interest_already_answered?) unless registered
+    scoped.filter_map { |subscription| subscription.person.preferred_email.presence }.uniq.sort
+  end
 
   def set_topic_subscription
     @topic_subscription = TopicSubscription.find(params[:id])
@@ -119,8 +124,9 @@ class TopicSubscriptionsController < ApplicationController
     type&.id
   end
 
-  # When the form was opened from an event's Forms menu, return there; otherwise
-  # fall back to the subscriptions index.
+  # Back to wherever this subscription was opened from — the filtered index, an
+  # event's Forms menu, or a person — falling back to the subscriptions index.
+  # Shared with the eyebrow so the redirect and the back link never diverge.
   def save_return_path
     helpers.topic_subscription_return_path
   end

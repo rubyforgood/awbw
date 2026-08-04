@@ -3,9 +3,9 @@
 <% pencil_class = "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 cursor-pointer" %>
 <% value_class = "text-sm font-medium text-gray-900" %>
 
-<%# Specific upcoming trainings to narrow to, plus the current selection so an
+<%# Specific upcoming events to narrow to, plus the current selection so an
     already-chosen (possibly past) event stays selectable. %>
-<% event_options = Event.upcoming.facilitator_trainings.order(:start_date).to_a %>
+<% event_options = Event.upcoming.order(:start_date).to_a %>
 <% current_event = @topic_subscription.interested_event %>
 <% event_options.unshift(current_event) if current_event && event_options.exclude?(current_event) %>
 
@@ -17,9 +17,10 @@
 <% cancel_path = topic_subscription_return_path %>
 
 <%= form_with model: @topic_subscription, class: "space-y-5", data: { controller: "dirty-form conditional-fields" } do |f| %>
-  <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to].present? %>
-  <%= hidden_field_tag :event_id, params[:event_id] if params[:event_id].present? %>
-  <%= hidden_field_tag :person_id, params[:person_id] if params[:person_id].present? %>
+  <%# Where this form was opened from, so the redirect after save matches the eyebrow. %>
+  <% topic_subscription_return_params.each do |key, value| %>
+    <%= hidden_field_tag key, value, id: nil %>
+  <% end %>
 
   <% if @topic_subscription.errors.any? %>
     <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -78,7 +79,7 @@
         <i class="fa-solid fa-pen text-[0.6rem]"></i>
       </button>
     </div>
-    <p class="mt-1 text-xs text-gray-500">Choose a specific upcoming training, or “All upcoming events”.</p>
+    <p class="mt-1 text-xs text-gray-500">Choose a specific upcoming event, or “All upcoming events”.</p>
   </div>
 
   <div>

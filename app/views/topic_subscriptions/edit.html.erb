@@ -7,21 +7,23 @@
   <h1 class="text-2xl font-semibold text-gray-900 mb-6">Edit subscription</h1>
   <%= render "form", submit_label: "Save changes" %>
 
+  <%# These actions redirect too, so they carry the same origin params as the form. %>
+  <% return_params = topic_subscription_return_params %>
   <div class="mt-6 flex flex-wrap items-center gap-2 border-t border-gray-200 pt-4">
     <% if @topic_subscription.active? %>
-      <%= button_to unsubscribe_topic_subscription_path(@topic_subscription), method: :patch,
+      <%= button_to unsubscribe_topic_subscription_path(@topic_subscription, return_params), method: :patch,
             class: "btn btn-utility-outline inline-flex items-center gap-1.5" do %>
         <i class="fa-solid fa-bell-slash text-xs"></i>
         Unsubscribe
       <% end %>
     <% else %>
-      <%= button_to resubscribe_topic_subscription_path(@topic_subscription), method: :patch,
+      <%= button_to resubscribe_topic_subscription_path(@topic_subscription, return_params), method: :patch,
             class: "btn btn-utility-outline inline-flex items-center gap-1.5" do %>
         <i class="fa-solid fa-bell text-xs"></i>
         Resubscribe
       <% end %>
     <% end %>
-    <%= button_to topic_subscription_path(@topic_subscription), method: :delete,
+    <%= button_to topic_subscription_path(@topic_subscription, return_params), method: :delete,
           class: "btn btn-danger-outline inline-flex items-center gap-1.5",
           data: { turbo_confirm: "Remove this subscription?" } do %>
       <i class="fa-solid fa-trash-can text-xs"></i>

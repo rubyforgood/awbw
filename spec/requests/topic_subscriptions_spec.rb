@@ -129,6 +129,31 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).not_to include("optedout@example.com")
     end
 
+    it "counts email addresses that would actually be added, not subscriptions" do
+      news = create(:topic_subscription_type, :news)
+      # One person, two subscriptions: still reachable via News, so switching the
+      # unsubscribed back on would add nobody to the list.
+      both = create(:person, email: "both@example.com", user: nil)
+      create(:topic_subscription, person: both, topic_subscription_type: news)
+      create(:topic_subscription, :unsubscribed, person: both, topic_subscription_type: trainings)
+
+      get email_addresses_topic_subscriptions_path
+
+      expect(response.body).to include("both@example.com")
+      expect(response.body).not_to match(/\(\d+ left out\)/)
+    end
+
+    it "counts a person only once when several of their subscriptions are excluded" do
+      news = create(:topic_subscription_type, :news)
+      gone = create(:person, email: "gone@example.com", user: nil)
+      create(:topic_subscription, :unsubscribed, person: gone, topic_subscription_type: news)
+      create(:topic_subscription, :unsubscribed, person: gone, topic_subscription_type: trainings)
+
+      get email_addresses_topic_subscriptions_path
+
+      expect(response.body).to include("(1 left out)")
+    end
+
     it "adds back the unsubscribed when the include toggle is on" do
       opted_out = create(:person, email: "optedout@example.com", user: nil)
       create(:topic_subscription, :unsubscribed, person: opted_out, topic_subscription_type: trainings)
@@ -175,15 +200,13 @@ RSpec.describe "TopicSubscriptions", type: :request do
     end
 
     it "shows grey chips describing the applied index filters" do
-      get email_addresses_topic_subscriptions_path(topic_subscription_type_id: trainings.id, status: "active", q: "smith")
+      get email_addresses_topic_subscriptions_path(topic_subscription_type_id: trainings.id, status: "active")
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Topic:")
       expect(response.body).to include(trainings.name)
       expect(response.body).to include("Status:")
       expect(response.body).to include("Active")
-      expect(response.body).to include("Search:")
-      expect(response.body).to include("smith")
     end
 
     it "shows no filter chips when the list is unfiltered" do
@@ -265,6 +288,50 @@ RSpec.describe "TopicSubscriptions", type: :request do
 
       expect(response).to redirect_to(dashboard_event_path(event))
       expect(TopicSubscription.last.interested_event).to eq(event)
+    end
+  end
+
+  # Leaving the index for a row's edit page and coming back must land on the same
+  # filtered list, not the bare index — the filters ride along on the link, the
+  # form's hidden fields, and the edit page's action buttons.
+  describe "returning to the filtered index" do
+    let(:person) { create(:person, first_name: "Dana", last_name: "Rivers") }
+    let!(:subscription) { create(:topic_subscription, person: person, topic_subscription_type: trainings) }
+    let(:filters) { { person_id: person.id, status: "active" } }
+
+    it "carries the index's filters into each row's edit link" do
+      get topic_subscriptions_path(filters), headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+
+      expect(response.body).to include(
+        CGI.escapeHTML(edit_topic_subscription_path(subscription, filters.merge(return_to: "index")))
+      )
+    end
+
+    it "points the edit page's eyebrow back at the filtered index" do
+      get edit_topic_subscription_path(subscription, filters.merge(return_to: "index"))
+
+      expect(response.body).to include(CGI.escapeHTML(topic_subscriptions_path(filters)))
+    end
+
+    it "redirects back to the filtered index after saving" do
+      patch topic_subscription_path(subscription), params: filters.merge(
+        return_to: "index",
+        topic_subscription: { person_id: person.id, topic_subscription_type_id: trainings.id, note: "Called in" }
+      )
+
+      expect(response).to redirect_to(topic_subscriptions_path(filters))
+    end
+
+    it "redirects back to the filtered index after unsubscribing" do
+      patch unsubscribe_topic_subscription_path(subscription, filters.merge(return_to: "index"))
+
+      expect(response).to redirect_to(topic_subscriptions_path(filters))
+    end
+
+    it "redirects back to the filtered index after removing" do
+      delete topic_subscription_path(subscription, filters.merge(return_to: "index"))
+
+      expect(response).to redirect_to(topic_subscriptions_path(filters))
     end
   end
 
