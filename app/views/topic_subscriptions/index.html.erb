@@ -3,6 +3,10 @@
 <div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:topic_subscriptions) %> border border-gray-200 rounded-xl shadow p-6">
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
     <%= link_to "← Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <div class="flex items-center gap-4">
+      <%= link_to "Email addresses", email_addresses_topic_subscriptions_path(request.query_parameters), class: "text-sm text-gray-500 hover:text-gray-700" %>
+      <%= link_to "Manage topics", topic_subscription_types_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+    </div>
   </div>
 
   <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -14,7 +18,6 @@
       <p class="text-gray-600 mt-1">People subscribed to hear about a topic. A signal, not a registration.</p>
     </div>
     <div class="flex items-center gap-2">
-      <%= link_to "Manage topics", topic_subscription_types_path, class: "btn btn-utility-outline" %>
       <%= link_to new_topic_subscription_path(person_id: params[:person_id], return_to: ("person" if params[:person_id].present?)), class: "btn btn-primary inline-flex items-center gap-1.5" do %>
         <i class="fa-solid fa-plus text-xs"></i>
         New subscription

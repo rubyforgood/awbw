@@ -54,6 +54,22 @@ RSpec.describe "TopicSubscriptions", type: :request do
     end
   end
 
+  describe "GET /topic_subscriptions/email_addresses" do
+    it "lists the unique subscriber emails comma-separated, honoring filters" do
+      news = create(:topic_subscription_type, :news)
+      tara = create(:person, first_name: "Tara", last_name: "Trainings", email: "tara@example.com")
+      nora = create(:person, first_name: "Nora", last_name: "News", email: "nora@example.com")
+      create(:topic_subscription, person: tara, topic_subscription_type: trainings)
+      create(:topic_subscription, person: nora, topic_subscription_type: news)
+
+      get email_addresses_topic_subscriptions_path(topic_subscription_type_id: trainings.id)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("tara@example.com")
+      expect(response.body).not_to include("nora@example.com")
+    end
+  end
+
   describe "GET new and edit" do
     it "renders the new form" do
       get new_topic_subscription_path

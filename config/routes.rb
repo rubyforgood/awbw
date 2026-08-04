@@ -108,6 +108,9 @@ Rails.application.routes.draw do
     resources :comments, only: [ :index, :create, :update ]
   end
   resources :topic_subscriptions, except: [ :show ] do
+    collection do
+      get :email_addresses
+    end
     member do
       patch :unsubscribe
       patch :resubscribe

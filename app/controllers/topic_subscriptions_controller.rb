@@ -12,6 +12,16 @@ class TopicSubscriptionsController < ApplicationController
     render :topic_subscriptions_results if turbo_frame_request?
   end
 
+  def email_addresses
+    authorize! TopicSubscription, to: :index?
+    @email_addresses = TopicSubscription
+      .search_by_params(params)
+      .includes(:person)
+      .filter_map { |subscription| subscription.person.email.presence }
+      .uniq
+      .sort
+  end
+
   def new
     authorize! TopicSubscription
     @topic_subscription = TopicSubscription.new(

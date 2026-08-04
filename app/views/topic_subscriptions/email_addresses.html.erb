@@ -1,0 +1,25 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:topic_subscriptions) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
+    <%= link_to "← Subscriptions", topic_subscriptions_path(request.query_parameters), class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <div class="mb-6">
+    <h1 class="flex items-center gap-2 text-2xl font-semibold text-gray-900">
+      <i class="fa-solid fa-envelope <%= DomainTheme.text_class_for(:topic_subscriptions, intensity: 600) %>"></i>
+      Email addresses
+    </h1>
+    <p class="text-gray-600 mt-1">
+      <%= pluralize(@email_addresses.size, "unique email address") %> from the current subscriptions filter.
+    </p>
+  </div>
+
+  <% if @email_addresses.any? %>
+    <div class="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-800 break-words select-all">
+      <%= @email_addresses.join(", ") %>
+    </div>
+  <% else %>
+    <p class="text-gray-500">No email addresses found.</p>
+  <% end %>
+</div>
