@@ -254,12 +254,14 @@
               <i class="fa-solid fa-circle-check text-[0.6rem]"></i>
               Signed in at <%= open_entry.decorate.signed_in_label %>
             </span>
+            <%# Signing out is the one action left while signed in, so it gets the
+                primary CTA treatment, same as Sign in. %>
             <% if sample_preview? %>
               <button type="button" disabled
-                      class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-500 opacity-60 cursor-not-allowed">Sign out</button>
+                      class="shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white opacity-60 cursor-not-allowed">Sign out</button>
             <% else %>
               <%= button_to "Sign out", registration_ce_sign_out_path(@event_registration.slug), data: { turbo: false },
-                    class: "shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 cursor-pointer" %>
+                    class: "shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer" %>
             <% end %>
           <% elsif @event.attendance_sign_in_open? %>
             <%# "Signed out" only makes sense after a session today — first-time
@@ -267,11 +269,12 @@
             <% if todays_entries.any? %>
               <span class="inline-flex items-center gap-1.5 rounded-full border bg-gray-50 text-gray-600 border-gray-200 px-2.5 py-0.5 text-xs font-medium">Signed out</span>
             <% end %>
+            <% sign_in_label = todays_entries.any? ? "Sign in again" : "Sign in" %>
             <% if sample_preview? %>
               <button type="button" disabled
-                      class="shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white opacity-60 cursor-not-allowed">Sign in</button>
+                      class="shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white opacity-60 cursor-not-allowed"><%= sign_in_label %></button>
             <% else %>
-              <%= button_to "Sign in", registration_ce_sign_in_path(@event_registration.slug), data: { turbo: false },
+              <%= button_to sign_in_label, registration_ce_sign_in_path(@event_registration.slug), data: { turbo: false },
                     class: "shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer" %>
             <% end %>
           <% else %>
@@ -296,9 +299,10 @@
 
         <% if todays_entries.any? %>
           <dl class="mt-5 divide-y divide-gray-100 rounded-lg border border-gray-100">
+            <% tz_abbr = Time.zone.now.strftime("%Z") %>
             <div class="grid grid-cols-3 gap-2 px-3 py-2 text-xs font-medium uppercase tracking-wide text-gray-400">
-              <dt>Time in</dt>
-              <dt>Time out</dt>
+              <dt>Time in (<%= tz_abbr %>)</dt>
+              <dt>Time out (<%= tz_abbr %>)</dt>
               <dt class="text-right">Duration</dt>
             </div>
             <% todays_entries.each do |entry| %>

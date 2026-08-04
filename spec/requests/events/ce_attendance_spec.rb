@@ -98,12 +98,21 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       expect(response.body).not_to include("Signed out")
     end
 
-    it "shows the Signed out chip after signing out today" do
+    it "shows the Signed out chip and a Sign in again button after signing out today" do
       pay_ce!
       create(:event_attendance_time_entry, event_registration: registration,
         signed_in_at: Time.current - 2.hours, signed_out_at: Time.current - 1.hour)
       get registration_ce_path(registration.slug)
       expect(response.body).to include("Signed out")
+      expect(response.body).to include("Sign in again")
+    end
+
+    it "styles Sign out as the primary CTA while signed in" do
+      pay_ce!
+      create(:event_attendance_time_entry, :open, event_registration: registration,
+        signed_in_at: Time.current - 30.minutes)
+      get registration_ce_path(registration.slug)
+      expect(response.body).to match(/<button[^>]*bg-teal-600[^>]*>Sign out</)
     end
 
     it "shows a Sign out button and today's entries while signed in" do
@@ -113,6 +122,9 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       get registration_ce_path(registration.slug)
       expect(response.body).to include("Sign out")
       expect(response.body).to include("Signed in at")
+      # The entries table labels its clock times with the page's zone (Pacific).
+      expect(response.body).to include("Time in (PDT)")
+      expect(response.body).to include("Time out (PDT)")
     end
 
     it "shows the event dates and daily times on their own header line" do

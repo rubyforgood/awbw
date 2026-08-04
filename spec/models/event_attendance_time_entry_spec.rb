@@ -41,6 +41,13 @@ RSpec.describe EventAttendanceTimeEntry, type: :model do
       expect(entry.duration_minutes).to eq(2)
     end
 
+    it "counts a sub-minute pair as a full minute (rounds up for the attendee)" do
+      entry = build(:event_attendance_time_entry,
+        signed_in_at: Time.zone.local(2026, 7, 23, 9, 0, 0),
+        signed_out_at: Time.zone.local(2026, 7, 23, 9, 0, 20))
+      expect(entry.duration_minutes).to eq(1)
+    end
+
     it "is nil while open" do
       expect(build(:event_attendance_time_entry, :open).duration_minutes).to be_nil
     end

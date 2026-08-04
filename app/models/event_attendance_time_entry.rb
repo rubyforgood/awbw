@@ -30,10 +30,11 @@ class EventAttendanceTimeEntry < ApplicationRecord
   end
 
   # Whole minutes between sign-in and sign-out; nil while still open. Rounded to
-  # the minute like the paper sheet, which staff totalled by the minute.
+  # the minute like the paper sheet, which staff totalled by the minute — except
+  # a sub-minute pair counts as 1 (rounded up in the attendee's favor), never 0.
   def duration_minutes
     return nil unless signed_out_at && signed_in_at
-    ((signed_out_at - signed_in_at) / 60).round
+    [ ((signed_out_at - signed_in_at) / 60).round, 1 ].max
   end
 
   # The event day (a Date, in the app zone) this entry's sign-in falls on — how
