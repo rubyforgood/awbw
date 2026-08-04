@@ -24,6 +24,25 @@ RSpec.describe "Event registration edit page", type: :system do
     end
   end
 
+  describe "Linked organizations card" do
+    let(:organization) { create(:organization, name: "Asian Women Shelter") }
+
+    it "renders a linked organization as a profile link with a × removal toggle" do
+      create(:event_registration_organization, event_registration: registration, organization: organization)
+
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      within("section", text: "Linked organizations") do
+        expect(page).to have_link("Asian Women Shelter", href: organization_path(organization))
+        # The × is a <label for> wired to the (visually hidden) checkbox that
+        # submits the link — unchecking it marks the org for removal on save.
+        expect(page).to have_css("label[for='org_chip_#{organization.id}']")
+        expect(page).to have_field("event_registration[organization_ids][]", type: "checkbox", with: organization.id.to_s, visible: :all)
+      end
+    end
+  end
+
   describe "payment & allocation history" do
     it "shows the cost/allocated/due totals with nothing allocated" do
       sign_in(admin)
