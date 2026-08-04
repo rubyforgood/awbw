@@ -12,8 +12,13 @@ class EventAttendanceTimeEntry < ApplicationRecord
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
 
+  # A single day can't hold more than a real day's worth of logged time.
+  MAX_DAILY_MINUTES = 24 * 60
+
   validates :signed_in_at, presence: true
   validate :signed_out_after_signed_in
+  validate :within_daily_limit
+  validate :does_not_overlap_same_day
 
   scope :open, -> { where(signed_out_at: nil) }
   scope :closed, -> { where.not(signed_out_at: nil) }
@@ -44,5 +49,73 @@ class EventAttendanceTimeEntry < ApplicationRecord
     return if signed_out_at > signed_in_at
 
     errors.add(:signed_out_at, "must be after the sign-in time")
+  end
+
+  # The day's total logged time (this entry plus its same-day siblings) can't exceed
+  # 24 hours — catches fat-fingered edits like a 19-hour session.
+  def within_daily_limit
+    return unless own_range_valid?
+
+    total = duration_minutes.to_i + same_day_siblings.sum { |entry| entry.duration_minutes.to_i }
+    return if total <= MAX_DAILY_MINUTES
+
+    errors.add(:base, "Total time on #{day_label} can't exceed 24 hours.")
+  end
+
+  # An entry can't fall within (or straddle) another sign-in's timeframe on the same
+  # day — you can't be signed in twice at once.
+  def does_not_overlap_same_day
+    return unless own_range_valid?
+
+    my_end = signed_out_at || signed_in_at
+    clash = same_day_siblings.find do |entry|
+      entry_end = entry.signed_out_at || entry.signed_in_at
+      signed_in_at < entry_end && entry.signed_in_at < my_end
+    end
+    return unless clash
+
+    errors.add(:base, "This sign-in overlaps another entry on #{day_label}.")
+  end
+
+  # Only run the cross-entry guards on a well-formed range (presence + order are
+  # checked separately), so we never compare against a backwards interval.
+  def own_range_valid?
+    return false if signed_in_at.blank?
+
+    signed_out_at.blank? || signed_out_at > signed_in_at
+  end
+
+  # This registration's other entries on the same day. Starts from the persisted
+  # rows (queried fresh, not the possibly-stale association cache) and overlays the
+  # in-memory collection when it's loaded — so the CE edit form, which assigns every
+  # row through nested attributes, compares against siblings-in-progress (and their
+  # unsaved edits) too. Excludes self and rows being removed.
+  def same_day_siblings
+    registration = event_registration
+    return [] unless registration && attendance_date
+
+    by_key = {}
+    if registration.persisted?
+      EventAttendanceTimeEntry.where(event_registration_id: registration.id).find_each do |entry|
+        by_key[entry.id] = entry
+      end
+    end
+    if registration.event_attendance_time_entries.loaded?
+      registration.event_attendance_time_entries.target.each do |entry|
+        by_key[entry.id || entry.object_id] = entry
+      end
+    end
+
+    by_key.values.reject do |entry|
+      entry.equal?(self) ||
+        (persisted? && entry.id == id) ||
+        entry.marked_for_destruction? ||
+        entry.signed_in_at.blank? ||
+        entry.attendance_date != attendance_date
+    end
+  end
+
+  def day_label
+    attendance_date.strftime("%b %-d")
   end
 end

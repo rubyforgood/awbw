@@ -53,6 +53,78 @@ RSpec.describe EventAttendanceTimeEntry, type: :model do
     end
   end
 
+  describe "cross-entry guards" do
+    let(:registration) { create(:event_registration) }
+
+    def at(hour, min, day: 23)
+      Time.zone.local(2026, 7, day, hour, min)
+    end
+
+    describe "24-hour daily limit" do
+      it "rejects a single entry longer than 24 hours" do
+        entry = build(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: at(0, 0), signed_out_at: at(1, 0, day: 24))
+        expect(entry).not_to be_valid
+        expect(entry.errors[:base].join).to match(/24 hours/)
+      end
+
+      it "rejects when same-day siblings push the total past 24 hours" do
+        create(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: at(0, 0), signed_out_at: at(3, 0)) # 3h on the 23rd
+        # 22h more, still the 23rd (attendance date = sign-in day) and adjacent, so no
+        # overlap — but 25h total on the day.
+        cross = build(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: at(3, 0), signed_out_at: at(1, 0, day: 24))
+        expect(cross).not_to be_valid
+        expect(cross.errors[:base].join).to match(/24 hours/)
+      end
+
+      it "allows a day that totals exactly 24 hours" do
+        entry = build(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: at(0, 0), signed_out_at: at(0, 0, day: 24))
+        expect(entry).to be_valid
+      end
+    end
+
+    describe "same-day overlap" do
+      before do
+        create(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: at(9, 0), signed_out_at: at(12, 0))
+      end
+
+      it "rejects an entry that overlaps an existing session" do
+        entry = build(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: at(11, 0), signed_out_at: at(13, 0))
+        expect(entry).not_to be_valid
+        expect(entry.errors[:base].join).to match(/overlaps/)
+      end
+
+      it "rejects an entry fully inside an existing session" do
+        entry = build(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: at(10, 0), signed_out_at: at(11, 0))
+        expect(entry).not_to be_valid
+      end
+
+      it "rejects an open (not-yet-signed-out) entry inside an existing session" do
+        entry = build(:event_attendance_time_entry, :open, event_registration: registration,
+          signed_in_at: at(10, 0))
+        expect(entry).not_to be_valid
+      end
+
+      it "allows a back-to-back entry that only touches at the edge" do
+        entry = build(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: at(12, 0), signed_out_at: at(13, 0))
+        expect(entry).to be_valid
+      end
+
+      it "allows the same clock times on a different day" do
+        entry = build(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: at(9, 0, day: 24), signed_out_at: at(12, 0, day: 24))
+        expect(entry).to be_valid
+      end
+    end
+  end
+
   describe "scopes" do
     it "separates open from closed entries" do
       reg = create(:event_registration)

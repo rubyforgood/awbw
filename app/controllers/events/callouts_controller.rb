@@ -157,6 +157,9 @@ module Events
       entry = @event_registration.event_attendance_time_entries.create!(signed_in_at: Time.current)
       redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"),
         notice: "Signed in at #{local_time(entry.signed_in_at)}."
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"),
+        alert: e.record.errors.full_messages.to_sentence
     end
 
     # Close the registrant's open attendance entry. Not windowed — a forgotten
@@ -171,6 +174,9 @@ module Events
       entry.update!(signed_out_at: Time.current)
       redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"),
         notice: "Signed out at #{local_time(entry.signed_out_at)}."
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"),
+        alert: e.record.errors.full_messages.to_sentence
     end
 
     # Handouts page: callout-card links to the training worksheet/handout

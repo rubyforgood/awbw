@@ -342,6 +342,21 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
         }.not_to change { registration.event_attendance_time_entries.count }
       end
 
+      it "rejects overlapping times on the same day with a helpful error" do
+        pt = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+        create(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: pt.local(2026, 7, 23, 9, 0), signed_out_at: pt.local(2026, 7, 23, 12, 0))
+
+        expect {
+          patch continuing_education_registration_path(ce_registration),
+                params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
+                  time_entries: { "0" => { signed_in_at: "2026-07-23T11:00", signed_out_at: "2026-07-23T13:00" } } } }
+        }.not_to change { registration.event_attendance_time_entries.count }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(flash[:alert]).to match(/overlaps/)
+      end
+
       it "rejects a sign-out before the sign-in with a helpful error" do
         patch continuing_education_registration_path(ce_registration),
               params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
