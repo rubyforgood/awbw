@@ -181,7 +181,12 @@ Rails.application.routes.draw do
       get :bio
     end
     resources :comments, only: [ :index, :create, :update ]
-    resources :dues_subscriptions, only: [ :index, :new, :create ]
+    resources :dues_subscriptions, only: [ :index, :new, :create, :edit, :update ] do
+      member do
+        patch :cancel
+        patch :resume
+      end
+    end
   end
   resources :faqs
   resources :other_responses, only: [ :index, :update ] do
