@@ -39,6 +39,9 @@ application.register("ce-license-picker", CeLicensePickerController)
 import ChipSelectController from "./chip_select_controller"
 application.register("chip-select", ChipSelectController)
 
+import ClickableRowController from "./clickable_row_controller"
+application.register("clickable-row", ClickableRowController)
+
 import CocoonController from "./cocoon_controller"
 application.register("cocoon", CocoonController)
 

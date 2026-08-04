@@ -1,26 +1,32 @@
 <%# Scholarship summary: dollars and award counts (funded vs unfunded) plus an
     attended-trainee count, one column per facilitator training, grouped by year.
-    Pass `report:` (an EventScholarshipReport). Rendered on the scholarships
-    report page. %>
+    Pass `report:` (an EventScholarshipReport). Branded to the scholarship domain
+    theme (fuchsia); the three sections read by their icon + label, not by hue. %>
+<% header_cell = "text-right font-semibold px-3 py-2 border border-gray-200 align-bottom min-w-[9rem] max-w-[15rem]" %>
 <% if report.any? %>
   <div class="space-y-10">
     <% report.years.each do |group| %>
       <% events = group.columns %>
-      <section class="rounded-xl border border-gray-200 bg-white overflow-hidden">
-        <div class="flex items-baseline justify-between gap-3 px-4 py-3 bg-gray-50 border-b border-gray-200">
-          <h3 class="text-base font-semibold text-gray-900"><%= group.year || "Undated" %> facilitator trainings</h3>
+      <section class="rounded-xl border border-fuchsia-300 bg-white overflow-hidden">
+        <div class="flex items-baseline justify-between gap-3 px-4 py-3 bg-fuchsia-50 border-b border-fuchsia-300">
+          <h3 class="flex items-center gap-2 text-base font-semibold text-fuchsia-900">
+            <i class="fa-solid fa-graduation-cap text-fuchsia-500"></i>
+            <%= group.year || "Undated" %> facilitator trainings
+          </h3>
           <span class="text-xs text-gray-500"><%= pluralize(events.size, "training") %></span>
         </div>
 
         <div class="overflow-x-auto">
           <table class="w-full text-sm border-collapse">
-            <%# ---- $ of Scholarships ---- %>
+            <%# ---- $ of scholarships ---- %>
             <thead>
-              <tr class="bg-rose-100 text-gray-800">
-                <th class="text-left font-semibold px-3 py-2 border border-gray-200">$ of scholarships</th>
+              <tr class="bg-fuchsia-50 text-fuchsia-900">
+                <th class="text-left font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap">
+                  <i class="fa-solid fa-dollar-sign text-fuchsia-500 mr-1.5"></i>$ of scholarships
+                </th>
                 <% events.each do |column| %>
-                  <th class="text-right font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap" title="<%= column.event.title %>">
-                    <%= column.label %>
+                  <th class="<%= header_cell %>" title="<%= column.event.title %>">
+                    <span class="block line-clamp-2"><%= column.label %></span>
                     <% if column.date_label %>
                       <span class="block text-xs font-normal text-gray-500"><%= column.date_label %></span>
                     <% end %>
@@ -52,11 +58,15 @@
                 <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= dollars_from_cents(group.scholarship_cents) %></td>
               </tr>
 
-              <%# ---- # of Scholarships ---- %>
-              <tr class="bg-amber-100 text-gray-800">
-                <th class="text-left font-semibold px-3 py-2 border border-gray-200"># of scholarships</th>
+              <%# ---- # of scholarships ---- %>
+              <tr class="bg-fuchsia-50 text-fuchsia-900">
+                <th class="text-left font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap">
+                  <i class="fa-solid fa-hashtag text-fuchsia-500 mr-1.5"></i># of scholarships
+                </th>
                 <% events.each do |column| %>
-                  <th class="text-right font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap"><%= column.label %></th>
+                  <th class="<%= header_cell %>">
+                    <span class="block line-clamp-2"><%= column.label %></span>
+                  </th>
                 <% end %>
               </tr>
               <tr>
@@ -82,12 +92,14 @@
                 <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= group.scholarship_count %></td>
               </tr>
 
-              <%# ---- # of Trainees (attended) ---- %>
-              <tr class="bg-yellow-100 text-gray-800">
-                <th class="text-left font-semibold px-3 py-2 border border-gray-200"># of trainees attended</th>
+              <%# ---- # of trainees attended ---- %>
+              <tr class="bg-fuchsia-50 text-fuchsia-900">
+                <th class="text-left font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap">
+                  <i class="fa-solid fa-user-graduate text-fuchsia-500 mr-1.5"></i># of trainees attended
+                </th>
                 <% events.each do |column| %>
-                  <th class="text-right font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap">
-                    <%= column.label %>
+                  <th class="<%= header_cell %>">
+                    <span class="block line-clamp-2"><%= column.label %></span>
                     <% if column.on_demand? %>
                       <span class="block text-xs font-normal text-gray-500">On-demand</span>
                     <% end %>
