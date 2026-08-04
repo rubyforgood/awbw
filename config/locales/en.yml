@@ -58,8 +58,8 @@ en:
         one: "Subscription"
         other: "Subscriptions"
       topic_subscription_type:
-        one: "Topic"
-        other: "Topics"
+        one: "Subscription type"
+        other: "Subscription types"
       video_recording:
         one: "Video"
         other: "Videos"

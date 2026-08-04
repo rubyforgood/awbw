@@ -28,15 +28,16 @@ module AdminCardsHelper
     [
       custom_card("Portal activity", admin_activities_counts_path, icon: "📊"),
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
-      model_card(:quotes, icon: "💬", intensity: 100),
+      model_card(:notifications, icon: "🔔", title: t("communications.title")),
       custom_card("Events statistics", statistics_events_path, icon: "📊", color: :blue),
       model_card(:scholarships, icon: "🎓"),
-      model_card(:notifications, icon: "🔔", title: t("communications.title")),
+      model_card(:topic_subscriptions, icon: "✉️", intensity: 100, title: "Subscriptions"),
       model_card(:story_ideas, icon: "✍🏾️", intensity: 100),
       custom_card("Tags", tags_path, icon: "🏷️", color: :lime, intensity: 100),
       model_card(:workshop_ideas, icon: "💡", intensity: 100),
       model_card(:workshop_variation_ideas, icon: "🔀", intensity: 100),
-      model_card(:workshop_logs, icon: "📝", intensity: 100)
+      model_card(:workshop_logs, icon: "📝", intensity: 100),
+      model_card(:quotes, icon: "💬", intensity: 100)
     ]
   end
 
@@ -53,7 +54,7 @@ module AdminCardsHelper
                  intensity: 100,
                  title: "Sectors",
                  params: { published: true }),
-      custom_card("Subscription topics", topic_subscription_types_path, icon: "✉️", color: :sky, intensity: 100),
+      model_card(:topic_subscription_types, icon: "✉️", intensity: 100, title: "Subscription topics"),
       custom_card("Windows audiences", windows_types_path, icon: "🪟")
     ]
   end
