@@ -297,13 +297,19 @@
                                     title: org.name,
                                     class: org_btn_classes,
                                     data: { turbo_frame: "_top" } %>
-                        <%# Same chip styling as the "None" chip (padding, colors, hover),
-                            just a rounded-md rectangle to pair with the org button. %>
+                        <%# Same chip as "None" below, but for a linked org only the icon
+                            shows. A zero-width invisible copy of the word carries the
+                            text-xs line height so the chip keeps the same height (vertical
+                            padding around the icon) without reserving the word's width.
+                            gap-1.5 is dropped from pill_classes so the collapsed span adds
+                            no horizontal gap. %>
+                        <% icon_only_pill = pill_classes.sub("gap-1.5 ", "") %>
                         <%= link_to editor_path,
                                     title: "Edit linked organizations",
-                                    class: "inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs font-medium border px-3 py-0.5 transition hover:opacity-80 hover:shadow-sm bg-gray-50 text-gray-500 border-gray-200",
+                                    class: "#{icon_only_pill} bg-gray-50 text-gray-500 border-gray-200",
                                     data: { turbo_frame: "_top" } do %>
-                          <i class="fa-solid fa-pencil text-[0.7rem]"></i>
+                          <span class="invisible w-0 min-w-0 overflow-hidden">None</span>
+                          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
                         <% end %>
                       </span>
                     <% end %>
@@ -321,7 +327,7 @@
                                   class: "#{pill_classes} bg-gray-50 text-gray-500 border-gray-200",
                                   data: { turbo_frame: "_top" } do %>
                         <span>None</span>
-                        <i class="fa-solid fa-pencil text-[0.6rem] opacity-70"></i>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
                       <% end %>
                     <% end %>
                   </div>
