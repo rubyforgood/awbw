@@ -293,15 +293,13 @@ class BuiltinCalloutCards
              badge: ce_request_badge)
   end
 
-  # The CE fee and/or request deadline, so the registrant sees the cost and when to
-  # act before requesting — e.g. "$150 · Request CE by Jul 1". Naming the request
-  # keeps the date from reading as a payment due date. Nil when the event sets neither.
+  # The request deadline, so a not-yet-requested registrant knows when to act —
+  # e.g. "Request CE by Jul 1". No fee here (they haven't opted in and owe nothing
+  # yet); the cost surfaces on the card once they've requested. Nil when the event
+  # sets no request deadline.
   def ce_request_badge
-    parts = []
-    cost_cents = event.ce_hours_cost_cents.to_i
-    parts << MoneyFormatter.dollars_from_cents(cost_cents) if cost_cents.positive?
-    parts << "Request CE by #{ce_deadline_text(event.ce_hours_request_deadline)}" if event.ce_hours_request_deadline
-    parts.join(" · ").presence
+    return unless event.ce_hours_request_deadline
+    "Request CE by #{ce_deadline_text(event.ce_hours_request_deadline)}"
   end
 
   # Whether a not-yet-requested registrant can still request CE credit: no request

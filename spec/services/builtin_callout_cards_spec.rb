@@ -92,7 +92,7 @@ RSpec.describe BuiltinCalloutCards do
       event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000, ce_hours_request_deadline: Date.current + 1.day)
       invite = card(registration, event.ce_hours_label)
       expect(invite.subtitle).to eq("Request continuing education credit")
-      expect(invite.badge).to eq("$150 · Request CE by #{(Date.current + 1.day).strftime("%b %-d")}")
+      expect(invite.badge).to eq("Request CE by #{(Date.current + 1.day).strftime("%b %-d")}")
       expect(invite.theme).to eq(DomainTheme.swatch("teal"))
     end
 

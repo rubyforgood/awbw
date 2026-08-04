@@ -370,12 +370,24 @@ RSpec.describe "Events::Callouts", type: :request do
     end
 
     context "when CE is not registered" do
-      let(:event) { create(:event) }
+      let(:event) { create(:event, ce_hours_offered: 6) }
 
-      it "renders the opt-in form" do
+      it "renders the opt-in form inside the flip frame" do
         get registration_ce_path(registration.slug)
         expect(response).to have_http_status(:success)
-        expect(response.body).to include("Request CE credit")
+        button = Nokogiri::HTML(response.body).at_css("turbo-frame#ce_request_section input[value='Request CE credit']")
+        expect(button).to be_present
+      end
+
+      it "flips the frame to the license section once CE is requested" do
+        post registration_ce_request_path(registration.slug)
+
+        # Turbo re-fetches the redirect target for the frame; the same frame now
+        # carries the license-entry section instead of the opt-in button.
+        get registration_ce_path(registration.slug), headers: { "Turbo-Frame" => "ce_request_section" }
+        frame = Nokogiri::HTML(response.body).at_css("turbo-frame#ce_request_section")
+        expect(frame.text).to include("Your CE credit")
+        expect(frame.text).not_to include("Request CE credit")
       end
     end
 
