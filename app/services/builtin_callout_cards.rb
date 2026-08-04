@@ -53,18 +53,17 @@ class BuiltinCalloutCards
     [
       EditorCard.new("payment", "fa-solid fa-credit-card", "orange", "Payment", "Your balance and payment history", "When the event has a cost", nil),
       EditorCard.new("scholarship", "fa-solid fa-award", "fuchsia", "Scholarship", "Your scholarship request and award", "When the registrant requested a scholarship", nil),
-      EditorCard.new("videoconference", "fa-solid fa-video", "blue", "Videoconference", "Join link and how to add it to your calendar", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
+      EditorCard.new("videoconference", "fa-solid fa-video", "blue", "Videoconference", "Join details and add to calendar links", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
       EditorCard.new("staff", "fa-solid fa-people-group", "blue", "Meet the staff", "The team for this event", "Always shown when published", "The roster comes from this event's staff."),
-      EditorCard.new("handouts", "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "On facilitator trainings", "Items link to their relevant resources."),
+      EditorCard.new("handouts", "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the event", "On facilitator trainings", "Items link to their relevant resources."),
       EditorCard.new("certificate", "fa-solid fa-certificate", "green", "Certificate of completion", "View and download your certificate", "Once the certificate is unlocked", nil),
       EditorCard.new("faq", "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "On facilitator trainings", nil)
     ].reject { |card| materialized.include?(card.builtin_key) }
   end
 
   # builtin_key → builder method, in the default order cards appear on a ticket.
-  # Content callouts (art supplies, handouts, FAQ) only ever render from their
-  # materialized row (the ticket's content branch), never from code, so they have
-  # no builder here.
+  # Content callouts (handouts, FAQ) only ever render from their materialized row
+  # (the ticket's content branch), never from code, so they have no builder here.
   CARD_BUILDERS = {
     "payment" => :payment_card,
     "scholarship" => :scholarship_status_card,
@@ -367,7 +366,7 @@ class BuiltinCalloutCards
     return if config_gap?("videoconference")
     Card.new(icon_class: "fa-solid fa-video", color: "blue",
              title: "Videoconference",
-             subtitle: "Join link and how to add it to your calendar",
+             subtitle: "Join details and add to calendar links",
              href: registration_videoconference_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end

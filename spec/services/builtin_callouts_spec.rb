@@ -2,13 +2,13 @@ require "rails_helper"
 
 RSpec.describe BuiltinCallouts do
   describe "#build" do
-    it "builds all nine built-ins as unsaved in-memory rows on a new event" do
+    it "builds all eight built-ins as unsaved in-memory rows on a new event" do
       event = Event.new
 
       built = described_class.build(event)
 
       expect(built.map(&:builtin_key)).to contain_exactly(
-        "payment", "certificate", "scholarship", "ce_hours", "art_supplies",
+        "payment", "certificate", "scholarship", "ce_hours",
         "videoconference", "staff", "handouts", "faq"
       )
       expect(built).to all(be_new_record)
@@ -22,7 +22,7 @@ RSpec.describe BuiltinCallouts do
       built = described_class.build(event)
 
       expect(built).to be_empty
-      expect(event.registration_ticket_callouts.builtin.count).to eq(9)
+      expect(event.registration_ticket_callouts.builtin.count).to eq(8)
     end
 
     it "builds a paid event's Payment card with the W-9 link (subtitle) in memory" do
@@ -39,14 +39,14 @@ RSpec.describe BuiltinCallouts do
   end
 
   describe "#seed" do
-    it "materializes all nine built-in callouts for every event" do
+    it "materializes all eight built-in callouts for every event" do
       event = create(:event, cost_cents: 0) # free, no scholarship form, no VC link
 
       described_class.seed(event)
 
       keys = event.registration_ticket_callouts.builtin.pluck(:builtin_key)
       expect(keys).to contain_exactly(
-        "payment", "certificate", "scholarship", "ce_hours", "art_supplies",
+        "payment", "certificate", "scholarship", "ce_hours",
         "videoconference", "staff", "handouts", "faq"
       )
     end
@@ -60,7 +60,7 @@ RSpec.describe BuiltinCallouts do
       described_class.seed(event)
 
       expect(event.registration_ticket_callouts.ordered.map(&:builtin_key)).to eq(
-        %w[payment scholarship ce_hours art_supplies videoconference staff handouts certificate faq]
+        %w[payment scholarship ce_hours videoconference staff handouts certificate faq]
       )
     end
 
@@ -110,28 +110,25 @@ RSpec.describe BuiltinCallouts do
       expect(payment.resources).to be_empty # no W-9 on a free event
     end
 
-    it "seeds CE hours and art supplies with their default titles and no content" do
+    it "seeds CE hours with its default title and no content" do
       event = create(:event)
 
       described_class.seed(event)
 
       ce = event.registration_ticket_callouts.find_by(builtin_key: "ce_hours")
-      art_supplies = event.registration_ticket_callouts.find_by(builtin_key: "art_supplies")
       expect(ce.title).to eq("CE hours")
       expect(ce.description).to be_blank
-      expect(art_supplies.title).to eq("Art supplies & what to bring")
-      expect(art_supplies.description).to be_blank
       # A freshly-seeded card matches its default.
       expect(described_class.customized?(ce)).to be(false)
     end
 
-    it "seeds art supplies as a content callout" do
+    it "seeds Handouts as a content callout" do
       event = create(:event)
 
       described_class.seed(event)
 
-      art_supplies = event.registration_ticket_callouts.find_by(builtin_key: "art_supplies")
-      expect(art_supplies.behavioral_builtin?).to be(false)
+      handouts = event.registration_ticket_callouts.find_by(builtin_key: "handouts")
+      expect(handouts.behavioral_builtin?).to be(false)
     end
 
     it "reports whether a materialized callout has been customized" do
@@ -248,7 +245,7 @@ RSpec.describe BuiltinCallouts do
 
       keys = event.registration_ticket_callouts.builtin.pluck(:builtin_key)
       expect(keys).to contain_exactly(
-        "payment", "certificate", "scholarship", "ce_hours", "art_supplies",
+        "payment", "certificate", "scholarship", "ce_hours",
         "videoconference", "staff", "faq"
       )
     end
@@ -261,7 +258,7 @@ RSpec.describe BuiltinCallouts do
 
       expect(event.registration_ticket_callouts.ordered.first).to eq(custom)
       expect(event.registration_ticket_callouts.ordered.map(&:builtin_key).compact).to eq(
-        %w[payment scholarship ce_hours art_supplies videoconference staff handouts certificate faq]
+        %w[payment scholarship ce_hours videoconference staff handouts certificate faq]
       )
     end
   end
