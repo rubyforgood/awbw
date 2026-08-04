@@ -132,6 +132,13 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/workshop_variation_ideas/index.html.erb" => "admin-only bg-blue-100",
     "app/views/grants/index.html.erb"                  => "admin-only bg-blue-100",
     "app/views/scholarships/index.html.erb"            => "admin-only bg-blue-100",
+    "app/views/topic_subscriptions/index.html.erb"     => "admin-only bg-blue-100",
+    "app/views/topic_subscriptions/email_addresses.html.erb" => "admin-only bg-blue-100",
+    "app/views/topic_subscriptions/new.html.erb"       => "admin-only bg-blue-100",
+    "app/views/topic_subscriptions/edit.html.erb"      => "admin-only bg-blue-100",
+    "app/views/topic_subscription_types/index.html.erb" => "admin-only bg-blue-100",
+    "app/views/topic_subscription_types/new.html.erb"  => "admin-only bg-blue-100",
+    "app/views/topic_subscription_types/edit.html.erb" => "admin-only bg-blue-100",
     "app/views/form_submissions/index.html.erb"        => "admin-only bg-blue-100",
     # show
     "app/views/banners/show.html.erb"                  => "admin-only bg-blue-100",

@@ -49,5 +49,15 @@ RSpec.describe "Admin::Home", type: :request do
       expect(response.body).to include(statistics_events_path)
       expect(response.body).to include("Payments")
     end
+
+    it "surfaces Subscription topics and moves Organization statuses to Deprecated data" do
+      get admin_path
+
+      expect(response.body).to include("Subscription topics")
+      expect(response.body).to include(topic_subscription_types_path)
+      expect(response.body).to include("Deprecated data")
+      expect(response.body).to include("Organization statuses")
+      expect(response.body).to include(organization_statuses_path)
+    end
   end
 end

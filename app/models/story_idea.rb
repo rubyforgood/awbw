@@ -11,6 +11,7 @@ class StoryIdea < ApplicationRecord
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:query]) if params[:query].present?
     results = results.where(organization_id: params[:organization_id]) if params[:organization_id].present?
+    results = results.created_by_person(params[:created_by_person_id]) if params[:created_by_person_id].present?
     results
   end
 

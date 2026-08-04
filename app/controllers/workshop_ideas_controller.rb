@@ -6,6 +6,7 @@ class WorkshopIdeasController < ApplicationController
     per_page = params[:number_of_items_per_page].presence || 25
     base_scope = authorized_scope(WorkshopIdea.includes(:workshops))
     filtered = base_scope.search(params.slice(:title, :created_by_id, :author_name))
+    filtered = filtered.created_by_person(params[:created_by_person_id]) if params[:created_by_person_id].present?
     @workshop_ideas_count = filtered.size
     @workshop_ideas = filtered.paginate(page: params[:page], per_page: per_page).decorate
     @users = User.has_access.includes(:person).references(:person).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)"))

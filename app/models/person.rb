@@ -35,6 +35,7 @@ class Person < ApplicationRecord
            dependent: :restrict_with_error
   # has_many through
   has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
+  has_many :topic_subscriptions, dependent: :destroy
   has_many :event_staffs, dependent: :destroy
   has_many :scholarships, foreign_key: :recipient_id, dependent: :destroy
   has_many :grants, as: :donor, dependent: :destroy

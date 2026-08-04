@@ -31,6 +31,8 @@ module DomainTheme
     banners:                  :yellow,
     users:                    :rose,
     comments:                 :purple,
+    topic_subscriptions:      :stone,
+    topic_subscription_types: :stone,
 
     # Event dashboard cards
     payments:                 :green,

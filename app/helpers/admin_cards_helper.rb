@@ -28,15 +28,16 @@ module AdminCardsHelper
     [
       custom_card("Portal activity", admin_activities_counts_path, icon: "📊"),
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
-      model_card(:quotes, icon: "💬", intensity: 100),
+      model_card(:notifications, icon: "🔔", title: t("communications.title")),
       custom_card("Events statistics", statistics_events_path, icon: "📊", color: :blue),
       model_card(:scholarships, icon: "🎓"),
-      model_card(:notifications, icon: "🔔", title: t("communications.title")),
+      model_card(:topic_subscriptions, icon: "✉️", intensity: 100, title: "Subscriptions"),
       model_card(:story_ideas, icon: "✍🏾️", intensity: 100),
       custom_card("Tags", tags_path, icon: "🏷️", color: :lime, intensity: 100),
       model_card(:workshop_ideas, icon: "💡", intensity: 100),
       model_card(:workshop_variation_ideas, icon: "🔀", intensity: 100),
-      model_card(:workshop_logs, icon: "📝", intensity: 100)
+      model_card(:workshop_logs, icon: "📝", intensity: 100),
+      model_card(:quotes, icon: "💬", intensity: 100)
     ]
   end
 
@@ -49,12 +50,21 @@ module AdminCardsHelper
       model_card(:categories, icon: "🗂️",
                  intensity: 100,
                  params: { published: true }),
-      custom_card("Organization statuses", organization_statuses_path, icon: "🧮", color: :emerald, intensity: 100),
       model_card(:sectors, icon: "🏭",
                  intensity: 100,
                  title: "Sectors",
                  params: { published: true }),
+      model_card(:topic_subscription_types, icon: "✉️", intensity: 100, title: "Subscription topics"),
       custom_card("Windows audiences", windows_types_path, icon: "🪟")
+    ]
+  end
+
+  # -----------------------------
+  # DEPRECATED DATA CARDS
+  # -----------------------------
+  def deprecated_data_cards
+    [
+      custom_card("Organization statuses", organization_statuses_path, icon: "🧮", color: :emerald, intensity: 100)
     ]
   end
 

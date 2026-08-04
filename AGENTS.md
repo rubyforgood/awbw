@@ -62,7 +62,7 @@ This codebase (Rails 8.1)
 | `app/decorators/` | Draper decorators for view logic | ~40 files |
 | `app/policies/` | ActionPolicy authorization rules | ~55 files |
 | `app/presenters/` | Presentation objects | 6 files |
-| `app/helpers/` | View helpers | ~25 files |
+| `app/helpers/` | View helpers | ~29 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (75) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (76) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -108,6 +108,8 @@ This codebase (Rails 8.1)
 | `Scholarship` | Award to a `Person`; optionally drawn from a `Grant`, syncs to event registration `Allocation` |
 | `ProfessionalLicense` | A license a `Person` holds (`number`, `kind`, `issuing_state`, `expires_on`); a null `number` is a placeholder. `find_or_create_for` keeps one license per (person, number) |
 | `ContinuingEducationRegistration` | A registrant's CE for one event against one `ProfessionalLicense`; billable `allocatable` (`Registerable`) with stored `hours` + `cost_cents` (default from the event). Payment is computed (no stored status); the certificate is delivered via `certificate_sent_at` and gated by its own `certificate_available?` |
+| `TopicSubscription` | A `Person`'s standing subscription to a `TopicSubscriptionType`, optionally narrowed to a specific `interested_event` (null = the topic broadly). State is timestamp-driven (`unsubscribed_at IS NULL` = active — `active?`/`unsubscribe!`/`resubscribe` — non-bang, since reviving can collide with a newer active row, no status column); `subscribed_at` + `source` mirror the `mailing_list_consent_*` provenance pattern. Distinct from the `mailing_list_consent_*` flag (consent = "you may email me"; subscription = "what I want to hear about") and from an `EventRegistration` (an actual enrollment). One active subscription per (person, type, event) |
+| `TopicSubscriptionType` | Admin-editable list of subscribable topics (`TopicSubscriptionTypesController` CRUD). Editable `name` + immutable derived `key` slug (stable for code lookups like `interested_in_more` → `INTERESTED_IN_MORE_KEY`); `archived_at` retires a topic without deleting it (`active`/`archived` scopes) since types in use can't be destroyed (`restrict_with_error`). Seeded (all envs) from `CANONICAL` — facilitator_trainings/news/resources |
 | `Report` | STI base class for MonthlyReport |
 | `WorkshopLog` | Standalone model for workshop log submissions (attendance, form fields) |
 
@@ -310,6 +312,7 @@ end
 - `edit_toggle` — Inline view/edit toggle for the comments and communications boxes (configurable view/edit CSS classes)
 - `event_staff_bio` — Loads a selected person's read-only profile bio (with edit link) alongside the editable event-specific bio on the staff form
 - `file_preview` — File upload preview
+- `conditional_fields` — Shows/hides fields based on a source `<select>` (via `data-show-when` value match, or `data-show-when-attr` reading a `data-*` flag on the selected option — e.g. the subscription form's event field appears only for event-oriented topics)
 - `grant_details` — Swaps a grant's eligibility criteria + tasks when the grant picker changes
 - `grant_select` — Tom Select grant picker showing each grant's remaining-of-total funds
 - `inactive_toggle` — Gray out expired affiliations

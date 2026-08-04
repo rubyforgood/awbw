@@ -1,0 +1,98 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="max-w-5xl mx-auto <%= DomainTheme.bg_class_for(:topic_subscription_types) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
+    <%= link_to "← Subscriptions", topic_subscriptions_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-semibold text-gray-900">Subscription topics</h1>
+      <p class="text-gray-600 mt-1">The topics people can subscribe to. Archive a topic to retire it without losing existing subscriptions.</p>
+    </div>
+    <%= link_to new_topic_subscription_type_path, class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+      <i class="fa-solid fa-plus text-xs"></i>
+      New topic
+    <% end %>
+  </div>
+
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Status filter">
+        <%= link_to topic_subscription_types_path(status: "active"),
+              class: "px-3 py-1 rounded-md transition-colors #{@status_filter == "active" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}" do %>
+          Active <span class="text-gray-400">(<%= @active_count %>)</span>
+        <% end %>
+        <%= link_to topic_subscription_types_path(status: "archived"),
+              class: "px-3 py-1 rounded-md transition-colors #{@status_filter == "archived" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}" do %>
+          Archived <span class="text-gray-400">(<%= @archived_count %>)</span>
+        <% end %>
+      </nav>
+    </div>
+    <table class="w-full border-collapse border border-gray-200">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Key</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Events</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Subscriptions</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% @topic_subscription_types.each do |type| %>
+          <tr class="hover:bg-gray-50 transition-colors duration-150 align-middle <%= "text-gray-500" if type.archived? %>">
+            <td class="px-4 py-2 text-sm">
+              <%# Active is a light card in the page's stone tone; archived keeps a solid
+                  dark card so the retired state reads at a glance. Both open the edit page. %>
+              <% if type.archived? %>
+                <% card_classes = "border-gray-700 bg-gray-700 hover:bg-gray-800 text-white" %>
+                <% icon_classes = "text-gray-300" %>
+              <% else %>
+                <% card_classes = "#{DomainTheme.border_class_for(:topic_subscription_types)} #{DomainTheme.bg_class_for(:topic_subscription_types, intensity: 100)} #{DomainTheme.bg_class_for(:topic_subscription_types, intensity: 100, hover: true)} #{DomainTheme.text_class_for(:topic_subscription_types, intensity: 600)}" %>
+                <% icon_classes = DomainTheme.text_class_for(:topic_subscription_types, intensity: 600) %>
+              <% end %>
+              <%= link_to edit_topic_subscription_type_path(type), title: "Edit #{type.name}",
+                    class: "group inline-flex items-center gap-2 max-w-full px-2.5 py-1.5 rounded-lg border shadow-sm leading-none transition-colors duration-200 #{card_classes}" do %>
+                <i class="fa-solid fa-tag flex-shrink-0 text-xs <%= icon_classes %>"></i>
+                <span class="font-semibold text-sm truncate"><%= type.name %></span>
+              <% end %>
+            </td>
+            <td class="px-4 py-2 text-sm text-gray-500"><code><%= type.key %></code></td>
+            <td class="px-4 py-2 text-sm text-gray-500">
+              <% if type.event_selector? %>
+                <span class="inline-flex items-center gap-1 text-gray-700">
+                  <i class="fa-solid fa-check text-xs text-green-600"></i>
+                  Tied to events
+                </span>
+              <% else %>
+                <span class="text-gray-400">—</span>
+              <% end %>
+            </td>
+            <td class="px-4 py-2 text-sm text-gray-700">
+              <%= link_to type.topic_subscriptions.count, topic_subscriptions_path(topic_subscription_type_id: type.id),
+                    class: "text-blue-600 hover:text-blue-800 hover:underline" %>
+            </td>
+            <td class="px-4 py-2 text-sm">
+              <% badge_base = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium" %>
+              <% if type.archived? %>
+                <span class="<%= badge_base %> bg-slate-600 text-white border-slate-600">
+                  <i class="fa-solid fa-box-archive text-[0.65rem]"></i>
+                  Archived
+                </span>
+              <% else %>
+                <span class="<%= badge_base %> bg-green-50 text-green-700 border-green-200">
+                  <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
+                  Active
+                </span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <% if @topic_subscription_types.none? %>
+      <p class="text-gray-500 text-center py-8"><%= @status_filter == "archived" ? "No archived topics." : "No active topics yet." %></p>
+    <% end %>
+  </div>
+</div>

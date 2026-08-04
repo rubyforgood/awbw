@@ -1,0 +1,67 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:topic_subscriptions) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
+    <%= link_to "← Subscriptions", topic_subscriptions_path(request.query_parameters), class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <div class="mb-6">
+    <h1 class="flex items-center gap-2 text-2xl font-semibold text-gray-900">
+      <i class="fa-solid fa-envelope <%= DomainTheme.text_class_for(:topic_subscriptions, intensity: 600) %>"></i>
+      Email addresses
+    </h1>
+    <p class="text-gray-600 mt-1">
+      <%= pluralize(@email_addresses.size, "unique email address") %> from the current subscriptions filter.
+      This list is narrower than the index: people who unsubscribed are left out, as are people already
+      registered for the event their subscription names. Switch either back on below.
+    </p>
+
+    <%# The index filters carried through, so it's clear which subscribers this list covers. %>
+    <% applied_filters = topic_subscription_applied_filters(request.query_parameters) %>
+    <% if applied_filters.any? %>
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Filters</span>
+        <% applied_filters.each do |label, value| %>
+          <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
+            <span class="font-semibold text-gray-500"><%= label %>:</span>
+            <%= value %>
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Both toggles re-run the query, so they're real checkboxes in a GET form that
+      resubmits on change and carries the index's filter params through. The track
+      is the app's pure-CSS `peer` switch — the input must stay the first sibling. %>
+  <%= form_with url: email_addresses_topic_subscriptions_path, method: :get,
+        class: "mb-6 flex flex-wrap items-center gap-x-8 gap-y-3" do %>
+    <% request.query_parameters.except("include_unsubscribed", "include_registered").each do |key, value| %>
+      <%= hidden_field_tag key, value, id: nil %>
+    <% end %>
+
+    <% [ [ :include_unsubscribed, @include_unsubscribed, @unsubscribed_count, "people who unsubscribed", "fa-bell-slash" ],
+         [ :include_registered, @include_registered, @registered_count, "people already registered", "fa-clipboard-check" ] ].each do |name, checked, hidden_count, label, icon| %>
+      <div class="flex items-center">
+        <%= check_box_tag name, "1", checked, id: name.to_s.dasherize, class: "sr-only peer",
+              onchange: "this.form.requestSubmit()" %>
+        <%= label_tag name.to_s.dasherize, "",
+              class: "relative inline-block h-6 w-11 rounded-full bg-gray-200 align-middle transition-colors cursor-pointer after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-stone-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-stone-300" %>
+        <%= label_tag name.to_s.dasherize,
+              class: "ml-2 inline-flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer select-none" do %>
+          <i class="fa-solid <%= icon %> text-xs text-gray-400" aria-hidden="true"></i>
+          <%# The count is already 0 once the toggle is on, so no `checked` guard. %>
+          Include <%= label %><% if hidden_count.positive? %> (<%= hidden_count %> left out)<% end %>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+
+  <% if @email_addresses.any? %>
+    <div class="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-800 break-words select-all">
+      <%= @email_addresses.join(", ") %>
+    </div>
+  <% else %>
+    <p class="text-gray-500">No email addresses found.</p>
+  <% end %>
+</div>
