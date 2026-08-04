@@ -208,11 +208,17 @@ class User < ApplicationRecord
     []
   end
 
+  # The staff member who triggered this confirmation email, when one did. Not
+  # persisted — DeviseMailer reads it off the record to attribute the
+  # notification it logs, since it has no request and no current_user.
+  attr_reader :confirmation_sender
+
   # Override Devise to always send confirmation to the pending email when present.
   # Devise's default checks `pending_reconfirmation?` but can still route to the
   # current email in some flows. This ensures the confirmation always targets the
   # unconfirmed (new) email address.
-  def send_confirmation_instructions
+  def send_confirmation_instructions(sender: nil)
+    @confirmation_sender = sender
     generate_confirmation_token! unless @raw_confirmation_token
     target = unconfirmed_email.presence || email
     send_devise_notification(:confirmation_instructions, @raw_confirmation_token, to: target)

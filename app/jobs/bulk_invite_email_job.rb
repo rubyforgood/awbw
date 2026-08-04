@@ -3,7 +3,7 @@ class BulkInviteEmailJob < ApplicationJob
 
   def perform(user_id, sender_id: nil)
     user = User.find(user_id)
-    Current.user = User.find_by(id: sender_id) if sender_id
-    user.send_confirmation_instructions
+    sender = User.find_by(id: sender_id) if sender_id
+    user.send_confirmation_instructions(sender: sender)
   end
 end

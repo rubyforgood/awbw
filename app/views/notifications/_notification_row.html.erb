@@ -13,7 +13,7 @@
 <% show_body = admin || !body_admin_only %>
 <% subject = notification.email_subject.presence || notification.kind.to_s.humanize %>
 <% body = notification.email_body_text.to_s if show_body %>
-<% sender_name = notification.sender&.full_name.presence || "AWBW Portal" %>
+<% sender_name = notification.decorate.sender_name %>
 <div class="flex items-baseline gap-x-2">
   <span class="shrink-0 whitespace-nowrap text-xs text-gray-400"><%= notification.created_at.strftime("%-m/%-d/%Y") %></span>
   <%# Fixed, snug width (~"Umberto User") + truncate so the channel icons line up

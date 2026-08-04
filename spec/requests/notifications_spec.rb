@@ -250,15 +250,19 @@ RSpec.describe "Notifications", type: :request do
         expect(response.body).not_to match(/<input[^>]*name="notification\[responded\]"/)
       end
 
+      # Scoped to the From row's <dd> so an unrelated mention of the sender or of
+      # "AWBW Portal" elsewhere on the page can't satisfy (or break) the assertion.
+      def from_row(body)
+        Capybara.string(body).find(:xpath, "//dt[normalize-space()='From']/following-sibling::dd[1]")
+      end
+
       it "names the sending person in the From row when a sender is set" do
         sender = create(:user, :admin, first_name: "Dana", last_name: "Sender")
         sent = create(:notification, kind: "event_registration_reminder", sender: sender)
 
         get notification_path(sent)
 
-        expect(response.body).to include("From")
-        expect(response.body).to include("Dana Sender")
-        expect(response.body).not_to include("AWBW Portal")
+        expect(from_row(response.body)).to have_text("Dana Sender")
       end
 
       it "shows AWBW Portal in the From row for automated messages with no sender" do
@@ -266,8 +270,7 @@ RSpec.describe "Notifications", type: :request do
 
         get notification_path(automated)
 
-        expect(response.body).to include("From")
-        expect(response.body).to include("AWBW Portal")
+        expect(from_row(response.body)).to have_text("AWBW Portal")
       end
     end
 

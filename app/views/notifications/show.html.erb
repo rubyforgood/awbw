@@ -107,8 +107,7 @@
       <div class="flex items-start gap-4">
         <dt class="w-28 text-gray-500">From</dt>
         <dd class="text-gray-900 font-medium">
-          <%# A person only when a staff member sent it; otherwise the portal sent it automatically. %>
-          <%= @notification.sender&.full_name.presence || "AWBW Portal" %>
+          <%= @notification.decorate.sender_name %>
         </dd>
       </div>
 

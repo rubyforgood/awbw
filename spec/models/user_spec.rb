@@ -432,5 +432,27 @@ RSpec.describe User do
           .with(user, anything, hash_including(to: user.email))
       end
     end
+
+    context "when a sender is given" do
+      let(:user) { create(:user, confirmed_at: nil) }
+      let(:sender) { create(:user) }
+
+      before do
+        user
+        allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)
+      end
+
+      it "exposes it as confirmation_sender for the mailer to attribute" do
+        user.send_confirmation_instructions(sender: sender)
+
+        expect(user.confirmation_sender).to eq(sender)
+      end
+
+      it "leaves confirmation_sender unset when none is given" do
+        user.send_confirmation_instructions
+
+        expect(user.confirmation_sender).to be_nil
+      end
+    end
   end
 end

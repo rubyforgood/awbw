@@ -82,7 +82,7 @@ class DeviseMailer < Devise::Mailer
       recipient_email: recipient_email,
       kind: kind,
       notification_type: 1,
-      sender: Current.user, # attribute to the operator when one is set (e.g. bulk invites)
+      sender: @record.try(:confirmation_sender), # the staff member who triggered it, when one did
       deliver: false # Devise already sent the email, so no need to deliver via the job
     )
 
@@ -135,7 +135,7 @@ class DeviseMailer < Devise::Mailer
     Analytics::AhoyTracker.track_auth_event(
       event_name,
       properties,
-      user: Current.user
+      user: @record.confirmation_sender || Current.user
     )
   end
 end
