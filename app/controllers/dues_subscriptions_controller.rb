@@ -1,5 +1,5 @@
 class DuesSubscriptionsController < ApplicationController
-  before_action :set_person
+  before_action :set_person, only: [ :index, :new, :create ]
   before_action :set_dues_subscription, only: [ :edit, :update, :cancel, :resume ]
 
   def index
@@ -70,7 +70,8 @@ class DuesSubscriptionsController < ApplicationController
   end
 
   def set_dues_subscription
-    @dues_subscription = @person.dues_subscriptions.find(params[:id])
+    @dues_subscription = DuesSubscription.find(params[:id])
+    @person = @dues_subscription.person
   end
 
   def dues_subscription_params

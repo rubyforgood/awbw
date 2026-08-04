@@ -7,8 +7,14 @@
       <%= term.cost %> billed<% unless term.comped? %> &middot; <%= term.paid %> paid<% end %>
     </span>
   </div>
-  <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium <%= badge.classes %>">
-    <i class="<%= badge.icon %>"></i>
-    <%= badge.label %>
-  </span>
+  <div class="flex items-center gap-2">
+    <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium <%= badge.classes %>">
+      <i class="<%= badge.icon %>"></i>
+      <%= badge.label %>
+    </span>
+
+    <% if local_assigns.fetch(:editable, false) %>
+      <%= link_to "Edit", edit_dues_registration_path(year), class: "btn btn-secondary-outline btn-sm" %>
+    <% end %>
+  </div>
 </li>

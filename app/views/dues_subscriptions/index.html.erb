@@ -32,14 +32,15 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-              <%= link_to "Edit rate", edit_person_dues_subscription_path(@person, subscription), class: "btn btn-secondary-outline btn-sm" %>
+              <%= link_to "Add year", new_dues_subscription_dues_registration_path(subscription), class: "btn btn-secondary-outline btn-sm" %>
+              <%= link_to "Edit rate", edit_dues_subscription_path(subscription), class: "btn btn-secondary-outline btn-sm" %>
 
               <% if subscription.cancelled? %>
-                <%= button_to "Resume", resume_person_dues_subscription_path(@person, subscription),
+                <%= button_to "Resume", resume_dues_subscription_path(subscription),
                       method: :patch, class: "btn btn-secondary-outline btn-sm",
                       data: { turbo_confirm: "Resume renewals for #{@person.full_name}?" } %>
               <% else %>
-                <%= button_to "Cancel", cancel_person_dues_subscription_path(@person, subscription),
+                <%= button_to "Cancel", cancel_dues_subscription_path(subscription),
                       method: :patch, class: "btn btn-secondary-outline btn-sm",
                       data: { turbo_confirm: "Stop renewing dues for #{@person.full_name}? They keep the dues year they have already paid for." } %>
               <% end %>
@@ -51,7 +52,7 @@
           <% else %>
             <ul class="space-y-2">
               <% subscription.dues_registrations.each do |year| %>
-                <%= render "dues_registrations/year_row", year: year %>
+                <%= render "dues_registrations/year_row", year: year, editable: true %>
               <% end %>
             </ul>
           <% end %>

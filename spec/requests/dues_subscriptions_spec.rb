@@ -186,34 +186,27 @@ RSpec.describe "DuesSubscriptions", type: :request do
     end
   end
 
-  describe "GET /people/:person_id/dues_subscriptions/:id/edit" do
+  describe "GET /dues_subscriptions/:id/edit" do
     let(:subscription) { create(:dues_subscription, person: person, rate_cents: 1_500) }
 
     it "is not available to a non-admin" do
       sign_in create(:user)
-      get edit_person_dues_subscription_path(person, subscription)
+      get edit_dues_subscription_path(subscription)
 
       expect(response).to redirect_to(root_path)
     end
 
     it "shows the current rate and says it applies to future years" do
       sign_in admin
-      get edit_person_dues_subscription_path(person, subscription)
+      get edit_dues_subscription_path(subscription)
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("15.0")
       expect(response.body).to include("future dues years only")
     end
-
-    it "is not found under a different person" do
-      sign_in admin
-      get edit_person_dues_subscription_path(create(:person), subscription)
-
-      expect(response).to have_http_status(:not_found)
-    end
   end
 
-  describe "PATCH /people/:person_id/dues_subscriptions/:id" do
+  describe "PATCH /dues_subscriptions/:id" do
     let!(:subscription) { create(:dues_subscription, person: person) }
     let!(:existing_year) do
       create(:dues_registration, dues_subscription: subscription, cost_cents: 2_500)
@@ -221,7 +214,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
 
     it "is not available to a non-admin" do
       sign_in create(:user)
-      patch person_dues_subscription_path(person, subscription), params: { dues_subscription: { rate_dollars: "15" } }
+      patch dues_subscription_path(subscription), params: { dues_subscription: { rate_dollars: "15" } }
 
       expect(response).to redirect_to(root_path)
       expect(subscription.reload.rate_cents).to be_nil
@@ -231,7 +224,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
       before { sign_in admin }
 
       it "locks in a new rate" do
-        patch person_dues_subscription_path(person, subscription), params: { dues_subscription: { rate_dollars: "15" } }
+        patch dues_subscription_path(subscription), params: { dues_subscription: { rate_dollars: "15" } }
 
         expect(subscription.reload.rate_cents).to eq(1_500)
         expect(response).to redirect_to(person_dues_subscriptions_path(person))
@@ -240,26 +233,26 @@ RSpec.describe "DuesSubscriptions", type: :request do
       it "clears the rate back to standard when left blank" do
         subscription.update!(rate_cents: 1_500)
 
-        patch person_dues_subscription_path(person, subscription), params: { dues_subscription: { rate_dollars: "" } }
+        patch dues_subscription_path(subscription), params: { dues_subscription: { rate_dollars: "" } }
 
         expect(subscription.reload.rate_cents).to be_nil
       end
 
       it "leaves years already created at the price they were billed" do
-        patch person_dues_subscription_path(person, subscription), params: { dues_subscription: { rate_dollars: "60" } }
+        patch dues_subscription_path(subscription), params: { dues_subscription: { rate_dollars: "60" } }
 
         expect(existing_year.reload.cost_cents).to eq(2_500)
       end
 
       it "rejects a negative rate" do
-        patch person_dues_subscription_path(person, subscription), params: { dues_subscription: { rate_dollars: "-5" } }
+        patch dues_subscription_path(subscription), params: { dues_subscription: { rate_dollars: "-5" } }
 
         expect(response).to have_http_status(:unprocessable_content)
         expect(subscription.reload.rate_cents).to be_nil
       end
 
       it "cannot set the cancellation date through the rate form" do
-        patch person_dues_subscription_path(person, subscription),
+        patch dues_subscription_path(subscription),
           params: { dues_subscription: { rate_dollars: "15", cancelled_at: Time.current } }
 
         expect(subscription.reload.cancelled_at).to be_nil
@@ -267,12 +260,12 @@ RSpec.describe "DuesSubscriptions", type: :request do
     end
   end
 
-  describe "PATCH .../dues_subscriptions/:id/cancel and /resume" do
+  describe "PATCH /dues_subscriptions/:id/cancel and /resume" do
     let!(:subscription) { create(:dues_subscription, person: person) }
 
     it "is not available to a non-admin" do
       sign_in create(:user)
-      patch cancel_person_dues_subscription_path(person, subscription)
+      patch cancel_dues_subscription_path(subscription)
 
       expect(response).to redirect_to(root_path)
       expect(subscription.reload).not_to be_cancelled
@@ -282,7 +275,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
       before { sign_in admin }
 
       it "stamps the cancellation" do
-        patch cancel_person_dues_subscription_path(person, subscription)
+        patch cancel_dues_subscription_path(subscription)
 
         expect(subscription.reload).to be_cancelled
         expect(response).to redirect_to(person_dues_subscriptions_path(person))
@@ -291,7 +284,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
       it "leaves an existing year untouched when cancelling" do
         year = create(:dues_registration, dues_subscription: subscription)
 
-        patch cancel_person_dues_subscription_path(person, subscription)
+        patch cancel_dues_subscription_path(subscription)
 
         expect(year.reload.end_date).to be_present
         expect(person.reload).to be_dues_current
@@ -300,7 +293,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
       it "clears the cancellation on resume, keeping the rate" do
         subscription.update!(cancelled_at: Time.current, rate_cents: 1_500)
 
-        patch resume_person_dues_subscription_path(person, subscription)
+        patch resume_dues_subscription_path(subscription)
 
         subscription.reload
         expect(subscription).not_to be_cancelled
@@ -314,7 +307,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
 
         expect { RenewDuesTermsJob.new.perform }.not_to change(DuesRegistration, :count)
 
-        patch resume_person_dues_subscription_path(person, subscription)
+        patch resume_dues_subscription_path(subscription)
 
         expect { RenewDuesTermsJob.new.perform }.to change(DuesRegistration, :count).by(1)
       end
