@@ -1,4 +1,4 @@
-<%= simple_form_for(event_registration, data: { turbo: false }) do |f| %>
+<%= simple_form_for(event_registration, data: { turbo: false, controller: "dirty-form" }) do |f| %>
   <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to].present? %>
   <%= render "shared/errors", resource: event_registration if event_registration.errors.any? %>
 
@@ -181,16 +181,20 @@
               <div class="flex flex-wrap gap-1.5" data-org-toggle-target="chips">
                 <%# Matched pair (like the registrants roster): the org name as a grey
                     rounded-md rectangle linking to the org profile (same emerald hover
-                    as the roster), plus a separate × toggle that marks the org for
-                    removal — it goes red, and the org is unlinked on save. %>
-                <% org_btn_classes = "inline-flex items-center whitespace-nowrap rounded-md text-xs font-medium border px-3 py-0.5 transition bg-gray-50 text-gray-500 border-gray-200 hover:shadow-sm #{DomainTheme.bg_class_for(:organizations, intensity: 100, hover: true)} hover:text-emerald-800 hover:border-emerald-300" %>
+                    as the roster), plus a separate × toggle. The checkbox is the peer, so
+                    unchecking it (clicking ×) turns the name red + line-through and the ×
+                    red; the org is unlinked on save. The × is a <label for> rather than
+                    wrapping the checkbox so the name link stays a plain profile link. %>
+                <%# Emerald hover is scoped to the linked (checked) state so a to-be-removed
+                    chip stays red on hover. %>
+                <% org_name_classes = "inline-flex items-center whitespace-nowrap rounded-md text-xs font-medium border px-3 py-0.5 transition bg-red-50 border-red-200 text-red-500 line-through peer-checked:bg-gray-50 peer-checked:border-gray-200 peer-checked:text-gray-500 peer-checked:no-underline peer-checked:hover:bg-emerald-200 peer-checked:hover:text-emerald-800 peer-checked:hover:border-emerald-300 peer-checked:hover:shadow-sm" %>
+                <% remove_classes = "inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs leading-none cursor-pointer transition-colors bg-red-100 border-red-300 text-red-600 peer-checked:bg-gray-50 peer-checked:border-gray-200 peer-checked:text-gray-400" %>
                 <% f.object.organizations.sort_by(&:name).each do |org| %>
                   <span class="inline-flex items-center gap-1">
-                    <%= link_to org.name, organization_path(org), title: org.name, class: org_btn_classes, data: { turbo_frame: "_top" } %>
-                    <label class="inline-flex items-center cursor-pointer" title="Remove from this registration">
-                      <input type="checkbox" name="event_registration[organization_ids][]" value="<%= org.id %>" checked class="peer sr-only">
-                      <span class="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs leading-none transition-colors bg-red-100 border-red-300 text-red-600 peer-checked:bg-gray-50 peer-checked:border-gray-200 peer-checked:text-gray-400">&times;</span>
-                    </label>
+                    <input type="checkbox" id="org_chip_<%= org.id %>" name="event_registration[organization_ids][]" value="<%= org.id %>" checked class="peer sr-only">
+                    <%# Warn before leaving to the profile if the form has unsaved edits. %>
+                    <%= link_to org.name, organization_path(org), title: org.name, class: org_name_classes, data: { turbo_frame: "_top", action: "dirty-form#confirmCancel" } %>
+                    <label for="org_chip_<%= org.id %>" title="Remove from this registration" class="<%= remove_classes %>">&times;</label>
                   </span>
                 <% end %>
               </div>
@@ -215,11 +219,9 @@
                 the markup (not a JS string) so Tailwind always compiles the amber variants. %>
             <template data-org-toggle-target="template">
               <span class="inline-flex items-center gap-1">
-                <a href="#" data-org-toggle-name title="Pending — saved when you save the form" data-turbo-frame="_top" class="inline-flex items-center whitespace-nowrap rounded-md border px-3 py-0.5 text-xs font-medium transition bg-amber-50 border-amber-200 text-amber-800 hover:shadow-sm hover:bg-amber-100 hover:border-amber-300"></a>
-                <label class="inline-flex items-center cursor-pointer" title="Remove from this registration">
-                  <input type="checkbox" name="event_registration[organization_ids][]" value="" checked class="peer sr-only">
-                  <span class="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs leading-none transition-colors bg-red-100 border-red-300 text-red-600 peer-checked:bg-amber-50 peer-checked:border-amber-200 peer-checked:text-amber-500">&times;</span>
-                </label>
+                <input type="checkbox" name="event_registration[organization_ids][]" value="" checked class="peer sr-only">
+                <a href="#" data-org-toggle-name title="Pending — saved when you save the form" data-turbo-frame="_top" data-action="dirty-form#confirmCancel" class="inline-flex items-center whitespace-nowrap rounded-md border px-3 py-0.5 text-xs font-medium transition bg-red-50 border-red-200 text-red-500 line-through peer-checked:bg-amber-50 peer-checked:border-amber-200 peer-checked:text-amber-800 peer-checked:no-underline peer-checked:hover:bg-amber-100 peer-checked:hover:border-amber-300 peer-checked:hover:shadow-sm"></a>
+                <label data-org-toggle-remove title="Remove from this registration" class="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs leading-none cursor-pointer transition-colors bg-red-100 border-red-300 text-red-600 peer-checked:bg-amber-50 peer-checked:border-amber-200 peer-checked:text-amber-500">&times;</label>
               </span>
             </template>
 

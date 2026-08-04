@@ -55,7 +55,14 @@ export default class extends Controller {
     // Clone the pending-chip template (amber until saved). Keeping the markup in
     // the view means Tailwind reliably compiles its variants.
     const chip = this.templateTarget.content.firstElementChild.cloneNode(true)
-    chip.querySelector("input").value = orgId
+    const checkbox = chip.querySelector("input")
+    checkbox.value = orgId
+    // Unique id so the × label's `for` toggles this chip's checkbox — the checkbox
+    // is the peer that drives the linked/removal styling on the name and the ×.
+    const id = `org_chip_${orgId}`
+    checkbox.id = id
+    chip.querySelector("[data-org-toggle-remove]").htmlFor = id
+
     const nameLink = chip.querySelector("[data-org-toggle-name]")
     nameLink.textContent = orgName
     // Point the name at the org profile (standard REST path) so it matches the
