@@ -61,7 +61,7 @@ module TopicSubscriptionHelper
       filters << [ "Topic", topic&.name || "Unknown" ]
     end
 
-    status_labels = { "active" => "Active", "unsubscribed" => "Unsubscribed", "general" => "General (no event)" }
+    status_labels = { "active" => "Active", "unsubscribed" => "Unsubscribed" }
     filters << [ "Status", status_labels[params[:status]] ] if status_labels.key?(params[:status])
 
     filters

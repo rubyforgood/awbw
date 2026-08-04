@@ -1,24 +1,28 @@
 <%= turbo_frame_tag :topic_subscriptions_results do %>
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit">
-    <% if @topic_subscriptions.any? %>
-      <% total = @topic_subscriptions.respond_to?(:total_entries) ? @topic_subscriptions.total_entries : @topic_subscriptions.size %>
-      <% toggle_params = request.query_parameters.except("page") %>
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Status filter">
-          <%= link_to topic_subscriptions_path(toggle_params.merge(status: "active")),
-                data: { turbo_frame: "topic_subscriptions_results" },
-                class: "px-3 py-1 rounded-md transition-colors #{@status_filter == "active" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}" do %>
-            Active <span class="text-gray-400">(<%= @active_count %>)</span>
-          <% end %>
-          <%= link_to topic_subscriptions_path(toggle_params.merge(status: "unsubscribed")),
-                data: { turbo_frame: "topic_subscriptions_results" },
-                class: "px-3 py-1 rounded-md transition-colors #{@status_filter == "unsubscribed" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}" do %>
-            Unsubscribed <span class="text-gray-400">(<%= @unsubscribed_count %>)</span>
-          <% end %>
-        </nav>
-        <p class="text-sm text-gray-500"><%= total %> subscription<%= "s" if total != 1 %></p>
-      </div>
+    <%# Outside the empty check: with nothing to list, the toggle is the only way
+        back to the other status. It navigates the whole page rather than this
+        frame so the filter form — which lives outside the frame and carries the
+        status through every other filter change — is re-rendered with it. %>
+    <% total = @topic_subscriptions.respond_to?(:total_entries) ? @topic_subscriptions.total_entries : @topic_subscriptions.size %>
+    <% toggle_params = request.query_parameters.except("page") %>
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Status filter">
+        <%= link_to topic_subscriptions_path(toggle_params.merge(status: "active")),
+              data: { turbo_frame: "_top" },
+              class: "px-3 py-1 rounded-md transition-colors #{@status_filter == "active" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}" do %>
+          Active <span class="text-gray-400">(<%= @active_count %>)</span>
+        <% end %>
+        <%= link_to topic_subscriptions_path(toggle_params.merge(status: "unsubscribed")),
+              data: { turbo_frame: "_top" },
+              class: "px-3 py-1 rounded-md transition-colors #{@status_filter == "unsubscribed" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}" do %>
+          Unsubscribed <span class="text-gray-400">(<%= @unsubscribed_count %>)</span>
+        <% end %>
+      </nav>
+      <p class="text-sm text-gray-500"><%= total %> subscription<%= "s" if total != 1 %></p>
+    </div>
 
+    <% if @topic_subscriptions.any? %>
       <div class="overflow-x-auto animate-fade">
         <table class="w-full border-collapse border border-gray-200">
           <thead class="bg-gray-100">

@@ -21,9 +21,10 @@ class TopicSubscription < ApplicationRecord
   scope :newest_first, -> { order(subscribed_at: :desc) }
 
   # Drives the subscriptions index filters: person, topic type, and status
-  # ("active"/"unsubscribed"/"general"). The person filter is an exact id — the
-  # index picks people through the remote-select search, so there's no free-text
-  # name matching to do here.
+  # ("active"/"unsubscribed" — the two the segmented toggle emits). The person
+  # filter is an exact id — the index picks people through the remote-select
+  # search, so there's no free-text name matching to do here. Generality is a
+  # separate axis (see `general`), not a status, so it isn't folded in here.
   def self.search_by_params(params)
     scope = all
     scope = scope.where(person_id: params[:person_id]) if params[:person_id].present?
@@ -32,7 +33,6 @@ class TopicSubscription < ApplicationRecord
     case params[:status]
     when "active" then scope = scope.active
     when "unsubscribed" then scope = scope.unsubscribed
-    when "general" then scope = scope.general
     end
 
     scope

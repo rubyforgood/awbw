@@ -113,6 +113,33 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).to include("Active <span class=\"text-gray-400\">(1)")
       expect(response.body).to include("Unsubscribed <span class=\"text-gray-400\">(2)")
     end
+
+    it "keeps the toggle reachable when the selected status has no rows" do
+      create(:topic_subscription, :unsubscribed, person: create(:person), topic_subscription_type: trainings)
+
+      get topic_subscriptions_path, headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+
+      # Nothing active to list, but the way back to the unsubscribed list must stay on the page.
+      expect(response.body).to include("No subscriptions match your search.")
+      expect(response.body).to include("Unsubscribed <span class=\"text-gray-400\">(1)")
+      expect(response.body).to include(CGI.escapeHTML(topic_subscriptions_path(status: "unsubscribed")))
+    end
+
+    it "navigates the whole page from the toggle so the filter form learns the new status" do
+      create(:topic_subscription, person: create(:person), topic_subscription_type: trainings)
+
+      get topic_subscriptions_path, headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+
+      # A frame-scoped toggle would leave the out-of-frame filter form holding a
+      # stale status, so the next filter change would silently reset it.
+      expect(response.body).not_to include('data-turbo-frame="topic_subscriptions_results"')
+    end
+
+    it "carries the selected status through the filter form" do
+      get topic_subscriptions_path(status: "unsubscribed")
+
+      expect(response.body).to include(%(<input type="hidden" name="status" value="unsubscribed" />))
+    end
   end
 
   describe "GET /topic_subscriptions/email_addresses" do
