@@ -48,46 +48,72 @@ RSpec.describe "organizations/edit", type: :view do
       )
     end
 
-    it "shows the status select for an org with no affiliations" do
+    it "hides the status select without the admin param" do
+      assign(:organization, org_with_status("Active"))
+      render
+      assert_select "select[name=?]", "organization[organization_status_id]", false
+      assert_select "input[type=hidden][name=?]", "organization[organization_status_id]"
+    end
+
+    it "shows the status select with the admin param" do
+      allow(view).to receive(:params).and_return(ActionController::Parameters.new(admin: "true"))
       assign(:organization, org_with_status("Active"))
       render
       assert_select "select[name=?]", "organization[organization_status_id]"
     end
 
-    it "hides the status select (and the mismatch hint) when the status matches the affiliation-calculated status" do
-      org = org_with_status("Active")
-      create(:affiliation, organization: org, person: create(:person), inactive: false, end_date: nil)
-      assign(:organization, org.reload)
-      render
-      assert_select "select[name=?]", "organization[organization_status_id]", false
-      assert_select "input[type=hidden][name=?]", "organization[organization_status_id]"
-      expect(rendered).not_to include("Does not match affiliations status")
-    end
-
-    it "shows the status select and the red mismatch hint when the status does not match the affiliation-calculated status" do
+    it "shows a warning icon (not the select) when the stored status does not match the affiliation status" do
       org = org_with_status("Pending")
       create(:affiliation, organization: org, person: create(:person), inactive: false, end_date: nil)
       assign(:organization, org.reload)
       render
-      assert_select "select[name=?]", "organization[organization_status_id]"
-      assert_select "p.text-red-600", text: "Does not match affiliations status"
+      assert_select "select[name=?]", "organization[organization_status_id]", false
+      assert_select "i.fa-triangle-exclamation"
+      expect(rendered).to include("Legacy organization status does not match affiliation status")
+    end
+
+    it "shows no warning icon when the stored status matches the affiliation status" do
+      org = org_with_status("Active")
+      create(:affiliation, organization: org, person: create(:person), inactive: false, end_date: nil)
+      assign(:organization, org.reload)
+      render
+      expect(rendered).not_to include("Legacy organization status does not match affiliation status")
+    end
+  end
+
+  describe "art program since" do
+    before(:each) { assign(:organization_statuses, OrganizationStatus.all) }
+
+    around { |ex| travel_to(Date.new(2026, 8, 3)) { ex.run } }
+
+    it "shows the earliest facilitator start (month precision), not the latest, wired for live updates" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+                           start_date: Date.new(2025, 8, 1), end_date: nil)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+                           start_date: Date.new(2026, 9, 1), end_date: nil)
+      assign(:organization, org.reload)
+      render
+
+      assert_select "[data-affiliation-dates-target='facilitatorSince']", text: /Aug 2025/
+      assert_select "[data-affiliation-dates-target='facilitatorSince']", text: /Sep 2026/, count: 0
     end
   end
 
   describe "program status" do
-    it "renders an 'event · status' chip for each event the org is represented at" do
+    it "renders a 'status as of date · event' chip for each event the org is represented at" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
       person = create(:person)
       create(:affiliation, organization: org, person: person, title: "Facilitator",
-                           start_date: 1.year.ago, end_date: nil)
-      event = create(:event, title: "August Training", abbreviation: "PES205", start_date: 2.days.from_now)
+                           start_date: Date.new(2020, 1, 1), end_date: nil)
+      event = create(:event, title: "August Training", abbreviation: "PES205", start_date: Date.new(2026, 8, 1))
 
       assign(:organization, org.reload)
       assign(:organization_statuses, OrganizationStatus.all)
       assign(:organization_events, Event.where(id: event.id))
       render
 
-      expect(rendered).to include("PES205 · Ongoing")
+      expect(rendered).to include("Ongoing as of Aug 2026 · PES205")
     end
 
     it "always shows the general status chip, even with no events" do

@@ -120,4 +120,33 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     affiliated = find("[data-affiliation-dates-target='affiliatedSince']", wait: 10)
     expect(affiliated).to have_text("Jun 2022", wait: 5)
   end
+
+  # The org form renders "Affiliated since" as merged, year-based periods
+  # (AffiliationPeriods) rather than a single range; it must live-update in that
+  # same format so the value doesn't jump on save.
+  context "on the organization form" do
+    let!(:org_person) { create(:person) }
+    let!(:merged_org) { create(:organization) }
+
+    before do
+      create(:affiliation, person: org_person, organization: merged_org,
+             title: "Facilitator", start_date: "2018-01-01", end_date: "2019-12-31")
+      create(:affiliation, person: org_person, organization: merged_org,
+             title: "Facilitator", start_date: "2022-01-01", end_date: nil)
+    end
+
+    it "live-updates the merged 'Affiliated since' periods" do
+      visit_and_wait edit_organization_path(merged_org)
+
+      affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
+      expect(affiliated).to have_text("2018-2019, 2022")
+
+      ongoing_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
+        f.find("input[name*='start_date']").value == "2022-01-01"
+      }
+      set_date_input(ongoing_row.find("input[name*='start_date']"), "2021-05-01")
+
+      expect(affiliated).to have_text("2018-2019, 2021", wait: 5)
+    end
+  end
 end

@@ -431,6 +431,16 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("<option selected=\"selected\" value=\"Check\">Check</option>")
       end
 
+      it "renders each linked-organization chip as a new-tab link to the org profile" do
+        organization = create(:organization, name: "A Window Between Worlds")
+        existing_registration.organizations << organization
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("href=\"#{organization_path(organization)}\"")
+        expect(response.body).to include("A Window Between Worlds")
+      end
+
       it "shows a Delete button for a deletable registration" do
         get edit_event_registration_path(existing_registration)
 

@@ -58,7 +58,7 @@
         <% program_since = org_decorated.program_since_display %>
         <% if program_since.present? %>
           <p class="text-gray-500 text-sm mt-1">
-            Program since
+            Art program since
             <span class="font-medium"><%= program_since %></span>
           </p>
         <% end %>
@@ -119,7 +119,7 @@
             <%= link_to participation_events_path(event_id: event.id, return_to: "dashboard"), target: "_blank", rel: "noopener noreferrer",
                         title: event.title,
                         class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{OrganizationDecorator.program_status_classes(status)}" do %>
-              <%= event.decorate.compact_label.truncate(24) %> · <%= status.to_s.titleize %>
+              <%= status.to_s.titleize %><%= " as of #{event.start_date.strftime('%b %Y')}" if event.start_date %> · <%= event.decorate.compact_label.truncate(24) %>
             <% end %>
           <% end %>
         </div>
