@@ -297,9 +297,11 @@
                                     title: org.name,
                                     class: org_btn_classes,
                                     data: { turbo_frame: "_top" } %>
+                        <%# Same chip styling as the "None" chip (padding, colors, hover),
+                            just a rounded-md rectangle to pair with the org button. %>
                         <%= link_to editor_path,
                                     title: "Edit linked organizations",
-                                    class: "inline-flex h-6 w-6 items-center justify-center rounded-md text-gray-400 transition hover:bg-gray-100 hover:text-gray-600",
+                                    class: "inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs font-medium border px-3 py-0.5 transition hover:opacity-80 hover:shadow-sm bg-gray-50 text-gray-500 border-gray-200",
                                     data: { turbo_frame: "_top" } do %>
                           <i class="fa-solid fa-pencil text-[0.7rem]"></i>
                         <% end %>
