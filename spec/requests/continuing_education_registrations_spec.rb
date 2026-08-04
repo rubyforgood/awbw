@@ -18,6 +18,12 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(response.body).to include("Edit CE registration")
     end
 
+    it "offers a 'View all' link to this registration's allocations from the CE payments card" do
+      get edit_continuing_education_registration_path(ce_registration)
+      # sgid carries an expiry, so match the allocations href without pinning it.
+      expect(response.body).to match(%r{/allocations\?[^"]*return_to=ce_registration"[^>]*>\s*View all})
+    end
+
     it "updates hours, cost, and fills the placeholder license type, number, state + expiry in place" do
       license = ce_registration.professional_license
       patch continuing_education_registration_path(ce_registration),
