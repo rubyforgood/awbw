@@ -1,8 +1,8 @@
 <% return unless person.persisted? %>
 <% email = person.preferred_email %>
 <% notifications = email.present? ? Notification.email(email) : Notification.none %>
-<%# Two clusters: general system records, then content the person authored or
-    submitted. Keep the cards alphabetical by label within each cluster. %>
+<%# Two clusters: administrative system records, then content the person authored
+    or submitted. Keep the cards alphabetical by label within each cluster. %>
 
 <div class="mb-5">
   <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Administrative</h3>
@@ -12,15 +12,15 @@
     <li class="break-inside-avoid mb-2"><%= index_button person.form_submissions, params: { person_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.grants, params: { donor_id: person.id, donor_type: "Person" }, label: "Grants (as donor)" %></li>
     <li class="break-inside-avoid mb-2"><%= index_button Payment.where(person_id: person.id), params: { person_id: person.id } %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button person.scholarships, params: { recipient_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.topic_subscriptions, params: { person_id: person.id }, label: "Subscriptions" %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button(person.user&.workshop_logs || WorkshopLog.none, path: workshop_logs_person_path(person)) %></li>
   </ul>
 </div>
 
 <div>
   <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Contributed content</h3>
   <ul class="columns-1 sm:columns-2 md:columns-3 gap-x-6">
-    <li class="break-inside-avoid mb-2"><%= index_button(person.user&.workshop_logs || WorkshopLog.none, path: workshop_logs_person_path(person)) %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button person.scholarships, params: { recipient_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.community_news_as_author, params: { author_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.resources_as_author, params: { author_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.stories_as_author, params: { author_id: person.id } %></li>
