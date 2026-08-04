@@ -127,6 +127,28 @@
           <% end %>
         </div>
       </div>
+
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mt-6">
+        Deprecated data
+       <div class="columns-1 sm:columns-2 md:columns-3 gap-2 mt-3">
+          <% @deprecated_data_cards.each do |card| %>
+            <a href="<%= card[:path] %>"
+             class="flex items-center gap-3 rounded-lg shadow-lg border border-gray-200 mb-2 break-inside-avoid
+              <%= card[:bg_color] %> <%= card[:text_color] %>
+              <%= card[:hover_bg_color] %>
+              transition-colors transition-shadow duration-300 px-4 py-1">
+
+              <div class="text-lg text-gray-700 flex-shrink-0">
+                <%= card[:icon] %>
+              </div>
+
+              <div>
+                <h3 class="text-sm font-bold text-gray-800 whitespace-nowrap"><%= card[:title] %></h3>
+              </div>
+            </a>
+          <% end %>
+        </div>
+      </div>
       </div>
     </section>
 </div>

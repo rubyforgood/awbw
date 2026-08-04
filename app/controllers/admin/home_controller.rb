@@ -9,6 +9,7 @@ module Admin
       @user_content_cards    = user_content_cards
       @reference_cards       = reference_cards
       @additional_data_cards = additional_data_cards
+      @deprecated_data_cards = deprecated_data_cards
     end
   end
 end

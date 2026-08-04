@@ -49,12 +49,21 @@ module AdminCardsHelper
       model_card(:categories, icon: "🗂️",
                  intensity: 100,
                  params: { published: true }),
-      custom_card("Organization statuses", organization_statuses_path, icon: "🧮", color: :emerald, intensity: 100),
       model_card(:sectors, icon: "🏭",
                  intensity: 100,
                  title: "Sectors",
                  params: { published: true }),
+      custom_card("Subscription topics", topic_subscription_types_path, icon: "✉️", color: :sky, intensity: 100),
       custom_card("Windows audiences", windows_types_path, icon: "🪟")
+    ]
+  end
+
+  # -----------------------------
+  # DEPRECATED DATA CARDS
+  # -----------------------------
+  def deprecated_data_cards
+    [
+      custom_card("Organization statuses", organization_statuses_path, icon: "🧮", color: :emerald, intensity: 100)
     ]
   end
 
