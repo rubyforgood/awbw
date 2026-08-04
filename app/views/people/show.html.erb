@@ -276,7 +276,7 @@
     <% end %>
     <!-- DUES SECTION -->
     <% if allowed_to?(:index?, DuesRegistration) %>
-      <%= render "people/dues", subscriptions: @dues_subscriptions %>
+      <%= render "people/dues", person: @person, subscription: @dues_subscription %>
     <% end %>
     <!-- SUBMITTED SECTION -->
     <% if allowed_to?(:show?, @person) %>

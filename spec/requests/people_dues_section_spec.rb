@@ -56,16 +56,33 @@ RSpec.describe "Person profile dues section", type: :request do
       expect(response.body).to include("Cancelled Aug 3, 2026")
     end
 
-    it "lists every year, newest first" do
+    it "shows only the year covering today, not the whole history" do
       subscription = create(:dues_subscription, person: person)
       older = dues_year(cost_cents: 0, start_date: Date.current - 1.year, subscription: subscription)
-      newer = dues_year(subscription: subscription)
+      current = dues_year(subscription: subscription)
 
       get person_path(person)
 
-      body = response.body
-      expect(body).to include(newer.decorate.term_range, older.decorate.term_range)
-      expect(body.index(newer.decorate.term_range)).to be < body.index(older.decorate.term_range)
+      expect(response.body).to include(current.decorate.term_range)
+      expect(response.body).not_to include(older.decorate.term_range)
+    end
+
+    it "prefers the year covering today over a future one the job created early" do
+      subscription = create(:dues_subscription, person: person)
+      current = dues_year(subscription: subscription)
+      future = dues_year(start_date: current.end_date + 1.day, subscription: subscription)
+
+      get person_path(person)
+
+      expect(response.body).to include(current.decorate.term_range)
+      expect(response.body).not_to include(future.decorate.term_range)
+    end
+
+    it "links to the management page" do
+      get person_path(person)
+
+      expect(response.body).to include(person_dues_subscriptions_path(person))
+      expect(response.body).to include("Manage dues")
     end
 
     it "says so when the person has no subscription" do

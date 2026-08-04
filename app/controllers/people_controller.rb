@@ -30,7 +30,7 @@ class PeopleController < ApplicationController
     @person = Person.includes(:avatar_attachment, :contact_methods, :user,
                               categorizable_items: { category: :category_type }).find(params[:id]).decorate
     track_view(@person)
-    @dues_subscriptions = dues_subscriptions_for(@person)
+    @dues_subscription = dues_subscription_for(@person)
 
     if params[:checkout] == "success"
       flash[:notice] = "Thank you for your donation!"
@@ -594,9 +594,9 @@ class PeopleController < ApplicationController
     )
   end
 
-  def dues_subscriptions_for(person)
-    return DuesSubscription.none unless allowed_to?(:index?, DuesRegistration)
+  def dues_subscription_for(person)
+    return unless allowed_to?(:index?, DuesRegistration)
 
-    person.dues_subscriptions.includes(:dues_registrations).order(created_at: :desc).decorate
+    person.dues_subscriptions.includes(:dues_registrations).order(created_at: :desc).first&.decorate
   end
 end

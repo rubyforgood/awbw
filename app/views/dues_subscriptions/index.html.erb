@@ -1,0 +1,38 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="mx-auto max-w-3xl bg-white border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+  <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+    <%= link_to person_path(@person), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> <%= @person.full_name %>
+    <% end %>
+    <%= link_to "All dues", dues_registrations_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <h1 class="text-2xl font-bold mb-1">Dues</h1>
+  <p class="text-sm text-gray-500 mb-6"><%= @person.full_name %></p>
+
+  <% if @dues_subscriptions.none? %>
+    <p class="text-gray-500 italic">No dues subscription yet.</p>
+  <% else %>
+    <div class="space-y-6">
+      <% @dues_subscriptions.each do |subscription| %>
+        <div class="border border-gray-200 rounded-lg p-3 sm:p-4">
+          <div class="flex flex-wrap gap-x-6 gap-y-1 mb-3 text-sm">
+            <span class="text-gray-600">Rate: <span class="font-medium text-gray-800"><%= subscription.rate_label %></span></span>
+            <span class="text-gray-600">Subscription: <span class="font-medium text-gray-800"><%= subscription.status_label %></span></span>
+          </div>
+
+          <% if subscription.dues_registrations.empty? %>
+            <p class="text-gray-500 italic">No dues years yet.</p>
+          <% else %>
+            <ul class="space-y-2">
+              <% subscription.dues_registrations.each do |year| %>
+                <%= render "dues_registrations/year_row", year: year %>
+              <% end %>
+            </ul>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
