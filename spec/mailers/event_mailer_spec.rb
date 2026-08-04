@@ -17,6 +17,26 @@ RSpec.describe EventMailer, type: :mailer do
       expect(mail.subject).to include(event_registration.event.title)
     end
 
+    context "when the recipient's zone differs from the event's zone" do
+      # Event pinned to Pacific: 19:00-20:00 UTC on 2031-06-15 = 12-1 pm PDT, but
+      # the email shows the recipient's own zone — 3-4 pm EDT for an Eastern user.
+      let(:event) do
+        create(:event,
+          time_zone: "Pacific Time (US & Canada)",
+          start_date: Time.utc(2031, 6, 15, 19, 0, 0),
+          end_date: Time.utc(2031, 6, 15, 20, 0, 0))
+      end
+      let(:eastern_user) { create(:user, time_zone: "Eastern Time (US & Canada)") }
+      let(:registrant) { create(:person, user: eastern_user) }
+      let(:event_registration) { create(:event_registration, event: event, registrant: registrant) }
+
+      it "renders the event time in the recipient's zone, not the event's" do
+        body = mail.body.encoded
+        expect(body).to include("3 - 4 pm EDT")
+        expect(body).not_to include("12 - 1 pm")
+      end
+    end
+
     context "when a scholarship was not requested" do
       let(:event_registration) { create(:event_registration, scholarship_requested: false) }
 

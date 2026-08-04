@@ -21,7 +21,7 @@
     </h2>
 
     <p style="font-size: 22px; font-weight: bold; color: #1e3a8c; text-transform: uppercase; margin: 0 0 8px; font-family: Lato, sans-serif;">
-      <% Time.use_zone(@time_zone) { %><%= @event.times(display_day: true, display_date: true) %><% } %>
+      <%= @event.times(display_day: true, display_date: true, zone: @time_zone) %>
     </p>
 
     <% if @event.labelled_cost.present? %>

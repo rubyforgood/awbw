@@ -56,6 +56,12 @@ RSpec.describe Event, type: :model do
       expect(event.errors[:time_zone]).to include("is not a valid time zone")
     end
 
+    it "treats a blank time_zone as Pacific (no backfill needed for existing rows)" do
+      event = build(:event, time_zone: nil)
+      expect(event).to be_valid
+      expect(event.event_zone).to eq(ActiveSupport::TimeZone["Pacific Time (US & Canada)"])
+    end
+
     it "interprets typed times in the event's own zone, not the session zone" do
       # An Eastern admin editing a Pacific event: the 2:00 PM they type must be
       # stored as 2:00 PM Pacific regardless of the request zone.

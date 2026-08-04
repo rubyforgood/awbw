@@ -13,18 +13,16 @@
     <%= event.title %>
   </h2>
 
-  <% Time.use_zone(time_zone) do %>
-    <% if event_dates_detail_label(event.object).present? %>
-      <p style="font-size: 22px; font-weight: bold; color: #1e3a8c; text-transform: uppercase; margin: 0 0 4px; font-family: Lato, sans-serif;">
-        <%= event_dates_detail_label(event.object) %>
-      </p>
-    <% end %>
+  <% if event_dates_detail_label(event.object, zone: time_zone).present? %>
+    <p style="font-size: 22px; font-weight: bold; color: #1e3a8c; text-transform: uppercase; margin: 0 0 4px; font-family: Lato, sans-serif;">
+      <%= event_dates_detail_label(event.object, zone: time_zone) %>
+    </p>
+  <% end %>
 
-    <% if event_times_label(event.object).present? %>
-      <p style="font-size: 18px; font-weight: bold; color: #1e3a8c; text-transform: uppercase; margin: 0 0 8px; font-family: Lato, sans-serif;">
-        <%= event_times_label(event.object) %>
-      </p>
-    <% end %>
+  <% if event_times_label(event.object, zone: time_zone).present? %>
+    <p style="font-size: 18px; font-weight: bold; color: #1e3a8c; text-transform: uppercase; margin: 0 0 8px; font-family: Lato, sans-serif;">
+      <%= event_times_label(event.object, zone: time_zone) %>
+    </p>
   <% end %>
 
   <% if event.labelled_cost.present? %>

@@ -119,10 +119,10 @@ module ApplicationHelper
   # Weekday-prefixed date for the registration details panel, without the year
   # (the year lives in the page hero) — e.g. "Wednesday, August 12" or
   # "Thursday-Friday, July 23-24". Nil when the event has no start date.
-  def event_dates_detail_label(event)
+  def event_dates_detail_label(event, zone: event&.event_zone)
     return unless event&.start_date
-    s = event.start_date.in_time_zone(event.event_zone)
-    e = (event.end_date || event.start_date).in_time_zone(event.event_zone)
+    s = event.start_date.in_time_zone(zone)
+    e = (event.end_date || event.start_date).in_time_zone(zone)
     return s.strftime("%A, %B %-d") if s.to_date == e.to_date
     if s.year == e.year && s.month == e.month
       "#{s.strftime("%A")}-#{e.strftime("%A")}, #{s.strftime("%B %-d")}-#{e.strftime("%-d")}"
@@ -149,10 +149,10 @@ module ApplicationHelper
 
   # Event start-end time as plain text (e.g. "9 am - 4:30 pm PST"), mirroring the
   # event show page's time formatting (minutes hidden when :00), or nil with no start.
-  def event_times_label(event)
+  def event_times_label(event, zone: event&.event_zone)
     return unless event&.start_date
-    s = event.start_date.in_time_zone(event.event_zone)
-    e = (event.end_date || event.start_date).in_time_zone(event.event_zone)
+    s = event.start_date.in_time_zone(zone)
+    e = (event.end_date || event.start_date).in_time_zone(zone)
     format = ->(d) do
       t = d.strftime("%-l")
       t += ":#{d.strftime("%M")}" unless d.strftime("%M") == "00"

@@ -6,7 +6,7 @@ This message confirms your registration for the following event:
 
 <% if @event.respond_to?(:pre_title) && @event.pre_title.present? %><%= @event.pre_title %>
 <% end %><%= @event.title %>
-<% Time.use_zone(@time_zone) { %><%= @event.times(display_day: true, display_date: true) %><% } %>
+<%= @event.times(display_day: true, display_date: true, zone: @time_zone) %>
 
 <% if @event.location.present? %>
 Location: <%= @event.location.name %>

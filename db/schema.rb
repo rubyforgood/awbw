@@ -563,7 +563,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_002438) do
     t.text "short_description"
     t.boolean "signed_in_one_click_enabled", default: false, null: false
     t.datetime "start_date", precision: nil
-    t.string "time_zone", default: "Pacific Time (US & Canada)", null: false
+    t.string "time_zone"
     t.string "title"
     t.datetime "updated_at", null: false
     t.string "videoconference_label", default: "Virtual event"

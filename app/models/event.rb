@@ -213,11 +213,16 @@ class Event < ApplicationRecord
     registration_ticket_callouts.find_by(builtin_key: "ce_hours")&.title.presence || "CE hours"
   end
 
+  # Default zone for events with no explicit time_zone — existing rows are left
+  # NULL (no backfill) and read as Pacific, and the form selector defaults here.
+  DEFAULT_TIME_ZONE = "Pacific Time (US & Canada)".freeze
+
   # The event's own canonical zone — the times entered and displayed are pinned to
-  # it, so an event no longer floats to whoever's viewing. Falls back to the app
-  # zone if the column is somehow blank/invalid.
+  # it, so an event no longer floats to whoever's viewing. A blank/unrecognized
+  # column falls back to the default (Pacific).
   def event_zone
-    ActiveSupport::TimeZone[time_zone.to_s] || Time.zone
+    ActiveSupport::TimeZone[time_zone.presence || DEFAULT_TIME_ZONE] ||
+      ActiveSupport::TimeZone[DEFAULT_TIME_ZONE]
   end
 
   # Virtual attributes for date/time inputs (Firefox datetime-local compat). Read
@@ -331,7 +336,7 @@ class Event < ApplicationRecord
   end
 
   def time_zone_must_be_valid
-    return if ActiveSupport::TimeZone[time_zone.to_s]
+    return if time_zone.blank? || ActiveSupport::TimeZone[time_zone]
 
     errors.add(:time_zone, "is not a valid time zone")
   end

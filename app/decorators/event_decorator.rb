@@ -215,9 +215,11 @@ class EventDecorator < ApplicationDecorator
     start_date.in_time_zone(event_zone).to_date != end_date.in_time_zone(event_zone).to_date
   end
 
-  def times(display_day: false, display_date: false, inline: false, styled: false)
-    s = start_date.in_time_zone(event_zone)
-    e = (end_date || start_date).in_time_zone(event_zone)
+  # Renders in the event's own zone by default; mailers pass `zone:` to show times
+  # in the recipient's zone instead.
+  def times(display_day: false, display_date: false, inline: false, styled: false, zone: event_zone)
+    s = start_date.in_time_zone(zone)
+    e = (end_date || start_date).in_time_zone(zone)
     tz_abbr = s.strftime("%Z")
     muted = styled ? "text-lg font-normal text-blue-400" : nil
 
