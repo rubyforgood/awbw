@@ -58,14 +58,14 @@ RSpec.describe "Events::Registrations", type: :request do
       it "renders the consolidated built-in callout cards for the published built-ins" do
         get registration_ticket_path(registration.slug)
         expect(response.body).to include("Your balance and payment history")
-        expect(response.body).to include("Worksheets and resources for the training")
+        expect(response.body).to include("Worksheets and resources for the event")
         expect(response.body).to include("Frequently asked questions")
       end
 
       it "omits a built-in card once its row is hidden" do
         event.registration_ticket_callouts.where(builtin_key: %w[handouts faq]).each { |callout| callout.update!(hidden: true) }
         get registration_ticket_path(registration.slug)
-        expect(response.body).not_to include("Worksheets and resources for the training")
+        expect(response.body).not_to include("Worksheets and resources for the event")
         expect(response.body).not_to include("Frequently asked questions")
       end
     end

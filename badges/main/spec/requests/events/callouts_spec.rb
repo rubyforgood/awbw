@@ -9,13 +9,23 @@ RSpec.describe "Events::Callouts", type: :request do
   let(:event) { create(:event) }
 
   describe "GET /registration/:slug/faq" do
-    it "renders the FAQ as collapsible toggles from the default content when published" do
+    it "renders the FAQ as collapsible toggles from the row's hydrated default content when published" do
       BuiltinCallouts.seed(event)
       event.registration_ticket_callouts.find_by(builtin_key: "faq").update!(hidden: false)
       get registration_faq_path(registration.slug)
       expect(response).to have_http_status(:success)
       expect(response.body).to include("<details")
       expect(response.body).to include("Who is this training designed for?")
+    end
+
+    it "shows no content (no code fallback) once the FAQ description is blanked" do
+      BuiltinCallouts.seed(event)
+      event.registration_ticket_callouts.find_by(builtin_key: "faq").update!(description: "", hidden: false)
+      get registration_faq_path(registration.slug)
+      expect(response).to have_http_status(:success)
+      # The default questions live on the row (hydrated), so blanking it shows
+      # blank — the same as every other callout, not the code-defined default.
+      expect(response.body).not_to include("Who is this training designed for?")
     end
 
     it "renders the editable FAQ callout copy when the card is materialized" do
@@ -36,9 +46,9 @@ RSpec.describe "Events::Callouts", type: :request do
   end
 
   # The intro copy an admin types into a built-in's materialized callout row (its
-  # "Callout page text" / description) renders on that built-in's public page. CE
-  # and scholarship previously had no request-layer coverage of this; the FAQ case
-  # is covered above, and handouts has no description intro (resource cards only).
+  # "Callout page text" / description) renders on that built-in's public page —
+  # including its <details> dropdowns as styled toggles — the same way regardless
+  # of which built-in it was entered into.
   describe "built-in page copy from the callout row description" do
     it "renders the CE callout's description on the CE page" do
       BuiltinCallouts.seed(event)
@@ -49,6 +59,19 @@ RSpec.describe "Events::Callouts", type: :request do
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Bring your license number.")
+    end
+
+    it "renders the handouts callout's description (with dropdowns) on the handouts page" do
+      create(:registration_ticket_callout, event:, builtin_key: "handouts", hidden: false,
+             description: "<details><summary>What to bring</summary><p>Scissors and glue.</p></details>")
+
+      get registration_handouts_path(registration.slug)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("What to bring")
+      expect(response.body).to include("Scissors and glue.")
+      # Rendered through _rich_content, so the disclosure becomes a styled toggle.
+      expect(response.body).to include("<details")
     end
 
     it "renders the scholarship callout's description on the scholarship page" do

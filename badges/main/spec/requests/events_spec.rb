@@ -388,7 +388,7 @@ RSpec.describe "Events", type: :request do
 
       it "materializes the built-in callouts so the preview reads from real rows" do
         expect { get sample_ticket_event_path(event) }
-          .to change { event.registration_ticket_callouts.builtin.count }.from(0).to(9)
+          .to change { event.registration_ticket_callouts.builtin.count }.from(0).to(8)
       end
 
       it "renders a published custom callout as a link to its detail page" do
@@ -575,10 +575,10 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:public_registration_enabled][:description])
     end
 
-    it "renders the built-in 'Art supplies & what to bring' card as an editable row" do
+    it "renders the built-in 'Handouts' content card as an editable row" do
       get edit_event_path(event)
       expect(response.body).to include("Registration ticket callouts")
-      expect(response.body).to include("Art supplies &amp; what to bring")
+      expect(response.body).to include("Handouts")
       # Its text lives on the callout row, not the removed event columns.
       expect(response.body).not_to include("event[event_details_label]")
     end
@@ -630,8 +630,10 @@ RSpec.describe "Events", type: :request do
 
         created = Event.order(created_at: :desc).first
         # The two submitted built-ins persist their edits, and the post-save seed
-        # fills the remaining six — every built-in key present exactly once.
-        expect(created.registration_ticket_callouts.builtin.pluck(:builtin_key).sort).to eq(RegistrationTicketCallout::BUILTIN_KEYS.sort)
+        # fills the remaining six — every seeded built-in key present exactly once.
+        expect(created.registration_ticket_callouts.builtin.pluck(:builtin_key)).to contain_exactly(
+          "payment", "certificate", "scholarship", "ce_hours", "videoconference", "staff", "handouts", "faq"
+        )
         payment = created.registration_ticket_callouts.find_by(builtin_key: "payment")
         expect(payment.title).to eq("Pay your balance")
         expect(payment.published?).to be true
