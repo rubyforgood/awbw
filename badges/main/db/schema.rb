@@ -537,7 +537,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_002438) do
     t.integer "ce_hours_cost_cents"
     t.decimal "ce_hours_offered", precision: 5, scale: 2
     t.date "ce_hours_request_deadline"
-    t.date "ce_payment_due_deadline"
+    t.datetime "ce_payment_due_deadline"
     t.integer "cost_cents"
     t.datetime "created_at", null: false
     t.integer "created_by_id"

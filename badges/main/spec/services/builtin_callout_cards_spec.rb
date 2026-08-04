@@ -67,7 +67,7 @@ RSpec.describe BuiltinCalloutCards do
       expect(trailing).to eq([ "fa-solid fa-arrow-right" ])
     end
 
-    it "shows the certificate card only once it is available" do
+    it "shows the certificate card in the fallback set only once it is available" do
       expect(card_titles(registration)).not_to include("Certificate of completion")
 
       event.update!(start_date: 3.days.ago, end_date: 2.days.ago)
@@ -81,12 +81,29 @@ RSpec.describe BuiltinCalloutCards do
       expect(card_titles(registration)).to include("Videoconference")
     end
 
-    it "shows the CE card only when the registrant requested CE credit" do
+    it "shows the CE card once the registrant has requested CE credit" do
       event.update!(ce_hours_offered: 6)
-      expect(card_titles(registration)).not_to include(event.ce_hours_label)
       license = create(:professional_license, :placeholder, person: registration.registrant)
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
       expect(card_titles(registration.reload)).to include(event.ce_hours_label)
+    end
+
+    it "invites a not-yet-requested registrant to request CE while the window is open" do
+      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000, ce_hours_request_deadline: Date.current + 1.day)
+      invite = card(registration, event.ce_hours_label)
+      expect(invite.subtitle).to eq("Request continuing education credit")
+      expect(invite.badge).to eq("Request CE by #{(Date.current + 1.day).strftime("%b %-d")}")
+      expect(invite.theme).to eq(DomainTheme.swatch("teal"))
+    end
+
+    it "invites a not-yet-requested registrant when the event sets no request deadline" do
+      event.update!(ce_hours_offered: 6)
+      expect(card_titles(registration)).to include(event.ce_hours_label)
+    end
+
+    it "stops inviting once the CE request deadline has passed" do
+      event.update!(ce_hours_offered: 6, ce_hours_request_deadline: Date.current - 1.day)
+      expect(card_titles(registration)).not_to include(event.ce_hours_label)
     end
 
     it "omits the CE card when the event offers no CE hours, even with a CE registration" do
@@ -215,11 +232,11 @@ RSpec.describe BuiltinCalloutCards do
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
       expect(card_titles(registration)).to eq([
         "Make your payment",
-        "Certificate of completion",
         "Scholarship",
         event.ce_hours_label,
         "Videoconference",
-        "Meet the staff"
+        "Meet the staff",
+        "Certificate of completion"
       ])
     end
   end
@@ -248,11 +265,21 @@ RSpec.describe BuiltinCalloutCards do
       expect(card.badge).to end_with("due")
     end
 
-    it "returns nil when the card shouldn't show for this registration" do
+    it "badges a materialized certificate row as pending until it unlocks" do
       callout = create(:registration_ticket_callout, event:, builtin_key: "certificate",
         title: "Certificate of completion")
 
-      # Certificate isn't unlocked (event not ended, not attended).
+      # Certificate isn't unlocked (event not ended, not attended), but the card
+      # still shows so the registrant knows one is coming — badged as pending.
+      card = described_class.new(registration).card_for(callout)
+      expect(card).to be_present
+      expect(card.badge).to eq("Available after the event")
+    end
+
+    it "returns nil for a behavioral card that truly can't apply (no videoconference URL)" do
+      callout = create(:registration_ticket_callout, event:, builtin_key: "videoconference",
+        title: "Videoconference")
+
       expect(described_class.new(registration).card_for(callout)).to be_nil
     end
 

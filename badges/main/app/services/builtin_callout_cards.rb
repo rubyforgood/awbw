@@ -52,11 +52,11 @@ class BuiltinCalloutCards
     materialized = event.registration_ticket_callouts.reject(&:marked_for_destruction?).filter_map(&:builtin_key).to_set
     [
       EditorCard.new("payment", "fa-solid fa-credit-card", "orange", "Payment", "Your balance and payment history", "When the event has a cost", nil),
-      EditorCard.new("certificate", "fa-solid fa-certificate", "green", "Certificate of completion", "View and download your certificate", "Once the certificate is unlocked", nil),
       EditorCard.new("scholarship", "fa-solid fa-award", "fuchsia", "Scholarship", "Your scholarship request and award", "When the registrant requested a scholarship", nil),
       EditorCard.new("videoconference", "fa-solid fa-video", "blue", "Videoconference", "Join link and how to add it to your calendar", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
       EditorCard.new("staff", "fa-solid fa-people-group", "blue", "Meet the staff", "The team for this event", "Always shown when published", "The roster comes from this event's staff."),
       EditorCard.new("handouts", "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "On facilitator trainings", "Items link to their relevant resources."),
+      EditorCard.new("certificate", "fa-solid fa-certificate", "green", "Certificate of completion", "View and download your certificate", "Once the certificate is unlocked", nil),
       EditorCard.new("faq", "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "On facilitator trainings", nil)
     ].reject { |card| materialized.include?(card.builtin_key) }
   end
@@ -67,11 +67,11 @@ class BuiltinCalloutCards
   # no builder here.
   CARD_BUILDERS = {
     "payment" => :payment_card,
-    "certificate" => :certificate_card,
     "scholarship" => :scholarship_status_card,
     "ce_hours" => :ce_hours_card,
     "videoconference" => :videoconference_card,
-    "staff" => :staff_card
+    "staff" => :staff_card,
+    "certificate" => :certificate_card
   }.freeze
 
   # Why a built-in card with this builtin_key can never appear on the given event's
@@ -127,13 +127,16 @@ class BuiltinCalloutCards
   end
 
   # The live Card for a materialized behavioral callout row, or nil when it
-  # shouldn't show for this registration (e.g. certificate not yet unlocked). The
+  # shouldn't show for this registration (e.g. no videoconference link set). The
   # app supplies the dynamic parts (badge, per-registration visibility, and the
   # destination link); the row supplies the editable presentation (title,
   # subtitle, colour, icon), so admin edits to those take effect on the ticket.
   def card_for(callout)
     builder = CARD_BUILDERS[callout.builtin_key]
     base = builder && send(builder)
+    # A published certificate row shows even before it unlocks (as a pending card);
+    # the fallback set only surfaces it once downloadable, so this lives here.
+    base ||= certificate_pending_card if callout.builtin_key == "certificate"
     return unless base
 
     base.with(
@@ -185,7 +188,8 @@ class BuiltinCalloutCards
   end
 
   # Shown only once the certificate of completion is unlocked (training over,
-  # attended, scholarship tasks met). Renders like the invoice.
+  # attended, scholarship tasks met). Renders like the invoice. A published
+  # certificate row also shows before then via #certificate_pending_card.
   def certificate_card
     return unless registration.certificate_available?
     Card.new(icon_class: "fa-solid fa-certificate", color: "green",
@@ -193,6 +197,21 @@ class BuiltinCalloutCards
              subtitle: "View and download your certificate",
              href: registration_certificate_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
+  end
+
+  # A published certificate row still shows before it unlocks, badged as pending so
+  # the registrant knows one is coming; its page lists the outstanding conditions.
+  # Badge is the one presentation the row can't override, so the cue survives
+  # #card_for. Only reached via a published row — the code-defined fallback set
+  # (#cards) surfaces the certificate only once it's actually downloadable.
+  def certificate_pending_card
+    Card.new(icon_class: "fa-solid fa-certificate", color: "gray",
+             title: "Certificate of completion",
+             subtitle: "Unlocks after the training",
+             href: registration_certificate_path(registration.slug),
+             target: nil, trailing_icon: "fa-solid fa-arrow-right",
+             badge: "Available after the event",
+             badge_classes: "bg-gray-100 text-gray-600 border border-gray-300")
   end
 
   # Shown only when the registrant requested a scholarship. Its page surfaces the
@@ -236,9 +255,16 @@ class BuiltinCalloutCards
   # CE hours: an action card prompting the registrant to request credit until
   # they have, becoming a reference card once requested with hours and a license
   # number on file. Shown when the event offers CE or the registrant asked for it.
+  # Before they've requested, it's the invite card — but only while the request
+  # window is still open (see #ce_request_open?).
   def ce_hours_card
     return if config_gap?("ce_hours")
-    return unless registration.ce_registered?
+    unless registration.ce_registered?
+      # The sample-ticket preview models CE only through its "Show all options"
+      # toggle (which builds a CE registration), so don't surface the invite there.
+      return unless !@preview && ce_request_open?
+      return ce_request_card
+    end
     complete = registration.ce_license_provided?
     # An outstanding CE balance turns the card orange (an action card), matching
     # the payment card, rather than the resting teal.
@@ -253,6 +279,34 @@ class BuiltinCalloutCards
              # badge_classes falls back to amber in _callout_card); teal once it's
              # complete and paid.
              badge_classes: complete && !due ? "bg-teal-100 text-teal-800 border border-teal-300" : nil)
+  end
+
+  # Before the registrant has requested CE, an invite card linking to the CE page
+  # where the "Request CE credit" button lives. Shown only while the request window
+  # is open. Resting teal — requesting is optional, not an outstanding obligation.
+  def ce_request_card
+    Card.new(icon_class: "fa-solid fa-graduation-cap", color: "teal",
+             title: event.ce_hours_label,
+             subtitle: "Request continuing education credit",
+             href: registration_ce_path(registration.slug),
+             target: nil, trailing_icon: "fa-solid fa-arrow-right",
+             badge: ce_request_badge)
+  end
+
+  # The request deadline, so a not-yet-requested registrant knows when to act —
+  # e.g. "Request CE by Jul 1". No fee here (they haven't opted in and owe nothing
+  # yet); the cost surfaces on the card once they've requested. Nil when the event
+  # sets no request deadline.
+  def ce_request_badge
+    return unless event.ce_hours_request_deadline
+    "Request CE by #{ce_deadline_text(event.ce_hours_request_deadline)}"
+  end
+
+  # Whether a not-yet-requested registrant can still request CE credit: no request
+  # deadline set, or it hasn't passed (lenient through the end of the deadline day).
+  def ce_request_open?
+    deadline = event.ce_hours_request_deadline
+    deadline.blank? || deadline.to_date >= Time.zone.today
   end
 
   def ce_hours_subtitle
@@ -293,8 +347,9 @@ class BuiltinCalloutCards
   end
 
   # Short month/day for a deadline shown inline on the CE card, e.g. "Jul 1".
+  # in_time_zone first so a datetime deadline reports the same day it's displayed as.
   def ce_deadline_text(deadline)
-    deadline.strftime("%b %-d")
+    deadline.in_time_zone(Time.zone).strftime("%b %-d")
   end
 
   # Always shown once published — the roster page (which shares its card grid

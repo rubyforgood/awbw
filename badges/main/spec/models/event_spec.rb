@@ -394,6 +394,27 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "ce_payment_due_deadline date/time fields" do
+    it "merges the date and time inputs into the datetime column on save" do
+      event = create(:event,
+                     ce_payment_due_deadline_date: "2026-07-22",
+                     ce_payment_due_deadline_time: "09:00")
+      deadline = event.reload.ce_payment_due_deadline
+      expect(deadline.in_time_zone(Time.zone).strftime("%Y-%m-%d %H:%M")).to eq("2026-07-22 09:00")
+    end
+
+    it "exposes the stored deadline back through the virtual date/time readers" do
+      event = create(:event, ce_payment_due_deadline: Time.zone.local(2026, 7, 22, 9, 0))
+      expect(event.ce_payment_due_deadline_date).to eq("2026-07-22")
+      expect(event.ce_payment_due_deadline_time).to eq("09:00")
+    end
+
+    it "leaves the deadline nil when both inputs are blank" do
+      event = create(:event, ce_payment_due_deadline_date: "", ce_payment_due_deadline_time: "")
+      expect(event.reload.ce_payment_due_deadline).to be_nil
+    end
+  end
+
   describe "#scholarship_eligible?" do
     it "is true when the event has a cost" do
       expect(build(:event, cost_cents: 1_000)).to be_scholarship_eligible
