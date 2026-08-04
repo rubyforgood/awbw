@@ -42,8 +42,8 @@ RSpec.describe "EventRegistrations", type: :request do
 
         get event_registrations_path(organization_id: organization.id)
         expect(response).to have_http_status(:success)
-        expect(response.body).to include(matching_reg.registrant.first_name)
-        expect(response.body).not_to include(existing_registration.registrant.first_name)
+        expect(response.body).to include(matching_reg.registrant.name)
+        expect(response.body).not_to include(existing_registration.registrant.name)
       end
 
       it "filters registrations by ce_status" do
@@ -53,8 +53,8 @@ RSpec.describe "EventRegistrations", type: :request do
 
         get event_registrations_path(ce_status: "needs_license")
         expect(response).to have_http_status(:success)
-        expect(response.body).to include(needs_license.registrant.first_name)
-        expect(response.body).not_to include(existing_registration.registrant.first_name)
+        expect(response.body).to include(needs_license.registrant.name)
+        expect(response.body).not_to include(existing_registration.registrant.name)
       end
 
       it "filters registrations by attendance status" do
@@ -62,8 +62,8 @@ RSpec.describe "EventRegistrations", type: :request do
 
         get event_registrations_path(attendance_status: "no_show")
         expect(response).to have_http_status(:success)
-        expect(response.body).to include(no_show.registrant.first_name)
-        expect(response.body).not_to include(existing_registration.registrant.first_name)
+        expect(response.body).to include(no_show.registrant.name)
+        expect(response.body).not_to include(existing_registration.registrant.name)
       end
 
       it "filters registrations to 'other' outcomes (not attended/partial/no-show)" do
@@ -72,9 +72,9 @@ RSpec.describe "EventRegistrations", type: :request do
 
         get event_registrations_path(attendance_status: "other")
         expect(response).to have_http_status(:success)
-        expect(response.body).to include(cancelled.registrant.first_name)
-        expect(response.body).to include(existing_registration.registrant.first_name) # registered
-        expect(response.body).not_to include(attended.registrant.first_name)
+        expect(response.body).to include(cancelled.registrant.name)
+        expect(response.body).to include(existing_registration.registrant.name) # registered
+        expect(response.body).not_to include(attended.registrant.name)
       end
 
       it "filters registrations by event year" do
@@ -83,8 +83,8 @@ RSpec.describe "EventRegistrations", type: :request do
 
         get event_registrations_path(event_year: 2026)
         expect(response).to have_http_status(:success)
-        expect(response.body).to include(this_year.registrant.first_name)
-        expect(response.body).not_to include(last_year.registrant.first_name)
+        expect(response.body).to include(this_year.registrant.name)
+        expect(response.body).not_to include(last_year.registrant.name)
       end
 
       it "filters registrations by event type" do
@@ -92,8 +92,8 @@ RSpec.describe "EventRegistrations", type: :request do
 
         get event_registrations_path(event_type: "trainings")
         expect(response).to have_http_status(:success)
-        expect(response.body).to include(training_reg.registrant.first_name)
-        expect(response.body).not_to include(existing_registration.registrant.first_name)
+        expect(response.body).to include(training_reg.registrant.name)
+        expect(response.body).not_to include(existing_registration.registrant.name)
       end
 
       it "exports CSV with headers and data only (no captions)" do
