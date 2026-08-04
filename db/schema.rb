@@ -459,7 +459,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_114533) do
     t.integer "updated_by_id"
     t.index ["created_by_id"], name: "index_event_attendance_time_entries_on_created_by_id"
     t.index ["event_registration_id", "signed_out_at"], name: "index_attendance_entries_on_registration_and_signed_out"
-    t.index ["event_registration_id"], name: "index_event_attendance_time_entries_on_event_registration_id"
     t.index ["updated_by_id"], name: "index_event_attendance_time_entries_on_updated_by_id"
   end
 

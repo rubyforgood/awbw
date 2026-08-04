@@ -28,6 +28,20 @@ RSpec.describe EventAttendanceReport do
     end
   end
 
+  describe "#dates_truncated?" do
+    it "is false when the event fits within the 5-day date cap" do
+      expect(described_class.new(event).dates_truncated?).to be(false)
+    end
+
+    it "is true when the event runs past the capped dates" do
+      long_event = create(:event, ce_hours_offered: 6,
+        start_date: Time.zone.local(2026, 7, 20, 9, 0),
+        end_date: Time.zone.local(2026, 7, 27, 16, 0),
+        registration_close_date: Time.zone.local(2026, 7, 15, 9, 0))
+      expect(described_class.new(long_event).dates_truncated?).to be(true)
+    end
+  end
+
   describe "CE report (ce_only: true)" do
     let!(:alice) { registration_for("Alice", "Adams") }
     let!(:bob)   { registration_for("Bob", "Baker") }

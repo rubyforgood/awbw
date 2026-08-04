@@ -36,10 +36,14 @@ class EventAttendanceReport
     registrations.any?
   end
 
-  # Whether anyone logged any time at all (the report can list CE registrants with
-  # no entries, so registrations.any? isn't the same question).
-  def any_entries?
-    registrations.any? { |reg| reg.event_attendance_time_entries.any? }
+  # Whether the event actually runs past the last reported date — event_dates is
+  # capped at 5 days (Event#day_count's clamp), so a longer event has no sign-in
+  # window or day section past day 5. The view warns when this is true.
+  def dates_truncated?
+    last_day = event.end_date&.in_time_zone(Time.zone)&.to_date
+    return false unless last_day && dates.any?
+
+    last_day > dates.last
   end
 
   # One registration's entries on one date, decorated and in sign-in order.

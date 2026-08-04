@@ -120,6 +120,25 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(ce_registration.reload.professional_license).to eq(other)
     end
 
+    describe "opened from the CE sign-in report (return_to=attendance)" do
+      it "points the back and cancel links at the report" do
+        get edit_continuing_education_registration_path(ce_registration, return_to: "attendance")
+        expect(response.body).to include("CE sign-in report")
+        expect(response.body).to include(attendance_event_path(event, ce: "true", anchor: "totals"))
+      end
+
+      it "returns to the report after saving" do
+        patch continuing_education_registration_path(ce_registration, return_to: "attendance"),
+              params: { continuing_education_registration: { hours: "6", cost_dollars: "120" } }
+        expect(response).to redirect_to(attendance_event_path(event, ce: "true", anchor: "totals"))
+      end
+
+      it "returns to the report after deleting" do
+        delete continuing_education_registration_path(ce_registration, return_to: "attendance")
+        expect(response).to redirect_to(attendance_event_path(event, ce: "true", anchor: "totals"))
+      end
+    end
+
     it "marks the certificate issued and back to not issued" do
       patch toggle_certificate_continuing_education_registration_path(ce_registration)
       expect(ce_registration.reload.certificate_sent_at).to be_present

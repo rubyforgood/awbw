@@ -49,6 +49,12 @@ RSpec.describe "Events attendance report", type: :request do
       get attendance_event_path(event, ce: "true", return_to: "registrants")
       expect(response.body).to include("← Registrants")
     end
+
+    it "warns when the event runs longer than the report's 5-day cap" do
+      event.update!(end_date: Time.zone.local(2026, 7, 30, 16, 0))
+      get attendance_event_path(event)
+      expect(response.body).to include("only the first 5 days")
+    end
   end
 
   it "forbids users who are neither admin nor the event owner" do

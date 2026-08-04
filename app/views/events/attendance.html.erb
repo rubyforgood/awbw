@@ -32,6 +32,13 @@
       <% end %>
     </div>
 
+    <% if @report.dates_truncated? %>
+      <div class="mb-6 flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <i class="fa-solid fa-triangle-exclamation mt-0.5 shrink-0"></i>
+        <p>This event runs past <%= @report.dates.last.strftime("%b %-d") %>, but sign-in and this report cover only the first 5 days. Times entered for later days count toward totals without a day section.</p>
+      </div>
+    <% end %>
+
     <% if @report.any? %>
       <% @report.dates.each_with_index do |date, index| %>
         <% signed_in_count = @report.registrations.count { |reg| @report.entries_for(reg, date).any? } %>
@@ -84,8 +91,9 @@
       <% end %>
 
       <%# Totals across all days — the figure the CE board certifies, alongside the
-          hours the event awards so staff can reconcile the two. %>
-      <section class="mb-4">
+          hours the event awards so staff can reconcile the two. The id anchors the
+          return trip from the per-row CE edit links. %>
+      <section id="totals" class="mb-4 scroll-mt-6">
         <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">Totals</h2>
         <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
           <div class="grid items-center gap-x-3 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 border-b border-gray-100"
