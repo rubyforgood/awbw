@@ -16,6 +16,7 @@ class EventRegistration < ApplicationRecord
   has_many :organizations, through: :event_registration_organizations
   has_many :allocations, as: :allocatable
   has_many :continuing_education_registrations, dependent: :destroy
+  has_many :event_attendance_time_entries, dependent: :destroy
   has_many :scholarships, -> { distinct },
     through: :allocations, source: :source, source_type: "Scholarship"
   has_many :checklist_completions, class_name: "EventRegistrationChecklistCompletion", dependent: :destroy
@@ -25,6 +26,10 @@ class EventRegistration < ApplicationRecord
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
+  # Staff correct/add attendance times on the CE edit form; a row with no sign-in
+  # time is an untouched blank and dropped.
+  accepts_nested_attributes_for :event_attendance_time_entries, allow_destroy: true,
+    reject_if: proc { |attrs| attrs["signed_in_at"].blank? }
   # Lets the registration edit form edit the registrant's shout-out text (which
   # lives on the Person) inline, alongside the registration's own shout-out flag.
   accepts_nested_attributes_for :registrant
@@ -664,6 +669,24 @@ class EventRegistration < ApplicationRecord
   # Cost source for the Registerable payment interface: the event's price.
   def cost_cents
     event.cost_cents
+  end
+
+  # The registrant's currently-open attendance entry (signed in, not yet out), or
+  # nil when they're not signed in. Drives which sign-in/out button the CE callout
+  # shows. Uses the most recent open entry if more than one somehow exists.
+  def open_attendance_entry
+    event_attendance_time_entries.open.chronological.last
+  end
+
+  # Whether the registrant is currently signed in.
+  def signed_in?
+    open_attendance_entry.present?
+  end
+
+  # This registration's attendance entries for one event day (a Date), in
+  # sign-in order — the day's rows on the CE callout and the report.
+  def attendance_entries_on(date)
+    event_attendance_time_entries.chronological.select { |entry| entry.attendance_date == date }
   end
 
   # CE is now tracked as one or more ContinuingEducationRegistration records,

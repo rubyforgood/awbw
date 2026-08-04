@@ -1389,4 +1389,35 @@ RSpec.describe EventRegistration, type: :model do
       expect(preloaded.paid_in_full?).to be(true)
     end
   end
+
+  describe "attendance time entries" do
+    let(:registration) { create(:event_registration) }
+
+    describe "#signed_in? / #open_attendance_entry" do
+      it "is signed in while an entry has no sign-out" do
+        entry = create(:event_attendance_time_entry, :open, event_registration: registration)
+        expect(registration.signed_in?).to be(true)
+        expect(registration.open_attendance_entry).to eq(entry)
+      end
+
+      it "is not signed in once every entry is closed" do
+        create(:event_attendance_time_entry, event_registration: registration)
+        expect(registration.signed_in?).to be(false)
+        expect(registration.open_attendance_entry).to be_nil
+      end
+    end
+
+    describe "#attendance_entries_on" do
+      it "returns that day's entries in sign-in order" do
+        second = create(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 23, 11, 0), signed_out_at: Time.zone.local(2026, 7, 23, 12, 0))
+        first = create(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 23, 8, 50), signed_out_at: Time.zone.local(2026, 7, 23, 10, 34))
+        create(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 24, 8, 50), signed_out_at: Time.zone.local(2026, 7, 24, 10, 0))
+
+        expect(registration.attendance_entries_on(Date.new(2026, 7, 23))).to eq([ first, second ])
+      end
+    end
+  end
 end

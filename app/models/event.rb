@@ -202,6 +202,44 @@ class Event < ApplicationRecord
     span.clamp(1, 5)
   end
 
+  # Attendance sign-in opens this long before a training day's start, so early
+  # arrivals can sign in (the CE sheet shows people arriving ~10 min early). Sign-out
+  # isn't windowed — an open entry can always be closed, since forgetting to sign out
+  # is the common failure.
+  ATTENDANCE_SIGN_IN_LEAD = 30.minutes
+
+  # The calendar dates this event runs, inclusive, capped to day_count. Events store
+  # only one start_date/end_date, so multi-day events are assumed to run on
+  # consecutive days — the same assumption day_count already makes.
+  def event_dates
+    return [] if start_date.blank?
+
+    first = start_date.in_time_zone(Time.zone).to_date
+    (0...day_count).map { |offset| first + offset }
+  end
+
+  # A day's start datetime: that date at start_date's time-of-day, in the app zone.
+  # Every event day is assumed to start at the same time (the only time we have).
+  def daily_start_at(date)
+    combine_date_and_time(date, start_date)
+  end
+
+  # A day's end datetime: that date at end_date's time-of-day (falling back to the
+  # start time for events with no end), in the app zone.
+  def daily_end_at(date)
+    combine_date_and_time(date, end_date.presence || start_date)
+  end
+
+  # Whether a registrant may start a new sign-in right now: it's an event day and
+  # now falls within [day start − lead, day end]. Sign-out is deliberately not
+  # gated by this (see ATTENDANCE_SIGN_IN_LEAD).
+  def attendance_sign_in_open?(at = Time.current)
+    date = event_dates.find { |d| d == at.in_time_zone(Time.zone).to_date }
+    return false unless date
+
+    at.between?(daily_start_at(date) - ATTENDANCE_SIGN_IN_LEAD, daily_end_at(date))
+  end
+
   def time_title
     "(#{ start_text }) #{ name }"
   end
@@ -349,6 +387,13 @@ class Event < ApplicationRecord
     date_val = send(:"#{field}_date")
     time_val = send(:"#{field}_time")
     self[field] = build_datetime(date_val, time_val)
+  end
+
+  # Combine a Date with the time-of-day of a datetime source, in the app zone —
+  # e.g. "day 2's date" + "the event's 9:00am start" → that day at 9:00am.
+  def combine_date_and_time(date, source)
+    time = source.in_time_zone(Time.zone)
+    Time.zone.local(date.year, date.month, date.day, time.hour, time.min)
   end
 
   def build_datetime(date_str, time_str)

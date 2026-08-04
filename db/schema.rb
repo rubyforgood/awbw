@@ -449,6 +449,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_114533) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "event_attendance_time_entries", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.bigint "event_registration_id", null: false
+    t.datetime "signed_in_at", null: false
+    t.datetime "signed_out_at"
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
+    t.index ["created_by_id"], name: "index_event_attendance_time_entries_on_created_by_id"
+    t.index ["event_registration_id", "signed_out_at"], name: "index_attendance_entries_on_registration_and_signed_out"
+    t.index ["event_registration_id"], name: "index_event_attendance_time_entries_on_event_registration_id"
+    t.index ["updated_by_id"], name: "index_event_attendance_time_entries_on_updated_by_id"
+  end
+
   create_table "event_forms", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "event_id", null: false
@@ -1807,6 +1821,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_114533) do
   add_foreign_key "contact_methods", "addresses"
   add_foreign_key "continuing_education_registrations", "event_registrations"
   add_foreign_key "continuing_education_registrations", "professional_licenses"
+  add_foreign_key "event_attendance_time_entries", "event_registrations"
   add_foreign_key "event_forms", "events"
   add_foreign_key "event_forms", "forms"
   add_foreign_key "event_registration_checklist_completions", "event_registrations"

@@ -481,4 +481,56 @@ RSpec.describe Event, type: :model do
       expect(create(:event, cost_cents: nil)).not_to be_scholarship_eligible
     end
   end
+
+  describe "attendance sign-in window" do
+    # A two-day training running 9:00am–4:00pm each day.
+    let(:event) do
+      create(:event,
+        start_date: Time.zone.local(2026, 7, 23, 9, 0),
+        end_date: Time.zone.local(2026, 7, 24, 16, 0),
+        registration_close_date: Time.zone.local(2026, 7, 20, 9, 0))
+    end
+
+    describe "#event_dates" do
+      it "lists each consecutive calendar day, inclusive" do
+        expect(event.event_dates).to eq([ Date.new(2026, 7, 23), Date.new(2026, 7, 24) ])
+      end
+
+      it "is empty without a start date" do
+        expect(build(:event, start_date: nil).event_dates).to eq([])
+      end
+    end
+
+    describe "#daily_start_at / #daily_end_at" do
+      it "applies the event's start/end time-of-day to each day" do
+        day2 = Date.new(2026, 7, 24)
+        expect(event.daily_start_at(day2)).to eq(Time.zone.local(2026, 7, 24, 9, 0))
+        expect(event.daily_end_at(day2)).to eq(Time.zone.local(2026, 7, 24, 16, 0))
+      end
+    end
+
+    describe "#attendance_sign_in_open?" do
+      it "opens 30 minutes before a day's start" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 8, 30))).to be(true)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 8, 29))).to be(false)
+      end
+
+      it "stays open through the day's end time" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 16, 0))).to be(true)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 16, 1))).to be(false)
+      end
+
+      it "applies the same window to every event day" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 24, 9, 0))).to be(true)
+      end
+
+      it "is closed overnight between event days" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 20, 0))).to be(false)
+      end
+
+      it "is closed on non-event days" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 25, 9, 0))).to be(false)
+      end
+    end
+  end
 end
