@@ -145,6 +145,19 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       expect(response.body).not_to include("in about 2 hours")
     end
 
+    it "shows staff an admin chip linking to the event's attendance report" do
+      pay_ce!
+      sign_in create(:user, :admin)
+      get registration_ce_path(registration.slug)
+      expect(response.body).to include(attendance_event_path(event, ce: "true"))
+    end
+
+    it "hides the attendance report chip from registrants" do
+      pay_ce!
+      get registration_ce_path(registration.slug)
+      expect(response.body).not_to include(attendance_event_path(event, ce: "true"))
+    end
+
     it "hides the attendance section until CE is paid in full" do
       license = create(:professional_license, person: registration.registrant, number: "LIC123")
       create(:continuing_education_registration, event_registration: registration, professional_license: license)

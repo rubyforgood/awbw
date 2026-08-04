@@ -251,7 +251,14 @@
       <% todays_minutes = todays_entries.sum { |entry| entry.duration_minutes.to_i } %>
 
       <section id="attendance" class="mt-7 scroll-mt-6 border-t border-gray-100 pt-6">
-        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Training sign-in</h2>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Training sign-in</h2>
+          <%# Admin-only jump to the event's attendance report, mirroring the
+              "Edit CE registration" chip up top. %>
+          <% if allowed_to?(:attendance?, @event) && !sample_preview? %>
+            <%= render "events/callouts/admin_edit_link", path: attendance_event_path(@event, ce: "true"), label: "Attendance report" %>
+          <% end %>
+        </div>
 
         <div class="mt-3 flex flex-wrap items-center gap-3">
           <% if signed_in %>
