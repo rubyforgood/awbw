@@ -170,6 +170,7 @@ Rails.application.routes.draw do
     end
     member do
       get :dashboard
+      get :attendance
       get :sample_ticket
       # Admin-only in-memory previews of the behavioral built-in callout pages,
       # linked from the sample ticket. They reuse Events::CalloutsController's

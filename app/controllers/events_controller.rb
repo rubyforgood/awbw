@@ -2,18 +2,19 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard sample_ticket registrants roster onboarding staff edit_staff update_staff recipients preview_reminder confirm_reminder send_reminder copy_registration_form feature_recipient_shoutout ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard attendance sample_ticket registrants roster onboarding staff edit_staff update_staff recipients preview_reminder confirm_reminder send_reminder copy_registration_form feature_recipient_shoutout ]
   before_action :set_report_filters, only: %i[ revenue participation reports scholarships ]
   # The cross-event report suite is visible to admins and event owners alike; what
   # differs is the rows, which EventPolicy's :reportable scope narrows to the
-  # viewer's own events.
+  # viewer's own events. #attendance is per-event, so it authorizes its own record
+  # rather than joining this list.
   before_action :authorize_report!, only: %i[ revenue participation reports scholarships attendees ]
   # Log a visit to each event page / report. after_action so it only fires once
   # the action rendered successfully (authorization inside the actions has passed);
   # the turbo_frame_request? / redirect guards skip the lazy results/charts
   # sub-requests and the confirm-reminder bounce-back. send_reminder is logged
   # inline on a successful send (it always redirects).
-  after_action :track_page_view, only: %i[ dashboard roster registrants recipients staff onboarding edit preview sample_ticket revenue participation reports scholarships attendees confirm_reminder ]
+  after_action :track_page_view, only: %i[ dashboard attendance roster registrants recipients staff onboarding edit preview sample_ticket revenue participation reports scholarships attendees confirm_reminder ]
 
   def index
     authorize!
@@ -100,6 +101,14 @@ class EventsController < ApplicationController
     @people = people.paginate(page: params[:page], per_page: per_page)
     @roster = AttendeesRoster.new(@people, events: attendee_events, registrations: attendee_registrations)
     render :attendees_results
+  end
+
+  # Per-event attendance sign-in/out report, grouped by day then registrant — the
+  # in-portal CE hour sign-in sheet. `?ce=true` scopes to CE registrants and shows
+  # their license number and awarded hours.
+  def attendance
+    authorize! @event
+    @report = EventAttendanceReport.new(@event, ce_only: params[:ce] == "true")
   end
 
   def new
