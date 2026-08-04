@@ -117,12 +117,13 @@ RSpec.describe "Events::Callouts", type: :request do
   describe "callout page header" do
     let(:event) { create(:event, title: "Windows workshop", start_date: Date.new(2020, 1, 12), end_date: Date.new(2099, 12, 12)) }
 
-    it "shows the event title and short date range under the callout title" do
+    it "shows the event title with the date range and daily times on the line below" do
       create(:registration_ticket_callout, event:, builtin_key: "staff", hidden: false)
       get registration_staff_path(registration.slug)
-      # title · "<Mon D, 2020> - <Mon D, 2099>" — the short_date_range format
-      # (no weekday, with year); the exact day depends on the request time zone.
-      expect(response.body).to match(/Windows workshop · \w{3} \d{1,2}, 2020 - \w{3} \d{1,2}, 2099/)
+      expect(response.body).to include("Windows workshop")
+      # "<Mon D, 2020> - <Mon D, 2099> · <times>" — the short_date_range format
+      # (no weekday, with year); the exact day/time depend on the request time zone.
+      expect(response.body).to match(/\w{3} \d{1,2}, 2020 - \w{3} \d{1,2}, 2099 · .+m [A-Z]{3}/)
     end
   end
 
