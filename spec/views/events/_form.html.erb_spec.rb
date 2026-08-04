@@ -28,6 +28,7 @@ RSpec.describe "events/_form", type: :view do
     expect(rendered).to have_selector("input[type='time'][name='event[end_date_time]']")
     expect(rendered).to have_selector("input[type='date'][name='event[registration_close_date_date]']")
     expect(rendered).to have_selector("input[type='time'][name='event[registration_close_date_time]']")
+    expect(rendered).to have_selector("select[name='event[time_zone]']")
     expect(rendered).to have_selector("input[type='checkbox'][name='event[published]']")
   end
 

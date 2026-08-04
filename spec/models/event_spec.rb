@@ -49,6 +49,35 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "time zone" do
+    it "is invalid when the time_zone is not a recognized zone" do
+      event = build(:event, time_zone: "Mars/Olympus")
+      expect(event).not_to be_valid
+      expect(event.errors[:time_zone]).to include("is not a valid time zone")
+    end
+
+    it "interprets typed times in the event's own zone, not the session zone" do
+      # An Eastern admin editing a Pacific event: the 2:00 PM they type must be
+      # stored as 2:00 PM Pacific regardless of the request zone.
+      event = build(:event, time_zone: "Pacific Time (US & Canada)")
+      event.assign_attributes(start_date_date: "2026-09-14", start_date_time: "14:00")
+
+      Time.use_zone("Eastern Time (US & Canada)") { event.valid? }
+
+      expect(event.start_date.utc).to eq(Time.find_zone!("Pacific Time (US & Canada)").local(2026, 9, 14, 14, 0).utc)
+    end
+
+    it "renders the form readers in the event's zone regardless of the session zone" do
+      event = create(:event, time_zone: "Pacific Time (US & Canada)",
+                             start_date: Time.find_zone!("Pacific Time (US & Canada)").local(2026, 9, 14, 14, 0))
+
+      Time.use_zone("Eastern Time (US & Canada)") do
+        expect(event.start_date_time).to eq("14:00")
+        expect(event.start_date_date).to eq("2026-09-14")
+      end
+    end
+  end
+
   describe "#date_title" do
     it "labels the event by date and title, without the time or parens" do
       event = build(:event, title: "Youth Creativity Day", start_date: Time.zone.local(2026, 9, 14, 14, 9))

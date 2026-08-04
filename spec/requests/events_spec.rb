@@ -640,13 +640,15 @@ RSpec.describe "Events", type: :request do
         expect(created.end_date.utc).to eq(Time.utc(2025, 6, 15, 20, 0, 0))
       end
 
-      it "stores start_date/end_date in UTC when created by user in Eastern time zone" do
+      it "interprets typed times in the event's chosen zone, not the admin's session zone" do
         admin_et = create(:user, :admin, time_zone: "Eastern Time (US & Canada)")
         sign_in admin_et
-        # 15:00–16:00 ET (EDT) on 2025-06-15 = 19:00–20:00 UTC
+        # The admin's session is Eastern, but the event is set to Pacific — so
+        # 15:00–16:00 PT (PDT) on 2025-06-15 = 22:00–23:00 UTC.
         post events_url, params: { event: {
-          title: "ET event",
+          title: "PT event",
           description: "desc",
+          time_zone: "Pacific Time (US & Canada)",
           start_date_date: "2025-06-15",
           start_date_time: "15:00",
           end_date_date: "2025-06-15",
@@ -657,8 +659,9 @@ RSpec.describe "Events", type: :request do
 
         created = Event.order(created_at: :desc).first
         expect(response).to redirect_to(event_url(created))
-        expect(created.start_date.utc).to eq(Time.utc(2025, 6, 15, 19, 0, 0))
-        expect(created.end_date.utc).to eq(Time.utc(2025, 6, 15, 20, 0, 0))
+        expect(created.time_zone).to eq("Pacific Time (US & Canada)")
+        expect(created.start_date.utc).to eq(Time.utc(2025, 6, 15, 22, 0, 0))
+        expect(created.end_date.utc).to eq(Time.utc(2025, 6, 15, 23, 0, 0))
       end
     end
 

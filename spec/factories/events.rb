@@ -3,6 +3,10 @@ FactoryBot.define do
     association :created_by, factory: :user
     title { "sample title" }
     description { "sample description" }
+    # Default to the ambient zone so factory-built times (`Time.zone.local(...)`)
+    # display in the same zone they were constructed in. Production events default
+    # to Pacific via the DB column; override explicitly to exercise zone behavior.
+    time_zone { Time.zone.name }
     start_date { 12.days.from_now }
     end_date   { 14.days.from_now }
     registration_close_date { 13.days.from_now }
