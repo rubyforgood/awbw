@@ -187,10 +187,10 @@
                     wrapping the checkbox so the name link stays a plain profile link. %>
                 <%# Emerald hover is scoped to the linked (checked) state so a to-be-removed
                     chip stays red on hover. %>
-                <% org_name_classes = "inline-flex items-center whitespace-nowrap rounded-md text-xs font-medium border px-3 py-0.5 transition bg-red-50 border-red-200 text-red-500 line-through peer-checked:bg-gray-50 peer-checked:border-gray-200 peer-checked:text-gray-500 peer-checked:no-underline peer-checked:hover:bg-emerald-200 peer-checked:hover:text-emerald-800 peer-checked:hover:border-emerald-300 peer-checked:hover:shadow-sm" %>
+                <% org_name_classes = "inline-flex min-w-0 items-center break-words rounded-md text-xs font-medium border px-3 py-0.5 transition bg-red-50 border-red-200 text-red-500 line-through peer-checked:bg-gray-50 peer-checked:border-gray-200 peer-checked:text-gray-500 peer-checked:no-underline peer-checked:hover:bg-emerald-200 peer-checked:hover:text-emerald-800 peer-checked:hover:border-emerald-300 peer-checked:hover:shadow-sm" %>
                 <% remove_classes = "inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs leading-none cursor-pointer transition-colors bg-red-100 border-red-300 text-red-600 peer-checked:bg-gray-50 peer-checked:border-gray-200 peer-checked:text-gray-400" %>
                 <% f.object.organizations.sort_by(&:name).each do |org| %>
-                  <span class="inline-flex items-center gap-1">
+                  <span class="inline-flex min-w-0 max-w-full items-start gap-1">
                     <input type="checkbox" id="org_chip_<%= org.id %>" name="event_registration[organization_ids][]" value="<%= org.id %>" checked class="peer sr-only">
                     <%# Warn before leaving to the profile if the form has unsaved edits. %>
                     <%= link_to org.name, organization_path(org), title: org.name, class: org_name_classes, data: { turbo_frame: "_top", action: "dirty-form#confirmCancel" } %>
@@ -218,9 +218,9 @@
             <%# Pending-chip template cloned by org_toggle_controller when adding. Kept in
                 the markup (not a JS string) so Tailwind always compiles the amber variants. %>
             <template data-org-toggle-target="template">
-              <span class="inline-flex items-center gap-1">
+              <span class="inline-flex min-w-0 max-w-full items-start gap-1">
                 <input type="checkbox" name="event_registration[organization_ids][]" value="" checked class="peer sr-only">
-                <a href="#" data-org-toggle-name title="Pending — saved when you save the form" data-turbo-frame="_top" data-action="dirty-form#confirmCancel" class="inline-flex items-center whitespace-nowrap rounded-md border px-3 py-0.5 text-xs font-medium transition bg-red-50 border-red-200 text-red-500 line-through peer-checked:bg-amber-50 peer-checked:border-amber-200 peer-checked:text-amber-800 peer-checked:no-underline peer-checked:hover:bg-amber-100 peer-checked:hover:border-amber-300 peer-checked:hover:shadow-sm"></a>
+                <a href="#" data-org-toggle-name title="Pending — saved when you save the form" data-turbo-frame="_top" data-action="dirty-form#confirmCancel" class="inline-flex min-w-0 items-center break-words rounded-md border px-3 py-0.5 text-xs font-medium transition bg-red-50 border-red-200 text-red-500 line-through peer-checked:bg-amber-50 peer-checked:border-amber-200 peer-checked:text-amber-800 peer-checked:no-underline peer-checked:hover:bg-amber-100 peer-checked:hover:border-amber-300 peer-checked:hover:shadow-sm"></a>
                 <label data-org-toggle-remove title="Remove from this registration" class="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs leading-none cursor-pointer transition-colors bg-red-100 border-red-300 text-red-600 peer-checked:bg-amber-50 peer-checked:border-amber-200 peer-checked:text-amber-500">&times;</label>
               </span>
             </template>
