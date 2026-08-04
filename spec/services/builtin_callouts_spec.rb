@@ -60,7 +60,7 @@ RSpec.describe BuiltinCallouts do
       described_class.seed(event)
 
       expect(event.registration_ticket_callouts.ordered.map(&:builtin_key)).to eq(
-        %w[payment certificate scholarship ce_hours art_supplies videoconference staff handouts faq]
+        %w[payment scholarship ce_hours art_supplies videoconference staff handouts certificate faq]
       )
     end
 
@@ -261,7 +261,7 @@ RSpec.describe BuiltinCallouts do
 
       expect(event.registration_ticket_callouts.ordered.first).to eq(custom)
       expect(event.registration_ticket_callouts.ordered.map(&:builtin_key).compact).to eq(
-        %w[payment certificate scholarship ce_hours art_supplies videoconference staff handouts faq]
+        %w[payment scholarship ce_hours art_supplies videoconference staff handouts certificate faq]
       )
     end
   end

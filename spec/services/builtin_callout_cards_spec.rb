@@ -232,11 +232,11 @@ RSpec.describe BuiltinCalloutCards do
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
       expect(card_titles(registration)).to eq([
         "Make your payment",
-        "Certificate of completion",
         "Scholarship",
         event.ce_hours_label,
         "Videoconference",
-        "Meet the staff"
+        "Meet the staff",
+        "Certificate of completion"
       ])
     end
   end
