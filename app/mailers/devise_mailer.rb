@@ -82,6 +82,7 @@ class DeviseMailer < Devise::Mailer
       recipient_email: recipient_email,
       kind: kind,
       notification_type: 1,
+      sender: Current.user, # attribute to the operator when one is set (e.g. bulk invites)
       deliver: false # Devise already sent the email, so no need to deliver via the job
     )
 
