@@ -38,6 +38,30 @@
     </button>
   </div>
 
+  <% if @event_registration.ce_registered? && !show_ce_clause %>
+    <%# The registrant requested CE but it isn't earned/paid yet, so it stays off
+        the printed certificate. Surface its status on screen (same gated-notice
+        style as the pending block below), print-hidden so it never prints. %>
+    <% ce_pending_reason = if !@event_registration.ce_license_provided?
+         "your professional license number is on file"
+       elsif !@event_registration.ce_paid_in_full?
+         "your CE payment is received"
+       else
+         "your CE certificate is issued"
+       end %>
+    <div class="max-w-4xl mx-auto px-4 sm:px-8 pt-3 print:hidden">
+      <div class="flex items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+        <i class="fa-solid fa-graduation-cap mt-0.5 text-gray-400"></i>
+        <span>
+          Your continuing education (CE) credit<%= " (#{ce_hours_label} hours)" if ce_hours.positive? %>
+          isn't shown on this certificate yet — it's added once <%= ce_pending_reason %>.
+          <%= link_to "View your CE status", registration_ce_path(@event_registration.slug),
+                class: "font-medium text-teal-700 underline hover:text-teal-900" %>.
+        </span>
+      </div>
+    </div>
+  <% end %>
+
   <div class="px-4 sm:px-8 py-6 print:p-0">
     <article class="certificate relative mx-auto max-w-4xl overflow-hidden rounded-2xl bg-white text-center text-gray-800 shadow-xl ring-1 ring-black/5 print:max-w-none print:rounded-none print:shadow-none print:ring-0">
       <%# Decorative double frame: deep AWBW purple outer, thin gold inner. %>

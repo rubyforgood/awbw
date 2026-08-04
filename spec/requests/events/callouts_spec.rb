@@ -613,6 +613,19 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).to include("continuing education (CE) credit")
     end
 
+    it "surfaces CE status above the certificate (screen-only) when CE isn't earned yet" do
+      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 12_000)
+      license = create(:professional_license, person: registration.registrant, number: "LIC-4")
+      registration.continuing_education_registrations.create!(professional_license: license, hours: 6)
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("This certifies that")
+      expect(response.body).to include("isn't shown on this certificate yet")
+      # The gated note never joins the printed CE clause.
+      expect(response.body).not_to include("in accordance with our approval by")
+    end
+
     it "omits the CE clause when no CE credit was earned" do
       get registration_certificate_path(registration.slug)
 
