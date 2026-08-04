@@ -335,7 +335,13 @@ class Person < ApplicationRecord
   # decorator maps each key to the label shown in the "Can't be deleted" notice.
   def deletion_blockers
     blockers = []
-    blockers << :user_account if user.present?
+    if user.present?
+      blockers << :user_account
+      blockers << :workshop_logs if user.workshop_logs.exists?
+      blockers << :story_ideas if user.story_ideas_as_creator.exists?
+      blockers << :workshop_ideas if user.workshop_ideas_as_creator.exists?
+      blockers << :workshop_variation_ideas if user.workshop_variation_ideas_creator.exists?
+    end
     blockers << :affiliations if affiliations.exists?
     blockers << :stories if stories_as_author.exists? || stories_as_spotlighted_facilitator.exists?
     blockers << :workshops if workshops_as_author.exists?

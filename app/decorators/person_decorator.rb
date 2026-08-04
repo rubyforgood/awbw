@@ -88,6 +88,10 @@ class PersonDecorator < ApplicationDecorator
   # has rather than a generic catch-all.
   DELETION_BLOCKER_LABELS = {
     user_account: "a user account",
+    workshop_logs: "authored workshop logs",
+    story_ideas: "authored story ideas",
+    workshop_ideas: "authored workshop ideas",
+    workshop_variation_ideas: "authored workshop variation ideas",
     affiliations: "organization affiliations",
     stories: "authored stories",
     workshops: "authored workshops",

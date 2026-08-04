@@ -77,13 +77,21 @@ RSpec.describe PersonDecorator do
         .to eq("Can't be deleted — this person has event registrations and form submissions.")
     end
 
-    it "names each kind of blocking record the person actually has" do
+    it "names authored records owned through the person's user" do
       person = create(:person)
+      create(:workshop_log, created_by: person.user)
+
+      expect(person.decorate.deletion_blocked_reason)
+        .to eq("Can't be deleted — this person has a user account and authored workshop logs.")
+    end
+
+    it "names each kind of blocking record the person actually has" do
+      person = create(:person, user: nil)
       create(:scholarship, recipient: person)
       create(:grant, donor: person)
 
       expect(person.decorate.deletion_blocked_reason)
-        .to eq("Can't be deleted — this person has a user account, scholarships, and grants.")
+        .to eq("Can't be deleted — this person has scholarships and grants.")
     end
   end
 end

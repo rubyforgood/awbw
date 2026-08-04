@@ -574,5 +574,12 @@ RSpec.describe Person, "scholarship index helpers" do
 
       expect(person).not_to be_deletable
     end
+
+    it "is false when the person's user authored workshop logs or ideas" do
+      person = create(:person)
+      create(:workshop_log, created_by: person.user)
+
+      expect(person).not_to be_deletable
+    end
   end
 end
