@@ -6,7 +6,7 @@ class EventMailer < ApplicationMailer
 
     @notification_type = "Event registration confirmation"
 
-    @time_zone = @person.user&.time_zone || Time.zone.name
+    @time_zone = @event.time_zone
     @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
     @organization_website  = ENV.fetch("ORGANIZATION_WEBSITE", root_url)
 
@@ -57,7 +57,7 @@ class EventMailer < ApplicationMailer
 
     @notification_type = "Event registration reminder"
 
-    @time_zone = @person.user&.time_zone || Time.zone.name
+    @time_zone = @event.time_zone
     @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
     @organization_website = ENV.fetch("ORGANIZATION_WEBSITE", root_url)
 
@@ -83,7 +83,7 @@ class EventMailer < ApplicationMailer
     @recipient_labels = Array(recipient_labels)
     @custom_message = custom_message.presence
     @notification_type = "Event registration reminder"
-    @time_zone = Time.zone.name
+    @time_zone = @event.time_zone
     @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
 
     count = @recipient_labels.size
@@ -102,7 +102,7 @@ class EventMailer < ApplicationMailer
 
     @notification_type = "Event registration cancellation"
 
-    @time_zone = @person.user&.time_zone || Time.zone.name
+    @time_zone = @event.time_zone
     @event_url = event_url(@event, reg: @event_registration.slug)
     @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
 

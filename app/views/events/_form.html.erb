@@ -77,6 +77,17 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <%# LEFT: Date/time, cost + pre-date text, videoconference + location %>
         <div class="md:col-span-2 space-y-6">
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-gray-200 bg-white px-3 py-2">
+            <label for="event_time_zone" class="flex items-center gap-1.5 text-sm text-gray-600">
+              <%= icon("fa-solid fa-earth-americas", class: "text-gray-400") %>
+              The times below are in
+            </label>
+            <%= f.time_zone_select :time_zone,
+                       ActiveSupport::TimeZone.us_zones,
+                       { default: "Pacific Time (US & Canada)" },
+                       class: "min-w-0 flex-1 rounded border-gray-300 shadow-sm px-2 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+
           <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
             <div class="bg-white border border-gray-200 rounded-lg p-3">
               <h3 class="font-medium mb-2">Start</h3>
@@ -225,7 +236,7 @@
           <p class="text-sm text-gray-500 mb-3">Toggle which details appear on the event page.<br>Fields with no value will be ignored.</p>
 
           <div class="space-y-2">
-            <% tz = Time.zone %>
+            <% tz = @event.event_zone %>
             <% tz_abbr = @event.start_date.present? ? @event.start_date.in_time_zone(tz).strftime("%Z") : Time.current.strftime("%Z") %>
 
             <%= f.input :autoshow_pre_date_text, as: :boolean, label: ("Pre-date text" + (@event.pre_date_text.present? ? " <span class='text-gray-400 font-normal'>#{h @event.pre_date_text}</span>" : "")).html_safe %>

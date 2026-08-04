@@ -53,6 +53,7 @@ class Event < ApplicationRecord
   # Validations
   validates_presence_of :title, :start_date, :end_date
   validates_inclusion_of :published, in: [ true, false ]
+  validate :time_zone_must_be_valid
   validates_numericality_of :cost_cents, greater_than_or_equal_to: 0, allow_nil: true
   validate :registration_form_required_when_publicly_registerable, on: :update
   validate :staff_members_are_unique, on: :update
@@ -212,33 +213,42 @@ class Event < ApplicationRecord
     registration_ticket_callouts.find_by(builtin_key: "ce_hours")&.title.presence || "CE hours"
   end
 
-  # Virtual attributes for date/time inputs (Firefox datetime-local compat)
+  # The event's own canonical zone — the times entered and displayed are pinned to
+  # it, so an event no longer floats to whoever's viewing. Falls back to the app
+  # zone if the column is somehow blank/invalid.
+  def event_zone
+    ActiveSupport::TimeZone[time_zone.to_s] || Time.zone
+  end
+
+  # Virtual attributes for date/time inputs (Firefox datetime-local compat). Read
+  # and write in the event's own zone so the form round-trips wall-clock times
+  # regardless of the editing admin's session zone.
   attr_writer :start_date_date, :start_date_time,
               :end_date_date, :end_date_time,
               :registration_close_date_date, :registration_close_date_time
 
   def start_date_date
-    @start_date_date || start_date&.strftime("%Y-%m-%d")
+    @start_date_date || start_date&.in_time_zone(event_zone)&.strftime("%Y-%m-%d")
   end
 
   def start_date_time
-    @start_date_time || start_date&.strftime("%H:%M")
+    @start_date_time || start_date&.in_time_zone(event_zone)&.strftime("%H:%M")
   end
 
   def end_date_date
-    @end_date_date || end_date&.strftime("%Y-%m-%d")
+    @end_date_date || end_date&.in_time_zone(event_zone)&.strftime("%Y-%m-%d")
   end
 
   def end_date_time
-    @end_date_time || end_date&.strftime("%H:%M")
+    @end_date_time || end_date&.in_time_zone(event_zone)&.strftime("%H:%M")
   end
 
   def registration_close_date_date
-    @registration_close_date_date || registration_close_date&.strftime("%Y-%m-%d")
+    @registration_close_date_date || registration_close_date&.in_time_zone(event_zone)&.strftime("%Y-%m-%d")
   end
 
   def registration_close_date_time
-    @registration_close_date_time || registration_close_date&.strftime("%H:%M")
+    @registration_close_date_time || registration_close_date&.in_time_zone(event_zone)&.strftime("%H:%M")
   end
 
   # Virtual attribute for cost in dollars (converts to/from cost_cents)
@@ -315,9 +325,15 @@ class Event < ApplicationRecord
 
   def build_datetime(date_str, time_str)
     return nil if date_str.blank? && time_str.blank?
-    return Time.zone.parse(date_str) if date_str.present? && time_str.blank?
-    return Time.zone.parse("2000-01-01 #{time_str}") if date_str.blank? && time_str.present?
-    Time.zone.parse("#{date_str} #{time_str}")
+    return event_zone.parse(date_str) if date_str.present? && time_str.blank?
+    return event_zone.parse("2000-01-01 #{time_str}") if date_str.blank? && time_str.present?
+    event_zone.parse("#{date_str} #{time_str}")
+  end
+
+  def time_zone_must_be_valid
+    return if ActiveSupport::TimeZone[time_zone.to_s]
+
+    errors.add(:time_zone, "is not a valid time zone")
   end
 
   def registration_form_required_when_publicly_registerable

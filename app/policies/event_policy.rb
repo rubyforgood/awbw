@@ -160,6 +160,7 @@ class EventPolicy < ApplicationPolicy
                   :pre_date_text,
                   :facilitator_training,
                   :featured,
+                  :time_zone,
                   :start_date, :start_date_date, :start_date_time,
                   :end_date, :end_date_date, :end_date_time,
                   :registration_close_date, :registration_close_date_date, :registration_close_date_time,
