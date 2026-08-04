@@ -29,7 +29,7 @@
                   <% else %>
                     <span class="font-semibold"><%= person.name %></span>
                     <% if show_email && person.preferred_email.present? %>
-                      <div class="text-xs text-gray-500"><%= person.preferred_email %></div>
+                      <div class="text-xs text-gray-500"><!--email_off--><%= person.preferred_email %><!--email_on--></div>
                     <% end %>
                   <% end %>
                 </td>
