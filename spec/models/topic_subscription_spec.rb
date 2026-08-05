@@ -57,7 +57,7 @@ RSpec.describe TopicSubscription, type: :model do
 
     it "still allows saving an unrelated edit to an active subscription" do
       subscription = create(:topic_subscription)
-      expect(subscription.update(note: "Called in")).to be(true)
+      expect(subscription.update(source: "Called in")).to be(true)
     end
   end
 
