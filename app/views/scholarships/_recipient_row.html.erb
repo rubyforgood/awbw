@@ -4,7 +4,7 @@
     a click anywhere in the row follows that one (screen-reader-friendly) link. %>
 <tr class="relative hover:bg-fuchsia-50">
   <td class="px-4 py-2 whitespace-nowrap text-sm">
-    <%= link_to scholarship.recipient_name, edit_scholarship_path(scholarship), class: "font-medium text-blue-700 hover:text-blue-900 hover:underline before:absolute before:inset-0 before:content-['']" %>
+    <%= link_to scholarship.recipient_name, edit_scholarship_path(scholarship), class: "font-medium text-blue-700 hover:text-blue-900 hover:underline after:absolute after:inset-0 after:content-['']" %>
   </td>
   <td class="px-4 py-2 text-sm text-gray-900"><%= scholarship.program_name %></td>
   <td class="px-4 py-2 text-sm text-gray-600 whitespace-nowrap"><%= scholarship.program_location %></td>
