@@ -1,0 +1,20 @@
+<%# Shared pill/badge (cases 1 + 2). Locals:
+      label   – the badge text (required)
+      classes – theme bg/text/border classes (required)
+      icon    – Font Awesome class, e.g. "fa-solid fa-circle-check" (optional)
+      href    – wrap the pill in a link with a trailing jump icon (optional)
+      data    – data attributes for the link (optional; defaults to turbo_frame: "_top") %>
+<% icon = local_assigns[:icon] %>
+<% href = local_assigns[:href] %>
+<% if href %>
+  <%= link_to href, class: "#{badge_classes(classes, padding: "px-5 py-0.5")} transition hover:opacity-80 hover:shadow-sm", data: local_assigns.fetch(:data, { turbo_frame: "_top" }) do %>
+    <% if icon %><i class="<%= icon %>"></i><% end %>
+    <span><%= label %></span>
+    <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
+  <% end %>
+<% else %>
+  <span class="<%= badge_classes(classes) %>">
+    <% if icon %><i class="<%= icon %>"></i><% end %>
+    <%= label %>
+  </span>
+<% end %>
