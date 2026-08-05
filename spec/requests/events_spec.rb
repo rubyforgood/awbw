@@ -2390,7 +2390,7 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include('data-controller="expandable-cards scholarship-status-toggle"')
         expect(response.body).to include('data-action="scholarship-status-toggle#toggle"')
         expect(response.body).to include('data-scholarship-status-toggle-shown-value="true"')
-        expect(response.body).to include("Hide scholarship status")
+        expect(response.body).to include("Show scholarship status")
       end
 
       it "renders the Recipients and Statistics section headers with placeholder breakdowns" do
