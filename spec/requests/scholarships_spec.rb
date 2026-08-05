@@ -191,6 +191,17 @@ RSpec.describe "Scholarships", type: :request do
 
       expect(response).to redirect_to(edit_event_registration_path(registration))
     end
+
+    it "does not create the scholarship and re-renders with a warning when the amount exceeds the remaining owed" do
+      # Event costs $100 with $50 already allocated; a $60 award overshoots the $50 remaining.
+      expect {
+        post scholarships_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registration"),
+             params: { scholarship: { amount_dollars: "60" } }
+      }.not_to change(Scholarship, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("Cannot allocate more than remaining event cost")
+    end
   end
 
   describe "back link follows the page the user came from" do

@@ -10,6 +10,7 @@ class Scholarship < ApplicationRecord
 
   validates :amount_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :recipient_must_match_allocation_registrant
+  validate :allocation_must_be_valid
   validate :within_grant_budget, if: :grant
 
   after_update :sync_allocation_amount, if: -> { saved_change_to_amount_cents? }
@@ -53,6 +54,17 @@ class Scholarship < ApplicationRecord
     if others_total + amount_cents > grant.amount_cents
       errors.add(:amount_cents, "would exceed the grant's available funds")
     end
+  end
+
+  # A built allocation is only persisted by has_one autosave *after* the parent
+  # saves, and Rails silently drops it (returning true from save) if it's invalid.
+  # That left orphaned scholarships with no allocation — awarded per the success
+  # flash, but invisible on the registration, which finds them through allocations.
+  # Validate it up front so an over-owed amount fails the save with a clear message.
+  def allocation_must_be_valid
+    return if allocation.nil? || allocation.valid?
+
+    allocation.errors.full_messages.each { |message| errors.add(:base, message) }
   end
 
   def recipient_must_match_allocation_registrant
