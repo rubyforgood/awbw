@@ -121,7 +121,8 @@ class TopicSubscriptionsController < ApplicationController
   end
 
   def topic_subscription_params
-    params.require(:topic_subscription).permit(:person_id, :topic_subscription_type_id, :interested_event_id, :source, :note)
+    params.require(:topic_subscription).permit(:person_id, :topic_subscription_type_id, :interested_event_id, :source,
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ])
   end
 
   # Prefill the topic when opened from an event's Forms menu: an explicit type id
