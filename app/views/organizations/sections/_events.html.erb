@@ -7,12 +7,11 @@
         <div class="flex flex-wrap gap-2">
           <% events.each do |event| %>
             <% status = decorated_org.facilitator_status_as_of(event.start_date) %>
-            <%= link_to event_path(event),
-                        title: event.title,
-                        data: { turbo_frame: "_top" },
-                        class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{OrganizationDecorator.program_status_classes(status)}" do %>
-              <%= status.to_s.titleize %> · <%= event.decorate.compact_label.truncate(24) %>
-            <% end %>
+            <%= render "shared/badge",
+                  label: "#{status.to_s.titleize} · #{event.decorate.compact_label.truncate(24)}",
+                  classes: OrganizationDecorator.program_status_classes(status),
+                  href: event_path(event),
+                  title: event.title %>
           <% end %>
         </div>
       </div>

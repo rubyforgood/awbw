@@ -1,9 +1,10 @@
 <%# Admin-only jump from a callout page to a record's management surface. Opens
     in a new tab so the registrant view is kept. Shared by the callout pages so
     every "Edit …" link reads identically. Locals: `path`, `label`. %>
-<%= link_to path, target: "_blank", rel: "noopener",
-      class: "admin-only inline-flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 transition" do %>
-  <i class="fa-solid fa-pen-to-square text-[0.6rem]"></i>
-  <%= label %>
-  <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-<% end %>
+<%= render "shared/badge",
+      href: path,
+      label: label,
+      classes: "bg-sky-100 text-sky-700 border-sky-200",
+      icon: "fa-solid fa-pen-to-square text-[0.6rem]",
+      extra: "admin-only",
+      target: "_blank", rel: "noopener" %>

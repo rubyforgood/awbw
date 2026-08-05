@@ -5,9 +5,9 @@
     the admin preview, never on the public registration form. %>
 <% source = form_field_option_source(field) %>
 <% if source %>
-  <%= link_to source[:path], target: "_blank", rel: "noopener",
-        class: "inline-flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 transition" do %>
-    Options from <%= source[:label] %>
-    <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-  <% end %>
+  <%= render "shared/badge",
+        label: "Options from #{source[:label]}",
+        classes: "bg-sky-100 text-sky-700 border-sky-200",
+        href: source[:path],
+        target: "_blank", rel: "noopener" %>
 <% end %>

@@ -210,7 +210,9 @@
                     <% if statuses.any? %>
                       <span class="flex flex-wrap gap-1">
                         <% statuses.each do |status| %>
-                          <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= OrganizationDecorator.program_status_classes(status) %>"><%= status.to_s.titleize %></span>
+                          <%= render "shared/badge",
+                                label: status.to_s.titleize,
+                                classes: OrganizationDecorator.program_status_classes(status) %>
                         <% end %>
                       </span>
                     <% else %>
@@ -222,9 +224,9 @@
                   <%= mobile_label.("Location") %>
                   <div class="min-w-0 flex-1">
                     <% if location.present? %>
-                      <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= DomainTheme.bg_class_for(:addresses, intensity: 100) %> <%= DomainTheme.text_class_for(:addresses, intensity: 700) %> <%= DomainTheme.border_class_for(:addresses, intensity: 200) %>">
-                        <%= location %>
-                      </span>
+                      <%= render "shared/badge",
+                            label: location,
+                            classes: "bg-slate-100 text-slate-700 border-slate-200" %>
                     <% else %>
                       <span class="text-gray-300">—</span>
                     <% end %>

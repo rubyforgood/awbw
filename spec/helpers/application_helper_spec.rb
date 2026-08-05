@@ -573,7 +573,7 @@ RSpec.describe ApplicationHelper, type: :helper do
 
       expect(result).to include("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border text-xs font-medium")
       expect(result).to include("bg-green-50 text-green-700 border-green-200")
-      expect(result).to include("px-2.5 py-0.5")
+      expect(result).to include("px-2 py-0.5")
     end
 
     it "accepts custom padding" do

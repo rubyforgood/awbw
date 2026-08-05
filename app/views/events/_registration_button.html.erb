@@ -10,7 +10,9 @@
   <% elsif event.actively_registered?(Current.user.person) %>
     <%# De-registering is a hard delete; the public self-service action is Cancel
         (soft, reversible), offered on the registration ticket. ---- %>
-    <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Registered</span>
+    <%= render "shared/badge",
+          label: "Registered",
+          classes: "bg-green-100 text-green-700 border-green-200" %>
   <% elsif event.ended? %>
     <span class="text-sm text-gray-500 italic">Event ended</span>
   <% elsif !event.published? %>

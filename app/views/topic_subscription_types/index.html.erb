@@ -74,17 +74,16 @@
                     class: "text-blue-600 hover:text-blue-800 hover:underline" %>
             </td>
             <td class="px-4 py-2 text-sm">
-              <% badge_base = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium" %>
               <% if type.archived? %>
-                <span class="<%= badge_base %> bg-slate-600 text-white border-slate-600">
-                  <i class="fa-solid fa-box-archive text-[0.65rem]"></i>
-                  Archived
-                </span>
+                <%= render "shared/badge",
+                      label: "Archived",
+                      classes: "bg-slate-600 text-white border-slate-600",
+                      icon: "fa-solid fa-box-archive text-[0.65rem]" %>
               <% else %>
-                <span class="<%= badge_base %> bg-green-50 text-green-700 border-green-200">
-                  <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
-                  Active
-                </span>
+                <%= render "shared/badge",
+                      label: "Active",
+                      classes: "bg-green-50 text-green-700 border-green-200",
+                      icon_html: tag.span(class: "h-1.5 w-1.5 rounded-full bg-green-500") %>
               <% end %>
             </td>
           </tr>

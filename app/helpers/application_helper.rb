@@ -33,7 +33,7 @@ module ApplicationHelper
   # Shared pill/badge recipe. Pass the theme bg/text/border classes; padding varies
   # (static pills use px-2.5, link pills px-5), so it's a param. Pairs with the
   # shared/_badge partial.
-  def badge_classes(theme_classes, padding: "px-2.5 py-0.5")
+  def badge_classes(theme_classes, padding: "px-2 py-0.5")
     "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border text-xs font-medium #{theme_classes} #{padding}"
   end
 

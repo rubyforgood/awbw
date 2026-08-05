@@ -18,11 +18,7 @@
   tooltip = issues.any? ? issues.join(" · ") : label
 %>
 <div class="inline-flex flex-col items-center gap-0.5">
-  <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-3 py-0.5 <%= style %>"
-        title="<%= tooltip %>">
-    <i class="fas <%= icon %>"></i>
-    <span><%= label %></span>
-  </span>
+  <%= render "shared/badge", label: label, classes: style, icon: "fas #{icon}", title: tooltip %>
   <% if subtext.present? %>
     <span class="text-[0.65rem] font-medium <%= subtext_color %>"><%= subtext %></span>
   <% end %>

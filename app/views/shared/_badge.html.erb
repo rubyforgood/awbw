@@ -1,20 +1,24 @@
-<%# Shared pill/badge (cases 1 + 2). Locals:
-      label   – the badge text (required)
-      classes – theme bg/text/border classes (required)
-      icon    – Font Awesome class, e.g. "fa-solid fa-circle-check" (optional)
-      href    – wrap the pill in a link with a trailing jump icon (optional)
-      data    – data attributes for the link (optional; defaults to turbo_frame: "_top") %>
+<%# Shared pill/badge. Locals:
+      label     – the badge text (required)
+      classes   – theme bg/text/border classes (required)
+      icon      – Font Awesome class, e.g. "fa-solid fa-circle-check" (optional)
+      icon_html – raw leading marker HTML when it isn't a plain FA icon, e.g. a status dot (optional)
+      href      – wrap the pill in a link with a trailing jump icon (optional)
+      extra     – extra classes on the badge element, e.g. "shrink-0" (optional)
+      title     – native tooltip text (optional)
+      target    – link target, e.g. "_blank" (optional)
+      rel       – link rel, e.g. "noopener" (optional)
+      data      – link data attributes (optional; defaults to turbo_frame: "_top") %>
 <% icon = local_assigns[:icon] %>
+<% icon_html = local_assigns[:icon_html] %>
 <% href = local_assigns[:href] %>
+<% pill = "#{badge_classes(classes)} #{local_assigns[:extra]}".strip %>
 <% if href %>
-  <%= link_to href, class: "#{badge_classes(classes, padding: "px-5 py-0.5")} transition hover:opacity-80 hover:shadow-sm", data: local_assigns.fetch(:data, { turbo_frame: "_top" }) do %>
-    <% if icon %><i class="<%= icon %>"></i><% end %>
+  <%= link_to href, class: "#{pill} transition hover:opacity-80 hover:shadow-sm", title: local_assigns[:title], target: local_assigns[:target], rel: local_assigns[:rel], data: local_assigns.fetch(:data, { turbo_frame: "_top" }) do %>
+    <%= icon_html %><% if icon %><i class="<%= icon %>"></i><% end %>
     <span><%= label %></span>
     <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
   <% end %>
 <% else %>
-  <span class="<%= badge_classes(classes) %>">
-    <% if icon %><i class="<%= icon %>"></i><% end %>
-    <%= label %>
-  </span>
+  <%= content_tag :span, class: pill, title: local_assigns[:title] do %><%= icon_html %><% if icon %><i class="<%= icon %>"></i><% end %><%= label %><% end %>
 <% end %>

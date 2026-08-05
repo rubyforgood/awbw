@@ -10,16 +10,18 @@
     <% if scholarship.program_status == "—" %>
       <span class="text-gray-400">—</span>
     <% else %>
-      <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium <%= scholarship.program_status_classes %>"><%= scholarship.program_status %></span>
+      <%= render "shared/badge",
+                 label: scholarship.program_status,
+                 classes: scholarship.program_status_classes %>
     <% end %>
   </td>
   <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right tabular-nums"><%= scholarship.amount %></td>
   <td class="px-4 py-2 whitespace-nowrap text-sm text-center">
     <% if scholarship.tasks_completed? %>
-      <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-3 py-0.5 bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200">
-        <i class="fa-solid fa-graduation-cap text-xs"></i>
-        Yes
-      </span>
+      <%= render "shared/badge",
+                 label: "Yes",
+                 classes: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200",
+                 icon: "fa-solid fa-graduation-cap text-xs" %>
     <% else %>
       <span class="text-gray-400">No</span>
     <% end %>
