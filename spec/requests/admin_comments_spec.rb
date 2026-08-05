@@ -54,5 +54,17 @@ RSpec.describe "Admin comments index", type: :request do
       get admin_comments_path
       expect(response).to redirect_to(root_path)
     end
+
+    it "tracks a view event on the full page" do
+      sign_in admin
+      expect(Analytics::AhoyTracker).to receive(:track_event).with(anything, "view.comments", { page: "index" })
+      get admin_comments_path
+    end
+
+    it "does not track on the results frame request" do
+      sign_in admin
+      expect(Analytics::AhoyTracker).not_to receive(:track_event)
+      get admin_comments_path, headers: frame_headers
+    end
   end
 end

@@ -3,6 +3,8 @@ module Admin
   # boxes as a person's aggregated feed plus remote person/event filters. Distinct
   # from the nested CommentsController, which manages one record's comments.
   class CommentsController < ApplicationController
+    include AhoyTracking
+
     def index
       authorize! Comment, to: :index?, with: CommentPolicy
 
@@ -15,6 +17,7 @@ module Admin
         render :comments_results
       else
         @total_count = base.count
+        track_view("comments", { page: "index" })
       end
     end
   end

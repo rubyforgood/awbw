@@ -108,6 +108,7 @@ class PeopleController < ApplicationController
       @flagged_count = base.flagged.count
       @new_comment = Comment.new
       @comment_targets = helpers.person_comment_targets(@person)
+      track_view("person_all_comments", { person_id: @person.id })
     end
   end
 

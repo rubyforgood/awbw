@@ -79,6 +79,21 @@ RSpec.describe "Person aggregated comments", type: :request do
     end
   end
 
+  describe "Ahoy tracking" do
+    before { sign_in admin }
+
+    it "tracks a distinct view event on the full page" do
+      expect(Analytics::AhoyTracker).to receive(:track_event)
+        .with(anything, "view.person_all_comments", hash_including(person_id: person.id))
+      get all_comments_person_path(person)
+    end
+
+    it "does not track on the results frame request" do
+      expect(Analytics::AhoyTracker).not_to receive(:track_event)
+      get all_comments_person_path(person), headers: frame_headers
+    end
+  end
+
   describe "authorization" do
     it "forbids non-admins" do
       sign_in create(:user)
