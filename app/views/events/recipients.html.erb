@@ -19,6 +19,12 @@
       in their own right-aligned row above the centered title to avoid overlap. %>
   <div class="relative mb-8">
     <div class="flex justify-end gap-3 mb-4 sm:mb-0 sm:absolute sm:right-0 sm:top-0 print:hidden">
+      <% if allowed_to?(:scholarships?, @event) %>
+        <%= link_to scholarships_events_path, target: "_blank", rel: "noopener", class: "btn btn-utility-outline" do %>
+          <i class="fa-solid fa-chart-line"></i> Statistics
+          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+        <% end %>
+      <% end %>
       <% if allowed_to?(:index?, Grant) %>
         <%= link_to grants_path, target: "_blank", rel: "noopener", class: "btn btn-utility-outline" do %>
           <i class="fa-solid fa-hand-holding-dollar"></i> Grants

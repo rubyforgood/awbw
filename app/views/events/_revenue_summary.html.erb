@@ -12,9 +12,6 @@
     <% metrics = period.metrics %>
     <div class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2"><%= period.label %></div>
     <% ce_collected_cents = metrics.fees_cents - metrics.registration_payments_cents %>
-    <% net_parts = [ "Fees" ]
-       net_parts << "+ #{MoneyFormatter.compact_from_cents(metrics.funded_scholarship_cents, precision: 0)} scholarships" if metrics.funded_scholarship_cents.positive?
-       net_parts << "− #{MoneyFormatter.compact_from_cents(metrics.org_subsidy_cents, precision: 0)} subsidy" %>
     <div class="grid grid-cols-2 gap-3 mb-4">
       <div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Fees collected</div>
@@ -25,8 +22,12 @@
       </div>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Net</div>
-        <div class="mt-1 text-xl font-bold tabular-nums <%= metrics.net_cents.negative? ? "text-rose-700" : "text-gray-900" %>"><%= signed_dollars_from_cents(metrics.net_cents) %></div>
-        <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= net_parts.join(" ") %></div>
+        <div class="mt-1 tabular-nums">
+          <span class="text-xl font-bold <%= metrics.net_cents.negative? ? "text-rose-700" : "text-gray-900" %>"><%= signed_dollars_from_cents(metrics.net_cents) %></span>
+          <span class="text-xs text-gray-500">
+            <%= MoneyFormatter.compact_from_cents(metrics.fees_cents, precision: 0) %> fees<% if metrics.funded_scholarship_cents.positive? %> + <%= MoneyFormatter.compact_from_cents(metrics.funded_scholarship_cents, precision: 0) %> scholarships<% end %> − <%= MoneyFormatter.compact_from_cents(metrics.org_subsidy_cents, precision: 0) %> subsidy
+          </span>
+        </div>
       </div>
       <div class="rounded-lg border border-orange-200 bg-orange-50 p-3">
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Outstanding</div>

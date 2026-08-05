@@ -6,9 +6,7 @@
     (omit on totals rows, which span multiple events). %>
 <td class="px-3 py-2 border border-gray-200 text-right">
   <% if event && source.attended_count.positive? %>
-    <%= link_to source.attended_count,
-          registrants_event_path(event, attendance_status: "attended", return_to: "scholarships"),
-          target: "_blank", rel: "noopener",
+    <%= link_to source.attended_count, attended_registrants_path(event),
           class: "text-blue-600 hover:text-blue-800 hover:underline",
           title: "View attended registrants" %>
   <% else %>
