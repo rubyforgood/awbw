@@ -51,13 +51,12 @@ RSpec.describe TrainingAttendeesRoster do
     end
   end
 
-  describe "profile-sourced columns" do
+  describe "columns" do
     let(:sector) { create(:sector, name: "Healthcare") }
     let(:organization) { create(:organization, name: "Wellness Org") }
 
     before do
       create(:sectorable_item, sectorable: person, sector: sector, is_primary: true)
-      create(:affiliation, person: person, organization: organization, title: "Facilitator")
       create(:address, addressable: person, state: "CA", inactive: false)
     end
 
@@ -65,13 +64,21 @@ RSpec.describe TrainingAttendeesRoster do
       expect(roster.primary_sector_names_by_registrant[person.id]).to eq([ "Healthcare" ])
     end
 
-    it "maps the person's active-affiliation organizations" do
+    it "maps organizations linked on the person's training registrations" do
+      recent_registration.event_registration_organizations.create!(organization: organization)
       expect(roster.organization_ids_by_registrant[person.id]).to eq([ organization.id ])
       expect(roster.organizations).to include(organization)
     end
 
     it "maps a short location label from the active address" do
       expect(roster.location_label_by_registrant[person.id]).to eq("CA")
+    end
+
+    it "lists distinct affiliation statuses in display order" do
+      create(:affiliation, person: person, organization: organization, start_date: 1.year.ago, end_date: nil, inactive: false)
+      create(:affiliation, person: person, organization: create(:organization), start_date: 1.month.from_now, inactive: false)
+      create(:affiliation, person: person, organization: create(:organization), inactive: true)
+      expect(roster.affiliation_statuses_by_registrant[person.id]).to eq([ "Active", "Pending", "Inactive" ])
     end
   end
 end

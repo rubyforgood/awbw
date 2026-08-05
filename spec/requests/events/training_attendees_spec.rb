@@ -81,6 +81,23 @@ RSpec.describe "Events training attendees", type: :request do
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Katherine Johnson")
         end
+
+        it "shows the Program status and Affiliation status columns" do
+          get training_attendees_events_url, headers: frame_headers
+          expect(response.body).to include("Program status")
+          expect(response.body).to include("Affiliation status")
+        end
+
+        it "filters by affiliation status" do
+          create(:affiliation, person: attendee, organization: create(:organization), inactive: true, title: "Facilitator")
+          active_person = create(:person, first_name: "Nora", last_name: "Active")
+          create(:event_registration, event: recent_training, registrant: active_person, status: "attended")
+          create(:affiliation, person: active_person, organization: create(:organization), start_date: 1.year.ago, inactive: false, title: "Facilitator")
+
+          get training_attendees_events_url(affiliation_status: "Inactive"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).not_to include("Nora Active")
+        end
       end
     end
   end

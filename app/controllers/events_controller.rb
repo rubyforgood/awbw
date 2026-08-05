@@ -555,6 +555,7 @@ class EventsController < ApplicationController
     scope = Person.where(id: registrations.select(:registrant_id))
     scope = scope.search_by_params({ contact_info: params[:contact_info] }) if params[:contact_info].present?
     scope = scope.where(id: person_sector_ids(params[:sector])) if params[:sector].present?
+    scope = scope.where(id: person_affiliation_status_ids(params[:affiliation_status])) if params[:affiliation_status].present?
     scope = scope.where(id: person_address_ids(state: params[:state])) if params[:state].present?
     if params[:county].present?
       # County options carry their state ("STATE::County") so same-named counties
@@ -564,12 +565,32 @@ class EventsController < ApplicationController
     end
 
     scope
-      .includes({ affiliations: :organization }, { sectorable_items: :sector }, { age_range_categorizable_items: { category: :category_type } })
+      .includes(:affiliations, { sectorable_items: :sector }, { age_range_categorizable_items: { category: :category_type } })
       .order(:first_name, :last_name)
   end
 
   def person_sector_ids(sector_id)
     SectorableItem.where(sectorable_type: "Person", sector_id: sector_id).select(:sectorable_id)
+  end
+
+  # Person ids with at least one affiliation in the given status (Active / Pending
+  # / Inactive), matching TrainingAttendeesRoster#affiliation_status.
+  def person_affiliation_status_ids(status)
+    today = Date.current
+    scope =
+      case status
+      when "Active"
+        Affiliation.where(inactive: false)
+          .where("affiliations.start_date IS NULL OR affiliations.start_date <= ?", today)
+          .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", today)
+      when "Pending"
+        Affiliation.where(inactive: false).where("affiliations.start_date > ?", today)
+      when "Inactive"
+        Affiliation.where("affiliations.inactive = ? OR affiliations.end_date < ?", true, today)
+      else
+        return Person.none
+      end
+    scope.select(:person_id)
   end
 
   def person_address_ids(state: nil, county: nil)

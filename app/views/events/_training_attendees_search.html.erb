@@ -44,6 +44,14 @@
             class: select_class, onchange: "this.form.submit();" %>
     </div>
 
+    <div class="w-full md:w-40">
+      <%= label_tag :affiliation_status, "Affiliation status", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag :affiliation_status,
+            options_for_select(TrainingAttendeesRoster::AFFILIATION_STATUSES, params[:affiliation_status]),
+            include_blank: "All statuses",
+            class: select_class, onchange: "this.form.submit();" %>
+    </div>
+
     <div class="w-full md:w-32">
       <%= label_tag :state, "State", class: "block text-sm font-medium text-gray-700 mb-1" %>
       <%= select_tag :state,

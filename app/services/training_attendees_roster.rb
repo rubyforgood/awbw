@@ -8,6 +8,10 @@
 # profile (sectors, age groups, affiliations, address); scholarship/CE/event
 # columns come from their attended-training registrations.
 class TrainingAttendeesRoster
+  # Affiliation status taxonomy shown in the index's Affiliation status column and
+  # offered as a filter, in display order.
+  AFFILIATION_STATUSES = %w[ Active Pending Inactive ].freeze
+
   def initialize(people)
     @people = people.to_a
   end
@@ -67,16 +71,25 @@ class TrainingAttendeesRoster
     end
   end
 
-  # Organizations across the listed people's active affiliations, name-ordered.
+  # Organizations linked on the listed people's attended-training registrations,
+  # name-ordered. Mirrors the roster's Organization column, aggregated across all
+  # of a person's trainings.
   def organizations
-    @organizations ||= Organization.where(id: active_affiliations.map(&:organization_id).uniq).order(:name)
+    @organizations ||= Organization.where(id: linked_org_ids_by_registrant.values.flatten.uniq).order(:name)
   end
 
-  # Active-affiliation organization ids per person.
+  # Linked-organization ids per person, uniqued across their training registrations.
   def organization_ids_by_registrant
-    @organization_ids_by_registrant ||= active_affiliations
-      .group_by(&:person_id)
-      .transform_values { |affiliations| affiliations.map(&:organization_id).uniq }
+    linked_org_ids_by_registrant
+  end
+
+  # Distinct affiliation statuses (Active / Pending / Inactive) per person, in
+  # display order — the index-only Affiliation status column and filter.
+  def affiliation_statuses_by_registrant
+    @affiliation_statuses_by_registrant ||= people.to_h do |person|
+      statuses = person.affiliations.map { |affiliation| affiliation_status(affiliation) }.uniq
+      [ person.id, AFFILIATION_STATUSES & statuses ]
+    end
   end
 
   # Distinct program statuses (:new / :ongoing / :reinstated) of each person's
@@ -151,14 +164,24 @@ class TrainingAttendeesRoster
       .transform_values(&:first)
   end
 
-  # Active (present, non-inactive, unexpired) affiliations across the listed
-  # people — the source for the organization and program-status columns.
-  def active_affiliations
-    @active_affiliations ||= people.flat_map(&:affiliations).select do |affiliation|
-      affiliation.organization_id.present? &&
-        !affiliation.inactive? &&
-        (affiliation.end_date.nil? || affiliation.end_date >= Date.current)
-    end
+  # Organization ids linked on each person's attended-training registrations
+  # (EventRegistrationOrganization), uniqued per person.
+  def linked_org_ids_by_registrant
+    @linked_org_ids_by_registrant ||= EventRegistrationOrganization
+      .joins(:event_registration)
+      .where(event_registration_id: registration_ids)
+      .pluck(Arel.sql("event_registrations.registrant_id"), :organization_id)
+      .each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |(registrant_id, organization_id), map|
+        map[registrant_id] << organization_id unless map[registrant_id].include?(organization_id)
+      end
+  end
+
+  # One affiliation's status: Inactive (flagged or ended), Pending (future start),
+  # otherwise Active.
+  def affiliation_status(affiliation)
+    return "Inactive" if affiliation.inactive? || (affiliation.end_date && affiliation.end_date < Date.current)
+    return "Pending" if affiliation.start_date && affiliation.start_date > Date.current
+    "Active"
   end
 
   def program_status_by_organization

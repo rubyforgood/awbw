@@ -9,7 +9,13 @@
         (Background); off on the cross-event index, where the event links lead
         into the individual registrations instead. %>
 <% show_event_column = local_assigns.fetch(:show_event_column, false) %>
+<% show_affiliation_status = local_assigns.fetch(:show_affiliation_status, false) %>
 <% clickable_rows = local_assigns.fetch(:clickable_rows, true) %>
+<% affiliation_status_classes = {
+     "Active" => "border-green-300 bg-green-100 text-green-800",
+     "Pending" => "border-amber-300 bg-amber-100 text-amber-800",
+     "Inactive" => "border-gray-300 bg-gray-100 text-gray-600"
+   } %>
 <% if roster.registrants.any? %>
   <div class="overflow-x-auto">
     <%# Below sm the whole table chain reflows to block so each row stacks into
@@ -22,11 +28,12 @@
                { index: 0, align: "text-left", parts: [ { label: "First", key: "first" }, { label: "Last", key: "last" } ] },
                { index: 1, align: "text-left", parts: [ { label: "Primary sector", key: "sector" }, { label: "Primary age group", key: "age" } ] },
                { label: "Organization", index: 2, align: "text-left" },
-               { label: "Status", index: 3, align: "text-left" },
+               { label: "Program status", index: 3, align: "text-left" },
                { label: "Location", index: 4, align: "text-left" },
                { label: "Scholarship", index: 5, align: "text-center" },
                { label: "CE", index: 6, align: "text-center" }
              ] %>
+          <% columns.insert(4, { label: "Affiliation status", index: 8, align: "text-left" }) if show_affiliation_status %>
           <% columns << { label: "Trainings attended", index: 7, align: "text-left" } if show_event_column %>
           <% columns.each do |col| %>
             <th class="px-4 py-2 <%= col[:align] %> text-xs font-semibold text-gray-700" aria-sort="none">
@@ -93,7 +100,7 @@
             </td>
             <% statuses = roster.program_statuses_by_registrant[person.id] || [] %>
             <td class="flex sm:table-cell gap-3 px-4 py-1 sm:py-1.5 text-sm" data-sort-value="<%= statuses.join(", ") %>">
-              <%= mobile_label.("Status") %>
+              <%= mobile_label.("Program status") %>
               <div class="min-w-0 flex-1">
                 <% if statuses.any? %>
                   <span class="flex flex-wrap gap-1">
@@ -106,6 +113,23 @@
                 <% end %>
               </div>
             </td>
+            <% if show_affiliation_status %>
+              <% affiliation_statuses = roster.affiliation_statuses_by_registrant[person.id] || [] %>
+              <td class="flex sm:table-cell gap-3 px-4 py-1 sm:py-1.5 text-sm" data-sort-value="<%= affiliation_statuses.join(", ") %>">
+                <%= mobile_label.("Affiliation status") %>
+                <div class="min-w-0 flex-1">
+                  <% if affiliation_statuses.any? %>
+                    <span class="flex flex-wrap gap-1">
+                      <% affiliation_statuses.each do |status| %>
+                        <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= affiliation_status_classes[status] %>"><%= status %></span>
+                      <% end %>
+                    </span>
+                  <% else %>
+                    <span class="text-gray-300">—</span>
+                  <% end %>
+                </div>
+              </td>
+            <% end %>
             <td class="flex sm:table-cell gap-3 px-4 py-1 sm:py-1.5 text-sm" data-sort-value="<%= location.to_s.downcase %>">
               <%= mobile_label.("Location") %>
               <div class="min-w-0 flex-1">
