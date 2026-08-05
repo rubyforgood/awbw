@@ -16,7 +16,7 @@ class DuesRegistrationsController < ApplicationController
     authorize!
     @dues_registration = @dues_subscription.dues_registrations.new(
       start_date: next_start_date,
-      cost_cents: @dues_subscription.rate_cents || Dues::ANNUAL_COST_CENTS
+      cost_cents: @dues_subscription.cost_cents || Dues::ANNUAL_COST_CENTS
     )
   end
 
