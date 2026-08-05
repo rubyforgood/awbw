@@ -120,6 +120,7 @@ class EventsController < ApplicationController
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.payment_status(params[:payment_status]) if params[:payment_status].present?
     scope = scope.scholarship_status(params[:scholarship]) if params[:scholarship].present?
+    scope = scope.funder(params[:funder]) if params[:funder].present?
     scope = scope.ce_status(params[:ce_status]) if params[:ce_status].present?
     scope = scope.comment_status(params[:comment_status]) if params[:comment_status].present?
     scope = scope.organization_status(params[:org_status], @event) if params[:org_status].present?
