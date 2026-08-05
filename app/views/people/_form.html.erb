@@ -533,32 +533,47 @@
 
     <!-- Comments -->
     <% if allowed_to?(:manage?, Comment) %>
-      <div class="admin-only bg-blue-100 form-group space-y-4" id="comments-section">
-        <div class="font-semibold text-gray-700 mb-2">Comments</div>
+      <section class="overflow-hidden rounded-xl border border-blue-200 bg-white shadow-sm"
+               id="comments-section"
+               data-controller="paginated-fields edit-toggle"
+               data-paginated-fields-per-page-value="5">
+        <div class="admin-only bg-blue-100 flex items-center gap-3 border-b border-blue-200 px-4 py-3">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-blue-600">
+            <i class="fa-solid fa-comments"></i>
+          </span>
+          <h2 class="text-sm font-semibold text-gray-700">Comments</h2>
+          <% if @person.persisted? %>
+            <%= link_to all_comments_person_path(@person),
+                        class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
+                        target: "_blank", rel: "noopener" do %>
+              View all
+              <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+            <% end %>
+          <% end %>
+        </div>
 
-        <div class="admin-only bg-blue-100 rounded-lg border border-gray-200 p-4 mb-4 shadow-sm"
-            data-controller="paginated-fields edit-toggle"
-            data-paginated-fields-per-page-value="5">
+        <div class="space-y-3 p-4">
           <%= f.simple_fields_for :comments do |cf| %>
             <%= render "comments/comment_fields", f: cf %>
           <% end %>
 
           <div data-paginated-fields-target="nav"></div>
 
-          <button type="button"
-                  class="text-sm text-gray-400 hover:text-blue-600 underline cursor-pointer whitespace-nowrap"
-                  style="float:right"
-                  data-action="edit-toggle#toggle">
-            <span data-edit-toggle-target="editLabel">Edit Comments</span>
-            <span data-edit-toggle-target="viewLabel" class="hidden">Done Editing</span>
-          </button>
-          <%= link_to_add_association "➕ Add Comment",
-                                      f,
-                                      :comments,
-                                      partial: "comments/comment_fields",
-                                      class: "btn btn-secondary-outline" %>
+          <div class="flex items-center justify-between gap-2">
+            <%= link_to_add_association "➕ Add Comment",
+                                        f,
+                                        :comments,
+                                        partial: "comments/comment_fields",
+                                        class: "btn btn-secondary-outline" %>
+            <button type="button"
+                    class="text-sm text-gray-400 hover:text-blue-600 underline cursor-pointer whitespace-nowrap"
+                    data-action="edit-toggle#toggle">
+              <span data-edit-toggle-target="editLabel">Edit Comments</span>
+              <span data-edit-toggle-target="viewLabel" class="hidden">Done Editing</span>
+            </button>
+          </div>
         </div>
-      </div>
+      </section>
     <% end %>
   <% end %>
 

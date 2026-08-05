@@ -1,6 +1,6 @@
 class PeopleController < ApplicationController
   include AhoyTracking, TagAssignable
-  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio ]
+  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments ]
 
   def index
     authorize!
@@ -84,6 +84,30 @@ class PeopleController < ApplicationController
         @affiliations = @person.affiliations.active.includes(organization: :logo_attachment).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/affiliations", locals: { person: @person, affiliations: @affiliations }
       end
+    end
+  end
+
+  # Every comment connected to this person — their profile plus the records that
+  # hang off them (registrations, scholarships, CE registrations, user account) —
+  # in one newest-first feed you can add to and edit in place. Staff-only, since
+  # comments are internal notes (CommentPolicy#manage? = admin).
+  def all_comments
+    authorize! @person, to: :manage?, with: CommentPolicy
+    @person = @person.decorate
+
+    base = PersonCommentAggregator.new(@person).comments
+
+    if turbo_frame_request?
+      filtered = base.search_by_params(params)
+      @total_count = base.count
+      @count_display = filtered.count == @total_count ? @total_count : "#{filtered.count}/#{@total_count}"
+      @comments = filtered.paginate(page: params[:page], per_page: 20)
+      render :person_comments_results
+    else
+      @total_count = base.count
+      @flagged_count = base.flagged.count
+      @new_comment = Comment.new
+      @comment_targets = helpers.person_comment_targets(@person)
     end
   end
 
