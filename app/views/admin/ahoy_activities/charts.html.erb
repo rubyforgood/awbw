@@ -70,8 +70,9 @@
             <% end %>
           </h2>
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-            <%= link_to users_path, class: "group bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
-              <h3 class="text-sm font-semibold text-gray-700 mb-2">Total users</h3>
+            <%= link_to users_path, class: "group relative bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 group-hover:text-blue-600 absolute top-3.5 right-3.5 transition-colors"></i>
+              <h3 class="text-sm font-semibold text-gray-700 mb-2 pr-4">Total users</h3>
               <div class="flex flex-col items-center justify-center py-4">
                 <div class="text-5xl font-bold text-gray-900 group-hover:text-blue-600 tabular-nums transition-colors"><%= number_with_delimiter(@filtered_user_count) %></div>
                 <% if @audience_labels.include?("users") && @audience_labels.include?("staff") %>
@@ -87,8 +88,9 @@
               </div>
             <% end %>
 
-            <%= link_to users_path(invited: "true"), class: "group bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
-              <h3 class="text-sm font-semibold text-gray-700 mb-2">Invited users</h3>
+            <%= link_to users_path(invited: "true"), class: "group relative bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 group-hover:text-blue-600 absolute top-3.5 right-3.5 transition-colors"></i>
+              <h3 class="text-sm font-semibold text-gray-700 mb-2 pr-4">Invited users</h3>
               <div class="flex flex-col items-center justify-center py-4">
                 <div class="text-5xl font-bold text-gray-900 group-hover:text-blue-600 tabular-nums transition-colors"><%= number_with_delimiter(@portal_access_users) %></div>
                 <div class="text-xs text-gray-400 mt-2">Sent the welcome instructions email</div>
@@ -100,8 +102,9 @@
               </div>
             <% end %>
 
-            <%= link_to users_path(authenticated: "true"), class: "group bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
-              <h3 class="text-sm font-semibold text-gray-700 mb-2">Authenticated users</h3>
+            <%= link_to users_path(authenticated: "true"), class: "group relative bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 group-hover:text-blue-600 absolute top-3.5 right-3.5 transition-colors"></i>
+              <h3 class="text-sm font-semibold text-gray-700 mb-2 pr-4">Authenticated users</h3>
               <div class="flex flex-col items-center justify-center py-4">
                 <div class="text-5xl font-bold text-gray-900 group-hover:text-blue-600 tabular-nums transition-colors"><%= number_with_delimiter(@authenticated_users) %></div>
                 <div class="text-xs text-gray-400 mt-2">Logged in at least once</div>
@@ -131,8 +134,9 @@
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
           <h2 class="text-lg font-semibold text-gray-800 mb-4">Engagement patterns</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-            <%= link_to admin_activities_visits_path, class: "group bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
-              <h3 class="text-sm font-semibold text-gray-700 mb-2">Total visits</h3>
+            <%= link_to admin_activities_visits_path, class: "group relative bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 group-hover:text-blue-600 absolute top-3.5 right-3.5 transition-colors"></i>
+              <h3 class="text-sm font-semibold text-gray-700 mb-2 pr-4">Total visits</h3>
               <div class="flex flex-col items-center justify-center py-4">
                 <div class="text-5xl font-bold text-gray-900 group-hover:text-blue-600 tabular-nums transition-colors"><%= number_with_delimiter(scoped_visits.count) %></div>
                 <div class="text-xs text-gray-400 mt-2">Sessions in selected period</div>
@@ -142,8 +146,9 @@
               </div>
             <% end %>
 
-            <%= link_to admin_activities_events_path, class: "group bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
-              <h3 class="text-sm font-semibold text-gray-700 mb-2">Total activities</h3>
+            <%= link_to admin_activities_events_path, class: "group relative bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 group-hover:text-blue-600 absolute top-3.5 right-3.5 transition-colors"></i>
+              <h3 class="text-sm font-semibold text-gray-700 mb-2 pr-4">Total activities</h3>
               <div class="flex flex-col items-center justify-center py-4">
                 <div class="text-5xl font-bold text-gray-900 group-hover:text-blue-600 tabular-nums transition-colors"><%= number_with_delimiter(scoped_events.count) %></div>
                 <div class="text-xs text-gray-400 mt-2">Actions in selected period</div>
@@ -295,15 +300,17 @@
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
           <h2 class="text-lg font-semibold text-gray-800 mb-4">Tag analytics</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-            <%= link_to tags_path, class: "group bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
-              <h3 class="text-sm font-semibold text-gray-700 mb-2">Tags page views</h3>
+            <%= link_to tags_path, class: "group relative bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 group-hover:text-blue-600 absolute top-3.5 right-3.5 transition-colors"></i>
+              <h3 class="text-sm font-semibold text-gray-700 mb-2 pr-4">Tags page views</h3>
               <div class="flex flex-col items-center justify-center py-4">
                 <div class="text-5xl font-bold text-gray-900 group-hover:text-blue-600 tabular-nums transition-colors"><%= number_with_delimiter(@tags_page_views) %></div>
               </div>
             <% end %>
 
-            <%= link_to taggings_path, class: "group bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
-              <h3 class="text-sm font-semibold text-gray-700 mb-2">Taggings page views</h3>
+            <%= link_to taggings_path, class: "group relative bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 group-hover:text-blue-600 absolute top-3.5 right-3.5 transition-colors"></i>
+              <h3 class="text-sm font-semibold text-gray-700 mb-2 pr-4">Taggings page views</h3>
               <div class="flex flex-col items-center justify-center py-4">
                 <div class="text-5xl font-bold text-gray-900 group-hover:text-blue-600 tabular-nums transition-colors"><%= number_with_delimiter(@taggings_page_views) %></div>
               </div>

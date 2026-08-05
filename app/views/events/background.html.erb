@@ -82,9 +82,10 @@
         <i class="fa-solid fa-users"></i>
       </span>
       <span class="min-w-0">
-        <%= link_to background_return_path(registrants_event_path(@event), "overview"), class: "block hover:underline leading-tight" do %>
+        <%= link_to background_return_path(registrants_event_path(@event), "overview"), class: "group/reg block hover:underline leading-tight" do %>
           <span class="text-xl font-bold text-gray-900 tabular-nums"><%= @dashboard.registrant_count %></span>
           <span class="text-xs text-gray-500">Registrants</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 opacity-0 group-hover/reg:opacity-100 transition-opacity"></i>
         <% end %>
         <span class="block text-xs text-gray-400 mt-0.5">
           <%= link_to recipients_event_path(@event), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.scholarship_recipient_count, "scholarship") %><% end %>

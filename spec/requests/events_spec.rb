@@ -180,6 +180,15 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include('title="TAC 261"')
       end
 
+      it "links each drillable revenue KPI to its filtered registrant list" do
+        sign_in admin
+        get revenue_events_path
+        expect(response.body).to include("payment_status=paid")   # Fees collected
+        expect(response.body).to include("payment_status=unpaid") # Outstanding
+        expect(response.body).to include("funder=donor")          # Scholarships (grant-funded)
+        expect(response.body).to include("funder=awbw")           # Org subsidy
+      end
+
       # The Event dropdown lists every (paid) event, so the report rows are
       # identified by their per-event dashboard link rather than the title.
       it "narrows to facilitator trainings by event type" do
