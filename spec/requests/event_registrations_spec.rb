@@ -464,7 +464,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
       it "keeps a funded scholarship when unrequested" do
         existing_registration.update!(scholarship_requested: true)
-        link_scholarship(existing_registration, amount_cents: 5000)
+        link_scholarship(existing_registration, amount_cents: 1000)
 
         expect { unrequest(existing_registration) }
           .not_to change { existing_registration.scholarships.count }
