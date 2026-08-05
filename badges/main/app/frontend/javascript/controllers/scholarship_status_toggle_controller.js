@@ -3,10 +3,10 @@ import { Controller } from "@hotwired/stimulus"
 // Connects to data-controller="scholarship-status-toggle"
 // Shows or hides every recipient's scholarship status (awarded amount + whether
 // the tasks are completed) across all recipient cards at once, keeping the
-// switch's label, track, knob, and aria-checked state in sync.
+// switch's track, knob, and aria-checked state in sync. The label stays fixed.
 export default class extends Controller {
-  static targets = ["status", "label", "switch", "track", "knob"]
-  static values = { shown: { type: Boolean, default: false } }
+  static targets = ["status", "switch", "track", "knob"]
+  static values = { shown: { type: Boolean, default: true } }
 
   toggle() {
     this.shownValue = !this.shownValue
@@ -14,9 +14,6 @@ export default class extends Controller {
 
   shownValueChanged() {
     this.statusTargets.forEach((el) => el.classList.toggle("hidden", !this.shownValue))
-    if (this.hasLabelTarget) {
-      this.labelTarget.textContent = this.shownValue ? "Hide scholarship status" : "Show scholarship status"
-    }
     if (this.hasSwitchTarget) {
       this.switchTarget.setAttribute("aria-checked", this.shownValue)
     }
