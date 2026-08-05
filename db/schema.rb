@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_021441) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_05_023506) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1318,7 +1318,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_021441) do
     t.datetime "created_at", null: false
     t.bigint "created_by_id"
     t.bigint "interested_event_id"
-    t.text "note"
     t.bigint "person_id", null: false
     t.string "source"
     t.datetime "subscribed_at", null: false

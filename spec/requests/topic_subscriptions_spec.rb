@@ -379,6 +379,35 @@ RSpec.describe "TopicSubscriptions", type: :request do
   # Leaving the index for a row's edit page and coming back must land on the same
   # filtered list, not the bare index — the filters ride along on the link, the
   # form's hidden fields, and the edit page's action buttons.
+  describe "comments on a subscription" do
+    let(:subscription) { create(:topic_subscription) }
+
+    it "renders a comments box on the edit page" do
+      get edit_topic_subscription_path(subscription)
+      expect(response.body).to include("comment-list")
+    end
+
+    it "saves a comment added on the subscription form" do
+      expect {
+        patch topic_subscription_path(subscription),
+              params: { topic_subscription: { comments_attributes: { "0" => { body: "Reached out via email" } } } }
+      }.to change(subscription.comments, :count).by(1)
+
+      expect(subscription.comments.last.body).to eq("Reached out via email")
+    end
+
+    it "filters the index to subscriptions that have comments" do
+      commented = create(:topic_subscription, topic_subscription_type: trainings, person: create(:person, first_name: "Comm", last_name: "Ented"))
+      create(:comment, commentable: commented)
+      create(:topic_subscription, topic_subscription_type: trainings, person: create(:person, first_name: "No", last_name: "Comments"))
+
+      get topic_subscriptions_path(comment_status: "present"), headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+
+      expect(response.body).to include("Comm Ented")
+      expect(response.body).not_to include("No Comments")
+    end
+  end
+
   describe "returning to the filtered index" do
     let(:person) { create(:person, first_name: "Dana", last_name: "Rivers") }
     let!(:subscription) { create(:topic_subscription, person: person, topic_subscription_type: trainings) }
@@ -419,7 +448,7 @@ RSpec.describe "TopicSubscriptions", type: :request do
     it "redirects back to the filtered index after saving" do
       patch topic_subscription_path(subscription), params: filters.merge(
         return_to: "index",
-        topic_subscription: { person_id: person.id, topic_subscription_type_id: trainings.id, note: "Called in" }
+        topic_subscription: { person_id: person.id, topic_subscription_type_id: trainings.id }
       )
 
       expect(response).to redirect_to(topic_subscriptions_path(filters))

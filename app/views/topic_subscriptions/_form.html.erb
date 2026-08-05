@@ -16,7 +16,7 @@
 
 <% cancel_path = topic_subscription_return_path %>
 
-<%= form_with model: @topic_subscription, class: "space-y-5", data: { controller: "dirty-form conditional-fields" } do |f| %>
+<%= simple_form_for @topic_subscription, html: { class: "space-y-5", data: { controller: "dirty-form conditional-fields" } } do |f| %>
   <%# Where this form was opened from, so the redirect after save matches the eyebrow. %>
   <% topic_subscription_return_params.each do |key, value| %>
     <%= hidden_field_tag key, value, id: nil %>
@@ -87,10 +87,44 @@
     <%= f.text_field :source, class: field_class, placeholder: "e.g. Facilitator Training registration, admin" %>
   </div>
 
-  <div>
-    <%= f.label :note, "Note (optional)", class: label_class %>
-    <%= f.text_area :note, rows: 3, class: field_class %>
-  </div>
+  <%# ---- Comments (saved with the subscription; shown on the person's aggregated
+      comments page). Replaces the old free-text note field. ---- %>
+  <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="edit-toggle">
+    <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:topic_subscriptions, intensity: 100) %> <%= DomainTheme.text_class_for(:topic_subscriptions, intensity: 600) %>">
+        <i class="fa-solid fa-comments"></i>
+      </span>
+      <h2 class="text-sm font-semibold text-gray-700">Comments</h2>
+    </div>
+
+    <div class="space-y-4 p-4" data-controller="paginated-fields" data-paginated-fields-per-page-value="5">
+      <div id="comment-list" class="space-y-4">
+        <%= f.simple_fields_for :comments do |cf| %>
+          <%= render "comments/comment_fields", f: cf %>
+        <% end %>
+      </div>
+
+      <div data-paginated-fields-target="nav"></div>
+
+      <div class="flex items-center justify-between gap-2">
+        <%= link_to_add_association f, :comments,
+              partial: "comments/comment_fields",
+              data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
+              class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
+          <i class="fa-solid fa-plus text-[0.6rem]"></i>
+          Add comment
+        <% end %>
+
+        <button type="button"
+                class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
+                data-action="edit-toggle#toggle">
+          <i class="fa-solid fa-pen text-[0.6rem]"></i>
+          <span data-edit-toggle-target="editLabel">Edit comments</span>
+          <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
+        </button>
+      </div>
+    </div>
+  </section>
 
   <div class="flex gap-2 justify-end">
     <%= link_to "Cancel", cancel_path, class: "btn btn-utility-outline", data: { action: "dirty-form#confirmCancel" } %>

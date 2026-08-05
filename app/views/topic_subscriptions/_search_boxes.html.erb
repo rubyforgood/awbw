@@ -26,6 +26,12 @@
               { include_blank: "All topics" },
               class: field_class, onchange: "this.form.requestSubmit()" %>
       </div>
+      <div class="min-w-[150px]">
+        <%= f.label :comment_status, "Comments", class: label_class %>
+        <%= f.select :comment_status,
+              options_for_select([ [ "All", "" ], [ "Has comments", "present" ], [ "Flagged", "flagged" ], [ "None", "none" ] ], params[:comment_status]),
+              {}, class: field_class, onchange: "this.form.requestSubmit()" %>
+      </div>
       <%# Active/unsubscribed lives in the segmented toggle above the results;
           carry the current selection so filtering here doesn't reset it. %>
       <%= hidden_field_tag :status, params[:status], id: nil if params[:status].present? %>
