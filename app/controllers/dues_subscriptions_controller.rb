@@ -40,7 +40,7 @@ class DuesSubscriptionsController < ApplicationController
 
     if @dues_subscription.update(cost_params)
       redirect_to person_dues_subscriptions_path(@person),
-        notice: "Rate updated. It applies to future dues years.", status: :see_other
+        notice: "Cost updated. It applies to future dues years.", status: :see_other
     else
       render :edit, status: :unprocessable_content
     end
