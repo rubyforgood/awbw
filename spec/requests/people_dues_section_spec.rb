@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "Person profile dues section", type: :request do
   around { |example| travel_to(Time.current.midday) { example.run } }
 
-  let(:standard_rate) { MoneyFormatter.dollars_from_cents(Dues::ANNUAL_COST_CENTS) }
+  let(:standard_cost) { MoneyFormatter.dollars_from_cents(Dues::ANNUAL_COST_CENTS) }
   let(:admin) { create(:user, :admin) }
   let(:owner_user) { create(:user, :with_person) }
   let(:person) { owner_user.person }
@@ -26,20 +26,20 @@ RSpec.describe "Person profile dues section", type: :request do
 
       expect(response).to be_successful
       expect(response.body).to include("Dues")
-      expect(response.body).to include(standard_rate)
+      expect(response.body).to include(standard_cost)
       expect(response.body).to include("due")
     end
 
-    it "shows the standard rate when the subscription has no override" do
+    it "shows the standard cost when the subscription has no override" do
       dues_year
 
       get person_path(person)
 
-      expect(response.body).to include("Standard (#{standard_rate})")
+      expect(response.body).to include("Standard (#{standard_cost})")
     end
 
-    it "shows a locked rate when the subscription has one" do
-      subscription = create(:dues_subscription, person: person, rate_cents: 1_500)
+    it "shows a locked cost when the subscription has one" do
+      subscription = create(:dues_subscription, person: person, cost_cents: 1_500)
       dues_year(subscription: subscription)
 
       get person_path(person)
@@ -103,7 +103,7 @@ RSpec.describe "Person profile dues section", type: :request do
 
     expect(response).to be_successful
     expect(response.body).not_to include("No dues subscription yet")
-    expect(response.body).not_to include("Standard (#{standard_rate})")
+    expect(response.body).not_to include("Standard (#{standard_cost})")
   end
 
   it "is hidden from another signed-in user" do
@@ -112,6 +112,6 @@ RSpec.describe "Person profile dues section", type: :request do
 
     get person_path(person)
 
-    expect(response.body).not_to include("Standard (#{standard_rate})")
+    expect(response.body).not_to include("Standard (#{standard_cost})")
   end
 end

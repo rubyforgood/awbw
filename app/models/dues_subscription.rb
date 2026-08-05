@@ -6,8 +6,8 @@ class DuesSubscription < ApplicationRecord
 
   accepts_nested_attributes_for :dues_registrations
 
-  # When nil, charge standard rate. A valude is an override
-  validates :rate_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  # When nil, charge standard cost. A value is an override
+  validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
   validate :one_uncancelled_subscription_per_person
 
@@ -16,12 +16,12 @@ class DuesSubscription < ApplicationRecord
 
   def cancelled? = cancelled_at.present?
 
-  def rate_dollars
-    rate_cents.to_d / 100 if rate_cents
+  def cost_dollars
+    cost_cents.to_d / 100 if cost_cents
   end
 
-  def rate_dollars=(value)
-    self.rate_cents = value.present? ? (value.to_d * 100).to_i : nil
+  def cost_dollars=(value)
+    self.cost_cents = value.present? ? (value.to_d * 100).to_i : nil
   end
 
   private

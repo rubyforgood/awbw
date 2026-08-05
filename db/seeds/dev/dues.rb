@@ -24,7 +24,7 @@ else
   end
 
   scenarios = [
-    # [ label, rate_cents, cancelled_at, years, payments ]
+    # [ label, cost_cents, cancelled_at, years, payments ]
     [ "comped first year, as an invite leaves it", nil, nil,
       [ [ Date.current - 2.months, 0 ] ], [] ],
 
@@ -44,7 +44,7 @@ else
       [ [ Date.current - 11.months, standard ], [ Date.current + 1.month, standard ] ],
       [ [ 0, standard ] ] ],
 
-    [ "grandfathered at a lower rate", 1_500, nil,
+    [ "grandfathered at a lower cost", 1_500, nil,
       [ [ Date.current - 2.years, 1_500 ], [ Date.current - 1.year, 1_500 ], [ Date.current, 1_500 ] ],
       [ [ 0, 1_500 ], [ 1, 1_500 ] ] ],
 
@@ -55,10 +55,10 @@ else
       [ [ Date.current - 4.months, standard ] ], [ [ 0, standard ] ] ]
   ]
 
-  scenarios.each_with_index do |(label, rate_cents, cancelled_at, years, payments), index|
+  scenarios.each_with_index do |(label, cost_cents, cancelled_at, years, payments), index|
     person = pool[index]
 
-    subscription = person.dues_subscriptions.create!(rate_cents: rate_cents, cancelled_at: cancelled_at)
+    subscription = person.dues_subscriptions.create!(cost_cents: cost_cents, cancelled_at: cancelled_at)
     created = years.map { |start_date, cost_cents| year_for.(subscription, start_date, cost_cents) }
     payments.each { |year_index, cents| pay.(created[year_index], cents) }
 
@@ -68,13 +68,13 @@ else
   # New subscription after old sub lapsed
   rejoiner = pool[9] || pool.first
   if rejoiner.dues_subscriptions.count < 2
-    lapsed = rejoiner.dues_subscriptions.create!(rate_cents: 1_500, cancelled_at: Time.current - 2.years)
+    lapsed = rejoiner.dues_subscriptions.create!(cost_cents: 1_500, cancelled_at: Time.current - 2.years)
     pay.(year_for.(lapsed, Date.current - 4.years, 1_500), 1_500)
 
     rejoined = rejoiner.dues_subscriptions.create!
     pay.(year_for.(rejoined, Date.current - 1.month, standard), standard)
 
-    puts "  #{rejoiner.full_name}: lapsed at the old rate, rejoined at the standard one"
+    puts "  #{rejoiner.full_name}: lapsed at the old cost, rejoined at the standard one"
   end
 end
 

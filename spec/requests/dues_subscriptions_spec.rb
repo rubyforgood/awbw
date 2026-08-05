@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "DuesSubscriptions", type: :request do
   around { |example| travel_to(Time.current.midday) { example.run } }
 
-  let(:standard_rate) { MoneyFormatter.dollars_from_cents(Dues::ANNUAL_COST_CENTS) }
+  let(:standard_cost) { MoneyFormatter.dollars_from_cents(Dues::ANNUAL_COST_CENTS) }
   let(:admin) { create(:user, :admin) }
   let(:person) { create(:person, first_name: "Grace", last_name: "Hopper") }
 
@@ -59,14 +59,14 @@ RSpec.describe "DuesSubscriptions", type: :request do
       end
 
       it "lists past subscriptions alongside the current one" do
-        past = create(:dues_subscription, :cancelled, person: person, rate_cents: 1_500)
+        past = create(:dues_subscription, :cancelled, person: person, cost_cents: 1_500)
         dues_year(subscription: past, start_date: Date.current - 3.years)
         create(:dues_subscription, person: person)
 
         get person_dues_subscriptions_path(person)
 
         expect(response.body).to include("Locked at $15")
-        expect(response.body).to include("Standard (#{standard_rate})")
+        expect(response.body).to include("Standard (#{standard_cost})")
       end
 
       it "shows the status badge for each year" do
@@ -96,7 +96,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
-    it "prefills the first year at today and the standard rate" do
+    it "prefills the first year at today and the standard cost" do
       sign_in admin
       get new_person_dues_subscription_path(person)
 
@@ -110,7 +110,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
     let(:valid_params) do
       {
         dues_subscription: {
-          rate_dollars: "",
+          cost_dollars: "",
           dues_registrations_attributes: {
             "0" => { start_date: Date.current.to_s, cost_dollars: (Dues::ANNUAL_COST_CENTS / 100).to_s }
           }
@@ -136,18 +136,18 @@ RSpec.describe "DuesSubscriptions", type: :request do
 
         subscription = person.dues_subscriptions.sole
         year = subscription.dues_registrations.sole
-        expect(subscription.rate_cents).to be_nil
+        expect(subscription.cost_cents).to be_nil
         expect(year.cost_cents).to eq(Dues::ANNUAL_COST_CENTS)
         expect(year.start_date).to eq(Date.current)
         expect(year.end_date).to eq(Date.current + 1.year - 1.day)
         expect(response).to redirect_to(person_dues_subscriptions_path(person))
       end
 
-      it "locks in a rate when one is given" do
+      it "locks in a cost when one is given" do
         post person_dues_subscriptions_path(person),
-          params: valid_params.deep_merge(dues_subscription: { rate_dollars: "15" })
+          params: valid_params.deep_merge(dues_subscription: { cost_dollars: "15" })
 
-        expect(person.dues_subscriptions.sole.rate_cents).to eq(1_500)
+        expect(person.dues_subscriptions.sole.cost_cents).to eq(1_500)
       end
 
       it "accepts a cost of zero for a year already covered" do
@@ -192,7 +192,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
   end
 
   describe "GET /dues_subscriptions/:id/edit" do
-    let(:subscription) { create(:dues_subscription, person: person, rate_cents: 1_500) }
+    let(:subscription) { create(:dues_subscription, person: person, cost_cents: 1_500) }
 
     it "is not available to a non-admin" do
       sign_in create(:user)
@@ -201,7 +201,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
-    it "shows the current rate and says it applies to future years" do
+    it "shows the current cost and says it applies to future years" do
       sign_in admin
       get edit_dues_subscription_path(subscription)
 
@@ -219,46 +219,46 @@ RSpec.describe "DuesSubscriptions", type: :request do
 
     it "is not available to a non-admin" do
       sign_in create(:user)
-      patch dues_subscription_path(subscription), params: { dues_subscription: { rate_dollars: "15" } }
+      patch dues_subscription_path(subscription), params: { dues_subscription: { cost_dollars: "15" } }
 
       expect(response).to redirect_to(root_path)
-      expect(subscription.reload.rate_cents).to be_nil
+      expect(subscription.reload.cost_cents).to be_nil
     end
 
     context "as an admin" do
       before { sign_in admin }
 
-      it "locks in a new rate" do
-        patch dues_subscription_path(subscription), params: { dues_subscription: { rate_dollars: "15" } }
+      it "locks in a new cost" do
+        patch dues_subscription_path(subscription), params: { dues_subscription: { cost_dollars: "15" } }
 
-        expect(subscription.reload.rate_cents).to eq(1_500)
+        expect(subscription.reload.cost_cents).to eq(1_500)
         expect(response).to redirect_to(person_dues_subscriptions_path(person))
       end
 
-      it "clears the rate back to standard when left blank" do
-        subscription.update!(rate_cents: 1_500)
+      it "clears the cost back to standard when left blank" do
+        subscription.update!(cost_cents: 1_500)
 
-        patch dues_subscription_path(subscription), params: { dues_subscription: { rate_dollars: "" } }
+        patch dues_subscription_path(subscription), params: { dues_subscription: { cost_dollars: "" } }
 
-        expect(subscription.reload.rate_cents).to be_nil
+        expect(subscription.reload.cost_cents).to be_nil
       end
 
       it "leaves years already created at the price they were billed" do
-        patch dues_subscription_path(subscription), params: { dues_subscription: { rate_dollars: "60" } }
+        patch dues_subscription_path(subscription), params: { dues_subscription: { cost_dollars: "60" } }
 
         expect(existing_year.reload.cost_cents).to eq(Dues::ANNUAL_COST_CENTS)
       end
 
-      it "rejects a negative rate" do
-        patch dues_subscription_path(subscription), params: { dues_subscription: { rate_dollars: "-5" } }
+      it "rejects a negative cost" do
+        patch dues_subscription_path(subscription), params: { dues_subscription: { cost_dollars: "-5" } }
 
         expect(response).to have_http_status(:unprocessable_content)
-        expect(subscription.reload.rate_cents).to be_nil
+        expect(subscription.reload.cost_cents).to be_nil
       end
 
-      it "cannot set the cancellation date through the rate form" do
+      it "cannot set the cancellation date through the cost form" do
         patch dues_subscription_path(subscription),
-          params: { dues_subscription: { rate_dollars: "15", cancelled_at: Time.current } }
+          params: { dues_subscription: { cost_dollars: "15", cancelled_at: Time.current } }
 
         expect(subscription.reload.cancelled_at).to be_nil
       end
@@ -295,14 +295,14 @@ RSpec.describe "DuesSubscriptions", type: :request do
         expect(person.reload).to be_dues_current
       end
 
-      it "clears the cancellation on resume, keeping the rate" do
-        subscription.update!(cancelled_at: Time.current, rate_cents: 1_500)
+      it "clears the cancellation on resume, keeping the cost" do
+        subscription.update!(cancelled_at: Time.current, cost_cents: 1_500)
 
         patch resume_dues_subscription_path(subscription)
 
         subscription.reload
         expect(subscription).not_to be_cancelled
-        expect(subscription.rate_cents).to eq(1_500)
+        expect(subscription.cost_cents).to eq(1_500)
       end
 
       it "lets the nightly job renew again once resumed" do

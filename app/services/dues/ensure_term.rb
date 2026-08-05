@@ -29,7 +29,7 @@ module Dues
       year = terms.new(
         start_date: @covering,
         end_date: @covering + 1.year - 1.day,
-        cost_cents: @cost_cents || @dues_subscription.rate_cents || Dues::ANNUAL_COST_CENTS
+        cost_cents: @cost_cents || @dues_subscription.cost_cents || Dues::ANNUAL_COST_CENTS
       )
 
       year if year.save

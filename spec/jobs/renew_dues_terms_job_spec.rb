@@ -40,8 +40,8 @@ RSpec.describe RenewDuesTermsJob, type: :job do
       expect { described_class.new.perform }.not_to change(DuesRegistration, :count)
     end
 
-    it "carries the subscription's own rate onto the renewal" do
-      subscription = create(:dues_subscription, rate_cents: 1_500)
+    it "carries the subscription's own cost onto the renewal" do
+      subscription = create(:dues_subscription, cost_cents: 1_500)
       term_ending(Date.current + 10.days, subscription: subscription)
 
       described_class.new.perform
@@ -49,7 +49,7 @@ RSpec.describe RenewDuesTermsJob, type: :job do
       expect(subscription.dues_registrations.reorder(:start_date).last.cost_cents).to eq(1_500)
     end
 
-    it "charges the standard rate after a comped year" do
+    it "charges the standard cost after a comped year" do
       subscription = create(:dues_subscription)
       create(:dues_registration, :comped,
         dues_subscription: subscription,

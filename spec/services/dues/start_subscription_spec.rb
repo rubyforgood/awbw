@@ -7,7 +7,7 @@ RSpec.describe Dues::StartSubscription do
     subscription = described_class.call(person: person)
 
     expect(subscription.person).to eq(person)
-    expect(subscription.rate_cents).to be_nil
+    expect(subscription.cost_cents).to be_nil
     expect(subscription).not_to be_cancelled
 
     term = subscription.dues_registrations.sole

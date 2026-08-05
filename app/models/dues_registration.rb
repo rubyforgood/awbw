@@ -89,7 +89,7 @@ class DuesRegistration < ApplicationRecord
     errors.add(:end_date, "can't be before the start date")
   end
 
-  # Spans every subscription the person has, not just this one: a cancelled
+  # Spans every dues subscription the person has, not just this one: a cancelled
   # subscription keeps its coverage to the term's end, so a rejoin can otherwise
   # produce two subscriptions covering the same day.
   def no_overlapping_term_for_person

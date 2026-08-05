@@ -26,7 +26,7 @@ class DuesRegistrationsController < ApplicationController
 
     if @dues_registration.save
       redirect_to person_dues_subscriptions_path(@dues_subscription.person),
-        notice: "Dues year added.", status: :see_other
+        notice: "Annual dues log created.", status: :see_other
     else
       render :new, status: :unprocessable_content
     end
@@ -41,7 +41,7 @@ class DuesRegistrationsController < ApplicationController
 
     if @dues_registration.update(dues_registration_params)
       redirect_to person_dues_subscriptions_path(@dues_registration.person),
-        notice: "Dues year updated.", status: :see_other
+        notice: "Annual dues log updated.", status: :see_other
     else
       render :edit, status: :unprocessable_content
     end

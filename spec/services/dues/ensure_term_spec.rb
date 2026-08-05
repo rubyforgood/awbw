@@ -11,13 +11,13 @@ RSpec.describe Dues::EnsureTerm do
       expect(term.end_date).to eq(Date.new(2027, 10, 13))
     end
 
-    it "charges the standard rate" do
+    it "charges the standard cost" do
       term = described_class.call(dues_subscription: subscription)
       expect(term.cost_cents).to eq(Dues::ANNUAL_COST_CENTS)
     end
 
-    it "charges the subscription's own rate when it has one" do
-      subscription.update!(rate_cents: 1_500)
+    it "charges the subscription's own cost when it has one" do
+      subscription.update!(cost_cents: 1_500)
       expect(described_class.call(dues_subscription: subscription).cost_cents).to eq(1_500)
     end
 
@@ -26,8 +26,8 @@ RSpec.describe Dues::EnsureTerm do
       expect(term.cost_cents).to eq(0)
     end
 
-    it "honours a zero rate on the subscription" do
-      subscription.update!(rate_cents: 0)
+    it "honours a zero cost on the subscription" do
+      subscription.update!(cost_cents: 0)
       expect(described_class.call(dues_subscription: subscription).cost_cents).to eq(0)
     end
   end

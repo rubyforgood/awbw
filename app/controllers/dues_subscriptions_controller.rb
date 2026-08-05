@@ -25,7 +25,7 @@ class DuesSubscriptionsController < ApplicationController
 
     if @dues_subscription.save
       redirect_to person_dues_subscriptions_path(@person),
-        notice: "Dues subscription created.", status: :see_other
+        notice: "Dues subscription created. Autorenewal is turned on.", status: :see_other
     else
       render :new, status: :unprocessable_content
     end
@@ -38,7 +38,7 @@ class DuesSubscriptionsController < ApplicationController
   def update
     authorize! @dues_subscription
 
-    if @dues_subscription.update(rate_params)
+    if @dues_subscription.update(cost_params)
       redirect_to person_dues_subscriptions_path(@person),
         notice: "Rate updated. It applies to future dues years.", status: :see_other
     else
@@ -60,7 +60,7 @@ class DuesSubscriptionsController < ApplicationController
     @dues_subscription.update!(cancelled_at: nil)
 
     redirect_to person_dues_subscriptions_path(@person),
-      notice: "Subscription resumed. Dues years will renew again.", status: :see_other
+      notice: "Subscription resumed. Dues autorenewal turned back on.", status: :see_other
   end
 
   private
@@ -76,11 +76,11 @@ class DuesSubscriptionsController < ApplicationController
 
   def dues_subscription_params
     params.expect(
-      dues_subscription: [ :rate_dollars, { dues_registrations_attributes: [ [ :start_date, :cost_dollars ] ] } ]
+      dues_subscription: [ :cost_dollars, { dues_registrations_attributes: [ [ :start_date, :cost_dollars ] ] } ]
     )
   end
 
-  def rate_params
-    params.expect(dues_subscription: [ :rate_dollars ])
+  def cost_params
+    params.expect(dues_subscription: [ :cost_dollars ])
   end
 end

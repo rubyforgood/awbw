@@ -27,13 +27,13 @@
         <div class="border border-gray-200 rounded-lg p-3 sm:p-4">
           <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-2 mb-3">
             <div class="flex flex-wrap gap-x-6 gap-y-1 text-sm">
-              <span class="text-gray-600">Rate: <span class="font-medium text-gray-800"><%= subscription.rate_label %></span></span>
+              <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= subscription.cost_label %></span></span>
               <span class="text-gray-600">Subscription: <span class="font-medium text-gray-800"><%= subscription.status_label %></span></span>
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
               <%= link_to "Add year", new_dues_subscription_dues_registration_path(subscription), class: "btn btn-secondary-outline btn-sm" %>
-              <%= link_to "Edit rate", edit_dues_subscription_path(subscription), class: "btn btn-secondary-outline btn-sm" %>
+              <%= link_to "Edit cost", edit_dues_subscription_path(subscription), class: "btn btn-secondary-outline btn-sm" %>
 
               <% if subscription.cancelled? %>
                 <%= button_to "Resume", resume_dues_subscription_path(subscription),

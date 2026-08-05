@@ -2,7 +2,7 @@ class CreateDuesSubscriptionsAndRegistrations < ActiveRecord::Migration[8.1]
   def change
     create_table :dues_subscriptions do |t|
       t.references :person, null: false, foreign_key: true
-      t.integer :rate_cents
+      t.integer :cost_cents
       t.datetime :cancelled_at
       t.timestamps
     end

@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "DuesRegistrations", type: :request do
-  let(:standard_rate) { MoneyFormatter.dollars_from_cents(Dues::ANNUAL_COST_CENTS) }
+  let(:standard_cost) { MoneyFormatter.dollars_from_cents(Dues::ANNUAL_COST_CENTS) }
   around { |example| travel_to(Time.current.midday) { example.run } }
 
   let(:admin) { create(:user, :admin) }
@@ -48,7 +48,7 @@ RSpec.describe "DuesRegistrations", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Ada Tester")
-        expect(response.body).to include(standard_rate)
+        expect(response.body).to include(standard_cost)
       end
 
       it "shows the status badge for an overdue year" do
@@ -105,8 +105,8 @@ RSpec.describe "DuesRegistrations", type: :request do
         expect(response.body).to include("2027-10-14")
       end
 
-      it "prefills the cost from a locked rate" do
-        subscription.update!(rate_cents: 1_500)
+      it "prefills the cost from a locked cost" do
+        subscription.update!(cost_cents: 1_500)
 
         get new_dues_subscription_dues_registration_path(subscription)
 

@@ -1,8 +1,8 @@
 class DuesSubscriptionDecorator < ApplicationDecorator
-  def rate_label
-    return "Standard (#{h.dollars_from_cents(Dues::ANNUAL_COST_CENTS)})" if rate_cents.nil?
+  def cost_label
+    return "Standard (#{h.dollars_from_cents(Dues::ANNUAL_COST_CENTS)})" if cost_cents.nil?
 
-    "Locked at #{h.dollars_from_cents(rate_cents)}"
+    "Locked at #{h.dollars_from_cents(cost_cents)}"
   end
 
   def current_year

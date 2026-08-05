@@ -1,20 +1,20 @@
 require "rails_helper"
 
 RSpec.describe DuesSubscriptionDecorator, type: :decorator do
-  let(:standard_rate) { MoneyFormatter.dollars_from_cents(Dues::ANNUAL_COST_CENTS) }
+  let(:standard_cost) { MoneyFormatter.dollars_from_cents(Dues::ANNUAL_COST_CENTS) }
 
-  describe "#rate_label" do
-    it "names the standard rate when there is no override" do
-      expect(create(:dues_subscription, rate_cents: nil).decorate.rate_label)
-        .to eq("Standard (#{standard_rate})")
+  describe "#cost_label" do
+    it "names the standard cost when there is no override" do
+      expect(create(:dues_subscription, cost_cents: nil).decorate.cost_label)
+        .to eq("Standard (#{standard_cost})")
     end
 
-    it "names the locked rate when there is one" do
-      expect(create(:dues_subscription, rate_cents: 1_500).decorate.rate_label).to eq("Locked at $15")
+    it "names the locked cost when there is one" do
+      expect(create(:dues_subscription, cost_cents: 1_500).decorate.cost_label).to eq("Locked at $15")
     end
 
-    it "treats a zero rate as locked, not standard" do
-      expect(create(:dues_subscription, rate_cents: 0).decorate.rate_label).to eq("Locked at $0")
+    it "treats a zero cost as locked, not standard" do
+      expect(create(:dues_subscription, cost_cents: 0).decorate.cost_label).to eq("Locked at $0")
     end
   end
 

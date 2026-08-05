@@ -13,10 +13,10 @@
   <%= simple_form_for @dues_subscription, url: person_dues_subscriptions_path(@person) do |f| %>
     <%= render "shared/errors", resource: f.object %>
 
-    <%= f.input :rate_dollars,
-          label: "Rate ($ per year)",
+    <%= f.input :cost_dollars,
+          label: "Cost ($ per year)",
           required: false,
-          hint: "Leave blank for the standard rate (#{dollars_from_cents(Dues::ANNUAL_COST_CENTS)}). Set an amount only to lock this person in at that price.",
+          hint: "Leave blank for the standard cost (#{dollars_from_cents(Dues::ANNUAL_COST_CENTS)}). Set an amount only to lock this person in at that price.",
           input_html: { min: 0, step: 0.01, placeholder: "Standard", class: "bg-white" } %>
 
     <fieldset class="mt-6 border-t border-gray-200 pt-6">

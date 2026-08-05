@@ -2,18 +2,18 @@ require "rails_helper"
 
 RSpec.describe DuesSubscription, type: :model do
   describe "validations" do
-    it "allows a nil rate_cents, meaning the standard rate" do
-      expect(build(:dues_subscription, rate_cents: nil)).to be_valid
+    it "allows a nil cost_cents, meaning the standard cost" do
+      expect(build(:dues_subscription, cost_cents: nil)).to be_valid
     end
 
-    it "allows a zero rate_cents, meaning a comped member" do
-      expect(build(:dues_subscription, rate_cents: 0)).to be_valid
+    it "allows a zero cost_cents, meaning a comped member" do
+      expect(build(:dues_subscription, cost_cents: 0)).to be_valid
     end
 
-    it "rejects a negative rate_cents" do
-      subscription = build(:dues_subscription, rate_cents: -1)
+    it "rejects a negative cost_cents" do
+      subscription = build(:dues_subscription, cost_cents: -1)
       expect(subscription).not_to be_valid
-      expect(subscription.errors[:rate_cents]).to be_present
+      expect(subscription.errors[:cost_cents]).to be_present
     end
 
     it "rejects a second uncancelled subscription for the same person" do
@@ -39,7 +39,7 @@ RSpec.describe DuesSubscription, type: :model do
 
     it "does not treat a persisted subscription as its own duplicate" do
       subscription = create(:dues_subscription)
-      subscription.rate_cents = 1_500
+      subscription.cost_cents = 1_500
       expect(subscription).to be_valid
     end
   end
