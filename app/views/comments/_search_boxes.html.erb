@@ -54,28 +54,6 @@
                        onchange: "this.form.requestSubmit()" %>
     </div>
 
-    <% if show_person %>
-      <div class="min-w-[200px]">
-        <label for="person_id" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">Person</label>
-        <%= select_tag :person_id,
-                       options_for_select(Person.where(id: params[:person_id]).map { |person| [ person.full_name, person.id ] }, params[:person_id]),
-                       include_blank: true, prompt: "Search for a person",
-                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                       data: { controller: "remote-select", remote_select_model_value: "person" } %>
-      </div>
-    <% end %>
-
-    <% if show_event %>
-      <div class="min-w-[200px]">
-        <label for="event_id" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">Event</label>
-        <%= select_tag :event_id,
-                       options_for_select(Event.where(id: params[:event_id]).map { |event| [ event.title, event.id ] }, params[:event_id]),
-                       include_blank: true, prompt: "Search for an event",
-                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                       data: { controller: "remote-select", remote_select_model_value: "event" } %>
-      </div>
-    <% end %>
-
     <div class="pb-1">
       <label class="inline-flex items-center cursor-pointer select-none" title="Flagged for follow-up">
         <%= check_box_tag :flagged, "1", params[:flagged] == "1", class: "peer sr-only", onchange: "this.form.requestSubmit()" %>
@@ -88,4 +66,30 @@
       <%= link_to "Clear", clear_path, class: "btn btn-utility", data: { action: "collection#clearAndSubmit" } %>
     </div>
   </div>
+
+  <% if show_person || show_event %>
+    <div class="flex flex-wrap items-end gap-4">
+      <% if show_person %>
+        <div class="min-w-[200px]">
+          <label for="person_id" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">Person</label>
+          <%= select_tag :person_id,
+                         options_for_select(Person.where(id: params[:person_id]).map { |person| [ person.full_name, person.id ] }, params[:person_id]),
+                         include_blank: true, prompt: "Search for a person",
+                         class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                         data: { controller: "remote-select", remote_select_model_value: "person" } %>
+        </div>
+      <% end %>
+
+      <% if show_event %>
+        <div class="min-w-[200px]">
+          <label for="event_id" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">Event</label>
+          <%= select_tag :event_id,
+                         options_for_select(Event.where(id: params[:event_id]).map { |event| [ event.title, event.id ] }, params[:event_id]),
+                         include_blank: true, prompt: "Search for an event",
+                         class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                         data: { controller: "remote-select", remote_select_model_value: "event" } %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
 <% end %>
