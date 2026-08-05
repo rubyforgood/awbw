@@ -15,6 +15,12 @@ class DuesSubscription < ApplicationRecord
   scope :cancelled, -> { where.not(cancelled_at: nil) }
 
   def cancelled? = cancelled_at.present?
+  alias_method :cancelled, :cancelled?
+
+  def cancelled=(value)
+    flag = ActiveModel::Type::Boolean.new.cast(value)
+    self.cancelled_at = flag ? (cancelled_at || Time.current) : nil
+  end
 
   def cost_dollars
     cost_cents.to_d / 100 if cost_cents

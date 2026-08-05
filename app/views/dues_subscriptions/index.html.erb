@@ -22,6 +22,8 @@
   <% if @dues_subscriptions.none? %>
     <p class="text-gray-500 italic">No dues subscription yet.</p>
   <% else %>
+    <% resumable = @dues_subscriptions.none? { |subscription| !subscription.cancelled? } %>
+
     <div class="space-y-6">
       <% @dues_subscriptions.each do |subscription| %>
         <div class="border border-gray-200 rounded-lg p-3 sm:p-4">
@@ -35,14 +37,16 @@
               <%= link_to "Add year", new_dues_subscription_dues_registration_path(subscription), class: "btn btn-secondary-outline btn-sm" %>
               <%= link_to "Edit cost", edit_dues_subscription_path(subscription), class: "btn btn-secondary-outline btn-sm" %>
 
-              <% if subscription.cancelled? %>
-                <%= button_to "Resume", resume_dues_subscription_path(subscription),
+              <% if !subscription.cancelled? %>
+                <%= button_to "Cancel", dues_subscription_path(subscription),
                       method: :patch, class: "btn btn-secondary-outline btn-sm",
-                      data: { turbo_confirm: "Resume renewals for #{@person.full_name}?" } %>
-              <% else %>
-                <%= button_to "Cancel", cancel_dues_subscription_path(subscription),
-                      method: :patch, class: "btn btn-secondary-outline btn-sm",
+                      params: { dues_subscription: { cancelled: "1" } },
                       data: { turbo_confirm: "Stop renewing dues for #{@person.full_name}? They keep the dues year they have already paid for." } %>
+              <% elsif resumable %>
+                <%= button_to "Resume", dues_subscription_path(subscription),
+                      method: :patch, class: "btn btn-secondary-outline btn-sm",
+                      params: { dues_subscription: { cancelled: "0" } },
+                      data: { turbo_confirm: "Resume renewals for #{@person.full_name}?" } %>
               <% end %>
             </div>
           </div>

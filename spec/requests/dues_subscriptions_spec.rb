@@ -249,28 +249,72 @@ RSpec.describe "DuesSubscriptions", type: :request do
         expect(existing_year.reload.cost_cents).to eq(Dues::ANNUAL_COST_CENTS)
       end
 
-      it "rejects a negative cost" do
+      it "rejects a negative cost, explaining why" do
         patch dues_subscription_path(subscription), params: { dues_subscription: { cost_dollars: "-5" } }
 
-        expect(response).to have_http_status(:unprocessable_content)
+        expect(response).to redirect_to(person_dues_subscriptions_path(person))
+        expect(flash[:alert]).to match(/greater than or equal to 0/)
         expect(subscription.reload.cost_cents).to be_nil
       end
 
-      it "cannot set the cancellation date through the cost form" do
+      it "explains a resume that conflicts with a newer subscription" do
+        subscription.update!(cancelled_at: Time.current)
+        create(:dues_subscription, person: person)
+
+        patch dues_subscription_path(subscription), params: { dues_subscription: { cancelled: "0" } }
+
+        expect(response).to redirect_to(person_dues_subscriptions_path(person))
+        expect(flash[:alert]).to match(/already has a dues subscription/)
+        expect(subscription.reload).to be_cancelled
+      end
+
+      it "ignores a raw cancellation timestamp — only the virtual flag is permitted" do
         patch dues_subscription_path(subscription),
           params: { dues_subscription: { cost_dollars: "15", cancelled_at: Time.current } }
 
         expect(subscription.reload.cancelled_at).to be_nil
+        expect(subscription.cost_cents).to eq(1_500)
       end
     end
   end
 
-  describe "PATCH /dues_subscriptions/:id/cancel and /resume" do
+  describe "the policy params filter" do
+    let!(:subscription) { create(:dues_subscription, person: person) }
+
+    it "lets an admin set the cost" do
+      sign_in admin
+      patch dues_subscription_path(subscription), params: { dues_subscription: { cost_dollars: "15" } }
+
+      expect(subscription.reload.cost_cents).to eq(1_500)
+    end
+
+    it "permits only the cancelled flag for a non-admin" do
+      policy = DuesSubscriptionPolicy.new(subscription, user: create(:user))
+      filtered = policy.apply_scope(
+        ActionController::Parameters.new(cost_dollars: "0", cancelled: "1"),
+        type: :action_controller_params
+      )
+
+      expect(filtered.keys).to contain_exactly("cancelled")
+    end
+
+    it "permits both for an admin" do
+      policy = DuesSubscriptionPolicy.new(subscription, user: admin)
+      filtered = policy.apply_scope(
+        ActionController::Parameters.new(cost_dollars: "0", cancelled: "1"),
+        type: :action_controller_params
+      )
+
+      expect(filtered.keys).to contain_exactly("cost_dollars", "cancelled")
+    end
+  end
+
+  describe "PATCH /dues_subscriptions/:id — cancelling and resuming" do
     let!(:subscription) { create(:dues_subscription, person: person) }
 
     it "is not available to a non-admin" do
       sign_in create(:user)
-      patch cancel_dues_subscription_path(subscription)
+      patch dues_subscription_path(subscription), params: { dues_subscription: { cancelled: "1" } }
 
       expect(response).to redirect_to(root_path)
       expect(subscription.reload).not_to be_cancelled
@@ -280,7 +324,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
       before { sign_in admin }
 
       it "stamps the cancellation" do
-        patch cancel_dues_subscription_path(subscription)
+        patch dues_subscription_path(subscription), params: { dues_subscription: { cancelled: "1" } }
 
         expect(subscription.reload).to be_cancelled
         expect(response).to redirect_to(person_dues_subscriptions_path(person))
@@ -289,7 +333,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
       it "leaves an existing year untouched when cancelling" do
         year = create(:dues_registration, dues_subscription: subscription)
 
-        patch cancel_dues_subscription_path(subscription)
+        patch dues_subscription_path(subscription), params: { dues_subscription: { cancelled: "1" } }
 
         expect(year.reload.end_date).to be_present
         expect(person.reload).to be_dues_current
@@ -298,7 +342,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
       it "clears the cancellation on resume, keeping the cost" do
         subscription.update!(cancelled_at: Time.current, cost_cents: 1_500)
 
-        patch resume_dues_subscription_path(subscription)
+        patch dues_subscription_path(subscription), params: { dues_subscription: { cancelled: "0" } }
 
         subscription.reload
         expect(subscription).not_to be_cancelled
@@ -312,7 +356,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
 
         expect { RenewDuesTermsJob.new.perform }.not_to change(DuesRegistration, :count)
 
-        patch resume_dues_subscription_path(subscription)
+        patch dues_subscription_path(subscription), params: { dues_subscription: { cancelled: "0" } }
 
         expect { RenewDuesTermsJob.new.perform }.to change(DuesRegistration, :count).by(1)
       end

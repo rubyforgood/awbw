@@ -1,6 +1,6 @@
 class DuesSubscriptionsController < ApplicationController
   before_action :set_person, only: [ :index, :new, :create ]
-  before_action :set_dues_subscription, only: [ :edit, :update, :cancel, :resume ]
+  before_action :set_dues_subscription, only: [ :edit, :update ]
 
   def index
     authorize!
@@ -38,29 +38,13 @@ class DuesSubscriptionsController < ApplicationController
   def update
     authorize! @dues_subscription
 
-    if @dues_subscription.update(cost_params)
+    if @dues_subscription.update(authorized_dues_subscription_params)
       redirect_to person_dues_subscriptions_path(@person),
-        notice: "Cost updated. It applies to future dues years.", status: :see_other
+        notice: update_notice, status: :see_other
     else
-      render :edit, status: :unprocessable_content
+      redirect_to person_dues_subscriptions_path(@person),
+        alert: @dues_subscription.errors.full_messages.to_sentence, status: :see_other
     end
-  end
-
-  def cancel
-    authorize! @dues_subscription, to: :update?
-    @dues_subscription.update!(cancelled_at: Time.current)
-
-    redirect_to person_dues_subscriptions_path(@person),
-      notice: "Subscription cancelled. They keep the dues year they have already paid for.",
-      status: :see_other
-  end
-
-  def resume
-    authorize! @dues_subscription, to: :update?
-    @dues_subscription.update!(cancelled_at: nil)
-
-    redirect_to person_dues_subscriptions_path(@person),
-      notice: "Subscription resumed. Dues autorenewal turned back on.", status: :see_other
   end
 
   private
@@ -80,7 +64,14 @@ class DuesSubscriptionsController < ApplicationController
     )
   end
 
-  def cost_params
-    params.expect(dues_subscription: [ :cost_dollars ])
+  def authorized_dues_subscription_params
+    authorized_scope(params.require(:dues_subscription))
+  end
+
+  def update_notice
+    return "Cost updated. Changes will only be applied to future years." unless @dues_subscription.saved_change_to_cancelled_at?
+    return "Subscription cancelled. Autorenewal turned off." if @dues_subscription.cancelled?
+
+    "Subscription resumed. Autorenewal turned back on."
   end
 end

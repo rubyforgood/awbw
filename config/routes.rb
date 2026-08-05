@@ -235,10 +235,6 @@ Rails.application.routes.draw do
   end
 
   resources :dues_subscriptions, only: [ :edit, :update ] do
-    member do
-      patch :cancel
-      patch :resume
-    end
     resources :dues_registrations, only: [ :new, :create ]
   end
 
