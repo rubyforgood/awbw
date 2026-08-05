@@ -6,6 +6,9 @@ class TopicSubscription < ApplicationRecord
   belongs_to :interested_event, class_name: "Event", optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
   before_validation :set_subscribed_at, on: :create
   before_validation :clear_event_for_non_event_topic
@@ -17,6 +20,15 @@ class TopicSubscription < ApplicationRecord
   scope :unsubscribed, -> { where.not(unsubscribed_at: nil) }
   scope :for_topic_type, ->(type) { where(topic_subscription_type: type) }
   scope :newest_first, -> { order(subscribed_at: :desc) }
+  scope :comment_status, ->(value) {
+    commented = Comment.where(commentable_type: "TopicSubscription").select(:commentable_id)
+    case value
+    when "none" then where.not(id: commented)
+    when "present" then where(id: commented)
+    when "flagged" then where(id: Comment.where(commentable_type: "TopicSubscription", flagged: true).select(:commentable_id))
+    else all
+    end
+  }
 
   # Drives the subscriptions index filters: person, topic type, and status
   # ("active"/"unsubscribed" — the two the segmented toggle emits). The person
@@ -26,6 +38,7 @@ class TopicSubscription < ApplicationRecord
     scope = all
     scope = scope.where(person_id: params[:person_id]) if params[:person_id].present?
     scope = scope.for_topic_type(params[:topic_subscription_type_id]) if params[:topic_subscription_type_id].present?
+    scope = scope.comment_status(params[:comment_status]) if params[:comment_status].present?
 
     case params[:status]
     when "active" then scope = scope.active
