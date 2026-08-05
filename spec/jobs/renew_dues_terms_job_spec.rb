@@ -21,9 +21,11 @@ RSpec.describe RenewDuesTermsJob, type: :job do
     end
 
     it "creates one for a term expiring on the window's last day" do
-      term_ending(Date.current + Dues::RENEWAL_WINDOW_DAYS)
+      travel_to(Time.current.midday) do
+        term_ending(Date.current + Dues::RENEWAL_WINDOW_DAYS)
 
-      expect { described_class.new.perform }.to change(DuesRegistration, :count).by(1)
+        expect { described_class.new.perform }.to change(DuesRegistration, :count).by(1)
+      end
     end
 
     it "leaves a term expiring beyond the window alone" do

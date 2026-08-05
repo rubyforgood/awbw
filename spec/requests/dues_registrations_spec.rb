@@ -1,9 +1,12 @@
 require "rails_helper"
 
 RSpec.describe "DuesRegistrations", type: :request do
+  let(:standard_rate) { MoneyFormatter.dollars_from_cents(Dues::ANNUAL_COST_CENTS) }
+  around { |example| travel_to(Time.current.midday) { example.run } }
+
   let(:admin) { create(:user, :admin) }
 
-  def term_for(name, cost_cents: 2_500, start_date: Date.current)
+  def term_for(name, cost_cents: Dues::ANNUAL_COST_CENTS, start_date: Date.current)
     person = create(:person, first_name: name, last_name: "Tester")
     create(:dues_registration,
       dues_subscription: create(:dues_subscription, person: person),
@@ -45,7 +48,7 @@ RSpec.describe "DuesRegistrations", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Ada Tester")
-        expect(response.body).to include("$25")
+        expect(response.body).to include(standard_rate)
       end
 
       it "shows the status badge for an overdue year" do

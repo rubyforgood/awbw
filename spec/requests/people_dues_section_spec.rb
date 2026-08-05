@@ -1,11 +1,14 @@
 require "rails_helper"
 
 RSpec.describe "Person profile dues section", type: :request do
+  around { |example| travel_to(Time.current.midday) { example.run } }
+
+  let(:standard_rate) { MoneyFormatter.dollars_from_cents(Dues::ANNUAL_COST_CENTS) }
   let(:admin) { create(:user, :admin) }
   let(:owner_user) { create(:user, :with_person) }
   let(:person) { owner_user.person }
 
-  def dues_year(cost_cents: 2_500, start_date: Date.current, subscription: nil)
+  def dues_year(cost_cents: Dues::ANNUAL_COST_CENTS, start_date: Date.current, subscription: nil)
     create(:dues_registration,
       dues_subscription: subscription || create(:dues_subscription, person: person),
       cost_cents: cost_cents,
@@ -23,7 +26,7 @@ RSpec.describe "Person profile dues section", type: :request do
 
       expect(response).to be_successful
       expect(response.body).to include("Dues")
-      expect(response.body).to include("$25")
+      expect(response.body).to include(standard_rate)
       expect(response.body).to include("due")
     end
 
@@ -32,7 +35,7 @@ RSpec.describe "Person profile dues section", type: :request do
 
       get person_path(person)
 
-      expect(response.body).to include("Standard ($25)")
+      expect(response.body).to include("Standard (#{standard_rate})")
     end
 
     it "shows a locked rate when the subscription has one" do
@@ -100,7 +103,7 @@ RSpec.describe "Person profile dues section", type: :request do
 
     expect(response).to be_successful
     expect(response.body).not_to include("No dues subscription yet")
-    expect(response.body).not_to include("Standard ($25)")
+    expect(response.body).not_to include("Standard (#{standard_rate})")
   end
 
   it "is hidden from another signed-in user" do
@@ -109,6 +112,6 @@ RSpec.describe "Person profile dues section", type: :request do
 
     get person_path(person)
 
-    expect(response.body).not_to include("Standard ($25)")
+    expect(response.body).not_to include("Standard (#{standard_rate})")
   end
 end

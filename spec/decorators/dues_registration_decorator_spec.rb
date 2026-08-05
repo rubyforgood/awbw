@@ -56,7 +56,7 @@ RSpec.describe DuesRegistrationDecorator, type: :decorator do
     end
 
     it "renders money without trailing cents" do
-      decorated = term(paid: 1_000)
+      decorated = term(cost_cents: 2_500, paid: 1_000)
 
       expect(decorated.cost).to eq("$25")
       expect(decorated.paid).to eq("$10")

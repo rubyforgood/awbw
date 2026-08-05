@@ -1,10 +1,13 @@
 require "rails_helper"
 
 RSpec.describe "DuesSubscriptions", type: :request do
+  around { |example| travel_to(Time.current.midday) { example.run } }
+
+  let(:standard_rate) { MoneyFormatter.dollars_from_cents(Dues::ANNUAL_COST_CENTS) }
   let(:admin) { create(:user, :admin) }
   let(:person) { create(:person, first_name: "Grace", last_name: "Hopper") }
 
-  def dues_year(subscription:, cost_cents: 2_500, start_date: Date.current)
+  def dues_year(subscription:, cost_cents: Dues::ANNUAL_COST_CENTS, start_date: Date.current)
     create(:dues_registration,
       dues_subscription: subscription,
       cost_cents: cost_cents,
@@ -63,7 +66,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
         get person_dues_subscriptions_path(person)
 
         expect(response.body).to include("Locked at $15")
-        expect(response.body).to include("Standard ($25)")
+        expect(response.body).to include("Standard (#{standard_rate})")
       end
 
       it "shows the status badge for each year" do
@@ -99,7 +102,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(Date.current.to_s)
-      expect(response.body).to include("25.0")
+      expect(response.body).to include((Dues::ANNUAL_COST_CENTS / 100.0).to_s)
     end
   end
 
@@ -108,7 +111,9 @@ RSpec.describe "DuesSubscriptions", type: :request do
       {
         dues_subscription: {
           rate_dollars: "",
-          dues_registrations_attributes: { "0" => { start_date: Date.current.to_s, cost_dollars: "25" } }
+          dues_registrations_attributes: {
+            "0" => { start_date: Date.current.to_s, cost_dollars: (Dues::ANNUAL_COST_CENTS / 100).to_s }
+          }
         }
       }
     end
@@ -132,7 +137,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
         subscription = person.dues_subscriptions.sole
         year = subscription.dues_registrations.sole
         expect(subscription.rate_cents).to be_nil
-        expect(year.cost_cents).to eq(2_500)
+        expect(year.cost_cents).to eq(Dues::ANNUAL_COST_CENTS)
         expect(year.start_date).to eq(Date.current)
         expect(year.end_date).to eq(Date.current + 1.year - 1.day)
         expect(response).to redirect_to(person_dues_subscriptions_path(person))
@@ -209,7 +214,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
   describe "PATCH /dues_subscriptions/:id" do
     let!(:subscription) { create(:dues_subscription, person: person) }
     let!(:existing_year) do
-      create(:dues_registration, dues_subscription: subscription, cost_cents: 2_500)
+      create(:dues_registration, dues_subscription: subscription, cost_cents: Dues::ANNUAL_COST_CENTS)
     end
 
     it "is not available to a non-admin" do
@@ -241,7 +246,7 @@ RSpec.describe "DuesSubscriptions", type: :request do
       it "leaves years already created at the price they were billed" do
         patch dues_subscription_path(subscription), params: { dues_subscription: { rate_dollars: "60" } }
 
-        expect(existing_year.reload.cost_cents).to eq(2_500)
+        expect(existing_year.reload.cost_cents).to eq(Dues::ANNUAL_COST_CENTS)
       end
 
       it "rejects a negative rate" do
