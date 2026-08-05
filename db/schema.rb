@@ -458,9 +458,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_021441) do
 
   create_table "dues_subscriptions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "cancelled_at"
+    t.integer "cost_cents"
     t.datetime "created_at", null: false
     t.bigint "person_id", null: false
-    t.integer "rate_cents"
     t.datetime "updated_at", null: false
     t.index ["person_id"], name: "index_dues_subscriptions_on_person_id"
   end
