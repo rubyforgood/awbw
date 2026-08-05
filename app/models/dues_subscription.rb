@@ -6,9 +6,7 @@ class DuesSubscription < ApplicationRecord
 
   accepts_nested_attributes_for :dues_registrations
 
-  # A nil rate_cents means "charge the standard rate, whatever it currently is", so
-  # a rate rise moves these members automatically. A stored value is a rate this
-  # member is locked into — the distinction is what makes grandfathering possible.
+  # When nil, charge standard rate. A valude is an override
   validates :rate_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
   validate :one_uncancelled_subscription_per_person
