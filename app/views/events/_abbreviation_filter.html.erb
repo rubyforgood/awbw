@@ -1,9 +1,0 @@
-<%# Abbreviation substring search shared by the report forms. Submits the form on
-    change (blur/Enter), matching the auto-submitting selects beside it. %>
-<div class="flex flex-col gap-1">
-  <label class="text-xs font-medium text-gray-600" for="abbreviation">Abbreviation</label>
-  <%= text_field_tag :abbreviation, params[:abbreviation],
-        placeholder: "e.g. TOS",
-        class: "max-w-[10rem] px-3 py-2 rounded-md border-gray-300 shadow-sm text-sm text-gray-700",
-        onchange: "this.form.requestSubmit()" %>
-</div>

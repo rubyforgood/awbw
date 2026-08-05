@@ -115,7 +115,7 @@ class ScholarshipsController < ApplicationController
   # trainings, matching the events scholarship report.
   def set_report_filter_state
     @filter_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
-    @event_abbreviation = params[:abbreviation].presence
+    @event_search = params[:search].presence
     @filter_funder = GlobalID::Locator.locate_signed(params[:funder_sgid]) if params[:funder_sgid].present?
     @filter_events = Event.facilitator_trainings.order(start_date: :desc)
     @year_options = Event.facilitator_trainings
@@ -147,26 +147,30 @@ class ScholarshipsController < ApplicationController
     scope
   end
 
-  # Event ids matching the year / specific-event / abbreviation filters, or nil
+  # Event ids matching the year / specific-event / search filters, or nil
   # when none are active (so the list isn't restricted by event).
   def filter_event_ids
-    return unless @selected_year || @filter_event || @event_abbreviation
+    return unless @selected_year || @filter_event || @event_search
     scoped_events.select(:id)
   end
 
   # Facilitator trainings for the summary report at the top of the index, scoped
-  # by the same filters (year / event / abbreviation / funder), decorated.
+  # by the same filters (year / event / search / funder), decorated.
   def report_training_events
     events = scoped_events(Event.facilitator_trainings)
     events = events.where(id: Scholarship.from_funder(@filter_funder).event_ids) if @filter_funder
     events.order(start_date: :desc).map(&:decorate)
   end
 
-  # Applies the year / specific-event / abbreviation filters to an event scope.
+  # Applies the year / specific-event / search (abbreviation OR title) filters to
+  # an event scope.
   def scoped_events(base = Event.all)
     base = base.in_year(@selected_year) if @selected_year
     base = base.where(id: @filter_event.id) if @filter_event
-    base = base.where("events.abbreviation LIKE ?", "%#{Event.sanitize_sql_like(@event_abbreviation)}%") if @event_abbreviation
+    if @event_search
+      like = "%#{Event.sanitize_sql_like(@event_search)}%"
+      base = base.where("events.abbreviation LIKE :q OR events.title LIKE :q", q: like)
+    end
     base
   end
 

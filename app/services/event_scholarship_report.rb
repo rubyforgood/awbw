@@ -59,7 +59,9 @@ class EventScholarshipReport
   def initialize(events, current_year: Date.current.year, featured_year: nil, funder: nil)
     @events = events.to_a
     @current_year = current_year
-    @featured_year_value = featured_year || current_year
+    # nil means no specific year is featured (all-time): the headline aggregates
+    # every training rather than collapsing to the current year.
+    @featured_year_value = featured_year
     @funder = funder
   end
 
@@ -80,10 +82,18 @@ class EventScholarshipReport
       .sort_by { |group| [ group.year ? 0 : 1, -(group.year || 0) ] }
   end
 
-  # The year whose figures lead the KPI strip: the filtered/navigated-from year,
-  # else the current year, falling back to the most recent year present.
+  # The group whose figures lead the KPI strip: the filtered/navigated-from year,
+  # falling back to the most recent year present. When no year is featured
+  # (all-time), an aggregate of every training so the headline isn't year-scoped.
   def featured_year
+    return all_trainings_group if @featured_year_value.nil?
     years_by_value[@featured_year_value] || years.first
+  end
+
+  # A single group spanning every training, under a nil year so the KPI strip
+  # reads "All trainings". Used as the all-time headline.
+  def all_trainings_group
+    @all_trainings_group ||= YearGroup.new(year: nil, columns: columns, in_progress: false)
   end
 
   # The most recent year-group strictly older than the featured one, for a

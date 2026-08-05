@@ -1,0 +1,29 @@
+<%# The figure cells for one scholarship report row — a training column, a year
+    subtotal, or the grand total: registrants attended, then funded/unfunded/total
+    for counts and dollars (or the combined count-over-dollars cells). Pass
+    `source:` (responds to attended_count / *_count / *_cents), `combined:`, and
+    optionally `event:` to link the attended number into the registrants roster
+    (omit on totals rows, which span multiple events). %>
+<td class="px-3 py-2 border border-gray-200 text-right">
+  <% if event && source.attended_count.positive? %>
+    <%= link_to source.attended_count,
+          registrants_event_path(event, attendance_status: "attended", return_to: "scholarships"),
+          target: "_blank", rel: "noopener",
+          class: "text-blue-600 hover:text-blue-800 hover:underline",
+          title: "View attended registrants" %>
+  <% else %>
+    <%= source.attended_count %>
+  <% end %>
+</td>
+<% if combined %>
+  <%= render "scholarships_report_combined_cell", count: source.funded_count, cents: source.funded_cents, start: true, emphasis: false %>
+  <%= render "scholarships_report_combined_cell", count: source.unfunded_count, cents: source.unfunded_cents, start: false, emphasis: false %>
+  <%= render "scholarships_report_combined_cell", count: source.scholarship_count, cents: source.scholarship_cents, start: false, emphasis: true %>
+<% else %>
+  <td class="px-3 py-2 border border-gray-200 text-right border-l-2 border-l-fuchsia-200"><%= source.funded_count %></td>
+  <td class="px-3 py-2 border border-gray-200 text-right"><%= source.unfunded_count %></td>
+  <td class="px-3 py-2 border border-gray-200 text-right font-semibold text-gray-900"><%= source.scholarship_count %></td>
+  <td class="px-3 py-2 border border-gray-200 text-right border-l-2 border-l-fuchsia-200"><%= dollars_from_cents(source.funded_cents) %></td>
+  <td class="px-3 py-2 border border-gray-200 text-right"><%= dollars_from_cents(source.unfunded_cents) %></td>
+  <td class="px-3 py-2 border border-gray-200 text-right font-semibold text-gray-900"><%= dollars_from_cents(source.scholarship_cents) %></td>
+<% end %>

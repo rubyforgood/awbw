@@ -385,18 +385,34 @@ RSpec.describe "Events", type: :request do
         get scholarships_events_path
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Events scholarships")
-        expect(response.body).to include("$ of scholarships", "# of scholarships", "# of trainees attended")
+        expect(response.body).to include("$ of scholarships", "# of scholarships", "Attended breakdown")
         expect(response.body).to include("TAC 261", "Self-paced training")
         expect(response.body).not_to include("Paid webinar")
       end
 
+      it "renders the combined-cell layout when the view toggle is set" do
+        sign_in admin
+        get scholarships_events_path(view: "combined")
+        # Combined view folds the two count/$ column groups into one; the split
+        # view's separate headers are gone.
+        expect(response.body).to include("Events scholarships")
+        expect(response.body).not_to include("# of scholarships", "$ of scholarships")
+      end
+
       it "narrows to trainings whose abbreviation matches the search" do
         sign_in admin
-        get scholarships_events_path(abbreviation: "TAC")
+        get scholarships_events_path(search: "TAC")
         # Abbreviations head the report columns; the excluded training's is absent
         # (its title still appears in the always-full Event dropdown).
         expect(response.body).to include("TAC261")
         expect(response.body).not_to include("OND100")
+      end
+
+      it "narrows to trainings whose title matches the search" do
+        sign_in admin
+        get scholarships_events_path(search: "Self-paced")
+        expect(response.body).to include("OND100")
+        expect(response.body).not_to include("TAC261")
       end
 
       it "narrows to trainings a selected funder scholarshipped" do

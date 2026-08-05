@@ -1,0 +1,13 @@
+<%# Layout toggle for the scholarship report table: separate # and $ columns vs
+    a combined count-over-dollars cell. Reloads with a `view` param, preserving
+    the current filters. Pass `combined:` (whether the combined view is active). %>
+<nav class="inline-flex rounded-lg bg-fuchsia-100 p-0.5 text-xs font-medium" aria-label="Scholarship table layout">
+  <%= link_to scholarships_events_path(request.query_parameters.except("view")),
+        class: "px-2.5 py-1 rounded-md transition-colors #{combined ? "text-fuchsia-700 hover:text-fuchsia-900" : "bg-white text-gray-800 shadow-sm"}" do %>
+    Separate #&nbsp;&amp;&nbsp;$
+  <% end %>
+  <%= link_to scholarships_events_path(request.query_parameters.merge("view" => "combined")),
+        class: "px-2.5 py-1 rounded-md transition-colors #{combined ? "bg-white text-gray-800 shadow-sm" : "text-fuchsia-700 hover:text-fuchsia-900"}" do %>
+    Combined
+  <% end %>
+</nav>

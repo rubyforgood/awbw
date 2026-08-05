@@ -1,0 +1,98 @@
+<%# One scholarship report card: every facilitator training as a row, grouped by
+    year (a subheader + subtotal per year when more than one year is in scope),
+    ending in a grand total. `combined:` false → separate "# of scholarships" and
+    "$ of scholarships" column groups; true → a single count-over-dollars group.
+    `all_time:` titles the card "All facilitator trainings" (else the single year).
+    Rendered by _scholarships_report and swapped by the view toggle. Pass
+    `report:`, `combined:`, `all_time:`. %>
+<% years = report.years %>
+<% multi_year = years.size > 1 %>
+<% col_span = combined ? 5 : 8 %>
+<section class="rounded-xl border border-fuchsia-300 bg-white overflow-hidden">
+  <div class="flex items-center justify-between gap-3 px-4 py-3 bg-fuchsia-50 border-b border-fuchsia-300">
+    <h3 class="flex items-center gap-2 text-base font-semibold text-fuchsia-900">
+      <i class="fa-solid fa-graduation-cap text-fuchsia-500"></i>
+      <%= all_time ? "All facilitator trainings" : "#{years.first.year || "Undated"} facilitator trainings" %>
+    </h3>
+    <div class="flex items-center gap-4">
+      <%= render "scholarships_report_toggle", combined: combined %>
+      <span class="text-xs text-gray-500"><%= pluralize(report.columns.size, "training") %></span>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm border-collapse">
+      <thead>
+        <tr class="bg-fuchsia-50 text-fuchsia-900">
+          <th rowspan="2" class="text-left font-semibold px-3 py-2 border border-gray-200 align-bottom">Training</th>
+          <th rowspan="2" class="text-right font-semibold px-3 py-2 border border-gray-200 align-bottom">
+            <i class="fa-solid fa-user-check text-fuchsia-500 mr-1"></i>Registrants attended
+          </th>
+          <% if combined %>
+            <th colspan="3" class="text-center font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap border-l-2 border-l-fuchsia-300">
+              <i class="fa-solid fa-graduation-cap text-fuchsia-500 mr-1"></i>Scholarships
+              <span class="font-normal text-gray-500">(#&nbsp;/&nbsp;$)</span>
+            </th>
+          <% else %>
+            <th colspan="3" class="text-center font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap border-l-2 border-l-fuchsia-300">
+              <i class="fa-solid fa-graduation-cap text-fuchsia-500 mr-1"></i># of scholarships
+            </th>
+            <th colspan="3" class="text-center font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap border-l-2 border-l-fuchsia-300">
+              <i class="fa-solid fa-hand-holding-dollar text-fuchsia-500 mr-1"></i>$ of scholarships
+            </th>
+          <% end %>
+        </tr>
+        <tr class="bg-fuchsia-50 text-fuchsia-900 text-xs">
+          <th class="text-right font-medium px-3 py-1.5 border border-gray-200 border-l-2 border-l-fuchsia-300">Funded</th>
+          <th class="text-right font-medium px-3 py-1.5 border border-gray-200">Unfunded</th>
+          <th class="text-right font-semibold px-3 py-1.5 border border-gray-200">Total</th>
+          <% unless combined %>
+            <th class="text-right font-medium px-3 py-1.5 border border-gray-200 border-l-2 border-l-fuchsia-300">Funded</th>
+            <th class="text-right font-medium px-3 py-1.5 border border-gray-200">Unfunded</th>
+            <th class="text-right font-semibold px-3 py-1.5 border border-gray-200">Total</th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody class="tabular-nums">
+        <% years.each do |group| %>
+          <% if multi_year %>
+            <tr class="bg-fuchsia-100 text-fuchsia-900">
+              <th colspan="<%= col_span %>" class="text-left font-semibold px-3 py-1.5 border border-gray-200">
+                <%= group.year || "Undated" %>
+              </th>
+            </tr>
+          <% end %>
+          <% group.columns.each do |column| %>
+            <tr>
+              <td class="px-3 py-2 border border-gray-200" title="<%= column.event.title %>">
+                <span class="font-medium text-gray-900"><%= column.label %></span>
+                <% if column.date_label %>
+                  <span class="block text-xs text-gray-500"><%= column.date_label %></span>
+                <% end %>
+                <% if column.on_demand? %>
+                  <span class="block text-xs text-gray-500">On-demand</span>
+                <% end %>
+              </td>
+              <%= render "scholarships_report_figures", source: column, combined: combined, event: column.event %>
+            </tr>
+          <% end %>
+          <% if multi_year %>
+            <tr class="bg-gray-50 font-semibold text-gray-900">
+              <td class="px-3 py-2 border border-gray-200"><%= group.year || "Undated" %> total</td>
+              <%= render "scholarships_report_figures", source: group, combined: combined, event: nil %>
+            </tr>
+          <% end %>
+        <% end %>
+        <tr class="bg-gray-100 font-bold text-gray-900">
+          <td class="px-3 py-2 border border-gray-200"><%= all_time ? "All-time total" : "Total" %></td>
+          <%= render "scholarships_report_figures", source: report.all_trainings_group, combined: combined, event: nil %>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="px-4 py-2 text-xs text-gray-500 border-t border-fuchsia-200 bg-fuchsia-50">
+    Attended breakdown:
+    <span class="font-medium text-gray-700"><%= report.training_attended_count %></span> training
+    · <span class="font-medium text-gray-700"><%= report.on_demand_attended_count %></span> on-demand
+  </div>
+</section>

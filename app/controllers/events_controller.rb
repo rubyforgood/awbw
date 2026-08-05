@@ -465,7 +465,7 @@ class EventsController < ApplicationController
   def set_report_filters
     @event_type = params[:event_type].presence_in(%w[ trainings other ])
     @filter_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
-    @event_abbreviation = params[:abbreviation].presence
+    @event_search = params[:search].presence
     @filter_funder = GlobalID::Locator.locate_signed(params[:funder_sgid]) if params[:funder_sgid].present?
     # The Event dropdown lists the report's own universe: paid events for revenue,
     # facilitator trainings for scholarships, every event otherwise.
@@ -500,13 +500,16 @@ class EventsController < ApplicationController
     scoped_report_base(base).order(start_date: :desc).map(&:decorate)
   end
 
-  # Narrows `base` by the event-type, specific-event and abbreviation-search
-  # filters.
+  # Narrows `base` by the event-type, specific-event and search (abbreviation OR
+  # title) filters.
   def scoped_report_base(base)
     base = base.facilitator_trainings if @event_type == "trainings"
     base = base.where(facilitator_training: false) if @event_type == "other"
     base = base.where(id: @filter_event.id) if @filter_event
-    base = base.where("events.abbreviation LIKE ?", "%#{Event.sanitize_sql_like(@event_abbreviation)}%") if @event_abbreviation
+    if @event_search
+      like = "%#{Event.sanitize_sql_like(@event_search)}%"
+      base = base.where("events.abbreviation LIKE :q OR events.title LIKE :q", q: like)
+    end
     base = base.where(id: Scholarship.from_funder(@filter_funder).event_ids) if @filter_funder
     base
   end

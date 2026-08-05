@@ -1,135 +1,14 @@
-<%# Scholarship summary: dollars and award counts (funded vs unfunded) plus an
-    attended-trainee count, one column per facilitator training, grouped by year.
-    Pass `report:` (an EventScholarshipReport). Branded to the scholarship domain
-    theme (fuchsia); the three sections read by their icon + label, not by hue. %>
-<% header_cell = "text-right font-semibold px-3 py-2 border border-gray-200 align-bottom min-w-[9rem] max-w-[15rem]" %>
+<%# Scholarship summary: one card, one row per facilitator training (grouped by
+    year when several are in scope), with attended trainees and funded/unfunded/
+    total for award counts and dollars. A segmented toggle in the card header (see
+    _scholarships_report_toggle) swaps the layout via a `view` param — the default
+    split view (separate # and $ columns) or a combined view (count over dollars
+    in one cell). Pass `report:` (an EventScholarshipReport). Fuchsia-branded. %>
 <% if report.any? %>
-  <div class="space-y-10">
-    <% report.years.each do |group| %>
-      <% events = group.columns %>
-      <section class="rounded-xl border border-fuchsia-300 bg-white overflow-hidden">
-        <div class="flex items-baseline justify-between gap-3 px-4 py-3 bg-fuchsia-50 border-b border-fuchsia-300">
-          <h3 class="flex items-center gap-2 text-base font-semibold text-fuchsia-900">
-            <i class="fa-solid fa-graduation-cap text-fuchsia-500"></i>
-            <%= group.year || "Undated" %> facilitator trainings
-          </h3>
-          <span class="text-xs text-gray-500"><%= pluralize(events.size, "training") %></span>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm border-collapse">
-            <%# ---- $ of scholarships ---- %>
-            <thead>
-              <tr class="bg-fuchsia-50 text-fuchsia-900">
-                <th class="text-left font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap">
-                  <i class="fa-solid fa-dollar-sign text-fuchsia-500 mr-1.5"></i>$ of scholarships
-                </th>
-                <% events.each do |column| %>
-                  <th class="<%= header_cell %>" title="<%= column.event.title %>">
-                    <span class="block line-clamp-2"><%= column.label %></span>
-                    <% if column.date_label %>
-                      <span class="block text-xs font-normal text-gray-500"><%= column.date_label %></span>
-                    <% end %>
-                  </th>
-                <% end %>
-              </tr>
-            </thead>
-            <tbody class="tabular-nums">
-              <tr>
-                <td class="px-3 py-2 border border-gray-200 text-gray-600">Total funded</td>
-                <% events.each do |column| %>
-                  <td class="px-3 py-2 border border-gray-200 text-right"><%= dollars_from_cents(column.funded_cents) %></td>
-                <% end %>
-              </tr>
-              <tr>
-                <td class="px-3 py-2 border border-gray-200 text-gray-600">Total unfunded</td>
-                <% events.each do |column| %>
-                  <td class="px-3 py-2 border border-gray-200 text-right"><%= dollars_from_cents(column.unfunded_cents) %></td>
-                <% end %>
-              </tr>
-              <tr class="font-semibold text-gray-900">
-                <td class="px-3 py-2 border border-gray-200">Total</td>
-                <% events.each do |column| %>
-                  <td class="px-3 py-2 border border-gray-200 text-right"><%= dollars_from_cents(column.scholarship_cents) %></td>
-                <% end %>
-              </tr>
-              <tr class="bg-gray-100 font-bold text-gray-900">
-                <td class="px-3 py-2 border border-gray-200">Overall total</td>
-                <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= dollars_from_cents(group.scholarship_cents) %></td>
-              </tr>
-
-              <%# ---- # of scholarships ---- %>
-              <tr class="bg-fuchsia-50 text-fuchsia-900">
-                <th class="text-left font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap">
-                  <i class="fa-solid fa-hashtag text-fuchsia-500 mr-1.5"></i># of scholarships
-                </th>
-                <% events.each do |column| %>
-                  <th class="<%= header_cell %>">
-                    <span class="block line-clamp-2"><%= column.label %></span>
-                  </th>
-                <% end %>
-              </tr>
-              <tr>
-                <td class="px-3 py-2 border border-gray-200 text-gray-600">Total # funded</td>
-                <% events.each do |column| %>
-                  <td class="px-3 py-2 border border-gray-200 text-right"><%= column.funded_count %></td>
-                <% end %>
-              </tr>
-              <tr>
-                <td class="px-3 py-2 border border-gray-200 text-gray-600">Total # unfunded</td>
-                <% events.each do |column| %>
-                  <td class="px-3 py-2 border border-gray-200 text-right"><%= column.unfunded_count %></td>
-                <% end %>
-              </tr>
-              <tr class="font-semibold text-gray-900">
-                <td class="px-3 py-2 border border-gray-200">Total #</td>
-                <% events.each do |column| %>
-                  <td class="px-3 py-2 border border-gray-200 text-right"><%= column.scholarship_count %></td>
-                <% end %>
-              </tr>
-              <tr class="bg-gray-100 font-bold text-gray-900">
-                <td class="px-3 py-2 border border-gray-200">Overall # total</td>
-                <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= group.scholarship_count %></td>
-              </tr>
-
-              <%# ---- # of trainees attended ---- %>
-              <tr class="bg-fuchsia-50 text-fuchsia-900">
-                <th class="text-left font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap">
-                  <i class="fa-solid fa-user-graduate text-fuchsia-500 mr-1.5"></i># of trainees attended
-                </th>
-                <% events.each do |column| %>
-                  <th class="<%= header_cell %>">
-                    <span class="block line-clamp-2"><%= column.label %></span>
-                    <% if column.on_demand? %>
-                      <span class="block text-xs font-normal text-gray-500">On-demand</span>
-                    <% end %>
-                  </th>
-                <% end %>
-              </tr>
-              <tr class="font-semibold text-gray-900">
-                <td class="px-3 py-2 border border-gray-200 text-gray-600">Attended</td>
-                <% events.each do |column| %>
-                  <td class="px-3 py-2 border border-gray-200 text-right"><%= column.attended_count %></td>
-                <% end %>
-              </tr>
-              <tr>
-                <td class="px-3 py-2 border border-gray-200 text-gray-600">Training</td>
-                <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= group.training_attended_count %></td>
-              </tr>
-              <tr>
-                <td class="px-3 py-2 border border-gray-200 text-gray-600">On-demand</td>
-                <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= group.on_demand_attended_count %></td>
-              </tr>
-              <tr class="bg-gray-100 font-bold text-gray-900">
-                <td class="px-3 py-2 border border-gray-200">Overall total</td>
-                <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= group.attended_count %></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-    <% end %>
-  </div>
+  <%= render "scholarships_report_table",
+        report: report,
+        combined: params[:view] == "combined",
+        all_time: @time_period.blank? || @time_period == "all_time" %>
 <% else %>
   <div class="text-center py-8 text-gray-500">
     No facilitator trainings yet — mark an event as a facilitator training to see it here.

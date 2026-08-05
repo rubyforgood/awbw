@@ -159,6 +159,13 @@ RSpec.describe EventScholarshipReport do
       expect(report.prior_year.year).to eq(2024)
     end
 
+    it "leads with an all-trainings aggregate when no year is featured (all-time)" do
+      all_time = report_for([ e2025b, e2024, e2025a ])
+      expect(all_time.featured_year.year).to be_nil
+      expect(all_time.featured_year.scholarship_cents).to eq(5_000)
+      expect(all_time.prior_year).to be_nil
+    end
+
     it "resolves an all-time period to the whole report" do
       period = report.period_scope("all_time")
       expect(period.metrics.scholarship_cents).to eq(5_000)
