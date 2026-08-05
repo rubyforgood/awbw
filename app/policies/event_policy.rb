@@ -37,6 +37,13 @@ class EventPolicy < ApplicationPolicy
     admin?
   end
 
+  # The cross-event index of everyone who has attended a facilitator training
+  # aggregates registrants across every event, so it's admin-only like the
+  # participation report it's reached from.
+  def training_attendees?
+    admin?
+  end
+
   def show?
     return true if admin?
 

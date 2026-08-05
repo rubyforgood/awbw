@@ -57,6 +57,25 @@ class EventsController < ApplicationController
     @report = EventScholarshipReport.new(events, featured_year: selected_year, funder: @filter_funder)
   end
 
+  # Cross-event index of everyone who has attended a facilitator training, deduped
+  # to one row per person. Lazy-loaded like the people index: the frame request
+  # builds the filtered/paginated page and its roster; the full request renders the
+  # shell (header, filters, skeleton).
+  def training_attendees
+    authorize!
+    if turbo_frame_request?
+      per_page = params[:number_of_items_per_page].presence || 25
+      people = filtered_training_attendees
+      @count_display = people.count
+      @people = people.paginate(page: params[:page], per_page: per_page)
+      @roster = TrainingAttendeesRoster.new(@people)
+      render :training_attendees_results
+    else
+      set_training_attendee_filter_options
+      render :training_attendees
+    end
+  end
+
   def new
     authorize!
     @event = Event.new.decorate
@@ -520,6 +539,56 @@ class EventsController < ApplicationController
   def selected_report_year(time_period)
     return Date.current.year if time_period == "this_year"
     Integer(time_period, exception: false)
+  end
+
+  # People (Person records) with an attended facilitator-training registration,
+  # narrowed by the training-attendees index filters. The training-specific
+  # filters (event, year) constrain which attended registrations qualify; the rest
+  # filter the people. Distinct via the id subquery, so joins never duplicate rows.
+  def filtered_training_attendees
+    registrations = EventRegistration.attended
+      .joins(:event)
+      .where(events: { facilitator_training: true })
+    registrations = registrations.where(events: { id: params[:event_id] }) if params[:event_id].present?
+    registrations = registrations.where("YEAR(events.start_date) = ?", params[:event_year]) if params[:event_year].present?
+
+    scope = Person.where(id: registrations.select(:registrant_id))
+    scope = scope.search_by_params({ contact_info: params[:contact_info] }) if params[:contact_info].present?
+    scope = scope.where(id: person_sector_ids(params[:sector])) if params[:sector].present?
+    scope = scope.where(id: person_address_ids(state: params[:state])) if params[:state].present?
+    if params[:county].present?
+      # County options carry their state ("STATE::County") so same-named counties
+      # across states don't collide.
+      county_state, county_name = params[:county].split("::", 2)
+      scope = scope.where(id: person_address_ids(state: county_state, county: county_name))
+    end
+
+    scope
+      .includes({ affiliations: :organization }, { sectorable_items: :sector }, { age_range_categorizable_items: { category: :category_type } })
+      .order(:first_name, :last_name)
+  end
+
+  def person_sector_ids(sector_id)
+    SectorableItem.where(sectorable_type: "Person", sector_id: sector_id).select(:sectorable_id)
+  end
+
+  def person_address_ids(state: nil, county: nil)
+    scope = Address.active.where(addressable_type: "Person")
+    scope = scope.where(state: state) if state.present?
+    scope = scope.where(county: county) if county.present?
+    scope.select(:addressable_id)
+  end
+
+  # Option lists for the training-attendees filter selects, built once per full
+  # page load from the whole attended-training population.
+  def set_training_attendee_filter_options
+    @training_events = Event.facilitator_trainings.order(start_date: :desc)
+    @training_years = @training_events.filter_map { |event| event.start_date&.year }.uniq.sort.reverse
+    attended_person_ids = Person.where(id: EventRegistration.attended.joins(:event).where(events: { facilitator_training: true }).select(:registrant_id))
+    @training_sectors = Sector.where(id: SectorableItem.where(sectorable_type: "Person", sectorable_id: attended_person_ids).select(:sector_id)).order(:name)
+    addresses = Address.active.where(addressable_type: "Person", addressable_id: attended_person_ids)
+    @training_states = addresses.where.not(state: [ nil, "" ]).distinct.pluck(:state).sort
+    @training_counties = addresses.where.not(county: [ nil, "" ]).where.not(state: [ nil, "" ]).distinct.pluck(:state, :county).sort
   end
 
   # The registrations the admin checked on the recipient picker, narrowed to those

@@ -333,8 +333,10 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("People attended")
         expect(response.body).to match(/\d+ trainings/)
         expect(response.body).to match(/\d+ other/)
-        # The trainings/other split links into the filtered registrants index.
-        expect(response.body).to include("event_type=trainings", "attendance_status=attended")
+        # The trainings figure links into the cross-event training attendees index;
+        # the other-events figure into the filtered registrants index.
+        expect(response.body).to include(training_attendees_events_path)
+        expect(response.body).to include("event_type=other", "attendance_status=attended")
         expect(response.body).to include(revenue_events_path, participation_events_path)
       end
 

@@ -1,0 +1,199 @@
+<%# Shared registrant roster table, used both on a single event's Background page
+    and on the cross-event training-attendees index. Locals:
+      roster: - data object responding to `registrants` (Person records) and the
+        per-registrant lookup maps (EventDashboard or TrainingAttendeesRoster).
+      show_event_column: - adds a "Training" column listing each registration's
+        event (label + month/year) linking to its edit page. Off in single-event
+        context. Default false.
+      clickable_rows: - the whole row links to the person's profile. Default true
+        (Background); off on the cross-event index, where the event links lead
+        into the individual registrations instead. %>
+<% show_event_column = local_assigns.fetch(:show_event_column, false) %>
+<% clickable_rows = local_assigns.fetch(:clickable_rows, true) %>
+<% if roster.registrants.any? %>
+  <div class="overflow-x-auto">
+    <%# Below sm the whole table chain reflows to block so each row stacks into
+        a labeled card (header hidden; per-cell mobile_label supplies the name).
+        At sm+ it returns to a normal sortable table. %>
+    <table class="block sm:table w-full border-collapse" data-controller="table-sort">
+      <thead class="hidden sm:table-header-group bg-gray-100">
+        <tr>
+          <% columns = [
+               { index: 0, align: "text-left", parts: [ { label: "First", key: "first" }, { label: "Last", key: "last" } ] },
+               { index: 1, align: "text-left", parts: [ { label: "Primary sector", key: "sector" }, { label: "Primary age group", key: "age" } ] },
+               { label: "Organization", index: 2, align: "text-left" },
+               { label: "Status", index: 3, align: "text-left" },
+               { label: "Location", index: 4, align: "text-left" },
+               { label: "Scholarship", index: 5, align: "text-center" },
+               { label: "CE", index: 6, align: "text-center" }
+             ] %>
+          <% columns << { label: "Training", index: 7, align: "text-left" } if show_event_column %>
+          <% columns.each do |col| %>
+            <th class="px-4 py-2 <%= col[:align] %> text-xs font-semibold text-gray-700" aria-sort="none">
+              <span class="inline-flex items-center gap-1.5">
+                <% (col[:parts] || [ { label: col[:label] } ]).each_with_index do |part, i| %>
+                  <% if i.positive? %><span class="text-gray-300" aria-hidden="true">/</span><% end %>
+                  <%= render "shared/sortable_header", label: part[:label], index: col[:index], key: part[:key] %>
+                <% end %>
+              </span>
+            </th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody class="block sm:table-row-group divide-y divide-gray-100" data-table-sort-target="body">
+        <% orgs_by_id = roster.organizations.index_by(&:id) %>
+        <% lime_chip_class = "inline-flex items-center whitespace-nowrap rounded-md border border-lime-300 bg-lime-200 px-2 py-0.5 text-xs font-medium text-lime-800" %>
+        <%# Per-cell label shown only in the stacked mobile card; the column
+            header supplies it at sm+, so it's hidden there. %>
+        <% mobile_label = ->(text) { tag.span(text, class: "sm:hidden shrink-0 w-24 pt-0.5 text-xs font-semibold uppercase tracking-wide text-gray-400") } %>
+        <% roster.registrants.each do |person| %>
+          <% person_orgs = (roster.organization_ids_by_registrant[person.id] || []).filter_map { |org_id| orgs_by_id[org_id] } %>
+          <% location = roster.location_label_by_registrant[person.id] %>
+          <% person_sectors = roster.primary_sector_names_by_registrant[person.id] || [] %>
+          <% person_age_groups = roster.primary_age_group_names_by_registrant[person.id] || [] %>
+          <% scholarship = roster.scholarship_by_recipient[person.id] %>
+          <% ce_registration = roster.ce_registration_by_registrant[person.id] %>
+          <tr class="block sm:table-row hover:bg-blue-50 transition-colors <%= "cursor-pointer" if clickable_rows %>"
+              <% if clickable_rows %>onclick="window.location='<%= person_path(person) %>'"<% end %>>
+            <%# Card title on mobile (larger, allowed to wrap); plain name cell at sm+. %>
+            <td class="block sm:table-cell px-4 pt-3 pb-1 sm:py-1.5 text-sm sm:whitespace-nowrap"
+                data-sort-first="<%= person.first_name.to_s.downcase %>"
+                data-sort-last="<%= person.last_name.to_s.downcase %>">
+              <%= link_to person.name, person_path(person), class: "font-bold text-gray-900 hover:underline text-base sm:text-sm" %>
+            </td>
+            <%# Primary sector + age group — one column, each independently
+                sortable (data-sort-sector / data-sort-age), mirroring the
+                First/Last name cell. Sector and age-group chips share a single
+                wrapping row. %>
+            <td class="flex sm:table-cell gap-3 px-4 py-1 sm:py-1.5 text-sm"
+                data-sort-sector="<%= person_sectors.join(", ").downcase %>"
+                data-sort-age="<%= person_age_groups.join(", ").downcase %>">
+              <%= mobile_label.("Sector / age") %>
+              <div class="min-w-0 flex-1">
+                <% if person_sectors.any? || person_age_groups.any? %>
+                  <div class="flex flex-wrap items-center gap-1">
+                    <% (person_sectors + person_age_groups).each do |name| %>
+                      <span class="<%= lime_chip_class %>"><%= name %></span>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <span class="text-gray-300">—</span>
+                <% end %>
+              </div>
+            </td>
+            <td class="flex sm:table-cell gap-3 px-4 py-1 sm:py-1.5 text-sm text-gray-600" data-sort-value="<%= person_orgs.map(&:name).join(", ").downcase %>">
+              <%= mobile_label.("Organization") %>
+              <div class="min-w-0 flex-1 break-words">
+                <% if person_orgs.any? %>
+                  <% person_orgs.each_with_index do |org, i| %><%= ", " if i.positive? %><%= org.decorate.high_profile_icon %><%= link_to org.name, organization_path(org), class: "hover:underline", onclick: "event.stopPropagation()" %><% end %>
+                <% else %>
+                  <span class="text-gray-300">—</span>
+                <% end %>
+              </div>
+            </td>
+            <% statuses = roster.program_statuses_by_registrant[person.id] || [] %>
+            <td class="flex sm:table-cell gap-3 px-4 py-1 sm:py-1.5 text-sm" data-sort-value="<%= statuses.join(", ") %>">
+              <%= mobile_label.("Status") %>
+              <div class="min-w-0 flex-1">
+                <% if statuses.any? %>
+                  <span class="flex flex-wrap gap-1">
+                    <% statuses.each do |status| %>
+                      <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= OrganizationDecorator.program_status_classes(status) %>"><%= status.to_s.titleize %></span>
+                    <% end %>
+                  </span>
+                <% else %>
+                  <span class="text-gray-300">—</span>
+                <% end %>
+              </div>
+            </td>
+            <td class="flex sm:table-cell gap-3 px-4 py-1 sm:py-1.5 text-sm" data-sort-value="<%= location.to_s.downcase %>">
+              <%= mobile_label.("Location") %>
+              <div class="min-w-0 flex-1">
+                <% if location.present? %>
+                  <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= DomainTheme.bg_class_for(:addresses, intensity: 100) %> <%= DomainTheme.text_class_for(:addresses, intensity: 700) %> <%= DomainTheme.border_class_for(:addresses, intensity: 200) %>">
+                    <%= location %>
+                  </span>
+                <% else %>
+                  <span class="text-gray-300">—</span>
+                <% end %>
+              </div>
+            </td>
+            <td class="flex sm:table-cell items-center gap-3 px-4 py-1 sm:py-1.5 text-sm sm:text-center" data-sort-value="<%= scholarship ? 1 : 0 %>">
+              <%= mobile_label.("Scholarship") %>
+              <% if scholarship %>
+                <% target_event, participant_slug = roster.scholarship_link_target(person) %>
+                <%= link_to recipients_event_path(target_event, anchor: ("participant-#{participant_slug}" if participant_slug)),
+                            class: "#{DomainTheme.text_class_for(:scholarships, intensity: 600)} hover:#{DomainTheme.text_class_for(:scholarships)}",
+                            title: "Scholarship recipient — view application",
+                            onclick: "event.stopPropagation()" do %>
+                  <i class="fa-solid fa-graduation-cap"></i>
+                <% end %>
+              <% else %>
+                <span class="sm:hidden text-gray-300">—</span>
+              <% end %>
+            </td>
+            <%# CE: the icon shows for registrants with a CE registration and
+                links to that record's edit page. %>
+            <td class="flex sm:table-cell items-center gap-3 px-4 <%= show_event_column ? "py-1 sm:py-1.5" : "pt-1 pb-3 sm:py-1.5" %> text-sm sm:text-center" data-sort-value="<%= ce_registration ? 1 : 0 %>">
+              <%= mobile_label.("CE") %>
+              <% if ce_registration %>
+                <%= link_to edit_continuing_education_registration_path(ce_registration),
+                            class: "#{DomainTheme.text_class_for(:continuing_education, intensity: 600)} hover:#{DomainTheme.text_class_for(:continuing_education)}",
+                            title: "Edit continuing education",
+                            onclick: "event.stopPropagation()" do %>
+                  <i class="fa-solid fa-certificate"></i>
+                <% end %>
+              <% else %>
+                <span class="sm:hidden text-gray-300">—</span>
+              <% end %>
+            </td>
+            <%# Training column (cross-event index only): the person's attended
+                trainings, most recent first. The most recent shows inline; when
+                there are more, a chevron expands the rest (and the page-level
+                "Show all events" toggle expands every row at once). Each event
+                links to that registration's edit page. %>
+            <% if show_event_column %>
+              <% registrations = roster.training_registrations_by_registrant[person.id] || [] %>
+              <% first_registration = registrations.first %>
+              <% event_link_class = "font-medium #{DomainTheme.text_class_for(:event_registrations, intensity: 700)} hover:underline" %>
+              <td class="flex sm:table-cell gap-3 px-4 pt-1 pb-3 sm:py-1.5 text-sm"
+                  data-sort-value="<%= first_registration&.event&.start_date&.iso8601 %>"
+                  <% if registrations.size > 1 %>data-controller="expandable-card" data-expandable-card-expanded-value="false" data-action="expandable-cards:expandAll@window->expandable-card#expand expandable-cards:collapseAll@window->expandable-card#collapse"<% end %>>
+                <%= mobile_label.("Training") %>
+                <div class="min-w-0 flex-1">
+                  <% if first_registration %>
+                    <div class="flex items-center gap-1.5">
+                      <%= link_to edit_event_registration_path(first_registration, return_to: "training_attendees"), class: event_link_class do %>
+                        <%= first_registration.event.decorate.compact_label %>
+                        <span class="text-gray-400 font-normal"><%= first_registration.event.start_date&.strftime("%b %Y") %></span>
+                      <% end %>
+                      <% if registrations.size > 1 %>
+                        <button type="button" data-action="expandable-card#toggle" aria-label="Show all trainings" class="text-gray-400 hover:text-gray-600">
+                          <i class="fa-solid fa-chevron-down text-xs transition-transform" data-expandable-card-target="icon"></i>
+                        </button>
+                      <% end %>
+                    </div>
+                    <% if registrations.size > 1 %>
+                      <div class="hidden mt-1 flex flex-col gap-1" data-expandable-card-target="body">
+                        <% registrations.drop(1).each do |registration| %>
+                          <%= link_to edit_event_registration_path(registration, return_to: "training_attendees"), class: "text-xs #{DomainTheme.text_class_for(:event_registrations, intensity: 700)} hover:underline" do %>
+                            <%= registration.event.decorate.compact_label %>
+                            <span class="text-gray-400"><%= registration.event.start_date&.strftime("%b %Y") %></span>
+                          <% end %>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  <% else %>
+                    <span class="text-gray-300">—</span>
+                  <% end %>
+                </div>
+              </td>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <p class="text-gray-500 text-center py-8 text-sm">No registrants yet.</p>
+<% end %>

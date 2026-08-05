@@ -20,7 +20,7 @@
         <div class="mt-1 text-xl font-bold tabular-nums text-blue-700"><%= number_with_delimiter(metrics.unique_people) %></div>
         <%# Each side links to the attended registrants of that event type. %>
         <div class="mt-1 text-xs text-gray-500 tabular-nums">
-          <%= link_to "#{number_with_delimiter(people[:trainings])} trainings", event_registrations_path(event_type: "trainings", attendance_status: "attended", event_year: period.year), class: "hover:underline" %>
+          <%= link_to "#{number_with_delimiter(people[:trainings])} trainings", training_attendees_events_path(event_year: period.year, return_to: "statistics"), class: "hover:underline" %>
           · <%= link_to "#{number_with_delimiter(people[:non_trainings])} other", event_registrations_path(event_type: "other", attendance_status: "attended", event_year: period.year), class: "hover:underline" %>
         </div>
       </div>

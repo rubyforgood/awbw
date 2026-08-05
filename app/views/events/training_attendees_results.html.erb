@@ -1,0 +1,32 @@
+<%= turbo_frame_tag :training_attendees_results do %>
+  <%= turbo_stream.replace("training_attendees_count", partial: "training_attendees_count") %>
+
+  <div class="rounded-xl bg-white overflow-hidden animate-fade blur-on-submit">
+    <% if @people.any? %>
+      <%# Page-level toggle: expand every row's Training cell to all events, or
+          collapse back to the most recent one. Broadcasts to each row's
+          expandable-card via @window (see _registrant_roster). %>
+      <div class="flex items-center justify-end px-4 py-3 border-b border-gray-100">
+        <button type="button"
+                data-controller="expandable-cards"
+                data-expandable-cards-expanded-value="false"
+                data-expandable-cards-collapsed-label-value="Show all events attended"
+                data-expandable-cards-expanded-label-value="Show last event attended"
+                data-action="expandable-cards#toggleAll"
+                class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-800">
+          <span data-expandable-cards-target="label">Show all events attended</span>
+          <i class="fa-solid fa-chevron-down text-xs transition-transform" data-expandable-cards-target="icon"></i>
+        </button>
+      </div>
+      <%= render "events/registrant_roster", roster: @roster, show_event_column: true, clickable_rows: false %>
+    <% else %>
+      <p class="text-gray-500 text-center px-6 py-8">No training attendees found.</p>
+    <% end %>
+  </div>
+
+  <% if @people.any? %>
+    <div class="mt-6 flex justify-center">
+      <div class="pagination"><%= tailwind_paginate @people %></div>
+    </div>
+  <% end %>
+<% end %>
