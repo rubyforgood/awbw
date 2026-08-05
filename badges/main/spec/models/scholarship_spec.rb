@@ -30,6 +30,31 @@ RSpec.describe Scholarship, type: :model do
       end
     end
 
+    describe "allocation_must_be_valid" do
+      let(:event) { create(:event, cost_cents: 10_000) }
+      let(:person) { create(:person) }
+      let(:registration) { create(:event_registration, event:, registrant: person) }
+
+      it "is invalid when a newly built allocation overshoots the remaining owed" do
+        scholarship = build(:scholarship, recipient: person, amount_cents: 15_000)
+        scholarship.build_allocation(allocatable: registration, amount: 15_000)
+
+        expect(scholarship).not_to be_valid
+        expect(scholarship.errors[:base]).to include(a_string_matching(/Cannot allocate more than remaining event cost/))
+      end
+
+      it "does not re-validate an already-persisted allocation on an unrelated re-save" do
+        scholarship = create(:scholarship, recipient: person, amount_cents: 10_000)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 10_000)
+        # Shrinking the event below the funded amount would fail the allocation's own
+        # cost check — but a persisted allocation is out of scope, so saving an
+        # unrelated attribute must still succeed.
+        event.update!(cost_cents: 5_000)
+
+        expect { scholarship.update!(agreement_signed: true) }.not_to raise_error
+      end
+    end
+
     describe "within_grant_budget" do
       let(:grant) { create(:grant, amount_cents: 100_000) }
 
