@@ -56,13 +56,16 @@ class Scholarship < ApplicationRecord
     end
   end
 
-  # A built allocation is only persisted by has_one autosave *after* the parent
-  # saves, and Rails silently drops it (returning true from save) if it's invalid.
-  # That left orphaned scholarships with no allocation — awarded per the success
-  # flash, but invisible on the registration, which finds them through allocations.
-  # Validate it up front so an over-owed amount fails the save with a clear message.
+  # A newly built allocation is only persisted by has_one autosave *after* the
+  # parent saves, and Rails silently drops it (returning true from save) if it's
+  # invalid. That left orphaned scholarships with no allocation — awarded per the
+  # success flash, but invisible on the registration, which finds them through
+  # allocations. Validate it up front so an over-owed amount fails the save with a
+  # clear message. Scoped to a new allocation so unrelated re-saves of an existing
+  # scholarship aren't blocked by an already-persisted (possibly legacy) allocation.
   def allocation_must_be_valid
-    return if allocation.nil? || allocation.valid?
+    return unless allocation&.new_record?
+    return if allocation.valid?
 
     allocation.errors.full_messages.each { |message| errors.add(:base, message) }
   end
