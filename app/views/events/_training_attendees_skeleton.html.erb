@@ -3,7 +3,7 @@
     <table class="w-full border-collapse animate-pulse">
       <thead class="bg-gray-100">
         <tr>
-          <% %w[Name Sector\ /\ age Organization Status Location Scholarship CE Training].each do |heading| %>
+          <% [ "Name", "Sector / age", "Organization", "Status", "Location", "Scholarship", "CE", "Trainings attended" ].each do |heading| %>
             <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700"><%= heading %></th>
           <% end %>
         </tr>
