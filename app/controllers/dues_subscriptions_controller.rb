@@ -5,7 +5,7 @@ class DuesSubscriptionsController < ApplicationController
   def index
     authorize!
     @dues_subscriptions = @person.dues_subscriptions
-      .includes(:dues_registrations)
+      .includes(dues_registrations: :allocations)
       .order(created_at: :desc)
       .decorate
   end
