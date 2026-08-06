@@ -5,6 +5,10 @@ class DuesSubscriptionDecorator < ApplicationDecorator
     "Locked at #{h.dollars_from_cents(cost_cents)}"
   end
 
+  def covered_on?(date = Date.current)
+    dues_registrations.any? { |year| year.active_on?(date) }
+  end
+
   def current_year
     dues_registrations.find { |year| year.active_on?(Date.current) } || dues_registrations.first
   end

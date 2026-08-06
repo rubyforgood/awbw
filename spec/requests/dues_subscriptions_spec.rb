@@ -278,6 +278,44 @@ RSpec.describe "DuesSubscriptions", type: :request do
     end
   end
 
+  describe "the Add year affordance" do
+    let(:subscription) { create(:dues_subscription, person: person) }
+
+    before { sign_in admin }
+
+    it "is hidden while the subscription already covers today" do
+      dues_year(subscription: subscription)
+
+      get person_dues_subscriptions_path(person)
+
+      expect(response.body).not_to include("Add year")
+    end
+
+    it "is offered once coverage has lapsed" do
+      dues_year(subscription: subscription, start_date: Date.current - 2.years)
+
+      get person_dues_subscriptions_path(person)
+
+      expect(response.body).to include("Add year")
+    end
+
+    it "is offered for a subscription with no years at all" do
+      subscription
+
+      get person_dues_subscriptions_path(person)
+
+      expect(response.body).to include("Add year")
+    end
+
+    it "can be forced back with ?admin=true" do
+      dues_year(subscription: subscription)
+
+      get person_dues_subscriptions_path(person, admin: "true")
+
+      expect(response.body).to include("Add year")
+    end
+  end
+
   describe "the policy params filter" do
     let!(:subscription) { create(:dues_subscription, person: person) }
 

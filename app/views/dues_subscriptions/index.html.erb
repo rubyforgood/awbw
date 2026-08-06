@@ -34,7 +34,9 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-              <%= link_to "Add year", new_dues_subscription_dues_registration_path(subscription), class: "btn btn-secondary-outline btn-sm" %>
+              <% if !subscription.covered_on? || params[:admin] == "true" %>
+                <%= link_to "Add year", new_dues_subscription_dues_registration_path(subscription), class: "btn btn-secondary-outline btn-sm" %>
+              <% end %>
               <%= link_to "Edit cost", edit_dues_subscription_path(subscription), class: "btn btn-secondary-outline btn-sm" %>
 
               <% if !subscription.cancelled? %>
