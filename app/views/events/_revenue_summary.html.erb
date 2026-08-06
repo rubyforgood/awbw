@@ -24,9 +24,7 @@
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Net</div>
         <div class="mt-1 tabular-nums">
           <span class="text-xl font-bold <%= metrics.net_cents.negative? ? "text-rose-700" : "text-gray-900" %>"><%= signed_dollars_from_cents(metrics.net_cents) %></span>
-          <span class="text-xs text-gray-500">
-            <%= MoneyFormatter.compact_from_cents(metrics.fees_cents, precision: 0) %> fees<% if metrics.funded_scholarship_cents.positive? %> + <%= MoneyFormatter.compact_from_cents(metrics.funded_scholarship_cents, precision: 0) %> scholarships<% end %> − <%= MoneyFormatter.compact_from_cents(metrics.org_subsidy_cents, precision: 0) %> subsidy
-          </span>
+          <span class="text-xs text-gray-500">Fees collected +<br>scholarships (+ funded − unfunded)</span>
         </div>
       </div>
       <div class="rounded-lg border border-orange-200 bg-orange-50 p-3">
