@@ -180,6 +180,15 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include('title="TAC 261"')
       end
 
+      it "links each drillable revenue KPI to its filtered registrant list" do
+        sign_in admin
+        get revenue_events_path
+        expect(response.body).to include("payment_status=paid")   # Fees collected
+        expect(response.body).to include("payment_status=unpaid") # Outstanding
+        expect(response.body).to include("funder=donor")          # Scholarships (grant-funded)
+        expect(response.body).to include("funder=awbw")           # Org subsidy
+      end
+
       # The Event dropdown lists every (paid) event, so the report rows are
       # identified by their per-event dashboard link rather than the title.
       it "narrows to facilitator trainings by event type" do
@@ -996,6 +1005,28 @@ RSpec.describe "Events", type: :request do
         get registrants_event_path(event, scholarship: "bogus")
 
         expect(response).to have_http_status(:ok)
+      end
+
+      it "does not crash on an invalid funder" do
+        get registrants_event_path(event, funder: "bogus")
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context "funder filter" do
+      it "narrows the roster to org-subsidized (unfunded) scholarship recipients" do
+        subsidized = create(:event_registration, event: event, registrant: create(:person, first_name: "Orgsubsidized", last_name: "Recipient"))
+        create(:allocation, source: create(:scholarship, recipient: subsidized.registrant, amount_cents: 1000),
+                            allocatable: subsidized, amount: 1000)
+        grant_funded = create(:event_registration, event: event, registrant: create(:person, first_name: "Grantfunded", last_name: "Recipient"))
+        create(:allocation, source: create(:scholarship, recipient: grant_funded.registrant, grant: create(:grant), amount_cents: 1000),
+                            allocatable: grant_funded, amount: 1000)
+
+        get registrants_event_path(event, funder: "awbw")
+
+        expect(response.body).to include("Orgsubsidized")
+        expect(response.body).not_to include("Grantfunded")
       end
     end
 
