@@ -1,6 +1,7 @@
 class EventRegistration < ApplicationRecord
   include RemoteSearchable
   include Registerable
+  include Certifiable
 
   belongs_to :registrant, class_name: "Person"
   belongs_to :event

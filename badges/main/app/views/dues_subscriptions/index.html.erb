@@ -1,0 +1,69 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="mx-auto max-w-3xl bg-white border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+  <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+    <%= link_to person_path(@person), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> <%= @person.full_name %>
+    <% end %>
+    <%= link_to "All dues", dues_registrations_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <div class="flex flex-wrap items-end justify-between gap-2 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold mb-1">Dues</h1>
+      <p class="text-sm text-gray-500"><%= @person.full_name %></p>
+    </div>
+    <%= link_to new_person_dues_subscription_path(@person), class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+      <i class="fa-solid fa-plus text-xs"></i>
+      New subscription
+    <% end %>
+  </div>
+
+  <% if @dues_subscriptions.none? %>
+    <p class="text-gray-500 italic">No dues subscription yet.</p>
+  <% else %>
+    <% resumable = @dues_subscriptions.none? { |subscription| !subscription.cancelled? } %>
+
+    <div class="space-y-6">
+      <% @dues_subscriptions.each do |subscription| %>
+        <div class="border border-gray-200 rounded-lg p-3 sm:p-4">
+          <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-2 mb-3">
+            <div class="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+              <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= subscription.cost_label %></span></span>
+              <span class="text-gray-600">Subscription: <span class="font-medium text-gray-800"><%= subscription.status_label %></span></span>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <% if !subscription.covered_on? || params[:admin] == "true" %>
+                <%= link_to "Add year", new_dues_subscription_dues_registration_path(subscription), class: "btn btn-secondary-outline btn-sm" %>
+              <% end %>
+              <%= link_to "Edit cost", edit_dues_subscription_path(subscription), class: "btn btn-secondary-outline btn-sm" %>
+
+              <% if !subscription.cancelled? %>
+                <%= button_to "Cancel", dues_subscription_path(subscription),
+                      method: :patch, class: "btn btn-secondary-outline btn-sm",
+                      params: { dues_subscription: { cancelled: "1" } },
+                      data: { turbo_confirm: "Stop renewing dues for #{@person.full_name}? They keep the dues year they have already paid for." } %>
+              <% elsif resumable %>
+                <%= button_to "Resume", dues_subscription_path(subscription),
+                      method: :patch, class: "btn btn-secondary-outline btn-sm",
+                      params: { dues_subscription: { cancelled: "0" } },
+                      data: { turbo_confirm: "Resume renewals for #{@person.full_name}?" } %>
+              <% end %>
+            </div>
+          </div>
+
+          <% if subscription.dues_registrations.empty? %>
+            <p class="text-gray-500 italic">No dues years yet.</p>
+          <% else %>
+            <ul class="space-y-2">
+              <% subscription.dues_registrations.each do |year| %>
+                <%= render "dues_registrations/year_row", year: year, editable: true %>
+              <% end %>
+            </ul>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

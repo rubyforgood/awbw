@@ -1,0 +1,27 @@
+<div class="admin-only bg-blue-100 border border-blue-200 rounded-lg shadow-sm">
+  <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3 border-b border-blue-200">
+    <h2 class="text-xl font-semibold text-gray-800">Dues</h2>
+    <%= link_to "Manage dues", person_dues_subscriptions_path(person), class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <div class="section-content px-3 sm:px-4 py-4">
+    <% if subscription.blank? %>
+      <p class="text-gray-500 italic px-3">No dues subscription yet.</p>
+    <% else %>
+      <div class="px-3">
+        <div class="flex flex-wrap gap-x-6 gap-y-1 mb-3 text-sm">
+          <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= subscription.cost_label %></span></span>
+          <span class="text-gray-600">Subscription: <span class="font-medium text-gray-800"><%= subscription.status_label %></span></span>
+        </div>
+
+        <% if subscription.current_year.blank? %>
+          <p class="text-gray-500 italic">No dues years yet.</p>
+        <% else %>
+          <ul>
+            <%= render "dues_registrations/year_row", year: subscription.current_year %>
+          </ul>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

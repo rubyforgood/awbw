@@ -1,5 +1,6 @@
 class ContinuingEducationRegistration < ApplicationRecord
   include Registerable
+  include Certifiable
 
   # AWBW's continuing-education accreditation, referenced by the CE callout copy
   # and the completion certificate's CE clause. Kept here as the single source of
