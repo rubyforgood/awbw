@@ -72,10 +72,10 @@
           <span class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount paid</span>
           <span class="font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(ce_registration&.payments_sum.to_i) %></span>
           <% if ce_registration&.paid_in_full? || simulate_ce_paid %>
-            <span class="inline-flex items-center gap-1.5 rounded-full border bg-green-50 text-green-700 border-green-200 px-2.5 py-0.5 text-xs font-medium">
-              <i class="fa-solid fa-circle-check text-[0.6rem]"></i>
-              Paid in full
-            </span>
+            <%= render "shared/badge",
+                  label: "Paid in full",
+                  classes: "bg-green-50 text-green-700 border-green-200",
+                  icon: "fa-solid fa-circle-check text-[0.6rem]" %>
           <% end %>
         </p>
 
