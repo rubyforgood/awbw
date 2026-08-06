@@ -2215,7 +2215,7 @@ RSpec.describe "Events", type: :request do
         get background_event_path(event)
 
         # "Background Org" is the registrant's first-facilitator program → New.
-        expect(response.body).to include("Status")
+        expect(response.body).to include("Program status")
         expect(response.body).to include("New")
       end
 

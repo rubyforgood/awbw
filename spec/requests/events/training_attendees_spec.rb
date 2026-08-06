@@ -88,6 +88,23 @@ RSpec.describe "Events training attendees", type: :request do
           expect(response.body).to include("Affiliation status")
         end
 
+        it "renders the breakdown charts in the results frame" do
+          create(:sectorable_item, sectorable: attendee, sector: create(:sector, name: "Healthcare"), is_primary: true)
+          get training_attendees_events_url, headers: frame_headers
+          expect(response.body).to include("Primary sector")
+          expect(response.body).to include("All sectors")
+        end
+
+        it "filters by a breakdown drill-in (country)" do
+          create(:address, addressable: attendee, country: "Canada", inactive: false)
+          other = create(:person, first_name: "Zed", last_name: "Zulu")
+          create(:event_registration, event: recent_training, registrant: other, status: "attended")
+
+          get training_attendees_events_url(country: "Canada"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).not_to include("Zed Zulu")
+        end
+
         it "filters by affiliation status" do
           create(:affiliation, person: attendee, organization: create(:organization), inactive: true, title: "Facilitator")
           active_person = create(:person, first_name: "Nora", last_name: "Active")
