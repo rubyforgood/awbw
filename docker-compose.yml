@@ -26,6 +26,7 @@ services:
       database:
         condition: service_healthy
     env_file: .env
+    user: "${UID:-0}:${GID:-0}"
     environment:
       # Fallback so Rails can boot even if .env is minimal.
       # If you prefer traditional keys, set DB_* in .env and configure database.yml accordingly.
@@ -49,6 +50,7 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     env_file: .env
+    user: "${UID:-0}:${GID:-0}"
     environment:
       RAILS_ENV: development
       RAILS_LOG_TO_STDOUT: "true"

@@ -10,6 +10,8 @@ class Person < ApplicationRecord
   has_many :affiliations, dependent: :destroy
   has_many :organizations, through: :affiliations
   has_many :professional_licenses, dependent: :destroy
+  has_many :dues_subscriptions, dependent: :destroy
+  has_many :dues_registrations, through: :dues_subscriptions
   has_many :communal_reports, through: :organizations, source: :reports
   has_many :windows_types, through: :organizations
 
@@ -172,6 +174,10 @@ class Person < ApplicationRecord
 
   def published?
     profile_is_searchable? && affiliations.active.exists?
+  end
+
+  def dues_current?(as_of: Date.current)
+    dues_registrations.active_on(as_of).paid_or_within_grace(as_of).exists?
   end
 
   def sector_list

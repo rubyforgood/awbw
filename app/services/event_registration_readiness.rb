@@ -189,7 +189,7 @@ class EventRegistrationReadiness
   end
 
   # The registration's own completion certificate (certificate_sent_at, via
-  # Registerable#certificate_sent?).
+  # Certifiable#certificate_sent?).
   def registration_certificate_sent?
     registration.certificate_sent?
   end
