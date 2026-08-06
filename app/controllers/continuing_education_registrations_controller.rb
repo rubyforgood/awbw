@@ -91,5 +91,9 @@ class ContinuingEducationRegistrationsController < ApplicationController
     ce_registration.hours = params.dig(:continuing_education_registration, :hours)
     cost = params.dig(:continuing_education_registration, :cost_dollars)
     ce_registration.cost_cents = (cost.to_d * 100).round if cost.present?
+
+    comments = params.fetch(:continuing_education_registration, {})
+      .permit(comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ])[:comments_attributes]
+    ce_registration.comments_attributes = comments if comments.present?
   end
 end

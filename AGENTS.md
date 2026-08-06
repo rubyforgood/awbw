@@ -57,12 +57,12 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/controllers/` | Rails controllers (admin/, events/) | ~77 files |
+| `app/controllers/` | Rails controllers (admin/, events/) | ~78 files |
 | `app/views/` | ERB templates | ~632 files |
 | `app/decorators/` | Draper decorators for view logic | ~40 files |
 | `app/policies/` | ActionPolicy authorization rules | ~55 files |
 | `app/presenters/` | Presentation objects | 6 files |
-| `app/helpers/` | View helpers | ~29 files |
+| `app/helpers/` | View helpers | ~31 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (76) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (75) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -123,7 +123,7 @@ This codebase (Rails 8.1)
 - **Bookmarks** (`bookmarkable`): Workshop, Event, Resource, etc.
 - **Grant donor** (`donor`): Organization, Person
 - **Assets** (`owner`): Workshop, Story, Resource, Report, etc.
-- **Comments** (`commentable`): User, Person, Organization, etc.
+- **Comments** (`commentable`): Person, User, EventRegistration, Scholarship, ContinuingEducationRegistration, TopicSubscription, Organization, Workshop
 - **Categorizable/Sectorable** items: Workshop, Story, Resource, etc.
 - **Forms** (`owner`): Resource, Report, etc.
 
@@ -152,7 +152,7 @@ This codebase (Rails 8.1)
 ### Namespaces
 
 - **Root level** (~58 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
-- **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController
+- **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController, CommentsController (global comments index at `/admin/comments` with search + remote person/event filters)
 - **`events/`**: Registrations sub-resource (create/destroy + slug-based show at `/registration/:slug`)
 - **Devise overrides**: Registrations, Confirmations, Passwords
 
@@ -205,6 +205,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `WorkshopVariationFromIdeaService` — Variation creation from ideas
 - `TaggingSearchService` — Search and filter tagging data
 - `PersonFromUserService` — Create Person from User account
+- `PersonCommentAggregator` — Unifies every comment connected to a person (their profile, event registrations, scholarships, CE registrations, topic subscriptions, and user account) into one newest-first `Comment` relation for the aggregated `/people/:id/all_comments` page
 - `BulkInviteService` — Bulk send welcome instructions and reset created_at for users
 - `FormBuilderService` — Builds configurable forms from composable sections with per-field visibility
 - `ModelDeduper` — Deduplication logic
@@ -258,7 +259,7 @@ All inherit from `ApplicationDecorator` which provides:
 - `display_image` — selects primary/gallery/downloadable asset intelligently
 - `link_target` — polymorphic path generation
 
-Key decorators: WorkshopDecorator, StoryDecorator, ResourceDecorator, PersonDecorator, OrganizationDecorator, UserDecorator, EventDecorator, ReportDecorator, GrantDecorator, ScholarshipDecorator (derives the scholarship index's program/location/training/status columns).
+Key decorators: WorkshopDecorator, StoryDecorator, ResourceDecorator, PersonDecorator, OrganizationDecorator, UserDecorator, EventDecorator, ReportDecorator, GrantDecorator, ScholarshipDecorator (derives the scholarship index's program/location/training/status columns), CommentDecorator (source chip label/link/theme + author + timestamp for the aggregated person-comments feed).
 
 ## Policies (ActionPolicy)
 

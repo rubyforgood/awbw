@@ -102,6 +102,8 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/other_responses/index.html.erb"         => "admin-only bg-blue-100",
     "app/views/banners/index.html.erb"                 => "admin-only bg-blue-100",
     "app/views/comments/index.html.erb"                => "admin-only bg-blue-100",
+    "app/views/people/all_comments.html.erb"           => "admin-only bg-white",
+    "app/views/admin/comments/index.html.erb"          => "admin-only bg-white",
     "app/views/bookmarks/index.html.erb"               => "admin-only bg-blue-100",
     "app/views/categories/index.html.erb"              => "admin-only bg-blue-100",
     "app/views/category_types/index.html.erb"          => "admin-only bg-blue-100",

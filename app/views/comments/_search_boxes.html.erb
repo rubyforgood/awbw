@@ -1,0 +1,95 @@
+<%# Shared filter/search bar for the comment feeds. Auto-submits into `frame`
+    (collection Stimulus) so results swap in place with no page jump.
+    Locals: url, frame, clear_path. Optional: show_person / show_event (global
+    index only). %>
+<% show_person = local_assigns.fetch(:show_person, false) %>
+<% show_event = local_assigns.fetch(:show_event, false) %>
+<% source_options = [ [ "All sources", "" ], [ "Profile", "Person" ], [ "Registrations", "EventRegistration" ], [ "Scholarships", "Scholarship" ], [ "CE registrations", "ContinuingEducationRegistration" ], [ "Subscriptions", "TopicSubscription" ], [ "User account", "User" ], [ "Organizations", "Organization" ], [ "Workshops", "Workshop" ] ] %>
+<%= form_with url: url, method: :get,
+              data: { controller: "collection", turbo_frame: frame },
+              html: { autocomplete: "off" }, class: "bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3" do |f| %>
+  <div class="flex items-center gap-2 text-gray-600">
+    <i class="fa-solid fa-filter text-xs"></i>
+    <span class="text-xs font-semibold uppercase tracking-wide">Filter</span>
+  </div>
+  <div class="flex flex-wrap items-end gap-3">
+    <div class="grow min-w-[150px]">
+      <label for="query" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">Keyword</label>
+      <div class="relative">
+        <%= f.text_field :query, value: params[:query],
+                         placeholder: "Body or topic…",
+                         class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-blue-500 focus:border-blue-500",
+                         oninput: "this.form.requestSubmit()" %>
+        <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"><i class="fa fa-search"></i></button>
+      </div>
+    </div>
+
+    <div class="grow min-w-[150px]">
+      <label for="author_id" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">Author</label>
+      <%= select_tag :author_id,
+                     options_for_select(User.where(id: params[:author_id]).map { |user| [ user.full_name_with_email, user.id ] }, params[:author_id]),
+                     include_blank: true, prompt: "Search staff by name",
+                     class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                     data: { controller: "remote-select", remote_select_model_value: "user" } %>
+    </div>
+
+    <div class="w-36">
+      <label for="source" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">Type</label>
+      <%= f.select :source, options_for_select(source_options, params[:source]), {},
+                   class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                   onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="w-36">
+      <label for="from" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">From</label>
+      <%= f.date_field :from, value: params[:from],
+                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                       onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="w-36">
+      <label for="to" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">To</label>
+      <%= f.date_field :to, value: params[:to],
+                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                       onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="pb-1">
+      <label class="inline-flex items-center cursor-pointer select-none" title="Flagged for follow-up">
+        <%= check_box_tag :flagged, "1", params[:flagged] == "1", class: "peer sr-only", onchange: "this.form.requestSubmit()" %>
+        <i class="fa-regular fa-flag text-gray-500 peer-checked:text-orange-500 peer-checked:[--fa-style:900]!"></i>
+        <span class="ml-1.5 text-sm text-gray-500 peer-checked:text-orange-600">Flagged</span>
+      </label>
+    </div>
+
+    <div class="pb-1">
+      <%= link_to "Clear", clear_path, class: "btn btn-utility", data: { action: "collection#clearAndSubmit" } %>
+    </div>
+  </div>
+
+  <% if show_person || show_event %>
+    <div class="flex flex-wrap items-end gap-4">
+      <% if show_person %>
+        <div class="min-w-[200px]">
+          <label for="person_id" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">Person</label>
+          <%= select_tag :person_id,
+                         options_for_select(Person.where(id: params[:person_id]).map { |person| [ person.full_name, person.id ] }, params[:person_id]),
+                         include_blank: true, prompt: "Search for a person",
+                         class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                         data: { controller: "remote-select", remote_select_model_value: "person" } %>
+        </div>
+      <% end %>
+
+      <% if show_event %>
+        <div class="min-w-[200px]">
+          <label for="event_id" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">Event</label>
+          <%= select_tag :event_id,
+                         options_for_select(Event.where(id: params[:event_id]).map { |event| [ event.title, event.id ] }, params[:event_id]),
+                         include_blank: true, prompt: "Search for an event",
+                         class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                         data: { controller: "remote-select", remote_select_model_value: "event" } %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>

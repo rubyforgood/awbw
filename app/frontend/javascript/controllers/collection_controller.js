@@ -83,6 +83,13 @@ export default class extends Controller {
       });
     this.element.reset();
 
+    // TomSelect (remote-select) renders its own UI and ignores selectedIndex and
+    // form.reset(), so clear each enhanced control explicitly. Silent clear avoids
+    // a redundant submit before the one below.
+    this.element.querySelectorAll("select").forEach((select) => {
+      if (select.tomselect) select.tomselect.clear(true);
+    });
+
     if (this.hasSearchTypeSelectOutlet) {
       this.searchTypeSelectOutlets.forEach((controller) => {
         controller.toggle({ target: { value: "" } });

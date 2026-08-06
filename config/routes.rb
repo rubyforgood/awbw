@@ -53,6 +53,7 @@ Rails.application.routes.draw do
     get "activities/charts",         to: "ahoy_activities#charts", as: "activities_charts"
     get "activities/counts",         to: "analytics#index", as: "activities_counts"
     post "activities/counts/print",  to: "analytics#print", as: "analytics_print"
+    resources :comments, only: [ :index ]
   end
 
   resources :banners
@@ -115,6 +116,7 @@ Rails.application.routes.draw do
       patch :unsubscribe
       patch :resubscribe
     end
+    resources :comments, only: [ :index, :create, :update ]
   end
   resources :topic_subscription_types, except: [ :show ] do
     member do
@@ -134,9 +136,11 @@ Rails.application.routes.draw do
   resources :grants
   resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
     member { patch :toggle_tasks }
+    resources :comments, only: [ :index, :create, :update ]
   end
   resources :continuing_education_registrations, only: [ :new, :create, :edit, :update, :destroy ] do
     member { patch :toggle_certificate }
+    resources :comments, only: [ :index, :create, :update ]
   end
   resources :discounts, only: [ :create, :show, :destroy ] do
     collection do
@@ -195,6 +199,7 @@ Rails.application.routes.draw do
       get :workshop_logs
       get :checkout
       get :bio
+      get :all_comments
     end
     resources :comments, only: [ :index, :create, :update ]
     resources :dues_subscriptions, only: [ :index, :new, :create ]
