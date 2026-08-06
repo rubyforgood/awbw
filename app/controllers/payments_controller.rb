@@ -25,7 +25,7 @@ class PaymentsController < ApplicationController
 
     if params[:allocatable_sgid].present?
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
-      person, organization = registrant_and_organization_for(@allocatable)
+      person, organization = @allocatable.registrant, organization_for(@allocatable)
       @payment.person = person
       @payment.organization = organization
     end
@@ -169,7 +169,7 @@ class PaymentsController < ApplicationController
 
     if params[:allocatable_sgid].present?
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
-      person, organization = registrant_and_organization_for(@allocatable)
+      person, organization = @allocatable.registrant, organization_for(@allocatable)
       @payment.person = person
       @payment.organization = organization
     end
@@ -195,23 +195,18 @@ class PaymentsController < ApplicationController
     GlobalID::Locator.locate_signed(params[:payment][:allocatable_sgid])
   end
 
-  def registrant_and_organization_for(allocatable)
+  def organization_for(allocatable)
     case allocatable
     when EventRegistration
-      [ allocatable.registrant, allocatable.organizations.first ]
+      allocatable.organizations.first
     when ContinuingEducationRegistration
-      [ allocatable.registrant, allocatable.event_registration.organizations.first ]
-    when DuesRegistration
-      [ allocatable.registrant, nil ]
-    else
-      [ nil, nil ]
+      allocatable.event_registration.organizations.first
     end
   end
 
   def build_payment_attributes(payment_params, allocatable)
     attrs = payment_params.except(:allocatable_sgid, :type)
-    person, = registrant_and_organization_for(allocatable)
-    attrs[:person_id] ||= person&.id
+    attrs[:person_id] ||= allocatable.registrant&.id
     attrs
   end
 
