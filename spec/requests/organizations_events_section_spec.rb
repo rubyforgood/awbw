@@ -58,7 +58,7 @@ RSpec.describe "Organization profile events-attended section", type: :request do
   end
 
   it "shows an admin program-status chip per event in the profile's Program status block" do
-    event = create(:event, title: "Trauma-Informed Onsite", abbreviation: "TOS205", start_date: 2.days.from_now)
+    event = create(:event, title: "Trauma-Informed Onsite", abbreviation: "TOS205", start_date: 2.days.from_now, facilitator_training: true)
     person = create(:person)
     create(:affiliation, organization: organization, person: person, title: "Facilitator", start_date: 1.year.ago, end_date: nil)
     registration = create(:event_registration, registrant: person, event: event, status: "registered")
