@@ -12,6 +12,7 @@ module Dues
     # Skips anyone who already has a subscription, cancelled or not
 
     def call
+      return unless Dues.enabled?
       return if @person.blank?
       return if @person.dues_subscriptions.exists?
 

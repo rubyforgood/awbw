@@ -1,3 +1,3 @@
 class DuesRegistrationPolicy < ApplicationPolicy
-  def manage? = admin?
+  def manage? = admin? && Dues.enabled?
 end
