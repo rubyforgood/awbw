@@ -278,6 +278,40 @@ RSpec.describe "DuesSubscriptions", type: :request do
     end
   end
 
+  describe "the New subscription affordance" do
+    before { sign_in admin }
+
+    it "is offered when the person has none" do
+      get person_dues_subscriptions_path(person)
+
+      expect(response.body).to include("New subscription")
+    end
+
+    it "is hidden while an uncancelled subscription exists" do
+      create(:dues_subscription, person: person)
+
+      get person_dues_subscriptions_path(person)
+
+      expect(response.body).not_to include("New subscription")
+    end
+
+    it "is offered again once the only subscription is cancelled" do
+      create(:dues_subscription, :cancelled, person: person)
+
+      get person_dues_subscriptions_path(person)
+
+      expect(response.body).to include("New subscription")
+    end
+
+    it "can be forced back with ?admin=true" do
+      create(:dues_subscription, person: person)
+
+      get person_dues_subscriptions_path(person, admin: "true")
+
+      expect(response.body).to include("New subscription")
+    end
+  end
+
   describe "the Add year affordance" do
     let(:subscription) { create(:dues_subscription, person: person) }
 
