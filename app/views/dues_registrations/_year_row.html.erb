@@ -1,5 +1,4 @@
 <% term = year.decorate %>
-<% badge = term.status_badge %>
 <li class="bg-white border border-gray-200 rounded-lg px-3 py-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
   <div>
     <span class="block text-sm font-medium text-gray-800"><%= term.term_range %></span>
@@ -8,10 +7,7 @@
     </span>
   </div>
   <div class="flex items-center gap-2">
-    <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium <%= badge.classes %>">
-      <i class="<%= badge.icon %>"></i>
-      <%= badge.label %>
-    </span>
+    <%= render "dues_registrations/status_pill", term: term, linked: local_assigns.fetch(:linked, false) %>
 
     <% if local_assigns.fetch(:editable, false) %>
       <%= link_to "Edit", edit_dues_registration_path(year), class: "btn btn-secondary-outline btn-sm" %>

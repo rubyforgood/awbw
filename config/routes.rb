@@ -238,7 +238,7 @@ Rails.application.routes.draw do
     resources :dues_registrations, only: [ :new, :create ]
   end
 
-  resources :dues_registrations, only: [ :index, :edit, :update ]
+  resources :dues_registrations, only: [ :index, :show, :edit, :update ]
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses

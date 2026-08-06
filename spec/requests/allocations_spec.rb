@@ -7,6 +7,41 @@ RSpec.describe "Allocations", type: :request do
 
   before { sign_in admin }
 
+  describe "GET /allocations scoped to a dues year" do
+    let(:term) { create(:dues_registration, cost_cents: 2_500) }
+
+    it "offers cash, cheque and discount for a dues year" do
+      get allocations_path(allocatable_sgid: term.to_sgid.to_s)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Add cash payment", "Add check payment", "Add discount")
+    end
+
+    it "names the person the dues year belongs to" do
+      get allocations_path(allocatable_sgid: term.to_sgid.to_s)
+
+      expect(response.body).to include(term.registrant.full_name)
+    end
+
+    it "lists an allocation already recorded against the year" do
+      create(:allocation, source: create(:payment, amount_cents: 2_500), allocatable: term, amount: 2_500)
+
+      get allocations_path(allocatable_sgid: term.to_sgid.to_s)
+
+      expect(response.body).not_to include("No payments or allocations recorded yet")
+    end
+
+    it "links a dues allocation somewhere followable from the global list" do
+      create(:allocation, source: create(:payment, amount_cents: 2_500), allocatable: term, amount: 2_500)
+
+      get allocations_path, headers: { "Turbo-Frame" => "allocations_results" }
+      expect(response.body).to include("href=\"#{dues_registration_path(term)}\"")
+
+      get dues_registration_path(term)
+      expect(response).to have_http_status(:see_other)
+    end
+  end
+
   describe "GET /allocations" do
     it "renders the searchable list of all allocations" do
       get allocations_path
@@ -22,6 +57,16 @@ RSpec.describe "Allocations", type: :request do
       expect(response.body).to include("Allocations")
       expect(response.body).to include("Add cash payment")
       expect(response.body).to include(reg.registrant.full_name)
+    end
+
+    it "renders the focused view scoped to a CE registration" do
+      ce = create(:continuing_education_registration, cost_cents: 5_000)
+
+      get allocations_path(allocatable_sgid: ce.to_sgid.to_s)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Add cash payment", "Add check payment", "Add discount")
+      expect(response.body).to include(ce.registrant.full_name)
     end
 
     it "renders the results turbo frame" do

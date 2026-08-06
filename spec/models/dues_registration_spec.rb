@@ -271,6 +271,14 @@ RSpec.describe DuesRegistration, type: :model do
     end
   end
 
+  describe "#registrant" do
+    it "is the subscription's person, so payment code can stay type-agnostic" do
+      term = create(:dues_registration)
+
+      expect(term.registrant).to eq(term.dues_subscription.person)
+    end
+  end
+
   describe "#person" do
     it "comes through the subscription" do
       subscription = create(:dues_subscription)

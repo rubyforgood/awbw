@@ -76,6 +76,36 @@ RSpec.describe "DuesRegistrations", type: :request do
     end
   end
 
+  describe "GET /dues_registrations/:id" do
+    let(:term) { term_for("Ada") }
+
+    it "is not available to a non-admin" do
+      sign_in create(:user)
+      get dues_registration_path(term)
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "redirects to the person's dues page, giving a dues year a canonical URL" do
+      sign_in admin
+      get dues_registration_path(term)
+
+      expect(response).to redirect_to(person_dues_subscriptions_path(term.registrant))
+    end
+  end
+
+  describe "the status pill" do
+    before { sign_in admin }
+
+    it "links to the year's scoped allocations page from the index" do
+      term = term_for("Ada")
+
+      get dues_registrations_path, headers: { "Turbo-Frame" => "dues_registrations_results" }
+
+      expect(response.body).to include(allocations_path(allocatable_sgid: term.to_sgid.to_s))
+    end
+  end
+
   describe "GET /dues_subscriptions/:id/dues_registrations/new" do
     let(:subscription) { create(:dues_subscription, person: create(:person)) }
 

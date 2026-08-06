@@ -200,7 +200,9 @@ class PaymentsController < ApplicationController
     when EventRegistration
       [ allocatable.registrant, allocatable.organizations.first ]
     when ContinuingEducationRegistration
-      [ allocatable.event_registration.registrant, allocatable.event_registration.organizations.first ]
+      [ allocatable.registrant, allocatable.event_registration.organizations.first ]
+    when DuesRegistration
+      [ allocatable.registrant, nil ]
     else
       [ nil, nil ]
     end

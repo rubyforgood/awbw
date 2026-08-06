@@ -278,6 +278,29 @@ RSpec.describe "DuesSubscriptions", type: :request do
     end
   end
 
+  describe "the status pill" do
+    before { sign_in admin }
+
+    it "links to the year's scoped allocations page from the management page" do
+      subscription = create(:dues_subscription, person: person)
+      term = dues_year(subscription: subscription)
+
+      get person_dues_subscriptions_path(person)
+
+      expect(response.body).to include(allocations_path(allocatable_sgid: term.to_sgid.to_s))
+    end
+
+    it "is not a link on the profile card, which stays read-only" do
+      subscription = create(:dues_subscription, person: person)
+      term = dues_year(subscription: subscription)
+
+      get person_path(person)
+
+      expect(response.body).to include(term.decorate.status_badge.label)
+      expect(response.body).not_to include(allocations_path(allocatable_sgid: term.to_sgid.to_s))
+    end
+  end
+
   describe "the New subscription affordance" do
     before { sign_in admin }
 

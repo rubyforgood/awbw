@@ -8,6 +8,7 @@ class DuesRegistration < ApplicationRecord
   has_many :payments, through: :allocations, source: :source, source_type: "Payment"
 
   delegate :person, to: :dues_subscription
+  alias_method :registrant, :person
 
   scope :active_on, ->(date = Date.current) { where(start_date: ..date, end_date: date..) }
   scope :expiring_between, ->(from, to) { where(end_date: from..to) }

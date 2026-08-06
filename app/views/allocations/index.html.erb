@@ -85,10 +85,10 @@
                  icon: "fa-solid fa-money-bill-transfer",
                  color: :payments,
                  event: (@allocatable.event if @allocatable.respond_to?(:event)),
-                 person: (@allocatable.registrant if @allocatable.respond_to?(:registrant)) %>
+                 person: @allocatable.registrant %>
     <% end %>
 
-    <% if @allocatable.is_a?(EventRegistration) || @allocatable.is_a?(ContinuingEducationRegistration) %>
+    <% if @allocatable.is_a?(Registerable) %>
       <div id="payment-form" class="flex flex-wrap justify-center gap-2 mb-4">
         <%= button_to allocation_form_payments_path(type: "CashPayment", allocatable_sgid: params[:allocatable_sgid]),
             class: "btn btn-primary-outline inline-flex items-center gap-1.5" do %>
@@ -101,13 +101,6 @@
           <i class="fa-solid fa-plus text-xs"></i>
           Add check payment
         <% end %>
-
-        <%# Credit card payments are not wired up yet — disabled placeholder. %>
-        <button type="button" disabled
-            class="btn btn-primary-outline inline-flex items-center gap-1.5 cursor-not-allowed opacity-50">
-          <i class="fa-solid fa-plus text-xs"></i>
-          Add a credit card payment (TBD)
-        </button>
 
         <%= button_to allocation_form_discounts_path(allocatable_sgid: params[:allocatable_sgid]),
             class: "btn btn-secondary-outline inline-flex items-center gap-1.5" do %>

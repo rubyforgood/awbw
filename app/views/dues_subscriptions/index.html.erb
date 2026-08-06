@@ -60,7 +60,7 @@
           <% else %>
             <ul class="space-y-2">
               <% subscription.dues_registrations.each do |year| %>
-                <%= render "dues_registrations/year_row", year: year, editable: true %>
+                <%= render "dues_registrations/year_row", year: year, editable: true, linked: true %>
               <% end %>
             </ul>
           <% end %>

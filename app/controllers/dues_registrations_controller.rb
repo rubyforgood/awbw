@@ -1,6 +1,6 @@
 class DuesRegistrationsController < ApplicationController
   before_action :set_dues_subscription, only: [ :new, :create ]
-  before_action :set_dues_registration, only: [ :edit, :update ]
+  before_action :set_dues_registration, only: [ :show, :edit, :update ]
 
   def index
     authorize!
@@ -30,6 +30,11 @@ class DuesRegistrationsController < ApplicationController
     else
       render :new, status: :unprocessable_content
     end
+  end
+
+  def show
+    authorize! @dues_registration
+    redirect_to person_dues_subscriptions_path(@dues_registration.registrant), status: :see_other
   end
 
   def edit
