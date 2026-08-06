@@ -207,9 +207,9 @@ RSpec.describe EventParticipationReport do
       expect(report.years.last.in_progress).to be(false)
     end
 
-    it "features the current year by default, with the next older year as prior" do
-      expect(report.featured_year.year).to eq(2026)
-      expect(report.prior_year.year).to eq(2025)
+    it "aggregates all events when no year is featured (all-time), with no prior delta" do
+      expect(report.featured_year.year).to be_nil
+      expect(report.prior_year).to be_nil
     end
 
     it "features an explicit year when given" do

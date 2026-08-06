@@ -85,7 +85,9 @@ class EventRevenueReport
   def initialize(events, current_year: Date.current.year, featured_year: nil)
     @events = events
     @current_year = current_year
-    @featured_year_value = featured_year || current_year
+    # nil means no specific year is featured (all-time): the headline aggregates
+    # every event rather than collapsing to the current year.
+    @featured_year_value = featured_year
   end
 
   def rows
@@ -108,11 +110,19 @@ class EventRevenueReport
       .sort_by { |group| [ group.year ? 0 : 1, -(group.year || 0) ] }
   end
 
-  # The year whose figures lead the KPI strip: the year navigated from (the event
-  # clicked) or the current year. Falls back to the most recent year present when
-  # that year has no events.
+  # The group whose figures lead the KPI strip: the year navigated from (the event
+  # clicked), falling back to the most recent year present. When no year is
+  # featured (all-time), an aggregate of every event so the headline isn't
+  # year-scoped.
   def featured_year
+    return all_events_group if @featured_year_value.nil?
     years_by_value[@featured_year_value] || years.first
+  end
+
+  # A single group spanning every event, under a nil year so the headline reads
+  # "All events". Used as the all-time headline.
+  def all_events_group
+    @all_events_group ||= YearGroup.new(year: nil, rows: rows, in_progress: false)
   end
 
   # The most recent year-group strictly older than the featured one, for a

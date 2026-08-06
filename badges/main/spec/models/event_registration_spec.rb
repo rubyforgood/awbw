@@ -322,6 +322,31 @@ RSpec.describe EventRegistration, type: :model do
       end
     end
 
+    describe ".funder" do
+      let(:funded_reg) { create(:event_registration, event: event) }
+
+      before do
+        funded = create(:scholarship, recipient: funded_reg.registrant, grant: create(:grant), amount_cents: 1000)
+        create(:allocation, source: funded, allocatable: funded_reg, amount: 1000)
+      end
+
+      it "maps 'awbw' to recipients of grant-less (org-subsidized) scholarships" do
+        results = EventRegistration.funder("awbw")
+        expect(results).to include(scholarship_reg, incomplete_scholarship_reg)
+        expect(results).not_to include(funded_reg, paid_reg, unpaid_reg)
+      end
+
+      it "maps 'donor' to recipients of grant-funded scholarships" do
+        results = EventRegistration.funder("donor")
+        expect(results).to include(funded_reg)
+        expect(results).not_to include(scholarship_reg, incomplete_scholarship_reg, paid_reg, unpaid_reg)
+      end
+
+      it "returns an unfiltered relation for unknown values" do
+        expect(EventRegistration.funder("bogus")).to include(funded_reg, scholarship_reg, paid_reg, unpaid_reg)
+      end
+    end
+
     describe ".ce_status" do
       let(:ce_cost) { 15_000 }
       # Known license, fully paid (certificate not yet issued).

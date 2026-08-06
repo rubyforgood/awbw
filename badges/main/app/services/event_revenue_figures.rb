@@ -43,6 +43,16 @@ class EventRevenueFigures
 
   private
 
+  # A grant counts as external funding only when it exists and the org didn't
+  # donate it to itself (AWBW) — matching EventDashboard#funded_scholarships.
+  def external_grant?(grant_id)
+    grant_id.present? && !awbw_grant_ids.include?(grant_id)
+  end
+
+  def awbw_grant_ids
+    @awbw_grant_ids ||= Grant.where(donor: Organization.awbw).ids.to_set
+  end
+
   def figures_by_event_id
     @figures_by_event_id ||= @events.to_h { |event| [ event.id, build(event) ] }
   end
@@ -56,8 +66,8 @@ class EventRevenueFigures
     Figures.new(
       registration_payments_cents: registration_ids.sum { |id| registration_allocations[[ id, "Payment" ]].to_i },
       registration_outstanding_cents: registration_ids.sum { |id| [ cost_cents - registration_allocated_total[id], 0 ].max },
-      funded_scholarship_cents: scholarships.sum { |grant_id, amount_cents| grant_id ? amount_cents : 0 },
-      unfunded_scholarship_cents: scholarships.sum { |grant_id, amount_cents| grant_id ? 0 : amount_cents },
+      funded_scholarship_cents: scholarships.sum { |grant_id, amount_cents| external_grant?(grant_id) ? amount_cents : 0 },
+      unfunded_scholarship_cents: scholarships.sum { |grant_id, amount_cents| external_grant?(grant_id) ? 0 : amount_cents },
       discount_cents: registration_ids.sum { |id| registration_allocations[[ id, "Discount" ]].to_i } +
         ce_rows.sum { |ce_id, _cost| ce_allocations[[ ce_id, "Discount" ]].to_i },
       ce_paid_cents: ce_rows.sum { |ce_id, _cost| ce_allocations[[ ce_id, "Payment" ]].to_i },

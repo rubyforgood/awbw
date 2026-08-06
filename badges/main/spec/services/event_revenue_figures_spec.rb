@@ -90,6 +90,9 @@ RSpec.describe EventRevenueFigures do
       events.each { |e| loader.for(e) }
     end
 
-    expect(queries).to eq(5)
+    # 5 batch component queries + 2 constant queries that classify AWBW-donated
+    # grants as subsidy (the AWBW org lookup and its grant ids), regardless of
+    # how many events are loaded.
+    expect(queries).to eq(7)
   end
 end

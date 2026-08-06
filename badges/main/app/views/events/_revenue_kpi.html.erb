@@ -1,7 +1,13 @@
 <% note = local_assigns[:note] %>
 <% card_class = local_assigns.fetch(:card_class, "border-gray-200 bg-white") %>
-<div class="rounded-xl border <%= card_class %> p-4">
-  <div class="text-xs font-semibold uppercase tracking-wide text-gray-500"><%= label %></div>
+<% href = local_assigns[:href] %>
+<% tag = href ? :a : :div %>
+<%= content_tag tag, href: href,
+      class: class_names("block rounded-xl border p-4", card_class, "relative transition-shadow hover:shadow-md" => href.present?) do %>
+  <% if href %>
+    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 absolute top-2.5 right-2.5"></i>
+  <% end %>
+  <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 <%= class_names("pr-4" => href.present?) %>"><%= label %></div>
   <div class="mt-1 text-2xl font-bold tabular-nums <%= value_class %>"><%= value %></div>
   <% if note %>
     <div class="text-xs italic text-gray-400 whitespace-nowrap">(<%= note %>)</div>
@@ -10,4 +16,4 @@
   <% if delta %>
     <div class="mt-1 flex items-center gap-1.5"><%= delta %><span class="text-xs text-gray-400">vs <%= prior_year %></span></div>
   <% end %>
-</div>
+<% end %>

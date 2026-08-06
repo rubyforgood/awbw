@@ -1,0 +1,8 @@
+<%# Shared scholarship-report filter controls: time period, specific training,
+    abbreviation search, and funder. Rendered inside a GET form on both the
+    events scholarship report and the /scholarships index. `event_all_label`
+    overrides the Event dropdown's blank option. %>
+<%= render "events/time_period_filter" %>
+<%= render "events/event_filter", all_label: local_assigns.fetch(:event_all_label, "All trainings") %>
+<%= render "events/event_search_filter" %>
+<%= render "events/funder_filter" %>

@@ -1,0 +1,48 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<%# Opt out of the layout's max-w-7xl cap to match the wider event manage pages. %>
+<% content_for(:full_width, true) %>
+
+<div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8 py-6">
+  <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
+    <div class="mb-6">
+      <% if params[:return_to] == "dashboard" && params[:event_id].present? %>
+        <%= link_to "← Dashboard", dashboard_event_path(params[:event_id]), class: "text-sm text-gray-500 hover:text-gray-700" %>
+      <% else %>
+        <%= link_to "← Events statistics", statistics_events_path(report_to_statistics_params), class: "text-sm text-gray-500 hover:text-gray-700" %>
+      <% end %>
+    </div>
+
+    <div class="mb-6">
+      <h1 class="text-2xl font-semibold text-gray-900">Events scholarships</h1>
+      <p class="text-gray-600 mt-1">
+        Scholarship dollars and awards (funded vs unfunded) per facilitator training, by year, with trainees who attended.
+      </p>
+    </div>
+
+    <%# Ahoy-style filters — time period, specific training, and abbreviation
+        search — each auto-submitting a GET form so the report reshapes on change. %>
+    <%= form_with url: scholarships_events_path, method: :get, local: true,
+          class: "flex flex-wrap items-end gap-4 mb-8" do %>
+      <%= hidden_field_tag :return_to, params[:return_to] %>
+      <%= hidden_field_tag :view, params[:view] %>
+      <%= render "report_filters", event_all_label: "All trainings" %>
+    <% end %>
+
+    <% if @report.any? %>
+      <%= render "scholarship_kpis", report: @report %>
+
+      <%= render "scholarships_report", report: @report %>
+
+      <p class="mt-6 text-xs text-gray-500">
+        <span class="font-medium">Funded</span> = backed by an external grant.
+        <span class="font-medium">Unfunded</span> = no grant, or a grant A Window Between Worlds funded (org subsidy).
+        <br>
+        <span class="font-medium">Attended</span> counts all trainees whose registration is marked attended, including scholarship recipients and people who paid in full.
+      </p>
+    <% else %>
+      <div class="text-center py-12 text-gray-500">
+        No facilitator trainings match these filters yet.
+      </div>
+    <% end %>
+  </div>
+</div>

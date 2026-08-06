@@ -1,0 +1,15 @@
+<%# Funder filter shared by the scholarship report forms: a remote-select over
+    people and organizations (grant donors), bound to the signed global id in
+    `funder_sgid`. Seeded with just the current funder's option so the value
+    shows without preloading everyone; the rest arrive via the remote search.
+    Submits the form on change, matching the sibling selects. %>
+<% funder_label = @filter_funder&.compound_search_label %>
+<div class="flex flex-col gap-1">
+  <label class="text-xs font-medium text-gray-600" for="funder_sgid">Funder</label>
+  <%= select_tag :funder_sgid,
+        options_for_select(funder_label ? [ [ funder_label[:label], funder_label[:id] ] ] : [], funder_label&.dig(:id)),
+        include_blank: "All funders",
+        class: "min-w-[13rem] max-w-[16rem] bg-white px-3 py-2 rounded-md border-gray-300 shadow-sm text-sm text-gray-700",
+        data: { controller: "remote-select", remote_select_model_value: "person_or_organization" },
+        onchange: "this.form.requestSubmit()" %>
+</div>

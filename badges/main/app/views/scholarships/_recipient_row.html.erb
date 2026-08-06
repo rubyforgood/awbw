@@ -1,11 +1,13 @@
 <% scholarship = scholarship.decorate %>
-<tr class="hover:bg-gray-50">
+<%# The whole row links to the scholarship edit page with no JS: the row is the
+    positioned ancestor and the recipient link's stretched ::before covers it, so
+    a click anywhere in the row follows that one (screen-reader-friendly) link. %>
+<tr class="relative hover:bg-fuchsia-50">
   <td class="px-4 py-2 whitespace-nowrap text-sm">
-    <%= link_to scholarship.recipient_name, edit_scholarship_path(scholarship), class: "font-medium text-blue-700 hover:text-blue-900 hover:underline" %>
+    <%= link_to scholarship.recipient_name, edit_scholarship_path(scholarship), class: "font-medium text-blue-700 hover:text-blue-900 hover:underline after:absolute after:inset-0 after:content-['']" %>
   </td>
   <td class="px-4 py-2 text-sm text-gray-900"><%= scholarship.program_name %></td>
   <td class="px-4 py-2 text-sm text-gray-600 whitespace-nowrap"><%= scholarship.program_location %></td>
-  <td class="px-4 py-2 text-sm text-gray-600 whitespace-nowrap"><%= scholarship.training_label %></td>
   <td class="px-4 py-2 text-center text-sm">
     <% if scholarship.program_status == "—" %>
       <span class="text-gray-400">—</span>
@@ -13,6 +15,7 @@
       <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium <%= scholarship.program_status_classes %>"><%= scholarship.program_status %></span>
     <% end %>
   </td>
+  <td class="px-4 py-2 text-sm text-gray-600 whitespace-nowrap"><%= scholarship.training_label %></td>
   <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right tabular-nums"><%= scholarship.amount %></td>
   <td class="px-4 py-2 whitespace-nowrap text-sm text-center">
     <% if scholarship.tasks_completed? %>
