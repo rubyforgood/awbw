@@ -25,6 +25,39 @@ module EventsHelper
     registrants_event_path(event_or_id, anchor: registrant_row_id(registration_id), highlight: registration_id)
   end
 
+  # The scholarships report's filter/toggle state, carried through a drill-in so
+  # its eyebrow can rebuild the exact view (period, event type/id, search, funder,
+  # split/combined layout, and the report's own origin) the user came from.
+  REPORT_FILTER_KEYS = %i[ time_period event_type event_id search funder_sgid view return_to ].freeze
+
+  # Stable anchor id for a training's row on the scholarships report, so the
+  # registrants eyebrow can scroll to and highlight the row drilled in from.
+  def training_report_row_id(event_or_id)
+    id = event_or_id.respond_to?(:id) ? event_or_id.id : event_or_id
+    "training-row-#{id}"
+  end
+
+  # Forward: from a scholarships report row into that training's *attended*
+  # registrants, stamped so the roster's eyebrow returns to the exact row
+  # (highlight + anchor) with the report's filters/toggle restored.
+  def attended_registrants_path(event)
+    registrants_event_path(event,
+      attendance_status: "attended",
+      return_to: "scholarships",
+      return_highlight: event.id,
+      return_anchor: training_report_row_id(event),
+      report_filters: params.permit(*REPORT_FILTER_KEYS).to_h.compact_blank)
+  end
+
+  # Back: the registrants eyebrow's path to the scholarships report, restoring the
+  # carried filters/toggle and highlighting the row the user drilled in from.
+  def scholarships_report_return_path
+    filters = params.fetch(:report_filters, ActionController::Parameters.new).permit(*REPORT_FILTER_KEYS)
+    scholarships_events_path(**filters.to_h.symbolize_keys,
+      highlight: params[:return_highlight].presence,
+      anchor: params[:return_anchor].presence)
+  end
+
   # Stamp a registrants-page link reached from the background dashboard with the
   # context its eyebrow needs to send the user back to the exact section they
   # drilled in from: return_to marks the origin page, return_anchor the section id

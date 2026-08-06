@@ -1,7 +1,8 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<%# Opt out of the layout's max-w-7xl cap to match the wider event manage pages. %>
 <% content_for(:full_width, true) %>
 
-<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+<div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8 py-6">
   <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
     <div class="mb-6">
       <% if params[:return_to] == "events" %>
@@ -34,13 +35,10 @@
       <%= render "event_filter" %>
     <% end %>
 
-    <div class="flex flex-col md:flex-row gap-6">
-      <div class="flex-1 min-w-0">
-        <%= render "events/revenue_summary", report: @revenue_report, period: @revenue_report.period_scope(@period) %>
-      </div>
-      <div class="flex-1 min-w-0">
-        <%= render "events/participation_summary", report: @participation_report, period: @participation_report.period_scope(@period) %>
-      </div>
+    <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <%= render "events/revenue_summary", report: @revenue_report, period: @revenue_report.period_scope(@period) %>
+      <%= render "events/participation_summary", report: @participation_report, period: @participation_report.period_scope(@period) %>
+      <%= render "events/scholarship_summary", report: @scholarship_report, period: @scholarship_report.period_scope(@period) %>
     </div>
   </div>
 </div>

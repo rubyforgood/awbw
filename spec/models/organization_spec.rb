@@ -364,4 +364,19 @@ RSpec.describe Organization, "scholarship index helpers" do
       expect(Organization.program_statuses_by_id([ org.id ])).to eq(org.id => :new)
     end
   end
+
+  describe ".awbw" do
+    it "finds the org named by ORGANIZATION_NAME" do
+      awbw = create(:organization, name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))
+      create(:organization, name: "Some Partner Org")
+
+      expect(Organization.awbw).to eq(awbw)
+    end
+
+    it "is nil when no organization matches" do
+      create(:organization, name: "Some Partner Org")
+
+      expect(Organization.awbw).to be_nil
+    end
+  end
 end

@@ -19,6 +19,29 @@ class Scholarship < ApplicationRecord
   scope :completed, -> { where(tasks_completed: true) }
   scope :agreement_signed, -> { where.not(agreement_signed_at: nil) }
 
+  # Scholarships from grants a given donor (Person/Organization) gave — the
+  # "funder" filter. A blank donor matches nothing.
+  scope :from_funder, ->(donor) { where(grant_id: Grant.where(donor: donor).select(:id)) }
+
+  # Scholarships awarded at the given events, via the allocation → event
+  # registration chain (a scholarship's allocation is on an EventRegistration).
+  scope :for_events, ->(event_ids) {
+    registration_ids = EventRegistration.where(event_id: event_ids).select(:id)
+    source_ids = Allocation
+      .where(allocatable_type: "EventRegistration", allocatable_id: registration_ids, source_type: "Scholarship")
+      .select(:source_id)
+    where(id: source_ids)
+  }
+
+  # Ids of events this relation's scholarships were awarded at — for narrowing an
+  # event report to trainings a funder actually scholarshipped.
+  def self.event_ids
+    registration_ids = Allocation
+      .where(allocatable_type: "EventRegistration", source_type: "Scholarship", source_id: all.select(:id))
+      .select(:allocatable_id)
+    EventRegistration.where(id: registration_ids).distinct.pluck(:event_id)
+  end
+
   # The agreement is signed when a signed-at timestamp is present — a single
   # source of truth. `agreement_signed` reads/writes as a virtual boolean so the
   # admin form checkbox and strong params keep working, stamping or clearing the

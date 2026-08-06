@@ -329,6 +329,13 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(revenue_events_path, participation_events_path)
       end
 
+      it "shows the scholarship summary card linking to its full report" do
+        sign_in admin
+        get statistics_events_path
+        expect(response.body).to include("Scholarships")
+        expect(response.body).to include(scholarships_events_path)
+      end
+
       it "carries the active filters into the full report links" do
         sign_in admin
         get statistics_events_path(period: "all_time", event_type: "trainings")
@@ -362,6 +369,70 @@ RSpec.describe "Events", type: :request do
       it "redirects" do
         sign_in user
         get statistics_events_path
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  describe "GET /scholarships" do
+    let!(:training) { create(:event, title: "TAC 261", abbreviation: "TAC261", facilitator_training: true, cost_cents: 10_000, start_date: Date.new(2026, 5, 1)) }
+    let!(:on_demand) { create(:event, title: "Self-paced training", abbreviation: "OND100", facilitator_training: true, on_demand: true, start_date: Date.new(2026, 6, 1)) }
+    let!(:webinar) { create(:event, title: "Paid webinar", facilitator_training: false, cost_cents: 5_000, start_date: Date.new(2026, 5, 1)) }
+
+    context "as admin" do
+      it "renders the report with only facilitator trainings" do
+        sign_in admin
+        get scholarships_events_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Events scholarships")
+        expect(response.body).to include("$ of scholarships", "# of scholarships", "Attended breakdown")
+        expect(response.body).to include("TAC 261", "Self-paced training")
+        expect(response.body).not_to include("Paid webinar")
+      end
+
+      it "renders the combined-cell layout when the view toggle is set" do
+        sign_in admin
+        get scholarships_events_path(view: "combined")
+        # Combined view folds the two count/$ column groups into one; the split
+        # view's separate headers are gone.
+        expect(response.body).to include("Events scholarships")
+        expect(response.body).not_to include("# of scholarships", "$ of scholarships")
+      end
+
+      it "narrows to trainings whose abbreviation matches the search" do
+        sign_in admin
+        get scholarships_events_path(search: "TAC")
+        # Abbreviations head the report columns; the excluded training's is absent
+        # (its title still appears in the always-full Event dropdown).
+        expect(response.body).to include("TAC261")
+        expect(response.body).not_to include("OND100")
+      end
+
+      it "narrows to trainings whose title matches the search" do
+        sign_in admin
+        get scholarships_events_path(search: "Self-paced")
+        expect(response.body).to include("OND100")
+        expect(response.body).not_to include("TAC261")
+      end
+
+      it "narrows to trainings a selected funder scholarshipped" do
+        funder = create(:organization, name: "Community Trust")
+        person = create(:person)
+        reg = create(:event_registration, event: training, registrant: person, status: "attended")
+        award = create(:scholarship, recipient: person, amount_cents: 4_000, grant: create(:grant, donor: funder))
+        create(:allocation, source: award, allocatable: reg, amount: 4_000)
+
+        sign_in admin
+        get scholarships_events_path(funder_sgid: funder.to_signed_global_id.to_s)
+        expect(response.body).to include("TAC261")
+        expect(response.body).not_to include("OND100")
+      end
+    end
+
+    context "as non-admin" do
+      it "redirects" do
+        sign_in user
+        get scholarships_events_path
         expect(response).to redirect_to(root_path)
       end
     end

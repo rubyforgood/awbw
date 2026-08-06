@@ -31,6 +31,7 @@
                       placeholder: "e.g. TOS205"
                     } %>
             <%= f.input :facilitator_training, as: :boolean, label: "Facilitator training event", wrapper_html: { class: "mb-0!" } %>
+            <%= f.input :on_demand, as: :boolean, label: "On-demand (self-paced)", hint: "Trainees count under \"On-demand\" instead of \"Training\" in the scholarships report", wrapper_html: { class: "mb-0!" } %>
           </div>
 
           <%= f.input :pre_title,

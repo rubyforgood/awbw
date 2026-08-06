@@ -24,6 +24,23 @@
       </div>
     </div>
 
+    <%# Shared scholarship-report filters: time period, training, abbreviation, funder. %>
+    <%= form_with url: scholarships_path, method: :get, local: true, class: "flex flex-wrap items-end gap-4 mb-6" do %>
+      <% if params[:recipient_id].present? %><%= hidden_field_tag :recipient_id, params[:recipient_id] %><% end %>
+      <%= render "events/report_filters" %>
+    <% end %>
+
+    <%# Scholarship summary for the trainings in scope, linking to the full report. %>
+    <% if @scholarship_report.any? %>
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Summary</h3>
+          <%= link_to "Full report →", scholarships_events_path, class: "text-sm font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+        </div>
+        <%= render "events/scholarship_kpis", report: @scholarship_report %>
+      </div>
+    <% end %>
+
     <%= render "shared/filtered_to", record: @recipient, clear_path: scholarships_path %>
     <% if @funder_groups.any? %>
       <div class="space-y-4">

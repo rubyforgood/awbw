@@ -40,6 +40,14 @@ class Organization < ApplicationRecord
   AGENCY_TYPE_OTHER = "Other"
   AGENCY_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", AGENCY_TYPE_OTHER ].freeze
 
+  # The organization that runs this app. A grant it donates is the org funding
+  # itself, so reports count it as subsidy (unfunded), not external funding.
+  # Identified by name via ORGANIZATION_NAME — the only marker available today.
+  # Not memoized: the record can be created mid-process (seeds, tests).
+  def self.awbw
+    find_by(name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))
+  end
+
   # Validations
   validates :logo,
             content_type: %w[image/png image/jpeg image/webp],

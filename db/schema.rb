@@ -573,6 +573,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_05_023506) do
     t.string "hint_times"
     t.boolean "inactive", default: true, null: false
     t.integer "location_id"
+    t.boolean "on_demand", default: false, null: false
     t.string "pre_date_text"
     t.string "pre_title"
     t.boolean "public_registration_enabled", default: false, null: false
