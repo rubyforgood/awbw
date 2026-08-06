@@ -23,9 +23,10 @@
               </span>
             </div>
             <% if person.author_credit_reconciled_at.present? %>
-              <span class="text-xs text-gray-500">
-                <i class="fa-solid fa-circle-info mr-1"></i>Reconciled <%= person.author_credit_reconciled_at.strftime("%b %-d, %Y") %>
-              </span>
+              <%= render "shared/badge",
+                    label: "Reconciled #{person.author_credit_reconciled_at.strftime('%b %-d, %Y')}",
+                    classes: "bg-gray-50 text-gray-600 border-gray-200",
+                    icon: "fa-solid fa-circle-info" %>
             <% end %>
           </div>
 
