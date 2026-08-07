@@ -69,6 +69,13 @@ RSpec.describe "Events attendance report", type: :request do
       expect(response.body).to include("#{edit_event_registration_path(registration)}?return_to=attendance")
     end
 
+    it "gives CE-report name links a path back to the report via the CE page eyebrow" do
+      log_ce_time!
+      get attendance_event_path(event, ce: "true")
+      expect(response.body).to include("#{registration_ce_path(registration.slug)}?return_to=attendance")
+      expect(response.body).not_to include("return_to=ce_registration")
+    end
+
     it "links session rows to the CE edit page on the CE report" do
       log_ce_time!
       ce = registration.continuing_education_registrations.first
