@@ -27,4 +27,25 @@ RSpec.describe Report do
     it { should validate_content_type_of(:form_file).allowing(Report::FORM_FILE_CONTENT_TYPES) }
     it { should validate_content_type_of(:form_file).rejecting("text/plain", "text/xml") }
   end
+
+  describe "#set_has_attachment" do
+    let(:report) { create(:report) }
+
+    it "sets has_attachment when an image is attached" do
+      report.image.attach(
+        io: Rails.root.join("spec/fixtures/files/sample.png").open,
+        filename: "sample.png",
+        content_type: "image/png"
+      )
+      report.save!
+
+      expect(report.has_attachment).to be(true)
+    end
+
+    it "leaves has_attachment false with no attachments" do
+      report.save!
+
+      expect(report.has_attachment).to be(false)
+    end
+  end
 end
