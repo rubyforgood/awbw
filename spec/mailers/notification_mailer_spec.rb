@@ -306,5 +306,22 @@ RSpec.describe NotificationMailer, type: :mailer do
         mail.deliver_now
       }.to change { ActionMailer::Base.deliveries.count }.by(1)
     end
+
+    context "when the user's person has an avatar attached" do
+      let(:user) { create(:user, :with_person, email: "user@example.com") }
+
+      before do
+        user.person.avatar.attach(
+          io: Rails.root.join("spec/fixtures/files/sample.png").open,
+          filename: "sample.png",
+          content_type: "image/png"
+        )
+      end
+
+      it "renders the avatar section" do
+        expect(mail.body.encoded).to match("requested a password reset")
+        expect(mail.body.encoded).to include("Avatar")
+      end
+    end
   end
 end
