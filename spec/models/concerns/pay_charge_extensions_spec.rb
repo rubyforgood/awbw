@@ -166,16 +166,16 @@ RSpec.describe PayChargeExtensions do
       expect(Refund.count).to eq(1)
     end
   end
-  describe "dues subscription charges" do
-    let(:dues_person) { create(:person) }
-    let(:dues_subscription) { create(:dues_subscription, person: dues_person) }
+  describe "membership subscription charges" do
+    let(:member) { create(:person) }
+    let(:membership) { create(:membership, person: member) }
 
-    def renewal_charge(period_start:, amount: Dues::ANNUAL_COST_CENTS, charge_id: "ch_dues")
+    def renewal_charge(period_start:, amount: Membership::ANNUAL_COST_CENTS, charge_id: "ch_membership")
       pay_subscription = Pay::Subscription.create!(
-        customer: pay_customer, name: "default", processor_id: "sub_dues",
-        processor_plan: "dues", status: "active", quantity: 1,
+        customer: pay_customer, name: "default", processor_id: "sub_membership",
+        processor_plan: "membership", status: "active", quantity: 1,
         current_period_start: period_start,
-        metadata: { "dues_subscription_id" => dues_subscription.id }
+        metadata: { "membership_id" => membership.id }
       )
 
       Pay::Charge.create!(
@@ -187,47 +187,47 @@ RSpec.describe PayChargeExtensions do
     end
 
     it "allocates the charge to the year covering the invoice period" do
-      term = create(:dues_registration, dues_subscription: dues_subscription,
-        cost_cents: Dues::ANNUAL_COST_CENTS,
+      invoice = create(:membership_invoice, membership: membership,
+        cost_cents: Membership::ANNUAL_COST_CENTS,
         start_date: Date.current, end_date: Date.current + 1.year - 1.day)
 
       renewal_charge(period_start: Date.current.to_time)
 
-      expect(term.reload).to be_paid_in_full
-      expect(term.allocations.sole.amount).to eq(Dues::ANNUAL_COST_CENTS)
+      expect(invoice.reload).to be_paid_in_full
+      expect(invoice.allocations.sole.amount).to eq(Membership::ANNUAL_COST_CENTS)
     end
 
     it "records the payment against the subscription's person, not the Stripe customer owner" do
-      create(:dues_registration, dues_subscription: dues_subscription,
+      create(:membership_invoice, membership: membership,
         start_date: Date.current, end_date: Date.current + 1.year - 1.day)
 
       renewal_charge(period_start: Date.current.to_time)
 
-      expect(ExternalProcessorPayment.find_by(stripe_charge_id: "ch_dues").person).to eq(dues_person)
+      expect(ExternalProcessorPayment.find_by(stripe_charge_id: "ch_membership").person).to eq(member)
     end
 
     it "creates the year when the renewal arrives before the nightly job made one" do
       next_period = Date.current + 2.years
 
       expect { renewal_charge(period_start: next_period.to_time) }
-        .to change { dues_subscription.dues_registrations.count }.by(1)
+        .to change { membership.membership_invoices.count }.by(1)
 
-      expect(dues_subscription.dues_registrations.last.start_date).to eq(next_period)
+      expect(membership.membership_invoices.last.start_date).to eq(next_period)
     end
 
     it "never allocates more than the year still owes" do
-      term = create(:dues_registration, dues_subscription: dues_subscription,
+      invoice = create(:membership_invoice, membership: membership,
         cost_cents: 1_000, start_date: Date.current, end_date: Date.current + 1.year - 1.day)
 
-      renewal_charge(period_start: Date.current.to_time, amount: Dues::ANNUAL_COST_CENTS)
+      renewal_charge(period_start: Date.current.to_time, amount: Membership::ANNUAL_COST_CENTS)
 
-      expect(term.allocations.sole.amount).to eq(1_000)
-      expect(ExternalProcessorPayment.find_by(stripe_charge_id: "ch_dues").amount_cents_remaining)
-        .to eq(Dues::ANNUAL_COST_CENTS - 1_000)
+      expect(invoice.allocations.sole.amount).to eq(1_000)
+      expect(ExternalProcessorPayment.find_by(stripe_charge_id: "ch_membership").amount_cents_remaining)
+        .to eq(Membership::ANNUAL_COST_CENTS - 1_000)
     end
 
-    it "leaves a subscription charge that is not dues unallocated" do
-      create(:dues_registration, dues_subscription: dues_subscription,
+    it "leaves a subscription charge that is not a membership unallocated" do
+      create(:membership_invoice, membership: membership,
         start_date: Date.current, end_date: Date.current + 1.year - 1.day)
       other = Pay::Subscription.create!(
         customer: pay_customer, name: "default", processor_id: "sub_other",
@@ -245,33 +245,33 @@ RSpec.describe PayChargeExtensions do
     end
 
     it "allocates a checkout charge from the invoice metadata before Pay links the subscription" do
-      term = create(:dues_registration, dues_subscription: dues_subscription,
-        cost_cents: Dues::ANNUAL_COST_CENTS,
+      invoice = create(:membership_invoice, membership: membership,
+        cost_cents: Membership::ANNUAL_COST_CENTS,
         start_date: Date.current, end_date: Date.current + 1.year - 1.day)
 
       period_start = Date.current.to_time.to_i
       Pay::Charge.create!(
         customer: pay_customer, processor_id: "ch_checkout",
-        amount: Dues::ANNUAL_COST_CENTS, amount_refunded: 0, currency: "usd",
+        amount: Membership::ANNUAL_COST_CENTS, amount_refunded: 0, currency: "usd",
         metadata: {},
         data: {
           "stripe_invoice" => {
             "period_start" => period_start,
             "parent" => {
               "type" => "subscription_details",
-              "subscription_details" => { "metadata" => { "dues_subscription_id" => dues_subscription.id.to_s } }
+              "subscription_details" => { "metadata" => { "membership_id" => membership.id.to_s } }
             }
           }
         },
-        object: { "id" => "ch_checkout", "amount" => Dues::ANNUAL_COST_CENTS,
+        object: { "id" => "ch_checkout", "amount" => Membership::ANNUAL_COST_CENTS,
                   "currency" => "usd", "paid" => true, "metadata" => {},
                   "refunds" => { "data" => [], "has_more" => false } }
       )
 
-      expect(term.reload).to be_paid_in_full
-      expect(term.allocations.sole.amount).to eq(Dues::ANNUAL_COST_CENTS)
+      expect(invoice.reload).to be_paid_in_full
+      expect(invoice.allocations.sole.amount).to eq(Membership::ANNUAL_COST_CENTS)
       expect(ExternalProcessorPayment.find_by(stripe_charge_id: "ch_checkout"))
-        .to have_attributes(external_origin: false, person: dues_person)
+        .to have_attributes(external_origin: false, person: member)
     end
   end
 end

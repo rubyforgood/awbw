@@ -109,10 +109,10 @@ class EventParticipationReport
   def years
     @years ||= rows
       .group_by(&:year)
-      .map do |year, year_rows|
+      .map do |year, invoice_rows|
         YearGroup.new(
           year: year,
-          rows: year_rows,
+          rows: invoice_rows,
           unique_people: unique_people_by_year.fetch(year, 0),
           in_progress: year == @current_year
         )

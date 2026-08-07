@@ -48,7 +48,7 @@ RSpec.describe StripeChargeSucceededProcessor do
     end
 
     it "does nothing when the charge belongs to a subscription" do
-      allow(stripe_charge).to receive(:subscription).and_return("sub_dues")
+      allow(stripe_charge).to receive(:subscription).and_return("sub_membership")
 
       expect { processor.call(event) }.not_to change(ExternalProcessorPayment, :count)
     end

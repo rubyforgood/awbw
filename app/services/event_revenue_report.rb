@@ -104,7 +104,7 @@ class EventRevenueReport
   def years
     @years ||= rows
       .group_by(&:year)
-      .map { |year, year_rows| YearGroup.new(year: year, rows: year_rows, in_progress: year == @current_year) }
+      .map { |year, invoice_rows| YearGroup.new(year: year, rows: invoice_rows, in_progress: year == @current_year) }
       .sort_by { |group| [ group.year ? 0 : 1, -(group.year || 0) ] }
   end
 

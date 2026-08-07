@@ -21,7 +21,7 @@ namespace :db do
       analytics
       payments
       scholarships
-      dues
+      membership
       bulk_payments
       legacy_form_identifiers
     ]
@@ -114,9 +114,9 @@ namespace :db do
       load Rails.root.join("db/seeds/dev/scholarships.rb")
     end
 
-    desc "Seed dues subscriptions and years covering every status (dev only)"
-    task dues: :environment do
-      load Rails.root.join("db/seeds/dev/dues.rb")
+    desc "Seed memberships and invoices covering every status (dev only)"
+    task membership: :environment do
+      load Rails.root.join("db/seeds/dev/membership.rb")
     end
 
     desc "Seed bulk payment demo submissions, payments, and allocations (dev only)"

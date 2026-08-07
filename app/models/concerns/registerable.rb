@@ -4,7 +4,7 @@ module Registerable
   # Includers must:
   #   - have an `allocations` association (as: :allocatable)
   #   - respond to `cost_cents` (EventRegistration delegates to event.cost_cents;
-  #     ContinuingEducationRegistration has its own column)
+  #     ContinuingEducationRegistration and MembershipInvoice have their own column)
   #   - respond to `registrant`
   #
 

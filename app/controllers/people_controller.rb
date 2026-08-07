@@ -30,17 +30,17 @@ class PeopleController < ApplicationController
     @person = Person.includes(:avatar_attachment, :contact_methods, :user,
                               categorizable_items: { category: :category_type }).find(params[:id]).decorate
     track_view(@person)
-    @dues_subscription = dues_subscription_for(@person)
-    @dues_autopay = allowed_to?(:own_dues?, @person) && @person.payment_processor.subscribed?
+    @membership = membership_for(@person)
+    @membership_autopay = allowed_to?(:own_membership?, @person) && @person.payment_processor.subscribed?
 
     if params[:checkout] == "success"
       flash[:notice] = "Thank you for your donation!"
     elsif params[:checkout] == "cancelled"
       flash[:alert] = "Donation was cancelled."
-    elsif params[:dues_checkout] == "success"
-      flash[:notice] = "Your annual dues are set up. Thank you!"
-    elsif params[:dues_checkout] == "cancelled"
-      flash[:alert] = "Dues setup was cancelled."
+    elsif params[:membership_checkout] == "success"
+      flash[:notice] = "Your annual membership is set up. Thank you!"
+    elsif params[:membership_checkout] == "cancelled"
+      flash[:alert] = "Membership setup was cancelled."
     end
 
     # Handle paginated sections for Turbo Frame requests
@@ -599,9 +599,9 @@ class PeopleController < ApplicationController
     )
   end
 
-  def dues_subscription_for(person)
-    return unless Dues.enabled? && allowed_to?(:show?, person)
+  def membership_for(person)
+    return unless Membership.enabled? && allowed_to?(:show?, person)
 
-    person.dues_subscriptions.includes(:dues_registrations).order(created_at: :desc).first&.decorate
+    person.memberships.includes(:membership_invoices).order(created_at: :desc).first&.decorate
   end
 end

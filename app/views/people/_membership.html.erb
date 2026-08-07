@@ -1,0 +1,27 @@
+<div class="admin-only bg-blue-100 border border-blue-200 rounded-lg shadow-sm">
+  <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3 border-b border-blue-200">
+    <h2 class="text-xl font-semibold text-gray-800">Membership</h2>
+    <%= link_to "Manage membership", person_memberships_path(person), class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <div class="section-content px-3 sm:px-4 py-4">
+    <% if membership.blank? %>
+      <p class="text-gray-500 italic px-3">No membership yet.</p>
+    <% else %>
+      <div class="px-3">
+        <div class="flex flex-wrap gap-x-6 gap-y-1 mb-3 text-sm">
+          <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= membership.cost_label %></span></span>
+          <span class="text-gray-600">Subscription: <span class="font-medium text-gray-800"><%= membership.status_label %></span></span>
+        </div>
+
+        <% if membership.current_invoice.blank? %>
+          <p class="text-gray-500 italic">No membership invoices yet.</p>
+        <% else %>
+          <ul>
+            <%= render "membership_invoices/invoice_row", invoice: membership.current_invoice %>
+          </ul>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -196,7 +196,7 @@ Rails.application.routes.draw do
       get :bio
     end
     resources :comments, only: [ :index, :create, :update ]
-    resources :dues_subscriptions, only: [ :index, :new, :create ]
+    resources :memberships, only: [ :index, :new, :create ]
   end
   resources :faqs
   resources :other_responses, only: [ :index, :update ] do
@@ -234,12 +234,12 @@ Rails.application.routes.draw do
     post :revert, on: :member
   end
 
-  resources :dues_subscriptions, only: [ :edit, :update ] do
-    resources :dues_registrations, only: [ :new, :create ]
+  resources :memberships, only: [ :edit, :update ] do
+    resources :membership_invoices, only: [ :new, :create ]
   end
 
-  resources :dues_registrations, only: [ :index, :show, :edit, :update ]
-  resources :dues_checkouts, only: [ :create ]
+  resources :membership_invoices, only: [ :index, :show, :edit, :update ]
+  resources :membership_checkouts, only: [ :create ]
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
