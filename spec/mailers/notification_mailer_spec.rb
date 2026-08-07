@@ -318,9 +318,9 @@ RSpec.describe NotificationMailer, type: :mailer do
         )
       end
 
-      it "renders the avatar section" do
+      it "renders without touching the avatar" do
         expect(mail.body.encoded).to match("requested a password reset")
-        expect(mail.body.encoded).to include("Avatar")
+        expect(mail.body.encoded).not_to include("Avatar")
       end
     end
   end
