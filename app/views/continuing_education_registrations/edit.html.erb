@@ -12,12 +12,12 @@
       <%# Admin jump to the registrant-facing CE callout (what the registrant sees /
           where they enter their own license). Opens in a new tab so the edit context
           is kept; matches the sky admin-link convention. %>
-      <%= link_to registration_ce_path(registration.slug, return_to: "ce_registration"), target: "_blank", rel: "noopener",
-            class: "inline-flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 transition" do %>
-        <i class="fa-solid fa-id-card text-[0.6rem]"></i>
-        Registrant's CE page
-        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-      <% end %>
+      <%= render "shared/badge",
+            label: "Registrant's CE page",
+            classes: "bg-sky-100 text-sky-700 border-sky-200",
+            icon: "fa-solid fa-id-card text-[0.6rem]",
+            href: registration_ce_path(registration.slug, return_to: "ce_registration"),
+            target: "_blank", rel: "noopener" %>
       <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
     </div>
   </div>
@@ -30,10 +30,56 @@
              person: registration.registrant %>
 
   <div class="space-y-6">
-    <%= form_with model: @ce_registration, url: continuing_education_registration_path(@ce_registration, return_to: params[:return_to].presence),
-          method: :patch, id: "ce_registration_form", data: { turbo: false } do |f| %>
+    <%= simple_form_for @ce_registration, url: continuing_education_registration_path(@ce_registration, return_to: params[:return_to].presence),
+          html: { id: "ce_registration_form", data: { turbo: false } } do |f| %>
       <%= render "details_section", f: f, license: license, ce_registration: @ce_registration, event: registration.event %>
       <%= render "payment_history", ce_registration: @ce_registration %>
+
+      <%# ---- Comments (saved with the CE registration, like the other forms) ---- %>
+      <section class="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="edit-toggle">
+        <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
+            <i class="fa-solid fa-comments"></i>
+          </span>
+          <h2 class="text-sm font-semibold text-gray-700">CE comments</h2>
+          <% if registration.registrant %>
+            <%= link_to all_comments_person_path(registration.registrant),
+                        class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
+                        target: "_blank", rel: "noopener" do %>
+              View all
+              <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+            <% end %>
+          <% end %>
+        </div>
+
+        <div class="space-y-4 p-4" data-controller="paginated-fields" data-paginated-fields-per-page-value="5">
+          <div id="comment-list" class="space-y-4">
+            <%= f.simple_fields_for :comments do |cf| %>
+              <%= render "comments/comment_fields", f: cf %>
+            <% end %>
+          </div>
+
+          <div data-paginated-fields-target="nav"></div>
+
+          <div class="flex items-center justify-between gap-2">
+            <%= link_to_add_association f, :comments,
+                  partial: "comments/comment_fields",
+                  data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
+                  class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
+              <i class="fa-solid fa-plus text-[0.6rem]"></i>
+              Add comment
+            <% end %>
+
+            <button type="button"
+                    class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
+                    data-action="edit-toggle#toggle">
+              <i class="fa-solid fa-pen text-[0.6rem]"></i>
+              <span data-edit-toggle-target="editLabel">Edit comments</span>
+              <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
+            </button>
+          </div>
+        </div>
+      </section>
     <% end %>
 
     <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">

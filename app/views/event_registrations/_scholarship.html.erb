@@ -52,26 +52,26 @@
         <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3">
           <%# Agreement first, then tasks — the recipient agrees before completing tasks. %>
           <% if scholarship.agreement_signed? %>
-            <span class="inline-flex items-center gap-1 rounded-full border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> px-2.5 py-0.5 text-xs font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
-              <i class="fa-solid fa-file-signature"></i>
-              Agreement signed
-            </span>
+            <%= render "shared/badge",
+                       label: "Agreement signed",
+                       classes: "#{DomainTheme.bg_class_for(:scholarships, intensity: 50)} #{DomainTheme.text_class_for(:scholarships, intensity: 700)} #{DomainTheme.border_class_for(:scholarships, intensity: 200)}",
+                       icon: "fa-solid fa-file-signature" %>
           <% else %>
-            <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-              <i class="fa-solid fa-file-signature"></i>
-              Agreement pending
-            </span>
+            <%= render "shared/badge",
+                       label: "Agreement pending",
+                       classes: "bg-amber-50 text-amber-700 border-amber-200",
+                       icon: "fa-solid fa-file-signature" %>
           <% end %>
           <% if scholarship.tasks_completed? %>
-            <span class="inline-flex items-center gap-1 rounded-full border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> px-2.5 py-0.5 text-xs font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
-              <i class="fa-solid fa-circle-check"></i>
-              Tasks completed
-            </span>
+            <%= render "shared/badge",
+                       label: "Tasks completed",
+                       classes: "#{DomainTheme.bg_class_for(:scholarships, intensity: 50)} #{DomainTheme.text_class_for(:scholarships, intensity: 700)} #{DomainTheme.border_class_for(:scholarships, intensity: 200)}",
+                       icon: "fa-solid fa-circle-check" %>
           <% else %>
-            <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-              <i class="fa-solid fa-clock"></i>
-              Tasks outstanding
-            </span>
+            <%= render "shared/badge",
+                       label: "Tasks outstanding",
+                       classes: "bg-amber-50 text-amber-700 border-amber-200",
+                       icon: "fa-solid fa-clock" %>
           <% end %>
         </div>
       </div>

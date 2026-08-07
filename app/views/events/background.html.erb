@@ -82,9 +82,10 @@
         <i class="fa-solid fa-users"></i>
       </span>
       <span class="min-w-0">
-        <%= link_to background_return_path(registrants_event_path(@event), "overview"), class: "block hover:underline leading-tight" do %>
+        <%= link_to background_return_path(registrants_event_path(@event), "overview"), class: "group/reg block hover:underline leading-tight" do %>
           <span class="text-xl font-bold text-gray-900 tabular-nums"><%= @dashboard.registrant_count %></span>
           <span class="text-xs text-gray-500">Registrants</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 opacity-0 group-hover/reg:opacity-100 transition-opacity"></i>
         <% end %>
         <span class="block text-xs text-gray-400 mt-0.5">
           <%= link_to recipients_event_path(@event), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.scholarship_recipient_count, "scholarship") %><% end %>
@@ -210,7 +211,9 @@
                     <% if statuses.any? %>
                       <span class="flex flex-wrap gap-1">
                         <% statuses.each do |status| %>
-                          <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= OrganizationDecorator.program_status_classes(status) %>"><%= status.to_s.titleize %></span>
+                          <%= render "shared/badge",
+                                label: status.to_s.titleize,
+                                classes: OrganizationDecorator.program_status_classes(status) %>
                         <% end %>
                       </span>
                     <% else %>
@@ -222,9 +225,9 @@
                   <%= mobile_label.("Location") %>
                   <div class="min-w-0 flex-1">
                     <% if location.present? %>
-                      <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= DomainTheme.bg_class_for(:addresses, intensity: 100) %> <%= DomainTheme.text_class_for(:addresses, intensity: 700) %> <%= DomainTheme.border_class_for(:addresses, intensity: 200) %>">
-                        <%= location %>
-                      </span>
+                      <%= render "shared/badge",
+                            label: location,
+                            classes: "bg-slate-100 text-slate-700 border-slate-200" %>
                     <% else %>
                       <span class="text-gray-300">—</span>
                     <% end %>

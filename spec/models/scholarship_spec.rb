@@ -141,4 +141,37 @@ RSpec.describe Scholarship, type: :model do
       expect(scholarship.reload.agreement_signed_at).to be_within(1.second).of(original)
     end
   end
+
+  describe "report filter scopes" do
+    let(:event) { create(:event, cost_cents: 50_000) }
+    let(:funder) { create(:organization, name: "Community Trust") }
+    let(:person1) { create(:person) }
+    let(:person2) { create(:person) }
+
+    let!(:from_funder) do
+      reg = create(:event_registration, event: event, registrant: person1, status: "attended")
+      scholarship = create(:scholarship, recipient: person1, amount_cents: 4_000, grant: create(:grant, donor: funder))
+      create(:allocation, source: scholarship, allocatable: reg, amount: 4_000)
+      scholarship
+    end
+
+    let!(:other) do
+      reg = create(:event_registration, event: create(:event, cost_cents: 50_000), registrant: person2, status: "attended")
+      scholarship = create(:scholarship, recipient: person2, amount_cents: 2_000, grant: create(:grant))
+      create(:allocation, source: scholarship, allocatable: reg, amount: 2_000)
+      scholarship
+    end
+
+    it ".from_funder returns only scholarships whose grant that donor gave" do
+      expect(Scholarship.from_funder(funder)).to contain_exactly(from_funder)
+    end
+
+    it ".for_events returns only scholarships awarded at the given events" do
+      expect(Scholarship.for_events([ event.id ])).to contain_exactly(from_funder)
+    end
+
+    it ".event_ids returns the events the scholarships were awarded at" do
+      expect(Scholarship.from_funder(funder).event_ids).to contain_exactly(event.id)
+    end
+  end
 end

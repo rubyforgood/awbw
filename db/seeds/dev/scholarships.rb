@@ -426,6 +426,64 @@ end
   end
 end
 
+# --- Prior-year facilitator trainings --------------------------------------
+# Every dev event above sits in the current year, so the events scholarship
+# report only ever shows a single year group. Seed a few past-year trainings —
+# each with attended trainees and a mix of funded/unfunded awards — so the
+# report's year grouping and the "All time" period have real multi-year data,
+# and "Registrants attended" exceeds the scholarship count (plain attendees on
+# top of recipients). Idempotent: keyed on each training's title.
+puts "Creating prior-year facilitator trainings with scholarships…"
+
+admin_user = User.find_by(email: "umberto.user@example.com")
+people_pool = Person.order(:id).to_a
+person_cursor = 0
+take_person = -> do
+  person = people_pool[person_cursor % people_pool.length]
+  person_cursor += 1
+  person
+end
+
+# [ title, abbreviation, start_date, cost_cents,
+#   [ [ award_cents, grant_funded ], … ] (each an attended recipient),
+#   plain_attendee_count (attended, no scholarship) ]
+prior_year_trainings = [
+  [ "Facilitator Training: Trauma-Informed Art (2024)", "TAC24", Date.new(2024, 4, 12), 30_000,
+    [ [ 30_000, true ], [ 15_000, true ], [ 12_000, false ] ], 4 ],
+  [ "Facilitator Training: Expressive Arts Intensive (2025)", "TAC25S", Date.new(2025, 3, 8), 32_500,
+    [ [ 32_500, true ], [ 20_000, false ], [ 10_000, false ] ], 5 ],
+  [ "Facilitator Training: Community Healing Cohort (2025)", "TAC25F", Date.new(2025, 10, 18), 35_000,
+    [ [ 35_000, true ], [ 17_500, true ] ], 3 ]
+]
+
+prior_year_trainings.each do |title, abbreviation, start_date, cost_cents, awards, plain_count|
+  event = Event.find_or_create_by!(title: title) do |e|
+    e.abbreviation = abbreviation
+    e.start_date = start_date
+    e.end_date = start_date + 1.day
+    e.cost_cents = cost_cents
+    e.facilitator_training = true
+    e.published = true
+    e.created_by = admin_user
+  end
+  event.update!(abbreviation: abbreviation, start_date: start_date, end_date: start_date + 1.day,
+                cost_cents: cost_cents, facilitator_training: true)
+
+  awards.each do |award_cents, grant_funded|
+    registration = EventRegistration.find_or_create_by!(event: event, registrant: take_person.()) do |reg|
+      reg.status = "attended"
+    end
+    registration.update!(status: "attended") unless registration.status == "attended"
+    award_scholarship.(registration, amount_cents: award_cents, tasks_completed: true, grant_funded: grant_funded)
+  end
+
+  plain_count.times do
+    EventRegistration.find_or_create_by!(event: event, registrant: take_person.()) do |reg|
+      reg.status = "attended"
+    end
+  end
+end
+
 # --- Standalone grant-funded scholarships ----------------------------------
 # Beyond the event-allocated awards above (which now draw from these grants too),
 # seed a few standalone grant awards — recipient + grant, no event allocation —

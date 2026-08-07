@@ -20,6 +20,15 @@ class ContinuingEducationRegistration < ApplicationRecord
 
   has_many :allocations, as: :allocatable, dependent: :destroy
   has_many :payments, through: :allocations, source: :source, source_type: "Payment"
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
+
+  # Virtual sub-fields for the edit form's license inputs. The controller reads
+  # them from params and routes them through #assign_license; declared here so the
+  # form builder can bind to them (SimpleForm reads the object when a field's
+  # value is nil, e.g. a blank expiry on a placeholder license).
+  attr_accessor :license_kind, :license_number, :license_issuing_state, :license_expires_on
 
   before_validation :default_from_event, on: :create
 

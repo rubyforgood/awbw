@@ -52,9 +52,10 @@
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             <% @summary.each do |label, data| %>
               <%= link_to polymorphic_path(label.to_s.classify.constantize), class: "block group" do %>
-                <div class="<%= DomainTheme.bg_class_for(label) %> border border-gray-200 rounded-xl p-5
+                <div class="<%= DomainTheme.bg_class_for(label) %> relative border border-gray-200 rounded-xl p-5
                 shadow-sm hover:shadow-md transition min-h-[120px]">
-                  <div class="text-xs font-semibold tracking-wide uppercase text-gray-500">
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 group-hover:text-blue-600 absolute top-3 right-3 transition-colors"></i>
+                  <div class="text-xs font-semibold tracking-wide uppercase text-gray-500 pr-4">
                     <%= label.to_s.humanize %>
                   </div>
 

@@ -91,7 +91,9 @@ class EventParticipationReport
   def initialize(events, current_year: Date.current.year, featured_year: nil)
     @events = events.to_a
     @current_year = current_year
-    @featured_year_value = featured_year || current_year
+    # nil means no specific year is featured (all-time): the headline aggregates
+    # every event rather than collapsing to the current year.
+    @featured_year_value = featured_year
   end
 
   def rows
@@ -126,10 +128,19 @@ class EventParticipationReport
     @unique_people ||= unique_attended_people
   end
 
-  # The year whose figures lead the KPI strip: the filtered/navigated-from year,
-  # else the current year, falling back to the most recent year present.
+  # The group whose figures lead the KPI strip: the filtered/navigated-from year,
+  # falling back to the most recent year present. When no year is featured
+  # (all-time), an aggregate of every event so the headline isn't year-scoped.
   def featured_year
+    return all_events_group if @featured_year_value.nil?
     years_by_value[@featured_year_value] || years.first
+  end
+
+  # A single group spanning every event, under a nil year so the headline reads
+  # "All events". unique_people is the distinct all-scope count (not a sum of
+  # year subtotals). Used as the all-time headline.
+  def all_events_group
+    @all_events_group ||= YearGroup.new(year: nil, rows: rows, unique_people: unique_people, in_progress: false)
   end
 
   # The most recent year-group strictly older than the featured one, for a

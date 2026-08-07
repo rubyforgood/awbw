@@ -96,6 +96,36 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).not_to include(existing_registration.registrant.name)
       end
 
+      it "filters registrations by payment status" do
+        paid_event = create(:event, cost_cents: 1000)
+        paid = create(:event_registration, event: paid_event)
+        create(:allocation, source: create(:payment, amount_cents: 1000, amount_cents_remaining: 1000),
+                            allocatable: paid, amount: 1000)
+        unpaid = create(:event_registration, event: paid_event)
+
+        get event_registrations_path(payment_status: "paid")
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include(paid.registrant.name)
+        expect(response.body).not_to include(unpaid.registrant.name)
+      end
+
+      it "filters registrations by funder (org-subsidized vs grant-funded)" do
+        org_subsidized = create(:event_registration)
+        unfunded = create(:scholarship, recipient: org_subsidized.registrant, amount_cents: 1000)
+        create(:allocation, source: unfunded, allocatable: org_subsidized, amount: 1000)
+        grant_funded = create(:event_registration)
+        funded = create(:scholarship, recipient: grant_funded.registrant, grant: create(:grant), amount_cents: 1000)
+        create(:allocation, source: funded, allocatable: grant_funded, amount: 1000)
+
+        get event_registrations_path(funder: "awbw")
+        expect(response.body).to include(org_subsidized.registrant.name)
+        expect(response.body).not_to include(grant_funded.registrant.name)
+
+        get event_registrations_path(funder: "donor")
+        expect(response.body).to include(grant_funded.registrant.name)
+        expect(response.body).not_to include(org_subsidized.registrant.name)
+      end
+
       it "exports CSV with headers and data only (no captions)" do
         get event_registrations_path, params: { format: :csv }
 

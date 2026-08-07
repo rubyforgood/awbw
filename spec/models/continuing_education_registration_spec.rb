@@ -1,11 +1,13 @@
 require "rails_helper"
 
 RSpec.describe ContinuingEducationRegistration, type: :model do
-  describe "#registrant" do
-    it "is its event registration's registrant" do
-      ce = create(:continuing_education_registration)
+  describe "comments" do
+    it "is commentable and destroys its comments when removed" do
+      ce_reg = create(:continuing_education_registration)
+      comment = create(:comment, commentable: ce_reg)
 
-      expect(ce.registrant).to eq(ce.event_registration.registrant)
+      expect(ce_reg.comments).to include(comment)
+      expect { ce_reg.destroy }.to change(Comment, :count).by(-1)
     end
   end
 

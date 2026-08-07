@@ -17,6 +17,8 @@ class CommentsController < ApplicationController
     @comment.updated_by = current_user
 
     if @comment.save
+      @created_comment = @comment
+      setup_aggregated_context if aggregated?
       @comment = @commentable.comments.build
       @comments = @commentable.comments.newest_first.paginate(page: 1, per_page: 10)
       respond_to do |format|
@@ -36,6 +38,7 @@ class CommentsController < ApplicationController
     authorize! @comment
     @comment.updated_by = current_user
     @comment.update(comment_params)
+    setup_aggregated_context if aggregated?
 
     respond_to do |format|
       format.turbo_stream
@@ -45,8 +48,28 @@ class CommentsController < ApplicationController
 
   private
 
+  # The aggregated person-comments page posts from a composer that spans many
+  # commentables, so it flags itself and names the person whose feed to refresh.
+  # `for_person_id` (not `person_id`) is used deliberately so set_commentable
+  # still resolves the real commentable from the route rather than the person.
+  def aggregated?
+    params[:aggregated].present?
+  end
+
+  def setup_aggregated_context
+    return if params[:for_person_id].blank?
+    @aggregator_person = Person.find(params[:for_person_id]).decorate
+    @comment_targets = helpers.person_comment_targets(@aggregator_person)
+  end
+
   def set_commentable
-    if params[:person_id]
+    # The aggregated composer files against many records, so it submits the
+    # chosen record as a signed GlobalID rather than a per-target route. Signed,
+    # so the type/id can't be tampered with.
+    if params[:commentable_sgid].present?
+      @commentable = GlobalID::Locator.locate_signed(params[:commentable_sgid])
+      redirect_to(root_path, alert: "Invalid commentable resource") unless @commentable
+    elsif params[:person_id]
       @commentable = Person.find(params[:person_id])
     elsif params[:user_id]
       @commentable = User.find(params[:user_id])
@@ -54,6 +77,12 @@ class CommentsController < ApplicationController
       @commentable = Organization.find(params[:organization_id])
     elsif params[:event_registration_id]
       @commentable = EventRegistration.find(params[:event_registration_id])
+    elsif params[:scholarship_id]
+      @commentable = Scholarship.find(params[:scholarship_id])
+    elsif params[:continuing_education_registration_id]
+      @commentable = ContinuingEducationRegistration.find(params[:continuing_education_registration_id])
+    elsif params[:topic_subscription_id]
+      @commentable = TopicSubscription.find(params[:topic_subscription_id])
     elsif params[:workshop_id]
       @commentable = Workshop.find(params[:workshop_id])
     else

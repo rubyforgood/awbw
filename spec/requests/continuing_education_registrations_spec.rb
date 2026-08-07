@@ -39,6 +39,24 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
         issuing_state: "CA", expires_on: Date.new(2027, 1, 31))
     end
 
+    it "renders a comments box on the edit page" do
+      get edit_continuing_education_registration_path(ce_registration)
+      expect(response.body).to include("CE comments")
+      expect(response.body).to include("comment-list")
+    end
+
+    it "saves a comment added on the CE form (with the record)" do
+      expect {
+        patch continuing_education_registration_path(ce_registration),
+              params: { continuing_education_registration: {
+                hours: "6", cost_dollars: "120", license_kind: "LMFT", license_number: "555",
+                comments_attributes: { "0" => { body: "Verified license by phone" } }
+              } }
+      }.to change(ce_registration.comments, :count).by(1)
+
+      expect(ce_registration.comments.last.body).to eq("Verified license by phone")
+    end
+
     it "edits the same license in place when correcting a typo (no new record)" do
       license = create(:professional_license, person: registration.registrant, kind: "LCSW", number: "11223")
       ce_registration.update!(professional_license: license)

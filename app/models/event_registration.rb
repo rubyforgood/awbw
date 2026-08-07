@@ -140,6 +140,39 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
+  scope :with_funded_scholarship, -> {
+    where(<<~SQL.squish)
+      EXISTS (
+        SELECT 1 FROM allocations
+        INNER JOIN scholarships ON scholarships.id = allocations.source_id
+        WHERE allocations.allocatable_type = 'EventRegistration'
+          AND allocations.allocatable_id = event_registrations.id
+          AND allocations.source_type = 'Scholarship'
+          AND scholarships.grant_id IS NOT NULL
+      )
+    SQL
+  }
+  scope :with_unfunded_scholarship, -> {
+    where(<<~SQL.squish)
+      EXISTS (
+        SELECT 1 FROM allocations
+        INNER JOIN scholarships ON scholarships.id = allocations.source_id
+        WHERE allocations.allocatable_type = 'EventRegistration'
+          AND allocations.allocatable_id = event_registrations.id
+          AND allocations.source_type = 'Scholarship'
+          AND scholarships.grant_id IS NULL
+      )
+    SQL
+  }
+  # Funder = the grant's donor. "awbw" = org-subsidized (a scholarship drawn from
+  # no grant); "donor" = grant-funded (drawn from an external donor's grant).
+  scope :funder, ->(value) {
+    case value
+    when "awbw" then with_unfunded_scholarship
+    when "donor" then with_funded_scholarship
+    else all
+    end
+  }
   scope :paid_in_full, -> {
     where(<<~SQL.squish)
       COALESCE((
@@ -297,6 +330,15 @@ class EventRegistration < ApplicationRecord
     end
     if params[:event_year].present?
       registrations = registrations.in_event_year(params[:event_year])
+    end
+    if params[:payment_status].present?
+      registrations = registrations.payment_status(params[:payment_status])
+    end
+    if params[:scholarship].present?
+      registrations = registrations.scholarship_status(params[:scholarship])
+    end
+    if params[:funder].present?
+      registrations = registrations.funder(params[:funder])
     end
     registrations
   end

@@ -394,6 +394,30 @@ RSpec.describe "GET /scholarships (index)", type: :request do
       expect(response.body).to include("Jane Doe")
     end
 
+    it "renders the shared report filters and the scholarship summary" do
+      training = create(:event, facilitator_training: true, cost_cents: 50_000, start_date: Date.current)
+      recipient = create(:person)
+      reg = create(:event_registration, event: training, registrant: recipient, status: "attended")
+      award = create(:scholarship, recipient: recipient, amount_cents: 4_000, grant: create(:grant))
+      create(:allocation, source: award, allocatable: reg, amount: 4_000)
+
+      get scholarships_path
+      expect(response.body).to include("Time period", "Abbreviation", "Funder")
+      expect(response.body).to include("Summary", "Total awarded")
+    end
+
+    it "narrows the list to a selected funder" do
+      keep = create(:organization, name: "Keep Foundation")
+      drop = create(:organization, name: "Drop Foundation")
+      create(:scholarship, grant: create(:grant, donor: keep), recipient: create(:person, first_name: "Kept", last_name: "One"))
+      create(:scholarship, grant: create(:grant, donor: drop), recipient: create(:person, first_name: "Dropped", last_name: "Two"))
+
+      get scholarships_path(funder_sgid: keep.to_signed_global_id.to_s)
+
+      expect(response.body).to include("Kept One")
+      expect(response.body).not_to include("Dropped Two")
+    end
+
     it "links a grant group's grant back to the scholarship index via from_scholarships" do
       grant = create(:grant, name: "Marisla")
       create(:scholarship, grant: grant)

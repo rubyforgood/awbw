@@ -33,10 +33,10 @@
               </td>
               <td class="px-4 py-2 whitespace-nowrap text-sm text-center">
                 <% if scholarship.tasks_completed? %>
-                  <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-3 py-0.5 bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200">
-                    <i class="fa-solid fa-graduation-cap text-xs"></i>
-                    Yes
-                  </span>
+                  <%= render "shared/badge",
+                             label: "Yes",
+                             classes: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200",
+                             icon: "fa-solid fa-graduation-cap text-xs" %>
                 <% else %>
                   <span class="text-gray-400">No</span>
                 <% end %>

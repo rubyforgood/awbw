@@ -66,7 +66,10 @@
 
     <div class="flex items-center gap-x-3 pr-32 text-sm">
       <% if f.object.builtin? %>
-        <span class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 shrink-0">Built in</span>
+        <%= render "shared/badge",
+              label: "Built in",
+              classes: "bg-purple-100 text-purple-700 border-purple-200",
+              extra: "shrink-0" %>
       <% end %>
 
       <span class="text-gray-800 font-medium truncate max-w-xs" title="<%= f.object.title %>"><%= f.object.title %></span>

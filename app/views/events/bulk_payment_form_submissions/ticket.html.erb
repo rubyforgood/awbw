@@ -177,8 +177,11 @@
 
       <% if allowed_to?(:dashboard?, @event) %>
         <div class="admin-only relative rounded-lg border border-blue-200 bg-blue-50/50 px-4 pt-6 pb-4 space-y-3">
-          <span class="absolute -top-3 left-4 inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">
-            <i class="fa-solid fa-lock text-[0.65rem]"></i> Admin only
+          <span class="absolute -top-3 left-4">
+            <%= render "shared/badge",
+                  label: "Admin only",
+                  classes: "bg-blue-100 text-blue-700 border-blue-200",
+                  icon: "fa-solid fa-lock text-[0.65rem]" %>
           </span>
           <div class="flex items-center justify-between gap-2">
             <h2 class="text-xs font-medium text-gray-400 uppercase tracking-wide">Payment allocations</h2>

@@ -1,16 +1,22 @@
 <% if payment %>
   <% if payment.amount_cents_remaining > 0 %>
-    <%= link_to payment_path(payment),
-                class: "inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800 hover:bg-orange-200 shrink-0" do %>
-      <i class="fa-solid fa-circle-exclamation text-orange-500"></i> Paid — <%= dollars_from_cents(payment.amount_cents_remaining) %> unallocated
-    <% end %>
+    <%= render "shared/badge",
+          href: payment_path(payment),
+          label: "Paid — #{dollars_from_cents(payment.amount_cents_remaining)} unallocated",
+          classes: "bg-orange-100 text-orange-800 border-orange-200",
+          icon: "fa-solid fa-circle-exclamation text-orange-500",
+          extra: "shrink-0" %>
   <% else %>
-    <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 shrink-0">
-      <i class="fa-solid fa-circle-check text-green-500"></i> Fully allocated
-    </span>
+    <%= render "shared/badge",
+          label: "Fully allocated",
+          classes: "bg-green-100 text-green-800 border-green-300",
+          icon: "fa-solid fa-circle-check text-green-500",
+          extra: "shrink-0" %>
   <% end %>
 <% else %>
-  <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 shrink-0">
-    <i class="fa-solid fa-clock text-amber-500"></i> Pending
-  </span>
+  <%= render "shared/badge",
+        label: "Pending",
+        classes: "bg-amber-100 text-amber-800 border-amber-200",
+        icon: "fa-solid fa-clock text-amber-500",
+        extra: "shrink-0" %>
 <% end %>

@@ -84,7 +84,7 @@
                   <span class="<%= form_section_bar_class %>"></span>
                   <h3 class="rich-label text-lg font-semibold text-gray-800"><%= form_label_html(field.name) %></h3>
                   <% if conditional %>
-                    <span class="text-xs rounded-full border px-2 py-0.5 <%= visibility_badge_styles[field.visibility] %>"><%= field.visibility_label %></span>
+                    <%= render "shared/badge", label: field.visibility_label, classes: visibility_badge_styles[field.visibility] %>
                   <% end %>
                 </div>
                 <% if field.subtitle.present? %>
@@ -96,7 +96,7 @@
                 <% if conditional %>
                   <div class="border-l-4 <%= visibility_marker_styles[field.visibility] %> pl-3">
                     <div class="mb-1.5 flex flex-wrap items-center gap-1.5">
-                      <span class="text-xs rounded-full border px-2 py-0.5 <%= visibility_badge_styles[field.visibility] %>"><%= field.visibility_label %></span>
+                      <%= render "shared/badge", label: field.visibility_label, classes: visibility_badge_styles[field.visibility] %>
                       <%= render "forms/option_source_link", field: field %>
                     </div>
                     <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier], show_dropdown_warning: true %>

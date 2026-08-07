@@ -2,7 +2,7 @@
     a label, linking to the matching filtered registrant list. Compact so several
     fit on one row. Locals: metric = { label:, value:, icon:, theme:, path:, sub? }. %>
 <%= link_to metric[:path],
-      class: "flex items-center gap-3 px-4 py-3 grow basis-40 hover:bg-gray-50 transition-colors" do %>
+      class: "group flex items-center gap-3 px-4 py-3 grow basis-40 hover:bg-gray-50 transition-colors" do %>
   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(metric[:theme], intensity: 100) %> <%= DomainTheme.text_class_for(metric[:theme], intensity: 600) %>">
     <i class="fa-solid <%= metric[:icon] %>"></i>
   </span>
@@ -10,6 +10,7 @@
     <span class="block leading-tight">
       <span class="text-xl font-bold text-gray-900 tabular-nums"><%= metric[:value] %></span>
       <span class="text-xs text-gray-500"><%= metric[:label] %></span>
+      <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
     </span>
     <% if metric[:sub].present? %>
       <span class="block text-xs text-gray-400 mt-0.5 truncate"><%= metric[:sub] %></span>
