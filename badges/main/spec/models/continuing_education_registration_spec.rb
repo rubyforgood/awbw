@@ -1,6 +1,16 @@
 require "rails_helper"
 
 RSpec.describe ContinuingEducationRegistration, type: :model do
+  describe "comments" do
+    it "is commentable and destroys its comments when removed" do
+      ce_reg = create(:continuing_education_registration)
+      comment = create(:comment, commentable: ce_reg)
+
+      expect(ce_reg.comments).to include(comment)
+      expect { ce_reg.destroy }.to change(Comment, :count).by(-1)
+    end
+  end
+
   describe "validations" do
     it "rejects a license that belongs to someone other than the registrant" do
       registration = create(:event_registration)

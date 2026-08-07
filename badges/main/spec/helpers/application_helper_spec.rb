@@ -566,4 +566,18 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(labels).not_to include("Retired range")
     end
   end
+
+  describe "#badge_classes" do
+    it "builds the pill recipe with the theme classes and default padding" do
+      result = helper.badge_classes("bg-green-50 text-green-700 border-green-200")
+
+      expect(result).to include("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border text-xs font-medium")
+      expect(result).to include("bg-green-50 text-green-700 border-green-200")
+      expect(result).to include("px-2 py-0.5")
+    end
+
+    it "accepts custom padding" do
+      expect(helper.badge_classes("bg-blue-50", padding: "px-5 py-0.5")).to include("px-5 py-0.5")
+    end
+  end
 end

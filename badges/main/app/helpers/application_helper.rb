@@ -30,6 +30,13 @@ module ApplicationHelper
     "#{DomainTheme.bg_class_for(domain, intensity: 100)} #{DomainTheme.text_class_for(domain, intensity: 600)}"
   end
 
+  # Shared pill/badge recipe. Pass the theme bg/text/border classes; padding varies
+  # (static pills use px-2.5, link pills px-5), so it's a param. Pairs with the
+  # shared/_badge partial.
+  def badge_classes(theme_classes, padding: "px-2 py-0.5")
+    "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border text-xs font-medium #{theme_classes} #{padding}"
+  end
+
   # Render a form field name / header with a safe subset of HTML allowed.
   # Uses Rails' SafeListSanitizer, which strips dangerous URL schemes
   # (e.g. javascript:) from href and CSS-scrubs the style attribute (dropping

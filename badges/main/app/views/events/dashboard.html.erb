@@ -149,12 +149,12 @@
                 <i class="fa-solid fa-sack-dollar"></i>
                 <span>Registration fees</span>
               </div>
-              <%= link_to registrants_event_path(@event),
-                    class: "inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:border-gray-300 hover:text-gray-800 transition-colors",
-                    title: "View all registrants" do %>
-                <i class="fa-solid fa-users text-gray-400"></i>
-                <%= pluralize(@dashboard.registrant_count, "registrant") %>
-              <% end %>
+              <%= render "shared/badge",
+                    href: registrants_event_path(@event),
+                    label: pluralize(@dashboard.registrant_count, "registrant"),
+                    classes: "bg-white text-gray-600 border-gray-200",
+                    icon: "fa-solid fa-users text-gray-400",
+                    title: "View all registrants" %>
             </div>
             <div class="mt-2 flex items-center justify-between gap-2">
               <p class="break-words">
@@ -189,12 +189,12 @@
                 <i class="fa-solid fa-graduation-cap"></i>
                 <span>Scholarships</span>
               </div>
-              <%= link_to registrants_event_path(@event, scholarship: "yes"),
-                    class: "inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:border-gray-300 hover:text-gray-800 transition-colors",
-                    title: "View scholarship recipients" do %>
-                <i class="fa-solid fa-user-graduate text-gray-400"></i>
-                <%= pluralize(@dashboard.scholarship_recipient_count, "recipient") %>
-              <% end %>
+              <%= render "shared/badge",
+                    href: registrants_event_path(@event, scholarship: "yes"),
+                    label: pluralize(@dashboard.scholarship_recipient_count, "recipient"),
+                    classes: "bg-white text-gray-600 border-gray-200",
+                    icon: "fa-solid fa-user-graduate text-gray-400",
+                    title: "View scholarship recipients" %>
             </div>
             <div class="mt-2 flex items-center justify-between gap-2">
               <p class="break-words">
@@ -221,12 +221,12 @@
                 <i class="fa-solid fa-award"></i>
                 <span>CE fees</span>
               </div>
-              <%= link_to registrants_event_path(@event, ce_status: "registered"),
-                    class: "inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:border-gray-300 hover:text-gray-800 transition-colors",
-                    title: "View registrants with continuing education" do %>
-                <i class="fa-solid fa-users text-gray-400"></i>
-                <%= pluralize(@dashboard.ce_registrant_count, "registrant") %>
-              <% end %>
+              <%= render "shared/badge",
+                    href: registrants_event_path(@event, ce_status: "registered"),
+                    label: pluralize(@dashboard.ce_registrant_count, "registrant"),
+                    classes: "bg-white text-gray-600 border-gray-200",
+                    icon: "fa-solid fa-users text-gray-400",
+                    title: "View registrants with continuing education" %>
             </div>
             <div class="mt-2 flex items-center justify-between gap-2">
               <p class="break-words">

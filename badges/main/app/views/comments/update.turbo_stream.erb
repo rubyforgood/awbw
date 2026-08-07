@@ -1,3 +1,9 @@
-<%= turbo_stream.replace dom_id(@comment, :flag) do %>
-  <%= render "comments/flag_toggle", commentable: @commentable, comment: @comment %>
+<% if params[:aggregated] %>
+  <%= turbo_stream.replace dom_id(@comment) do %>
+    <%= render "comments/aggregated_comment", comment: @comment.decorate, person: @aggregator_person %>
+  <% end %>
+<% else %>
+  <%= turbo_stream.replace dom_id(@comment, :flag) do %>
+    <%= render "comments/flag_toggle", commentable: @commentable, comment: @comment %>
+  <% end %>
 <% end %>

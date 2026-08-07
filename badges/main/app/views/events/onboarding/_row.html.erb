@@ -56,13 +56,13 @@
         <% if statuses.any? && org %>
           <%= link_to edit_organization_path(org, anchor: "affiliations", **onboarding_back), class: "inline-flex flex-col items-center gap-1 hover:opacity-80", title: "Edit #{org.name} affiliations", data: { turbo_frame: "_top" } do %>
             <% statuses.each do |status| %>
-              <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 <%= OrganizationDecorator.program_status_classes(status) %>"><%= status.to_s.titleize %></span>
+              <%= render "shared/badge", label: status.to_s.titleize, classes: OrganizationDecorator.program_status_classes(status) %>
             <% end %>
           <% end %>
         <% elsif statuses.any? %>
           <div class="flex flex-col items-center gap-1">
             <% statuses.each do |status| %>
-              <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 <%= OrganizationDecorator.program_status_classes(status) %>"><%= status.to_s.titleize %></span>
+              <%= render "shared/badge", label: status.to_s.titleize, classes: OrganizationDecorator.program_status_classes(status) %>
             <% end %>
           </div>
         <% else %>
@@ -105,15 +105,12 @@
          end %>
       <% badge_title = "#{badge_title} · Intends to pay" if !is_paid && registration.intends_to_pay? %>
       <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= due_cents %>">
-        <%= link_to allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "onboarding"), title: badge_title, class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-3 py-0.5 #{badge_classes} transition hover:opacity-80 hover:shadow-sm", data: { turbo_frame: "_top" } do %>
-          <i class="fas <%= badge_icon %>"></i>
-          <% if is_paid %>
-            <span>Paid</span>
-          <% else %>
-            <span><%= dollars_from_cents(due_cents) %> due</span>
-          <% end %>
-          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-        <% end %>
+        <%= render "shared/badge",
+              label: is_paid ? "Paid" : "#{dollars_from_cents(due_cents)} due",
+              classes: badge_classes,
+              icon: "fas #{badge_icon}",
+              href: allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "onboarding"),
+              title: badge_title %>
         <% if !is_paid && registration.intends_to_pay? %>
           <div class="mt-1 inline-flex items-center gap-1 whitespace-nowrap text-[0.65rem] font-medium text-blue-600">
             <i class="fa-solid fa-hand-holding-dollar"></i>
@@ -141,17 +138,21 @@
             <% if scholarship.amount_cents.to_i.positive? %>
               <span class="font-medium text-gray-800"><%= dollars_from_cents(scholarship.amount_cents) %></span>
             <% else %>
-              <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 bg-gray-50 text-gray-500 border-gray-200">TBD</span>
+              <%= render "shared/badge", label: "TBD", classes: "bg-gray-50 text-gray-500 border-gray-200" %>
             <% end %>
           <% end %>
         <% elsif registration.scholarship_requested? %>
-          <%= link_to new_scholarship_link, class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 bg-amber-50 text-amber-700 border-amber-200 hover:opacity-80", data: { turbo_frame: "_top" } do %>
-            <i class="fas fa-graduation-cap"></i> Requested
-          <% end %>
+          <%= render "shared/badge",
+                label: "Requested",
+                classes: "bg-amber-50 text-amber-700 border-amber-200",
+                icon: "fas fa-graduation-cap",
+                href: new_scholarship_link %>
         <% else %>
-          <%= link_to new_scholarship_link, class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 bg-gray-50 text-gray-400 border-gray-200 hover:opacity-80", data: { turbo_frame: "_top" } do %>
-            <i class="fas fa-graduation-cap"></i> Create
-          <% end %>
+          <%= render "shared/badge",
+                label: "Create",
+                classes: "bg-gray-50 text-gray-400 border-gray-200",
+                icon: "fas fa-graduation-cap",
+                href: new_scholarship_link %>
         <% end %>
       </td>
 
@@ -171,12 +172,12 @@
       <% done = scholarship && registration.scholarships.all?(&:tasks_completed?) %>
       <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= scholarship ? (done ? 1 : 0) : -1 %>">
         <% if scholarship %>
-          <%= link_to edit_scholarship_path(scholarship, return_to: "onboarding"),
-                title: "Edit scholarship tasks",
-                class: "inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 hover:opacity-80 #{done ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"}",
-                data: { turbo_frame: "_top" } do %>
-            <i class="fas <%= done ? "fa-circle-check" : "fa-clock" %>"></i><%= done ? "Yes" : "No" %>
-          <% end %>
+          <%= render "shared/badge",
+                label: done ? "Yes" : "No",
+                classes: done ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200",
+                icon: done ? "fas fa-circle-check" : "fas fa-clock",
+                href: edit_scholarship_path(scholarship, return_to: "onboarding"),
+                title: "Edit scholarship tasks" %>
         <% else %>
           <%= link_to "—", new_scholarship_link, class: "text-gray-400 hover:text-gray-600", data: { turbo_frame: "_top" } %>
         <% end %>
@@ -251,12 +252,12 @@
       <% any_flagged = registration.comments.any?(&:flagged?) %>
       <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= any_flagged ? 1 : 0 %>">
         <% if any_flagged %>
-          <%= link_to edit_event_registration_path(registration, return_to: "onboarding", anchor: "comments-section"),
-                title: "Has flagged comments",
-                class: "inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 bg-orange-50 text-orange-700 border-orange-200 hover:opacity-80",
-                data: { turbo_frame: "_top" } do %>
-            <i class="fa-solid fa-flag"></i> Yes
-          <% end %>
+          <%= render "shared/badge",
+                label: "Yes",
+                classes: "bg-orange-50 text-orange-700 border-orange-200",
+                icon: "fa-solid fa-flag",
+                href: edit_event_registration_path(registration, return_to: "onboarding", anchor: "comments-section"),
+                title: "Has flagged comments" %>
         <% else %>
           <span class="inline-flex items-center gap-1 text-xs text-gray-400"><i class="fa-regular fa-flag"></i> No</span>
         <% end %>

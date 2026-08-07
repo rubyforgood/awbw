@@ -102,6 +102,9 @@ application.register("grant-select", GrantSelectController)
 import InactiveToggleController from "./inactive_toggle_controller"
 application.register("inactive-toggle", InactiveToggleController)
 
+import NavigateSelectController from "./navigate_select_controller"
+application.register("navigate-select", NavigateSelectController)
+
 import OptimisticBookmarkController from "./optimistic_bookmark_controller"
 application.register("optimistic-bookmark", OptimisticBookmarkController)
 

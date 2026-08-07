@@ -28,7 +28,7 @@
     <% if badge.present? || callout.subtitle.present? %>
       <p class="text-sm <%= theme[:subtitle] %> flex items-center gap-1.5 flex-wrap">
         <% if badge.present? %>
-          <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold <%= badge_classes %>"><%= badge %></span>
+          <%= render "shared/badge", label: badge, classes: badge_classes %>
         <% end %>
         <%= callout.subtitle %>
       </p>

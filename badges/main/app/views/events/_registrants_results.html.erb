@@ -314,21 +314,17 @@
                       </span>
                     <% end %>
                     <% if needs_linking %>
-                      <%= link_to editor_path,
-                                  title: submitted_org_name,
-                                  class: "#{pill_classes} bg-amber-50 text-amber-700 border-amber-200",
-                                  data: { turbo_frame: "_top" } do %>
-                        <span>Pending</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-                      <% end %>
+                      <%= render "shared/badge",
+                            label: "Pending",
+                            classes: "bg-amber-50 text-amber-700 border-amber-200",
+                            href: editor_path,
+                            title: submitted_org_name %>
                     <% end %>
                     <% if linked_orgs.none? && !needs_linking %>
-                      <%= link_to editor_path,
-                                  class: "#{pill_classes} bg-gray-50 text-gray-500 border-gray-200",
-                                  data: { turbo_frame: "_top" } do %>
-                        <span>None</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-                      <% end %>
+                      <%= render "shared/badge",
+                            label: "None",
+                            classes: "bg-gray-50 text-gray-500 border-gray-200",
+                            href: editor_path %>
                     <% end %>
                   </div>
                 </td>
@@ -338,13 +334,11 @@
                     <%# Canonical CE badge (Requested → License # needed → $X due →
                         Pending → Issued). "Create" when CE isn't in play yet. %>
                     <% if registration.decorate.ce_status_badge.nil? %>
-                      <%= link_to edit_event_registration_path(registration, return_to: "registrants"),
-                                  title: "No CE credit requested",
-                                  class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-5 py-0.5 bg-gray-50 text-gray-400 border-gray-200 transition hover:opacity-80 hover:shadow-sm",
-                                  data: { turbo_frame: "_top" } do %>
-                        <span>Create</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-                      <% end %>
+                      <%= render "shared/badge",
+                            label: "Create",
+                            classes: "bg-gray-50 text-gray-400 border-gray-200",
+                            href: edit_event_registration_path(registration, return_to: "registrants"),
+                            title: "No CE credit requested" %>
                     <% else %>
                       <%= render "event_registrations/ce_status_badge", registration: registration,
                             href: edit_event_registration_path(registration, return_to: "registrants") %>
@@ -355,35 +349,27 @@
                 <td class="px-4 py-2 text-sm text-center <%= "hidden" unless scholarship_on %>" data-column-toggle-col="scholarship">
                   <% if (s = registration.scholarships.first) %>
                     <% if s.tasks_completed? %>
-                      <%= link_to edit_scholarship_path(s, return_to: "registrants"),
-                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-green-50 text-green-700 border-green-200 transition hover:opacity-80 hover:shadow-sm",
-                                  data: { turbo_frame: "_top" } do %>
-                        <span>Completed</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-                      <% end %>
+                      <%= render "shared/badge",
+                            label: "Completed",
+                            classes: "bg-green-50 text-green-700 border-green-200",
+                            href: edit_scholarship_path(s, return_to: "registrants") %>
                     <% else %>
-                      <%= link_to edit_scholarship_path(s, return_to: "registrants"),
-                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-blue-50 text-blue-700 border-blue-200 transition hover:opacity-80 hover:shadow-sm",
-                                  data: { turbo_frame: "_top" } do %>
-                        <span>Recipient</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-                      <% end %>
+                      <%= render "shared/badge",
+                            label: "Recipient",
+                            classes: "bg-blue-50 text-blue-700 border-blue-200",
+                            href: edit_scholarship_path(s, return_to: "registrants") %>
                     <% end %>
                   <% else %>
                     <% if registration.scholarship_requested? %>
-                      <%= link_to new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"),
-                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-amber-50 text-amber-700 border-amber-200 transition hover:opacity-80 hover:shadow-sm",
-                                  data: { turbo_frame: "_top" } do %>
-                        <span>Requested</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-                      <% end %>
+                      <%= render "shared/badge",
+                            label: "Requested",
+                            classes: "bg-amber-50 text-amber-700 border-amber-200",
+                            href: new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants") %>
                     <% else %>
-                      <%= link_to new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"),
-                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-gray-50 text-gray-400 border-gray-200 transition hover:opacity-80 hover:shadow-sm",
-                                  data: { turbo_frame: "_top" } do %>
-                        <span>Create</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-                      <% end %>
+                      <%= render "shared/badge",
+                            label: "Create",
+                            classes: "bg-gray-50 text-gray-400 border-gray-200",
+                            href: new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants") %>
                     <% end %>
                   <% end %>
                 </td>
@@ -415,14 +401,11 @@
                        end %>
                     <% badge_title = "#{badge_title} · Intends to pay" if !is_paid && registration.intends_to_pay? %>
 
-                    <%= link_to allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"), title: badge_title, class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-3 py-0.5 #{badge_classes} transition hover:opacity-80 hover:shadow-sm", data: { turbo_frame: "_top" } do %>
-                      <% if is_paid %>
-                        <span>Paid</span>
-                      <% else %>
-                        <span><%= dollars_from_cents(due_cents) %> due</span>
-                      <% end %>
-                      <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-                    <% end %>
+                    <%= render "shared/badge",
+                          label: is_paid ? "Paid" : "#{dollars_from_cents(due_cents)} due",
+                          classes: badge_classes,
+                          href: allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"),
+                          title: badge_title %>
 
                     <% if !is_paid && registration.intends_to_pay? %>
                       <div class="mt-1 inline-flex items-center gap-1 whitespace-nowrap text-[0.65rem] font-medium text-blue-600">
