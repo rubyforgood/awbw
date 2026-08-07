@@ -13,6 +13,12 @@ class PersonPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  # Deliberately not `admin? ||` — this gates the member's own dues card and its
+  # self-service actions, which an admin must not get on someone else's profile.
+  def own_dues?
+    owner? && Dues.enabled?
+  end
+
   def show_email_change?
     admin? || owner?
   end

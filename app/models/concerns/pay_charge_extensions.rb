@@ -18,9 +18,61 @@ module PayChargeExtensions
       create_event_registration_payment(event_registration_id)
     elsif (form_submission_id = metadata["form_submission_id"])
       create_bulk_payment(form_submission_id)
+    elsif (dues_subscription_id = dues_subscription_id_from_metadata)
+      create_dues_payment(dues_subscription_id)
     elsif (person_id = metadata["person_id"])
       create_donation_payment(person_id)
     end
+  end
+
+  # Renewal charges carry no checkout metadata, so the link comes from the subscription
+  # Pay already attached to this charge. Checkout charges are linked before Pay syncs the
+  # subscription, so the id also comes from the invoice Pay stores on the charge.
+  def dues_subscription_id_from_metadata
+    metadata["dues_subscription_id"] ||
+      subscription&.metadata&.dig("dues_subscription_id") ||
+      data&.dig("stripe_invoice", "parent", "subscription_details", "metadata", "dues_subscription_id")
+  end
+
+  def create_dues_payment(dues_subscription_id)
+    dues_subscription = DuesSubscription.find_by(id: dues_subscription_id)
+    return unless dues_subscription
+
+    person = dues_subscription.person
+    return unless person
+
+    term = Dues::EnsureTerm.call(dues_subscription: dues_subscription, covering: dues_period_date)
+    return unless term
+
+    payment = ExternalProcessorPayment.create!(
+      stripe_charge_id: processor_id,
+      external_origin: false,
+      person: person,
+      amount_cents: amount,
+      amount_cents_remaining: amount,
+      currency: currency,
+      pay_charge_id: id,
+      metadata: metadata.merge(stripe_charge: object)
+    )
+
+    allocation_amount = [ amount, term.remaining_cost ].min
+    return unless allocation_amount > 0
+
+    Allocation.create!(source: payment, allocatable: term, amount: allocation_amount)
+  end
+
+  # The invoice's billing period, so a renewal lands on the year it paid for rather than
+  # the outgoing one a charge date can fall inside. Prefers the invoice period because it
+  # is available before Pay links the subscription to the charge.
+  def dues_period_date
+    Time.use_zone(Dues::TIME_ZONE) do
+      (invoice_period_start || subscription&.current_period_start || created_at || Time.current).to_date
+    end
+  end
+
+  def invoice_period_start
+    stamp = data&.dig("stripe_invoice", "period_start")
+    Time.at(stamp) if stamp
   end
 
   def create_event_registration_payment(event_registration_id)

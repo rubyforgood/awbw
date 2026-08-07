@@ -239,6 +239,7 @@ Rails.application.routes.draw do
   end
 
   resources :dues_registrations, only: [ :index, :show, :edit, :update ]
+  resources :dues_checkouts, only: [ :create ]
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses

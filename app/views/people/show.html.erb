@@ -278,6 +278,9 @@
     <% if allowed_to?(:index?, DuesRegistration) %>
       <%= render "people/dues", person: @person, subscription: @dues_subscription %>
     <% end %>
+    <% if allowed_to?(:own_dues?, @person) %>
+      <%= render "people/my_dues", subscription: @dues_subscription, autopay: @dues_autopay %>
+    <% end %>
     <!-- SUBMITTED SECTION -->
     <% if allowed_to?(:show?, @person) %>
       <div class="user-only <%= DomainTheme.bg_class_for(:user_only) %>
