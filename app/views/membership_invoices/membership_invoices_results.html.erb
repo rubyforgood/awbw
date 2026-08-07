@@ -20,7 +20,7 @@
                             class: "text-primary hover:text-primary-dark",
                             data: { turbo_frame: "_top" } %>
                 <% if invoice.membership.cancelled? %>
-                  <span class="block text-xs text-gray-500">Subscription cancelled</span>
+                  <span class="block text-xs text-gray-500">Membership cancelled</span>
                 <% end %>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= invoice.period_range %></td>

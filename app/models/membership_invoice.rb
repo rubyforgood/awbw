@@ -1,13 +1,13 @@
-class MembershipInvoice < ApplicationRecord
+class DuesRegistration < ApplicationRecord
   include Registerable
 
   has_paper_trail
 
-  belongs_to :membership
+  belongs_to :dues_subscription
   has_many :allocations, as: :allocatable, dependent: :destroy
   has_many :payments, through: :allocations, source: :source, source_type: "Payment"
 
-  delegate :person, to: :membership
+  delegate :person, to: :dues_subscription
   alias_method :registrant, :person
 
   scope :active_on, ->(date = Date.current) { where(start_date: ..date, end_date: date..) }
@@ -16,11 +16,11 @@ class MembershipInvoice < ApplicationRecord
   scope :paid_in_full, -> { where(cost_covered_by_allocations) }
   scope :not_paid_in_full, -> { where(chargeable.and(cost_covered_by_allocations.not)) }
   scope :overdue, ->(as_of = Date.current) {
-    not_paid_in_full.where(start_date: ...(as_of - Membership::GRACE_PERIOD_DAYS))
+    not_paid_in_full.where(start_date: ...(as_of - Dues::GRACE_PERIOD_DAYS))
   }
   # Defined as the complement to `overdue` so it can't drift.
   scope :paid_or_within_grace, ->(as_of = Date.current) {
-    where.not(id: MembershipInvoice.overdue(as_of))
+    where.not(id: DuesRegistration.overdue(as_of))
   }
 
   before_validation :derive_end_date, on: :create
@@ -28,7 +28,7 @@ class MembershipInvoice < ApplicationRecord
   validates :start_date, :end_date, presence: true
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :end_date_not_before_start_date
-  validate :no_overlapping_invoice_for_person
+  validate :no_overlapping_term_for_person
   validate :cost_not_below_allocations, on: :update
 
   def self.chargeable
@@ -58,7 +58,7 @@ class MembershipInvoice < ApplicationRecord
   def overdue?(as_of = Date.current)
     return false if paid_in_full? || start_date.blank?
 
-    as_of > start_date + Membership::GRACE_PERIOD_DAYS
+    as_of > start_date + Dues::GRACE_PERIOD_DAYS
   end
 
   def within_grace?(as_of = Date.current)
@@ -80,7 +80,7 @@ class MembershipInvoice < ApplicationRecord
   def derive_end_date
     return if end_date.present? || start_date.blank?
 
-    self.end_date = start_date + Membership::INVOICE_PERIOD - 1.day
+    self.end_date = start_date + 1.year - 1.day
   end
 
   def end_date_not_before_start_date
@@ -90,18 +90,15 @@ class MembershipInvoice < ApplicationRecord
     errors.add(:end_date, "can't be before the start date")
   end
 
-  # Spans every membership the person has, not just this one: a cancelled
-  # subscription keeps its coverage to the invoice's end, so a rejoin can otherwise
-  # produce two subscriptions covering the same day.
-  def no_overlapping_invoice_for_person
-    return if start_date.blank? || end_date.blank? || membership&.person.blank?
+  def no_overlapping_term_for_person
+    return if start_date.blank? || end_date.blank? || dues_subscription&.person.blank?
 
-    overlapping = membership.person.membership_invoices
+    overlapping = dues_subscription.person.dues_registrations
       .where(start_date: ..end_date, end_date: start_date..)
     overlapping = overlapping.where.not(id: id) if persisted?
     return unless overlapping.exists?
 
-    errors.add(:base, "This person already has a membership invoice overlapping #{start_date} to #{end_date}")
+    errors.add(:base, "This person already has a dues year overlapping #{start_date} to #{end_date}")
   end
 
   def cost_not_below_allocations

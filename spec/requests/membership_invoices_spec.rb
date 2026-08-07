@@ -65,7 +65,7 @@ RSpec.describe "MembershipInvoices", type: :request do
 
         get membership_invoices_path, headers: frame
 
-        expect(response.body).to include("Subscription cancelled")
+        expect(response.body).to include("Membership cancelled")
       end
 
       it "says so when there are none" do

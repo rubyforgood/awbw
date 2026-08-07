@@ -8,9 +8,9 @@ RSpec.describe "Person profile membership section", type: :request do
   let(:owner_user) { create(:user, :with_person) }
   let(:person) { owner_user.person }
 
-  def membership_invoice_for(cost_cents: Membership::ANNUAL_COST_CENTS, start_date: Date.current, subscription: nil)
+  def membership_invoice_for(cost_cents: Membership::ANNUAL_COST_CENTS, start_date: Date.current, membership: nil)
     create(:membership_invoice,
-      membership: subscription || create(:membership, person: person),
+      membership: membership || create(:membership, person: person),
       cost_cents: cost_cents,
       start_date: start_date,
       end_date: start_date + 1.year - 1.day)
@@ -30,7 +30,7 @@ RSpec.describe "Person profile membership section", type: :request do
       expect(response.body).to include("due")
     end
 
-    it "shows the standard cost when the subscription has no override" do
+    it "shows the standard cost when the membership has no override" do
       membership_invoice_for
 
       get person_path(person)
@@ -38,9 +38,9 @@ RSpec.describe "Person profile membership section", type: :request do
       expect(response.body).to include("Standard (#{standard_cost})")
     end
 
-    it "shows a locked cost when the subscription has one" do
-      subscription = create(:membership, person: person, cost_cents: 1_500)
-      membership_invoice_for(subscription: subscription)
+    it "shows a locked cost when the membership has one" do
+      membership = create(:membership, person: person, cost_cents: 1_500)
+      membership_invoice_for(membership: membership)
 
       get person_path(person)
 
@@ -49,10 +49,10 @@ RSpec.describe "Person profile membership section", type: :request do
 
     # Requests render in the viewer's zone (ApplicationController#set_time_zone_from_user,
     # defaulting to Pacific), so midday avoids the date shifting either side of midnight.
-    it "shows when the subscription was cancelled" do
-      subscription = create(:membership, person: person,
+    it "shows when the membership was cancelled" do
+      membership = create(:membership, person: person,
         cancelled_at: Time.zone.parse("2026-08-03 12:00"))
-      membership_invoice_for(subscription: subscription)
+      membership_invoice_for(membership: membership)
 
       get person_path(person)
 
@@ -60,9 +60,9 @@ RSpec.describe "Person profile membership section", type: :request do
     end
 
     it "shows only the year covering today, not the whole history" do
-      subscription = create(:membership, person: person)
-      older = membership_invoice_for(cost_cents: 0, start_date: Date.current - 1.year, subscription: subscription)
-      current = membership_invoice_for(subscription: subscription)
+      membership = create(:membership, person: person)
+      older = membership_invoice_for(cost_cents: 0, start_date: Date.current - 1.year, membership: membership)
+      current = membership_invoice_for(membership: membership)
 
       get person_path(person)
 
@@ -71,9 +71,9 @@ RSpec.describe "Person profile membership section", type: :request do
     end
 
     it "prefers the year covering today over a future one the job created early" do
-      subscription = create(:membership, person: person)
-      current = membership_invoice_for(subscription: subscription)
-      future = membership_invoice_for(start_date: current.end_date + 1.day, subscription: subscription)
+      membership = create(:membership, person: person)
+      current = membership_invoice_for(membership: membership)
+      future = membership_invoice_for(start_date: current.end_date + 1.day, membership: membership)
 
       get person_path(person)
 
@@ -88,7 +88,7 @@ RSpec.describe "Person profile membership section", type: :request do
       expect(response.body).to include("Manage membership")
     end
 
-    it "says so when the person has no subscription" do
+    it "says so when the person has no membership" do
       get person_path(person)
 
       expect(response.body).to include("No membership yet")
@@ -125,7 +125,7 @@ RSpec.describe "Person profile membership section", type: :request do
       expect(button["data-turbo"]).to eq("false")
     end
 
-    it "offers the option even with no subscription at all" do
+    it "offers the option even with no membership at all" do
       get person_path(person)
 
       expect(response).to be_successful

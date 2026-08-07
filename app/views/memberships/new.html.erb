@@ -22,17 +22,17 @@
     <fieldset class="mt-6 border-t border-gray-200 pt-6">
       <legend class="text-sm font-medium text-gray-700 mb-3">First invoice</legend>
 
-      <%= f.simple_fields_for :membership_invoices do |year| %>
-        <%= year.input :start_date,
+      <%= f.simple_fields_for :membership_invoices do |invoice| %>
+        <%= invoice.input :start_date,
               as: :date,
               html5: true,
               label: "Starts",
               hint: "Runs 12 months from this date.",
               input_html: { class: "bg-white" } %>
 
-        <%= year.input :cost_dollars,
+        <%= invoice.input :cost_dollars,
               label: "Cost ($)",
-              hint: "Enter 0 if this year is already covered, e.g. by their training.",
+              hint: "Enter 0 if this invoice is already covered, e.g. by their training.",
               input_html: { min: 0, step: 0.01, class: "bg-white" } %>
       <% end %>
     </fieldset>
@@ -40,7 +40,7 @@
     <div class="flex items-center gap-3 border-t border-gray-200 pt-6 mt-6">
       <div class="ml-auto flex items-center gap-3">
         <%= link_to "Cancel", person_memberships_path(@person), class: "btn btn-secondary-outline" %>
-        <%= f.button :submit, "Create subscription", class: "btn btn-primary" %>
+        <%= f.button :submit, "Create membership", class: "btn btn-primary" %>
       </div>
     </div>
   <% end %>

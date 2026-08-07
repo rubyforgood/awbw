@@ -70,8 +70,8 @@ class MembershipsController < ApplicationController
 
   def update_notice
     return "Cost updated. Changes will only be applied to future years." unless @membership.saved_change_to_cancelled_at?
-    return "Subscription cancelled. Autorenewal turned off." if @membership.cancelled?
+    return "Membership cancelled. Autorenewal turned off." if @membership.cancelled?
 
-    "Subscription resumed. Autorenewal turned back on."
+    "Membership resumed. Autorenewal turned back on."
   end
 end
