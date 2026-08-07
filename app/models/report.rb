@@ -160,7 +160,7 @@ class Report < ApplicationRecord
   private
 
   def set_has_attachment
-    self.has_attachment = image&.file&.attached? || form_file&.attached? ||
+    self.has_attachment = image.attached? || form_file&.attached? ||
       media_files.any? { |media_file| media_file.file.attached? }
   end
 
