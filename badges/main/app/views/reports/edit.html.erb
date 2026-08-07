@@ -110,10 +110,10 @@
               Choose File
             <% end %>
 
-          <% if @report.image %>
+          <% if @report.image.attached? %>
             <div class="row">
               <div class="col-xs-2">
-                <%= image_tag @report.image.file, class: "portrait-img" %>
+                <%= image_tag @report.image, class: "portrait-img" %>
                 </div>
              </div>
             <% end %>
