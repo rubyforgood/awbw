@@ -13,8 +13,6 @@ class PersonPolicy < ApplicationPolicy
     admin? || owner?
   end
 
-  # Deliberately not `admin? ||` — this gates the member's own membership card and its
-  # self-service actions, which an admin must not get on someone else's profile.
   def own_membership?
     owner? && Membership.enabled?
   end
