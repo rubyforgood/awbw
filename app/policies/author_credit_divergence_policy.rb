@@ -10,4 +10,8 @@ class AuthorCreditDivergencePolicy < ApplicationPolicy
   def update_item?
     admin?
   end
+
+  def assign_author?
+    admin?
+  end
 end

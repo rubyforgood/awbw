@@ -17,13 +17,13 @@ RSpec.describe AuthorCreditDivergenceQuery do
       person.update!(display_name_preference: "full_name")
       create(:story, created_by: author_user, author: person, author_credit_preference: nil)
 
-      expect(described_class.new.call).to be_empty
+      expect(described_class.new.call.preference).to be_empty
     end
 
     it "groups diverging records under their credited person" do
       story = diverged_story
 
-      groups = described_class.new.call
+      groups = described_class.new.call.preference
 
       expect(groups.size).to eq(1)
       expect(groups.first.person).to eq(person)
@@ -35,21 +35,35 @@ RSpec.describe AuthorCreditDivergenceQuery do
       idea = create(:story_idea, created_by: author_user, author_credit_preference: nil)
       person.update!(display_name_preference: "full_name")
 
-      expect(described_class.new.call.first.records).to include(idea)
+      expect(described_class.new.call.preference.first.records).to include(idea)
     end
 
     it "ignores records with no stored snapshot" do
       create(:story, created_by: author_user, author: person, author_credit_preference: nil)
       Story.update_all(author_credit_preference: nil)
 
-      expect(described_class.new.call).to be_empty
+      expect(described_class.new.call.preference).to be_empty
+    end
+
+    it "orders groups by first name then last name" do
+      person.update!(first_name: "Zoe", last_name: "Adams")
+      diverged_story
+      early_user = create(:user, :with_person)
+      early_user.person.update!(first_name: "Ada", last_name: "Zimmerman")
+      early_user.person.update!(display_name_preference: "first_name_only")
+      create(:story, created_by: early_user, author: early_user.person, author_credit_preference: nil)
+      early_user.person.update!(display_name_preference: "full_name")
+
+      names = described_class.new.call.preference.map { |group| group.person.first_name }
+
+      expect(names).to eq(%w[Ada Zoe])
     end
 
     it "suggests the most restrictive preference across the person's records" do
       diverged_story
       create(:story, created_by: author_user, author: person, author_credit_preference: "anonymous")
 
-      expect(described_class.new.call.first.suggested_preference).to eq("anonymous")
+      expect(described_class.new.call.preference.first.suggested_preference).to eq("anonymous")
     end
   end
 
@@ -57,25 +71,101 @@ RSpec.describe AuthorCreditDivergenceQuery do
     before { diverged_story }
 
     it "filters by person_id" do
-      expect(described_class.new(person_id: person.id).call.size).to eq(1)
-      expect(described_class.new(person_id: person.id + 9999).call).to be_empty
+      expect(described_class.new(person_id: person.id).call.preference.size).to eq(1)
+      expect(described_class.new(person_id: person.id + 9999).call.preference).to be_empty
     end
 
     it "filters by type" do
-      expect(described_class.new(type: "Story").call.size).to eq(1)
-      expect(described_class.new(type: "Resource").call).to be_empty
+      expect(described_class.new(type: "Story").call.preference.size).to eq(1)
+      expect(described_class.new(type: "Resource").call.preference).to be_empty
     end
 
     it "filters by stored preference" do
-      expect(described_class.new(preference: "first_name_only").call.size).to eq(1)
-      expect(described_class.new(preference: "anonymous").call).to be_empty
+      expect(described_class.new(preference: "first_name_only").call.preference.size).to eq(1)
+      expect(described_class.new(preference: "anonymous").call.preference).to be_empty
     end
 
     it "hides reconciled people unless asked for" do
       person.update!(author_credit_reconciled_at: Time.current)
 
+      expect(described_class.new.call.preference).to be_empty
+      expect(described_class.new(include_reconciled: "1").call.preference.size).to eq(1)
+    end
+  end
+
+  describe "the legacy section" do
+    it "lists records credited by a free-text name with no person" do
+      workshop = create(:workshop, author: nil, full_name: "Marguerite Pre-Person")
+
+      legacy = described_class.new.call.legacy
+
+      expect(legacy).to include(workshop)
+      expect(workshop.author_credit).to eq("Marguerite Pre-Person")
+    end
+
+    it "drops a record once a real author is credited" do
+      workshop = create(:workshop, author: nil, full_name: "Marguerite Pre-Person")
+      workshop.update!(author: person)
+
+      expect(described_class.new.call.legacy).not_to include(workshop)
+    end
+
+    it "excludes models that have no legacy column" do
+      create(:story, created_by: author_user, author: nil)
+      expect(described_class.new.call.legacy).to be_empty
+    end
+  end
+
+  describe "the creator section" do
+    it "groups records whose author_id is blank under the creating person" do
+      story = create(:story, created_by: author_user, author: nil)
+
+      groups = described_class.new.call.creator
+
+      expect(groups.map(&:person)).to include(person)
+      expect(groups.find { |g| g.person == person }.records).to include(story)
+    end
+
+    it "excludes records that already name an author" do
+      story = create(:story, created_by: author_user, author: person)
+      expect(described_class.new.call.creator.flat_map(&:records)).not_to include(story)
+    end
+
+    it "excludes idea models, whose only credit path is the creator" do
+      idea = create(:story_idea, created_by: author_user)
+      expect(described_class.new.call.creator.flat_map(&:records)).not_to include(idea)
+    end
+
+    it "excludes records covered by the legacy section instead" do
+      workshop = create(:workshop, created_by: author_user, author: nil, full_name: "Legacy Name")
+      expect(described_class.new.call.creator.flat_map(&:records)).not_to include(workshop)
+    end
+  end
+
+  describe "the unattributed section" do
+    let(:personless_user) { create(:user, person: nil) }
+
+    it "lists records with no author, no legacy name, and no creator person" do
+      story = create(:story, created_by: personless_user, author: nil)
+
+      expect(described_class.new.call.unattributed).to include(story)
+      expect(story.author_credit).to eq(story.missing_author_label)
+    end
+
+    it "drops a record once an author is credited" do
+      story = create(:story, created_by: personless_user, author: nil)
+      story.update!(author: person)
+
+      expect(described_class.new.call.unattributed).not_to include(story)
+    end
+  end
+
+  describe "#empty?" do
+    it "is true only when every section is clear" do
       expect(described_class.new.call).to be_empty
-      expect(described_class.new(include_reconciled: "1").call.size).to eq(1)
+
+      create(:story, created_by: create(:user, person: nil), author: nil)
+      expect(described_class.new.call).not_to be_empty
     end
   end
 

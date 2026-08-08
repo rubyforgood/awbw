@@ -221,6 +221,7 @@ Rails.application.routes.draw do
     collection do
       patch :update_person
       patch :update_item
+      patch :assign_author
     end
   end
   resources :people do

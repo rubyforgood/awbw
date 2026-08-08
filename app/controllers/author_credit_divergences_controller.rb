@@ -4,7 +4,7 @@ class AuthorCreditDivergencesController < ApplicationController
   FILTER_KEYS = %i[person_id type preference include_reconciled].freeze
 
   def index
-    @groups = AuthorCreditDivergenceQuery.new(**filters.symbolize_keys).call
+    @result = AuthorCreditDivergenceQuery.new(**filters.symbolize_keys).call
 
     return unless turbo_frame_request?
     render :author_credit_divergences_results
@@ -38,6 +38,29 @@ class AuthorCreditDivergencesController < ApplicationController
 
     if record.save
       redirect_to author_credit_divergences_path(filters), notice: "Updated credit for #{model.name.underscore.humanize.downcase} ##{record.id}."
+    else
+      redirect_to author_credit_divergences_path(filters), alert: record.errors.full_messages.to_sentence
+    end
+  end
+
+  # Point a record at a real person. This is the fix for every section below the
+  # first: an author_id is the only credit path that follows the person's profile,
+  # links to it, and lists the record there. Once set, any legacy free-text name on
+  # the record stops being used.
+  def assign_author
+    model = AuthorCreditDivergenceQuery.model_for(params[:record_type])
+    return redirect_to(author_credit_divergences_path(filters), alert: "Unknown record type.") unless model
+
+    record = model.find(params[:record_id])
+    person = Person.find_by(id: params[:author_id])
+    return redirect_to(author_credit_divergences_path(filters), alert: "Choose a person to credit.") unless person
+
+    record.author_id = person.id
+    record.updated_by = current_user if record.respond_to?(:updated_by=)
+
+    if record.save
+      redirect_to author_credit_divergences_path(filters),
+                  notice: "Credited #{model.name.underscore.humanize.downcase} ##{record.id} to #{person.full_name}."
     else
       redirect_to author_credit_divergences_path(filters), alert: record.errors.full_messages.to_sentence
     end

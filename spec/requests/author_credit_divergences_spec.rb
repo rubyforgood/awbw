@@ -73,6 +73,60 @@ RSpec.describe "AuthorCreditDivergences", type: :request do
     end
   end
 
+  describe "PATCH /author_credit_divergences/assign_author" do
+    before { sign_in admin }
+
+    let(:target) { create(:person, first_name: "Rosalind", last_name: "Franklin") }
+
+    it "credits a legacy free-text record to a real person" do
+      workshop = create(:workshop, author: nil, full_name: "Marguerite Pre-Person")
+
+      patch assign_author_author_credit_divergences_path,
+            params: { record_type: "Workshop", record_id: workshop.id, author_id: target.id }
+
+      expect(workshop.reload.author).to eq(target)
+      expect(workshop.author_credit).to eq("Rosalind Franklin")
+    end
+
+    it "credits a creator-fallback record so it links to the profile" do
+      story = create(:story, created_by: author_user, author: nil)
+      expect(story.author_credit_person).to be_nil
+
+      patch assign_author_author_credit_divergences_path,
+            params: { record_type: "Story", record_id: story.id, author_id: person.id }
+
+      expect(story.reload.author_credit_person).to eq(person)
+    end
+
+    it "requires a person" do
+      story = create(:story, created_by: author_user, author: nil)
+
+      patch assign_author_author_credit_divergences_path,
+            params: { record_type: "Story", record_id: story.id, author_id: "" }
+
+      expect(flash[:alert]).to eq("Choose a person to credit.")
+      expect(story.reload.author).to be_nil
+    end
+
+    it "refuses a type outside the allowlist" do
+      patch assign_author_author_credit_divergences_path,
+            params: { record_type: "User", record_id: admin.id, author_id: target.id }
+
+      expect(flash[:alert]).to eq("Unknown record type.")
+    end
+
+    it "rejects a non-admin" do
+      sign_out admin
+      sign_in regular_user
+      story = create(:story, created_by: author_user, author: nil)
+
+      patch assign_author_author_credit_divergences_path,
+            params: { record_type: "Story", record_id: story.id, author_id: target.id }
+
+      expect(story.reload.author).to be_nil
+    end
+  end
+
   describe "PATCH /author_credit_divergences/update_item" do
     before { sign_in admin }
 

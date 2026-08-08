@@ -4,10 +4,11 @@
     <div class="flex flex-col items-start mb-4">
       <h1 class="text-3xl font-bold text-gray-900 my-2">Author credit divergences</h1>
       <p class="text-sm text-gray-600 max-w-3xl">
-        Content whose stored credit preference no longer matches the author's profile.
-        Credits render using the profile, so these are historical records that need a
-        decision &mdash; except <strong>anonymous</strong>, which always wins and keeps that
-        item uncredited no matter what the profile says.
+        Content whose credit doesn't resolve cleanly through a person's profile &mdash; either the
+        stored preference drifted, or the credit isn't coming from an <code>author_id</code> at all.
+        An <code>author_id</code> is the only path that follows the person's profile, links to it,
+        and lists the record there. Note that <strong>anonymous</strong> always wins over the
+        profile and keeps that item uncredited.
       </p>
     </div>
 

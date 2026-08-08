@@ -1,36 +1,48 @@
-<%= form_with url: author_credit_divergences_path, method: :get,
-              data: { turbo_frame: "author_credit_divergences_results" },
-              class: "flex flex-wrap items-end gap-3 mb-6" do |f| %>
-  <div>
-    <%= f.label :type, "Content type", class: "block text-sm font-medium text-gray-700" %>
-    <%= f.select :type,
-                 options_for_select(AuthorCreditDivergenceQuery::MODEL_NAMES.map { |name| [ name.underscore.humanize, name ] }, params[:type]),
-                 { include_blank: "All types" },
-                 class: "mt-1 rounded-md border-gray-300 text-sm" %>
-  </div>
+<div class="rounded-lg border border-gray-200 bg-white shadow-sm p-4 mb-6">
+  <%# The collection controller auto-submits into the results frame, so filters
+      apply as you type/pick — no Filter button needed. %>
+  <%= form_with url: author_credit_divergences_path, method: :get,
+                data: { controller: "collection", turbo_frame: "author_credit_divergences_results" },
+                html: { autocomplete: "off" },
+                class: "flex flex-wrap items-end gap-3" do |f| %>
+    <div class="flex items-center gap-2 text-gray-600 basis-full">
+      <i class="fa-solid fa-filter text-xs"></i>
+      <span class="text-xs font-semibold uppercase tracking-wide">Filter</span>
+    </div>
 
-  <div>
-    <%= f.label :preference, "Stored preference", class: "block text-sm font-medium text-gray-700" %>
-    <%= f.select :preference,
-                 options_for_select(AuthorCreditable::ADMIN_FORM_OPTIONS.to_a, params[:preference]),
-                 { include_blank: "Any preference" },
-                 class: "mt-1 rounded-md border-gray-300 text-sm" %>
-  </div>
+    <div>
+      <%= f.label :type, "Content type", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.select :type,
+                   options_for_select(AuthorCreditDivergenceQuery::MODEL_NAMES.map { |name| [ name.underscore.humanize, name ] }, params[:type]),
+                   { include_blank: "All types" },
+                   class: "mt-1 rounded-md border-gray-300 text-sm" %>
+    </div>
 
-  <div>
-    <%= f.label :person_id, "Person ID", class: "block text-sm font-medium text-gray-700" %>
-    <%= f.number_field :person_id, value: params[:person_id], placeholder: "Any person",
-                       class: "mt-1 rounded-md border-gray-300 text-sm w-32" %>
-  </div>
+    <div>
+      <%= f.label :preference, "Stored preference", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.select :preference,
+                   options_for_select(AuthorCreditable::ADMIN_FORM_OPTIONS.to_a, params[:preference]),
+                   { include_blank: "Any preference" },
+                   class: "mt-1 rounded-md border-gray-300 text-sm" %>
+    </div>
 
-  <label class="flex items-center gap-2 text-sm text-gray-700 pb-2">
-    <%= check_box_tag :include_reconciled, "1", params[:include_reconciled].present?,
-                      class: "rounded border-gray-300" %>
-    Include already reconciled
-  </label>
+    <div class="w-56">
+      <%= f.label :person_id, "Person", class: "block text-sm font-medium text-gray-700" %>
+      <%= select_tag :person_id,
+                     options_for_select(Person.where(id: params[:person_id]).map { |person| [ person.full_name, person.id ] }, params[:person_id]),
+                     include_blank: true, prompt: "Search for a person",
+                     class: "mt-1 block w-full rounded-md border-gray-300 text-sm",
+                     data: { controller: "remote-select", remote_select_model_value: "person" } %>
+    </div>
 
-  <%= f.submit "Filter", class: "rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 cursor-pointer" %>
-  <%= link_to "Clear", author_credit_divergences_path,
-              data: { turbo_frame: "author_credit_divergences_results" },
-              class: "text-sm text-gray-600 underline pb-2" %>
-<% end %>
+    <label class="flex items-center gap-2 text-sm text-gray-700 pb-2">
+      <%= check_box_tag :include_reconciled, "1", params[:include_reconciled].present?,
+                        class: "rounded border-gray-300" %>
+      Include already reconciled
+    </label>
+
+    <%= link_to "Clear", author_credit_divergences_path,
+                data: { action: "collection#clearAndSubmit" },
+                class: "text-sm text-gray-600 underline pb-2" %>
+  <% end %>
+</div>

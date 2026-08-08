@@ -1,0 +1,93 @@
+<% person = group.person %>
+<div id="<%= dom_id(person, :divergence) %>" class="rounded-lg border border-gray-200 bg-white shadow-sm scroll-mt-4">
+  <div class="border-b border-gray-200 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+    <div>
+      <%= link_to person.full_name, person_path(person), class: "font-semibold text-gray-900 hover:underline" %>
+      <span class="text-sm text-gray-500">
+        &mdash; profile currently credits as
+        <strong><%= AuthorCreditable::ADMIN_FORM_OPTIONS.key(person.effective_author_credit_preference) %></strong>
+      </span>
+    </div>
+    <% if person.author_credit_reconciled_at.present? %>
+      <%= render "shared/badge",
+            label: "Reconciled #{person.author_credit_reconciled_at.strftime('%b %-d, %Y')}",
+            classes: "bg-gray-50 text-gray-600 border-gray-200",
+            icon: "fa-solid fa-circle-info" %>
+    <% end %>
+  </div>
+
+  <table class="w-full text-sm">
+    <thead class="text-left text-xs uppercase text-gray-500 bg-gray-50">
+      <tr>
+        <th class="px-4 py-2 font-medium">Content</th>
+        <th class="px-4 py-2 font-medium">Type</th>
+        <th class="px-4 py-2 font-medium">Renders as</th>
+        <th class="px-4 py-2 font-medium">Stored consent</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      <% group.records.each do |record| %>
+        <tr>
+          <td class="px-4 py-2"><%= divergence_record_link(record) %></td>
+          <td class="px-4 py-2 text-gray-600"><%= record.class.name.underscore.humanize %></td>
+          <td class="px-4 py-2 text-gray-800"><%= record.author_credit %></td>
+          <td class="px-4 py-2">
+            <%= form_with url: update_item_author_credit_divergences_path, method: :patch,
+                          data: { turbo_frame: "_top" },
+                          class: "flex items-center gap-2" do %>
+              <%= hidden_field_tag :record_type, record.class.name, id: nil %>
+              <%= hidden_field_tag :record_id, record.id, id: nil %>
+              <%= render "filter_fields" %>
+              <%= select_tag "author_credit_preference",
+                             options_for_select(AuthorCreditable::ADMIN_FORM_OPTIONS.to_a, record.author_credit_preference),
+                             id: nil,
+                             class: "rounded-md border-gray-300 text-sm" %>
+              <%= submit_tag "Save",
+                             class: "rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer" %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <p class="px-4 py-2 text-xs text-gray-500 border-t border-gray-100">
+    Only <strong>Anonymous</strong> changes what renders &mdash; the other values just
+    re-record what was consented to.
+  </p>
+
+  <%# The action lands after the supportive data above: read the content, then apply. %>
+  <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
+    <%= form_with url: update_person_author_credit_divergences_path, method: :patch,
+                  data: { turbo_frame: "_top" },
+                  class: "flex flex-wrap items-end gap-3" do %>
+      <%= hidden_field_tag :id, person.id, id: nil %>
+      <%= render "filter_fields" %>
+
+      <div>
+        <%= label_tag "person_display_name_preference_#{person.id}", "Set profile to",
+                      class: "block text-xs font-medium text-gray-700" %>
+        <%= select_tag "person[display_name_preference]",
+                       options_for_select(Person::DISPLAY_NAME_PREFERENCE_LABELS.invert.to_a,
+                                          suggested_display_name_preference(group)),
+                       id: "person_display_name_preference_#{person.id}",
+                       class: "mt-1 rounded-md border-gray-300 text-sm" %>
+      </div>
+
+      <label class="flex items-center gap-2 text-sm text-gray-700 pb-2">
+        <%= hidden_field_tag "person[contributions_anonymous]", "0", id: nil %>
+        <%= check_box_tag "person[contributions_anonymous]", "1",
+                          group.suggested_preference == AuthorCreditable::ANONYMOUS || person.contributions_anonymous?,
+                          id: "person_contributions_anonymous_#{person.id}",
+                          class: "rounded border-gray-300" %>
+        Contributions show as anonymous
+      </label>
+
+      <%= submit_tag "Apply to profile",
+                     class: "rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 cursor-pointer" %>
+      <span class="text-xs text-gray-500 pb-2">
+        Suggested: <strong><%= AuthorCreditable::ADMIN_FORM_OPTIONS.key(group.suggested_preference) %></strong>
+        &mdash; the most restrictive consent across <%= person.full_name %>'s content.
+      </span>
+    <% end %>
+  </div>
+</div>

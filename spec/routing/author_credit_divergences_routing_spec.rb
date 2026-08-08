@@ -11,6 +11,11 @@ RSpec.describe AuthorCreditDivergencesController, type: :routing do
         .to route_to("author_credit_divergences#update_person")
     end
 
+    it "routes to #assign_author" do
+      expect(patch: "/author_credit_divergences/assign_author")
+        .to route_to("author_credit_divergences#assign_author")
+    end
+
     it "routes to #update_item" do
       expect(patch: "/author_credit_divergences/update_item")
         .to route_to("author_credit_divergences#update_item")

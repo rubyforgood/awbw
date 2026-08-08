@@ -1,113 +1,138 @@
 <%= turbo_frame_tag :author_credit_divergences_results do %>
-  <% if @groups.empty? %>
+  <% if @result.empty? && divergence_filters_applied? %>
     <div class="rounded-lg border border-gray-200 bg-white p-8 text-center">
-      <i class="fa-solid fa-circle-check text-3xl text-green-600 mb-3"></i>
-      <p class="text-gray-700 font-medium">Nothing to reconcile.</p>
-      <p class="text-sm text-gray-500 mt-1">Every stored credit preference matches its author's profile.</p>
+      <i class="fa-solid fa-filter-circle-xmark text-3xl text-gray-400 mb-3"></i>
+      <p class="text-gray-700 font-medium">Nothing matches these filters.</p>
+      <p class="text-sm text-gray-500 mt-1">
+        Clear them to see whether anything is left to reconcile overall.
+      </p>
+    </div>
+  <% elsif @result.empty? %>
+    <div class="rounded-lg border border-green-200 bg-green-50 p-8 text-center">
+      <i class="fa-solid fa-trophy text-3xl text-green-600 mb-3"></i>
+      <p class="text-green-800 font-semibold text-lg">Every credit resolves through a profile.</p>
+      <p class="text-sm text-green-900 mt-2">
+        Nothing left to reconcile in any section. Ask your developers to remove any unused
+        author credit code &mdash; the stored <code>author_credit_preference</code> columns, the
+        legacy free-text name columns, and the creator and missing-author fallbacks in
+        <code>AuthorCreditable</code>.
+      </p>
     </div>
   <% else %>
-    <p class="text-sm text-gray-600 mb-4">
-      <%= pluralize(@groups.size, "person") %> with diverging content.
-    </p>
-
-    <div class="space-y-6">
-      <% @groups.each do |group| %>
-        <% person = group.person %>
-        <div id="<%= dom_id(person, :divergence) %>" class="rounded-lg border border-gray-200 bg-white shadow-sm scroll-mt-4">
-          <div class="border-b border-gray-200 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <%= link_to person.full_name, person_path(person), class: "font-semibold text-gray-900 hover:underline" %>
-              <span class="text-sm text-gray-500">
-                &mdash; profile currently credits as
-                <strong><%= AuthorCreditable::ADMIN_FORM_OPTIONS.key(person.effective_author_credit_preference) %></strong>
-              </span>
-            </div>
-            <% if person.author_credit_reconciled_at.present? %>
-              <%= render "shared/badge",
-                    label: "Reconciled #{person.author_credit_reconciled_at.strftime('%b %-d, %Y')}",
-                    classes: "bg-gray-50 text-gray-600 border-gray-200",
-                    icon: "fa-solid fa-circle-info" %>
+    <%# Section counts up front so the admin can see the full scope and jump to any section. %>
+    <% overview = [
+         { anchor: "section-preference",   num: 1, label: "Preference drift", count: @result.preference.size,   unit: "person" },
+         { anchor: "section-legacy",       num: 2, label: "Legacy name",      count: @result.legacy.size,       unit: "record" },
+         { anchor: "section-creator",      num: 3, label: "Creator fallback", count: @result.creator.size,      unit: "person" },
+         { anchor: "section-unattributed", num: 4, label: "No author",        count: @result.unattributed.size, unit: "record" }
+       ] %>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+      <% overview.each do |section| %>
+        <% clear = section[:count].zero? %>
+        <%= link_to "##{section[:anchor]}",
+              class: "block rounded-lg border p-3 transition-colors #{clear ? "border-green-200 bg-green-50 hover:bg-green-100" : "border-gray-200 bg-white shadow-sm hover:bg-gray-50"}" do %>
+          <div class="flex items-baseline justify-between gap-2">
+            <span class="text-xs font-medium uppercase tracking-wide text-gray-500"><%= section[:num] %>. <%= section[:label] %></span>
+            <% if clear %>
+              <i class="fa-solid fa-circle-check text-green-600" aria-hidden="true"></i>
             <% end %>
           </div>
-
-          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
-            <%= form_with url: update_person_author_credit_divergences_path, method: :patch,
-                          data: { turbo_frame: "_top" },
-                          class: "flex flex-wrap items-end gap-3" do |f| %>
-              <%= hidden_field_tag :id, person.id %>
-              <%= render "filter_fields" %>
-
-              <div>
-                <%= label_tag "person_display_name_preference_#{person.id}", "Set profile to",
-                              class: "block text-xs font-medium text-gray-700" %>
-                <%= select_tag "person[display_name_preference]",
-                               options_for_select(Person::DISPLAY_NAME_PREFERENCE_LABELS.invert.to_a,
-                                                  suggested_display_name_preference(group)),
-                               id: "person_display_name_preference_#{person.id}",
-                               class: "mt-1 rounded-md border-gray-300 text-sm" %>
-              </div>
-
-              <label class="flex items-center gap-2 text-sm text-gray-700 pb-2">
-                <%= hidden_field_tag "person[contributions_anonymous]", "0" %>
-                <%= check_box_tag "person[contributions_anonymous]", "1",
-                                  group.suggested_preference == AuthorCreditable::ANONYMOUS || person.contributions_anonymous?,
-                                  id: "person_contributions_anonymous_#{person.id}",
-                                  class: "rounded border-gray-300" %>
-                Contributions show as anonymous
-              </label>
-
-              <%= submit_tag "Apply to profile",
-                             class: "rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 cursor-pointer" %>
-              <span class="text-xs text-gray-500 pb-2">
-                Suggested: the most restrictive preference across their content.
-              </span>
-            <% end %>
-          </div>
-
-          <table class="w-full text-sm">
-            <thead class="text-left text-xs uppercase text-gray-500 bg-gray-50">
-              <tr>
-                <th class="px-4 py-2 font-medium">Content</th>
-                <th class="px-4 py-2 font-medium">Type</th>
-                <th class="px-4 py-2 font-medium">Renders as</th>
-                <th class="px-4 py-2 font-medium">Stored consent</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <% group.records.each do |record| %>
-                <tr>
-                  <td class="px-4 py-2">
-                    <%= link_to divergence_record_title(record), polymorphic_path(record),
-                                target: "_blank", rel: "noopener",
-                                title: "Opens in a new tab",
-                                class: "text-blue-700 hover:underline" %>
-                  </td>
-                  <td class="px-4 py-2 text-gray-600"><%= record.class.name.underscore.humanize %></td>
-                  <td class="px-4 py-2 text-gray-800"><%= record.author_credit %></td>
-                  <td class="px-4 py-2">
-                    <%= form_with url: update_item_author_credit_divergences_path, method: :patch,
-                                  data: { turbo_frame: "_top" },
-                                  class: "flex items-center gap-2" do %>
-                      <%= hidden_field_tag :record_type, record.class.name %>
-                      <%= hidden_field_tag :record_id, record.id %>
-                      <%= render "filter_fields" %>
-                      <%= select_tag "author_credit_preference",
-                                     options_for_select(AuthorCreditable::ADMIN_FORM_OPTIONS.to_a, record.author_credit_preference),
-                                     class: "rounded-md border-gray-300 text-sm" %>
-                      <%= submit_tag "Save",
-                                     class: "rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer" %>
-                    <% end %>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-          <p class="px-4 py-2 text-xs text-gray-500 border-t border-gray-100">
-            Only <strong>Anonymous</strong> changes what renders &mdash; the other values just
-            re-record what was consented to.
-          </p>
-        </div>
+          <div class="mt-1 text-2xl font-bold <%= clear ? "text-green-700" : "text-gray-900" %>"><%= section[:count] %></div>
+          <div class="text-xs text-gray-500"><%= clear ? "clear" : "#{section[:unit].pluralize(section[:count])} to review" %></div>
+        <% end %>
       <% end %>
     </div>
+
+    <p class="text-sm text-gray-600 mb-6">
+      Work these top to bottom. A record can appear in more than one section when it needs
+      more than one fix.
+    </p>
+
+    <%# ── 1. Stored consent snapshot drifted from the profile ───────────────── %>
+    <section id="section-preference" class="mb-10 scroll-mt-4">
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">1. Preference no longer matches the profile</h2>
+      <p class="text-sm text-gray-600 mb-4">
+        These are credited correctly &mdash; the profile formats them &mdash; but the stored record of
+        what the submitter consented to has since drifted. Confirm which one is right.
+      </p>
+
+      <% if @result.preference.empty? %>
+        <%= render "section_clear",
+              message: "No preference divergences. Every stored consent snapshot matches its author's profile.",
+              cleanup: "Ask your developers to remove any unused author credit code." %>
+      <% else %>
+        <p class="text-sm text-gray-600 mb-3"><%= pluralize(@result.preference.size, "person") %> to review.</p>
+        <div class="space-y-6">
+          <%= render partial: "preference_group", collection: @result.preference, as: :group %>
+        </div>
+      <% end %>
+    </section>
+
+    <%# ── 2. Credited by a legacy free-text name ────────────────────────────── %>
+    <section id="section-legacy" class="mb-10 scroll-mt-4">
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">2. Credited by a legacy name, not a person</h2>
+      <p class="text-sm text-gray-600 mb-4">
+        Pre-person records whose credit comes from a free-text column
+        (<code>workshops.full_name</code>, <code>resources.legacy_author_name</code>). The name shown
+        obeys nobody's profile and links nowhere. Crediting a real person replaces it.
+      </p>
+
+      <% if @result.legacy.empty? %>
+        <%= render "section_clear",
+              message: "No legacy author names left. Every record is credited to a real person.",
+              cleanup: "Ask your developers to remove any unused full_name code — the workshops.full_name and resources.legacy_author_name columns, their legacy_author_name_columns / legacy_author_name_text overrides, and the legacy branches in AuthorCreditable." %>
+      <% else %>
+        <%= render "unlinked_table", records: @result.legacy, name_header: "Legacy name", suggest_creator: false %>
+      <% end %>
+    </section>
+
+    <%# ── 3. author_id blank, credit falls back to the creator ──────────────── %>
+    <section id="section-creator" class="mb-10 scroll-mt-4">
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">3. Credited to the creator, not an author</h2>
+      <p class="text-sm text-gray-600 mb-4">
+        These have no <code>author_id</code>, so the credit falls back to whoever created the record.
+        The name is right and follows that person's profile, but it never links to them and the record
+        doesn't appear on their profile. Confirm the creator is the author, or pick someone else.
+        Idea records are excluded &mdash; they have no <code>author_id</code>, so the creator is their
+        correct and only credit path.
+      </p>
+
+      <% if @result.creator.empty? %>
+        <%= render "section_clear",
+              message: "No creator fallbacks. Every record names its author explicitly.",
+              cleanup: "Ask your developers to remove the created_by fallback in AuthorCreditable#author_credit." %>
+      <% else %>
+        <p class="text-sm text-gray-600 mb-3"><%= pluralize(@result.creator.size, "person") %> to confirm.</p>
+        <div class="space-y-6">
+          <% @result.creator.each do |group| %>
+            <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+              <div class="border-b border-gray-200 px-4 py-3">
+                <%= link_to group.person.full_name, person_path(group.person),
+                            class: "font-semibold text-gray-900 hover:underline" %>
+                <span class="text-sm text-gray-500">&mdash; created <%= pluralize(group.records.size, "record") %> with no author set</span>
+              </div>
+              <%= render "unlinked_table", records: group.records, name_header: "Renders as", suggest_creator: true %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </section>
+
+    <%# ── 4. Nothing to credit at all ───────────────────────────────────────── %>
+    <section id="section-unattributed" class="scroll-mt-4">
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">4. No author at all</h2>
+      <p class="text-sm text-gray-600 mb-4">
+        No author, no legacy name, and no person behind the creating account, so these fall back to a
+        generic label like &ldquo;AWBW Facilitator&rdquo;.
+      </p>
+
+      <% if @result.unattributed.empty? %>
+        <%= render "section_clear",
+              message: "Nothing unattributed. Every record has someone to credit.",
+              cleanup: "Ask your developers to remove the missing_author_label fallbacks." %>
+      <% else %>
+        <%= render "unlinked_table", records: @result.unattributed, name_header: "Renders as", suggest_creator: false %>
+      <% end %>
+    </section>
   <% end %>
 <% end %>
