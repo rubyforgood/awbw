@@ -13,6 +13,36 @@ RSpec.describe PersonPolicy, type: :policy do
     described_class.new(record, user: user)
   end
 
+  describe "#own_membership?" do
+    subject { policy_for(record: owned_person, user: user) }
+
+    context "with the person's own user" do
+      let(:user) { owner_user }
+
+      it { is_expected.to be_allowed_to(:own_membership?) }
+    end
+
+    context "with an admin looking at someone else" do
+      let(:user) { admin_user }
+
+      it { is_expected.not_to be_allowed_to(:own_membership?) }
+    end
+
+    context "with another signed-in user" do
+      let(:user) { regular_user }
+
+      it { is_expected.not_to be_allowed_to(:own_membership?) }
+    end
+
+    context "when membership is disabled" do
+      let(:user) { owner_user }
+
+      before { allow(Membership).to receive(:enabled?).and_return(false) }
+
+      it { is_expected.not_to be_allowed_to(:own_membership?) }
+    end
+  end
+
   describe "#index?" do
     context "with admin user" do
       subject { policy_for(user: admin_user) }

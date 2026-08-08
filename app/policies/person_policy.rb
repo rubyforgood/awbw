@@ -13,6 +13,10 @@ class PersonPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def own_membership?
+    owner? && Membership.enabled?
+  end
+
   def show_email_change?
     admin? || owner?
   end

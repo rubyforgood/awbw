@@ -14,8 +14,8 @@ production:
     class: ReconcileCheckoutPaymentsJob
     schedule: every day at 3am
 
-  renew_dues_terms:
-    class: RenewDuesTermsJob
+  issue_membership_invoices:
+    class: IssueMembershipInvoicesJob
     schedule: every day at 3:30am
 
   clear_solid_queue_finished_jobs:

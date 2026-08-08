@@ -2,6 +2,7 @@ class StripeChargeSucceededProcessor
   def call(event)
     stripe_charge = event.data.object
     return unless stripe_charge.paid
+    return if stripe_charge.subscription.present?
 
     return if Payment.exists?(stripe_charge_id: stripe_charge.id)
 

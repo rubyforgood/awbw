@@ -28,42 +28,42 @@ RSpec.describe Allocation, type: :model do
       end
     end
 
-    describe "dues registrations" do
-      let(:term) { create(:dues_registration, cost_cents: 2_500) }
+    describe "membership invoices" do
+      let(:term) { create(:membership_invoice, cost_cents: 2_500) }
       let(:payment) { create(:payment, amount_cents: 2_500, amount_cents_remaining: 2_500) }
 
-      it "is valid when amount is within the dues cost" do
+      it "is valid when amount is within the membership cost" do
         expect(build(:allocation, source: payment, allocatable: term, amount: 1_000)).to be_valid
       end
 
-      it "is invalid when allocating more than the remaining dues" do
+      it "is invalid when allocating more than the remaining membership balance" do
         create(:allocation, source: payment, allocatable: term, amount: 2_000)
         allocation = build(:allocation,
           source: create(:payment, amount_cents: 2_000, amount_cents_remaining: 2_000),
           allocatable: term, amount: 2_000)
 
         expect(allocation).not_to be_valid
-        expect(allocation.errors[:base].join).to include("Cannot allocate more than the remaining dues")
+        expect(allocation.errors[:base].join).to include("Cannot allocate more than the remaining membership balance")
       end
 
-      it "is invalid when the dues year is already fully paid" do
+      it "is invalid when the invoice is already fully paid" do
         create(:allocation, source: payment, allocatable: term, amount: 2_500)
         allocation = build(:allocation,
           source: create(:payment, amount_cents: 500, amount_cents_remaining: 500),
           allocatable: term, amount: 500)
 
         expect(allocation).not_to be_valid
-        expect(allocation.errors[:base]).to include("Dues year is already fully paid.")
+        expect(allocation.errors[:base]).to include("Membership invoice is already fully paid.")
       end
 
-      it "is invalid when the dues year is comped" do
-        allocation = build(:allocation, source: payment, allocatable: create(:dues_registration, :comped), amount: 500)
+      it "is invalid when the invoice is comped" do
+        allocation = build(:allocation, source: payment, allocatable: create(:membership_invoice, :comped), amount: 500)
 
         expect(allocation).not_to be_valid
-        expect(allocation.errors[:base]).to include("Cannot allocate to a dues year with no cost.")
+        expect(allocation.errors[:base]).to include("Cannot allocate to a membership invoice with no cost.")
       end
 
-      it "allows a reversal on a fully paid dues year" do
+      it "allows a reversal on a fully paid invoice" do
         create(:allocation, source: payment, allocatable: term, amount: 2_500)
         expect(build(:allocation, source: payment, allocatable: term, amount: -2_500)).to be_valid
       end

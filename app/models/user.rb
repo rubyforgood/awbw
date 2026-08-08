@@ -8,7 +8,7 @@ class User < ApplicationRecord
 
   before_save :sync_locked_at_from_locked
 
-  after_commit :start_dues_subscription, on: [ :create, :update ],
+  after_commit :start_membership, on: [ :create, :update ],
     if: :saved_change_to_welcome_instructions_sent_at?
 
   after_update :track_welcome_instructions
@@ -299,8 +299,8 @@ class User < ApplicationRecord
     track_auth_event("auth.welcome_instructions_sent")
   end
 
-  def start_dues_subscription
-    Dues::StartSubscription.call(person: person)
+  def start_membership
+    Membership::Start.call(person: person)
   end
 
   def track_account_deleted
