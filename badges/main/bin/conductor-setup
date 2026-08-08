@@ -7,19 +7,49 @@
 set -e
 cd $(dirname "$0")/..
 
-# Activate mise so the project's Ruby/Node are on PATH. This script runs
-# under /bin/sh, which does not source ~/.zshenv, so the shims-in-zshenv
-# install documented in CONTRIBUTING.md does not apply here.
+# Resolve mise so the project's Ruby/Node are on PATH. This script runs under
+# /bin/sh, which does not source ~/.zshenv, so the shims-in-zshenv install
+# documented in CONTRIBUTING.md does not apply here — and a fresh machine may
+# have no mise at all, only the system Ruby (2.6), which can't satisfy the
+# Gemfile and yields a cryptic "Could not find 'bundler'" error. Check the
+# common install locations (the official installer lands mise in ~/.local/bin,
+# Homebrew in /opt/homebrew/bin) and bootstrap it if it's missing, so setup is
+# self-contained and doesn't depend on the developer's shell being configured.
+MISE=""
+if command -v mise > /dev/null 2>&1; then
+  MISE="mise"
+else
+  for candidate in /opt/homebrew/bin/mise /usr/local/bin/mise "$HOME/.local/bin/mise"; do
+    if [ -x "$candidate" ]; then
+      MISE="$candidate"
+      break
+    fi
+  done
+fi
+
+if [ -z "$MISE" ]; then
+  echo "mise not found — installing it (needed for the project's Ruby/Node)..."
+  curl -fsSL https://mise.run | sh
+  MISE="$HOME/.local/bin/mise"
+fi
+
+if [ ! -x "$MISE" ] && ! command -v "$MISE" > /dev/null 2>&1; then
+  echo "Error: mise is required but could not be installed."
+  echo "Install it manually, then re-run: https://mise.jdx.dev/getting-started.html"
+  exit 1
+fi
+
+# Trust mise.toml (avoids a per-workspace prompt) and install the pinned
+# toolchain (.ruby-version + node) before activating — a fresh machine won't
+# have Ruby 4.0.1 yet, so the shims would otherwise resolve to nothing.
 # Use shims (not the activate hook): the shims output is a single POSIX
 # `export PATH=...` line, so it runs under any /bin/sh — including dash on
 # Linux — whereas `mise activate <shell>` emits shell-specific code that only
 # works in that exact shell. The script's interpreter, not the developer's
 # login shell, is what matters here.
-if command -v mise > /dev/null 2>&1; then
-  eval "$(mise activate bash --shims)"
-elif [ -x /opt/homebrew/bin/mise ]; then
-  eval "$(/opt/homebrew/bin/mise activate bash --shims)"
-fi
+"$MISE" trust > /dev/null 2>&1 || true
+"$MISE" install
+eval "$("$MISE" activate bash --shims)"
 
 # CONDUCTOR_PORT is Conductor-specific. Expose it under the generic
 # WORKSPACE_PORT name so the rest of the app (database.yml, initializers,
@@ -42,12 +72,6 @@ if [ -z "$CONDUCTOR_ROOT_PATH" ]; then
 fi
 
 echo "Setting up Conductor workspace..."
-
-# Trust mise.toml so we don't get prompted every workspace
-if command -v mise > /dev/null 2>&1; then
-  echo "Trusting mise.toml..."
-  mise trust
-fi
 
 # Symlink .env from the root repo so all workspaces share the same config.
 if [ -f "$CONDUCTOR_ROOT_PATH/.env" ]; then
