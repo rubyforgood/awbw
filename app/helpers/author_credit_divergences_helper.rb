@@ -4,6 +4,15 @@ module AuthorCreditDivergencesHelper
     record.try(:title).presence || record.try(:name).presence || "##{record.id}"
   end
 
+  # Wraps plain records for the shared assign-a-person table. Sections 3 and 4 have
+  # no free-text name to guess from, so the suggestion is passed in (the creator) or
+  # omitted entirely.
+  def assignable_rows(records, suggested_author: nil)
+    records.map do |record|
+      AuthorCreditDivergenceQuery::AssignableRow.new(record: record, suggested_author: suggested_author)
+    end
+  end
+
   # An empty page means "nothing left to reconcile" only when nothing is filtered
   # out — otherwise the congratulations would be reporting on the filter.
   def divergence_filters_applied?

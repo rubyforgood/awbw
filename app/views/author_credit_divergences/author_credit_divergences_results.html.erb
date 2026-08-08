@@ -22,7 +22,7 @@
     <%# Section counts up front so the admin can see the full scope and jump to any section. %>
     <% overview = [
          { anchor: "section-preference",   num: 1, label: "Preference drift", count: @result.preference.size,   unit: "person" },
-         { anchor: "section-legacy",       num: 2, label: "Legacy name",      count: @result.legacy.size,       unit: "record" },
+         { anchor: "section-legacy",       num: 2, label: "Legacy name",      count: @result.legacy.sum { |g| g.entries.size },       unit: "record" },
          { anchor: "section-creator",      num: 3, label: "Creator fallback", count: @result.creator.size,      unit: "person" },
          { anchor: "section-unattributed", num: 4, label: "No author",        count: @result.unattributed.size, unit: "record" }
        ] %>
@@ -77,12 +77,12 @@
         obeys nobody's profile and links nowhere. Crediting a real person replaces it.
       </p>
 
-      <% if @result.legacy.empty? %>
+      <%= render partial: "legacy_group", collection: @result.legacy, as: :group %>
+
+      <% if @result.legacy_empty? %>
         <%= render "section_clear",
-              message: "No legacy author names left. Every record is credited to a real person.",
-              cleanup: "Ask your developers to remove any unused full_name code — the workshops.full_name and resources.legacy_author_name columns, their legacy_author_name_columns / legacy_author_name_text overrides, and the legacy branches in AuthorCreditable." %>
-      <% else %>
-        <%= render "unlinked_table", records: @result.legacy, name_header: "Legacy name", suggest_creator: false %>
+              message: "Every legacy name column is clear.",
+              cleanup: "Ask your developers to remove both unused fields and the legacy-name handling in AuthorCreditable that reads them." %>
       <% end %>
     </section>
 
@@ -112,7 +112,10 @@
                             class: "font-semibold text-gray-900 hover:underline" %>
                 <span class="text-sm text-gray-500">&mdash; created <%= pluralize(group.records.size, "record") %> with no author set</span>
               </div>
-              <%= render "unlinked_table", records: group.records, name_header: "Renders as", suggest_creator: true %>
+              <%= render "unlinked_table",
+                    rows: assignable_rows(group.records, suggested_author: group.person),
+                    name_header: "Renders as",
+                    suggestion_note: "Suggested: the person who created the record." %>
             </div>
           <% end %>
         </div>
@@ -124,15 +127,15 @@
       <h2 class="text-lg font-semibold text-gray-900 mb-1">4. No author at all</h2>
       <p class="text-sm text-gray-600 mb-4">
         No author, no legacy name, and no person behind the creating account, so these fall back to a
-        generic label like &ldquo;AWBW Facilitator&rdquo;.
+        generic placeholder like &ldquo;AWBW Facilitator&rdquo; or &ldquo;AWBW Staff&rdquo;.
       </p>
 
       <% if @result.unattributed.empty? %>
         <%= render "section_clear",
               message: "Nothing unattributed. Every record has someone to credit.",
-              cleanup: "Ask your developers to remove the missing_author_label fallbacks." %>
+              cleanup: "Ask your developers to remove the generic placeholder names, since no record falls back to one any more." %>
       <% else %>
-        <%= render "unlinked_table", records: @result.unattributed, name_header: "Renders as", suggest_creator: false %>
+        <%= render "unlinked_table", rows: assignable_rows(@result.unattributed), name_header: "Renders as" %>
       <% end %>
     </section>
   <% end %>

@@ -24,6 +24,9 @@ module AuthorCreditable
     # Snapshot the credited person's profile preference on create, so the column keeps
     # recording consent-at-submission without a human ever picking it.
     before_create :snapshot_author_credit_preference
+    # A blank preference means "no per-item override, just follow the profile" — store
+    # it as nil so the divergence worklist (which excludes nil) never re-flags it.
+    normalizes :author_credit_preference, with: ->(value) { value.presence }
     validates :author_credit_preference, inclusion: { in: AUTHOR_CREDIT_PREFERENCES }, allow_blank: true
 
     # Filter to content explicitly authored by a person (belongs_to :author);

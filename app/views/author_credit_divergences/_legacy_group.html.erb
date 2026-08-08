@@ -1,0 +1,19 @@
+<%# One legacy free-text column. Reported separately from its siblings so clearing
+    a single column is a visible milestone — that's what makes it safe to drop. %>
+<div class="mb-6">
+  <h3 class="text-sm font-semibold text-gray-800 mb-2">
+    <%= group.model.name.underscore.humanize %>
+    <code class="text-xs font-normal text-gray-500"><%= group.column %></code>
+  </h3>
+
+  <% if group.empty? %>
+    <%= render "section_clear",
+          message: "No #{group.model.name.underscore.humanize.downcase} records are credited by #{group.field} any more.",
+          cleanup: "Ask your developers to remove the unused #{group.column} field." %>
+  <% else %>
+    <%= render "unlinked_table",
+          rows: group.entries,
+          name_header: "Legacy name",
+          suggestion_note: "Suggested: a person whose name matches the legacy text." %>
+  <% end %>
+</div>

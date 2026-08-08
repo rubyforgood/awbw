@@ -104,6 +104,12 @@ RSpec.shared_examples "author_creditable" do |factory:|
       expect(record.reload.author_credit_preference).to eq("last_name_only")
     end
 
+    it "normalizes a blank preference to nil so the record just follows the profile" do
+      record = create(factory, created_by: author_user, author_credit_preference: "full_name")
+      record.update!(author_credit_preference: "")
+      expect(record.reload.author_credit_preference).to be_nil
+    end
+
     it "is left alone when the profile later changes, and reports the divergence" do
       person.update!(display_name_preference: "first_name_only")
       record = create(factory, created_by: author_user, author_credit_preference: nil)

@@ -29,4 +29,35 @@ RSpec.describe "Person profile workshops section", type: :request do
 
     expect(response.body).not_to include("Only Created Workshop")
   end
+
+  it "flags an anonymously-credited authored workshop for an admin" do
+    create(:workshop, :published, title: "Hush Workshop",
+                                  author: person, author_credit_preference: "anonymous")
+
+    get_workshops_section
+
+    expect(response.body).to include("Hush Workshop")
+    expect(response.body).to include("Credited as Anonymous")
+  end
+
+  it "does not flag a normally-credited workshop" do
+    create(:workshop, :published, title: "Loud Workshop",
+                                  author: person, author_credit_preference: "full_name")
+
+    get_workshops_section
+
+    expect(response.body).to include("Loud Workshop")
+    expect(response.body).not_to include("Credited as Anonymous")
+  end
+
+  it "still shows the anonymous workshop, flagged, to the owner viewing their own profile" do
+    sign_in owner_user
+    create(:workshop, :published, title: "Hush Workshop",
+                                  author: person, author_credit_preference: "anonymous")
+
+    get_workshops_section
+
+    expect(response.body).to include("Hush Workshop")
+    expect(response.body).to include("Credited as Anonymous")
+  end
 end

@@ -137,6 +137,25 @@ RSpec.describe "AuthorCreditDivergences", type: :request do
       expect(story.reload.author_credit_preference).to eq("full_name")
     end
 
+    it "clears the stored snapshot when set to blank, so the item just follows the profile" do
+      story.update_column(:author_credit_preference, "last_name_only")
+
+      patch update_item_author_credit_divergences_path,
+            params: { record_type: "Story", record_id: story.id, author_credit_preference: "" }
+
+      expect(story.reload.author_credit_preference).to be_nil
+    end
+
+    it "refuses to clear the snapshot of an item submitted anonymously" do
+      story.update_column(:author_credit_preference, "anonymous")
+
+      patch update_item_author_credit_divergences_path,
+            params: { record_type: "Story", record_id: story.id, author_credit_preference: "" }
+
+      expect(story.reload.author_credit_preference).to eq("anonymous")
+      expect(flash[:alert]).to be_present
+    end
+
     it "makes one item anonymous without touching the person's others" do
       other = create(:story, created_by: author_user, author: person)
 

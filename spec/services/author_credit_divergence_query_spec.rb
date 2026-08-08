@@ -94,12 +94,15 @@ RSpec.describe AuthorCreditDivergenceQuery do
   end
 
   describe "the legacy section" do
+    def legacy_records_for(column)
+      group = described_class.new.call.legacy.find { |g| g.column == column }
+      group.entries.map(&:record)
+    end
+
     it "lists records credited by a free-text name with no person" do
       workshop = create(:workshop, author: nil, full_name: "Marguerite Pre-Person")
 
-      legacy = described_class.new.call.legacy
-
-      expect(legacy).to include(workshop)
+      expect(legacy_records_for("workshops.full_name")).to include(workshop)
       expect(workshop.author_credit).to eq("Marguerite Pre-Person")
     end
 
@@ -107,12 +110,40 @@ RSpec.describe AuthorCreditDivergenceQuery do
       workshop = create(:workshop, author: nil, full_name: "Marguerite Pre-Person")
       workshop.update!(author: person)
 
-      expect(described_class.new.call.legacy).not_to include(workshop)
+      expect(legacy_records_for("workshops.full_name")).not_to include(workshop)
+    end
+
+    it "keeps a group per legacy column even when it is empty, so each can be retired" do
+      columns = described_class.new.call.legacy.map(&:column)
+
+      expect(columns).to contain_exactly("workshops.full_name", "resources.legacy_author_name")
+      expect(described_class.new.call).to be_legacy_empty
     end
 
     it "excludes models that have no legacy column" do
       create(:story, created_by: author_user, author: nil)
-      expect(described_class.new.call.legacy).to be_empty
+      expect(described_class.new.call.legacy.flat_map(&:entries)).to be_empty
+    end
+
+    it "suggests a person whose name matches the legacy text" do
+      match = create(:person, first_name: "Marguerite", last_name: "Duras")
+      workshop = create(:workshop, author: nil, full_name: "Marguerite Duras")
+
+      entry = described_class.new.call.legacy
+                             .find { |g| g.column == "workshops.full_name" }
+                             .entries.find { |e| e.record == workshop }
+
+      expect(entry.suggested_author).to eq(match)
+    end
+
+    it "suggests nothing when no person matches" do
+      workshop = create(:workshop, author: nil, full_name: "Nobody Byanyname")
+
+      entry = described_class.new.call.legacy
+                             .find { |g| g.column == "workshops.full_name" }
+                             .entries.find { |e| e.record == workshop }
+
+      expect(entry.suggested_author).to be_nil
     end
   end
 

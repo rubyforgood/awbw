@@ -52,24 +52,26 @@ class PeopleController < ApplicationController
       when "workshops"
         # Credit the person for workshops they authored — not ones their user
         # merely created (created_by is a pure audit trail).
-        @workshops = @person.workshops_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        @workshops = visible_authored_content(@person.workshops_as_author).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshops", locals: { person: @person, workshops: @workshops }
       when "workshop_variations"
         # Credit the person for variations they authored — not ones their user
         # merely entered (created_by is a pure audit trail).
-        @workshop_variations = @person.workshop_variations_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        @workshop_variations = visible_authored_content(@person.workshop_variations_as_author).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshop_variations", locals: { person: @person, workshop_variations: @workshop_variations }
       when "stories"
         # Credit the person for stories they authored or were spotlighted in —
         # not ones their user merely entered (created_by is a pure audit trail).
-        story_ids = @person.stories_as_author.pluck(:id) +
+        # Spotlighted stories are always listed: the spotlight is a separate credit
+        # from authorship, so the anonymity flag doesn't apply to it.
+        story_ids = visible_authored_content(@person.stories_as_author).pluck(:id) +
           @person.stories_as_spotlighted_facilitator.pluck(:id)
         @stories = Story.where(id: story_ids).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/stories", locals: { person: @person, stories: @stories }
       when "resources"
         # Credit the person for resources they authored — not ones their user
         # merely entered (created_by is a pure audit trail).
-        @resources = @person.resources_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        @resources = visible_authored_content(@person.resources_as_author).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/resources", locals: { person: @person, resources: @resources }
       when "events"
         @event_registrations = @person.event_registrations.active.includes(:event).order("events.start_date DESC").references(:events).paginate(page: params[:page], per_page: per_page)
@@ -297,6 +299,15 @@ class PeopleController < ApplicationController
 
   private
 
+  # Anonymously-credited content is listed on the profile only for the person
+  # themselves and admins — showing it to anyone else would tie an "Anonymous"
+  # credit back to a name. `contributions_anonymous` anonymizes every item at once;
+  # otherwise only the items whose stored consent is "anonymous" are hidden.
+  def visible_authored_content(scope)
+    return scope if allowed_to?(:manage?, Person) || current_user&.person_id == @person.id
+    return scope.none if @person.contributions_anonymous?
+    scope.where.not(author_credit_preference: AuthorCreditable::ANONYMOUS)
+  end
 
   def set_person
     @person = Person.find(params[:id])

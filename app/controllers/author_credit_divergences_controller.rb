@@ -33,6 +33,15 @@ class AuthorCreditDivergencesController < ApplicationController
     return redirect_to(author_credit_divergences_path(filters), alert: "Unknown record type.") unless model
 
     record = model.find(params[:record_id])
+
+    # Anonymity is a one-way latch: clearing the snapshot of an item submitted
+    # anonymously would silently de-anonymize it. A deliberate re-credit still works
+    # by picking an explicit preference.
+    if params[:author_credit_preference].blank? && record.author_credit_preference == AuthorCreditable::ANONYMOUS
+      return redirect_to(author_credit_divergences_path(filters),
+                         alert: "Can't clear the consent for an item submitted anonymously — pick an explicit preference instead.")
+    end
+
     record.author_credit_preference = params[:author_credit_preference]
     record.updated_by = current_user if record.respond_to?(:updated_by=)
 

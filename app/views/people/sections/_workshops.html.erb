@@ -2,7 +2,8 @@
   <% if workshops.any? %>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 blur-on-submit">
       <% workshops.each do |workshop| %>
-        <%= render "show_card", record: workshop.decorate, title_font_size: "text-sm" %>
+        <%= render "show_card", record: workshop.decorate, title_font_size: "text-sm",
+                   anonymous: workshop.credit_anonymous?(person) %>
       <% end %>
     </div>
     <div class="mt-6 flex justify-center">

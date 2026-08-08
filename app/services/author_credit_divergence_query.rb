@@ -41,9 +41,21 @@ class AuthorCreditDivergenceQuery
   }.freeze
 
   PersonGroup = Struct.new(:person, :records, :suggested_preference, keyword_init: true)
+
+  # One per legacy column, kept even when empty so the page can congratulate each
+  # field separately — clearing a column is what makes it safe to drop.
+  LegacyGroup = Struct.new(:model, :column, :entries, keyword_init: true) do
+    def empty? = entries.empty?
+    def field = column.split(".").last
+  end
+  # A row an admin can resolve by picking a person, optionally pre-guessed.
+  AssignableRow = Struct.new(:record, :suggested_author, keyword_init: true)
+
   Result = Struct.new(:preference, :legacy, :creator, :unattributed, keyword_init: true) do
+    def legacy_empty? = legacy.all?(&:empty?)
+
     def empty?
-      preference.empty? && legacy.empty? && creator.empty? && unattributed.empty?
+      preference.empty? && legacy_empty? && creator.empty? && unattributed.empty?
     end
   end
 
@@ -61,7 +73,7 @@ class AuthorCreditDivergenceQuery
   def call
     Result.new(
       preference: preference_groups,
-      legacy: legacy_records,
+      legacy: legacy_groups,
       creator: creator_groups,
       unattributed: unattributed_records
     )
@@ -104,15 +116,48 @@ class AuthorCreditDivergenceQuery
   end
 
   # ── Section 2: credited by a free-text name, with no person behind it ──────
-  # The person filter can't apply here: these records have no credited person,
-  # which is the whole problem with them.
-  def legacy_records
-    return [] if preference || person_id
+  # One group per legacy column, so each field can be reported (and retired)
+  # on its own. The person filter can't apply here: these records have no
+  # credited person, which is the whole problem with them.
+  def legacy_groups
+    groups = authorable_models.flat_map do |model|
+      model.legacy_author_name_columns.map { |column| [ model, column ] }
+    end
 
+    records = preference || person_id ? [] : legacy_candidates
+    suggestions = suggested_authors_for(records)
+
+    groups.map do |model, column|
+      entries = records.select { |record| record.is_a?(model) }.map do |record|
+        AssignableRow.new(record: record, suggested_author: suggestions[normalized(record.legacy_author_name_text)])
+      end
+      LegacyGroup.new(model: model, column: column, entries: entries)
+    end
+  end
+
+  def legacy_candidates
     authorable_models.flat_map do |model|
       next [] if model.legacy_author_name_columns.empty?
       sorted(scoped(model).where(author_id: nil).select { |record| record.legacy_author_name_text.present? })
     end
+  end
+
+  # Guess who each free-text name refers to, so an admin can confirm rather than
+  # look every one up. Matches on the whole name, or on first + last token, in one
+  # query for the whole page rather than one per row.
+  def suggested_authors_for(records)
+    names = records.filter_map { |record| record.legacy_author_name_text.presence }.uniq
+    return {} if names.empty?
+
+    candidates = Person.where(last_name: names.flat_map { |name| name.split(/\s+/) }.uniq)
+    by_normalized_full_name = candidates.index_by { |person| normalized(person.full_name) }
+
+    names.index_with { |name| by_normalized_full_name[normalized(name)] }
+         .transform_keys { |name| normalized(name) }
+  end
+
+  def normalized(value)
+    value.to_s.downcase.gsub(/\s+/, "")
   end
 
   # ── Section 3: author_id blank, so the credit falls back to the creator ────
