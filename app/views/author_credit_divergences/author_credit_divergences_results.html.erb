@@ -108,6 +108,7 @@
             <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
               <div class="border-b border-gray-200 px-4 py-3">
                 <%= link_to group.person.full_name, person_path(group.person),
+                            target: "_blank", rel: "noopener", title: "Opens in a new tab",
                             class: "font-semibold text-gray-900 hover:underline" %>
                 <span class="text-sm text-gray-500">&mdash; created <%= pluralize(group.records.size, "record") %> with no author set</span>
               </div>

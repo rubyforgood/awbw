@@ -1,8 +1,11 @@
 <% person = group.person %>
-<div id="<%= dom_id(person, :divergence) %>" class="rounded-lg border border-gray-200 bg-white shadow-sm scroll-mt-4">
+<% highlighted = params[:highlight].to_s == person.id.to_s %>
+<div id="<%= dom_id(person, :divergence) %>" class="rounded-lg border shadow-sm scroll-mt-4 transition-colors duration-150 <%= highlighted ? "border-yellow-400 bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "border-gray-200 bg-white" %>">
   <div class="border-b border-gray-200 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
     <div>
-      <%= link_to person.full_name, person_path(person), class: "font-semibold text-gray-900 hover:underline" %>
+      <%= link_to person.full_name, person_path(person),
+                  target: "_blank", rel: "noopener", title: "Opens in a new tab",
+                  class: "font-semibold text-gray-900 hover:underline" %>
       <span class="text-sm text-gray-500">
         &mdash; profile currently credits as
         <strong><%= AuthorCreditable::ADMIN_FORM_OPTIONS.key(person.effective_author_credit_preference) %></strong>
