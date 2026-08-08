@@ -63,19 +63,24 @@ class EventsController < ApplicationController
   # shell (header, filters, skeleton).
   def training_attendees
     authorize!
-    if turbo_frame_request?
-      per_page = params[:number_of_items_per_page].presence || 25
-      people = filtered_training_attendees
-      @count_display = people.count
-      @people = people.paginate(page: params[:page], per_page: per_page)
-      @roster = TrainingAttendeesRoster.new(@people)
-      # Breakdowns aggregate the whole filtered set (not just the current page).
-      @breakdowns = TrainingAttendeesBreakdowns.new(people)
-      render :training_attendees_results
-    else
+    unless turbo_frame_request?
       set_training_attendee_filter_options
-      render :training_attendees
+      return render :training_attendees
     end
+
+    people = filtered_training_attendees
+    # The charts frame is loaded lazily (only when the user reveals it), so the
+    # expensive cross-event breakdowns run solely on that request.
+    if turbo_frame_request_id == "training_attendees_charts"
+      @breakdowns = TrainingAttendeesBreakdowns.new(people)
+      return render :training_attendees_charts
+    end
+
+    per_page = params[:number_of_items_per_page].presence || 25
+    @count_display = people.count
+    @people = people.paginate(page: params[:page], per_page: per_page)
+    @roster = TrainingAttendeesRoster.new(@people)
+    render :training_attendees_results
   end
 
   def new

@@ -20,6 +20,8 @@ RSpec.describe "Events training attendees", type: :request do
   end
 
   let(:frame_headers) { { "Turbo-Frame" => "training_attendees_results" } }
+  # The charts are lazy-loaded into their own frame, only when the admin reveals them.
+  let(:charts_frame_headers) { { "Turbo-Frame" => "training_attendees_charts" } }
 
   describe "GET /events/training_attendees" do
     context "as non-admin" do
@@ -88,9 +90,19 @@ RSpec.describe "Events training attendees", type: :request do
           expect(response.body).to include("Affiliation status")
         end
 
-        it "renders the breakdown charts in the results frame" do
-          create(:sectorable_item, sectorable: attendee, sector: create(:sector, name: "Healthcare"), is_primary: true)
+        it "offers a charts toggle in the results frame but defers the charts to their lazy frame" do
           get training_attendees_events_url, headers: frame_headers
+          expect(response.body).to include("Show charts")
+          expect(response.body).to include("Hide table")
+          # Charts are not rendered inline — they load into the lazy charts frame.
+          # ("All sectors" is a breakdown-card title; the roster's own header says
+          # "Primary sector", so that phrase isn't a reliable charts marker.)
+          expect(response.body).not_to include("All sectors")
+        end
+
+        it "renders the breakdown charts in the lazy charts frame" do
+          create(:sectorable_item, sectorable: attendee, sector: create(:sector, name: "Healthcare"), is_primary: true)
+          get training_attendees_events_url, headers: charts_frame_headers
           expect(response.body).to include("Primary sector")
           expect(response.body).to include("All sectors")
         end
@@ -122,7 +134,7 @@ RSpec.describe "Events training attendees", type: :request do
           cityless_registration = create(:event_registration, event: recent_training, registrant: cityless, status: "attended")
           cityless_registration.event_registration_organizations.create!(organization: create(:organization, name: "Cityless Org"))
 
-          get training_attendees_events_url, headers: frame_headers
+          get training_attendees_events_url, headers: charts_frame_headers
           expect(response).to have_http_status(:ok)
           expect(response.body).to include("All cities")
           expect(response.body).to include("Austin, TX")

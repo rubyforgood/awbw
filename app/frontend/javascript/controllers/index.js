@@ -117,6 +117,9 @@ application.register("org-toggle", OrgToggleController)
 import PaginatedFieldsController from "./paginated_fields_controller"
 application.register("paginated-fields", PaginatedFieldsController)
 
+import PanelToggleController from "./panel_toggle_controller"
+application.register("panel-toggle", PanelToggleController)
+
 import QuestionLibraryController from "./question_library_controller"
 application.register("question-library", QuestionLibraryController)
 
