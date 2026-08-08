@@ -55,6 +55,15 @@ RSpec.describe "AuthorCreditDivergences", type: :request do
       expect(story.reload.author_credit).to eq("Anonymous")
     end
 
+    it "updates the results in place with a Turbo Stream instead of a full-page redirect" do
+      patch update_person_author_credit_divergences_path,
+            params: { id: person.id, person: { display_name_preference: "first_name_only", contributions_anonymous: "0" } },
+            as: :turbo_stream
+
+      expect(response.media_type).to eq(Mime[:turbo_stream])
+      expect(response.body).to include("author_credit_divergences_results")
+    end
+
     it "carries the active filters through the redirect" do
       patch update_person_author_credit_divergences_path,
             params: { id: person.id, type: "Story",
@@ -77,6 +86,17 @@ RSpec.describe "AuthorCreditDivergences", type: :request do
     before { sign_in admin }
 
     let(:target) { create(:person, first_name: "Rosalind", last_name: "Franklin") }
+
+    it "updates the results in place with a Turbo Stream instead of a full-page redirect" do
+      workshop = create(:workshop, author: nil, full_name: "Marguerite Pre-Person")
+
+      patch assign_author_author_credit_divergences_path,
+            params: { record_type: "Workshop", record_id: workshop.id, author_id: target.id },
+            as: :turbo_stream
+
+      expect(response.media_type).to eq(Mime[:turbo_stream])
+      expect(response.body).to include("author_credit_divergences_results")
+    end
 
     it "credits a legacy free-text record to a real person" do
       workshop = create(:workshop, author: nil, full_name: "Marguerite Pre-Person")
@@ -135,6 +155,16 @@ RSpec.describe "AuthorCreditDivergences", type: :request do
             params: { record_type: "Story", record_id: story.id, author_credit_preference: "full_name" }
 
       expect(story.reload.author_credit_preference).to eq("full_name")
+    end
+
+    it "updates the results in place with a Turbo Stream instead of a full-page redirect" do
+      patch update_item_author_credit_divergences_path,
+            params: { record_type: "Story", record_id: story.id, author_credit_preference: "full_name" },
+            as: :turbo_stream
+
+      expect(response.media_type).to eq(Mime[:turbo_stream])
+      expect(response.body).to include("author_credit_divergences_results")
+      expect(response.body).to include("flash_now")
     end
 
     it "clears the stored snapshot when set to blank, so the item just follows the profile" do

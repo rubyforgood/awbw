@@ -19,9 +19,9 @@ class AuthorCreditDivergencesController < ApplicationController
     person.updated_by = current_user
 
     if person.save
-      redirect_to author_credit_divergences_path(filters), notice: "Updated credit preferences for #{person.full_name}."
+      render_divergence_change("Updated credit preferences for #{person.full_name}.", :notice)
     else
-      redirect_to author_credit_divergences_path(filters), alert: person.errors.full_messages.to_sentence
+      render_divergence_change(person.errors.full_messages.to_sentence, :alert)
     end
   end
 
@@ -30,7 +30,7 @@ class AuthorCreditDivergencesController < ApplicationController
   # any other value only re-records history (see AuthorCreditable).
   def update_item
     model = AuthorCreditDivergenceQuery.model_for(params[:record_type])
-    return redirect_to(author_credit_divergences_path(filters), alert: "Unknown record type.") unless model
+    return render_divergence_change("Unknown record type.", :alert) unless model
 
     record = model.find(params[:record_id])
 
@@ -38,17 +38,16 @@ class AuthorCreditDivergencesController < ApplicationController
     # anonymously would silently de-anonymize it. A deliberate re-credit still works
     # by picking an explicit preference.
     if params[:author_credit_preference].blank? && record.author_credit_preference == AuthorCreditable::ANONYMOUS
-      return redirect_to(author_credit_divergences_path(filters),
-                         alert: "Can't clear the consent for an item submitted anonymously — pick an explicit preference instead.")
+      return render_divergence_change("Can't clear the consent for an item submitted anonymously — pick an explicit preference instead.", :alert)
     end
 
     record.author_credit_preference = params[:author_credit_preference]
     record.updated_by = current_user if record.respond_to?(:updated_by=)
 
     if record.save
-      redirect_to author_credit_divergences_path(filters), notice: "Updated credit for #{model.name.underscore.humanize.downcase} ##{record.id}."
+      render_divergence_change("Updated credit for #{model.name.underscore.humanize.downcase} ##{record.id}.", :notice)
     else
-      redirect_to author_credit_divergences_path(filters), alert: record.errors.full_messages.to_sentence
+      render_divergence_change(record.errors.full_messages.to_sentence, :alert)
     end
   end
 
@@ -58,24 +57,36 @@ class AuthorCreditDivergencesController < ApplicationController
   # the record stops being used.
   def assign_author
     model = AuthorCreditDivergenceQuery.model_for(params[:record_type])
-    return redirect_to(author_credit_divergences_path(filters), alert: "Unknown record type.") unless model
+    return render_divergence_change("Unknown record type.", :alert) unless model
 
     record = model.find(params[:record_id])
     person = Person.find_by(id: params[:author_id])
-    return redirect_to(author_credit_divergences_path(filters), alert: "Choose a person to credit.") unless person
+    return render_divergence_change("Choose a person to credit.", :alert) unless person
 
     record.author_id = person.id
     record.updated_by = current_user if record.respond_to?(:updated_by=)
 
     if record.save
-      redirect_to author_credit_divergences_path(filters),
-                  notice: "Credited #{model.name.underscore.humanize.downcase} ##{record.id} to #{person.full_name}."
+      render_divergence_change("Credited #{model.name.underscore.humanize.downcase} ##{record.id} to #{person.full_name}.", :notice)
     else
-      redirect_to author_credit_divergences_path(filters), alert: record.errors.full_messages.to_sentence
+      render_divergence_change(record.errors.full_messages.to_sentence, :alert)
     end
   end
 
   private
+
+  # Update in place: re-render the results frame and flash over Turbo so a save
+  # doesn't flip the whole page. Falls back to a redirect for non-Turbo requests.
+  def render_divergence_change(message, type)
+    respond_to do |format|
+      format.turbo_stream do
+        flash.now[type] = message
+        @result = AuthorCreditDivergenceQuery.new(**filters.symbolize_keys).call
+        render :divergence_change
+      end
+      format.html { redirect_to author_credit_divergences_path(filters), flash: { type => message } }
+    end
+  end
 
   def authorize_page
     authorize! :author_credit_divergence, to: :"#{action_name}?", with: AuthorCreditDivergencePolicy

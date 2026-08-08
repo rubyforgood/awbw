@@ -2,7 +2,6 @@
     Person to preselect, e.g. the creator on the "credited to the creator" section). %>
 <% suggested = local_assigns[:suggested] %>
 <%= form_with url: assign_author_author_credit_divergences_path, method: :patch,
-              data: { turbo_frame: "_top" },
               class: "flex items-center gap-2" do %>
   <%= hidden_field_tag :record_type, record.class.name, id: nil %>
   <%= hidden_field_tag :record_id, record.id, id: nil %>

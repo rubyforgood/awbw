@@ -36,7 +36,6 @@
           <td class="px-4 py-2 text-gray-800"><%= record.author_credit %></td>
           <td class="px-4 py-2">
             <%= form_with url: update_item_author_credit_divergences_path, method: :patch,
-                          data: { turbo_frame: "_top" },
                           class: "flex items-center gap-2" do %>
               <%= hidden_field_tag :record_type, record.class.name, id: nil %>
               <%= hidden_field_tag :record_id, record.id, id: nil %>
@@ -65,7 +64,6 @@
   <%# The action lands after the supportive data above: read the content, then apply. %>
   <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
     <%= form_with url: update_person_author_credit_divergences_path, method: :patch,
-                  data: { turbo_frame: "_top" },
                   class: "flex flex-wrap items-end gap-3" do %>
       <%= hidden_field_tag :id, person.id, id: nil %>
       <%= render "filter_fields" %>
@@ -91,9 +89,8 @@
 
       <%= submit_tag "Apply to profile",
                      class: "rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 cursor-pointer" %>
-      <span class="text-xs text-gray-500 pb-2">
+      <span class="basis-full text-xs text-gray-500">
         Suggested: <strong><%= AuthorCreditable::ADMIN_FORM_OPTIONS.key(group.suggested_preference) %></strong>
-        &mdash; the most restrictive consent across <%= person.full_name %>'s content.
       </span>
     <% end %>
   </div>
