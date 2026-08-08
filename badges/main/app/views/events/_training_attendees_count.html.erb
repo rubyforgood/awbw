@@ -1,0 +1,15 @@
+<%# Header + count for the training-attendees index. Rendered on the shell (no
+    count yet) and replaced out-of-band by the results frame once the page loads. %>
+<div id="training_attendees_count" class="mb-6">
+  <h1 class="text-2xl font-semibold text-gray-900 flex items-center gap-2">
+    <i class="fa-solid fa-user-pen <%= DomainTheme.text_class_for(:event_registrations, intensity: 500) %>"></i>
+    Training attendees
+  </h1>
+  <p class="text-sm text-gray-600 mt-1">
+    <% if @count_display %>
+      <%= pluralize(@count_display, "person") %> who have attended a facilitator training
+    <% else %>
+      Everyone who has attended a facilitator training
+    <% end %>
+  </p>
+</div>

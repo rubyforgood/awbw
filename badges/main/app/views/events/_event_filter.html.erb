@@ -1,11 +1,11 @@
 <%# Specific-event filter shared by the revenue/participation/statistics report
     forms. Scopes the report(s) to the chosen event. `all_label` overrides the
     blank option (revenue lists paid events only). %>
-<div class="flex flex-col gap-1">
-  <label class="text-xs font-medium text-gray-600" for="event_id">Event</label>
+<div class="w-full sm:w-56">
+  <label class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" for="event_id">Event</label>
   <%= select_tag :event_id,
         options_from_collection_for_select(@filter_events, :id, :date_title, params[:event_id].to_i),
         include_blank: local_assigns.fetch(:all_label, "All events"),
-        class: "max-w-[13rem] px-3 py-2 rounded-md border-gray-300 shadow-sm text-sm text-gray-700",
+        class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
         onchange: "this.form.submit()" %>
 </div>

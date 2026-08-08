@@ -4,12 +4,12 @@
     shows without preloading everyone; the rest arrive via the remote search.
     Submits the form on change, matching the sibling selects. %>
 <% funder_label = @filter_funder&.compound_search_label %>
-<div class="flex flex-col gap-1">
-  <label class="text-xs font-medium text-gray-600" for="funder_sgid">Funder</label>
+<div class="w-full sm:w-64">
+  <label class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" for="funder_sgid">Funder</label>
   <%= select_tag :funder_sgid,
         options_for_select(funder_label ? [ [ funder_label[:label], funder_label[:id] ] ] : [], funder_label&.dig(:id)),
         include_blank: "All funders",
-        class: "min-w-[13rem] max-w-[16rem] bg-white px-3 py-2 rounded-md border-gray-300 shadow-sm text-sm text-gray-700",
+        class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
         data: { controller: "remote-select", remote_select_model_value: "person_or_organization" },
         onchange: "this.form.requestSubmit()" %>
 </div>

@@ -1,10 +1,10 @@
 <%# Combined event search (matches abbreviation OR title) shared by the report
     forms. Submits the form on change (blur/Enter), matching the auto-submitting
     selects beside it. %>
-<div class="flex flex-col gap-1">
-  <label class="text-xs font-medium text-gray-600" for="search">Event search</label>
+<div class="w-full sm:w-56">
+  <label class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" for="search">Event search</label>
   <%= text_field_tag :search, params[:search],
         placeholder: "Abbreviation or name",
-        class: "max-w-[14rem] px-3 py-2 rounded-md border-gray-300 shadow-sm text-sm text-gray-700",
+        class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
         onchange: "this.form.requestSubmit()" %>
 </div>

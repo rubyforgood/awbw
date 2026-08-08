@@ -46,6 +46,21 @@ class EventScholarshipReport
     # Attendance split by delivery format — these sum to attended_count.
     def training_attended_count = columns.reject(&:on_demand?).sum(&:attended_count)
     def on_demand_attended_count = columns.select(&:on_demand?).sum(&:attended_count)
+
+    # Distinct scholarship recipients who attended (registration status
+    # "attended") — people, not seats: someone who holds a scholarship across two
+    # of these trainings counts once. Split by delivery format (a person attending
+    # both formats counts in each split, so the two need not sum to the total).
+    def recipients_attended_count = distinct_attended_recipient_count(columns.map { |column| column.event.id })
+    def training_recipients_attended_count = distinct_attended_recipient_count(columns.reject(&:on_demand?).map { |column| column.event.id })
+    def on_demand_recipients_attended_count = distinct_attended_recipient_count(columns.select(&:on_demand?).map { |column| column.event.id })
+
+    private
+
+    def distinct_attended_recipient_count(event_ids)
+      return 0 if event_ids.empty?
+      EventRegistration.attended.with_scholarship.where(event_id: event_ids).distinct.count(:registrant_id)
+    end
   end
 
   # One calendar year of trainings, with its columns and totals.

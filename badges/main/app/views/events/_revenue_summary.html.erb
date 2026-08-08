@@ -24,8 +24,9 @@
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Net</div>
         <div class="mt-1 tabular-nums">
           <span class="text-xl font-bold <%= metrics.net_cents.negative? ? "text-rose-700" : "text-gray-900" %>"><%= signed_dollars_from_cents(metrics.net_cents) %></span>
-          <span class="text-xs text-gray-500">Fees collected +<br>scholarships (+ funded − unfunded)</span>
         </div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums">fees + funded −<br>unfunded − discounts</div>
+        <div class="mt-0.5 text-xs text-gray-400 tabular-nums"><%= dollars_from_cents(metrics.discount_cents) %> discounts</div>
       </div>
       <div class="rounded-lg border border-orange-200 bg-orange-50 p-3">
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Outstanding</div>
@@ -38,8 +39,18 @@
         <div class="mt-1 text-xs text-gray-500 tabular-nums">net once all paid</div>
       </div>
     </div>
-    <div class="mt-auto">
-      <%= column_chart report.chart_series, stacked: true, prefix: "$", thousands: ",",
+    <%# Per-year figures from the KPI boxes, appended to the chart hover. %>
+    <% revenue_tooltip_lines = report.years.reject { |group| group.year.nil? }.to_h { |group|
+         [ group.year.to_s, [
+           "Net: #{dollars_from_cents(group.net_cents)}",
+           "Outstanding: #{dollars_from_cents(group.outstanding_cents)}",
+           "Total expected: #{dollars_from_cents(group.total_expected_cents)}"
+         ] ] } %>
+    <div class="mt-auto"
+         data-controller="chart-tooltip-footer"
+         data-chart-tooltip-footer-chart-id-value="revenue-hub-chart"
+         data-chart-tooltip-footer-lines-value="<%= revenue_tooltip_lines.to_json %>">
+      <%= column_chart report.chart_series, id: "revenue-hub-chart", stacked: true, prefix: "$", thousands: ",",
             colors: [ "#2563eb", "#c026d3", "#dc2626" ], height: "120px", legend: false,
             library: { borderRadius: 3 } %>
     </div>

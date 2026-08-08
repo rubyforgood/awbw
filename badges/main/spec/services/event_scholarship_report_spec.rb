@@ -128,6 +128,43 @@ RSpec.describe EventScholarshipReport do
     end
   end
 
+  describe "recipients who attended (distinct people, not seats)" do
+    let(:scheduled) { create(:event, facilitator_training: true, on_demand: false, start_date: Date.new(2025, 3, 1)) }
+    let(:on_demand) { create(:event, facilitator_training: true, on_demand: true, start_date: Date.new(2025, 7, 1)) }
+    let(:recipient) { create(:person) }
+
+    subject(:report) { report_for([ scheduled, on_demand ]) }
+
+    before do
+      # One recipient attends both trainings, holding a scholarship on each.
+      [ scheduled, on_demand ].each do |event|
+        reg = create(:event_registration, event: event, registrant: recipient, status: "attended")
+        award = create(:scholarship, recipient: recipient, amount_cents: 1_000, grant: create(:grant))
+        create(:allocation, source: award, allocatable: reg, amount: 1_000)
+      end
+
+      # Attended the scheduled training but holds no scholarship — not a recipient.
+      create(:event_registration, event: scheduled, registrant: create(:person), status: "attended")
+
+      # Holds a scholarship but only registered (didn't attend) — excluded.
+      registered = create(:person)
+      reg = create(:event_registration, event: scheduled, registrant: registered, status: "registered")
+      award = create(:scholarship, recipient: registered, amount_cents: 1_000, grant: create(:grant))
+      create(:allocation, source: award, allocatable: reg, amount: 1_000)
+    end
+
+    it "counts distinct recipients who attended — once across trainings, recipients only" do
+      # 3 attended seats (recipient ×2 + the no-scholarship attendee), but 1 recipient person.
+      expect(report.attended_count).to eq(3)
+      expect(report.recipients_attended_count).to eq(1)
+    end
+
+    it "splits by delivery format (a cross-format person counts in each)" do
+      expect(report.training_recipients_attended_count).to eq(1)
+      expect(report.on_demand_recipients_attended_count).to eq(1)
+    end
+  end
+
   describe "grouping, totals, and featured year" do
     let(:e2024) { create(:event, facilitator_training: true, start_date: Date.new(2024, 5, 1)) }
     let(:e2025a) { create(:event, facilitator_training: true, cost_cents: 50_000, start_date: Date.new(2025, 3, 1)) }
