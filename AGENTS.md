@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (75) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (77) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -197,6 +197,8 @@ action, or `authorize! :workshop, to: :summary?`).
 - `EventRevenueReport` — Cross-event revenue report grouped by calendar year (money in vs org subsidy vs net, CE fees, chart series) for the CEO revenue page
 - `EventRevenueFigures` — Batch-loads the per-event money components `EventRevenueReport` rows are built from (registration payments/outstanding, funded/unfunded scholarships, discounts, CE paid/outstanding) in a fixed number of grouped queries; mirrors the `EventDashboard` definitions
 - `EventParticipationReport` — Cross-event participation report grouped by calendar year (unique people trained vs attended seats vs per-status outcome counts, chart series) for the events participation page; sibling of `EventRevenueReport`
+- `TrainingAttendeesRoster` — Cross-event counterpart to `EventDashboard`: builds the per-registrant lookup maps the shared `events/_registrant_roster` partial reads (sector/age/org/status/location/scholarship/CE plus the attended-trainings event column) for a paginated page of people who have attended a facilitator training; backs the `events#training_attendees` index
+- `TrainingAttendeesBreakdowns` — Aggregate counterpart to `EventDashboard`'s breakdown methods: computes the chart datasets (sectors, age groups, locations, program status, life experiences, settings, organizations, scholarship/CE) over the whole filtered training-attendee population, profile-sourced, for the shared `events/_registrant_breakdowns` partial on the `events#training_attendees` index
 - `ReportPeriods` — Shared module (included by `EventRevenueReport` and `EventParticipationReport`) resolving the reporting-hub period toggle (this year / last year / all time) to a metric scope + label for the summary cards
 - `EventScholarshipReport` — Cross-event scholarship report grouped by calendar year: scholarship dollars and award counts (funded vs unfunded, via `EventDashboard`) per facilitator training, plus an attended-trainee count split into "Training" (scheduled) vs "On-demand" (`event.on_demand?`). Sibling of `EventRevenueReport`/`EventParticipationReport` (includes `ReportPeriods`); powers the `events#scholarships` report page and the statistics-hub scholarship summary card
 - `ScholarshipApplication` — Gathers one person's scholarship-application answers for an event by field across all their submissions, so answers surface whether captured on a dedicated scholarship form, an embedded registration section, or the registration submission itself (used by the scholarship edit page and the public submission view)
@@ -314,6 +316,8 @@ end
 - `cocoon` — Nested form handling (cocoon gem)
 - `collection` — Filter form auto-submit with debounce
 - `column_toggle` — Toggle table column visibility
+- `panel_toggle` — Independent show/hide toggles pairing each button to the panel at its index (e.g. the training-attendees table/charts panels; revealing a hidden panel loads its lazy Turbo frame)
+- `chart_tooltip_footer` — Appends footer lines to a chartkick stacked tooltip (a summed Total and/or per-x pre-formatted lines), configuring the Chart.js callback that can't be passed through the ERB helper
 - `confirm_email` — Email confirmation UI
 - `dirty_form` — Unsaved changes detection
 - `dismiss` — Dismissable elements

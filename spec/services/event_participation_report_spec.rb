@@ -30,6 +30,13 @@ RSpec.describe EventParticipationReport do
       expect(row.total_registrations).to eq(6)
     end
 
+    it "splits registrations into active vs inactive" do
+      # Active: attended (2) + incomplete (1) + registered (1). Inactive: no_show (1) + cancelled (1).
+      expect(row.active_registration_count).to eq(4)
+      expect(row.inactive_registration_count).to eq(2)
+      expect(row.active_registration_count + row.inactive_registration_count).to eq(row.total_registrations)
+    end
+
     it "buckets the remaining outcomes into 'other' so the four sum to registrations" do
       expect(row.count_other).to eq(2) # registered + cancelled
       buckets = row.attended_seats + row.count_for("incomplete_attendance") + row.count_for("no_show") + row.count_other
@@ -117,9 +124,9 @@ RSpec.describe EventParticipationReport do
       create(:event_registration, event: webinar, status: "registered")
     end
 
-    it "sums every registration on each side regardless of outcome" do
+    it "sums only active registrations on each side (no-show excluded)" do
       split = report.registrations_split
-      expect(split[:trainings]).to eq(2)
+      expect(split[:trainings]).to eq(1) # attended is active; no_show is not
       expect(split[:non_trainings]).to eq(1)
     end
   end
@@ -218,9 +225,11 @@ RSpec.describe EventParticipationReport do
       expect(scoped.prior_year).to be_nil
     end
 
-    it "builds an oldest-to-newest stacked series: attended, partial, no show" do
+    it "builds an oldest-to-newest stacked series covering every status" do
       series = report.chart_series
-      expect(series.map { |s| s[:name] }).to eq([ "Attended", "Partial (1-day)", "No show" ])
+      expect(series.map { |s| s[:name] }).to eq(
+        [ "Attended", "Registered", "Transferred in", "Cancelled", "Partial (1-day)", "No show", "Transferred out" ]
+      )
       expect(series.first[:data].map(&:first)).to eq(%w[2024 2025 2026])
     end
   end

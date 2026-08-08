@@ -153,6 +153,7 @@ Rails.application.routes.draw do
       get :participation
       get :statistics
       get :scholarships
+      get :training_attendees
     end
     member do
       get :dashboard
