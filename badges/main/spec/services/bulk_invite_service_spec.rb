@@ -58,11 +58,11 @@ RSpec.describe BulkInviteService do
         expect(user.welcome_instructions_sent_at).to be_present
       end
 
-      it "starts dues for each invited person" do
+      it "starts a membership for each invited person" do
         user = create(:user, :unconfirmed, person: create(:person))
 
-        expect { described_class.call(ids: [ user.id ]) }.to change(DuesSubscription, :count).by(1)
-        expect(user.person.dues_registrations.sole.cost_cents).to eq(0)
+        expect { described_class.call(ids: [ user.id ]) }.to change(Membership, :count).by(1)
+        expect(user.person.membership_invoices.sole.cost_cents).to eq(0)
       end
 
       it "nils out created_at" do

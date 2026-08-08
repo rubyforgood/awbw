@@ -1,0 +1,41 @@
+<%= turbo_frame_tag :membership_invoices_results do %>
+  <% if @membership_invoices.any? %>
+    <div class="overflow-x-auto animate-fade blur-on-submit bg-white border border-gray-200 rounded-xl shadow-sm">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Person</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @membership_invoices.each do |membership_invoice| %>
+            <% invoice = membership_invoice.decorate %>
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <%= link_to invoice.person.full_name, person_path(invoice.person),
+                            class: "text-primary hover:text-primary-dark",
+                            data: { turbo_frame: "_top" } %>
+                <% if invoice.membership.cancelled? %>
+                  <span class="block text-xs text-gray-500">Membership cancelled</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= invoice.period_range %></td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= invoice.cost %></td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= invoice.paid %></td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <%= render "membership_invoices/status_pill", invoice: invoice, linked: true %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="text-gray-500 text-center py-6">No membership invoices yet.</p>
+  <% end %>
+  <div class="pagination flex justify-center mt-6"><%= tailwind_paginate @membership_invoices %></div>
+<% end %>

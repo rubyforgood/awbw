@@ -274,9 +274,12 @@
         </div>
       </div>
     <% end %>
-    <!-- DUES SECTION -->
-    <% if allowed_to?(:index?, DuesRegistration) %>
-      <%= render "people/dues", person: @person, subscription: @dues_subscription %>
+    <!-- MEMBERSHIP SECTION -->
+    <% if allowed_to?(:index?, MembershipInvoice) %>
+      <%= render "people/membership", person: @person, membership: @membership %>
+    <% end %>
+    <% if allowed_to?(:own_membership?, @person) %>
+      <%= render "people/my_membership", membership: @membership, autopay: @membership_autopay %>
     <% end %>
     <!-- SUBMITTED SECTION -->
     <% if allowed_to?(:show?, @person) %>

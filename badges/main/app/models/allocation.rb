@@ -21,10 +21,10 @@ class Allocation < ApplicationRecord
       fully_paid: "CE registration is already fully paid.",
       too_much: "Cannot allocate more than remaining CE cost."
     },
-    "DuesRegistration" => {
-      no_cost: "Cannot allocate to a dues year with no cost.",
-      fully_paid: "Dues year is already fully paid.",
-      too_much: "Cannot allocate more than the remaining dues."
+    "MembershipInvoice" => {
+      no_cost: "Cannot allocate to a membership invoice with no cost.",
+      fully_paid: "Membership invoice is already fully paid.",
+      too_much: "Cannot allocate more than the remaining membership balance."
     }
   }.freeze
 
