@@ -22,11 +22,13 @@
     <%# Ahoy-style filters shared with the participation report — time period,
         event type and event — each auto-submitting a GET form. %>
     <%= form_with url: revenue_events_path, method: :get, local: true,
-          class: "flex flex-wrap items-end gap-4 mb-8" do %>
+          class: "rounded-xl border border-gray-200 bg-white p-4 shadow-sm mb-8" do %>
       <%= hidden_field_tag :return_to, params[:return_to] %>
-      <%= render "time_period_filter" %>
-      <%= render "event_type_filter", all_label: "All paid events" %>
-      <%= render "event_filter", all_label: "All paid events" %>
+      <div class="flex flex-wrap items-end gap-4">
+        <%= render "time_period_filter" %>
+        <%= render "event_type_filter", all_label: "All paid events" %>
+        <%= render "event_filter", all_label: "All paid events" %>
+      </div>
     <% end %>
 
     <% if @report.any? %>

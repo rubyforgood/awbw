@@ -12,6 +12,16 @@
     <% metrics = period.metrics %>
     <div class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2"><%= period.label %></div>
     <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="rounded-lg border border-purple-200 bg-purple-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Recipients attended</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-purple-700"><%= number_with_delimiter(metrics.attended_count) %></div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= metrics.training_attended_count %> training · <%= metrics.on_demand_attended_count %> on-demand</div>
+      </div>
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Scholarships total</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-gray-900"><%= dollars_from_cents(metrics.scholarship_cents) %></div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= pluralize(metrics.scholarship_count, "award") %> · funded + unfunded</div>
+      </div>
       <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Funded</div>
         <div class="mt-1 text-xl font-bold tabular-nums text-emerald-700"><%= dollars_from_cents(metrics.funded_cents) %></div>
@@ -21,16 +31,6 @@
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Unfunded</div>
         <div class="mt-1 text-xl font-bold tabular-nums text-red-600"><%= dollars_from_cents(metrics.unfunded_cents) %></div>
         <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= pluralize(metrics.unfunded_count, "award") %></div>
-      </div>
-      <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Total awarded</div>
-        <div class="mt-1 text-xl font-bold tabular-nums text-gray-900"><%= dollars_from_cents(metrics.scholarship_cents) %></div>
-        <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= pluralize(metrics.scholarship_count, "award") %></div>
-      </div>
-      <div class="rounded-lg border border-purple-200 bg-purple-50 p-3">
-        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Attended</div>
-        <div class="mt-1 text-xl font-bold tabular-nums text-purple-700"><%= number_with_delimiter(metrics.attended_count) %></div>
-        <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= metrics.training_attended_count %> training · <%= metrics.on_demand_attended_count %> on-demand</div>
       </div>
     </div>
     <div class="mt-auto">

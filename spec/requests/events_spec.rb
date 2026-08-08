@@ -330,7 +330,11 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Events statistics")
         expect(response.body).to include("Revenue")
         expect(response.body).to include("Participation")
+        expect(response.body).to match(/<h3[^>]*>Participation<\/h3>.*<h3[^>]*>Scholarships<\/h3>.*<h3[^>]*>Revenue<\/h3>/m)
         expect(response.body).to include("People attended")
+        expect(response.body).to include("Scholarships total")
+        expect(response.body).to include("fees collected")
+        expect(response.body).to include("scholarships total")
         expect(response.body).to match(/\d+ trainings/)
         expect(response.body).to match(/\d+ other/)
         # The trainings figure links into the cross-event training attendees index;

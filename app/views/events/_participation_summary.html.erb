@@ -15,15 +15,6 @@
     <% reach = report.demographics(year: period.year) %>
     <div class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2"><%= period.label %></div>
     <div class="grid grid-cols-2 gap-3 mb-4">
-      <div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
-        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">People attended</div>
-        <div class="mt-1 text-xl font-bold tabular-nums text-blue-700"><%= number_with_delimiter(metrics.unique_people) %></div>
-        <%# Each side links to the attended registrants of that event type. %>
-        <div class="mt-1 text-xs text-gray-500 tabular-nums">
-          <%= link_to "#{number_with_delimiter(people[:trainings])} trainings", training_attendees_events_path(event_year: period.year, return_to: "statistics"), class: "hover:underline" %>
-          · <%= link_to "#{number_with_delimiter(people[:non_trainings])} other", event_registrations_path(event_type: "other", attendance_status: "attended", event_year: period.year), class: "hover:underline" %>
-        </div>
-      </div>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Registrations</div>
         <div class="mt-1 text-xl font-bold tabular-nums text-gray-900"><%= number_with_delimiter(metrics.total_registrations) %></div>
@@ -31,6 +22,15 @@
         <div class="mt-1 text-xs text-gray-500 tabular-nums">
           <%= link_to "#{number_with_delimiter(registrations[:trainings])} trainings", event_registrations_path(event_type: "trainings", event_year: period.year), class: "hover:underline" %>
           · <%= link_to "#{number_with_delimiter(registrations[:non_trainings])} other", event_registrations_path(event_type: "other", event_year: period.year), class: "hover:underline" %>
+        </div>
+      </div>
+      <div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">People attended</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-blue-700"><%= number_with_delimiter(metrics.unique_people) %></div>
+        <%# Each side links to the attended registrants of that event type. %>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums">
+          <%= link_to "#{number_with_delimiter(people[:trainings])} trainings", training_attendees_events_path(event_year: period.year, return_to: "statistics"), class: "hover:underline" %>
+          · <%= link_to "#{number_with_delimiter(people[:non_trainings])} other", event_registrations_path(event_type: "other", attendance_status: "attended", event_year: period.year), class: "hover:underline" %>
         </div>
       </div>
     </div>

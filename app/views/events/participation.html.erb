@@ -28,11 +28,13 @@
     <%# Ahoy-style filters — time period, event type and event — each
         auto-submitting a GET form so the report reshapes on change. %>
     <%= form_with url: participation_events_path, method: :get, local: true,
-          class: "flex flex-wrap items-end gap-4 mb-8" do %>
+          class: "rounded-xl border border-gray-200 bg-white p-4 shadow-sm mb-8" do %>
       <%= hidden_field_tag :return_to, params[:return_to] %>
-      <%= render "time_period_filter" %>
-      <%= render "event_type_filter" %>
-      <%= render "event_filter" %>
+      <div class="flex flex-wrap items-end gap-4">
+        <%= render "time_period_filter" %>
+        <%= render "event_type_filter" %>
+        <%= render "event_filter" %>
+      </div>
     <% end %>
 
     <% if @report.any? %>
