@@ -36,12 +36,14 @@ class ApplicationController < ActionController::Base
   end
 
   # A failed save's errors as one flash-ready sentence. Errors on a nested association
-  # arrive keyed "<association>.<attribute>", and their full message pastes the
-  # humanized association name in front — fine for "Hours can't be blank", wrong for a
-  # child validation written as a whole sentence, so those show verbatim.
+  # are copied onto the parent keyed "<association>.<attribute>", so their full message
+  # pastes the humanized association name in front ("Event attendance time entries
+  # Sign-out must be after…"). Phrase those the way the child model does instead: a
+  # whole-sentence message reads verbatim, and an attribute-level one keeps its subject
+  # ("Signed in at can't be blank") rather than arriving as a bare fragment.
   def error_sentence(record)
     record.errors.map { |error|
-      error.attribute.to_s.include?(".") ? error.message : error.full_message
+      error.is_a?(ActiveModel::NestedError) ? error.inner_error.full_message : error.full_message
     }.to_sentence
   end
 

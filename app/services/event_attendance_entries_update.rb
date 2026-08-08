@@ -21,33 +21,31 @@ class EventAttendanceEntriesUpdate
     applicable = applicable_rows
     return if applicable.blank?
 
-    registration.assign_attributes(event_attendance_time_entries_attributes: applicable)
+    @registration.assign_attributes(event_attendance_time_entries_attributes: applicable)
     attribute_to_editor
-    registration.save!
+    @registration.save!
   end
 
   private
-
-  attr_reader :registration, :rows, :editor
 
   # Drop rows pointing at an entry that's no longer on this registration — a stale
   # form or double-submit (it was already removed). Left in, nested attributes raise
   # RecordNotFound and blow up the save.
   def applicable_rows
-    return [] if rows.blank?
+    return [] if @rows.blank?
 
-    existing_ids = registration.event_attendance_time_entries.pluck(:id).map(&:to_s)
-    rows.reject { |row| row["id"].present? && existing_ids.exclude?(row["id"].to_s) }
+    existing_ids = @registration.event_attendance_time_entries.pluck(:id).map(&:to_s)
+    @rows.reject { |row| row["id"].present? && existing_ids.exclude?(row["id"].to_s) }
   end
 
   # Staff edits are the only attributed entries — registrant self-service sign-ins on
   # the public callout leave created_by nil.
   def attribute_to_editor
-    registration.event_attendance_time_entries.each do |entry|
+    @registration.event_attendance_time_entries.each do |entry|
       next if entry.marked_for_destruction?
 
-      entry.created_by ||= editor if entry.new_record?
-      entry.updated_by = editor if entry.new_record? || entry.changed?
+      entry.created_by ||= @editor if entry.new_record?
+      entry.updated_by = @editor if entry.new_record? || entry.changed?
     end
   end
 end
