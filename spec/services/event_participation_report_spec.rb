@@ -30,6 +30,13 @@ RSpec.describe EventParticipationReport do
       expect(row.total_registrations).to eq(6)
     end
 
+    it "splits registrations into active vs inactive" do
+      # Active: attended (2) + incomplete (1) + registered (1). Inactive: no_show (1) + cancelled (1).
+      expect(row.active_registration_count).to eq(4)
+      expect(row.inactive_registration_count).to eq(2)
+      expect(row.active_registration_count + row.inactive_registration_count).to eq(row.total_registrations)
+    end
+
     it "buckets the remaining outcomes into 'other' so the four sum to registrations" do
       expect(row.count_other).to eq(2) # registered + cancelled
       buckets = row.attended_seats + row.count_for("incomplete_attendance") + row.count_for("no_show") + row.count_other
@@ -117,9 +124,9 @@ RSpec.describe EventParticipationReport do
       create(:event_registration, event: webinar, status: "registered")
     end
 
-    it "sums every registration on each side regardless of outcome" do
+    it "sums only active registrations on each side (no-show excluded)" do
       split = report.registrations_split
-      expect(split[:trainings]).to eq(2)
+      expect(split[:trainings]).to eq(1) # attended is active; no_show is not
       expect(split[:non_trainings]).to eq(1)
     end
   end

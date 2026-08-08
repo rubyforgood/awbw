@@ -71,20 +71,24 @@
       <%= render "stat_segment", metric: metric %>
     <% end %>
 
-    <%# States + countries combined: a unique-locations total with per-type subtotals. %>
-    <div class="flex items-center gap-3 px-4 py-3 grow basis-56">
+    <%# States + countries + cities combined: a unique-locations total with per-type subtotals. %>
+    <% city_rows = @dashboard.registrant_city_breakdown.rows.reject { |row| row.city == RegistrantCityBreakdown::UNKNOWN_LABEL } %>
+    <% city_registrant_ids = city_rows.flat_map(&:registrant_ids).uniq %>
+    <div class="flex items-center gap-3 px-4 py-3 grow basis-64">
       <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:addresses, intensity: 100) %> <%= DomainTheme.text_class_for(:addresses, intensity: 600) %>">
         <i class="fa-solid fa-earth-americas"></i>
       </span>
       <span class="min-w-0">
         <span class="block leading-tight">
-          <span class="text-xl font-bold <%= DomainTheme.text_class_for(:addresses, intensity: 700) %> tabular-nums"><%= @dashboard.states.size + @dashboard.countries.size %></span>
+          <span class="text-xl font-bold <%= DomainTheme.text_class_for(:addresses, intensity: 700) %> tabular-nums"><%= @dashboard.states.size + @dashboard.countries.size + city_rows.size %></span>
           <span class="text-xs <%= DomainTheme.text_class_for(:addresses, intensity: 600) %>">Locations</span>
         </span>
         <span class="block text-xs text-gray-400 mt-0.5">
           <%= link_to background_return_path(registrants_event_path(@event, registrant_ids: @dashboard.state_registrant_ids.join("-")), "overview"), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.states.size, "state") %><% end %>
           <span class="text-gray-300" aria-hidden="true">·</span>
           <%= link_to background_return_path(registrants_event_path(@event, registrant_ids: @dashboard.country_registrant_ids.join("-")), "overview"), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.countries.size, "country") %><% end %>
+          <span class="text-gray-300" aria-hidden="true">·</span>
+          <%= link_to background_return_path(registrants_event_path(@event, registrant_ids: city_registrant_ids.join("-").presence || "0"), "overview"), class: "hover:underline whitespace-nowrap" do %><%= pluralize(city_rows.size, "city") %><% end %>
         </span>
       </span>
     </div>

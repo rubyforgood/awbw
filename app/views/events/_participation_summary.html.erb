@@ -17,7 +17,10 @@
     <div class="grid grid-cols-2 gap-3 mb-4">
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Registrations</div>
-        <div class="mt-1 text-xl font-bold tabular-nums text-gray-900"><%= number_with_delimiter(metrics.total_registrations) %></div>
+        <div class="mt-1 tabular-nums">
+          <span class="text-xl font-bold text-gray-900"><%= number_with_delimiter(metrics.active_registration_count) %></span>
+          <% if metrics.inactive_registration_count.positive? %><span class="text-xs text-gray-400">(<%= number_with_delimiter(metrics.inactive_registration_count) %> inactive)</span><% end %>
+        </div>
         <%# Each side links to all registrants of that event type. %>
         <div class="mt-1 text-xs text-gray-500 tabular-nums">
           <%= link_to "#{number_with_delimiter(registrations[:trainings])} trainings", event_registrations_path(event_type: "trainings", event_year: period.year), class: "hover:underline" %>

@@ -14,11 +14,11 @@
     <div class="grid grid-cols-2 gap-3 mb-4">
       <div class="rounded-lg border border-purple-200 bg-purple-50 p-3">
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Recipients attended</div>
-        <div class="mt-1 text-xl font-bold tabular-nums text-purple-700"><%= number_with_delimiter(metrics.attended_count) %></div>
-        <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= metrics.training_attended_count %> training · <%= metrics.on_demand_attended_count %> on-demand</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-purple-700"><%= number_with_delimiter(metrics.recipients_attended_count) %></div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= metrics.training_recipients_attended_count %> non-demand · <%= metrics.on_demand_recipients_attended_count %> on-demand</div>
       </div>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Scholarships total</div>
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Scholarships awarded</div>
         <div class="mt-1 text-xl font-bold tabular-nums text-gray-900"><%= dollars_from_cents(metrics.scholarship_cents) %></div>
         <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= pluralize(metrics.scholarship_count, "award") %> · funded + unfunded</div>
       </div>

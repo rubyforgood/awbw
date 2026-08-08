@@ -53,6 +53,17 @@ class EventParticipationReport
       STATUSES.sum { |status| count_for(status) }
     end
 
+    # Registrations still in play (registered / attended / partial / transferred
+    # in) vs those that fell away (cancelled / no-show / transferred out) — the
+    # headline counts active, with inactive shown alongside in parentheses.
+    def active_registration_count
+      EventRegistration::ACTIVE_STATUSES.sum { |status| count_for(status) }
+    end
+
+    def inactive_registration_count
+      EventRegistration::INACTIVE_STATUSES.sum { |status| count_for(status) }
+    end
+
     def count_other
       OTHER_STATUSES.sum { |status| count_for(status) }
     end
@@ -72,6 +83,14 @@ class EventParticipationReport
 
     def total_registrations
       rows.sum(&:total_registrations)
+    end
+
+    def active_registration_count
+      rows.sum(&:active_registration_count)
+    end
+
+    def inactive_registration_count
+      rows.sum(&:inactive_registration_count)
     end
 
     def count_other
@@ -191,15 +210,16 @@ class EventParticipationReport
     }
   end
 
-  # Registration counts split by whether the event is a facilitator training, for
-  # a given calendar year (nil = every year in scope). Registrations are
-  # additive, so this is a plain sum over the already-loaded rows.
+  # Active registration counts split by whether the event is a facilitator
+  # training, for a given calendar year (nil = every year in scope). Matches the
+  # headline (active only); registrations are additive, so this is a plain sum
+  # over the already-loaded rows.
   def registrations_split(year: nil)
     scoped = year ? rows.select { |row| row.year == year } : rows
     trainings, non_trainings = scoped.partition { |row| row.event.facilitator_training? }
     {
-      trainings: trainings.sum(&:total_registrations),
-      non_trainings: non_trainings.sum(&:total_registrations)
+      trainings: trainings.sum(&:active_registration_count),
+      non_trainings: non_trainings.sum(&:active_registration_count)
     }
   end
 
