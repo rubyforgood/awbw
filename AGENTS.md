@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (76) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (77) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -317,6 +317,7 @@ end
 - `collection` — Filter form auto-submit with debounce
 - `column_toggle` — Toggle table column visibility
 - `panel_toggle` — Independent show/hide toggles pairing each button to the panel at its index (e.g. the training-attendees table/charts panels; revealing a hidden panel loads its lazy Turbo frame)
+- `chart_tooltip_footer` — Appends footer lines to a chartkick stacked tooltip (a summed Total and/or per-x pre-formatted lines), configuring the Chart.js callback that can't be passed through the ERB helper
 - `confirm_email` — Email confirmation UI
 - `dirty_form` — Unsaved changes detection
 - `dismiss` — Dismissable elements

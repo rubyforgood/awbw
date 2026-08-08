@@ -13,12 +13,18 @@
     <% people = report.training_split(year: period.year) %>
     <% registrations = report.registrations_split(year: period.year) %>
     <% reach = report.demographics(year: period.year) %>
+    <%# Person ids behind each headline, so the totals link into the training-
+        attendees index (which shows the training-attendee subset of them). %>
+    <% attended_ids = report.attended_person_ids(year: period.year) %>
+    <% active_ids = report.active_registrant_ids(year: period.year) %>
     <div class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2"><%= period.label %></div>
     <div class="grid grid-cols-2 gap-3 mb-4">
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Registrations</div>
         <div class="mt-1 tabular-nums">
-          <span class="text-xl font-bold text-gray-900"><%= number_with_delimiter(metrics.active_registration_count) %></span>
+          <%= link_to number_with_delimiter(metrics.active_registration_count),
+                training_attendees_events_path(registrant_ids: active_ids.join("-").presence || "0", return_to: "statistics"),
+                class: "text-xl font-bold text-gray-900 hover:underline" %>
           <% if metrics.inactive_registration_count.positive? %><span class="text-xs text-gray-400">(<%= number_with_delimiter(metrics.inactive_registration_count) %> inactive)</span><% end %>
         </div>
         <%# Each side links to all registrants of that event type. %>
@@ -29,7 +35,11 @@
       </div>
       <div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">People attended</div>
-        <div class="mt-1 text-xl font-bold tabular-nums text-blue-700"><%= number_with_delimiter(metrics.unique_people) %></div>
+        <div class="mt-1 tabular-nums">
+          <%= link_to number_with_delimiter(metrics.unique_people),
+                training_attendees_events_path(registrant_ids: attended_ids.join("-").presence || "0", return_to: "statistics"),
+                class: "text-xl font-bold text-blue-700 hover:underline" %>
+        </div>
         <%# Each side links to the attended registrants of that event type. %>
         <div class="mt-1 text-xs text-gray-500 tabular-nums">
           <%= link_to "#{number_with_delimiter(people[:trainings])} trainings", training_attendees_events_path(event_year: period.year, return_to: "statistics"), class: "hover:underline" %>
@@ -47,9 +57,11 @@
       <% end %>
     </div>
     <div class="mt-auto">
+      <%# One colour per status, in STATUS_LABELS order: attended, registered,
+          transferred in, cancelled, partial, no-show, transferred out. %>
       <%= column_chart report.chart_series, stacked: true, thousands: ",",
-            colors: [ "#2563eb", "#d97706", "#dc2626" ], height: "120px", legend: false,
-            library: { borderRadius: 3 } %>
+            colors: [ "#2563eb", "#93c5fd", "#14b8a6", "#d1d5db", "#d97706", "#dc2626", "#9ca3af" ],
+            height: "120px", legend: false, library: { borderRadius: 3 } %>
     </div>
   <% else %>
     <p class="text-sm text-gray-500 my-auto">No attendance recorded yet.</p>

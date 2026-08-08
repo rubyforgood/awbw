@@ -33,6 +33,9 @@ application.register("callout-preview", CalloutPreviewController)
 import CarouselController from "./carousel_controller"
 application.register("carousel", CarouselController)
 
+import ChartTooltipFooterController from "./chart_tooltip_footer_controller"
+application.register("chart-tooltip-footer", ChartTooltipFooterController)
+
 import CeLicensePickerController from "./ce_license_picker_controller"
 application.register("ce-license-picker", CeLicensePickerController)
 

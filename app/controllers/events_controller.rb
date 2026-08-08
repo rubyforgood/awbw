@@ -560,6 +560,8 @@ class EventsController < ApplicationController
     registrations = registrations.where("YEAR(events.start_date) = ?", params[:event_year]) if params[:event_year].present?
 
     scope = Person.where(id: registrations.select(:registrant_id))
+    # Dash-joined person ids, e.g. from the statistics-hub participation totals.
+    scope = scope.where(id: params[:registrant_ids].to_s.split("-")) if params[:registrant_ids].present?
     scope = scope.search_by_params({ contact_info: params[:contact_info] }) if params[:contact_info].present?
     scope = scope.where(id: person_sector_ids(params[:sector])) if params[:sector].present?
     scope = scope.where(id: person_affiliation_status_ids(params[:affiliation_status])) if params[:affiliation_status].present?

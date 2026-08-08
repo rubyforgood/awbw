@@ -144,6 +144,15 @@ RSpec.describe "Events training attendees", type: :request do
           expect(response.body).not_to include("Zed Zulu")
         end
 
+        it "filters by explicit registrant_ids (from the statistics-hub totals)" do
+          other = create(:person, first_name: "Zed", last_name: "Zulu")
+          create(:event_registration, event: recent_training, registrant: other, status: "attended")
+
+          get training_attendees_events_url(registrant_ids: attendee.id.to_s), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).not_to include("Zed Zulu")
+        end
+
         it "filters by affiliation status" do
           create(:affiliation, person: attendee, organization: create(:organization), inactive: true, title: "Facilitator")
           active_person = create(:person, first_name: "Nora", last_name: "Active")

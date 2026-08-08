@@ -225,9 +225,11 @@ RSpec.describe EventParticipationReport do
       expect(scoped.prior_year).to be_nil
     end
 
-    it "builds an oldest-to-newest stacked series: attended, partial, no show" do
+    it "builds an oldest-to-newest stacked series covering every status" do
       series = report.chart_series
-      expect(series.map { |s| s[:name] }).to eq([ "Attended", "Partial (1-day)", "No show" ])
+      expect(series.map { |s| s[:name] }).to eq(
+        [ "Attended", "Registered", "Transferred in", "Cancelled", "Partial (1-day)", "No show", "Transferred out" ]
+      )
       expect(series.first[:data].map(&:first)).to eq(%w[2024 2025 2026])
     end
   end

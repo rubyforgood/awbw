@@ -147,6 +147,17 @@ class EventParticipationReport
     @unique_people ||= unique_attended_people
   end
 
+  # Distinct person ids behind the People-attended and Registrations headline
+  # figures — used to link those totals into the training-attendees index. Scoped
+  # to a calendar year (nil = every year in scope).
+  def attended_person_ids(year: nil)
+    attended_registrations(year: year).distinct.pluck(:registrant_id)
+  end
+
+  def active_registrant_ids(year: nil)
+    active_registrations(year: year).distinct.pluck(:registrant_id)
+  end
+
   # The group whose figures lead the KPI strip: the filtered/navigated-from year,
   # falling back to the most recent year present. When no year is featured
   # (all-time), an aggregate of every event so the headline isn't year-scoped.
@@ -223,16 +234,13 @@ class EventParticipationReport
     }
   end
 
-  # Stacked-column attendance-outcome series by year, oldest to newest — seats
-  # (registration counts, one consistent unit) so the columns stack honestly.
+  # Stacked-column series by year, oldest to newest — every registration status
+  # (seats, one consistent unit) so the bar totals to all registrations and the
+  # hover shows the full outcome breakdown, in STATUS_LABELS display order.
   def chart_series
     ascending = years.reject { |group| group.year.nil? }.reverse
-    {
-      "Attended" => "attended",
-      "Partial (1-day)" => "incomplete_attendance",
-      "No show" => "no_show"
-    }.map do |name, status|
-      { name: name, data: ascending.map { |group| [ group.year.to_s, group.count_for(status) ] } }
+    STATUS_LABELS.map do |status, label|
+      { name: label, data: ascending.map { |group| [ group.year.to_s, group.count_for(status) ] } }
     end
   end
 
@@ -255,13 +263,19 @@ class EventParticipationReport
   # Distinct attended registrants among the scoped events, optionally narrowed to
   # a calendar year and/or facilitator-training status.
   def unique_attended_people(year: nil, trainings: nil)
+    attended_registrations(year: year, trainings: trainings).distinct.count(:registrant_id)
+  end
+
+  # Attended registrations among the scoped events, optionally narrowed to a
+  # calendar year and/or facilitator-training status.
+  def attended_registrations(year: nil, trainings: nil)
     scope = EventRegistration.attended.where(event_id: event_ids)
     if year || !trainings.nil?
       scope = scope.joins(:event)
       scope = scope.where("YEAR(events.start_date) = ?", year) if year
       scope = scope.where(events: { facilitator_training: trainings }) unless trainings.nil?
     end
-    scope.distinct.count(:registrant_id)
+    scope
   end
 
   def event_ids

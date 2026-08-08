@@ -33,8 +33,12 @@
         <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= pluralize(metrics.unfunded_count, "award") %></div>
       </div>
     </div>
-    <div class="mt-auto">
-      <%= column_chart report.chart_series, stacked: true, prefix: "$", thousands: ",",
+    <div class="mt-auto"
+         data-controller="chart-tooltip-footer"
+         data-chart-tooltip-footer-chart-id-value="scholarship-hub-chart"
+         data-chart-tooltip-footer-prefix-value="$"
+         data-chart-tooltip-footer-total-value="true">
+      <%= column_chart report.chart_series, id: "scholarship-hub-chart", stacked: true, prefix: "$", thousands: ",",
             colors: [ "#059669", "#dc2626" ], height: "120px", legend: false,
             library: { borderRadius: 3 } %>
     </div>
