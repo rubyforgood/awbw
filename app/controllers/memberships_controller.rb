@@ -38,7 +38,7 @@ class MembershipsController < ApplicationController
   def update
     authorize! @membership
 
-    if @membership.update(authorized_membership_params)
+    if @membership.update(authorized_scope(params.require(:membership)))
       redirect_to person_memberships_path(@person),
         notice: update_notice, status: :see_other
     else
@@ -62,10 +62,6 @@ class MembershipsController < ApplicationController
     params.expect(
       membership: [ :cost_dollars, { membership_invoices_attributes: [ [ :start_date, :cost_dollars ] ] } ]
     )
-  end
-
-  def authorized_membership_params
-    authorized_scope(params.require(:membership))
   end
 
   def update_notice
