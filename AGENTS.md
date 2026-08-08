@@ -222,7 +222,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `WorkshopSearchService` — Complex filtering, sorting, pagination with ActionPolicy
 - `WorkshopFromIdeaService` — Converts WorkshopIdea to Workshop with asset migration
 - `WorkshopVariationFromIdeaService` — Variation creation from ideas
-- `AuthorCreditDivergenceQuery` — Finds content whose stored `author_credit_preference` no longer matches the credited person's profile, grouped by person, for the admin reconciliation page. `MODEL_NAMES` doubles as the allowlist for the `type` param (never constantize a raw param)
+- `AuthorCreditDivergenceQuery` — Backs the admin author credit divergences page. Returns four sections: `preference` (stored snapshot no longer matches the profile, grouped by person), `legacy` (credited by a free-text column — `workshops.full_name`, `resources.legacy_author_name`), `creator` (no `author_id`, so the credit falls back to the creating user's person — idea models excluded, since that's their only credit path), and `unattributed` (nothing to credit, renders `missing_author_label`). The last three all resolve by assigning an `author_id`, the only credit path that follows a profile and links to it. `MODEL_NAMES` doubles as the allowlist for the `type` param (never constantize a raw param)
 - `TaggingSearchService` — Search and filter tagging data
 - `PersonFromUserService` — Create Person from User account
 - `PersonCommentAggregator` — Unifies every comment connected to a person (their profile, event registrations, scholarships, CE registrations, topic subscriptions, and user account) into one newest-first `Comment` relation for the aggregated `/people/:id/all_comments` page
