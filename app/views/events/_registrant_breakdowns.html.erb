@@ -133,8 +133,16 @@
     <% if org_rows.any? %>
       <%= render "events/organizations_breakdown", org_rows: org_rows, extra_class: "lg:row-span-2" %>
     <% end %>
-    <% if !index_context && data.registrant_city_breakdown.any? %>
-      <%= render "events/registrant_city_breakdown", breakdown: data.registrant_city_breakdown, metrics: :both, title: "All cities", return_anchor: "all-cities" %>
+    <% if data.registrant_city_breakdown.any? %>
+      <% if index_context %>
+        <% city_rows = data.registrant_city_breakdown.rows %>
+        <% known_city = ->(row) { row.city != RegistrantCityBreakdown::UNKNOWN_LABEL } %>
+        <% city_row_paths = city_rows.select(&known_city).to_h { |row| [ row.city, index_path.(org_city: row.city) ] } %>
+        <% city_scholarship_paths = city_rows.select { |row| known_city.(row) && row.scholarship_count.positive? }.to_h { |row| [ row.city, index_path.(org_city: row.city, scholarship: "yes") ] } %>
+        <%= render "events/registrant_city_breakdown", breakdown: data.registrant_city_breakdown, metrics: :both, title: "All cities", row_paths: city_row_paths, scholarship_paths: city_scholarship_paths %>
+      <% else %>
+        <%= render "events/registrant_city_breakdown", breakdown: data.registrant_city_breakdown, metrics: :both, title: "All cities", return_anchor: "all-cities" %>
+      <% end %>
     <% end %>
   </div>
   <%# --- Secondary breakdowns flow below the three aligned columns --- %>

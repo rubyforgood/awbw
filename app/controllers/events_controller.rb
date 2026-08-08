@@ -566,6 +566,7 @@ class EventsController < ApplicationController
     scope = scope.where(id: person_school_district_ids(params[:school_district])) if params[:school_district].present?
     scope = scope.where(id: person_program_status_ids(params[:program_status])) if params[:program_status].present?
     scope = scope.where(id: person_linked_organization_ids(params[:organization_id])) if params[:organization_id].present?
+    scope = scope.where(id: person_linked_org_city_ids(params[:org_city])) if params[:org_city].present?
     if params[:scholarship].present?
       ids = training_scholarship_recipient_ids
       scope = params[:scholarship] == "no" ? scope.where.not(id: ids) : scope.where(id: ids)
@@ -617,6 +618,28 @@ class EventsController < ApplicationController
       .joins(:event_registration)
       .where(organization_id: organization_id, event_registration_id: attended_training_registrations.select(:id))
       .select(Arel.sql("event_registrations.registrant_id"))
+  end
+
+  # People whose linked training org sits in the given "City, State" (matched on
+  # each org's first active address, mirroring the cities breakdown's labeling).
+  def person_linked_org_city_ids(city_label)
+    org_ids = org_ids_by_city_label[city_label] || []
+    return Person.none if org_ids.empty?
+    person_linked_organization_ids(org_ids)
+  end
+
+  def org_ids_by_city_label
+    @org_ids_by_city_label ||= Address.active
+      .where(addressable_type: "Organization",
+             addressable_id: EventRegistrationOrganization.where(event_registration_id: attended_training_registrations.select(:id)).select(:organization_id))
+      .order(:id)
+      .pluck(:addressable_id, :city, :state)
+      .each_with_object({}) do |(org_id, city, state), first_label|
+        next if first_label.key?(org_id)
+        first_label[org_id] = [ city, state ].compact_blank.join(", ").presence
+      end
+      .group_by { |_org_id, label| label }
+      .transform_values { |pairs| pairs.map(&:first) }
   end
 
   # Person ids whose linked training org currently has the given facilitator

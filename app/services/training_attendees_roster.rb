@@ -47,13 +47,23 @@ class TrainingAttendeesRoster
     [ registration.event, registration.slug ]
   end
 
+  # The training the person's shown scholarship comes from, keyed by Person id —
+  # lets the cross-event index label which training funded it (it may not be the
+  # top-listed training).
+  def scholarship_event_by_registrant
+    @scholarship_event_by_registrant ||= scholarship_registration_by_person.transform_values(&:event)
+  end
+
   # The CE registration shown per person: the one from their most recent training
   # that has continuing education. Keyed by Person id.
   def ce_registration_by_registrant
-    @ce_registration_by_registrant ||= people.each_with_object({}) do |person, map|
-      registration = registrations_for(person).find { |r| ce_registration_by_event_registration[r.id] }
-      map[person.id] = ce_registration_by_event_registration[registration.id] if registration
-    end
+    @ce_registration_by_registrant ||= ce_source_registration_by_registrant
+      .transform_values { |registration| ce_registration_by_event_registration[registration.id] }
+  end
+
+  # The training the person's shown CE registration comes from, keyed by Person id.
+  def ce_event_by_registrant
+    @ce_event_by_registrant ||= ce_source_registration_by_registrant.transform_values(&:event)
   end
 
   # Primary sector name(s) per person, from their profile's primary sector tags.
@@ -120,6 +130,15 @@ class TrainingAttendeesRoster
 
   def registrations_for(person)
     training_registrations_by_registrant[person.id] || []
+  end
+
+  # The attended-training registration whose CE record the CE icon shows, per
+  # person: their most recent attended training that has continuing education.
+  def ce_source_registration_by_registrant
+    @ce_source_registration_by_registrant ||= people.each_with_object({}) do |person, map|
+      registration = registrations_for(person).find { |r| ce_registration_by_event_registration[r.id] }
+      map[person.id] = registration if registration
+    end
   end
 
   def attended_training_registrations

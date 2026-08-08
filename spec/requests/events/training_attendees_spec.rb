@@ -105,6 +105,33 @@ RSpec.describe "Events training attendees", type: :request do
           expect(response.body).not_to include("Zed Zulu")
         end
 
+        it "renders the cities breakdown and filters by an org-city drill-in" do
+          org = create(:organization, name: "Wellness Org")
+          create(:address, addressable: org, city: "Austin", state: "TX", inactive: false)
+          attendee_registration.event_registration_organizations.create!(organization: org)
+
+          other = create(:person, first_name: "Zed", last_name: "Zulu")
+          other_registration = create(:event_registration, event: recent_training, registrant: other, status: "attended")
+          other_org = create(:organization, name: "Other Org")
+          create(:address, addressable: other_org, city: "Reno", state: "NV", inactive: false)
+          other_registration.event_registration_organizations.create!(organization: other_org)
+
+          # An org with no address falls into the non-clickable "Unknown" bucket —
+          # this used to raise a UrlGenerationError (nil event) on the index.
+          cityless = create(:person, first_name: "Nora", last_name: "Nowhere")
+          cityless_registration = create(:event_registration, event: recent_training, registrant: cityless, status: "attended")
+          cityless_registration.event_registration_organizations.create!(organization: create(:organization, name: "Cityless Org"))
+
+          get training_attendees_events_url, headers: frame_headers
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("All cities")
+          expect(response.body).to include("Austin, TX")
+
+          get training_attendees_events_url(org_city: "Austin, TX"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).not_to include("Zed Zulu")
+        end
+
         it "filters by affiliation status" do
           create(:affiliation, person: attendee, organization: create(:organization), inactive: true, title: "Facilitator")
           active_person = create(:person, first_name: "Nora", last_name: "Active")

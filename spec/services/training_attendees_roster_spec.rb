@@ -41,6 +41,10 @@ RSpec.describe TrainingAttendeesRoster do
       target_event, _slug = roster.scholarship_link_target(person)
       expect(target_event).to eq(recent_training)
     end
+
+    it "exposes the training the scholarship comes from" do
+      expect(roster.scholarship_event_by_registrant[person.id]).to eq(recent_training)
+    end
   end
 
   describe "#ce_registration_by_registrant" do
@@ -48,6 +52,10 @@ RSpec.describe TrainingAttendeesRoster do
 
     it "surfaces the CE registration from the most recent training with one" do
       expect(roster.ce_registration_by_registrant[person.id]).to eq(ce_registration)
+    end
+
+    it "exposes the training the CE registration comes from" do
+      expect(roster.ce_event_by_registrant[person.id]).to eq(recent_training)
     end
   end
 

@@ -31,6 +31,16 @@ RSpec.describe TrainingAttendeesBreakdowns do
     expect(breakdowns.organization_counts).to eq(organization.id => 1)
   end
 
+  it "groups attendees by the city of the org linked on their training registration" do
+    organization = create(:organization, name: "Wellness Org")
+    create(:address, addressable: organization, city: "Austin", state: "TX", inactive: false)
+    registration.event_registration_organizations.create!(organization: organization)
+
+    rows = breakdowns.registrant_city_breakdown.rows
+    expect(rows.map(&:city)).to eq([ "Austin, TX" ])
+    expect(rows.first.registrant_count).to eq(1)
+  end
+
   it "counts scholarship recipients and CE registrants across training registrations" do
     scholarship = create(:scholarship, recipient: person, amount_cents: 1_000)
     create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)

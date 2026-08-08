@@ -147,10 +147,11 @@
               <% if scholarship %>
                 <% target_event, participant_slug = roster.scholarship_link_target(person) %>
                 <%= link_to recipients_event_path(target_event, anchor: ("participant-#{participant_slug}" if participant_slug)),
-                            class: "#{DomainTheme.text_class_for(:scholarships, intensity: 600)} hover:#{DomainTheme.text_class_for(:scholarships)}",
-                            title: "Scholarship recipient — view application",
+                            class: "inline-flex items-center gap-1 #{DomainTheme.text_class_for(:scholarships, intensity: 600)} hover:#{DomainTheme.text_class_for(:scholarships)}",
+                            title: show_event_column ? "Scholarship from #{target_event.decorate.compact_label} — view application" : "Scholarship recipient — view application",
                             onclick: "event.stopPropagation()" do %>
                   <i class="fa-solid fa-graduation-cap"></i>
+                  <% if show_event_column %><span class="text-xs font-medium text-gray-400"><%= target_event.decorate.compact_label %></span><% end %>
                 <% end %>
               <% else %>
                 <span class="sm:hidden text-gray-300">—</span>
@@ -161,11 +162,13 @@
             <td class="flex sm:table-cell items-center gap-3 px-4 <%= show_event_column ? "py-1 sm:py-1.5" : "pt-1 pb-3 sm:py-1.5" %> text-sm sm:text-center" data-sort-value="<%= ce_registration ? 1 : 0 %>">
               <%= mobile_label.("CE") %>
               <% if ce_registration %>
+                <% ce_event = roster.ce_event_by_registrant[person.id] if show_event_column %>
                 <%= link_to edit_continuing_education_registration_path(ce_registration),
-                            class: "#{DomainTheme.text_class_for(:continuing_education, intensity: 600)} hover:#{DomainTheme.text_class_for(:continuing_education)}",
-                            title: "Edit continuing education",
+                            class: "inline-flex items-center gap-1 #{DomainTheme.text_class_for(:continuing_education, intensity: 600)} hover:#{DomainTheme.text_class_for(:continuing_education)}",
+                            title: ce_event ? "Continuing education from #{ce_event.decorate.compact_label} — edit" : "Edit continuing education",
                             onclick: "event.stopPropagation()" do %>
                   <i class="fa-solid fa-certificate"></i>
+                  <% if ce_event %><span class="text-xs font-medium text-gray-400"><%= ce_event.decorate.compact_label %></span><% end %>
                 <% end %>
               <% else %>
                 <span class="sm:hidden text-gray-300">—</span>

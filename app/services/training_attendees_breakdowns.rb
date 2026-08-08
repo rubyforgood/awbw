@@ -142,6 +142,19 @@ class TrainingAttendeesBreakdowns
       .pluck(Arel.sql("event_registrations.registrant_id"))
   end
 
+  # --- Cities ----------------------------------------------------------------
+
+  # Attendees grouped by the city of the organization linked on their attended-
+  # training registrations, with scholarship recipients per city — the shared
+  # "Registrants by city" breakdown, aggregated across all trainings.
+  def registrant_city_breakdown
+    @registrant_city_breakdown ||= RegistrantCityBreakdown.new(
+      org_registrant_pairs: org_registrant_pairs,
+      city_by_org: city_by_organization,
+      scholarship_recipient_ids: scholarship_recipient_ids
+    )
+  end
+
   # --- Free-text "Other" sector responses ------------------------------------
 
   def other_sector_response_count
@@ -209,6 +222,22 @@ class TrainingAttendeesBreakdowns
     @program_status_by_organization ||= organizations.to_h do |organization|
       [ organization.id, organization.facilitator_status_on(Date.current) ]
     end
+  end
+
+  # "City, State" per linked organization, from its first active address (mirrors
+  # EventDashboard#city_by_organization). Orgs with no active address are absent,
+  # so their registrants fall into the breakdown's Unknown bucket.
+  def city_by_organization
+    org_ids = org_registrant_pairs.map(&:first).uniq
+    Address.active
+      .where(addressable_type: "Organization", addressable_id: org_ids)
+      .order(:id)
+      .pluck(:addressable_id, :city, :state)
+      .each_with_object({}) do |(org_id, city, state), map|
+        next if map.key?(org_id)
+        label = [ city, state ].compact_blank.join(", ").presence
+        map[org_id] = label if label
+      end
   end
 
   def scholarship_recipient_ids
