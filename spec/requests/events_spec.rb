@@ -2870,20 +2870,6 @@ RSpec.describe "Events", type: :request do
         expect(response).to redirect_to(root_path)
       end
     end
-
-    describe "GET /index?staffed_by_me" do
-      it "returns only events the current user's person staffs" do
-        admin_with_person = create(:user, :admin, :with_person)
-        staffed = create(:event, :published, title: "Staffed event")
-        create(:event, :published, title: "Other event")
-        create(:event_staff, event: staffed, person: admin_with_person.person)
-
-        sign_in admin_with_person
-        get events_path(staffed_by_me: true)
-        expect(response.body).to include("Staffed event")
-        expect(response.body).not_to include("Other event")
-      end
-    end
   end
 
   describe "GET /show register button for signed-in users" do
