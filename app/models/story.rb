@@ -132,6 +132,14 @@ class Story < ApplicationRecord
     sectors.pluck(:name)
   end
 
+  # StoryPopulation categories describe who a story is about (Children, Teens,
+  # Adults, …) — the portal's audience facet.
+  AUDIENCE_CATEGORY_TYPE = "StoryPopulation"
+
+  def audience_categories
+    categories.joins(:category_type).where(category_types: { name: AUDIENCE_CATEGORY_TYPE })
+  end
+
   def attach_assets_from_idea!
     return unless story_idea
 

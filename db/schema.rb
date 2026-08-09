@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_09_224320) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_09_224624) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -322,9 +322,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_224320) do
     t.string "name"
     t.integer "position", null: false
     t.boolean "published", default: false
+    t.integer "story_share_position"
     t.datetime "updated_at", precision: nil, null: false
     t.index ["category_type_id", "position"], name: "index_categories_on_category_type_id_and_position", unique: true
     t.index ["category_type_id"], name: "index_categories_on_category_type_id"
+    t.index ["story_share_position"], name: "index_categories_on_story_share_position"
   end
 
   create_table "categorizable_items", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1264,7 +1266,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_224320) do
     t.text "description"
     t.string "name"
     t.boolean "published", default: false
+    t.integer "story_share_position"
     t.datetime "updated_at", precision: nil, null: false
+    t.index ["story_share_position"], name: "index_sectors_on_story_share_position"
   end
 
   create_table "stories", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|

@@ -21,6 +21,15 @@
                       hint: "Optional. Shown under this sector on the public registration form to clarify its meaning when the name alone isn't enough.",
                       input_html: { class: "form-control", rows: 2 } %>
         </div>
+
+        <!-- Story Share portal placement -->
+        <div class="max-w-[220px]">
+          <%= f.input :story_share_position,
+                      as: :integer,
+                      label: "Story share position",
+                      hint: "Optional. Featured in the Story Share portal at this position (top nav and its own landing-page row; first 6 shown). Leave blank to list it only under Additional focus areas.",
+                      input_html: { class: "form-control", min: 1 } %>
+        </div>
       </div>
 
       <div class="admin-only bg-blue-100 rounded mt-6 md:mt-0 p-3">
