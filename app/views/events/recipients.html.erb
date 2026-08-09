@@ -171,7 +171,7 @@
                   </div>
                 <% end %>
                 <% if has_age_groups || age_group_text.present? %>
-                  <div class="flex flex-wrap items-center gap-2 xl:w-80 xl:shrink-0">
+                  <div class="flex flex-wrap items-center gap-2 xl:w-[28rem] xl:shrink-0">
                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Ages</span>
                     <% if has_age_groups %>
                       <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups %>
