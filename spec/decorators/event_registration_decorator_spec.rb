@@ -162,7 +162,7 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
     it "maps a known method to its short code, icon, and classes" do
       badge = badges_for(expected: "Credit card (now)").sole
       expect(badge.code).to eq("CCN")
-      expect(badge.label).to eq("Credit card (now)")
+      expect(badge.label).to eq("Credit card")
       expect(badge.classes).to include("green")
     end
 
@@ -188,7 +188,7 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
     it "lists every method (code-labeled) plus the buddy-system sentinel" do
       expect(described_class.payment_method_filter_choices).to eq(
         [
-          [ "Credit card (now) (CCN)", "Credit card (now)" ],
+          [ "Credit card (CCN)", "Credit card (now)" ],
           [ "Credit card (later) (CCL)", "Credit card (later)" ],
           [ "Check (CK)", "Check" ],
           [ "Someone else will pay (BUD)", "someone_else_will_pay" ]

@@ -1158,7 +1158,7 @@ RSpec.describe "Events", type: :request do
       it "offers every method plus the buddy option in the filter" do
         get registrants_event_path(event)
 
-        expect(response.body).to include("Credit card (now) (CCN)")
+        expect(response.body).to include("Credit card (CCN)")
         expect(response.body).to include("Check (CK)")
         expect(response.body).to include("Someone else will pay (BUD)")
       end

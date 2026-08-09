@@ -21,7 +21,7 @@ class EventRegistrationDecorator < ApplicationDecorator
 
   PAYMENT_METHOD_BADGES = {
     FormBuilderService::PAYMENT_METHOD_PAY_NOW =>
-      PaymentMethodBadge.new(code: "CCN", label: "Credit card (now)", icon: "fa-solid fa-credit-card", classes: "text-green-600"),
+      PaymentMethodBadge.new(code: "CCN", label: "Credit card", icon: "fa-solid fa-credit-card", classes: "text-green-600"),
     "Credit card (later)" =>
       PaymentMethodBadge.new(code: "CCL", label: "Credit card (later)", icon: "fa-regular fa-credit-card", classes: "text-amber-600"),
     "Check" =>
@@ -79,7 +79,7 @@ class EventRegistrationDecorator < ApplicationDecorator
   # status filter). Values are the stored expected_payment_method strings, plus the
   # buddy-system sentinel.
   def self.payment_method_filter_choices
-    PAYMENT_METHOD_BADGES.map { |value, badge| [ "#{value} (#{badge.code})", value ] } +
+    PAYMENT_METHOD_BADGES.map { |value, badge| [ "#{badge.label} (#{badge.code})", value ] } +
       [ [ "#{BUDDY_PAYMENT_BADGE.label} (#{BUDDY_PAYMENT_BADGE.code})", EventRegistration::BUDDY_PAYMENT_FILTER ] ]
   end
 
