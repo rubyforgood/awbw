@@ -1,3 +1,4 @@
+<% sector = story.sectors.first %>
 <div class="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
   <!-- LEFT CONTENT -->
   <div>
@@ -6,8 +7,7 @@
     </h2>
 
     <p class="mt-2 text-sm text-gray-500">
-      <%= story.organization_name %>
-      <% if story.organization&.city_state.present? %>&nbsp;–&nbsp;<%= story.organization.city_state %><% end %>
+      <%= story.organization_name %><%= " – #{story.organization.state}" if story.organization&.state.present? %>
     </p>
 
     <p class="mt-6 text-gray-700 leading-relaxed">
@@ -21,12 +21,16 @@
   </div>
 
   <!-- RIGHT IMAGE -->
-  <div class="md:justify-self-end w-full">
-    <%= link_to story_share_path(story), class: "block" do %>
-      <div class="aspect-[4/3] max-w-md rounded shadow-lg overflow-hidden bg-gray-200">
-        <%= render "assets/display_image", resource: story,
-                   extra_image_classes: "!w-full h-full object-cover", variant: :hero %>
+  <div class="w-full">
+    <%= link_to story_share_path(story), class: "block relative" do %>
+      <div class="aspect-[4/3] rounded shadow-lg overflow-hidden bg-gray-200">
+        <%= image_tag story.display_image, alt: story.title, class: "w-full h-full object-cover" %>
       </div>
+      <% if sector %>
+        <div class="absolute top-3 left-3 <%= story_share_sector_chip_class(sector.name) %> text-white text-xs font-semibold uppercase px-3 py-1.5">
+          <%= sector.name %>
+        </div>
+      <% end %>
     <% end %>
   </div>
 </div>

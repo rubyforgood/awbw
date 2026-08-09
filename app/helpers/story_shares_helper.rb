@@ -17,6 +17,17 @@ module StorySharesHelper
     SLOT_THEMES[index % SLOT_THEMES.size]
   end
 
+  # A consistent sector-chip background, chosen deterministically per sector name
+  # from a fixed palette (complete literal classes so Tailwind's JIT emits them).
+  CHIP_COLORS = %w[
+    bg-red-700 bg-sky-700 bg-green-700 bg-purple-700 bg-indigo-700 bg-fuchsia-800
+    bg-rose-800 bg-teal-700 bg-amber-700 bg-emerald-700 bg-violet-700 bg-cyan-700
+  ].freeze
+
+  def story_share_sector_chip_class(name)
+    CHIP_COLORS[name.to_s.sum % CHIP_COLORS.size]
+  end
+
   # The portal's mega-menu points at the main marketing site. Opens in a new tab
   # so visitors don't lose the story they were reading.
   AWBW_BASE = "https://awbw.org".freeze

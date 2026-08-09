@@ -27,9 +27,7 @@ class StorySharesController < ApplicationController
     return redirect_to_external(@story.link_target) if @story.external_url.present? && params[:no_redirect].blank?
 
     track_view(@story)
-    others = portal_scope.where.not(id: @story.id)
-    @related_stories = related_stories(others)
-    @popular_stories = preloaded(others).order(bookmark_count_desc).limit(POPULAR_STORY_LIMIT).decorate
+    @related_stories = related_stories(portal_scope.where.not(id: @story.id))
     render layout: "story_shares"
   end
 
@@ -90,12 +88,20 @@ class StorySharesController < ApplicationController
                                   .decorate
   end
 
-  # Related stories share a sector, backfilled with recent ones, order preserved.
+  # Related stories share a sector and/or a category, most-read first (then
+  # newest), backfilled with the most-read remaining stories. Order preserved.
   def related_stories(others)
-    ids = others.joins(:sectors).where(sectors: { id: @story.sector_ids }).distinct
-                .order(created_at: :desc).limit(RELATED_STORY_LIMIT).pluck(:id)
+    sector_matches = @story.sector_ids.present? ?
+      others.where(id: SectorableItem.where(sectorable_type: "Story", sector_id: @story.sector_ids).select(:sectorable_id)) :
+      others.where(id: [])
+    category_matches = @story.category_ids.present? ?
+      others.where(id: CategorizableItem.where(categorizable_type: "Story", category_id: @story.category_ids).select(:categorizable_id)) :
+      others.where(id: [])
+    related = sector_matches.or(category_matches)
+
+    ids = related.reorder(bookmark_count_desc).limit(RELATED_STORY_LIMIT).pluck(:id)
     if ids.size < RELATED_STORY_LIMIT
-      ids += others.where.not(id: ids).order(created_at: :desc)
+      ids += others.where.not(id: ids).reorder(bookmark_count_desc)
                    .limit(RELATED_STORY_LIMIT - ids.size).pluck(:id)
     end
     preloaded(Story.where(id: ids)).in_order_of(:id, ids).decorate

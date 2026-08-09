@@ -10,19 +10,23 @@
 
     <% if @stories.any? %>
       <% lead = @stories.first %>
+      <% lead_sector = lead.sectors.first %>
 
       <!-- Lead story -->
-      <div class="bg-white rounded shadow-md overflow-hidden mb-10">
-        <%= link_to story_share_path(lead), class: "block" do %>
+      <div class="rounded shadow-md overflow-hidden mb-10">
+        <%= link_to story_share_path(lead), class: "block relative" do %>
           <div class="aspect-[16/7] bg-gray-200">
-            <%= render "assets/display_image", resource: lead,
-                       extra_image_classes: "!w-full h-full object-cover", variant: :hero %>
+            <%= image_tag lead.display_image, alt: lead.title, class: "w-full h-full object-cover" %>
           </div>
+          <% if lead_sector %>
+            <div class="absolute top-4 left-4 <%= story_share_sector_chip_class(lead_sector.name) %> text-white text-xs font-semibold uppercase px-4 py-2">
+              <%= lead_sector.name %>
+            </div>
+          <% end %>
           <div class="bg-gray-700 text-white p-4">
             <h2 class="font-telefon text-lg font-semibold"><%= lead.title %></h2>
             <p class="text-sm opacity-80">
-              <%= lead.organization_name %>
-              <% if lead.organization&.state.present? %>– <%= lead.organization.state %><% end %>
+              <%= lead.organization_name %><%= " – #{lead.organization.state}" if lead.organization&.state.present? %>
             </p>
           </div>
         <% end %>

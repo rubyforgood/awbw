@@ -96,10 +96,9 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
         <% @recent_stories.each_with_index do |story, index| %>
           <% theme = story_share_slot_theme(index) %>
-          <%= link_to story_share_path(story), class: "group block relative aspect-[3/4] overflow-hidden hover:opacity-90 transition-opacity" do %>
-            <div class="absolute inset-0 bg-gray-200">
-              <%= render "assets/display_image", resource: story, variant: :hero %>
-            </div>
+          <%= link_to story_share_path(story), class: "group block relative aspect-[3/4] overflow-hidden bg-gray-200 hover:opacity-90 transition-opacity" do %>
+            <%= image_tag story.display_image, loading: "lazy", alt: story.title,
+                          class: "absolute inset-0 w-full h-full object-cover" %>
             <div class="absolute inset-0 <%= theme[:overlay] %>"></div>
             <div class="absolute inset-0 flex flex-col items-center pt-16 p-6 text-center">
               <% if story.sectors.first %>

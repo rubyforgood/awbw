@@ -1,5 +1,10 @@
 <nav class="relative bg-white print:hidden" data-controller="dropdown">
   <style>
+      /* Mega menu spans the full row, not just the trigger button: keep the
+         trigger un-positioned so the absolute menu anchors to .nav-row.row-1
+         (the nearest positioned ancestor). */
+      .nav-item.has-dropdown { position: static; }
+
       /* Mega menu: full-width overlay under the top row */
       .nav-item.has-dropdown .mega-menu {
           position: absolute;           /* anchored to .nav-row.row-1 (position: relative) */
@@ -16,6 +21,13 @@
       .nav-item.has-dropdown:hover .mega-menu,
       .nav-item.has-dropdown:focus-within .mega-menu {
           display: block;
+      }
+
+      /* Native clear (✕) for the portal search, nudged left so it sits before
+         the magnifying glass. WebKit/Blink only — Firefox has no native clear. */
+      .portal-search::-webkit-search-cancel-button {
+          margin-right: 18px;
+          cursor: pointer;
       }
 
       .mega-container {
@@ -418,7 +430,7 @@
                 type="search"
                 name="query"
                 placeholder="Search keywords to find more stories..."
-                class="w-80 px-4 py-2 rounded-md border border-gray-300 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-700"
+                class="portal-search w-80 pl-4 pr-10 py-2 rounded-md border border-gray-300 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-700"
                 value="<%= params[:query] %>"/>
               <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700" aria-label="Search">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
