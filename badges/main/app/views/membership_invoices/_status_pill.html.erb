@@ -1,17 +1,9 @@
 <% badge = invoice.status_badge %>
-<% pill_class = "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium #{badge.classes}" %>
+<% linked = local_assigns.fetch(:linked, false) %>
 
-<% if local_assigns.fetch(:linked, false) %>
-  <%= link_to allocations_path(allocatable_sgid: invoice.object.to_sgid.to_s),
-              title: "Record or review payments for this membership invoice",
-              class: "#{pill_class} transition hover:opacity-80 hover:shadow-sm",
-              data: { turbo_frame: "_top" } do %>
-    <i class="<%= badge.icon %>"></i>
-    <%= badge.label %>
-  <% end %>
-<% else %>
-  <span class="<%= pill_class %>">
-    <i class="<%= badge.icon %>"></i>
-    <%= badge.label %>
-  </span>
-<% end %>
+<%= render "shared/badge",
+      label: badge.label,
+      icon: badge.icon,
+      classes: badge.classes,
+      title: ("Record or review payments for this membership invoice" if linked),
+      href: (allocations_path(allocatable_sgid: invoice.object.to_sgid.to_s) if linked) %>
