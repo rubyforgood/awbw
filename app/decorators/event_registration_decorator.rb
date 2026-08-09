@@ -23,6 +23,16 @@ class EventRegistrationDecorator < ApplicationDecorator
     ce_badge("#{h.dollars_from_cents(ce_amount_due_cents)} due", "fa-solid fa-dollar-sign", :amber)
   end
 
+  # Priority for sorting the CE column: most-complete first, "Create" (no CE) last.
+  # Mirrors the ce_status_badge guard order so the two never drift.
+  def ce_status_sort_key
+    return 4 unless ce_registered?
+    return 0 if ce_certificate_issued?
+    return 3 unless ce_license_provided?
+    return 1 if ce_paid_in_full?
+    2
+  end
+
   def title
     name
   end
