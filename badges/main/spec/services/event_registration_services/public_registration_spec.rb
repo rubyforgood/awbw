@@ -183,6 +183,52 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "someone else will pay" do
+    it "flags the registration when the registrant answers someone else will pay" do
+      params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
+        field_id("someone_else_will_pay") => "Yes"
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(EventRegistration.last.someone_else_will_pay).to be(true)
+    end
+
+    it "leaves the flag off when the registrant answers they will pay themselves" do
+      params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
+        field_id("someone_else_will_pay") => "No"
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(EventRegistration.last.someone_else_will_pay).to be(false)
+    end
+
+    it "updates the flag when an existing registrant re-registers" do
+      person = create(:person, first_name: "Pat", last_name: "Doe", email: "pat@example.com")
+      create(:event_registration, event: event, registrant: person, someone_else_will_pay: false)
+      params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
+        field_id("someone_else_will_pay") => "Yes"
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(event.event_registrations.find_by(registrant: person).someone_else_will_pay).to be(true)
+    end
+
+    it "does not clobber an existing flag when the answer is blank" do
+      person = create(:person, first_name: "Pat", last_name: "Doe", email: "pat@example.com")
+      create(:event_registration, event: event, registrant: person, someone_else_will_pay: true)
+      params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
+        field_id("someone_else_will_pay") => ""
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(event.event_registrations.find_by(registrant: person).someone_else_will_pay).to be(true)
+    end
+  end
+
   describe "mailing list consent" do
     it "stamps the consent time and source when the registrant opts in" do
       params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
