@@ -54,7 +54,7 @@ class FormBuilderService
     marketing: %w[referral_source training_motivation interested_in_more],
     continuing_education: %w[ce_credit_interest ce_license_number],
     scholarship: %w[scholarship_eligibility scholarship_contribution impact_description implementation_plan additional_comments],
-    payment: %w[payment_method pays_for_self],
+    payment: %w[payment_method someone_else_will_pay],
     consent: %w[communication_consent],
     post_event_feedback: %w[event_rating most_valuable improvement_suggestions],
     bulk_payment: %w[payer_first_name payer_last_name payer_email payer_phone payer_organization number_of_attendees payment_method bulk_payment_attendees]
@@ -109,7 +109,7 @@ class FormBuilderService
       "Please describe one way in which you plan to use art workshops and how you envision it will help.",
       "Anything else you'd like to share with us?"
     ],
-    payment: [ "Payment method", "Do you expect to pay for this registration yourself?" ],
+    payment: [ "Payment method", "Will someone else be paying for your registration?" ],
     consent: [ "I agree to receive email communications from A Window Between Worlds." ],
     post_event_feedback: [ "How would you rate this event?", "What did you find most valuable?", "Any suggestions for improvement?" ],
     bulk_payment: [
@@ -580,9 +580,9 @@ class FormBuilderService
     position = add_field(form, position, "Payment method", :single_select_radio,
                          key: "payment_method", group: "payment", required: true,
                          options: PAYMENT_METHOD_OPTIONS)
-    position = add_field(form, position, "Do you expect to pay for this registration yourself?", :single_select_radio,
-                         key: "pays_for_self", group: "payment", required: true,
-                         subtitle: "Choose \"No\" if a sponsor, partner, or organization will be covering your cost.",
+    position = add_field(form, position, "Will someone else be paying for your registration?", :single_select_radio,
+                         key: "someone_else_will_pay", group: "payment", required: true,
+                         subtitle: "Choose \"Yes\" if a sponsor, partner, or organization will be covering your cost.",
                          options: %w[Yes No])
     position
   end

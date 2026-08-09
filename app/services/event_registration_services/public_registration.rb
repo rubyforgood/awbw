@@ -37,11 +37,12 @@ module EventRegistrationServices
     ORGANIZATION_NAME_IDENTIFIER = "agency_name".freeze
     ORGANIZATION_POSITION_IDENTIFIER = "agency_position".freeze
 
-    # Well-known field_identifier of the "Do you expect to pay for yourself?"
-    # question seeded after the payment method. Answering it "No" sets the
-    # registration's someone_else_will_pay flag (a sponsor or partner covers the
-    # cost). Kept here so the seed, service, and specs agree.
-    PAYS_FOR_SELF_IDENTIFIER = "pays_for_self".freeze
+    # Well-known field_identifier of the "Will someone else be paying?" question
+    # seeded after the payment method. Answering it "Yes" sets the registration's
+    # someone_else_will_pay flag (a sponsor or partner covers the cost). Named to
+    # match the column so the mapping is direct. Kept here so the seed, service,
+    # and specs agree.
+    SOMEONE_ELSE_WILL_PAY_IDENTIFIER = "someone_else_will_pay".freeze
 
     def self.call(event:, registration_form:, form_params:, scholarship_requested: false, person: nil,
                   scholarship_form: nil, scholarship_params: {},
@@ -423,13 +424,13 @@ module EventRegistrationServices
       )
     end
 
-    # Inverse of the "Do you expect to pay for yourself?" answer: "No" means a
-    # sponsor or partner covers the cost. Returns nil when unanswered so we never
-    # clobber an existing flag with a blank.
+    # "Will someone else be paying?" — "Yes" means a sponsor or partner covers the
+    # cost. Returns nil when unanswered so we never clobber an existing flag with a
+    # blank.
     def someone_else_will_pay_answer
-      answer = field_value(PAYS_FOR_SELF_IDENTIFIER)&.strip
+      answer = field_value(SOMEONE_ELSE_WILL_PAY_IDENTIFIER)&.strip
       return nil if answer.blank?
-      !answer.casecmp?("yes")
+      answer.casecmp?("yes")
     end
 
     # Create the registrant's CE registration when they opt in, against a license

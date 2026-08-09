@@ -65,7 +65,7 @@ RSpec.describe "Public form submissions", type: :system do
 
       choose_pr_radio ce_field("ce_credit_interest"), "Yes"
       choose_pr_radio reg_field("payment_method"), "Check"
-      choose_pr_radio reg_field("pays_for_self"), "No"
+      choose_pr_radio reg_field("someone_else_will_pay"), "Yes"
       check_pr_box reg_field("additional_forms"), "W-9"
 
       click_button "Register"
@@ -111,7 +111,7 @@ RSpec.describe "Public form submissions", type: :system do
         "referral_source" => "Online Search",
         "training_motivation" => "Address staff burnout through art",
         "payment_method" => "Check",
-        "pays_for_self" => "No",
+        "someone_else_will_pay" => "Yes",
         "additional_forms" => "W-9",
         "communication_consent" => "Yes"
       )
@@ -147,7 +147,7 @@ RSpec.describe "Public form submissions", type: :system do
       choose_pr_radio reg_field("racial_ethnic_identity"), "Asian"
       choose_pr_radio reg_field("referral_source"), "Social Media"
       choose_pr_radio reg_field("payment_method"), "Check"
-      choose_pr_radio reg_field("pays_for_self"), "Yes"
+      choose_pr_radio reg_field("someone_else_will_pay"), "No"
       choose_pr_radio ce_field("ce_credit_interest"), "No"
       check_pr_box reg_field("communication_consent"), "Yes"
 
@@ -165,7 +165,7 @@ RSpec.describe "Public form submissions", type: :system do
         "racial_ethnic_identity" => "Asian",
         "referral_source" => "Social Media",
         "payment_method" => "Check",
-        "pays_for_self" => "Yes",
+        "someone_else_will_pay" => "No",
         "communication_consent" => "Yes"
       )
       logged_in_person.reload
@@ -180,7 +180,7 @@ RSpec.describe "Public form submissions", type: :system do
 
       fill_full_registration
       choose_pr_radio reg_field("payment_method"), "Check"
-      choose_pr_radio reg_field("pays_for_self"), "No"
+      choose_pr_radio reg_field("someone_else_will_pay"), "No"
       choose_pr_radio ce_field("ce_credit_interest"), "No"
 
       choose_pr_radio schol_field("scholarship_eligibility"), "Yes"
@@ -213,7 +213,7 @@ RSpec.describe "Public form submissions", type: :system do
       visit new_event_public_registration_path(event, scholarship_requested: true)
 
       choose_pr_radio reg_field("payment_method"), "Check"
-      choose_pr_radio reg_field("pays_for_self"), "No"
+      choose_pr_radio reg_field("someone_else_will_pay"), "No"
       choose_pr_radio ce_field("ce_credit_interest"), "No"
       check_pr_box reg_field("communication_consent"), "Yes"
 

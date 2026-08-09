@@ -184,9 +184,9 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
   end
 
   describe "someone else will pay" do
-    it "flags the registration when the registrant answers they won't pay for themselves" do
+    it "flags the registration when the registrant answers someone else will pay" do
       params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
-        field_id("pays_for_self") => "No"
+        field_id("someone_else_will_pay") => "Yes"
       )
 
       described_class.call(event: event, registration_form: form, form_params: params)
@@ -194,9 +194,9 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(EventRegistration.last.someone_else_will_pay).to be(true)
     end
 
-    it "leaves the flag off when the registrant answers they will pay for themselves" do
+    it "leaves the flag off when the registrant answers they will pay themselves" do
       params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
-        field_id("pays_for_self") => "Yes"
+        field_id("someone_else_will_pay") => "No"
       )
 
       described_class.call(event: event, registration_form: form, form_params: params)
@@ -208,7 +208,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       person = create(:person, first_name: "Pat", last_name: "Doe", email: "pat@example.com")
       create(:event_registration, event: event, registrant: person, someone_else_will_pay: false)
       params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
-        field_id("pays_for_self") => "No"
+        field_id("someone_else_will_pay") => "Yes"
       )
 
       described_class.call(event: event, registration_form: form, form_params: params)
@@ -220,7 +220,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       person = create(:person, first_name: "Pat", last_name: "Doe", email: "pat@example.com")
       create(:event_registration, event: event, registrant: person, someone_else_will_pay: true)
       params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
-        field_id("pays_for_self") => ""
+        field_id("someone_else_will_pay") => ""
       )
 
       described_class.call(event: event, registration_form: form, form_params: params)

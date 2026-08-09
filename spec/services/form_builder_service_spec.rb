@@ -115,12 +115,12 @@ RSpec.describe FormBuilderService do
 
       it "creates payment fields" do
         keys = form.form_fields.pluck(:field_identifier).compact
-        expect(keys).to include("payment_method", "pays_for_self")
+        expect(keys).to include("payment_method", "someone_else_will_pay")
       end
 
-      it "seeds the pays-for-self question after the payment method" do
+      it "seeds the someone-else-will-pay question after the payment method" do
         keys = form.form_fields.reorder(:position).pluck(:field_identifier).compact
-        expect(keys.index("pays_for_self")).to eq(keys.index("payment_method") + 1)
+        expect(keys.index("someone_else_will_pay")).to eq(keys.index("payment_method") + 1)
       end
     end
 
