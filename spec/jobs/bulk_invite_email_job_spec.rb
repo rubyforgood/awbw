@@ -27,4 +27,17 @@ RSpec.describe BulkInviteEmailJob do
 
     described_class.perform_now(user.id, sender_id: -1)
   end
+
+  # End-to-end through DeviseMailer, which is where the attribution actually lands.
+  # It skips logging in the test env, so unstub that after the factories have run.
+  it "logs the invite notification as sent by the sender, not the portal" do
+    user = create(:user, :unconfirmed)
+    sender = create(:user, first_name: "Dana", last_name: "Sender")
+    allow(Rails.env).to receive(:test?).and_return(false)
+
+    described_class.perform_now(user.id, sender_id: sender.id)
+
+    expect(Notification.last.sender).to eq(sender)
+    expect(Notification.last.decorate.sender_name).to eq("Dana Sender")
+  end
 end
