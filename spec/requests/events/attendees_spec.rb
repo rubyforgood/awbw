@@ -172,7 +172,22 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).not_to include("Zed Zulu")
         end
 
-        it "filters by explicit registrant_ids (from the statistics-hub totals)" do
+        it "renders the cities charts when a city has scholarship recipients" do
+          # The scholarship-only cities sub-table must use the index drill-in paths,
+          # not the event-scoped registrant links (there is no @event on the index —
+          # that raised a nil-event UrlGenerationError).
+          org = create(:organization, name: "Wellness Org")
+          create(:address, addressable: org, city: "Austin", state: "TX", inactive: false)
+          attendee_registration.event_registration_organizations.create!(organization: org)
+          award = create(:scholarship, recipient: attendee, amount_cents: 1_000, grant: create(:grant))
+          create(:allocation, source: award, allocatable: attendee_registration, amount: 1_000)
+
+          get attendees_events_url, headers: charts_frame_headers
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("All cities")
+        end
+
+        it "filters by explicit registrant_ids (from the reports-hub totals)" do
           other = create(:person, first_name: "Zed", last_name: "Zulu")
           create(:event_registration, event: recent_training, registrant: other, status: "attended")
 
