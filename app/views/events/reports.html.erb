@@ -16,12 +16,11 @@
       <% end %>
     </div>
 
-    <div class="mb-6">
-      <h1 class="text-2xl font-semibold text-gray-900">Event reports</h1>
-      <p class="text-gray-600 mt-1">
-        Revenue and participation at a glance — open a full report for the year-by-year detail.
-      </p>
-    </div>
+    <%= render "events/report_header",
+          title: "Event reports",
+          icon: "fa-solid fa-chart-line",
+          event: @filter_event,
+          subtitle: "Revenue and participation at a glance — open a full report for the year-by-year detail." %>
 
     <%# Filters driving both summary cards — time period, event type and event —
         matching the filter selects on the full revenue and participation reports. %>

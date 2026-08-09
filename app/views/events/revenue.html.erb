@@ -12,12 +12,12 @@
       <% end %>
     </div>
 
-    <div class="mb-8">
-      <h1 class="text-2xl font-semibold text-gray-900">Events revenue</h1>
-      <p class="text-gray-600 mt-1">
-        Program revenue by year — money in, what the org subsidized from its own funds, and the net.
-      </p>
-    </div>
+    <%= render "events/report_header",
+          title: "Event revenue",
+          icon: "fa-solid fa-sack-dollar",
+          theme: :payments,
+          event: @filter_event,
+          subtitle: "Program revenue by year — money in, what the org subsidized from its own funds, and the net." %>
 
     <%# Ahoy-style filters shared with the participation report — time period,
         event type and event — each auto-submitting a GET form. %>

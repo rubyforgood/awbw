@@ -279,6 +279,17 @@ class EventDashboard
     [ event, registration_slug_by_registrant[person.id] ]
   end
 
+  # The registration a registrant's roster row links to: their active registration
+  # for this event. The shared roster partial reads this so the same row link works
+  # on the cross-event attendees index (see AttendeesRoster).
+  def registration_link_target(person)
+    registration_by_registrant[person.id]
+  end
+
+  def registration_by_registrant
+    @registration_by_registrant ||= active_registrations.index_by(&:registrant_id)
+  end
+
   def scholarship_registrants
     @scholarship_registrants ||= people_sorted(scholarships.distinct.pluck(:recipient_id))
   end

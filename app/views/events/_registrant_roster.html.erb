@@ -5,12 +5,15 @@
       show_event_column: - adds a "Training" column listing each registration's
         event (label + month/year) linking to its edit page. Off in single-event
         context. Default false.
-      clickable_rows: - the whole row links to the person's profile. Default true;
-        off on the cross-event index, where the event links lead into the
-        individual registrations instead. %>
+      clickable_rows: - the whole row links to the person's registration. Default
+        true; off on the cross-event index, where the event links lead into the
+        individual registrations instead.
+      row_return_to: - `return_to` stamped on those registration links so the edit
+        page's eyebrow comes back here (e.g. "roster"). %>
 <% show_event_column = local_assigns.fetch(:show_event_column, false) %>
 <% show_affiliation_status = local_assigns.fetch(:show_affiliation_status, false) %>
 <% clickable_rows = local_assigns.fetch(:clickable_rows, true) %>
+<% row_return_to = local_assigns[:row_return_to] %>
 <% affiliation_status_classes = {
      "Active" => "border-green-300 bg-green-100 text-green-800",
      "Pending" => "border-amber-300 bg-amber-100 text-amber-800",
@@ -60,13 +63,18 @@
           <% person_age_groups = roster.primary_age_group_names_by_registrant[person.id] || [] %>
           <% scholarship = roster.scholarship_by_recipient[person.id] %>
           <% ce_registration = roster.ce_registration_by_registrant[person.id] %>
+          <%# Rows lead into the person's registration for this event — the record
+              an admin acts on from a roster. Falls back to their profile if they
+              somehow have no registration to point at. %>
+          <% registration = roster.registration_link_target(person) %>
+          <% person_link = registration ? edit_event_registration_path(registration, return_to: row_return_to) : person_path(person) %>
           <tr class="block sm:table-row hover:bg-blue-50 transition-colors <%= "cursor-pointer" if clickable_rows %>"
-              <% if clickable_rows %>onclick="window.location='<%= person_path(person) %>'"<% end %>>
+              <% if clickable_rows %>onclick="window.location='<%= person_link %>'"<% end %>>
             <%# Card title on mobile (larger, allowed to wrap); plain name cell at sm+. %>
             <td class="block sm:table-cell px-4 pt-3 pb-1 sm:py-1.5 text-sm sm:whitespace-nowrap"
                 data-sort-first="<%= person.first_name.to_s.downcase %>"
                 data-sort-last="<%= person.last_name.to_s.downcase %>">
-              <%= link_to person.name, person_path(person), class: "font-bold text-gray-900 hover:underline text-base sm:text-sm" %>
+              <%= link_to person.name, person_link, class: "font-bold text-gray-900 hover:underline text-base sm:text-sm" %>
             </td>
             <%# Primary sector + age group — one column, each independently
                 sortable (data-sort-sector / data-sort-age), mirroring the

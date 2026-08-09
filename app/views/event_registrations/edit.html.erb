@@ -20,7 +20,16 @@
       <% end %>
     <% elsif params[:return_to] == "attendees" %>
       <%= link_to attendees_events_path, class: "text-sm text-gray-500 hover:text-gray-700" do %>
-        <i class="fa-solid fa-arrow-left text-xs"></i> Training attendees
+        <i class="fa-solid fa-arrow-left text-xs"></i> Attendees
+      <% end %>
+    <% elsif params[:return_to] == "roster" %>
+      <%= link_to roster_event_path(@event_registration.event), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Registrant roster
+      <% end %>
+    <% elsif params[:return_to] == "recipients" %>
+      <%# Back to this recipient's own card, not the top of the page. %>
+      <%= link_to recipients_event_card_path(@event_registration.event, @event_registration.slug), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Scholarship recipients
       <% end %>
     <% elsif params[:return_to] == "recipients" %>
       <%= link_to recipients_event_path(@event_registration.event, anchor: "shout-outs"), class: "text-sm text-gray-500 hover:text-gray-700" do %>

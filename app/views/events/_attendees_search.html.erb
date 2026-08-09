@@ -1,4 +1,4 @@
-<%# Filters for the training-attendees index. Submits into the results frame; the
+<%# Filters for the attendees index. Submits into the results frame; the
     selects auto-submit on change and the text search on enter/click. `return_to`
     rides along so the eyebrow keeps pointing back to wherever the admin arrived
     from. %>
@@ -41,6 +41,14 @@
       <%= select_tag :sector,
             options_from_collection_for_select(@training_sectors, :id, :name, params[:sector].to_i),
             include_blank: "All sectors",
+            class: select_class, onchange: "this.form.submit();" %>
+    </div>
+
+    <div class="w-full md:w-44">
+      <%= label_tag :program_status, "Program status", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <%= select_tag :program_status,
+            options_for_select(Organization::FACILITATOR_PROGRAM_STATUSES.map { |status| [ status.to_s.titleize, status.to_s ] }, params[:program_status]),
+            include_blank: "All program statuses",
             class: select_class, onchange: "this.form.submit();" %>
     </div>
 

@@ -25,6 +25,15 @@ module EventsHelper
     registrants_event_path(event_or_id, anchor: registrant_row_id(registration_id), highlight: registration_id)
   end
 
+  # Path back to one recipient's card on the Scholarship recipients page, where the
+  # cards are anchored by registration slug (`participant-<slug>`, with a scroll-mt
+  # so the sticky header doesn't cover them). Shared by every page reached from
+  # there — the registration and scholarship edit pages and their post-save
+  # redirects — so the anchor is built once. A blank slug lands at the top.
+  def recipients_event_card_path(event, participant_slug)
+    recipients_event_path(event, anchor: ("participant-#{participant_slug}" if participant_slug.present?))
+  end
+
   # The scholarships report's filter/toggle state, carried through a drill-in so
   # its eyebrow can rebuild the exact view (period, event type/id, search, funder,
   # split/combined layout, and the report's own origin) the user came from.

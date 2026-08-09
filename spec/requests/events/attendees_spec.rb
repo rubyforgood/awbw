@@ -43,7 +43,8 @@ RSpec.describe "Events attendees", type: :request do
       it "renders the shell for an event they own" do
         get attendees_events_url(event_id: owned_training.id)
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Attendees")
+        expect(response.body).to include("Event attendees")
+        expect(response.body).to include(owned_training.decorate.compact_label)
       end
 
       it "returns the eyebrow to their event's dashboard" do
@@ -105,7 +106,14 @@ RSpec.describe "Events attendees", type: :request do
       it "renders the index shell" do
         get attendees_events_url
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Attendees")
+        expect(response.body).to include("Event attendees")
+      end
+
+      it "offers the program-status filter and keeps its selection" do
+        get attendees_events_url(program_status: "reinstated")
+        expect(response.body).to include("Program status")
+        expect(Capybara.string(response.body))
+          .to have_selector("select#program_status option[selected][value='reinstated']")
       end
 
       it "carries the participation origin back through the eyebrow" do
@@ -249,6 +257,23 @@ RSpec.describe "Events attendees", type: :request do
           get attendees_events_url(affiliation_status: "Inactive"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Nora Active")
+        end
+
+        it "filters by the org's facilitator program status" do
+          # Ada's org is new (no earlier facilitator affiliation); Zed's org is
+          # ongoing (a facilitator affiliation predates and still overlaps today).
+          new_org = create(:organization, name: "Fresh Org")
+          attendee_registration.event_registration_organizations.create!(organization: new_org)
+
+          ongoing = create(:person, first_name: "Zed", last_name: "Zulu")
+          ongoing_registration = create(:event_registration, event: recent_training, registrant: ongoing, status: "attended")
+          ongoing_org = create(:organization, name: "Established Org")
+          create(:affiliation, organization: ongoing_org, start_date: 2.years.ago, inactive: false, title: "Facilitator")
+          ongoing_registration.event_registration_organizations.create!(organization: ongoing_org)
+
+          get attendees_events_url(program_status: "new"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).not_to include("Zed Zulu")
         end
       end
     end

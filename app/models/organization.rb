@@ -128,6 +128,10 @@ class Organization < ApplicationRecord
     direct.or(legacy).distinct
   end
 
+  # Facilitator program statuses in display order — the values #facilitator_status
+  # and #facilitator_status_on return, and the attendees index filters on.
+  FACILITATOR_PROGRAM_STATUSES = %i[ new ongoing reinstated ].freeze
+
   # Classifies this organization as a facilitator program relative to a reference
   # ("current") facilitator affiliation — typically a registrant's affiliation
   # captured through the event registration form:

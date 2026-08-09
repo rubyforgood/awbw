@@ -639,7 +639,7 @@ class EventsController < ApplicationController
   end
 
   # People (Person records) with an attended facilitator-training registration,
-  # narrowed by the training-attendees index filters. The training-specific
+  # narrowed by the attendees index filters. The training-specific
   # filters (event, year) constrain which attended registrations qualify; the rest
   # filter the people. Distinct via the id subquery, so joins never duplicate rows.
   def filtered_training_attendees
@@ -779,7 +779,7 @@ class EventsController < ApplicationController
     scope.select(:addressable_id)
   end
 
-  # Option lists for the training-attendees filter selects, built once per full
+  # Option lists for the attendees index filter selects, built once per full
   # page load from the whole attended-training population.
   def set_training_attendee_filter_options
     @training_events = reportable_trainings.order(start_date: :desc)

@@ -14,40 +14,34 @@
     <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
     <%= render "events/subnav", event: @event, current: :scholarships %>
   </div>
-  <%# Title block with the Grants / Print buttons pinned top-right so they share
-      the title's vertical band instead of stacking above it. On mobile they sit
-      in their own right-aligned row above the centered title to avoid overlap. %>
-  <div class="relative mb-8">
-    <div class="flex justify-end gap-3 mb-4 sm:mb-0 sm:absolute sm:right-0 sm:top-0 print:hidden">
-      <% if allowed_to?(:cross_event_reports?, @event) %>
-        <%= link_to scholarships_events_path, target: "_blank", rel: "noopener", class: "btn btn-utility-outline" do %>
-          <i class="fa-solid fa-chart-line"></i> Reports
-          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
-        <% end %>
+  <%# Reports / Grants are cross-page navigation, so they read as text links; only
+      Print, which acts on this page, stays a button. %>
+  <% recipient_actions = capture do %>
+    <% if allowed_to?(:cross_event_reports?, @event) %>
+      <%= link_to scholarships_events_path, target: "_blank", rel: "noopener",
+            class: "text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap" do %>
+        <i class="fa-solid fa-chart-line"></i> Reports
+        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
       <% end %>
-      <% if allowed_to?(:index?, Grant) %>
-        <%= link_to grants_path, target: "_blank", rel: "noopener", class: "btn btn-utility-outline" do %>
-          <i class="fa-solid fa-hand-holding-dollar"></i> Grants
-          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
-        <% end %>
+    <% end %>
+    <% if allowed_to?(:index?, Grant) %>
+      <%= link_to grants_path, target: "_blank", rel: "noopener",
+            class: "text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap" do %>
+        <i class="fa-solid fa-hand-holding-dollar"></i> Grants
+        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
       <% end %>
-      <button onclick="window.print();" class="btn btn-utility-outline">
-        <i class="fa-solid fa-print"></i> Print
-      </button>
-    </div>
-
-    <div class="text-center">
-      <%= link_to @event.title, edit_event_path(@event), class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
-      <% if @event.start_date.present? %>
-        <p class="text-sm text-gray-500 mt-1"><%= @event.date_range %></p>
-      <% end %>
-      <h1 class="text-3xl font-bold mt-2 flex items-center justify-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
-        <i class="fa-solid fa-graduation-cap"></i>
-        Scholarship recipients
-      </h1>
-      <p class="text-gray-500 mt-2"><%= pluralize(@dashboard.scholarship_applicants.size, "person") %></p>
-    </div>
-  </div>
+    <% end %>
+    <button onclick="window.print();" class="btn btn-utility-outline">
+      <i class="fa-solid fa-print"></i> Print
+    </button>
+  <% end %>
+  <%= render "events/report_header",
+        title: "Scholarship recipients",
+        icon: "fa-solid fa-graduation-cap",
+        theme: :scholarships,
+        event: @event,
+        subtitle: pluralize(@dashboard.scholarship_applicants.size, "person"),
+        actions: recipient_actions %>
 
   <% if @dashboard.scholarship_applicants.any? %>
     <div data-controller="expandable-cards scholarship-status-toggle"
@@ -228,14 +222,14 @@
     </div>
   <% end %>
 
-  <%# ---- Statistics: recipient breakdowns by city + organization. The actual
+  <%# ---- Charts: recipient breakdowns by city + organization. The actual
       breakdown partials (scholarship-recipient totals) land in a follow-up PR;
       titled placeholders for now. ---- %>
   <% if @dashboard.scholarship_applicants.any? %>
     <div class="mt-10 break-inside-avoid">
       <h2 class="text-xl font-bold mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
         <i class="fa-solid fa-chart-pie"></i>
-        Statistics
+        Charts
       </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4">

@@ -51,6 +51,12 @@ class AttendeesRoster
     [ registration.event, registration.slug ]
   end
 
+  # The registration a person's roster row links to: their most recent attended
+  # training. Mirrors EventDashboard#registration_link_target.
+  def registration_link_target(person)
+    registrations_for(person).first
+  end
+
   # The training the person's shown scholarship comes from, keyed by Person id —
   # lets the cross-event index label which training funded it (it may not be the
   # top-listed training).

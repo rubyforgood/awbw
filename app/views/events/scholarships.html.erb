@@ -12,12 +12,12 @@
       <% end %>
     </div>
 
-    <div class="mb-6">
-      <h1 class="text-2xl font-semibold text-gray-900">Events scholarships</h1>
-      <p class="text-gray-600 mt-1">
-        Scholarship dollars and awards (funded vs unfunded) per facilitator training, by year, with trainees who attended.
-      </p>
-    </div>
+    <%= render "events/report_header",
+          title: "Event scholarships",
+          icon: "fa-solid fa-graduation-cap",
+          theme: :scholarships,
+          event: @filter_event,
+          subtitle: "Scholarship dollars and awards (funded vs unfunded) per facilitator training, by year, with trainees who attended." %>
 
     <%# Ahoy-style filters — time period, specific training, and abbreviation
         search — each auto-submitting a GET form so the report reshapes on change. %>

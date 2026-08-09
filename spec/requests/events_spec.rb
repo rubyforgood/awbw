@@ -205,7 +205,7 @@ RSpec.describe "Events", type: :request do
         sign_in admin
         get revenue_events_path
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Events revenue")
+        expect(response.body).to include("Event revenue")
         expect(response.body).to include("Revenue by year")
         expect(response.body).to include("Fees collected")
         expect(response.body).to include("TAC 261")
@@ -316,7 +316,7 @@ RSpec.describe "Events", type: :request do
         sign_in admin
         get participation_events_path
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Events participation")
+        expect(response.body).to include("Event participation")
         expect(response.body).to include("Attendance by year")
         expect(response.body).to include("TAC 261")
         expect(response.body).to include("Open webinar")
@@ -469,7 +469,7 @@ RSpec.describe "Events", type: :request do
         sign_in admin
         get scholarships_events_path
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Events scholarships")
+        expect(response.body).to include("Event scholarships")
         expect(response.body).to include("$ of scholarships", "# of scholarships", "Attended breakdown")
         expect(response.body).to include("TAC 261", "Self-paced training")
         expect(response.body).not_to include("Paid webinar")
@@ -480,7 +480,7 @@ RSpec.describe "Events", type: :request do
         get scholarships_events_path(view: "combined")
         # Combined view folds the two count/$ column groups into one; the split
         # view's separate headers are gone.
-        expect(response.body).to include("Events scholarships")
+        expect(response.body).to include("Event scholarships")
         expect(response.body).not_to include("# of scholarships", "$ of scholarships")
       end
 
@@ -2444,16 +2444,19 @@ RSpec.describe "Events", type: :request do
           get roster_event_path(owned_event)
 
           expect(response).to have_http_status(:ok)
-          expect(response.body).to include("Roster")
+          expect(response.body).to include("Registrant roster")
           expect(response.body).to include("Ada")
           expect(response.body).to include("Lovelace")
           expect(response.body).to include("Roster Org")
         end
 
-        it "links each registrant row to their profile" do
+        it "links each registrant row to their registration, not their profile" do
           get roster_event_path(owned_event)
 
-          expect(response.body).to include(person_path(person))
+          expect(response.body).to include(
+            CGI.escapeHTML(edit_event_registration_path(registration, return_to: "roster"))
+          )
+          expect(response.body).not_to include(person_path(person))
         end
 
         it "excludes registrants with an inactive status" do
@@ -2552,6 +2555,13 @@ RSpec.describe "Events", type: :request do
           expect(response.body).to include('id="overview"')
           expect(response.body).to include("return_to=roster")
           expect(response.body).to include("return_anchor=overview")
+        end
+
+        it "returns to the roster from the registration it opened" do
+          get edit_event_registration_path(registration, return_to: "roster")
+
+          expect(response.body).to include("Registrant roster")
+          expect(response.body).to include(roster_event_path(owned_event))
         end
 
         it "defers the demographic charts to a lazy frame (not rendered inline)" do
@@ -2847,10 +2857,10 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Show scholarship status")
       end
 
-      it "renders the Recipients and Statistics section headers with placeholder breakdowns" do
+      it "renders the Recipients and Charts section headers with placeholder breakdowns" do
         get recipients_event_path(event)
 
-        expect(response.body).to include("Statistics")
+        expect(response.body).to include("Charts")
         expect(response.body).to include("Recipients by city")
         expect(response.body).to include("Recipients by organization")
       end
@@ -2866,6 +2876,21 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include('data-scholarship-status-toggle-target="status"')
         expect(response.body).to include("$500")
         expect(response.body).to include("Tasks completed")
+      end
+
+      it "links each recipient's name to their registration, returning to their card" do
+        registration = event.event_registrations.find_by(registrant: applicant)
+
+        get recipients_event_path(event)
+        expect(response.body).to include(
+          CGI.escapeHTML(edit_event_registration_path(registration, return_to: "recipients"))
+        )
+
+        get edit_event_registration_path(registration, return_to: "recipients")
+        expect(response.body).to include("Scholarship recipients")
+        expect(response.body).to include(
+          CGI.escapeHTML("#{recipients_event_path(event)}#participant-#{registration.slug}")
+        )
       end
 
       it "links each scholarship to its edit page, returning to this recipients page" do
