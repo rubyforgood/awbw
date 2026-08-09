@@ -186,7 +186,8 @@ class EventPolicy < ApplicationPolicy
                   primary_asset_attributes: [ :id, :file, :_destroy ],
                   gallery_assets_attributes: [ :id, :file, :_destroy ],
                   registration_ticket_callouts_attributes: [ :id, :builtin_key, :title, :subtitle, :description, :callout_type, :icon_class, :color_class, :display_from, :payment_access_gated, :published, :reset_to_default, :_destroy,
-                    { registration_ticket_callout_resources_attributes: [ :id, :resource_id, :subtitle, :page_content, :_destroy ] } ]
+                    { registration_ticket_callout_resources_attributes: [ :id, :resource_id, :subtitle, :page_content, :_destroy ] } ],
+                  event_staffs_attributes: [ :id, :person_id, :title, :expected_to_attend, :bio, :_destroy ]
         ]
 
     permitted.prepend(:ga4_snippet, :gtm_head_snippet, :gtm_body_snippet) if admin?

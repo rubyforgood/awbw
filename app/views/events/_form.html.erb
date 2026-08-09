@@ -541,6 +541,48 @@
       </div>
     </div>
 
+    <div class="staff-section" data-controller="dropdown">
+      <button
+        type="button"
+        id="staff_button"
+        class="
+          flex items-center justify-between cursor-pointer w-full
+          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
+        "
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"staff":"hidden"}, {"staff_arrow":"rotate-180"}, {"staff_button":"rounded-md rounded-t-md"}]'
+      >
+        Event staff
+        <i id="staff_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
+      </button>
+
+      <div id="staff" class="hidden border border-gray-300 bg-gray-50 p-4 rounded-b-md" data-controller="expandable-cards" data-expandable-cards-expanded-value="false">
+        <div class="flex items-center justify-between mb-3">
+          <button type="button" data-action="expandable-cards#toggleAll"
+                  class="inline-flex items-center gap-2 text-sm font-medium text-blue-700 hover:text-blue-900">
+            <i class="fa-solid fa-chevron-down transition-transform" data-expandable-cards-target="icon"></i>
+            <span data-expandable-cards-target="label">Expand all</span>
+          </button>
+
+          <% if @event.persisted? %>
+            <%= link_to "View staff page", staff_event_path(@event), class: "btn btn-secondary-outline" %>
+          <% end %>
+        </div>
+
+        <div id="event-staffs">
+          <%= f.fields_for :event_staffs do |staff_form| %>
+            <%= render "event_staff_fields", f: staff_form %>
+          <% end %>
+        </div>
+
+        <div class="mt-2">
+          <%= link_to_add_association "➕ Add staff", f, :event_staffs,
+                data: { association_insertion_node: "#event-staffs", association_insertion_method: "append" },
+                class: "btn btn-secondary-outline" %>
+        </div>
+      </div>
+    </div>
+
     <%# ---- REGISTRATION TICKET CALLOUTS (built-in + custom ticket call-outs) ---- %>
     <%#
       ?expand=callouts (from the ticket's "Edit event" link) auto-opens this
