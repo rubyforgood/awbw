@@ -17,6 +17,13 @@ module OrganizationServices
   # passes overwrite: false so it only fills columns that are currently blank,
   # never clobbering an existing org's curated type/website.
   class SyncProfile
+    # filled: human labels of the columns this call actually wrote from the form.
+    # conflicts: OrganizationServices::ProfileDiff::Discrepancy for each answer
+    # that differs from a value already on the org and so was NOT applied (only
+    # populated under fill-blanks — overwrite: false). Lets the caller tell the
+    # admin what was saved and what they may want to reconcile by hand.
+    Result = Struct.new(:organization, :filled, :conflicts, keyword_init: true)
+
     def self.call(organization:, website: nil, agency_type: nil, overwrite: true)
       new(organization:, website:, agency_type:, overwrite:).call
     end
@@ -29,24 +36,27 @@ module OrganizationServices
     end
 
     def call
-      apply_value(:website_url, @website)
-      sync_agency_type
-      @organization
+      @filled = []
+      conflicts = @overwrite ? [] : ProfileDiff.call(organization: @organization, website: @website, agency_type: @agency_type)
+      @filled << "website" if apply_value(:website_url, @website)
+      @filled << "type" if sync_agency_type
+      Result.new(organization: @organization, filled: @filled, conflicts: conflicts)
     end
 
     private
 
     def sync_agency_type
       raw = @agency_type&.strip
-      return if raw.blank?
-      return if !@overwrite && @organization.agency_type.present?
+      return false if raw.blank?
+      return false if !@overwrite && @organization.agency_type.present?
 
       label, _separator, specified = raw.partition(":")
       label = label.strip
-      return if label.blank?
+      return false if label.blank?
       other_text = FormField.other_option?(label) ? specified.strip.presence : nil
       @organization.update!(agency_type: label, agency_type_other: other_text)
       capture_organization_type_other(other_text)
+      true
     end
 
     def capture_organization_type_other(text)
@@ -59,9 +69,10 @@ module OrganizationServices
     end
 
     def apply_value(attribute, value)
-      return if value.blank?
-      return if !@overwrite && @organization.public_send(attribute).present?
+      return false if value.blank?
+      return false if !@overwrite && @organization.public_send(attribute).present?
       @organization.update!(attribute => value.strip)
+      true
     end
   end
 end

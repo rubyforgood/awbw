@@ -687,6 +687,23 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).to include("No other affiliations on record")
         end
 
+        it "flags a persistent discrepancy on a linked org whose saved profile differs from the submission" do
+          organization.update!(name: "Acme", agency_type: "For-profit")
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_name" => "Acme", "agency_type" => "Government agency" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Form answers differ from this organization")
+          expect(response.body).to include("Government agency")
+          expect(response.body).to include("For-profit")
+        end
+
         it "shows the affiliation pill inline on the linked org, noting it has no dates" do
           create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
 
@@ -1000,6 +1017,40 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(address.country).to eq("USA")
           expect(regular_user.person.affiliations.where(organization: organization).map(&:organization_address))
             .to all(eq(address))
+        end
+
+        it "fills the org's blank type and website from the submission and says so" do
+          organization.update!(agency_type: nil, website_url: nil)
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_website" => "helpinghands.org", "agency_type" => "501c3/nonprofit" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
+
+          expect(organization.reload.website_url).to include("helpinghands.org")
+          expect(organization.agency_type).to eq("501c3/nonprofit")
+          expect(flash[:notice]).to include("Saved from the form").and include("type").and include("website")
+        end
+
+        it "keeps curated type/website and warns about the discrepancy" do
+          organization.update!(agency_type: "For-profit", website_url: "https://curated.org")
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_website" => "https://other.org", "agency_type" => "Government agency" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
+
+          expect(organization.reload.agency_type).to eq("For-profit")
+          expect(organization.website_url).to eq("https://curated.org")
+          expect(flash[:warning]).to include("were not applied").and include("Government agency").and include("For-profit")
         end
       end
 
