@@ -714,6 +714,19 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe ".organization_status scope" do
+    let(:event) { create(:event) }
+
+    it "filters linked / unlinked by organization link presence" do
+      linked = create(:event_registration, event: event)
+      create(:event_registration_organization, event_registration: linked)
+      unlinked = create(:event_registration, event: event)
+
+      expect(EventRegistration.organization_status("linked", event)).to contain_exactly(linked)
+      expect(EventRegistration.organization_status("unlinked", event)).to contain_exactly(unlinked)
+    end
+  end
+
   describe "#paid_in_full?" do
     let(:event) { create(:event, cost_cents: 1000) }
     let(:user) { create(:user, :with_person) }

@@ -19,6 +19,13 @@ class EventDashboard
     event.event_registrations.where(status: EventRegistration::INACTIVE_STATUSES).count
   end
 
+  # Active registrations with no organization linked (via
+  # EventRegistrationOrganization) — flags registrants still needing an agency
+  # linked, mirroring the "Unlinked" registrants filter.
+  def unlinked_registration_count
+    @unlinked_registration_count ||= active_registrations.where.not(id: linked_registration_ids).count
+  end
+
   # Registrant (Person) ids behind the inactive (cancelled / no-show)
   # registrations — for drilling into the matching manage list.
   def inactive_registrant_ids
@@ -916,6 +923,14 @@ class EventDashboard
 
   def active_registration_ids
     @active_registration_ids ||= active_registrations.pluck(:id)
+  end
+
+  # Ids of active registrations that have at least one organization linked.
+  def linked_registration_ids
+    @linked_registration_ids ||= EventRegistrationOrganization
+      .where(event_registration_id: active_registration_ids)
+      .distinct
+      .pluck(:event_registration_id)
   end
 
   def registrant_ids
