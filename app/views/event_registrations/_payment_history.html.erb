@@ -67,19 +67,37 @@
         <%# Intends to pay — grants ticket/material access while the balance above is
             still owed, for registrants who've committed to paying after the deadline.
             Does not change the amount due or mark the registration as paid. %>
-        <label class="flex items-start gap-2.5 cursor-pointer">
-          <input type="hidden" name="event_registration[intends_to_pay]" value="0" autocomplete="off">
-          <input type="checkbox"
-                 name="event_registration[intends_to_pay]"
-                 value="1"
-                 <%= "checked" if event_registration.intends_to_pay %>
-                 class="sr-only peer">
-          <span class="relative mt-0.5 h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-teal-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
-          <span>
-            <span class="block text-sm font-medium text-gray-700">Intends to pay</span>
-            <span class="block text-xs text-gray-400">Grant access to training materials and join links while the balance is still due. Doesn't mark the registration as paid.</span>
-          </span>
-        </label>
+        <div class="space-y-3">
+          <label class="flex items-start gap-2.5 cursor-pointer">
+            <input type="hidden" name="event_registration[intends_to_pay]" value="0" autocomplete="off">
+            <input type="checkbox"
+                   name="event_registration[intends_to_pay]"
+                   value="1"
+                   <%= "checked" if event_registration.intends_to_pay %>
+                   class="sr-only peer">
+            <span class="relative mt-0.5 h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-teal-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
+            <span>
+              <span class="block text-sm font-medium text-gray-700">Intends to pay</span>
+              <span class="block text-xs text-gray-400">Grant access to training materials and join links while the balance is still due.</span>
+            </span>
+          </label>
+
+          <%# Someone else will pay — buddy system: the registrant expects a
+              sponsor or partner to cover their cost, so they aren't the one paying. %>
+          <label class="flex items-start gap-2.5 cursor-pointer">
+            <input type="hidden" name="event_registration[someone_else_will_pay]" value="0" autocomplete="off">
+            <input type="checkbox"
+                   name="event_registration[someone_else_will_pay]"
+                   value="1"
+                   <%= "checked" if event_registration.someone_else_will_pay %>
+                   class="sr-only peer">
+            <span class="relative mt-0.5 h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-teal-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
+            <span>
+              <span class="block text-sm font-medium text-gray-700">Someone else will pay</span>
+              <span class="block text-xs text-gray-400">Buddy system — the registrant expects a sponsor or partner to cover their cost.</span>
+            </span>
+          </label>
+        </div>
       </div>
     <% else %>
       <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-0.5 text-xs font-medium text-gray-500">

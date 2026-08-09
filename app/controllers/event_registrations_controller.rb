@@ -351,6 +351,7 @@ class EventRegistrationsController < ApplicationController
       :scholarship_requested,
       :shoutout,
       :intends_to_pay,
+      :someone_else_will_pay,
       :expected_payment_method,
       :fee_note,
       *EventRegistration::DAY_FIELDS,
