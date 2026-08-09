@@ -47,10 +47,10 @@ RSpec.describe StripeChargeSucceededProcessor do
       expect { processor.call(event) }.not_to change(ExternalProcessorPayment, :count)
     end
 
-    it "does nothing when the charge belongs to a subscription (has an invoice)" do
-      allow(stripe_charge).to receive(:invoice).and_return("in_membership")
+    it "records a paid charge that carries an invoice but wasn't recorded by the membership flow" do
+      allow(stripe_charge).to receive(:invoice).and_return("in_manual")
 
-      expect { processor.call(event) }.not_to change(ExternalProcessorPayment, :count)
+      expect { processor.call(event) }.to change(ExternalProcessorPayment, :count).by(1)
     end
   end
 
