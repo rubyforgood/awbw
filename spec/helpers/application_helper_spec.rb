@@ -580,4 +580,19 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.badge_classes("bg-blue-50", padding: "px-5 py-0.5")).to include("px-5 py-0.5")
     end
   end
+
+  describe "#display_banner" do
+    it "renders published banner content" do
+      create(:banner, content: "Hello world", published: true)
+
+      expect(helper.display_banner).to include("Hello world")
+    end
+
+    it "returns nil without raising when the database connection drops" do
+      allow(Banner).to receive(:published).and_raise(ActiveRecord::ConnectionFailed)
+
+      expect { helper.display_banner }.not_to raise_error
+      expect(helper.display_banner).to be_nil
+    end
+  end
 end

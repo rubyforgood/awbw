@@ -436,6 +436,9 @@ module ApplicationHelper
     content_tag(:div, id: "banner-news", class: "bg-yellow-200 text-black text-center px-4 py-2") do
       content_tag(:div, safe_content.html_safe, class: "font-medium")
     end
+  rescue ActiveRecord::ConnectionNotEstablished, ActiveRecord::ConnectionFailed
+    # A transient DB connection drop shouldn't 500 the whole page over a decorative banner
+    nil
   end
 
   def sortable_field_display_name(name)
