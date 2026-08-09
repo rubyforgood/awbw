@@ -309,7 +309,7 @@ class EventRegistrationsController < ApplicationController
     when "onboarding" then redirect_to onboarding_event_path(event)
     when "attendees" then redirect_to attendees_events_path
     when "roster" then redirect_to roster_event_path(event)
-    when "recipients" then redirect_to recipients_event_path(event)
+    when "recipients", "recipient_card" then redirect_to recipients_event_path(event)
     else redirect_to event_registrations_path
     end
   end

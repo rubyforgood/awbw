@@ -217,16 +217,26 @@ RSpec.describe "Events", type: :request do
       # Money KPIs count people's registrations, so they drill into the people index
       # rather than the raw registrations table. Each opts out of the attendees
       # index's attended/trainings defaults or it would show the wrong population.
-      it "drills its money KPIs into the attendees index, defaults opted out" do
+      # The money lives on registrations, so these land on a registrations table
+      # with payment columns — the same kind of destination as the per-registrant
+      # breakdown rows lower down, rather than the attendees people-index.
+      it "drills its money KPIs into the registrations index across events" do
         sign_in admin
         get revenue_events_path
 
-        hrefs = Capybara.string(response.body).all("a[href*='/events/attendees']").map { |a| a[:href] }
-        unpaid = hrefs.find { |href| href.include?("payment_status=unpaid") }
+        hrefs = Capybara.string(response.body).all("a[href^='#{event_registrations_path}?']").map { |a| a[:href] }
 
-        expect(unpaid).to be_present
-        expect(unpaid).to include("attendance_status=all", "event_type=all", "return_to=revenue")
-        expect(response.body).not_to include(%(href="#{event_registrations_path}?))
+        expect(hrefs).to include(a_string_including("payment_status=unpaid"))
+        expect(hrefs).to include(a_string_including("funder=donor"))
+        expect(response.body).not_to include("/events/attendees")
+      end
+
+      it "drills them into that event's Manage list when scoped to one event" do
+        sign_in admin
+        get revenue_events_path(event_id: paid_training.id)
+
+        hrefs = Capybara.string(response.body).all("a[href^='#{registrants_event_path(paid_training)}?']").map { |a| a[:href] }
+        expect(hrefs).to include(a_string_including("payment_status=unpaid"))
       end
 
       it "labels an event by its abbreviation when set, keeping the full title as a tooltip" do
@@ -3015,15 +3025,18 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Tasks completed")
       end
 
+      # "recipients" already means "back to the shout-outs section" (the
+      # feature-a-shout-out flow), so the name link uses its own token to come
+      # back to this person's card instead.
       it "links each recipient's name to their registration, returning to their card" do
         registration = event.event_registrations.find_by(registrant: applicant)
 
         get recipients_event_path(event)
         expect(response.body).to include(
-          CGI.escapeHTML(edit_event_registration_path(registration, return_to: "recipients"))
+          CGI.escapeHTML(edit_event_registration_path(registration, return_to: "recipient_card"))
         )
 
-        get edit_event_registration_path(registration, return_to: "recipients")
+        get edit_event_registration_path(registration, return_to: "recipient_card")
         expect(response.body).to include("Scholarship recipients")
         expect(response.body).to include(
           CGI.escapeHTML("#{recipients_event_path(event)}#participant-#{registration.slug}")

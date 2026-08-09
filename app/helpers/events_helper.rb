@@ -34,6 +34,17 @@ module EventsHelper
     recipients_event_path(event, anchor: ("participant-#{participant_slug}" if participant_slug.present?))
   end
 
+  # Where a revenue figure drills in. The money lives on registrations, so these
+  # land on a registrations table with payment columns rather than the attendees
+  # people-index — matching the per-registrant breakdown rows lower down the same
+  # report. Scoped to one event that's its Manage list; across events it's the
+  # registrations index, which takes the same filters.
+  def revenue_drilldown_path(filters)
+    event_id = params[:event_id].presence
+    return registrants_event_path(event_id, **filters.except(:event_year)) if event_id
+    event_registrations_path(**filters)
+  end
+
   # Human label for the attendees index's population filters — e.g.
   # "Attended · Trainings". Shown in the page subtitle so the defaults the page
   # applies are visible rather than implied.
