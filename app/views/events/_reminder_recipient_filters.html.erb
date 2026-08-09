@@ -53,7 +53,7 @@
 
     <% if @ce_eligible %>
       <%= render "events/filter_select", param: :ce_status, label: "CE status",
-            options: [ [ "Needs license", "needs_license" ], [ "Requested", "requested" ], [ "Paid", "paid" ], [ "Issued", "issued" ], [ "Not issued", "not_issued" ] ],
+            options: [ [ "Requested", "requested" ], [ "Needs license", "needs_license" ], [ "Paid", "paid" ], [ "Issued", "issued" ], [ "Not issued", "not_issued" ] ],
             selected: params[:ce_status], blank: "Any CE status", field_class: field_class %>
     <% end %>
 
