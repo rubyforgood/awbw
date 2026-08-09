@@ -7,7 +7,7 @@
 # that event's dashboard can't disagree — a parity spec holds the two together.
 #
 # Pass funder: (a Person/Organization) to narrow to scholarships drawn from that
-# donor's grants, matching EventDashboard.new(event, scholarship_donor:).
+# funder's grants, matching EventDashboard.new(event, scholarship_funder:).
 class EventScholarshipFigures
   Figures = Struct.new(
     :funded_cents,
@@ -93,13 +93,13 @@ class EventScholarshipFigures
   end
 
   # A grant counts as external funding only when it exists and the org didn't
-  # donate it to itself (AWBW) — the in-memory form of Scholarship.externally_funded.
+  # fund it itself (AWBW) — the in-memory form of Scholarship.externally_funded.
   def external_grant?(grant_id)
-    grant_id.present? && !self_donated_grant_ids.include?(grant_id)
+    grant_id.present? && !self_funded_grant_ids.include?(grant_id)
   end
 
-  def self_donated_grant_ids
-    @self_donated_grant_ids ||= Grant.self_donated_ids.to_set
+  def self_funded_grant_ids
+    @self_funded_grant_ids ||= Grant.self_funded_ids.to_set
   end
 
   # { event_id => [ registration_id, ... ] } across every event, active only —
@@ -132,7 +132,7 @@ class EventScholarshipFigures
 
   # Ids of grants the funder gave — empty (so nothing matches) when they gave none.
   def funder_grant_ids
-    @funder_grant_ids ||= Grant.where(donor: @funder).ids
+    @funder_grant_ids ||= Grant.where(funder: @funder).ids
   end
 
   # { event_id => attended registration count } from one grouped status query.

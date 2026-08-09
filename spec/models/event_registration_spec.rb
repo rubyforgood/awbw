@@ -478,15 +478,15 @@ RSpec.describe EventRegistration, type: :model do
         expect(results).not_to include(scholarship_reg, incomplete_scholarship_reg, paid_reg, unpaid_reg)
       end
 
-      it "counts a grant AWBW donated to itself as org-subsidized ('awbw'), not funded" do
-        # Matches EventDashboard's funded/unfunded split: a self-donation is subsidy.
+      it "counts a grant AWBW funded itself as org-subsidized ('awbw'), not external" do
+        # Matches EventDashboard's funded/unfunded split: self-funding is subsidy.
         awbw = create(:organization, name: "A Window Between Worlds")
-        self_donated_reg = create(:event_registration, event: event)
-        subsidy = create(:scholarship, recipient: self_donated_reg.registrant, grant: create(:grant, donor: awbw), amount_cents: 1000)
-        create(:allocation, source: subsidy, allocatable: self_donated_reg, amount: 1000)
+        self_funded_reg = create(:event_registration, event: event)
+        subsidy = create(:scholarship, recipient: self_funded_reg.registrant, grant: create(:grant, funder: awbw), amount_cents: 1000)
+        create(:allocation, source: subsidy, allocatable: self_funded_reg, amount: 1000)
 
-        expect(EventRegistration.funder("awbw")).to include(self_donated_reg)
-        expect(EventRegistration.funder("donor")).not_to include(self_donated_reg)
+        expect(EventRegistration.funder("awbw")).to include(self_funded_reg)
+        expect(EventRegistration.funder("external")).not_to include(self_funded_reg)
       end
 
       it "returns an unfiltered relation for unknown values" do

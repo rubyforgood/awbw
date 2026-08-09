@@ -1257,18 +1257,18 @@ class EventDashboard
 
   # Externally funded = backed by a grant whose funder isn't the org itself.
   def funded_scholarships
-    scholarships.externally_funded(self_donated_grant_ids)
+    scholarships.externally_funded(self_funded_grant_ids)
   end
 
   # Org-subsidized = no grant, or a grant the org (AWBW) donated to itself.
   def unfunded_scholarships
-    scholarships.org_subsidized(self_donated_grant_ids)
+    scholarships.org_subsidized(self_funded_grant_ids)
   end
 
   # Ids of grants the org donated to itself; memoized so the funded/unfunded split
-  # doesn't re-run Grant.self_donated_ids (an Organization.awbw + pluck) per call.
-  def self_donated_grant_ids
-    @self_donated_grant_ids ||= Grant.self_donated_ids
+  # doesn't re-run Grant.self_funded_ids (an Organization.awbw + pluck) per call.
+  def self_funded_grant_ids
+    @self_funded_grant_ids ||= Grant.self_funded_ids
   end
 
   # [ [ organization_id, registrant_id ], ... ] from the organizations linked on

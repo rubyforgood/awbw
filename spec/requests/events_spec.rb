@@ -227,7 +227,7 @@ RSpec.describe "Events", type: :request do
         hrefs = Capybara.string(response.body).all("a[href^='#{event_registrations_path}?']").map { |a| a[:href] }
 
         expect(hrefs).to include(a_string_including("payment_status=unpaid"))
-        expect(hrefs).to include(a_string_including("funder=donor"))
+        expect(hrefs).to include(a_string_including("funder=external"))
         expect(response.body).not_to include("/events/attendees")
       end
 

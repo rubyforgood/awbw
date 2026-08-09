@@ -77,13 +77,13 @@ class EventRevenueFigures
   private
 
   # A grant counts as external funding only when it exists and the org didn't
-  # donate it to itself (AWBW) — the in-memory form of Scholarship.externally_funded.
+  # fund it itself (AWBW) — the in-memory form of Scholarship.externally_funded.
   def external_grant?(grant_id)
-    grant_id.present? && !self_donated_grant_ids.include?(grant_id)
+    grant_id.present? && !self_funded_grant_ids.include?(grant_id)
   end
 
-  def self_donated_grant_ids
-    @self_donated_grant_ids ||= Grant.self_donated_ids.to_set
+  def self_funded_grant_ids
+    @self_funded_grant_ids ||= Grant.self_funded_ids.to_set
   end
 
   def figures_by_event_id

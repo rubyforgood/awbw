@@ -40,7 +40,7 @@ RSpec.describe EventScholarshipFigures do
   it "counts an AWBW self-donated grant as unfunded, matching the dashboard" do
     awbw = create(:organization, name: "A Window Between Worlds")
     reg = create(:event_registration, event: event, registrant: create(:person), status: "attended")
-    subsidy = create(:scholarship, recipient: reg.registrant, amount_cents: 1_000, grant: create(:grant, donor: awbw))
+    subsidy = create(:scholarship, recipient: reg.registrant, amount_cents: 1_000, grant: create(:grant, funder: awbw))
     create(:allocation, source: subsidy, allocatable: reg, amount: 1_000)
 
     figures = described_class.new([ event ]).for(event)
@@ -53,7 +53,7 @@ RSpec.describe EventScholarshipFigures do
     it "counts only scholarships drawn from the given funder's grants" do
       funder = create(:organization, name: "Community Trust")
       reg = create(:event_registration, event: event, registrant: create(:person), status: "attended")
-      award = create(:scholarship, recipient: reg.registrant, amount_cents: 5_000, grant: create(:grant, donor: funder))
+      award = create(:scholarship, recipient: reg.registrant, amount_cents: 5_000, grant: create(:grant, funder: funder))
       create(:allocation, source: award, allocatable: reg, amount: 5_000)
 
       figures = described_class.new([ event ], funder: funder).for(event)
