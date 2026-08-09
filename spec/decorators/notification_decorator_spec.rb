@@ -1,6 +1,18 @@
 require "rails_helper"
 
 RSpec.describe NotificationDecorator, type: :decorator do
+  describe "#sender_name" do
+    it "names the staff member who sent it" do
+      sender = build_stubbed(:user, first_name: "Dana", last_name: "Sender", person: nil)
+
+      expect(build_stubbed(:notification, sender: sender).decorate.sender_name).to eq("Dana Sender")
+    end
+
+    it "falls back to the portal when nobody sent it by hand" do
+      expect(build_stubbed(:notification, sender: nil).decorate.sender_name).to eq("AWBW Portal")
+    end
+  end
+
   describe "#channel_icon" do
     {
       "email" => "fa-envelope",

@@ -87,6 +87,23 @@ RSpec.describe BulkInviteService do
 
         expect(results[:sent_ids]).to eq([ user.id ])
       end
+
+      it "threads the sender through to the job for attribution" do
+        user = create(:user, :unconfirmed)
+        sender = create(:user)
+
+        expect {
+          described_class.call(ids: [ user.id ], sender: sender)
+        }.to have_enqueued_job(BulkInviteEmailJob).with(user.id, sender_id: sender.id)
+      end
+
+      it "enqueues with a nil sender_id when no sender is given" do
+        user = create(:user, :unconfirmed)
+
+        expect {
+          described_class.call(ids: [ user.id ])
+        }.to have_enqueued_job(BulkInviteEmailJob).with(user.id, sender_id: nil)
+      end
     end
 
     context "with already confirmed users" do

@@ -390,6 +390,7 @@ class EventsController < ApplicationController
         recipient_role: :person,
         recipient_email: event_registration.registrant.preferred_email,
         notification_type: 0,
+        sender: current_user, # an admin sent these by hand from the reminders page
         custom_message: custom_message.presence,
         custom_subject: custom_subject.presence
       )

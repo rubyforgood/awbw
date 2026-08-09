@@ -465,5 +465,29 @@ RSpec.describe User do
           .with(user, anything, hash_including(to: user.email))
       end
     end
+
+    context "when a sender is given" do
+      let(:user) { create(:user, confirmed_at: nil) }
+      let(:sender) { create(:user) }
+
+      before do
+        user
+        allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)
+      end
+
+      it "passes the sender id through the mailer opts for attribution" do
+        user.send_confirmation_instructions(sender: sender)
+
+        expect(DeviseMailer).to have_received(:confirmation_instructions)
+          .with(user, anything, hash_including(sender_id: sender.id))
+      end
+
+      it "omits the sender id when none is given" do
+        user.send_confirmation_instructions
+
+        expect(DeviseMailer).to have_received(:confirmation_instructions)
+          .with(user, anything, hash_excluding(:sender_id))
+      end
+    end
   end
 end

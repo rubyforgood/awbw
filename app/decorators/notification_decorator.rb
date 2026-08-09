@@ -10,6 +10,13 @@ class NotificationDecorator < ApplicationDecorator
     "video" => "fa-video"
   }.freeze
 
+  # Shown as the "From" on a communication that no staff member sent by hand.
+  PORTAL_SENDER_NAME = "AWBW Portal".freeze
+
+  def sender_name
+    sender&.full_name.presence || PORTAL_SENDER_NAME
+  end
+
   def title
     "Re #{noticeable_type} ##{noticeable_id}"
   end

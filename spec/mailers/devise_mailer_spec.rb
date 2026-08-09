@@ -156,4 +156,66 @@ RSpec.describe DeviseMailer, type: :mailer do
     # unlock_instructions not tested here — app uses unlock_strategy: :none
     # so user_unlock_url route doesn't exist and the view can't render
   end
+
+  # Exercises the real CreateNotification (no stub) so these cover the persisted
+  # Notification and the "From" name the communications pages render. Rails.env.test?
+  # is stubbed per-example rather than in a before block so the user factories —
+  # which fire Devise's on-create confirmation — don't log notifications of their own.
+  describe "sender attribution" do
+    let(:admin) { create(:user, first_name: "Dana", last_name: "Sender") }
+
+    def unstub_notification_logging
+      allow(Rails.env).to receive(:test?).and_return(false)
+    end
+
+    it "attributes an admin-sent invite to the admin" do
+      invitee = create(:user, :unconfirmed)
+      admin
+      unstub_notification_logging
+
+      expect {
+        invitee.send_confirmation_instructions(sender: admin)
+      }.to change(Notification, :count).by(1)
+
+      expect(Notification.last.sender).to eq(admin)
+      expect(Notification.last.decorate.sender_name).to eq("Dana Sender")
+    end
+
+    it "leaves an automated confirmation as the portal" do
+      signup = create(:user, :unconfirmed)
+      unstub_notification_logging
+
+      expect {
+        signup.send_confirmation_instructions
+      }.to change(Notification, :count).by(1)
+
+      expect(Notification.last.sender).to be_nil
+      expect(Notification.last.decorate.sender_name).to eq(NotificationDecorator::PORTAL_SENDER_NAME)
+    end
+
+    # The sender is an internal audit field only — an admin-sent invite must still
+    # reach the recipient from the generic mailbox with no personal name attached.
+    it "sends an attributed invite from the generic address with no display name" do
+      invitee = create(:user, :unconfirmed)
+
+      invitee.send_confirmation_instructions(sender: admin)
+
+      mail = ActionMailer::Base.deliveries.last
+      expect(mail.from).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(mail[:from].display_names.compact).to be_empty
+      expect(mail.reply_to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(mail.header.fields.map(&:to_s).join("\n")).not_to include("Dana Sender")
+    end
+
+    it "leaves an automated password reset as the portal" do
+      user
+      unstub_notification_logging
+
+      user.send_reset_password_instructions
+
+      reset = Notification.where(kind: "reset_password").last
+      expect(reset.sender).to be_nil
+      expect(reset.decorate.sender_name).to eq(NotificationDecorator::PORTAL_SENDER_NAME)
+    end
+  end
 end

@@ -1,14 +1,17 @@
 class BulkInviteService
-  attr_reader :ids, :dry_run, :results
+  attr_reader :ids, :dry_run, :sender, :results
 
-  # BulkInviteService.call(ids: [1, 2, 3])
+  # sender is the person running the invite; bulk invites are attributed to them
+  # on the notification (and the ahoy event). Pass a User, e.g. the operator:
+  # BulkInviteService.call(ids: [1, 2, 3], sender: User.find_by(email: "you@awbw.org"))
   # BulkInviteService.call(ids: [1, 2, 3], dry_run: true)
-  def self.call(ids:, dry_run: false)
-    new(ids: ids, dry_run: dry_run).call
+  def self.call(ids:, sender: nil, dry_run: false)
+    new(ids: ids, sender: sender, dry_run: dry_run).call
   end
 
-  def initialize(ids:, dry_run: false)
+  def initialize(ids:, sender: nil, dry_run: false)
     @ids = Array(ids).map(&:to_i)
+    @sender = sender
     @dry_run = dry_run
     @results = if dry_run
       { dry_run_would_send_ids: [], missing_ids: [], already_confirmed_ids: [] }
@@ -40,6 +43,8 @@ class BulkInviteService
       return results
     end
 
+    log sender ? "Attributing invites to #{sender.name} <#{sender.email}>" : "Warning: no sender — invites will show as sent by AWBW Portal."
+
     log "Found #{unconfirmed.size} unconfirmed users:"
     unconfirmed.each { |u| log "  #{u.id}: #{u.name} <#{u.email}>" }
 
@@ -68,7 +73,7 @@ class BulkInviteService
       user.update!(welcome_instructions_sent_at: Time.current, created_at: nil)
     end
 
-    BulkInviteEmailJob.perform_later(user.id)
+    BulkInviteEmailJob.perform_later(user.id, sender_id: sender&.id)
     results[:sent_ids] << user.id
     log "  Invited #{user.email} (#{index}/#{total})"
   rescue => e

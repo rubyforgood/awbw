@@ -105,6 +105,13 @@
       </div>
 
       <div class="flex items-start gap-4">
+        <dt class="w-28 text-gray-500">From</dt>
+        <dd class="text-gray-900 font-medium">
+          <%= @notification.decorate.sender_name %>
+        </dd>
+      </div>
+
+      <div class="flex items-start gap-4">
         <dt class="w-28 text-gray-500">Subject</dt>
         <dd class="text-gray-900 font-medium">
           <%= @notification.email_subject.presence || "—" %>
