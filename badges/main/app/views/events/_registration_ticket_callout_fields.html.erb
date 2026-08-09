@@ -90,6 +90,13 @@
         the matching initial state to avoid a flash before the controller connects.
         `mt-5` keeps the preview card clear of the controls above it. %>
     <div class="<%= "hidden" unless f.object.published? %> space-y-3 mt-5 cursor-auto select-auto" data-expandable-card-target="body">
+      <% if f.object.staff? %>
+        <div class="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+          <i class="fa-solid fa-circle-info mt-0.5 shrink-0" aria-hidden="true"></i>
+          <span>This callout's page automatically lists the roster from the event's staff section — you don't need to add anyone here. The title, subtitle, and any page text you enter appear above that list.</span>
+        </div>
+      <% end %>
+
       <%#
         Live preview of how this callout appears on the ticket — the same card
         registrants see (icon, title, subtitle, themed color). Seeded from the

@@ -24,8 +24,16 @@
       <%= render "shared/errors", resource: @event %>
     <% end %>
 
-    <div class="bg-gray-50 border border-gray-200 rounded-md p-4 sm:p-6 mb-6">
-      <div id="event-staffs">
+    <div class="bg-gray-50 border border-gray-200 rounded-md p-4 sm:p-6 mb-6" data-controller="expandable-cards" data-expandable-cards-expanded-value="false">
+      <div class="flex justify-end mb-3">
+        <button type="button" data-action="expandable-cards#toggleAll"
+                class="inline-flex items-center gap-2 text-sm font-medium text-blue-700 hover:text-blue-900">
+          <i class="fa-solid fa-chevron-down transition-transform" data-expandable-cards-target="icon"></i>
+          <span data-expandable-cards-target="label">Expand all</span>
+        </button>
+      </div>
+
+      <div id="event-staffs" class="space-y-3">
         <%= f.fields_for :event_staffs do |staff_form| %>
           <%= render "event_staff_fields", f: staff_form %>
         <% end %>

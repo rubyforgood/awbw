@@ -912,6 +912,17 @@ RSpec.describe "Events", type: :request do
         pacific = event.ce_payment_due_deadline.in_time_zone("Pacific Time (US & Canada)")
         expect(pacific.strftime("%Y-%m-%d %H:%M")).to eq("2026-08-15 09:00")
       end
+
+      it "adds event staff via nested attributes" do
+        person = create(:person)
+        patch event_path(event), params: { event: {
+          event_staffs_attributes: { "0" => { person_id: person.id, title: "Lead facilitator", expected_to_attend: "1" } }
+        } }
+        staff = event.reload.event_staffs.first
+        expect(staff.person).to eq(person)
+        expect(staff.title).to eq("Lead facilitator")
+        expect(staff.expected_to_attend).to be(true)
+      end
     end
 
     context "as non-admin" do
