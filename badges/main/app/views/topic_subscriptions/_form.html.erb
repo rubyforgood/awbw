@@ -32,14 +32,62 @@
     </div>
   <% end %>
 
-  <div>
-    <%= f.label :person_id, "Person", class: label_class %>
+  <% person_select = capture do %>
     <%= f.select :person_id,
       options_for_select(Person.where(id: @topic_subscription.person_id).map { |p| [ p.full_name, p.id ] }, @topic_subscription.person_id),
       { include_blank: true, prompt: "Search for a person" },
       class: field_class,
       data: { controller: "remote-select", remote_select_model_value: "person" } %>
-  </div>
+  <% end %>
+
+  <% if @topic_subscription.new_record? %>
+    <%# Pick an existing person, or toggle to enter a new one that's created and
+        linked on save. No JS: the radios drive the CSS show/hide (named peers)
+        and the server reads person_source_mode to keep only that mode's params. %>
+    <% new_mode = params[:person_source_mode] == "new" %>
+    <div>
+      <span class="<%= label_class %>">Person</span>
+
+      <input type="radio" name="person_source_mode" value="existing" id="person-source-existing"
+             class="peer/existing sr-only"<%= " checked".html_safe unless new_mode %>>
+      <input type="radio" name="person_source_mode" value="new" id="person-source-new"
+             class="peer/new sr-only"<%= " checked".html_safe if new_mode %>>
+
+      <div class="mb-2 flex w-fit text-sm">
+        <label for="person-source-existing"
+               class="cursor-pointer rounded-l-lg border border-gray-300 px-3 py-1.5 font-medium text-gray-600 peer-checked/existing:border-blue-600 peer-checked/existing:bg-blue-600 peer-checked/existing:text-white">Existing person</label>
+        <label for="person-source-new"
+               class="cursor-pointer rounded-r-lg border border-l-0 border-gray-300 px-3 py-1.5 font-medium text-gray-600 peer-checked/new:border-blue-600 peer-checked/new:bg-blue-600 peer-checked/new:text-white">New person</label>
+      </div>
+
+      <div class="hidden peer-checked/existing:block"><%= person_select %></div>
+
+      <div class="hidden space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3 peer-checked/new:block">
+        <%= f.simple_fields_for :person, @topic_subscription.person || Person.new do |pf| %>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div>
+              <%= pf.label :first_name, "First name", class: label_class %>
+              <%= pf.text_field :first_name, class: field_class %>
+            </div>
+            <div>
+              <%= pf.label :last_name, "Last name", class: label_class %>
+              <%= pf.text_field :last_name, class: field_class %>
+            </div>
+            <div>
+              <%= pf.label :email, "Email", class: label_class %>
+              <%= pf.email_field :email, class: field_class %>
+            </div>
+          </div>
+        <% end %>
+        <p class="text-xs text-gray-500">A new person will be created and linked to this subscription.</p>
+      </div>
+    </div>
+  <% else %>
+    <div>
+      <%= f.label :person_id, "Person", class: label_class %>
+      <%= person_select %>
+    </div>
+  <% end %>
 
   <%# Topic — shown as a value with a pencil that reveals a picker (edit-toggle). %>
   <div data-controller="edit-toggle">
@@ -95,7 +143,7 @@
         <i class="fa-solid fa-comments"></i>
       </span>
       <h2 class="text-sm font-semibold text-gray-700">Comments</h2>
-      <% if @topic_subscription.person %>
+      <% if @topic_subscription.person&.persisted? %>
         <%= link_to all_comments_person_path(@topic_subscription.person),
                     class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
                     target: "_blank", rel: "noopener" do %>

@@ -3,6 +3,24 @@ require "rails_helper"
 RSpec.describe TopicSubscription, type: :model do
   let(:trainings) { create(:topic_subscription_type, :facilitator_trainings) }
 
+  describe "inline person creation" do
+    it "creates and links a person from nested attributes on save" do
+      subscription = build(:topic_subscription, person: nil, topic_subscription_type: trainings,
+        person_attributes: { first_name: "Nadia", last_name: "Newbie", email: "nadia@example.com" })
+
+      expect { subscription.save! }.to change(Person, :count).by(1)
+      expect(subscription.person).to have_attributes(first_name: "Nadia", last_name: "Newbie")
+    end
+
+    it "surfaces the nested person's errors and saves nothing when invalid" do
+      subscription = build(:topic_subscription, person: nil, topic_subscription_type: trainings,
+        person_attributes: { first_name: "Nadia", last_name: "" })
+
+      expect(subscription.save).to be(false)
+      expect(Person.count).to eq(0)
+    end
+  end
+
   describe "validations" do
     it "requires a topic subscription type" do
       subscription = build(:topic_subscription, topic_subscription_type: nil)

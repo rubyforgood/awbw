@@ -9,6 +9,10 @@ class TopicSubscription < ApplicationRecord
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
+  # Lets the new-subscription form create a brand-new person inline instead of
+  # only picking an existing one. The person is saved (and validated) in the same
+  # transaction as the subscription via the association's autosave.
+  accepts_nested_attributes_for :person
 
   before_validation :set_subscribed_at, on: :create
   before_validation :clear_event_for_non_event_topic

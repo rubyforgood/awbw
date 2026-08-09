@@ -59,6 +59,7 @@ class TopicSubscriptionsController < ApplicationController
     @topic_subscription = TopicSubscription.new(topic_subscription_params)
     @topic_subscription.created_by = current_user
     @topic_subscription.updated_by = current_user
+    stamp_inline_person
 
     if @topic_subscription.save
       redirect_to save_return_path, notice: "Subscription added."
@@ -121,8 +122,28 @@ class TopicSubscriptionsController < ApplicationController
   end
 
   def topic_subscription_params
-    params.require(:topic_subscription).permit(:person_id, :topic_subscription_type_id, :interested_event_id, :source,
-      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ])
+    permitted = params.require(:topic_subscription).permit(:person_id, :topic_subscription_type_id, :interested_event_id, :source,
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      person_attributes: [ :first_name, :last_name, :email ])
+
+    # The new-person toggle is CSS-only, so both the person select and the new
+    # person fields submit. Keep only the chosen mode's params so we never build
+    # a stray person or ignore the picked one.
+    if params[:person_source_mode] == "new"
+      permitted.except(:person_id)
+    else
+      permitted.except(:person_attributes)
+    end
+  end
+
+  # Stamp the auditing columns on a person created inline through the form so the
+  # new record carries the same authorship the subscription does.
+  def stamp_inline_person
+    person = @topic_subscription.person
+    return unless person&.new_record?
+
+    person.created_by ||= current_user
+    person.updated_by ||= current_user
   end
 
   # Prefill the topic when opened from an event's Forms menu: an explicit type id
