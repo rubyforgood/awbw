@@ -10,10 +10,10 @@
     </div>
 
     <div>
-      <% donor_label_data = @grant.donor&.compound_search_label %>
-      <%= f.input :donor_sgid,
-                  collection: donor_label_data ? [ [ donor_label_data[:label], donor_label_data[:id] ] ] : [],
-                  selected: donor_label_data&.dig(:id),
+      <% funder_label_data = @grant.funder&.compound_search_label %>
+      <%= f.input :funder_sgid,
+                  collection: funder_label_data ? [ [ funder_label_data[:label], funder_label_data[:id] ] ] : [],
+                  selected: funder_label_data&.dig(:id),
                   required: true,
                   input_html: {
                     class: "bg-white",
@@ -23,7 +23,7 @@
                     }
                   },
                   prompt: "Search organizations and people",
-                  label: "Donor",
+                  label: "Funder",
                   hint: "The organization or person donating the funds." %>
     </div>
 

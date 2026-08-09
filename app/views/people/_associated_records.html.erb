@@ -10,7 +10,7 @@
     <li class="break-inside-avoid mb-2"><%= index_button notifications, params: { email: email }, label: "#{t("communications.title")} (universal)" %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.event_registrations, params: { registrant_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.form_submissions, params: { person_id: person.id } %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button person.grants, params: { donor_id: person.id, donor_type: "Person" }, label: "Grants (as donor)" %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button person.grants, params: { funder_id: person.id, funder_type: "Person" }, label: "Grants (as funder)" %></li>
     <li class="break-inside-avoid mb-2"><%= index_button Payment.where(person_id: person.id), params: { person_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.scholarships, params: { recipient_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.topic_subscriptions, params: { person_id: person.id }, label: "Subscriptions" %></li>

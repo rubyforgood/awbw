@@ -52,7 +52,7 @@
           <%= render "revenue_kpi", label: "Scholarships", value: dollars_from_cents(featured.funded_scholarship_cents),
                 value_class: "text-fuchsia-700", card_class: "border-fuchsia-300 bg-fuchsia-50", note: "grant-funded only", cents: featured.funded_scholarship_cents,
                 prior_cents: prior&.funded_scholarship_cents, prior_year: prior&.year,
-                href: event_registrations_path(funder: "donor", event_year: featured.year, event_id: params[:event_id]) %>
+                href: event_registrations_path(funder: "external", event_year: featured.year, event_id: params[:event_id]) %>
           <%= render "revenue_kpi", label: "Org subsidy", value: dollars_from_cents(featured.org_subsidy_cents),
                 value_class: "text-red-600", card_class: "border-red-300 bg-red-50", note: "discounts + unfunded", cents: featured.org_subsidy_cents,
                 prior_cents: prior&.org_subsidy_cents, prior_year: prior&.year,

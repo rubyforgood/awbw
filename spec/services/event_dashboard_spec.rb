@@ -1097,7 +1097,7 @@ RSpec.describe EventDashboard do
 
       # A grant the org donated to itself is subsidy, so it counts as UNFUNDED.
       awbw = create(:organization, name: "A Window Between Worlds")
-      awbw_award = create(:scholarship, recipient: person4, amount_cents: 1_000, grant: create(:grant, donor: awbw))
+      awbw_award = create(:scholarship, recipient: person4, amount_cents: 1_000, grant: create(:grant, funder: awbw))
       create(:allocation, source: awbw_award, allocatable: reg4, amount: 1_000)
 
       # A scholarship on a cancelled registration must be ignored everywhere.

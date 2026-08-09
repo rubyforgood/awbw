@@ -8,7 +8,7 @@ RSpec.describe "/grants", type: :request do
     {
       name: "Healing Arts Grant",
       amount_dollars: "5000",
-      donor_sgid: organization.to_signed_global_id.to_s,
+      funder_sgid: organization.to_signed_global_id.to_s,
       funds_allocation_deadline: "2026-12-31",
       eligibility_criteria: "Must be a facilitator",
       tasks: "Submit application"
@@ -16,7 +16,7 @@ RSpec.describe "/grants", type: :request do
   end
 
   let(:invalid_attributes) do
-    { name: "", amount_dollars: "1000", donor_sgid: "" }
+    { name: "", amount_dollars: "1000", funder_sgid: "" }
   end
 
   describe "authorization" do
@@ -68,15 +68,15 @@ RSpec.describe "/grants", type: :request do
         expect(response.body).not_to include("Has funds")
       end
 
-      it "filters by donor type" do
-        org_grant = create(:grant, name: "Org grant", donor: create(:organization))
-        person_grant = create(:grant, name: "Person grant", donor: create(:person))
+      it "filters by funder type" do
+        org_grant = create(:grant, name: "Org grant", funder: create(:organization))
+        person_grant = create(:grant, name: "Person grant", funder: create(:person))
 
-        get grants_url(donor_type: "Organization"), headers: frame_headers
+        get grants_url(funder_type: "Organization"), headers: frame_headers
         expect(response.body).to include("Org grant")
         expect(response.body).not_to include("Person grant")
 
-        get grants_url(donor_type: "Person"), headers: frame_headers
+        get grants_url(funder_type: "Person"), headers: frame_headers
         expect(response.body).to include("Person grant")
         expect(response.body).not_to include("Org grant")
       end
@@ -90,16 +90,16 @@ RSpec.describe "/grants", type: :request do
         expect(response.body).not_to include("Music Therapy Grant")
       end
 
-      it "filters by donor name across organizations and people" do
-        org_grant = create(:grant, name: "Org-funded", donor: create(:organization, name: "Acme Foundation"))
-        person_grant = create(:grant, name: "Person-funded", donor: create(:person, first_name: "Jane", last_name: "Donor"))
-        create(:grant, name: "Other grant", donor: create(:organization, name: "Unrelated Inc"))
+      it "filters by funder name across organizations and people" do
+        org_grant = create(:grant, name: "Org-funded", funder: create(:organization, name: "Acme Foundation"))
+        person_grant = create(:grant, name: "Person-funded", funder: create(:person, first_name: "Jane", last_name: "Funder"))
+        create(:grant, name: "Other grant", funder: create(:organization, name: "Unrelated Inc"))
 
-        get grants_url(donor_name: "acme"), headers: frame_headers
+        get grants_url(funder_name: "acme"), headers: frame_headers
         expect(response.body).to include("Org-funded")
         expect(response.body).not_to include("Other grant")
 
-        get grants_url(donor_name: "jane donor"), headers: frame_headers
+        get grants_url(funder_name: "jane funder"), headers: frame_headers
         expect(response.body).to include("Person-funded")
         expect(response.body).not_to include("Other grant")
       end
@@ -119,18 +119,18 @@ RSpec.describe "/grants", type: :request do
         expect(response.body).not_to include("All done")
       end
 
-      it "scopes to a single donor via donor_id and names it in the banner" do
-        donor = create(:person, first_name: "Dana", last_name: "Donor")
-        create(:grant, name: "Dana Fund", donor: donor)
-        create(:grant, name: "Other Fund", donor: create(:organization, name: "Big Org"))
+      it "scopes to a single funder via funder_id and names it in the banner" do
+        funder = create(:person, first_name: "Dana", last_name: "Funder")
+        create(:grant, name: "Dana Fund", funder: funder)
+        create(:grant, name: "Other Fund", funder: create(:organization, name: "Big Org"))
 
-        # Banner renders on the full page (donor resolved in the non-frame branch).
-        get grants_url(donor_id: donor.id, donor_type: "Person")
+        # Banner renders on the full page (funder resolved in the non-frame branch).
+        get grants_url(funder_id: funder.id, funder_type: "Person")
         expect(response.body).to include("Filtered to")
-        expect(response.body).to include("Dana Donor")
+        expect(response.body).to include("Dana Funder")
 
-        # Rows are scoped to that donor inside the results frame.
-        get grants_url(donor_id: donor.id, donor_type: "Person"), headers: frame_headers
+        # Rows are scoped to that funder inside the results frame.
+        get grants_url(funder_id: funder.id, funder_type: "Person"), headers: frame_headers
         expect(response.body).to include("Dana Fund")
         expect(response.body).not_to include("Other Fund")
       end
@@ -165,7 +165,7 @@ RSpec.describe "/grants", type: :request do
           }.to change(Grant, :count).by(1)
 
           grant = Grant.last
-          expect(grant.donor).to eq(organization)
+          expect(grant.funder).to eq(organization)
           expect(grant.amount_cents).to eq(500_000)
           expect(grant.created_by).to eq(admin)
         end

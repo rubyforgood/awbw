@@ -7,7 +7,7 @@
 # account without extra per-filter SQL.
 class ReminderRecipientFilter
   # Free-text inputs matched in memory against the loaded registrations.
-  TEXT_KEYS = %i[ name reg_org grantor comment email ].freeze
+  TEXT_KEYS = %i[ name reg_org funder comment email ].freeze
   # Dropdown filters shared with the registrants roster. They reuse the
   # EventRegistration scopes (run once as a query) so both pages stay in sync —
   # same param names, options, and semantics.
@@ -40,7 +40,7 @@ class ReminderRecipientFilter
   def matches_text?(reg)
     matches_name?(reg) &&
       matches_reg_org?(reg) &&
-      matches_grantor?(reg) &&
+      matches_funder?(reg) &&
       matches_comment?(reg) &&
       matches_email?(reg)
   end
@@ -75,10 +75,10 @@ class ReminderRecipientFilter
     end
   end
 
-  # Grantor = the funder behind a scholarship's grant. Only registrants who hold a
+  # The funder behind a scholarship's grant. Only registrants who hold a
   # scholarship drawn from a grant can match, per the filter label.
-  def matches_grantor?(reg)
-    any_term?(:grantor) do |term|
+  def matches_funder?(reg)
+    any_term?(:funder) do |term|
       reg.scholarships.any? do |scholarship|
         grant = scholarship.grant
         grant.present? && grant.funder_name.to_s.downcase.include?(term)

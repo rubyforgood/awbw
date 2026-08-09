@@ -369,8 +369,8 @@ RSpec.describe "GET /scholarships (index)", type: :request do
       training = create(:event, title: "TAC251", facilitator_training: true)
       create(:event_registration, registrant: recipient, event: training, status: "attended")
 
-      donor = create(:organization, name: "JDI Foundation")
-      grant = create(:grant, name: "JDI", donor: donor, amount_cents: 1_000_000)
+      funder = create(:organization, name: "JDI Foundation")
+      grant = create(:grant, name: "JDI", funder: funder, amount_cents: 1_000_000)
       create(:scholarship, grant: grant, recipient: recipient, amount_cents: 150_000)
 
       get scholarships_path
@@ -409,8 +409,8 @@ RSpec.describe "GET /scholarships (index)", type: :request do
     it "narrows the list to a selected funder" do
       keep = create(:organization, name: "Keep Foundation")
       drop = create(:organization, name: "Drop Foundation")
-      create(:scholarship, grant: create(:grant, donor: keep), recipient: create(:person, first_name: "Kept", last_name: "One"))
-      create(:scholarship, grant: create(:grant, donor: drop), recipient: create(:person, first_name: "Dropped", last_name: "Two"))
+      create(:scholarship, grant: create(:grant, funder: keep), recipient: create(:person, first_name: "Kept", last_name: "One"))
+      create(:scholarship, grant: create(:grant, funder: drop), recipient: create(:person, first_name: "Dropped", last_name: "Two"))
 
       get scholarships_path(funder_sgid: keep.to_signed_global_id.to_s)
 
@@ -444,8 +444,8 @@ end
 
 RSpec.describe "/scholarships (grant-funded flow)", type: :request do
   let(:admin) { create(:user, :admin) }
-  let(:donor) { create(:organization, name: "Helping Hands") }
-  let(:grant) { create(:grant, donor:, amount_cents: 100_000) }
+  let(:funder) { create(:organization, name: "Helping Hands") }
+  let(:grant) { create(:grant, funder:, amount_cents: 100_000) }
   let(:recipient) { create(:person, first_name: "Bob", last_name: "Barker") }
 
   before { sign_in admin }

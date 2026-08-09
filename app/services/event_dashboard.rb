@@ -1,11 +1,11 @@
 class EventDashboard
-  # scholarship_donor: when set, every scholarship figure (funded/unfunded cents
-  # and counts, totals, recipients) is scoped to grants that donor gave — for the
+  # scholarship_funder: when set, every scholarship figure (funded/unfunded cents
+  # and counts, totals, recipients) is scoped to grants that funder gave — for the
   # funder-filtered scholarship report. Attendance/registration figures are
   # unaffected. Default nil = every scholarship, as before.
-  def initialize(event, scholarship_donor: nil)
+  def initialize(event, scholarship_funder: nil)
     @event = event
-    @scholarship_donor = scholarship_donor
+    @scholarship_funder = scholarship_funder
   end
 
   attr_reader :event
@@ -227,7 +227,7 @@ class EventDashboard
   # decide whether to flag a registrant as a scholarship recipient. First
   # scholarship wins if a person has several.
   def scholarship_by_recipient
-    @scholarship_by_recipient ||= scholarships.includes(grant: :donor).group_by(&:recipient_id).transform_values(&:first)
+    @scholarship_by_recipient ||= scholarships.includes(grant: :funder).group_by(&:recipient_id).transform_values(&:first)
   end
 
   # Active registration slug per registrant (Person id) — a stable, non-db
@@ -1166,18 +1166,18 @@ class EventDashboard
       scope = Scholarship
         .joins(:allocation)
         .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: active_registration_ids })
-      scope = scope.where(grant_id: donor_grant_ids) if @scholarship_donor
+      scope = scope.where(grant_id: funder_grant_ids) if @scholarship_funder
       scope
     end
   end
 
-  # Ids of grants the scoped donor gave — used to narrow scholarships to one
-  # funder. Empty (so no scholarships match) when the donor gave none.
-  def donor_grant_ids
-    @donor_grant_ids ||= Grant.where(donor: @scholarship_donor).ids
+  # Ids of grants the scoped funder gave — used to narrow scholarships to one
+  # funder. Empty (so no scholarships match) when the funder gave none.
+  def funder_grant_ids
+    @funder_grant_ids ||= Grant.where(funder: @scholarship_funder).ids
   end
 
-  # Externally funded = backed by a grant whose donor isn't the org itself.
+  # Externally funded = backed by a grant whose funder isn't the org itself.
   def funded_scholarships
     scholarships.where.not(grant_id: [ nil, *awbw_grant_ids ])
   end
@@ -1190,7 +1190,7 @@ class EventDashboard
   # Ids of grants the org donated to itself; empty when the AWBW org isn't on
   # file, collapsing the split back to grant-present vs grant-absent.
   def awbw_grant_ids
-    @awbw_grant_ids ||= Grant.where(donor: Organization.awbw).ids
+    @awbw_grant_ids ||= Grant.where(funder: Organization.awbw).ids
   end
 
   # [ [ organization_id, registrant_id ], ... ] from the organizations linked on

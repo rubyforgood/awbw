@@ -313,7 +313,7 @@ class EventsController < ApplicationController
     @event_registrations = @event.event_registrations
       .includes(
         :event, :organizations, :comments,
-        { scholarships: { grant: :donor } },
+        { scholarships: { grant: :funder } },
         registrant: [ :user, :contact_methods ]
       )
       .joins(:registrant)

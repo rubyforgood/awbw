@@ -1,6 +1,6 @@
 # Groups a set of scholarships for the index into the two-level hierarchy the
-# page renders: funder (the grant's donor) → grant → recipient rows. A funder
-# can hold several grants (e.g. a donor who funds a new grant each year), so
+# page renders: funder (the grant's funder) → grant → recipient rows. A funder
+# can hold several grants (e.g. a funder who funds a new grant each year), so
 # grants are nested under their shared funder rather than flattened.
 #
 # Scholarships drawn from no grant have no funder; they collect under a single
@@ -13,7 +13,7 @@ class ScholarshipsGrouping
     def count = scholarships.size
   end
 
-  FunderGroup = Struct.new(:name, :donor, :grant_groups, keyword_init: true) do
+  FunderGroup = Struct.new(:name, :funder, :grant_groups, keyword_init: true) do
     def total_cents = grant_groups.sum(&:total_cents)
     def count = grant_groups.sum(&:count)
   end
@@ -35,7 +35,7 @@ class ScholarshipsGrouping
     sample_grant = scholarships.filter_map(&:grant).first
     FunderGroup.new(
       name: sample_grant&.funder_name.presence || UNFUNDED_LABEL,
-      donor: sample_grant&.donor,
+      funder: sample_grant&.funder,
       grant_groups: grant_groups_for(scholarships)
     )
   end
@@ -51,13 +51,13 @@ class ScholarshipsGrouping
     scholarships.sort_by { |s| s.recipient&.full_name.to_s.downcase }
   end
 
-  # Scholarships from grants by the same donor share a funder; grant-free ones
+  # Scholarships from grants by the same funder share a funder; grant-free ones
   # fall into the single unfunded bucket.
   def funder_key(scholarship)
     grant = scholarship.grant
     return :unfunded unless grant
 
-    [ grant.donor_type, grant.donor_id ]
+    [ grant.funder_type, grant.funder_id ]
   end
 
   # Alphabetical by funder, with the unfunded group pinned last.

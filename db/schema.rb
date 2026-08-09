@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_09_210304) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_09_224320) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -687,9 +687,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_210304) do
     t.datetime "created_at", null: false
     t.bigint "created_by_id"
     t.text "description"
-    t.bigint "donor_id", null: false
-    t.string "donor_type", null: false
     t.text "eligibility_criteria"
+    t.bigint "funder_id", null: false
+    t.string "funder_type", null: false
     t.date "funds_allocation_deadline"
     t.date "funds_received_on"
     t.string "name", null: false
@@ -697,7 +697,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_210304) do
     t.datetime "updated_at", null: false
     t.bigint "updated_by_id"
     t.index ["created_by_id"], name: "index_grants_on_created_by_id"
-    t.index ["donor_type", "donor_id"], name: "index_grants_on_donor"
+    t.index ["funder_type", "funder_id"], name: "index_grants_on_funder"
     t.index ["updated_by_id"], name: "index_grants_on_updated_by_id"
   end
 

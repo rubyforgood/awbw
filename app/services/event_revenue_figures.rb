@@ -83,7 +83,7 @@ class EventRevenueFigures
   end
 
   def awbw_grant_ids
-    @awbw_grant_ids ||= Grant.where(donor: Organization.awbw).ids.to_set
+    @awbw_grant_ids ||= Grant.where(funder: Organization.awbw).ids.to_set
   end
 
   def figures_by_event_id
