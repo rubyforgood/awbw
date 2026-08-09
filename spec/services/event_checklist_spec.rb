@@ -12,7 +12,7 @@ RSpec.describe EventChecklist do
 
     it "lists items in lifecycle order across the phases" do
       keys = checklist.items.map(&:key)
-      expect(keys.first(4)).to eq(%i[ setup_forms setup_callouts setup_publish setup_event_type ])
+      expect(keys.first(5)).to eq(%i[ setup_forms setup_callouts setup_publish setup_event_type setup_staff ])
       expect(keys.last(2)).to eq(%i[ review_reports post_event_survey ])
     end
 
@@ -97,6 +97,17 @@ RSpec.describe EventChecklist do
       reports = item(:review_reports)
       expect(reports).to be_todo
       expect(reports.action_path).to eq(Rails.application.routes.url_helpers.statistics_events_path)
+    end
+  end
+
+  describe "staff setup" do
+    let(:event) { create(:event) }
+
+    it "is a to-do until event staff are indicated, then done" do
+      expect(item(:setup_staff)).to be_todo
+      expect(item(:setup_staff).action_path).to eq(Rails.application.routes.url_helpers.staff_event_path(event))
+      create(:event_staff, event: event)
+      expect(described_class.new(EventDashboard.new(event)).items.find { |i| i.key == :setup_staff }).to be_done
     end
   end
 

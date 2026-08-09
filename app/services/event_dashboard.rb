@@ -675,6 +675,10 @@ class EventDashboard
     event.facilitator_training? || event.on_demand?
   end
 
+  def staff_indicated?
+    event.event_staffs.exists?
+  end
+
   def free?
     event.cost_cents.to_i <= 0
   end

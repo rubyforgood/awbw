@@ -59,7 +59,7 @@ class EventChecklist
 
   def items
     @items ||= [
-      setup_forms, setup_callouts, setup_publish, setup_event_type,
+      setup_forms, setup_callouts, setup_publish, setup_event_type, setup_staff,
       link_organizations, allocate_bulk_payments, review_flagged_comments,
       collect_registration_fees, issue_scholarships, set_scholarship_funders,
       follow_up_agreements, fix_zero_scholarships, complete_scholarship_tasks,
@@ -174,6 +174,12 @@ class EventChecklist
          relevant: true, done: @dashboard.event_type_marked?,
          action_path: edit_event_path(@event), action_label: "Edit",
          detail: "Facilitator training / on-demand — skip if this is a standard event")
+  end
+
+  def setup_staff
+    flag(key: :setup_staff, phase: :setup, title: "Indicate event staff", actor: :admin,
+         relevant: true, done: @dashboard.staff_indicated?,
+         action_path: staff_event_path(@event), action_label: "Staff")
   end
 
   # --- Before the event ------------------------------------------------------
