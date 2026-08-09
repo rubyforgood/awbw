@@ -189,6 +189,20 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("funder=awbw")           # Org subsidy
       end
 
+      it "expands a subtotal to the registrants behind it with their amounts" do
+        registrant = create(:person, first_name: "Dana", last_name: "Rivers")
+        registration = create(:event_registration, event: paid_training, registrant: registrant, status: "registered")
+        create(:allocation, source: create(:payment, amount_cents: 4_000, amount_cents_remaining: 4_000),
+                            allocatable: registration, amount: 4_000)
+
+        sign_in admin
+        get revenue_events_path
+
+        expect(response.body).to include("Registration payments")
+        expect(response.body).to include("Dana Rivers")
+        expect(response.body).to include(CGI.escapeHTML(registrants_event_path(paid_training, registrant_ids: registrant.id)))
+      end
+
       # The Event dropdown lists every (paid) event, so the report rows are
       # identified by their per-event dashboard link rather than the title.
       it "narrows to facilitator trainings by event type" do
