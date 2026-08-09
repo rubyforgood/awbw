@@ -21,14 +21,12 @@
       <%= link_to scholarships_events_path, target: "_blank", rel: "noopener",
             class: "text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap" do %>
         <i class="fa-solid fa-chart-line"></i> Reports
-        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
       <% end %>
     <% end %>
     <% if allowed_to?(:index?, Grant) %>
       <%= link_to grants_path, target: "_blank", rel: "noopener",
             class: "text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap" do %>
         <i class="fa-solid fa-hand-holding-dollar"></i> Grants
-        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
       <% end %>
     <% end %>
     <button onclick="window.print();" class="btn btn-utility-outline">
@@ -43,9 +41,21 @@
         subtitle: pluralize(@dashboard.scholarship_applicants.size, "person"),
         actions: recipient_actions %>
 
+  <div data-controller="panel-toggle">
   <% if @dashboard.scholarship_applicants.any? %>
+    <%# Top-right toggle: hide/show the recipient cards and the recipient charts.
+        Charts start hidden; revealing loads the lazy frame on first show. %>
+    <%= render "events/charts_toggle_bar", buttons: [
+          { name: "recipients", icon: "fa-user-graduate", shown_label: "Hide recipients", hidden_label: "Show recipients", expanded: true },
+          { name: "charts", icon: "fa-chart-column", shown_label: "Hide charts", hidden_label: "Show charts", expanded: false }
+        ] %>
+    <h2 class="text-xl font-bold mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
+      <i class="fa-solid fa-user-graduate"></i>
+      Recipients
+    </h2>
     <div data-controller="expandable-cards scholarship-status-toggle"
-         data-scholarship-status-toggle-shown-value="true">
+         data-scholarship-status-toggle-shown-value="true"
+         data-panel-toggle-target="panel" data-panel-toggle-name="recipients">
       <%# Title shares a row with the controls (show/hide scholarship status,
           group by funder, expand/collapse all). %>
       <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
@@ -138,14 +148,6 @@
     </div>
   <% end %>
 
-  <%# ---- Registrants by city (of the org linked on their registration), with
-      each city's scholarship count — shared with the background dashboard. ---- %>
-  <% if @dashboard.registrant_city_breakdown.any? %>
-    <div class="mt-10 max-w-xl break-inside-avoid">
-      <%= render "events/registrant_city_breakdown", breakdown: @dashboard.registrant_city_breakdown, metrics: :both %>
-    </div>
-  <% end %>
-
   <%# ---- Shout outs: registrants who opted in, with their shout-out text ---- %>
   <% if @dashboard.shoutouts.any? %>
     <div id="shout-outs" class="scroll-mt-24 mt-10 break-inside-avoid">
@@ -222,26 +224,20 @@
     </div>
   <% end %>
 
-  <%# ---- Charts: recipient breakdowns by city + organization. The actual
-      breakdown partials (scholarship-recipient totals) land in a follow-up PR;
-      titled placeholders for now. ---- %>
+  <%# ---- Charts: the shared breakdown cards over just this event's scholarship
+      recipients, loaded lazily on first reveal (read-only — no drill-in). ---- %>
   <% if @dashboard.scholarship_applicants.any? %>
-    <div class="mt-10 break-inside-avoid">
-      <h2 class="text-xl font-bold mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
-        <i class="fa-solid fa-chart-pie"></i>
-        Charts
-      </h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4">
-          <h3 class="text-sm font-semibold text-gray-700 mb-3">Recipients by city</h3>
-          <p class="text-sm text-gray-400 italic text-center py-8">Coming soon</p>
-        </div>
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4">
-          <h3 class="text-sm font-semibold text-gray-700 mb-3">Recipients by organization</h3>
-          <p class="text-sm text-gray-400 italic text-center py-8">Coming soon</p>
-        </div>
-      </div>
+    <h2 class="text-xl font-bold mt-10 mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
+      <i class="fa-solid fa-chart-pie"></i>
+      Charts
+    </h2>
+    <%= render "events/charts_cta" %>
+    <div data-panel-toggle-target="panel" data-panel-toggle-name="charts" class="hidden">
+      <%= turbo_frame_tag :recipients_charts, src: recipients_event_path(@event), loading: :lazy do %>
+        <p class="text-sm text-gray-400 text-center py-8">Loading charts…</p>
+      <% end %>
     </div>
   <% end %>
+  </div>
 </div>
 </div>

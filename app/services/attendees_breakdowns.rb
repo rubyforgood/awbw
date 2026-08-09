@@ -6,12 +6,17 @@
 # Sourced from each person's profile (sectors, age groups, categories, addresses)
 # and from the orgs/scholarships/CE tied to their attended-training registrations.
 class AttendeesBreakdowns
-  # events: the facilitator trainings whose registrations may be counted (the
-  # viewer's reportable scope), so the org/scholarship/CE breakdowns never draw on
-  # a training the viewer isn't allowed to see.
-  def initialize(people, events: Event.facilitator_trainings)
+  # events: the events whose registrations may be counted (for the attendees
+  # index, the viewer's reportable facilitator trainings), so the org/scholarship/
+  # CE breakdowns never draw on an event the viewer isn't allowed to see.
+  # registrations: the registration scope the org/scholarship/CE breakdowns draw
+  # from — attended facilitator trainings by default (the attendees index), or any
+  # active registrations when a caller (e.g. the recipients charts) wants a single
+  # event's people regardless of attendance.
+  def initialize(people, events: Event.facilitator_trainings, registrations: EventRegistration.attended_facilitator_trainings)
     @people = people
     @events = events
+    @registrations = registrations
   end
 
   def registrant_count
@@ -135,7 +140,7 @@ class AttendeesBreakdowns
   def ce_registrant_ids
     @ce_registrant_ids ||= ContinuingEducationRegistration
       .joins(:event_registration)
-      .where(event_registration_id: training_registration_ids)
+      .where(event_registration_id: registration_ids)
       .distinct
       .pluck(Arel.sql("event_registrations.registrant_id"))
   end
@@ -175,9 +180,8 @@ class AttendeesBreakdowns
     @person_ids ||= @people.except(:includes, :eager_load, :preload, :order).ids
   end
 
-  def training_registration_ids
-    @training_registration_ids ||= EventRegistration
-      .attended_facilitator_trainings
+  def registration_ids
+    @registration_ids ||= @registrations
       .where(registrant_id: person_ids, event_id: @events.select(:id))
       .pluck(:id)
   end
@@ -211,7 +215,7 @@ class AttendeesBreakdowns
   def org_registrant_pairs
     @org_registrant_pairs ||= EventRegistrationOrganization
       .joins(:event_registration)
-      .where(event_registration_id: training_registration_ids)
+      .where(event_registration_id: registration_ids)
       .pluck(:organization_id, Arel.sql("event_registrations.registrant_id"))
   end
 
@@ -240,7 +244,7 @@ class AttendeesBreakdowns
   def scholarship_recipient_ids
     @scholarship_recipient_ids ||= Scholarship
       .joins(:allocation)
-      .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: training_registration_ids })
+      .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: registration_ids })
       .distinct
       .pluck(:recipient_id)
   end

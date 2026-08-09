@@ -11,6 +11,9 @@
     are context-agnostic. %>
 <% context = local_assigns.fetch(:context, :event) %>
 <% index_context = context == :index %>
+<% event_context = context == :event %>
+<%# Any other context (e.g. :static on the scholarship-recipients charts) renders
+    the cards read-only — no per-row drill-in links. %>
 
 <%# Drill-in path per dimension. In :event context we link to the event's
     registrant list (by named filter or by the registrant_ids behind the row); in
@@ -55,7 +58,7 @@
   <% other_response_paths = {} %>
   <% scholarship_pie_paths = { "Scholarship" => index_path.(scholarship: "yes"), "No scholarship" => index_path.(scholarship: "no") } %>
   <% ce_pie_paths = { "CE" => index_path.(ce: "yes"), "No CE" => index_path.(ce: "no") } %>
-<% else %>
+<% elsif event_context %>
   <% primary_sector_paths = data.primary_sectors.to_h { |s| [ s.name, by_ids.(data.primary_sector_registrant_ids_by_sector.fetch(s.id, [])) ] } %>
   <% sector_paths = data.sectors.to_h { |s| [ s.name, registrants_event_path(event, sector: s.id) ] } %>
   <% sector_paths["Other"] = by_ids.(data.other_sector_response_registrant_ids) if data.other_sector_response_count.positive? %>
@@ -73,10 +76,19 @@
   <% non_ce_ids = all_registrant_ids - data.ce_registrant_ids %>
   <% scholarship_pie_paths = { "Scholarship" => recipients_event_path(event), "No scholarship" => by_ids.(non_scholarship_ids) } %>
   <% ce_pie_paths = { "CE" => by_ids.(data.ce_registrant_ids), "No CE" => by_ids.(non_ce_ids) } %>
+<% else %>
+  <%# Read-only (:static) — no drill-in links. %>
+  <% primary_sector_paths = sector_paths = age_group_paths = all_age_group_paths = {} %>
+  <% state_paths = country_paths = school_district_paths = life_experience_paths = settings_paths = {} %>
+  <% program_status_paths = other_response_paths = scholarship_pie_paths = ce_pie_paths = {} %>
 <% end %>
 
 <% org_rows = data.organizations.map { |o|
-     index_org_path = index_context ? index_path.(organization_id: o.id) : roster_return_path(by_ids.(data.organization_registrant_ids_by_org.fetch(o.id, []).to_a), "all-organizations")
+     index_org_path = if index_context
+       index_path.(organization_id: o.id)
+     elsif event_context
+       roster_return_path(by_ids.(data.organization_registrant_ids_by_org.fetch(o.id, []).to_a), "all-organizations")
+     end
      { name: o.name,
        high_profile: o.high_profile?,
        count: data.organization_counts.fetch(o.id, 0),
@@ -140,8 +152,10 @@
         <% city_row_paths = city_rows.select(&known_city).to_h { |row| [ row.city, index_path.(org_city: row.city) ] } %>
         <% city_scholarship_paths = city_rows.select { |row| known_city.(row) && row.scholarship_count.positive? }.to_h { |row| [ row.city, index_path.(org_city: row.city, scholarship: "yes") ] } %>
         <%= render "events/registrant_city_breakdown", breakdown: data.registrant_city_breakdown, metrics: :both, title: "All cities", row_paths: city_row_paths, scholarship_paths: city_scholarship_paths %>
-      <% else %>
+      <% elsif event_context %>
         <%= render "events/registrant_city_breakdown", breakdown: data.registrant_city_breakdown, metrics: :both, title: "All cities", return_anchor: "all-cities" %>
+      <% else %>
+        <%= render "events/registrant_city_breakdown", breakdown: data.registrant_city_breakdown, metrics: :both, title: "All cities", row_paths: {} %>
       <% end %>
     <% end %>
   </div>

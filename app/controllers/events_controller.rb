@@ -299,6 +299,16 @@ class EventsController < ApplicationController
     authorize! @event, to: :recipients?
     @event = @event.decorate
     @dashboard = EventDashboard.new(@event)
+    return unless turbo_frame_request_id == "recipients_charts"
+
+    # Charts frame is loaded lazily (only when the admin reveals it), so the
+    # breakdowns run solely on that request. Scoped to this event's scholarship
+    # recipients via the shared cross-event AttendeesBreakdowns.
+    recipients = Person.where(id: @dashboard.scholarship_applicant_ids)
+    @breakdowns = AttendeesBreakdowns.new(recipients,
+      events: Event.where(id: @event.id),
+      registrations: EventRegistration.active)
+    render :recipients_charts
   end
 
   # From the recipients page "Add shoutout" control: flag the chosen registrant

@@ -187,7 +187,7 @@ RSpec.describe "Events attendees", type: :request do
         it "offers a charts toggle in the results frame but defers the charts to their lazy frame" do
           get attendees_events_url, headers: frame_headers
           expect(response.body).to include("Show charts")
-          expect(response.body).to include("Hide table")
+          expect(response.body).to include("Hide attendees")
           # Charts are not rendered inline — they load into the lazy charts frame.
           # ("All sectors" is a breakdown-card title; the roster's own header says
           # "Primary sector", so that phrase isn't a reliable charts marker.)

@@ -86,45 +86,32 @@
   </div>
 
   <div data-controller="panel-toggle" class="mt-6">
-    <%# Toggle bar: hide/show the roster table and the demographic charts. Charts
-        start hidden; revealing the panel loads its lazy Turbo frame on first show,
-        so the breakdown queries only run on demand. %>
-    <div class="flex flex-wrap items-center justify-end gap-2 mb-3 print:hidden">
-      <button type="button"
-              data-panel-toggle-target="button"
-              data-panel-toggle-shown-label="Hide table"
-              data-panel-toggle-hidden-label="Show table"
-              data-action="panel-toggle#toggle"
-              aria-expanded="true"
-              class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800">
-        <i class="fa-solid fa-table-list"></i>
-        <span data-panel-toggle-target="label">Hide table</span>
-      </button>
-      <button type="button"
-              data-panel-toggle-target="button"
-              data-panel-toggle-shown-label="Hide charts"
-              data-panel-toggle-hidden-label="Show charts"
-              data-action="panel-toggle#toggle"
-              aria-expanded="false"
-              class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800">
-        <i class="fa-solid fa-chart-column"></i>
-        <span data-panel-toggle-target="label">Show charts</span>
-      </button>
-    </div>
+    <%# Toggle bar: hide/show the registrants table and the demographic charts.
+        Charts start hidden; revealing the panel loads its lazy Turbo frame on
+        first show, so the breakdown queries only run on demand. %>
+    <%= render "events/charts_toggle_bar", buttons: [
+          { name: "registrants", icon: "fa-table-list", shown_label: "Hide registrants", hidden_label: "Show registrants", expanded: true },
+          { name: "charts", icon: "fa-chart-column", shown_label: "Hide charts", hidden_label: "Show charts", expanded: false }
+        ] %>
 
-    <%# Table panel — shown by default. %>
-    <div data-panel-toggle-target="panel">
+    <%# Registrants panel — shown by default. %>
+    <h2 class="text-xl font-bold mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:people, intensity: 700) %>">
+      <i class="fa-solid fa-users"></i>
+      Registrants
+    </h2>
+    <div data-panel-toggle-target="panel" data-panel-toggle-name="registrants">
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-          <h2 class="text-sm font-semibold text-gray-700">Registrants</h2>
-          <span class="text-xs text-gray-500"><%= pluralize(@dashboard.registrant_count, "person") %></span>
-        </div>
         <%= render "events/registrant_roster", roster: @dashboard, row_return_to: "roster" %>
       </div>
     </div>
 
     <%# Charts panel — hidden by default; the lazy frame loads on first reveal. %>
-    <div data-panel-toggle-target="panel" class="hidden mt-6">
+    <h2 class="text-xl font-bold mt-10 mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:people, intensity: 700) %>">
+      <i class="fa-solid fa-chart-pie"></i>
+      Charts
+    </h2>
+    <%= render "events/charts_cta" %>
+    <div data-panel-toggle-target="panel" data-panel-toggle-name="charts" class="hidden">
       <%= turbo_frame_tag :event_roster_charts, src: roster_event_path(@event), loading: :lazy do %>
         <p class="text-sm text-gray-400 text-center py-8">Loading charts…</p>
       <% end %>

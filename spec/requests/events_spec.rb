@@ -2826,15 +2826,16 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("It will let me reach more survivors.")
       end
 
-      it "shows a Registrants by city breakdown grouped by the registration-linked org" do
+      it "shows a recipient city breakdown, grouped by the registration-linked org, in the lazy charts frame" do
         org = create(:organization, name: "Reach Org")
         create(:address, addressable: org, city: "Richmond", state: "CA", inactive: false)
         registration = EventRegistration.find_by!(registrant: applicant, event: event)
         create(:event_registration_organization, event_registration: registration, organization: org)
 
-        get recipients_event_path(event)
+        get recipients_event_path(event), headers: { "Turbo-Frame" => "recipients_charts" }
 
-        expect(response.body).to include("Registrants by city")
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("All cities")
         expect(response.body).to include("Richmond, CA")
       end
 
@@ -2857,12 +2858,15 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Show scholarship status")
       end
 
-      it "renders the Recipients and Charts section headers with placeholder breakdowns" do
+      it "renders the Recipients and Charts section headers with a charts toggle" do
         get recipients_event_path(event)
 
+        expect(response.body).to include("Recipients")
         expect(response.body).to include("Charts")
-        expect(response.body).to include("Recipients by city")
-        expect(response.body).to include("Recipients by organization")
+        expect(response.body).to include("Hide recipients")
+        expect(response.body).to include("Show charts")
+        # The real breakdowns load lazily; no placeholder boxes remain.
+        expect(response.body).not_to include("Coming soon")
       end
 
       it "shows each recipient's awarded amount and completed tasks status" do

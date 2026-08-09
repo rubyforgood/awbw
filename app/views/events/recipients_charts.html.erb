@@ -1,0 +1,7 @@
+<%# Lazily-loaded charts frame for the scholarship-recipients page — the
+    breakdown queries run only when the admin reveals the charts panel. The data
+    is this event's scholarship recipients (a subset of registrants), rendered
+    read-only (:static context — no per-row drill-in). %>
+<%= turbo_frame_tag :recipients_charts do %>
+  <%= render "events/registrant_breakdowns", data: @breakdowns, context: :static %>
+<% end %>

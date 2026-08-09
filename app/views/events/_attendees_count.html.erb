@@ -7,6 +7,6 @@
         theme: :event_registrations,
         event: @filter_event,
         subtitle: @count_display ?
-          "#{pluralize(@count_display, "person")} who have attended a facilitator training" :
-          "Everyone who has attended a facilitator training" %>
+          "#{pluralize(@count_display, "person")} attended #{@filter_event ? "this event" : "these events"}" :
+          "Everyone who attended #{@filter_event ? "this event" : "these events"}" %>
 </div>
