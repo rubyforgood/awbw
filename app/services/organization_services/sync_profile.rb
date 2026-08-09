@@ -17,12 +17,11 @@ module OrganizationServices
   # passes overwrite: false so it only fills columns that are currently blank,
   # never clobbering an existing org's curated type/website.
   class SyncProfile
-    # filled: human labels of the columns this call actually wrote from the form.
-    # conflicts: OrganizationServices::ProfileDiff::Discrepancy for each answer
-    # that differs from a value already on the org and so was NOT applied (only
-    # populated under fill-blanks — overwrite: false). Lets the caller tell the
-    # admin what was saved and what they may want to reconcile by hand.
-    Result = Struct.new(:organization, :filled, :conflicts, keyword_init: true)
+    # filled: human labels of the columns this call actually wrote from the form,
+    # so the caller can tell the admin what was saved. Answers that differ from a
+    # value already on the org (and so weren't applied under fill-blanks) are
+    # reported separately by OrganizationServices::ProfileDiff.
+    Result = Struct.new(:organization, :filled, keyword_init: true)
 
     def self.call(organization:, website: nil, agency_type: nil, overwrite: true)
       new(organization:, website:, agency_type:, overwrite:).call
@@ -37,10 +36,9 @@ module OrganizationServices
 
     def call
       @filled = []
-      conflicts = @overwrite ? [] : ProfileDiff.call(organization: @organization, website: @website, agency_type: @agency_type)
       @filled << "website" if apply_value(:website_url, @website)
       @filled << "type" if sync_agency_type
-      Result.new(organization: @organization, filled: @filled, conflicts: conflicts)
+      Result.new(organization: @organization, filled: @filled)
     end
 
     private

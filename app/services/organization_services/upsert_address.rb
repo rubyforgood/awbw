@@ -12,17 +12,18 @@ module OrganizationServices
   # city was given (we key addresses on city, so a blank city means there is
   # nothing to save).
   class UpsertAddress
-    def self.call(organization:, city: nil, state: nil, street_address: nil, zip_code: nil, country: nil)
-      new(organization:, city:, state:, street_address:, zip_code:, country:).call
+    def self.call(organization:, city: nil, state: nil, street_address: nil, zip_code: nil, country: nil, overwrite: true)
+      new(organization:, city:, state:, street_address:, zip_code:, country:, overwrite:).call
     end
 
-    def initialize(organization:, city: nil, state: nil, street_address: nil, zip_code: nil, country: nil)
+    def initialize(organization:, city: nil, state: nil, street_address: nil, zip_code: nil, country: nil, overwrite: true)
       @organization = organization
       @city = city&.strip
       @state = state&.strip.presence
       @street_address = street_address
       @zip_code = zip_code
       @country = country&.strip.presence
+      @overwrite = overwrite
     end
 
     def call
@@ -36,13 +37,14 @@ module OrganizationServices
       make_primary = @organization.addresses.active.where(primary: true).none?
 
       if existing
-        existing.update!(
-          street_address: @street_address,
-          zip_code: @zip_code,
-          primary: existing.primary? || make_primary,
-          inactive: false
-        )
-        existing.update!(country: @country) if @country.present?
+        # overwrite: false (admin linking) only fills blank fields, so a
+        # discrepancy between the form and the org's saved address is kept and
+        # surfaced by ProfileDiff instead of being silently replaced.
+        updates = { primary: existing.primary? || make_primary, inactive: false }
+        updates[:street_address] = @street_address if @street_address.present? && (@overwrite || existing.street_address.blank?)
+        updates[:zip_code] = @zip_code if @zip_code.present? && (@overwrite || existing.zip_code.blank?)
+        updates[:country] = @country if @country.present? && (@overwrite || existing.country.blank?)
+        existing.update!(updates)
         return existing
       end
 

@@ -48,6 +48,22 @@ RSpec.describe OrganizationServices::UpsertAddress do
     expect(existing.reload).to have_attributes(street_address: "2 New Ave", zip_code: "78702", country: "Canada", primary: true, inactive: false)
   end
 
+  it "fills only blank fields on the matching address when overwrite is false" do
+    existing = create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "", country: "", primary: true)
+
+    described_class.call(
+      organization: organization,
+      street_address: "1 Main St",
+      city: "Austin",
+      state: "TX",
+      zip_code: "78702",
+      country: "Canada",
+      overwrite: false
+    )
+
+    expect(existing.reload).to have_attributes(street_address: "5 Oak Ave", zip_code: "78702", country: "Canada")
+  end
+
   it "leaves the org's existing primary intact and adds the new-city address as non-primary" do
     old_primary = create(:address, addressable: organization, city: "Dallas", state: "TX", primary: true)
 

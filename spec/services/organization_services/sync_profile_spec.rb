@@ -109,24 +109,14 @@ RSpec.describe OrganizationServices::SyncProfile do
       result = described_class.call(organization: organization, website: "acme.org", agency_type: "For-profit", overwrite: false)
 
       expect(result.filled).to contain_exactly("website", "type")
-      expect(result.conflicts).to be_empty
     end
 
-    it "reports conflicts for answers that differ from existing values (overwrite: false)" do
+    it "reports nothing filled when the blanks were left as conflicts" do
       organization.update!(website_url: "https://curated.org", agency_type: "For-profit")
 
       result = described_class.call(organization: organization, website: "https://new.org", agency_type: "Government agency", overwrite: false)
 
       expect(result.filled).to be_empty
-      expect(result.conflicts.map(&:field)).to contain_exactly(:website_url, :agency_type)
-    end
-
-    it "reports no conflicts when overwriting (public flow)" do
-      organization.update!(website_url: "https://curated.org", agency_type: "For-profit")
-
-      result = described_class.call(organization: organization, website: "https://new.org", agency_type: "Government agency")
-
-      expect(result.conflicts).to be_empty
     end
   end
 end

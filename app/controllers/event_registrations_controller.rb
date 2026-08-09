@@ -233,12 +233,13 @@ class EventRegistrationsController < ApplicationController
     else
       Organization.none
     end
-    # Per linked org: the submitted type/website answers that differ from what's
-    # saved on the org (and so weren't applied by the fill-blanks sync), for the
-    # persistent discrepancy note on each card. Keyed by org.
+    # Per linked org: the submitted type/website/address answers that differ from
+    # what's saved on the org (and so weren't applied by the fill-blanks sync), for
+    # the persistent discrepancy note on each card. Keyed by org.
     submitted_profile = submitted_agency_profile(@event_registration)
+    submitted_address = submitted_agency_address(@event_registration)
     @profile_conflicts_by_org = @linked_organizations.index_with do |org|
-      OrganizationServices::ProfileDiff.call(organization: org, **submitted_profile)
+      OrganizationServices::ProfileDiff.call(organization: org, address: submitted_address, **submitted_profile)
     end
   end
 
@@ -248,13 +249,13 @@ class EventRegistrationsController < ApplicationController
     @person = @event_registration.registrant
     organization = Organization.find(params[:organization_id])
 
-    notice = apply_submitted_profile(organization, "linked")
+    filled = sync_org_profile(organization)
     link_affiliations_for(@event_registration, organization)
 
     @event_registration.event_registration_organizations
       .find_or_create_by!(organization: organization)
 
-    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: notice
+    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: link_result_notice(organization, "linked", filled)
   end
 
   def create_organization
@@ -280,11 +281,11 @@ class EventRegistrationsController < ApplicationController
     # Seed type/website from the submission — filling blanks only, so an existing
     # org's curated values are never clobbered. Address + the affiliation linked to
     # it are handled by link_affiliations_for (find-or-create, so nothing dupes).
-    notice = apply_submitted_profile(organization, existing ? "linked" : "created and linked")
+    filled = sync_org_profile(organization)
     link_affiliations_for(@event_registration, organization)
     @event_registration.event_registration_organizations.find_or_create_by!(organization: organization)
 
-    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: notice
+    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: link_result_notice(organization, existing ? "linked" : "created and linked", filled)
   end
 
   def unlink_organization
@@ -497,38 +498,50 @@ class EventRegistrationsController < ApplicationController
     }
   end
 
-  # Fill the linked org's blank type/website from the registrant's submission
-  # (never clobbering curated values) and return the flash notice describing what
-  # was saved. Also stages a flash warning for any submitted answer that differs
-  # from a value already on the org, so the admin can reconcile it by hand. Shared
-  # by the select-existing and create-new org-linking actions; `verb` is the past
-  # tense used in the notice ("linked" / "created and linked").
-  def apply_submitted_profile(organization, verb)
-    result = OrganizationServices::SyncProfile.call(
+  # Fill the linked org's blank type/website from the registrant's submission,
+  # never clobbering curated values, and return the labels of what was written.
+  # Shared by the select-existing and create-new org-linking actions.
+  def sync_org_profile(organization)
+    OrganizationServices::SyncProfile.call(
       organization: organization, overwrite: false, **submitted_agency_profile(@event_registration)
+    ).filled
+  end
+
+  # Build the flash notice after linking, and stage a flash warning for any
+  # submitted answer (type/website/address) that differs from a value already on
+  # the org so the admin can reconcile it by hand. Computed after the sync +
+  # address upsert have run, so only the genuinely-kept discrepancies remain.
+  # `verb` is the notice's past tense ("linked" / "created and linked").
+  def link_result_notice(organization, verb, filled)
+    conflicts = OrganizationServices::ProfileDiff.call(
+      organization: organization,
+      address: submitted_agency_address(@event_registration),
+      **submitted_agency_profile(@event_registration)
     )
-
-    saved = result.filled.dup
-    saved << "work address" if submitted_agency_address(@event_registration)[:city].present?
-
-    if result.conflicts.any?
-      descriptions = result.conflicts.map { |conflict| "#{conflict.label} (form: “#{conflict.submitted}”, saved: “#{conflict.saved}”)" }
-      flash[:warning] = "Kept #{organization.name}’s saved values — these form answers differ and were not applied: #{descriptions.to_sentence}. Edit the organization if they should change."
+    if conflicts.any?
+      descriptions = conflicts.map { |conflict| "#{conflict.label} (form: “#{conflict.submitted}”, saved: “#{conflict.saved}”)" }
+      flash[:warning] = "Some form answers differ from #{organization.name}’s saved profile and were not applied: #{descriptions.to_sentence}. Edit the organization if they should change."
     end
 
+    saved = filled.dup
+    saved << "work address" if submitted_agency_address(@event_registration)[:city].present?
     notice = "#{organization.name} #{verb}."
     notice += " Saved from the form: #{saved.to_sentence}." if saved.any?
     notice
   end
 
-  # Upsert the linked org's work address from the registrant's submission and
-  # create the job + facilitator affiliations linked to it. Shared by the
-  # select-existing and create-new org-linking actions.
+  # Upsert the linked org's work address from the registrant's submission (filling
+  # blanks only, so a conflicting saved address is kept and flagged rather than
+  # overwritten) and create the job + facilitator affiliations linked to it. When
+  # the submission carried no address, fall back to the org's sole address so the
+  # affiliation is still anchored. Shared by the org-linking actions.
   def link_affiliations_for(registration, organization)
     organization_address = OrganizationServices::UpsertAddress.call(
       organization: organization,
+      overwrite: false,
       **submitted_agency_address(registration)
     )
+    organization_address ||= sole_address(organization)
 
     AffiliationServices::CreateFromRegistration.call(
       person: registration.registrant,
@@ -537,5 +550,12 @@ class EventRegistrationsController < ApplicationController
       training_date: registration.event.start_date,
       organization_address: organization_address
     )
+  end
+
+  # The org's single address, when it has exactly one — so a linked affiliation
+  # can be anchored to it even if the registrant submitted no address.
+  def sole_address(organization)
+    addresses = organization.addresses.active
+    addresses.first if addresses.count == 1
   end
 end

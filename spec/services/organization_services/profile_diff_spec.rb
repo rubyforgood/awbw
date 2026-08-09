@@ -60,4 +60,48 @@ RSpec.describe OrganizationServices::ProfileDiff do
 
     expect(diff.map(&:field)).to contain_exactly(:website_url, :agency_type)
   end
+
+  describe "address" do
+    it "flags street, ZIP and country that differ from the org's same-city address" do
+      create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "78701", country: "USA")
+
+      diff = described_class.call(organization: organization, address: {
+        street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78702", country: "Canada"
+      })
+
+      expect(diff.map(&:field)).to contain_exactly(:address_street, :address_zip, :address_country)
+      street = diff.find { |d| d.field == :address_street }
+      expect(street).to have_attributes(label: "Address – street", submitted: "1 Main St", saved: "5 Oak Ave")
+    end
+
+    it "does not flag address fields that match (case/whitespace insensitive)" do
+      create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
+
+      diff = described_class.call(organization: organization, address: {
+        street_address: " 1 main st ", city: "austin", state: "tx", zip_code: "78701"
+      })
+
+      expect(diff).to be_empty
+    end
+
+    it "does not flag a submitted address in a city the org has no address for (it gets added, not reconciled)" do
+      create(:address, addressable: organization, city: "Dallas", state: "TX")
+
+      diff = described_class.call(organization: organization, address: {
+        street_address: "1 Main St", city: "Austin", state: "TX"
+      })
+
+      expect(diff).to be_empty
+    end
+
+    it "does not flag a field that is blank on the org's address" do
+      create(:address, addressable: organization, street_address: "", city: "Austin", state: "TX")
+
+      diff = described_class.call(organization: organization, address: {
+        street_address: "1 Main St", city: "Austin", state: "TX"
+      })
+
+      expect(diff).to be_empty
+    end
+  end
 end

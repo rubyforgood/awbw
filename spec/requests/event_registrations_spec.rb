@@ -704,6 +704,24 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).to include("For-profit")
         end
 
+        it "flags an address discrepancy on a linked org whose saved address differs from the submission" do
+          organization.update!(name: "Acme")
+          create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX")
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_name" => "Acme", "agency_street" => "1 Main St", "agency_city" => "Austin", "agency_state" => "TX" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Address – street")
+          expect(response.body).to include("1 Main St")
+          expect(response.body).to include("5 Oak Ave")
+        end
+
         it "shows the affiliation pill inline on the linked org, noting it has no dates" do
           create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
 
@@ -1015,6 +1033,15 @@ RSpec.describe "EventRegistrations", type: :request do
           address = organization.addresses.find_by(city: "Austin")
           expect(address).to be_present
           expect(address.country).to eq("USA")
+          expect(regular_user.person.affiliations.where(organization: organization).map(&:organization_address))
+            .to all(eq(address))
+        end
+
+        it "links the affiliation to the org's sole address when the submission carried none" do
+          address = create(:address, addressable: organization, city: "Austin", state: "TX")
+
+          post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
+
           expect(regular_user.person.affiliations.where(organization: organization).map(&:organization_address))
             .to all(eq(address))
         end

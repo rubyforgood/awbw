@@ -1,29 +1,32 @@
 module OrganizationServices
-  # Read-only comparison of a registrant's submitted org answers (website +
-  # organization type) against an organization's saved profile. Surfaces the
-  # discrepancies where the submitted value differs from a value already on the
-  # org — i.e. the answers the fill-blanks sync will NOT apply, so an admin can
-  # decide whether to update the org by hand.
+  # Read-only comparison of a registrant's submitted org answers (website,
+  # organization type, and work address) against an organization's saved
+  # profile. Surfaces the discrepancies where the submitted value differs from a
+  # value already on the org — i.e. the answers the fill-blanks sync will NOT
+  # apply, so an admin can decide whether to update the org by hand.
   #
   # A blank submitted value, or a submitted value against a blank org column, is
   # not a discrepancy (nothing to reconcile — the latter just gets filled).
-  # Powers both the linking flow's flash summary and the linking page's
-  # persistent per-org note.
+  # Address is compared against the org's address in the same city/state (the one
+  # the fill-blanks upsert targets); a submitted address in a new city isn't a
+  # discrepancy because it's added rather than reconciled. Powers both the
+  # linking flow's flash summary and the linking page's persistent per-org note.
   class ProfileDiff
     Discrepancy = Struct.new(:field, :label, :submitted, :saved, keyword_init: true)
 
-    def self.call(organization:, website: nil, agency_type: nil)
-      new(organization:, website:, agency_type:).call
+    def self.call(organization:, website: nil, agency_type: nil, address: {})
+      new(organization:, website:, agency_type:, address:).call
     end
 
-    def initialize(organization:, website: nil, agency_type: nil)
+    def initialize(organization:, website: nil, agency_type: nil, address: {})
       @organization = organization
       @website = website
       @agency_type = agency_type
+      @address = address || {}
     end
 
     def call
-      [ website_discrepancy, agency_type_discrepancy ].compact
+      [ website_discrepancy, agency_type_discrepancy, *address_discrepancies ].compact
     end
 
     private
@@ -47,6 +50,42 @@ module OrganizationServices
       return if submitted.casecmp?(saved)
 
       Discrepancy.new(field: :agency_type, label: "Type", submitted: submitted, saved: saved)
+    end
+
+    # Compare every address field against the org's address in the same
+    # city/state. City/state are the lookup key so they only ever differ by case
+    # (ignored), which leaves street/ZIP/country as the fields that can flag.
+    def address_discrepancies
+      existing = matching_address
+      return [] unless existing
+
+      [
+        field_discrepancy(:address_street, "Address – street", @address[:street_address], existing.street_address),
+        field_discrepancy(:address_city, "Address – city", @address[:city], existing.city),
+        field_discrepancy(:address_state, "Address – state", @address[:state], existing.state),
+        field_discrepancy(:address_zip, "Address – ZIP", @address[:zip_code], existing.zip_code),
+        field_discrepancy(:address_country, "Address – country", @address[:country], existing.country)
+      ].compact
+    end
+
+    def matching_address
+      city = @address[:city]&.strip
+      return if city.blank?
+
+      state = @address[:state]&.strip
+      @organization.addresses.find_by(
+        "LOWER(city) = ? AND LOWER(COALESCE(state, '')) = ?",
+        city.downcase, state.to_s.downcase
+      )
+    end
+
+    def field_discrepancy(field, label, submitted, saved)
+      submitted = submitted&.strip.presence
+      saved = saved.presence
+      return if submitted.blank? || saved.blank?
+      return if submitted.casecmp?(saved)
+
+      Discrepancy.new(field: field, label: label, submitted: submitted, saved: saved)
     end
 
     # Split an "Other: <text>" answer into [ label, free_text ] the same way
