@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (77) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (78) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -333,6 +333,7 @@ end
 - `org_toggle` — Organization toggle UI
 - `paginated_fields` — Client-side pagination of nested fields
 - `password_toggle` — Show/hide password fields
+- `person_source` — Toggles the new-subscription person picker between an existing person and inline first/last/email fields (disables the inactive mode so only its data submits)
 - `prefetch_lazy` — Prefetch lazy-loaded content
 - `primary_tag` — Shared single-primary star for the sector and age-range cocoon chip editors (clears other stars, highlights via configurable classes, no reorder)
 - `print_options` — Print options toggle for analytics

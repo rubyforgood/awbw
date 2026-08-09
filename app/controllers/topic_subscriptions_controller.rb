@@ -59,6 +59,7 @@ class TopicSubscriptionsController < ApplicationController
     @topic_subscription = TopicSubscription.new(topic_subscription_params)
     @topic_subscription.created_by = current_user
     @topic_subscription.updated_by = current_user
+    stamp_inline_person
 
     if @topic_subscription.save
       redirect_to save_return_path, notice: "Subscription added."
@@ -122,7 +123,18 @@ class TopicSubscriptionsController < ApplicationController
 
   def topic_subscription_params
     params.require(:topic_subscription).permit(:person_id, :topic_subscription_type_id, :interested_event_id, :source,
-      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ])
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      person_attributes: [ :first_name, :last_name, :email ])
+  end
+
+  # Stamp the auditing columns on a person created inline through the form so the
+  # new record carries the same authorship the subscription does.
+  def stamp_inline_person
+    person = @topic_subscription.person
+    return unless person&.new_record?
+
+    person.created_by ||= current_user
+    person.updated_by ||= current_user
   end
 
   # Prefill the topic when opened from an event's Forms menu: an explicit type id
