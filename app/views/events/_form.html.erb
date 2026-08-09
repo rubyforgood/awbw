@@ -557,7 +557,7 @@
       </button>
 
       <div id="staff" class="hidden border border-gray-300 bg-gray-50 p-4 rounded-b-md" data-controller="expandable-cards" data-expandable-cards-expanded-value="false">
-        <div class="flex flex-col items-end gap-2 mb-3">
+        <div class="flex flex-col items-end gap-1 mb-2">
           <% if @event.persisted? %>
             <%= link_to "View staff page", staff_event_path(@event), class: "btn btn-secondary-outline" %>
           <% end %>
@@ -569,7 +569,7 @@
           </button>
         </div>
 
-        <div id="event-staffs">
+        <div id="event-staffs" class="space-y-3">
           <%= f.fields_for :event_staffs do |staff_form| %>
             <%= render "event_staff_fields", f: staff_form %>
           <% end %>
