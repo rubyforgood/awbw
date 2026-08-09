@@ -21,7 +21,7 @@
 <% primary_text, more_text = Array(text_fields).partition { |f| f[:primary] } %>
 <%# Open the collapsed section on load when any control inside it already carries
     a value, so an active filter is never hidden behind the toggle. %>
-<% collapsed_keys = %i[payment_method scholarship org_status account_status ce_status comment_status state county] %>
+<% collapsed_keys = %i[submission_status payment_method org_status scholarship funder_name ce_status city state county account_status comment_status comment] %>
 <% more_active = more_text.any? { |f| params[f[:param]].present? } || collapsed_keys.any? { |k| params[k].present? } %>
 <%= form_with url: url, method: :get,
       data: { controller: "collection filter-toggle", turbo_frame: frame },
@@ -64,7 +64,7 @@
             selected: params[:readiness], blank: "Any stage", field_class: field_class %>
     <% end %>
 
-    <%= render "events/filter_select", param: :attendance_status, label: "Attendance status",
+    <%= render "events/filter_select", param: :attendance_status, label: "Attendance",
           options: EventRegistration::ATTENDANCE_STATUSES.map { |s| [ EventRegistration.new(status: s).attendance_status_label, s ] },
           selected: params[:attendance_status], blank: "All statuses", field_class: field_class %>
 
@@ -92,17 +92,20 @@
       collapsed filter is already active. %>
   <div data-filter-toggle-target="content" class="<%= "hidden" unless more_active %>">
     <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4 mt-4">
+      <%# Page-specific collapsed text fields (e.g. the picker's Organization/Name
+          boxes). Grantor/City/Comment text below are shared across both pages. %>
       <% more_text.each do |f| %>
-        <div class="w-full md:w-48">
-          <%= label_tag f[:param], f[:label], class: label_class %>
-          <%= text_field_tag f[:param], params[f[:param]], class: field_class, placeholder: f[:placeholder] %>
-        </div>
+        <%= render "events/filter_text", param: f[:param], label: f[:label],
+              placeholder: f[:placeholder], field_class: field_class %>
       <% end %>
 
-      <%# Ordered by how a registration is worked after the top three: payment
-          method, then their organization, scholarship, CE credentials and
-          location — with portal access (user account) and admin notes (comments)
-          handled last. %>
+      <%# Ordered by how a registration is worked after the top three: did they
+          submit, how they pay, their org and funder, CE, then location — with
+          portal access (user account) and comments handled last. %>
+      <%= render "events/filter_select", param: :submission_status, label: "Submission status",
+            options: [ [ "No submission", "none" ], [ "Has form submission", "has" ], [ "Multiple form submissions", "multiple" ] ],
+            selected: params[:submission_status], blank: "All statuses", field_class: field_class %>
+
       <% if has_cost %>
         <%= render "events/filter_select", param: :payment_method, label: "Payment method",
               options: EventRegistrationDecorator.payment_method_filter_choices,
@@ -115,15 +118,23 @@
 
       <% if has_cost %>
         <%= render "events/filter_select", param: :scholarship, label: "Scholarship",
-              options: [ [ "All recipients", "yes" ], [ "Tasks complete", "complete" ], [ "Tasks not complete", "incomplete" ] ],
-              selected: params[:scholarship], blank: "All registrants", field_class: field_class %>
+              options: [ [ "All recipients", "yes" ], [ "Agreed", "agreed" ], [ "Tasks complete", "complete" ], [ "Tasks not complete", "incomplete" ] ],
+              selected: params[:scholarship], blank: "Any status", field_class: field_class %>
       <% end %>
+
+      <%# Free-text on the funder behind a scholarship. Param :funder_name stays
+          clear of the awbw/external :funder funding-source scope. %>
+      <%= render "events/filter_text", param: :funder_name, label: "Funder",
+            placeholder: "Funder name", field_class: field_class %>
 
       <% if @ce_eligible %>
         <%= render "events/filter_select", param: :ce_status, label: "CE status",
               options: [ [ "Registered for CE", "registered" ], [ "Requested", "requested" ], [ "Needs license", "needs_license" ], [ "Paid", "paid" ], [ "Issued", "issued" ], [ "Not issued", "not_issued" ] ],
               selected: params[:ce_status], blank: "Any CE status", field_class: field_class %>
       <% end %>
+
+      <%= render "events/filter_text", param: :city, label: "City",
+            placeholder: "City name", field_class: field_class %>
 
       <% if @dashboard&.states&.any? %>
         <%= render "events/filter_select", param: :state, label: "State",
@@ -140,9 +151,12 @@
             options: [ [ "No account", "none" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
             selected: params[:account_status], blank: "Any account status", field_class: field_class %>
 
-      <%= render "events/filter_select", param: :comment_status, label: "Comments",
+      <%= render "events/filter_select", param: :comment_status, label: "Comment status",
             options: [ [ "None", "none" ], [ "Present", "present" ], [ "Flagged", "flagged" ] ],
             selected: params[:comment_status], blank: "Any comments", field_class: field_class %>
+
+      <%= render "events/filter_text", param: :comment, label: "Comment text",
+            placeholder: "Topic or content", field_class: field_class %>
     </div>
   </div>
 <% end %>

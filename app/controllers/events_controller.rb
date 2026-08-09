@@ -170,6 +170,10 @@ class EventsController < ApplicationController
     scope = scope.funder(params[:funder]) if params[:funder].present?
     scope = scope.ce_status(params[:ce_status]) if params[:ce_status].present?
     scope = scope.comment_status(params[:comment_status]) if params[:comment_status].present?
+    scope = scope.comment_text(params[:comment]) if params[:comment].present?
+    scope = scope.funder_name(params[:funder_name]) if params[:funder_name].present?
+    scope = scope.submission_status(params[:submission_status], @event) if params[:submission_status].present?
+    scope = scope.registrant_city(params[:city]) if params[:city].present?
     scope = scope.organization_status(params[:org_status], @event) if params[:org_status].present?
     scope = scope.account_status(params[:account_status]) if params[:account_status].present?
     scope = scope.registrant_ids(params[:registrant_ids]) if params[:registrant_ids].present?
@@ -314,7 +318,7 @@ class EventsController < ApplicationController
       .includes(
         :event, :organizations, :comments,
         { scholarships: { grant: :funder } },
-        registrant: [ :user, :contact_methods ]
+        registrant: [ :user, :contact_methods, :addresses ]
       )
       .joins(:registrant)
       .select { |r| r.registrant.preferred_email.present? }

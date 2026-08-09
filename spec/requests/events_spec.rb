@@ -1155,6 +1155,46 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "new roster filters" do
+      let(:event) { create(:event, cost_cents: 10_000) }
+
+      it "renders the new controls and relabeled options" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Submission status")
+        expect(response.body).to include("Funder")
+        expect(response.body).to include("City name")
+        expect(response.body).to include("Comment status")
+        expect(response.body).to include("Comment text")
+        expect(response.body).to include(">Attendance<")
+        expect(response.body).to include("Agreed")
+        expect(response.body).to include("Any status")
+      end
+
+      it "narrows the roster by city" do
+        here = create(:person, first_name: "Cityful", last_name: "Local")
+        create(:address, addressable: here, city: "Santa Monica")
+        there = create(:person, first_name: "Faraway", last_name: "Person")
+        create(:address, addressable: there, city: "Portland")
+        create(:event_registration, event: event, registrant: here)
+        create(:event_registration, event: event, registrant: there)
+
+        get registrants_event_path(event, city: "santa")
+
+        expect(response.body).to include("Cityful")
+        expect(response.body).not_to include("Faraway")
+      end
+
+      it "does not crash on the new funder / comment-text / submission filters" do
+        get registrants_event_path(event, funder_name: "someone")
+        expect(response).to have_http_status(:ok)
+        get registrants_event_path(event, comment: "note")
+        expect(response).to have_http_status(:ok)
+        get registrants_event_path(event, submission_status: "multiple")
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
     context "with unknown filter params" do
       it "does not crash on an invalid payment_status" do
         get registrants_event_path(event, payment_status: "bogus")

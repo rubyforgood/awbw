@@ -47,6 +47,16 @@ RSpec.describe "Events::BulkReminders", type: :request do
     expect(checked?(response.body, sam)).to be(false)
   end
 
+  it "filters recipients by the shared city search" do
+    create(:address, addressable: jane.registrant, city: "Santa Monica")
+
+    get preview_reminder_event_path(event, city: "santa"),
+        headers: { "Turbo-Frame" => "reminder_recipients" }
+
+    expect(checked?(response.body, jane)).to be(true)
+    expect(checked?(response.body, sam)).to be(false)
+  end
+
   describe "confirm interstitial" do
     it "lists the selected recipients and the message preview without sending yet" do
       expect {

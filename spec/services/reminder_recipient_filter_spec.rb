@@ -71,7 +71,7 @@ RSpec.describe ReminderRecipientFilter do
       award_scholarship(reg, grant: grant)
       ungranted = registration(first_name: "Sam")
       award_scholarship(ungranted) # scholarship with no grant
-      expect(matched({ funder: "acme" }, [ reg, ungranted ])).to eq([ reg.id ].to_set)
+      expect(matched({ funder_name: "acme" }, [ reg, ungranted ])).to eq([ reg.id ].to_set)
     end
 
     it "filters by email address" do
@@ -227,7 +227,7 @@ RSpec.describe ReminderRecipientFilter do
       match = registration(first_name: "Jane", last_name: "Adams").tap { |r| award_scholarship(r, grant: grant) }
       name_only = registration(first_name: "Jane", last_name: "Brooks")
       funder_only = registration(first_name: "Sam", last_name: "Cole").tap { |r| award_scholarship(r, grant: grant) }
-      expect(matched({ name: "jane", funder: "acme" }, [ match, name_only, funder_only ]))
+      expect(matched({ name: "jane", funder_name: "acme" }, [ match, name_only, funder_only ]))
         .to eq([ match.id ].to_set)
     end
   end
