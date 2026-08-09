@@ -336,8 +336,8 @@ class EventChecklist
     task(key: :reconcile_ce_hours, phase: :after, title: "Reconcile CE hours", actor: :admin,
          relevant: relevant, count: count,
          registrants: count.positive? ? @dashboard.ce_hours_incomplete_registrants : [],
-         detail: "Hours are admin-entered — best-effort",
-         action_path: registrants_event_path(@event, ce_status: "registered"), action_label: "Review")
+         detail: "Hours are registrant-submitted",
+         action_path: participation_events_path, action_label: "Participation")
   end
 
   def send_completion_certificates
