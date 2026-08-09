@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe "Events training attendees", type: :request do
+RSpec.describe "Events attendees", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:user) { create(:user) }
 
@@ -19,15 +19,43 @@ RSpec.describe "Events training attendees", type: :request do
     create(:event_registration, event: recent_training, registrant: no_show, status: "no_show")
   end
 
-  let(:frame_headers) { { "Turbo-Frame" => "training_attendees_results" } }
+  let(:frame_headers) { { "Turbo-Frame" => "attendees_results" } }
   # The charts are lazy-loaded into their own frame, only when the admin reveals them.
-  let(:charts_frame_headers) { { "Turbo-Frame" => "training_attendees_charts" } }
+  let(:charts_frame_headers) { { "Turbo-Frame" => "attendees_charts" } }
 
-  describe "GET /events/training_attendees" do
+  describe "GET /events/attendees" do
     context "as non-admin" do
-      it "redirects" do
+      it "redirects the unfiltered cross-event view" do
         sign_in user
-        get training_attendees_events_url
+        get attendees_events_url
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    context "as an event owner, scoped to their own event" do
+      let(:owner) { create(:user) }
+      let!(:owned_training) { create(:event, facilitator_training: true, created_by: owner, start_date: Date.new(2026, 6, 1)) }
+
+      before { sign_in owner }
+
+      it "renders the shell for an event they own" do
+        get attendees_events_url(event_id: owned_training.id)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Training attendees")
+      end
+
+      it "returns the eyebrow to their event's dashboard" do
+        get attendees_events_url(event_id: owned_training.id)
+        expect(response.body).to include(dashboard_event_path(owned_training))
+      end
+
+      it "forbids an event they do not own" do
+        get attendees_events_url(event_id: recent_training.id)
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "forbids the unfiltered cross-event view" do
+        get attendees_events_url
         expect(response).to redirect_to(root_path)
       end
     end
@@ -36,26 +64,26 @@ RSpec.describe "Events training attendees", type: :request do
       before { sign_in admin }
 
       it "renders the index shell" do
-        get training_attendees_events_url
+        get attendees_events_url
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Training attendees")
       end
 
       it "carries the participation origin back through the eyebrow" do
-        get training_attendees_events_url(return_to: "participation")
+        get attendees_events_url(return_to: "participation")
         expect(response.body).to include("← Participation")
       end
 
       context "the results frame" do
         it "lists people who attended a training and links each to its registration" do
-          get training_attendees_events_url, headers: frame_headers
+          get attendees_events_url, headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).to include("TAC261")
           expect(response.body).to include(edit_event_registration_path(attendee_registration))
         end
 
         it "excludes non-training attendees and no-shows" do
-          get training_attendees_events_url, headers: frame_headers
+          get attendees_events_url, headers: frame_headers
           expect(response.body).not_to include("Grace Hopper")
           expect(response.body).not_to include("Alan Turing")
         end
@@ -63,7 +91,7 @@ RSpec.describe "Events training attendees", type: :request do
         it "filters by training" do
           create(:event_registration, event: older_training, registrant: create(:person, first_name: "Katherine", last_name: "Johnson"), status: "attended")
 
-          get training_attendees_events_url(event_id: recent_training.id), headers: frame_headers
+          get attendees_events_url(event_id: recent_training.id), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Katherine Johnson")
         end
@@ -71,7 +99,7 @@ RSpec.describe "Events training attendees", type: :request do
         it "filters by year" do
           create(:event_registration, event: older_training, registrant: create(:person, first_name: "Katherine", last_name: "Johnson"), status: "attended")
 
-          get training_attendees_events_url(event_year: 2024), headers: frame_headers
+          get attendees_events_url(event_year: 2024), headers: frame_headers
           expect(response.body).to include("Katherine Johnson")
           expect(response.body).not_to include("Ada Lovelace")
         end
@@ -79,19 +107,19 @@ RSpec.describe "Events training attendees", type: :request do
         it "filters by name search" do
           create(:event_registration, event: recent_training, registrant: create(:person, first_name: "Katherine", last_name: "Johnson"), status: "attended")
 
-          get training_attendees_events_url(contact_info: "Lovelace"), headers: frame_headers
+          get attendees_events_url(contact_info: "Lovelace"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Katherine Johnson")
         end
 
         it "shows the Program status and Affiliation status columns" do
-          get training_attendees_events_url, headers: frame_headers
+          get attendees_events_url, headers: frame_headers
           expect(response.body).to include("Program status")
           expect(response.body).to include("Affiliation status")
         end
 
         it "offers a charts toggle in the results frame but defers the charts to their lazy frame" do
-          get training_attendees_events_url, headers: frame_headers
+          get attendees_events_url, headers: frame_headers
           expect(response.body).to include("Show charts")
           expect(response.body).to include("Hide table")
           # Charts are not rendered inline — they load into the lazy charts frame.
@@ -102,7 +130,7 @@ RSpec.describe "Events training attendees", type: :request do
 
         it "renders the breakdown charts in the lazy charts frame" do
           create(:sectorable_item, sectorable: attendee, sector: create(:sector, name: "Healthcare"), is_primary: true)
-          get training_attendees_events_url, headers: charts_frame_headers
+          get attendees_events_url, headers: charts_frame_headers
           expect(response.body).to include("Primary sector")
           expect(response.body).to include("All sectors")
         end
@@ -112,7 +140,7 @@ RSpec.describe "Events training attendees", type: :request do
           other = create(:person, first_name: "Zed", last_name: "Zulu")
           create(:event_registration, event: recent_training, registrant: other, status: "attended")
 
-          get training_attendees_events_url(country: "Canada"), headers: frame_headers
+          get attendees_events_url(country: "Canada"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Zed Zulu")
         end
@@ -134,12 +162,12 @@ RSpec.describe "Events training attendees", type: :request do
           cityless_registration = create(:event_registration, event: recent_training, registrant: cityless, status: "attended")
           cityless_registration.event_registration_organizations.create!(organization: create(:organization, name: "Cityless Org"))
 
-          get training_attendees_events_url, headers: charts_frame_headers
+          get attendees_events_url, headers: charts_frame_headers
           expect(response).to have_http_status(:ok)
           expect(response.body).to include("All cities")
           expect(response.body).to include("Austin, TX")
 
-          get training_attendees_events_url(org_city: "Austin, TX"), headers: frame_headers
+          get attendees_events_url(org_city: "Austin, TX"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Zed Zulu")
         end
@@ -148,7 +176,7 @@ RSpec.describe "Events training attendees", type: :request do
           other = create(:person, first_name: "Zed", last_name: "Zulu")
           create(:event_registration, event: recent_training, registrant: other, status: "attended")
 
-          get training_attendees_events_url(registrant_ids: attendee.id.to_s), headers: frame_headers
+          get attendees_events_url(registrant_ids: attendee.id.to_s), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Zed Zulu")
         end
@@ -159,7 +187,7 @@ RSpec.describe "Events training attendees", type: :request do
           create(:event_registration, event: recent_training, registrant: active_person, status: "attended")
           create(:affiliation, person: active_person, organization: create(:organization), start_date: 1.year.ago, inactive: false, title: "Facilitator")
 
-          get training_attendees_events_url(affiliation_status: "Inactive"), headers: frame_headers
+          get attendees_events_url(affiliation_status: "Inactive"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Nora Active")
         end

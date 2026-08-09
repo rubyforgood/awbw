@@ -8,7 +8,7 @@
       <% if params[:return_to] == "dashboard" && params[:event_id].present? %>
         <%= link_to "← Dashboard", dashboard_event_path(params[:event_id]), class: "text-sm text-gray-500 hover:text-gray-700" %>
       <% else %>
-        <%= link_to "← Events statistics", statistics_events_path(report_to_statistics_params), class: "text-sm text-gray-500 hover:text-gray-700" %>
+        <%= link_to "← Reports", reports_events_path(report_to_hub_params), class: "text-sm text-gray-500 hover:text-gray-700" %>
       <% end %>
     </div>
 

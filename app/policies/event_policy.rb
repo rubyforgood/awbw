@@ -13,35 +13,19 @@ class EventPolicy < ApplicationPolicy
     admin?
   end
 
-  # The cross-event revenue report aggregates money across every event, so it's
-  # admin-only.
-  def revenue?
+  # The cross-event report suite (revenue, participation, scholarships, the
+  # reports hub, and the attendees index) aggregates across every event, so the
+  # whole-org view is admin-only.
+  def cross_event_reports?
     admin?
   end
 
-  # The cross-event participation report aggregates attendance across every
-  # event, so it's admin-only like the revenue report.
-  def participation?
-    admin?
-  end
-
-  # The events statistics hub gathers the cross-event report summaries, so it's
-  # admin-only like the reports it links to.
-  def statistics?
-    admin?
-  end
-
-  # The scholarship report aggregates scholarship money and award counts across
-  # every training, so it's admin-only like the revenue report.
-  def scholarships?
-    admin?
-  end
-
-  # The cross-event index of everyone who has attended a facilitator training
-  # aggregates registrants across every event, so it's admin-only like the
-  # participation report it's reached from.
-  def training_attendees?
-    admin?
+  # A single-event slice of those reports — reached from the per-event Reports and
+  # Roster tabs, which pass event_id — is visible to that event's owner too. The
+  # controller resolves event_id to the Event and authorizes against it here, so
+  # owner? has a real record to check.
+  def event_reports?
+    admin? || owner?
   end
 
   def show?

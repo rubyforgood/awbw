@@ -152,9 +152,9 @@ Rails.application.routes.draw do
     collection do
       get :revenue
       get :participation
-      get :statistics
+      get :reports
       get :scholarships
-      get :training_attendees
+      get :attendees
     end
     member do
       get :dashboard

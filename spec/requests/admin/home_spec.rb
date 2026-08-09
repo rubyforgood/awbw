@@ -43,10 +43,10 @@ RSpec.describe "Admin::Home", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
-    it "links to events statistics and still surfaces payments" do
+    it "links to reports and still surfaces payments" do
       get admin_path
-      expect(response.body).to include("Events statistics")
-      expect(response.body).to include(statistics_events_path)
+      expect(response.body).to include("Reports")
+      expect(response.body).to include(reports_events_path)
       expect(response.body).to include("Payments")
     end
 

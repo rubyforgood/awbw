@@ -3,7 +3,10 @@ class EventsController < ApplicationController
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
   before_action :set_event, only: %i[ show edit update destroy preview dashboard sample_ticket background registrants onboarding staff edit_staff update_staff recipients feature_recipient_shoutout preview_reminder confirm_reminder send_reminder copy_registration_form ]
-  before_action :set_report_filters, only: %i[ revenue participation statistics scholarships ]
+  before_action :set_report_filters, only: %i[ revenue participation reports scholarships ]
+  # The cross-event report suite is admin-only for the whole-org view, but a
+  # single-event slice (event_id filter) is visible to that event's owner too.
+  before_action :authorize_report!, only: %i[ revenue participation reports scholarships attendees ]
 
   def index
     authorize!
@@ -32,7 +35,6 @@ class EventsController < ApplicationController
   # KPI strip with the year of the event navigated from (when arriving from a
   # dashboard), otherwise the current year.
   def revenue
-    authorize!
     events, selected_year = filtered_report_events(Event.paid)
     @report = EventRevenueReport.new(events, featured_year: selected_year || @filter_event&.start_date&.year)
   end
@@ -41,15 +43,14 @@ class EventsController < ApplicationController
   # grouped by year. Scopes to all events by default, narrowable to facilitator
   # trainings, and to a single year via the ahoy-style time-period select.
   def participation
-    authorize!
     events, selected_year = filtered_report_events(Event.all)
     @report = EventParticipationReport.new(events, featured_year: selected_year)
   end
 
-  # Events statistics hub: the revenue, participation and scholarship report
-  # summaries side by side, each linking to its full report.
-  def statistics
-    authorize!
+  # Reports hub: the revenue, participation and scholarship report summaries side
+  # by side, each linking to its full report. Pre-filterable to a single event via
+  # event_id (the per-event "Reports" tab links here scoped to its event).
+  def reports
     @period = params[:period].presence_in(%w[ this_year last_year all_time ]) || "this_year"
     @revenue_report = EventRevenueReport.new(report_events(Event.paid))
     @participation_report = EventParticipationReport.new(report_events(Event.all))
@@ -58,10 +59,9 @@ class EventsController < ApplicationController
 
   # Cross-event scholarship report: scholarship dollars and award counts (funded
   # vs unfunded) per facilitator training, grouped by year, with an attended-
-  # trainee count split into Training vs On-demand. Sibling of the revenue and
-  # participation reports; admin-only.
+  # trainee count split into Live vs On-demand. Sibling of the revenue and
+  # participation reports.
   def scholarships
-    authorize!
     events, selected_year = filtered_report_events(Event.facilitator_trainings)
     @report = EventScholarshipReport.new(events, featured_year: selected_year, funder: @filter_funder)
   end
@@ -69,27 +69,27 @@ class EventsController < ApplicationController
   # Cross-event index of everyone who has attended a facilitator training, deduped
   # to one row per person. Lazy-loaded like the people index: the frame request
   # builds the filtered/paginated page and its roster; the full request renders the
-  # shell (header, filters, skeleton).
-  def training_attendees
-    authorize!
+  # shell (header, filters, skeleton). Pre-filterable to a single event via event_id
+  # (the per-event "Roster" tab links here scoped to its event).
+  def attendees
     unless turbo_frame_request?
       set_training_attendee_filter_options
-      return render :training_attendees
+      return render :attendees
     end
 
     people = filtered_training_attendees
     # The charts frame is loaded lazily (only when the user reveals it), so the
     # expensive cross-event breakdowns run solely on that request.
-    if turbo_frame_request_id == "training_attendees_charts"
+    if turbo_frame_request_id == "attendees_charts"
       @breakdowns = TrainingAttendeesBreakdowns.new(people)
-      return render :training_attendees_charts
+      return render :attendees_charts
     end
 
     per_page = params[:number_of_items_per_page].presence || 25
     @count_display = people.count
     @people = people.paginate(page: params[:page], per_page: per_page)
     @roster = TrainingAttendeesRoster.new(@people)
-    render :training_attendees_results
+    render :attendees_results
   end
 
   def new
@@ -522,9 +522,21 @@ class EventsController < ApplicationController
     end
   end
 
-  # Shared filter state for the revenue/participation/statistics/scholarships
-  # report pages: the event-type, specific-event and abbreviation-search filters,
-  # plus the event list for the Event dropdown.
+  # Authorize the cross-event report suite. Scoped to a single event (event_id
+  # filter, from the per-event Reports/Roster tabs), that event's owner may view
+  # it (event_reports?); the unfiltered whole-org view stays admin-only.
+  def authorize_report!
+    @filter_event ||= Event.find_by(id: params[:event_id]) if params[:event_id].present?
+    if @filter_event
+      authorize! @filter_event, to: :event_reports?
+    else
+      authorize! to: :cross_event_reports?
+    end
+  end
+
+  # Shared filter state for the revenue/participation/reports/scholarships report
+  # pages: the event-type, specific-event and abbreviation-search filters, plus the
+  # event list for the Event dropdown.
   def set_report_filters
     @event_type = params[:event_type].presence_in(%w[ trainings other ])
     @filter_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
@@ -594,7 +606,7 @@ class EventsController < ApplicationController
     registrations = registrations.where("YEAR(events.start_date) = ?", params[:event_year]) if params[:event_year].present?
 
     scope = Person.where(id: registrations.select(:registrant_id))
-    # Dash-joined person ids, e.g. from the statistics-hub participation totals.
+    # Dash-joined person ids, e.g. from the reports-hub participation totals.
     scope = scope.where(id: params[:registrant_ids].to_s.split("-")) if params[:registrant_ids].present?
     scope = scope.search_by_params({ contact_info: params[:contact_info] }) if params[:contact_info].present?
     scope = scope.where(id: person_sector_ids(params[:sector])) if params[:sector].present?

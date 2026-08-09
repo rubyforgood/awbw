@@ -190,7 +190,7 @@
                 <div class="min-w-0 flex-1">
                   <% if first_registration %>
                     <div class="flex items-center gap-1.5">
-                      <%= link_to edit_event_registration_path(first_registration, return_to: "training_attendees"), class: event_link_class do %>
+                      <%= link_to edit_event_registration_path(first_registration, return_to: "attendees"), class: event_link_class do %>
                         <%= first_registration.event.decorate.compact_label %>
                         <span class="text-gray-400 font-normal"><%= first_registration.event.start_date&.strftime("%b %Y") %></span>
                       <% end %>
@@ -203,7 +203,7 @@
                     <% if registrations.size > 1 %>
                       <div class="hidden mt-1 flex flex-col gap-1" data-expandable-card-target="body">
                         <% registrations.drop(1).each do |registration| %>
-                          <%= link_to edit_event_registration_path(registration, return_to: "training_attendees"), class: "text-xs #{DomainTheme.text_class_for(:event_registrations, intensity: 700)} hover:underline" do %>
+                          <%= link_to edit_event_registration_path(registration, return_to: "attendees"), class: "text-xs #{DomainTheme.text_class_for(:event_registrations, intensity: 700)} hover:underline" do %>
                             <%= registration.event.decorate.compact_label %>
                             <span class="text-gray-400"><%= registration.event.start_date&.strftime("%b %Y") %></span>
                           <% end %>

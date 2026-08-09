@@ -16,7 +16,7 @@
     registrant list (by named filter or by the registrant_ids behind the row); in
     :index context we re-apply this index's filters plus the row's own dimension. %>
 <% filter_params = index_context ? request.query_parameters.except("page", "controller", "action") : {} %>
-<% index_path = ->(params) { training_attendees_events_path(filter_params.merge(params)) } %>
+<% index_path = ->(params) { attendees_events_path(filter_params.merge(params)) } %>
 <% by_ids = ->(ids) { registrants_event_path(event, registrant_ids: ids.join("-")) } %>
 
 <% primary_sector_data = data.primary_sectors.map { |s| [ s.name, data.primary_sector_counts.fetch(s.id, 0) ] }.sort_by { |_, count| -count } %>

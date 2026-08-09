@@ -282,12 +282,12 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("← Dashboard")
       end
 
-      it "carries the statistics origin and active filters back through the eyebrow" do
+      it "carries the reports origin and active filters back through the eyebrow" do
         sign_in admin
         get revenue_events_path(return_to: "events", event_type: "trainings", event_id: paid_training.id)
-        expect(response.body).to include("← Events statistics")
+        expect(response.body).to include("← Reports")
         expect(response.body).to include(
-          CGI.escapeHTML(statistics_events_path(return_to: "events", event_type: "trainings", event_id: paid_training.id, period: "all_time"))
+          CGI.escapeHTML(reports_events_path(return_to: "events", event_type: "trainings", event_id: paid_training.id, period: "all_time"))
         )
       end
     end
@@ -353,12 +353,12 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include(dashboard_event_path(training_2026))
       end
 
-      it "carries the statistics origin and active filters back through the eyebrow and the filter form" do
+      it "carries the reports origin and active filters back through the eyebrow and the filter form" do
         sign_in admin
         get participation_events_path(return_to: "events", event_type: "trainings", event_id: training_2026.id)
-        expect(response.body).to include("← Events statistics")
+        expect(response.body).to include("← Reports")
         expect(response.body).to include(
-          CGI.escapeHTML(statistics_events_path(return_to: "events", event_type: "trainings", event_id: training_2026.id, period: "all_time"))
+          CGI.escapeHTML(reports_events_path(return_to: "events", event_type: "trainings", event_id: training_2026.id, period: "all_time"))
         )
         expect(response.body).to match(/<input[^>]*name="return_to"[^>]*value="events"/)
       end
@@ -373,7 +373,7 @@ RSpec.describe "Events", type: :request do
     end
   end
 
-  describe "GET /statistics" do
+  describe "GET /reports" do
     let!(:training) { create(:event, facilitator_training: true, cost_cents: 10_000, start_date: Date.current) }
 
     before { create(:event_registration, event: training, status: "attended") }
@@ -381,9 +381,9 @@ RSpec.describe "Events", type: :request do
     context "as admin" do
       it "shows the revenue and participation summaries side by side" do
         sign_in admin
-        get statistics_events_path
+        get reports_events_path
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Events statistics")
+        expect(response.body).to include("Reports")
         expect(response.body).to include("Revenue")
         expect(response.body).to include("Participation")
         expect(response.body).to match(/<h3[^>]*>Participation<\/h3>.*<h3[^>]*>Scholarships<\/h3>.*<h3[^>]*>Revenue<\/h3>/m)
@@ -395,28 +395,28 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to match(/\d+ other/)
         # The trainings figure links into the cross-event training attendees index;
         # the other-events figure into the filtered registrants index.
-        expect(response.body).to include(training_attendees_events_path)
+        expect(response.body).to include(attendees_events_path)
         expect(response.body).to include("event_type=other", "attendance_status=attended")
         expect(response.body).to include(revenue_events_path, participation_events_path)
       end
 
       it "shows the scholarship summary card linking to its full report" do
         sign_in admin
-        get statistics_events_path
+        get reports_events_path
         expect(response.body).to include("Scholarships")
         expect(response.body).to include(scholarships_events_path)
       end
 
       it "carries the active filters into the full report links" do
         sign_in admin
-        get statistics_events_path(period: "all_time", event_type: "trainings")
+        get reports_events_path(period: "all_time", event_type: "trainings")
         expect(response.body).to include(CGI.escapeHTML(revenue_events_path(event_type: "trainings", time_period: "all_time")))
         expect(response.body).to include(CGI.escapeHTML(participation_events_path(event_type: "trainings", time_period: "all_time")))
       end
 
       it "toggles the summary figures to all time via the period select" do
         sign_in admin
-        get statistics_events_path(period: "all_time")
+        get reports_events_path(period: "all_time")
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("All time")
         expect(response.body).to match(/<select[^>]*name="period"/)
@@ -424,13 +424,13 @@ RSpec.describe "Events", type: :request do
 
       it "returns to the admin home by default" do
         sign_in admin
-        get statistics_events_path
+        get reports_events_path
         expect(response.body).to include("← Admin home")
       end
 
       it "returns to the events index when arrived from it" do
         sign_in admin
-        get statistics_events_path(return_to: "events")
+        get reports_events_path(return_to: "events")
         expect(response.body).to include("← Events")
         expect(response.body).to include(events_path)
       end
@@ -439,7 +439,7 @@ RSpec.describe "Events", type: :request do
     context "as non-admin" do
       it "redirects" do
         sign_in user
-        get statistics_events_path
+        get reports_events_path
         expect(response).to redirect_to(root_path)
       end
     end

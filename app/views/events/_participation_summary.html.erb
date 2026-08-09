@@ -1,10 +1,10 @@
-<%# Compact participation headline for the statistics hub, linking to the full
+<%# Compact participation headline for the reports hub, linking to the full
     report. Expects `report` (an EventParticipationReport) and `period` (its
     resolved PeriodScope: #label, #year and #metrics). %>
 <div class="h-full flex flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
   <div class="flex items-center justify-between mb-4">
     <h3 class="text-base font-semibold text-gray-900">Participation</h3>
-    <%= link_to "Full report →", participation_events_path(statistics_to_report_params),
+    <%= link_to "Full report →", participation_events_path(hub_to_report_params),
           class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
   </div>
 
@@ -23,7 +23,7 @@
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Registrations</div>
         <div class="mt-1 tabular-nums">
           <%= link_to number_with_delimiter(metrics.active_registration_count),
-                training_attendees_events_path(registrant_ids: active_ids.join("-").presence || "0", return_to: "statistics"),
+                attendees_events_path(registrant_ids: active_ids.join("-").presence || "0", event_id: params[:event_id].presence, return_to: "reports"),
                 class: "text-xl font-bold text-gray-900 hover:underline" %>
           <% if metrics.inactive_registration_count.positive? %><span class="text-xs text-gray-400">(<%= number_with_delimiter(metrics.inactive_registration_count) %> inactive)</span><% end %>
         </div>
@@ -37,12 +37,12 @@
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">People attended</div>
         <div class="mt-1 tabular-nums">
           <%= link_to number_with_delimiter(metrics.unique_people),
-                training_attendees_events_path(registrant_ids: attended_ids.join("-").presence || "0", return_to: "statistics"),
+                attendees_events_path(registrant_ids: attended_ids.join("-").presence || "0", event_id: params[:event_id].presence, return_to: "reports"),
                 class: "text-xl font-bold text-blue-700 hover:underline" %>
         </div>
         <%# Each side links to the attended registrants of that event type. %>
         <div class="mt-1 text-xs text-gray-500 tabular-nums">
-          <%= link_to "#{number_with_delimiter(people[:trainings])} trainings", training_attendees_events_path(event_year: period.year, return_to: "statistics"), class: "hover:underline" %>
+          <%= link_to "#{number_with_delimiter(people[:trainings])} trainings", attendees_events_path(event_year: period.year, event_id: params[:event_id].presence, return_to: "reports"), class: "hover:underline" %>
           · <%= link_to "#{number_with_delimiter(people[:non_trainings])} other", event_registrations_path(event_type: "other", attendance_status: "attended", event_year: period.year), class: "hover:underline" %>
         </div>
       </div>

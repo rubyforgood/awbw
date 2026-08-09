@@ -1,8 +1,8 @@
-<%= turbo_frame_tag :training_attendees_results do %>
-  <%= turbo_stream.replace("training_attendees_count", partial: "training_attendees_count") %>
+<%= turbo_frame_tag :attendees_results do %>
+  <%= turbo_stream.replace("attendees_count", partial: "attendees_count") %>
 
   <% if @people.any? %>
-    <% charts_src = training_attendees_events_path(request.query_parameters) %>
+    <% charts_src = attendees_events_path(request.query_parameters) %>
     <div data-controller="panel-toggle">
       <%# Toggle bar: hide/show the roster table and the stats charts. Charts start
           hidden; revealing the panel loads its lazy Turbo frame on first show. %>
@@ -57,7 +57,7 @@
 
       <%# Charts panel — hidden by default; the lazy frame loads on first reveal. %>
       <div data-panel-toggle-target="panel" class="hidden mt-6">
-        <%= turbo_frame_tag :training_attendees_charts, src: charts_src, loading: :lazy do %>
+        <%= turbo_frame_tag :attendees_charts, src: charts_src, loading: :lazy do %>
           <p class="text-sm text-gray-400 text-center py-8">Loading charts…</p>
         <% end %>
       </div>

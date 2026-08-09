@@ -1,7 +1,7 @@
 # Scholarship report: scholarship dollars and award counts (funded vs unfunded)
 # per facilitator training, grouped by calendar year. The sibling of
 # EventRevenueReport / EventParticipationReport — same year-grouped shape and
-# statistics-hub period card, but counting scholarships.
+# reports-hub period card, but counting scholarships.
 #
 # Funded vs unfunded follows the app-wide convention (see EventDashboard):
 # funded = backed by an external grant; unfunded = no grant, or a grant the org
