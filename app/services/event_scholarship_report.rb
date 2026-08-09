@@ -6,8 +6,9 @@
 # Funded vs unfunded follows the app-wide convention (see EventDashboard):
 # funded = backed by an external grant; unfunded = no grant, or a grant the org
 # (AWBW) donated to itself. Alongside the money it carries a trainee headcount —
-# people who ATTENDED — split by delivery format: scheduled sessions total under
-# "Training" and self-paced ones (event.on_demand?) under "On-demand".
+# people who ATTENDED — split by delivery format: scheduled instructor-led
+# sessions total under "Live" and self-paced ones (event.on_demand?) under
+# "On-demand".
 #
 # Give it a collection of (decorated) facilitator-training events.
 class EventScholarshipReport
@@ -52,7 +53,7 @@ class EventScholarshipReport
     end
 
     # Attendance split by delivery format — these sum to attended_count.
-    def training_attended_count = columns.reject(&:on_demand?).sum(&:attended_count)
+    def live_attended_count = columns.reject(&:on_demand?).sum(&:attended_count)
     def on_demand_attended_count = columns.select(&:on_demand?).sum(&:attended_count)
 
     # Distinct scholarship recipients who attended (registration status
@@ -60,7 +61,7 @@ class EventScholarshipReport
     # of these trainings counts once. Split by delivery format (a person attending
     # both formats counts in each split, so the two need not sum to the total).
     def recipients_attended_count = distinct_attended_recipient_count(columns.map { |column| column.event.id })
-    def training_recipients_attended_count = distinct_attended_recipient_count(columns.reject(&:on_demand?).map { |column| column.event.id })
+    def live_recipients_attended_count = distinct_attended_recipient_count(columns.reject(&:on_demand?).map { |column| column.event.id })
     def on_demand_recipients_attended_count = distinct_attended_recipient_count(columns.select(&:on_demand?).map { |column| column.event.id })
 
     private
