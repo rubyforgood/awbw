@@ -84,6 +84,12 @@ class EventDecorator < ApplicationDecorator
     length ? description&.truncate(length) : description
   end
 
+  # Short reason an event sits in the index archive list rather than the cards
+  # grid: unpublished drafts read as "Draft", everything else there has ended.
+  def archive_status_label
+    published? ? "Ended" : "Draft"
+  end
+
   # Compact event label for tight/tabular or multi-event contexts: the admin-set
   # abbreviation (e.g. "TOS205") when present, otherwise the full title. Pair it
   # with the full title as a tooltip so the abbreviation is never ambiguous.

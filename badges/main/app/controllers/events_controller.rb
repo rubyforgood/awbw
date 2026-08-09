@@ -8,7 +8,17 @@ class EventsController < ApplicationController
   def index
     authorize!
     base_scope = authorized_scope(Event.all)
-    @events  = base_scope.search_by_params(params).order(start_date: :desc)
+    events = base_scope.search_by_params(params).order(start_date: :desc)
+    # Admins see every event, including unpublished drafts and long-past ones;
+    # collapse those into a compact archive list so the cards grid stays focused
+    # on current events. Non-admins never receive those events, so they keep
+    # every card.
+    if allowed_to?(:new?, Event)
+      @events, @archived_events = events.partition(&:shown_as_card?)
+    else
+      @events = events
+      @archived_events = []
+    end
   end
 
   def show

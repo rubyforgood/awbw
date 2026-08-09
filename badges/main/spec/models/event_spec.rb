@@ -96,6 +96,28 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#shown_as_card?" do
+    it "is true for a published event that has not ended" do
+      event = build(:event, :published, end_date: 1.day.from_now)
+      expect(event.shown_as_card?).to be true
+    end
+
+    it "is true for a published event that ended within the last month" do
+      event = build(:event, :published, end_date: 1.week.ago)
+      expect(event.shown_as_card?).to be true
+    end
+
+    it "is false for an unpublished event" do
+      event = build(:event, :unpublished, end_date: 1.day.from_now)
+      expect(event.shown_as_card?).to be false
+    end
+
+    it "is false for a published event that ended more than a month ago" do
+      event = build(:event, :published, end_date: (1.month + 1.day).ago)
+      expect(event.shown_as_card?).to be false
+    end
+  end
+
   describe "#videoconference_window_open?" do
     it "returns false more than 30 minutes before the start" do
       event = build(:event, start_date: 31.minutes.from_now, end_date: 2.hours.from_now)
