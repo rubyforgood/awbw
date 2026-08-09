@@ -25,6 +25,22 @@ module EventsHelper
     registrants_event_path(event_or_id, anchor: registrant_row_id(registration_id), highlight: registration_id)
   end
 
+  # Where the CE registration new/edit pages return to, based on the origin. From
+  # the registrants roster, back to that registrant's row; otherwise the
+  # registration edit page (the default origin).
+  def ce_registration_return_path(event_registration, return_to)
+    if return_to == "registrants"
+      registrants_event_row_path(event_registration.event, event_registration.id)
+    else
+      edit_event_registration_path(event_registration)
+    end
+  end
+
+  # Eyebrow label matching ce_registration_return_path.
+  def ce_registration_return_label(return_to)
+    return_to == "registrants" ? "Registrants" : "Registration"
+  end
+
   # The scholarships report's filter/toggle state, carried through a drill-in so
   # its eyebrow can rebuild the exact view (period, event type/id, search, funder,
   # split/combined layout, and the report's own origin) the user came from.

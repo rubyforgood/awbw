@@ -21,7 +21,7 @@ class ContinuingEducationRegistrationsController < ApplicationController
       apply_ce_params(@ce_registration)
       @ce_registration.save!
     end
-    redirect_to edit_event_registration_path(@ce_registration.event_registration), notice: "CE registration created.", status: :see_other
+    redirect_to helpers.ce_registration_return_path(@ce_registration.event_registration, params[:return_to]), notice: "CE registration created.", status: :see_other
   rescue ActiveRecord::RecordInvalid
     flash.now[:alert] = @ce_registration.errors.full_messages.to_sentence
     render :new, status: :unprocessable_content
@@ -38,7 +38,7 @@ class ContinuingEducationRegistrationsController < ApplicationController
       apply_ce_params(@ce_registration)
       @ce_registration.save!
     end
-    redirect_to edit_event_registration_path(@ce_registration.event_registration), notice: "CE registration updated.", status: :see_other
+    redirect_to helpers.ce_registration_return_path(@ce_registration.event_registration, params[:return_to]), notice: "CE registration updated.", status: :see_other
   rescue ActiveRecord::RecordInvalid
     flash.now[:alert] = @ce_registration.errors.full_messages.to_sentence
     render :edit, status: :unprocessable_content
@@ -54,7 +54,7 @@ class ContinuingEducationRegistrationsController < ApplicationController
 
     registration = @ce_registration.event_registration
     @ce_registration.destroy!
-    redirect_to edit_event_registration_path(registration), notice: "CE registration removed.", status: :see_other
+    redirect_to helpers.ce_registration_return_path(registration, params[:return_to]), notice: "CE registration removed.", status: :see_other
   end
 
   def toggle_certificate
