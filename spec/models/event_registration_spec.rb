@@ -1346,5 +1346,4 @@ RSpec.describe EventRegistration, type: :model do
       expect(preloaded.paid_in_full?).to be(true)
     end
   end
-
 end
