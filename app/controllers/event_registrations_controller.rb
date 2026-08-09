@@ -2,7 +2,7 @@ class EventRegistrationsController < ApplicationController
   require "csv"
 
   # show redirects to slug URL; kept for backwards compatibility
-  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding ]
+  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding, :toggle_certificate_issued ]
 
   def index
     authorize!
@@ -153,6 +153,17 @@ class EventRegistrationsController < ApplicationController
     respond_to do |format|
       format.turbo_stream
       format.html { redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id) }
+    end
+  end
+
+  # Inline toggle of the "certificate issued" flag from the registrants roster.
+  # Replaces just the cell so the whole roster doesn't re-render on every toggle.
+  def toggle_certificate_issued
+    authorize! @event_registration, to: :toggle_certificate_issued?
+    @event_registration.mark_certificate_issued!(ActiveModel::Type::Boolean.new.cast(params[:value]))
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to helpers.registrants_event_row_path(@event_registration.event, @event_registration.id) }
     end
   end
 
