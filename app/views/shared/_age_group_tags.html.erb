@@ -8,7 +8,7 @@
 <% padding = compact ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm" %>
 <div class="flex flex-wrap gap-1.5">
   <% primary.each do |category| %>
-    <span class="inline-flex items-center whitespace-nowrap rounded-md border border-lime-300 bg-lime-200 <%= padding %> font-medium text-lime-800">
+    <span class="inline-flex items-center whitespace-nowrap rounded-md border border-lime-300 bg-lime-100 <%= padding %> font-medium text-lime-800">
       <i class="fa-solid fa-star mr-1 text-xs text-amber-400" aria-hidden="true" title="Primary age group"></i><%= category.name %>
     </span>
   <% end %>
