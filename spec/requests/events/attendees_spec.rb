@@ -181,6 +181,32 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).not_to include("Ada Lovelace")
         end
 
+        # The reports hub forwards its Event type value straight through, so the
+        # delivery-format splits have to narrow here too — otherwise picking Live
+        # or On-demand on a report would widen the drill-in to every event type.
+        context "with the delivery-format splits the report filter offers" do
+          let!(:on_demand_training) { create(:event, title: "TAC on demand", facilitator_training: true, on_demand: true, start_date: Date.new(2026, 4, 1)) }
+          let!(:on_demand_attendee) { create(:person, first_name: "Katherine", last_name: "Johnson") }
+
+          before { create(:event_registration, event: on_demand_training, registrant: on_demand_attendee, status: "attended") }
+
+          it "narrows to live trainings" do
+            get attendees_events_url(event_type: "live"), headers: frame_headers
+
+            expect(response.body).to include("Ada Lovelace")
+            expect(response.body).not_to include("Katherine Johnson")
+            expect(response.body).not_to include("Grace Hopper")
+          end
+
+          it "narrows to on-demand trainings" do
+            get attendees_events_url(event_type: "on_demand"), headers: frame_headers
+
+            expect(response.body).to include("Katherine Johnson")
+            expect(response.body).not_to include("Ada Lovelace")
+            expect(response.body).not_to include("Grace Hopper")
+          end
+        end
+
         it "drops both narrowings for the all-outcomes drill-in" do
           get attendees_events_url(attendance_status: EventRegistration::FILTER_ALL,
                                    event_type: EventRegistration::FILTER_ALL), headers: frame_headers
@@ -190,10 +216,10 @@ RSpec.describe "Events attendees", type: :request do
 
         it "shows the resolved population in the subtitle so the defaults aren't hidden" do
           get attendees_events_url
-          expect(response.body).to include("Attended · Trainings")
+          expect(response.body).to include("Attended · All trainings")
 
           get attendees_events_url(attendance_status: "no_show")
-          expect(response.body).to include("No show · Trainings")
+          expect(response.body).to include("No show · All trainings")
         end
 
         it "pre-selects the defaults in the filter form rather than a blank All" do

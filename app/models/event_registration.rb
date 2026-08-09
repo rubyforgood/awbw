@@ -46,8 +46,15 @@ class EventRegistration < ApplicationRecord
     ATTENDANCE_STATUSES.map { |status| [ status.humanize, status ] } +
     [ [ "Other (registered, transfers, cancellations)", "other" ] ]
   ).freeze
-  # Event-type filter options, matching the .event_type scope's vocabulary.
-  EVENT_TYPE_FILTER_OPTIONS = [ [ "Trainings", "trainings" ], [ "Other events", "other" ] ].freeze
+  # Event-type filter options, matching the .event_type scope's vocabulary and the
+  # report suite's Event type select (events/_event_type_filter), so the same value
+  # means the same thing on a report and on the attendees index it drills into.
+  EVENT_TYPE_FILTER_OPTIONS = [
+    [ "All trainings", "trainings" ],
+    [ "Live trainings", "live" ],
+    [ "On-demand trainings", "on_demand" ],
+    [ "Other events", "other" ]
+  ].freeze
 
   # Human labels for each attendance status — the single source of truth for
   # status display (badges, filters, the dashboard breakdown).
@@ -94,11 +101,14 @@ class EventRegistration < ApplicationRecord
   scope :attendance_status, ->(status) {
     status == "other" ? where.not(status: NAMED_OUTCOME_STATUSES) : where(status: status)
   }
-  # Registrations on facilitator-training events ("trainings") vs everything else
-  # ("other"); any other value is a no-op so "all events" passes through.
+  # Registrations on facilitator-training events ("trainings", narrowable to the
+  # "live"/"on_demand" delivery formats) vs everything else ("other"); any other
+  # value is a no-op so "all events" passes through.
   scope :event_type, ->(type) {
     case type
     when "trainings" then joins(:event).where(events: { facilitator_training: true })
+    when "live" then joins(:event).where(events: { facilitator_training: true, on_demand: false })
+    when "on_demand" then joins(:event).where(events: { facilitator_training: true, on_demand: true })
     when "other" then joins(:event).where(events: { facilitator_training: false })
     else all
     end

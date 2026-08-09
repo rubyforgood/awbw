@@ -221,6 +221,23 @@ RSpec.describe EventRegistration, type: :model do
       expect(EventRegistration.event_type(EventRegistration::FILTER_ALL))
         .to include(attended, no_show, other_event)
     end
+
+    # Same vocabulary as the report suite's Event type filter, which forwards its
+    # value straight into the attendees index.
+    it "splits trainings by delivery format" do
+      on_demand_training = create(:event, facilitator_training: true, on_demand: true)
+      on_demand_registration = create(:event_registration, event: on_demand_training, status: "attended")
+
+      expect(EventRegistration.event_type("live")).to include(attended)
+      expect(EventRegistration.event_type("live")).not_to include(on_demand_registration, other_event)
+      expect(EventRegistration.event_type("on_demand")).to include(on_demand_registration)
+      expect(EventRegistration.event_type("on_demand")).not_to include(attended, other_event)
+    end
+
+    it "offers the same options the report suite's Event type filter does" do
+      expect(EventRegistration::EVENT_TYPE_FILTER_OPTIONS.map(&:last))
+        .to eq(%w[ trainings live on_demand other ])
+    end
   end
 
   describe ".status_counts_by_event" do

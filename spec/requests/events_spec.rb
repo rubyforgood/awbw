@@ -2051,6 +2051,34 @@ RSpec.describe "Events", type: :request do
       sign_in admin
     end
 
+    # Each row's program-status badge classifies its linked orgs via
+    # Organization#facilitator_status_on, which filters the loaded association —
+    # so without the preload that's a query per org, each pulling every
+    # affiliation row. Guards the same N+1 the roster/attendees/recipients
+    # breakdowns already guard.
+    it "classifies program status without a query per linked organization" do
+      3.times do
+        registrant = create(:person)
+        reg = create(:event_registration, event: event, registrant: registrant)
+        org = create(:organization)
+        create(:affiliation, organization: org, person: registrant, title: "Facilitator", start_date: 1.year.ago)
+        reg.event_registration_organizations.create!(organization: org)
+      end
+
+      affiliation_queries = 0
+      counter = ->(_name, _start, _finish, _id, payload) do
+        affiliation_queries += 1 if payload[:sql].to_s.include?("FROM `affiliations`")
+      end
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+        get onboarding_event_path(event)
+      end
+
+      expect(response).to have_http_status(:ok)
+      # Orgs' and registrants' affiliations each preloaded in one query — a small
+      # constant, not one per org.
+      expect(affiliation_queries).to be <= 3
+    end
+
     it "renders the onboarding matrix with the checklist columns" do
       get onboarding_event_path(event)
 

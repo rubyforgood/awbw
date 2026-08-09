@@ -46,7 +46,7 @@ module EventsHelper
   end
 
   # Human label for the attendees index's population filters — e.g.
-  # "Attended · Trainings". Shown in the page subtitle so the defaults the page
+  # "Attended · All trainings". Shown in the page subtitle so the defaults the page
   # applies are visible rather than implied.
   def attendee_population_label(attendance_status, event_type)
     outcome = EventRegistration::ATTENDANCE_FILTER_OPTIONS.rassoc(attendance_status)&.first || "All outcomes"

@@ -306,17 +306,21 @@ class EventsController < ApplicationController
     authorize! @event, to: :recipients?
     @event = @event.decorate
     @dashboard = EventDashboard.new(@event)
-    @recipient_applicants = filtered_recipient_applicants
-    return unless turbo_frame_request_id == "recipients_charts"
 
     # Charts frame is loaded lazily (only when the admin reveals it), so the
-    # breakdowns run solely on that request. Scoped to this event's scholarship
-    # recipients via the shared cross-event AttendeesBreakdowns.
-    recipients = Person.where(id: @dashboard.scholarship_applicant_ids)
-    @breakdowns = AttendeesBreakdowns.new(recipients,
-      events: Event.where(id: @event.id),
-      registrations: EventRegistration.active)
-    render :recipients_charts
+    # breakdowns run solely on that request — and it returns before the cards'
+    # profile-preloading applicant list, which that frame never renders.
+    # Scoped to this event's scholarship recipients via the shared cross-event
+    # AttendeesBreakdowns.
+    if turbo_frame_request_id == "recipients_charts"
+      recipients = Person.where(id: @dashboard.scholarship_applicant_ids)
+      @breakdowns = AttendeesBreakdowns.new(recipients,
+        events: Event.where(id: @event.id),
+        registrations: EventRegistration.active)
+      return render :recipients_charts
+    end
+
+    @recipient_applicants = filtered_recipient_applicants
   end
 
   # From the recipients page "Add shoutout" control: flag the chosen registrant
@@ -633,7 +637,12 @@ class EventsController < ApplicationController
   def attendee_events
     @attendee_events ||= begin
       scope = reportable_events
+      # Same vocabulary as the report suite's Event type filter, so the hub's
+      # Attendees/Breakdowns links carry a Live or On-demand filter through instead
+      # of falling through to every event type.
       scope = scope.facilitator_trainings if attendee_event_type == "trainings"
+      scope = scope.facilitator_trainings.live if attendee_event_type == "live"
+      scope = scope.facilitator_trainings.on_demand if attendee_event_type == "on_demand"
       scope = scope.where(facilitator_training: false) if attendee_event_type == "other"
       # Off @filter_event rather than the raw param: the policy scope already bounds
       # the events, and the resolved record is one event where params[:event_id]

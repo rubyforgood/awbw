@@ -53,7 +53,7 @@
             class: select_class, onchange: "this.form.submit();" %>
     </div>
 
-    <div class="w-full md:w-40">
+    <div class="w-full md:w-52">
       <%= label_tag :event_type, "Event type", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
       <%= select_tag :event_type,
             options_for_select([ [ "All events", EventRegistration::FILTER_ALL ] ] + EventRegistration::EVENT_TYPE_FILTER_OPTIONS, @attendee_event_type),
