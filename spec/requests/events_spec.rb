@@ -54,6 +54,48 @@ RSpec.describe "Events", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    context "as an admin with unpublished and long-past events" do
+      let!(:current_event) do
+        create(:event, :published, title: "Current workshop",
+          start_date: 5.days.from_now, end_date: 6.days.from_now)
+      end
+      let!(:draft_event) { create(:event, :unpublished, title: "Draft workshop") }
+      let!(:old_event) do
+        create(:event, :published, title: "Old workshop",
+          start_date: 3.months.ago, end_date: 3.months.ago + 1.day)
+      end
+
+      before do
+        sign_in admin
+        get events_path
+      end
+
+      it "shows current published events as cards" do
+        expect(response.body).to include(ActionView::RecordIdentifier.dom_id(current_event, :card))
+      end
+
+      it "lists unpublished and long-ended events instead of carding them" do
+        expect(response.body).to include("Drafts and past events")
+        expect(response.body).not_to include(ActionView::RecordIdentifier.dom_id(draft_event, :card))
+        expect(response.body).not_to include(ActionView::RecordIdentifier.dom_id(old_event, :card))
+        expect(response.body).to include("Draft workshop")
+        expect(response.body).to include("Old workshop")
+      end
+    end
+
+    context "as a non-admin" do
+      let!(:current_event) do
+        create(:event, :published, :publicly_visible, title: "Public workshop",
+          start_date: 5.days.from_now, end_date: 6.days.from_now)
+      end
+
+      it "never shows the drafts and past events list" do
+        sign_in user
+        get events_path
+        expect(response.body).not_to include("Drafts and past events")
+      end
+    end
+
     context "when user time_zone is set" do
       # 19:00 UTC = 12:00 noon PT = 15:00 (3 pm) ET (June 15, 2031 with DST)
       let(:utc_start) { Time.utc(2031, 6, 15, 19, 0, 0) }

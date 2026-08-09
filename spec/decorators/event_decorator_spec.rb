@@ -35,6 +35,18 @@ RSpec.describe EventDecorator do
     end
   end
 
+  describe "#archive_status_label" do
+    it "reads as Draft for an unpublished event" do
+      event = build(:event, :unpublished).decorate
+      expect(event.archive_status_label).to eq("Draft")
+    end
+
+    it "reads as Ended for a published event" do
+      event = build(:event, :published).decorate
+      expect(event.archive_status_label).to eq("Ended")
+    end
+  end
+
   describe "#videoconference_room" do
     it "pulls the Zoom meeting ID from the join URL and groups the digits" do
       event = build(:event, videoconference_url: "https://awbw-org.zoom.us/j/88285411273").decorate

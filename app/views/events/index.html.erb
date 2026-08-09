@@ -47,11 +47,15 @@
         <% end %>
       </div>
 
-    <% else %>
+    <% elsif @archived_events.none? %>
       <!-- Empty State -->
       <div class="text-center py-12 text-gray-500">
         No events available.
       </div>
+    <% end %>
+
+    <% if @archived_events.any? %>
+      <%= render "archived_events", events: @archived_events %>
     <% end %>
   </div>
 </div>
