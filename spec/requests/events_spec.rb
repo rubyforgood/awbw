@@ -1143,20 +1143,24 @@ RSpec.describe "Events", type: :request do
         create(:event_registration, event: event, expected_payment_method: "Check",
           registrant: create(:person, first_name: "Checkwriter", last_name: "Payer"))
       end
+      let!(:buddy) do
+        create(:event_registration, event: event, someone_else_will_pay: true,
+          registrant: create(:person, first_name: "Sponsored", last_name: "Buddy"))
+      end
 
       it "shows a short-code badge beside the registrant's name" do
         get registrants_event_path(event)
 
         expect(response.body).to include("CCN")
-        expect(response.body).to include("Expected payment: Credit card (now)")
+        expect(response.body).to include("BUD")
       end
 
-      it "offers only the methods present as filter options" do
+      it "offers every method plus the buddy option in the filter" do
         get registrants_event_path(event)
 
         expect(response.body).to include("Credit card (now) (CCN)")
         expect(response.body).to include("Check (CK)")
-        expect(response.body).not_to include("(BUD)")
+        expect(response.body).to include("Someone else will pay (BUD)")
       end
 
       it "narrows the roster to the chosen method" do
@@ -1164,6 +1168,22 @@ RSpec.describe "Events", type: :request do
 
         expect(response.body).to include("Checkwriter")
         expect(response.body).not_to include("Cardnow")
+      end
+
+      it "narrows the roster to buddy-system registrations" do
+        get registrants_event_path(event, payment_method: "someone_else_will_pay")
+
+        expect(response.body).to include("Sponsored")
+        expect(response.body).not_to include("Cardnow")
+      end
+
+      it "includes the expected payment method and buddy columns in the CSV export" do
+        get registrants_event_path(event, format: :csv)
+
+        rows = CSV.parse(response.body, headers: true)
+        expect(rows.headers).to include("Expected payment method", "Someone else will pay")
+        expect(rows.find { |r| r["First name"] == "Cardnow" }["Expected payment method"]).to eq("Credit card (now)")
+        expect(rows.find { |r| r["First name"] == "Sponsored" }["Someone else will pay"]).to eq("Yes")
       end
     end
 

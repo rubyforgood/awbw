@@ -34,9 +34,9 @@
             selected: params[:payment_status], blank: "Any payment status", field_class: field_class %>
     <% end %>
 
-    <% if @event.cost_cents.to_i > 0 && @payment_method_filter_options.present? %>
+    <% if @event.cost_cents.to_i > 0 %>
       <%= render "events/filter_select", param: :payment_method, label: "Payment method",
-            options: @payment_method_filter_options,
+            options: EventRegistrationDecorator.payment_method_filter_choices,
             selected: params[:payment_method], blank: "Any payment method", field_class: field_class %>
     <% end %>
 

@@ -191,9 +191,6 @@ class EventsController < ApplicationController
     @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name")).to_a
     @dashboard = EventDashboard.new(@event)
     @ce_eligible = @event.ce_eligible?
-    @payment_method_filter_options = EventRegistrationDecorator.payment_method_filter_options(
-      @event.event_registrations.pluck(:expected_payment_method)
-    )
 
     @submitted_org_names = submitted_org_names_for(@event_registrations)
     @readiness = @event_registrations.to_h do |registration|
@@ -777,7 +774,7 @@ class EventsController < ApplicationController
     require "csv"
     cost_required = @event.cost_cents.to_i > 0
     include_ce = @event.ce_eligible?
-    headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Intends to pay", "Payment total" ]
+    headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Expected payment method", "Intends to pay", "Someone else will pay", "Payment total" ]
     headers += [ "CE status", "CE paid", "CE due" ] if include_ce
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
       @event_registrations.each do |registration|
@@ -804,7 +801,9 @@ class EventsController < ApplicationController
       registration.scholarships.any? ? "Yes" : "No",
       registration.scholarships.any?(&:tasks_completed?) ? "Yes" : "No",
       payment_status,
+      cost_required ? registration.expected_payment_method.presence || "" : "",
       registration.intends_to_pay? ? "Yes" : "No",
+      cost_required ? (registration.someone_else_will_pay? ? "Yes" : "No") : "",
       payment_total
     ]
     if include_ce

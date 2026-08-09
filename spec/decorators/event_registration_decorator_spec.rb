@@ -149,59 +149,51 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
     end
   end
 
-  describe "#payment_method_badge" do
-    subject(:badge) { create(:event_registration, expected_payment_method: value).decorate.payment_method_badge }
-
-    context "when no payment method is recorded" do
-      let(:value) { nil }
-
-      it { is_expected.to be_nil }
+  describe "#payment_badges" do
+    def badges_for(expected: nil, buddy: false)
+      create(:event_registration, expected_payment_method: expected, someone_else_will_pay: buddy)
+        .decorate.payment_badges
     end
 
-    context "with a known method" do
-      let(:value) { "Credit card (now)" }
-
-      it "maps to its short code, icon, and classes" do
-        expect(badge.code).to eq("CCN")
-        expect(badge.label).to eq("Credit card (now)")
-        expect(badge.classes).to include("green")
-      end
+    it "is empty when nothing is recorded" do
+      expect(badges_for).to be_empty
     end
 
-    context "with the buddy-system method" do
-      let(:value) { "Buddy system" }
-
-      it "maps to the BUD code" do
-        expect(badge.code).to eq("BUD")
-        expect(badge.classes).to include("purple")
-      end
+    it "maps a known method to its short code, icon, and classes" do
+      badge = badges_for(expected: "Credit card (now)").sole
+      expect(badge.code).to eq("CCN")
+      expect(badge.label).to eq("Credit card (now)")
+      expect(badge.classes).to include("green")
     end
 
-    context "with an unknown / custom value" do
-      let(:value) { "Wire transfer overseas" }
+    it "shows a BUD badge when someone else will pay" do
+      badge = badges_for(buddy: true).sole
+      expect(badge.code).to eq("BUD")
+      expect(badge.classes).to include("purple")
+    end
 
-      it "falls back to a neutral badge showing the raw value" do
-        expect(badge.label).to eq("Wire transfer overseas")
-        expect(badge.classes).to include("gray")
-      end
+    it "shows both the method and BUD when both apply" do
+      codes = badges_for(expected: "Check", buddy: true).map(&:code)
+      expect(codes).to eq(%w[ CK BUD ])
+    end
+
+    it "falls back to a neutral badge showing an unknown/custom value" do
+      badge = badges_for(expected: "Wire transfer overseas").sole
+      expect(badge.label).to eq("Wire transfer overseas")
+      expect(badge.classes).to include("gray")
     end
   end
 
-  describe ".payment_method_filter_options" do
-    it "returns unique present values ordered by badge order, labeled with the code" do
-      options = described_class.payment_method_filter_options(
-        [ "Check", "Credit card (now)", "Credit card (now)", nil, "" ]
+  describe ".payment_method_filter_choices" do
+    it "lists every method (code-labeled) plus the buddy-system sentinel" do
+      expect(described_class.payment_method_filter_choices).to eq(
+        [
+          [ "Credit card (now) (CCN)", "Credit card (now)" ],
+          [ "Credit card (later) (CCL)", "Credit card (later)" ],
+          [ "Check (CK)", "Check" ],
+          [ "Someone else will pay (BUD)", "someone_else_will_pay" ]
+        ]
       )
-
-      expect(options).to eq(
-        [ [ "Credit card (now) (CCN)", "Credit card (now)" ], [ "Check (CK)", "Check" ] ]
-      )
-    end
-
-    it "keeps unknown values last, unlabeled" do
-      options = described_class.payment_method_filter_options([ "Mystery", "Check" ])
-
-      expect(options).to eq([ [ "Check (CK)", "Check" ], [ "Mystery", "Mystery" ] ])
     end
   end
 

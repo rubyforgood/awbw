@@ -50,7 +50,7 @@
           expected method is prefilled from the registration form answer but stays
           editable, so staff can record what they anticipate even when the
           registrant never filled out the form. %>
-      <% payment_options = FormBuilderService::PAYMENT_METHOD_OPTIONS_WITH_BUDDY %>
+      <% payment_options = FormBuilderService::PAYMENT_METHOD_OPTIONS %>
       <% payment_options |= [ event_registration.expected_payment_method ] if event_registration.expected_payment_method.present? %>
       <%# relative z-10 lifts these controls above the card's stretched "View all"
           link (after:inset-0), so the select and toggle stay clickable. %>

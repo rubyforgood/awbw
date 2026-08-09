@@ -3,6 +3,11 @@ class EventRegistration < ApplicationRecord
   include Registerable
   include Certifiable
 
+  # Sentinel for the roster's Payment method filter that matches buddy-system
+  # registrations (someone_else_will_pay), which isn't an expected_payment_method
+  # value. Equals the column name so the meaning is self-evident.
+  BUDDY_PAYMENT_FILTER = "someone_else_will_pay".freeze
+
   belongs_to :registrant, class_name: "Person"
   belongs_to :event
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
@@ -206,9 +211,16 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
-  # Filter the roster by the expected payment method (the stored form answer,
-  # e.g. "Credit card (now)"). Surfaced as a short-code badge on the roster.
-  scope :payment_method, ->(value) { where(expected_payment_method: value) }
+  # Filter the roster by payment situation: the expected payment method (the stored
+  # form answer, e.g. "Credit card (now)"), or the buddy-system sentinel, which
+  # matches registrations where someone else will pay. Surfaced as short-code badges.
+  scope :payment_method, ->(value) {
+    if value == BUDDY_PAYMENT_FILTER
+      where(someone_else_will_pay: true)
+    else
+      where(expected_payment_method: value)
+    end
+  }
   # Filter by CE state. All derived (no stored CE status): payment (requested/paid)
   # is computed from allocations vs cost like the registration's own payment state;
   # issued/not_issued read the certificate delivery; needs_license is a CE

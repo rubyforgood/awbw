@@ -4,11 +4,6 @@ class FormBuilderService
   # repeating its label. Keep this the single source of truth for the label.
   PAYMENT_METHOD_PAY_NOW = "Credit card (now)".freeze
   PAYMENT_METHOD_OPTIONS = [ PAYMENT_METHOD_PAY_NOW, "Credit card (later)", "Check" ].freeze
-  # "Buddy system" means someone else covers the cost — not known at registration,
-  # so it's admin-only (settable on the registration edit page, never on the public
-  # form). Public form uses PAYMENT_METHOD_OPTIONS; admins use the *_WITH_BUDDY list.
-  PAYMENT_METHOD_BUDDY = "Buddy system".freeze
-  PAYMENT_METHOD_OPTIONS_WITH_BUDDY = (PAYMENT_METHOD_OPTIONS + [ PAYMENT_METHOD_BUDDY ]).freeze
 
   SECTIONS = {
     person_identifier: { label: "Person identifier", method: :build_person_identifier_fields },
