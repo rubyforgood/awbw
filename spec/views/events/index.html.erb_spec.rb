@@ -44,6 +44,22 @@ RSpec.describe "events/index", type: :view do
     end
   end
 
+  describe "with archived events" do
+    let(:draft) { create(:event, :unpublished, title: "Draft Event") }
+
+    before do
+      assign(:events, [])
+      assign(:archived_events, [ draft ])
+      render
+    end
+
+    it "lists archived events instead of the empty message" do
+      expect(rendered).to include("Drafts and past events")
+      expect(rendered).to include("Draft Event")
+      expect(rendered).not_to include("No events available")
+    end
+  end
+
   describe "when not allowed" do
     before do
       allow(view).to receive(:allowed_to?).and_return(false)
