@@ -19,6 +19,18 @@ class NotificationMailerPreview < ActionMailer::Preview
     NotificationMailer.event_registration_confirmation_fyi(notification)
   end
 
+  def survey_submitted_fyi
+    submission = FormSubmission.order(:id).last ||
+      FormSubmission.create!(
+        person: Person.first || raise("Need a Person"),
+        form: Form.first || raise("Need a Form"),
+        event: Event.first,
+        role: "post_event_survey"
+      )
+
+    NotificationMailer.survey_submitted_fyi(submission)
+  end
+
   def event_registration_cancelled_fyi
     event_registration =
       EventRegistration.first ||
