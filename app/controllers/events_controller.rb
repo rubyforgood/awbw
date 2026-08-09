@@ -540,7 +540,7 @@ class EventsController < ApplicationController
   # pages: the event-type, specific-event and abbreviation-search filters, plus the
   # event list for the Event dropdown.
   def set_report_filters
-    @event_type = params[:event_type].presence_in(%w[ trainings other ])
+    @event_type = params[:event_type].presence_in(%w[ trainings live on_demand other ])
     @filter_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
     @event_search = params[:search].presence
     @filter_funder = GlobalID::Locator.locate_signed(params[:funder_sgid]) if params[:funder_sgid].present?
@@ -581,6 +581,8 @@ class EventsController < ApplicationController
   # title) filters.
   def scoped_report_base(base)
     base = base.facilitator_trainings if @event_type == "trainings"
+    base = base.facilitator_trainings.live if @event_type == "live"
+    base = base.facilitator_trainings.on_demand if @event_type == "on_demand"
     base = base.where(facilitator_training: false) if @event_type == "other"
     base = base.where(id: @filter_event.id) if @filter_event
     if @event_search

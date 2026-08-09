@@ -339,6 +339,20 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include(dashboard_event_path(training_2026))
       end
 
+      it "narrows to live vs on-demand trainings by event type" do
+        sign_in admin
+        on_demand_training = create(:event, title: "On-demand TAC", facilitator_training: true, on_demand: true, start_date: Date.new(2026, 7, 1))
+        create(:event_registration, event: on_demand_training, status: "attended")
+
+        get participation_events_path(event_type: "live")
+        expect(response.body).to include(dashboard_event_path(training_2026))
+        expect(response.body).not_to include(dashboard_event_path(on_demand_training))
+
+        get participation_events_path(event_type: "on_demand")
+        expect(response.body).to include(dashboard_event_path(on_demand_training))
+        expect(response.body).not_to include(dashboard_event_path(training_2026))
+      end
+
       it "narrows to a single selected event" do
         sign_in admin
         get participation_events_path(event_id: training_2026.id)
