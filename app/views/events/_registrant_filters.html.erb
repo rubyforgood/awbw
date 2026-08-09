@@ -53,13 +53,15 @@
       </div>
     <% end %>
 
-    <%# Top three, in the order an admin works a registration: overall readiness,
+    <%# Top three, in the order an admin works a registration: overall progress,
         are they coming, did they pay. %>
     <% if include_readiness %>
-      <%# Mirrors the far-right Readiness column: Not ready → Ready → Certificate pending → Completed. %>
-      <%= render "events/filter_select", param: :readiness, label: "Readiness",
+      <%# Mirrors the far-right Progress column: Not ready → Ready → Certificate
+          pending → Completed. Param stays :readiness (backed by
+          EventRegistrationReadiness); the user-facing label reads "Progress". %>
+      <%= render "events/filter_select", param: :readiness, label: "Progress",
             options: [ [ "Not ready", "not_ready" ], [ "Ready", "ready" ], [ "Certificate pending", "certificate_due" ], [ "Completed", "completed" ] ],
-            selected: params[:readiness], blank: "Any readiness", field_class: field_class %>
+            selected: params[:readiness], blank: "Any stage", field_class: field_class %>
     <% end %>
 
     <%= render "events/filter_select", param: :attendance_status, label: "Attendance status",
@@ -72,13 +74,13 @@
             selected: params[:payment_status], blank: "Any payment status", field_class: field_class %>
     <% end %>
 
-    <div class="w-full md:w-auto md:ml-auto flex items-end gap-2">
+    <div class="w-full md:w-auto md:ml-auto flex items-end gap-4">
       <button type="button"
-              class="btn btn-utility-outline"
+              class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 cursor-pointer transition"
               aria-expanded="<%= more_active %>"
               data-action="filter-toggle#toggle">
         <span data-filter-toggle-target="label">More filters</span>
-        <i class="fa-solid fa-chevron-down w-3 h-3 text-gray-400 transition-transform"
+        <i class="fa-solid fa-chevron-down text-xs transition-transform"
            data-filter-toggle-target="chevron"></i>
       </button>
       <%= link_to "Clear filters", clear_url, class: "btn btn-utility",
@@ -97,36 +99,31 @@
         </div>
       <% end %>
 
-      <%# Ordered by how a registration is worked after the top three: settle the
-          money (method, scholarship), affiliate their org, grant portal access,
-          handle CE credentials, then reference lenses (comments, location). %>
+      <%# Ordered by how a registration is worked after the top three: payment
+          method, then their organization, scholarship, CE credentials and
+          location — with portal access (user account) and admin notes (comments)
+          handled last. %>
       <% if has_cost %>
         <%= render "events/filter_select", param: :payment_method, label: "Payment method",
               options: EventRegistrationDecorator.payment_method_filter_choices,
               selected: params[:payment_method], blank: "Any payment method", field_class: field_class %>
-
-        <%= render "events/filter_select", param: :scholarship, label: "Scholarship",
-              options: [ [ "All recipients", "yes" ], [ "Tasks complete", "complete" ], [ "Tasks not complete", "incomplete" ] ],
-              selected: params[:scholarship], blank: "All registrants", field_class: field_class %>
       <% end %>
 
       <%= render "events/filter_select", param: :org_status, label: "Organization linking",
             options: [ [ "Pending", "pending" ], [ "Linked", "linked" ], [ "Unlinked", "unlinked" ] ],
             selected: params[:org_status], blank: "Any linking", field_class: field_class %>
 
-      <%= render "events/filter_select", param: :account_status, label: "User account",
-            options: [ [ "No account", "none" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
-            selected: params[:account_status], blank: "Any account status", field_class: field_class %>
+      <% if has_cost %>
+        <%= render "events/filter_select", param: :scholarship, label: "Scholarship",
+              options: [ [ "All recipients", "yes" ], [ "Tasks complete", "complete" ], [ "Tasks not complete", "incomplete" ] ],
+              selected: params[:scholarship], blank: "All registrants", field_class: field_class %>
+      <% end %>
 
       <% if @ce_eligible %>
         <%= render "events/filter_select", param: :ce_status, label: "CE status",
               options: [ [ "Registered for CE", "registered" ], [ "Requested", "requested" ], [ "Needs license", "needs_license" ], [ "Paid", "paid" ], [ "Issued", "issued" ], [ "Not issued", "not_issued" ] ],
               selected: params[:ce_status], blank: "Any CE status", field_class: field_class %>
       <% end %>
-
-      <%= render "events/filter_select", param: :comment_status, label: "Comments",
-            options: [ [ "None", "none" ], [ "Present", "present" ], [ "Flagged", "flagged" ] ],
-            selected: params[:comment_status], blank: "Any comments", field_class: field_class %>
 
       <% if @dashboard&.states&.any? %>
         <%= render "events/filter_select", param: :state, label: "State",
@@ -138,6 +135,14 @@
               options: @dashboard.counties.map { |state, county| [ "#{state} - #{county}", "#{state}|#{county}" ] },
               selected: params[:county], blank: "All counties", field_class: field_class %>
       <% end %>
+
+      <%= render "events/filter_select", param: :account_status, label: "User account",
+            options: [ [ "No account", "none" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
+            selected: params[:account_status], blank: "Any account status", field_class: field_class %>
+
+      <%= render "events/filter_select", param: :comment_status, label: "Comments",
+            options: [ [ "None", "none" ], [ "Present", "present" ], [ "Flagged", "flagged" ] ],
+            selected: params[:comment_status], blank: "Any comments", field_class: field_class %>
     </div>
   </div>
 <% end %>
