@@ -9,10 +9,12 @@ module OrganizationServices
   # address becomes primary only when the org has none yet.
   #
   # Shared by the public registration flow and the admin org-linking actions so
-  # both build the org address identically.
+  # both build the org address identically. A registrant's optional answers are
+  # tolerated: a skipped street/ZIP is stored blank, and a submission with no
+  # state saves no new address rather than failing the registration.
   class UpsertAddress
-    # address: the Address the submission was saved to — nil when no city was
-    # given (we key addresses on city, so a blank city means nothing to save).
+    # address: the Address the submission was saved to — nil when the submission
+    # couldn't be stored (see storable? for what a new address needs).
     # created: the submission added a new address rather than updating one.
     # filled: labels of the fields this call actually changed on an existing
     # address, so a caller can report what was saved instead of assuming.
@@ -41,11 +43,13 @@ module OrganizationServices
     end
 
     def call
-      return Result.new(address: nil, created: false, filled: []) if @city.blank?
+      return nothing_saved if @city.blank?
 
       existing = AddressMatcher.call(
         @organization, city: @city, state: @state, street_address: @street_address, zip_code: @zip_code
       )
+      return nothing_saved if existing.nil? && !storable?
+
       make_primary = @organization.addresses.active.where(primary: true).none?
 
       return Result.new(address: create_address(make_primary), created: true, filled: []) unless existing
@@ -78,17 +82,31 @@ module OrganizationServices
       updates
     end
 
+    # An Address needs a city and a state to validate, so a submission missing
+    # either can't become a new address — skip it rather than failing the whole
+    # registration over an optional answer. The answers stay on the form
+    # submission, and the linking page still shows them for an admin to enter.
+    def storable?
+      @state.present?
+    end
+
     def create_address(make_primary)
       @organization.addresses.create!(
-        street_address: @street_address,
+        # street/ZIP are NOT NULL with no default, so a skipped answer has to
+        # land as "" rather than nil.
+        street_address: @street_address.to_s,
         city: @city,
         state: @state,
-        zip_code: @zip_code,
+        zip_code: @zip_code.to_s,
         country: @country,
         locality: "Unknown",
         address_type: "work",
         primary: make_primary
       )
+    end
+
+    def nothing_saved
+      Result.new(address: nil, created: false, filled: [])
     end
   end
 end

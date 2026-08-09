@@ -1096,6 +1096,21 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(flash.now[:warning].to_s).to include("&lt;img src=x")
         end
 
+        it "links without a 500 when the submitted address has no ZIP" do
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_city" => "Austin", "agency_state" => "TX" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
+
+          expect(response).to redirect_to(link_organization_event_registration_path(existing_registration))
+          expect(organization.addresses.find_by(city: "Austin")).to have_attributes(street_address: "", zip_code: "")
+        end
+
         it "names the city of the work address it created" do
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)

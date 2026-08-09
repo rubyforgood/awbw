@@ -330,6 +330,28 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         expect(organization.addresses.last.address_type).to eq("work")
       end
 
+      # street/ZIP are NOT NULL columns, so passing a skipped answer straight
+      # through used to blow up the whole registration.
+      it "stores the org address when the registrant skipped the street and ZIP" do
+        result = register_with_org(
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV"
+        )
+
+        expect(result).to be_success
+        expect(organization.addresses.find_by(city: "Reno")).to have_attributes(street_address: "", zip_code: "")
+      end
+
+      it "saves no org address when the registrant skipped the state, leaving the registration intact" do
+        result = register_with_org(
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno"
+        )
+
+        expect(result).to be_success
+        expect(organization.addresses.find_by(city: "Reno")).to be_nil
+      end
+
       it "makes the first org address primary" do
         register_with_org(
           field_id("agency_street") => "5 Oak Ave",

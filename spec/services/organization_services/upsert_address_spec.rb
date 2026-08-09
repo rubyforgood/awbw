@@ -26,6 +26,30 @@ RSpec.describe OrganizationServices::UpsertAddress do
     )
   end
 
+  # street and ZIP are NOT NULL columns with no default.
+  it "stores skipped street and ZIP answers as empty strings rather than failing" do
+    result = described_class.call(organization: organization, city: "Austin", state: "TX")
+
+    expect(result.address).to have_attributes(city: "Austin", state: "TX", street_address: "", zip_code: "")
+  end
+
+  # An Address validates city and state, so there is nothing storable without both.
+  it "saves nothing when no state was submitted and no existing address matches" do
+    expect {
+      expect(described_class.call(organization: organization, street_address: "1 Main St", city: "Austin"))
+        .to have_attributes(address: nil, created: false, filled: [])
+    }.not_to change { organization.addresses.count }
+  end
+
+  it "still updates a matching address when the submission skipped the state" do
+    existing = create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "")
+
+    result = described_class.call(organization: organization, street_address: "5 Oak Ave", city: "Austin", zip_code: "78701", overwrite: false)
+
+    expect(result).to have_attributes(address: existing, created: false, filled: [ "ZIP" ])
+    expect(existing.reload.zip_code).to eq("78701")
+  end
+
   it "returns no address and creates nothing when no city is given" do
     expect {
       expect(described_class.call(organization: organization, street_address: "1 Main St"))
