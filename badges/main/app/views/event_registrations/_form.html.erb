@@ -327,7 +327,7 @@
           shout-out block and edits the text shown there. The text lives on the
           registrant's profile (Person#shoutout_text); editing it here updates
           their profile via nested attributes. ---- %>
-      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <section id="shout-out" class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
           <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:scholarships, f.object.shoutout? || f.object.registrant.shoutout_text.present?) %>">
             <i class="fa-solid fa-bullhorn"></i>
@@ -335,8 +335,8 @@
           <h2 class="text-sm font-semibold text-gray-700">Shout out</h2>
         </div>
 
-        <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-          <label class="flex shrink-0 items-center gap-2.5 cursor-pointer">
+        <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-start">
+          <label class="flex shrink-0 items-center gap-2.5 cursor-pointer sm:mt-6">
             <input type="hidden" name="event_registration[shoutout]" value="0" autocomplete="off">
             <input type="checkbox"
                    name="event_registration[shoutout]"
@@ -349,9 +349,9 @@
 
           <div class="flex-1">
             <%= f.simple_fields_for :registrant do |rf| %>
+              <%= rf.label :shoutout_text, "Shout-out text", class: "mb-1 block text-xs font-medium text-gray-700" %>
               <%= rf.input :shoutout_text,
-                    label: "Shout-out text",
-                    label_html: { class: "sr-only" },
+                    label: false,
                     as: :text,
                     placeholder: "Shown beneath their name on the recipients page",
                     wrapper_html: { class: "mb-0" },
@@ -427,12 +427,23 @@
         </span>
       <% end %>
 
-      <% cancel_path = case params[:return_to]
-                       when "registrants" then registrants_event_row_path(event_registration.event, event_registration.id)
-                       when "index" then event_registrations_path
-                       when "preview_reminder" then preview_reminder_event_path(event_registration.event)
-                       else allowed_to?(:index?, EventRegistration) ? event_registrations_path : root_path
-                       end %>
+      <%# Cancel returns where the eyebrow does — the event's registrants roster by
+          default, only the global index when the admin explicitly came from it. A
+          not-yet-saved registration has no event/roster to return to, so it falls
+          back to the index (or root for non-admins). %>
+      <% cancel_path = if event_registration.persisted? && event_registration.event
+        case params[:return_to]
+        when "index" then event_registrations_path
+        when "bulk_payments" then bulk_payments_return_path(event_registration.event)
+        when "preview_reminder" then preview_reminder_event_path(event_registration.event)
+        when "onboarding" then onboarding_event_row_path(event_registration.event, event_registration.id)
+        when "training_attendees" then training_attendees_events_path
+        when "recipients" then recipients_event_path(event_registration.event, anchor: "shout-outs")
+        else allowed_to?(:manage?, with: EventRegistrationPolicy) ? registrants_event_row_path(event_registration.event, event_registration.id) : registration_ticket_path(event_registration.slug)
+        end
+      else
+        allowed_to?(:index?, EventRegistration) ? event_registrations_path : root_path
+      end %>
 
       <div class="ml-auto flex items-center gap-3">
         <%= link_to "Cancel", cancel_path, class: "btn btn-secondary-outline" %>

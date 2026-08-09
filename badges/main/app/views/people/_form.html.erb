@@ -344,35 +344,17 @@
     </div>
 
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-      <%# Bio and Shout-out share one row, each half width. %>
-      <div class="flex flex-col sm:flex-row gap-6 items-start">
-        <div class="w-full sm:w-1/2 space-y-4">
-          <%= f.input :bio,
-                      wrapper_html: { class: "w-full" },
-                      as: :text,
-                      input_html: {
-                        rows: 2,
-                        maxlength: 1650,
-                        class: "w-full rounded-md border-gray-300 shadow-sm
-                            focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                      },
-                      hint: "Maximum 250 characters" %>
-        </div>
-
-        <div class="w-full sm:w-1/2 space-y-4">
-          <%= f.input :shoutout_text,
-                      label: "Shout-out",
-                      wrapper_html: { class: "w-full" },
-                      as: :text,
-                      input_html: {
-                        rows: 2,
-                        maxlength: 1650,
-                        class: "w-full rounded-md border-gray-300 shadow-sm
-                            focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                      },
-                      hint: "Shown on an event's scholarship recipients page if designated for a shout-out" %>
-        </div>
-      </div>
+      <%# Shout-out text is edited on the registration's "Shout out" section, not here. %>
+      <%= f.input :bio,
+                  wrapper_html: { class: "w-full" },
+                  as: :text,
+                  input_html: {
+                    rows: 2,
+                    maxlength: 1650,
+                    class: "w-full rounded-md border-gray-300 shadow-sm
+                        focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  },
+                  hint: "Maximum 250 characters" %>
     </div>
   </div>
 

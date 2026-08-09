@@ -2784,6 +2784,75 @@ RSpec.describe "Events", type: :request do
 
         expect(response.body).not_to include("Shout outs")
       end
+
+      it "offers a recipient search that posts to feature a chosen recipient" do
+        applicant.update!(shoutout_text: "Grateful to serve.")
+        registration = event.event_registrations.find_by(registrant: applicant)
+        registration.update!(shoutout: true)
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include("Add shoutout")
+        expect(response.body).to include(feature_recipient_shoutout_event_path(event))
+        # The recipient is an option, valued by their registration id.
+        expect(response.body).to include("value=\"#{registration.id}\"")
+      end
+
+      it "links each shout-out row to that registrant's registration edit form" do
+        applicant.update!(shoutout_text: "Grateful to serve.")
+        registration = event.event_registrations.find_by(registrant: applicant)
+        registration.update!(shoutout: true)
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include(edit_event_registration_path(registration.id, return_to: "recipients", anchor: "shout-out"))
+      end
+
+      describe "POST /events/:id/feature_recipient_shoutout" do
+        it "flags the registration and sends the admin to its edit form" do
+          registration = event.event_registrations.find_by(registrant: applicant)
+
+          post feature_recipient_shoutout_event_path(event), params: { registration_id: registration.id }
+
+          expect(registration.reload.shoutout).to be(true)
+          expect(response).to redirect_to(
+            edit_event_registration_path(registration, return_to: "recipients", anchor: "shout-out")
+          )
+        end
+
+        it "seeds the shout-out text from the profile bio when it is blank" do
+          applicant.update!(bio: "Two decades bringing art to survivors.", profile_show_bio: true, shoutout_text: nil)
+          registration = event.event_registrations.find_by(registrant: applicant)
+
+          post feature_recipient_shoutout_event_path(event), params: { registration_id: registration.id }
+
+          expect(applicant.reload.shoutout_text).to eq("Two decades bringing art to survivors.")
+        end
+
+        it "does not overwrite existing shout-out text with the bio" do
+          applicant.update!(bio: "Bio text.", shoutout_text: "Custom shout-out.")
+          registration = event.event_registrations.find_by(registrant: applicant)
+
+          post feature_recipient_shoutout_event_path(event), params: { registration_id: registration.id }
+
+          expect(applicant.reload.shoutout_text).to eq("Custom shout-out.")
+        end
+
+        it "leaves the shout-out text blank when the profile bio is hidden" do
+          applicant.update!(bio: "Hidden bio.", profile_show_bio: false, shoutout_text: nil)
+          registration = event.event_registrations.find_by(registrant: applicant)
+
+          post feature_recipient_shoutout_event_path(event), params: { registration_id: registration.id }
+
+          expect(applicant.reload.shoutout_text).to be_blank
+        end
+
+        it "returns to the recipients page with an alert when no recipient is chosen" do
+          post feature_recipient_shoutout_event_path(event), params: { registration_id: "" }
+
+          expect(response).to redirect_to(recipients_event_path(event))
+        end
+      end
     end
 
     context "as non-admin non-owner" do
