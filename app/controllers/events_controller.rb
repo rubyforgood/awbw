@@ -241,7 +241,10 @@ class EventsController < ApplicationController
     authorize! @event, to: :registrants?
     @event = @event.decorate
     scope = @event.event_registrations
-      .includes(:checklist_completions, :organizations, :allocations, :scholarships, :comments, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: [ :user, { affiliations: :organization } ])
+      # Preload each org's affiliations: the row's program-status badge classifies
+      # them via Organization#facilitator_status_on, which filters the loaded
+      # association — unloaded, that's a per-org query pulling every affiliation row.
+      .includes(:checklist_completions, { organizations: :affiliations }, :allocations, :scholarships, :comments, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: [ :user, { affiliations: :organization } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
 
