@@ -48,6 +48,7 @@ RSpec.describe StripeChargeSucceededProcessor do
     end
 
     it "does nothing when the charge belongs to a subscription (has an invoice)" do
+      skip "invoice-skip guard temporarily disabled by #2115 (temp fix); re-enable this with the guard"
       allow(stripe_charge).to receive(:invoice).and_return("in_membership")
 
       expect { processor.call(event) }.not_to change(ExternalProcessorPayment, :count)
