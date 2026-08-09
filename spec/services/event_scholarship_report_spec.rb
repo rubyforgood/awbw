@@ -59,7 +59,7 @@ RSpec.describe EventScholarshipReport do
 
     before do
       awbw = create(:organization, name: "A Window Between Worlds")
-      awbw_grant = create(:grant, donor: awbw)
+      awbw_grant = create(:grant, funder: awbw)
       award = create(:scholarship, recipient: person, amount_cents: 3_000, grant: awbw_grant)
       create(:allocation, source: award, allocatable: reg, amount: 3_000)
     end
@@ -84,7 +84,7 @@ RSpec.describe EventScholarshipReport do
       reg1 = create(:event_registration, event: event, registrant: person1, status: "attended")
       reg2 = create(:event_registration, event: event, registrant: person2, status: "attended")
 
-      from_funder = create(:scholarship, recipient: person1, amount_cents: 4_000, grant: create(:grant, donor: funder))
+      from_funder = create(:scholarship, recipient: person1, amount_cents: 4_000, grant: create(:grant, funder: funder))
       create(:allocation, source: from_funder, allocatable: reg1, amount: 4_000)
 
       other = create(:scholarship, recipient: person2, amount_cents: 2_000, grant: create(:grant))

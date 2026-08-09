@@ -227,7 +227,7 @@ RSpec.describe "Events", type: :request do
         get revenue_events_path
         expect(response.body).to include("payment_status=paid")   # Fees collected
         expect(response.body).to include("payment_status=unpaid") # Outstanding
-        expect(response.body).to include("funder=donor")          # Scholarships (grant-funded)
+        expect(response.body).to include("funder=external")       # Scholarships (grant-funded)
         expect(response.body).to include("funder=awbw")           # Org subsidy
       end
 
@@ -492,7 +492,7 @@ RSpec.describe "Events", type: :request do
         unfunded_person = create(:person, first_name: "Uma", last_name: "Unfunded")
         funded_reg = create(:event_registration, event: training, registrant: funded_person, status: "attended")
         unfunded_reg = create(:event_registration, event: training, registrant: unfunded_person, status: "attended")
-        funded_award = create(:scholarship, recipient: funded_person, amount_cents: 4_000, grant: create(:grant, donor: funder))
+        funded_award = create(:scholarship, recipient: funded_person, amount_cents: 4_000, grant: create(:grant, funder: funder))
         create(:allocation, source: funded_award, allocatable: funded_reg, amount: 4_000)
         unfunded_award = create(:scholarship, recipient: unfunded_person, amount_cents: 2_500, grant: nil)
         create(:allocation, source: unfunded_award, allocatable: unfunded_reg, amount: 2_500)
@@ -510,7 +510,7 @@ RSpec.describe "Events", type: :request do
         funder = create(:organization, name: "Community Trust")
         person = create(:person)
         reg = create(:event_registration, event: training, registrant: person, status: "attended")
-        award = create(:scholarship, recipient: person, amount_cents: 4_000, grant: create(:grant, donor: funder))
+        award = create(:scholarship, recipient: person, amount_cents: 4_000, grant: create(:grant, funder: funder))
         create(:allocation, source: award, allocatable: reg, amount: 4_000)
 
         sign_in admin
@@ -2715,10 +2715,10 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(CGI.escapeHTML(edit_scholarship_path(scholarship, return_to: "recipients", participant: registration.slug)))
       end
 
-      it "names the funding donor when the scholarship is drawn from a grant" do
+      it "names the funder when the scholarship is drawn from a grant" do
         registration = event.event_registrations.find_by(registrant: applicant)
         org = create(:organization, name: "Joyful Heart Foundation")
-        grant = create(:grant, name: "Healing Arts Fund", donor: org, amount_cents: 100_000)
+        grant = create(:grant, name: "Healing Arts Fund", funder: org, amount_cents: 100_000)
         scholarship = create(:scholarship, recipient: applicant, grant: grant, amount_cents: 1_000, tasks_completed: true)
         create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
 
@@ -2728,7 +2728,7 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Joyful Heart Foundation")
       end
 
-      it "omits the donor line for a scholarship with no parent grant" do
+      it "omits the funder line for a scholarship with no parent grant" do
         registration = event.event_registrations.find_by(registrant: applicant)
         scholarship = create(:scholarship, recipient: applicant, amount_cents: 1_000, tasks_completed: true)
         create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)

@@ -1,15 +1,15 @@
 class Grant < ApplicationRecord
-  belongs_to :donor, polymorphic: true
+  belongs_to :funder, polymorphic: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
 
   has_many :scholarships, dependent: :restrict_with_error
 
-  DONOR_TYPES = %w[Organization Person].freeze
+  FUNDER_TYPES = %w[Organization Person].freeze
 
   validates :name, presence: true
   validates :amount_cents, numericality: { greater_than_or_equal_to: 0 }
-  validates :donor_type, inclusion: { in: DONOR_TYPES }
+  validates :funder_type, inclusion: { in: FUNDER_TYPES }
   validate :amount_covers_scholarships_already_issued
 
   scope :by_deadline, -> { order(Arel.sql("funds_allocation_deadline IS NULL, funds_allocation_deadline ASC")) }
@@ -46,9 +46,9 @@ class Grant < ApplicationRecord
   # stays selectable even when fully allocated, since this scholarship is what
   # exhausted it and deselecting it should remain possible.
   def self.selectable_for(scholarship)
-    # Eager-load the polymorphic donor: the picker renders name_with_funder (→
-    # funder_name → donor) for every grant, which is an N+1 without this.
-    grants = with_funds_remaining.includes(:donor).by_deadline.to_a
+    # Eager-load the polymorphic funder: the picker renders name_with_funder (→
+    # funder_name → funder) for every grant, which is an N+1 without this.
+    grants = with_funds_remaining.includes(:funder).by_deadline.to_a
     connected = scholarship&.grant
     grants << connected if connected && grants.exclude?(connected)
     grants
@@ -63,19 +63,19 @@ class Grant < ApplicationRecord
     self.amount_cents = (value.to_d * 100).to_i if value.present?
   end
 
-  # Resolve the polymorphic donor from a signed global id, mirroring the
+  # Resolve the polymorphic funder from a signed global id, mirroring the
   # GlobalID pattern used for scholarship allocatables.
-  def donor_sgid
-    donor&.to_signed_global_id&.to_s
+  def funder_sgid
+    funder&.to_signed_global_id&.to_s
   end
 
-  def donor_sgid=(sgid)
-    self.donor = GlobalID::Locator.locate_signed(sgid) if sgid.present?
+  def funder_sgid=(sgid)
+    self.funder = GlobalID::Locator.locate_signed(sgid) if sgid.present?
   end
 
-  # The donor is the funder of any scholarships drawn from the grant.
+  # Human-readable name of the grant's funder (an Organization or Person).
   def funder_name
-    donor&.try(:full_name) || donor&.try(:name) || donor&.to_s
+    funder&.try(:full_name) || funder&.try(:name) || funder&.to_s
   end
 
   # Display label for dropdowns: the grant name with its funder in parens

@@ -89,7 +89,7 @@ class EventScholarshipReport
   end
 
   def columns
-    @columns ||= @events.map { |event| Column.new(event: event, dashboard: EventDashboard.new(event, scholarship_donor: @funder)) }
+    @columns ||= @events.map { |event| Column.new(event: event, dashboard: EventDashboard.new(event, scholarship_funder: @funder)) }
   end
 
   def any?

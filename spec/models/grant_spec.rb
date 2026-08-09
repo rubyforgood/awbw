@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe Grant, type: :model do
   describe "associations" do
-    it { is_expected.to belong_to(:donor) }
+    it { is_expected.to belong_to(:funder) }
     it { is_expected.to belong_to(:created_by).class_name("User").optional }
     it { is_expected.to belong_to(:updated_by).class_name("User").optional }
     it { is_expected.to have_many(:scholarships).dependent(:restrict_with_error) }
@@ -12,11 +12,11 @@ RSpec.describe Grant, type: :model do
     it { is_expected.to validate_presence_of(:name) }
     it { is_expected.to validate_numericality_of(:amount_cents).is_greater_than_or_equal_to(0) }
 
-    it "is valid with an organization donor" do
+    it "is valid with an organization funder" do
       expect(build(:grant)).to be_valid
     end
 
-    it "is valid with a person donor" do
+    it "is valid with a person funder" do
       expect(build(:grant, :donated_by_person)).to be_valid
     end
 
@@ -64,13 +64,13 @@ RSpec.describe Grant, type: :model do
     end
   end
 
-  describe "#donor_sgid" do
-    it "round-trips a donor through a signed global id" do
+  describe "#funder_sgid" do
+    it "round-trips a funder through a signed global id" do
       organization = create(:organization)
       grant = build(:grant)
-      grant.donor_sgid = organization.to_signed_global_id.to_s
-      expect(grant.donor).to eq(organization)
-      expect(GlobalID::Locator.locate_signed(grant.donor_sgid)).to eq(organization)
+      grant.funder_sgid = organization.to_signed_global_id.to_s
+      expect(grant.funder).to eq(organization)
+      expect(GlobalID::Locator.locate_signed(grant.funder_sgid)).to eq(organization)
     end
   end
 
@@ -89,7 +89,7 @@ RSpec.describe Grant, type: :model do
   describe "#name_with_funder" do
     it "appends the funder name in parens" do
       organization = build(:organization, name: "Acme Foundation")
-      grant = build(:grant, name: "Spring Fund", donor: organization)
+      grant = build(:grant, name: "Spring Fund", funder: organization)
       expect(grant.name_with_funder).to eq("Spring Fund (Acme Foundation)")
     end
 

@@ -64,14 +64,14 @@ RSpec.describe ReminderRecipientFilter do
       expect(matched({ reg_org: "hope" }, [ reg, other ])).to eq([ reg.id ].to_set)
     end
 
-    it "filters by grantor name of an associated grant" do
-      donor = create(:organization, name: "Acme Foundation")
-      grant = create(:grant, donor: donor)
+    it "filters by funder name of an associated grant" do
+      funder = create(:organization, name: "Acme Foundation")
+      grant = create(:grant, funder: funder)
       reg = registration
       award_scholarship(reg, grant: grant)
       ungranted = registration(first_name: "Sam")
       award_scholarship(ungranted) # scholarship with no grant
-      expect(matched({ grantor: "acme" }, [ reg, ungranted ])).to eq([ reg.id ].to_set)
+      expect(matched({ funder: "acme" }, [ reg, ungranted ])).to eq([ reg.id ].to_set)
     end
 
     it "filters by email address" do
@@ -222,12 +222,12 @@ RSpec.describe ReminderRecipientFilter do
     end
 
     it "combines filters with AND" do
-      donor = create(:organization, name: "Acme Foundation")
-      grant = create(:grant, donor: donor)
+      funder = create(:organization, name: "Acme Foundation")
+      grant = create(:grant, funder: funder)
       match = registration(first_name: "Jane", last_name: "Adams").tap { |r| award_scholarship(r, grant: grant) }
       name_only = registration(first_name: "Jane", last_name: "Brooks")
-      grantor_only = registration(first_name: "Sam", last_name: "Cole").tap { |r| award_scholarship(r, grant: grant) }
-      expect(matched({ name: "jane", grantor: "acme" }, [ match, name_only, grantor_only ]))
+      funder_only = registration(first_name: "Sam", last_name: "Cole").tap { |r| award_scholarship(r, grant: grant) }
+      expect(matched({ name: "jane", funder: "acme" }, [ match, name_only, funder_only ]))
         .to eq([ match.id ].to_set)
     end
   end

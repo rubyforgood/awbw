@@ -128,7 +128,7 @@ RSpec.describe "Event registration edit page", type: :system do
 
     it "links the grant's organization funder to its profile" do
       organization = create(:organization, name: "Acme Foundation")
-      grant = create(:grant, donor: organization)
+      grant = create(:grant, funder: organization)
       scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 1_000, grant: grant)
       create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
 
@@ -136,14 +136,14 @@ RSpec.describe "Event registration edit page", type: :system do
       visit edit_event_registration_path(registration)
 
       within("section", text: "Scholarship") do
-        expect(page).to have_text("Grantor:")
+        expect(page).to have_text("Funder:")
         expect(page).to have_link("Acme Foundation", href: organization_path(organization))
       end
     end
 
     it "links the grant's person funder to its profile" do
-      funder = create(:person, first_name: "Dana", last_name: "Donor")
-      grant = create(:grant, :donated_by_person, donor: funder)
+      funder = create(:person, first_name: "Dana", last_name: "Funder")
+      grant = create(:grant, :donated_by_person, funder: funder)
       scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 1_000, grant: grant)
       create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
 
@@ -155,7 +155,7 @@ RSpec.describe "Event registration edit page", type: :system do
       end
     end
 
-    it "shows no grantor text (just a spacer) when the scholarship has no grant" do
+    it "shows no funder text (just a spacer) when the scholarship has no grant" do
       scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 1_000)
       create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
 
@@ -163,7 +163,7 @@ RSpec.describe "Event registration edit page", type: :system do
       visit edit_event_registration_path(registration)
 
       within("section", text: "Scholarship") do
-        expect(page).to have_no_text("Grantor:")
+        expect(page).to have_no_text("Funder:")
       end
     end
   end

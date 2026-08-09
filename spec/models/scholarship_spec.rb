@@ -150,7 +150,7 @@ RSpec.describe Scholarship, type: :model do
 
     let!(:from_funder) do
       reg = create(:event_registration, event: event, registrant: person1, status: "attended")
-      scholarship = create(:scholarship, recipient: person1, amount_cents: 4_000, grant: create(:grant, donor: funder))
+      scholarship = create(:scholarship, recipient: person1, amount_cents: 4_000, grant: create(:grant, funder: funder))
       create(:allocation, source: scholarship, allocatable: reg, amount: 4_000)
       scholarship
     end
@@ -162,7 +162,7 @@ RSpec.describe Scholarship, type: :model do
       scholarship
     end
 
-    it ".from_funder returns only scholarships whose grant that donor gave" do
+    it ".from_funder returns only scholarships whose grant that funder gave" do
       expect(Scholarship.from_funder(funder)).to contain_exactly(from_funder)
     end
 

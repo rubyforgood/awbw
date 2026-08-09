@@ -6,7 +6,7 @@
   <td class="px-4 py-3.5 align-middle" data-sort-value="<%= grant.object.name.to_s.downcase %>">
     <%= link_to grant.name, grant_path(grant), class: "inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-900 shadow-sm transition-colors hover:border-gray-400 hover:bg-gray-50", data: { turbo_frame: "_top" } %>
   </td>
-  <td class="px-4 py-3.5 align-middle text-sm text-gray-700" data-sort-value="<%= grant.object.funder_name.to_s.downcase %>"><%= grant_donor_badge(grant) %></td>
+  <td class="px-4 py-3.5 align-middle text-sm text-gray-700" data-sort-value="<%= grant.object.funder_name.to_s.downcase %>"><%= grant_funder_badge(grant) %></td>
   <td class="px-4 py-3.5 align-middle text-sm font-medium text-gray-900 text-right tabular-nums" data-sort-value="<%= grant.object.amount_cents.to_i %>"><%= grant.amount %></td>
   <td class="px-4 py-3.5 align-middle text-sm text-gray-700" data-sort-value="<%= grant.object.remaining_cents.to_i %>">
     <%# Bar tracks funds left: green shrinks as the grant is awarded, fully grey

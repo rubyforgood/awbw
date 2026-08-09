@@ -104,7 +104,7 @@ This codebase (Rails 8.1)
 | `Person` | Organization affiliates with contacts, addresses, sectors |
 | `OtherResponse` | A free-text "Other" typed on a form question, captured at submission time (registration, scholarship, bulk payment). Polymorphic `owner`: a **sector** "Other" is owned by the `Person` (promotable into a `Sector`, shown on their profile/edit chip); an **organization_type** "Other" is owned by the `Organization` (stored now, not promotable until `OrganizationType` is a model). `generic` questions aren't captured — that stays searchable in the form answers. `field_identifier` records the question; `kind` is derived. Curated at `/other_responses` (grouped by kind/question): `promote` (sectors only), `keep`, `dismiss`. `dismissed` hides the chip from the profile but stays in the review queue (still promotable later); only `promoted` leaves the queue. Admins deep-link there from a person's chip. |
 | `Organization` | Groups with affiliations, addresses, logos via ActiveStorage |
-| `Grant` | Donated funds (polymorphic `donor`: Organization or Person) with eligibility criteria, tasks, deadlines; parent of `Scholarship`. Scholarship totals cannot exceed the grant amount |
+| `Grant` | Funds (polymorphic `funder`: Organization or Person) with eligibility criteria, tasks, deadlines; parent of `Scholarship`. Scholarship totals cannot exceed the grant amount |
 | `Scholarship` | Award to a `Person`; optionally drawn from a `Grant`, syncs to event registration `Allocation` |
 | `ProfessionalLicense` | A license a `Person` holds (`number`, `kind`, `issuing_state`, `expires_on`); a null `number` is a placeholder. `find_or_create_for` keeps one license per (person, number) |
 | `ContinuingEducationRegistration` | A registrant's CE for one event against one `ProfessionalLicense`; billable `allocatable` (`Registerable`) with stored `hours` + `cost_cents` (default from the event). Payment is computed (no stored status); the certificate is delivered via `certificate_sent_at` and gated by its own `certificate_available?` |
@@ -121,7 +121,7 @@ This codebase (Rails 8.1)
 ### Polymorphic Associations
 
 - **Bookmarks** (`bookmarkable`): Workshop, Event, Resource, etc.
-- **Grant donor** (`donor`): Organization, Person
+- **Grant funder** (`funder`): Organization, Person
 - **Assets** (`owner`): Workshop, Story, Resource, Report, etc.
 - **Comments** (`commentable`): Person, User, EventRegistration, Scholarship, ContinuingEducationRegistration, TopicSubscription, Organization, Workshop
 - **Categorizable/Sectorable** items: Workshop, Story, Resource, etc.

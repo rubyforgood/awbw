@@ -134,7 +134,7 @@ class ScholarshipsController < ApplicationController
     # Eager-load everything the grid derives so each row's funder, program,
     # location, training, and status cells add no per-row queries.
     scope = authorized_scope(Scholarship.all).includes(
-      { grant: :donor },
+      { grant: :funder },
       { recipient: [ { affiliations: { organization: :addresses } }, { event_registrations: :event } ] }
     )
     if params[:recipient_id].present?

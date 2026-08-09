@@ -40,7 +40,7 @@ class Person < ApplicationRecord
   has_many :topic_subscriptions, dependent: :destroy
   has_many :event_staffs, dependent: :destroy
   has_many :scholarships, foreign_key: :recipient_id, dependent: :destroy
-  has_many :grants, as: :donor, dependent: :destroy
+  has_many :grants, as: :funder, dependent: :destroy
   has_many :events, through: :event_registrations
   has_many :staffed_events, through: :event_staffs, source: :event
   has_many :categories, through: :categorizable_items
