@@ -12,16 +12,20 @@ class AttendeesActiveFilters
     registrant_ids organization_id org_city age_group life_experience setting
     country school_district scholarship ce
   ].freeze
+  # The roster has no filter form at all, so every drill-in it accepts needs a
+  # chip — including the two the index leaves out because it has controls for them.
+  ROSTER_CHIP_PARAMS = %w[ registrant_ids sector state ].freeze
 
-  def initialize(params)
+  def initialize(params, chip_params: CHIP_PARAMS)
     @params = params
+    @chip_params = chip_params
   end
 
   # [ { param: "age_group", label: "Age group: Teens (13-17)" }, ... ] in
   # CHIP_PARAMS order; empty when no drill-in filter is applied. A param whose
   # referenced record no longer exists is dropped rather than shown label-less.
   def chips
-    CHIP_PARAMS.filter_map do |param|
+    @chip_params.filter_map do |param|
       value = @params[param]
       next if value.blank?
       label = label_for(param, value)
@@ -34,6 +38,8 @@ class AttendeesActiveFilters
   def label_for(param, value)
     case param
     when "registrant_ids" then "#{value.to_s.split("-").size} selected people"
+    when "sector" then record_label("Sector", Sector, value)
+    when "state" then "State: #{value}"
     when "organization_id" then record_label("Organization", Organization, value)
     when "org_city" then "Org city: #{value}"
     when "age_group" then record_label("Age group", Category, value)

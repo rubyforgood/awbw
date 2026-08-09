@@ -214,6 +214,21 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("Free open house")
       end
 
+      # Money KPIs count people's registrations, so they drill into the people index
+      # rather than the raw registrations table. Each opts out of the attendees
+      # index's attended/trainings defaults or it would show the wrong population.
+      it "drills its money KPIs into the attendees index, defaults opted out" do
+        sign_in admin
+        get revenue_events_path
+
+        hrefs = Capybara.string(response.body).all("a[href*='/events/attendees']").map { |a| a[:href] }
+        unpaid = hrefs.find { |href| href.include?("payment_status=unpaid") }
+
+        expect(unpaid).to be_present
+        expect(unpaid).to include("attendance_status=all", "event_type=all", "return_to=revenue")
+        expect(response.body).not_to include(%(href="#{event_registrations_path}?))
+      end
+
       it "labels an event by its abbreviation when set, keeping the full title as a tooltip" do
         paid_training.update!(abbreviation: "TAC261")
         sign_in admin
@@ -323,6 +338,26 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("2026", "2025")
       end
 
+      # The KPIs count people, so they drill into the people index rather than the
+      # raw registrations table. Each has to opt out of the attendees index's
+      # attended/trainings defaults or it would silently show the wrong population.
+      it "drills its outcome KPIs into the attendees index, defaults opted out" do
+        sign_in admin
+        get participation_events_path
+
+        hrefs = Capybara.string(response.body).all("a[href*='/events/attendees']").map { |a| a[:href] }
+
+        # No show is the case the old registrations-index target existed for: the
+        # attendees index used to exclude no-shows outright.
+        no_show = hrefs.find { |href| href.include?("attendance_status=no_show") }
+        expect(no_show).to be_present
+        expect(no_show).to include("event_type=all", "return_to=participation")
+
+        # "Registrations" counts every outcome, so it opts out of both defaults.
+        expect(hrefs).to include(a_string_including("attendance_status=all", "event_type=all"))
+        expect(response.body).not_to include(%(href="#{event_registrations_path}?))
+      end
+
       # The Event dropdown lists every event, so the report rows are identified by
       # their per-event dashboard link rather than the title.
       it "narrows to facilitator trainings by event type" do
@@ -412,6 +447,24 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(attendees_events_path)
         expect(response.body).to include("event_type=other", "attendance_status=attended")
         expect(response.body).to include(revenue_events_path, participation_events_path)
+      end
+
+      # Demographics stay next to the people they describe; the hub signposts them
+      # rather than hosting them. ?charts=1 so the link doesn't land on a collapsed
+      # panel.
+      it "links to the cross-event breakdowns when unscoped" do
+        sign_in admin
+        get reports_events_path
+
+        expect(response.body).to include("Breakdowns →")
+        expect(response.body).to include(CGI.escapeHTML(attendees_events_path(charts: 1)))
+      end
+
+      it "links to that event's own breakdowns when scoped to one event" do
+        sign_in admin
+        get reports_events_path(event_id: training.id)
+
+        expect(response.body).to include(CGI.escapeHTML(roster_event_path(training, charts: 1)))
       end
 
       it "shows the scholarship summary card linking to its full report" do
@@ -1096,14 +1149,6 @@ RSpec.describe "Events", type: :request do
     before { sign_in admin }
 
     context "eyebrow back link" do
-      it "returns to the originating roster section when arrived from it" do
-        get registrants_event_path(event, return_to: "roster", return_anchor: "all-cities")
-
-        expect(response.body).to include("← Roster")
-        expect(response.body).to include("#{roster_event_path(event)}#all-cities")
-        expect(response.body).not_to include("← Dashboard")
-      end
-
       it "returns to the dashboard by default" do
         get registrants_event_path(event)
 
@@ -2469,6 +2514,21 @@ RSpec.describe "Events", type: :request do
           expect(response.body).not_to include("Hopper")
         end
 
+        it "shows a read-only attendance-status pill linking to the registration edit page" do
+          registration.update!(status: "attended")
+
+          get roster_event_path(owned_event)
+
+          expect(response.body).to include("Attendance")
+          expect(response.body).to include("Attended")
+          # The pill links to the edit page (the row edits attendance there, not
+          # inline) — no status <select> in the roster table.
+          expect(response.body).to include(
+            CGI.escapeHTML(edit_event_registration_path(registration, return_to: "roster"))
+          )
+          expect(response.body).not_to include("Change attendance status")
+        end
+
         it "shows each registrant's Primary sector and Primary age group in the roster" do
           registration_form = create(:form, name: "Registration")
           create(:event_form, event: owned_event, form: registration_form, role: "registration")
@@ -2549,12 +2609,26 @@ RSpec.describe "Events", type: :request do
           expect(response.body).not_to include("#scholarship_")
         end
 
-        it "anchors the stat bar and stamps its drill-downs with a back-to-roster eyebrow" do
+        # The stat bar filters this page rather than sending the admin to Manage,
+        # so there's no back-link to stamp — you never leave.
+        it "filters in place from the stat bar instead of leaving for Manage" do
           get roster_event_path(owned_event)
 
           expect(response.body).to include('id="overview"')
-          expect(response.body).to include("return_to=roster")
-          expect(response.body).to include("return_anchor=overview")
+          expect(response.body).to include(CGI.escapeHTML(roster_event_path(owned_event, registrant_ids: registration.registrant_id.to_s)))
+          expect(response.body).not_to include(%(href="#{registrants_event_path(owned_event)}?registrant_ids))
+        end
+
+        it "narrows only the table, leaving the stat bar whole, and says what's applied" do
+          other = create(:person, first_name: "Zed", last_name: "Zulu")
+          create(:event_registration, event: owned_event, registrant: other, status: "registered")
+
+          get roster_event_path(owned_event, registrant_ids: registration.registrant_id.to_s)
+
+          expect(response.body).to include("Lovelace")
+          expect(response.body).not_to include("Zulu")
+          expect(response.body).to include("Applied")
+          expect(response.body).to include("Showing 1 of 2")
         end
 
         it "returns to the roster from the registration it opened" do
@@ -2569,6 +2643,19 @@ RSpec.describe "Events", type: :request do
 
           expect(response.body).to include("event_roster_charts")
           expect(response.body).not_to include("All sectors")
+        end
+
+        # The Reports hub's "Breakdowns →" link arrives with ?charts=1; without this
+        # it would land on a collapsed panel and show nothing.
+        it "starts the breakdowns panel collapsed, and open on a ?charts=1 arrival" do
+          get roster_event_path(owned_event)
+          collapsed = Capybara.string(response.body)
+          expect(collapsed).to have_selector("[data-panel-toggle-name='charts'].hidden", visible: :all)
+
+          get roster_event_path(owned_event, charts: 1)
+          opened = Capybara.string(response.body)
+          expect(opened).not_to have_selector("div[data-panel-toggle-name='charts'].hidden", visible: :all)
+          expect(opened).to have_selector("button[data-panel-toggle-name='charts'][aria-expanded='true']", visible: :all)
         end
       end
 
@@ -2723,12 +2810,14 @@ RSpec.describe "Events", type: :request do
           expect(response.body).not_to include("Settings")
         end
 
-        it "anchors its breakdown sections so a drill-down can scroll back to them" do
+        it "anchors its breakdown sections and drills each row back into this page" do
           get roster_event_path(owned_event), headers: charts_headers
 
           expect(response.body).to include('id="all-organizations"')
           expect(response.body).to include('id="primary-sector"')
-          expect(response.body).to include("return_anchor=all-organizations")
+          # Rows filter the roster itself — nothing points at the Manage list.
+          expect(response.body).to include(CGI.escapeHTML("#{roster_event_path(owned_event)}?registrant_ids="))
+          expect(response.body).not_to include(registrants_event_path(owned_event))
         end
       end
     end
@@ -2858,15 +2947,57 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Show scholarship status")
       end
 
-      it "renders the Recipients and Charts section headers with a charts toggle" do
+      it "renders the Recipients and Breakdowns section headers with a breakdowns toggle" do
         get recipients_event_path(event)
 
         expect(response.body).to include("Recipients")
-        expect(response.body).to include("Charts")
+        expect(response.body).to include("Breakdowns")
         expect(response.body).to include("Hide recipients")
-        expect(response.body).to include("Show charts")
+        expect(response.body).to include("Show breakdowns")
         # The real breakdowns load lazily; no placeholder boxes remain.
         expect(response.body).not_to include("Coming soon")
+      end
+
+      # Every section toggles the same way, and its header stays put while
+      # collapsed so the page still reads — the "Show …" prompt sits under it.
+      it "toggles the shout outs alongside the other sections" do
+        applicant.update!(shoutout_text: "This training changed how we serve survivors.")
+        event.event_registrations.find_by(registrant: applicant).update!(shoutout: true)
+
+        get recipients_event_path(event)
+        page = Capybara.string(response.body)
+
+        expect(response.body).to include("Shout outs")
+        expect(response.body).to include("Hide shout outs")
+        expect(page).to have_selector("[data-panel-toggle-name='shoutouts']", visible: :all)
+      end
+
+      # Same rule as the roster: a breakdown row filters the cards on this page
+      # rather than navigating anywhere.
+      it "drills its breakdown rows back into this page" do
+        get recipients_event_path(event), headers: { "Turbo-Frame" => "recipients_charts" }
+
+        expect(response.body).to include(CGI.escapeHTML("#{recipients_event_path(event)}?registrant_ids="))
+      end
+
+      it "narrows the cards to a drill-in, leaving the header count whole" do
+        other = create(:person, first_name: "Zed", last_name: "Zulu")
+        create(:event_registration, event: event, registrant: other, status: "registered", scholarship_requested: true)
+
+        get recipients_event_path(event, registrant_ids: applicant.id.to_s)
+
+        expect(response.body).to include("Tara Gallagher")
+        expect(response.body).not_to include("Zed Zulu")
+        expect(response.body).to include("Showing 1 of 2")
+      end
+
+      it "gives every section its own in-place Show prompt" do
+        get recipients_event_path(event)
+        page = Capybara.string(response.body)
+
+        %w[ recipients charts ].each do |panel|
+          expect(page).to have_selector("button[data-panel-toggle-cta][data-panel-toggle-name='#{panel}']", visible: :all)
+        end
       end
 
       it "shows each recipient's awarded amount and completed tasks status" do

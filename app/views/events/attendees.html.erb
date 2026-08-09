@@ -2,13 +2,25 @@
 <% content_for(:full_width, true) %>
 <div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8 py-6">
   <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+    <%# The report KPIs drill in here carrying both return_to and (when scoped)
+        event_id, so an explicit origin wins over the event fallback — otherwise a
+        report drill-in would bounce the user to that event's dashboard instead of
+        back to the report they were reading. %>
+    <% report_return = { event_id: params[:event_id].presence } %>
     <div class="mb-6">
-      <% if @filter_event %>
-        <%= link_to "← #{@filter_event.title}", dashboard_event_path(@filter_event), class: "text-sm text-gray-500 hover:text-gray-700" %>
-      <% elsif params[:return_to] == "participation" %>
-        <%= link_to "← Participation", participation_events_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+      <% case params[:return_to] %>
+      <% when "participation" %>
+        <%= link_to "← Event participation", participation_events_path(report_return), class: "text-sm text-gray-500 hover:text-gray-700" %>
+      <% when "revenue" %>
+        <%= link_to "← Event revenue", revenue_events_path(report_return), class: "text-sm text-gray-500 hover:text-gray-700" %>
+      <% when "reports" %>
+        <%= link_to "← Event reports", reports_events_path(report_return), class: "text-sm text-gray-500 hover:text-gray-700" %>
       <% else %>
-        <%= link_to "← Reports", reports_events_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+        <% if @filter_event %>
+          <%= link_to "← #{@filter_event.title}", dashboard_event_path(@filter_event), class: "text-sm text-gray-500 hover:text-gray-700" %>
+        <% else %>
+          <%= link_to "← Event reports", reports_events_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+        <% end %>
       <% end %>
     </div>
 

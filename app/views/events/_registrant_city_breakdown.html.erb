@@ -46,14 +46,14 @@
     <%# Full list — hidden once the toggle is checked. %>
     <table class="w-full text-sm peer-checked:hidden">
       <tbody>
-        <%= render partial: "events/registrant_city_row", collection: rows, as: :row, locals: { metrics: metrics, event: @event, return_anchor: return_anchor, row_paths: row_paths, scholarship_paths: scholarship_paths } %>
+        <%= render partial: "events/registrant_city_row", collection: rows, as: :row, locals: { metrics: metrics, event: @event, row_paths: row_paths, scholarship_paths: scholarship_paths } %>
       </tbody>
     </table>
     <%# Scholarship-cities-only list — revealed when the toggle is checked. %>
     <% if scholarship_rows.any? %>
       <table class="hidden w-full text-sm peer-checked:table">
         <tbody>
-          <%= render partial: "events/registrant_city_row", collection: scholarship_rows, as: :row, locals: { metrics: metrics, event: @event, return_anchor: return_anchor, row_paths: row_paths, scholarship_paths: scholarship_paths } %>
+          <%= render partial: "events/registrant_city_row", collection: scholarship_rows, as: :row, locals: { metrics: metrics, event: @event, row_paths: row_paths, scholarship_paths: scholarship_paths } %>
         </tbody>
       </table>
     <% end %>

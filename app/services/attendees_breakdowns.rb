@@ -6,14 +6,14 @@
 # Sourced from each person's profile (sectors, age groups, categories, addresses)
 # and from the orgs/scholarships/CE tied to their attended-training registrations.
 class AttendeesBreakdowns
-  # events: the events whose registrations may be counted (for the attendees
-  # index, the viewer's reportable facilitator trainings), so the org/scholarship/
-  # CE breakdowns never draw on an event the viewer isn't allowed to see.
-  # registrations: the registration scope the org/scholarship/CE breakdowns draw
-  # from — attended facilitator trainings by default (the attendees index), or any
-  # active registrations when a caller (e.g. the recipients charts) wants a single
-  # event's people regardless of attendance.
-  def initialize(people, events: Event.facilitator_trainings, registrations: EventRegistration.attended_facilitator_trainings)
+  # events: the events whose registrations may be counted (for the attendees index,
+  # the viewer's reportable events narrowed by the active filters), so the
+  # org/scholarship/CE breakdowns never draw on an event the viewer isn't allowed to
+  # see — or one outside the current filter.
+  # registrations: the registration scope those breakdowns draw from — attended
+  # registrations by default, or any active ones when a caller (e.g. the recipients
+  # charts) wants a single event's people regardless of attendance.
+  def initialize(people, events: Event.all, registrations: EventRegistration.attended)
     @people = people
     @events = events
     @registrations = registrations
@@ -62,27 +62,15 @@ class AttendeesBreakdowns
   # --- Locations -------------------------------------------------------------
 
   def state_counts
-    @state_counts ||= active_addresses
-      .where("UPPER(addresses.state) IN (?)", Address::US_STATE_ABBREVIATIONS)
-      .group(:state)
-      .distinct
-      .count(:addressable_id)
+    @state_counts ||= state_registrant_ids_by_state.transform_values(&:size)
   end
 
   def country_counts
-    @country_counts ||= active_addresses
-      .where.not(country: [ nil, "" ])
-      .group(:country)
-      .distinct
-      .count(:addressable_id)
+    @country_counts ||= country_registrant_ids_by_country.transform_values(&:size)
   end
 
   def school_district_counts
-    @school_district_counts ||= active_addresses
-      .where.not(district: [ nil, "" ])
-      .group(:district)
-      .distinct
-      .count(:addressable_id)
+    @school_district_counts ||= school_district_registrant_ids_by_district.transform_values(&:size)
   end
 
   # --- Profile categories (life experiences / settings) ----------------------
@@ -158,6 +146,76 @@ class AttendeesBreakdowns
     )
   end
 
+  # --- Person ids per breakdown row ------------------------------------------
+  # Mirrors EventDashboard's `*_registrant_ids_by_*` names so the shared breakdown
+  # partial can build a drill-in from either source. Every one of these regroups
+  # rows already loaded for the counts — no extra queries.
+
+  def registrant_ids
+    person_ids
+  end
+
+  def primary_sector_registrant_ids_by_sector
+    @primary_sector_registrant_ids_by_sector ||= person_ids_by(sector_rows.select { |_, _, primary| primary }) { |row| row[1] }
+  end
+
+  def sector_registrant_ids_by_sector
+    @sector_registrant_ids_by_sector ||= person_ids_by(sector_rows) { |row| row[1] }
+  end
+
+  def age_group_registrant_ids_by_category
+    @age_group_registrant_ids_by_category ||= person_ids_by(age_rows.select { |_, _, primary| primary }) { |row| row[1] }
+  end
+
+  def all_age_group_registrant_ids_by_category
+    @all_age_group_registrant_ids_by_category ||= person_ids_by(age_rows) { |row| row[1] }
+  end
+
+  def life_experience_registrant_ids_by_category
+    @life_experience_registrant_ids_by_category ||= person_ids_by(category_rows("StoryPopulation")) { |row| row[1] }
+  end
+
+  def settings_registrant_ids_by_category
+    @settings_registrant_ids_by_category ||= person_ids_by(category_rows("WorkshopEnvironment")) { |row| row[1] }
+  end
+
+  def state_registrant_ids_by_state
+    @state_registrant_ids_by_state ||= person_ids_by(address_rows.select { |_, state, _, _| Address::US_STATE_ABBREVIATIONS.include?(state.to_s.upcase) }) { |row| row[1] }
+  end
+
+  def country_registrant_ids_by_country
+    @country_registrant_ids_by_country ||= person_ids_by(address_rows.reject { |_, _, country, _| country.blank? }) { |row| row[2] }
+  end
+
+  def school_district_registrant_ids_by_district
+    @school_district_registrant_ids_by_district ||= person_ids_by(address_rows.reject { |_, _, _, district| district.blank? }) { |row| row[3] }
+  end
+
+  def organization_registrant_ids_by_org
+    @organization_registrant_ids_by_org ||= org_registrant_pairs
+      .group_by(&:first)
+      .transform_values { |pairs| pairs.map(&:last).uniq }
+  end
+
+  # { :new/:ongoing/:reinstated => person ids } — a person lands in a status if any
+  # of their linked orgs has it, so the buckets can overlap.
+  def program_status_registrant_ids
+    @program_status_registrant_ids ||= organization_registrant_ids_by_org
+      .each_with_object({ new: [], ongoing: [], reinstated: [] }) do |(org_id, ids), map|
+        status = program_status_by_organization[org_id]
+        map[status]&.concat(ids)
+      end
+      .transform_values(&:uniq)
+  end
+
+  def scholarship_registrant_ids
+    scholarship_recipient_ids
+  end
+
+  def other_sector_response_registrant_ids
+    other_sector_responses.map(&:owner_id).uniq
+  end
+
   # --- Free-text "Other" sector responses ------------------------------------
 
   def other_sector_response_count
@@ -200,12 +258,28 @@ class AttendeesBreakdowns
   end
 
   def category_counts(category_type_name)
-    CategorizableItem
+    distinct_person_counts(category_rows(category_type_name)) { |row| row[1] }
+  end
+
+  # [ [ person_id, category_id ], ... ] for one category type, memoized so the
+  # counts and the id maps share a single query.
+  def category_rows(category_type_name)
+    @category_rows ||= {}
+    @category_rows[category_type_name] ||= CategorizableItem
       .joins(category: :category_type)
       .where(categorizable_type: "Person", categorizable_id: person_ids, category_types: { name: category_type_name })
-      .distinct
-      .group(:category_id)
-      .count(:categorizable_id)
+      .pluck(:categorizable_id, :category_id)
+  end
+
+  # [ [ person_id, state, country, district ], ... ] — one load behind the state,
+  # country and district counts and their id maps.
+  def address_rows
+    @address_rows ||= active_addresses.pluck(:addressable_id, :state, :country, :district)
+  end
+
+  # { key => distinct person ids }, grouping [ person_id, ... ] rows by the block.
+  def person_ids_by(rows)
+    rows.group_by { |row| yield(row) }.transform_values { |grouped| grouped.map(&:first).uniq }
   end
 
   def active_addresses

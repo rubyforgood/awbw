@@ -1,25 +1,21 @@
 <%# One row of the Registrants-by-city breakdown. Locals: row (a
     RegistrantCityBreakdown::Row), metrics (:registrants/:scholarships/:both), and
-    event. The whole row links to that city's filtered registrant list; the
-    scholarship figure links to just its scholarship recipients. Registrant total
+    event. The whole row filters the page to that city's registrants; the
+    scholarship figure to just its scholarship recipients. Registrant total
     and scholarship figure get their own right-aligned columns so counts line up;
     tabular-nums + a 3-digit min-width keep padding even. %>
-<%# return_anchor (set only on the roster page) makes each registrants
-    link carry a back-to-this-card eyebrow; nil elsewhere leaves links plain.
-    row_paths/scholarship_paths (set only on the cross-event index) supply per-city
-    drill-in paths keyed by city label; a missing entry (e.g. Unknown) renders the
-    row non-clickable. %>
-<% return_anchor = local_assigns[:return_anchor] %>
+<%# row_paths/scholarship_paths (set on the cross-event index and the read-only
+    recipients charts) supply per-city paths keyed by city label; a missing entry
+    (e.g. Unknown) renders the row non-clickable. Absent, the row builds its own
+    event-scoped roster filter. %>
 <% row_paths = local_assigns[:row_paths] %>
 <% scholarship_paths = local_assigns[:scholarship_paths] %>
 <% if row_paths %>
   <% row_path = row_paths[row.city] %>
   <% scholarship_path = scholarship_paths&.dig(row.city) %>
 <% else %>
-  <% row_path = registrants_event_path(event, registrant_ids: row.registrant_ids.join("-")) %>
-  <% row_path = roster_return_path(row_path, return_anchor) if return_anchor %>
-  <% scholarship_path = registrants_event_path(event, registrant_ids: row.scholarship_recipient_ids.join("-")) %>
-  <% scholarship_path = roster_return_path(scholarship_path, return_anchor) if return_anchor %>
+  <% row_path = roster_event_path(event, registrant_ids: row.registrant_ids.join("-").presence || "0") %>
+  <% scholarship_path = roster_event_path(event, registrant_ids: row.scholarship_recipient_ids.join("-").presence || "0") %>
 <% end %>
 <tr class="border-t border-gray-100 group hover:bg-gray-50 <%= "cursor-pointer" if row_path %> transition-colors"
     <% if row_path %>onclick="window.location='<%= row_path %>'"<% end %>>

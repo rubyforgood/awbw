@@ -11,20 +11,34 @@ RSpec.describe AttendeesRoster do
   let!(:recent_registration) { create(:event_registration, event: recent_training, registrant: person, status: "attended") }
 
   # Built from a fresh relation like the controller passes it, so profile
-  # associations load fresh rather than from a stale in-memory cache.
-  subject(:roster) { described_class.new(Person.where(id: person.id)) }
+  # associations load fresh rather than from a stale in-memory cache. The `events:`
+  # scope is the index's current event filter — the roster never reaches past it.
+  subject(:roster) { described_class.new(Person.where(id: person.id), events: Event.facilitator_trainings) }
 
-  describe "#training_registrations_by_registrant" do
+  describe "#event_registrations_by_registrant" do
     before do
-      # Non-training attendance and a registered-but-not-attended training must
-      # both be excluded from the training column.
+      # Non-training attendance is outside the events: scope; a registered-but-not-
+      # attended training is outside the registrations: scope. Both are excluded.
       create(:event_registration, event: webinar, registrant: person, status: "attended")
       other_training = create(:event, facilitator_training: true, start_date: Date.new(2023, 1, 1))
       create(:event_registration, event: other_training, registrant: person, status: "registered")
     end
 
-    it "returns only attended training registrations, most recent event first" do
-      expect(roster.training_registrations_by_registrant[person.id]).to eq([ recent_registration, older_registration ])
+    it "returns only in-scope registrations, most recent event first" do
+      expect(roster.event_registrations_by_registrant[person.id]).to eq([ recent_registration, older_registration ])
+    end
+
+    it "widens with the events: scope rather than hardcoding trainings" do
+      all_events = described_class.new(Person.where(id: person.id), events: Event.all)
+
+      expect(all_events.event_registrations_by_registrant[person.id].map(&:event))
+        .to include(webinar)
+    end
+
+    it "narrows to a single event, so a drill-in row shows that event not a history" do
+      one_event = described_class.new(Person.where(id: person.id), events: Event.where(id: recent_training.id))
+
+      expect(one_event.event_registrations_by_registrant[person.id]).to eq([ recent_registration ])
     end
   end
 

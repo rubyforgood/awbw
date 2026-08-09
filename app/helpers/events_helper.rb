@@ -34,6 +34,15 @@ module EventsHelper
     recipients_event_path(event, anchor: ("participant-#{participant_slug}" if participant_slug.present?))
   end
 
+  # Human label for the attendees index's population filters — e.g.
+  # "Attended · Trainings". Shown in the page subtitle so the defaults the page
+  # applies are visible rather than implied.
+  def attendee_population_label(attendance_status, event_type)
+    outcome = EventRegistration::ATTENDANCE_FILTER_OPTIONS.rassoc(attendance_status)&.first || "All outcomes"
+    type = EventRegistration::EVENT_TYPE_FILTER_OPTIONS.rassoc(event_type)&.first || "All events"
+    "#{outcome} · #{type}"
+  end
+
   # The scholarships report's filter/toggle state, carried through a drill-in so
   # its eyebrow can rebuild the exact view (period, event type/id, search, funder,
   # split/combined layout, and the report's own origin) the user came from.
@@ -78,15 +87,6 @@ module EventsHelper
     scholarships_events_path(**filters.to_h.symbolize_keys,
       highlight: params[:return_highlight].presence,
       anchor: params[:return_anchor].presence)
-  end
-
-  # Stamp a registrants-page link reached from the roster page with the
-  # context its eyebrow needs to send the user back to the exact section they
-  # drilled in from: return_to marks the origin page, return_anchor the section id
-  # (matching that section's `id`/`scroll-mt-*` on the roster page).
-  def roster_return_path(path, anchor)
-    separator = path.include?("?") ? "&" : "?"
-    "#{path}#{separator}#{{ return_to: "roster", return_anchor: anchor }.to_query}"
   end
 
   # Ordered column descriptors for the event Onboarding matrix. The array index

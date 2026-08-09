@@ -46,7 +46,7 @@
     <div class="w-full md:flex-1">
       <%= label_tag :attendance_status, "Attendance", class: "block text-sm font-medium text-gray-700 mb-1" %>
       <%= select_tag :attendance_status,
-                     options_for_select(EventRegistration::ATTENDANCE_STATUSES.map { |status| [ status.humanize, status ] } + [ [ "Other (registered, transfers, cancellations)", "other" ] ], params[:attendance_status]),
+                     options_for_select(EventRegistration::ATTENDANCE_FILTER_OPTIONS, params[:attendance_status]),
                      include_blank: "All statuses",
                      class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                              focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",

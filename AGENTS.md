@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~80 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~40 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~49 files |
 | `app/jobs/` | SolidQueue background jobs | 4 files |
 | `app/models/concerns/` | Shared model modules | 16 concerns |
 
@@ -58,7 +58,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/controllers/` | Rails controllers (admin/, events/) | ~78 files |
-| `app/views/` | ERB templates | ~632 files |
+| `app/views/` | ERB templates | ~745 files |
 | `app/decorators/` | Draper decorators for view logic | ~40 files |
 | `app/policies/` | ActionPolicy authorization rules | ~55 files |
 | `app/presenters/` | Presentation objects | 6 files |
@@ -199,9 +199,9 @@ action, or `authorize! :workshop, to: :summary?`).
 - `EventRevenueFigures` — Batch-loads the per-event money components `EventRevenueReport` rows are built from (registration payments/outstanding, funded/unfunded scholarships, discounts, CE paid/outstanding) in a fixed number of grouped queries; mirrors the `EventDashboard` definitions
 - `EventScholarshipFigures` — Batch-loads the per-event scholarship figures `EventScholarshipReport` columns are built from (funded/unfunded dollars + counts, attended count) in a fixed number of grouped queries; optional `funder:` narrows to a donor's grants. Mirrors the `EventDashboard` funded/unfunded split, replacing the one-dashboard-per-event it used to build
 - `EventParticipationReport` — Cross-event participation report grouped by calendar year (unique people trained vs attended seats vs per-status outcome counts, chart series) for the events participation page; sibling of `EventRevenueReport`
-- `AttendeesRoster` — Cross-event counterpart to `EventDashboard`: builds the per-registrant lookup maps the shared `events/_registrant_roster` partial reads (sector/age/org/status/location/scholarship/CE plus the attended-trainings event column) for a paginated page of people who have attended a facilitator training; backs the `events#attendees` index. Takes `events:` — the viewer's `EventPolicy` `:reportable` scope — so a person's training columns never surface an event the viewer can't see
-- `AttendeesBreakdowns` — Aggregate counterpart to `EventDashboard`'s breakdown methods: computes the chart datasets (sectors, age groups, locations, program status, life experiences, settings, organizations, scholarship/CE) over an arbitrary people set, profile-sourced, for the shared `events/_registrant_breakdowns` partial. Backs the `events#attendees` index charts (cross-event, `events:` = the viewer's reportable trainings, `registrations:` = attended facilitator trainings) and the `events#recipients` charts frame (one event's scholarship recipients, `registrations:` = `EventRegistration.active` so it counts them regardless of attendance)
-- `AttendeesActiveFilters` — Human-readable, removable-chip descriptors for the `events#attendees` index's "drill-in" filters (registrant_ids, organization, org city, age group / life experience / setting categories, country, school district, scholarship, CE) — the params that narrow the roster but have no field in the visible filter form; the filter partial surfaces each applied one as a chip so an admin can see and clear it
+- `AttendeesRoster` — Cross-event counterpart to `EventDashboard`: builds the per-registrant lookup maps the shared `events/_registrant_roster` partial reads (sector/age/org/status/location/scholarship/CE plus the events-attended column) for a paginated page of people; backs the `events#attendees` index. Takes `events:` + `registrations:` — the index's current filter scopes, already narrowed by `EventPolicy`'s `:reportable` scope — so a person's columns show what's in scope rather than their whole history, and never an event the viewer can't see
+- `AttendeesBreakdowns` — Aggregate counterpart to `EventDashboard`'s breakdown methods: computes the chart datasets (sectors, age groups, locations, program status, life experiences, settings, organizations, scholarship/CE) over an arbitrary people set, profile-sourced, for the shared `events/_registrant_breakdowns` partial. Backs the `events#attendees` index charts (cross-event; `events:` / `registrations:` = the index's current filter scopes, already narrowed by `EventPolicy`'s `:reportable` scope) and the `events#recipients` charts frame (one event's scholarship recipients, `registrations:` = `EventRegistration.active` so it counts them regardless of attendance). Also exposes `*_registrant_ids_by_*` maps mirroring `EventDashboard`'s, so a breakdown row can drill in by person id — they regroup rows already loaded for the counts, adding no queries
+- `AttendeesActiveFilters` — Human-readable, removable-chip descriptors for a page's "drill-in" filters (registrant_ids, organization, org city, age group / life experience / setting categories, country, school district, scholarship, CE, sector, state) — params that narrow a list without a field in a visible filter form. `CHIP_PARAMS` is the attendees index's set (omitting anything with its own control); pass `chip_params:` for a page with no filter form at all — `ROSTER_CHIP_PARAMS` for the per-event roster, `%w[ registrant_ids ]` for scholarship recipients
 - `ReportPeriods` — Shared module (included by `EventRevenueReport` and `EventParticipationReport`) resolving the reporting-hub period toggle (this year / last year / all time) to a metric scope + label for the summary cards
 - `EventScholarshipReport` — Cross-event scholarship report grouped by calendar year: scholarship dollars and award counts (funded vs unfunded, via `EventScholarshipFigures`) per facilitator training, plus an attended-trainee count split into "Live" (scheduled instructor-led) vs "On-demand" (`event.on_demand?`). Sibling of `EventRevenueReport`/`EventParticipationReport` (includes `ReportPeriods`); powers the `events#scholarships` report page and the reports-hub scholarship summary card
 - `ScholarshipApplication` — Gathers one person's scholarship-application answers for an event by field across all their submissions, so answers surface whether captured on a dedicated scholarship form, an embedded registration section, or the registration submission itself (used by the scholarship edit page and the public submission view)
@@ -217,7 +217,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `RichTextMigrator` — Rich text migration utility
 - `DisplayImagePresenter` — Image display logic
 - `ScholarshipsGrouping` (presenter) — Groups scholarships into the index's funder → grant → recipient hierarchy; grant-free awards collect under a trailing "Unfunded" group
-- `RegistrantCityBreakdown` (presenter) — Groups an event's registrants by the city of the org linked on their registration, counting registrants + scholarship recipients per city; drives the shared "Registrants by city" card on the per-event roster page, the cross-event attendees index, and the scholarship-recipients page (fed plucked data by `EventDashboard`)
+- `RegistrantCityBreakdown` (presenter) — Groups an event's registrants by the city of the org linked on their registration, counting registrants + scholarship recipients per city; drives the shared "Registrants by city" card inside `events/_registrant_breakdowns` on all three people-pages — per-event roster, cross-event attendees index, and scholarship recipients (fed plucked data by `EventDashboard` or `AttendeesBreakdowns`)
 - `AllocationLedgerLabel` (presenter) — Shared payment-method/label + check-number labelling for an allocation, used by the invoice and receipt ledgers so they can't drift
 
 ### Event Registrations

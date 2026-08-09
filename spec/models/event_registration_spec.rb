@@ -197,17 +197,29 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
-  describe ".attended_facilitator_trainings" do
-    it "returns only attended registrations on facilitator-training events" do
-      training = create(:event, facilitator_training: true)
-      other = create(:event, facilitator_training: false)
-      attended = create(:event_registration, event: training, status: "attended")
-      no_show = create(:event_registration, event: training, status: "no_show")
-      other_event = create(:event_registration, event: other, status: "attended")
+  # The attendees index composes these two rather than using one fixed scope, so
+  # that the same page can also answer "no shows" and "non-trainings".
+  describe ".attended composed with .event_type" do
+    let!(:training) { create(:event, facilitator_training: true) }
+    let!(:other) { create(:event, facilitator_training: false) }
+    let!(:attended) { create(:event_registration, event: training, status: "attended") }
+    let!(:no_show) { create(:event_registration, event: training, status: "no_show") }
+    let!(:other_event) { create(:event_registration, event: other, status: "attended") }
 
-      results = EventRegistration.attended_facilitator_trainings
+    it "narrows to attended registrations on facilitator trainings" do
+      results = EventRegistration.attended.event_type("trainings")
       expect(results).to include(attended)
       expect(results).not_to include(no_show, other_event)
+    end
+
+    it "reaches the rows the old fixed scope could never return" do
+      expect(EventRegistration.attendance_status("no_show").event_type("trainings")).to include(no_show)
+      expect(EventRegistration.attended.event_type("other")).to include(other_event)
+    end
+
+    it "passes everything through when neither is applied" do
+      expect(EventRegistration.event_type(EventRegistration::FILTER_ALL))
+        .to include(attended, no_show, other_event)
     end
   end
 

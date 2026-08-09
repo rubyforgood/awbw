@@ -72,4 +72,52 @@ RSpec.describe AttendeesBreakdowns do
     # Orgs' affiliations preloaded in one query, not one-per-org.
     expect(affiliation_queries).to be <= 1
   end
+
+  # The breakdown rows drill in by person id on the roster and recipients pages,
+  # so each dimension exposes the people behind it. These regroup rows already
+  # loaded for the counts — asking for both must not cost a second query.
+  describe "person ids per row" do
+    it "returns the people behind each dimension" do
+      sector = create(:sector, name: "Healthcare")
+      create(:sectorable_item, sectorable: person, sector: sector, is_primary: true)
+      create(:address, addressable: person, state: "CA", inactive: false)
+      organization = create(:organization, name: "Wellness Org")
+      registration.event_registration_organizations.create!(organization: organization)
+      scholarship = create(:scholarship, recipient: person, amount_cents: 1_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
+
+      expect(breakdowns.primary_sector_registrant_ids_by_sector[sector.id]).to eq([ person.id ])
+      expect(breakdowns.sector_registrant_ids_by_sector[sector.id]).to eq([ person.id ])
+      expect(breakdowns.state_registrant_ids_by_state["CA"]).to eq([ person.id ])
+      expect(breakdowns.organization_registrant_ids_by_org[organization.id]).to eq([ person.id ])
+      expect(breakdowns.scholarship_registrant_ids).to eq([ person.id ])
+      expect(breakdowns.registrant_ids).to eq([ person.id ])
+    end
+
+    it "shares one query with the matching counts" do
+      counts_only = described_class.new(Person.where(id: person.id))
+      with_ids = described_class.new(Person.where(id: person.id))
+
+      counts = count_queries { counts_only.state_counts; counts_only.country_counts; counts_only.school_district_counts }
+      both = count_queries do
+        with_ids.state_counts
+        with_ids.country_counts
+        with_ids.school_district_counts
+        with_ids.state_registrant_ids_by_state
+        with_ids.country_registrant_ids_by_country
+        with_ids.school_district_registrant_ids_by_district
+      end
+
+      expect(both).to eq(counts)
+    end
+  end
+
+  def count_queries
+    queries = 0
+    counter = ->(_name, _start, _finish, _id, payload) do
+      queries += 1 unless payload[:name].to_s.match?(/SCHEMA|TRANSACTION/)
+    end
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { yield }
+    queries
+  end
 end

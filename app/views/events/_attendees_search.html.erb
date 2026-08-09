@@ -43,18 +43,35 @@
       </div>
     </div>
 
+    <%# Attendance outcome and event type default to "attended" / "trainings" — the
+        population this page has always shown. Rendered pre-selected rather than as a
+        blank "All" so the default filter is visible instead of hidden. %>
+    <div class="w-full md:w-40">
+      <%= label_tag :attendance_status, "Attendance", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <%= select_tag :attendance_status,
+            options_for_select([ [ "All outcomes", EventRegistration::FILTER_ALL ] ] + EventRegistration::ATTENDANCE_FILTER_OPTIONS, @attendance_status),
+            class: select_class, onchange: "this.form.submit();" %>
+    </div>
+
+    <div class="w-full md:w-40">
+      <%= label_tag :event_type, "Event type", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <%= select_tag :event_type,
+            options_for_select([ [ "All events", EventRegistration::FILTER_ALL ] ] + EventRegistration::EVENT_TYPE_FILTER_OPTIONS, @attendee_event_type),
+            class: select_class, onchange: "this.form.submit();" %>
+    </div>
+
     <div class="w-full md:w-52">
-      <%= label_tag :event_id, "Training", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <%= label_tag :event_id, "Event", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
       <%= select_tag :event_id,
-            options_from_collection_for_select(@training_events, :id, :time_title, params[:event_id].to_i),
-            include_blank: "All trainings",
+            options_from_collection_for_select(@attendee_event_options, :id, :time_title, params[:event_id].to_i),
+            include_blank: "All events",
             class: select_class, onchange: "this.form.submit();" %>
     </div>
 
     <div class="w-full md:w-32">
       <%= label_tag :event_year, "Year", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
       <%= select_tag :event_year,
-            options_for_select(@training_years.map { |year| [ year.to_s, year ] }, params[:event_year].presence&.to_i),
+            options_for_select(@attendee_years.map { |year| [ year.to_s, year ] }, params[:event_year].presence&.to_i),
             include_blank: "All years",
             class: select_class, onchange: "this.form.submit();" %>
     </div>
@@ -62,7 +79,7 @@
     <div class="w-full md:w-44">
       <%= label_tag :sector, "Sector", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
       <%= select_tag :sector,
-            options_from_collection_for_select(@training_sectors, :id, :name, params[:sector].to_i),
+            options_from_collection_for_select(@attendee_sectors, :id, :name, params[:sector].to_i),
             include_blank: "All sectors",
             class: select_class, onchange: "this.form.submit();" %>
     </div>
@@ -86,7 +103,7 @@
     <div class="w-full md:w-32">
       <%= label_tag :state, "State", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
       <%= select_tag :state,
-            options_for_select(@training_states, params[:state]),
+            options_for_select(@attendee_states, params[:state]),
             include_blank: "All states",
             class: select_class, onchange: "this.form.submit();" %>
     </div>
@@ -94,7 +111,7 @@
     <div class="w-full md:w-52">
       <%= label_tag :county, "County", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
       <%= select_tag :county,
-            options_for_select(@training_counties.map { |state, county| [ "#{county} (#{state})", "#{state}::#{county}" ] }, params[:county]),
+            options_for_select(@attendee_counties.map { |state, county| [ "#{county} (#{state})", "#{state}::#{county}" ] }, params[:county]),
             include_blank: "All counties",
             class: select_class, onchange: "this.form.submit();" %>
     </div>

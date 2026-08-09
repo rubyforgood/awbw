@@ -6,7 +6,6 @@
         icon: "fa-solid fa-user-pen",
         theme: :event_registrations,
         event: @filter_event,
-        subtitle: @count_display ?
-          "#{pluralize(@count_display, "person")} attended #{@filter_event ? "this event" : "these events"}" :
-          "Everyone who attended #{@filter_event ? "this event" : "these events"}" %>
+        subtitle: [ (pluralize(@count_display, "person") if @count_display),
+                    attendee_population_label(@attendance_status, @attendee_event_type) ].compact.join(" · ") %>
 </div>

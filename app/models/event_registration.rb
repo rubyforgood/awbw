@@ -36,6 +36,18 @@ class EventRegistration < ApplicationRecord
   # Attendance outcomes surfaced as their own participation buckets; every other
   # status falls into "other" (registered, transfers, cancellations).
   NAMED_OUTCOME_STATUSES = %w[ attended incomplete_attendance no_show ].freeze
+  # Sentinel filter value meaning "don't narrow on this dimension" — for a filter
+  # that defaults to something specific (the attendees index defaults to attended
+  # registrations on trainings, so it needs a way to say "all of them").
+  FILTER_ALL = "all".freeze
+  # Attendance-outcome filter options, shared by the registrations index and the
+  # attendees index so the vocabulary can't drift between them.
+  ATTENDANCE_FILTER_OPTIONS = (
+    ATTENDANCE_STATUSES.map { |status| [ status.humanize, status ] } +
+    [ [ "Other (registered, transfers, cancellations)", "other" ] ]
+  ).freeze
+  # Event-type filter options, matching the .event_type scope's vocabulary.
+  EVENT_TYPE_FILTER_OPTIONS = [ [ "Trainings", "trainings" ], [ "Other events", "other" ] ].freeze
 
   # Human labels for each attendance status — the single source of truth for
   # status display (badges, filters, the dashboard breakdown).
@@ -78,10 +90,6 @@ class EventRegistration < ApplicationRecord
   scope :active, -> { where(status: ACTIVE_STATUSES) }
   scope :inactive, -> { where(status: INACTIVE_STATUSES) }
   scope :attended, -> { where(status: "attended") }
-  # Attended registrations on facilitator-training events — the population behind
-  # the cross-event attendees index and its breakdowns. Chain .where(registrant_id:)
-  # to narrow to a page of people.
-  scope :attended_facilitator_trainings, -> { attended.joins(:event).where(events: { facilitator_training: true }) }
   scope :registrant_ids, ->(ids) { where(registrant_id: ids.to_s.split("-").map(&:to_i)) }
   scope :attendance_status, ->(status) {
     status == "other" ? where.not(status: NAMED_OUTCOME_STATUSES) : where(status: status)

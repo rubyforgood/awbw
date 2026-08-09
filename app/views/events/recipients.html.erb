@@ -1,4 +1,9 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<%# A ?charts=1 arrival (e.g. the Reports hub's breakdowns link) lands with the
+    panel already open — otherwise the link would drop the user on a collapsed
+    section. Only the first render needs to know: the buttons' shown/hidden label
+    data-attributes drive every toggle after that. %>
+<% charts_open = params[:charts].present? %>
 
 <% answers_by_applicant = @dashboard.scholarship_answers_by_applicant %>
 <% header_answers = @dashboard.header_answers_by_applicant %>
@@ -47,12 +52,34 @@
         Charts start hidden; revealing loads the lazy frame on first show. %>
     <%= render "events/charts_toggle_bar", buttons: [
           { name: "recipients", icon: "fa-user-graduate", shown_label: "Hide recipients", hidden_label: "Show recipients", expanded: true },
-          { name: "charts", icon: "fa-chart-column", shown_label: "Hide charts", hidden_label: "Show charts", expanded: false }
-        ] %>
+          ({ name: "shoutouts", icon: "fa-bullhorn", shown_label: "Hide shout outs", hidden_label: "Show shout outs", expanded: true } if @dashboard.shoutouts.any?),
+          { name: "charts", icon: "fa-chart-column", shown_label: "Hide breakdowns", hidden_label: "Show breakdowns", expanded: charts_open }
+        ].compact %>
     <h2 class="text-xl font-bold mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
       <i class="fa-solid fa-user-graduate"></i>
       Recipients
     </h2>
+    <%= render "events/panel_cta", name: "recipients", label: "Show recipients", icon: "fa-user-graduate", open: true %>
+    <%# A breakdown row narrows the cards in place; the chip says what's applied so
+        the shorter list doesn't read as missing data, and clears it. %>
+    <% drill_ins = AttendeesActiveFilters.new(params, chip_params: %w[ registrant_ids ]).chips %>
+    <% if drill_ins.any? %>
+      <div class="flex flex-wrap items-center gap-2 mb-4 print:hidden">
+        <span class="text-xs font-semibold uppercase text-gray-500 tracking-wide">Applied</span>
+        <% drill_ins.each do |filter| %>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-200 bg-fuchsia-50 px-3 py-1 text-xs font-medium text-fuchsia-700">
+            <%= filter[:label] %>
+            <%= link_to recipients_event_path(@event), class: "text-fuchsia-400 hover:text-fuchsia-700",
+                  aria: { label: "Remove #{filter[:label]} filter" } do %>
+              <i class="fa-solid fa-xmark"></i>
+            <% end %>
+          </span>
+        <% end %>
+        <span class="text-xs text-gray-500 tabular-nums">
+          Showing <%= @recipient_applicants.size %> of <%= @dashboard.scholarship_applicants.size %>
+        </span>
+      </div>
+    <% end %>
     <div data-controller="expandable-cards scholarship-status-toggle"
          data-scholarship-status-toggle-shown-value="true"
          data-panel-toggle-target="panel" data-panel-toggle-name="recipients">
@@ -100,9 +127,15 @@
 
       <% card_locals = { dashboard: @dashboard, answers_by_applicant: answers_by_applicant,
                          header_answers: header_answers, event_date: event_date } %>
+      <%# A breakdown drill-in narrows the cards; the funder buckets follow it, and
+          an emptied bucket drops out rather than showing a header with nothing
+          under it. %>
+      <% shown_ids = @recipient_applicants.map(&:id).to_set %>
       <% if params[:group_by] == "funder" %>
         <div class="space-y-8">
           <% @dashboard.scholarship_applicants_by_funder.each do |group| %>
+            <% group_people = group.people.select { |person| shown_ids.include?(person.id) } %>
+            <% next if group_people.empty? %>
             <section class="break-inside-avoid">
               <%# Bold, dark-fuchsia funder band so each group's header stands out.
                   The funder name links to the funder's profile (org or person). %>
@@ -124,10 +157,10 @@
                     <i class="fa-solid fa-location-dot text-xs text-fuchsia-200"></i><%= group.location %>
                   </span>
                 <% end %>
-                <span class="ml-auto text-sm font-medium text-fuchsia-100"><%= pluralize(group.count, "recipient") %></span>
+                <span class="ml-auto text-sm font-medium text-fuchsia-100"><%= pluralize(group_people.size, "recipient") %></span>
               </div>
               <div class="space-y-6">
-                <% group.people.each do |person| %>
+                <% group_people.each do |person| %>
                   <%= render "events/recipient_card", card_locals.merge(person: person, grouped: true) %>
                 <% end %>
               </div>
@@ -136,7 +169,7 @@
         </div>
       <% else %>
         <div class="space-y-6">
-          <% @dashboard.scholarship_applicants.each do |person| %>
+          <% @recipient_applicants.each do |person| %>
             <%= render "events/recipient_card", card_locals.merge(person: person) %>
           <% end %>
         </div>
@@ -182,7 +215,9 @@
           <% end %>
         <% end %>
       </div>
-      <div class="bg-white border <%= DomainTheme.border_class_for(:scholarships) %> rounded-xl shadow-sm divide-y divide-gray-100">
+      <%= render "events/panel_cta", name: "shoutouts", label: "Show shout outs", icon: "fa-bullhorn", open: true %>
+      <div data-panel-toggle-target="panel" data-panel-toggle-name="shoutouts"
+           class="bg-white border <%= DomainTheme.border_class_for(:scholarships) %> rounded-xl shadow-sm divide-y divide-gray-100">
         <% @dashboard.shoutouts.each do |shoutout| %>
           <% org_link_class = "text-sm font-semibold #{DomainTheme.text_class_for(:scholarships, intensity: 700)} hover:#{DomainTheme.text_class_for(:scholarships)} hover:underline" %>
           <div class="flex items-start gap-3 px-5 py-4 break-inside-avoid">
@@ -229,10 +264,10 @@
   <% if @dashboard.scholarship_applicants.any? %>
     <h2 class="text-xl font-bold mt-10 mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
       <i class="fa-solid fa-chart-pie"></i>
-      Charts
+      Breakdowns
     </h2>
-    <%= render "events/charts_cta" %>
-    <div data-panel-toggle-target="panel" data-panel-toggle-name="charts" class="hidden">
+    <%= render "events/panel_cta", name: "charts", label: "Show breakdowns", open: charts_open %>
+    <div data-panel-toggle-target="panel" data-panel-toggle-name="charts" class="<%= "hidden" unless charts_open %>">
       <%= turbo_frame_tag :recipients_charts, src: recipients_event_path(@event), loading: :lazy do %>
         <%= render "events/charts_loading" %>
       <% end %>

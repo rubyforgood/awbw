@@ -12,15 +12,21 @@
 <% context = local_assigns.fetch(:context, :event) %>
 <% index_context = context == :index %>
 <% event_context = context == :event %>
-<%# Any other context (e.g. :static on the scholarship-recipients charts) renders
-    the cards read-only — no per-row drill-in links. %>
+<%# :recipients — the scholarship-recipients page. Same idea as :event, but the
+    ids come from AttendeesBreakdowns (scoped to that event's recipients) and the
+    drill-in filters that page's cards. %>
+<% recipients_context = context == :recipients %>
 
-<%# Drill-in path per dimension. In :event context we link to the event's
-    registrant list (by named filter or by the registrant_ids behind the row); in
-    :index context we re-apply this index's filters plus the row's own dimension. %>
+<%# Drill-in path per dimension. Every row links to the page it's already on plus
+    a filter — :event narrows the roster's own table by the registrant_ids behind
+    the row, :index re-applies this index's filters plus the row's own dimension.
+    Nothing navigates away, so no back-link/eyebrow plumbing is needed. %>
 <% filter_params = index_context ? request.query_parameters.except("page", "controller", "action") : {} %>
 <% index_path = ->(params) { attendees_events_path(filter_params.merge(params)) } %>
-<% by_ids = ->(ids) { registrants_event_path(event, registrant_ids: ids.join("-")) } %>
+<% by_ids = ->(ids) {
+     ids = ids.to_a.join("-").presence || "0"
+     recipients_context ? recipients_event_path(event, registrant_ids: ids) : roster_event_path(event, registrant_ids: ids)
+   } %>
 
 <% primary_sector_data = data.primary_sectors.map { |s| [ s.name, data.primary_sector_counts.fetch(s.id, 0) ] }.sort_by { |_, count| -count } %>
 <% sector_data = data.sectors.map { |s| [ s.name, data.sector_counts.fetch(s.id, 0) ] }.sort_by { |_, count| -count } %>
@@ -60,11 +66,11 @@
   <% ce_pie_paths = { "CE" => index_path.(ce: "yes"), "No CE" => index_path.(ce: "no") } %>
 <% elsif event_context %>
   <% primary_sector_paths = data.primary_sectors.to_h { |s| [ s.name, by_ids.(data.primary_sector_registrant_ids_by_sector.fetch(s.id, [])) ] } %>
-  <% sector_paths = data.sectors.to_h { |s| [ s.name, registrants_event_path(event, sector: s.id) ] } %>
+  <% sector_paths = data.sectors.to_h { |s| [ s.name, roster_event_path(event, sector: s.id) ] } %>
   <% sector_paths["Other"] = by_ids.(data.other_sector_response_registrant_ids) if data.other_sector_response_count.positive? %>
   <% age_group_paths = data.age_groups.to_h { |c| [ c.name, by_ids.(data.age_group_registrant_ids_by_category.fetch(c.id, [])) ] } %>
   <% all_age_group_paths = data.all_age_groups.to_h { |c| [ c.name, by_ids.(data.all_age_group_registrant_ids_by_category.fetch(c.id, [])) ] } %>
-  <% state_paths = data.states.index_with { |state| registrants_event_path(event, state: state) } %>
+  <% state_paths = data.states.index_with { |state| roster_event_path(event, state: state) } %>
   <% country_paths = data.country_registrant_ids_by_country.transform_values { |ids| by_ids.(ids) } %>
   <% school_district_paths = data.school_district_registrant_ids_by_district.transform_values { |ids| by_ids.(ids) } %>
   <% life_experience_paths = data.life_experiences.to_h { |c| [ c.name, by_ids.(data.life_experience_registrant_ids_by_category.fetch(c.id, [])) ] } %>
@@ -74,10 +80,26 @@
   <% all_registrant_ids = data.registrants.map(&:id) %>
   <% non_scholarship_ids = all_registrant_ids - data.scholarship_registrants.map(&:id) %>
   <% non_ce_ids = all_registrant_ids - data.ce_registrant_ids %>
-  <% scholarship_pie_paths = { "Scholarship" => recipients_event_path(event), "No scholarship" => by_ids.(non_scholarship_ids) } %>
+  <% scholarship_pie_paths = { "Scholarship" => by_ids.(data.scholarship_registrants.map(&:id)), "No scholarship" => by_ids.(non_scholarship_ids) } %>
   <% ce_pie_paths = { "CE" => by_ids.(data.ce_registrant_ids), "No CE" => by_ids.(non_ce_ids) } %>
+<% elsif recipients_context %>
+  <% primary_sector_paths = data.primary_sectors.to_h { |s| [ s.name, by_ids.(data.primary_sector_registrant_ids_by_sector.fetch(s.id, [])) ] } %>
+  <% sector_paths = data.sectors.to_h { |s| [ s.name, by_ids.(data.sector_registrant_ids_by_sector.fetch(s.id, [])) ] } %>
+  <% sector_paths["Other"] = by_ids.(data.other_sector_response_registrant_ids) if data.other_sector_response_count.positive? %>
+  <% age_group_paths = data.age_groups.to_h { |c| [ c.name, by_ids.(data.age_group_registrant_ids_by_category.fetch(c.id, [])) ] } %>
+  <% all_age_group_paths = data.all_age_groups.to_h { |c| [ c.name, by_ids.(data.all_age_group_registrant_ids_by_category.fetch(c.id, [])) ] } %>
+  <% state_paths = data.state_registrant_ids_by_state.transform_values { |ids| by_ids.(ids) } %>
+  <% country_paths = data.country_registrant_ids_by_country.transform_values { |ids| by_ids.(ids) } %>
+  <% school_district_paths = data.school_district_registrant_ids_by_district.transform_values { |ids| by_ids.(ids) } %>
+  <% life_experience_paths = data.life_experiences.to_h { |c| [ c.name, by_ids.(data.life_experience_registrant_ids_by_category.fetch(c.id, [])) ] } %>
+  <% settings_paths = data.settings.to_h { |c| [ c.name, by_ids.(data.settings_registrant_ids_by_category.fetch(c.id, [])) ] } %>
+  <% program_status_paths = data.program_status_registrant_ids.to_h { |status, ids| [ status.to_s.titleize, by_ids.(ids) ] } %>
+  <% other_response_paths = data.other_sector_response_rows.to_h { |text, _count, ids| [ text, by_ids.(ids) ] } %>
+  <% all_registrant_ids = data.registrant_ids %>
+  <% scholarship_pie_paths = { "Scholarship" => by_ids.(data.scholarship_registrant_ids),
+                               "No scholarship" => by_ids.(all_registrant_ids - data.scholarship_registrant_ids) } %>
+  <% ce_pie_paths = { "CE" => by_ids.(data.ce_registrant_ids), "No CE" => by_ids.(all_registrant_ids - data.ce_registrant_ids) } %>
 <% else %>
-  <%# Read-only (:static) — no drill-in links. %>
   <% primary_sector_paths = sector_paths = age_group_paths = all_age_group_paths = {} %>
   <% state_paths = country_paths = school_district_paths = life_experience_paths = settings_paths = {} %>
   <% program_status_paths = other_response_paths = scholarship_pie_paths = ce_pie_paths = {} %>
@@ -86,8 +108,8 @@
 <% org_rows = data.organizations.map { |o|
      index_org_path = if index_context
        index_path.(organization_id: o.id)
-     elsif event_context
-       roster_return_path(by_ids.(data.organization_registrant_ids_by_org.fetch(o.id, []).to_a), "all-organizations")
+     elsif event_context || recipients_context
+       by_ids.(data.organization_registrant_ids_by_org.fetch(o.id, []).to_a)
      end
      { name: o.name,
        high_profile: o.high_profile?,
@@ -154,6 +176,11 @@
         <%= render "events/registrant_city_breakdown", breakdown: data.registrant_city_breakdown, metrics: :both, title: "All cities", row_paths: city_row_paths, scholarship_paths: city_scholarship_paths %>
       <% elsif event_context %>
         <%= render "events/registrant_city_breakdown", breakdown: data.registrant_city_breakdown, metrics: :both, title: "All cities", return_anchor: "all-cities" %>
+      <% elsif recipients_context %>
+        <% city_rows = data.registrant_city_breakdown.rows %>
+        <% city_row_paths = city_rows.to_h { |row| [ row.city, by_ids.(row.registrant_ids) ] } %>
+        <% city_scholarship_paths = city_rows.select { |row| row.scholarship_count.positive? }.to_h { |row| [ row.city, by_ids.(row.scholarship_recipient_ids) ] } %>
+        <%= render "events/registrant_city_breakdown", breakdown: data.registrant_city_breakdown, metrics: :both, title: "All cities", row_paths: city_row_paths, scholarship_paths: city_scholarship_paths %>
       <% else %>
         <%= render "events/registrant_city_breakdown", breakdown: data.registrant_city_breakdown, metrics: :both, title: "All cities", row_paths: {} %>
       <% end %>

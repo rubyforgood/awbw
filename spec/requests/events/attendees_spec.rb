@@ -79,7 +79,7 @@ RSpec.describe "Events attendees", type: :request do
 
         get attendees_events_url, headers: frame_headers
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("No training attendees found.")
+        expect(response.body).to include("No attendees found.")
       end
 
       # An array event_id resolves to one event for authorization but would reach
@@ -132,12 +132,77 @@ RSpec.describe "Events attendees", type: :request do
 
       it "carries the participation origin back through the eyebrow" do
         get attendees_events_url(return_to: "participation")
-        expect(response.body).to include("← Participation")
+        expect(response.body).to include("← Event participation")
+      end
+
+      it "returns to the revenue report when a money KPI drilled in" do
+        get attendees_events_url(return_to: "revenue", payment_status: "unpaid")
+        expect(response.body).to include("← Event revenue")
+      end
+
+      # A report KPI passes both return_to and event_id; the explicit origin has to
+      # win, or the back link drops the user on the event dashboard instead of the
+      # report they were reading.
+      it "prefers the report origin over the event fallback" do
+        get attendees_events_url(return_to: "participation", event_id: recent_training.id)
+
+        expect(response.body).to include("← Event participation")
+        expect(response.body).to include(CGI.escapeHTML(participation_events_path(event_id: recent_training.id)))
+        expect(response.body).not_to include("← #{recent_training.title}")
       end
 
       it "logs an Ahoy page-view event (once, not for the lazy frames)" do
         expect(Analytics::AhoyTracker).to receive(:track_event).with(anything, "view.events.attendees", {})
         get attendees_events_url
+      end
+
+      # The population is defaults, not a fixed base — so the page can also answer
+      # "no shows" and "non-trainings" for the report KPIs that drill in here.
+      context "the population filters" do
+        it "defaults to attended registrations on trainings" do
+          get attendees_events_url, headers: frame_headers
+
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).not_to include("Alan Turing")
+          expect(response.body).not_to include("Grace Hopper")
+        end
+
+        it "reaches no-shows, which the old fixed population excluded outright" do
+          get attendees_events_url(attendance_status: "no_show"), headers: frame_headers
+
+          expect(response.body).to include("Alan Turing")
+          expect(response.body).not_to include("Ada Lovelace")
+        end
+
+        it "reaches non-training events" do
+          get attendees_events_url(event_type: "other"), headers: frame_headers
+
+          expect(response.body).to include("Grace Hopper")
+          expect(response.body).not_to include("Ada Lovelace")
+        end
+
+        it "drops both narrowings for the all-outcomes drill-in" do
+          get attendees_events_url(attendance_status: EventRegistration::FILTER_ALL,
+                                   event_type: EventRegistration::FILTER_ALL), headers: frame_headers
+
+          expect(response.body).to include("Ada Lovelace", "Alan Turing", "Grace Hopper")
+        end
+
+        it "shows the resolved population in the subtitle so the defaults aren't hidden" do
+          get attendees_events_url
+          expect(response.body).to include("Attended · Trainings")
+
+          get attendees_events_url(attendance_status: "no_show")
+          expect(response.body).to include("No show · Trainings")
+        end
+
+        it "pre-selects the defaults in the filter form rather than a blank All" do
+          get attendees_events_url
+          page = Capybara.string(response.body)
+
+          expect(page).to have_selector("select#attendance_status option[selected][value='attended']")
+          expect(page).to have_selector("select#event_type option[selected][value='trainings']")
+        end
       end
 
       context "the results frame" do
@@ -184,9 +249,9 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).to include("Affiliation status")
         end
 
-        it "offers a charts toggle in the results frame but defers the charts to their lazy frame" do
+        it "offers a breakdowns toggle in the results frame but defers the charts to their lazy frame" do
           get attendees_events_url, headers: frame_headers
-          expect(response.body).to include("Show charts")
+          expect(response.body).to include("Show breakdowns")
           expect(response.body).to include("Hide attendees")
           # Charts are not rendered inline — they load into the lazy charts frame.
           # ("All sectors" is a breakdown-card title; the roster's own header says

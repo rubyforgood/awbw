@@ -73,29 +73,32 @@ class EventsController < ApplicationController
     @report = EventScholarshipReport.new(events, featured_year: selected_year, funder: @filter_funder)
   end
 
-  # Cross-event index of everyone who has attended a facilitator training, deduped
-  # to one row per person. Lazy-loaded like the people index: the frame request
-  # builds the filtered/paginated page and its roster; the full request renders the
-  # shell (header, filters, skeleton). Pre-filterable to a single event via event_id
-  # (the reports hub's participation card links here scoped to its event).
+  # Cross-event index of the people behind event registrations, deduped to one row
+  # per person. Lazy-loaded like the people index: the frame request builds the
+  # filtered/paginated page and its roster; the full request renders the shell
+  # (header, filters, skeleton). The population defaults to people who attended a
+  # facilitator training, but attendance outcome and event type are filters — the
+  # report KPIs drill in here for no-shows and non-trainings too.
   def attendees
+    @attendance_status = attendee_attendance_status
+    @attendee_event_type = attendee_event_type
     unless turbo_frame_request?
-      set_training_attendee_filter_options
+      set_attendee_filter_options
       return render :attendees
     end
 
-    people = filtered_training_attendees
+    people = filtered_attendees
     # The charts frame is loaded lazily (only when the user reveals it), so the
     # expensive cross-event breakdowns run solely on that request.
     if turbo_frame_request_id == "attendees_charts"
-      @breakdowns = AttendeesBreakdowns.new(people, events: reportable_trainings)
+      @breakdowns = AttendeesBreakdowns.new(people, events: attendee_events, registrations: attendee_registrations)
       return render :attendees_charts
     end
 
     per_page = params[:number_of_items_per_page].presence || 25
     @count_display = people.count
     @people = people.paginate(page: params[:page], per_page: per_page)
-    @roster = AttendeesRoster.new(@people, events: reportable_trainings)
+    @roster = AttendeesRoster.new(@people, events: attendee_events, registrations: attendee_registrations)
     render :attendees_results
   end
 
@@ -161,6 +164,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :roster?
     @event = @event.decorate
     @dashboard = EventDashboard.new(@event)
+    @roster_registrants = filtered_roster_registrants
     render :event_roster_charts if turbo_frame_request_id == "event_roster_charts"
   end
 
@@ -299,6 +303,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :recipients?
     @event = @event.decorate
     @dashboard = EventDashboard.new(@event)
+    @recipient_applicants = filtered_recipient_applicants
     return unless turbo_frame_request_id == "recipients_charts"
 
     # Charts frame is loaded lazily (only when the admin reveals it), so the
@@ -567,10 +572,86 @@ class EventsController < ApplicationController
     authorized_scope(base, as: :reportable)
   end
 
-  # Facilitator trainings the viewer may report on — the universe behind the
-  # attendees index, its filter dropdowns and its roster/breakdown columns.
-  def reportable_trainings
-    reportable_events(Event.facilitator_trainings)
+  # The attendees index's population filters. These are DEFAULTS, not a fixed base:
+  # you can't filter into no-shows from a set that already excluded them, so the
+  # base is every reportable registration and these narrow it. Unfiltered, the page
+  # shows exactly what it always has — people who attended a facilitator training.
+  # Opt out with EventRegistration::FILTER_ALL (the participation report's
+  # all-outcomes and all-event-types drill-ins).
+  DEFAULT_ATTENDANCE_STATUS = "attended".freeze
+  DEFAULT_ATTENDEE_EVENT_TYPE = "trainings".freeze
+
+  def attendee_attendance_status
+    params[:attendance_status].presence || DEFAULT_ATTENDANCE_STATUS
+  end
+
+  def attendee_event_type
+    params[:event_type].presence || DEFAULT_ATTENDEE_EVENT_TYPE
+  end
+
+  # The recipient cards, narrowed by a breakdown drill-in — same rule as the
+  # roster: only the list shrinks, the breakdowns stay whole.
+  def filtered_recipient_applicants
+    ids = params[:registrant_ids].presence&.to_s&.split("-")&.map(&:to_i)&.to_set
+    return @dashboard.scholarship_applicants unless ids
+    @dashboard.scholarship_applicants.select { |person| ids.include?(person.id) }
+  end
+
+  # The roster table's rows, narrowed by a breakdown drill-in. Only the table
+  # shrinks — the stat bar and the breakdowns deliberately stay whole, so the
+  # charts remain the full picture and keep working as a navigation surface while
+  # the table below shows what was clicked.
+  def filtered_roster_registrants
+    ids = roster_drill_in_ids
+    return @dashboard.registrants unless ids
+    @dashboard.registrants.select { |person| ids.include?(person.id) }
+  end
+
+  # Person ids behind the clicked breakdown row. Most dimensions arrive as an
+  # explicit id list (EventDashboard already has the maps); sector and state have
+  # no per-value id map, so they arrive as named filters and resolve here.
+  def roster_drill_in_ids
+    return @roster_drill_in_ids if defined?(@roster_drill_in_ids)
+
+    @roster_drill_in_ids =
+      if params[:registrant_ids].present?
+        params[:registrant_ids].to_s.split("-").map(&:to_i).to_set
+      elsif params[:sector].present?
+        Person.where(id: person_sector_ids(params[:sector])).ids.to_set
+      elsif params[:state].present?
+        Person.where(id: person_address_ids(state: params[:state])).ids.to_set
+      end
+  end
+
+  # The events the attendees index draws from: the viewer's reportable events
+  # narrowed by the event-side filters. Shared by the registration scope and by the
+  # roster/breakdowns, so a person's row only shows events in scope rather than
+  # their whole history.
+  def attendee_events
+    @attendee_events ||= begin
+      scope = reportable_events
+      scope = scope.facilitator_trainings if attendee_event_type == "trainings"
+      scope = scope.where(facilitator_training: false) if attendee_event_type == "other"
+      # Off @filter_event rather than the raw param: the policy scope already bounds
+      # the events, and the resolved record is one event where params[:event_id]
+      # could be an array asking for several.
+      scope = scope.where(id: @filter_event.id) if @filter_event
+      scope = scope.in_year(params[:event_year]) if params[:event_year].present?
+      scope
+    end
+  end
+
+  # Registrations (any registrant) on those events, narrowed by the registration-side
+  # filters — the population behind the index and the basis for its org/scholarship/
+  # CE drill-in filters.
+  def attendee_registrations
+    @attendee_registrations ||= begin
+      scope = EventRegistration.where(event_id: attendee_events.select(:id))
+      scope = scope.attendance_status(attendee_attendance_status) unless attendee_attendance_status == EventRegistration::FILTER_ALL
+      scope = scope.payment_status(params[:payment_status]) if params[:payment_status].present?
+      scope = scope.funder(params[:funder]) if params[:funder].present?
+      scope
+    end
   end
 
   # Ahoy log for a visit to an event page/report, e.g. "view.events.roster". Ties
@@ -648,19 +729,13 @@ class EventsController < ApplicationController
     Integer(time_period, exception: false)
   end
 
-  # People (Person records) with an attended facilitator-training registration,
-  # narrowed by the attendees index filters. The training-specific
-  # filters (event, year) constrain which attended registrations qualify; the rest
-  # filter the people. Distinct via the id subquery, so joins never duplicate rows.
-  def filtered_training_attendees
-    # Filter off @filter_event rather than the raw param: the policy scope already
-    # bounds the trainings, and the resolved record is a single event where
-    # params[:event_id] could be an array asking for several.
-    registrations = attended_training_registrations
-    registrations = registrations.where(events: { id: @filter_event.id }) if @filter_event
-    registrations = registrations.where("YEAR(events.start_date) = ?", params[:event_year]) if params[:event_year].present?
-
-    scope = Person.where(id: registrations.select(:registrant_id))
+  # People (Person records) behind the attendees index's registrations, narrowed by
+  # the index filters. The event- and registration-side filters (see
+  # #attendee_events / #attendee_registrations) constrain which registrations
+  # qualify; the rest filter the people. Distinct via the id subquery, so joins
+  # never duplicate rows.
+  def filtered_attendees
+    scope = Person.where(id: attendee_registrations.select(:registrant_id))
     # Dash-joined person ids, e.g. from the reports-hub participation totals.
     scope = scope.where(id: params[:registrant_ids].to_s.split("-")) if params[:registrant_ids].present?
     scope = scope.search_by_params({ contact_info: params[:contact_info] }) if params[:contact_info].present?
@@ -676,11 +751,11 @@ class EventsController < ApplicationController
     scope = scope.where(id: person_linked_organization_ids(params[:organization_id])) if params[:organization_id].present?
     scope = scope.where(id: person_linked_org_city_ids(params[:org_city])) if params[:org_city].present?
     if params[:scholarship].present?
-      ids = training_scholarship_recipient_ids
+      ids = scholarship_recipient_person_ids
       scope = params[:scholarship] == "no" ? scope.where.not(id: ids) : scope.where(id: ids)
     end
     if params[:ce].present?
-      ids = training_ce_person_ids
+      ids = ce_person_ids
       scope = params[:ce] == "no" ? scope.where.not(id: ids) : scope.where(id: ids)
     end
     scope = scope.where(id: person_address_ids(state: params[:state])) if params[:state].present?
@@ -714,18 +789,11 @@ class EventsController < ApplicationController
     Address.active.where(addressable_type: "Person", district: district).select(:addressable_id)
   end
 
-  # Attended registrations (any registrant) on the facilitator trainings the
-  # viewer may report on — the basis for the attendees index and its
-  # org/scholarship/CE drill-in filters.
-  def attended_training_registrations
-    EventRegistration.attended_facilitator_trainings.where(event_id: reportable_trainings.select(:id))
-  end
-
-  # Person ids with the given org linked on one of their attended trainings.
+  # Person ids with the given org linked on one of their in-scope registrations.
   def person_linked_organization_ids(organization_id)
     EventRegistrationOrganization
       .joins(:event_registration)
-      .where(organization_id: organization_id, event_registration_id: attended_training_registrations.select(:id))
+      .where(organization_id: organization_id, event_registration_id: attendee_registrations.select(:id))
       .select(Arel.sql("event_registrations.registrant_id"))
   end
 
@@ -740,7 +808,7 @@ class EventsController < ApplicationController
   def org_ids_by_city_label
     @org_ids_by_city_label ||= Address.active
       .where(addressable_type: "Organization",
-             addressable_id: EventRegistrationOrganization.where(event_registration_id: attended_training_registrations.select(:id)).select(:organization_id))
+             addressable_id: EventRegistrationOrganization.where(event_registration_id: attendee_registrations.select(:id)).select(:organization_id))
       .order(:id)
       .pluck(:addressable_id, :city, :state)
       .each_with_object({}) do |(org_id, city, state), first_label|
@@ -756,7 +824,7 @@ class EventsController < ApplicationController
   def person_program_status_ids(status)
     status_sym = status.to_sym
     org_ids = Organization
-      .where(id: EventRegistrationOrganization.where(event_registration_id: attended_training_registrations.select(:id)).select(:organization_id))
+      .where(id: EventRegistrationOrganization.where(event_registration_id: attendee_registrations.select(:id)).select(:organization_id))
       .includes(:affiliations)
       .select { |organization| organization.facilitator_status_on(Date.current) == status_sym }
       .map(&:id)
@@ -764,15 +832,15 @@ class EventsController < ApplicationController
     person_linked_organization_ids(org_ids)
   end
 
-  def training_scholarship_recipient_ids
+  def scholarship_recipient_person_ids
     EventRegistration
-      .where(id: Allocation.where(source_type: "Scholarship", allocatable_type: "EventRegistration", allocatable_id: attended_training_registrations.select(:id)).select(:allocatable_id))
+      .where(id: Allocation.where(source_type: "Scholarship", allocatable_type: "EventRegistration", allocatable_id: attendee_registrations.select(:id)).select(:allocatable_id))
       .select(:registrant_id)
   end
 
-  def training_ce_person_ids
+  def ce_person_ids
     EventRegistration
-      .where(id: ContinuingEducationRegistration.where(event_registration_id: attended_training_registrations.select(:id)).select(:event_registration_id))
+      .where(id: ContinuingEducationRegistration.where(event_registration_id: attendee_registrations.select(:id)).select(:event_registration_id))
       .select(:registrant_id)
   end
 
@@ -789,16 +857,17 @@ class EventsController < ApplicationController
     scope.select(:addressable_id)
   end
 
-  # Option lists for the attendees index filter selects, built once per full
-  # page load from the whole attended-training population.
-  def set_training_attendee_filter_options
-    @training_events = reportable_trainings.order(start_date: :desc)
-    @training_years = @training_events.filter_map { |event| event.start_date&.year }.uniq.sort.reverse
-    attended_person_ids = Person.where(id: attended_training_registrations.select(:registrant_id))
-    @training_sectors = Sector.where(id: SectorableItem.where(sectorable_type: "Person", sectorable_id: attended_person_ids).select(:sector_id)).order(:name)
-    addresses = Address.active.where(addressable_type: "Person", addressable_id: attended_person_ids)
-    @training_states = addresses.where.not(state: [ nil, "" ]).distinct.pluck(:state).sort
-    @training_counties = addresses.where.not(county: [ nil, "" ]).where.not(state: [ nil, "" ]).distinct.pluck(:state, :county).sort
+  # Option lists for the attendees index filter selects, built once per full page
+  # load from the viewer's WHOLE reportable population — deliberately un-narrowed by
+  # the active filters, so filtering never removes the option that would undo it.
+  def set_attendee_filter_options
+    @attendee_event_options = reportable_events.order(start_date: :desc)
+    @attendee_years = @attendee_event_options.filter_map { |event| event.start_date&.year }.uniq.sort.reverse
+    person_ids = Person.where(id: EventRegistration.where(event_id: reportable_events.select(:id)).select(:registrant_id))
+    @attendee_sectors = Sector.where(id: SectorableItem.where(sectorable_type: "Person", sectorable_id: person_ids).select(:sector_id)).order(:name)
+    addresses = Address.active.where(addressable_type: "Person", addressable_id: person_ids)
+    @attendee_states = addresses.where.not(state: [ nil, "" ]).distinct.pluck(:state).sort
+    @attendee_counties = addresses.where.not(county: [ nil, "" ]).where.not(state: [ nil, "" ]).distinct.pluck(:state, :county).sort
   end
 
   # The registrations the admin checked on the recipient picker, narrowed to those

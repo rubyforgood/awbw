@@ -9,6 +9,14 @@
             class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
       <%= link_to "Attendees →", attendees_events_path(hub_to_report_params),
             class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+      <%# Demographics live next to the people they describe, so this points at the
+          breakdowns rather than duplicating them here: one event's roster when the
+          hub is scoped, the cross-event attendees index otherwise. ?charts=1 opens
+          the panel on arrival so the link doesn't land on a collapsed section. %>
+      <% breakdowns_path = @filter_event ? roster_event_path(@filter_event, charts: 1) :
+           attendees_events_path(hub_to_report_params.merge(charts: 1)) %>
+      <%= link_to "Breakdowns →", breakdowns_path,
+            class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
     </div>
   </div>
 
@@ -33,8 +41,8 @@
         </div>
         <%# Each side links to all registrants of that event type. %>
         <div class="mt-1 text-xs text-gray-500 tabular-nums">
-          <%= link_to "#{number_with_delimiter(registrations[:trainings])} trainings", event_registrations_path(event_type: "trainings", event_year: period.year), class: "hover:underline" %>
-          · <%= link_to "#{number_with_delimiter(registrations[:non_trainings])} other", event_registrations_path(event_type: "other", event_year: period.year), class: "hover:underline" %>
+          <%= link_to "#{number_with_delimiter(registrations[:trainings])} trainings", attendees_events_path(event_type: "trainings", attendance_status: EventRegistration::FILTER_ALL, event_year: period.year, event_id: params[:event_id].presence, return_to: "reports"), class: "hover:underline" %>
+          · <%= link_to "#{number_with_delimiter(registrations[:non_trainings])} other", attendees_events_path(event_type: "other", attendance_status: EventRegistration::FILTER_ALL, event_year: period.year, event_id: params[:event_id].presence, return_to: "reports"), class: "hover:underline" %>
         </div>
       </div>
       <div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
@@ -47,7 +55,7 @@
         <%# Each side links to the attended registrants of that event type. %>
         <div class="mt-1 text-xs text-gray-500 tabular-nums">
           <%= link_to "#{number_with_delimiter(people[:trainings])} trainings", attendees_events_path(event_year: period.year, event_id: params[:event_id].presence, return_to: "reports"), class: "hover:underline" %>
-          · <%= link_to "#{number_with_delimiter(people[:non_trainings])} other", event_registrations_path(event_type: "other", attendance_status: "attended", event_year: period.year), class: "hover:underline" %>
+          · <%= link_to "#{number_with_delimiter(people[:non_trainings])} other", attendees_events_path(event_type: "other", attendance_status: "attended", event_year: period.year, event_id: params[:event_id].presence, return_to: "reports"), class: "hover:underline" %>
         </div>
       </div>
     </div>

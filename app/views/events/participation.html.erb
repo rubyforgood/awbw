@@ -56,23 +56,23 @@
                 value_class: "text-blue-700", card_class: "border-blue-300 bg-blue-100",
                 note: featured.attended_seats == featured.unique_people ? "fully attended" : "#{number_with_delimiter(featured.attended_seats)} seats",
                 prior: prior&.unique_people, prior_year: prior&.year,
-                href: event_registrations_path(attendance_status: "attended", event_year: featured.year) %>
+                href: attendees_events_path(attendance_status: "attended", event_type: EventRegistration::FILTER_ALL, event_year: featured.year, event_id: params[:event_id].presence, return_to: "participation") %>
           <%= render "participation_kpi", label: "Partial (1-day)", value: featured.count_for("incomplete_attendance"),
                 value_class: "text-amber-700", card_class: "border-amber-300 bg-amber-50", note: "some days only",
                 prior: prior&.count_for("incomplete_attendance"), prior_year: prior&.year,
-                href: event_registrations_path(attendance_status: "incomplete_attendance", event_year: featured.year) %>
+                href: attendees_events_path(attendance_status: "incomplete_attendance", event_type: EventRegistration::FILTER_ALL, event_year: featured.year, event_id: params[:event_id].presence, return_to: "participation") %>
           <%= render "participation_kpi", label: "No show", value: featured.count_for("no_show"),
                 value_class: "text-red-600", card_class: "border-red-300 bg-red-50", note: "registered, absent",
                 prior: prior&.count_for("no_show"), prior_year: prior&.year,
-                href: event_registrations_path(attendance_status: "no_show", event_year: featured.year) %>
+                href: attendees_events_path(attendance_status: "no_show", event_type: EventRegistration::FILTER_ALL, event_year: featured.year, event_id: params[:event_id].presence, return_to: "participation") %>
           <%= render "participation_kpi", label: "Other", value: featured.count_other,
                 value_class: "text-purple-700", card_class: "border-purple-300 bg-purple-50", note: "registered, transfers, cancels",
                 prior: prior&.count_other, prior_year: prior&.year,
-                href: event_registrations_path(attendance_status: "other", event_year: featured.year) %>
+                href: attendees_events_path(attendance_status: "other", event_type: EventRegistration::FILTER_ALL, event_year: featured.year, event_id: params[:event_id].presence, return_to: "participation") %>
           <%= render "participation_kpi", label: "Registrations", value: featured.total_registrations,
                 value_class: "text-gray-900", card_class: "border-gray-300 bg-gray-50", note: "all outcomes",
                 prior: prior&.total_registrations, prior_year: prior&.year,
-                href: event_registrations_path(event_year: featured.year) %>
+                href: attendees_events_path(attendance_status: EventRegistration::FILTER_ALL, event_type: EventRegistration::FILTER_ALL, event_year: featured.year, event_id: params[:event_id].presence, return_to: "participation") %>
         </div>
       </section>
 
@@ -156,7 +156,7 @@
                     <div class="grid gap-x-4 gap-y-2 text-sm py-2"
                          style="grid-template-columns: repeat(7, minmax(0, 1fr))">
                       <% EventParticipationReport::STATUS_LABELS.each do |status, label| %>
-                        <%= link_to event_registrations_path(event_id: row.event.id, attendance_status: status),
+                        <%= link_to attendees_events_path(event_id: row.event.id, attendance_status: status, event_type: EventRegistration::FILTER_ALL, return_to: "participation"),
                               class: "flex items-baseline justify-between gap-2 rounded px-1 -mx-1 hover:bg-white transition-colors" do %>
                           <span class="text-gray-500 whitespace-nowrap"><%= label %></span>
                           <span class="tabular-nums text-gray-800"><%= number_with_delimiter(row.count_for(status)) %></span>
