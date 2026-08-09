@@ -86,7 +86,6 @@ class Event < ApplicationRecord
   scope :publicly_featured, -> { where(published: true, publicly_visible: true, publicly_featured: true) } # overrides Featureable
   scope :registerable, -> { where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current) }
   scope :using_form, ->(form_id) { joins(:event_forms).where(event_forms: { form_id: form_id }).distinct }
-  scope :staffed_by, ->(person) { joins(:event_staffs).where(event_staffs: { person_id: person }).distinct }
   # Events flagged as facilitator trainings (the "TAC" a scholarship recipient
   # attends). Drives the scholarship index's training column.
   scope :facilitator_trainings, -> { where(facilitator_training: true) }
