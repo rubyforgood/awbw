@@ -5,8 +5,8 @@
 <div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:continuing_education) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
   <%# Top bar: back link + secondary links, matching the scholarship edit page %>
   <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
-    <%= link_to edit_event_registration_path(registration), class: "text-sm text-gray-500 hover:text-gray-700" do %>
-      <i class="fa-solid fa-arrow-left text-xs"></i> Registration
+    <%= link_to ce_registration_return_path(registration), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> <%= params[:return_to] == "registrants" ? "Registrants" : "Registration" %>
     <% end %>
     <div class="flex items-center gap-3">
       <%# Admin jump to the registrant-facing CE callout (what the registrant sees /
@@ -115,7 +115,7 @@
       <% end %>
 
       <div class="ml-auto flex items-center gap-3">
-        <%= link_to "Cancel", edit_event_registration_path(registration), class: "btn btn-secondary-outline" %>
+        <%= link_to "Cancel", ce_registration_return_path(registration), class: "btn btn-secondary-outline" %>
         <%# Submits the CE details form above (which the certificate section sits outside of). %>
         <button type="submit" form="ce_registration_form" class="btn btn-primary">Save changes</button>
       </div>
