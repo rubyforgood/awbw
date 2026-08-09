@@ -246,6 +246,7 @@ action, or `authorize! :workshop, to: :summary?`).
 ### Organizations
 
 - `OrganizationServices::UpsertAddress` — Find-or-create an organization's "work" address from a registrant's submitted agency fields (street/city/state/zip/country). Updates the matching city/state address in place, else adds a new one; never demotes the org's existing primary (a registrant's address becomes primary only when the org has none yet). Returns nil when no city is given. Shared by `PublicRegistration` and the admin org-linking actions so both build the org address identically before linking the affiliation to it
+- `OrganizationServices::SyncProfile` — Populate an organization's structured profile columns (`website_url`, `agency_type`/`agency_type_other`) from a registrant's submitted answers, folding an "Other: <text>" type answer into the label + free text (and recording the free text as an `OtherResponse` for the curation queue). `overwrite: true` (default, public flow) replaces non-blank values latest-wins; `overwrite: false` (admin create-and-link) only fills columns that are currently blank. Shared by `PublicRegistration` and `EventRegistrationsController#create_organization`
 
 ### Notifications
 

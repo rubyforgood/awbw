@@ -269,6 +269,10 @@ class EventRegistrationsController < ApplicationController
     existing = Organization.where("LOWER(name) = ?", name.strip.downcase).first
     organization = existing || Organization.create!(name: name.strip, organization_status: OrganizationStatus.find_by(name: "Active"))
 
+    # Seed type/website from the submission — filling blanks only, so an existing
+    # org's curated values are never clobbered. Address + the affiliation linked to
+    # it are handled by link_affiliations_for (find-or-create, so nothing dupes).
+    OrganizationServices::SyncProfile.call(organization:, overwrite: false, **submitted_agency_profile(@event_registration))
     link_affiliations_for(@event_registration, organization)
     @event_registration.event_registration_organizations.find_or_create_by!(organization: organization)
 
@@ -412,7 +416,7 @@ class EventRegistrationsController < ApplicationController
     return [] unless form
 
     field_ids = form.form_fields
-      .where(field_identifier: %w[agency_name agency_position agency_street agency_city agency_state agency_zip agency_country])
+      .where(field_identifier: %w[agency_name agency_position agency_website agency_type agency_street agency_city agency_state agency_zip agency_country])
       .pluck(:field_identifier, :id).to_h
 
     entries = registration.registrant.form_submissions
@@ -426,6 +430,8 @@ class EventRegistrationsController < ApplicationController
           submission: submission,
           org_name: answer.call("agency_name"),
           position: answer.call("agency_position"),
+          website: answer.call("agency_website"),
+          agency_type: answer.call("agency_type"),
           address: {
             street_address: answer.call("agency_street"),
             city: answer.call("agency_city"),
@@ -470,6 +476,18 @@ class EventRegistrationsController < ApplicationController
     entries = registration_submission_entries(registration)
     primary = entries.find { |entry| entry[:org_name].present? } || entries.first
     primary && primary[:address] || {}
+  end
+
+  # The org website + type the registrant typed on the same "primary" submission
+  # used for the org name/position/address, as attrs for
+  # OrganizationServices::SyncProfile.
+  def submitted_agency_profile(registration)
+    entries = registration_submission_entries(registration)
+    primary = entries.find { |entry| entry[:org_name].present? } || entries.first
+    {
+      website: primary && primary[:website],
+      agency_type: primary && primary[:agency_type]
+    }
   end
 
   # Upsert the linked org's work address from the registrant's submission and

@@ -217,38 +217,11 @@ module EventRegistrationServices
     end
 
     def sync_organization_profile(organization)
-      apply_value(organization, :website_url, field_value("agency_website"))
-      sync_agency_type(organization)
-    end
-
-    # The "Organization Type" answer folds an "Other" choice's free text in as
-    # "Other: <text>" (a specify option). Split the option label from the typed
-    # text: the label drives agency_type and the stripped text fills
-    # agency_type_other, which is cleared for the non-"Other" classifications so
-    # no stale free text lingers. Follows the same latest-wins / never-clobber-on-
-    # blank contract as apply_value.
-    def sync_agency_type(organization)
-      raw = field_value("agency_type")&.strip
-      return if raw.blank?
-
-      label, _separator, specified = raw.partition(":")
-      label = label.strip
-      return if label.blank?
-      other_text = FormField.other_option?(label) ? specified.strip.presence : nil
-      organization.update!(agency_type: label, agency_type_other: other_text)
-      capture_organization_type_other(organization, other_text)
-    end
-
-    # Materialize the org-type "Other" as an OtherResponse owned by the org, so it
-    # joins the curation queue alongside sector "Other"s. Not promotable yet (no
-    # OrganizationType model), but stored now so nothing is lost; de-duped per org.
-    def capture_organization_type_other(organization, text)
-      return if text.blank?
-
-      organization.other_responses.find_or_create_by!(
-        field_identifier: OtherResponse::ORGANIZATION_TYPE_FIELD_IDENTIFIER,
-        normalized_text: OtherResponse.normalize(text)
-      ) { |response| response.text = text }
+      OrganizationServices::SyncProfile.call(
+        organization: organization,
+        website: field_value("agency_website"),
+        agency_type: field_value("agency_type")
+      )
     end
 
     # Write value onto attribute when a non-blank value was submitted, overwriting

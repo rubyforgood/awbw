@@ -1058,6 +1058,25 @@ RSpec.describe "EventRegistrations", type: :request do
             .to all(eq(address))
         end
 
+        it "populates the new org's website and type from the submission" do
+          create(:organization_status, name: "Active")
+          reg_form = create(:form, name: "Reg form")
+          name_field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Brand New Org")
+          { "agency_website" => "helpinghands.org", "agency_type" => "501c3/nonprofit" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post create_organization_event_registration_path(existing_registration)
+
+          organization = Organization.find_by(name: "Brand New Org")
+          expect(organization.website_url).to include("helpinghands.org")
+          expect(organization.agency_type).to eq("501c3/nonprofit")
+        end
+
         it "links an existing org instead of creating a duplicate" do
           existing = create(:organization, name: "Existing Org")
           reg_form = create(:form, name: "Reg form")
@@ -1071,6 +1090,42 @@ RSpec.describe "EventRegistrations", type: :request do
           }.not_to change(Organization, :count)
 
           expect(existing_registration.organizations).to include(existing)
+        end
+
+        it "fills a blank website and type on an existing org from the submission" do
+          existing = create(:organization, name: "Existing Org", website_url: nil, agency_type: nil)
+          reg_form = create(:form, name: "Reg form")
+          name_field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Existing Org")
+          { "agency_website" => "helpinghands.org", "agency_type" => "Government agency" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post create_organization_event_registration_path(existing_registration)
+
+          expect(existing.reload.website_url).to include("helpinghands.org")
+          expect(existing.agency_type).to eq("Government agency")
+        end
+
+        it "does not overwrite an existing org's curated website and type" do
+          existing = create(:organization, name: "Existing Org", website_url: "https://curated.org", agency_type: "For-profit")
+          reg_form = create(:form, name: "Reg form")
+          name_field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Existing Org")
+          { "agency_website" => "helpinghands.org", "agency_type" => "Government agency" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post create_organization_event_registration_path(existing_registration)
+
+          expect(existing.reload.website_url).to eq("https://curated.org")
+          expect(existing.agency_type).to eq("For-profit")
         end
 
         it "does nothing when no organization name was submitted" do
