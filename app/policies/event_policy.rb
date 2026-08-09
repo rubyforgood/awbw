@@ -78,10 +78,6 @@ class EventPolicy < ApplicationPolicy
     admin? || owner?
   end
 
-  def background?
-    admin? || owner?
-  end
-
   def edit_staff?
     manage?
   end

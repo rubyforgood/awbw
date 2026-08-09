@@ -1,11 +1,14 @@
 <%# Shared sub-navigation for an event's admin sub-pages.
-    Pass `event:` and `current:` (one of :dashboard, :registrants, :background, :scholarships, :staff, :edit).
+    Pass `event:` and `current:` (one of :dashboard, :registrants, :scholarships, :staff, :edit).
+    Roster and Reports link out to the shared cross-event pages pre-filtered to this
+    event, so those pages don't render this subnav and have no `current:` value.
     The current page renders as a non-link underlined tab; the rest are muted links. %>
 <nav class="flex flex-wrap items-center gap-1" aria-label="Event views">
   <% tabs = [
        { key: :dashboard, label: "Dashboard", path: dashboard_event_path(event), visible: allowed_to?(:dashboard?, event) },
-       { key: :registrants, label: "Registrants", path: registrants_event_path(event), visible: allowed_to?(:registrants?, event) },
-       { key: :background, label: "Background", path: background_event_path(event), visible: allowed_to?(:background?, event) },
+       { key: :registrants, label: "Manage", path: registrants_event_path(event), visible: allowed_to?(:registrants?, event) },
+       { key: :roster, label: "Roster", path: attendees_events_path(event_id: event.id), visible: allowed_to?(:event_reports?, event) },
+       { key: :reports, label: "Reports", path: reports_events_path(event_id: event.id), visible: allowed_to?(:event_reports?, event) },
        { key: :scholarships, label: "Scholarships", path: recipients_event_path(event), visible: allowed_to?(:recipients?, event) },
        { key: :staff, label: "Staff", path: staff_event_path(event), visible: allowed_to?(:staff?, event) },
        { key: :edit, label: "Edit event", path: edit_event_path(event), visible: allowed_to?(:edit?, event) }

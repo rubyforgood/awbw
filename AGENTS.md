@@ -216,7 +216,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `RichTextMigrator` — Rich text migration utility
 - `DisplayImagePresenter` — Image display logic
 - `ScholarshipsGrouping` (presenter) — Groups scholarships into the index's funder → grant → recipient hierarchy; grant-free awards collect under a trailing "Unfunded" group
-- `RegistrantCityBreakdown` (presenter) — Groups an event's registrants by the city of the org linked on their registration, counting registrants + scholarship recipients per city; drives the shared "Registrants by city" card on the background dashboard and scholarship-recipients page (fed plucked data by `EventDashboard`)
+- `RegistrantCityBreakdown` (presenter) — Groups an event's registrants by the city of the org linked on their registration, counting registrants + scholarship recipients per city; drives the shared "Registrants by city" card on the attendees index and scholarship-recipients page (fed plucked data by `EventDashboard`)
 - `AllocationLedgerLabel` (presenter) — Shared payment-method/label + check-number labelling for an allocation, used by the invoice and receipt ledgers so they can't drift
 
 ### Event Registrations
@@ -356,7 +356,7 @@ end
 - `timeframe` — Date range filtering
 - `toggle_lock` — Lock/unlock toggle UI
 - `toggle_user_icon` — User icon visibility toggle
-- `us_map_chart` — US states choropleth map (event Background states breakdown)
+- `us_map_chart` — US states choropleth map (event attendees index states breakdown)
 
 ### JS Dependencies
 

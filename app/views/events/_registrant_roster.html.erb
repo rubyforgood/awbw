@@ -1,13 +1,13 @@
-<%# Shared registrant roster table, used both on a single event's Background page
-    and on the cross-event training-attendees index. Locals:
+<%# Shared registrant roster table for the cross-event attendees index (and
+    reusable for any single-event registrant list). Locals:
       roster: - data object responding to `registrants` (Person records) and the
         per-registrant lookup maps (EventDashboard or TrainingAttendeesRoster).
       show_event_column: - adds a "Training" column listing each registration's
         event (label + month/year) linking to its edit page. Off in single-event
         context. Default false.
-      clickable_rows: - the whole row links to the person's profile. Default true
-        (Background); off on the cross-event index, where the event links lead
-        into the individual registrations instead. %>
+      clickable_rows: - the whole row links to the person's profile. Default true;
+        off on the cross-event index, where the event links lead into the
+        individual registrations instead. %>
 <% show_event_column = local_assigns.fetch(:show_event_column, false) %>
 <% show_affiliation_status = local_assigns.fetch(:show_affiliation_status, false) %>
 <% clickable_rows = local_assigns.fetch(:clickable_rows, true) %>
