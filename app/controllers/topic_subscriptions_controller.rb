@@ -122,9 +122,18 @@ class TopicSubscriptionsController < ApplicationController
   end
 
   def topic_subscription_params
-    params.require(:topic_subscription).permit(:person_id, :topic_subscription_type_id, :interested_event_id, :source,
+    permitted = params.require(:topic_subscription).permit(:person_id, :topic_subscription_type_id, :interested_event_id, :source,
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       person_attributes: [ :first_name, :last_name, :email ])
+
+    # The new-person toggle is CSS-only, so both the person select and the new
+    # person fields submit. Keep only the chosen mode's params so we never build
+    # a stray person or ignore the picked one.
+    if params[:person_source_mode] == "new"
+      permitted.except(:person_id)
+    else
+      permitted.except(:person_attributes)
+    end
   end
 
   # Stamp the auditing columns on a person created inline through the form so the

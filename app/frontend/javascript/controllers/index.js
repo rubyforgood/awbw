@@ -129,9 +129,6 @@ application.register("question-library", QuestionLibraryController)
 import PasswordToggleController from "./password_toggle_controller"
 application.register("password-toggle", PasswordToggleController)
 
-import PersonSourceController from "./person_source_controller"
-application.register("person-source", PersonSourceController)
-
 import SearchTypeSelectController from "./search_type_select_controller"
 application.register("search-type-select", SearchTypeSelectController)
 

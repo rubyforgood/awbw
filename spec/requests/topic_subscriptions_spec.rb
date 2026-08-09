@@ -365,6 +365,7 @@ RSpec.describe "TopicSubscriptions", type: :request do
     it "creates a new person inline and links them to the subscription" do
       expect {
         post topic_subscriptions_path, params: {
+          person_source_mode: "new",
           topic_subscription: {
             topic_subscription_type_id: trainings.id, source: "admin",
             person_attributes: { first_name: "Nadia", last_name: "Newbie", email: "nadia@example.com" }
@@ -378,9 +379,26 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(TopicSubscription.last.person).to eq(person)
     end
 
+    it "uses the picked person and ignores the new-person fields in existing mode" do
+      person = create(:person)
+
+      expect {
+        post topic_subscriptions_path, params: {
+          person_source_mode: "existing",
+          topic_subscription: {
+            person_id: person.id, topic_subscription_type_id: trainings.id,
+            person_attributes: { first_name: "Stray", last_name: "Ignored", email: "stray@example.com" }
+          }
+        }
+      }.to change(Person, :count).by(0)
+
+      expect(TopicSubscription.last.person).to eq(person)
+    end
+
     it "re-renders with errors and creates nothing when the inline person is invalid" do
       expect {
         post topic_subscriptions_path, params: {
+          person_source_mode: "new",
           topic_subscription: {
             topic_subscription_type_id: trainings.id,
             person_attributes: { first_name: "Nadia", last_name: "", email: "" }
