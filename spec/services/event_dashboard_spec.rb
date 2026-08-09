@@ -1108,5 +1108,22 @@ RSpec.describe EventDashboard do
       expect(dashboard.unfunded_scholarship_count).to eq(2)
       expect(dashboard.unfunded_scholarship_cents).to eq(3_000)
     end
+
+    it "maps funded dollars per recipient, reconciling with the funded total" do
+      amounts = dashboard.funded_scholarship_cents_by_recipient
+      expect(amounts).to eq(person1.id => 4_000)
+      expect(amounts.values.sum).to eq(dashboard.funded_scholarship_cents)
+    end
+
+    it "maps unfunded dollars per recipient, reconciling with the unfunded total" do
+      amounts = dashboard.unfunded_scholarship_cents_by_recipient
+      expect(amounts).to eq(person2.id => 2_000, person4.id => 1_000)
+      expect(amounts.values.sum).to eq(dashboard.unfunded_scholarship_cents)
+    end
+
+    it "lists funded and unfunded recipients as name-sorted Person records" do
+      expect(dashboard.funded_scholarship_recipients).to eq([ person1 ])
+      expect(dashboard.unfunded_scholarship_recipients).to match_array([ person2, person4 ])
+    end
   end
 end

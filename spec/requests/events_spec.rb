@@ -430,6 +430,26 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("TAC261")
       end
 
+      it "expands a training row to list its scholarship recipients and amounts, split funded vs unfunded" do
+        funder = create(:organization, name: "Community Trust")
+        funded_person = create(:person, first_name: "Fern", last_name: "Funded")
+        unfunded_person = create(:person, first_name: "Uma", last_name: "Unfunded")
+        funded_reg = create(:event_registration, event: training, registrant: funded_person, status: "attended")
+        unfunded_reg = create(:event_registration, event: training, registrant: unfunded_person, status: "attended")
+        funded_award = create(:scholarship, recipient: funded_person, amount_cents: 4_000, grant: create(:grant, donor: funder))
+        create(:allocation, source: funded_award, allocatable: funded_reg, amount: 4_000)
+        unfunded_award = create(:scholarship, recipient: unfunded_person, amount_cents: 2_500, grant: nil)
+        create(:allocation, source: unfunded_award, allocatable: unfunded_reg, amount: 2_500)
+
+        sign_in admin
+        get scholarships_events_path
+        expect(response.body).to include("Fern Funded", "Uma Unfunded")
+        expect(response.body).to include("$40", "$25")
+        # Each recipient links into that training's registrants, filtered to them,
+        # stamped so the eyebrow returns to the report.
+        expect(response.body).to include("registrant_ids=#{funded_person.id}", "return_to=scholarships")
+      end
+
       it "narrows to trainings a selected funder scholarshipped" do
         funder = create(:organization, name: "Community Trust")
         person = create(:person)

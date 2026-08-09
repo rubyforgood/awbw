@@ -253,6 +253,30 @@ class EventDashboard
     @scholarship_amounts_by_recipient ||= scholarships.group(:recipient_id).sum(:amount_cents)
   end
 
+  # Funded / unfunded scholarship dollars per recipient (Person id => cents) — the
+  # per-person split behind funded_scholarship_cents / unfunded_scholarship_cents.
+  # Recipients with no award in that split are absent, so a recipient can appear in
+  # one map, both, or neither.
+  def funded_scholarship_cents_by_recipient
+    @funded_scholarship_cents_by_recipient ||= funded_scholarships.group(:recipient_id).sum(:amount_cents)
+  end
+
+  def unfunded_scholarship_cents_by_recipient
+    @unfunded_scholarship_cents_by_recipient ||= unfunded_scholarships.group(:recipient_id).sum(:amount_cents)
+  end
+
+  # Scholarship recipients (Person records, name-sorted) with a funded / unfunded
+  # award — the people behind each split, for the scholarship report row's expander.
+  # Both reuse the recipients already loaded by #scholarship_registrants, so the
+  # split adds no extra Person query.
+  def funded_scholarship_recipients
+    @funded_scholarship_recipients ||= recipients_for(funded_scholarship_cents_by_recipient.keys)
+  end
+
+  def unfunded_scholarship_recipients
+    @unfunded_scholarship_recipients ||= recipients_for(unfunded_scholarship_cents_by_recipient.keys)
+  end
+
   # Per-registrant payment-sourced cents received, keyed by Person id. Aggregates
   # across a person's registrations; sums to received_cents.
   def registration_paid_by_registrant
@@ -1204,6 +1228,16 @@ class EventDashboard
 
   def people_sorted(person_ids)
     Person.where(id: person_ids).sort_by(&:name)
+  end
+
+  # Recipient Person records for the given ids, name-sorted, drawn from the
+  # already-loaded scholarship_registrants so a funded/unfunded split reuses one query.
+  def recipients_for(recipient_ids)
+    recipient_ids.filter_map { |id| scholarship_recipients_by_id[id] }.sort_by(&:name)
+  end
+
+  def scholarship_recipients_by_id
+    @scholarship_recipients_by_id ||= scholarship_registrants.index_by(&:id)
   end
 
   def organization_ids
