@@ -206,6 +206,9 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
+  # Filter the roster by the expected payment method (the stored form answer,
+  # e.g. "Credit card (now)"). Surfaced as a short-code badge on the roster.
+  scope :payment_method, ->(value) { where(expected_payment_method: value) }
   # Filter by CE state. All derived (no stored CE status): payment (requested/paid)
   # is computed from allocations vs cost like the registration's own payment state;
   # issued/not_issued read the certificate delivery; needs_license is a CE

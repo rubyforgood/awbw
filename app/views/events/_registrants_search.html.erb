@@ -34,6 +34,12 @@
             selected: params[:payment_status], blank: "Any payment status", field_class: field_class %>
     <% end %>
 
+    <% if @event.cost_cents.to_i > 0 && @payment_method_filter_options.present? %>
+      <%= render "events/filter_select", param: :payment_method, label: "Payment method",
+            options: @payment_method_filter_options,
+            selected: params[:payment_method], blank: "Any payment method", field_class: field_class %>
+    <% end %>
+
     <% if @ce_eligible %>
       <%= render "events/filter_select", param: :ce_status, label: "CE status",
             options: [ [ "Registered for CE", "registered" ], [ "Needs license", "needs_license" ], [ "Requested", "requested" ], [ "Paid", "paid" ], [ "Issued", "issued" ], [ "Not issued", "not_issued" ] ],

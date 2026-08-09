@@ -149,6 +149,62 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
     end
   end
 
+  describe "#payment_method_badge" do
+    subject(:badge) { create(:event_registration, expected_payment_method: value).decorate.payment_method_badge }
+
+    context "when no payment method is recorded" do
+      let(:value) { nil }
+
+      it { is_expected.to be_nil }
+    end
+
+    context "with a known method" do
+      let(:value) { "Credit card (now)" }
+
+      it "maps to its short code, icon, and classes" do
+        expect(badge.code).to eq("CCN")
+        expect(badge.label).to eq("Credit card (now)")
+        expect(badge.classes).to include("green")
+      end
+    end
+
+    context "with the buddy-system method" do
+      let(:value) { "Buddy system" }
+
+      it "maps to the BUD code" do
+        expect(badge.code).to eq("BUD")
+        expect(badge.classes).to include("purple")
+      end
+    end
+
+    context "with an unknown / custom value" do
+      let(:value) { "Wire transfer overseas" }
+
+      it "falls back to a neutral badge showing the raw value" do
+        expect(badge.label).to eq("Wire transfer overseas")
+        expect(badge.classes).to include("gray")
+      end
+    end
+  end
+
+  describe ".payment_method_filter_options" do
+    it "returns unique present values ordered by badge order, labeled with the code" do
+      options = described_class.payment_method_filter_options(
+        [ "Check", "Credit card (now)", "Credit card (now)", nil, "" ]
+      )
+
+      expect(options).to eq(
+        [ [ "Credit card (now) (CCN)", "Credit card (now)" ], [ "Check (CK)", "Check" ] ]
+      )
+    end
+
+    it "keeps unknown values last, unlabeled" do
+      options = described_class.payment_method_filter_options([ "Mystery", "Check" ])
+
+      expect(options).to eq([ [ "Check (CK)", "Check" ], [ "Mystery", "Mystery" ] ])
+    end
+  end
+
   describe "#ce_status_sort_key" do
     subject(:sort_key) { registration.decorate.ce_status_sort_key }
 

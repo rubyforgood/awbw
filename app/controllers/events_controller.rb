@@ -165,6 +165,7 @@ class EventsController < ApplicationController
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.payment_status(params[:payment_status]) if params[:payment_status].present?
+    scope = scope.payment_method(params[:payment_method]) if params[:payment_method].present?
     scope = scope.scholarship_status(params[:scholarship]) if params[:scholarship].present?
     scope = scope.funder(params[:funder]) if params[:funder].present?
     scope = scope.ce_status(params[:ce_status]) if params[:ce_status].present?
@@ -190,6 +191,9 @@ class EventsController < ApplicationController
     @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name")).to_a
     @dashboard = EventDashboard.new(@event)
     @ce_eligible = @event.ce_eligible?
+    @payment_method_filter_options = EventRegistrationDecorator.payment_method_filter_options(
+      @event.event_registrations.pluck(:expected_payment_method)
+    )
 
     @submitted_org_names = submitted_org_names_for(@event_registrations)
     @readiness = @event_registrations.to_h do |registration|

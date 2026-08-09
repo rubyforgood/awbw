@@ -1124,6 +1124,47 @@ RSpec.describe "Events", type: :request do
 
         expect(response).to have_http_status(:ok)
       end
+
+      it "does not crash on an invalid payment_method" do
+        get registrants_event_path(event, payment_method: "bogus")
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context "payment method filter" do
+      let(:event) { create(:event, cost_cents: 10_000) }
+
+      let!(:ccn) do
+        create(:event_registration, event: event, expected_payment_method: "Credit card (now)",
+          registrant: create(:person, first_name: "Cardnow", last_name: "Payer"))
+      end
+      let!(:check) do
+        create(:event_registration, event: event, expected_payment_method: "Check",
+          registrant: create(:person, first_name: "Checkwriter", last_name: "Payer"))
+      end
+
+      it "shows a short-code badge beside the registrant's name" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include("CCN")
+        expect(response.body).to include("Expected payment: Credit card (now)")
+      end
+
+      it "offers only the methods present as filter options" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Credit card (now) (CCN)")
+        expect(response.body).to include("Check (CK)")
+        expect(response.body).not_to include("(BUD)")
+      end
+
+      it "narrows the roster to the chosen method" do
+        get registrants_event_path(event, payment_method: "Check")
+
+        expect(response.body).to include("Checkwriter")
+        expect(response.body).not_to include("Cardnow")
+      end
     end
 
     context "funder filter" do

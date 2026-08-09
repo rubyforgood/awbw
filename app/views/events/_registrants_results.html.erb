@@ -252,6 +252,14 @@
                       <% end %>
                     </div>
 
+                    <% if payment_col && (payment_method = registration.decorate.payment_method_badge) %>
+                      <span class="inline-flex items-center gap-1 flex-shrink-0 rounded border px-1.5 py-0.5 text-[0.65rem] font-semibold <%= payment_method.classes %>"
+                            title="Expected payment: <%= payment_method.label %>">
+                        <i class="<%= payment_method.icon %>" aria-hidden="true"></i>
+                        <%= payment_method.code %>
+                      </span>
+                    <% end %>
+
                     <% form_show_params = registration.slug.present? ? { reg: registration.slug } : { person_id: person.id } %>
                     <% if event_form_ids.any? %>
                       <span class="inline-flex w-4 justify-center">
