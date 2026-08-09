@@ -61,18 +61,19 @@
   <div class="px-2 sm:px-6 lg:px-8">
     <!-- Row 1: Logo and Main Navigation -->
     <div class="nav-row row-1 relative flex items-center justify-center border-b-4 border-purple-700 py-3">
-      <div class="hidden lg:flex space-x-6 items-center">
-        <div class="flex shrink-0 items-center">
-          <% if current_user %>
-            <% path = root_path %>
-          <% else %>
-            <% path = root_url(host: ENV.fetch("APP_HOST", request.host)) %>
-          <% end %>
-          <%= link_to path, class: "relative group" do %>
-            <%= image_tag("logo-with-tagline-436x80.jpg", class: "h-8 sm:h-8 w-auto block") %>
-          <% end %>
-        </div>
+      <!-- Logo (always visible) -->
+      <div class="flex shrink-0 items-center absolute left-2 sm:left-6 lg:left-8">
+        <% if current_user %>
+          <% path = root_path %>
+        <% else %>
+          <% path = root_url(host: ENV.fetch("APP_HOST", request.host)) %>
+        <% end %>
+        <%= link_to path, class: "relative group" do %>
+          <%= image_tag("logo-with-tagline-436x80.jpg", class: "h-8 w-auto block") %>
+        <% end %>
+      </div>
 
+      <div class="hidden lg:flex space-x-6 items-center">
         <!-- Mega dropdown trigger -->
         <div class="relative group nav-item has-dropdown">
           <button type="button" class="font-telefon text-gray-700 hover:text-purple-700 text-md font-medium transition-colors">

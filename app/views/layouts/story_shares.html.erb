@@ -26,41 +26,17 @@
       .font-telefon {
         font-family: 'Telefon Bold', sans-serif;
       }
-
-      /* Hide secondary nav rows on scroll */
-      .nav-row {
-        max-height: 200px;
-        overflow: visible;
-        transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
-      }
-
-      .scrolled .nav-row:not(:first-child) {
-        max-height: 0;
-        overflow: hidden;
-        opacity: 0;
-      }
     </style>
   </head>
 
-  <body class="stories share_portal flex flex-col min-h-screen bg-white">
-    <button type="button"
-            data-controller="safety-exit"
-            data-action="safety-exit#leave"
-            class="fixed top-2 right-2 z-[60] print:hidden inline-flex items-center gap-1 rounded-md bg-red-700 px-3 py-2 text-sm font-semibold text-white shadow-lg hover:bg-red-800 focus:outline-2 focus:ring-2 focus:ring-red-400">
-      <%= icon("fa-solid fa-xmark") %>
-      Safety exit
-    </button>
-
-    <div class="flex-grow" id="main">
-      <div class="sticky top-0 left-0 w-full z-50 print:hidden"
-           id="share-portal-header"
-           data-controller="nav-shrink"
-           data-action="scroll@window->nav-shrink#update">
+  <body class="stories share_portal flex flex-col min-h-screen bg-white overflow-x-hidden">
+    <div class="flex-grow min-w-0 w-full" id="main">
+      <div class="sticky top-0 left-0 w-full z-50 print:hidden" id="share-portal-header">
         <!-- Story Share Portal Navbar -->
         <%= render "shared/story_shares_navbar" %>
       </div>
 
-      <div class="not-signed-in-user flex flex-col <%= yield(:page_bg_class) %>">
+      <div class="not-signed-in-user flex flex-col min-w-0 w-full <%= yield(:page_bg_class) %>">
         <%= render "shared/flash_messages" %>
         <%= yield %>
       </div>

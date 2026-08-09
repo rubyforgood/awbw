@@ -108,12 +108,6 @@ application.register("inactive-toggle", InactiveToggleController)
 import NavigateSelectController from "./navigate_select_controller"
 application.register("navigate-select", NavigateSelectController)
 
-import NavShrinkController from "./nav_shrink_controller"
-application.register("nav-shrink", NavShrinkController)
-
-import SafetyExitController from "./safety_exit_controller"
-application.register("safety-exit", SafetyExitController)
-
 import OptimisticBookmarkController from "./optimistic_bookmark_controller"
 application.register("optimistic-bookmark", OptimisticBookmarkController)
 
