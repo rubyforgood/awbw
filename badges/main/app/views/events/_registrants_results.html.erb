@@ -330,7 +330,7 @@
                 </td>
 
                 <% if ce_col %>
-                  <td class="px-4 py-2 text-sm text-center" data-column-toggle-col="ce">
+                  <td class="px-4 py-2 text-sm text-center" data-column-toggle-col="ce" data-sort-value="<%= registration.decorate.ce_status_sort_key %>">
                     <%# Canonical CE badge (Requested → License # needed → $X due →
                         Pending → Issued). "Create" when CE isn't in play yet. %>
                     <% if registration.decorate.ce_status_badge.nil? %>
@@ -346,8 +346,18 @@
                   </td>
                 <% end %>
 
-                <td class="px-4 py-2 text-sm text-center <%= "hidden" unless scholarship_on %>" data-column-toggle-col="scholarship">
-                  <% if (s = registration.scholarships.first) %>
+                <% scholarship = registration.scholarships.first %>
+                <% scholarship_sort = if scholarship&.tasks_completed?
+                     0
+                   elsif scholarship
+                     1
+                   elsif registration.scholarship_requested?
+                     2
+                   else
+                     3
+                   end %>
+                <td class="px-4 py-2 text-sm text-center <%= "hidden" unless scholarship_on %>" data-column-toggle-col="scholarship" data-sort-value="<%= scholarship_sort %>">
+                  <% if (s = scholarship) %>
                     <% if s.tasks_completed? %>
                       <%= render "shared/badge",
                             label: "Completed",
