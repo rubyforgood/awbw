@@ -278,14 +278,16 @@
         </div>
         <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: "#{@dashboard.registrant_count} active", path: registrants_event_path(@event, status_filter: "active") %><% if @dashboard.inactive_registration_count.positive? %> · <%= render "stat_link", label: "#{@dashboard.inactive_registration_count} inactive", path: registrants_event_path(@event, status_filter: "inactive") %><% end %></p>
         <% if @dashboard.unlinked_registration_count.positive? %>
+          <%# Rectangular amber callout matching the "Unallocated bulk payments"
+              card in the grand-total equation: same rounded-lg border, amber-50
+              fill, and darker amber-700 circle-exclamation. %>
           <div class="mt-1.5">
-            <%= render "shared/badge",
-                  href: registrants_event_path(@event, org_status: "unlinked"),
-                  label: "#{@dashboard.unlinked_registration_count} unlinked",
-                  classes: "bg-amber-50 text-amber-700 border-amber-300",
-                  icon: "fa-solid fa-circle-exclamation text-amber-500",
-                  title: "Registrants with no organization linked",
-                  extra: "shrink-0" %>
+            <%= link_to registrants_event_path(@event, org_status: "unlinked"),
+                  class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors",
+                  title: "Registrants with no organization linked" do %>
+              <i class="fa-solid fa-circle-exclamation"></i>
+              <%= @dashboard.unlinked_registration_count %> unlinked
+            <% end %>
           </div>
         <% end %>
       </summary>
