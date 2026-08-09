@@ -438,6 +438,21 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).not_to include("reverted payments still count")
       end
 
+      it "points Cancel at the event's registrants roster by default" do
+        get edit_event_registration_path(existing_registration)
+
+        cancel_href = Capybara.string(response.body).find_link("Cancel")[:href]
+        expect(cancel_href).to start_with(registrants_event_path(existing_registration.event))
+      end
+
+      it "points Cancel at the registrations index only when the admin came from it" do
+        get edit_event_registration_path(existing_registration, return_to: "index")
+
+        cancel_href = Capybara.string(response.body).find_link("Cancel")[:href]
+        expect(cancel_href).to eq(event_registrations_path)
+      end
+
+
       it "shows the scholarship agreement status on the scholarship card" do
         scholarship = Scholarship.new(recipient: existing_registration.registrant, amount_cents: 1_000)
         scholarship.build_allocation(allocatable: existing_registration, amount: 1_000)
@@ -487,6 +502,13 @@ RSpec.describe "EventRegistrations", type: :request do
 
         expect(existing_registration.reload.shoutout).to be(true)
         expect(existing_registration.registrant.reload.shoutout_text).to eq("Grateful to bring art to survivors.")
+      end
+
+      it "returns to the recipients page shout-outs section when return_to is recipients" do
+        patch event_registration_path(existing_registration),
+              params: { return_to: "recipients", event_registration: { shoutout: "1" } }
+
+        expect(response).to redirect_to(recipients_event_path(existing_registration.event, anchor: "shout-outs"))
       end
 
       it "records an admin-set expected payment method even when the form was never filled out" do

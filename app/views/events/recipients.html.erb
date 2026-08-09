@@ -260,15 +260,43 @@
 
   <%# ---- Shout outs: registrants who opted in, with their shout-out text ---- %>
   <% if @dashboard.shoutouts.any? %>
-    <div class="mt-10 break-inside-avoid">
-      <h2 class="text-xl font-bold mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
-        <i class="fa-solid fa-bullhorn"></i>
-        Shout outs
-      </h2>
+    <div id="shout-outs" class="scroll-mt-24 mt-10 break-inside-avoid">
+      <% recipient_shoutout_options = @dashboard.scholarship_applicants.filter_map { |person|
+           reg_id = @dashboard.registration_id_by_registrant[person.id]
+           next unless reg_id
+           label = person.email.present? ? "#{person.name} (#{person.email})" : person.name
+           [ label, reg_id ]
+         } %>
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <h2 class="text-xl font-bold flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
+          <i class="fa-solid fa-bullhorn"></i>
+          Shout outs
+        </h2>
+        <%# Search a scholarship recipient and feature them: this flags their
+            registration for a shout-out, then lands on their registration edit
+            form to add the shout-out text (the toggle is already saved). %>
+        <% if recipient_shoutout_options.any? %>
+          <%= form_with url: feature_recipient_shoutout_event_path(@event), method: :post,
+                        data: { turbo: false }, class: "flex items-center gap-2 print:hidden" do %>
+            <div class="min-w-[220px]" data-controller="searchable-select" data-searchable-select-mode-value="person">
+              <%= select_tag :registration_id,
+                             options_for_select(recipient_shoutout_options),
+                             include_blank: true, prompt: "Search recipients…",
+                             aria: { label: "Search scholarship recipients to add a shout-out" },
+                             class: "ts-flat w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-fuchsia-500 focus:border-fuchsia-500",
+                             data: { searchable_select_target: "select" } %>
+            </div>
+            <button type="submit" class="btn btn-utility-outline whitespace-nowrap">
+              <i class="fa-solid fa-plus"></i> Add shoutout
+            </button>
+          <% end %>
+        <% end %>
+      </div>
       <div class="bg-white border <%= DomainTheme.border_class_for(:scholarships) %> rounded-xl shadow-sm divide-y divide-gray-100">
         <% @dashboard.shoutouts.each do |shoutout| %>
           <% org_link_class = "text-sm font-semibold #{DomainTheme.text_class_for(:scholarships, intensity: 700)} hover:#{DomainTheme.text_class_for(:scholarships)} hover:underline" %>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 px-5 py-4 break-inside-avoid">
+          <div class="flex items-start gap-3 px-5 py-4 break-inside-avoid">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1 min-w-0">
             <%# Organization on the left, linked to its website when it has one,
                 otherwise to its profile page. %>
             <div class="sm:col-span-1">
@@ -290,6 +318,16 @@
               <% if meta.any? %><span class="text-gray-500">(<%= meta.join(", ") %>)</span><% end %>
               — <%= shoutout.text %>
             </div>
+            </div>
+            <%# Jump to this recipient's registration edit form, anchored to the
+                shout-out section, to change the flag or text. %>
+            <% reg_id = @dashboard.registration_id_by_registrant[shoutout.recipient.id] %>
+            <% if reg_id %>
+              <%= link_to edit_event_registration_path(reg_id, return_to: "recipients", anchor: "shout-out"),
+                          class: "shrink-0 inline-flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline print:hidden" do %>
+                <i class="fa-solid fa-pen"></i> Edit
+              <% end %>
+            <% end %>
           </div>
         <% end %>
       </div>

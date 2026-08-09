@@ -175,6 +175,7 @@ Rails.application.routes.draw do
       get "staff/edit", action: :edit_staff, as: :edit_staff
       patch "staff", action: :update_staff
       get :recipients
+      post :feature_recipient_shoutout
       get :bulk_payments, to: "events/bulk_payments#index"
       get :preview_reminder
       patch :preview

@@ -237,6 +237,13 @@ class EventDashboard
     @registration_slug_by_registrant ||= active_registrations.pluck(:registrant_id, :slug).to_h
   end
 
+  # Active registration id per registrant (Person id) — links a recipient's
+  # shout-out row on the recipients page to their registration edit form, where
+  # the shout-out flag and text are set. One active registration per event.
+  def registration_id_by_registrant
+    @registration_id_by_registrant ||= active_registrations.pluck(:registrant_id, :id).to_h
+  end
+
   # The [ event, participant slug ] a registrant's scholarship icon links to: this
   # event's recipients page, anchored to their entry. The shared roster partial
   # reads this so the same column works on the cross-event training-attendees
