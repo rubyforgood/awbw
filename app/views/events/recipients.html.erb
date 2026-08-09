@@ -55,11 +55,8 @@
           ({ name: "shoutouts", icon: "fa-bullhorn", shown_label: "Hide shout outs", hidden_label: "Show shout outs", expanded: true } if @dashboard.shoutouts.any?),
           { name: "charts", icon: "fa-chart-column", shown_label: "Hide breakdowns", hidden_label: "Show breakdowns", expanded: charts_open }
         ].compact %>
-    <h2 class="text-xl font-bold mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
-      <i class="fa-solid fa-user-graduate"></i>
-      Recipients
-    </h2>
-    <%= render "events/panel_cta", name: "recipients", label: "Show recipients", icon: "fa-user-graduate", open: true %>
+    <%= render "events/section_heading", title: "Recipients", icon: "fa-user-graduate",
+          theme: :scholarships, panel: "recipients", open: true %>
     <%# A breakdown row narrows the cards in place; the chip says what's applied so
         the shorter list doesn't read as missing data, and clears it. %>
     <% drill_ins = AttendeesActiveFilters.new(params, chip_params: %w[ registrant_ids ]).chips %>
@@ -191,10 +188,8 @@
            [ label, reg_id ]
          } %>
       <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <h2 class="text-xl font-bold flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
-          <i class="fa-solid fa-bullhorn"></i>
-          Shout outs
-        </h2>
+        <%= render "events/section_heading", title: "Shout outs", icon: "fa-bullhorn",
+              theme: :scholarships, panel: "shoutouts", open: true, margin: "" %>
         <%# Search a scholarship recipient and feature them: this flags their
             registration for a shout-out, then lands on their registration edit
             form to add the shout-out text (the toggle is already saved). %>
@@ -215,7 +210,6 @@
           <% end %>
         <% end %>
       </div>
-      <%= render "events/panel_cta", name: "shoutouts", label: "Show shout outs", icon: "fa-bullhorn", open: true %>
       <div data-panel-toggle-target="panel" data-panel-toggle-name="shoutouts"
            class="bg-white border <%= DomainTheme.border_class_for(:scholarships) %> rounded-xl shadow-sm divide-y divide-gray-100">
         <% @dashboard.shoutouts.each do |shoutout| %>
@@ -262,11 +256,8 @@
   <%# ---- Charts: the shared breakdown cards over just this event's scholarship
       recipients, loaded lazily on first reveal (read-only — no drill-in). ---- %>
   <% if @dashboard.scholarship_applicants.any? %>
-    <h2 class="text-xl font-bold mt-10 mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
-      <i class="fa-solid fa-chart-pie"></i>
-      Breakdowns
-    </h2>
-    <%= render "events/panel_cta", name: "charts", label: "Show breakdowns", open: charts_open %>
+    <%= render "events/section_heading", title: "Breakdowns", icon: "fa-chart-pie",
+          theme: :scholarships, panel: "charts", open: charts_open, spacing: "mt-10" %>
     <div data-panel-toggle-target="panel" data-panel-toggle-name="charts" class="<%= "hidden" unless charts_open %>">
       <%= turbo_frame_tag :recipients_charts, src: recipients_event_path(@event), loading: :lazy do %>
         <%= render "events/charts_loading" %>

@@ -2991,13 +2991,15 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Showing 1 of 2")
       end
 
-      it "gives every section its own in-place Show prompt" do
+      it "gives every section a Show/Hide toggle beside its heading" do
         get recipients_event_path(event)
         page = Capybara.string(response.body)
 
         %w[ recipients charts ].each do |panel|
-          expect(page).to have_selector("button[data-panel-toggle-cta][data-panel-toggle-name='#{panel}']", visible: :all)
+          expect(page).to have_selector("button[data-panel-toggle-name='#{panel}'][aria-label^='Toggle']", visible: :all)
         end
+        # Short label; the heading beside it supplies the subject.
+        expect(page).to have_selector("button[aria-label='Toggle breakdowns']", text: "Show", visible: :all)
       end
 
       it "shows each recipient's awarded amount and completed tasks status" do

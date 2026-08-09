@@ -17,11 +17,8 @@
           ] %>
 
       <%# Attendees panel — shown by default. %>
-      <h2 class="text-xl font-bold mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:event_registrations, intensity: 700) %>">
-        <i class="fa-solid fa-user-pen"></i>
-        Attendees
-      </h2>
-      <%= render "events/panel_cta", name: "attendees", label: "Show attendees", icon: "fa-table-list", open: true %>
+      <%= render "events/section_heading", title: "Attendees", icon: "fa-user-pen",
+            theme: :event_registrations, intensity: 700, panel: "attendees", open: true %>
       <div data-panel-toggle-target="panel" data-panel-toggle-name="attendees">
         <div class="rounded-xl bg-white overflow-hidden animate-fade blur-on-submit">
           <%# Page-level toggle: expand every row's Training cell to all events, or
@@ -48,11 +45,8 @@
       </div>
 
       <%# Charts panel — hidden by default; the lazy frame loads on first reveal. %>
-      <h2 class="text-xl font-bold mt-10 mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:event_registrations, intensity: 700) %>">
-        <i class="fa-solid fa-chart-pie"></i>
-        Breakdowns
-      </h2>
-      <%= render "events/panel_cta", name: "charts", label: "Show breakdowns", open: charts_open %>
+      <%= render "events/section_heading", title: "Breakdowns", icon: "fa-chart-pie",
+            theme: :event_registrations, intensity: 700, panel: "charts", open: charts_open, spacing: "mt-10" %>
       <div data-panel-toggle-target="panel" data-panel-toggle-name="charts" class="<%= "hidden" unless charts_open %>">
         <%= turbo_frame_tag :attendees_charts, src: charts_src, loading: :lazy do %>
           <%= render "events/charts_loading" %>

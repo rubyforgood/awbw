@@ -100,11 +100,8 @@
         ] %>
 
     <%# Registrants panel — shown by default. %>
-    <h2 class="text-xl font-bold mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:people, intensity: 700) %>">
-      <i class="fa-solid fa-users"></i>
-      Registrants
-    </h2>
-    <%= render "events/panel_cta", name: "registrants", label: "Show registrants", icon: "fa-table-list", open: true %>
+    <%= render "events/section_heading", title: "Registrants", icon: "fa-users",
+          theme: :people, intensity: 700, panel: "registrants", open: true %>
     <div data-panel-toggle-target="panel" data-panel-toggle-name="registrants">
       <%# A breakdown row narrows this table in place. The chip says what's applied
           — otherwise the shorter list looks like missing data — and clears it. %>
@@ -132,11 +129,8 @@
     </div>
 
     <%# Charts panel — hidden by default; the lazy frame loads on first reveal. %>
-    <h2 class="text-xl font-bold mt-10 mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:people, intensity: 700) %>">
-      <i class="fa-solid fa-chart-pie"></i>
-      Breakdowns
-    </h2>
-    <%= render "events/panel_cta", name: "charts", label: "Show breakdowns", open: charts_open %>
+    <%= render "events/section_heading", title: "Breakdowns", icon: "fa-chart-pie",
+          theme: :people, intensity: 700, panel: "charts", open: charts_open, spacing: "mt-10" %>
     <div data-panel-toggle-target="panel" data-panel-toggle-name="charts" class="<%= "hidden" unless charts_open %>">
       <%= turbo_frame_tag :event_roster_charts, src: roster_event_path(@event), loading: :lazy do %>
         <%= render "events/charts_loading" %>

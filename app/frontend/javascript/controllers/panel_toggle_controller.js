@@ -3,10 +3,9 @@ import { Controller } from "@hotwired/stimulus"
 // Connects to data-controller="panel-toggle"
 // Show/hide named panels. Each button and panel carries data-panel-toggle-name;
 // a button toggles every panel sharing its name, and every button controlling
-// that panel is kept in sync — its label, its aria-expanded, and (for a button
-// marked data-panel-toggle-cta) its own visibility, since a CTA only invites
-// revealing and hides once its panel shows. This lets one panel have several
-// controls (a top toggle plus an in-section "Show" prompt) that never disagree.
+// that panel is kept in sync — its label and its aria-expanded. This lets one
+// panel have several controls (a top toggle bar plus the Show/Hide button beside
+// the section heading) that never disagree.
 // Revealing a hidden panel that holds a lazy Turbo frame loads the frame on first
 // show, so charts stay off the initial request until asked for.
 export default class extends Controller {
@@ -14,8 +13,8 @@ export default class extends Controller {
 
   connect() {
     // Reconcile every control with its panel's actual visibility on load, so a
-    // CTA and its top toggle can't disagree (and it self-heals after a Turbo
-    // restore or frame reload).
+    // section's toggle and the top bar can't disagree (and it self-heals after a
+    // Turbo restore or frame reload).
     this.panelNames().forEach(name => this.sync(name, this.panelShown(name)))
   }
 
@@ -32,9 +31,6 @@ export default class extends Controller {
   sync(name, shown) {
     this.buttonsFor(name).forEach(button => {
       button.setAttribute("aria-expanded", String(shown))
-      if (button.dataset.panelToggleCta !== undefined) {
-        button.classList.toggle("hidden", shown)
-      }
       const label = this.labelTargets.find(target => button.contains(target))
       if (label) {
         label.textContent = shown

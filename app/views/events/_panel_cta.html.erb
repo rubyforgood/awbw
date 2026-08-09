@@ -1,22 +1,25 @@
-<%# In-section prompt to reveal a hidden panel, sitting under that section's
-    header so the header always reads even while its content is collapsed. It's a
-    second control for the same panel as the top toggle bar and hides itself once
-    the panel shows (see panel-toggle's CTA behaviour).
+<%# Compact Show/Hide toggle sitting beside a section heading (see
+    events/_section_heading). It's a second control for the same panel as the top
+    toggle bar; panel-toggle keeps every control for a panel in sync, so both
+    labels flip together.
+
+    The visible text is just "Show"/"Hide" — the heading next to it supplies the
+    subject — so `section` names it for screen readers, where the heading isn't
+    adjacent. aria-expanded carries the state, so that label stays static.
+
     Locals:
-      name:  the data-panel-toggle-name of the panel it reveals
-      label: button text, e.g. "Show breakdowns"
-      icon:  Font Awesome icon class. Default the chart icon.
-      open:  whether the panel is already open on this render (e.g. a ?charts=1
-             arrival), in which case there's nothing to invite. Default false. %>
+      name:    the data-panel-toggle-name of the panel it toggles
+      section: the section's name, for the accessible label ("Toggle breakdowns")
+      open:    whether the panel is open on this render. Default false. %>
 <% open = local_assigns.fetch(:open, false) %>
-<% icon = local_assigns.fetch(:icon, "fa-chart-column") %>
 <button type="button"
         data-panel-toggle-target="button"
         data-panel-toggle-name="<%= name %>"
-        data-panel-toggle-cta="true"
+        data-panel-toggle-shown-label="Hide"
+        data-panel-toggle-hidden-label="Show"
         data-action="panel-toggle#toggle"
         aria-expanded="<%= open %>"
-        class="mb-6 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 print:hidden <%= "hidden" if open %>">
-  <i class="fa-solid <%= icon %>"></i>
-  <%= label %>
+        aria-label="Toggle <%= section %>"
+        class="shrink-0 rounded-md border border-gray-300 bg-white px-2 py-0.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 print:hidden">
+  <span data-panel-toggle-target="label"><%= open ? "Hide" : "Show" %></span>
 </button>
