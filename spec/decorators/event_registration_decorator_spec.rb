@@ -148,4 +148,55 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       end
     end
   end
+
+  describe "#ce_status_sort_key" do
+    subject(:sort_key) { registration.decorate.ce_status_sort_key }
+
+    let(:registration) { create(:event_registration) }
+
+    def add_ce(placeholder: false, cost_cents: 15_000)
+      license = placeholder ?
+        create(:professional_license, :placeholder, person: registration.registrant) :
+        create(:professional_license, person: registration.registrant)
+      create(:continuing_education_registration, event_registration: registration,
+        professional_license: license, cost_cents: cost_cents)
+    end
+
+    def pay(cer, amount)
+      payment = create(:payment, person: registration.registrant, amount_cents: amount, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: cer, amount: amount)
+    end
+
+    context "when the certificate has been issued" do
+      before do
+        cer = add_ce
+        pay(cer, 15_000)
+        cer.mark_certificate_sent!
+      end
+
+      it { is_expected.to eq(0) }
+    end
+
+    context "when paid in full but not issued" do
+      before { pay(add_ce, 15_000) }
+
+      it { is_expected.to eq(1) }
+    end
+
+    context "when the license is on file but unpaid" do
+      before { add_ce }
+
+      it { is_expected.to eq(2) }
+    end
+
+    context "when the CE registration sits on a placeholder license" do
+      before { add_ce(placeholder: true) }
+
+      it { is_expected.to eq(3) }
+    end
+
+    context "when CE isn't in play" do
+      it { is_expected.to eq(4) }
+    end
+  end
 end

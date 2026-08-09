@@ -330,7 +330,7 @@
                 </td>
 
                 <% if ce_col %>
-                  <td class="px-4 py-2 text-sm text-center" data-column-toggle-col="ce">
+                  <td class="px-4 py-2 text-sm text-center" data-column-toggle-col="ce" data-sort-value="<%= registration.decorate.ce_status_sort_key %>">
                     <%# Canonical CE badge (Requested → License # needed → $X due →
                         Pending → Issued). "Create" when CE isn't in play yet. %>
                     <% if registration.decorate.ce_status_badge.nil? %>
