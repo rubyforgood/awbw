@@ -91,14 +91,18 @@ class EventRevenueReport
   end
 
   def rows
-    @rows ||= begin
-      figures = EventRevenueFigures.new(@events)
-      @events.map { |event| build_row(event, figures.for(event)) }
-    end
+    @rows ||= @events.map { |event| build_row(event, figures_loader.for(event)) }
   end
 
   def any?
     rows.any?
+  end
+
+  # The people (and their individual amounts) behind an event row's component
+  # figures, for the report's per-figure drilldowns. Computed lazily off the same
+  # loader, so pages that only read the totals never pay for it.
+  def breakdown_for(event)
+    figures_loader.breakdown_for(event)
   end
 
   # Calendar-year groups, newest first, each with a subtotal. Events without a
@@ -148,6 +152,10 @@ class EventRevenueReport
   end
 
   private
+
+  def figures_loader
+    @figures_loader ||= EventRevenueFigures.new(@events)
+  end
 
   # A zeroed year group for a period with no events, so the summary card renders
   # $0 rather than blank.
