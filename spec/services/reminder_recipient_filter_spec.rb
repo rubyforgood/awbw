@@ -112,6 +112,20 @@ RSpec.describe ReminderRecipientFilter do
       end
     end
 
+    context "payment method" do
+      let!(:card) { registration(first_name: "Card").tap { |r| r.update!(expected_payment_method: "Credit card (now)") } }
+      let!(:check) { registration(first_name: "Check").tap { |r| r.update!(expected_payment_method: "Check") } }
+      let!(:buddy) { registration(first_name: "Buddy").tap { |r| r.update!(someone_else_will_pay: true) } }
+
+      it "filters by the expected payment method" do
+        expect(matched({ payment_method: "Check" }, [ card, check, buddy ])).to eq([ check.id ].to_set)
+      end
+
+      it "filters buddy-system registrants via the sentinel value" do
+        expect(matched({ payment_method: "someone_else_will_pay" }, [ card, check, buddy ])).to eq([ buddy.id ].to_set)
+      end
+    end
+
     # Shares the registrants-roster `scholarship` filter (yes/complete/incomplete).
     context "scholarship" do
       let!(:none) { registration.tap { |r| r.update!(scholarship_requested: true) } }

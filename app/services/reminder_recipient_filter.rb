@@ -12,8 +12,8 @@ class ReminderRecipientFilter
   # EventRegistration scopes (run once as a query) so both pages stay in sync —
   # same param names, options, and semantics.
   DROPDOWN_KEYS = %i[
-    attendance_status payment_status ce_status scholarship comment_status
-    org_status account_status state county
+    attendance_status payment_status payment_method ce_status scholarship
+    comment_status org_status account_status state county
   ].freeze
   FILTER_KEYS = (TEXT_KEYS + DROPDOWN_KEYS).freeze
 
@@ -54,6 +54,7 @@ class ReminderRecipientFilter
     scope = @event.event_registrations
     scope = scope.attendance_status(@params[:attendance_status]) if @params[:attendance_status].present?
     scope = scope.payment_status(@params[:payment_status]) if @params[:payment_status].present?
+    scope = scope.payment_method(@params[:payment_method]) if @params[:payment_method].present?
     scope = scope.ce_status(@params[:ce_status]) if @params[:ce_status].present?
     scope = scope.scholarship_status(@params[:scholarship]) if @params[:scholarship].present?
     scope = scope.comment_status(@params[:comment_status]) if @params[:comment_status].present?
