@@ -23,6 +23,10 @@ class NotificationMailerJob < ApplicationJob
     mailer = mailer_map[notification.kind]&.call(notification)
     raise "Unknown notification kind: #{notification.kind}" unless mailer
 
+    # Name the admin who sent it in the From display name, keeping the generic
+    # address (and reply_to) each mailer already set. No-op when sender is nil.
+    mailer.message.from = AttributedFromAddress.call(notification.sender, mailer.message.from&.first)
+
     Notification.transaction do
       notification.lock!
       return if notification.delivered_at.present?

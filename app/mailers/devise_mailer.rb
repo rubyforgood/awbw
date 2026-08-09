@@ -29,6 +29,8 @@ class DeviseMailer < Devise::Mailer
     else
       "AWBW Portal: Welcome instructions for #{record.full_name}"
     end
+    # Invites sent by hand carry the staff member's name; the address stays generic.
+    opts[:from] = AttributedFromAddress.call(record.try(:confirmation_sender), ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))
     @mail = super
   end
 

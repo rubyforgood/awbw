@@ -193,6 +193,29 @@ RSpec.describe DeviseMailer, type: :mailer do
       expect(Notification.last.decorate.sender_name).to eq(NotificationDecorator::PORTAL_SENDER_NAME)
     end
 
+    # We only have SendGrid authorization for our own domain, so the sender's name
+    # may appear in the From display name but never in the address.
+    it "names the sending admin in the invite's From display name only" do
+      invitee = create(:user, :unconfirmed)
+
+      invitee.send_confirmation_instructions(sender: admin)
+
+      mail = ActionMailer::Base.deliveries.last
+      expect(mail[:from].display_names).to eq([ "Dana Sender" ])
+      expect(mail.from).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(mail.reply_to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+    end
+
+    it "sends an automated confirmation with no display name" do
+      signup = create(:user, :unconfirmed)
+
+      signup.send_confirmation_instructions
+
+      mail = ActionMailer::Base.deliveries.last
+      expect(mail[:from].display_names.compact).to be_empty
+      expect(mail.from).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+    end
+
     it "leaves an automated password reset as the portal" do
       user
       unstub_notification_logging
