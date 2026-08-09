@@ -99,18 +99,18 @@
               placeholder: f[:placeholder], field_class: field_class %>
       <% end %>
 
-      <%# Ordered by how a registration is worked after the top three: did they
-          submit, how they pay, their org and funder, CE, then location — with
-          portal access (user account) and comments handled last. %>
-      <%= render "events/filter_select", param: :submission_status, label: "Submission status",
-            options: [ [ "No submission", "none" ], [ "Has form submission", "has" ], [ "Multiple form submissions", "multiple" ] ],
-            selected: params[:submission_status], blank: "All statuses", field_class: field_class %>
-
+      <%# Ordered by how a registration is worked after the top three: how they
+          pay, whether they submitted, their org, scholarship and funder, CE,
+          then portal access and location — with comments handled last. %>
       <% if has_cost %>
         <%= render "events/filter_select", param: :payment_method, label: "Payment method",
               options: EventRegistrationDecorator.payment_method_filter_choices,
               selected: params[:payment_method], blank: "Any payment method", field_class: field_class %>
       <% end %>
+
+      <%= render "events/filter_select", param: :submission_status, label: "Submission status",
+            options: [ [ "No submission", "none" ], [ "Has form submission", "has" ], [ "Multiple form submissions", "multiple" ] ],
+            selected: params[:submission_status], blank: "All statuses", field_class: field_class %>
 
       <%= render "events/filter_select", param: :org_status, label: "Organization linking",
             options: [ [ "Pending", "pending" ], [ "Linked", "linked" ], [ "Unlinked", "unlinked" ] ],
@@ -133,6 +133,10 @@
               selected: params[:ce_status], blank: "Any CE status", field_class: field_class %>
       <% end %>
 
+      <%= render "events/filter_select", param: :account_status, label: "User account",
+            options: [ [ "No account", "none" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
+            selected: params[:account_status], blank: "Any account status", field_class: field_class %>
+
       <%= render "events/filter_text", param: :city, label: "City",
             placeholder: "City name", field_class: field_class %>
 
@@ -146,10 +150,6 @@
               options: @dashboard.counties.map { |state, county| [ "#{state} - #{county}", "#{state}|#{county}" ] },
               selected: params[:county], blank: "All counties", field_class: field_class %>
       <% end %>
-
-      <%= render "events/filter_select", param: :account_status, label: "User account",
-            options: [ [ "No account", "none" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
-            selected: params[:account_status], blank: "Any account status", field_class: field_class %>
 
       <%= render "events/filter_select", param: :comment_status, label: "Comment status",
             options: [ [ "None", "none" ], [ "Present", "present" ], [ "Flagged", "flagged" ] ],
