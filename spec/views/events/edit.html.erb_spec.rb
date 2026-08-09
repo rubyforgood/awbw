@@ -27,7 +27,6 @@ RSpec.describe "events/edit", type: :view do
     allow(view).to receive(:allowed_to?).with(:roster?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:event_reports?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:recipients?, event).and_return(true)
-    allow(view).to receive(:allowed_to?).with(:staff?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:bulk_payments?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:edit?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:index?, Event).and_return(true)
