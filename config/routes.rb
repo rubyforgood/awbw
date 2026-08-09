@@ -132,6 +132,7 @@ Rails.application.routes.draw do
       patch :update_onboarding
       patch :toggle_certificate_issued
       patch :update_attendance
+      patch :toggle_post_survey
     end
     resources :comments, only: [ :create, :update ]
   end

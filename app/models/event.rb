@@ -240,6 +240,23 @@ class Event < ApplicationRecord
     from.blank? || now >= from
   end
 
+  # The scholarship recipients survey callout, if seeded. Memoized so readiness
+  # (which runs per registration) hits the callouts once per event, not per row.
+  def scholarship_recipients_survey_callout
+    return @scholarship_recipients_survey_callout if defined?(@scholarship_recipients_survey_callout)
+    @scholarship_recipients_survey_callout =
+      registration_ticket_callouts.detect { |callout| callout.builtin_key == "scholarship_recipients_survey" }
+  end
+
+  # Whether the scholarship recipients survey is live — published and past its drip.
+  # Only then does an unsubmitted survey count against a recipient's completion; an
+  # unpublished (or not-yet-dripped) survey blocks no one.
+  def post_event_survey_open?(now = Time.current)
+    callout = scholarship_recipients_survey_callout
+    return false unless callout && !callout.hidden?
+    callout.display_from.blank? || callout.display_from <= now
+  end
+
   def registerable?
     !ended? && (registration_close_date.nil? || registration_close_date >= Time.current)
   end

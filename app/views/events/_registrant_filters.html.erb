@@ -57,7 +57,7 @@
         pending → Completed. Param stays :readiness (backed by
         EventRegistrationReadiness); the user-facing label reads "Progress". %>
     <%= render "events/filter_select", param: :readiness, label: "Progress",
-          options: [ [ "Not ready", "not_ready" ], [ "Ready", "ready" ], [ "Certificate pending", "certificate_due" ], [ "Completed", "completed" ] ],
+          options: [ [ "Not ready", "not_ready" ], [ "Ready", "ready" ], [ "Survey pending", "survey_pending" ], [ "Certificate pending", "certificate_due" ], [ "Completed", "completed" ] ],
           selected: params[:readiness], blank: "Any stage", field_class: field_class %>
   <% end %>
 

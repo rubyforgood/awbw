@@ -15,12 +15,13 @@ class EventRegistrationReadiness
   STATUS_LABELS = {
     not_ready: "Not ready",
     ready: "Ready",
+    survey_pending: "Survey pending",
     certificate_due: "Certificate pending",
     completed: "Completed"
   }.freeze
 
   # Lifecycle order for sorting the roster's Status column.
-  STATUS_ORDER = %i[ not_ready ready certificate_due completed ].freeze
+  STATUS_ORDER = %i[ not_ready ready survey_pending certificate_due completed ].freeze
 
   def event_ready?
     event_ready_issues.empty?
@@ -31,11 +32,11 @@ class EventRegistrationReadiness
     completion_issues.empty?
   end
 
-  # All post-event work done (attended, scholarship tasks met) — i.e. the only
-  # thing left is sending the certificate(s). This is the admin's "send a
-  # certificate" queue.
+  # All post-event work done (attended, scholarship tasks met, post-event survey in)
+  # — i.e. the only thing left is sending the certificate(s). This is the admin's
+  # "send a certificate" queue.
   def certifiable?
-    completion_work_issues.empty?
+    (completion_work_issues + survey_issues).empty?
   end
 
   # The registration's single lifecycle state for the roster's one Status column
@@ -46,8 +47,16 @@ class EventRegistrationReadiness
   def status
     return :completed if completed?
     return :not_ready unless event_ready?
+    return :survey_pending if survey_pending?
     return :certificate_due if certifiable?
     :ready
+  end
+
+  # A scholarship recipient who has finished the other post-event work but still owes
+  # the (now-live) post-event survey. Sits between "ready" and "certificate pending":
+  # the survey is the one thing keeping them from the certificate queue.
+  def survey_pending?
+    survey_outstanding? && completion_work_issues.empty?
   end
 
   def status_label
@@ -64,6 +73,7 @@ class EventRegistrationReadiness
   def status_issues
     case status
     when :not_ready then event_ready_issues
+    when :survey_pending then survey_issues
     when :certificate_due then certificate_issues
     else []
     end
@@ -115,7 +125,14 @@ class EventRegistrationReadiness
   end
 
   def completion_issues
-    completion_work_issues + certificate_issues
+    completion_work_issues + survey_issues + certificate_issues
+  end
+
+  # The post-event (scholarship recipients) survey, when a recipient still owes a
+  # live one. Gates certifiable?/completed? so the certificate can't close out until
+  # the survey is in.
+  def survey_issues
+    @survey_issues ||= survey_outstanding? ? [ "Post-event survey outstanding" ] : []
   end
 
   # Post-event work that must happen before a certificate can be issued.
@@ -174,6 +191,15 @@ class EventRegistrationReadiness
 
   def scholarship_tasks_incomplete?
     registration.scholarship? && !registration.scholarship_tasks_met?
+  end
+
+  # Only scholarship recipients owe the post-event survey, and only once it's live
+  # (published + past drip). Reads a plain column plus the event's memoized survey
+  # callout, so it adds no per-row query on the roster.
+  def survey_outstanding?
+    registration.scholarship? &&
+      registration.event.post_event_survey_open? &&
+      !registration.post_survey_completed?
   end
 
   def ce_unpaid?

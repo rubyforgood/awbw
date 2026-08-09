@@ -2,11 +2,11 @@ class EventRegistrationsController < ApplicationController
   require "csv"
 
   # show redirects to slug URL; kept for backwards compatibility
-  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding, :toggle_certificate_issued, :update_attendance, :transfer, :process_transfer, :revert_transfer ]
+  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding, :toggle_certificate_issued, :update_attendance, :toggle_post_survey, :transfer, :process_transfer, :revert_transfer ]
   # A transferred-out reg is locked (issue #1944): its inline write endpoints are
   # blocked with a warning rather than silently ignored. The full-form `update` is
   # handled separately (it keeps comments/communications editable).
-  before_action :block_locked_registration, only: [ :update_onboarding, :toggle_certificate_issued, :update_attendance ]
+  before_action :block_locked_registration, only: [ :update_onboarding, :toggle_certificate_issued, :update_attendance, :toggle_post_survey ]
 
   def index
     authorize!
@@ -321,6 +321,19 @@ class EventRegistrationsController < ApplicationController
     redirect_to edit_event_registration_path(@event_registration, return_to: params[:return_to].presence),
       notice: "Transfer undone — #{@event_registration.registrant.full_name} is back to #{@event_registration.attendance_status_label.downcase} on #{@event_registration.event.title}.",
       status: :see_other
+  end
+
+  # Admin toggle for whether the post-event (scholarship recipients) survey is in.
+  # Independent of the certificate: clears/sets only its own timestamp.
+  def toggle_post_survey
+    authorize! @event_registration, to: :update?
+    if @event_registration.post_survey_completed?
+      @event_registration.clear_post_survey_completed!
+    else
+      @event_registration.mark_post_survey_completed!
+    end
+    redirect_back fallback_location: edit_event_registration_path(@event_registration),
+                  notice: "Post-event survey updated."
   end
 
   def confirm

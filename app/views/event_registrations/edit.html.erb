@@ -72,6 +72,22 @@
              wrapper_class: "mt-4" %>
 
   <%= render "form", event_registration: @event_registration %>
+
+  <%# Admin completion controls. The certificate is issued by sending its email; the
+      post-event survey is marked here (independently) when a recipient's survey is in. %>
+  <div class="mt-6 flex items-center gap-3 border-t border-gray-200 pt-4">
+    <span class="text-sm font-medium text-gray-700">Post-event survey received</span>
+    <%= button_to toggle_post_survey_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+          method: :patch,
+          class: "rounded-lg border px-3 py-1.5 text-sm font-medium cursor-pointer #{@event_registration.post_survey_completed? ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100" : "border-gray-300 text-gray-600 hover:bg-gray-50"}" do %>
+      <% if @event_registration.post_survey_completed? %>
+        <i class="fa-solid fa-check text-xs"></i> Received<% if @event_registration.post_survey_completed_at %> · <%= @event_registration.post_survey_completed_at.to_date.to_fs(:long) %><% end %>
+      <% else %>
+        Mark received
+      <% end %>
+    <% end %>
+  </div>
+
   <%= render "shared/audit_info", resource: @event_registration %>
   <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
     <div class="mt-4 flex justify-end">
