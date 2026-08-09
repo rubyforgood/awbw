@@ -42,6 +42,18 @@ RSpec.describe RegistrationTicketCalloutDecorator, type: :decorator do
       expect(callout.decorate.config_suppression_hint).to eq("set CE hours above 0 under form settings")
     end
 
+    it "names connecting staff for a staff callout on an event with none" do
+      callout = builtin_callout("staff", event: create(:event))
+      expect(callout.decorate.config_suppression_hint).to eq("connect some staff")
+    end
+
+    it "is nil for a staff callout once the event has staff" do
+      event = create(:event)
+      create(:event_staff, event:)
+      callout = builtin_callout("staff", event:)
+      expect(callout.decorate.config_suppression_hint).to be_nil
+    end
+
     it "is nil once the event is configured for the callout" do
       callout = builtin_callout("payment", event: create(:event, cost_cents: 5_000))
       expect(callout.decorate.config_suppression_hint).to be_nil

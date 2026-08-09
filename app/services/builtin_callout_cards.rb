@@ -54,7 +54,7 @@ class BuiltinCalloutCards
       EditorCard.new("payment", "fa-solid fa-credit-card", "orange", "Payment", "Your balance and payment history", "When the event has a cost", nil),
       EditorCard.new("scholarship", "fa-solid fa-award", "fuchsia", "Scholarship", "Your scholarship request and award", "When the registrant requested a scholarship", nil),
       EditorCard.new("videoconference", "fa-solid fa-video", "blue", "Videoconference", "Join details and add to calendar links", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
-      EditorCard.new("staff", "fa-solid fa-people-group", "blue", "Meet the staff", "The team for this event", "Always shown when published", "The roster comes from this event's staff."),
+      EditorCard.new("staff", "fa-solid fa-people-group", "blue", "Meet the staff", "The team for this event", "When the event has staff", "The roster comes from this event's staff."),
       EditorCard.new("handouts", "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the event", "On facilitator trainings", "Items link to their relevant resources."),
       EditorCard.new("certificate", "fa-solid fa-certificate", "green", "Certificate of completion", "View and download your certificate", "Once the certificate is unlocked", nil),
       EditorCard.new("faq", "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "On facilitator trainings", nil)
@@ -90,6 +90,8 @@ class BuiltinCalloutCards
       "this event offers no CE hours" unless event.ce_eligible?
     when "videoconference"
       "this event has no videoconference link" if event.videoconference_url.blank?
+    when "staff"
+      "this event has no staff" unless event.event_staffs.exists?
     end
   end
 
@@ -103,7 +105,8 @@ class BuiltinCalloutCards
       "payment" => "set an event cost above $0",
       "scholarship" => "add a scholarship form under form settings",
       "ce_hours" => "set CE hours above 0 under form settings",
-      "videoconference" => "add a videoconference link"
+      "videoconference" => "add a videoconference link",
+      "staff" => "connect some staff"
     }[builtin_key]
   end
 
@@ -351,9 +354,10 @@ class BuiltinCalloutCards
     deadline.in_time_zone(Time.zone).strftime("%b %-d")
   end
 
-  # Always shown once published — the roster page (which shares its card grid
-  # with the admin staff page) handles the empty case, so there's no config gap.
+  # Hidden until the event has staff — an empty roster page is nothing to link to,
+  # so the card only appears once someone's been connected in the Event staff section.
   def staff_card
+    return if config_gap?("staff")
     Card.new(icon_class: "fa-solid fa-people-group", color: "blue",
              title: "Meet the staff",
              subtitle: "The team for this event",
