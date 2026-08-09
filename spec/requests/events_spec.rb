@@ -327,13 +327,17 @@ RSpec.describe "Events", type: :request do
   end
 
   describe "GET /dashboard" do
-    let(:event) { create(:event, :publicly_visible, published: true) }
+    let(:event) { create(:event, :publicly_visible, published: true, cost_cents: 10_000) }
 
-    it "renders the event checklist for an admin" do
+    it "renders the event checklist, including an expandable to-do row" do
+      create(:event_registration, event: event, registrant: create(:person), status: "registered")
       sign_in admin
       get dashboard_event_path(event)
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Event checklist")
+      # An unpaid registrant with no org linked surfaces reminder + admin to-dos.
+      expect(response.body).to include("Remind registration fees due")
+      expect(response.body).to include("Link organizations")
     end
   end
 

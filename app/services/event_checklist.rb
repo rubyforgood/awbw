@@ -25,8 +25,12 @@ class EventChecklist
   # kind: :task (count-based), :flag (binary done/not-done), :action (a standing
   #   action with no done state, e.g. review reports), :placeholder (not built yet).
   # status: :todo / :done / :not_relevant.
+  # A drill row shown when a non-registrant item expands (e.g. bulk-payment
+  # submitters): a title, optional subtitle (org), amount, and a link.
+  DetailRow = Data.define(:title, :subtitle, :amount_cents, :path)
+
   Item = Data.define(:key, :phase, :title, :actor, :kind, :status, :count,
-                     :money_cents, :detail, :registrants, :action_path, :action_label) do
+                     :money_cents, :detail, :registrants, :detail_rows, :action_path, :action_label) do
     def todo?
       status == :todo
     end
@@ -104,7 +108,7 @@ class EventChecklist
 
   # --- Item builders ---------------------------------------------------------
   def task(key:, phase:, title:, actor:, action_path:, action_label:, relevant:,
-           count: 0, registrants: [], money_cents: nil, detail: nil)
+           count: 0, registrants: [], detail_rows: [], money_cents: nil, detail: nil)
     status = if !relevant
       :not_relevant
     elsif count.positive?
@@ -114,7 +118,8 @@ class EventChecklist
     end
     Item.new(key: key, phase: phase, title: title, actor: actor, kind: :task,
              status: status, count: count, money_cents: money_cents, detail: detail,
-             registrants: registrants, action_path: action_path, action_label: action_label)
+             registrants: registrants, detail_rows: detail_rows,
+             action_path: action_path, action_label: action_label)
   end
 
   def flag(key:, phase:, title:, actor:, action_path:, action_label:, relevant:, done:, detail: nil)
@@ -127,20 +132,20 @@ class EventChecklist
     end
     Item.new(key: key, phase: phase, title: title, actor: actor, kind: :flag,
              status: status, count: nil, money_cents: nil, detail: detail,
-             registrants: [], action_path: action_path, action_label: action_label)
+             registrants: [], detail_rows: [], action_path: action_path, action_label: action_label)
   end
 
   def action(key:, phase:, title:, actor:, action_path:, action_label:, relevant:, detail: nil)
     Item.new(key: key, phase: phase, title: title, actor: actor, kind: :action,
              status: relevant ? :todo : :not_relevant, count: nil, money_cents: nil,
-             detail: detail, registrants: [],
+             detail: detail, registrants: [], detail_rows: [],
              action_path: relevant ? action_path : nil, action_label: action_label)
   end
 
   def placeholder(key:, phase:, title:, detail:)
     Item.new(key: key, phase: phase, title: title, actor: :admin, kind: :placeholder,
              status: :not_relevant, count: nil, money_cents: nil, detail: detail,
-             registrants: [], action_path: nil, action_label: nil)
+             registrants: [], detail_rows: [], action_path: nil, action_label: nil)
   end
 
   # --- Set up ----------------------------------------------------------------
@@ -184,11 +189,21 @@ class EventChecklist
   def allocate_bulk_payments
     relevant = @dashboard.bulk_payment_present?
     count = relevant ? @dashboard.unallocated_bulk_payment_count : 0
+    rows = count.positive? ? @dashboard.unallocated_bulk_payment_details.map { |detail| bulk_payment_row(detail) } : []
     task(key: :allocate_bulk_payments, phase: :before, title: "Allocate bulk payments", actor: :admin,
-         relevant: relevant, count: count,
+         relevant: relevant, count: count, detail_rows: rows,
          money_cents: relevant ? @dashboard.unallocated_bulk_payment_cents : nil,
          detail: "Received, not yet applied",
          action_path: bulk_payments_event_path(@event), action_label: "Allocate")
+  end
+
+  def bulk_payment_row(detail)
+    DetailRow.new(
+      title: detail.name.presence || "Unknown payer",
+      subtitle: detail.organization,
+      amount_cents: detail.amount_cents,
+      path: bulk_payments_event_path(@event, expand: detail.submission_id, anchor: "payment-card-#{detail.submission_id}")
+    )
   end
 
   def review_flagged_comments
@@ -203,7 +218,7 @@ class EventChecklist
   def collect_registration_fees
     relevant = @dashboard.has_registrants? && !@dashboard.free?
     count = relevant ? @dashboard.unpaid_count : 0
-    task(key: :collect_registration_fees, phase: :before, title: "Collect registration fees", actor: :registrant,
+    task(key: :collect_registration_fees, phase: :before, title: "Remind registration fees due", actor: :registrant,
          relevant: relevant, count: count,
          money_cents: relevant ? @dashboard.outstanding_cents : nil,
          registrants: count.positive? ? @dashboard.unpaid_registrants : [],
@@ -232,10 +247,17 @@ class EventChecklist
   def follow_up_agreements
     relevant = @dashboard.scholarships_present? && !@dashboard.free?
     count = relevant ? @dashboard.scholarship_agreement_unsigned_count : 0
-    task(key: :follow_up_agreements, phase: :before, title: "Follow up scholarship agreements", actor: :registrant,
-         relevant: relevant, count: count,
-         registrants: count.positive? ? @dashboard.scholarship_agreement_unsigned_registrants : [],
-         action_path: recipients_event_path(@event), action_label: "Scholarships")
+    registrants = count.positive? ? @dashboard.scholarship_agreement_unsigned_registrants : []
+    # No semantic reminder filter for "agreement unsigned", so recreate the
+    # selection on the reminder page via its name filter (multi-value, split on --).
+    action_path = if registrants.any?
+      preview_reminder_event_path(@event, name: registrants.map(&:name).join("--"))
+    else
+      preview_reminder_event_path(@event)
+    end
+    task(key: :follow_up_agreements, phase: :before, title: "Remind scholarship agreements", actor: :registrant,
+         relevant: relevant, count: count, registrants: registrants,
+         action_path: action_path, action_label: "Send reminder")
   end
 
   def fix_zero_scholarships
@@ -250,7 +272,7 @@ class EventChecklist
   def complete_scholarship_tasks
     relevant = @dashboard.scholarships_present? && !@dashboard.free?
     count = relevant ? @dashboard.scholarship_tasks_incomplete_count : 0
-    task(key: :complete_scholarship_tasks, phase: :before, title: "Complete scholarship tasks", actor: :registrant,
+    task(key: :complete_scholarship_tasks, phase: :before, title: "Remind scholarship tasks", actor: :registrant,
          relevant: relevant, count: count,
          registrants: count.positive? ? @dashboard.scholarship_tasks_incomplete_registrants : [],
          action_path: preview_reminder_event_path(@event, scholarship: "incomplete"), action_label: "Send reminder")
@@ -259,7 +281,7 @@ class EventChecklist
   def collect_ce_licenses
     relevant = @dashboard.ce_eligible?
     count = relevant ? @dashboard.ce_license_missing_count : 0
-    task(key: :collect_ce_licenses, phase: :before, title: "Collect CE license numbers", actor: :registrant,
+    task(key: :collect_ce_licenses, phase: :before, title: "Remind CE license numbers", actor: :registrant,
          relevant: relevant, count: count,
          registrants: count.positive? ? @dashboard.ce_license_missing_registrants : [],
          action_path: preview_reminder_event_path(@event, ce_status: "needs_license"), action_label: "Send reminder")
@@ -268,7 +290,7 @@ class EventChecklist
   def collect_ce_fees
     relevant = @dashboard.ce_eligible?
     count = relevant ? @dashboard.cont_ed_unpaid_count : 0
-    task(key: :collect_ce_fees, phase: :before, title: "Collect CE fees", actor: :registrant,
+    task(key: :collect_ce_fees, phase: :before, title: "Remind CE fees due", actor: :registrant,
          relevant: relevant, count: count,
          money_cents: relevant ? @dashboard.cont_ed_outstanding_cents : nil,
          registrants: count.positive? ? @dashboard.cont_ed_unpaid_registrants : [],

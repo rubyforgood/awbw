@@ -31,7 +31,7 @@
 %>
 <div class="flex items-start gap-2 px-3 py-2">
   <span class="shrink-0 inline-flex justify-center rounded-full <%= chip[:classes] %> text-[10px] font-semibold w-16 py-0.5 mt-0.5"><%= chip[:label] %></span>
-  <% if item.registrants.any? %>
+  <% if item.registrants.any? || item.detail_rows.any? %>
     <details class="group flex-1 min-w-0">
       <summary class="flex items-center justify-between gap-2 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden rounded py-0.5 hover:bg-gray-50">
         <span class="flex items-center gap-2 min-w-0 text-sm text-gray-700">
@@ -43,14 +43,27 @@
       </summary>
       <% if item.detail.present? %><p class="text-xs text-gray-400 mt-0.5 ml-6"><%= item.detail %></p><% end %>
       <ul class="mt-1 mb-1 ml-6 space-y-0.5 text-xs text-gray-700 max-h-48 overflow-y-auto">
-        <% item.registrants.each do |registrant| %>
-          <li>
-            <%= link_to registrants_event_path(@event, registrant_ids: registrant.id),
-                  class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
-              <span class="truncate min-w-0 group-hover/rowlink:underline"><%= registrant.name %></span>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-white shrink-0 group-hover/rowlink:text-gray-500"></i>
-            <% end %>
-          </li>
+        <% if item.detail_rows.any? %>
+          <% item.detail_rows.each do |row| %>
+            <li>
+              <%= link_to row.path, class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
+                <span class="truncate min-w-0">
+                  <span class="group-hover/rowlink:underline"><%= row.title %></span><% if row.subtitle.present? %><span class="text-gray-400"> · <%= row.subtitle %></span><% end %>
+                </span>
+                <span class="shrink-0 tabular-nums text-gray-500"><%= dollars_from_cents(row.amount_cents) %></span>
+              <% end %>
+            </li>
+          <% end %>
+        <% else %>
+          <% item.registrants.each do |registrant| %>
+            <li>
+              <%= link_to registrants_event_path(@event, registrant_ids: registrant.id),
+                    class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
+                <span class="truncate min-w-0 group-hover/rowlink:underline"><%= registrant.name %></span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-white shrink-0 group-hover/rowlink:text-gray-500"></i>
+              <% end %>
+            </li>
+          <% end %>
         <% end %>
       </ul>
     </details>

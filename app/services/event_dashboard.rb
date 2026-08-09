@@ -10,6 +10,10 @@ class EventDashboard
 
   attr_reader :event
 
+  # One unallocated bulk-payment submission: who submitted it, their org (the
+  # payer_organization answer), the amount still to apply, and ids for linking.
+  BulkPaymentDetail = Data.define(:name, :organization, :amount_cents, :submission_id, :slug)
+
   def registrant_count
     active_registration_ids.size
   end
@@ -498,6 +502,25 @@ class EventDashboard
 
   def bulk_payment_present?
     bulk_payments.exists?
+  end
+
+  # Per-submission breakdown behind #unallocated_bulk_payment_count: who submitted
+  # each bulk payment (name + org) and how much of it is still unapplied.
+  def unallocated_bulk_payment_details
+    @unallocated_bulk_payment_details ||= event.form_submissions
+      .where(role: "bulk_payment")
+      .includes(:person, :payment, form_answers: :form_field)
+      .filter_map do |submission|
+        payment = submission.payment
+        next unless payment && payment.amount_cents_remaining.positive?
+        BulkPaymentDetail.new(
+          name: submission.person&.name,
+          organization: submission.answers_by_identifier["payer_organization"].presence,
+          amount_cents: payment.amount_cents_remaining,
+          submission_id: submission.id,
+          slug: submission.slug
+        )
+      end
   end
 
   # Active registrations carrying a flagged comment an admin should review.

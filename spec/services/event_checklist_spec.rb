@@ -31,6 +31,12 @@ RSpec.describe EventChecklist do
     it "models review reports as a standing action, not a done-able task" do
       expect(item(:review_reports).kind).to eq(:action)
     end
+
+    it "prefixes every registrant-facing reminder item with 'Remind'" do
+      reminders = checklist.items.select(&:registrant_task?)
+      expect(reminders).to be_present
+      expect(reminders.map(&:title)).to all(start_with("Remind"))
+    end
   end
 
   describe "before the event, with a registrant" do
@@ -91,6 +97,48 @@ RSpec.describe EventChecklist do
       reports = item(:review_reports)
       expect(reports).to be_todo
       expect(reports.action_path).to eq(Rails.application.routes.url_helpers.statistics_events_path)
+    end
+  end
+
+  describe "bulk payments" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:form) { create(:form) }
+    let(:payer) { create(:person, first_name: "Helena", last_name: "Lopez") }
+    let!(:submission) { create(:form_submission, form: form, event: event, person: payer, role: "bulk_payment") }
+
+    before do
+      field = create(:form_field, form: form, field_identifier: "payer_organization")
+      create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "A Greater Hope")
+      create(:payment, form_submission: submission, amount_cents: 7_500, amount_cents_remaining: 7_500)
+    end
+
+    it "expands to each submitter with their org and remaining amount" do
+      bulk = item(:allocate_bulk_payments)
+      expect(bulk).to be_todo
+      expect(bulk.count).to eq(1)
+      expect(bulk.money_cents).to eq(7_500)
+      row = bulk.detail_rows.first
+      expect(row.title).to eq(payer.name)
+      expect(row.subtitle).to eq("A Greater Hope")
+      expect(row.amount_cents).to eq(7_500)
+    end
+  end
+
+  describe "scholarship agreement reminders" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:recipient) { create(:person) }
+
+    before do
+      registration = create(:event_registration, event: event, registrant: recipient, status: "registered")
+      scholarship = create(:scholarship, recipient: recipient, amount_cents: 5_000,
+                           tasks_completed: true, agreement_signed_at: nil)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 5_000)
+    end
+
+    it "routes agreement follow-ups to the reminder page via its name filter" do
+      agreements = item(:follow_up_agreements)
+      expect(agreements).to be_todo
+      expect(agreements.action_path).to include("preview_reminder", "name=")
     end
   end
 
