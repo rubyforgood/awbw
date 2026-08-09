@@ -73,5 +73,45 @@ RSpec.describe NotificationMailerJob, type: :job do
         expect(ActionMailer::Base.deliveries.last.subject).to eq("Don't forget us tomorrow!")
       end
     end
+
+    # notification.sender is an internal audit field only. Recipients must keep
+    # seeing the generic mailbox with no personal name attached, both because
+    # SendGrid only authorizes our own domain and because we're not ready to
+    # change what the public sees.
+    context "sender attribution stays out of the delivered email" do
+      let(:event_registration) { create(:event_registration) }
+      let(:admin) { create(:user, first_name: "Dana", last_name: "Sender") }
+      let(:notification) do
+        create(:notification,
+          kind: "event_registration_reminder",
+          noticeable: event_registration,
+          recipient_role: "person",
+          recipient_email: event_registration.registrant.preferred_email,
+          sender: admin)
+      end
+
+      it "sends an attributed reminder from the generic address with no display name" do
+        described_class.new.perform(notification.id)
+
+        mail = ActionMailer::Base.deliveries.last
+        expect(mail.from).to eq([ ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org") ])
+        expect(mail[:from].display_names.compact).to be_empty
+        expect(mail.reply_to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      end
+
+      it "never names the sender in any header" do
+        described_class.new.perform(notification.id)
+
+        headers = ActionMailer::Base.deliveries.last.header.fields.map(&:to_s).join("\n")
+        expect(headers).not_to include("Dana Sender")
+      end
+
+      it "still records the sender for the communications pages" do
+        described_class.new.perform(notification.id)
+
+        expect(notification.reload.sender).to eq(admin)
+        expect(notification.decorate.sender_name).to eq("Dana Sender")
+      end
+    end
   end
 end

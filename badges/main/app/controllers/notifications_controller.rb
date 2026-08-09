@@ -71,6 +71,7 @@ class NotificationsController < ApplicationController
       recipient_email: @notification.recipient_email,
       recipient_role: @notification.recipient_role,
       notification_type: @notification.notification_type,
+      sender: current_user, # a resend is an admin action — attribute it to them
       deliver: true,
       persist_delivered_email: true
     )

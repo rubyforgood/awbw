@@ -32,7 +32,7 @@ module UserServices
       # Credit the acting admin. Devise saves only when it regenerates the token,
       # so persist the attribution ourselves if it's left dirty.
       @user.updated_by = @current_user
-      @user.send_confirmation_instructions
+      @user.send_confirmation_instructions(sender: @current_user)
       @user.save(validate: false) if @user.changed?
       @actions_taken << "A confirmation email has been sent to #{@user.unconfirmed_email}"
     end

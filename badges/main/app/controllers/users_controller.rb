@@ -305,7 +305,7 @@ class UsersController < ApplicationController
     @user.updated_by = current_user
     @user.set_welcome_instructions_token!
     @user.update(welcome_instructions_sent_at: Time.current, welcome_instructions_sent_by: current_user)
-    @user.send_confirmation_instructions
+    @user.send_confirmation_instructions(sender: current_user)
 
     redirect_to users_path(search: params[:search],
                            super_user: params[:super_user],

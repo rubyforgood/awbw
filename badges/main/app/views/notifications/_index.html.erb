@@ -33,7 +33,7 @@
       <!-- People -->
       <td class="px-4 py-3 text-gray-700">
         <div><span class="text-xs uppercase text-gray-500">To:</span> <%= notification.recipient_email %></div>
-        <div class="text-[10px] text-gray-400"><span class="uppercase">From:</span> <%= notification.sender&.full_name.presence || "AWBW portal" %></div>
+        <div class="text-[10px] text-gray-400"><span class="uppercase">From:</span> <%= notification.decorate.sender_name %></div>
       </td>
 
       <!-- Subject -->
