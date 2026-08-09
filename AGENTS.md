@@ -205,7 +205,6 @@ action, or `authorize! :workshop, to: :summary?`).
 - `TaggingSearchService` — Search and filter tagging data
 - `PersonFromUserService` — Create Person from User account
 - `BulkInviteService` — Bulk send welcome instructions and reset created_at for users
-- `AttributedFromAddress` — Builds the From header for admin-sent mail: the notification sender's name becomes the display name while the address stays on the SendGrid-authorized generic mailbox (used by `NotificationMailerJob` and `DeviseMailer`)
 - `FormBuilderService` — Builds configurable forms from composable sections with per-field visibility
 - `ModelDeduper` — Deduplication logic
 - `RichTextMigrator` — Rich text migration utility
