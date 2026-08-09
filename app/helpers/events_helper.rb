@@ -49,6 +49,19 @@ module EventsHelper
       report_filters: params.permit(*REPORT_FILTER_KEYS).to_h.compact_blank)
   end
 
+  # Forward: from a scholarships report row's expanded recipient list into that
+  # recipient's registration for the training, stamped like #attended_registrants_path
+  # so the roster's eyebrow returns to the exact row (highlight + anchor) with the
+  # report's filters/toggle restored.
+  def scholarship_recipient_registrants_path(event, recipient)
+    registrants_event_path(event,
+      registrant_ids: recipient.id,
+      return_to: "scholarships",
+      return_highlight: event.id,
+      return_anchor: training_report_row_id(event),
+      report_filters: params.permit(*REPORT_FILTER_KEYS).to_h.compact_blank)
+  end
+
   # Back: the registrants eyebrow's path to the scholarships report, restoring the
   # carried filters/toggle and highlighting the row the user drilled in from.
   def scholarships_report_return_path
