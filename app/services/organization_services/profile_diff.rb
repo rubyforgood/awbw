@@ -8,8 +8,8 @@ module OrganizationServices
   # A blank submitted value, or a submitted value against a blank org column, is
   # not a discrepancy (nothing to reconcile — the latter just gets filled).
   # Address is compared against the org's corresponding address (AddressMatcher,
-  # the one the fill-blanks upsert targets); a submitted address in a new city
-  # isn't a discrepancy because it's added rather than reconciled. Powers both the
+  # the one the fill-blanks upsert targets); an address the matcher doesn't
+  # recognize isn't a discrepancy because it's added rather than reconciled. Powers both the
   # linking flow's flash summary and the linking page's persistent per-org note.
   class ProfileDiff
     Discrepancy = Struct.new(:field, :label, :submitted, :saved, keyword_init: true)
@@ -53,8 +53,10 @@ module OrganizationServices
     end
 
     # Compare every address field against the org's corresponding address. A field
-    # blank on either side is skipped (the blank gets filled, not reconciled), so
-    # in practice street/state/ZIP/country are what can flag.
+    # blank on either side is skipped (the blank gets filled, not reconciled).
+    # City can differ here because AddressMatcher's last resort matches on
+    # street + ZIP across cities — that's exactly the respelled-city case an admin
+    # should see rather than have silently normalized away.
     def address_discrepancies
       existing = matching_address
       return [] unless existing
@@ -73,7 +75,8 @@ module OrganizationServices
         @organization,
         city: @address[:city],
         state: @address[:state],
-        street_address: @address[:street_address]
+        street_address: @address[:street_address],
+        zip_code: @address[:zip_code]
       )
     end
 

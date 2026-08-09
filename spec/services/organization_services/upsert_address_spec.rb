@@ -4,7 +4,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
   let(:organization) { create(:organization) }
 
   it "creates a primary work address from the submitted fields" do
-    address = described_class.call(
+    result = described_class.call(
       organization: organization,
       street_address: "1 Main St",
       city: "Austin",
@@ -13,7 +13,8 @@ RSpec.describe OrganizationServices::UpsertAddress do
       country: "USA"
     )
 
-    expect(address).to have_attributes(
+    expect(result).to have_attributes(created: true, filled: [])
+    expect(result.address).to have_attributes(
       addressable: organization,
       street_address: "1 Main St",
       city: "Austin",
@@ -25,9 +26,10 @@ RSpec.describe OrganizationServices::UpsertAddress do
     )
   end
 
-  it "returns nil and creates nothing when no city is given" do
+  it "returns no address and creates nothing when no city is given" do
     expect {
-      expect(described_class.call(organization: organization, street_address: "1 Main St")).to be_nil
+      expect(described_class.call(organization: organization, street_address: "1 Main St"))
+        .to have_attributes(address: nil, created: false, filled: [])
     }.not_to change { organization.addresses.count }
   end
 
@@ -43,15 +45,30 @@ RSpec.describe OrganizationServices::UpsertAddress do
       country: "Canada"
     )
 
-    expect(result).to eq(existing)
+    expect(result).to have_attributes(address: existing, created: false)
+    expect(result.filled).to contain_exactly("street", "ZIP", "country")
     expect(organization.addresses.count).to eq(1)
     expect(existing.reload).to have_attributes(street_address: "2 New Ave", zip_code: "78702", country: "Canada", primary: true, inactive: false)
+  end
+
+  it "reports nothing filled when the submission repeats what is already on file" do
+    create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701", primary: true)
+
+    result = described_class.call(
+      organization: organization,
+      street_address: "1 Main St",
+      city: "Austin",
+      state: "TX",
+      zip_code: "78701"
+    )
+
+    expect(result).to have_attributes(created: false, filled: [])
   end
 
   it "fills only blank fields on the matching address when overwrite is false" do
     existing = create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "", country: "", primary: true)
 
-    described_class.call(
+    result = described_class.call(
       organization: organization,
       street_address: "1 Main St",
       city: "Austin",
@@ -61,6 +78,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
       overwrite: false
     )
 
+    expect(result.filled).to contain_exactly("ZIP", "country")
     expect(existing.reload).to have_attributes(street_address: "5 Oak Ave", zip_code: "78702", country: "Canada")
   end
 
@@ -76,10 +94,45 @@ RSpec.describe OrganizationServices::UpsertAddress do
       overwrite: false
     )
 
-    expect(result).to eq(existing)
+    expect(result).to have_attributes(address: existing, created: false, filled: [ "country" ])
     expect(organization.addresses.count).to eq(1)
     # State already on file is kept (never flipped); the blank country is filled.
     expect(existing.reload).to have_attributes(state: "Texas", country: "USA", street_address: "1 Main St")
+  end
+
+  it "updates the same street/ZIP address instead of duplicating when the city is respelled, keeping the saved city" do
+    existing = create(:address, addressable: organization, street_address: "1 Main St", city: "Saint Louis", state: "MO", zip_code: "63101", country: "")
+
+    result = described_class.call(
+      organization: organization,
+      street_address: "1 Main St",
+      city: "St. Louis",
+      state: "MO",
+      zip_code: "63101",
+      country: "USA",
+      overwrite: false
+    )
+
+    expect(result).to have_attributes(address: existing, created: false, filled: [ "country" ])
+    expect(organization.addresses.count).to eq(1)
+    expect(existing.reload).to have_attributes(city: "Saint Louis", country: "USA")
+  end
+
+  it "fills a blank city on the matched address rather than leaving it empty" do
+    # City is validated present now, so only a legacy row can be blank.
+    existing = create(:address, addressable: organization, street_address: "1 Main St", city: "Nowhere", state: "MO", zip_code: "63101")
+    existing.update_column(:city, "")
+
+    result = described_class.call(
+      organization: organization,
+      street_address: "1 Main St",
+      city: "St. Louis",
+      zip_code: "63101",
+      overwrite: false
+    )
+
+    expect(result).to have_attributes(address: existing, filled: [ "city" ])
+    expect(existing.reload.city).to eq("St. Louis")
   end
 
   it "leaves the org's existing primary intact and adds the new-city address as non-primary" do

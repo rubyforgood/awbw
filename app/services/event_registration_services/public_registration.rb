@@ -354,7 +354,7 @@ module EventRegistrationServices
         state: field_value("agency_state"),
         zip_code: field_value("agency_zip"),
         country: field_value("agency_country")
-      )
+      ).address
     end
 
     def assign_tags(person, organization)

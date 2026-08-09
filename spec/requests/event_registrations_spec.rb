@@ -1079,6 +1079,67 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(organization.website_url).to eq("https://curated.org")
           expect(flash[:warning]).to include("were not applied").and include("Government agency").and include("For-profit")
         end
+
+        it "escapes a submitted answer before putting it in the flash warning" do
+          organization.update!(website_url: "https://curated.org")
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          field = create(:form_field, form: reg_form, field_identifier: "agency_website")
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "<img src=x onerror=alert(1)>")
+
+          post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
+          follow_redirect!
+
+          # Flash messages are rendered with html_safe, so the raw tag must never survive.
+          expect(response.body).not_to include("<img src=x onerror=alert(1)>")
+          expect(flash.now[:warning].to_s).to include("&lt;img src=x")
+        end
+
+        it "names the city of the work address it created" do
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_street" => "1 Main St", "agency_city" => "Austin", "agency_state" => "TX", "agency_zip" => "78701" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
+
+          expect(flash[:notice]).to include("Saved from the form: work address in Austin")
+        end
+
+        it "does not claim the work address was saved when the submission changed nothing on it" do
+          create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "78701", country: "USA")
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_street" => "1 Main St", "agency_city" => "Austin", "agency_state" => "TX", "agency_zip" => "78701" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
+
+          expect(flash[:notice]).not_to include("work address")
+          expect(flash[:warning]).to include("Address – street")
+        end
+
+        it "reports only the address fields it actually filled" do
+          create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "", country: "USA")
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_street" => "1 Main St", "agency_city" => "Austin", "agency_state" => "TX", "agency_zip" => "78701" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
+
+          expect(flash[:notice]).to include("Saved from the form: ZIP on the Austin work address")
+        end
       end
 
       describe "POST /event_registrations/:id/create_organization" do

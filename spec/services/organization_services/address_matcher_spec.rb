@@ -39,4 +39,35 @@ RSpec.describe OrganizationServices::AddressMatcher do
 
     expect(described_class.call(organization, city: "Austin", state: "CA", street_address: "99 Nowhere Ln")).to be_nil
   end
+
+  it "falls back across cities to the same street and ZIP when the city is respelled" do
+    respelled = create(:address, addressable: organization, street_address: "1 Main St", city: "Saint Louis", state: "MO", zip_code: "63101")
+
+    match = described_class.call(organization, city: "St. Louis", state: "MO", street_address: "1 Main St", zip_code: "63101")
+
+    expect(match).to eq(respelled)
+  end
+
+  it "does not merge two offices on the same street in different cities when the ZIP differs" do
+    create(:address, addressable: organization, street_address: "1 Main St", city: "Dallas", state: "TX", zip_code: "75201")
+
+    match = described_class.call(organization, city: "Austin", state: "TX", street_address: "1 Main St", zip_code: "78701")
+
+    expect(match).to be_nil
+  end
+
+  it "does not fall back across cities without a submitted ZIP" do
+    create(:address, addressable: organization, street_address: "1 Main St", city: "Saint Louis", state: "MO", zip_code: "63101")
+
+    expect(described_class.call(organization, city: "St. Louis", state: "MO", street_address: "1 Main St")).to be_nil
+  end
+
+  it "prefers the in-city match over a cross-city street/ZIP one" do
+    create(:address, addressable: organization, street_address: "1 Main St", city: "Saint Louis", state: "MO", zip_code: "63101")
+    in_city = create(:address, addressable: organization, street_address: "9 Other Rd", city: "St. Louis", state: "MO", zip_code: "63102")
+
+    match = described_class.call(organization, city: "St. Louis", state: "MO", street_address: "1 Main St", zip_code: "63101")
+
+    expect(match).to eq(in_city)
+  end
 end

@@ -84,6 +84,17 @@ RSpec.describe OrganizationServices::ProfileDiff do
       expect(diff).to be_empty
     end
 
+    it "flags a city that differs on the address matched across cities by street and ZIP" do
+      create(:address, addressable: organization, street_address: "1 Main St", city: "Saint Louis", state: "MO", zip_code: "63101")
+
+      diff = described_class.call(organization: organization, address: {
+        street_address: "1 Main St", city: "St. Louis", state: "MO", zip_code: "63101"
+      })
+
+      expect(diff.map(&:field)).to eq([ :address_city ])
+      expect(diff.first).to have_attributes(label: "Address – city", submitted: "St. Louis", saved: "Saint Louis")
+    end
+
     it "does not flag a submitted address in a city the org has no address for (it gets added, not reconciled)" do
       create(:address, addressable: organization, city: "Dallas", state: "TX")
 
