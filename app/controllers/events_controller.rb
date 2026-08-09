@@ -8,7 +8,6 @@ class EventsController < ApplicationController
   def index
     authorize!
     base_scope = authorized_scope(Event.all)
-    base_scope = base_scope.staffed_by(current_user.person) if params[:staffed_by_me].present? && current_user&.person
     @events  = base_scope.search_by_params(params).order(start_date: :desc)
   end
 
