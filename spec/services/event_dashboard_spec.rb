@@ -996,6 +996,25 @@ RSpec.describe EventDashboard do
     end
   end
 
+  describe "unlinked registrations" do
+    let(:event) { create(:event) }
+
+    it "counts active registrations with no organization linked" do
+      linked = create(:event_registration, event: event, status: "registered")
+      create(:event_registration_organization, event_registration: linked)
+      create(:event_registration, event: event, status: "registered")
+      create(:event_registration, event: event, status: "attended")
+
+      expect(dashboard.unlinked_registration_count).to eq(2)
+    end
+
+    it "ignores inactive registrations" do
+      create(:event_registration, event: event, status: "cancelled")
+
+      expect(dashboard.unlinked_registration_count).to eq(0)
+    end
+  end
+
   describe "attendance stats" do
     let(:event) { create(:event) }
 

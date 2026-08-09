@@ -55,7 +55,7 @@
           selected: params[:readiness], blank: "All statuses", field_class: field_class %>
 
     <%= render "events/filter_select", param: :org_status, label: "Organization linking",
-          options: [ [ "Pending", "pending" ], [ "Linked", "linked" ] ],
+          options: [ [ "Pending", "pending" ], [ "Linked", "linked" ], [ "Unlinked", "unlinked" ] ],
           selected: params[:org_status], blank: "Any linking", field_class: field_class %>
 
     <%= render "events/filter_select", param: :comment_status, label: "Comments",

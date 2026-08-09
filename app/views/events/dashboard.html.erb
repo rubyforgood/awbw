@@ -277,6 +277,17 @@
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
         <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: "#{@dashboard.registrant_count} active", path: registrants_event_path(@event, status_filter: "active") %><% if @dashboard.inactive_registration_count.positive? %> · <%= render "stat_link", label: "#{@dashboard.inactive_registration_count} inactive", path: registrants_event_path(@event, status_filter: "inactive") %><% end %></p>
+        <% if @dashboard.unlinked_registration_count.positive? %>
+          <div class="mt-1.5">
+            <%= render "shared/badge",
+                  href: registrants_event_path(@event, org_status: "unlinked"),
+                  label: "#{@dashboard.unlinked_registration_count} unlinked",
+                  classes: "bg-amber-50 text-amber-700 border-amber-300",
+                  icon: "fa-solid fa-circle-exclamation text-amber-500",
+                  title: "Registrants with no organization linked",
+                  extra: "shrink-0" %>
+          </div>
+        <% end %>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.registrants.any? %>
