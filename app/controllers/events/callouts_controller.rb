@@ -342,6 +342,47 @@ module Events
                   notice: "Thanks! Your responses have been submitted."
     end
 
+    # Maps each survey built-in to the FormSubmission role it records under. The
+    # scholarship recipients survey is the one that gates readiness, tagged
+    # "post_event_survey".
+    SURVEY_ROLES = {
+      "day_1_survey" => "day_1_survey",
+      "day_2_survey" => "day_2_survey",
+      "scholarship_recipients_survey" => "post_event_survey"
+    }.freeze
+
+    # The inline survey page for a survey callout: renders the drip notice before
+    # the drip date, the form to fill, or the submitted answers (read-only) with an
+    # edit affordance.
+    def survey
+      @callout = survey_callout
+      return redirect_to registration_ticket_path(@event_registration.slug) unless @callout
+
+      @form = @callout.form
+      @role = SURVEY_ROLES.fetch(@callout.builtin_key)
+      @dripping = @callout.dripping?
+      @submission = survey_submission
+      @editing = @submission.nil? || params[:edit].present?
+    end
+
+    def submit_survey
+      @callout = survey_callout
+      return redirect_to registration_ticket_path(@event_registration.slug) if @callout.nil? || @callout.dripping?
+
+      service = EventRegistrationServices::SurveySubmission.call(
+        event_registration: @event_registration,
+        form: @callout.form,
+        role: SURVEY_ROLES.fetch(@callout.builtin_key),
+        field_params: survey_field_params,
+        clarity_params: survey_clarity_params
+      )
+      track_survey_profile_changes(service.profile_changes)
+      NotificationMailer.survey_submitted_fyi(service.submission).deliver_later
+
+      redirect_to registration_survey_path(@event_registration.slug, @callout.builtin_key),
+                  notice: "Thanks! Your responses have been submitted."
+    end
+
     private
 
     # A dollar amount typed into the support-request box ("$1,200", "1200.50") as
@@ -412,6 +453,35 @@ module Events
       return "Signed out at #{time}." if entry.attendance_date == Time.zone.today
 
       "Signed out for #{entry.attendance_date.strftime("%a, %b %-d")} at #{time}."
+    end
+
+    # The published survey callout named by :builtin_key, once it actually carries a
+    # form. Nil (→ back to the ticket) for anything else.
+    def survey_callout
+      callout = @event.registration_ticket_callouts.find_by(builtin_key: params[:builtin_key])
+      return unless callout && callout.form && !callout.hidden? && SURVEY_ROLES.key?(callout.builtin_key)
+      callout
+    end
+
+    def survey_submission
+      FormSubmission.find_by(person: @event_registration.registrant, form: @callout.form,
+                             event: @event, role: SURVEY_ROLES.fetch(@callout.builtin_key))
+    end
+
+    def survey_field_params
+      params.dig(:survey, :fields)&.to_unsafe_h || {}
+    end
+
+    def survey_clarity_params
+      params.dig(:survey, :clarity)&.to_unsafe_h || {}
+    end
+
+    # One Ahoy event per profile field the survey actually changed (anonymity / name
+    # display), so the change is auditable.
+    def track_survey_profile_changes(changes)
+      changes.each do |attribute, (from, to)|
+        ahoy.track("profile.#{attribute}", person_id: @event_registration.registrant_id, from: from, to: to)
+      end
     end
 
     # Whether the event's built-in callout for this key is materialized and

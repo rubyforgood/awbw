@@ -110,6 +110,8 @@ Rails.application.routes.draw do
   get "registration/:slug/staff", to: "events/callouts#staff", as: :registration_staff
   get "registration/:slug/forms/:callout_id", to: "events/callouts#callout", as: :registration_callout_form
   post "registration/:slug/forms/:callout_id", to: "events/callouts#submit_callout", as: :registration_callout_form_submit
+  get "registration/:slug/survey/:builtin_key", to: "events/callouts#survey", as: :registration_survey
+  post "registration/:slug/survey/:builtin_key", to: "events/callouts#submit_survey", as: :registration_survey_submit
   post "registration/:slug/resend_confirmation", to: "events/registrations#resend_confirmation", as: :registration_resend_confirmation
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate
