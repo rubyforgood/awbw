@@ -2369,6 +2369,44 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /events/:id/roster" do
+    let(:owner) { create(:user) }
+    let(:owned_event) { create(:event, created_by: owner) }
+
+    before do
+      create(:event_registration, event: owned_event, registrant: create(:person, first_name: "Ada", last_name: "Lovelace"), status: "attended")
+      create(:event_registration, event: owned_event, registrant: create(:person, first_name: "Gus", last_name: "Gone"), status: "cancelled")
+    end
+
+    it "renders the roster of active registrants for an admin" do
+      sign_in admin
+      get roster_event_path(owned_event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Roster")
+      expect(response.body).to include("Ada Lovelace")
+      expect(response.body).not_to include("Gus Gone")
+    end
+
+    it "is visible to the event owner" do
+      sign_in owner
+      get roster_event_path(owned_event)
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "redirects a non-owner non-admin" do
+      sign_in user
+      get roster_event_path(owned_event)
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "drills a breakdown into Manage with a back-to-roster eyebrow" do
+      sign_in admin
+      get roster_event_path(owned_event)
+      expect(response.body).to include("return_to=roster")
+    end
+  end
+
   describe "GET /events/:id/staff" do
     let(:public_event) { create(:event, :published, :publicly_visible) }
     let(:staff_member) { create(:person, first_name: "Ada", last_name: "Lovelace") }

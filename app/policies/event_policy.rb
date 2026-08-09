@@ -74,6 +74,12 @@ class EventPolicy < ApplicationPolicy
     manage?
   end
 
+  # The per-event roster (active registrants + demographics) is owner-visible like
+  # the rest of the event's management pages.
+  def roster?
+    manage?
+  end
+
   def dashboard?
     admin? || owner?
   end

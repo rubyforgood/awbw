@@ -1,21 +1,25 @@
 <%# Registrants grouped by the city of the organization linked on their
-    registration — shared by the event background dashboard and the
+    registration — shared by the event roster page and the
     scholarship-recipients page. A pure-CSS `peer` toggle swaps between all cities
     and scholarship-only cities: both lists render server-side and are shown/hidden
     via `peer-checked:` (no JS). Locals:
       breakdown: a RegistrantCityBreakdown
       metrics:   :registrants, :scholarships, or :both (default :both) — which
                  figure(s) each city row shows. Grouping is always by city.
-      title:     heading (default "Registrants by city") %>
+      title:     heading (default "Registrants by city")
+      return_anchor: optional section id — when set (roster page), the card
+                 gets that id/scroll-mt and its row links carry a back-to-here
+                 eyebrow. Omit it elsewhere (recipients page) for plain links. %>
 <% metrics = local_assigns.fetch(:metrics, :both) %>
 <% title = local_assigns.fetch(:title, "Registrants by city") %>
+<% return_anchor = local_assigns[:return_anchor] %>
 <%# Index context passes per-city drill-in paths (keyed by city label) instead of
     the event-scoped registrant links the row partial builds by default. %>
 <% row_paths = local_assigns[:row_paths] %>
 <% scholarship_paths = local_assigns[:scholarship_paths] %>
 <% rows = breakdown.rows %>
 <% scholarship_rows = rows.select { |row| row.scholarship_count.positive? } %>
-<div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4">
+<div <%= tag.attributes(id: return_anchor, class: "#{"scroll-mt-24 " if return_anchor}bg-white border border-gray-200 rounded-xl shadow-sm p-4") %>>
   <div class="flex items-center justify-between mb-3">
     <h2 class="text-sm font-semibold text-gray-700"><%= title %></h2>
     <span class="text-xs text-gray-500"><%= rows.size %></span>
@@ -42,14 +46,14 @@
     <%# Full list — hidden once the toggle is checked. %>
     <table class="w-full text-sm peer-checked:hidden">
       <tbody>
-        <%= render partial: "events/registrant_city_row", collection: rows, as: :row, locals: { metrics: metrics, event: @event, row_paths: row_paths, scholarship_paths: scholarship_paths } %>
+        <%= render partial: "events/registrant_city_row", collection: rows, as: :row, locals: { metrics: metrics, event: @event, return_anchor: return_anchor, row_paths: row_paths, scholarship_paths: scholarship_paths } %>
       </tbody>
     </table>
     <%# Scholarship-cities-only list — revealed when the toggle is checked. %>
     <% if scholarship_rows.any? %>
       <table class="hidden w-full text-sm peer-checked:table">
         <tbody>
-          <%= render partial: "events/registrant_city_row", collection: scholarship_rows, as: :row, locals: { metrics: metrics, event: @event, row_paths: row_paths, scholarship_paths: scholarship_paths } %>
+          <%= render partial: "events/registrant_city_row", collection: scholarship_rows, as: :row, locals: { metrics: metrics, event: @event, return_anchor: return_anchor, row_paths: row_paths, scholarship_paths: scholarship_paths } %>
         </tbody>
       </table>
     <% end %>

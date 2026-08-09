@@ -4,9 +4,13 @@
 <% content_for(:full_width, true) %>
 <div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8">
 <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
-  <%# Top bar: eyebrow + sub-nav, matching the other event pages. %>
+  <%# Top bar: eyebrow + sub-nav, matching the other event pages. When the user
+      arrived by drilling into a Roster section, the eyebrow returns to that exact
+      section (via return_anchor) instead of the generic Dashboard. %>
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
-    <% if params[:return_to] == "scholarships" %>
+    <% if params[:return_to] == "roster" %>
+      <%= link_to "← Roster", roster_event_path(@event, anchor: params[:return_anchor].presence), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <% elsif params[:return_to] == "scholarships" %>
       <%= link_to "← Events scholarships", scholarships_report_return_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
     <% else %>
       <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>

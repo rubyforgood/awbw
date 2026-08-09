@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard sample_ticket registrants onboarding staff edit_staff update_staff recipients feature_recipient_shoutout preview_reminder confirm_reminder send_reminder copy_registration_form ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard sample_ticket registrants roster onboarding staff edit_staff update_staff recipients preview_reminder confirm_reminder send_reminder copy_registration_form feature_recipient_shoutout ]
   before_action :set_report_filters, only: %i[ revenue participation reports scholarships ]
   # The cross-event report suite is admin-only for the whole-org view, but a
   # single-event slice (event_id filter) is visible to that event's owner too.
@@ -144,6 +144,14 @@ class EventsController < ApplicationController
     # admin-only sample callout previews (see Events::CalloutsController), which
     # render the same in-memory sample — nothing is ever persisted.
     @event_registration = SampleTicketRegistration.new(@event, all_options: @show_all_options).registration
+  end
+
+  # The event's active-registrant roster (registrant table + demographic charts),
+  # over the shared roster/breakdown partials fed by EventDashboard.
+  def roster
+    authorize! @event, to: :roster?
+    @event = @event.decorate
+    @dashboard = EventDashboard.new(@event)
   end
 
   def registrants

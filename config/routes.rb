@@ -169,6 +169,7 @@ Rails.application.routes.draw do
       get "sample_ticket/videoconference", to: "events/callouts#videoconference", defaults: { sample: "1" }, as: :sample_videoconference
       get "sample_ticket/staff", to: "events/callouts#staff", defaults: { sample: "1" }, as: :sample_staff
       get :registrants
+      get :roster
       get :onboarding
       get :staff
       get "staff/edit", action: :edit_staff, as: :edit_staff

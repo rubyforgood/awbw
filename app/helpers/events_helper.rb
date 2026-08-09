@@ -71,6 +71,15 @@ module EventsHelper
       anchor: params[:return_anchor].presence)
   end
 
+  # Stamp a registrants-page link reached from the roster page with the
+  # context its eyebrow needs to send the user back to the exact section they
+  # drilled in from: return_to marks the origin page, return_anchor the section id
+  # (matching that section's `id`/`scroll-mt-*` on the roster page).
+  def roster_return_path(path, anchor)
+    separator = path.include?("?") ? "&" : "?"
+    "#{path}#{separator}#{{ return_to: "roster", return_anchor: anchor }.to_query}"
+  end
+
   # Ordered column descriptors for the event Onboarding matrix. The array index
   # is the table-sort column index, so the header row and every body row iterate
   # this same list — keeping header buttons and cell positions aligned no matter

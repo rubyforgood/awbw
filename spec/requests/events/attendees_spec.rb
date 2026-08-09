@@ -41,7 +41,7 @@ RSpec.describe "Events attendees", type: :request do
       it "renders the shell for an event they own" do
         get attendees_events_url(event_id: owned_training.id)
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Training attendees")
+        expect(response.body).to include("Attendees")
       end
 
       it "returns the eyebrow to their event's dashboard" do
@@ -66,7 +66,7 @@ RSpec.describe "Events attendees", type: :request do
       it "renders the index shell" do
         get attendees_events_url
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Training attendees")
+        expect(response.body).to include("Attendees")
       end
 
       it "carries the participation origin back through the eyebrow" do

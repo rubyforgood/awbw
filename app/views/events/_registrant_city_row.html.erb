@@ -4,10 +4,12 @@
     scholarship figure links to just its scholarship recipients. Registrant total
     and scholarship figure get their own right-aligned columns so counts line up;
     tabular-nums + a 3-digit min-width keep padding even. %>
-<%# row_paths/scholarship_paths (set only on the cross-event index) supply per-city
+<%# return_anchor (set only on the roster page) makes each registrants
+    link carry a back-to-this-card eyebrow; nil elsewhere leaves links plain.
+    row_paths/scholarship_paths (set only on the cross-event index) supply per-city
     drill-in paths keyed by city label; a missing entry (e.g. Unknown) renders the
-    row non-clickable. Without them (the recipients page), links go to the event's
-    filtered registrant list. %>
+    row non-clickable. %>
+<% return_anchor = local_assigns[:return_anchor] %>
 <% row_paths = local_assigns[:row_paths] %>
 <% scholarship_paths = local_assigns[:scholarship_paths] %>
 <% if row_paths %>
@@ -15,7 +17,9 @@
   <% scholarship_path = scholarship_paths&.dig(row.city) %>
 <% else %>
   <% row_path = registrants_event_path(event, registrant_ids: row.registrant_ids.join("-")) %>
+  <% row_path = roster_return_path(row_path, return_anchor) if return_anchor %>
   <% scholarship_path = registrants_event_path(event, registrant_ids: row.scholarship_recipient_ids.join("-")) %>
+  <% scholarship_path = roster_return_path(scholarship_path, return_anchor) if return_anchor %>
 <% end %>
 <tr class="border-t border-gray-100 group hover:bg-gray-50 <%= "cursor-pointer" if row_path %> transition-colors"
     <% if row_path %>onclick="window.location='<%= row_path %>'"<% end %>>

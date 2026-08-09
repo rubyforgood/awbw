@@ -1,0 +1,109 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<%# Opt out of the layout's max-w-7xl cap to match the wider Manage page;
+    the wrapper restores the layout's gutters at a wider bound. %>
+<% content_for(:full_width, true) %>
+<div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8">
+<div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+  <%# Top bar: back link + sub-nav, matching the other event pages %>
+  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6 print:hidden">
+    <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <%= render "events/subnav", event: @event, current: :roster %>
+  </div>
+  <%# Title block with the Print button pinned top-right so it shares the title's
+      vertical band instead of stacking above it. On mobile it sits in its own
+      right-aligned row above the centered title to avoid overlapping it. %>
+  <div class="relative mb-8">
+    <div class="flex justify-end gap-3 mb-4 sm:mb-0 sm:absolute sm:right-0 sm:top-0 print:hidden">
+      <button onclick="window.print();" class="btn btn-utility-outline">
+        <i class="fa-solid fa-print"></i> Print
+      </button>
+    </div>
+
+    <div class="text-center">
+      <%= link_to @event.decorate.compact_label, edit_event_path(@event), title: @event.title, class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
+      <% if @event.start_date.present? %>
+        <p class="text-sm text-gray-500 mt-1"><%= @event.date_range %></p>
+      <% end %>
+      <h1 class="text-3xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-users-viewfinder <%= DomainTheme.text_class_for(:people, intensity: 500) %>"></i>
+        Roster
+      </h1>
+      <p class="text-sm text-gray-500 mt-2"><%= pluralize(@dashboard.registrant_count, "active registrant") %></p>
+    </div>
+  </div>
+
+  <%# ---- At-a-glance counts — one compact "stat bar" of metrics; each segment
+      drills into the matching filtered registrant list. Scholarships and CE ride
+      along as subtotals of registrants, and states + countries combine into a
+      single "Locations" total with per-type subtotals. ---- %>
+  <% ps = @dashboard.program_status_counts %>
+  <% program_breakdown = @dashboard.organization_count.positive? ? "#{ps[:new]} new · #{ps[:ongoing]} ongoing · #{ps[:reinstated]} reinstated" : nil %>
+  <% ce_registrant_ids = @dashboard.ce_registrant_ids %>
+  <%# Every stat-bar link returns to the stat bar itself (anchor "overview"). %>
+  <% leading_metrics = [
+       { label: "Organizations", value: @dashboard.organization_count, icon: "fa-building", theme: :organizations,
+         path: roster_return_path(registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids.join("-")), "overview"), sub: program_breakdown },
+       { label: "Sectors", value: @dashboard.sectors.size, icon: "fa-hand-holding-heart", theme: :sectors,
+         path: roster_return_path(registrants_event_path(@event, registrant_ids: @dashboard.sector_registrant_ids.join("-")), "overview"),
+         sub: @dashboard.sectors.any? ? "#{@dashboard.primary_sector_count} primary · #{@dashboard.additional_sector_count} additional" : nil }
+     ] %>
+  <div id="overview" class="scroll-mt-24 flex flex-wrap items-stretch divide-y sm:divide-y-0 sm:divide-x divide-gray-100 rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+    <%# Registrants, with scholarship recipients and CE as subtotals drilling into their lists. %>
+    <div class="flex items-center gap-3 px-4 py-3 grow basis-44">
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:people, intensity: 100) %> <%= DomainTheme.text_class_for(:people, intensity: 600) %>">
+        <i class="fa-solid fa-users"></i>
+      </span>
+      <span class="min-w-0">
+        <%= link_to roster_return_path(registrants_event_path(@event), "overview"), class: "group/reg block hover:underline leading-tight" do %>
+          <span class="text-xl font-bold text-gray-900 tabular-nums"><%= @dashboard.registrant_count %></span>
+          <span class="text-xs text-gray-500">Registrants</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 opacity-0 group-hover/reg:opacity-100 transition-opacity"></i>
+        <% end %>
+        <span class="block text-xs text-gray-400 mt-0.5">
+          <%= link_to recipients_event_path(@event), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.scholarship_recipient_count, "scholarship") %><% end %>
+          <span class="text-gray-300" aria-hidden="true">·</span>
+          <%= link_to roster_return_path(registrants_event_path(@event, registrant_ids: ce_registrant_ids.join("-")), "overview"), class: "hover:underline whitespace-nowrap" do %><%= ce_registrant_ids.size %> CE<% end %>
+        </span>
+      </span>
+    </div>
+
+    <% leading_metrics.each do |metric| %>
+      <%= render "stat_segment", metric: metric %>
+    <% end %>
+
+    <%# States + countries + cities combined: a unique-locations total with per-type subtotals. %>
+    <% city_rows = @dashboard.registrant_city_breakdown.rows.reject { |row| row.city == RegistrantCityBreakdown::UNKNOWN_LABEL } %>
+    <% city_registrant_ids = city_rows.flat_map(&:registrant_ids).uniq %>
+    <div class="flex items-center gap-3 px-4 py-3 grow basis-64">
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:addresses, intensity: 100) %> <%= DomainTheme.text_class_for(:addresses, intensity: 600) %>">
+        <i class="fa-solid fa-earth-americas"></i>
+      </span>
+      <span class="min-w-0">
+        <span class="block leading-tight">
+          <span class="text-xl font-bold <%= DomainTheme.text_class_for(:addresses, intensity: 700) %> tabular-nums"><%= @dashboard.states.size + @dashboard.countries.size + city_rows.size %></span>
+          <span class="text-xs <%= DomainTheme.text_class_for(:addresses, intensity: 600) %>">Locations</span>
+        </span>
+        <span class="block text-xs text-gray-400 mt-0.5">
+          <%= link_to roster_return_path(registrants_event_path(@event, registrant_ids: @dashboard.state_registrant_ids.join("-")), "overview"), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.states.size, "state") %><% end %>
+          <span class="text-gray-300" aria-hidden="true">·</span>
+          <%= link_to roster_return_path(registrants_event_path(@event, registrant_ids: @dashboard.country_registrant_ids.join("-")), "overview"), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.countries.size, "country") %><% end %>
+          <span class="text-gray-300" aria-hidden="true">·</span>
+          <%= link_to roster_return_path(registrants_event_path(@event, registrant_ids: city_registrant_ids.join("-").presence || "0"), "overview"), class: "hover:underline whitespace-nowrap" do %><%= pluralize(city_rows.size, "city") %><% end %>
+        </span>
+      </span>
+    </div>
+  </div>
+
+  <%# ---- Registrant roster (full width) ---- %>
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mt-6">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+      <h2 class="text-sm font-semibold text-gray-700">Registrants</h2>
+      <span class="text-xs text-gray-500"><%= pluralize(@dashboard.registrant_count, "person") %></span>
+    </div>
+    <%= render "events/registrant_roster", roster: @dashboard %>
+  </div>
+
+  <%= render "events/registrant_breakdowns", data: @dashboard, context: :event, event: @event %>
+</div>
+</div>
