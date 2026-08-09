@@ -10,8 +10,10 @@ class EventsController < ApplicationController
   before_action :authorize_report!, only: %i[ revenue participation reports scholarships attendees ]
   # Log a visit to each event page / report. after_action so it only fires once
   # the action rendered successfully (authorization inside the actions has passed);
-  # the turbo_frame_request? guard skips the lazy results/charts sub-requests.
-  after_action :track_page_view, only: %i[ dashboard roster registrants recipients staff onboarding edit revenue participation reports scholarships attendees ]
+  # the turbo_frame_request? / redirect guards skip the lazy results/charts
+  # sub-requests and the confirm-reminder bounce-back. send_reminder is logged
+  # inline on a successful send (it always redirects).
+  after_action :track_page_view, only: %i[ dashboard roster registrants recipients staff onboarding edit preview sample_ticket revenue participation reports scholarships attendees confirm_reminder ]
 
   def index
     authorize!
@@ -417,6 +419,7 @@ class EventsController < ApplicationController
     recipient_labels = registrations.map { |r| "#{r.registrant.full_name} <#{r.registrant.preferred_email}>" }
     EventMailer.event_registration_reminder_fyi(@event, recipient_labels, custom_message: custom_message.presence).deliver_later
 
+    track_view("events.send_reminder", { event_id: @event.id, recipient_count: registrations.size })
     redirect_to registrants_event_path(@event), notice: "Reminder emails are being sent to #{registrations.size} registrant#{'s' if registrations.size != 1}."
   end
 
@@ -564,7 +567,7 @@ class EventsController < ApplicationController
   # the event via event_id where there is one (per-event pages, or a report scoped
   # to an event). Skips the lazy Turbo-frame sub-requests so a page counts once.
   def track_page_view
-    return if turbo_frame_request?
+    return if turbo_frame_request? || response.redirect?
     track_view("events.#{action_name}", { event_id: @event&.id || params[:event_id].presence }.compact)
   end
 

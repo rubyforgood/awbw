@@ -397,7 +397,7 @@ RSpec.describe "Events", type: :request do
         sign_in admin
         get reports_events_path
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Reports")
+        expect(response.body).to include("Event reports")
         expect(response.body).to include("Revenue")
         expect(response.body).to include("Participation")
         expect(response.body).to match(/<h3[^>]*>Participation<\/h3>.*<h3[^>]*>Scholarships<\/h3>.*<h3[^>]*>Revenue<\/h3>/m)
@@ -565,6 +565,11 @@ RSpec.describe "Events", type: :request do
       it "materializes the built-in callouts so the preview reads from real rows" do
         expect { get sample_ticket_event_path(event) }
           .to change { event.registration_ticket_callouts.builtin.count }.from(0).to(8)
+      end
+
+      it "logs an Ahoy page-view event" do
+        expect(Analytics::AhoyTracker).to receive(:track_event).with(anything, "view.events.sample_ticket", { event_id: event.id })
+        get sample_ticket_event_path(event)
       end
 
       it "renders a published custom callout as a link to its detail page" do
@@ -1011,6 +1016,11 @@ RSpec.describe "Events", type: :request do
         original_title = event.title
         patch preview_event_path(event), params: { event: { title: "Preview Title" } }
         expect(event.reload.title).to eq(original_title)
+      end
+
+      it "logs an Ahoy page-view event" do
+        expect(Analytics::AhoyTracker).to receive(:track_event).with(anything, "view.events.preview", { event_id: event.id })
+        patch preview_event_path(event), params: { event: { title: "Preview Title" } }
       end
     end
 
@@ -3400,6 +3410,33 @@ RSpec.describe "Events", type: :request do
       }.not_to change(Notification, :count)
 
       expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: "", custom_subject: ""))
+    end
+
+    it "logs an Ahoy event with the recipient count on a successful send" do
+      expect(Analytics::AhoyTracker).to receive(:track_event)
+        .with(anything, "view.events.send_reminder", { event_id: event.id, recipient_count: 2 })
+      post send_reminder_event_path(event), params: { registration_ids: [ registration_one.id, registration_two.id ] }
+    end
+
+    it "logs nothing when nothing is selected" do
+      expect(Analytics::AhoyTracker).not_to receive(:track_event)
+      post send_reminder_event_path(event), params: { registration_ids: [] }
+    end
+  end
+
+  describe "POST /confirm_reminder" do
+    let!(:registration) { create(:event_registration, event: event) }
+
+    before { sign_in admin }
+
+    it "logs an Ahoy page-view event when it renders the confirmation" do
+      expect(Analytics::AhoyTracker).to receive(:track_event).with(anything, "view.events.confirm_reminder", { event_id: event.id })
+      post confirm_reminder_event_path(event), params: { registration_ids: [ registration.id ] }
+    end
+
+    it "logs nothing when it bounces back for having no recipients" do
+      expect(Analytics::AhoyTracker).not_to receive(:track_event)
+      post confirm_reminder_event_path(event), params: { registration_ids: [] }
     end
   end
 

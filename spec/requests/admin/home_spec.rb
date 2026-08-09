@@ -45,7 +45,7 @@ RSpec.describe "Admin::Home", type: :request do
 
     it "links to reports and still surfaces payments" do
       get admin_path
-      expect(response.body).to include("Reports")
+      expect(response.body).to include("Event reports")
       expect(response.body).to include(reports_events_path)
       expect(response.body).to include("Payments")
     end
