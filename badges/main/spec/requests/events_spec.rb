@@ -1124,6 +1124,67 @@ RSpec.describe "Events", type: :request do
 
         expect(response).to have_http_status(:ok)
       end
+
+      it "does not crash on an invalid payment_method" do
+        get registrants_event_path(event, payment_method: "bogus")
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context "payment method filter" do
+      let(:event) { create(:event, cost_cents: 10_000) }
+
+      let!(:ccn) do
+        create(:event_registration, event: event, expected_payment_method: "Credit card (now)",
+          registrant: create(:person, first_name: "Cardnow", last_name: "Payer"))
+      end
+      let!(:check) do
+        create(:event_registration, event: event, expected_payment_method: "Check",
+          registrant: create(:person, first_name: "Checkwriter", last_name: "Payer"))
+      end
+      let!(:buddy) do
+        create(:event_registration, event: event, someone_else_will_pay: true,
+          registrant: create(:person, first_name: "Sponsored", last_name: "Buddy"))
+      end
+
+      it "shows a short-code badge beside the registrant's name" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include("CCN")
+        expect(response.body).to include("BUD")
+      end
+
+      it "offers every method plus the buddy option in the filter" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Credit card (CCN)")
+        expect(response.body).to include("Check (CK)")
+        expect(response.body).to include("Someone else will pay (BUD)")
+      end
+
+      it "narrows the roster to the chosen method" do
+        get registrants_event_path(event, payment_method: "Check")
+
+        expect(response.body).to include("Checkwriter")
+        expect(response.body).not_to include("Cardnow")
+      end
+
+      it "narrows the roster to buddy-system registrations" do
+        get registrants_event_path(event, payment_method: "someone_else_will_pay")
+
+        expect(response.body).to include("Sponsored")
+        expect(response.body).not_to include("Cardnow")
+      end
+
+      it "includes the expected payment method and buddy columns in the CSV export" do
+        get registrants_event_path(event, format: :csv)
+
+        rows = CSV.parse(response.body, headers: true)
+        expect(rows.headers).to include("Expected payment method", "Someone else will pay")
+        expect(rows.find { |r| r["First name"] == "Cardnow" }["Expected payment method"]).to eq("Credit card (now)")
+        expect(rows.find { |r| r["First name"] == "Sponsored" }["Someone else will pay"]).to eq("Yes")
+      end
     end
 
     context "funder filter" do
