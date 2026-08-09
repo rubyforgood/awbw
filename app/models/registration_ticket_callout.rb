@@ -147,6 +147,12 @@ class RegistrationTicketCallout < ApplicationRecord
     builtin_key == "payment"
   end
 
+  # The built-in whose page lists the event's staff roster, pulled from the
+  # Event staff section — editing this row only owns the title/subtitle/intro copy.
+  def staff?
+    builtin_key == "staff"
+  end
+
   # Whether the callout's page content is drip-scheduled to reveal only from a
   # future date. The card still shows on the ticket; the page withholds its
   # content until then (see the callout show page).

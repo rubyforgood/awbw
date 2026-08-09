@@ -557,11 +557,34 @@
       </button>
 
       <div id="staff" class="hidden border border-gray-300 bg-gray-50 p-4 rounded-b-md" data-controller="expandable-cards" data-expandable-cards-expanded-value="false">
-        <div class="flex flex-col items-end gap-1 mb-2">
-          <% if @event.persisted? %>
-            <%= link_to "View staff page", staff_event_path(@event), class: "btn btn-secondary-outline" %>
-          <% end %>
+        <p class="text-sm text-gray-500 mb-4">
+          The people shown on this event's public staff page and on the ticket's “Meet the staff” callout. Add each person, set their role, and toggle who's expected to attend. A person's bio falls back to their profile bio when left blank.
+        </p>
 
+        <% if @event.persisted? %>
+          <%# Both open in a new tab so the admin keeps their place in the editor;
+              they reflect saved staff, not unsaved edits in this form. %>
+          <div class="mb-4">
+            <div class="flex flex-wrap items-center gap-2">
+              <%= link_to staff_event_path(@event), target: "_blank", rel: "noopener",
+                    class: "inline-flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100" do %>
+                <i class="fa-solid fa-users" aria-hidden="true"></i>
+                View staff page
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs" aria-hidden="true"></i>
+              <% end %>
+
+              <%= link_to sample_staff_event_path(@event), target: "_blank", rel: "noopener",
+                    class: "inline-flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100" do %>
+                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                Preview sample staff callout
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs" aria-hidden="true"></i>
+              <% end %>
+            </div>
+            <p class="mt-1 text-xs text-gray-400">Both open in a new tab and reflect saved staff — save your edits first. Edit the callout page's title and intro copy on the “Meet the staff” built-in in the Registration ticket callouts section below.</p>
+          </div>
+        <% end %>
+
+        <div class="flex justify-end mb-3">
           <button type="button" data-action="expandable-cards#toggleAll"
                   class="inline-flex items-center gap-2 text-sm font-medium text-blue-700 hover:text-blue-900">
             <i class="fa-solid fa-chevron-down transition-transform" data-expandable-cards-target="icon"></i>
