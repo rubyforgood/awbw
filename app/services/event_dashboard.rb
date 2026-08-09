@@ -47,7 +47,7 @@ class EventDashboard
 
   # Every registration status for this event, counted in one query.
   def registration_status_counts
-    @registration_status_counts ||= event.event_registrations.group(:status).count
+    @registration_status_counts ||= EventRegistration.status_counts_by_event([ event.id ]).fetch(event.id, {})
   end
 
   # Count of registrations in a single status.
@@ -950,22 +950,13 @@ class EventDashboard
 
   private
 
-  # USPS abbreviations for the 50 states, DC, and the territories the US atlas
-  # draws. The States breakdown only shows these, so international registrants'
-  # regions (e.g. "ON", "England") are excluded — those belong to the Countries map.
-  US_STATE_ABBREVIATIONS = %w[
-    AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO
-    MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY
-    PR GU VI AS MP
-  ].freeze
-
   # Active registrant addresses whose state is a recognized US state/territory —
   # the source for every States figure (count card, choropleth, and drill-in).
   def us_state_addresses
     Address
       .active
       .where(addressable_type: "Person", addressable_id: registrant_ids)
-      .where("UPPER(addresses.state) IN (?)", US_STATE_ABBREVIATIONS)
+      .where("UPPER(addresses.state) IN (?)", Address::US_STATE_ABBREVIATIONS)
   end
 
   def district_addresses
@@ -1252,18 +1243,12 @@ class EventDashboard
 
   # Externally funded = backed by a grant whose funder isn't the org itself.
   def funded_scholarships
-    scholarships.where.not(grant_id: [ nil, *awbw_grant_ids ])
+    scholarships.externally_funded
   end
 
   # Org-subsidized = no grant, or a grant the org (AWBW) donated to itself.
   def unfunded_scholarships
-    scholarships.where(grant_id: [ nil, *awbw_grant_ids ])
-  end
-
-  # Ids of grants the org donated to itself; empty when the AWBW org isn't on
-  # file, collapsing the split back to grant-present vs grant-absent.
-  def awbw_grant_ids
-    @awbw_grant_ids ||= Grant.where(funder: Organization.awbw).ids
+    scholarships.org_subsidized
   end
 
   # [ [ organization_id, registrant_id ], ... ] from the organizations linked on

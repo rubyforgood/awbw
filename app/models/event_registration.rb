@@ -78,6 +78,10 @@ class EventRegistration < ApplicationRecord
   scope :active, -> { where(status: ACTIVE_STATUSES) }
   scope :inactive, -> { where(status: INACTIVE_STATUSES) }
   scope :attended, -> { where(status: "attended") }
+  # Attended registrations on facilitator-training events — the population behind
+  # the cross-event attendees index and its breakdowns. Chain .where(registrant_id:)
+  # to narrow to a page of people.
+  scope :attended_facilitator_trainings, -> { attended.joins(:event).where(events: { facilitator_training: true }) }
   scope :registrant_ids, ->(ids) { where(registrant_id: ids.to_s.split("-").map(&:to_i)) }
   scope :attendance_status, ->(status) {
     status == "other" ? where.not(status: NAMED_OUTCOME_STATUSES) : where(status: status)
@@ -166,32 +170,19 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
-  scope :with_funded_scholarship, -> {
-    where(<<~SQL.squish)
-      EXISTS (
-        SELECT 1 FROM allocations
-        INNER JOIN scholarships ON scholarships.id = allocations.source_id
-        WHERE allocations.allocatable_type = 'EventRegistration'
-          AND allocations.allocatable_id = event_registrations.id
-          AND allocations.source_type = 'Scholarship'
-          AND scholarships.grant_id IS NOT NULL
-      )
-    SQL
-  }
-  scope :with_unfunded_scholarship, -> {
-    where(<<~SQL.squish)
-      EXISTS (
-        SELECT 1 FROM allocations
-        INNER JOIN scholarships ON scholarships.id = allocations.source_id
-        WHERE allocations.allocatable_type = 'EventRegistration'
-          AND allocations.allocatable_id = event_registrations.id
-          AND allocations.source_type = 'Scholarship'
-          AND scholarships.grant_id IS NULL
-      )
-    SQL
-  }
-  # Funding source of a registrant's scholarship. "awbw" = org-subsidized (a
-  # scholarship drawn from no grant); "external" = grant-funded (drawn from an
+  # Funded vs org-subsidized follow the app-wide split (Scholarship.externally_funded
+  # / .org_subsidized): a grant AWBW funded itself counts as subsidy, not
+  # external funding, so it lands in the unfunded set alongside grant-less awards.
+  scope :with_funded_scholarship, -> { where(id: scholarship_allocatable_ids(Scholarship.externally_funded)) }
+  scope :with_unfunded_scholarship, -> { where(id: scholarship_allocatable_ids(Scholarship.org_subsidized)) }
+  # EventRegistration ids that a scholarship in the given relation is allocated to.
+  def self.scholarship_allocatable_ids(scholarships)
+    Allocation
+      .where(allocatable_type: "EventRegistration", source_type: "Scholarship", source_id: scholarships.select(:id))
+      .select(:allocatable_id)
+  end
+  # Funding source of a registrant's scholarship. "awbw" = org-subsidized (no
+  # grant, or a grant AWBW funded itself); "external" = grant-funded (drawn from an
   # external funder's grant).
   scope :funder, ->(value) {
     case value
@@ -383,6 +374,18 @@ class EventRegistration < ApplicationRecord
       )
       .distinct
   }
+
+  # { event_id => { status => count } } from a single grouped query, so callers
+  # never round-trip per event. The single-event dashboard reads its own event's
+  # slice; the participation report reads every event's at once.
+  def self.status_counts_by_event(event_ids)
+    where(event_id: event_ids)
+      .group(:event_id, :status)
+      .count
+      .each_with_object({}) do |((event_id, status), count), map|
+        (map[event_id] ||= {})[status] = count
+      end
+  end
 
   def self.search_by_params(params)
     registrations = is_a?(ActiveRecord::Relation) ? self : all

@@ -200,6 +200,37 @@ RSpec.describe Affiliation do
     end
   end
 
+  describe 'status (#status_on and .with_status)' do
+    let!(:active_open) { create(:affiliation, start_date: Date.current.prev_year, end_date: nil) }
+    let!(:active_span) { create(:affiliation, start_date: Date.current.prev_year, end_date: Date.current.next_year) }
+    let!(:pending) { create(:affiliation, start_date: Date.current.next_year, end_date: nil) }
+    let!(:ended) { create(:affiliation, start_date: Date.current.prev_year(2), end_date: Date.current.prev_year) }
+    let!(:no_dates) { create(:affiliation, start_date: nil, end_date: nil) }
+
+    it 'exposes the taxonomy in display order' do
+      expect(Affiliation::STATUSES).to eq(%w[ Active Pending Inactive ])
+    end
+
+    it '#status_on classifies by flag and dates' do
+      expect(active_open.reload.status_on).to eq("Active")
+      expect(active_span.reload.status_on).to eq("Active")
+      expect(pending.reload.status_on).to eq("Pending")
+      expect(ended.reload.status_on).to eq("Inactive")
+      expect(no_dates.reload.status_on).to eq("Active")
+    end
+
+    it '.with_status returns exactly the rows whose #status_on matches (SQL ↔ Ruby agree)' do
+      Affiliation::STATUSES.each do |status|
+        expected = Affiliation.all.select { |a| a.status_on == status }.map(&:id).sort
+        expect(Affiliation.with_status(status).ids.sort).to eq(expected), "mismatch for #{status}"
+      end
+    end
+
+    it '.with_status is empty for an unknown status' do
+      expect(Affiliation.with_status("bogus")).to be_empty
+    end
+  end
+
   describe '#set_inactive_from_dates' do
     let(:op) { create(:affiliation, inactive: false, end_date: nil) }
 

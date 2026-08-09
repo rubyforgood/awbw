@@ -19,6 +19,12 @@ class Scholarship < ApplicationRecord
   scope :completed, -> { where(tasks_completed: true) }
   scope :agreement_signed, -> { where.not(agreement_signed_at: nil) }
 
+  # Funding split (the app-wide convention, mirrored by EventDashboard and
+  # EventRevenueFigures): externally funded = backed by a grant whose funder isn't
+  # the org itself; org-subsidized = no grant, or a grant AWBW funded itself.
+  scope :externally_funded, -> { where.not(grant_id: [ nil, *Grant.self_donated_ids ]) }
+  scope :org_subsidized, -> { where(grant_id: [ nil, *Grant.self_donated_ids ]) }
+
   # Scholarships from grants a given funder (Person/Organization) gave — the
   # "funder" filter. A blank funder matches nothing.
   scope :from_funder, ->(funder) { where(grant_id: Grant.where(funder: funder).select(:id)) }

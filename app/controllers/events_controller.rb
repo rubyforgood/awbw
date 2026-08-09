@@ -589,9 +589,7 @@ class EventsController < ApplicationController
   # filters (event, year) constrain which attended registrations qualify; the rest
   # filter the people. Distinct via the id subquery, so joins never duplicate rows.
   def filtered_training_attendees
-    registrations = EventRegistration.attended
-      .joins(:event)
-      .where(events: { facilitator_training: true })
+    registrations = EventRegistration.attended_facilitator_trainings
     registrations = registrations.where(events: { id: params[:event_id] }) if params[:event_id].present?
     registrations = registrations.where("YEAR(events.start_date) = ?", params[:event_year]) if params[:event_year].present?
 
@@ -652,7 +650,7 @@ class EventsController < ApplicationController
   # Attended facilitator-training registrations (any registrant) — the basis for
   # the org/scholarship/CE drill-in filters.
   def attended_training_registrations
-    EventRegistration.attended.joins(:event).where(events: { facilitator_training: true })
+    EventRegistration.attended_facilitator_trainings
   end
 
   # Person ids with the given org linked on one of their attended trainings.
@@ -710,23 +708,9 @@ class EventsController < ApplicationController
   end
 
   # Person ids with at least one affiliation in the given status (Active / Pending
-  # / Inactive), matching TrainingAttendeesRoster#affiliation_status.
+  # / Inactive).
   def person_affiliation_status_ids(status)
-    today = Date.current
-    scope =
-      case status
-      when "Active"
-        Affiliation.where(inactive: false)
-          .where("affiliations.start_date IS NULL OR affiliations.start_date <= ?", today)
-          .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", today)
-      when "Pending"
-        Affiliation.where(inactive: false).where("affiliations.start_date > ?", today)
-      when "Inactive"
-        Affiliation.where("affiliations.inactive = ? OR affiliations.end_date < ?", true, today)
-      else
-        return Person.none
-      end
-    scope.select(:person_id)
+    Affiliation.with_status(status).select(:person_id)
   end
 
   def person_address_ids(state: nil, county: nil)
@@ -741,7 +725,7 @@ class EventsController < ApplicationController
   def set_training_attendee_filter_options
     @training_events = Event.facilitator_trainings.order(start_date: :desc)
     @training_years = @training_events.filter_map { |event| event.start_date&.year }.uniq.sort.reverse
-    attended_person_ids = Person.where(id: EventRegistration.attended.joins(:event).where(events: { facilitator_training: true }).select(:registrant_id))
+    attended_person_ids = Person.where(id: EventRegistration.attended_facilitator_trainings.select(:registrant_id))
     @training_sectors = Sector.where(id: SectorableItem.where(sectorable_type: "Person", sectorable_id: attended_person_ids).select(:sector_id)).order(:name)
     addresses = Address.active.where(addressable_type: "Person", addressable_id: attended_person_ids)
     @training_states = addresses.where.not(state: [ nil, "" ]).distinct.pluck(:state).sort

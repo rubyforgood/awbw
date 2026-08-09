@@ -10,7 +10,7 @@
 class TrainingAttendeesRoster
   # Affiliation status taxonomy shown in the index's Affiliation status column and
   # offered as a filter, in display order.
-  AFFILIATION_STATUSES = %w[ Active Pending Inactive ].freeze
+  AFFILIATION_STATUSES = Affiliation::STATUSES
 
   def initialize(people)
     @people = people.to_a
@@ -143,10 +143,8 @@ class TrainingAttendeesRoster
 
   def attended_training_registrations
     @attended_training_registrations ||= EventRegistration
-      .attended
+      .attended_facilitator_trainings
       .where(registrant_id: people.map(&:id))
-      .joins(:event)
-      .where(events: { facilitator_training: true })
       .includes(:event)
       .to_a
   end
@@ -195,12 +193,8 @@ class TrainingAttendeesRoster
       end
   end
 
-  # One affiliation's status: Inactive (flagged or ended), Pending (future start),
-  # otherwise Active.
   def affiliation_status(affiliation)
-    return "Inactive" if affiliation.inactive? || (affiliation.end_date && affiliation.end_date < Date.current)
-    return "Pending" if affiliation.start_date && affiliation.start_date > Date.current
-    "Active"
+    affiliation.status_on
   end
 
   def program_status_by_organization

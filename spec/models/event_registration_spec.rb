@@ -197,6 +197,35 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe ".attended_facilitator_trainings" do
+    it "returns only attended registrations on facilitator-training events" do
+      training = create(:event, facilitator_training: true)
+      other = create(:event, facilitator_training: false)
+      attended = create(:event_registration, event: training, status: "attended")
+      no_show = create(:event_registration, event: training, status: "no_show")
+      other_event = create(:event_registration, event: other, status: "attended")
+
+      results = EventRegistration.attended_facilitator_trainings
+      expect(results).to include(attended)
+      expect(results).not_to include(no_show, other_event)
+    end
+  end
+
+  describe ".status_counts_by_event" do
+    it "returns { event_id => { status => count } } across the given events" do
+      e1 = create(:event)
+      e2 = create(:event)
+      create(:event_registration, event: e1, status: "attended")
+      create(:event_registration, event: e1, status: "attended")
+      create(:event_registration, event: e1, status: "no_show")
+      create(:event_registration, event: e2, status: "registered")
+
+      counts = EventRegistration.status_counts_by_event([ e1.id, e2.id ])
+      expect(counts[e1.id]).to eq("attended" => 2, "no_show" => 1)
+      expect(counts[e2.id]).to eq("registered" => 1)
+    end
+  end
+
   describe ".registrant_ids" do
     it "returns registrations for the registrants in a hyphenated id list" do
       person_a = create(:person)
@@ -435,6 +464,17 @@ RSpec.describe EventRegistration, type: :model do
         results = EventRegistration.funder("external")
         expect(results).to include(funded_reg)
         expect(results).not_to include(scholarship_reg, incomplete_scholarship_reg, paid_reg, unpaid_reg)
+      end
+
+      it "counts a grant AWBW donated to itself as org-subsidized ('awbw'), not funded" do
+        # Matches EventDashboard's funded/unfunded split: a self-donation is subsidy.
+        awbw = create(:organization, name: "A Window Between Worlds")
+        self_donated_reg = create(:event_registration, event: event)
+        subsidy = create(:scholarship, recipient: self_donated_reg.registrant, grant: create(:grant, donor: awbw), amount_cents: 1000)
+        create(:allocation, source: subsidy, allocatable: self_donated_reg, amount: 1000)
+
+        expect(EventRegistration.funder("awbw")).to include(self_donated_reg)
+        expect(EventRegistration.funder("donor")).not_to include(self_donated_reg)
       end
 
       it "returns an unfiltered relation for unknown values" do

@@ -6,14 +6,6 @@
 # Sourced from each person's profile (sectors, age groups, categories, addresses)
 # and from the orgs/scholarships/CE tied to their attended-training registrations.
 class TrainingAttendeesBreakdowns
-  # US states/territories the atlas draws — international regions are excluded from
-  # the States breakdown (they belong to Countries), mirroring EventDashboard.
-  US_STATE_ABBREVIATIONS = %w[
-    AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO
-    MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY
-    PR GU VI AS MP
-  ].freeze
-
   def initialize(people)
     @people = people
   end
@@ -62,7 +54,7 @@ class TrainingAttendeesBreakdowns
 
   def state_counts
     @state_counts ||= active_addresses
-      .where("UPPER(addresses.state) IN (?)", US_STATE_ABBREVIATIONS)
+      .where("UPPER(addresses.state) IN (?)", Address::US_STATE_ABBREVIATIONS)
       .group(:state)
       .distinct
       .count(:addressable_id)
@@ -179,9 +171,8 @@ class TrainingAttendeesBreakdowns
 
   def training_registration_ids
     @training_registration_ids ||= EventRegistration
-      .attended
-      .joins(:event)
-      .where(events: { facilitator_training: true }, registrant_id: person_ids)
+      .attended_facilitator_trainings
+      .where(registrant_id: person_ids)
       .pluck(:id)
   end
 

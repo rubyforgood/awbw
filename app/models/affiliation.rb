@@ -4,6 +4,9 @@ class Affiliation < ApplicationRecord
   # (both treat exactly "Facilitator" as canonical).
   FACILITATOR_TITLE = "Facilitator".freeze
 
+  # Status taxonomy shown/filtered on the attendees index, in display order.
+  STATUSES = %w[ Active Pending Inactive ].freeze
+
   belongs_to :organization, inverse_of: :affiliations
   belongs_to :person, touch: true
   # Which of the organization's addresses this person is affiliated with (optional).
@@ -39,6 +42,24 @@ class Affiliation < ApplicationRecord
   # TRIM mirrors the in-memory #facilitator? strip so stray whitespace still matches.
   scope :facilitators, -> { where("BINARY TRIM(title) = ?", "Facilitator") }
 
+  # Affiliations whose #status_on(date) equals the given status, expressed in SQL
+  # so it composes as a subquery (e.g. person-id narrowing). Kept in lock-step with
+  # #status_on by an executable agreement spec.
+  scope :with_status, ->(status, on: Date.current) {
+    case status
+    when "Active"
+      where(inactive: false)
+        .where("affiliations.start_date IS NULL OR affiliations.start_date <= ?", on)
+        .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", on)
+    when "Pending"
+      where(inactive: false).where("affiliations.start_date > ?", on)
+    when "Inactive"
+      where("affiliations.inactive = ? OR affiliations.end_date < ?", true, on)
+    else
+      none
+    end
+  }
+
   before_validation :skip_if_duplicate
   before_save :set_inactive_from_dates
   after_save :sync_organization_status_with_affiliations
@@ -60,6 +81,14 @@ class Affiliation < ApplicationRecord
   # query (e.g. on list pages that preload affiliations).
   def active?
     !inactive? && (end_date.nil? || end_date >= Date.current)
+  end
+
+  # This affiliation's status as of a date: Inactive (flagged or ended), Pending
+  # (future start), otherwise Active. The in-memory twin of the .with_status scope.
+  def status_on(date = Date.current)
+    return "Inactive" if inactive? || (end_date && end_date < date)
+    return "Pending" if start_date && start_date > date
+    "Active"
   end
 
   def name
