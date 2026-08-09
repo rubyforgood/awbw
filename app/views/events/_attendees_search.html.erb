@@ -8,6 +8,29 @@
       autocomplete: "off",
       class: "rounded-xl border border-gray-200 bg-white p-4 shadow-sm mb-6") do %>
   <%= hidden_field_tag :return_to, params[:return_to] %>
+  <%# Keep drill-in filters applied while the admin tweaks a visible select — the
+      auto-submit only sends this form's fields, so the drill-ins ride as hidden
+      inputs and are surfaced (and cleared) via the chip row below. %>
+  <% AttendeesActiveFilters::CHIP_PARAMS.each do |param| %>
+    <%= hidden_field_tag param, params[param] if params[param].present? %>
+  <% end %>
+
+  <% active_filters = AttendeesActiveFilters.new(params).chips %>
+  <% if active_filters.any? %>
+    <div class="flex flex-wrap items-center gap-2 mb-4">
+      <span class="text-xs font-semibold uppercase text-gray-500 tracking-wide">Applied</span>
+      <% active_filters.each do |filter| %>
+        <span class="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+          <%= filter[:label] %>
+          <%= link_to attendees_events_path(request.query_parameters.except("page", filter[:param])),
+                class: "text-blue-400 hover:text-blue-700", aria: { label: "Remove #{filter[:label]} filter" } do %>
+            <i class="fa-solid fa-xmark"></i>
+          <% end %>
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+
   <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4">
     <div class="w-full md:flex-1 md:min-w-[14rem]">
       <%= label_tag :contact_info, "Name, email, or phone", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
@@ -55,7 +78,7 @@
     <div class="w-full md:w-40">
       <%= label_tag :affiliation_status, "Affiliation status", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
       <%= select_tag :affiliation_status,
-            options_for_select(Affiliation::STATUSES, params[:affiliation_status]),
+            options_for_select(Affiliation::FILTER_STATUSES, params[:affiliation_status]),
             include_blank: "All statuses",
             class: select_class, onchange: "this.form.submit();" %>
     </div>

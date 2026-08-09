@@ -86,7 +86,7 @@ RSpec.describe AttendeesRoster do
       create(:affiliation, person: person, organization: organization, start_date: 1.year.ago, end_date: nil, inactive: false)
       create(:affiliation, person: person, organization: create(:organization), start_date: 1.month.from_now, inactive: false)
       create(:affiliation, person: person, organization: create(:organization), inactive: true)
-      expect(roster.affiliation_statuses_by_registrant[person.id]).to eq([ "Active", "Pending", "Inactive" ])
+      expect(roster.affiliation_statuses_by_registrant[person.id]).to eq([ "Active", "Upcoming", "Inactive" ])
     end
   end
 end

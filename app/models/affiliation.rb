@@ -4,8 +4,13 @@ class Affiliation < ApplicationRecord
   # (both treat exactly "Facilitator" as canonical).
   FACILITATOR_TITLE = "Facilitator".freeze
 
-  # Status taxonomy shown/filtered on the attendees index, in display order.
-  STATUSES = %w[ Active Pending Inactive ].freeze
+  # Status taxonomy shown as a chip on each person's row, in display order.
+  STATUSES = %w[ Active Upcoming Inactive ].freeze
+  # Filter-only value combining the two current-or-future statuses — never a chip,
+  # since one affiliation is only ever Active or Upcoming, not both.
+  ACTIVE_OR_UPCOMING = "Active & Upcoming".freeze
+  # Options offered by the attendees index's Affiliation status filter.
+  FILTER_STATUSES = [ "Active", "Upcoming", ACTIVE_OR_UPCOMING, "Inactive" ].freeze
 
   belongs_to :organization, inverse_of: :affiliations
   belongs_to :person, touch: true
@@ -51,8 +56,13 @@ class Affiliation < ApplicationRecord
       where(inactive: false)
         .where("affiliations.start_date IS NULL OR affiliations.start_date <= ?", on)
         .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", on)
-    when "Pending"
+    when "Upcoming"
       where(inactive: false).where("affiliations.start_date > ?", on)
+    when ACTIVE_OR_UPCOMING
+      # Either of the above: not flagged inactive and not ended. A row that ended
+      # before `on` is Inactive whatever its start date, so this needs no start
+      # clause — it matches exactly the rows #status_on calls Active or Upcoming.
+      where(inactive: false).where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", on)
     when "Inactive"
       where("affiliations.inactive = ? OR affiliations.end_date < ?", true, on)
     else
@@ -83,11 +93,11 @@ class Affiliation < ApplicationRecord
     !inactive? && (end_date.nil? || end_date >= Date.current)
   end
 
-  # This affiliation's status as of a date: Inactive (flagged or ended), Pending
+  # This affiliation's status as of a date: Inactive (flagged or ended), Upcoming
   # (future start), otherwise Active. The in-memory twin of the .with_status scope.
   def status_on(date = Date.current)
     return "Inactive" if inactive? || (end_date && end_date < date)
-    return "Pending" if start_date && start_date > date
+    return "Upcoming" if start_date && start_date > date
     "Active"
   end
 

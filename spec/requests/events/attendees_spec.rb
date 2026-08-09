@@ -116,6 +116,20 @@ RSpec.describe "Events attendees", type: :request do
           .to have_selector("select#program_status option[selected][value='reinstated']")
       end
 
+      it "surfaces an applied drill-in filter as a removable chip" do
+        get attendees_events_url(country: "Canada", state: "OR")
+        # The chip labels the applied filter and its ✕ links back to the index
+        # with only that param dropped (the other filters are preserved).
+        expect(response.body).to include("Country: Canada")
+        expect(Capybara.string(response.body))
+          .to have_link(href: attendees_events_path(state: "OR"))
+      end
+
+      it "does not show the applied-filters row when only visible filters are set" do
+        get attendees_events_url(state: "OR")
+        expect(response.body).not_to include(">Applied<")
+      end
+
       it "carries the participation origin back through the eyebrow" do
         get attendees_events_url(return_to: "participation")
         expect(response.body).to include("← Participation")
@@ -257,6 +271,28 @@ RSpec.describe "Events attendees", type: :request do
           get attendees_events_url(affiliation_status: "Inactive"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Nora Active")
+        end
+
+        it "filters by the combined Active & Upcoming status" do
+          create(:affiliation, person: attendee, organization: create(:organization), inactive: true, title: "Facilitator")
+          active_person = create(:person, first_name: "Nora", last_name: "Active")
+          create(:event_registration, event: recent_training, registrant: active_person, status: "attended")
+          create(:affiliation, person: active_person, organization: create(:organization), start_date: 1.year.ago, inactive: false, title: "Facilitator")
+          upcoming_person = create(:person, first_name: "Uma", last_name: "Upcoming")
+          create(:event_registration, event: recent_training, registrant: upcoming_person, status: "attended")
+          create(:affiliation, person: upcoming_person, organization: create(:organization), start_date: 1.month.from_now, inactive: false, title: "Facilitator")
+
+          get attendees_events_url(affiliation_status: Affiliation::ACTIVE_OR_UPCOMING), headers: frame_headers
+          expect(response.body).to include("Nora Active")
+          expect(response.body).to include("Uma Upcoming")
+          expect(response.body).not_to include("Ada Lovelace")
+        end
+
+        it "offers the combined option in the filter and keeps its selection" do
+          get attendees_events_url(affiliation_status: Affiliation::ACTIVE_OR_UPCOMING)
+
+          expect(Capybara.string(response.body))
+            .to have_selector("select#affiliation_status option[selected]", text: "Active & Upcoming")
         end
 
         it "filters by the org's facilitator program status" do

@@ -203,18 +203,18 @@ RSpec.describe Affiliation do
   describe 'status (#status_on and .with_status)' do
     let!(:active_open) { create(:affiliation, start_date: Date.current.prev_year, end_date: nil) }
     let!(:active_span) { create(:affiliation, start_date: Date.current.prev_year, end_date: Date.current.next_year) }
-    let!(:pending) { create(:affiliation, start_date: Date.current.next_year, end_date: nil) }
+    let!(:upcoming) { create(:affiliation, start_date: Date.current.next_year, end_date: nil) }
     let!(:ended) { create(:affiliation, start_date: Date.current.prev_year(2), end_date: Date.current.prev_year) }
     let!(:no_dates) { create(:affiliation, start_date: nil, end_date: nil) }
 
     it 'exposes the taxonomy in display order' do
-      expect(Affiliation::STATUSES).to eq(%w[ Active Pending Inactive ])
+      expect(Affiliation::STATUSES).to eq(%w[ Active Upcoming Inactive ])
     end
 
     it '#status_on classifies by flag and dates' do
       expect(active_open.reload.status_on).to eq("Active")
       expect(active_span.reload.status_on).to eq("Active")
-      expect(pending.reload.status_on).to eq("Pending")
+      expect(upcoming.reload.status_on).to eq("Upcoming")
       expect(ended.reload.status_on).to eq("Inactive")
       expect(no_dates.reload.status_on).to eq("Active")
     end
@@ -224,6 +224,19 @@ RSpec.describe Affiliation do
         expected = Affiliation.all.select { |a| a.status_on == status }.map(&:id).sort
         expect(Affiliation.with_status(status).ids.sort).to eq(expected), "mismatch for #{status}"
       end
+    end
+
+    it 'offers the combined filter option alongside the chip taxonomy' do
+      expect(Affiliation::FILTER_STATUSES)
+        .to eq([ "Active", "Upcoming", "Active & Upcoming", "Inactive" ])
+    end
+
+    it '.with_status("Active & Upcoming") returns exactly the Active and Upcoming rows' do
+      expected = Affiliation.all.select { |a| a.status_on.in?(%w[ Active Upcoming ]) }.map(&:id).sort
+
+      expect(Affiliation.with_status(Affiliation::ACTIVE_OR_UPCOMING).ids.sort).to eq(expected)
+      expect(Affiliation.with_status(Affiliation::ACTIVE_OR_UPCOMING)).to include(active_open, active_span, upcoming, no_dates)
+      expect(Affiliation.with_status(Affiliation::ACTIVE_OR_UPCOMING)).not_to include(ended)
     end
 
     it '.with_status is empty for an unknown status' do
