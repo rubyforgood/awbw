@@ -1376,9 +1376,10 @@ RSpec.describe "Events", type: :request do
         create(:event_registration_organization, event_registration: ready_registration, organization: create(:organization))
       end
 
-      it "renders the combined Status column with the right badge labels" do
+      it "renders the combined Readiness column with the right badge labels" do
         get registrants_event_path(event)
 
+        expect(response.body).to include("Readiness")
         expect(response.body).to include("Ready")
         expect(response.body).to include("Not ready")
       end

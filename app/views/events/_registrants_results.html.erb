@@ -181,7 +181,7 @@
         <% ce_col = @ce_eligible %>
         <% extra_cols = (payment_col ? 1 : 0) + (ce_col ? 1 : 0) %>
         <%# Column order: Name, Organization, [CE status], Scholarship, [Payment],
-            Confirmed (hidden), Attendance, Date registered, Status, Edit (far right).
+            Confirmed (hidden), Attendance, Date registered, Readiness, Edit (far right).
             The Name button also links to editing the registration. %>
         <% ce_index = 2 %>
         <% scholarship_index = ce_col ? 3 : 2 %>
@@ -229,7 +229,7 @@
                 <%= render "shared/sortable_header", label: "Date registered", index: date_index %>
               </th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
-                <%= render "shared/sortable_header", label: "Status", index: status_index %>
+                <%= render "shared/sortable_header", label: "Readiness", index: status_index %>
               </th>
               <%# Off by default; kept out of the sortable index range (last data column). %>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 hidden" data-column-toggle-col="certificate">Certificate</th>

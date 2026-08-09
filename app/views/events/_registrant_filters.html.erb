@@ -21,7 +21,7 @@
 <% primary_text, more_text = Array(text_fields).partition { |f| f[:primary] } %>
 <%# Open the collapsed section on load when any control inside it already carries
     a value, so an active filter is never hidden behind the toggle. %>
-<% collapsed_keys = %i[ce_status scholarship readiness org_status comment_status account_status state county] %>
+<% collapsed_keys = %i[payment_method scholarship org_status account_status ce_status comment_status state county] %>
 <% more_active = more_text.any? { |f| params[f[:param]].present? } || collapsed_keys.any? { |k| params[k].present? } %>
 <%= form_with url: url, method: :get,
       data: { controller: "collection filter-toggle", turbo_frame: frame },
@@ -53,6 +53,15 @@
       </div>
     <% end %>
 
+    <%# Top three, in the order an admin works a registration: overall readiness,
+        are they coming, did they pay. %>
+    <% if include_readiness %>
+      <%# Mirrors the far-right Readiness column: Not ready → Ready → Certificate pending → Completed. %>
+      <%= render "events/filter_select", param: :readiness, label: "Readiness",
+            options: [ [ "Not ready", "not_ready" ], [ "Ready", "ready" ], [ "Certificate pending", "certificate_due" ], [ "Completed", "completed" ] ],
+            selected: params[:readiness], blank: "Any readiness", field_class: field_class %>
+    <% end %>
+
     <%= render "events/filter_select", param: :attendance_status, label: "Attendance status",
           options: EventRegistration::ATTENDANCE_STATUSES.map { |s| [ EventRegistration.new(status: s).attendance_status_label, s ] },
           selected: params[:attendance_status], blank: "All statuses", field_class: field_class %>
@@ -61,10 +70,6 @@
       <%= render "events/filter_select", param: :payment_status, label: "Payment status",
             options: [ [ "Due", "unpaid" ], [ "Paid", "paid" ], [ "Intends to pay", "intends_to_pay" ] ],
             selected: params[:payment_status], blank: "Any payment status", field_class: field_class %>
-
-      <%= render "events/filter_select", param: :payment_method, label: "Payment method",
-            options: EventRegistrationDecorator.payment_method_filter_choices,
-            selected: params[:payment_method], blank: "Any payment method", field_class: field_class %>
     <% end %>
 
     <div class="w-full md:w-auto md:ml-auto flex items-end gap-2">
@@ -92,36 +97,36 @@
         </div>
       <% end %>
 
-      <% if @ce_eligible %>
-        <%= render "events/filter_select", param: :ce_status, label: "CE status",
-              options: [ [ "Registered for CE", "registered" ], [ "Requested", "requested" ], [ "Needs license", "needs_license" ], [ "Paid", "paid" ], [ "Issued", "issued" ], [ "Not issued", "not_issued" ] ],
-              selected: params[:ce_status], blank: "Any CE status", field_class: field_class %>
-      <% end %>
-
+      <%# Ordered by how a registration is worked after the top three: settle the
+          money (method, scholarship), affiliate their org, grant portal access,
+          handle CE credentials, then reference lenses (comments, location). %>
       <% if has_cost %>
+        <%= render "events/filter_select", param: :payment_method, label: "Payment method",
+              options: EventRegistrationDecorator.payment_method_filter_choices,
+              selected: params[:payment_method], blank: "Any payment method", field_class: field_class %>
+
         <%= render "events/filter_select", param: :scholarship, label: "Scholarship",
               options: [ [ "All recipients", "yes" ], [ "Tasks complete", "complete" ], [ "Tasks not complete", "incomplete" ] ],
               selected: params[:scholarship], blank: "All registrants", field_class: field_class %>
-      <% end %>
-
-      <% if include_readiness %>
-        <%# Mirrors the far-right Status column: Not ready → Ready → Certificate pending → Completed. %>
-        <%= render "events/filter_select", param: :readiness, label: "Status",
-              options: [ [ "Not ready", "not_ready" ], [ "Ready", "ready" ], [ "Certificate pending", "certificate_due" ], [ "Completed", "completed" ] ],
-              selected: params[:readiness], blank: "All statuses", field_class: field_class %>
       <% end %>
 
       <%= render "events/filter_select", param: :org_status, label: "Organization linking",
             options: [ [ "Pending", "pending" ], [ "Linked", "linked" ], [ "Unlinked", "unlinked" ] ],
             selected: params[:org_status], blank: "Any linking", field_class: field_class %>
 
-      <%= render "events/filter_select", param: :comment_status, label: "Comments",
-            options: [ [ "None", "none" ], [ "Present", "present" ], [ "Flagged", "flagged" ] ],
-            selected: params[:comment_status], blank: "Any comments", field_class: field_class %>
-
       <%= render "events/filter_select", param: :account_status, label: "User account",
             options: [ [ "No account", "none" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
             selected: params[:account_status], blank: "Any account status", field_class: field_class %>
+
+      <% if @ce_eligible %>
+        <%= render "events/filter_select", param: :ce_status, label: "CE status",
+              options: [ [ "Registered for CE", "registered" ], [ "Requested", "requested" ], [ "Needs license", "needs_license" ], [ "Paid", "paid" ], [ "Issued", "issued" ], [ "Not issued", "not_issued" ] ],
+              selected: params[:ce_status], blank: "Any CE status", field_class: field_class %>
+      <% end %>
+
+      <%= render "events/filter_select", param: :comment_status, label: "Comments",
+            options: [ [ "None", "none" ], [ "Present", "present" ], [ "Flagged", "flagged" ] ],
+            selected: params[:comment_status], blank: "Any comments", field_class: field_class %>
 
       <% if @dashboard&.states&.any? %>
         <%= render "events/filter_select", param: :state, label: "State",
