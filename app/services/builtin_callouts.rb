@@ -130,7 +130,7 @@ class BuiltinCallouts
   # never clobbers admin edits. Returns the created rows.
   def seed
     existing_keys = @event.registration_ticket_callouts.builtin.pluck(:builtin_key).to_set
-    definitions.reject { |definition| existing_keys.include?(definition[:builtin_key]) }
+    definitions.reject { |definition| existing_keys.include?(definition[:builtin_key]) || !applicable?(definition) }
                .filter_map { |definition| create(definition) }
   end
 
@@ -138,7 +138,7 @@ class BuiltinCallouts
   # association (built or persisted) so it's safe to call on every form render.
   def build
     existing_keys = @event.registration_ticket_callouts.reject(&:marked_for_destruction?).filter_map(&:builtin_key).to_set
-    definitions.reject { |definition| existing_keys.include?(definition[:builtin_key]) }
+    definitions.reject { |definition| existing_keys.include?(definition[:builtin_key]) || !applicable?(definition) }
                .map { |definition| build_row(definition) }
   end
 
@@ -154,7 +154,8 @@ class BuiltinCallouts
       icon_class: definition[:icon_class],
       color_class: definition[:color_class],
       hidden: definition[:hidden].call(@event),
-      display_from: definition[:display_from]&.call(@event)
+      display_from: definition[:display_from]&.call(@event),
+      form_id: definition[:form]&.call(@event)&.id
     )
     callout.registration_ticket_callout_resources.destroy_all
     build_resource_links(callout, definition)
@@ -183,6 +184,21 @@ class BuiltinCallouts
   # CE / event details to seed their default from the event's own columns).
   def resolve(value)
     value.respond_to?(:call) ? value.call(@event) : value
+  end
+
+  # Whether a definition applies to this event. `seed_if` gates cards that only make
+  # sense for some events (e.g. the Day 2 survey on multi-day trainings).
+  def applicable?(definition)
+    definition[:seed_if].nil? || definition[:seed_if].call(@event)
+  end
+
+  # A post-event day-N survey opens 30 minutes before that day's end time. Day N's
+  # date is the start date plus (N - 1) days; the time-of-day comes from the event's
+  # end_date (used as the daily end time for every day). Nil when dates are unset.
+  def survey_drip(event, day)
+    return unless event.start_date && event.end_date
+    target = event.start_date.to_date + (day - 1)
+    event.end_date.change(year: target.year, month: target.month, day: target.day) - 30.minutes
   end
 
   # Ordered built-in callout definitions. `hidden` / `display_from` are procs so
@@ -287,6 +303,43 @@ class BuiltinCallouts
         color_class: "blue",
         description: self.class.faq_html,
         hidden: ->(_event) { true }
+      },
+      {
+        builtin_key: "day_1_survey",
+        title: "Day 1 survey",
+        subtitle: "Share your feedback on day 1 of the training",
+        callout_type: "action",
+        icon_class: "fa-solid fa-clipboard-list",
+        color_class: "indigo",
+        hidden: ->(_event) { true },
+        form: ->(_event) { Form.standalone.find_by(name: "Day 1 Survey") },
+        # Opens 30 min before day 1's end time; admins can edit per event.
+        display_from: ->(event) { survey_drip(event, 1) }
+      },
+      {
+        builtin_key: "day_2_survey",
+        title: "Day 2 survey",
+        subtitle: "Share your feedback on day 2 of the training",
+        callout_type: "action",
+        icon_class: "fa-solid fa-clipboard-list",
+        color_class: "indigo",
+        hidden: ->(_event) { true },
+        # Only seeds on multi-day events — a one-day training has no day 2.
+        seed_if: ->(event) { event.day_count >= 2 },
+        form: ->(_event) { Form.standalone.find_by(name: "Day 2 Survey") },
+        display_from: ->(event) { survey_drip(event, 2) }
+      },
+      {
+        builtin_key: "scholarship_recipients_survey",
+        title: "Scholarship recipients survey",
+        subtitle: "Post-training questions for scholarship recipients",
+        callout_type: "action",
+        icon_class: "fa-solid fa-clipboard-list",
+        color_class: "fuchsia",
+        hidden: ->(_event) { true },
+        form: ->(_event) { Form.standalone.find_by(name: "Post-Training Recipients Survey") },
+        # Opens 30 min before the event ends.
+        display_from: ->(event) { event.end_date - 30.minutes if event.end_date }
       }
     ]
   end
@@ -321,7 +374,8 @@ class BuiltinCallouts
       icon_class: definition[:icon_class],
       color_class: definition[:color_class],
       hidden: definition[:hidden].call(@event),
-      display_from: definition[:display_from]&.call(@event)
+      display_from: definition[:display_from]&.call(@event),
+      form_id: definition[:form]&.call(@event)&.id
     }
   end
 

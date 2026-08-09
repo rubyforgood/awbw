@@ -13,6 +13,7 @@ class RegistrationTicketCallout < ApplicationRecord
   BUILTIN_KEYS = %w[
     payment certificate scholarship ce_hours art_supplies
     videoconference staff handouts faq
+    day_1_survey day_2_survey scholarship_recipients_survey
   ].freeze
 
   # "Content" built-in callouts render their own editable copy/resources (like custom

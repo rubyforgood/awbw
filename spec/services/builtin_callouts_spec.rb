@@ -2,14 +2,16 @@ require "rails_helper"
 
 RSpec.describe BuiltinCallouts do
   describe "#build" do
-    it "builds all eight built-ins as unsaved in-memory rows on a new event" do
+    it "builds the built-ins as unsaved in-memory rows on a new event" do
       event = Event.new
 
       built = described_class.build(event)
 
+      # No dates on a bare Event, so day_count is 1 and the Day 2 survey is skipped.
       expect(built.map(&:builtin_key)).to contain_exactly(
         "payment", "certificate", "scholarship", "ce_hours",
-        "videoconference", "staff", "handouts", "faq"
+        "videoconference", "staff", "handouts", "faq",
+        "day_1_survey", "scholarship_recipients_survey"
       )
       expect(built).to all(be_new_record)
       expect(event.registration_ticket_callouts).to match_array(built)
@@ -22,7 +24,8 @@ RSpec.describe BuiltinCallouts do
       built = described_class.build(event)
 
       expect(built).to be_empty
-      expect(event.registration_ticket_callouts.builtin.count).to eq(8)
+      # 8 originals + the 3 survey built-ins (the factory event spans multiple days).
+      expect(event.registration_ticket_callouts.builtin.count).to eq(11)
     end
 
     it "builds a paid event's Payment card with the W-9 link (subtitle) in memory" do
@@ -39,7 +42,7 @@ RSpec.describe BuiltinCallouts do
   end
 
   describe "#seed" do
-    it "materializes all eight built-in callouts for every event" do
+    it "materializes the built-in callouts for every event" do
       event = create(:event, cost_cents: 0) # free, no scholarship form, no VC link
 
       described_class.seed(event)
@@ -47,7 +50,8 @@ RSpec.describe BuiltinCallouts do
       keys = event.registration_ticket_callouts.builtin.pluck(:builtin_key)
       expect(keys).to contain_exactly(
         "payment", "certificate", "scholarship", "ce_hours",
-        "videoconference", "staff", "handouts", "faq"
+        "videoconference", "staff", "handouts", "faq",
+        "day_1_survey", "day_2_survey", "scholarship_recipients_survey"
       )
     end
 
@@ -60,7 +64,7 @@ RSpec.describe BuiltinCallouts do
       described_class.seed(event)
 
       expect(event.registration_ticket_callouts.ordered.map(&:builtin_key)).to eq(
-        %w[payment scholarship ce_hours videoconference staff handouts certificate faq]
+        %w[payment scholarship ce_hours videoconference staff handouts certificate faq day_1_survey day_2_survey scholarship_recipients_survey]
       )
     end
 
@@ -248,7 +252,8 @@ RSpec.describe BuiltinCallouts do
       keys = event.registration_ticket_callouts.builtin.pluck(:builtin_key)
       expect(keys).to contain_exactly(
         "payment", "certificate", "scholarship", "ce_hours",
-        "videoconference", "staff", "faq"
+        "videoconference", "staff", "faq",
+        "day_1_survey", "day_2_survey", "scholarship_recipients_survey"
       )
     end
 
@@ -260,7 +265,7 @@ RSpec.describe BuiltinCallouts do
 
       expect(event.registration_ticket_callouts.ordered.first).to eq(custom)
       expect(event.registration_ticket_callouts.ordered.map(&:builtin_key).compact).to eq(
-        %w[payment scholarship ce_hours videoconference staff handouts certificate faq]
+        %w[payment scholarship ce_hours videoconference staff handouts certificate faq day_1_survey day_2_survey scholarship_recipients_survey]
       )
     end
   end
@@ -297,6 +302,54 @@ RSpec.describe BuiltinCallouts do
       callout = create(:registration_ticket_callout, title: "Parking", builtin_key: nil)
 
       expect { described_class.reset(callout) }.not_to change { callout.reload.title }
+    end
+  end
+
+  describe "post-event survey built-ins" do
+    it "seeds the Day 1 and scholarship surveys but omits Day 2 on a one-day event" do
+      event = create(:event, start_date: Time.zone.local(2026, 9, 10, 9), end_date: Time.zone.local(2026, 9, 10, 17))
+
+      described_class.seed(event)
+
+      keys = event.registration_ticket_callouts.builtin.pluck(:builtin_key)
+      expect(keys).to include("day_1_survey", "scholarship_recipients_survey")
+      expect(keys).not_to include("day_2_survey")
+    end
+
+    it "seeds the Day 2 survey on a multi-day event" do
+      event = create(:event, start_date: Time.zone.local(2026, 9, 10, 9), end_date: Time.zone.local(2026, 9, 11, 17))
+
+      described_class.seed(event)
+
+      expect(event.registration_ticket_callouts.pluck(:builtin_key)).to include("day_2_survey")
+    end
+
+    it "points each survey callout at its seeded template form" do
+      day_1_form = FormBuilderService.new(name: "Day 1 Survey", sections: [ :day_1_survey ], role: "day_1_survey").call
+      event = create(:event)
+
+      described_class.seed(event)
+
+      callout = event.registration_ticket_callouts.find_by(builtin_key: "day_1_survey")
+      expect(callout.form).to eq(day_1_form)
+    end
+
+    it "drips the Day 1 survey 30 minutes before that day's end time" do
+      event = create(:event, start_date: Time.zone.local(2026, 9, 10, 9), end_date: Time.zone.local(2026, 9, 11, 17))
+
+      described_class.seed(event)
+
+      day_1 = event.registration_ticket_callouts.find_by(builtin_key: "day_1_survey")
+      expect(day_1.display_from).to eq(Time.zone.local(2026, 9, 10, 16, 30))
+    end
+
+    it "drips the scholarship survey 30 minutes before the event ends" do
+      event = create(:event, end_date: Time.zone.local(2026, 9, 11, 17))
+
+      described_class.seed(event)
+
+      scholarship = event.registration_ticket_callouts.find_by(builtin_key: "scholarship_recipients_survey")
+      expect(scholarship.display_from).to eq(Time.zone.local(2026, 9, 11, 16, 30))
     end
   end
 end
