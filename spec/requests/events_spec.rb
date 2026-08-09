@@ -1106,6 +1106,55 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "Send bulk emails link" do
+      it "reads 'Send bulk emails' with no filters and links without filter params" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include(">Send bulk emails</a>")
+        expect(response.body).not_to include("Send bulk emails (filtered)")
+        expect(response.body).to include(CGI.escapeHTML(preview_reminder_event_path(event)))
+      end
+
+      it "reads 'Send bulk emails (filtered)' and forwards shared filters when a filter is active" do
+        get registrants_event_path(event, scholarship: "yes", account_status: "invited")
+
+        expect(response.body).to include("Send bulk emails (filtered)")
+        expect(response.body).to include(CGI.escapeHTML(
+          preview_reminder_event_path(event, scholarship: "yes", account_status: "invited")
+        ))
+      end
+
+      it "does not treat roster-only filters (keyword) as reminder filters" do
+        get registrants_event_path(event, keyword: "smith")
+
+        expect(response.body).to include(">Send bulk emails</a>")
+        expect(response.body).not_to include("Send bulk emails (filtered)")
+      end
+    end
+
+    context "shared filter bar" do
+      it "renders the Filters heading and a collapsed More filters toggle by default" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include("fa-filter")
+        expect(response.body).to include(">Filters<")
+        expect(response.body).to include("More filters")
+        expect(response.body).to include('aria-expanded="false"')
+      end
+
+      it "opens the More filters section when a collapsed filter is active" do
+        get registrants_event_path(event, account_status: "invited")
+
+        expect(response.body).to include('aria-expanded="true"')
+      end
+
+      it "keeps the More filters section collapsed for a primary-row filter" do
+        get registrants_event_path(event, keyword: "smith")
+
+        expect(response.body).to include('aria-expanded="false"')
+      end
+    end
+
     context "with unknown filter params" do
       it "does not crash on an invalid payment_status" do
         get registrants_event_path(event, payment_status: "bogus")

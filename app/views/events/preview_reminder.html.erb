@@ -25,7 +25,17 @@
       <code class="font-mono">'--'</code> to match multiple values (e.g.
       <code class="font-mono">amy--aisha</code>).
     </p>
-    <%= render "events/reminder_recipient_filters" %>
+    <%= render "events/filters",
+          url: preview_reminder_event_path(@event),
+          frame: "reminder_recipients",
+          clear_url: preview_reminder_event_path(@event),
+          text_fields: [
+            { param: :name, label: "Name", placeholder: "Registrant name", primary: true },
+            { param: :email, label: "Email", placeholder: "Email address", primary: true },
+            { param: :reg_org, label: "Organization", placeholder: "Organization name" },
+            { param: :grantor, label: "Grantor", placeholder: "Grantor name" },
+            { param: :comment, label: "Comment", placeholder: "Comment text" }
+          ] %>
     <%# Turbo disabled: this POST renders the confirmation interstitial (a full
         page), not a redirect, so a normal browser navigation is what we want.
         reminder-preview drives the live message/subject preview as the admin types. %>
