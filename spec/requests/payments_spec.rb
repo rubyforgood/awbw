@@ -80,6 +80,29 @@ RSpec.describe "Payments", type: :request do
     end
   end
 
+  describe "POST /payments for a ContinuingEducationRegistration" do
+    let(:ce) { create(:continuing_education_registration, cost_cents: 5_000) }
+
+    before { sign_in admin }
+
+    it "records the payment against the CE registration's registrant" do
+      expect {
+        post payments_path, params: {
+          payment: {
+            type: "CashPayment",
+            payer_type: "Person",
+            amount_dollars: "50.00",
+            allocatable_sgid: ce.to_sgid.to_s
+          }
+        }
+      }.to change(Payment, :count).by(1)
+        .and change(Allocation, :count).by(1)
+
+      expect(Payment.last.person).to eq(ce.event_registration.registrant)
+      expect(ce.reload).to be_paid_in_full
+    end
+  end
+
   describe "POST /payments/allocation_form" do
     let(:event) { create(:event, cost_cents: 10_000) }
     let(:registration) { create(:event_registration, event:) }

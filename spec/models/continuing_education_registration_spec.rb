@@ -11,6 +11,14 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
     end
   end
 
+  describe "#registrant" do
+    it "is its event registration's registrant" do
+      ce = create(:continuing_education_registration)
+
+      expect(ce.registrant).to eq(ce.event_registration.registrant)
+    end
+  end
+
   describe "validations" do
     it "rejects a license that belongs to someone other than the registrant" do
       registration = create(:event_registration)

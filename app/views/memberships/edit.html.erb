@@ -16,7 +16,7 @@
     <%= f.input :cost_dollars,
           label: "Cost ($ per year)",
           required: false,
-          hint: "Leave blank for the standard cost (#{dollars_from_cents(Membership::ANNUAL_COST_CENTS)}). Applies to future membership invoices only — years already created keep the price they were billed at.",
+          hint: "Leave blank for the standard cost (#{dollars_from_cents(Membership::ANNUAL_COST_CENTS)}). Applies to future membership invoices only - those already created keep the price they were billed at.",
           input_html: { min: 0, step: 0.01, placeholder: "Standard", class: "bg-white" } %>
 
     <div class="flex items-center gap-3 border-t border-gray-200 pt-6 mt-6">
