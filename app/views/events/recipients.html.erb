@@ -50,32 +50,34 @@
   </div>
 
   <% if @dashboard.scholarship_applicants.any? %>
-    <h2 class="text-xl font-bold mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
-      <i class="fa-solid fa-user-graduate"></i>
-      Recipients
-    </h2>
     <div data-controller="expandable-cards scholarship-status-toggle"
          data-scholarship-status-toggle-shown-value="true">
-      <%# Controls — show/hide scholarship status for all recipients, and expand/collapse all %>
-      <div class="flex flex-wrap items-center justify-end gap-4 mb-4 print:hidden">
-        <%# Show / hide each recipient's awarded amount + tasks-completed status %>
-        <button type="button" role="switch" aria-checked="true"
-                data-action="scholarship-status-toggle#toggle"
-                data-scholarship-status-toggle-target="switch"
-                class="group inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800">
-          <span class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-fuchsia-600 transition-colors"
-                data-scholarship-status-toggle-target="track">
-            <span class="inline-block h-4 w-4 translate-x-[1.125rem] transform rounded-full bg-white shadow transition-transform"
-                  data-scholarship-status-toggle-target="knob"></span>
-          </span>
-          <span>Show scholarship status</span>
-        </button>
-        <%# Expand / collapse all %>
-        <button type="button" data-action="expandable-cards#toggleAll"
-                class="inline-flex items-center gap-2 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %> hover:<%= DomainTheme.text_class_for(:scholarships) %>">
-          <i class="fa-solid fa-chevron-down transition-transform rotate-180" data-expandable-cards-target="icon"></i>
-          <span data-expandable-cards-target="label">Collapse all</span>
-        </button>
+      <%# Title shares a row with the controls (show/hide scholarship status, expand/collapse all) %>
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <h2 class="text-xl font-bold flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
+          <i class="fa-solid fa-user-graduate"></i>
+          Recipients
+        </h2>
+        <div class="flex flex-wrap items-center gap-4 print:hidden">
+          <%# Show / hide each recipient's awarded amount + tasks-completed status %>
+          <button type="button" role="switch" aria-checked="true"
+                  data-action="scholarship-status-toggle#toggle"
+                  data-scholarship-status-toggle-target="switch"
+                  class="group inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800">
+            <span class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-fuchsia-600 transition-colors"
+                  data-scholarship-status-toggle-target="track">
+              <span class="inline-block h-4 w-4 translate-x-[1.125rem] transform rounded-full bg-white shadow transition-transform"
+                    data-scholarship-status-toggle-target="knob"></span>
+            </span>
+            <span>Show scholarship status</span>
+          </button>
+          <%# Expand / collapse all %>
+          <button type="button" data-action="expandable-cards#toggleAll"
+                  class="inline-flex items-center gap-2 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %> hover:<%= DomainTheme.text_class_for(:scholarships) %>">
+            <i class="fa-solid fa-chevron-down transition-transform rotate-180" data-expandable-cards-target="icon"></i>
+            <span data-expandable-cards-target="label">Collapse all</span>
+          </button>
+        </div>
       </div>
 
       <div class="space-y-6">
@@ -130,10 +132,10 @@
               <% end %>
 
               <div class="min-w-0 flex-1 flex flex-wrap items-start gap-x-8 gap-y-3">
-                <%# Name with title / organization beneath. Fixed width on wider
-                    screens so the Serves / Ages strip starts at a consistent left
+                <%# Name with title / organization beneath. Fixed width on wide
+                    screens so the Serves / Ages columns start at a consistent left
                     edge across rows instead of a jagged one. %>
-                <div class="min-w-0 lg:w-72 lg:shrink-0">
+                <div class="min-w-0 xl:w-72 xl:shrink-0">
                   <%= link_to person.name, person_path(person), data: { turbo_frame: "_top" },
                               class: "text-lg font-bold text-gray-900 hover:underline" %>
                   <% recipient_affiliations.each do |affiliation| %>
@@ -153,32 +155,28 @@
                   <% end %>
                 </div>
 
-                <%# Serves / Ages — parallel with the name %>
-                <% if has_sectors || sector_text.present? || has_age_groups || age_group_text.present? %>
-                  <div class="flex flex-wrap items-center gap-x-8 gap-y-2 lg:flex-1 lg:min-w-0">
+                <%# Serves / Ages — two fixed-width columns so each label starts at
+                    a consistent x across rows and its chips wrap within its own
+                    column instead of pushing the next column out of alignment. %>
+                <% if has_sectors || sector_text.present? %>
+                  <div class="flex flex-wrap items-center gap-2 xl:w-96 xl:shrink-0">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Serves</span>
                     <% if has_sectors %>
-                      <div class="flex flex-wrap items-center gap-2">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Serves</span>
-                        <% sectorable_items.each do |si| %>
-                          <%= render "sectors/tagging_label", sector: si.sector, is_primary: si.is_primary? %>
-                        <% end %>
-                      </div>
-                    <% elsif sector_text.present? %>
-                      <div class="text-sm text-gray-600">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Serves</span>
-                        <%= sector_text %>
-                      </div>
+                      <% sectorable_items.each do |si| %>
+                        <%= render "sectors/tagging_label", sector: si.sector, is_primary: si.is_primary? %>
+                      <% end %>
+                    <% else %>
+                      <span class="text-sm text-gray-600"><%= sector_text %></span>
                     <% end %>
+                  </div>
+                <% end %>
+                <% if has_age_groups || age_group_text.present? %>
+                  <div class="flex flex-wrap items-center gap-2 xl:w-80 xl:shrink-0">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Ages</span>
                     <% if has_age_groups %>
-                      <div class="flex flex-wrap items-center gap-2">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Ages</span>
-                        <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups %>
-                      </div>
-                    <% elsif age_group_text.present? %>
-                      <div class="flex items-center gap-2">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Ages</span>
-                        <span class="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-3 py-1 text-sm font-medium text-gray-600"><%= age_group_text %></span>
-                      </div>
+                      <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups %>
+                    <% else %>
+                      <span class="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-3 py-1 text-sm font-medium text-gray-600"><%= age_group_text %></span>
                     <% end %>
                   </div>
                 <% end %>
