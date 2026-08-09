@@ -952,8 +952,8 @@ RSpec.describe EventRegistration, type: :model do
       create(:event_registration_organization, event_registration: linked)
       unlinked = create(:event_registration, event: event)
 
-      expect(EventRegistration.organization_status("linked", event)).to contain_exactly(linked)
-      expect(EventRegistration.organization_status("unlinked", event)).to contain_exactly(unlinked)
+      expect(EventRegistration.organization_linking_status("linked", event)).to contain_exactly(linked)
+      expect(EventRegistration.organization_linking_status("unlinked", event)).to contain_exactly(unlinked)
     end
   end
 

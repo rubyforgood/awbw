@@ -101,7 +101,7 @@ RSpec.describe "organizations/edit", type: :view do
   end
 
   describe "program status" do
-    it "renders a 'status as of date · event' chip for each event the org is represented at" do
+    it "renders a 'date · status · event' chip for each event the org is represented at" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
       person = create(:person)
       create(:affiliation, organization: org, person: person, title: "Facilitator",
@@ -113,7 +113,7 @@ RSpec.describe "organizations/edit", type: :view do
       assign(:organization_events, Event.where(id: event.id))
       render
 
-      expect(rendered).to include("Ongoing as of Aug 2026 · PES205")
+      expect(rendered).to include("Aug 2026 · Ongoing · PES205")
     end
 
     it "always shows the general status chip, even with no events" do
