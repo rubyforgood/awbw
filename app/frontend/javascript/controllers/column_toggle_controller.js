@@ -9,7 +9,9 @@ import { Controller } from "@hotwired/stimulus"
 //
 // The chosen state is remembered per group in sessionStorage and reapplied on
 // connect, so it survives Turbo frame re-renders (e.g. applying a search
-// filter) instead of snapping back to the server-rendered defaults.
+// filter) instead of snapping back to the server-rendered defaults. State is
+// namespaced by the scope declared on the [data-column-toggle-root] ancestor
+// (e.g. the event id) so different tables/records keep independent toggles.
 
 export default class extends Controller {
   static targets = ["toggle", "track", "knob"]
@@ -28,7 +30,7 @@ export default class extends Controller {
 
   apply(checked) {
     this.toggleTarget.checked = checked
-    const root = this.element.closest("[data-column-toggle-root]") || document
+    const root = this.rootElement || document
 
     root.querySelectorAll(`[data-column-toggle-col="${this.groupValue}"]`).forEach((el) => {
       el.classList.toggle("hidden", !checked)
@@ -39,8 +41,13 @@ export default class extends Controller {
     this.knobTarget.style.transform = checked ? "translateX(16px)" : ""
   }
 
+  get rootElement() {
+    return this.element.closest("[data-column-toggle-root]")
+  }
+
   storageKey() {
-    return `column-toggle:${this.groupValue}`
+    const scope = this.rootElement?.dataset.columnToggleScope || "default"
+    return `column-toggle:${scope}:${this.groupValue}`
   }
 
   storedState() {
