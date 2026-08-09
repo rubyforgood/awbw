@@ -85,14 +85,14 @@ class EventsController < ApplicationController
     # The charts frame is loaded lazily (only when the user reveals it), so the
     # expensive cross-event breakdowns run solely on that request.
     if turbo_frame_request_id == "attendees_charts"
-      @breakdowns = TrainingAttendeesBreakdowns.new(people)
+      @breakdowns = AttendeesBreakdowns.new(people)
       return render :attendees_charts
     end
 
     per_page = params[:number_of_items_per_page].presence || 25
     @count_display = people.count
     @people = people.paginate(page: params[:page], per_page: per_page)
-    @roster = TrainingAttendeesRoster.new(@people)
+    @roster = AttendeesRoster.new(@people)
     render :attendees_results
   end
 

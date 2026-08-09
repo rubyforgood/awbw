@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe TrainingAttendeesRoster do
+RSpec.describe AttendeesRoster do
   let(:person) { create(:person, first_name: "Ada", last_name: "Lovelace") }
 
   let!(:older_training) { create(:event, title: "TAC 200", facilitator_training: true, start_date: Date.new(2024, 5, 1)) }

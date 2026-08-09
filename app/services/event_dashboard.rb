@@ -274,7 +274,7 @@ class EventDashboard
   # The [ event, participant slug ] a registrant's scholarship icon links to: this
   # event's recipients page, anchored to their entry. The shared roster partial
   # reads this so the same column works on the cross-event training-attendees
-  # index (see TrainingAttendeesRoster#scholarship_link_target).
+  # index (see AttendeesRoster#scholarship_link_target).
   def scholarship_link_target(person)
     [ event, registration_slug_by_registrant[person.id] ]
   end

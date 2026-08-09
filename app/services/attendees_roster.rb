@@ -7,7 +7,7 @@
 # rows (no whole-history scans). Columns are sourced from each person's own
 # profile (sectors, age groups, affiliations, address); scholarship/CE/event
 # columns come from their attended-training registrations.
-class TrainingAttendeesRoster
+class AttendeesRoster
   # Affiliation status taxonomy shown in the index's Affiliation status column and
   # offered as a filter, in display order.
   AFFILIATION_STATUSES = Affiliation::STATUSES

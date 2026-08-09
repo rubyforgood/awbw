@@ -5,7 +5,7 @@
 #
 # Sourced from each person's profile (sectors, age groups, categories, addresses)
 # and from the orgs/scholarships/CE tied to their attended-training registrations.
-class TrainingAttendeesBreakdowns
+class AttendeesBreakdowns
   def initialize(people)
     @people = people
   end

@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe TrainingAttendeesBreakdowns do
+RSpec.describe AttendeesBreakdowns do
   let(:person) { create(:person) }
   let!(:training) { create(:event, facilitator_training: true, start_date: Date.new(2025, 5, 1)) }
   let!(:registration) { create(:event_registration, event: training, registrant: person, status: "attended") }
