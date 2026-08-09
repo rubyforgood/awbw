@@ -22,23 +22,25 @@
     <%# Filters driving both summary cards — time period, event type and event —
         matching the filter selects on the full revenue and participation reports. %>
     <%= form_with url: statistics_events_path, method: :get, local: true,
-          class: "flex flex-wrap items-end gap-4 mb-6" do %>
+          class: "rounded-xl border border-gray-200 bg-white p-4 shadow-sm mb-6" do %>
       <%= hidden_field_tag :return_to, params[:return_to] %>
-      <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-gray-600" for="period">Time period</label>
-        <%= select_tag :period,
-              options_for_select([ [ "This year", "this_year" ], [ "Last year", "last_year" ], [ "All time", "all_time" ] ], @period),
-              class: "px-3 py-2 rounded-md border-gray-300 shadow-sm text-sm text-gray-700",
-              onchange: "this.form.submit()" %>
+      <div class="flex flex-wrap items-end gap-4">
+        <div class="w-full sm:w-40">
+          <label class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" for="period">Time period</label>
+          <%= select_tag :period,
+                options_for_select([ [ "This year", "this_year" ], [ "Last year", "last_year" ], [ "All time", "all_time" ] ], @period),
+                class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                onchange: "this.form.submit()" %>
+        </div>
+        <%= render "event_type_filter" %>
+        <%= render "event_filter" %>
       </div>
-      <%= render "event_type_filter" %>
-      <%= render "event_filter" %>
     <% end %>
 
     <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-      <%= render "events/revenue_summary", report: @revenue_report, period: @revenue_report.period_scope(@period) %>
       <%= render "events/participation_summary", report: @participation_report, period: @participation_report.period_scope(@period) %>
       <%= render "events/scholarship_summary", report: @scholarship_report, period: @scholarship_report.period_scope(@period) %>
+      <%= render "events/revenue_summary", report: @revenue_report, period: @revenue_report.period_scope(@period) %>
     </div>
   </div>
 </div>

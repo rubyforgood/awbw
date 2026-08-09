@@ -887,6 +887,52 @@ if facilitator_training
   end
 end
 
+# --- Cross-event training attendance -----------------------------------------
+# Give Amy and Aisha several *attended* facilitator trainings across different
+# years so the cross-event "Training attendees" index shows them with more than
+# one event (and the row's expand chevron). These are separate past-dated events
+# so they don't disturb the flagship training's named scenarios above.
+puts "Seeding multi-training attendance for Amy and Aisha…"
+past_trainings = [
+  { title: "Facilitator Training: Foundations 2023", abbreviation: "FT2023", start: Date.new(2023, 3, 14) },
+  { title: "Facilitator Training: Advanced Practice 2024", abbreviation: "FT2024", start: Date.new(2024, 6, 9) },
+  { title: "Facilitator Training: Community Care 2025", abbreviation: "FT2025", start: Date.new(2025, 5, 20) }
+].map do |attrs|
+  event = Event.find_or_create_by!(title: attrs[:title]) do |e|
+    e.description = "Past facilitator training (seed demo)."
+    e.rhino_description = e.description
+    e.created_by = admin_user
+    e.public_registration_enabled = false
+    e.start_date = attrs[:start].to_time
+    e.end_date = (attrs[:start] + 1).to_time
+    e.registration_close_date = (attrs[:start] - 7).to_time
+    e.cost_cents = 15_000
+  end
+  # Keep the schedule/flags current and deterministic on re-seed (find_or_create_by!
+  # only sets attributes on create).
+  event.update!(
+    abbreviation: attrs[:abbreviation],
+    start_date: attrs[:start].to_time,
+    end_date: (attrs[:start] + 1).to_time,
+    registration_close_date: (attrs[:start] - 7).to_time,
+    cost_cents: 15_000,
+    facilitator_training: true,
+    published: true
+  )
+  event
+end
+
+# Amy attended all three; Aisha attended the two most recent — both land on the
+# index with multiple trainings.
+{ amy_person => past_trainings, aisha_person => past_trainings.last(2) }.each do |person, events|
+  next unless person
+  events.each do |evt|
+    registration = EventRegistration.find_or_initialize_by(event: evt, registrant: person)
+    registration.status = "attended"
+    registration.save!
+  end
+end
+
 # Backfill slugs for any registrations created before the generate_slug callback existed
 EventRegistration.where(slug: nil).find_each do |reg|
   reg.update!(slug: SecureRandom.urlsafe_base64(16))

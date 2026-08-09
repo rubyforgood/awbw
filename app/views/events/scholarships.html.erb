@@ -22,10 +22,12 @@
     <%# Ahoy-style filters — time period, specific training, and abbreviation
         search — each auto-submitting a GET form so the report reshapes on change. %>
     <%= form_with url: scholarships_events_path, method: :get, local: true,
-          class: "flex flex-wrap items-end gap-4 mb-8" do %>
+          class: "rounded-xl border border-gray-200 bg-white p-4 shadow-sm mb-8" do %>
       <%= hidden_field_tag :return_to, params[:return_to] %>
       <%= hidden_field_tag :view, params[:view] %>
-      <%= render "report_filters", event_all_label: "All trainings" %>
+      <div class="flex flex-wrap items-end gap-4">
+        <%= render "report_filters", event_all_label: "All trainings" %>
+      </div>
     <% end %>
 
     <% if @report.any? %>

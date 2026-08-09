@@ -330,11 +330,17 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Events statistics")
         expect(response.body).to include("Revenue")
         expect(response.body).to include("Participation")
+        expect(response.body).to match(/<h3[^>]*>Participation<\/h3>.*<h3[^>]*>Scholarships<\/h3>.*<h3[^>]*>Revenue<\/h3>/m)
         expect(response.body).to include("People attended")
+        expect(response.body).to include("Scholarships awarded")
+        expect(response.body).to include("fees + funded")
+        expect(response.body).to include("discounts")
         expect(response.body).to match(/\d+ trainings/)
         expect(response.body).to match(/\d+ other/)
-        # The trainings/other split links into the filtered registrants index.
-        expect(response.body).to include("event_type=trainings", "attendance_status=attended")
+        # The trainings figure links into the cross-event training attendees index;
+        # the other-events figure into the filtered registrants index.
+        expect(response.body).to include(training_attendees_events_path)
+        expect(response.body).to include("event_type=other", "attendance_status=attended")
         expect(response.body).to include(revenue_events_path, participation_events_path)
       end
 
@@ -2213,7 +2219,7 @@ RSpec.describe "Events", type: :request do
         get background_event_path(event)
 
         # "Background Org" is the registrant's first-facilitator program → New.
-        expect(response.body).to include("Status")
+        expect(response.body).to include("Program status")
         expect(response.body).to include("New")
       end
 
@@ -2868,20 +2874,6 @@ RSpec.describe "Events", type: :request do
           event: { event_staffs_attributes: { "0" => { person_id: staffer.id, title: "Staff" } } }
         }
         expect(response).to redirect_to(root_path)
-      end
-    end
-
-    describe "GET /index?staffed_by_me" do
-      it "returns only events the current user's person staffs" do
-        admin_with_person = create(:user, :admin, :with_person)
-        staffed = create(:event, :published, title: "Staffed event")
-        create(:event, :published, title: "Other event")
-        create(:event_staff, event: staffed, person: admin_with_person.person)
-
-        sign_in admin_with_person
-        get events_path(staffed_by_me: true)
-        expect(response.body).to include("Staffed event")
-        expect(response.body).not_to include("Other event")
       end
     end
   end

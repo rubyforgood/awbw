@@ -10,7 +10,11 @@ import { Controller } from "@hotwired/stimulus"
 // PR #1606.
 export default class extends Controller {
   static targets = ["label", "icon"]
-  static values = { expanded: { type: Boolean, default: true } }
+  static values = {
+    expanded: { type: Boolean, default: true },
+    expandedLabel: { type: String, default: "Collapse all" },
+    collapsedLabel: { type: String, default: "Expand all" }
+  }
 
   toggleAll() {
     this.expandedValue = !this.expandedValue
@@ -22,7 +26,7 @@ export default class extends Controller {
   // would otherwise force every card open regardless of its own initial state.
   expandedValueChanged() {
     if (this.hasLabelTarget) {
-      this.labelTarget.textContent = this.expandedValue ? "Collapse all" : "Expand all"
+      this.labelTarget.textContent = this.expandedValue ? this.expandedLabelValue : this.collapsedLabelValue
     }
     if (this.hasIconTarget) {
       this.iconTarget.classList.toggle("rotate-180", this.expandedValue)

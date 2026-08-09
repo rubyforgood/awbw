@@ -18,7 +18,7 @@ RSpec.describe StripeChargeSucceededProcessor do
       billing_details: nil,
       receipt_email: nil,
       customer: nil,
-      subscription: nil,
+      invoice: nil,
       to_hash: { "id" => stripe_charge_id, "amount" => 30_00 }
     )
   end
@@ -47,8 +47,8 @@ RSpec.describe StripeChargeSucceededProcessor do
       expect { processor.call(event) }.not_to change(ExternalProcessorPayment, :count)
     end
 
-    it "does nothing when the charge belongs to a subscription" do
-      allow(stripe_charge).to receive(:subscription).and_return("sub_membership")
+    it "does nothing when the charge belongs to a subscription (has an invoice)" do
+      allow(stripe_charge).to receive(:invoice).and_return("in_membership")
 
       expect { processor.call(event) }.not_to change(ExternalProcessorPayment, :count)
     end
