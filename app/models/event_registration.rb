@@ -742,6 +742,22 @@ class EventRegistration < ApplicationRecord
     status == "attended"
   end
 
+  # The post-event (scholarship recipients) survey is "in" once this timestamp is
+  # set — by the registrant submitting it or an admin toggling it. Mirrors the
+  # Certifiable certificate_sent_at pattern so the roster's readiness reads a plain
+  # column with no extra query.
+  def post_survey_completed?
+    post_survey_completed_at.present?
+  end
+
+  def mark_post_survey_completed!(at: Time.current)
+    update!(post_survey_completed_at: at)
+  end
+
+  def clear_post_survey_completed!
+    update!(post_survey_completed_at: nil)
+  end
+
   # The certificate of completion unlocks once the training has happened, the
   # registrant attended, and any scholarship tasks are complete. Issuing a CE
   # certificate (an admin marking the credit sent) is itself an affirmation that
