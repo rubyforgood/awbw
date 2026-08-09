@@ -11,26 +11,27 @@ class EventRegistrationDecorator < ApplicationDecorator
     amber: "bg-amber-50 text-amber-700 border-amber-200"
   }.freeze
 
-  # Short-code badges for the payment situation, shown beside the registrant's name
-  # on the roster so staff can read it at a glance. The first three are keyed by the
-  # stored expected_payment_method string (FormBuilderService payment options); BUD
-  # is the separate someone_else_will_pay boolean (buddy system), shown in addition
-  # to the method — a registrant can have both.
+  # Short-code payment indicators in the Payment column, rendered as colored text
+  # (icon + code, like the "Intends to pay" note) rather than a chip. The first
+  # three are keyed by the stored expected_payment_method string (FormBuilderService
+  # payment options); BUD is the separate someone_else_will_pay boolean (buddy
+  # system), shown in addition to the method — a registrant can have both. `classes`
+  # is the text color.
   PaymentMethodBadge = Struct.new(:code, :label, :icon, :classes, keyword_init: true)
 
   PAYMENT_METHOD_BADGES = {
     FormBuilderService::PAYMENT_METHOD_PAY_NOW =>
-      PaymentMethodBadge.new(code: "CCN", label: "Credit card (now)", icon: "fa-solid fa-credit-card", classes: "bg-green-50 text-green-700 border-green-200"),
+      PaymentMethodBadge.new(code: "CCN", label: "Credit card (now)", icon: "fa-solid fa-credit-card", classes: "text-green-600"),
     "Credit card (later)" =>
-      PaymentMethodBadge.new(code: "CCL", label: "Credit card (later)", icon: "fa-regular fa-credit-card", classes: "bg-amber-50 text-amber-700 border-amber-200"),
+      PaymentMethodBadge.new(code: "CCL", label: "Credit card (later)", icon: "fa-regular fa-credit-card", classes: "text-amber-600"),
     "Check" =>
-      PaymentMethodBadge.new(code: "CK", label: "Check", icon: "fa-solid fa-money-check-dollar", classes: "bg-blue-50 text-blue-700 border-blue-200")
+      PaymentMethodBadge.new(code: "CK", label: "Check", icon: "fa-solid fa-money-check-dollar", classes: "text-sky-600")
   }.freeze
 
   # Buddy system — someone else covers the cost (the someone_else_will_pay boolean).
   BUDDY_PAYMENT_BADGE = PaymentMethodBadge.new(
     code: "BUD", label: "Someone else will pay", icon: "fa-solid fa-user-group",
-    classes: "bg-purple-50 text-purple-700 border-purple-200"
+    classes: "text-purple-600"
   )
 
   # Nil when CE isn't in play (so the index can show a "Create" affordance instead).
@@ -66,7 +67,7 @@ class EventRegistrationDecorator < ApplicationDecorator
         code: value.truncate(8),
         label: value,
         icon: "fa-solid fa-money-bill",
-        classes: "bg-gray-50 text-gray-600 border-gray-200"
+        classes: "text-gray-600"
       ))
     end
     badges << BUDDY_PAYMENT_BADGE if someone_else_will_pay?

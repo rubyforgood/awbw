@@ -446,16 +446,11 @@
                       </div>
                     <% end %>
 
-                    <% payment_badges = registration.decorate.payment_badges %>
-                    <% if payment_badges.any? %>
-                      <div class="mt-1 flex flex-wrap justify-center gap-1">
-                        <% payment_badges.each do |payment_badge| %>
-                          <span class="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[0.65rem] font-semibold <%= payment_badge.classes %>"
-                                title="<%= payment_badge.label %>">
-                            <i class="<%= payment_badge.icon %>" aria-hidden="true"></i>
-                            <%= payment_badge.code %>
-                          </span>
-                        <% end %>
+                    <% registration.decorate.payment_badges.each do |payment_badge| %>
+                      <div class="mt-1 flex items-center justify-center gap-1 whitespace-nowrap text-[0.65rem] font-medium <%= payment_badge.classes %>"
+                           title="<%= payment_badge.label %>">
+                        <i class="<%= payment_badge.icon %>" aria-hidden="true"></i>
+                        <span><%= payment_badge.code %></span>
                       </div>
                     <% end %>
                   </td>
