@@ -252,16 +252,6 @@
                       <% end %>
                     </div>
 
-                    <% if payment_col %>
-                      <% registration.decorate.payment_badges.each do |payment_badge| %>
-                        <span class="inline-flex items-center gap-1 flex-shrink-0 rounded border px-1.5 py-0.5 text-[0.65rem] font-semibold <%= payment_badge.classes %>"
-                              title="<%= payment_badge.label %>">
-                          <i class="<%= payment_badge.icon %>" aria-hidden="true"></i>
-                          <%= payment_badge.code %>
-                        </span>
-                      <% end %>
-                    <% end %>
-
                     <% form_show_params = registration.slug.present? ? { reg: registration.slug } : { person_id: person.id } %>
                     <% if event_form_ids.any? %>
                       <span class="inline-flex w-4 justify-center">
@@ -453,6 +443,19 @@
                       <div class="mt-1 inline-flex items-center gap-1 whitespace-nowrap text-[0.65rem] font-medium text-blue-600">
                         <i class="fa-solid fa-hand-holding-dollar"></i>
                         <span>Intends to pay</span>
+                      </div>
+                    <% end %>
+
+                    <% payment_badges = registration.decorate.payment_badges %>
+                    <% if payment_badges.any? %>
+                      <div class="mt-1 flex flex-wrap justify-center gap-1">
+                        <% payment_badges.each do |payment_badge| %>
+                          <span class="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[0.65rem] font-semibold <%= payment_badge.classes %>"
+                                title="<%= payment_badge.label %>">
+                            <i class="<%= payment_badge.icon %>" aria-hidden="true"></i>
+                            <%= payment_badge.code %>
+                          </span>
+                        <% end %>
                       </div>
                     <% end %>
                   </td>
