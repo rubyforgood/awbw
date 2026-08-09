@@ -1086,6 +1086,14 @@ RSpec.describe "Events", type: :request do
     before { sign_in admin }
 
     context "eyebrow back link" do
+      it "returns to the originating roster section when arrived from it" do
+        get registrants_event_path(event, return_to: "roster", return_anchor: "all-cities")
+
+        expect(response.body).to include("← Roster")
+        expect(response.body).to include("#{roster_event_path(event)}#all-cities")
+        expect(response.body).not_to include("← Dashboard")
+      end
+
       it "returns to the dashboard by default" do
         get registrants_event_path(event)
 
@@ -2386,61 +2394,323 @@ RSpec.describe "Events", type: :request do
   describe "GET /events/:id/roster" do
     let(:owner) { create(:user) }
     let(:owned_event) { create(:event, created_by: owner) }
-
-    before do
-      create(:event_registration, event: owned_event, registrant: create(:person, first_name: "Ada", last_name: "Lovelace"), status: "attended")
-      create(:event_registration, event: owned_event, registrant: create(:person, first_name: "Gus", last_name: "Gone"), status: "cancelled")
+    let(:person) { create(:person, first_name: "Ada", last_name: "Lovelace") }
+    let(:organization) { create(:organization, name: "Roster Org") }
+    let!(:registration) do
+      create(:affiliation, person: person, organization: organization)
+      create(:event_registration, event: owned_event, registrant: person, status: "registered")
     end
 
-    it "renders the roster of active registrants for an admin" do
-      sign_in admin
-      get roster_event_path(owned_event)
+    # The demographic charts load into their own lazy Turbo frame, so every
+    # breakdown assertion asks for the page with that frame's header. The stat bar
+    # and the registrant table come back on the plain request.
+    let(:charts_headers) { { "Turbo-Frame" => "event_roster_charts" } }
 
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Roster")
-      expect(response.body).to include("Ada Lovelace")
-      expect(response.body).not_to include("Gus Gone")
+    context "authorization" do
+      it "is visible to the event owner" do
+        sign_in owner
+        get roster_event_path(owned_event)
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "redirects a non-owner non-admin" do
+        sign_in user
+        get roster_event_path(owned_event)
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "logs an Ahoy page-view event" do
+        sign_in admin
+        expect(Analytics::AhoyTracker).to receive(:track_event).with(anything, "view.events.roster", { event_id: owned_event.id })
+        get roster_event_path(owned_event)
+      end
     end
 
-    it "is visible to the event owner" do
-      sign_in owner
-      get roster_event_path(owned_event)
-      expect(response).to have_http_status(:ok)
-    end
+    context "as admin" do
+      before { sign_in admin }
 
-    it "redirects a non-owner non-admin" do
-      sign_in user
-      get roster_event_path(owned_event)
-      expect(response).to redirect_to(root_path)
-    end
+      describe "the page shell and registrant table" do
+        it "renders the registrant roster with names and program" do
+          get roster_event_path(owned_event)
 
-    it "drills a breakdown into Manage with a back-to-roster eyebrow" do
-      sign_in admin
-      get roster_event_path(owned_event)
-      expect(response.body).to include("return_to=roster")
-    end
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("Roster")
+          expect(response.body).to include("Ada")
+          expect(response.body).to include("Lovelace")
+          expect(response.body).to include("Roster Org")
+        end
 
-    it "logs an Ahoy page-view event" do
-      sign_in admin
-      expect(Analytics::AhoyTracker).to receive(:track_event).with(anything, "view.events.roster", { event_id: owned_event.id })
-      get roster_event_path(owned_event)
-    end
+        it "links each registrant row to their profile" do
+          get roster_event_path(owned_event)
 
-    it "defers the demographic charts to a lazy frame (not rendered inline)" do
-      sign_in admin
-      get roster_event_path(owned_event)
-      expect(response.body).to include("event_roster_charts")
-      expect(response.body).not_to include("All sectors")
-    end
+          expect(response.body).to include(person_path(person))
+        end
 
-    it "renders the demographic charts in the roster charts frame" do
-      ada = Person.find_by(first_name: "Ada")
-      create(:sectorable_item, sectorable: ada, sector: create(:sector, name: "Healthcare"), is_primary: true)
-      create(:sectorable_item, sectorable: ada, sector: create(:sector, name: "Education"))
+        it "excludes registrants with an inactive status" do
+          cancelled = create(:person, first_name: "Grace", last_name: "Hopper")
+          create(:event_registration, event: owned_event, registrant: cancelled, status: "cancelled")
 
-      sign_in admin
-      get roster_event_path(owned_event), headers: { "Turbo-Frame" => "event_roster_charts" }
-      expect(response.body).to include("All sectors")
+          get roster_event_path(owned_event)
+
+          expect(response.body).to include("Lovelace")
+          expect(response.body).not_to include("Hopper")
+        end
+
+        it "shows each registrant's Primary sector and Primary age group in the roster" do
+          registration_form = create(:form, name: "Registration")
+          create(:event_form, event: owned_event, form: registration_form, role: "registration")
+          submission = create(:form_submission, person: person, form: registration_form)
+
+          sector = create(:sector, name: "Sexual Assault")
+          sector_field = create(:form_field, form: registration_form, field_identifier: "primary_sector_single")
+          create(:form_answer, form_submission: submission, form_field: sector_field, submitted_answer: sector.id.to_s)
+
+          age_range = create(:category_type, name: "AgeRange")
+          teens = create(:category, name: "Teens", category_type: age_range)
+          age_field = create(:form_field, form: registration_form, field_identifier: "primary_age_group")
+          create(:form_answer, form_submission: submission, form_field: age_field, submitted_answer: teens.id.to_s)
+
+          get roster_event_path(owned_event)
+
+          expect(response.body).to include("Primary sector")
+          expect(response.body).to include("Primary age group")
+          expect(response.body).to include("Sexual Assault")
+          expect(response.body).to include("Teens")
+        end
+
+        it "links a registrant's organization to its profile and the CE icon to the CE registration edit" do
+          ce_registration = create(:continuing_education_registration, event_registration: registration)
+
+          get roster_event_path(owned_event)
+
+          # Roster Org is linked to Ada via the affiliation in the registration let!.
+          expect(response.body).to include(organization_path(organization))
+          expect(response.body).to include(edit_continuing_education_registration_path(ce_registration))
+        end
+
+        it "shows a location column with the registrant's state abbreviation" do
+          create(:address, addressable: person, state: "WY", country: nil, inactive: false)
+
+          get roster_event_path(owned_event)
+
+          expect(response.body).to include("Location")
+          expect(response.body).to include("WY")
+        end
+
+        it "shows the ISO country code in the location column for international registrants" do
+          create(:address, addressable: person, state: "ON", country: "Canada", inactive: false)
+
+          get roster_event_path(owned_event)
+
+          expect(response.body).to include("CAN")
+        end
+
+        it "shows a program-status column in the registrant roster" do
+          get roster_event_path(owned_event)
+
+          # "Roster Org" is the registrant's first-facilitator program → New.
+          expect(response.body).to include("Program status")
+          expect(response.body).to include("New")
+        end
+
+        it "labels the organizations count box and breaks it down by program status" do
+          get roster_event_path(owned_event)
+
+          expect(response.body).to include("Organizations")
+          expect(response.body).to match(/\d+ new · \d+ ongoing · \d+ reinstated/)
+        end
+
+        it "links scholarship recipients to their entry on the recipients page" do
+          scholarship = create(:scholarship, recipient: person)
+          create(:allocation, source: scholarship, allocatable: registration)
+
+          get roster_event_path(owned_event)
+
+          expect(response.body).to include("fa-graduation-cap")
+          expect(response.body).to include("#{recipients_event_path(owned_event)}#participant-#{registration.slug}")
+        end
+
+        it "does not show a recipients link for registrants without a scholarship" do
+          get roster_event_path(owned_event)
+
+          expect(response.body).not_to include("#scholarship_")
+        end
+
+        it "anchors the stat bar and stamps its drill-downs with a back-to-roster eyebrow" do
+          get roster_event_path(owned_event)
+
+          expect(response.body).to include('id="overview"')
+          expect(response.body).to include("return_to=roster")
+          expect(response.body).to include("return_anchor=overview")
+        end
+
+        it "defers the demographic charts to a lazy frame (not rendered inline)" do
+          get roster_event_path(owned_event)
+
+          expect(response.body).to include("event_roster_charts")
+          expect(response.body).not_to include("All sectors")
+        end
+      end
+
+      describe "the demographic charts frame" do
+        it "renders the sector breakdowns" do
+          create(:sectorable_item, sectorable: person, sector: create(:sector, name: "Sexual Assault"), is_primary: true)
+          create(:sectorable_item, sectorable: person, sector: create(:sector, name: "Mental Health"))
+
+          get roster_event_path(owned_event), headers: charts_headers
+
+          expect(response.body).to include("Primary sector")
+          expect(response.body).to include("All sectors")
+          expect(response.body).to include("Sexual Assault")
+        end
+
+        it "shows the free-text \"Other\" sector responses as their own detail card" do
+          create(:other_response, owner: person, text: "Hospice care")
+
+          get roster_event_path(owned_event), headers: charts_headers
+
+          expect(response.body).to include("Other sector responses")
+          expect(response.body).to include("Hospice care")
+        end
+
+        it "shows a countries breakdown from registrant addresses" do
+          create(:address, addressable: person, state: "CA", country: "Canada", inactive: false)
+
+          get roster_event_path(owned_event), headers: charts_headers
+
+          expect(response.body).to include("Canada")
+          expect(response.body).to include("Countries")
+        end
+
+        it "shows a school districts breakdown from registrant addresses" do
+          create(:address, addressable: person, state: "CA", district: "Compton Unified", inactive: false)
+
+          get roster_event_path(owned_event), headers: charts_headers
+
+          expect(response.body).to include("School districts")
+          expect(response.body).to include("Compton Unified")
+        end
+
+        it "renders the states breakdown as a US choropleth map fed by per-state counts" do
+          create(:address, addressable: person, state: "CA", inactive: false)
+
+          get roster_event_path(owned_event), headers: charts_headers
+
+          expect(response.body).to include("States")
+          expect(response.body).to include('data-controller="us-map-chart"')
+          expect(response.body).to include("CA")
+        end
+
+        it "charts the organizations' program-status breakdown above the org list" do
+          get roster_event_path(owned_event), headers: charts_headers
+
+          expect(response.body).to include("Organization/program status")
+          # "Roster Org" is the registrant's first-facilitator program → New.
+          expect(response.body).to include("New")
+        end
+
+        it "flags scholarship-recipient orgs in the Organizations breakdown and offers a CSS filter toggle" do
+          scholarship = create(:scholarship, recipient: person, amount_cents: 500)
+          create(:allocation, source: scholarship, allocatable: registration, amount: 500)
+
+          get roster_event_path(owned_event), headers: charts_headers
+
+          # Pure-CSS toggle: a `peer` checkbox reveals the scholarship-only list.
+          expect(response.body).to include("Only scholarship orgs")
+          expect(response.body).to include('id="org-scholarship-filter"')
+          expect(response.body).to include("peer-checked:table")
+          # The recipient's org (Roster Org) is flagged with the grad-cap icon.
+          expect(response.body).to include("fa-graduation-cap")
+        end
+
+        it "omits the scholarship-org filter toggle when no org has a recipient" do
+          get roster_event_path(owned_event), headers: charts_headers
+
+          expect(response.body).to include('id="all-organizations"')
+          expect(response.body).not_to include("Only scholarship orgs")
+        end
+
+        it "groups registrants by the city of the org linked on their registration" do
+          city_org = create(:organization, name: "City Org")
+          create(:address, addressable: city_org, city: "Los Angeles", state: "CA", inactive: false)
+          create(:event_registration_organization, event_registration: registration, organization: city_org)
+          scholarship = create(:scholarship, recipient: person, amount_cents: 500)
+          create(:allocation, source: scholarship, allocatable: registration, amount: 500)
+
+          get roster_event_path(owned_event), headers: charts_headers
+
+          expect(response.body).to include("All cities")
+          expect(response.body).to include("Los Angeles, CA")
+          # Scholarship recipient in that city renders in the "(🎓 1)" parenthetical.
+          expect(response.body).to include("fa-graduation-cap")
+          # Same pure-CSS toggle as the Organizations card.
+          expect(response.body).to include('id="city-scholarship-filter"')
+        end
+
+        it "shows a primary age group breakdown from registration responses" do
+          registration_form = create(:form, name: "Registration")
+          field = create(:form_field, form: registration_form, field_identifier: "primary_age_group",
+                                      answer_type: :multi_select_checkbox)
+          create(:event_form, event: owned_event, form: registration_form, role: "registration")
+          age_range = create(:category_type, name: "AgeRange")
+          adults = create(:category, name: "Adults", category_type: age_range)
+          submission = create(:form_submission, person: person, form: registration_form)
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: adults.id.to_s)
+
+          get roster_event_path(owned_event), headers: charts_headers
+
+          expect(response.body).to include("Primary age group")
+          expect(response.body).to include("Adults")
+          # Percentages render as always-visible text (not hover-only), so they read on mobile.
+          expect(response.body).to include("100.0%")
+        end
+
+        it "shows an all age groups breakdown spanning the primary and additional questions" do
+          registration_form = create(:form, name: "Registration")
+          create(:event_form, event: owned_event, form: registration_form, role: "registration")
+          age_range = create(:category_type, name: "AgeRange")
+          adults = create(:category, name: "Adults", category_type: age_range)
+          teens = create(:category, name: "Teens", category_type: age_range)
+          primary_field = create(:form_field, form: registration_form, field_identifier: "primary_age_group",
+                                              answer_type: :multi_select_checkbox)
+          additional_field = create(:form_field, form: registration_form, field_identifier: "additional_age_group",
+                                                 answer_type: :multi_select_checkbox)
+          submission = create(:form_submission, person: person, form: registration_form)
+          create(:form_answer, form_submission: submission, form_field: primary_field, submitted_answer: adults.id.to_s)
+          create(:form_answer, form_submission: submission, form_field: additional_field, submitted_answer: teens.id.to_s)
+
+          get roster_event_path(owned_event), headers: charts_headers
+
+          expect(response.body).to include("All age groups")
+          expect(response.body).to include("Teens")
+        end
+
+        it "shows a life experiences breakdown from registrants' StoryPopulation tags" do
+          story_population = create(:category_type, name: "StoryPopulation")
+          experience = create(:category, name: "Veterans", category_type: story_population)
+          create(:categorizable_item, category: experience, categorizable: person)
+
+          get roster_event_path(owned_event), headers: charts_headers
+
+          expect(response.body).to include("Life experiences")
+          expect(response.body).to include("Veterans")
+        end
+
+        it "hides the life experiences and settings cards when registrants have no tags" do
+          get roster_event_path(owned_event), headers: charts_headers
+
+          expect(response.body).not_to include("Life experiences")
+          expect(response.body).not_to include("Settings")
+        end
+
+        it "anchors its breakdown sections so a drill-down can scroll back to them" do
+          get roster_event_path(owned_event), headers: charts_headers
+
+          expect(response.body).to include('id="all-organizations"')
+          expect(response.body).to include('id="primary-sector"')
+          expect(response.body).to include("return_anchor=all-organizations")
+        end
+      end
     end
   end
 

@@ -24,17 +24,19 @@ RSpec.describe "Events attendees", type: :request do
   let(:charts_frame_headers) { { "Turbo-Frame" => "attendees_charts" } }
 
   describe "GET /events/attendees" do
-    context "as non-admin" do
-      it "redirects the unfiltered cross-event view" do
+    context "as a user who owns no events" do
+      it "redirects — there is nothing for them to report on" do
         sign_in user
         get attendees_events_url
         expect(response).to redirect_to(root_path)
       end
     end
 
-    context "as an event owner, scoped to their own event" do
+    context "as an event owner" do
       let(:owner) { create(:user) }
-      let!(:owned_training) { create(:event, facilitator_training: true, created_by: owner, start_date: Date.new(2026, 6, 1)) }
+      let!(:owned_training) { create(:event, title: "Owned TAC", abbreviation: "OWN100", facilitator_training: true, created_by: owner, start_date: Date.new(2026, 6, 1)) }
+      let!(:own_attendee) { create(:person, first_name: "Mine", last_name: "Own") }
+      let!(:own_registration) { create(:event_registration, event: owned_training, registrant: own_attendee, status: "attended") }
 
       before { sign_in owner }
 
@@ -54,9 +56,46 @@ RSpec.describe "Events attendees", type: :request do
         expect(response).to redirect_to(root_path)
       end
 
-      it "forbids the unfiltered cross-event view" do
+      # Clearing the Training filter used to re-enter the admin-only cross-event
+      # view and bounce the owner to root — inside a Turbo frame, a broken frame.
+      it "renders the unfiltered view narrowed to their own events" do
+        get attendees_events_url, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Mine Own")
+        expect(response.body).not_to include("Ada Lovelace")
+      end
+
+      it "only offers their own trainings in the Training filter" do
         get attendees_events_url
-        expect(response).to redirect_to(root_path)
+
+        expect(response.body).to include("Owned TAC")
+        expect(response.body).not_to include("TAC 261")
+      end
+
+      it "shows the empty state rather than an error when none of their events are trainings" do
+        owned_training.update!(facilitator_training: false)
+
+        get attendees_events_url, headers: frame_headers
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("No training attendees found.")
+      end
+
+      # An array event_id resolves to one event for authorization but would reach
+      # a raw `where` as several. Whichever of the two authorize_report! lands on,
+      # the policy scope keeps the other event's people out.
+      it "never widens the roster when event_id is passed as an array" do
+        get attendees_events_url(event_id: [ owned_training.id, recent_training.id ]), headers: frame_headers
+
+        expect(response.body).not_to include("Ada Lovelace")
+      end
+
+      it "keeps another event's trainings out of a shared attendee's Training column" do
+        create(:event_registration, event: recent_training, registrant: own_attendee, status: "attended")
+
+        get attendees_events_url, headers: frame_headers
+        expect(response.body).to include("OWN100")
+        expect(response.body).not_to include("TAC261")
       end
     end
 

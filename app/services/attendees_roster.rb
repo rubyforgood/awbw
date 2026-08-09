@@ -12,8 +12,12 @@ class AttendeesRoster
   # offered as a filter, in display order.
   AFFILIATION_STATUSES = Affiliation::STATUSES
 
-  def initialize(people)
+  # events: the facilitator trainings whose registrations may be counted (the
+  # viewer's reportable scope), so a person's Training/scholarship/CE columns
+  # never surface a training the viewer isn't allowed to see.
+  def initialize(people, events: Event.facilitator_trainings)
     @people = people.to_a
+    @events = events
   end
 
   attr_reader :people
@@ -146,7 +150,7 @@ class AttendeesRoster
   def attended_training_registrations
     @attended_training_registrations ||= EventRegistration
       .attended_facilitator_trainings
-      .where(registrant_id: people.map(&:id))
+      .where(registrant_id: people.map(&:id), event_id: @events.select(:id))
       .includes(:event)
       .to_a
   end

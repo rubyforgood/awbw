@@ -6,8 +6,12 @@
 # Sourced from each person's profile (sectors, age groups, categories, addresses)
 # and from the orgs/scholarships/CE tied to their attended-training registrations.
 class AttendeesBreakdowns
-  def initialize(people)
+  # events: the facilitator trainings whose registrations may be counted (the
+  # viewer's reportable scope), so the org/scholarship/CE breakdowns never draw on
+  # a training the viewer isn't allowed to see.
+  def initialize(people, events: Event.facilitator_trainings)
     @people = people
+    @events = events
   end
 
   def registrant_count
@@ -174,7 +178,7 @@ class AttendeesBreakdowns
   def training_registration_ids
     @training_registration_ids ||= EventRegistration
       .attended_facilitator_trainings
-      .where(registrant_id: person_ids)
+      .where(registrant_id: person_ids, event_id: @events.select(:id))
       .pluck(:id)
   end
 

@@ -14,10 +14,12 @@ class EventPolicy < ApplicationPolicy
   end
 
   # The cross-event report suite (revenue, participation, scholarships, the
-  # reports hub, and the attendees index) aggregates across every event, so the
-  # whole-org view is admin-only.
+  # reports hub, and the attendees index). Admins see the whole org; an event
+  # owner sees the same pages narrowed to their own events by the :reportable
+  # relation scope, so the unfiltered view needs no gate beyond "has events to
+  # report on" — the rows, not the page, carry the authorization.
   def cross_event_reports?
-    admin?
+    admin? || owns_events?
   end
 
   # A single-event slice of those reports — reached from the per-event Reports and
@@ -26,6 +28,17 @@ class EventPolicy < ApplicationPolicy
   # owner? has a real record to check.
   def event_reports?
     admin? || owner?
+  end
+
+  # Rows the report suite may show: every event for an admin, only their own for
+  # anyone else. Applied as a scope rather than trusting the event_id filter, so
+  # no combination of filter params (including an `event_id[]` array, which
+  # `find_by` collapses to one record while a raw `where` would not) can widen a
+  # report past what the viewer is allowed to see.
+  relation_scope(:reportable) do |relation|
+    next relation if admin?
+    next relation.none unless authenticated?
+    relation.where(created_by_id: user.id)
   end
 
   def show?
@@ -189,6 +202,13 @@ class EventPolicy < ApplicationPolicy
     return false unless authenticated?
     return false unless record.is_a?(Event)
     record.created_by == user
+  end
+
+  # Whether there is anything for this user to report on at all — the gate on the
+  # unfiltered report pages, so a user who owns no events doesn't land on a suite
+  # of empty reports.
+  def owns_events?
+    authenticated? && Event.exists?(created_by_id: user.id)
   end
 
   relation_scope do |relation|
