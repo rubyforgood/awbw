@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 // Connects to data-controller="filter-toggle"
 // Expands/collapses the secondary row of the shared events filter bar
-// (events/_filters), rotating the chevron and swapping the toggle button's
+// (events/_registrant_filters), rotating the chevron and swapping the toggle button's
 // label. The server renders the content without the `hidden` class when a
 // collapsed filter is already active, so an active filter is never hidden on
 // load — connect() syncs the chevron and label to that initial state.
