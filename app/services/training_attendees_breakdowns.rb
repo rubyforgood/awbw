@@ -97,7 +97,9 @@ class TrainingAttendeesBreakdowns
   # --- Organizations + program status ----------------------------------------
 
   def organizations
-    @organizations ||= Organization.where(id: org_registrant_pairs.map(&:first).uniq).order(:name)
+    # Preload affiliations: program-status classification (facilitator_status_on)
+    # reads the loaded association rather than re-querying per org.
+    @organizations ||= Organization.where(id: org_registrant_pairs.map(&:first).uniq).includes(:affiliations).order(:name)
   end
 
   def organization_counts

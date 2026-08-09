@@ -85,7 +85,9 @@ class TrainingAttendeesRoster
   # name-ordered. Mirrors the roster's Organization column, aggregated across all
   # of a person's trainings.
   def organizations
-    @organizations ||= Organization.where(id: linked_org_ids_by_registrant.values.flatten.uniq).order(:name)
+    # Preload affiliations: program-status classification (facilitator_status_on)
+    # reads the loaded association rather than re-querying per org.
+    @organizations ||= Organization.where(id: linked_org_ids_by_registrant.values.flatten.uniq).includes(:affiliations).order(:name)
   end
 
   # Linked-organization ids per person, uniqued across their training registrations.

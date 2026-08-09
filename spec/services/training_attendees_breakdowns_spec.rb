@@ -49,4 +49,27 @@ RSpec.describe TrainingAttendeesBreakdowns do
     expect(breakdowns.scholarship_recipient_count).to eq(1)
     expect(breakdowns.ce_registrant_ids).to eq([ person.id ])
   end
+
+  it "classifies program status without a per-org affiliations query" do
+    people = 3.times.map do
+      registrant = create(:person)
+      reg = create(:event_registration, event: training, registrant: registrant, status: "attended")
+      org = create(:organization)
+      create(:affiliation, organization: org, person: registrant, title: "Facilitator", start_date: 1.year.ago)
+      reg.event_registration_organizations.create!(organization: org)
+      registrant
+    end
+    breakdowns = described_class.new(Person.where(id: people.map(&:id)))
+
+    affiliation_queries = 0
+    counter = ->(_name, _start, _finish, _id, payload) do
+      affiliation_queries += 1 if payload[:sql].to_s.include?("FROM `affiliations`")
+    end
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+      breakdowns.program_status_counts
+    end
+
+    # Orgs' affiliations preloaded in one query, not one-per-org.
+    expect(affiliation_queries).to be <= 1
+  end
 end
