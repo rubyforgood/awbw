@@ -1,0 +1,24 @@
+<%#
+  A one-line row in the checklist's collapsed "Done & not applicable" section:
+  a done item (green check) or a not-relevant / not-yet / unbuilt item (muted).
+  Locals: item (EventChecklist::Item).
+%>
+<%
+  lead_icon = if item.done?
+    "fa-circle-check text-emerald-500"
+  elsif item.kind == :placeholder
+    "fa-flask text-gray-300"
+  else
+    "fa-clock text-gray-300"
+  end
+  text_class = item.done? ? "text-gray-500" : "text-gray-400"
+%>
+<div class="flex items-center gap-2 px-3 py-1.5 text-xs <%= text_class %>">
+  <i class="fa-solid <%= lead_icon %> w-4 text-center shrink-0"></i>
+  <span class="uppercase tracking-wide text-[10px] font-semibold w-14 shrink-0 text-gray-400"><%= EventChecklist::PHASE_SHORT[item.phase] %></span>
+  <span class="truncate"><%= item.title %></span>
+  <% if item.count.present? && item.count.positive? %>
+    <span class="shrink-0 inline-flex items-center rounded-full bg-gray-100 text-gray-500 text-[10px] font-semibold tabular-nums px-1.5"><%= item.count %></span>
+  <% end %>
+  <% if item.detail.present? %><span class="text-gray-400 italic truncate"><%= item.detail %></span><% end %>
+</div>

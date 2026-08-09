@@ -16,6 +16,14 @@
     </div>
   </div>
 
+  <% if @event.present? %>
+    <div class="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-gray-700">
+      <i class="fa-solid fa-filter text-blue-500"></i>
+      <span>Showing forms connected to <span class="font-semibold"><%= @event.title %></span></span>
+      <%= link_to "Clear filter", forms_path, class: "text-blue-600 hover:underline" %>
+    </div>
+  <% end %>
+
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
     <table class="w-full border-collapse">
       <thead class="bg-gray-100">

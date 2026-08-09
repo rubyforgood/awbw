@@ -5,6 +5,10 @@ class FormsController < ApplicationController
   def index
     authorize!
     @forms = Form.standalone.order(:name)
+    if params[:event_id].present?
+      @event = Event.find(params[:event_id])
+      @forms = @forms.joins(:event_forms).where(event_forms: { event_id: @event.id }).distinct
+    end
   end
 
   # Reference page for the field identifiers that wire a question to backend

@@ -14,6 +14,16 @@ RSpec.describe "Forms", type: :request do
         expect(response).to have_http_status(:success)
         expect(response.body).to include("My Form")
       end
+
+      it "filters to an event's connected forms when event_id is given" do
+        event = create(:event)
+        connected = create(:form, :standalone, name: "Connected Form")
+        create(:form, :standalone, name: "Other Form")
+        create(:event_form, event: event, form: connected, role: "registration")
+        get forms_path(event_id: event.id)
+        expect(response.body).to include("Connected Form")
+        expect(response.body).not_to include("Other Form")
+      end
     end
 
     context "as regular user" do

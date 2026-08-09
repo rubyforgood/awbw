@@ -1190,4 +1190,38 @@ RSpec.describe EventDashboard do
       expect(affiliation_queries).to be <= 3
     end
   end
+
+  describe "checklist counts" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+
+    it "lists the registrants behind the unlinked-organization count" do
+      person = create(:person)
+      create(:event_registration, event: event, registrant: person, status: "registered")
+      dashboard = described_class.new(event)
+      expect(dashboard.unlinked_registration_count).to eq(1)
+      expect(dashboard.unlinked_registrants).to eq([ person ])
+    end
+
+    it "counts scholarships still at $0 and those missing a funder" do
+      recipient = create(:person)
+      registration = create(:event_registration, event: event, registrant: recipient, status: "registered")
+      scholarship = create(:scholarship, recipient: recipient, amount_cents: 0, grant: nil,
+                           tasks_completed: false, agreement_signed_at: nil)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 0)
+      dashboard = described_class.new(event)
+      expect(dashboard.scholarship_zero_amount_count).to eq(1)
+      expect(dashboard.scholarship_missing_funder_count).to eq(1)
+      expect(dashboard.scholarship_agreement_unsigned_count).to eq(1)
+      expect(dashboard.scholarship_zero_amount_registrants).to eq([ recipient ])
+    end
+
+    it "reports event_over? / event_started? from the event dates" do
+      past = described_class.new(create(:event, :ended))
+      future = described_class.new(create(:event))
+      expect(past.event_over?).to be(true)
+      expect(past.event_started?).to be(true)
+      expect(future.event_over?).to be(false)
+      expect(future.event_started?).to be(false)
+    end
+  end
 end

@@ -1,0 +1,72 @@
+<%#
+  A single to-do row in the event checklist. Anatomy:
+    [actor chip · fixed width] [icon] [title] [count / money] [chevron] ...... [CTA]
+  The fixed-width chip keeps titles aligned for easy vertical scanning. People-based
+  items expand (collapsed by default) to reveal exactly who the item is for; item-
+  level and money-only items render without a toggle.
+
+  Locals: item (EventChecklist::Item).
+%>
+<%
+  icons = {
+    setup_forms: "fa-file-lines", setup_callouts: "fa-comment-dots",
+    setup_publish: "fa-globe", setup_event_type: "fa-tags",
+    link_organizations: "fa-building-circle-exclamation", allocate_bulk_payments: "fa-money-check-dollar",
+    review_flagged_comments: "fa-flag", collect_registration_fees: "fa-hand-holding-dollar",
+    issue_scholarships: "fa-graduation-cap", set_scholarship_funders: "fa-hand-holding-heart",
+    follow_up_agreements: "fa-file-signature", fix_zero_scholarships: "fa-dollar-sign",
+    complete_scholarship_tasks: "fa-list-check", collect_ce_licenses: "fa-id-card",
+    collect_ce_fees: "fa-award", issue_ce_certificates: "fa-certificate",
+    send_pre_event_reminders: "fa-bell", record_attendance: "fa-user-check",
+    reconcile_ce_hours: "fa-clock-rotate-left", send_completion_certificates: "fa-certificate",
+    review_reports: "fa-chart-line"
+  }
+  icon = icons.fetch(item.key, "fa-circle-dot")
+  chip = item.registrant_task? ? { label: "remind", classes: "bg-emerald-50 text-emerald-600" } : { label: "admin", classes: "bg-blue-50 text-blue-600" }
+  cta_classes = case item.action_label
+    when "Scholarships" then "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
+    when "Send reminder", "Send" then "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+    else "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+    end
+%>
+<div class="flex items-start gap-2 px-3 py-2">
+  <span class="shrink-0 inline-flex justify-center rounded-full <%= chip[:classes] %> text-[10px] font-semibold w-16 py-0.5 mt-0.5"><%= chip[:label] %></span>
+  <% if item.registrants.any? %>
+    <details class="group flex-1 min-w-0">
+      <summary class="flex items-center justify-between gap-2 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden rounded py-0.5 hover:bg-gray-50">
+        <span class="flex items-center gap-2 min-w-0 text-sm text-gray-700">
+          <i class="fa-solid <%= icon %> text-orange-500 shrink-0"></i>
+          <span class="truncate"><%= item.title %></span>
+          <%= render "events/checklist_badges", item: item %>
+        </span>
+        <i class="fa-solid fa-chevron-down text-[10px] text-gray-300 shrink-0 transition-transform group-open:rotate-180"></i>
+      </summary>
+      <% if item.detail.present? %><p class="text-xs text-gray-400 mt-0.5 ml-6"><%= item.detail %></p><% end %>
+      <ul class="mt-1 mb-1 ml-6 space-y-0.5 text-xs text-gray-700 max-h-48 overflow-y-auto">
+        <% item.registrants.each do |registrant| %>
+          <li>
+            <%= link_to registrants_event_path(@event, registrant_ids: registrant.id),
+                  class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
+              <span class="truncate min-w-0 group-hover/rowlink:underline"><%= registrant.name %></span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-white shrink-0 group-hover/rowlink:text-gray-500"></i>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </details>
+  <% else %>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center gap-2 text-sm text-gray-700">
+        <i class="fa-solid <%= icon %> text-orange-500 shrink-0"></i>
+        <span class="truncate"><%= item.title %></span>
+        <%= render "events/checklist_badges", item: item %>
+      </div>
+      <% if item.detail.present? %><p class="text-xs text-gray-400 mt-0.5"><%= item.detail %></p><% end %>
+    </div>
+  <% end %>
+  <% if item.action_path.present? %>
+    <%= link_to item.action_path, class: "shrink-0 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold whitespace-nowrap #{cta_classes}" do %>
+      <%= item.action_label %> <i class="fa-solid fa-arrow-right text-[10px]"></i>
+    <% end %>
+  <% end %>
+</div>

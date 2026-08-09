@@ -1,0 +1,10 @@
+<%#
+  The count + money badges shown after a checklist item's title.
+  Locals: item (EventChecklist::Item).
+%>
+<% if item.count.present? && item.count.positive? %>
+  <span class="shrink-0 inline-flex items-center rounded-full bg-orange-100 text-orange-700 text-[11px] font-semibold tabular-nums px-1.5"><%= item.count %></span>
+<% end %>
+<% if item.money_cents.present? && item.money_cents.positive? %>
+  <span class="shrink-0 inline-flex items-center rounded-full bg-amber-100 text-amber-700 text-[11px] font-semibold tabular-nums px-1.5"><%= dollars_from_cents(item.money_cents) %></span>
+<% end %>

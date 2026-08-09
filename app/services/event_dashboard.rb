@@ -479,6 +479,179 @@ class EventDashboard
     @cont_ed_due_by_registrant ||= ce_cents_by_registrant { |ce_registration| ce_due_cents(ce_registration) }
   end
 
+  # --- Checklist / needs attention ------------------------------------------
+  # Auto-detected outstanding admin work, consumed by EventChecklist. Each count
+  # pairs with a *_registrants list (the people behind it) for the dashboard's
+  # expandable checklist rows; relevance helpers below gate which items apply.
+
+  # Registrant list behind #unlinked_registration_count — the admin's org-linking
+  # queue (active registrations with no organization linked). The count itself is
+  # #unlinked_registration_count.
+  def unlinked_registrants
+    @unlinked_registrants ||= people_sorted(unlinked_registrant_ids)
+  end
+
+  # Bulk-payment money received but not yet applied to a registration.
+  def unallocated_bulk_payment_count
+    @unallocated_bulk_payment_count ||= bulk_payments.where("amount_cents_remaining > 0").count
+  end
+
+  def bulk_payment_present?
+    bulk_payments.exists?
+  end
+
+  # Active registrations carrying a flagged comment an admin should review.
+  def flagged_comment_count
+    flagged_comment_registrant_ids.size
+  end
+
+  def flagged_comment_registrants
+    @flagged_comment_registrants ||= people_sorted(flagged_comment_registrant_ids)
+  end
+
+  # Scholarship requested on the registration but no Scholarship created yet.
+  def scholarship_uncreated_count
+    scholarship_uncreated_registrant_ids.size
+  end
+
+  def scholarship_uncreated_registrants
+    @scholarship_uncreated_registrants ||= people_sorted(scholarship_uncreated_registrant_ids)
+  end
+
+  # Scholarships with no grant assigned — may still need a funder (or be an
+  # intentional org subsidy; best-effort signal).
+  def scholarship_missing_funder_count
+    scholarship_missing_funder_recipient_ids.size
+  end
+
+  def scholarship_missing_funder_registrants
+    @scholarship_missing_funder_registrants ||= people_sorted(scholarship_missing_funder_recipient_ids)
+  end
+
+  # Scholarships still sitting at $0 — a placeholder amount to fill in.
+  def scholarship_zero_amount_count
+    scholarship_zero_amount_recipient_ids.size
+  end
+
+  def scholarship_zero_amount_registrants
+    @scholarship_zero_amount_registrants ||= people_sorted(scholarship_zero_amount_recipient_ids)
+  end
+
+  # Scholarship recipients whose tasks aren't complete yet.
+  def scholarship_tasks_incomplete_count
+    scholarship_tasks_incomplete_recipient_ids.size
+  end
+
+  def scholarship_tasks_incomplete_registrants
+    @scholarship_tasks_incomplete_registrants ||= people_sorted(scholarship_tasks_incomplete_recipient_ids)
+  end
+
+  # Scholarship recipients who haven't signed their agreement yet.
+  def scholarship_agreement_unsigned_count
+    scholarship_agreement_unsigned_recipient_ids.size
+  end
+
+  def scholarship_agreement_unsigned_registrants
+    @scholarship_agreement_unsigned_registrants ||= people_sorted(scholarship_agreement_unsigned_recipient_ids)
+  end
+
+  # CE registrants missing a professional-license number.
+  def ce_license_missing_count
+    ce_license_missing_registrant_ids.size
+  end
+
+  def ce_license_missing_registrants
+    @ce_license_missing_registrants ||= people_sorted(ce_license_missing_registrant_ids)
+  end
+
+  # CE registrants whose CE certificate hasn't been sent.
+  def ce_certificate_pending_count
+    ce_certificate_pending_registrant_ids.size
+  end
+
+  def ce_certificate_pending_registrants
+    @ce_certificate_pending_registrants ||= people_sorted(ce_certificate_pending_registrant_ids)
+  end
+
+  # CE registrants whose recorded hours fall short of the event's offered hours.
+  def ce_hours_incomplete_count
+    ce_hours_incomplete_registrant_ids.size
+  end
+
+  def ce_hours_incomplete_registrants
+    @ce_hours_incomplete_registrants ||= people_sorted(ce_hours_incomplete_registrant_ids)
+  end
+
+  # Active registrants with no attendance outcome recorded yet (still "registered").
+  def attendance_pending_count
+    attendance_count_for("registered")
+  end
+
+  def attendance_pending_registrants
+    attendance_registrants("registered")
+  end
+
+  # Attended registrations whose completion certificate hasn't been sent
+  # (readiness == :certificate_due with the registration cert still outstanding).
+  def completion_certificate_pending_count
+    completion_certificate_pending_registrations.size
+  end
+
+  def completion_certificate_pending_registrants
+    @completion_certificate_pending_registrants ||=
+      people_sorted(completion_certificate_pending_registrations.map(&:registrant_id))
+  end
+
+  # True once any pre-event reminder has been sent to this event's registrants.
+  def pre_event_reminder_sent?
+    Notification.where(noticeable_type: "EventRegistration", noticeable_id: active_registration_ids,
+                       kind: "event_registration_reminder").exists?
+  end
+
+  # --- Relevance helpers -----------------------------------------------------
+  def has_registrants?
+    registrant_count.positive?
+  end
+
+  def event_started?
+    event.start_date.present? && event.start_date <= Time.current
+  end
+
+  def event_over?
+    reference = event.end_date || event.start_date
+    reference.present? && reference.to_date < Date.current
+  end
+
+  def ce_eligible?
+    event.ce_eligible?
+  end
+
+  def scholarships_present?
+    scholarship_recipient_count.positive?
+  end
+
+  def scholarship_requests_present?
+    scholarship_applicant_ids.any?
+  end
+
+  def registration_form_ready?
+    event.registration_form&.form_fields&.published&.exists? || false
+  end
+
+  def callouts_reviewed?
+    event.registration_ticket_callouts.any? do |callout|
+      callout.builtin? ? BuiltinCallouts.customized?(callout) : true
+    end
+  end
+
+  def event_page_published?
+    event.publicly_visible?
+  end
+
+  def event_type_marked?
+    event.facilitator_training? || event.on_demand?
+  end
+
   def free?
     event.cost_cents.to_i <= 0
   end
@@ -970,6 +1143,88 @@ class EventDashboard
   end
 
   private
+
+  # --- Checklist id helpers --------------------------------------------------
+  # Reuses #linked_registration_ids (the "N unlinked" dashboard flag) so the
+  # checklist's list and that count stay in lockstep.
+  def unlinked_registrant_ids
+    @unlinked_registrant_ids ||= active_registrations.where.not(id: linked_registration_ids).pluck(:registrant_id)
+  end
+
+  def flagged_comment_registrant_ids
+    @flagged_comment_registrant_ids ||= begin
+      registration_ids = Comment.flagged
+        .where(commentable_type: "EventRegistration", commentable_id: active_registration_ids)
+        .distinct
+        .pluck(:commentable_id)
+      registration_ids.filter_map { |id| registrant_id_by_registration[id] }.uniq
+    end
+  end
+
+  def scholarship_uncreated_registrant_ids
+    @scholarship_uncreated_registrant_ids ||= begin
+      requested = active_registrations.where(scholarship_requested: true)
+      created_ids = requested.with_scholarship.pluck(:id)
+      requested.where.not(id: created_ids).pluck(:registrant_id)
+    end
+  end
+
+  def scholarship_missing_funder_recipient_ids
+    @scholarship_missing_funder_recipient_ids ||= scholarships.where(grant_id: nil).distinct.pluck(:recipient_id)
+  end
+
+  def scholarship_zero_amount_recipient_ids
+    @scholarship_zero_amount_recipient_ids ||= scholarships.where(amount_cents: 0).distinct.pluck(:recipient_id)
+  end
+
+  def scholarship_tasks_incomplete_recipient_ids
+    @scholarship_tasks_incomplete_recipient_ids ||= scholarships.where(tasks_completed: false).distinct.pluck(:recipient_id)
+  end
+
+  def scholarship_agreement_unsigned_recipient_ids
+    @scholarship_agreement_unsigned_recipient_ids ||= scholarships.where(agreement_signed_at: nil).distinct.pluck(:recipient_id)
+  end
+
+  def ce_license_missing_registrant_ids
+    @ce_license_missing_registrant_ids ||= active_registrations.ce_status("needs_license").distinct.pluck(:registrant_id)
+  end
+
+  def ce_certificate_pending_registrant_ids
+    @ce_certificate_pending_registrant_ids ||= active_registrations.ce_status("not_issued").distinct.pluck(:registrant_id)
+  end
+
+  def ce_hours_incomplete_registrant_ids
+    @ce_hours_incomplete_registrant_ids ||= begin
+      offered = event.ce_hours_offered.to_f
+      if offered.positive?
+        ce_registrations
+          .select { |ce_registration| ce_registration.hours.to_f < offered }
+          .filter_map { |ce_registration| registrant_id_by_registration[ce_registration.event_registration_id] }
+          .uniq
+      else
+        []
+      end
+    end
+  end
+
+  def completion_certificate_pending_registrations
+    @completion_certificate_pending_registrations ||= certificate_due_registrations.reject(&:certificate_sent?)
+  end
+
+  def certificate_due_registrations
+    @certificate_due_registrations ||= readiness_registrations.select do |registration|
+      EventRegistrationReadiness.new(registration).status == :certificate_due
+    end
+  end
+
+  # Active registrations preloaded with everything EventRegistrationReadiness
+  # reads, so per-registration readiness runs without extra queries.
+  def readiness_registrations
+    @readiness_registrations ||= active_registrations
+      .includes(:event, :organizations, :allocations, :scholarships,
+                { continuing_education_registrations: [ :professional_license, :allocations ] })
+      .to_a
+  end
 
   # Active registrant addresses whose state is a recognized US state/territory —
   # the source for every States figure (count card, choropleth, and drill-in).

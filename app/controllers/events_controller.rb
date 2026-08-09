@@ -128,6 +128,7 @@ class EventsController < ApplicationController
     authorize! @event
     @event = @event.decorate
     @dashboard = EventDashboard.new(@event)
+    @checklist = EventChecklist.new(@dashboard)
   end
 
   # Admin preview of the registration ticket. Builds an in-memory sample

@@ -326,6 +326,17 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /dashboard" do
+    let(:event) { create(:event, :publicly_visible, published: true) }
+
+    it "renders the event checklist for an admin" do
+      sign_in admin
+      get dashboard_event_path(event)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Event checklist")
+    end
+  end
+
   describe "GET /participation" do
     let!(:training_2026) { create(:event, title: "TAC 261", facilitator_training: true, start_date: Date.new(2026, 5, 1)) }
     let!(:webinar_2025) { create(:event, title: "Open webinar", facilitator_training: false, start_date: Date.new(2025, 5, 1)) }
