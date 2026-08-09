@@ -1929,6 +1929,21 @@ RSpec.describe "Events", type: :request do
         expect(page).to have_link(href: registrants_event_path(event, status_filter: "inactive"), visible: :all)
       end
 
+      it "flags registrations with no organization linked via an unlinked badge" do
+        get dashboard_event_path(event)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link("1 unlinked", href: registrants_event_path(event, org_status: "unlinked"), visible: :all)
+      end
+
+      it "omits the unlinked badge when every registration has an organization linked" do
+        create(:event_registration_organization, event_registration: registration)
+
+        get dashboard_event_path(event)
+
+        expect(response.body).not_to include("unlinked")
+      end
+
       it "drills the CE card into the registrants filtered to continuing education" do
         create(:continuing_education_registration, event_registration: registration, cost_cents: 6_000)
 
