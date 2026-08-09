@@ -588,11 +588,13 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.display_banner).to include("Hello world")
     end
 
-    it "returns nil without raising when the database connection drops" do
-      allow(Banner).to receive(:published).and_raise(ActiveRecord::ConnectionFailed)
+    [ ActiveRecord::ConnectionFailed, ActiveRecord::ConnectionNotEstablished ].each do |error|
+      it "returns nil without raising on a transient #{error}" do
+        allow(Banner).to receive(:published).and_raise(error)
 
-      expect { helper.display_banner }.not_to raise_error
-      expect(helper.display_banner).to be_nil
+        expect { helper.display_banner }.not_to raise_error
+        expect(helper.display_banner).to be_nil
+      end
     end
   end
 end
