@@ -75,6 +75,52 @@ RSpec.describe EventRevenueFigures do
     expect(described_class.new([ event, other ]).for(other)).to eq(described_class::EMPTY)
   end
 
+  describe "#breakdown_for" do
+    subject(:breakdown) { described_class.new([ event ]).breakdown_for(event) }
+
+    def amounts(contributors)
+      contributors.to_h { |contributor| [ contributor.person, contributor.cents ] }
+    end
+
+    it "names the registrants (and recipients) behind each component with their amounts" do
+      expect(amounts(breakdown.registration_payments)).to eq(person1 => 6_000, person2 => 3_000)
+      expect(amounts(breakdown.registration_outstanding)).to eq(person2 => 4_000)
+      expect(amounts(breakdown.funded_scholarships)).to eq(person1 => 4_000)
+      expect(amounts(breakdown.unfunded_scholarships)).to eq(person2 => 2_000)
+      expect(amounts(breakdown.discounts)).to eq(person2 => 1_000)
+      expect(amounts(breakdown.ce_paid)).to eq(person1 => 7_500, person2 => 2_000)
+      expect(amounts(breakdown.ce_outstanding)).to eq(person2 => 4_000)
+    end
+
+    it "reconciles each drilldown list with its subtotal" do
+      totals = described_class.new([ event ]).for(event)
+
+      expect(breakdown.registration_payments.sum(&:cents)).to eq(totals.registration_payments_cents)
+      expect(breakdown.registration_outstanding.sum(&:cents)).to eq(totals.registration_outstanding_cents)
+      expect(breakdown.funded_scholarships.sum(&:cents)).to eq(totals.funded_scholarship_cents)
+      expect(breakdown.unfunded_scholarships.sum(&:cents)).to eq(totals.unfunded_scholarship_cents)
+      expect(breakdown.discounts.sum(&:cents)).to eq(totals.discount_cents)
+      expect(breakdown.ce_paid.sum(&:cents)).to eq(totals.ce_paid_cents)
+      expect(breakdown.ce_outstanding.sum(&:cents)).to eq(totals.ce_outstanding_cents)
+    end
+
+    it "omits people with a zero share and excludes cancelled registrants" do
+      cancelled_person = EventRegistration.find_by(status: "cancelled")&.registrant
+      expect(breakdown.registration_payments.map(&:person)).not_to include(cancelled_person)
+      expect(breakdown.registration_outstanding.map(&:person)).not_to include(person1)
+    end
+
+    it "sorts contributors by name" do
+      names = breakdown.registration_payments.map { |contributor| contributor.person.name }
+      expect(names).to eq(names.sort_by(&:downcase))
+    end
+
+    it "returns an empty breakdown for an event with no registrations" do
+      other = create(:event, cost_cents: 10_000)
+      expect(described_class.new([ event, other ]).breakdown_for(other)).to eq(described_class::EMPTY_BREAKDOWN)
+    end
+  end
+
   it "loads every event in a fixed number of queries" do
     events = [ event ] + Array.new(3) do
       other = create(:event, cost_cents: 5_000)

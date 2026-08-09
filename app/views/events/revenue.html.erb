@@ -139,27 +139,28 @@
                   </summary>
                   <div class="px-3 pb-3 pl-8 bg-gray-50">
                     <% ce_class = DomainTheme.text_class_for(:continuing_education, intensity: 600) %>
-                    <dl class="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-3 text-sm py-2">
-                      <% columns = [
-                           [ [ "Registration payments", row.registration_payments_cents, "text-gray-800" ],
-                             [ "CE paid", row.ce_paid_cents, ce_class ] ],
-                           [ [ "Funded scholarships", row.funded_scholarship_cents, "text-gray-800" ],
-                             [ "Unfunded scholarships", row.unfunded_scholarship_cents, "text-gray-800" ],
-                             [ "Discounts", row.discount_cents, "text-gray-800" ] ],
-                           [ [ "Registration owed", row.registration_outstanding_cents, "text-orange-600" ],
-                             [ "CE owed", row.ce_outstanding_cents, "text-orange-600" ] ]
-                         ] %>
+                    <% breakdown = @report.breakdown_for(row.event) %>
+                    <%# Each figure expands to the registrants (or recipients) behind it,
+                        with their individual amounts — the per-figure drilldown. %>
+                    <% columns = [
+                         [ [ "Registration payments", row.registration_payments_cents, "text-gray-800", breakdown.registration_payments ],
+                           [ "CE paid", row.ce_paid_cents, ce_class, breakdown.ce_paid ] ],
+                         [ [ "Funded scholarships", row.funded_scholarship_cents, "text-gray-800", breakdown.funded_scholarships ],
+                           [ "Unfunded scholarships", row.unfunded_scholarship_cents, "text-gray-800", breakdown.unfunded_scholarships ],
+                           [ "Discounts", row.discount_cents, "text-gray-800", breakdown.discounts ] ],
+                         [ [ "Registration owed", row.registration_outstanding_cents, "text-orange-600", breakdown.registration_outstanding ],
+                           [ "CE owed", row.ce_outstanding_cents, "text-orange-600", breakdown.ce_outstanding ] ]
+                       ] %>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-3 text-sm py-2">
                       <% columns.each do |pair| %>
                         <div class="space-y-1.5">
-                          <% pair.each do |label, cents, value_class| %>
-                            <div class="flex items-baseline justify-between gap-3">
-                              <dt class="text-gray-500"><%= label %></dt>
-                              <dd class="tabular-nums <%= value_class %>"><%= dollars_from_cents(cents) %></dd>
-                            </div>
+                          <% pair.each do |label, cents, value_class, contributors| %>
+                            <%= render "revenue_breakdown_row", event: row.event, label: label,
+                                  cents: cents, value_class: value_class, contributors: contributors %>
                           <% end %>
                         </div>
                       <% end %>
-                    </dl>
+                    </div>
                     <%= link_to "Open event dashboard →", dashboard_event_path(row.event),
                           class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
                   </div>
