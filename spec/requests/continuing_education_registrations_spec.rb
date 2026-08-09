@@ -192,6 +192,41 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(ContinuingEducationRegistration.exists?(ce_registration.id)).to be(true)
       expect(flash[:alert]).to match(/has payments/)
     end
+
+    context "reached from the registrants roster (return_to=registrants)" do
+      let(:row_path) do
+        registrants_event_path(event, anchor: "registrant-row-#{registration.id}", highlight: registration.id)
+      end
+
+      it "shows the Registrants eyebrow and carries return_to through the new form" do
+        get new_continuing_education_registration_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants")
+
+        expect(response.body).to include("Registrants")
+        expect(response.body).to match(/name="return_to"[^>]*value="registrants"/)
+      end
+
+      it "sends the create redirect back to the registrant's row" do
+        post continuing_education_registrations_path,
+             params: { allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants",
+               continuing_education_registration: { hours: "6", cost_dollars: "120", license_kind: "LMFT", license_number: "555" } }
+
+        expect(response).to redirect_to(row_path)
+      end
+
+      it "sends the update redirect back to the registrant's row" do
+        patch continuing_education_registration_path(ce_registration, return_to: "registrants"),
+              params: { continuing_education_registration: { hours: "6", cost_dollars: "120", license_kind: "LMFT", license_number: "555" } }
+
+        expect(response).to redirect_to(row_path)
+      end
+
+      it "sends the destroy redirect back to the registrant's row" do
+        ce_registration
+        delete continuing_education_registration_path(ce_registration, return_to: "registrants")
+
+        expect(response).to redirect_to(row_path)
+      end
+    end
   end
 
   it "forbids non-admins" do

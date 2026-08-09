@@ -332,16 +332,18 @@
                 <% if ce_col %>
                   <td class="px-4 py-2 text-sm text-center" data-column-toggle-col="ce" data-sort-value="<%= registration.decorate.ce_status_sort_key %>">
                     <%# Canonical CE badge (Requested → License # needed → $X due →
-                        Pending → Issued). "Create" when CE isn't in play yet. %>
-                    <% if registration.decorate.ce_status_badge.nil? %>
+                        Pending → Issued). Each state links to the connected CE
+                        registration's edit page; "Create" opens the new CE form. %>
+                    <% ce_registration = registration.continuing_education_registrations.first %>
+                    <% if ce_registration.nil? %>
                       <%= render "shared/badge",
                             label: "Create",
                             classes: "bg-gray-50 text-gray-400 border-gray-200",
-                            href: edit_event_registration_path(registration, return_to: "registrants"),
-                            title: "No CE credit requested" %>
+                            href: new_continuing_education_registration_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"),
+                            title: "Add CE registration" %>
                     <% else %>
                       <%= render "event_registrations/ce_status_badge", registration: registration,
-                            href: edit_event_registration_path(registration, return_to: "registrants") %>
+                            href: edit_continuing_education_registration_path(ce_registration, return_to: "registrants") %>
                     <% end %>
                   </td>
                 <% end %>
