@@ -630,6 +630,24 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).not_to include("Reworded after submission")
     end
 
+    it "renders an uploaded file answer as an image preview and download link" do
+      upload_field = create(:form_field, :file_upload, form: form, name: "Photo of your creation")
+      submission = FormSubmission.find_by(person: person, form: form)
+      answer = submission.form_answers.create!(form_field: upload_field, submitted_answer: "sample.png")
+      answer.build_asset.tap do |asset|
+        asset.file.attach(io: File.open(Rails.root.join("spec/fixtures/files/sample.png")),
+                          filename: "sample.png", content_type: "image/png")
+        asset.save!
+      end
+
+      get event_public_registration_path(event, person_id: person.id)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Photo of your creation")
+      expect(response.body).to include("sample.png")
+      expect(response.body).to include(rails_blob_path(answer.uploaded_file, only_path: true))
+    end
+
     context "when the registrant filled out a separate scholarship form" do
       let(:scholarship_form) { create(:form, role: "scholarship") }
       let!(:scholarship_field) do

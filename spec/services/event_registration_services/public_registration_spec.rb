@@ -955,4 +955,57 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(FormSubmission.where(person: person, role: "scholarship")).to be_empty
     end
   end
+
+  describe "file-upload answers" do
+    let!(:upload_field) do
+      form.form_fields.create!(name: "Photo of your creation", answer_type: :file_upload,
+                               status: :active, position: 999)
+    end
+
+    def signed_id_for(fixture, content_type)
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: File.open(Rails.root.join("spec/fixtures/files", fixture)),
+        filename: fixture, content_type: content_type
+      )
+      blob.signed_id
+    end
+
+    it "attaches the uploaded blob to the answer and stores its filename" do
+      params = base_form_params(first_name: "Pat", last_name: "Art", email: "pat@example.com").merge(
+        upload_field.id.to_s => signed_id_for("sample.png", "image/png")
+      )
+
+      result = described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(result.success?).to be true
+      answer = result.form_submission.form_answers.find_by(form_field: upload_field)
+      expect(answer.uploaded_file).to be_attached
+      expect(answer.uploaded_file.filename.to_s).to eq("sample.png")
+      expect(answer.submitted_answer).to eq("sample.png")
+    end
+
+    it "leaves the answer fileless when nothing was uploaded" do
+      params = base_form_params(first_name: "No", last_name: "File", email: "nofile@example.com").merge(
+        upload_field.id.to_s => ""
+      )
+
+      result = described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(result.success?).to be true
+      answer = result.form_submission.form_answers.find_by(form_field: upload_field)
+      expect(answer.uploaded_file).to be_nil
+      expect(answer.submitted_answer).to eq("")
+    end
+
+    it "rejects a file whose content type Asset does not accept" do
+      params = base_form_params(first_name: "Bad", last_name: "Type", email: "bad@example.com").merge(
+        upload_field.id.to_s => signed_id_for("sample.txt", "text/plain")
+      )
+
+      result = described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(result.success?).to be false
+      expect(Person.find_by(email: "bad@example.com")).to be_nil
+    end
+  end
 end
