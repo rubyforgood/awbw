@@ -17,11 +17,11 @@ RSpec.describe "sectors/_tagging_label", type: :view do
     expect(rendered).to include(DomainTheme.bg_class_for(:sectors))
   end
 
-  it "marks a primary sector with a darker-green chip and a star" do
+  it "marks a primary sector with a light-green chip and a star" do
     render partial: "sectors/tagging_label", locals: { sector: sector, is_primary: true }
 
     expect(rendered).to include("fa-star")
-    expect(rendered).to include("bg-lime-200")
+    expect(rendered).to include("bg-lime-100")
   end
 
   context "when the sector is hidden from the public (unpublished)" do
