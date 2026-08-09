@@ -2419,6 +2419,29 @@ RSpec.describe "Events", type: :request do
       get roster_event_path(owned_event)
       expect(response.body).to include("return_to=roster")
     end
+
+    it "logs an Ahoy page-view event" do
+      sign_in admin
+      expect(Analytics::AhoyTracker).to receive(:track_event).with(anything, "view.events.roster", { event_id: owned_event.id })
+      get roster_event_path(owned_event)
+    end
+
+    it "defers the demographic charts to a lazy frame (not rendered inline)" do
+      sign_in admin
+      get roster_event_path(owned_event)
+      expect(response.body).to include("event_roster_charts")
+      expect(response.body).not_to include("All sectors")
+    end
+
+    it "renders the demographic charts in the roster charts frame" do
+      ada = Person.find_by(first_name: "Ada")
+      create(:sectorable_item, sectorable: ada, sector: create(:sector, name: "Healthcare"), is_primary: true)
+      create(:sectorable_item, sectorable: ada, sector: create(:sector, name: "Education"))
+
+      sign_in admin
+      get roster_event_path(owned_event), headers: { "Turbo-Frame" => "event_roster_charts" }
+      expect(response.body).to include("All sectors")
+    end
   end
 
   describe "GET /events/:id/staff" do

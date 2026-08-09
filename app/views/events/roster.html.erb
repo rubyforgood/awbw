@@ -95,15 +95,50 @@
     </div>
   </div>
 
-  <%# ---- Registrant roster (full width) ---- %>
-  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mt-6">
-    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-      <h2 class="text-sm font-semibold text-gray-700">Registrants</h2>
-      <span class="text-xs text-gray-500"><%= pluralize(@dashboard.registrant_count, "person") %></span>
+  <div data-controller="panel-toggle" class="mt-6">
+    <%# Toggle bar: hide/show the roster table and the demographic charts. Charts
+        start hidden; revealing the panel loads its lazy Turbo frame on first show,
+        so the breakdown queries only run on demand. %>
+    <div class="flex flex-wrap items-center justify-end gap-2 mb-3 print:hidden">
+      <button type="button"
+              data-panel-toggle-target="button"
+              data-panel-toggle-shown-label="Hide table"
+              data-panel-toggle-hidden-label="Show table"
+              data-action="panel-toggle#toggle"
+              aria-expanded="true"
+              class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800">
+        <i class="fa-solid fa-table-list"></i>
+        <span data-panel-toggle-target="label">Hide table</span>
+      </button>
+      <button type="button"
+              data-panel-toggle-target="button"
+              data-panel-toggle-shown-label="Hide charts"
+              data-panel-toggle-hidden-label="Show charts"
+              data-action="panel-toggle#toggle"
+              aria-expanded="false"
+              class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800">
+        <i class="fa-solid fa-chart-column"></i>
+        <span data-panel-toggle-target="label">Show charts</span>
+      </button>
     </div>
-    <%= render "events/registrant_roster", roster: @dashboard %>
-  </div>
 
-  <%= render "events/registrant_breakdowns", data: @dashboard, context: :event, event: @event %>
+    <%# Table panel — shown by default. %>
+    <div data-panel-toggle-target="panel">
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+          <h2 class="text-sm font-semibold text-gray-700">Registrants</h2>
+          <span class="text-xs text-gray-500"><%= pluralize(@dashboard.registrant_count, "person") %></span>
+        </div>
+        <%= render "events/registrant_roster", roster: @dashboard %>
+      </div>
+    </div>
+
+    <%# Charts panel — hidden by default; the lazy frame loads on first reveal. %>
+    <div data-panel-toggle-target="panel" class="hidden mt-6">
+      <%= turbo_frame_tag :event_roster_charts, src: roster_event_path(@event), loading: :lazy do %>
+        <p class="text-sm text-gray-400 text-center py-8">Loading charts…</p>
+      <% end %>
+    </div>
+  </div>
 </div>
 </div>

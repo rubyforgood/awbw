@@ -1,0 +1,5 @@
+<%# Lazily-loaded charts frame for the per-event roster (see roster.html.erb) — the
+    breakdown queries run only when the admin reveals the charts panel. %>
+<%= turbo_frame_tag :event_roster_charts do %>
+  <%= render "events/registrant_breakdowns", data: @dashboard, context: :event, event: @event %>
+<% end %>

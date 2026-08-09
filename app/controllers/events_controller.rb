@@ -7,6 +7,10 @@ class EventsController < ApplicationController
   # The cross-event report suite is admin-only for the whole-org view, but a
   # single-event slice (event_id filter) is visible to that event's owner too.
   before_action :authorize_report!, only: %i[ revenue participation reports scholarships attendees ]
+  # Log a visit to each event page / report. after_action so it only fires once
+  # the action rendered successfully (authorization inside the actions has passed);
+  # the turbo_frame_request? guard skips the lazy results/charts sub-requests.
+  after_action :track_page_view, only: %i[ dashboard roster registrants recipients staff onboarding edit revenue participation reports scholarships attendees ]
 
   def index
     authorize!
@@ -147,11 +151,14 @@ class EventsController < ApplicationController
   end
 
   # The event's active-registrant roster (registrant table + demographic charts),
-  # over the shared roster/breakdown partials fed by EventDashboard.
+  # over the shared roster/breakdown partials fed by EventDashboard. The charts are
+  # loaded lazily into their own Turbo frame so the heavier breakdown queries only
+  # run when the admin reveals them (mirrors the attendees index).
   def roster
     authorize! @event, to: :roster?
     @event = @event.decorate
     @dashboard = EventDashboard.new(@event)
+    render :event_roster_charts if turbo_frame_request_id == "event_roster_charts"
   end
 
   def registrants
@@ -534,6 +541,14 @@ class EventsController < ApplicationController
     else
       authorize! to: :cross_event_reports?
     end
+  end
+
+  # Ahoy log for a visit to an event page/report, e.g. "view.events.roster". Ties
+  # the event via event_id where there is one (per-event pages, or a report scoped
+  # to an event). Skips the lazy Turbo-frame sub-requests so a page counts once.
+  def track_page_view
+    return if turbo_frame_request?
+    track_view("events.#{action_name}", { event_id: @event&.id || params[:event_id].presence }.compact)
   end
 
   # Shared filter state for the revenue/participation/reports/scholarships report

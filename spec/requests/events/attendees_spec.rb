@@ -74,6 +74,11 @@ RSpec.describe "Events attendees", type: :request do
         expect(response.body).to include("← Participation")
       end
 
+      it "logs an Ahoy page-view event (once, not for the lazy frames)" do
+        expect(Analytics::AhoyTracker).to receive(:track_event).with(anything, "view.events.attendees", {})
+        get attendees_events_url
+      end
+
       context "the results frame" do
         it "lists people who attended a training and links each to its registration" do
           get attendees_events_url, headers: frame_headers
