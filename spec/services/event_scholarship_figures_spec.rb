@@ -102,8 +102,38 @@ RSpec.describe EventScholarshipFigures do
       events.each { |e| loader.for(e) }
     end
 
-    # 3 batch component queries + 2 constant queries classifying AWBW-donated
-    # grants as subsidy (the org lookup + its grant ids), independent of event count.
-    expect(queries).to eq(5)
+    # 3 batch component queries + 1 recipient lookup shared by every event and both
+    # funded/unfunded splits + 2 constant queries classifying AWBW-donated grants as
+    # subsidy (the org lookup + its grant ids). All independent of event count —
+    # that's the point, since this replaced one EventDashboard per event.
+    expect(queries).to eq(6)
+  end
+
+  # The report rows expand to name the people behind each split, so the loader has
+  # to carry recipients too — batched, rather than reviving a dashboard per event.
+  describe "per-recipient splits" do
+    it "names the recipients and their dollars on each side" do
+      expect(figures.funded_recipients).to eq([ person1 ])
+      expect(figures.unfunded_recipients).to eq([ person2 ])
+      expect(figures.funded_cents_by_recipient).to eq(person1.id => 4_000)
+      expect(figures.unfunded_cents_by_recipient).to eq(person2.id => 2_000)
+    end
+
+    it "matches the event's dashboard" do
+      dashboard = EventDashboard.new(event)
+
+      expect(figures.funded_recipients).to eq(dashboard.funded_scholarship_recipients)
+      expect(figures.unfunded_recipients).to eq(dashboard.unfunded_scholarship_recipients)
+      expect(figures.funded_cents_by_recipient).to eq(dashboard.funded_scholarship_cents_by_recipient)
+      expect(figures.unfunded_cents_by_recipient).to eq(dashboard.unfunded_scholarship_cents_by_recipient)
+    end
+
+    it "returns empty splits for an event with no scholarships" do
+      other = create(:event, cost_cents: 10_000)
+      empty = described_class.new([ event, other ]).for(other)
+
+      expect(empty.funded_recipients).to be_empty
+      expect(empty.unfunded_cents_by_recipient).to be_empty
+    end
   end
 end

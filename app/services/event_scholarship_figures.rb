@@ -15,6 +15,13 @@ class EventScholarshipFigures
     :funded_count,
     :unfunded_count,
     :attended_count,
+    # { Person id => cents } per split, and the matching name-sorted Person
+    # records — the report row's expander. A recipient with no award in a split is
+    # absent from it, so they can appear in one, both, or neither.
+    :funded_cents_by_recipient,
+    :unfunded_cents_by_recipient,
+    :funded_recipients,
+    :unfunded_recipients,
     keyword_init: true
   ) do
     def scholarship_cents = funded_cents + unfunded_cents
@@ -26,7 +33,11 @@ class EventScholarshipFigures
     unfunded_cents: 0,
     funded_count: 0,
     unfunded_count: 0,
-    attended_count: 0
+    attended_count: 0,
+    funded_cents_by_recipient: {}.freeze,
+    unfunded_cents_by_recipient: {}.freeze,
+    funded_recipients: [].freeze,
+    unfunded_recipients: [].freeze
   ).freeze
 
   def initialize(events, funder: nil)
@@ -47,15 +58,38 @@ class EventScholarshipFigures
   def build(event)
     registration_ids = registration_ids_by_event.fetch(event.id, [])
     rows = registration_ids.flat_map { |id| scholarship_rows_by_registration.fetch(id, []) }
-    funded, unfunded = rows.partition { |grant_id, _amount| external_grant?(grant_id) }
+    funded, unfunded = rows.partition { |grant_id, _amount, _recipient_id| external_grant?(grant_id) }
+    funded_by_recipient = cents_by_recipient(funded)
+    unfunded_by_recipient = cents_by_recipient(unfunded)
 
     Figures.new(
-      funded_cents: funded.sum { |_grant_id, amount| amount },
-      unfunded_cents: unfunded.sum { |_grant_id, amount| amount },
+      funded_cents: funded.sum { |_grant_id, amount, _recipient_id| amount },
+      unfunded_cents: unfunded.sum { |_grant_id, amount, _recipient_id| amount },
       funded_count: funded.size,
       unfunded_count: unfunded.size,
-      attended_count: attended_counts_by_event.fetch(event.id, 0)
+      attended_count: attended_counts_by_event.fetch(event.id, 0),
+      funded_cents_by_recipient: funded_by_recipient,
+      unfunded_cents_by_recipient: unfunded_by_recipient,
+      funded_recipients: recipients_for(funded_by_recipient.keys),
+      unfunded_recipients: recipients_for(unfunded_by_recipient.keys)
     )
+  end
+
+  # { Person id => cents } for one split of a row's scholarship rows.
+  def cents_by_recipient(rows)
+    rows.each_with_object(Hash.new(0)) { |(_grant_id, amount, recipient_id), map| map[recipient_id] += amount }
+  end
+
+  # Name-sorted Person records for the given ids, from one lookup shared by every
+  # event and both splits — so the expanders add a single Person query in total.
+  def recipients_for(recipient_ids)
+    recipient_ids.filter_map { |id| recipients_by_id[id] }.sort_by(&:name)
+  end
+
+  def recipients_by_id
+    @recipients_by_id ||= Person
+      .where(id: scholarship_rows_by_registration.values.flatten(1).map(&:last).uniq)
+      .index_by(&:id)
   end
 
   # A grant counts as external funding only when it exists and the org didn't
@@ -82,8 +116,8 @@ class EventScholarshipFigures
     @registration_ids ||= registration_ids_by_event.values.flatten
   end
 
-  # { registration_id => [ [ grant_id, amount_cents ], ... ] }, optionally narrowed
-  # to the funder's grants.
+  # { registration_id => [ [ grant_id, amount_cents, recipient_id ], ... ] },
+  # optionally narrowed to the funder's grants.
   def scholarship_rows_by_registration
     @scholarship_rows_by_registration ||= begin
       scope = Scholarship
@@ -91,8 +125,8 @@ class EventScholarshipFigures
         .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: registration_ids })
       scope = scope.where(grant_id: funder_grant_ids) if @funder
       scope
-        .pluck(Arel.sql("allocations.allocatable_id"), :grant_id, :amount_cents)
-        .each_with_object({}) { |(registration_id, grant_id, amount), map| (map[registration_id] ||= []) << [ grant_id, amount ] }
+        .pluck(Arel.sql("allocations.allocatable_id"), :grant_id, :amount_cents, :recipient_id)
+        .each_with_object({}) { |(registration_id, grant_id, amount, recipient_id), map| (map[registration_id] ||= []) << [ grant_id, amount, recipient_id ] }
     end
   end
 

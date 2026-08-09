@@ -30,10 +30,10 @@ class EventScholarshipReport
     # Per-recipient scholarship breakdown for the row's expander: the funded /
     # unfunded recipients (name-sorted Person records) and their dollars keyed by
     # Person id. A recipient can appear in one split, both, or neither.
-    def funded_recipients = dashboard.funded_scholarship_recipients
-    def unfunded_recipients = dashboard.unfunded_scholarship_recipients
-    def funded_cents_by_recipient = dashboard.funded_scholarship_cents_by_recipient
-    def unfunded_cents_by_recipient = dashboard.unfunded_scholarship_cents_by_recipient
+    def funded_recipients = figures.funded_recipients
+    def unfunded_recipients = figures.unfunded_recipients
+    def funded_cents_by_recipient = figures.funded_cents_by_recipient
+    def unfunded_cents_by_recipient = figures.unfunded_cents_by_recipient
 
     def on_demand? = event.on_demand?
     def label = event.compact_label
