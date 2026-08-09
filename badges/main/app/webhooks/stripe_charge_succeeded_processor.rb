@@ -2,7 +2,10 @@ class StripeChargeSucceededProcessor
   def call(event)
     stripe_charge = event.data.object
     return unless stripe_charge.paid
-    return if stripe_charge.subscription.present?
+    # Subscription (membership) charges carry an invoice and are recorded via the
+    # membership/invoice flow — skip them here. Newer Stripe API versions dropped
+    # Charge#subscription, so detect them by the presence of an invoice.
+    return if stripe_charge.invoice.present?
 
     return if Payment.exists?(stripe_charge_id: stripe_charge.id)
 
