@@ -566,17 +566,17 @@
               they reflect saved staff, not unsaved edits in this form. %>
           <div class="mb-4">
             <div class="flex flex-wrap items-center gap-2">
-              <%= link_to staff_event_path(@event), target: "_blank", rel: "noopener",
-                    class: "inline-flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100" do %>
-                <i class="fa-solid fa-users" aria-hidden="true"></i>
-                View staff page
-                <i class="fa-solid fa-arrow-up-right-from-square text-xs" aria-hidden="true"></i>
-              <% end %>
-
               <%= link_to sample_staff_event_path(@event), target: "_blank", rel: "noopener",
                     class: "inline-flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100" do %>
                 <i class="fa-solid fa-eye" aria-hidden="true"></i>
                 Preview sample staff callout
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs" aria-hidden="true"></i>
+              <% end %>
+
+              <%= link_to staff_event_path(@event), target: "_blank", rel: "noopener",
+                    class: "inline-flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100" do %>
+                <i class="fa-solid fa-users" aria-hidden="true"></i>
+                View staff page
                 <i class="fa-solid fa-arrow-up-right-from-square text-xs" aria-hidden="true"></i>
               <% end %>
             </div>
