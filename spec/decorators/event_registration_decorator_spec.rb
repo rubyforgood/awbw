@@ -149,6 +149,54 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
     end
   end
 
+  describe "#payment_badges" do
+    def badges_for(expected: nil, buddy: false)
+      create(:event_registration, expected_payment_method: expected, someone_else_will_pay: buddy)
+        .decorate.payment_badges
+    end
+
+    it "is empty when nothing is recorded" do
+      expect(badges_for).to be_empty
+    end
+
+    it "maps a known method to its short code, icon, and classes" do
+      badge = badges_for(expected: "Credit card (now)").sole
+      expect(badge.code).to eq("CCN")
+      expect(badge.label).to eq("Credit card")
+      expect(badge.classes).to include("green")
+    end
+
+    it "shows a BUD badge when someone else will pay" do
+      badge = badges_for(buddy: true).sole
+      expect(badge.code).to eq("BUD")
+      expect(badge.classes).to include("purple")
+    end
+
+    it "shows both the method and BUD when both apply" do
+      codes = badges_for(expected: "Check", buddy: true).map(&:code)
+      expect(codes).to eq(%w[ CK BUD ])
+    end
+
+    it "falls back to a neutral badge showing an unknown/custom value" do
+      badge = badges_for(expected: "Wire transfer overseas").sole
+      expect(badge.label).to eq("Wire transfer overseas")
+      expect(badge.classes).to include("gray")
+    end
+  end
+
+  describe ".payment_method_filter_choices" do
+    it "lists every method (code-labeled) plus the buddy-system sentinel" do
+      expect(described_class.payment_method_filter_choices).to eq(
+        [
+          [ "Credit card (CCN)", "Credit card (now)" ],
+          [ "Credit card (later) (CCL)", "Credit card (later)" ],
+          [ "Check (CK)", "Check" ],
+          [ "Someone else will pay (BUD)", "someone_else_will_pay" ]
+        ]
+      )
+    end
+  end
+
   describe "#ce_status_sort_key" do
     subject(:sort_key) { registration.decorate.ce_status_sort_key }
 

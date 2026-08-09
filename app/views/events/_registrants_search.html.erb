@@ -29,14 +29,20 @@
           selected: params[:attendance_status], blank: "All statuses", field_class: field_class %>
 
     <% if @event.cost_cents.to_i > 0 %>
-      <%= render "events/filter_select", param: :payment_status, label: "Payment",
+      <%= render "events/filter_select", param: :payment_status, label: "Payment status",
             options: [ [ "Due", "unpaid" ], [ "Paid", "paid" ], [ "Intends to pay", "intends_to_pay" ] ],
             selected: params[:payment_status], blank: "Any payment status", field_class: field_class %>
     <% end %>
 
+    <% if @event.cost_cents.to_i > 0 %>
+      <%= render "events/filter_select", param: :payment_method, label: "Payment method",
+            options: EventRegistrationDecorator.payment_method_filter_choices,
+            selected: params[:payment_method], blank: "Any payment method", field_class: field_class %>
+    <% end %>
+
     <% if @ce_eligible %>
       <%= render "events/filter_select", param: :ce_status, label: "CE status",
-            options: [ [ "Registered for CE", "registered" ], [ "Needs license", "needs_license" ], [ "Requested", "requested" ], [ "Paid", "paid" ], [ "Issued", "issued" ], [ "Not issued", "not_issued" ] ],
+            options: [ [ "Registered for CE", "registered" ], [ "Requested", "requested" ], [ "Needs license", "needs_license" ], [ "Paid", "paid" ], [ "Issued", "issued" ], [ "Not issued", "not_issued" ] ],
             selected: params[:ce_status], blank: "Any CE status", field_class: field_class %>
     <% end %>
 

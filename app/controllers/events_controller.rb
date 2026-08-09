@@ -165,6 +165,7 @@ class EventsController < ApplicationController
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.payment_status(params[:payment_status]) if params[:payment_status].present?
+    scope = scope.payment_method(params[:payment_method]) if params[:payment_method].present?
     scope = scope.scholarship_status(params[:scholarship]) if params[:scholarship].present?
     scope = scope.funder(params[:funder]) if params[:funder].present?
     scope = scope.ce_status(params[:ce_status]) if params[:ce_status].present?
@@ -773,7 +774,7 @@ class EventsController < ApplicationController
     require "csv"
     cost_required = @event.cost_cents.to_i > 0
     include_ce = @event.ce_eligible?
-    headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Intends to pay", "Payment total" ]
+    headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Expected payment method", "Intends to pay", "Someone else will pay", "Payment total" ]
     headers += [ "CE status", "CE paid", "CE due" ] if include_ce
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
       @event_registrations.each do |registration|
@@ -800,7 +801,9 @@ class EventsController < ApplicationController
       registration.scholarships.any? ? "Yes" : "No",
       registration.scholarships.any?(&:tasks_completed?) ? "Yes" : "No",
       payment_status,
+      cost_required ? registration.expected_payment_method.presence || "" : "",
       registration.intends_to_pay? ? "Yes" : "No",
+      cost_required ? (registration.someone_else_will_pay? ? "Yes" : "No") : "",
       payment_total
     ]
     if include_ce
