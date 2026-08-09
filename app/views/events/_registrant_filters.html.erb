@@ -93,7 +93,7 @@
   <div data-filter-toggle-target="content" class="<%= "hidden" unless more_active %>">
     <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4 mt-4">
       <%# Page-specific collapsed text fields (e.g. the picker's Organization/Name
-          boxes). Grantor/City/Comment text below are shared across both pages. %>
+          boxes). Funder/City/Comment text below are shared across both pages. %>
       <% more_text.each do |f| %>
         <%= render "events/filter_text", param: f[:param], label: f[:label],
               placeholder: f[:placeholder], field_class: field_class %>
@@ -120,12 +120,12 @@
         <%= render "events/filter_select", param: :scholarship, label: "Scholarship",
               options: [ [ "All recipients", "yes" ], [ "Agreed", "agreed" ], [ "Tasks complete", "complete" ], [ "Tasks not complete", "incomplete" ] ],
               selected: params[:scholarship], blank: "Any status", field_class: field_class %>
-      <% end %>
 
-      <%# Free-text on the funder behind a scholarship. Param :funder_name stays
-          clear of the awbw/external :funder funding-source scope. %>
-      <%= render "events/filter_text", param: :funder_name, label: "Funder",
-            placeholder: "Funder name", field_class: field_class %>
+        <%# Free-text on the funder behind a scholarship. Param :funder_name stays
+            clear of the awbw/external :funder funding-source scope. %>
+        <%= render "events/filter_text", param: :funder_name, label: "Funder",
+              placeholder: "Funder name", field_class: field_class %>
+      <% end %>
 
       <% if @ce_eligible %>
         <%= render "events/filter_select", param: :ce_status, label: "CE status",

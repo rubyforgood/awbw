@@ -1195,6 +1195,16 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    it "hides cost-only filters (payment, scholarship, funder) on a free event" do
+      free_event = create(:event, cost_cents: 0)
+      get registrants_event_path(free_event)
+
+      expect(response.body).not_to include("Any payment status")
+      expect(response.body).not_to include("Any payment method")
+      expect(response.body).not_to include("Funder name")
+      expect(response.body).not_to include("Any status")
+    end
+
     context "with unknown filter params" do
       it "does not crash on an invalid payment_status" do
         get registrants_event_path(event, payment_status: "bogus")
