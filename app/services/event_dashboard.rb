@@ -469,7 +469,10 @@ class EventDashboard
   # registrants' affiliations that were active at the time of the event
   # (#reference_date).
   def organizations
-    @organizations ||= Organization.where(id: organization_ids).order(:name)
+    # Preload affiliations: the program-status breakdown classifies every org via
+    # Organization#facilitator_status_on, which reads the loaded association rather
+    # than re-querying per org.
+    @organizations ||= Organization.where(id: organization_ids).includes(:affiliations).order(:name)
   end
 
   def organization_count
@@ -483,8 +486,8 @@ class EventDashboard
   # as the reference when present, otherwise the org's earliest facilitator
   # affiliation; an org with no facilitator history at all counts as :new.
   def program_status_counts
-    @program_status_counts ||= organizations.each_with_object({ new: 0, ongoing: 0, reinstated: 0 }) do |organization, counts|
-      counts[program_status_for(organization)] += 1
+    @program_status_counts ||= program_status_by_organization.each_with_object({ new: 0, ongoing: 0, reinstated: 0 }) do |(_organization_id, status), counts|
+      counts[status] += 1
     end
   end
 

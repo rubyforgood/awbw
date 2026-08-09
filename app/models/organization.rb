@@ -151,15 +151,18 @@ class Organization < ApplicationRecord
   def facilitator_status_on(reference_date, excluding_affiliation_id: nil)
     reference_start = reference_date || Date.current
 
-    earlier = affiliations.facilitators
-      .where.not(start_date: nil)
-      .where("affiliations.start_date < ?", reference_start)
-    earlier = earlier.where.not(id: excluding_affiliation_id) if excluding_affiliation_id
+    # Filter the (often preloaded) affiliations in Ruby rather than firing a query
+    # per org — the event dashboard classifies every represented org this way.
+    earlier = affiliations.select do |affiliation|
+      affiliation.facilitator? &&
+        affiliation.start_date && affiliation.start_date < reference_start &&
+        affiliation.id != excluding_affiliation_id
+    end
 
-    return :new unless earlier.exists?
+    return :new if earlier.empty?
 
-    active_overlap = earlier.where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", reference_start)
-    active_overlap.exists? ? :ongoing : :reinstated
+    active_overlap = earlier.any? { |affiliation| affiliation.end_date.nil? || affiliation.end_date >= reference_start }
+    active_overlap ? :ongoing : :reinstated
   end
 
   # Methods

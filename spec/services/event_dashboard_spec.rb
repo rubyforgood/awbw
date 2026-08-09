@@ -1163,4 +1163,31 @@ RSpec.describe EventDashboard do
       expect(dashboard.unfunded_scholarship_recipients).to match_array([ person2, person4 ])
     end
   end
+
+  describe "program-status classification query count" do
+    it "classifies every represented org without a per-org affiliations query" do
+      event = create(:event, start_date: Date.current)
+      3.times do
+        person = create(:person)
+        registration = create(:event_registration, event: event, registrant: person, status: "registered")
+        org = create(:organization)
+        create(:affiliation, organization: org, person: person, title: "Facilitator", start_date: 1.year.ago)
+        registration.event_registration_organizations.create!(organization: org)
+      end
+      dashboard = EventDashboard.new(event)
+
+      affiliation_queries = 0
+      counter = ->(_name, _start, _finish, _id, payload) do
+        affiliation_queries += 1 if payload[:sql].to_s.include?("FROM `affiliations`")
+      end
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+        dashboard.program_status_counts
+        dashboard.program_status_by_organization
+      end
+
+      # Orgs' affiliations are preloaded (one query) plus the batched
+      # registrant-affiliation lookup — a small constant, not one-per-org.
+      expect(affiliation_queries).to be <= 3
+    end
+  end
 end
