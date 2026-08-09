@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (77) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (79) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -181,6 +181,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `AhoyTracking` — Event tracking integration
 - `Dedupable` — Data deduplication helpers
 - `ExternallyRedirectable` — External URL redirection
+- `StoryIdeaFormVariables` — Loads the shared story-idea form variables (StoryIdeasController + the portal's StorySharesController#share)
 - `TagAssignable` — Tag assignment helpers
 
 ## Services
@@ -311,7 +312,7 @@ end
 - `anchor_highlight` — Highlight anchored elements
 - `asset_picker` — Asset selection UI
 - `autosave` — Auto-save form state
-- `carousel` — Swiper-based carousels
+- `carousel` — Swiper-based carousels (opt-in `Autoplay` via the options value)
 - `ce_license_picker` — Fill the CE license type/number/state/expiry fields from the picked license (or clear them for a new one)
 - `cocoon` — Nested form handling (cocoon gem)
 - `collection` — Filter form auto-submit with debounce
@@ -329,9 +330,11 @@ end
 - `grant_details` — Swaps a grant's eligibility criteria + tasks when the grant picker changes
 - `grant_select` — Tom Select grant picker showing each grant's remaining-of-total funds
 - `inactive_toggle` — Gray out expired affiliations
+- `nav_shrink` — Collapses the Story Share portal's secondary nav rows on scroll
 - `optimistic_bookmark` — Instant bookmark UI feedback
 - `org_toggle` — Organization toggle UI
 - `paginated_fields` — Client-side pagination of nested fields
+- `safety_exit` — Quick-escape button on the Story Share portal (opens a neutral site and replaces the current page)
 - `password_toggle` — Show/hide password fields
 - `prefetch_lazy` — Prefetch lazy-loaded content
 - `primary_tag` — Shared single-primary star for the sector and age-range cocoon chip editors (clears other stars, highlights via configurable classes, no reorder)

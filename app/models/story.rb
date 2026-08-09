@@ -71,7 +71,6 @@ class Story < ApplicationRecord
   def self.search_by_params(params)
     conditions = {}
     conditions[:title] = params[:title] if params[:title].present?
-    conditions[:query] = params[:query] if params[:query].present?
 
     # Use visibility checkbox filters when present; otherwise pass published to SearchCop
     if visibility_params_present?(params)
@@ -81,12 +80,16 @@ class Story < ApplicationRecord
       stories = self.search(conditions)
     end
 
-    # SearchCop's free-text query only covers title + body. Also match the
-    # credited author/creator by name, OR-ed in via id subqueries so the extra
-    # `people` joins stay isolated from SearchCop's own joins.
+    # Keyword search matches the title, the rich-text body, and the credited
+    # author/creator name, OR-ed together via id subqueries so SearchCop's joins
+    # and the `people` joins stay isolated from each other. (A plain LIKE handles
+    # the title because SearchCop's default group pairs it with the boolean
+    # `published` column and won't match a title on its own.)
     if params[:query].present?
-      stories = self.where(id: stories.select("stories.id"))
-                    .or(self.where(id: by_credited_person_name(params[:query]).select("stories.id")))
+      query = params[:query]
+      stories = stories.where("stories.title LIKE ?", "%#{query}%")
+                       .or(stories.where(id: self.search(query).select("stories.id")))
+                       .or(stories.where(id: by_credited_person_name(query).select("stories.id")))
     end
 
     stories = stories.by_year(params[:year]) if params[:year].present? && params[:year].match?(/\A\d{4}\z/)

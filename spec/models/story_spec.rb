@@ -196,4 +196,26 @@ RSpec.describe Story, type: :model do
       expect(Story.find(story.to_param)).to eq(story)
     end
   end
+
+  describe "#audience_categories" do
+    it "returns only StoryPopulation categories" do
+      story = create(:story)
+      population = create(:category_type, name: "StoryPopulation")
+      other_type = create(:category_type, name: "ArtType")
+      teens = create(:category, name: "Teens", category_type: population)
+      clay = create(:category, name: "Clay", category_type: other_type)
+      story.categorizable_items.create!(category: teens)
+      story.categorizable_items.create!(category: clay)
+
+      expect(story.audience_categories).to contain_exactly(teens)
+    end
+  end
+
+  describe ".search_by_params keyword query" do
+    it "matches on the title" do
+      match = create(:story, title: "Watercolor journey")
+      create(:story, title: "Something else")
+      expect(Story.search_by_params(query: "Watercolor")).to contain_exactly(match)
+    end
+  end
 end
