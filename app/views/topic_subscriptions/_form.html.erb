@@ -62,7 +62,7 @@
 
       <div class="hidden space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3" data-person-source-target="newGroup">
         <%= f.simple_fields_for :person, @topic_subscription.person || Person.new do |pf| %>
-          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div>
               <%= pf.label :first_name, "First name", class: label_class %>
               <%= pf.text_field :first_name, class: field_class, data: { person_source_target: "newField" } %>
@@ -71,10 +71,10 @@
               <%= pf.label :last_name, "Last name", class: label_class %>
               <%= pf.text_field :last_name, class: field_class, data: { person_source_target: "newField" } %>
             </div>
-          </div>
-          <div>
-            <%= pf.label :email, "Email", class: label_class %>
-            <%= pf.email_field :email, class: field_class, data: { person_source_target: "newField" } %>
+            <div>
+              <%= pf.label :email, "Email", class: label_class %>
+              <%= pf.email_field :email, class: field_class, data: { person_source_target: "newField" } %>
+            </div>
           </div>
         <% end %>
         <p class="text-xs text-gray-500">A new person will be created and linked to this subscription.</p>
