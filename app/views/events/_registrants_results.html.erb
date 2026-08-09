@@ -1,7 +1,7 @@
 <%= turbo_frame_tag :registrants_results do %>
   <%# Scholarship column shows by default only when the event charges a fee. %>
   <% scholarship_on = @event.cost_cents.to_i > 0 %>
-  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit" data-column-toggle-root>
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit" data-column-toggle-root data-column-toggle-scope="event-<%= @event.id %>">
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
       <% current_filter = params[:attendance_status].present? ? nil : (params[:status_filter].presence || "active") %>
       <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Attendance filter">
