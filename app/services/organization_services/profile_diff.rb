@@ -7,9 +7,9 @@ module OrganizationServices
   #
   # A blank submitted value, or a submitted value against a blank org column, is
   # not a discrepancy (nothing to reconcile — the latter just gets filled).
-  # Address is compared against the org's address in the same city/state (the one
-  # the fill-blanks upsert targets); a submitted address in a new city isn't a
-  # discrepancy because it's added rather than reconciled. Powers both the
+  # Address is compared against the org's corresponding address (AddressMatcher,
+  # the one the fill-blanks upsert targets); a submitted address in a new city
+  # isn't a discrepancy because it's added rather than reconciled. Powers both the
   # linking flow's flash summary and the linking page's persistent per-org note.
   class ProfileDiff
     Discrepancy = Struct.new(:field, :label, :submitted, :saved, keyword_init: true)
@@ -52,9 +52,9 @@ module OrganizationServices
       Discrepancy.new(field: :agency_type, label: "Type", submitted: submitted, saved: saved)
     end
 
-    # Compare every address field against the org's address in the same
-    # city/state. City/state are the lookup key so they only ever differ by case
-    # (ignored), which leaves street/ZIP/country as the fields that can flag.
+    # Compare every address field against the org's corresponding address. A field
+    # blank on either side is skipped (the blank gets filled, not reconciled), so
+    # in practice street/state/ZIP/country are what can flag.
     def address_discrepancies
       existing = matching_address
       return [] unless existing
@@ -69,13 +69,11 @@ module OrganizationServices
     end
 
     def matching_address
-      city = @address[:city]&.strip
-      return if city.blank?
-
-      state = @address[:state]&.strip
-      @organization.addresses.find_by(
-        "LOWER(city) = ? AND LOWER(COALESCE(state, '')) = ?",
-        city.downcase, state.to_s.downcase
+      AddressMatcher.call(
+        @organization,
+        city: @address[:city],
+        state: @address[:state],
+        street_address: @address[:street_address]
       )
     end
 

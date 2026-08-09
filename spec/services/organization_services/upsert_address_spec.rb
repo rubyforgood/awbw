@@ -64,6 +64,24 @@ RSpec.describe OrganizationServices::UpsertAddress do
     expect(existing.reload).to have_attributes(street_address: "5 Oak Ave", zip_code: "78702", country: "Canada")
   end
 
+  it "updates the same-street address and fills a missing country instead of duplicating when the state differs by format" do
+    existing = create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "Texas", zip_code: "78701", country: "")
+
+    result = described_class.call(
+      organization: organization,
+      street_address: "1 Main St",
+      city: "Austin",
+      state: "TX",
+      country: "USA",
+      overwrite: false
+    )
+
+    expect(result).to eq(existing)
+    expect(organization.addresses.count).to eq(1)
+    # State already on file is kept (never flipped); the blank country is filled.
+    expect(existing.reload).to have_attributes(state: "Texas", country: "USA", street_address: "1 Main St")
+  end
+
   it "leaves the org's existing primary intact and adds the new-city address as non-primary" do
     old_primary = create(:address, addressable: organization, city: "Dallas", state: "TX", primary: true)
 

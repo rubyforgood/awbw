@@ -29,18 +29,18 @@ module OrganizationServices
     def call
       return if @city.blank?
 
-      existing = @organization.addresses.find_by(
-        "LOWER(city) = ? AND LOWER(COALESCE(state, '')) = ?",
-        @city.downcase, @state&.downcase.to_s
-      )
+      existing = AddressMatcher.call(@organization, city: @city, state: @state, street_address: @street_address)
 
       make_primary = @organization.addresses.active.where(primary: true).none?
 
       if existing
         # overwrite: false (admin linking) only fills blank fields, so a
         # discrepancy between the form and the org's saved address is kept and
-        # surfaced by ProfileDiff instead of being silently replaced.
+        # surfaced by ProfileDiff instead of being silently replaced. State is
+        # always fill-only (never flipped) so a street match can supply the state
+        # we were missing without rewriting a state already on file.
         updates = { primary: existing.primary? || make_primary, inactive: false }
+        updates[:state] = @state if @state.present? && existing.state.blank?
         updates[:street_address] = @street_address if @street_address.present? && (@overwrite || existing.street_address.blank?)
         updates[:zip_code] = @zip_code if @zip_code.present? && (@overwrite || existing.zip_code.blank?)
         updates[:country] = @country if @country.present? && (@overwrite || existing.country.blank?)
