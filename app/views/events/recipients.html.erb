@@ -234,7 +234,7 @@
     <%= render "events/charts_cta" %>
     <div data-panel-toggle-target="panel" data-panel-toggle-name="charts" class="hidden">
       <%= turbo_frame_tag :recipients_charts, src: recipients_event_path(@event), loading: :lazy do %>
-        <p class="text-sm text-gray-400 text-center py-8">Loading charts…</p>
+        <%= render "events/charts_loading" %>
       <% end %>
     </div>
   <% end %>
