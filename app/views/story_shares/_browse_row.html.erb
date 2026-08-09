@@ -1,0 +1,32 @@
+<div class="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+  <!-- LEFT CONTENT -->
+  <div>
+    <h2 class="font-telefon text-2xl font-bold text-gray-900">
+      <%= link_to story.title, story_share_path(story), class: "hover:text-purple-700" %>
+    </h2>
+
+    <p class="mt-2 text-sm text-gray-500">
+      <%= story.organization_name %>
+      <% if story.organization&.city_state.present? %>&nbsp;–&nbsp;<%= story.organization.city_state %><% end %>
+    </p>
+
+    <p class="mt-6 text-gray-700 leading-relaxed">
+      <%= truncate(story.rhino_body.to_plain_text, length: 280) %>
+    </p>
+
+    <div class="mt-6">
+      <%= link_to "Read more", story_share_path(story),
+                  class: "inline-block bg-gray-700 hover:bg-gray-800 text-white px-6 py-2 rounded transition" %>
+    </div>
+  </div>
+
+  <!-- RIGHT IMAGE -->
+  <div class="md:justify-self-end w-full">
+    <%= link_to story_share_path(story), class: "block" do %>
+      <div class="aspect-[4/3] max-w-md rounded shadow-lg overflow-hidden bg-gray-200">
+        <%= render "assets/display_image", resource: story,
+                   extra_image_classes: "!w-full h-full object-cover", variant: :hero %>
+      </div>
+    <% end %>
+  </div>
+</div>

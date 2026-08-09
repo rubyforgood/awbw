@@ -1,5 +1,8 @@
 <div class="rounded-xl bg-white p-6">
   <%= simple_form_for(story_idea) do |f| %>
+    <% if (return_to = local_assigns.fetch(:return_to, params[:return_to])).present? %>
+      <%= hidden_field_tag :return_to, return_to %>
+    <% end %>
     <%= f.hidden_field :created_by_id, value: f.object.created_by_id || (@user || current_user)&.id %>
     <%= f.hidden_field :updated_by_id, value: (@user || current_user)&.id %>
     <% selected_sector_ids = @preselected_sector_ids || @story_idea.sector_ids %>

@@ -2,7 +2,7 @@
 
 <html>
   <head>
-    <title>Story Share - AWBW</title>
+    <title><%= content_for(:title).presence || "Story share - AWBW" %></title>
     <%= csrf_meta_tags %>
 
     <meta charset="utf-8">
@@ -17,6 +17,8 @@
     <%= vite_client_tag %>
     <%= vite_javascript_tag "application" %>
 
+    <%= yield :head %>
+
     <style>
       body {
         font-family: 'Roboto', sans-serif;
@@ -24,14 +26,14 @@
       .font-telefon {
         font-family: 'Telefon Bold', sans-serif;
       }
-      
+
       /* Hide secondary nav rows on scroll */
       .nav-row {
         max-height: 200px;
         overflow: visible;
         transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
       }
-      
+
       .scrolled .nav-row:not(:first-child) {
         max-height: 0;
         overflow: hidden;
@@ -41,13 +43,24 @@
   </head>
 
   <body class="stories share_portal flex flex-col min-h-screen bg-white">
+    <button type="button"
+            data-controller="safety-exit"
+            data-action="safety-exit#leave"
+            class="fixed top-2 right-2 z-[60] print:hidden inline-flex items-center gap-1 rounded-md bg-red-700 px-3 py-2 text-sm font-semibold text-white shadow-lg hover:bg-red-800 focus:outline-2 focus:ring-2 focus:ring-red-400">
+      <%= icon("fa-solid fa-xmark") %>
+      Safety exit
+    </button>
+
     <div class="flex-grow" id="main">
-      <div class="sticky top-0 left-0 w-full z-50 print:hidden" id="share-portal-header">
+      <div class="sticky top-0 left-0 w-full z-50 print:hidden"
+           id="share-portal-header"
+           data-controller="nav-shrink"
+           data-action="scroll@window->nav-shrink#update">
         <!-- Story Share Portal Navbar -->
         <%= render "shared/story_shares_navbar" %>
       </div>
 
-      <div class="not-signed-in-user flex flex-col">
+      <div class="not-signed-in-user flex flex-col <%= yield(:page_bg_class) %>">
         <%= render "shared/flash_messages" %>
         <%= yield %>
       </div>
@@ -55,18 +68,5 @@
 
     <div class="site-footer print:hidden"><%= render "shared/footer" %></div>
     <%= render "shared/footer_nav" %>
-
-    <script>
-      // Hide navigation rows on scroll
-      const header = document.getElementById('share-portal-header');
-      
-      window.addEventListener('scroll', () => {
-        if (window.pageYOffset > 100) {
-          header.classList.add('scrolled');
-        } else {
-          header.classList.remove('scrolled');
-        }
-      });
-    </script>
   </body>
 </html>

@@ -1,0 +1,46 @@
+<div class="bg-gray-100 min-h-screen py-8">
+  <div class="max-w-6xl mx-auto px-6">
+
+    <div class="flex items-baseline justify-between mb-6">
+      <%# Sector/category names carry intentional casing ("LGBTQIA+",
+          "Self-Care/Personal Growth"); render as stored, never .titleize. %>
+      <h1 class="text-2xl font-bold text-gray-900"><%= browse_title(params) %></h1>
+      <p class="text-sm text-gray-500"><%= pluralize(@count_display, "story") %></p>
+    </div>
+
+    <% if @stories.any? %>
+      <% lead = @stories.first %>
+
+      <!-- Lead story -->
+      <div class="bg-white rounded shadow-md overflow-hidden mb-10">
+        <%= link_to story_share_path(lead), class: "block" do %>
+          <div class="aspect-[16/7] bg-gray-200">
+            <%= render "assets/display_image", resource: lead,
+                       extra_image_classes: "!w-full h-full object-cover", variant: :hero %>
+          </div>
+          <div class="bg-gray-700 text-white p-4">
+            <h2 class="font-telefon text-lg font-semibold"><%= lead.title %></h2>
+            <p class="text-sm opacity-80">
+              <%= lead.organization_name %>
+              <% if lead.organization&.state.present? %>– <%= lead.organization.state %><% end %>
+            </p>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Remaining stories -->
+      <div class="space-y-16">
+        <% @stories.drop(1).each do |story| %>
+          <%= render "browse_row", story: story %>
+        <% end %>
+      </div>
+
+      <div class="pagination mt-10"><%= tailwind_paginate @stories %></div>
+    <% else %>
+      <div class="text-center text-gray-600 py-20">
+        No stories found.
+      </div>
+    <% end %>
+
+  </div>
+</div>

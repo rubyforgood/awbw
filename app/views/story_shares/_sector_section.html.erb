@@ -1,0 +1,38 @@
+<%# Renders one landing-page column for a sector (or Facilitator Spotlights).
+    Locals: title, stories, theme (from StorySharesHelper::SLOT_THEMES), more_path. %>
+<% if stories.any? %>
+  <div>
+    <h2 class="font-telefon text-2xl <%= theme[:heading] %> mb-4"><%= title %></h2>
+
+    <% featured = stories.first %>
+    <article class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow mb-4">
+      <%= link_to story_share_path(featured), class: "block relative" do %>
+        <div class="aspect-[4/3] bg-gray-200 relative">
+          <%= render "assets/display_image", resource: featured, variant: :hero %>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end">
+            <div class="p-4 w-full">
+              <h3 class="font-telefon text-white text-base mb-1 leading-tight"><%= featured.title %></h3>
+              <p class="text-white text-xs opacity-90">
+                <%= featured.organization_name %>
+                <% if featured.organization&.city_state.present? %>- <%= featured.organization.city_state %><% end %>
+              </p>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </article>
+
+    <ul class="space-y-2 text-sm">
+      <% stories.drop(1).first(4).each do |story| %>
+        <li class="flex items-start">
+          <i class="fa-solid fa-chevron-right w-3 mr-2 mt-1 <%= theme[:heading] %> flex-shrink-0"></i>
+          <%= link_to story.title, story_share_path(story), class: "text-gray-800 #{theme[:link]}" %>
+        </li>
+      <% end %>
+    </ul>
+
+    <div class="mt-4">
+      <%= link_to "More #{title} stories...", more_path, class: "font-medium text-sm inline-flex items-center #{theme[:link]}" %>
+    </div>
+  </div>
+<% end %>

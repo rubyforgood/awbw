@@ -42,6 +42,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/workshop_logs/index.html.erb"           => "admin-or-auth",
 
     "app/views/story_ideas/new.html.erb"               => "admin-or-auth",
+    "app/views/story_shares/share.html.erb"            => "admin-or-auth",
     "app/views/workshop_ideas/new.html.erb"            => "admin-or-auth",
     "app/views/workshop_variation_ideas/new.html.erb"  => "admin-or-auth",
 
