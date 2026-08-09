@@ -551,6 +551,23 @@ class EventRegistration < ApplicationRecord
     continuing_education_registrations.all? { |c| c.certificate_sent_at.present? }
   end
 
+  # The registration's completion certificate, as shown by the registrants-roster
+  # toggle. For a CE-eligible registration that's the CE certificate
+  # (certificate_sent_at on its CE registrations, so it stays in sync with the CE
+  # edit page); otherwise the registration's own certificate_sent_at (Certifiable).
+  def certificate_issued?
+    ce_registered? ? ce_certificate_issued? : certificate_sent?
+  end
+
+  def mark_certificate_issued!(issued)
+    at = issued ? Time.current : nil
+    if ce_registered?
+      continuing_education_registrations.each { |c| c.update!(certificate_sent_at: at) }
+    else
+      update!(certificate_sent_at: at)
+    end
+  end
+
   # True when a CE registration exists and every one is fully paid.
   def ce_paid_in_full?
     return false unless ce_registered?

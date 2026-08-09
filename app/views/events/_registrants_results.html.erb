@@ -130,6 +130,24 @@
             <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
           </span>
         </label>
+
+        <%# Off by default — Certificate issued is hidden until the admin reveals it. %>
+        <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+               data-controller="column-toggle" data-column-toggle-group-value="certificate">
+          <span class="text-sm text-gray-500">Certificate</span>
+
+          <input
+            type="checkbox"
+            data-column-toggle-target="toggle"
+            data-action="column-toggle#toggle"
+            class="sr-only"
+          >
+
+          <span class="relative inline-block w-9 h-5">
+            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
+            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
+          </span>
+        </label>
       </div>
     </div>
 
@@ -193,6 +211,8 @@
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
                 <%= render "shared/sortable_header", label: "Status", index: status_index %>
               </th>
+              <%# Off by default; kept out of the sortable index range (last data column). %>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 hidden" data-column-toggle-col="certificate">Certificate</th>
               <th class="px-4 py-2"></th>
             </tr>
           </thead>
@@ -448,6 +468,9 @@
                         label: readiness.status_label,
                         issues: readiness.status_issues,
                         subtext: readiness.status_reason %>
+                </td>
+                <td class="px-4 py-2 text-sm text-center hidden" data-column-toggle-col="certificate">
+                  <%= render "event_registrations/certificate_issued_toggle", registration: registration %>
                 </td>
                 <td class="px-4 py-2 text-right text-sm"><%= link_to "Edit", edit_event_registration_path(registration, return_to: "registrants"), class: "text-gray-500 hover:text-gray-700 underline", data: { turbo_frame: "_top" } %></td>
               </tr>

@@ -18,6 +18,9 @@ class EventRegistrationPolicy < ApplicationPolicy
   # Editing the onboarding matrix is an admin management action; event owners
   # (the event's creator) manage their own events' onboarding too.
   def update_onboarding? = admin? || event_owner?
+  # Marking a certificate issued from the registrants roster is an event-management
+  # action, so mirror the roster's audience (admins and the event's owner).
+  def toggle_certificate_issued? = admin? || event_owner?
 
 
   relation_scope do |relation|

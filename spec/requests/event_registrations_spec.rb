@@ -268,6 +268,42 @@ RSpec.describe "EventRegistrations", type: :request do
       end
     end
 
+    describe "PATCH /event_registrations/:id/toggle_certificate_issued" do
+      let(:registration) { create(:event_registration, event: event) }
+
+      def toggle_certificate(value)
+        patch toggle_certificate_issued_event_registration_path(registration),
+              params: { value: value },
+              headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      end
+
+      it "marks the registration's certificate issued" do
+        toggle_certificate("1")
+        expect(registration.reload.certificate_issued?).to be(true)
+      end
+
+      it "clears the certificate when unchecked" do
+        registration.mark_certificate_sent!
+        toggle_certificate("0")
+        expect(registration.reload.certificate_issued?).to be(false)
+      end
+
+      it "drives the CE certificate for a CE registration, so it stays in sync with the CE edit page" do
+        ce = create(:continuing_education_registration, event_registration: registration)
+
+        toggle_certificate("1")
+        expect(ce.reload.certificate_sent_at).to be_present
+
+        toggle_certificate("0")
+        expect(ce.reload.certificate_sent_at).to be_nil
+      end
+
+      it "replaces just the toggled cell in the turbo stream" do
+        toggle_certificate("1")
+        expect(response.body).to include("certificate_issued_event_registration_#{registration.id}")
+      end
+    end
+
     describe "POST /event_registrations" do
       it "creates registration and redirects admin to confirm page" do
         expect {
@@ -1090,6 +1126,14 @@ RSpec.describe "EventRegistrations", type: :request do
       it "redirects to root (unauthorized)" do
         get event_registration_path(existing_registration)
         expect(response).to redirect_to(root_path)
+      end
+    end
+
+    describe "PATCH /event_registrations/:id/toggle_certificate_issued" do
+      it "is forbidden for the registrant themselves" do
+        patch toggle_certificate_issued_event_registration_path(existing_registration), params: { value: "1" }
+        expect(response).to redirect_to(root_path)
+        expect(existing_registration.reload.certificate_issued?).to be(false)
       end
     end
 
