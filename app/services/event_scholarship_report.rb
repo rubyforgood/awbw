@@ -12,19 +12,20 @@
 #
 # Give it a collection of (decorated) facilitator-training events.
 class EventScholarshipReport
-  # One training's column. Sources every figure from EventDashboard so the
-  # funded/unfunded and attendance conventions can't drift from the dashboard.
-  Column = Struct.new(:event, :dashboard, keyword_init: true) do
-    def funded_cents = dashboard.funded_scholarship_cents
-    def unfunded_cents = dashboard.unfunded_scholarship_cents
-    def scholarship_cents = funded_cents + unfunded_cents
+  # One training's column. Sources every figure from EventScholarshipFigures, which
+  # mirrors EventDashboard's funded/unfunded and attendance conventions (held by a
+  # parity spec) but loads all events in a fixed number of queries.
+  Column = Struct.new(:event, :figures, keyword_init: true) do
+    def funded_cents = figures.funded_cents
+    def unfunded_cents = figures.unfunded_cents
+    def scholarship_cents = figures.scholarship_cents
 
-    def funded_count = dashboard.funded_scholarship_count
-    def unfunded_count = dashboard.unfunded_scholarship_count
-    def scholarship_count = funded_count + unfunded_count
+    def funded_count = figures.funded_count
+    def unfunded_count = figures.unfunded_count
+    def scholarship_count = figures.scholarship_count
 
     # Trainees who fully attended (registration status "attended").
-    def attended_count = dashboard.attendance_count_for("attended")
+    def attended_count = figures.attended_count
 
     # Per-recipient scholarship breakdown for the row's expander: the funded /
     # unfunded recipients (name-sorted Person records) and their dollars keyed by
@@ -90,7 +91,10 @@ class EventScholarshipReport
   end
 
   def columns
-    @columns ||= @events.map { |event| Column.new(event: event, dashboard: EventDashboard.new(event, scholarship_funder: @funder)) }
+    @columns ||= begin
+      figures = EventScholarshipFigures.new(@events, funder: @funder)
+      @events.map { |event| Column.new(event: event, figures: figures.for(event)) }
+    end
   end
 
   def any?
