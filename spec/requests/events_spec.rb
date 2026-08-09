@@ -1124,6 +1124,15 @@ RSpec.describe "Events", type: :request do
         ))
       end
 
+      it "forwards the shared text filters (city, comment, funder) too" do
+        get registrants_event_path(event, city: "santa", comment: "ramp", funder_name: "acme")
+
+        expect(response.body).to include("Send bulk emails (filtered)")
+        expect(response.body).to include(CGI.escapeHTML(
+          preview_reminder_event_path(event, funder_name: "acme", comment: "ramp", city: "santa")
+        ))
+      end
+
       it "does not treat roster-only filters (keyword) as reminder filters" do
         get registrants_event_path(event, keyword: "smith")
 

@@ -312,10 +312,7 @@ class EventRegistration < ApplicationRecord
   # Free-text match on a registrant's comments — topic or body.
   scope :comment_text, ->(term) {
     return all if term.blank?
-    like = "%#{sanitize_sql_like(term.downcase.strip)}%"
-    where(id: Comment.where(commentable_type: "EventRegistration")
-      .where("LOWER(comments.body) LIKE :t OR LOWER(comments.topic) LIKE :t", t: like)
-      .select(:commentable_id))
+    where(id: Comment.where(commentable_type: "EventRegistration").matching(term).select(:commentable_id))
   }
   # Mirrors EventRegistration#account_status (none / has_access / invited /
   # no_access) as a DB filter, joining the registrant's login account.

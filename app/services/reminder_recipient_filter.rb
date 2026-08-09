@@ -19,6 +19,11 @@ class ReminderRecipientFilter
     submission_status comment_status org_status account_status state county
   ].freeze
   FILTER_KEYS = (TEXT_KEYS + DROPDOWN_KEYS).freeze
+  # Every key above that is also a registrants-roster param, so the roster's
+  # "Send bulk emails" link can carry the active filters straight into the picker
+  # (see EventHelper#reminder_recipient_filters). The remaining text keys (name,
+  # reg_org, email) exist only here.
+  SHARED_ROSTER_KEYS = (DROPDOWN_KEYS + %i[ funder_name comment city ]).freeze
 
   def initialize(event_registrations, params, event: nil)
     @event_registrations = event_registrations
@@ -99,9 +104,13 @@ class ReminderRecipientFilter
     end
   end
 
+  # Skips inactive addresses, matching EventRegistration.registrant_city so the
+  # same City value narrows the roster and the picker identically.
   def matches_city?(reg)
     any_term?(:city) do |term|
-      reg.registrant.addresses.any? { |address| address.city.to_s.downcase.include?(term) }
+      reg.registrant.addresses.any? do |address|
+        !address.inactive? && address.city.to_s.downcase.include?(term)
+      end
     end
   end
 

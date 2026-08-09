@@ -87,11 +87,10 @@ module EventHelper
   # Registrants-roster filters the bulk-emails (reminder) recipient picker also
   # understands, pulled from the current request so "Send bulk emails" carries
   # the roster's active filters straight into the picker (pre-checking the
-  # matching recipients). Only the dropdown filters are shared verbatim between
-  # the two pages; roster-only filters (keyword, funder, sector, readiness,
+  # matching recipients). Roster-only filters (keyword, funder, sector, readiness,
   # status) have no reminder equivalent, so they're dropped.
   def reminder_recipient_filters
-    ReminderRecipientFilter::DROPDOWN_KEYS.each_with_object({}) do |key, forwarded|
+    ReminderRecipientFilter::SHARED_ROSTER_KEYS.each_with_object({}) do |key, forwarded|
       forwarded[key] = params[key] if params[key].present?
     end
   end
