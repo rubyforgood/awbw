@@ -526,6 +526,13 @@ RSpec.describe "EventRegistrations", type: :request do
 
         expect(existing_registration.reload.expected_payment_method).to be_blank
       end
+
+      it "flags that someone else will pay when the toggle is on" do
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { someone_else_will_pay: "1" } }
+
+        expect(existing_registration.reload.someone_else_will_pay).to be(true)
+      end
     end
 
     describe "PATCH /event_registrations/:id scholarship handling" do
