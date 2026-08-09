@@ -2,7 +2,7 @@ class SearchController < ApplicationController
   skip_before_action :preload_current_user_associations, raise: false
 
   # Virtual "model" that searches people and organizations together for the
-  # compound payer / donor pickers, listing organizations first.
+  # compound payer / funder pickers, listing organizations first.
   COMPOUND_MODEL = "person_or_organization".freeze
 
   def index
@@ -40,7 +40,7 @@ class SearchController < ApplicationController
   private
 
   # Search people and organizations, listing organizations first (the more
-  # common donor/payer).
+  # common funder/payer).
   def compound_results
     authorize! Organization, to: :search?
     authorize! Person, to: :search?

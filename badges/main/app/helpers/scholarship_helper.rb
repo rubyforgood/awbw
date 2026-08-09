@@ -1,12 +1,12 @@
 module ScholarshipHelper
-  # Funder label for a funder group on the scholarship index: the donor's name
-  # with a person/organization icon, mirroring grant_donor_badge. Grant-free
-  # ("Unfunded") groups have no donor, so they render the plain label.
+  # Funder label for a funder group on the scholarship index: the funder's name
+  # with a person/organization icon, mirroring grant_funder_badge. Grant-free
+  # ("Unfunded") groups have no funder, so they render the plain label.
   def funder_badge(funder_group)
-    donor = funder_group.donor
-    return tag.span(funder_group.name) unless donor
+    funder = funder_group.funder
+    return tag.span(funder_group.name) unless funder
 
-    person = donor.is_a?(Person)
+    person = funder.is_a?(Person)
     icon_name = person ? "fa-user" : "fa-building"
     color_key = person ? :people : :organizations
 

@@ -121,7 +121,7 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include(org_subsidized.registrant.name)
         expect(response.body).not_to include(grant_funded.registrant.name)
 
-        get event_registrations_path(funder: "donor")
+        get event_registrations_path(funder: "external")
         expect(response.body).to include(grant_funded.registrant.name)
         expect(response.body).not_to include(org_subsidized.registrant.name)
       end

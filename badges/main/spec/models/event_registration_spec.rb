@@ -336,8 +336,8 @@ RSpec.describe EventRegistration, type: :model do
         expect(results).not_to include(funded_reg, paid_reg, unpaid_reg)
       end
 
-      it "maps 'donor' to recipients of grant-funded scholarships" do
-        results = EventRegistration.funder("donor")
+      it "maps 'external' to recipients of grant-funded scholarships" do
+        results = EventRegistration.funder("external")
         expect(results).to include(funded_reg)
         expect(results).not_to include(scholarship_reg, incomplete_scholarship_reg, paid_reg, unpaid_reg)
       end

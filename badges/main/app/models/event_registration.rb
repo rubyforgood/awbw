@@ -169,12 +169,13 @@ class EventRegistration < ApplicationRecord
       )
     SQL
   }
-  # Funder = the grant's donor. "awbw" = org-subsidized (a scholarship drawn from
-  # no grant); "donor" = grant-funded (drawn from an external donor's grant).
+  # Funding source of a registrant's scholarship. "awbw" = org-subsidized (a
+  # scholarship drawn from no grant); "external" = grant-funded (drawn from an
+  # external funder's grant).
   scope :funder, ->(value) {
     case value
     when "awbw" then with_unfunded_scholarship
-    when "donor" then with_funded_scholarship
+    when "external" then with_funded_scholarship
     else all
     end
   }

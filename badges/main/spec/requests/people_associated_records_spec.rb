@@ -11,7 +11,7 @@ RSpec.describe "Person edit associated records", type: :request do
       create(:event_registration, registrant: person)
       create(:workshop_log, created_by: person.user)
       create(:scholarship, recipient: person)
-      create(:grant, donor: person)
+      create(:grant, funder: person)
       create(:form_submission, person: person)
       create(:payment, person: person)
       create(:notification, recipient_email: person.preferred_email)
@@ -35,13 +35,13 @@ RSpec.describe "Person edit associated records", type: :request do
       expect(response.body).to include(community_news_index_path(author_id: person.id))
       expect(response.body).to include(resources_path(author_id: person.id))
       expect(response.body).to include(scholarships_path(recipient_id: person.id))
-      expect(response.body).to include(CGI.escapeHTML(grants_path(donor_id: person.id, donor_type: "Person")))
+      expect(response.body).to include(CGI.escapeHTML(grants_path(funder_id: person.id, funder_type: "Person")))
       expect(response.body).to include(form_submissions_path(person_id: person.id))
       expect(response.body).to include(payments_path(person_id: person.id))
       expect(response.body).to include(notifications_path(email: person.preferred_email))
 
       # Custom card labels
-      expect(response.body).to include("Grants (as donor)")
+      expect(response.body).to include("Grants (as funder)")
       expect(response.body).to include("Communications (universal)")
     end
 

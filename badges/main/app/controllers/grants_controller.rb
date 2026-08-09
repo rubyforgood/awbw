@@ -5,20 +5,20 @@ class GrantsController < ApplicationController
   def index
     authorize!
 
-    # Scoped to a single donor when linked from a person/org edit page. Resolve
-    # the donor from a matching grant (avoids reflection on the type param) so the
-    # header banner can name it; filter_grants scopes the rows to the same donor.
-    if params[:donor_id].present? && Grant::DONOR_TYPES.include?(params[:donor_type])
-      @donor = authorized_scope(Grant.all)
-                 .where(donor_id: params[:donor_id], donor_type: params[:donor_type])
-                 .first&.donor
+    # Scoped to a single funder when linked from a person/org edit page. Resolve
+    # the funder from a matching grant (avoids reflection on the type param) so the
+    # header banner can name it; filter_grants scopes the rows to the same funder.
+    if params[:funder_id].present? && Grant::FUNDER_TYPES.include?(params[:funder_type])
+      @funder = authorized_scope(Grant.all)
+                 .where(funder_id: params[:funder_id], funder_type: params[:funder_type])
+                 .first&.funder
     end
 
     # The full page renders only the header, filters, and an empty results frame;
     # the frame's src request (turbo_frame_request?) loads the filtered rows.
     if turbo_frame_request?
       @grants = filter_grants(authorized_scope(Grant.all))
-                  .includes(:donor, scholarships: { allocation: :allocatable })
+                  .includes(:funder, scholarships: { allocation: :allocatable })
                   .by_deadline
                   .page(params[:page])
       track_index_intent(Grant, @grants, params)
@@ -85,7 +85,7 @@ class GrantsController < ApplicationController
   # its param is blank or unrecognized, so combinations stack cleanly.
   def filter_grants(scope)
     scope = scope.where("grants.name LIKE ?", "%#{Grant.sanitize_sql_like(params[:name])}%") if params[:name].present?
-    scope = filter_by_donor_name(scope, params[:donor_name]) if params[:donor_name].present?
+    scope = filter_by_funder_name(scope, params[:funder_name]) if params[:funder_name].present?
 
     scope = case params[:funds]
     when "available" then scope.with_funds_remaining
@@ -93,8 +93,8 @@ class GrantsController < ApplicationController
     else scope
     end
 
-    scope = scope.where(donor_type: params[:donor_type]) if Grant::DONOR_TYPES.include?(params[:donor_type])
-    scope = scope.where(donor_id: params[:donor_id]) if params[:donor_id].present?
+    scope = scope.where(funder_type: params[:funder_type]) if Grant::FUNDER_TYPES.include?(params[:funder_type])
+    scope = scope.where(funder_id: params[:funder_id]) if params[:funder_id].present?
 
     case params[:tasks]
     when "completed" then scope.all_tasks_completed
@@ -103,15 +103,15 @@ class GrantsController < ApplicationController
     end
   end
 
-  # Match grants whose polymorphic donor (Organization or Person) name contains
-  # the query. Resolve matching donor ids per type, then OR the two sides so the
+  # Match grants whose polymorphic funder (Organization or Person) name contains
+  # the query. Resolve matching funder ids per type, then OR the two sides so the
   # other active filters on `scope` apply to both.
-  def filter_by_donor_name(scope, query)
+  def filter_by_funder_name(scope, query)
     like = "%#{Grant.sanitize_sql_like(query)}%"
     org_ids = Organization.where("name LIKE ?", like).pluck(:id)
     person_ids = Person.where("first_name LIKE :q OR last_name LIKE :q OR CONCAT(first_name, ' ', last_name) LIKE :q", q: like).pluck(:id)
-    scope.where(donor_type: "Organization", donor_id: org_ids)
-         .or(scope.where(donor_type: "Person", donor_id: person_ids))
+    scope.where(funder_type: "Organization", funder_id: org_ids)
+         .or(scope.where(funder_type: "Person", funder_id: person_ids))
   end
 
   def set_grant
@@ -127,7 +127,7 @@ class GrantsController < ApplicationController
 
   def grant_params
     params.require(:grant).permit(
-      :name, :description, :amount_dollars, :amount_cents, :donor_sgid,
+      :name, :description, :amount_dollars, :amount_cents, :funder_sgid,
       :funds_allocation_deadline, :funds_received_on, :eligibility_criteria, :tasks
     )
   end

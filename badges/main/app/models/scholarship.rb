@@ -19,9 +19,9 @@ class Scholarship < ApplicationRecord
   scope :completed, -> { where(tasks_completed: true) }
   scope :agreement_signed, -> { where.not(agreement_signed_at: nil) }
 
-  # Scholarships from grants a given donor (Person/Organization) gave — the
-  # "funder" filter. A blank donor matches nothing.
-  scope :from_funder, ->(donor) { where(grant_id: Grant.where(donor: donor).select(:id)) }
+  # Scholarships from grants a given funder (Person/Organization) gave — the
+  # "funder" filter. A blank funder matches nothing.
+  scope :from_funder, ->(funder) { where(grant_id: Grant.where(funder: funder).select(:id)) }
 
   # Scholarships awarded at the given events, via the allocation → event
   # registration chain (a scholarship's allocation is on an EventRegistration).

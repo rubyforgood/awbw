@@ -3,9 +3,9 @@ require "rails_helper"
 RSpec.describe ScholarshipsGrouping do
   describe "#funder_groups" do
     it "nests grants under their shared funder and sums each level" do
-      donor = create(:person, first_name: "Elisa", last_name: "Perlman")
-      grant_2025 = create(:grant, name: "Elisa 2025", donor: donor, amount_cents: 1_000_000)
-      grant_2026 = create(:grant, name: "Elisa 2026", donor: donor, amount_cents: 1_000_000)
+      funder = create(:person, first_name: "Elisa", last_name: "Perlman")
+      grant_2025 = create(:grant, name: "Elisa 2025", funder: funder, amount_cents: 1_000_000)
+      grant_2026 = create(:grant, name: "Elisa 2026", funder: funder, amount_cents: 1_000_000)
       create(:scholarship, grant: grant_2025, amount_cents: 100_000)
       create(:scholarship, grant: grant_2026, amount_cents: 50_000)
 
@@ -19,7 +19,7 @@ RSpec.describe ScholarshipsGrouping do
     end
 
     it "puts grant-free scholarships in an Unfunded group sorted last" do
-      create(:scholarship, grant: create(:grant, name: "Aardvark Fund", donor: create(:organization, name: "Aardvark")))
+      create(:scholarship, grant: create(:grant, name: "Aardvark Fund", funder: create(:organization, name: "Aardvark")))
       create(:scholarship, grant: nil)
 
       names = described_class.new(Scholarship.all).funder_groups.map(&:name)

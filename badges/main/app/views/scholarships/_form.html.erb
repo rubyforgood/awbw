@@ -132,11 +132,11 @@
 
   <div class="space-y-6 p-4">
     <% if grant_funded %>
-      <% donor_icon = grant.donor.is_a?(Person) ? "fa-user #{DomainTheme.text_class_for(:people)}" : "fa-building #{DomainTheme.text_class_for(:organizations)}" %>
+      <% funder_icon = grant.funder.is_a?(Person) ? "fa-user #{DomainTheme.text_class_for(:people)}" : "fa-building #{DomainTheme.text_class_for(:organizations)}" %>
       <div>
         <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Funder</dt>
         <dd class="mt-1 text-sm text-gray-900 flex items-center gap-2">
-          <i class="fa-solid <%= donor_icon %>" aria-hidden="true"></i>
+          <i class="fa-solid <%= funder_icon %>" aria-hidden="true"></i>
           <%= link_to grant.funder_name, grant_path(grant), class: "text-blue-700 hover:underline" %>
         </dd>
       </div>
