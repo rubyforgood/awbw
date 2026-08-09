@@ -48,6 +48,10 @@ ActiveJob::Base.queue_adapter = :test
 RSpec.configure do |config|
   # Gives travel method for time helpers
   config.include ActiveSupport::Testing::TimeHelpers
+  # RSpec doesn't run minitest teardown, so travel_to never auto-reverts — freeze
+  # one example and the frozen clock leaks into later specs. Always reset after
+  # each example (no-op when time wasn't traveled).
+  config.after { travel_back }
 
   # Include pagination helper globally
   config.include PaginationHelpers
