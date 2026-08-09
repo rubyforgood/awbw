@@ -336,7 +336,7 @@ RSpec.describe "Events", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Event checklist")
       # An unpaid registrant with no org linked surfaces reminder + admin to-dos.
-      expect(response.body).to include("Remind registration fees due")
+      expect(response.body).to include("Send reminder: registration fees due")
       expect(response.body).to include("Link organizations")
     end
   end

@@ -32,10 +32,10 @@ RSpec.describe EventChecklist do
       expect(item(:review_reports).kind).to eq(:action)
     end
 
-    it "prefixes every registrant-facing reminder item with 'Remind'" do
+    it "prefixes every registrant-facing reminder item with 'Send reminder'" do
       reminders = checklist.items.select(&:registrant_task?)
       expect(reminders).to be_present
-      expect(reminders.map(&:title)).to all(start_with("Remind"))
+      expect(reminders.map(&:title)).to all(start_with("Send reminder"))
     end
   end
 

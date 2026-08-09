@@ -218,11 +218,11 @@ class EventChecklist
   def collect_registration_fees
     relevant = @dashboard.has_registrants? && !@dashboard.free?
     count = relevant ? @dashboard.unpaid_count : 0
-    task(key: :collect_registration_fees, phase: :before, title: "Remind registration fees due", actor: :registrant,
+    task(key: :collect_registration_fees, phase: :before, title: "Send reminder: registration fees due", actor: :registrant,
          relevant: relevant, count: count,
          money_cents: relevant ? @dashboard.outstanding_cents : nil,
          registrants: count.positive? ? @dashboard.unpaid_registrants : [],
-         action_path: preview_reminder_event_path(@event, payment_status: "unpaid"), action_label: "Send reminder")
+         action_path: preview_reminder_event_path(@event, payment_status: "unpaid"), action_label: "Send")
   end
 
   def issue_scholarships
@@ -255,9 +255,9 @@ class EventChecklist
     else
       preview_reminder_event_path(@event)
     end
-    task(key: :follow_up_agreements, phase: :before, title: "Remind scholarship agreements", actor: :registrant,
+    task(key: :follow_up_agreements, phase: :before, title: "Send reminder: scholarship agreements", actor: :registrant,
          relevant: relevant, count: count, registrants: registrants,
-         action_path: action_path, action_label: "Send reminder")
+         action_path: action_path, action_label: "Send")
   end
 
   def fix_zero_scholarships
@@ -272,29 +272,29 @@ class EventChecklist
   def complete_scholarship_tasks
     relevant = @dashboard.scholarships_present? && !@dashboard.free?
     count = relevant ? @dashboard.scholarship_tasks_incomplete_count : 0
-    task(key: :complete_scholarship_tasks, phase: :before, title: "Remind scholarship tasks", actor: :registrant,
+    task(key: :complete_scholarship_tasks, phase: :before, title: "Send reminder: scholarship tasks", actor: :registrant,
          relevant: relevant, count: count,
          registrants: count.positive? ? @dashboard.scholarship_tasks_incomplete_registrants : [],
-         action_path: preview_reminder_event_path(@event, scholarship: "incomplete"), action_label: "Send reminder")
+         action_path: preview_reminder_event_path(@event, scholarship: "incomplete"), action_label: "Send")
   end
 
   def collect_ce_licenses
     relevant = @dashboard.ce_eligible?
     count = relevant ? @dashboard.ce_license_missing_count : 0
-    task(key: :collect_ce_licenses, phase: :before, title: "Remind CE license numbers", actor: :registrant,
+    task(key: :collect_ce_licenses, phase: :before, title: "Send reminder: CE license numbers", actor: :registrant,
          relevant: relevant, count: count,
          registrants: count.positive? ? @dashboard.ce_license_missing_registrants : [],
-         action_path: preview_reminder_event_path(@event, ce_status: "needs_license"), action_label: "Send reminder")
+         action_path: preview_reminder_event_path(@event, ce_status: "needs_license"), action_label: "Send")
   end
 
   def collect_ce_fees
     relevant = @dashboard.ce_eligible?
     count = relevant ? @dashboard.cont_ed_unpaid_count : 0
-    task(key: :collect_ce_fees, phase: :before, title: "Remind CE fees due", actor: :registrant,
+    task(key: :collect_ce_fees, phase: :before, title: "Send reminder: CE fees due", actor: :registrant,
          relevant: relevant, count: count,
          money_cents: relevant ? @dashboard.cont_ed_outstanding_cents : nil,
          registrants: count.positive? ? @dashboard.cont_ed_unpaid_registrants : [],
-         action_path: preview_reminder_event_path(@event, ce_status: "requested"), action_label: "Send reminder")
+         action_path: preview_reminder_event_path(@event, ce_status: "requested"), action_label: "Send")
   end
 
   def issue_ce_certificates
