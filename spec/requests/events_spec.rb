@@ -1162,9 +1162,11 @@ RSpec.describe "Events", type: :request do
 
         created = Event.order(created_at: :desc).first
         # The two submitted built-ins persist their edits, and the post-save seed
-        # fills the remaining six — every seeded built-in key present exactly once.
+        # fills the rest — every seeded built-in key present exactly once, including
+        # the three post-event survey callouts (the event spans multiple days).
         expect(created.registration_ticket_callouts.builtin.pluck(:builtin_key)).to contain_exactly(
-          "payment", "certificate", "scholarship", "ce_hours", "videoconference", "staff", "handouts", "faq"
+          "payment", "certificate", "scholarship", "ce_hours", "videoconference", "staff", "handouts", "faq",
+          "day_1_survey", "day_2_survey", "scholarship_recipients_survey"
         )
         payment = created.registration_ticket_callouts.find_by(builtin_key: "payment")
         expect(payment.title).to eq("Pay your balance")
