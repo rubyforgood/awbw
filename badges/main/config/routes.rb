@@ -105,6 +105,7 @@ Rails.application.routes.draw do
       post :create_organization
       delete :unlink_organization
       patch :update_onboarding
+      patch :toggle_certificate_issued
     end
     resources :comments, only: [ :index, :create, :update ]
   end
