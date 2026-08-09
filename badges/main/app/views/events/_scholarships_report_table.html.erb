@@ -65,15 +65,7 @@
           <% group.columns.each do |column| %>
             <% highlighted = params[:highlight].to_s == column.event.id.to_s %>
             <tr id="<%= training_report_row_id(column.event) %>" class="scroll-mt-24 transition-colors duration-150 <%= "bg-yellow-50 ring-2 ring-inset ring-yellow-500" if highlighted %>">
-              <td class="px-3 py-2 border border-gray-200" title="<%= column.event.title %>">
-                <span class="font-medium text-gray-900"><%= column.label %></span>
-                <% if column.date_label %>
-                  <span class="block text-xs text-gray-500"><%= column.date_label %></span>
-                <% end %>
-                <% if column.on_demand? %>
-                  <span class="block text-xs text-gray-500">On-demand</span>
-                <% end %>
-              </td>
+              <%= render "scholarship_recipients_cell", column: column %>
               <%= render "scholarships_report_figures", source: column, combined: combined, event: column.event %>
             </tr>
           <% end %>
