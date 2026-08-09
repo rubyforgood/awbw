@@ -21,7 +21,7 @@
         <%# On by default — Organization shows unless the admin hides it. %>
         <label class="inline-flex items-center gap-2 cursor-pointer select-none"
                data-controller="column-toggle" data-column-toggle-group-value="organization">
-          <span class="text-sm text-gray-500">Linked organization</span>
+          <span class="text-sm text-gray-500">Linked org</span>
 
           <input
             type="checkbox"
@@ -77,10 +77,48 @@
           </span>
         </label>
 
-        <%# On by default — Date registered shows unless the admin hides it. %>
+        <% if @event.cost_cents.to_i > 0 %>
+          <%# Off by default — the payment-method chips are hidden until the admin reveals them. %>
+          <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+                 data-controller="column-toggle" data-column-toggle-group-value="payment_method">
+            <span class="text-sm text-gray-500">Payment method</span>
+
+            <input
+              type="checkbox"
+              data-column-toggle-target="toggle"
+              data-action="column-toggle#toggle"
+              class="sr-only"
+            >
+
+            <span class="relative inline-block w-9 h-5">
+              <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
+              <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
+            </span>
+          </label>
+        <% end %>
+
+        <%# Off by default — Date registered is hidden until the admin reveals it. %>
         <label class="inline-flex items-center gap-2 cursor-pointer select-none"
                data-controller="column-toggle" data-column-toggle-group-value="date">
           <span class="text-sm text-gray-500">Date registered</span>
+
+          <input
+            type="checkbox"
+            data-column-toggle-target="toggle"
+            data-action="column-toggle#toggle"
+            class="sr-only"
+          >
+
+          <span class="relative inline-block w-9 h-5">
+            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
+            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
+          </span>
+        </label>
+
+        <%# On by default — Attendance shows unless the admin hides it. %>
+        <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+               data-controller="column-toggle" data-column-toggle-group-value="attendance">
+          <span class="text-sm text-gray-500">Attendance</span>
 
           <input
             type="checkbox"
@@ -96,27 +134,9 @@
           </span>
         </label>
 
-        <%# Off by default — Attendance is hidden until the admin reveals it. %>
-        <label class="inline-flex items-center gap-2 cursor-pointer select-none"
-               data-controller="column-toggle" data-column-toggle-group-value="attendance">
-          <span class="text-sm text-gray-500">Attendance</span>
-
-          <input
-            type="checkbox"
-            data-column-toggle-target="toggle"
-            data-action="column-toggle#toggle"
-            class="sr-only"
-          >
-
-          <span class="relative inline-block w-9 h-5">
-            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
-            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
-          </span>
-        </label>
-
         <label class="inline-flex items-center gap-2 cursor-pointer select-none"
                data-controller="column-toggle" data-column-toggle-group-value="confirmed">
-          <span class="text-sm text-gray-500">User confirmation</span>
+          <span class="text-sm text-gray-500">User account</span>
 
           <input
             type="checkbox"
@@ -202,10 +222,10 @@
               <% end %>
 
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px] hidden" data-column-toggle-col="confirmed">Confirmed</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 hidden" aria-sort="none" data-column-toggle-col="attendance">
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none" data-column-toggle-col="attendance">
                 <%= render "shared/sortable_header", label: "Attendance", index: attendance_index %>
               </th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none" data-column-toggle-col="date">
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 hidden" aria-sort="none" data-column-toggle-col="date">
                 <%= render "shared/sortable_header", label: "Date registered", index: date_index %>
               </th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
@@ -448,7 +468,7 @@
 
                     <% payment_badges = registration.decorate.payment_badges %>
                     <% if payment_badges.any? %>
-                      <div class="mt-1 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
+                      <div class="mt-1 hidden flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5" data-column-toggle-col="payment_method">
                         <% payment_badges.each do |payment_badge| %>
                           <span class="inline-flex items-center gap-1 whitespace-nowrap text-[0.65rem] font-medium <%= payment_badge.classes %>"
                                 title="<%= payment_badge.label %>">
@@ -472,8 +492,8 @@
                   <% end %>
                 </td>
 
-                <td class="px-4 py-2 text-sm text-nowrap text-center hidden" data-column-toggle-col="attendance" data-sort-value="<%= registration.status %>"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
-                <td class="px-4 py-2 text-sm text-nowrap text-center text-gray-600" data-column-toggle-col="date" data-sort-value="<%= registration.created_at.to_i %>" title="<%= registration.created_at.strftime("%B %-d, %Y at %l:%M %P") %>"><%= registration.created_at.strftime("%b %-d, %Y") %></td>
+                <td class="px-4 py-2 text-sm text-nowrap text-center" data-column-toggle-col="attendance" data-sort-value="<%= registration.status %>"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
+                <td class="px-4 py-2 text-sm text-nowrap text-center text-gray-600 hidden" data-column-toggle-col="date" data-sort-value="<%= registration.created_at.to_i %>" title="<%= registration.created_at.strftime("%B %-d, %Y at %l:%M %P") %>"><%= registration.created_at.strftime("%b %-d, %Y") %></td>
                 <% readiness = @readiness[registration.id] %>
                 <td class="px-4 py-2 text-sm text-center" data-sort-value="<%= readiness.status_sort_key %>">
                   <%= render "event_registrations/readiness_badge",
