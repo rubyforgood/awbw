@@ -87,9 +87,6 @@ application.register("expand-all", ExpandAllController)
 import FilePreviewController from "./file_preview_controller"
 application.register("file-preview", FilePreviewController)
 
-import FilterToggleController from "./filter_toggle_controller"
-application.register("filter-toggle", FilterToggleController)
-
 import FieldOptionsController from "./field_options_controller"
 application.register("field-options", FieldOptionsController)
 

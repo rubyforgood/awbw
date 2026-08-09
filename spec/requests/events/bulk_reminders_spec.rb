@@ -31,7 +31,7 @@ RSpec.describe "Events::BulkReminders", type: :request do
     expect(response.body).to include("More filters")
     # Name/email are the primary row; a name filter shouldn't force the section open.
     get preview_reminder_event_path(event, name: "jane")
-    expect(response.body).to include('aria-expanded="false"')
+    expect(response.body).to include('id="more-filters-toggle" class="sr-only">')
   end
 
   it "keeps all registrants visible but only checks the matches when filtered" do

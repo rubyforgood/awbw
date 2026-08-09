@@ -1139,19 +1139,19 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("fa-filter")
         expect(response.body).to include(">Filters<")
         expect(response.body).to include("More filters")
-        expect(response.body).to include('aria-expanded="false"')
+        expect(response.body).to include('id="more-filters-toggle" class="sr-only">')
       end
 
-      it "opens the More filters section when a collapsed filter is active" do
+      it "opens the More filters section (checks the toggle) when a collapsed filter is active" do
         get registrants_event_path(event, account_status: "invited")
 
-        expect(response.body).to include('aria-expanded="true"')
+        expect(response.body).to include('id="more-filters-toggle" class="sr-only" checked>')
       end
 
       it "keeps the More filters section collapsed for a primary-row filter" do
         get registrants_event_path(event, keyword: "smith")
 
-        expect(response.body).to include('aria-expanded="false"')
+        expect(response.body).to include('id="more-filters-toggle" class="sr-only">')
       end
     end
 
