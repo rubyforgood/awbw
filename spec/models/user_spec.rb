@@ -442,16 +442,18 @@ RSpec.describe User do
         allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)
       end
 
-      it "exposes it as confirmation_sender for the mailer to attribute" do
+      it "passes the sender id through the mailer opts for attribution" do
         user.send_confirmation_instructions(sender: sender)
 
-        expect(user.confirmation_sender).to eq(sender)
+        expect(DeviseMailer).to have_received(:confirmation_instructions)
+          .with(user, anything, hash_including(sender_id: sender.id))
       end
 
-      it "leaves confirmation_sender unset when none is given" do
+      it "omits the sender id when none is given" do
         user.send_confirmation_instructions
 
-        expect(user.confirmation_sender).to be_nil
+        expect(DeviseMailer).to have_received(:confirmation_instructions)
+          .with(user, anything, hash_excluding(:sender_id))
       end
     end
   end
