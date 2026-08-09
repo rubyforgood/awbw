@@ -49,7 +49,7 @@
       </thead>
       <tbody class="block sm:table-row-group divide-y divide-gray-100" data-table-sort-target="body">
         <% orgs_by_id = roster.organizations.index_by(&:id) %>
-        <% lime_chip_class = "inline-flex items-center whitespace-nowrap rounded-md border border-lime-300 bg-lime-200 px-2 py-0.5 text-xs font-medium text-lime-800" %>
+        <% lime_chip_class = "inline-flex items-center whitespace-nowrap rounded-md border border-lime-300 bg-lime-100 px-2 py-0.5 text-xs font-medium text-lime-800" %>
         <%# Per-cell label shown only in the stacked mobile card; the column
             header supplies it at sm+, so it's hidden there. %>
         <% mobile_label = ->(text) { tag.span(text, class: "sm:hidden shrink-0 w-24 pt-0.5 text-xs font-semibold uppercase tracking-wide text-gray-400") } %>

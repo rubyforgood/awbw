@@ -147,7 +147,7 @@
       <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm
                   flex flex-wrap items-center content-start gap-2 flex-1"
            data-controller="primary-tag"
-           data-primary-tag-primary-class="border-lime-500 bg-lime-200"
+           data-primary-tag-primary-class="border-lime-500 bg-lime-100"
            data-primary-tag-default-class="border-gray-300 bg-white">
         <% sectors_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
         <%# "Other" is never a real sector tag (it's captured as an OtherResponse),

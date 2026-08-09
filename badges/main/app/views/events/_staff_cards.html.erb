@@ -98,7 +98,7 @@
                   <%= render "sectors/tagging_label", sector: lead_sector.sector, is_primary: lead_sector.is_primary? %>
                 <% end %>
                 <% if lead_age %>
-                  <span class="inline-flex items-center whitespace-nowrap rounded-md border border-lime-300 <%= lead_age_primary ? "bg-lime-200 text-lime-800" : "bg-lime-50 text-gray-500" %> px-2 py-0.5 text-xs font-medium">
+                  <span class="inline-flex items-center whitespace-nowrap rounded-md border border-lime-300 <%= lead_age_primary ? "bg-lime-100 text-lime-800" : "bg-lime-50 text-gray-500" %> px-2 py-0.5 text-xs font-medium">
                     <% if lead_age_primary %><i class="fa-solid fa-star mr-1 text-xs text-amber-400" aria-hidden="true" title="Primary age group"></i><% end %><%= lead_age.name %>
                   </span>
                 <% end %>
