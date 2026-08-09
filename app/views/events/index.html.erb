@@ -40,6 +40,7 @@
       </div>
     <% end %>
 
+    <% archived_events = @archived_events.to_a %>
     <% if @events.any? %>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <% @events.each do |event| %>
@@ -47,15 +48,15 @@
         <% end %>
       </div>
 
-    <% elsif @archived_events.none? %>
+    <% elsif archived_events.none? %>
       <!-- Empty State -->
       <div class="text-center py-12 text-gray-500">
         No events available.
       </div>
     <% end %>
 
-    <% if @archived_events.any? %>
-      <%= render "archived_events", events: @archived_events %>
+    <% if archived_events.any? %>
+      <%= render "archived_events", events: archived_events %>
     <% end %>
   </div>
 </div>
