@@ -1034,6 +1034,25 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "CE column links" do
+      before { offer_ce!(event) }
+
+      it "links a registrant without a CE registration to the new CE form" do
+        get registrants_event_path(event)
+
+        expect(response.body).to match(%r{/continuing_education_registrations/new\?[^"]*return_to=registrants})
+      end
+
+      it "links a registrant with a CE registration to its edit page" do
+        ce = create(:continuing_education_registration, event_registration: registration,
+          professional_license: create(:professional_license, :placeholder, person: person))
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include(edit_continuing_education_registration_path(ce, return_to: "registrants"))
+      end
+    end
+
     context "with unknown filter params" do
       it "does not crash on an invalid payment_status" do
         get registrants_event_path(event, payment_status: "bogus")
