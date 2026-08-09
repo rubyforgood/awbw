@@ -105,6 +105,7 @@ class EventRegistrationsController < ApplicationController
           when "preview_reminder" then redirect_to preview_reminder_event_path(@event_registration.event), notice: notice, status: :see_other
           when "onboarding" then redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
           when "training_attendees" then redirect_to training_attendees_events_path, notice: notice, status: :see_other
+          when "recipients" then redirect_to recipients_event_path(@event_registration.event, anchor: "shout-outs"), notice: notice, status: :see_other
           else
             # No explicit origin: keep admins in the management context (the
             # roster) rather than dropping them on the public registration show.

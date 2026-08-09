@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard sample_ticket background registrants onboarding staff edit_staff update_staff recipients preview_reminder confirm_reminder send_reminder copy_registration_form ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard sample_ticket background registrants onboarding staff edit_staff update_staff recipients feature_recipient_shoutout preview_reminder confirm_reminder send_reminder copy_registration_form ]
   before_action :set_report_filters, only: %i[ revenue participation statistics scholarships ]
 
   def index
@@ -282,6 +282,27 @@ class EventsController < ApplicationController
     authorize! @event, to: :recipients?
     @event = @event.decorate
     @dashboard = EventDashboard.new(@event)
+  end
+
+  # From the recipients page "Add shoutout" control: flag the chosen registrant
+  # for the recipients-page shout-out, seed the shout-out text from their profile
+  # bio when it's blank, then send the admin to their registration edit form to
+  # review (the toggle and any seeded text are already saved on arrival).
+  def feature_recipient_shoutout
+    authorize! @event, to: :recipients?
+    registration = @event.event_registrations.active.find_by(id: params[:registration_id])
+    unless registration
+      redirect_to recipients_event_path(@event), alert: "Choose a recipient to feature." and return
+    end
+
+    authorize! registration, to: :update?
+    registrant = registration.registrant
+    registration.update!(shoutout: true)
+    if registrant.shoutout_text.blank? && (bio = shoutout_bio_from_profile(registrant))
+      registrant.update!(shoutout_text: bio)
+    end
+    redirect_to edit_event_registration_path(registration, return_to: "recipients", anchor: "shout-out"),
+                notice: "Featured on the recipients page — review their shout-out text below.", status: :see_other
   end
 
   def preview_reminder
@@ -904,6 +925,13 @@ class EventsController < ApplicationController
         .select { |type, _| type.nil? || (type.published? && !type.story_specific? && !type.profile_specific?) }
         .sort_by { |type, _| type&.name.to_s.downcase }
     @sectors = Sector.published.order(:name)
+  end
+
+  # The registrant's profile bio as plain text, usable to seed a shout-out — only
+  # when the bio is shown on their profile. Nil when hidden or blank.
+  def shoutout_bio_from_profile(person)
+    return unless person.profile_show_bio?
+    helpers.strip_tags(person.bio).to_s.strip.presence
   end
 
   def set_event

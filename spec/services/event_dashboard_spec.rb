@@ -503,6 +503,13 @@ RSpec.describe EventDashboard do
       expect(dashboard.scholarship_applicants).to eq([ separate_applicant, embedded_applicant ])
     end
 
+    it "maps each active registrant to their registration id" do
+      map = dashboard.registration_id_by_registrant
+
+      expect(map[embedded_applicant.id]).to eq(EventRegistration.find_by(event: event, registrant: embedded_applicant).id)
+      expect(map[separate_applicant.id]).to eq(EventRegistration.find_by(event: event, registrant: separate_applicant).id)
+    end
+
     it "gathers scholarship answers wherever they were captured, keyed by applicant" do
       answers = dashboard.scholarship_answers_by_applicant
 
