@@ -50,7 +50,7 @@ class BuiltinCallouts
       a: [ "Yes. Multiple staff members from the same organization are welcome and encouraged to participate in the training.",
            "Many organizations choose to train teams of staff members in order to integrate trauma-informed healing arts practices more broadly across their programs, services, and communities." ] },
     { q: "Are there any fees, other than the training fee, associated with becoming a facilitator?",
-      a: [ "AWBW facilitators pay annual dues to support the sustainability of the organization and continued facilitator resources and support.",
+      a: [ "AWBW facilitators pay annual dues of $25 to support the sustainability of the organization and continued facilitator resources and support.",
            "Dues are billed per facilitator and renew automatically each year. You can manage or cancel your subscription at any time." ] }
   ].freeze
 
