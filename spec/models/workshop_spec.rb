@@ -111,6 +111,21 @@ RSpec.describe Workshop do
     end
   end
 
+  describe "#author_credit with a legacy free-text name" do
+    let(:creator) { create(:user, :with_person) }
+
+    it "uses the legacy name when no author is credited" do
+      workshop = create(:workshop, created_by: creator, author: nil, full_name: "Jane Legacy")
+      expect(workshop.author_credit).to eq("Jane Legacy")
+    end
+
+    it "stays anonymous rather than exposing the legacy name" do
+      workshop = create(:workshop, created_by: creator, author: nil, full_name: "Jane Legacy",
+                                   author_credit_preference: "anonymous")
+      expect(workshop.author_credit).to eq("Anonymous")
+    end
+  end
+
   describe "#remote_search_label" do
     it "returns title with windows type short_name" do
       record = create(:workshop, title: "Art Therapy", windows_type: create(:windows_type, :children))

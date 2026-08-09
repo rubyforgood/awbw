@@ -306,7 +306,7 @@ class PeopleController < ApplicationController
   def visible_authored_content(scope)
     return scope if allowed_to?(:manage?, Person) || current_user&.person_id == @person.id
     return scope.none if @person.contributions_anonymous?
-    scope.where.not(author_credit_preference: AuthorCreditable::ANONYMOUS)
+    scope.credited_openly
   end
 
   def set_person

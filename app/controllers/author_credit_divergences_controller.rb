@@ -3,10 +3,12 @@ class AuthorCreditDivergencesController < ApplicationController
 
   FILTER_KEYS = %i[person_id type preference include_reconciled].freeze
 
+  # The full page renders only the header, filters, and an empty results frame;
+  # the frame's src request builds the divergences.
   def index
-    @result = AuthorCreditDivergenceQuery.new(**filters.symbolize_keys).call
-
     return unless turbo_frame_request?
+
+    @result = AuthorCreditDivergenceQuery.new(**filters.symbolize_keys).call
     render :author_credit_divergences_results
   end
 

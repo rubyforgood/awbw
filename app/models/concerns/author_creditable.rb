@@ -33,6 +33,13 @@ module AuthorCreditable
     # no-op when person_id is blank. Only models with an author_id column use it.
     scope :authored_by, ->(person_id) { where(author_id: person_id) if person_id.present? }
 
+    # Content whose credit isn't suppressed per item. A blank snapshot means "follow
+    # the profile", so those rows stay in — `where.not` on its own would drop them,
+    # since NULL never compares unequal in SQL.
+    scope :credited_openly, -> {
+      where(author_credit_preference: nil).or(where.not(author_credit_preference: ANONYMOUS))
+    }
+
     # Filter to content whose creating user belongs to a person. This is the only
     # authorship link the idea models have (they carry no author_id of their own),
     # and it's keyed on the person rather than a user id so it stays correct — and
@@ -63,6 +70,9 @@ module AuthorCreditable
   # Precedence: the primary author person, then the legacy free-text name, then the
   # creating user's person, then `missing_author_label`.
   def author_credit
+    # A stored "anonymous" outranks every source, including the legacy free-text
+    # name — that name belongs to no profile, so nothing else would suppress it.
+    return "Anonymous" if author_credit_preference == ANONYMOUS
     person = primary_author_person
     return credit_for(person) if person
     return legacy_author_name_text if legacy_author_name_text.present?

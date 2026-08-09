@@ -1,10 +1,20 @@
 <%# All-clear note for one section. Locals: message (required), cleanup (optional —
-    the code that can now be retired, which is the real payoff of clearing it). %>
-<div class="rounded-lg border border-green-200 bg-green-50 p-6">
-  <p class="text-green-800 font-medium">
-    <i class="fa-solid fa-circle-check mr-1"></i><%= message %>
-  </p>
-  <% if local_assigns[:cleanup].present? %>
-    <p class="text-sm text-green-900 mt-2"><%= cleanup %></p>
-  <% end %>
-</div>
+    the code that can now be retired, which is the real payoff of clearing it).
+    Under a filter an empty section is the filter's doing, not a milestone, so both
+    the congratulations and the cleanup instruction are withheld. %>
+<% if divergence_filters_applied? %>
+  <div class="rounded-lg border border-gray-200 bg-gray-50 p-6">
+    <p class="text-sm text-gray-600">
+      <i class="fa-solid fa-filter mr-1"></i>Nothing in this section matches the current filters.
+    </p>
+  </div>
+<% else %>
+  <div class="rounded-lg border border-green-200 bg-green-50 p-6">
+    <p class="text-green-800 font-medium">
+      <i class="fa-solid fa-circle-check mr-1"></i><%= message %>
+    </p>
+    <% if local_assigns[:cleanup].present? %>
+      <p class="text-sm text-green-900 mt-2"><%= cleanup %></p>
+    <% end %>
+  </div>
+<% end %>

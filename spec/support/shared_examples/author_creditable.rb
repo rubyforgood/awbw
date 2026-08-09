@@ -128,6 +128,27 @@ RSpec.shared_examples "author_creditable" do |factory:|
     end
   end
 
+  describe ".credited_openly" do
+    let(:author_user) { create(:user, :with_person) }
+    let!(:record) { create(factory, created_by: author_user, author_credit_preference: "full_name") }
+
+    it "includes a record whose snapshot is a name format" do
+      expect(described_class.credited_openly).to include(record)
+    end
+
+    it "excludes a record submitted anonymously" do
+      record.update!(author_credit_preference: "anonymous")
+      expect(described_class.credited_openly).not_to include(record)
+    end
+
+    it "includes a record with no snapshot, which just follows the profile" do
+      # The un-backfilled state of every pre-callback row, and what clearing the
+      # snapshot on the divergences page writes back.
+      described_class.where(id: record.id).update_all(author_credit_preference: nil)
+      expect(described_class.credited_openly).to include(record)
+    end
+  end
+
   describe ".by_credited_person_name" do
     let(:author_user) { create(:user, :with_person) }
     let(:person) { author_user.person }

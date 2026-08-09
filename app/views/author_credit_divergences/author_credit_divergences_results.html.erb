@@ -28,7 +28,8 @@
        ] %>
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
       <% overview.each do |section| %>
-        <% clear = section[:count].zero? %>
+        <%# A zero under a filter is the filter's doing, so it isn't reported as clear. %>
+        <% clear = section[:count].zero? && !divergence_filters_applied? %>
         <%= link_to "##{section[:anchor]}",
               class: "block rounded-lg border p-3 transition-colors #{clear ? "border-green-200 bg-green-50 hover:bg-green-100" : "border-gray-200 bg-white shadow-sm hover:bg-gray-50"}" do %>
           <div class="flex items-baseline justify-between gap-2">

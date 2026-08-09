@@ -35,6 +35,21 @@ RSpec.describe Resource do
     end
   end
 
+  describe "#author_credit with a legacy free-text name" do
+    let(:creator) { create(:user, :with_person) }
+
+    it "uses the legacy name when no author is credited" do
+      resource = create(:resource, created_by: creator, author: nil, legacy_author_name: "Jane Legacy")
+      expect(resource.author_credit).to eq("Jane Legacy")
+    end
+
+    it "stays anonymous rather than exposing the legacy name" do
+      resource = create(:resource, created_by: creator, author: nil, legacy_author_name: "Jane Legacy",
+                                   author_credit_preference: "anonymous")
+      expect(resource.author_credit).to eq("Anonymous")
+    end
+  end
+
   describe 'validations' do
     # Requires associations for create
     it { should validate_presence_of(:title) }
