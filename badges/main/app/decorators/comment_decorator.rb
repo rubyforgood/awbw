@@ -17,6 +17,8 @@ class CommentDecorator < ApplicationDecorator
     when Scholarship then h.scholarship_path(commentable)
     when ContinuingEducationRegistration then h.edit_continuing_education_registration_path(commentable)
     when TopicSubscription then h.edit_topic_subscription_path(commentable)
+    when Story then h.edit_story_path(commentable)
+    when StoryIdea then h.edit_story_idea_path(commentable)
     end
   end
 
@@ -30,6 +32,8 @@ class CommentDecorator < ApplicationDecorator
     when Scholarship then :scholarships
     when ContinuingEducationRegistration then :continuing_education
     when TopicSubscription then :topic_subscriptions
+    when Story then :stories
+    when StoryIdea then :story_ideas
     else :comments
     end
   end

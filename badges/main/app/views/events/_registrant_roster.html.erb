@@ -1,22 +1,32 @@
-<%# Shared registrant roster table, used both on a single event's Background page
-    and on the cross-event training-attendees index. Locals:
+<%# Shared registrant roster table for the cross-event attendees index (and
+    reusable for any single-event registrant list). Locals:
       roster: - data object responding to `registrants` (Person records) and the
-        per-registrant lookup maps (EventDashboard or TrainingAttendeesRoster).
+        per-registrant lookup maps (EventDashboard or AttendeesRoster).
       show_event_column: - adds a "Training" column listing each registration's
         event (label + month/year) linking to its edit page. Off in single-event
         context. Default false.
-      clickable_rows: - the whole row links to the person's profile. Default true
-        (Background); off on the cross-event index, where the event links lead
-        into the individual registrations instead. %>
+      clickable_rows: - the whole row links to the person's registration. Default
+        true; off on the cross-event index, where the event links lead into the
+        individual registrations instead.
+      row_return_to: - `return_to` stamped on those registration links so the edit
+        page's eyebrow comes back here (e.g. "roster").
+      show_attendance_status: - adds a read-only "Attendance" column (the
+        registration's status pill, linking to its edit page). Single-event only.
+        Default false.
+      registrants: - override the rows shown, for a page that filters its own table
+        from a breakdown drill-in. Defaults to every registrant the roster holds. %>
 <% show_event_column = local_assigns.fetch(:show_event_column, false) %>
 <% show_affiliation_status = local_assigns.fetch(:show_affiliation_status, false) %>
+<% show_attendance_status = local_assigns.fetch(:show_attendance_status, false) %>
 <% clickable_rows = local_assigns.fetch(:clickable_rows, true) %>
+<% row_return_to = local_assigns[:row_return_to] %>
+<% registrants = local_assigns.fetch(:registrants, roster.registrants) %>
 <% affiliation_status_classes = {
      "Active" => "border-green-300 bg-green-100 text-green-800",
-     "Pending" => "border-amber-300 bg-amber-100 text-amber-800",
+     "Upcoming" => "border-amber-300 bg-amber-100 text-amber-800",
      "Inactive" => "border-gray-300 bg-gray-100 text-gray-600"
    } %>
-<% if roster.registrants.any? %>
+<% if registrants.any? %>
   <div class="overflow-x-auto">
     <%# Below sm the whole table chain reflows to block so each row stacks into
         a labeled card (header hidden; per-cell mobile_label supplies the name).
@@ -34,7 +44,10 @@
                { label: "CE", index: 6, align: "text-center" }
              ] %>
           <% columns.insert(4, { label: "Affiliation status", index: 8, align: "text-left" }) if show_affiliation_status %>
-          <% columns << { label: "Trainings attended", index: 7, align: "text-left" } if show_event_column %>
+          <% columns << { label: "Events attended", index: 7, align: "text-left" } if show_event_column %>
+          <%# Single-event roster only, so it never coexists with the cross-event
+              "Events attended" column — both are the row's last cell (index 7). %>
+          <% columns << { label: "Attendance", index: 7, align: "text-left" } if show_attendance_status %>
           <% columns.each do |col| %>
             <th class="px-4 py-2 <%= col[:align] %> text-xs font-semibold text-gray-700" aria-sort="none">
               <span class="inline-flex items-center gap-1.5">
@@ -53,20 +66,25 @@
         <%# Per-cell label shown only in the stacked mobile card; the column
             header supplies it at sm+, so it's hidden there. %>
         <% mobile_label = ->(text) { tag.span(text, class: "sm:hidden shrink-0 w-24 pt-0.5 text-xs font-semibold uppercase tracking-wide text-gray-400") } %>
-        <% roster.registrants.each do |person| %>
+        <% registrants.each do |person| %>
           <% person_orgs = (roster.organization_ids_by_registrant[person.id] || []).filter_map { |org_id| orgs_by_id[org_id] } %>
           <% location = roster.location_label_by_registrant[person.id] %>
           <% person_sectors = roster.primary_sector_names_by_registrant[person.id] || [] %>
           <% person_age_groups = roster.primary_age_group_names_by_registrant[person.id] || [] %>
           <% scholarship = roster.scholarship_by_recipient[person.id] %>
           <% ce_registration = roster.ce_registration_by_registrant[person.id] %>
+          <%# Rows lead into the person's registration for this event — the record
+              an admin acts on from a roster. Falls back to their profile if they
+              somehow have no registration to point at. %>
+          <% registration = roster.registration_link_target(person) %>
+          <% person_link = registration ? edit_event_registration_path(registration, return_to: row_return_to) : person_path(person) %>
           <tr class="block sm:table-row hover:bg-blue-50 transition-colors <%= "cursor-pointer" if clickable_rows %>"
-              <% if clickable_rows %>onclick="window.location='<%= person_path(person) %>'"<% end %>>
+              <% if clickable_rows %>onclick="window.location='<%= person_link %>'"<% end %>>
             <%# Card title on mobile (larger, allowed to wrap); plain name cell at sm+. %>
             <td class="block sm:table-cell px-4 pt-3 pb-1 sm:py-1.5 text-sm sm:whitespace-nowrap"
                 data-sort-first="<%= person.first_name.to_s.downcase %>"
                 data-sort-last="<%= person.last_name.to_s.downcase %>">
-              <%= link_to person.name, person_path(person), class: "font-bold text-gray-900 hover:underline text-base sm:text-sm" %>
+              <%= link_to person.name, person_link, class: "font-bold text-gray-900 hover:underline text-base sm:text-sm" %>
             </td>
             <%# Primary sector + age group — one column, each independently
                 sortable (data-sort-sector / data-sort-age), mirroring the
@@ -159,7 +177,7 @@
             </td>
             <%# CE: the icon shows for registrants with a CE registration and
                 links to that record's edit page. %>
-            <td class="flex sm:table-cell items-center gap-3 px-4 <%= show_event_column ? "py-1 sm:py-1.5" : "pt-1 pb-3 sm:py-1.5" %> text-sm sm:text-center" data-sort-value="<%= ce_registration ? 1 : 0 %>">
+            <td class="flex sm:table-cell items-center gap-3 px-4 <%= show_event_column || show_attendance_status ? "py-1 sm:py-1.5" : "pt-1 pb-3 sm:py-1.5" %> text-sm sm:text-center" data-sort-value="<%= ce_registration ? 1 : 0 %>">
               <%= mobile_label.("CE") %>
               <% if ce_registration %>
                 <% ce_event = roster.ce_event_by_registrant[person.id] if show_event_column %>
@@ -174,23 +192,45 @@
                 <span class="sm:hidden text-gray-300">—</span>
               <% end %>
             </td>
+            <%# Attendance column (single-event roster only): the registration's
+                status as a read-only pill that links to its edit page — the
+                outcome is edited there, not inline. %>
+            <% if show_attendance_status %>
+              <td class="flex sm:table-cell gap-3 px-4 pt-1 pb-3 sm:py-1.5 text-sm" data-sort-value="<%= registration&.attendance_status_label.to_s.downcase %>">
+                <%= mobile_label.("Attendance") %>
+                <div class="min-w-0 flex-1">
+                  <% if registration %>
+                    <% attendance = registration.decorate %>
+                    <%= link_to edit_event_registration_path(registration, return_to: row_return_to),
+                          class: "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium hover:underline #{attendance.attendance_status_classes}",
+                          title: "Edit registration",
+                          onclick: "event.stopPropagation()" do %>
+                      <i class="fa-solid <%= attendance.attendance_status_icon %>"></i>
+                      <span><%= registration.attendance_status_label %></span>
+                    <% end %>
+                  <% else %>
+                    <span class="text-gray-300">—</span>
+                  <% end %>
+                </div>
+              </td>
+            <% end %>
             <%# Training column (cross-event index only): the person's attended
                 trainings, most recent first. The most recent shows inline; when
                 there are more, a chevron expands the rest (and the page-level
                 "Show all events" toggle expands every row at once). Each event
                 links to that registration's edit page. %>
             <% if show_event_column %>
-              <% registrations = roster.training_registrations_by_registrant[person.id] || [] %>
+              <% registrations = roster.event_registrations_by_registrant[person.id] || [] %>
               <% first_registration = registrations.first %>
               <% event_link_class = "font-medium #{DomainTheme.text_class_for(:event_registrations, intensity: 700)} hover:underline" %>
               <td class="flex sm:table-cell gap-3 px-4 pt-1 pb-3 sm:py-1.5 text-sm"
                   data-sort-value="<%= first_registration&.event&.start_date&.iso8601 %>"
                   <% if registrations.size > 1 %>data-controller="expandable-card" data-expandable-card-expanded-value="false" data-action="expandable-cards:expandAll@window->expandable-card#expand expandable-cards:collapseAll@window->expandable-card#collapse"<% end %>>
-                <%= mobile_label.("Trainings attended") %>
+                <%= mobile_label.("Events attended") %>
                 <div class="min-w-0 flex-1">
                   <% if first_registration %>
                     <div class="flex items-center gap-1.5">
-                      <%= link_to edit_event_registration_path(first_registration, return_to: "training_attendees"), class: event_link_class do %>
+                      <%= link_to edit_event_registration_path(first_registration, return_to: "attendees"), class: event_link_class do %>
                         <%= first_registration.event.decorate.compact_label %>
                         <span class="text-gray-400 font-normal"><%= first_registration.event.start_date&.strftime("%b %Y") %></span>
                       <% end %>
@@ -203,7 +243,7 @@
                     <% if registrations.size > 1 %>
                       <div class="hidden mt-1 flex flex-col gap-1" data-expandable-card-target="body">
                         <% registrations.drop(1).each do |registration| %>
-                          <%= link_to edit_event_registration_path(registration, return_to: "training_attendees"), class: "text-xs #{DomainTheme.text_class_for(:event_registrations, intensity: 700)} hover:underline" do %>
+                          <%= link_to edit_event_registration_path(registration, return_to: "attendees"), class: "text-xs #{DomainTheme.text_class_for(:event_registrations, intensity: 700)} hover:underline" do %>
                             <%= registration.event.decorate.compact_label %>
                             <span class="text-gray-400"><%= registration.event.start_date&.strftime("%b %Y") %></span>
                           <% end %>

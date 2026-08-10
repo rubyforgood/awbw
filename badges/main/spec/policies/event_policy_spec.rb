@@ -354,4 +354,55 @@ RSpec.describe EventPolicy, type: :policy do
       end
     end
   end
+
+  # The report suite's rows: what the viewer may aggregate over, regardless of the
+  # filter params they send.
+  describe "relation_scope(:reportable)" do
+    let!(:owner) { create(:user) }
+    let!(:owned) { create(:event, created_by: owner) }
+    let!(:other) { create(:event) }
+
+    def reportable_for(user)
+      described_class.new(Event, user: user)
+        .apply_scope(Event.all, type: :active_record_relation, name: :reportable)
+    end
+
+    it "returns every event for an admin" do
+      expect(reportable_for(create(:user, :admin))).to contain_exactly(owned, other)
+    end
+
+    it "returns only their own events for an event owner" do
+      expect(reportable_for(owner)).to contain_exactly(owned)
+    end
+
+    it "returns nothing for a user who owns no events" do
+      expect(reportable_for(create(:user))).to be_empty
+    end
+
+    it "returns nothing for a guest" do
+      expect(reportable_for(nil)).to be_empty
+    end
+  end
+
+  describe "#cross_event_reports?" do
+    let!(:owner) { create(:user) }
+
+    before { create(:event, created_by: owner) }
+
+    it "allows an admin" do
+      expect(policy_for(record: Event, user: create(:user, :admin))).to be_allowed_to(:cross_event_reports?)
+    end
+
+    it "allows an event owner — the :reportable scope narrows their rows" do
+      expect(policy_for(record: Event, user: owner)).to be_allowed_to(:cross_event_reports?)
+    end
+
+    it "denies a user who owns no events" do
+      expect(policy_for(record: Event, user: create(:user))).not_to be_allowed_to(:cross_event_reports?)
+    end
+
+    it "denies a guest" do
+      expect(policy_for(record: Event, user: nil)).not_to be_allowed_to(:cross_event_reports?)
+    end
+  end
 end

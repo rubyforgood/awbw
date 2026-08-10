@@ -1,0 +1,25 @@
+<%# Right-aligned show/hide bar for a panel-toggle controller — one button per
+    panel. Shared by the roster, attendees index, and scholarship recipients so
+    the table/charts toggle reads identically across them.
+    Locals:
+      buttons: array of { name:, icon:, shown_label:, hidden_label:, expanded: }
+               — name pairs the button to its data-panel-toggle-name="…" panel;
+               expanded true means the panel starts shown.
+      margin:  bottom margin, "mb-3" by default; pass "" when the bar rides in the
+               first section heading's row (events/_section_heading `actions:`),
+               which already spaces itself. %>
+<div class="flex flex-wrap items-center justify-end gap-2 <%= local_assigns.fetch(:margin, "mb-3") %> print:hidden">
+  <% buttons.each do |button| %>
+    <button type="button"
+            data-panel-toggle-target="button"
+            data-panel-toggle-name="<%= button[:name] %>"
+            data-panel-toggle-shown-label="<%= button[:shown_label] %>"
+            data-panel-toggle-hidden-label="<%= button[:hidden_label] %>"
+            data-action="panel-toggle#toggle"
+            aria-expanded="<%= button[:expanded] %>"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800">
+      <i class="fa-solid <%= button[:icon] %>"></i>
+      <span data-panel-toggle-target="label"><%= button[:expanded] ? button[:shown_label] : button[:hidden_label] %></span>
+    </button>
+  <% end %>
+</div>

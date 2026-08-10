@@ -11,6 +11,8 @@ module CommentsHelper
     when Scholarship then scholarship_label(record)
     when ContinuingEducationRegistration then "CE · #{event_label(record.event_registration.event)}"
     when TopicSubscription then "Subscription · #{record.topic_label}"
+    when Story then "Story · #{record.title}"
+    when StoryIdea then "Story idea · #{record.title.presence || "##{record.id}"}"
     else record.class.name.underscore.humanize
     end
   end

@@ -265,6 +265,38 @@ RSpec.describe "/stories", type: :request do
         expect(Story.last.author).to eq(facilitator)
       end
     end
+
+    describe "comments and communications on the edit page" do
+      it "renders the comments section" do
+        get edit_story_url(published_story)
+        expect(response.body).to include("Story comments")
+        expect(response.body).to include("Add comment")
+      end
+
+      it "saves a new comment with its topic, authored by the current user" do
+        expect {
+          patch story_url(published_story),
+                params: { story: { comments_attributes: { "0" => { topic: "Follow-up", body: "Emailed the facilitator" } } } }
+        }.to change { published_story.comments.count }.by(1)
+
+        comment = published_story.comments.order(:created_at).last
+        expect(comment.body).to eq("Emailed the facilitator")
+        expect(comment.topic).to eq("Follow-up")
+        expect(comment.created_by).to eq(admin)
+      end
+
+      it "logs a communication against the story" do
+        expect {
+          patch story_url(published_story),
+                params: { story: { notifications_attributes: { "0" => { email_subject: "Called the facilitator" } } } }
+        }.to change { published_story.notifications.count }.by(1)
+
+        note = published_story.notifications.last
+        expect(note.noticeable).to eq(published_story)
+        expect(note.email_subject).to eq("Called the facilitator")
+        expect(note.recipient_email).to eq(published_story.communications_email.presence || "n/a")
+      end
+    end
   end
 
   # ==========================================================

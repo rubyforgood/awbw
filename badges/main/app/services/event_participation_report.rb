@@ -289,13 +289,7 @@ class EventParticipationReport
   # { event_id => { status => count } } from one grouped query, so no per-event
   # round trip and no Ruby readiness pass.
   def status_counts_by_event
-    @status_counts_by_event ||= EventRegistration
-      .where(event_id: event_ids)
-      .group(:event_id, :status)
-      .count
-      .each_with_object({}) do |((event_id, status), count), map|
-        (map[event_id] ||= {})[status] = count
-      end
+    @status_counts_by_event ||= EventRegistration.status_counts_by_event(event_ids)
   end
 
   # { year => distinct attended people } in one grouped distinct query. A nil
