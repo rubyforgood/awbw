@@ -72,7 +72,7 @@
             </span>
             <span>Show scholarship status</span>
           </button>
-          <%# Group the roster by funder (the scholarship's grant donor), with a
+          <%# Group the roster by funder (the scholarship's grant funder), with a
               header per funder — or return to the flat, name-ordered list. %>
           <% if params[:group_by] == "funder" %>
             <%= link_to recipients_event_path(@event),
@@ -101,12 +101,12 @@
           <% @dashboard.scholarship_applicants_by_funder.each do |group| %>
             <section class="break-inside-avoid">
               <%# Bold, dark-fuchsia funder band so each group's header stands out.
-                  The funder name links to the donor's profile (org or person). %>
+                  The funder name links to the funder's profile (org or person). %>
               <div class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-fuchsia-800 px-4 py-2.5 mb-4 text-white">
                 <i class="fa-solid fa-hand-holding-heart text-fuchsia-200"></i>
                 <h2 class="text-lg font-bold tracking-tight">
-                  <% if group.donor && allowed_to?(:show?, group.donor) %>
-                    <%= link_to polymorphic_path(group.donor), data: { turbo_frame: "_top" },
+                  <% if group.funder && allowed_to?(:show?, group.funder) %>
+                    <%= link_to polymorphic_path(group.funder), data: { turbo_frame: "_top" },
                                 class: "inline-flex items-center gap-1.5 hover:underline" do %>
                       <%= group.name %>
                       <i class="fa-solid fa-arrow-up-right-from-square text-xs text-fuchsia-200"></i>

@@ -178,16 +178,16 @@ class EventDashboard
   FUNDER_UNFUNDED_LABEL = "Unfunded".freeze
 
   # One funder bucket for the recipients page "group by funder" view: the funder
-  # name, the donor record behind it (an Organization or Person — nil for the
-  # unfunded / no-scholarship buckets), that donor's "City, State", and the
+  # name, the funder record behind it (an Organization or Person — nil for the
+  # unfunded / no-scholarship buckets), that funder's "City, State", and the
   # applicants in the bucket.
-  FunderGroup = Struct.new(:name, :donor, :location, :people, keyword_init: true) do
+  FunderGroup = Struct.new(:name, :funder, :location, :people, keyword_init: true) do
     def count = people.size
   end
 
   # Scholarship applicants bucketed by their scholarship's funder (the grant's
-  # donor), as ordered FunderGroups — alphabetical by funder with the "Unfunded"
-  # and "No scholarship yet" buckets pinned last. Grants from the same donor
+  # funder), as ordered FunderGroups — alphabetical by funder with the "Unfunded"
+  # and "No scholarship yet" buckets pinned last. Grants from the same funder
   # share a bucket. People within a group keep #scholarship_applicants'
   # display-name order.
   def scholarship_applicants_by_funder
@@ -1050,38 +1050,38 @@ class EventDashboard
     @scholarship_applicant_ids ||= active_registrations.where(scholarship_requested: true).pluck(:registrant_id)
   end
 
-  # Grouping key for an applicant's funder: the donor identity when the
-  # scholarship is drawn from a grant (so a donor's grants share a bucket), else
+  # Grouping key for an applicant's funder: the funder identity when the
+  # scholarship is drawn from a grant (so a funder's grants share a bucket), else
   # the unfunded / no-scholarship bucket.
   def funder_key_for(person)
     scholarship = scholarship_by_recipient[person.id]
     return :none unless scholarship
-    donor = scholarship.grant&.donor
-    return :unfunded unless donor
-    [ donor.class.name, donor.id ]
+    funder = scholarship.grant&.funder
+    return :unfunded unless funder
+    [ funder.class.name, funder.id ]
   end
 
   # Builds a FunderGroup from a bucket of applicants that share a funder, reading
-  # the funder name, donor, and location from any member's scholarship (they're
+  # the funder name, funder, and location from any member's scholarship (they're
   # identical across the bucket).
   def build_applicant_funder_group(people)
     scholarship = scholarship_by_recipient[people.first.id]
     grant = scholarship&.grant
-    donor = grant&.donor
+    funder = grant&.funder
     name = if scholarship.nil?
       FUNDER_NONE_LABEL
     else
       grant&.funder_name.presence || FUNDER_UNFUNDED_LABEL
     end
-    FunderGroup.new(name: name, donor: donor, location: donor_location(donor), people: people)
+    FunderGroup.new(name: name, funder: funder, location: funder_location(funder), people: people)
   end
 
-  # "City, State" from the donor's first active address — works for either an
-  # Organization or a Person funder (both are addressable). Nil when the donor
+  # "City, State" from the funder's first active address — works for either an
+  # Organization or a Person funder (both are addressable). Nil when the funder
   # has no address or isn't addressable.
-  def donor_location(donor)
-    return unless donor.respond_to?(:addresses)
-    address = donor.addresses.active.first
+  def funder_location(funder)
+    return unless funder.respond_to?(:addresses)
+    address = funder.addresses.active.first
     return unless address
     [ address.city, address.state ].compact_blank.join(", ").presence
   end

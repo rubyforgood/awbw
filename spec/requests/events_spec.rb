@@ -2924,7 +2924,7 @@ RSpec.describe "Events", type: :request do
         registration = event.event_registrations.find_by(registrant: applicant)
         org = create(:organization, name: "Joyful Heart Foundation")
         create(:address, addressable: org, city: "Los Angeles", state: "CA")
-        grant = create(:grant, name: "Healing Arts Fund", donor: org, amount_cents: 100_000)
+        grant = create(:grant, name: "Healing Arts Fund", funder: org, amount_cents: 100_000)
         scholarship = create(:scholarship, recipient: applicant, grant: grant, amount_cents: 1_000)
         create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
 
@@ -2932,7 +2932,7 @@ RSpec.describe "Events", type: :request do
 
         expect(response).to have_http_status(:ok)
         page = Capybara.string(response.body)
-        # The funder name renders as a section header linking to the donor's profile,
+        # The funder name renders as a section header linking to the funder's profile,
         # with its city/state alongside.
         expect(page).to have_css("h2 a[href='#{organization_path(org)}']", text: "Joyful Heart Foundation")
         expect(page).to have_content("Los Angeles, CA")
