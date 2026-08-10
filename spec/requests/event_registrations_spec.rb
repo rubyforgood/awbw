@@ -699,9 +699,30 @@ RSpec.describe "EventRegistrations", type: :request do
 
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("Form answers differ from this organization")
+          expect(response.body).to include("Form answers not applied to this organization")
           expect(response.body).to include("Government agency")
           expect(response.body).to include("For-profit")
+        end
+
+        it "does not flag the submitted answers against a second org the registrant never named" do
+          organization.update!(name: "Acme", agency_type: "For-profit")
+          other = create(:organization, name: "Zebra Center", agency_type: "School district")
+          create(:event_registration_organization, event_registration: existing_registration, organization: other)
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_name" => "Acme", "agency_type" => "Government agency" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          get link_organization_event_registration_path(existing_registration)
+
+          # Only the linked-org cards carry an Unlink button, so this skips the
+          # submission section above, which also names the submitted org.
+          cards = Nokogiri::HTML(response.body).css("li").select { |li| li.text.include?("Unlink") }
+          expect(cards.find { |li| li.text.include?("Zebra Center") }.text).not_to include("not applied")
+          expect(cards.find { |li| li.text.include?("Acme") }.text).to include("Government agency")
         end
 
         it "flags an address discrepancy on a linked org whose saved address differs from the submission" do
@@ -1046,7 +1067,7 @@ RSpec.describe "EventRegistrations", type: :request do
             .to all(eq(address))
         end
 
-        it "fills the org's blank type and website from the submission and says so" do
+        it "leaves an existing org's blank type and website alone, reporting them instead" do
           organization.update!(agency_type: nil, website_url: nil)
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
@@ -1058,9 +1079,26 @@ RSpec.describe "EventRegistrations", type: :request do
 
           post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
 
-          expect(organization.reload.website_url).to include("helpinghands.org")
-          expect(organization.agency_type).to eq("501c3/nonprofit")
-          expect(flash[:notice]).to include("Saved from the form").and include("type").and include("website")
+          expect(organization.reload).to have_attributes(website_url: nil, agency_type: nil)
+          expect(flash[:notice]).not_to include("Saved from the form")
+          expect(flash[:warning]).to include("were not applied").and include("helpinghands.org").and include("nothing saved")
+        end
+
+        it "does not report another org's answers when linking an extra organization" do
+          create(:event_registration_organization, event_registration: existing_registration, organization: organization)
+          other = create(:organization, name: "Zebra Center", website_url: nil, agency_type: nil)
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_name" => "Helping Hands", "agency_website" => "helpinghands.org" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post select_organization_event_registration_path(existing_registration), params: { organization_id: other.id }
+
+          expect(other.reload.website_url).to be_nil
+          expect(flash[:warning]).to be_nil
         end
 
         it "keeps curated type/website and warns about the discrepancy" do
@@ -1246,7 +1284,7 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(existing_registration.organizations).to include(existing)
         end
 
-        it "fills a blank website and type on an existing org from the submission" do
+        it "leaves a blank website and type on an existing org alone, reporting them instead" do
           existing = create(:organization, name: "Existing Org", website_url: nil, agency_type: nil)
           reg_form = create(:form, name: "Reg form")
           name_field = create(:form_field, form: reg_form, field_identifier: "agency_name")
@@ -1260,8 +1298,8 @@ RSpec.describe "EventRegistrations", type: :request do
 
           post create_organization_event_registration_path(existing_registration)
 
-          expect(existing.reload.website_url).to include("helpinghands.org")
-          expect(existing.agency_type).to eq("Government agency")
+          expect(existing.reload).to have_attributes(website_url: nil, agency_type: nil)
+          expect(flash[:warning]).to include("Government agency").and include("nothing saved")
         end
 
         it "does not overwrite an existing org's curated website and type" do

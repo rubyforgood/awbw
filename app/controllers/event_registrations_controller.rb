@@ -233,13 +233,12 @@ class EventRegistrationsController < ApplicationController
     else
       Organization.none
     end
-    # Per linked org: the submitted type/website/address answers that differ from
-    # what's saved on the org (and so weren't applied by the fill-blanks sync), for
-    # the persistent discrepancy note on each card. Keyed by org.
-    submitted_profile = submitted_agency_profile(@event_registration)
-    submitted_address = submitted_agency_address(@event_registration)
+    # Per linked org: the type/website/address answers from the submission that
+    # describes it which aren't on the org, for the persistent note on each card.
+    # Keyed by org; an org no submission describes gets no note.
+    linked_count = @linked_organizations.size
     @profile_conflicts_by_org = @linked_organizations.index_with do |org|
-      OrganizationServices::ProfileDiff.call(organization: org, address: submitted_address, **submitted_profile)
+      profile_diff_for(org, linked_count: linked_count)
     end
   end
 
@@ -249,13 +248,15 @@ class EventRegistrationsController < ApplicationController
     @person = @event_registration.registrant
     organization = Organization.find(params[:organization_id])
 
-    filled = sync_org_profile(organization)
+    # An org that already exists keeps its own profile: we can't be sure the
+    # submission describes it, so nothing is written and the answers it doesn't
+    # carry are reported instead.
     address_result = link_affiliations_for(@event_registration, organization)
 
     @event_registration.event_registration_organizations
       .find_or_create_by!(organization: organization)
 
-    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: link_result_notice(organization, "linked", filled, address_result)
+    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: link_result_notice(organization, "linked", [], address_result)
   end
 
   def create_organization
@@ -278,10 +279,11 @@ class EventRegistrationsController < ApplicationController
     existing = Organization.where("LOWER(name) = ?", name.strip.downcase).first
     organization = existing || Organization.create!(name: name.strip, organization_status: OrganizationStatus.find_by(name: "Active"))
 
-    # Seed type/website from the submission — filling blanks only, so an existing
-    # org's curated values are never clobbered. Address + the affiliation linked to
-    # it are handled by link_affiliations_for (find-or-create, so nothing dupes).
-    filled = sync_org_profile(organization)
+    # Seed type/website from the submission only for an org we're creating here —
+    # it's the one the registrant named, and it has no profile of its own yet. An
+    # org that already exists is left alone. Address + the affiliation linked to it
+    # are handled by link_affiliations_for (find-or-create, so nothing dupes).
+    filled = existing ? [] : sync_org_profile(organization)
     address_result = link_affiliations_for(@event_registration, organization)
     @event_registration.event_registration_organizations.find_or_create_by!(organization: organization)
 
@@ -493,41 +495,59 @@ class EventRegistrationsController < ApplicationController
     primary && primary[:address] || {}
   end
 
-  # The org website + type the registrant typed on the same "primary" submission
-  # used for the org name/position/address, as attrs for
-  # OrganizationServices::SyncProfile.
-  def submitted_agency_profile(registration)
+  # The submission entry whose answers describe `organization`: the one whose typed
+  # org name matches it, else — only when the pairing is unambiguous, i.e. a single
+  # submission and a single linked org — that sole entry, which covers a registrant
+  # who named no org and an admin resolving a typo'd "Acme Inc" to the saved "Acme
+  # Corporation". Nil otherwise: an extra org an admin linked by hand isn't the one
+  # the registrant wrote about, so none of the submitted answers apply to it.
+  def submission_entry_for(registration, organization, linked_count: nil)
     entries = registration_submission_entries(registration)
-    primary = entries.find { |entry| entry[:org_name].present? } || entries.first
-    {
-      website: primary && primary[:website],
-      agency_type: primary && primary[:agency_type]
-    }
+    match = entries.find { |entry| entry[:org_name].present? && entry[:org_name].strip.casecmp?(organization.name.to_s.strip) }
+    return match if match
+    return unless entries.one?
+
+    entries.first if (linked_count || registration.organizations.count) == 1
   end
 
-  # Fill the linked org's blank type/website from the registrant's submission,
-  # never clobbering curated values, and return the labels of what was written.
-  # Shared by the select-existing and create-new org-linking actions.
+  # The answers from the submission that describes this org which aren't on the org
+  # (missing or conflicting), for the linking flash and the per-card note. Empty
+  # when no submission describes it, so one org's answers are never reported
+  # against another.
+  def profile_diff_for(organization, linked_count: nil)
+    entry = submission_entry_for(@event_registration, organization, linked_count: linked_count)
+    return [] unless entry
+
+    OrganizationServices::ProfileDiff.call(
+      organization: organization,
+      website: entry[:website],
+      agency_type: entry[:agency_type],
+      address: entry[:address] || {}
+    )
+  end
+
+  # Fill a newly created org's type/website from the submission that named it, and
+  # return the labels of what was written.
   def sync_org_profile(organization)
+    entry = submission_entry_for(@event_registration, organization)
+    return [] unless entry
+
     OrganizationServices::SyncProfile.call(
-      organization: organization, overwrite: false, **submitted_agency_profile(@event_registration)
+      organization: organization, overwrite: false, website: entry[:website], agency_type: entry[:agency_type]
     ).filled
   end
 
-  # Build the flash notice after linking, and stage a flash warning for any
-  # submitted answer (type/website/address) that differs from a value already on
-  # the org so the admin can reconcile it by hand. Computed after the sync +
-  # address upsert have run, so only the genuinely-kept discrepancies remain.
-  # `verb` is the notice's past tense ("linked" / "created and linked").
+  # Build the flash notice after linking, and stage a flash warning for every
+  # submitted answer (type/website/address) the org doesn't carry — either because
+  # it holds a different value or, for a profile column we no longer autofill on an
+  # existing org, because it's still blank — so the admin can enter it by hand.
+  # Computed after the address upsert has run, so only what's genuinely unapplied
+  # remains. `verb` is the notice's past tense ("linked" / "created and linked").
   def link_result_notice(organization, verb, filled, address_result)
-    conflicts = OrganizationServices::ProfileDiff.call(
-      organization: organization,
-      address: submitted_agency_address(@event_registration),
-      **submitted_agency_profile(@event_registration)
-    )
+    conflicts = profile_diff_for(organization)
     if conflicts.any?
-      descriptions = conflicts.map { |conflict| "#{conflict.label} (form: “#{flash_safe(conflict.submitted)}”, saved: “#{flash_safe(conflict.saved)}”)" }
-      flash[:warning] = "Some form answers differ from #{flash_safe(organization.name)}’s saved profile and were not applied: #{descriptions.to_sentence}. Edit the organization if they should change."
+      descriptions = conflicts.map { |conflict| "#{conflict.label} (form: “#{flash_safe(conflict.submitted)}”, #{conflict.saved.present? ? "saved: “#{flash_safe(conflict.saved)}”" : "nothing saved"})" }
+      flash[:warning] = "Some form answers were not applied to #{flash_safe(organization.name)}’s saved profile: #{descriptions.to_sentence}. Edit the organization if it should carry them."
     end
 
     saved = filled + [ address_saved_label(address_result) ].compact

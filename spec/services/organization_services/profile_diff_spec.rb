@@ -9,12 +9,16 @@ RSpec.describe OrganizationServices::ProfileDiff do
     expect(described_class.call(organization: organization)).to be_empty
   end
 
-  it "does not flag a submitted value against a blank org column (it just gets filled)" do
+  # Linking an existing org no longer autofills its profile, so a blank column is
+  # something the admin still has to enter rather than something we'll fill.
+  it "flags a submitted value against a blank org column, with no saved value" do
     organization.update!(agency_type: nil, website_url: nil)
 
     diff = described_class.call(organization: organization, website: "acme.org", agency_type: "For-profit")
 
-    expect(diff).to be_empty
+    expect(diff.map(&:field)).to contain_exactly(:website_url, :agency_type)
+    expect(diff.map(&:saved)).to all(be_nil)
+    expect(diff.find { |d| d.field == :agency_type }).to have_attributes(label: "Type", submitted: "For-profit")
   end
 
   it "does not flag a website that matches apart from scheme/www/trailing slash" do

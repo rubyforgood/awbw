@@ -1,16 +1,21 @@
 module OrganizationServices
   # Read-only comparison of a registrant's submitted org answers (website,
   # organization type, and work address) against an organization's saved
-  # profile. Surfaces the discrepancies where the submitted value differs from a
-  # value already on the org — i.e. the answers the fill-blanks sync will NOT
-  # apply, so an admin can decide whether to update the org by hand.
+  # profile. Surfaces the answers the org doesn't carry, so an admin can decide
+  # whether to enter them by hand.
   #
-  # A blank submitted value, or a submitted value against a blank org column, is
-  # not a discrepancy (nothing to reconcile — the latter just gets filled).
-  # Address is compared against the org's corresponding address (AddressMatcher,
-  # the one the fill-blanks upsert targets); an address the matcher doesn't
-  # recognize isn't a discrepancy because it's added rather than reconciled. Powers both the
-  # linking flow's flash summary and the linking page's persistent per-org note.
+  # Website and type are reported whenever they differ from the org's value AND
+  # when the org's column is blank, because linking an existing org no longer
+  # autofills either (only an org created from the submission is seeded).
+  # `saved` is nil on the blank case.
+  #
+  # Address is different: the upsert still fills blank fields on the org's
+  # corresponding address, so only a genuine conflict is reported. It's compared
+  # against the address AddressMatcher picks (the one the upsert targets); an
+  # address the matcher doesn't recognize isn't a discrepancy because it's added
+  # rather than reconciled. A blank submitted value is never a discrepancy.
+  # Powers both the linking flow's flash summary and the linking page's
+  # persistent per-org note.
   class ProfileDiff
     Discrepancy = Struct.new(:field, :label, :submitted, :saved, keyword_init: true)
 
@@ -33,9 +38,10 @@ module OrganizationServices
 
     def website_discrepancy
       submitted = @website&.strip
-      saved = @organization.website_url
-      return if submitted.blank? || saved.blank?
-      return if normalize_url(submitted) == normalize_url(saved)
+      return if submitted.blank?
+
+      saved = @organization.website_url.presence
+      return if saved && normalize_url(submitted) == normalize_url(saved)
 
       Discrepancy.new(field: :website_url, label: "Website", submitted: submitted, saved: saved)
     end
@@ -43,11 +49,10 @@ module OrganizationServices
     def agency_type_discrepancy
       submitted_label, submitted_other = parse_agency_type(@agency_type)
       return if submitted_label.blank?
-      return if @organization.agency_type.blank?
 
       submitted = display_type(submitted_label, submitted_other)
-      saved = display_type(@organization.agency_type, @organization.agency_type_other)
-      return if submitted.casecmp?(saved)
+      saved = @organization.agency_type.presence && display_type(@organization.agency_type, @organization.agency_type_other)
+      return if saved && submitted.casecmp?(saved)
 
       Discrepancy.new(field: :agency_type, label: "Type", submitted: submitted, saved: saved)
     end
