@@ -1,5 +1,5 @@
 <% content_for(:page_bg_class, "public") %>
-<%= render "shared/public_welcome_banner" %>
+<%= render "shared/public_welcome_banner" unless @from_story_share %>
 
 <div class="w-full max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6" id="contact-us-container">
       <!-- Header -->
@@ -19,6 +19,35 @@
       </header>
       <!-- Contact Details -->
       <div class="mt-10 text-gray-800">
+        <% if @from_story_share %>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            <div>
+              <div class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-1">
+                Phone
+              </div>
+              <%= link_to "(310) 396-0317", "tel:310-396-0317",
+                          class: "text-blue-600 hover:text-blue-800 font-medium" %>
+            </div>
+            <div>
+              <div class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-1">
+                Email
+              </div>
+              <%= mail_to "info@awbw.org",
+                          class: "text-blue-600 hover:text-blue-800 font-medium" %>
+            </div>
+            <div>
+              <div class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-1">
+                Mailing address
+              </div>
+              <address class="not-italic text-gray-700 leading-relaxed">
+                Attn: Zachery Scott, Executive Director<br>
+                A Window Between Worlds<br>
+                1029 1/2 W 24th Street<br>
+                Los Angeles, CA 90007
+              </address>
+            </div>
+          </div>
+        <% else %>
         <div class="space-y-4">
           <div class="grid grid-cols-3 gap-x-8">
             <div>
@@ -70,6 +99,7 @@
             </div>
           </div>
         </div>
+        <% end %>
       </div>
       <!-- Divider -->
       <div class="mt-12 pt-12 border-t border-gray-200">
@@ -92,6 +122,11 @@
                   We'll reply by email to <strong><%= @user.email %></strong>.
                 <% end %>
               </p>
+              <% if @from_story_share %>
+                <div class="pt-2">
+                  <%= link_to "Back to story share", story_shares_path, class: "btn btn-primary" %>
+                </div>
+              <% end %>
             </div>
             <script>document.getElementById("thank-you").scrollIntoView({ behavior: "smooth", block: "center" });</script>
           <% else %>
@@ -109,8 +144,12 @@
                 Hello, <%= @user.first_name_or_email %>! We're glad to hear from you. We'll reply by email to <%= @user.email %>.
               </div>
             <% end %>
-            <%= form_tag("/contact_us", method: "POST", class: "space-y-8", id: "contact-us-form", novalidate: true) do %>
+            <%= form_tag("/contact_us", method: "POST", class: "space-y-8", id: "contact-us-form", novalidate: true,
+                         data: { controller: ("subject-select" if @from_story_share) }) do %>
               <input type="hidden" name="contact_us[q]" value="general">
+              <% if @from_story_share %>
+                <input type="hidden" name="from" value="story_share">
+              <% end %>
               <% unless current_user %>
                 <!-- Name Row -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
@@ -168,6 +207,21 @@
                 <label for="website_url">Website</label>
                 <input type="text" name="contact_us[website_url]" id="website_url" tabindex="-1" autocomplete="off">
               </div>
+              <% if @from_story_share %>
+                <!-- Subject preset picker (fills the subject line) -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Select from the choices below so we can best serve you *
+                  </label>
+                  <select data-action="subject-select#populate"
+                          class="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
+                    <option value="" disabled selected>Choose an option…</option>
+                    <% ContactUsController::PORTAL_SUBJECT_OPTIONS.each do |option| %>
+                      <option value="<%= option %>"><%= option %></option>
+                    <% end %>
+                  </select>
+                </div>
+              <% end %>
               <!-- Subject -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -178,6 +232,7 @@
                        required
                        maxlength="100"
                        data-error-message="Subject line is required"
+                       <%= raw('data-subject-select-target="subject"') if @from_story_share %>
                        class="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
                 <p class="field-error hidden mt-1 text-xs text-red-600"></p>
               </div>

@@ -180,6 +180,9 @@ application.register("scroll-to-top", ScrollToTopController)
 import SortableController from "./sortable_controller"
 application.register("sortable", SortableController)
 
+import SubjectSelectController from "./subject_select_controller"
+application.register("subject-select", SubjectSelectController)
+
 import SubmitOnceController from "./submit_once_controller"
 application.register("submit-once", SubmitOnceController)
 
