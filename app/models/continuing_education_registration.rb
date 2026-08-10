@@ -77,13 +77,30 @@ class ContinuingEducationRegistration < ApplicationRecord
   # sign-ins/early sign-outs. You can't certify hours the sign-in sheet doesn't support.
   ATTENDANCE_COVERAGE_THRESHOLD = 0.9
 
+  # The registration whose event the hours are completed/certified at — the home
+  # reg, or the destination it transferred to. Record + payment stay on the home
+  # reg; only certification follows the person. Derived from the transfer link, so
+  # there's nothing to keep in sync. (issue #1944)
+  def certified_at_registration
+    event_registration.transferred_to_registration || event_registration
+  end
+
+  # True when this record's hours are certified at a *different* event than the
+  # one it's billed to (i.e. the home reg transferred out).
+  def certified_elsewhere?
+    event_registration.transferred_to_registration.present?
+  end
+
   # CE certificate eligibility — its own rule (not shared): the event grants CE,
   # the registrant attended, the training has ended, the CE balance is paid, and
   # (when attendance was tracked) the logged time approximately covers the hours.
+  # Attendance + the training-ended check run against the certified-at reg (the
+  # destination event after a transfer); payment stays this record's own balance.
   def certificate_available?
-    event = event_registration&.event
+    reg = certified_at_registration
+    event = reg&.event
     return false unless event&.ce_eligible?
-    return false unless event.end_date&.past? && event_registration.attended? && paid_in_full?
+    return false unless event.end_date&.past? && reg.attended? && paid_in_full?
 
     attendance_time_sufficient?
   end
@@ -92,8 +109,9 @@ class ContinuingEducationRegistration < ApplicationRecord
   # cover the awarded hours before the certificate unlocks. With nothing logged (the
   # portal sign-in wasn't used for this event), day-level attendance alone governs,
   # so this doesn't block — it never retroactively gates events that never tracked time.
+  # Reads the certified-at reg's log (the destination event after a transfer).
   def attendance_time_sufficient?
-    logged = event_registration.attendance_minutes_total
+    logged = certified_at_registration.attendance_minutes_total
     return true if logged.zero?
 
     logged >= required_attendance_minutes

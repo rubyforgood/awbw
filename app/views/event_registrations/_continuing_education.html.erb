@@ -46,6 +46,18 @@
           <% end %>
         </p>
 
+        <%# After a transfer, the hours are certified at the destination event
+            while this record + its payment stay here (issue #1944). %>
+        <% if ce_registration.certified_elsewhere? %>
+          <% certified_at = ce_registration.certified_at_registration %>
+          <p class="text-xs text-teal-700">
+            <i class="fa-solid fa-award"></i>
+            Hours certified at
+            <%= link_to certified_at.event.title, edit_event_registration_path(certified_at, return_to: "registrants"),
+                        class: "font-medium underline", target: "_blank", rel: "noopener" %>
+          </p>
+        <% end %>
+
         <%# Pinned to the card's bottom so it lines up with the scholarship card's
             chip and the organizations card's "Connect organization" link. %>
         <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3">

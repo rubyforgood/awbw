@@ -506,6 +506,20 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("Record where they transferred to")
       end
 
+      it "notes on the source CE card where the hours are certified after a transfer" do
+        source_event = create(:event, ce_hours_offered: 6)
+        source = create(:event_registration, event: source_event, status: "transferred_out")
+        intended = create(:event, title: "Intended Training")
+        create(:event_registration, event: intended, registrant: source.registrant, transferred_from_registration: source)
+        create(:continuing_education_registration, event_registration: source,
+               professional_license: create(:professional_license, person: source.registrant))
+
+        get edit_event_registration_path(source)
+
+        expect(response.body).to include("Hours certified at")
+        expect(response.body).to include("Intended Training")
+      end
+
       it "shows the source event on a transferred-in registration" do
         source = create(:event_registration, event: event, status: "transferred_out")
         incoming = create(:event_registration, event: new_event, transferred_from_registration: source)
@@ -694,6 +708,20 @@ RSpec.describe "EventRegistrations", type: :request do
           post process_transfer_event_registration_path(source)
 
           expect(response).to redirect_to(transfer_event_registration_path(source))
+        end
+
+        it "certifies the source reg's CE hours at the destination reg" do
+          ce = create(:continuing_education_registration, event_registration: source,
+                professional_license: create(:professional_license, person: source.registrant))
+
+          post process_transfer_event_registration_path(source),
+               params: { destination_event_id: destination_event.id }
+
+          incoming = EventRegistration.find_by(registrant: source.registrant, event: destination_event)
+          # Derived from the transfer link — no re-pointing needed.
+          expect(ce.reload.certified_at_registration).to eq(incoming)
+          expect(incoming.certifiable_ce_registrations).to include(ce)
+          expect(source.reload.certifiable_ce_registrations).to be_empty
         end
       end
     end

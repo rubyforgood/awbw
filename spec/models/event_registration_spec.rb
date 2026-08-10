@@ -206,6 +206,31 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "CE certification across a transfer" do
+    let(:home_event) { create(:event, ce_hours_offered: 6, start_date: 3.days.ago, end_date: 1.day.ago) }
+    let(:intended_event) { create(:event, ce_hours_offered: 6, start_date: 3.days.ago, end_date: 1.day.ago) }
+    let(:person) { create(:person) }
+    let!(:source) { create(:event_registration, event: home_event, registrant: person, status: "transferred_out") }
+    let!(:intended) { create(:event_registration, event: intended_event, registrant: person, status: "attended", transferred_from_registration: source) }
+    let!(:ce) do
+      create(:continuing_education_registration, event_registration: source,
+        professional_license: create(:professional_license, person: person))
+    end
+
+    it "lets the intended event issue the CE certificate for hours earned there" do
+      expect(intended.certifiable_ce_registrations).to eq([ ce ])
+      intended.mark_certificate_issued!(true)
+      expect(ce.reload.certificate_sent?).to be(true)
+      expect(intended.reload.certificate_issued?).to be(true)
+    end
+
+    it "does not issue the transferred-out hours from the source registration" do
+      expect(source.certifiable_ce_registrations).to be_empty
+      source.mark_certificate_issued!(true)
+      expect(ce.reload.certificate_sent?).to be(false)
+    end
+  end
+
   describe "#sync_attendance_status_to_days!" do
     # A two-day event: start and end one day apart → day_count == 2.
     let(:event) { create(:event, start_date: 12.days.from_now, end_date: 13.days.from_now) }

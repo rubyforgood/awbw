@@ -98,6 +98,11 @@
         <% end %>
       </div>
       <% if source.ce_registered? %>
+        <%# Hours are earned/certified HERE (this event); the CE record + payment
+            stay on the original registration. %>
+        <span class="mb-1 inline-flex w-fit items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-[0.65rem] font-medium text-teal-700">
+          <i class="fa-solid fa-award"></i> Hours earned at this event
+        </span>
         <p class="text-sm text-gray-900"><%= source.ce_status_label %></p>
         <p class="mt-1 text-xs text-gray-500">
           <%= plain_number(source.ce_hours_total) || "0" %> hrs

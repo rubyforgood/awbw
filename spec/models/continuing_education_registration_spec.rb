@@ -157,6 +157,37 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       ce_reg.mark_certificate_sent!
       expect(ce_reg.certificate_sent?).to be(true)
     end
+
+    describe "certified at a different event (transfer)" do
+      let(:home_event) { create(:event, ce_hours_offered: 6, start_date: 3.days.ago, end_date: 1.day.ago) }
+      let(:intended_event) { create(:event, ce_hours_offered: 6, start_date: 10.days.from_now, end_date: 12.days.from_now) }
+      let(:home_reg) { create(:event_registration, event: home_event, status: "transferred_out") }
+      let(:ce_reg) do
+        create(:continuing_education_registration, event_registration: home_reg, cost_cents: 0,
+          professional_license: create(:professional_license, person: home_reg.registrant))
+      end
+
+      it "defaults certified_at_registration to the home reg when not transferred" do
+        solo = create(:event_registration, event: home_event, status: "attended")
+        ce = create(:continuing_education_registration, event_registration: solo, cost_cents: 0,
+          professional_license: create(:professional_license, person: solo.registrant))
+        expect(ce.certified_at_registration).to eq(solo)
+      end
+
+      it "certifies against the destination (intended) event, not the home event" do
+        # Same person transfers on to the intended event (derives home_reg.transferred_to).
+        intended_reg = create(:event_registration, event: intended_event, registrant: home_reg.registrant,
+          status: "attended", transferred_from_registration: home_reg)
+
+        expect(ce_reg.reload.certified_at_registration).to eq(intended_reg)
+        # Home event already ended, but hours are certified at the intended event,
+        # which hasn't happened yet → not certifiable until that event ends.
+        expect(ce_reg.certificate_available?).to be(false)
+
+        intended_event.update!(start_date: 3.days.ago, end_date: 1.day.ago)
+        expect(ce_reg.reload.certificate_available?).to be(true)
+      end
+    end
   end
 
   # Payment interface comes from Registerable, driven by the CE record's own
