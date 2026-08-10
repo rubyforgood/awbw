@@ -324,6 +324,16 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         expect(link.form_filled_labels).to contain_exactly("website", "work address in Reno")
       end
 
+      # The admin linking page pairs answers to orgs by this pin. Without it the
+      # pairing falls back to matching the org's current name against what the
+      # registrant typed, which an admin renaming the org would silently break.
+      it "pins the submission the registrant's answers came from on the org link" do
+        result = register_with_org(field_id("agency_website") => "helpinghands.org")
+
+        link = result.event_registration.event_registration_organizations.find_by!(organization: organization)
+        expect(link.form_submission).to eq(result.form_submission)
+      end
+
       it "overwrites an existing website with the latest answer" do
         organization.update!(website_url: "https://existing.org")
 

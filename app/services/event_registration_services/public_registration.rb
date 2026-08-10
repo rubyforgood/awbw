@@ -103,8 +103,9 @@ module EventRegistrationServices
             existing.update!(status: "registered")
             send_notifications(existing)
           end
-          connect_organization(existing, organization)
+          organization_link = connect_organization(existing, organization)
           submission = update_form_submission(person)
+          organization_link&.record_form_submission(submission)
           save_scholarship_submission(person)
           save_continuing_education_submission(person)
           return Result.new(success?: true, event_registration: existing, form_submission: submission, errors: [])
@@ -112,8 +113,9 @@ module EventRegistrationServices
 
         event_registration = create_event_registration(person)
         create_ce_registration(event_registration, person)
-        connect_organization(event_registration, organization)
+        organization_link = connect_organization(event_registration, organization)
         submission = create_form_submission(person)
+        organization_link&.record_form_submission(submission)
         save_scholarship_submission(person)
         save_continuing_education_submission(person)
 
@@ -333,12 +335,16 @@ module EventRegistrationServices
     # multiple orgs only deliberately: an admin links extra ones from the edit
     # page, or the registrant applies again with a different org (each submission
     # adds its single org to the same registration via find_or_create_by!).
+    # Returns the link so the caller can pin this submission on it once it exists —
+    # the admin linking page pairs answers to orgs by that pin, and an org renamed
+    # after registration would otherwise stop matching the name the registrant typed.
     def connect_organization(event_registration, organization)
       return unless organization
 
       link = event_registration.event_registration_organizations
         .find_or_create_by!(organization: organization)
       link.record_form_fills(@organization_form_fills.to_a)
+      link
     end
 
     def create_affiliation(person, organization, organization_address = nil)

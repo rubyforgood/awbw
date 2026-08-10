@@ -1159,6 +1159,30 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(flash[:warning]).to include("were not applied").and include("Government agency").and include("For-profit")
         end
 
+        # The submission that describes an org is pinned on the link when it's made,
+        # so the discrepancy note survives however many orgs are linked afterwards.
+        # Recomputing the pairing per request would drop it here: the org's name isn't
+        # what the registrant typed, so the sole-submission/sole-org fallback is what
+        # paired them, and that fallback stops applying at the second linked org.
+        it "keeps the discrepancy note on an org linked under a name the registrant didn't type" do
+          organization.update!(name: "Acme Corporation", agency_type: "For-profit")
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_name" => "Acme Inc", "agency_type" => "Government agency" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: create(:organization, name: "Zebra Center").id }
+          get link_organization_event_registration_path(existing_registration)
+
+          cards = Nokogiri::HTML(response.body).css("li").select { |li| li.text.include?("Unlink") }
+          expect(cards.find { |li| li.text.include?("Acme Corporation") }.text).to include("Government agency")
+        end
+
         it "escapes a submitted answer before putting it in the flash warning" do
           organization.update!(website_url: "https://curated.org")
           reg_form = create(:form, name: "Reg form")

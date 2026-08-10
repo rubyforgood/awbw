@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_10_001547) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_10_123041) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -474,10 +474,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_10_001547) do
     t.datetime "created_at", null: false
     t.bigint "event_registration_id", null: false
     t.json "form_filled_fields"
+    t.bigint "form_submission_id"
     t.integer "organization_id", null: false
     t.datetime "updated_at", null: false
     t.index ["event_registration_id", "organization_id"], name: "idx_event_reg_orgs_on_registration_and_org", unique: true
     t.index ["event_registration_id"], name: "idx_on_event_registration_id_806bdcd019"
+    t.index ["form_submission_id"], name: "index_event_registration_organizations_on_form_submission_id"
     t.index ["organization_id"], name: "index_event_registration_organizations_on_organization_id"
   end
 
@@ -1801,6 +1803,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_10_001547) do
   add_foreign_key "event_registration_checklist_completions", "event_registrations"
   add_foreign_key "event_registration_checklist_completions", "users", column: "completed_by_id"
   add_foreign_key "event_registration_organizations", "event_registrations"
+  add_foreign_key "event_registration_organizations", "form_submissions", on_delete: :nullify
   add_foreign_key "event_registration_organizations", "organizations"
   add_foreign_key "event_registrations", "events"
   add_foreign_key "event_registrations", "people", column: "registrant_id"

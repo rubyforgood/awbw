@@ -481,12 +481,13 @@ class EventRegistrationsController < ApplicationController
     entry && entry[:position]
   end
 
-  # The submission entry whose answers describe `organization`: the one whose typed
-  # org name matches it, else — only when the pairing is unambiguous, i.e. a single
-  # submission and a single linked org — that sole entry, which covers a registrant
-  # who named no org and an admin resolving a typo'd "Acme Inc" to the saved "Acme
-  # Corporation". Nil otherwise: an extra org an admin linked by hand isn't the one
-  # the registrant wrote about, so none of the submitted answers apply to it.
+  # The submission entry whose answers describe `organization`: the one pinned on
+  # the link when it was made, else the one whose typed org name matches, else —
+  # only when the pairing is unambiguous, i.e. a single submission and a single
+  # linked org — that sole entry, which covers a registrant who named no org and an
+  # admin resolving a typo'd "Acme Inc" to the saved "Acme Corporation". Nil
+  # otherwise: an extra org an admin linked by hand isn't the one the registrant
+  # wrote about, so none of the submitted answers apply to it.
   # Memoized per org: each linking action asks five times (profile, address,
   # position, notice, warning) and the fallback counts the registration's linked orgs.
   def submission_entry_for(registration, organization, linked_count: nil)
@@ -498,11 +499,24 @@ class EventRegistrationsController < ApplicationController
 
   def find_submission_entry(registration, organization, linked_count)
     entries = registration_submission_entries(registration)
-    match = entries.find { |entry| entry[:org_name].present? && entry[:org_name].strip.casecmp?(organization.name.to_s.strip) }
+    # The pinned submission wins: the name and sole-org rules below are re-derived
+    # on every request, so an org linked under a name the registrant didn't type
+    # would otherwise lose its answers (and its discrepancy note) the moment a
+    # second org is linked.
+    pinned = pinned_submission_ids(registration)[organization.id]
+    match = pinned && entries.find { |entry| entry[:submission].id == pinned }
+    match ||= entries.find { |entry| entry[:org_name].present? && entry[:org_name].strip.casecmp?(organization.name.to_s.strip) }
     return match if match
     return unless entries.one?
 
     entries.first if (linked_count || registration.organizations.count) == 1
+  end
+
+  # The submission pinned on each of this registration's org links, by org id.
+  # Loaded once: the linking page asks for every linked org.
+  def pinned_submission_ids(registration)
+    @pinned_submission_ids ||= registration.event_registration_organizations
+      .pluck(:organization_id, :form_submission_id).to_h
   end
 
   # The address fields the registrant typed on the submission that describes this
@@ -535,10 +549,14 @@ class EventRegistrationsController < ApplicationController
   # unambiguous. `record_fills` keeps a persistent note of what the form changed.
   def link_and_report(organization, verb:, record_fills:)
     link = @event_registration.event_registration_organizations.find_or_create_by!(organization: organization)
+    entry = submission_entry_for(@event_registration, organization)
     filled = sync_org_profile(organization)
     address_result = link_affiliations_for(@event_registration, organization)
 
     saved = filled + [ address_result.saved_label ].compact
+    # Pin the pairing even when nothing was filled — an org whose every answer
+    # conflicts fills nothing, and that's exactly the one whose note has to survive.
+    link.record_form_submission(entry[:submission]) if entry
     link.record_form_fills(saved) if record_fills
     link_result_notice(organization, verb, saved)
   end

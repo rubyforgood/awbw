@@ -4,6 +4,7 @@ RSpec.describe EventRegistrationOrganization, type: :model do
   describe "associations" do
     it { should belong_to(:event_registration).required }
     it { should belong_to(:organization).required }
+    it { should belong_to(:form_submission).optional }
   end
 
   describe "validations" do
@@ -61,6 +62,54 @@ RSpec.describe EventRegistrationOrganization, type: :model do
 
     # Matches only a statement that starts with UPDATE — "updated_at" appears in
     # the column list of every INSERT.
+    def updates_while
+      statements = []
+      subscriber = ->(*, payload) { statements << payload[:sql] unless payload[:name] == "SCHEMA" }
+      ActiveSupport::Notifications.subscribed(subscriber, "sql.active_record") { yield }
+      statements.grep(/\AUPDATE\b/i)
+    end
+  end
+
+  describe "pinned submission" do
+    subject(:link) { create(:event_registration_organization) }
+
+    let(:submission) { create(:form_submission) }
+
+    it "has none until a submission is pinned" do
+      expect(link.form_submission).to be_nil
+    end
+
+    it "pins the submission whose answers describe the org" do
+      link.record_form_submission(submission)
+
+      expect(link.reload.form_submission).to eq(submission)
+    end
+
+    # A registrant applying again describes the org afresh, and the profile sync
+    # is latest-wins, so the pin follows the newest submission.
+    it "repins to a later submission" do
+      link.record_form_submission(submission)
+
+      later = create(:form_submission)
+      link.record_form_submission(later)
+
+      expect(link.reload.form_submission).to eq(later)
+    end
+
+    it "issues no write when the same submission is already pinned" do
+      link.record_form_submission(submission)
+
+      expect(updates_while { link.record_form_submission(submission) }).to be_empty
+    end
+
+    # An org an admin linked by hand matches no submission, so there's nothing to pin.
+    it "issues no write when there is no submission" do
+      link.reload
+
+      expect(updates_while { link.record_form_submission(nil) }).to be_empty
+      expect(link.reload.form_submission_id).to be_nil
+    end
+
     def updates_while
       statements = []
       subscriber = ->(*, payload) { statements << payload[:sql] unless payload[:name] == "SCHEMA" }

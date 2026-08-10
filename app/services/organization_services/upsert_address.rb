@@ -81,8 +81,13 @@ module OrganizationServices
     # overwrite: false (admin linking) only fills blank fields, so a discrepancy
     # between the form and the org's saved address is kept and surfaced by
     # ProfileDiff instead of being silently replaced. City and state are always
-    # fill-only (never flipped) so a street/ZIP match can supply what we were
-    # missing without rewriting what's already on file.
+    # fill-only, in both modes: they're what an address is identified by, and
+    # rewriting them would move a saved address to a different place rather than
+    # correct it. The fill is not dead code even though both columns are NOT NULL
+    # and validated present — a legacy row can hold "", and AddressMatcher's last
+    # resort (street + ZIP, any city) is the one path that reaches such a row, so
+    # that's where a blank city/state gets repaired. See the "repairs a legacy
+    # address" specs.
     def field_updates(existing)
       updates = {}
       updates[:city] = @city if existing.city.blank?

@@ -134,6 +134,38 @@ RSpec.describe OrganizationServices::UpsertAddress do
     expect(existing.reload).to have_attributes(street_address: "5 Oak Ave", zip_code: "78702", country: "Canada")
   end
 
+  # city and state are NOT NULL and validated present, so only a legacy row holds
+  # "". AddressMatcher's street + ZIP last resort is the one path that reaches such
+  # a row (the earlier steps all require the city to match), which is why the
+  # fill-blank branches for city and state exist.
+  it "repairs a legacy address whose city and state are blank" do
+    existing = create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
+    # The presence validations that keep these filled today didn't always exist.
+    existing.update_columns(city: "", state: "")
+
+    result = described_class.call(
+      organization: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701", overwrite: false
+    )
+
+    expect(result).to have_attributes(address: existing, created: false)
+    expect(result.filled).to contain_exactly("city", "state")
+    expect(existing.reload).to have_attributes(city: "Austin", state: "TX")
+    expect(organization.addresses.count).to eq(1)
+  end
+
+  # The public flow overwrites details, but city and state stay fill-only there
+  # too: rewriting them would move a saved address rather than correct it.
+  it "repairs a legacy blank city without moving an address that already has one" do
+    elsewhere = create(:address, addressable: organization, street_address: "1 Main St", city: "Saint Louis", state: "MO", zip_code: "63101")
+
+    described_class.call(
+      organization: organization, street_address: "1 Main St", city: "St. Louis", state: "MO", zip_code: "63101"
+    )
+
+    expect(elsewhere.reload.city).to eq("Saint Louis")
+    expect(organization.addresses.count).to eq(1)
+  end
+
   it "updates the same-street address and fills a missing country instead of duplicating when the state differs by format" do
     existing = create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "Texas", zip_code: "78701", country: "")
 
