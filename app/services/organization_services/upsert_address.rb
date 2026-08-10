@@ -47,8 +47,8 @@ module OrganizationServices
       @organization = organization
       @city = city&.strip
       @state = state&.strip.presence
-      @street_address = street_address
-      @zip_code = zip_code
+      @street_address = street_address&.strip
+      @zip_code = zip_code&.strip
       @country = country&.strip.presence
       @overwrite = overwrite
     end

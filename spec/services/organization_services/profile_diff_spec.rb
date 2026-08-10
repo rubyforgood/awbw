@@ -84,6 +84,18 @@ RSpec.describe OrganizationServices::ProfileDiff do
       expect(diff).to be_empty
     end
 
+    # A legacy row can hold a padded street/ZIP, and comparing it to the trimmed
+    # answer would flag the address as unreconciled against its own value.
+    it "does not flag a saved value that differs only by surrounding whitespace" do
+      create(:address, addressable: organization, street_address: " 1 Main St ", city: "Austin", state: "TX", zip_code: " 78701 ")
+
+      diff = described_class.call(organization: organization, address: {
+        street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701"
+      })
+
+      expect(diff).to be_empty
+    end
+
     it "flags a city that differs on the address matched across cities by street and ZIP" do
       create(:address, addressable: organization, street_address: "1 Main St", city: "Saint Louis", state: "MO", zip_code: "63101")
 

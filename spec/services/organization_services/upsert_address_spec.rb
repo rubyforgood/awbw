@@ -26,6 +26,22 @@ RSpec.describe OrganizationServices::UpsertAddress do
     )
   end
 
+  # Browsers don't trim text inputs, and a padded value stored verbatim would read
+  # as a difference to ProfileDiff and get re-reported as filled on every relink.
+  it "strips the submitted street and ZIP before storing them" do
+    result = described_class.call(organization: organization, street_address: " 1 Main St ", city: "Austin", state: "TX", zip_code: " 78701 ")
+
+    expect(result.address).to have_attributes(street_address: "1 Main St", zip_code: "78701")
+  end
+
+  it "reports nothing filled when the submission only pads what is already on file" do
+    create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
+
+    result = described_class.call(organization: organization, street_address: " 1 Main St ", city: "Austin", state: "TX", zip_code: " 78701 ")
+
+    expect(result).to have_attributes(created: false, filled: [])
+  end
+
   # street and ZIP are NOT NULL columns with no default.
   it "stores skipped street and ZIP answers as empty strings rather than failing" do
     result = described_class.call(organization: organization, city: "Austin", state: "TX")

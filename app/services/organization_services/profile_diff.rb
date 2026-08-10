@@ -84,7 +84,9 @@ module OrganizationServices
 
     def field_discrepancy(field, label, submitted, saved)
       submitted = submitted&.strip.presence
-      saved = saved.presence
+      # Strip both sides: a legacy row can hold a padded street/ZIP, and comparing
+      # it raw would flag the address as differing from the answer it came from.
+      saved = saved&.strip.presence
       return if submitted.blank? || saved.blank?
       return if submitted.casecmp?(saved)
 
