@@ -181,6 +181,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `AhoyTracking` — Event tracking integration
 - `Dedupable` — Data deduplication helpers
 - `ExternallyRedirectable` — External URL redirection
+- `StoryIdeaFormVariables` — Loads the shared story-idea form variables (StoryIdeasController + the portal's StorySharesController#share)
 - `TagAssignable` — Tag assignment helpers
 
 ## Services
@@ -311,7 +312,7 @@ end
 - `anchor_highlight` — Highlight anchored elements
 - `asset_picker` — Asset selection UI
 - `autosave` — Auto-save form state
-- `carousel` — Swiper-based carousels
+- `carousel` — Swiper-based carousels (opt-in `Autoplay` via the options value)
 - `ce_license_picker` — Fill the CE license type/number/state/expiry fields from the picked license (or clear them for a new one)
 - `cocoon` — Nested form handling (cocoon gem)
 - `collection` — Filter form auto-submit with debounce

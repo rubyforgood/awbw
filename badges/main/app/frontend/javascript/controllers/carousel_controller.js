@@ -1,6 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import Swiper from 'swiper'
-import { Navigation } from 'swiper/modules'
+import { Navigation, Autoplay } from 'swiper/modules'
 
 import 'swiper/css'
 import 'swiper/css/navigation'
@@ -13,7 +13,7 @@ export default class extends Controller {
 
   connect() {
     const defaults = {
-      modules: [Navigation],
+      modules: [Navigation, Autoplay],
       loop: true,
       speed: 1400,
       spaceBetween: 30,

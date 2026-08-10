@@ -1,90 +1,109 @@
 <% content_for(:page_bg_class, "admin-or-public-or-authpublished") %>
-</div><!-- Break out of layout container -->
+<% content_for(:title, "#{@story.title} - AWBW Story Share") %>
+<% content_for(:head) do %>
+  <meta property="og:title" content="<%= @story.title %>">
+  <meta property="og:description" content="<%= @story.detail(length: 160) %>">
+  <meta property="og:type" content="article">
+  <% if @story.primary_asset&.file&.attached? %>
+    <meta property="og:image" content="<%= url_for(@story.primary_asset.file) %>">
+  <% end %>
+<% end %>
 
-<!-- Hero Section with Story Image -->
-<section class="bg-white mt-12 -mx-2 sm:-mx-6 lg:-mx-8">
-  <div class="max-w-6xl mx-auto">
-    <div class="relative rounded-lg overflow-hidden shadow-lg">
-      <div class="aspect-[16/6] bg-gray-200">
-        <%= render "assets/display_image",
-                   resource: @story,
-                   variant: :hero,
-                   link: true %>
+<section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <!-- Utility buttons -->
+  <div class="flex flex-wrap justify-end gap-1 mb-6">
+    <%= link_to "All stories", story_shares_path, class: "btn btn-secondary-outline" %>
+    <%= link_to "Home", root_path, class: "btn btn-secondary-outline" %>
+    <% if current_user&.super_user? %>
+      <%= link_to "Edit", edit_story_path(@story.id), class: "btn btn-secondary-outline admin-only bg-blue-100" %>
+    <% end %>
+    <span class="inline-block text-sm">
+      <%= render "bookmarks/editable_bookmark_button", resource: @story %>
+    </span>
+    <%= print_button(@story, printable_type: "Story", button_text: "Print page") %>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+    <!-- MAIN COLUMN -->
+    <div class="lg:col-span-2 min-w-0">
+      <h1 class="font-telefon text-3xl sm:text-4xl text-gray-900 mb-4"><%= @story.title %></h1>
+
+      <!-- Metadata -->
+      <div class="text-sm text-gray-700 space-y-1 mb-5">
+        <p><strong>Story by:</strong> <%= @story.author_credit %></p>
+        <% if @story.organization_name.present? %>
+          <p>
+            <strong>Organization name:</strong>
+            <%= @story.organization_name %><%= ", #{@story.organization.state}" if @story.organization&.state.present? %>
+          </p>
+        <% end %>
+        <% if @story.workshop_title.present? %>
+          <p><strong>Workshop:</strong> <%= @story.workshop_title %></p>
+        <% end %>
       </div>
-      
-      <!-- Blue Sector Box on Top Left -->
-      <div class="absolute top-6 left-6 bg-blue-600 text-white text-xs font-semibold uppercase px-4 py-2 z-10">
-        <%= @story.sectors.first&.name || "Story" %>
+
+      <%= render "tag_chips", story: @story %>
+
+      <!-- Story image -->
+      <% if @story.primary_asset&.file&.attached? || @story.gallery_assets.any? %>
+        <div class="mb-8 rounded-lg overflow-hidden bg-black">
+          <%= image_tag @story.display_image, alt: @story.title, class: "w-full h-auto" %>
+        </div>
+      <% end %>
+
+      <!-- Body -->
+      <div class="prose prose-lg max-w-none text-gray-700 mb-10">
+        <%= @story.rhino_body %>
       </div>
-      
-      <!-- Black semi-transparent overlay bar at bottom with title -->
-      <div class="absolute bottom-0 left-0 right-0 bg-black/50 p-8 text-white">
-        <h1 class="font-telefon text-3xl mb-2">
-          <%= @story.title %>
-        </h1>
-        <p class="text-sm opacity-90">
-          <%= @story.organization_name %>
-          <% if @story.organization.city_state.present? %>
-            - <%= @story.organization.city_state %>
+
+      <!-- YouTube embed -->
+      <% if (embed_url = youtube_embed_url(@story.youtube_url)) %>
+        <div class="aspect-video mb-10">
+          <iframe src="<%= embed_url %>" class="w-full h-full rounded-lg"
+                  title="<%= @story.title %> video" allowfullscreen loading="lazy"></iframe>
+        </div>
+      <% end %>
+
+      <!-- Additional artwork gallery -->
+      <% if @story.assets.count > 1 %>
+        <div class="mb-10">
+          <%= render "assets/display_assets", resource: @story, link: true %>
+        </div>
+      <% end %>
+
+      <!-- Share -->
+      <div class="border-t border-gray-200 pt-6 mb-8">
+        <%= render "share_buttons", story: @story %>
+      </div>
+
+      <!-- Boilerplate footer -->
+      <p class="text-xs text-gray-400 leading-relaxed border-t border-gray-200 pt-6">
+        A Window Between Worlds (AWBW) supports hundreds of art workshop facilitators across the
+        country to incorporate creative expression into their work with trauma survivors. These
+        Windows Facilitators serve over 140,000 adults, teens, and children each year. Through
+        these stories, we invite you to explore and share their journeys toward transformation and healing.
+      </p>
+    </div>
+
+    <!-- RELATED SIDEBAR -->
+    <% if @related_stories.any? %>
+      <aside class="lg:col-span-1">
+        <h2 class="font-telefon text-lg text-purple-800 border-b-2 border-purple-800 pb-1 mb-5">Related stories:</h2>
+        <div class="space-y-8">
+          <% @related_stories.each do |story| %>
+            <article>
+              <%= link_to story.title, story_share_path(story), class: "font-telefon text-lg text-gray-900 hover:text-purple-700 leading-tight" %>
+              <p class="text-xs text-gray-500 mt-1 mb-2">
+                <%= story.organization_name %><%= " – #{story.organization.state}" if story.organization&.state.present? %>
+              </p>
+              <%= link_to story_share_path(story), class: "block rounded overflow-hidden bg-gray-100" do %>
+                <%= image_tag story.display_image, loading: "lazy", alt: story.title,
+                              class: "w-full aspect-[4/3] object-cover" %>
+              <% end %>
+            </article>
           <% end %>
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Utility Buttons Section -->
-<section class="bg-white py-4 -mx-2 sm:-mx-6 lg:-mx-8">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-right space-x-1">
-      <%= link_to "All Stories", story_shares_path, class: "btn btn-secondary-outline" %>
-      <%= link_to "Stories", stories_path, class: "btn btn-secondary-outline" %>
-      <%= link_to "Home", root_path, class: "btn btn-secondary-outline" %>
-      <% if current_user&.super_user? %>
-        <%= link_to "Edit", edit_story_path(@story.id),
-                    class: "btn btn-secondary-outline admin-only bg-blue-100" %>
-      <% end %>
-      <span class="inline-block text-sm">
-        <%= render "bookmarks/editable_bookmark_button", resource: @story %>
-      </span>
-      <%= print_button(@story, printable_type: "Story", button_text: "Print page") %>
-    </div>
-  </div>
-</section>
-
-<!-- Story Content Section -->
-<section class="bg-white py-12 -mx-2 sm:-mx-6 lg:-mx-8">
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- Story Metadata -->
-    <div class="text-sm text-gray-600 space-y-1 mb-8">
-      <p>
-        <strong>Story by:</strong>
-        <%= @story.author_credit %>
-      </p>
-      <p>
-        <strong>Organization Name:</strong>
-        <%= @story.organization_name %>
-      </p>
-      <% if @story.workshop_title.present? %>
-        <p>
-          <strong>Workshop:</strong>
-          <%= @story.workshop_title %>
-        </p>
-      <% end %>
-    </div>
-
-    <!-- Story Body Text -->
-    <div class="prose prose-lg max-w-none text-gray-700 mb-10">
-      <%= @story.rhino_body %>
-    </div>
-
-    <!-- Additional Story Assets (if any beyond hero) -->
-    <% if @story.assets.count > 1 %>
-      <div class="mb-10">
-        <%= render "assets/display_assets", resource: @story, link: true %>
-      </div>
+        </div>
+      </aside>
     <% end %>
   </div>
 </section>
-
-<div><!-- Restore layout container -->

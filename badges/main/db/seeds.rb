@@ -184,6 +184,12 @@ canonical_names = Sector::SECTOR_TYPES.map(&:downcase)
 Sector.all.reject { |sector| canonical_names.include?(sector.name.downcase) }
   .each { |sector| sector.update!(published: false) }
 
+# Feature a few sectors in the Story Share portal (nav + landing rows, ordered).
+# Admins can change these from the Sectors admin.
+{ "Domestic Violence" => 1, "Self-Care/Personal Growth" => 2, "Racial/Social Justice" => 3 }.each do |name, position|
+  Sector.find_by(name: name)&.update!(story_share_position: position)
+end
+
 puts "Creating CategoryTypes/Categories…"
 category_type_categories = [
   [ "AgeRange", "Children (0-12)" ],
@@ -332,6 +338,12 @@ story_population_type.update!(display_text: "Who is this story about?", story_sp
     cat = story_population_type.categories.create!(name: name, published: true)
   end
   cat.update!(published: true) unless cat.published?
+end
+
+# Order the audience nav row in the Story Share portal. Admins can change these
+# from the Categories admin.
+%w[Children Teens Adults Families Community Self Colleagues].each_with_index do |name, index|
+  Category.where("LOWER(name) = LOWER(?)", name).first&.update!(story_share_position: index + 1)
 end
 
 puts "Creating WorkshopEnvironment CategoryType…"

@@ -1,0 +1,34 @@
+<%# Sortable list of featured sectors/categories + an "Add" picker.
+    Locals: title, type ("sector"/"category"), records, empty. %>
+<section class="bg-white rounded-lg shadow p-6 mb-8">
+  <h2 class="font-semibold text-lg text-gray-900 mb-4"><%= title %></h2>
+
+  <% if records.any? %>
+    <ul class="divide-y divide-gray-200 border border-gray-200 rounded"
+        data-controller="sortable"
+        data-sortable-url-value="<%= story_share_admin_reorder_path(type: type, id: ":id") %>">
+      <% records.each do |record| %>
+        <li class="flex items-center gap-3 px-4 py-3" data-sortable-id="<%= record.id %>">
+          <i class="fa-solid fa-grip-vertical cursor-move text-gray-400 hover:text-gray-600" data-sortable-handle=""></i>
+          <span class="flex-1 text-gray-800"><%= record.name %></span>
+          <%= button_to "Remove", story_share_admin_remove_path(type: type, id: record.id),
+                        method: :delete,
+                        form: { data: { turbo_confirm: "Remove “#{record.name}” from the menu?" } },
+                        class: "text-sm text-red-700 hover:underline" %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="text-sm text-gray-500 mb-4"><%= empty %></p>
+  <% end %>
+
+  <%= form_with url: story_share_admin_add_path(type: type), method: :post, class: "flex items-center gap-2 mt-4" do %>
+    <%= select_tag "id", options_for_select([]),
+                   include_blank: "Search #{type.pluralize}…",
+                   data: { controller: "remote-select",
+                           remote_select_model_value: type,
+                           remote_select_exclude_value: records.map(&:id).join(",") },
+                   class: "w-72 rounded-lg border border-gray-300 px-3 py-2 text-sm" %>
+    <%= submit_tag "Add", class: "btn btn-primary" %>
+  <% end %>
+</section>

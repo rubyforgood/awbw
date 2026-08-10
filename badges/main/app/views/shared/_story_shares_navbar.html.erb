@@ -1,24 +1,38 @@
-<nav class="relative bg-white print:hidden">
+<nav class="relative bg-white print:hidden" data-controller="dropdown">
   <style>
-      /* Mega menu: full-width overlay under the top row */
-      .nav-item.has-dropdown { position: relative; }
+      /* Mega menu spans the full row, not just the trigger button: keep the
+         trigger un-positioned so the absolute menu anchors to .nav-row.row-1
+         (the nearest positioned ancestor). */
+      .nav-item.has-dropdown { position: static; }
 
+      /* Mega menu: full-width overlay under the top row. All four menus share the
+         same box, so only the hovered one may paint — hover-only (no
+         :focus-within, which would keep a clicked trigger's menu stuck open on
+         top of the others). The hovered menu is lifted above its siblings. */
       .nav-item.has-dropdown .mega-menu {
-          position: fixed;              /* <-- key: not absolute (prevents layout pushing/inline flow) */
+          position: absolute;           /* anchored to .nav-row.row-1 (position: relative) */
           left: 0;
           right: 0;
-          top: var(--mega-top, 72px);   /* fallback; JS sets this accurately */
-          width: 100vw;
+          top: 100%;                    /* directly below row 1, whatever its height */
           background: #f7f7f9;
           padding: 24px 0;
           box-shadow: 0 10px 30px rgba(0,0,0,0.10);
-          z-index: 9999;               /* above your rows 2/3 */
-          display: none;
+          z-index: 9990;
+          visibility: hidden;
+          opacity: 0;
       }
 
-      .nav-item.has-dropdown:hover .mega-menu,
-      .nav-item.has-dropdown:focus-within .mega-menu {
-          display: block;
+      .nav-item.has-dropdown:hover .mega-menu {
+          visibility: visible;
+          opacity: 1;
+          z-index: 9999;
+      }
+
+      /* Native clear (✕) for the portal search, nudged left so it sits before
+         the magnifying glass. WebKit/Blink only — Firefox has no native clear. */
+      .portal-search::-webkit-search-cancel-button {
+          margin-right: 18px;
+          cursor: pointer;
       }
 
       .mega-container {
@@ -42,7 +56,7 @@
           margin: 0 0 10px 0;
           line-height: 1.5;
           color: #111827;
-          font-weight: 400; /* force normal */
+          font-weight: 400;
       }
 
       .image-col img {
@@ -59,50 +73,24 @@
       .links-group li { margin-bottom: 8px; }
       .links-group a { color: #111827; text-decoration: none; }
       .links-group a:hover { color: #6d28d9; text-decoration: underline; }
-
-      .search-box { display: flex; gap: 8px; }
-      .search-box input {
-          flex: 1;
-          padding: 10px 12px;
-          border: 1px solid #d1d5db;
-          border-radius: 8px;
-          background: white;
-      }
-      .search-box button {
-          padding: 10px 12px;
-          border-radius: 8px;
-          background: #e5e7eb;
-      }
   </style>
-
-  <script>
-      // Sets mega menu top offset to sit directly under Row 1 (regardless of header height)
-      document.addEventListener("turbo:load", () => {
-          const row1 = document.querySelector(".nav-row.row-1");
-          const mega = document.querySelector(".nav-item.has-dropdown .mega-menu");
-          if (!row1 || !mega) return;
-
-          const rect = row1.getBoundingClientRect();
-          const top = Math.round(rect.bottom);
-          mega.style.setProperty("--mega-top", `${top}px`);
-      });
-  </script>
 
   <div class="px-2 sm:px-6 lg:px-8">
     <!-- Row 1: Logo and Main Navigation -->
     <div class="nav-row row-1 relative flex items-center justify-center border-b-4 border-purple-700 py-3">
-      <div class="hidden lg:flex space-x-6 items-center">
-        <div class="flex shrink-0 items-center">
-          <% if current_user %>
-            <% path = root_path %>
-          <% else %>
-            <% path = root_url(host: ENV.fetch("APP_HOST", request.host)) %>
-          <% end %>
-          <%= link_to path, class: "relative group" do %>
-            <%= image_tag("logo-with-tagline-436x80.jpg", class: "h-8 sm:h-8 w-auto block") %>
-          <% end %>
-        </div>
+      <!-- Logo (always visible) -->
+      <div class="flex shrink-0 items-center absolute left-2 sm:left-6 lg:left-8">
+        <% if current_user %>
+          <% path = root_path %>
+        <% else %>
+          <% path = root_url(host: ENV.fetch("APP_HOST", request.host)) %>
+        <% end %>
+        <%= link_to path, class: "relative group" do %>
+          <%= image_tag("logo-with-tagline-436x80.jpg", class: "h-8 w-auto block") %>
+        <% end %>
+      </div>
 
+      <div class="hidden lg:flex space-x-6 items-center">
         <!-- Mega dropdown trigger -->
         <div class="relative group nav-item has-dropdown">
           <button type="button" class="font-telefon text-gray-700 hover:text-purple-700 text-md font-medium transition-colors">
@@ -141,20 +129,20 @@
                 <div class="links-group">
                   <h4>ABOUT US</h4>
                   <ul>
-                    <li><a href="#">Our Approach</a></li>
-                    <li><a href="#">Mission, Vision &amp; Values</a></li>
-                    <li><a href="#">Staff &amp; Board</a></li>
-                    <li><a href="#">Major Donors</a></li>
-                    <li><a href="#">Contact us</a></li>
+                    <li><%= awbw_menu_link "Our Approach", "/about-us/our-approach/", html_class: "" %></li>
+                    <li><%= awbw_menu_link "Mission, Vision & Values", "/about-us/mission-vision-values/", html_class: "" %></li>
+                    <li><%= awbw_menu_link "Staff & Board", "/about-us/staff/", html_class: "" %></li>
+                    <li><%= awbw_menu_link "Major Donors", "/about-us/major-donors/", html_class: "" %></li>
+                    <li><%= awbw_menu_link "Contact us", "/about-us/contact-us/", html_class: "" %></li>
                   </ul>
                 </div>
 
                 <div class="links-group">
                   <h4>NEWS</h4>
                   <ul>
-                    <li><a href="#">Press Release</a></li>
-                    <li><a href="#">Media Press Kit</a></li>
-                    <li><a href="#">Receive Updates</a></li>
+                    <li><%= awbw_menu_link "Press Release", "/news/press-releases/", html_class: "" %></li>
+                    <li><%= awbw_menu_link "Media Press Kit", "/news/media-press-kit/", html_class: "" %></li>
+                    <li><%= awbw_menu_link "Receive Updates", "/news/enewsletter/", html_class: "" %></li>
                   </ul>
                 </div>
               </div>
@@ -205,22 +193,21 @@
                   <div class="links-group">
                     <h4>PROGRAM</h4>
                     <ul>
-                      <li><%= link_to "Our Philosophy", "#" %></li>
-                      <li><%= link_to "Community of Practice", "#" %></li>
-                      <li><%= link_to "Windows Facilitator Trainings", "#" %></li>
-                      <li><%= link_to "Durational Art", "#" %></li>
+                      <li><%= awbw_menu_link "Our Philosophy", "/programs/our-philosophy/", html_class: "" %></li>
+                      <li><%= awbw_menu_link "Community of Practice", "/programs/community-of-practice/", html_class: "" %></li>
+                      <li><%= awbw_menu_link "Windows Facilitator Trainings", "/programs/facilitator-trainings/", html_class: "" %></li>
+                      <li><%= awbw_menu_link "Durational Art", "/programs/durational-art/", html_class: "" %></li>
                       <li><%= link_to "Story Share", story_shares_path %></li>
                     </ul>
                   </div>
 
                   <!-- FACILITATOR COLUMN -->
                   <div class="links-group">
-                    <h4>&nbsp;</h4> <!-- keeps alignment clean -->
+                    <h4>&nbsp;</h4>
                     <ul>
-                      <li><%= link_to "Facilitator Blog", "#" %></li>
-                      <li><%= link_to "Themes in Healing", "#" %></li>
-                      <li><%= link_to "Highlight Stories", "#" %></li>
-                      <li><%= link_to "Impact Report", "#" %></li>
+                      <li><%= awbw_menu_link "Facilitator Blog", "/blog/", html_class: "" %></li>
+                      <li><%= awbw_menu_link "Themes in Healing", "/impact/themes-in-healing/", html_class: "" %></li>
+                      <li><%= awbw_menu_link "Impact Report", "/about-us/impact-report/", html_class: "" %></li>
                     </ul>
                   </div>
 
@@ -256,8 +243,8 @@
                     <h3>GET INVOLVED</h3>
                   </div>
                   <ul class="mt-3 space-y-2">
-                    <li><%= link_to "Join the Ignite Team", "#", class: "hover:text-purple-700" %></li>
-                    <li><%= link_to "Join Our Team", "#", class: "hover:text-purple-700" %></li>
+                    <li><%= awbw_menu_link "Join the Ignite Team", "/fueling-the-future/join-the-ignite-team/" %></li>
+                    <li><%= awbw_menu_link "Join Our Team", "/joinourteam/" %></li>
                   </ul>
                 </div>
 
@@ -266,8 +253,8 @@
                     <h3>MAKE A DONATION</h3>
                   </div>
                   <ul class="mt-3 space-y-2">
-                    <li><%= link_to "One-Time Gift", "#", class: "hover:text-purple-700" %></li>
-                    <li><%= link_to "Give Monthly", "#", class: "hover:text-purple-700" %></li>
+                    <li><%= awbw_menu_link "One-Time Gift", "/ways-to-give/" %></li>
+                    <li><%= awbw_menu_link "Give Monthly", "/ways-to-give/" %></li>
                   </ul>
                 </div>
 
@@ -283,10 +270,10 @@
                       <h4>WAYS TO GIVE</h4>
                     </div>
                     <ul class="mt-3 space-y-2">
-                      <li><%= link_to "Sustaining Gifts", "#", class: "hover:text-purple-700" %></li>
-                      <li><%= link_to "Planned Giving", "#", class: "hover:text-purple-700" %></li>
-                      <li><%= link_to "More Ways To Give", "#", class: "hover:text-purple-700" %></li>
-                      <li><%= link_to "Supporter Spotlights", "#", class: "hover:text-purple-700" %></li>
+                      <li><%= awbw_menu_link "Sustaining Gifts", "/ways-to-give/impact-journey-circle/" %></li>
+                      <li><%= awbw_menu_link "Planned Giving", "/ways-to-give/planned-giving/" %></li>
+                      <li><%= awbw_menu_link "More Ways To Give", "/ways-to-give/" %></li>
+                      <li><%= awbw_menu_link "Supporter Spotlights", "/ways-to-give/supporter-spotlights/" %></li>
                     </ul>
                   </div>
 
@@ -343,8 +330,7 @@
                 </p>
 
                 <div class="mt-4">
-                  <%= link_to "Learn more", "#",
-                              class: "underline font-semibold hover:text-purple-700" %>
+                  <%= awbw_menu_link "Learn more", "/key-initiatives/", html_class: "underline font-semibold hover:text-purple-700" %>
                 </div>
               </div>
 
@@ -356,9 +342,9 @@
                   <div class="links-group">
                     <h4>KEY INITIATIVES</h4>
                     <ul class="mt-3 space-y-2">
-                      <li><%= link_to "Uplifting Voices", "#", class: "hover:text-purple-700" %></li>
-                      <li><%= link_to "Centering Social Justice", "#", class: "hover:text-purple-700" %></li>
-                      <li><%= link_to "Embedding Sustainability", "#", class: "hover:text-purple-700" %></li>
+                      <li><%= awbw_menu_link "Uplifting Voices", "/key-initiatives/uplifting-voices/" %></li>
+                      <li><%= awbw_menu_link "Centering Social Justice", "/key-initiatives/initiative-2-centering-social-justice/" %></li>
+                      <li><%= awbw_menu_link "Embedding Sustainability", "/key-initiatives/initiative-3-embedding-sustainability/" %></li>
                     </ul>
                   </div>
 
@@ -366,8 +352,8 @@
                   <div class="links-group">
                     <h4>CELEBRATE WITH US</h4>
                     <ul class="mt-3 space-y-2">
-                      <li><%= link_to "Fueling the Future Campaign", "#", class: "hover:text-purple-700" %></li>
-                      <li><%= link_to "View Our Impact Report", "#", class: "hover:text-purple-700" %></li>
+                      <li><%= awbw_menu_link "Fueling the Future Campaign", "/fueling-the-future-updated/" %></li>
+                      <li><%= awbw_menu_link "View Our Impact Report", "/about-us/impact-report/" %></li>
                     </ul>
                   </div>
                 </div>
@@ -378,7 +364,7 @@
       </div>
 
       <div class="flex items-center space-x-4 absolute right-2 sm:right-6 lg:right-8">
-        <%= link_to "Donate", "#", class: "hidden md:inline-flex px-6 py-2 bg-gray-800 text-white text-sm font-medium hover:bg-gray-900 transition-colors" %>
+        <%= awbw_menu_link "Donate", "/ways-to-give/", html_class: "hidden md:inline-flex px-6 py-2 bg-gray-800 text-white text-sm font-medium hover:bg-gray-900 transition-colors" %>
 
         <%= link_to new_user_session_path,
                     class: "hidden md:inline-flex text-gray-700 hover:text-purple-700 transition-colors",
@@ -395,8 +381,8 @@
           <button
             type="button"
             class="relative inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100 focus:outline-2 focus:ring-2 focus:ring-purple-700"
-            data-action="click->toggle#toggle"
-            data-toggle-target="menu">
+            data-action="dropdown#toggle"
+            data-dropdown-payload-param='[{"story-shares-mobile-menu":"hidden"}]'>
             <span class="sr-only">Open main menu</span>
             <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -410,11 +396,12 @@
     <div class="nav-row">
       <div class="hidden lg:flex items-center justify-center py-3 space-x-6">
         <%= link_to "Home", story_shares_path, class: "font-telefon text-[#5B2C8A] hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-        <%= link_to "Domestic Violence", story_shares_path(sector_names_all: "domestic_violence"), class: "font-telefon text-red-700 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-        <%= link_to "Self-Care & Personal Growth", story_shares_path(sector_names_all: "self_care"), class: "font-telefon text-[#1F6F8B] hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-        <%= link_to "Social Justice", story_shares_path(sector_names_all: "social_justice"), class: "font-telefon text-green-700 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-        <%= link_to "Facilitator Spotlights", story_shares_path(sector_names_all: "facilitator_spotlights"), class: "font-telefon text-[#8B004B] hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-        <%= link_to "Additional Focus Areas", "#", class: "font-telefon text-[#F28C00] hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+        <% story_share_nav_sectors.each_with_index do |sector, index| %>
+          <%= link_to sector.name, story_shares_path(sector_names_all: sector.name),
+                      class: "font-telefon #{story_share_slot_theme(index)[:heading]} hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+        <% end %>
+        <%= link_to "Facilitator Spotlights", story_shares_path(facilitator_spotlights: true), class: "font-telefon text-purple-700 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+        <%= link_to "Additional Focus Areas", story_shares_path(additional_focus_areas: true), class: "font-telefon text-[#F28C00] hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
       </div>
     </div>
 
@@ -422,61 +409,59 @@
     <div class="nav-row border-b-4 border-purple-700 ">
       <div class="hidden lg:flex flex-col items-center justify-center py-3 space-y-3">
         <div class="flex items-center space-x-6">
-          <%= link_to "Children", story_shares_path(sector_names_all: "children"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-          <%= link_to "Teens", story_shares_path(sector_names_all: "teens"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-          <%= link_to "Adults", story_shares_path(sector_names_all: "adults"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-          <%= link_to "Families", story_shares_path(sector_names_all: "families"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-          <%= link_to "Community", story_shares_path(sector_names_all: "community"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-          <%= link_to "Self", story_shares_path(sector_names_all: "self"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-          <%= link_to "Colleagues", story_shares_path(sector_names_all: "colleagues"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+          <% story_share_audience_categories.each do |category| %>
+            <%= link_to category.name, story_shares_path(category_names_all: category.name), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+          <% end %>
           <div>
-            <form action="<%= story_shares_path %>" method="get" class="relative">
+            <%= form_with url: story_shares_path, method: :get, class: "relative" do %>
               <input
                 type="search"
-                name="q"
+                name="query"
                 placeholder="Search keywords to find more stories..."
-                class="w-80 px-4 py-2 rounded-md border border-gray-300 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-700"
-                value="<%= params[:q] %>"/>
-              <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                class="portal-search w-80 pl-4 pr-10 py-2 rounded-md border border-gray-300 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-700"
+                value="<%= params[:query] %>"/>
+              <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700" aria-label="Search">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </button>
-            </form>
+            <% end %>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Mobile menu, hidden by default -->
-    <div class="lg:hidden hidden nav-row border-b-4 border-purple-700 " data-toggle-target="menu">
+    <div id="story-shares-mobile-menu" class="lg:hidden hidden nav-row border-b-4 border-purple-700 ">
       <div class="space-y-1 pb-3 pt-2">
         <%= link_to "Home", story_shares_path, class: "block px-3 py-2 text-gray-800 hover:bg-gray-100 text-base font-medium rounded-md" %>
-        <%= link_to "Domestic Violence", story_shares_path(sector_names_all: "domestic_violence"), class: "block px-3 py-2 text-red-700 hover:bg-gray-100 text-base font-medium rounded-md" %>
-        <%= link_to "Self-Care & Personal Growth", story_shares_path(sector_names_all: "self_care"), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
-        <%= link_to "Social Justice", story_shares_path(sector_names_all: "social_justice"), class: "block px-3 py-2 text-green-700 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        <% story_share_nav_sectors.each_with_index do |sector, index| %>
+          <%= link_to sector.name, story_shares_path(sector_names_all: sector.name),
+                      class: "block px-3 py-2 #{story_share_slot_theme(index)[:heading]} hover:bg-gray-100 text-base font-medium rounded-md" %>
+        <% end %>
         <%= link_to "Facilitator Spotlights", story_shares_path(facilitator_spotlights: true), class: "block px-3 py-2 text-purple-700 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        <%= link_to "Additional Focus Areas", story_shares_path(additional_focus_areas: true), class: "block px-3 py-2 text-[#F28C00] hover:bg-gray-100 text-base font-medium rounded-md" %>
 
         <div class="border-t border-gray-200 my-2"></div>
 
-        <%= link_to "Children", story_shares_path(sector_names_all: "children"), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
-        <%= link_to "Teens", story_shares_path(sector_names_all: "teens"), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
-        <%= link_to "Adults", story_shares_path(sector_names_all: "adults"), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
-        <%= link_to "Families", story_shares_path(sector_names_all: "families"), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
-        <%= link_to "Community", story_shares_path(sector_names_all: "community"), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
-        <%= link_to "Self", story_shares_path(sector_names_all: "self"), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
-        <%= link_to "Colleagues", story_shares_path(sector_names_all: "colleagues"), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        <% story_share_audience_categories.each do |category| %>
+          <%= link_to category.name, story_shares_path(category_names_all: category.name), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        <% end %>
+
+        <div class="border-t border-gray-200 my-2"></div>
+
+        <%= link_to "Share your story", share_story_shares_path, class: "block px-3 py-2 text-purple-700 hover:bg-gray-100 text-base font-medium rounded-md" %>
 
         <div class="px-3 py-2">
-          <form action="<%= story_shares_path %>" method="get">
+          <%= form_with url: story_shares_path, method: :get do %>
             <input
               type="search"
-              name="q"
+              name="query"
               placeholder="Search stories..."
               class="w-full px-4 py-2 rounded-md border border-gray-300 text-gray-900 text-sm"
-              value="<%= params[:q] %>"
+              value="<%= params[:query] %>"
               />
-          </form>
+          <% end %>
         </div>
       </div>
     </div>

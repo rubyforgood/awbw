@@ -1,0 +1,16 @@
+<article>
+  <%= link_to story_share_path(story), class: "block rounded shadow-md overflow-hidden hover:shadow-xl transition-shadow" do %>
+    <%= render "story_image", story: story, aspect: "aspect-[4/3]" %>
+  <% end %>
+  <h3 class="font-telefon text-lg font-bold text-gray-900 mt-3 leading-tight">
+    <%= link_to story.title, story_share_path(story), class: "hover:text-purple-700" %>
+  </h3>
+  <p class="text-xs text-gray-500 mt-1">
+    <%= story.organization_name %><%= " – #{story.organization.state}" if story.organization&.state.present? %>
+  </p>
+  <p class="text-sm text-gray-700 mt-2"><%= truncate(story.rhino_body.to_plain_text, length: 140) %></p>
+  <div class="mt-3">
+    <%= link_to "Read more", story_share_path(story),
+                class: "inline-block bg-gray-700 hover:bg-gray-800 text-white text-sm px-5 py-2 rounded transition" %>
+  </div>
+</article>

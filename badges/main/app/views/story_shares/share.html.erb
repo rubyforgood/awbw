@@ -1,0 +1,21 @@
+<% content_for(:page_bg_class, "admin-or-auth") %>
+<% content_for(:title, "Share your story - AWBW Story Share") %>
+
+<section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="mb-4">
+    <%= link_to "← Story Share", story_shares_path, class: "text-sm text-purple-700 hover:underline" %>
+  </div>
+
+  <h1 class="font-telefon text-3xl text-black mb-4">Share your story</h1>
+
+  <div class="mb-8 text-gray-700 leading-relaxed">
+    <p>
+      This Story Share was created to uplift your voice and experiences as an anchor for your peers,
+      as well as to illustrate to the general public the transformative and healing power of art you
+      witness every day. Thank you for taking the time to share. Please note: minor edits may be made,
+      and not all stories will be published to the site, but may still be used in other places.
+    </p>
+  </div>
+
+  <%= render "story_ideas/form", story_idea: @story_idea, return_to: "story_share" %>
+</section>

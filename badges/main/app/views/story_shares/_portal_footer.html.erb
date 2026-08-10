@@ -1,0 +1,21 @@
+<footer class="bg-black text-white print:hidden">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+    <div class="flex justify-center md:justify-start">
+      <%= awbw_menu_link "Contact us", "/about-us/contact-us/",
+                         html_class: "inline-block border border-white/70 px-6 py-2 text-sm font-medium tracking-wide hover:bg-white hover:text-black transition-colors" %>
+    </div>
+
+    <div class="text-center text-sm space-y-1">
+      <p>Registered 501(c)(3). EIN: 95-448606</p>
+      <p>© 2021–<%= Date.current.year %> A Window Between Worlds</p>
+    </div>
+
+    <div class="flex justify-center md:justify-end">
+      <div class="bg-white text-black text-center text-xs px-5 py-3 rounded">
+        <p class="tracking-wide">Platinum Transparency</p>
+        <p class="font-semibold"><%= Date.current.year %></p>
+        <p class="font-bold mt-1">Candid.</p>
+      </div>
+    </div>
+  </div>
+</footer>

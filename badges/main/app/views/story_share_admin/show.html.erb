@@ -1,0 +1,26 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="mb-6">
+    <%= link_to "← Story Share portal", story_shares_path, class: "text-sm text-purple-700 hover:underline" %>
+  </div>
+
+  <h1 class="text-2xl font-bold text-gray-900 mb-2">Story Share admin</h1>
+  <p class="text-gray-600 mb-8">
+    Choose which sectors and audience categories appear in the Story Share portal's nav menus,
+    and drag to reorder them. The top nav shows the first six sectors; the second nav shows the
+    audience categories in this order.
+  </p>
+
+  <%= render "menu_section",
+             title: "Top nav — sectors",
+             type: "sector",
+             records: @sectors,
+             empty: "No sectors are featured yet. Add one below." %>
+
+  <%= render "menu_section",
+             title: "Second nav — audience categories",
+             type: "category",
+             records: @categories,
+             empty: "No categories are featured yet. Add one below." %>
+</div>
