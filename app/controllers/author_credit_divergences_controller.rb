@@ -36,13 +36,9 @@ class AuthorCreditDivergencesController < ApplicationController
 
     record = model.find(params[:record_id])
 
-    # Anonymity is a one-way latch: clearing the snapshot of an item submitted
-    # anonymously would silently de-anonymize it. A deliberate re-credit still works
-    # by picking an explicit preference.
-    if params[:author_credit_preference].blank? && record.author_credit_preference == AuthorCreditable::ANONYMOUS
-      return render_divergence_change("Can't clear the consent for an item submitted anonymously — pick an explicit preference instead.", :alert)
-    end
-
+    # Clearing an "anonymous" snapshot hands the item back to the profile, which may
+    # well credit it. That's the point: a per-item anonymous flag is the legacy state
+    # this page exists to drain, and the person's profile is the source of truth.
     record.author_credit_preference = params[:author_credit_preference]
     record.updated_by = current_user if record.respond_to?(:updated_by=)
 

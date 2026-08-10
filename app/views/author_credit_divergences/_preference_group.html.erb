@@ -40,12 +40,11 @@
               <%= hidden_field_tag :record_type, record.class.name, id: nil %>
               <%= hidden_field_tag :record_id, record.id, id: nil %>
               <%= render "filter_fields" %>
-              <%# "None" clears the snapshot so the item just follows the profile. Hidden
-                  for anonymous items — clearing that value would de-anonymize them. %>
-              <% allow_clear = record.author_credit_preference != AuthorCreditable::ANONYMOUS %>
+              <%# "None" clears the snapshot so the item just follows the profile —
+                  offered on anonymous items too, since that's how they're reconciled. %>
               <%= select_tag "author_credit_preference",
                              options_for_select(AuthorCreditable::ADMIN_FORM_OPTIONS.to_a, record.author_credit_preference),
-                             include_blank: (allow_clear ? "None (follow profile)" : false),
+                             include_blank: "None (follow profile)",
                              id: nil,
                              class: "rounded-md border-gray-300 text-sm" %>
               <%= submit_tag "Save",

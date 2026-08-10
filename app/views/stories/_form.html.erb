@@ -240,12 +240,12 @@
 
   <div class="flex flex-col md:flex-row md:space-x-4">
     <div class="flex-1 mb-4 md:mb-0">
-      <% story_author_id = f.object.author_person&.id || current_user.person_id %>
+      <% story_author = author_picker_person(f.object) %>
       <%= f.input :author_id,
-                  collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
+                  collection: story_author.present? ? [[ story_author.remote_search_label[:label], story_author.id ]] : [],
                   prompt: "Select an author",
-                  selected: story_author_id,
-                  hint: "Defaults to the creator; change to credit someone else.",
+                  selected: story_author&.id,
+                  hint: "Defaults to the creator on a new story; change to credit someone else.",
                   label: (f.object.author ? (
                     link_to "Story author",
                             person_path(f.object.author),
@@ -255,6 +255,7 @@
                     data: { controller: "remote-select",
                             remote_select_model_value: "person" }
                   } %>
+      <%= render "shared/author_credit_note", record: f.object %>
     </div>
 
     <div class="flex-1 mb-4 md:mb-0">

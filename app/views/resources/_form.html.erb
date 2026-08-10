@@ -62,8 +62,8 @@
     <div class="flex-1 mb-4 md:mb-0">
       <%= f.input :author_id,
                   as: :select,
-                  collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
-                  selected: f.object.author_person&.id || current_user.person_id,
+                  collection: author_picker_person(f.object).present? ? [[ author_picker_person(f.object).remote_search_label[:label], author_picker_person(f.object).id ]] : [],
+                  selected: author_picker_person(f.object)&.id,
                   include_blank: "Select an author",
                   label: (f.object.author ? (
                     link_to "Resource author",
@@ -73,9 +73,7 @@
                   input_html: { class: "w-full rounded border-gray-300",
                                 data: { controller: "remote-select",
                                         remote_select_model_value: "person" } } %>
-      <% if f.object.legacy_author_name.present? %>
-        <p class="mt-1 text-xs text-gray-500 italic">Legacy author credit: <%= f.object.legacy_author_name %></p>
-      <% end %>
+      <%= render "shared/author_credit_note", record: f.object %>
     </div>
 
     <div class="flex-1 mb-4 md:mb-0">

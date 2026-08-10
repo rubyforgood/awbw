@@ -62,14 +62,15 @@
                           link_to "Author",
                                   person_path(f.object.author),
                                   class: "hover:underline") : "Author").html_safe,
-                        collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
-                        selected: (f.object.author_person&.id || current_user.person_id),
-                        hint: "Credited author — any person, not just active users. Defaults to the creator; change to credit someone else.",
+                        collection: author_picker_person(f.object).present? ? [[ author_picker_person(f.object).remote_search_label[:label], author_picker_person(f.object).id ]] : [],
+                        selected: author_picker_person(f.object)&.id,
+                        hint: "Credited author — any person, not just active users. Defaults to the creator on a new workshop; change to credit someone else.",
                         input_html: {
                           class: "block w-full rounded-md border-gray-300 shadow-sm
                           focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
                           data: { controller: "remote-select",
                                   remote_select_model_value: "person" } } %>
+            <%= render "shared/author_credit_note", record: f.object %>
           </div>
           <%= render "shared/author_credit_warning", record: f.object %>
         </div>

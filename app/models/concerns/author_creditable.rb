@@ -5,9 +5,9 @@ module AuthorCreditable
   # `author_credit_preference` is retained as the record of what the submitter consented
   # to at submission time, and is human-editable only on the author credit divergences
   # page. It no longer drives display — with one exception: a stored "anonymous" is
-  # always honored, because anonymity is inherently per-item (a person may want four
-  # stories credited and the fifth not) and because nothing should be able to
-  # de-anonymize an item that was submitted anonymously.
+  # always honored while it's set, because anonymity is inherently per-item (a person
+  # may want four stories credited and the fifth not). Only an admin clearing the
+  # snapshot on that page hands the item back to the profile.
   AUTHOR_CREDIT_PREFERENCES = %w[full_name first_name_last_initial first_name_only last_name_only anonymous].freeze
 
   ANONYMOUS = "anonymous"
@@ -179,13 +179,16 @@ module AuthorCreditable
 
     # Arel COALESCE over every credited person alias (and legacy name column),
     # so the ORDER BY carries no interpolated SQL. Aliases and column names come
-    # from model config / column_names, never user input.
+    # from model config / column_names, never user input. Ordered author → legacy →
+    # creator to match `author_credit`, so a row sorts under the name it displays.
     def coalesced_author_arel(field, ascending)
-      parts = credited_person_aliases.map { |sql_alias| Arel::Table.new(sql_alias)[field] }
+      parts = []
+      parts << Arel::Table.new("credited_author")[field] if column_names.include?("author_id")
       parts += legacy_author_name_columns.map do |col|
         table, column = col.split(".")
         Arel::Table.new(table)[column]
       end
+      parts << Arel::Table.new("credited_creator")[field]
       node = Arel::Nodes::NamedFunction.new("COALESCE", parts)
       ascending ? node.asc : node.desc
     end

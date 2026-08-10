@@ -103,8 +103,8 @@
                           link_to "Variation author",
                                   person_path(f.object.author),
                                   class: "hover:underline") : "Variation author").html_safe,
-                        collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
-                        selected: f.object.author_person&.id || current_user.person_id,
+                        collection: author_picker_person(f.object).present? ? [[ author_picker_person(f.object).remote_search_label[:label], author_picker_person(f.object).id ]] : [],
+                        selected: author_picker_person(f.object)&.id,
                         include_blank: true,
                         input_html: {
                           data: {
@@ -112,6 +112,7 @@
                             remote_select_model_value: "person"
                           }
                         } %>
+              <%= render "shared/author_credit_note", record: f.object %>
             </div>
           <% end %>
         </div>
