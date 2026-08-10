@@ -1,8 +1,8 @@
 <footer class="bg-black text-white print:hidden">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
     <div class="flex justify-center md:justify-start">
-      <%= awbw_menu_link "Contact us", "/about-us/contact-us/",
-                         html_class: "inline-block rounded border border-white px-6 py-2 text-sm font-bold uppercase tracking-wide hover:bg-white hover:text-black transition-colors" %>
+      <%= link_to "Contact us", contact_us_path(from: "story_share"),
+                  class: "inline-block rounded border border-white px-6 py-2 text-sm font-bold uppercase tracking-wide hover:bg-white hover:text-black transition-colors" %>
     </div>
 
     <div class="text-center text-sm space-y-3">

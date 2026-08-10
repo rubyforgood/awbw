@@ -4,11 +4,20 @@
   <h2 class="font-semibold text-lg text-gray-900 mb-4"><%= title %></h2>
 
   <% if records.any? %>
+    <%# Leading color swatch (a ::before dot) marks each menu slot's color. Sectors are
+        colored by position via nth-child so the color stays fixed to the slot as rows are
+        dragged (mirrors StorySharesHelper::SLOT_THEMES chips); categories are all grey. %>
+    <% swatch_base = "before:content-[''] before:size-4 before:rounded-full before:shrink-0" %>
+    <% swatch_classes = if type == "sector"
+         "#{swatch_base} nth-[6n+1]:before:bg-red-700 nth-[6n+2]:before:bg-sky-700 nth-[6n+3]:before:bg-green-700 nth-[6n+4]:before:bg-purple-700 nth-[6n+5]:before:bg-indigo-700 nth-[6n]:before:bg-fuchsia-700"
+       else
+         "#{swatch_base} before:bg-gray-400"
+       end %>
     <ul class="divide-y divide-gray-200 border border-gray-200 rounded"
         data-controller="sortable"
         data-sortable-url-value="<%= story_share_admin_reorder_path(type: type, id: ":id") %>">
       <% records.each do |record| %>
-        <li class="flex items-center gap-3 px-4 py-3" data-sortable-id="<%= record.id %>">
+        <li class="flex items-center gap-3 px-4 py-3 <%= swatch_classes %>" data-sortable-id="<%= record.id %>">
           <i class="fa-solid fa-grip-vertical cursor-move text-gray-400 hover:text-gray-600" data-sortable-handle=""></i>
           <span class="flex-1 text-gray-800"><%= record.name %></span>
           <%= button_to "Remove", story_share_admin_remove_path(type: type, id: record.id),

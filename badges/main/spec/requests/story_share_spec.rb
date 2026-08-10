@@ -128,6 +128,12 @@ RSpec.describe "/story_share", type: :request do
       expect(response.body).to include("category_names_all=Teens")
       expect(response.body).not_to include('href="#"')
     end
+
+    it "points the footer Contact us link at the in-app portal contact page" do
+      get story_shares_path
+
+      expect(response.body).to include(contact_us_path(from: "story_share"))
+    end
   end
 
   # ==========================================================

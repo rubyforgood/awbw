@@ -3,17 +3,30 @@ class ContactUsController < ApplicationController
 
   skip_before_action :authenticate_user!, only: [ :index, :create ]
 
+  # Subject presets offered on the Story Share portal variant; picking one fills
+  # the subject line so submissions route to the right team.
+  PORTAL_SUBJECT_OPTIONS = [
+    "General inquiry",
+    "Interest in starting a healing arts program",
+    "Interest in Windows Facilitator trainings",
+    "Interest in hiring AWBW to lead an art workshop",
+    "Current or former Windows Facilitator"
+  ].freeze
+
   def index
     authorize! :contact_us, to: :index?
     @user = current_user if user_signed_in?
     @form_submitted = flash[:form_submitted] == true
+    @from_story_share = params[:from] == "story_share"
+    render layout: "story_shares" if @from_story_share
   end
 
   def create
     authorize! :contact_us, to: :create?
+    from = "story_share" if params[:from] == "story_share"
 
     if params[:contact_us][:website_url].present?
-      redirect_to contact_us_path
+      redirect_to contact_us_path(from: from)
       return
     end
 
@@ -48,7 +61,7 @@ class ContactUsController < ApplicationController
     NotificationServices::PersistDeliveredEmail.call(notification: admin_notification, mail: admin_mail)
 
     flash[:form_submitted] = true
-    redirect_to contact_us_path(anchor: "thank-you")
+    redirect_to contact_us_path(anchor: "thank-you", from: from)
   end
 
   private
