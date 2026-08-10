@@ -19,6 +19,8 @@ Quick-reference scripts for common development tasks. Designed for AI agents and
 
 All scripts pass through extra arguments, so `ai/test --fail-fast` works as expected.
 
+**Full tests in a ship flow:** a bare "test" while iterating means `ai/test` (fast path), but when "test" rides along with commit / push / PR — e.g. **"commit push pr test"** — run the **full** suite with `ai/test_extra` (Vite build + all system specs) and only commit/push/PR once it's green.
+
 Only the commands listed above exist. "ai <name>" refers to one of these `ai/` scripts — not a slash-command skill. Two phrases are special:
 
 - **"ai security"** runs `ai/security` (the security scan above).
