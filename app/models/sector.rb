@@ -1,5 +1,6 @@
 class Sector < ApplicationRecord
-  include NameFilterable, Publishable
+  include NameFilterable, Publishable, RemoteSearchable
+  remote_searchable_by :name
   # Canonical sector tags, in display order. "Other" is kept at the end
   # as the catch-all free-text fallback for additional sectors (see
   # OTHER_SECTOR_NAME below) — it isn't a selectable tag itself. Descriptions for

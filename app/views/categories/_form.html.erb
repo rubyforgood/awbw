@@ -38,14 +38,6 @@
               </span>
             </div>
           </div>
-
-          <div class="flex-1 min-w-[220px]">
-            <%= f.input :story_share_position,
-                        as: :integer,
-                        label: "Story share position",
-                        hint: "Optional. Shown in the Story Share portal's audience nav at this position. Leave blank to omit.",
-                        input_html: { class: "form-control", min: 1 } %>
-          </div>
         </div>
 
         <!-- Description -->
@@ -55,6 +47,15 @@
                       label: "Description",
                       hint: "Optional. Shown under this option on the public registration form to clarify its meaning when the name alone isn't enough.",
                       input_html: { class: "form-control", rows: 2 } %>
+        </div>
+
+        <!-- Story Share portal placement -->
+        <div class="max-w-[220px]">
+          <%= f.input :story_share_position,
+                      as: :integer,
+                      label: "Story share position",
+                      hint: "Optional. Shown in the Story Share portal's audience nav at this position. Leave blank to omit.",
+                      input_html: { class: "form-control", min: 1 } %>
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 class Category < ApplicationRecord
-  include NameFilterable, Publishable
+  include NameFilterable, Publishable, RemoteSearchable
+  remote_searchable_by :name
 
   positioned on: :category_type_id
 
