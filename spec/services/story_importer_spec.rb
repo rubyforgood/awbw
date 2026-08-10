@@ -164,6 +164,29 @@ RSpec.describe StoryImporter do
     end
   end
 
+  describe "connecting grant-tagged stories to the Grant via the author" do
+    let!(:grant) { create(:grant, name: "Cathy Salser Legacy Scholarship") }
+
+    it "links the author to the grant through a scholarship" do
+      import([ base_row("Tags" => "Adults|Cathy scholarship",
+                        "facilitator_name" => "Nikki", "facilitator_last_name" => "Crow") ])
+
+      author = Person.find_by(first_name: "Nikki", last_name: "Crow")
+      expect(author).to be_present
+      expect(Story.sole.author).to eq(author)
+      expect(Scholarship.where(recipient: author, grant: grant)).to exist
+    end
+
+    it "warns and skips the link when the author has no last name" do
+      result = import([ base_row("Tags" => "Cathy scholarship",
+                                 "facilitator_name" => "Teena", "facilitator_last_name" => "") ])
+
+      expect(result.warnings).to include(a_string_matching(/author unresolved/))
+      expect(Scholarship.count).to eq(0)
+      expect(Story.sole.author).to be_nil
+    end
+  end
+
   it "warns about unmapped fields rather than dropping them" do
     result = import([ base_row("state" => "California", "facilitator_name" => "Eydie") ])
 

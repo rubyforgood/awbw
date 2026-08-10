@@ -102,6 +102,15 @@ translations:
     - { category: "Self", type: "StoryPopulation" }
 
   # ---- No portal tag (skipped) ----
+  # "Cathy scholarship" / "babs mayer" carry no sector/category, but DO connect
+  # the story to a Grant via the author's Scholarship — see grant_tags below.
   "Uncategorized": []
-  "Cathy scholarship": [] # non-taxonomy tag
-  "babs mayer": [] # non-taxonomy tag
+  "Cathy scholarship": []
+  "babs mayer": []
+
+# Audience "Tags" that mark a story's author as a recipient of a named Grant's
+# scholarship. On import the author (from facilitator_name/last_name) is linked
+# to the Grant through a Scholarship, so story → author → scholarship → grant.
+grant_tags:
+  "Cathy scholarship": "Cathy Salser Legacy Scholarship"
+  "babs mayer": "Babs Mayer Legacy Scholarship"

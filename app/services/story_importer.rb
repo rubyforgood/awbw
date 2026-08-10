@@ -50,6 +50,13 @@ class StoryImporter
   # and de-duplicated case-insensitively across all columns.
   TRANSLATION_COLUMNS = [ "Categories", "User Categories", "Tags", "who_is_your_story_about" ].freeze
 
+  # Audience "Tags" that mark the story's author as a recipient of a named Grant's
+  # scholarship (story → author → scholarship → grant).
+  GRANT_BY_TAG = YAML.load_file(SECTOR_MAP_PATH)
+    .fetch("grant_tags", {})
+    .transform_keys(&:downcase)
+    .freeze
+
   # Resolved tags for one row, applied to both the idea and its connected story.
   RowTags = Struct.new(:sectors, :categories, keyword_init: true)
 
@@ -153,7 +160,43 @@ class StoryImporter
     )
     return unless persist(story)
     apply_tags(story, tags)
+    link_grant_scholarship(row, story)
     @result.stories_created += 1
+  end
+
+  # Connect a grant-tagged story to its Grant through the author's Scholarship
+  # (story → author → scholarship → grant). Resolves the author from the
+  # facilitator name; warns and skips when it can't (a Person needs first + last).
+  def link_grant_scholarship(row, story)
+    grant_names = grant_names_for(row)
+    return if grant_names.empty? || @dry_run
+
+    author = resolve_author(row)
+    return record_warning(row, "grant tag present but author unresolved (needs first + last name)") unless author
+
+    story.update!(author: author) unless story.author
+    grant_names.each do |grant_name|
+      grant = Grant.where("LOWER(name) = ?", grant_name.downcase).first
+      next record_warning(row, "no Grant match for #{grant_name.inspect}") unless grant
+      Scholarship.find_or_create_by!(recipient: author, grant: grant)
+    end
+  end
+
+  def grant_names_for(row)
+    clean(row["Tags"]).split(/[|,]/).map(&:strip).filter_map { |tag| GRANT_BY_TAG[tag.downcase] }
+  end
+
+  # Find or create the story's author Person from the facilitator name. A Person
+  # requires both names, so a single-name facilitator (e.g. "Teena") can't resolve.
+  def resolve_author(row)
+    first = clean(row["facilitator_name"])
+    last = clean(row["facilitator_last_name"])
+    return if first.blank? || last.blank?
+
+    email = clean(row["facilitator_email"]).presence
+    person = email && Person.where("LOWER(email) = ?", email.downcase).first
+    person ||= Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first.downcase, last.downcase).first
+    person || Person.create!(first_name: first, last_name: last, email: email)
   end
 
   def build_idea(row, title:, organization:, windows_type:)
