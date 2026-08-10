@@ -4,7 +4,7 @@ RSpec.describe "StoryShareAdmin", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:regular_user) { create(:user) }
 
-  describe "GET /story_share_admin" do
+  describe "GET /story_share/admin" do
     it "renders for admins" do
       sign_in admin
       get story_share_admin_path
@@ -23,7 +23,7 @@ RSpec.describe "StoryShareAdmin", type: :request do
     end
   end
 
-  describe "POST /story_share_admin/add" do
+  describe "POST /story_share/admin/add" do
     before { sign_in admin }
 
     it "sets story_share_position on a sector and redirects" do
@@ -47,7 +47,7 @@ RSpec.describe "StoryShareAdmin", type: :request do
     end
   end
 
-  describe "PUT /story_share_admin/reorder" do
+  describe "PUT /story_share/admin/reorder" do
     before { sign_in admin }
 
     it "renumbers story_share_position to place the moved item at the new position" do
@@ -63,7 +63,7 @@ RSpec.describe "StoryShareAdmin", type: :request do
     end
   end
 
-  describe "DELETE /story_share_admin/remove" do
+  describe "DELETE /story_share/admin/remove" do
     before { sign_in admin }
 
     it "clears story_share_position and renumbers the rest" do
