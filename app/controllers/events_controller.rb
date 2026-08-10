@@ -163,11 +163,7 @@ class EventsController < ApplicationController
   def roster
     authorize! @event, to: :roster?
     @event = @event.decorate
-    # .on_roster rather than .active: this page answers "who was here", and someone
-    # who made only part of the event isn't that. The header reports how many that
-    # left out, so the narrower population is visible rather than a silent gap
-    # against the dashboard's active count.
-    @dashboard = EventDashboard.new(@event, registrations: EventRegistration.on_roster)
+    @dashboard = EventDashboard.new(@event)
     @roster_registrants = filtered_roster_registrants
     render :event_roster_charts if turbo_frame_request_id == "event_roster_charts"
   end

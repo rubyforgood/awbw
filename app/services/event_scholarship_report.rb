@@ -24,8 +24,10 @@ class EventScholarshipReport
     def unfunded_count = figures.unfunded_count
     def scholarship_count = figures.scholarship_count
 
-    # Trainees who fully attended (registration status "attended").
+    # Trainees who fully attended (registration status "attended"), and — reported
+    # beside it, never folded in — those recorded as partial.
     def attended_count = figures.attended_count
+    def incomplete_count = figures.incomplete_count
 
     # Per-recipient scholarship breakdown for the row's expander: the funded /
     # unfunded recipients (name-sorted Person records) and their dollars keyed by
@@ -45,7 +47,7 @@ class EventScholarshipReport
   # across every column for the all-time total.
   SUMMABLE = %i[
     funded_cents unfunded_cents scholarship_cents
-    funded_count unfunded_count scholarship_count attended_count
+    funded_count unfunded_count scholarship_count attended_count incomplete_count
   ].freeze
 
   module Aggregates

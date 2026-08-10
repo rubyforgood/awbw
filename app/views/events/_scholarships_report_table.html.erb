@@ -87,5 +87,9 @@
     Attended breakdown:
     <span class="font-medium text-gray-700"><%= report.live_attended_count %></span> live
     · <span class="font-medium text-gray-700"><%= report.on_demand_attended_count %></span> on-demand
+    <% if report.incomplete_count.positive? %>
+      <%# Not part of the live/on-demand split above — those sum to attended. %>
+      · <span class="font-medium text-gray-700"><%= report.incomplete_count %></span> incomplete attendance, counted in the money but not as attended
+    <% end %>
   </div>
 </section>

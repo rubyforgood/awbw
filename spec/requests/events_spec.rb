@@ -538,6 +538,24 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("Paid webinar")
       end
 
+      # Two reasons to count on this report: the money stays with the event
+      # whatever the attendance, but "trained" means a completed attendance. So an
+      # incomplete one is reported beside the attended figure, never inside it, and
+      # its scholarship still lands in the dollar columns.
+      it "reports incomplete attendance beside the attended count, keeping its money" do
+        partial = create(:person, first_name: "Pat", last_name: "Partial")
+        reg = create(:event_registration, event: training, registrant: partial, status: "incomplete_attendance")
+        create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        award = create(:scholarship, recipient: partial, amount_cents: 3_000, grant: nil)
+        create(:allocation, source: award, allocatable: reg, amount: 3_000)
+
+        sign_in admin
+        get scholarships_events_path
+
+        expect(response.body).to include("incomplete attendance, counted in the money but not as attended")
+        expect(response.body).to include("$30")
+      end
+
       it "renders the combined-cell layout when the view toggle is set" do
         sign_in admin
         get scholarships_events_path(view: "combined")
@@ -2533,26 +2551,26 @@ RSpec.describe "Events", type: :request do
           expect(response.body).to include("Roster Org")
         end
 
-        # The roster is "who was here", so a partial attendance is out of the
-        # population entirely — table, stat bar and breakdowns alike. The header
-        # says how many that left out, so the count doesn't read as a discrepancy
-        # against the dashboard's active count.
-        it "excludes incomplete attendance from the roster and says how many" do
+        # An incomplete attendance holds this event's scholarship and paid its fees,
+        # so it stays in the roster's population — dropping it would pull that money
+        # out of the page's totals. "Completed the training" is a separate figure;
+        # here the header just names how many of the registrants were partial.
+        it "keeps incomplete attendance in the roster and names it in the header" do
           partial = create(:person, first_name: "Zed", last_name: "Zulu")
           create(:event_registration, event: owned_event, registrant: partial, status: "incomplete_attendance")
 
           get roster_event_path(owned_event)
 
           expect(response.body).to include("Lovelace")
-          expect(response.body).not_to include("Zulu")
-          expect(response.body).to include("1 registrant (1 with incomplete attendance excluded)")
+          expect(response.body).to include("Zulu")
+          expect(response.body).to include("2 active registrants (1 with incomplete attendance)")
         end
 
-        it "omits the exclusion note when nobody has a partial attendance" do
+        it "omits the incomplete note when nobody has a partial attendance" do
           get roster_event_path(owned_event)
 
-          expect(response.body).to include("1 registrant")
-          expect(response.body).not_to include("incomplete attendance excluded")
+          expect(response.body).to include("1 active registrant")
+          expect(response.body).not_to include("with incomplete attendance")
         end
 
         it "links each registrant row to their registration, not their profile" do

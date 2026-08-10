@@ -37,6 +37,21 @@ RSpec.describe EventScholarshipFigures do
     expect(figures.attended_count).to eq(2)
   end
 
+  # An incomplete attendance keeps its scholarship — the money stayed with the
+  # event — but doesn't count as someone who completed the training. The two are
+  # reported side by side rather than one folded into the other.
+  it "counts an incomplete attendance separately, keeping its scholarship money" do
+    partial = create(:person)
+    reg = create(:event_registration, event: event, registrant: partial, status: "incomplete_attendance")
+    award = create(:scholarship, recipient: partial, amount_cents: 3_000, grant: nil)
+    create(:allocation, source: award, allocatable: reg, amount: 3_000)
+
+    expect(figures.attended_count).to eq(2)
+    expect(figures.incomplete_count).to eq(1)
+    expect(figures.unfunded_cents).to eq(5_000)
+    expect(figures.scholarship_count).to eq(3)
+  end
+
   it "counts an AWBW self-donated grant as unfunded, matching the dashboard" do
     awbw = create(:organization, name: "A Window Between Worlds")
     reg = create(:event_registration, event: event, registrant: create(:person), status: "attended")
@@ -79,6 +94,7 @@ RSpec.describe EventScholarshipFigures do
     expect(figures.funded_count).to eq(dashboard.funded_scholarship_count)
     expect(figures.unfunded_count).to eq(dashboard.unfunded_scholarship_count)
     expect(figures.attended_count).to eq(dashboard.attendance_count_for("attended"))
+    expect(figures.incomplete_count).to eq(dashboard.attendance_count_for("incomplete_attendance"))
   end
 
   it "returns zeros for an event with no registrations" do

@@ -33,7 +33,12 @@
     </div>
     <div class="rounded-lg border border-purple-300 bg-purple-50 p-3">
       <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Registrants attended</div>
-      <div class="mt-1 text-xl font-bold tabular-nums text-purple-700"><%= number_with_delimiter(featured.attended_count) %></div>
+      <%# Attended counts only a completed attendance. Partials are reported beside
+          it, not inside it — their scholarships and fees still count in the money
+          figures, but they didn't complete the training. %>
+      <div class="mt-1 text-xl font-bold tabular-nums text-purple-700">
+        <%= number_with_delimiter(featured.attended_count) %><% if featured.incomplete_count.positive? %><span class="text-sm font-medium text-gray-500"> (<%= number_with_delimiter(featured.incomplete_count) %> incomplete)</span><% end %>
+      </div>
       <div class="mt-1 text-xs text-gray-500"><%= featured.live_attended_count %> live · <%= featured.on_demand_attended_count %> on-demand</div>
     </div>
   </div>

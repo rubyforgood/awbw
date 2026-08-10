@@ -194,7 +194,7 @@ action, or `authorize! :workshop, to: :summary?`).
 
 ### Business Logic
 
-- `EventDashboard` — Aggregates per-event dashboard metrics (registrant/org/sector/state/county counts, scholarship totals, payment received/outstanding/total). Takes `registrations:` — the scope every people-facing figure draws from, defaulting to `EventRegistration.active`; the Roster page passes `.on_roster` (active minus `incomplete_attendance`). Attendance status counts stay whole regardless, so a page can report what its scope excluded
+- `EventDashboard` — Aggregates per-event dashboard metrics (registrant/org/sector/state/county counts, scholarship totals, payment received/outstanding/total). One population per event — `EventRegistration.active` — so the money and the people figures always reconcile; "who completed the training" is an attendance figure over that population (`#attended_count`), never a narrower population
 - `EventRevenueReport` — Cross-event revenue report grouped by calendar year (money in vs org subsidy vs net, CE fees, chart series) for the CEO revenue page
 - `EventRevenueFigures` — Batch-loads the per-event money components `EventRevenueReport` rows are built from (registration payments/outstanding, funded/unfunded scholarships, discounts, CE paid/outstanding) in a fixed number of grouped queries; mirrors the `EventDashboard` definitions
 - `EventScholarshipFigures` — Batch-loads the per-event scholarship figures `EventScholarshipReport` columns are built from (funded/unfunded dollars + counts, attended count) in a fixed number of grouped queries; optional `funder:` narrows to a donor's grants. Mirrors the `EventDashboard` funded/unfunded split, replacing the one-dashboard-per-event it used to build

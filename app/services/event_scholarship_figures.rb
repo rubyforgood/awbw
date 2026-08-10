@@ -15,6 +15,10 @@ class EventScholarshipFigures
     :funded_count,
     :unfunded_count,
     :attended_count,
+    # Trainees whose attendance was recorded as partial. Reported alongside
+    # attended_count rather than folded into it: the money stays with them, but
+    # they aren't counted among those who completed the training.
+    :incomplete_count,
     # { Person id => cents } per split, and the matching name-sorted Person
     # records — the report row's expander. A recipient with no award in a split is
     # absent from it, so they can appear in one, both, or neither.
@@ -34,6 +38,7 @@ class EventScholarshipFigures
     funded_count: 0,
     unfunded_count: 0,
     attended_count: 0,
+    incomplete_count: 0,
     funded_cents_by_recipient: {}.freeze,
     unfunded_cents_by_recipient: {}.freeze,
     funded_recipients: [].freeze,
@@ -67,7 +72,8 @@ class EventScholarshipFigures
       unfunded_cents: unfunded.sum { |_grant_id, amount, _recipient_id| amount },
       funded_count: funded.size,
       unfunded_count: unfunded.size,
-      attended_count: attended_counts_by_event.fetch(event.id, 0),
+      attended_count: status_counts_by_event.dig(event.id, "attended").to_i,
+      incomplete_count: status_counts_by_event.dig(event.id, "incomplete_attendance").to_i,
       funded_cents_by_recipient: funded_by_recipient,
       unfunded_cents_by_recipient: unfunded_by_recipient,
       funded_recipients: recipients_for(funded_by_recipient.keys),
@@ -135,10 +141,11 @@ class EventScholarshipFigures
     @funder_grant_ids ||= Grant.where(funder: @funder).ids
   end
 
-  # { event_id => attended registration count } from one grouped status query.
-  def attended_counts_by_event
-    @attended_counts_by_event ||= EventRegistration
-      .status_counts_by_event(@events.map(&:id))
-      .transform_values { |counts| counts.fetch("attended", 0) }
+  # { event_id => { status => count } } from one grouped query — the attended and
+  # incomplete-attendance headcounts both read from it. Deliberately over every
+  # registration, not just the active ones the money figures use: it answers who
+  # completed the training, which is a different question from who was on it.
+  def status_counts_by_event
+    @status_counts_by_event ||= EventRegistration.status_counts_by_event(@events.map(&:id))
   end
 end
