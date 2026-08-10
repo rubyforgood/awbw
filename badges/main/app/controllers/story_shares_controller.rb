@@ -32,7 +32,7 @@ class StorySharesController < ApplicationController
   end
 
   # Signed-in "Share your story" — reuses the StoryIdea submission flow.
-  def share
+  def new
     @story_idea = StoryIdea.new
     authorize! @story_idea, to: :create?
     set_story_idea_form_variables
@@ -64,7 +64,24 @@ class StorySharesController < ApplicationController
     end
     @spotlight_stories = section_stories(portal_scope.facilitator_spotlights(true))
     @featured_stories = carousel_stories
-    @recent_stories = preloaded(portal_scope).order(bookmark_count_desc).limit(POPULAR_STORY_LIMIT).decorate
+    @recent_stories = popular_stories
+  end
+
+  # "What others are reading": the most-viewed visible stories by tracked page
+  # views (Ahoy `view.story` events), backfilled with the most-bookmarked when
+  # view data is thin so the section always fills. Order preserved.
+  def popular_stories
+    visible = portal_scope
+    ids = Ahoy::Event.where(name: "view.story", resource_type: "Story", resource_id: visible.select(:id))
+                     .group(:resource_id)
+                     .order(Arel.sql("COUNT(*) DESC"))
+                     .limit(POPULAR_STORY_LIMIT)
+                     .pluck(:resource_id)
+    if ids.size < POPULAR_STORY_LIMIT
+      ids += visible.where.not(id: ids).reorder(bookmark_count_desc)
+                    .limit(POPULAR_STORY_LIMIT - ids.size).pluck(:id)
+    end
+    preloaded(Story.where(id: ids)).in_order_of(:id, ids).decorate
   end
 
   # Publicly featured stories lead the section, then most recent, capped.
