@@ -654,6 +654,19 @@ class EventRegistration < ApplicationRecord
     scholarships.any?
   end
 
+  # The scholarship that designates this registrant a recipient at THIS event: its
+  # own award, or — for a transferred-in reg — the award on the source
+  # registration it came from (walking the transfer chain). The dollars stay on
+  # the source (see EventDashboard's billable basis); this is recognition only, so
+  # a transferred-in registrant still "gets the hat" at the event they attend. (#1944)
+  def effective_scholarship
+    scholarships.first || transferred_from_registration&.effective_scholarship
+  end
+
+  def scholarship_recipient?
+    effective_scholarship.present?
+  end
+
   # Noun phrase distinguishing a scholarship-requested registration from a
   # standard one in email subjects and notification labels (e.g.
   # "event scholarship registration" vs "event registration"). Driven by the

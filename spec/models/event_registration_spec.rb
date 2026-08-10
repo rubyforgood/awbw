@@ -149,6 +149,35 @@ RSpec.describe EventRegistration, type: :model do
         expect(incoming.reload.payment_access_granted?).to be(true)
       end
     end
+
+    describe "scholarship recognition across a transfer" do
+      let(:source) { create(:event_registration, event: create(:event, cost_cents: 5_000), status: "transferred_out") }
+      let!(:incoming) { create(:event_registration, status: "registered", transferred_from_registration: source) }
+
+      it "designates a transferred-in reg a scholarship recipient via the source award" do
+        scholarship = create(:scholarship, recipient: source.registrant, amount_cents: 5_000)
+        create(:allocation, source: scholarship, allocatable: source, amount: 5_000)
+
+        expect(incoming.effective_scholarship).to eq(scholarship)
+        expect(incoming).to be_scholarship_recipient
+        # ...without the award becoming one of its own (dollars stay on the source).
+        expect(incoming.scholarship?).to be(false)
+      end
+
+      it "is not a recipient when the source has no scholarship" do
+        expect(incoming.effective_scholarship).to be_nil
+        expect(incoming).not_to be_scholarship_recipient
+      end
+
+      it "uses a reg's own scholarship when present" do
+        own = create(:event_registration, event: create(:event, cost_cents: 3_000), status: "registered")
+        scholarship = create(:scholarship, recipient: own.registrant, amount_cents: 3_000)
+        create(:allocation, source: scholarship, allocatable: own, amount: 3_000)
+
+        expect(own.effective_scholarship).to eq(scholarship)
+        expect(own).to be_scholarship_recipient
+      end
+    end
   end
 
   describe ".registrant_name" do

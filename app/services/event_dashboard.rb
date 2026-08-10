@@ -138,7 +138,7 @@ class EventDashboard
   end
 
   def scholarship_recipient_count
-    scholarships.distinct.count(:recipient_id)
+    recognized_scholarships.map(&:recipient_id).uniq.size
   end
 
   # This event's registrants grouped by the city of the organization linked on
@@ -175,8 +175,13 @@ class EventDashboard
   # Person ids of this event's scholarship recipients — the lightweight id list
   # behind #scholarship_applicants (no includes/sort), for scoping the recipients
   # charts frame, which only needs their ids. Public: the controller calls it.
+  # Includes registrants transferred in with an award on their source reg — they
+  # are recognized recipients here even though the dollars stay on the source. (#1944)
   def scholarship_applicant_ids
-    @scholarship_applicant_ids ||= active_registrations.where(scholarship_requested: true).pluck(:registrant_id)
+    @scholarship_applicant_ids ||= (
+      active_registrations.where(scholarship_requested: true).pluck(:registrant_id) +
+      recognized_scholarships.map(&:recipient_id)
+    ).uniq
   end
 
   def scholarship_applicants
@@ -273,8 +278,7 @@ class EventDashboard
   # scholarship wins if a person has several, preferring a live award over a
   # declined one so a re-award isn't hidden behind the decline it replaced.
   def scholarship_by_recipient
-    @scholarship_by_recipient ||= all_scholarships
-      .includes(grant: :funder)
+    @scholarship_by_recipient ||= (all_scholarships.includes(grant: :funder).to_a + transferred_in_source_scholarships)
       .group_by(&:recipient_id)
       .transform_values { |awards| awards.reject(&:agreement_declined?).first || awards.first }
   end
@@ -1056,6 +1060,28 @@ class EventDashboard
   # numbers regardless of affiliations that have started or ended since.
   def reference_date
     @reference_date ||= (event.start_date || Date.current).to_date
+  end
+
+  # Scholarships to RECOGNIZE recipients at this event: awards on this event's own
+  # registrations, plus awards on the SOURCE registrations of anyone transferred
+  # in (their dollars stay on the source event — see #scholarships and the
+  # billable basis — but they're still a scholarship recipient here). Recognition
+  # only: drives the recipient "hat", the recipient count, and the recipients
+  # page; NOT the dollar totals. (#1944)
+  def recognized_scholarships
+    @recognized_scholarships ||= scholarships.includes(grant: :funder).to_a + transferred_in_source_scholarships
+  end
+
+  # The source registrations' scholarships for everyone transferred into this
+  # event — recognized here, but billed to the source event.
+  def transferred_in_source_scholarships
+    source_ids = active_registrations.transferred_in.pluck(:transferred_from_registration_id)
+    return [] if source_ids.empty?
+
+    Scholarship.joins(:allocation)
+      .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: source_ids })
+      .includes(grant: :funder)
+      .to_a
   end
 
   # Grouping key for an applicant's funder: the funder identity when the

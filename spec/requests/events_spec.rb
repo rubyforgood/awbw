@@ -3251,6 +3251,20 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to match(/line-through[^>]*>\s*<i[^>]*sack-dollar[^>]*><\/i>\s*\$10\b/)
       end
 
+      it "recognizes a transferred-in registrant as a scholarship recipient (award on the source)" do
+        # Same person transfers: source award + incoming reg both belong to them.
+        person = create(:person, first_name: "Transo", last_name: "Ferredin")
+        source = create(:event_registration, event: create(:event, cost_cents: 5_000), registrant: person, status: "transferred_out")
+        create(:allocation, source: create(:scholarship, recipient: person, amount_cents: 5_000),
+               allocatable: source, amount: 5_000)
+        create(:event_registration, event: event, registrant: person, status: "registered",
+               transferred_from_registration: source)
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include("Transo Ferredin")
+      end
+
       it "shows a recipient city breakdown, grouped by the registration-linked org, in the lazy charts frame" do
         org = create(:organization, name: "Reach Org")
         create(:address, addressable: org, city: "Richmond", state: "CA", inactive: false)

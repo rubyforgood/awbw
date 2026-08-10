@@ -66,11 +66,19 @@
       </div>
       <% source_scholarship = source.scholarships.first %>
       <% if source_scholarship %>
+        <%# A scholarship recipient here too — the award (and its dollars) stay on
+            the original registration, but they keep the recipient designation. %>
+        <span class="mb-1 inline-flex w-fit items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-[0.65rem] font-medium text-teal-700">
+          <i class="fa-solid fa-graduation-cap"></i> Scholarship recipient
+        </span>
         <p class="text-sm font-semibold tabular-nums text-gray-900"><%= dollars_from_cents(source_scholarship.amount_cents) %></p>
         <p class="mt-1 text-xs text-gray-500">
           <%= source_scholarship.agreement_signed? ? "Agreement signed" : "Agreement pending" %> ·
           <%= source_scholarship.tasks_completed? ? "Tasks complete" : "Tasks outstanding" %>
         </p>
+        <%= link_to "View scholarship record", edit_scholarship_path(source_scholarship, return_to: "registrants"),
+                    class: "mt-1 inline-flex items-center gap-1 text-xs font-medium text-teal-700 hover:underline",
+                    target: "_blank", rel: "noopener" %>
       <% else %>
         <p class="text-sm text-gray-500">None.</p>
       <% end %>

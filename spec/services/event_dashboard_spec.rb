@@ -1237,6 +1237,31 @@ RSpec.describe EventDashboard do
     end
   end
 
+  describe "transferred-in scholarship recognition" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:source_event) { create(:event, cost_cents: 10_000) }
+    let(:recipient) { create(:person, first_name: "Trans", last_name: "Ferred") }
+    let(:source) { create(:event_registration, event: source_event, registrant: recipient, status: "transferred_out") }
+    let!(:incoming) { create(:event_registration, event: event, registrant: recipient, status: "registered", transferred_from_registration: source) }
+    let!(:scholarship) do
+      s = create(:scholarship, recipient: recipient, amount_cents: 4_000)
+      create(:allocation, source: s, allocatable: source, amount: 4_000)
+      s
+    end
+
+    it "recognizes the transferred-in registrant as a scholarship recipient (the hat)" do
+      expect(dashboard.scholarship_by_recipient[recipient.id]).to eq(scholarship)
+      expect(dashboard.scholarship_recipient_count).to eq(1)
+      expect(dashboard.scholarship_applicants).to include(recipient)
+    end
+
+    it "does not attribute the scholarship dollars to this event (they stay on the source)" do
+      expect(dashboard.scholarship_total_cents).to eq(0)
+      expect(dashboard.funded_scholarship_cents).to eq(0)
+      expect(dashboard.unfunded_scholarship_cents).to eq(0)
+    end
+  end
+
   describe "transferred-in registrations and financial totals" do
     let(:event) { create(:event, cost_cents: 10_000) }
     let(:paid_person) { create(:person) }

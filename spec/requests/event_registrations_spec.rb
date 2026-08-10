@@ -530,6 +530,9 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("Financials on the original registration")
         expect(response.body).to include("#{edit_event_registration_path(source)}#allocations-card")
         expect(response.body).to include("#{edit_event_registration_path(source)}#scholarship-card")
+        # Designated a scholarship recipient, linking to the actual award record.
+        expect(response.body).to include("Scholarship recipient")
+        expect(response.body).to include(edit_scholarship_path(scholarship))
         # NOT the incoming reg's own editable payment/scholarship cards.
         expect(response.body).not_to include("Registration payments and allocations")
         expect(response.body).not_to include("name=\"event_registration[scholarship_requested]\"")
