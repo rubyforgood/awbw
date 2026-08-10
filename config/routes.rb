@@ -278,11 +278,11 @@ Rails.application.routes.draw do
   get "search/:model", to: "search#index"
   resources :story_ideas
   resources :stories
+  get "story_share/admin", to: "story_share_admin#show", as: :story_share_admin
+  match "story_share/admin/reorder", to: "story_share_admin#reorder", via: [ :put, :patch ], as: :story_share_admin_reorder
+  post "story_share/admin/add", to: "story_share_admin#add", as: :story_share_admin_add
+  delete "story_share/admin/remove", to: "story_share_admin#remove", as: :story_share_admin_remove
   resources :story_shares, path: "story_share", only: [ :index, :show, :new ]
-  get "story_share_admin", to: "story_share_admin#show"
-  match "story_share_admin/reorder", to: "story_share_admin#reorder", via: [ :put, :patch ], as: :story_share_admin_reorder
-  post "story_share_admin/add", to: "story_share_admin#add", as: :story_share_admin_add
-  delete "story_share_admin/remove", to: "story_share_admin#remove", as: :story_share_admin_remove
   resources :video_recordings
   resources :user_forms
   resources :windows_types
