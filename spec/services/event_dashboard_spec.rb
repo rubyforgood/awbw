@@ -511,12 +511,12 @@ RSpec.describe EventDashboard do
     end
 
     describe "#scholarship_applicants_by_funder" do
-      it "buckets applicants by their scholarship's grant funder, unfunded last, carrying the donor and its city/state" do
+      it "buckets applicants by their scholarship's grant funder, unfunded last, carrying the funder and its city/state" do
         embedded_reg = event.event_registrations.find_by(registrant: embedded_applicant)
         separate_reg = event.event_registrations.find_by(registrant: separate_applicant)
-        donor = create(:organization, name: "Joyful Heart Foundation")
-        create(:address, addressable: donor, city: "Los Angeles", state: "CA")
-        grant = create(:grant, name: "Healing Arts", funder: donor, amount_cents: 100_000)
+        funder = create(:organization, name: "Joyful Heart Foundation")
+        create(:address, addressable: funder, city: "Los Angeles", state: "CA")
+        grant = create(:grant, name: "Healing Arts", funder: funder, amount_cents: 100_000)
         funded = create(:scholarship, recipient: embedded_applicant, grant: grant, amount_cents: 1_000)
         create(:allocation, source: funded, allocatable: embedded_reg, amount: 1_000)
         unfunded = create(:scholarship, recipient: separate_applicant, amount_cents: 1_000)
@@ -526,10 +526,10 @@ RSpec.describe EventDashboard do
 
         expect(groups.map(&:name)).to eq([ "Joyful Heart Foundation", "Unfunded" ])
         expect(groups.first.people).to eq([ embedded_applicant ])
-        expect(groups.first.donor).to eq(donor)
+        expect(groups.first.funder).to eq(funder)
         expect(groups.first.location).to eq("Los Angeles, CA")
         expect(groups.last.people).to eq([ separate_applicant ])
-        expect(groups.last.donor).to be_nil
+        expect(groups.last.funder).to be_nil
       end
 
       it "collects applicants with no awarded scholarship under 'No scholarship yet'" do

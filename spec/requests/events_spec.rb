@@ -2932,7 +2932,7 @@ RSpec.describe "Events", type: :request do
 
         expect(response).to have_http_status(:ok)
         page = Capybara.string(response.body)
-        # The funder name renders as a section header linking to the donor's profile,
+        # The funder name renders as a section header linking to the funder's profile,
         # with its city/state alongside.
         expect(page).to have_css("h2 a[href='#{organization_path(org)}']", text: "Joyful Heart Foundation")
         expect(page).to have_content("Los Angeles, CA")
