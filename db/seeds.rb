@@ -154,15 +154,19 @@ OrganizationObligation::OBLIGATION_TYPES.each do |obligation_type|
 end
 
 puts "Creating legacy scholarship Grants…"
-# Named legacy scholarship funds. Story-import rows tagged "Cathy scholarship" /
-# "babs mayer" connect to these via the recipient's Scholarship (grant → scholarship
-# → recipient, who is the story author). Funded by AWBW; change the funder if a
-# legacy fund is attributed to an individual donor instead.
-[ "Cathy Salser Legacy Scholarship", "Babs Mayer Legacy Scholarship" ].each do |grant_name|
-  Grant.find_or_create_by!(name: grant_name) do |grant|
-    grant.funder = awbw_org
-    grant.amount_cents = 0
+# Named legacy scholarship funds, each funded by its namesake (a Person). Story-
+# import rows tagged "Cathy scholarship" / "babs mayer" connect to these via the
+# recipient's Scholarship (grant → scholarship → recipient, who is the story author).
+{
+  "Cathy Salser Legacy Scholarship" => [ "Cathy", "Salser" ],
+  "Babs Mayer Legacy Scholarship" => [ "Babs", "Mayer" ]
+}.each do |grant_name, (first, last)|
+  funder = Person.find_or_create_by!(first_name: first, last_name: last)
+  grant = Grant.find_or_create_by!(name: grant_name) do |g|
+    g.funder = funder
+    g.amount_cents = 0
   end
+  grant.update!(funder: funder) unless grant.funder == funder
 end
 
 puts "Creating Sectors…"
