@@ -1,0 +1,42 @@
+<%# Centered page header shared by the event pages (roster, scholarship
+    recipients) and the report suite (reports hub, attendees, revenue,
+    participation, scholarships), so they all read as one page family.
+
+    When the page is scoped to a single event — always for the per-event pages,
+    only with an event_id filter for the reports — that event's label and dates sit
+    above the title. Unscoped, the title stands alone.
+
+    Locals:
+      title:    heading text
+      icon:     Font Awesome classes for the heading icon (e.g. "fa-solid fa-chart-line")
+      theme:    DomainTheme key colouring the heading (default :events)
+      subtitle: optional line under the title
+      event:    optional Event the page is scoped to (@event / @filter_event)
+      actions:  optional captured markup pinned top-right (its own row on mobile) %>
+<% event = local_assigns[:event] %>
+<% actions = local_assigns[:actions] %>
+<% theme = local_assigns.fetch(:theme, :events) %>
+<div class="relative mb-8">
+  <% if actions.present? %>
+    <div class="flex flex-wrap items-center justify-end gap-3 mb-4 sm:mb-0 sm:absolute sm:right-0 sm:top-0 print:hidden">
+      <%= actions %>
+    </div>
+  <% end %>
+
+  <div class="text-center">
+    <% if event %>
+      <%= link_to event.decorate.compact_label, edit_event_path(event), title: event.title,
+            class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
+      <% if event.start_date.present? %>
+        <p class="text-sm text-gray-500 mt-1"><%= event.decorate.date_range %></p>
+      <% end %>
+    <% end %>
+    <h1 class="text-3xl font-bold <%= "mt-2" if event %> flex items-center justify-center gap-2 <%= DomainTheme.text_class_for(theme) %>">
+      <i class="<%= icon %>"></i>
+      <%= title %>
+    </h1>
+    <% if local_assigns[:subtitle].present? %>
+      <p class="text-gray-500 mt-2"><%= subtitle %></p>
+    <% end %>
+  </div>
+</div>

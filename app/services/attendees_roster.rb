@@ -3,17 +3,23 @@
 # counterpart to EventDashboard, which builds the same shape for a single event.
 #
 # Constructed with the already-filtered, already-paginated page of Person records
-# who have attended a facilitator training, so every map is scoped to just those
+# in the current filter scope, so every map is scoped to just those
 # rows (no whole-history scans). Columns are sourced from each person's own
 # profile (sectors, age groups, affiliations, address); scholarship/CE/event
-# columns come from their attended-training registrations.
-class TrainingAttendeesRoster
+# columns come from their in-scope registrations.
+class AttendeesRoster
   # Affiliation status taxonomy shown in the index's Affiliation status column and
   # offered as a filter, in display order.
-  AFFILIATION_STATUSES = %w[ Active Pending Inactive ].freeze
+  AFFILIATION_STATUSES = Affiliation::STATUSES
 
-  def initialize(people)
+  # events / registrations: the event + registration scopes whose rows may be
+  # counted — the index's current filters — so a person's Events/scholarship/CE
+  # columns show what's in scope rather than their whole history, and never an
+  # event the viewer isn't allowed to see.
+  def initialize(people, events: Event.all, registrations: EventRegistration.attended)
     @people = people.to_a
+    @events = events
+    @registrations = registrations
   end
 
   attr_reader :people
@@ -23,15 +29,15 @@ class TrainingAttendeesRoster
     people.size
   end
 
-  # Each person's attended facilitator-training registrations, most recent event
-  # first, keyed by Person id — the source for the roster's Training column.
-  def training_registrations_by_registrant
-    @training_registrations_by_registrant ||= attended_training_registrations
+  # Each person's in-scope registrations, most recent event first, keyed by Person
+  # id — the source for the roster's Events column.
+  def event_registrations_by_registrant
+    @event_registrations_by_registrant ||= scoped_registrations
       .group_by(&:registrant_id)
       .transform_values { |registrations| registrations.sort_by { |r| r.event.start_date || Date.new(0) }.reverse }
   end
 
-  # The scholarship shown per person: the one from the most recent training where
+  # The scholarship shown per person: the one from the most recent in-scope event where
   # they hold a scholarship. Keyed by Person id (matches EventDashboard's shape).
   def scholarship_by_recipient
     @scholarship_by_recipient ||= scholarship_registration_by_person
@@ -39,7 +45,7 @@ class TrainingAttendeesRoster
   end
 
   # [ event, participant slug ] the scholarship icon links to: the recipients page
-  # of the most recent training where the person holds a scholarship, anchored to
+  # of the most recent in-scope event where the person holds a scholarship, anchored to
   # their entry there.
   def scholarship_link_target(person)
     registration = scholarship_registration_by_person[person.id]
@@ -47,21 +53,27 @@ class TrainingAttendeesRoster
     [ registration.event, registration.slug ]
   end
 
-  # The training the person's shown scholarship comes from, keyed by Person id —
-  # lets the cross-event index label which training funded it (it may not be the
-  # top-listed training).
+  # The registration a person's roster row links to: their most recent in-scope
+  # event. Mirrors EventDashboard#registration_link_target.
+  def registration_link_target(person)
+    registrations_for(person).first
+  end
+
+  # The event the person's shown scholarship comes from, keyed by Person id — lets
+  # the cross-event index label which event funded it (it may not be the top-listed
+  # one).
   def scholarship_event_by_registrant
     @scholarship_event_by_registrant ||= scholarship_registration_by_person.transform_values(&:event)
   end
 
-  # The CE registration shown per person: the one from their most recent training
+  # The CE registration shown per person: the one from their most recent in-scope event
   # that has continuing education. Keyed by Person id.
   def ce_registration_by_registrant
     @ce_registration_by_registrant ||= ce_source_registration_by_registrant
       .transform_values { |registration| ce_registration_by_event_registration[registration.id] }
   end
 
-  # The training the person's shown CE registration comes from, keyed by Person id.
+  # The event the person's shown CE registration comes from, keyed by Person id.
   def ce_event_by_registrant
     @ce_event_by_registrant ||= ce_source_registration_by_registrant.transform_values(&:event)
   end
@@ -81,14 +93,15 @@ class TrainingAttendeesRoster
     end
   end
 
-  # Organizations linked on the listed people's attended-training registrations,
-  # name-ordered. Mirrors the roster's Organization column, aggregated across all
-  # of a person's trainings.
+  # Organizations linked on the listed people's in-scope registrations, name-ordered.
+  # Mirrors the roster's Organization column, aggregated across all their events.
   def organizations
-    @organizations ||= Organization.where(id: linked_org_ids_by_registrant.values.flatten.uniq).order(:name)
+    # Preload affiliations: program-status classification (facilitator_status_on)
+    # reads the loaded association rather than re-querying per org.
+    @organizations ||= Organization.where(id: linked_org_ids_by_registrant.values.flatten.uniq).includes(:affiliations).order(:name)
   end
 
-  # Linked-organization ids per person, uniqued across their training registrations.
+  # Linked-organization ids per person, uniqued across their in-scope registrations.
   def organization_ids_by_registrant
     linked_org_ids_by_registrant
   end
@@ -129,11 +142,11 @@ class TrainingAttendeesRoster
   private
 
   def registrations_for(person)
-    training_registrations_by_registrant[person.id] || []
+    event_registrations_by_registrant[person.id] || []
   end
 
-  # The attended-training registration whose CE record the CE icon shows, per
-  # person: their most recent attended training that has continuing education.
+  # The registration whose CE record the CE icon shows, per person: their most
+  # recent in-scope event that has continuing education.
   def ce_source_registration_by_registrant
     @ce_source_registration_by_registrant ||= people.each_with_object({}) do |person, map|
       registration = registrations_for(person).find { |r| ce_registration_by_event_registration[r.id] }
@@ -141,22 +154,19 @@ class TrainingAttendeesRoster
     end
   end
 
-  def attended_training_registrations
-    @attended_training_registrations ||= EventRegistration
-      .attended
-      .where(registrant_id: people.map(&:id))
-      .joins(:event)
-      .where(events: { facilitator_training: true })
+  def scoped_registrations
+    @scoped_registrations ||= @registrations
+      .where(registrant_id: people.map(&:id), event_id: @events.select(:id))
       .includes(:event)
       .to_a
   end
 
   def registration_ids
-    @registration_ids ||= attended_training_registrations.map(&:id)
+    @registration_ids ||= scoped_registrations.map(&:id)
   end
 
   # The registration whose recipients-page entry the scholarship icon links to,
-  # per person: the most recent attended training where they hold a scholarship.
+  # per person: the most recent in-scope event where they hold a scholarship.
   def scholarship_registration_by_person
     @scholarship_registration_by_person ||= people.each_with_object({}) do |person, map|
       registration = registrations_for(person).find { |r| scholarship_by_registration[r.id] }
@@ -165,7 +175,7 @@ class TrainingAttendeesRoster
   end
 
   # Scholarship per funded registration id (first wins), across the page's
-  # attended-training registrations.
+  # in-scope registrations.
   def scholarship_by_registration
     @scholarship_by_registration ||= Scholarship
       .joins(:allocation)
@@ -175,7 +185,7 @@ class TrainingAttendeesRoster
       .transform_values(&:first)
   end
 
-  # First CE registration per attended-training registration id.
+  # First CE registration per in-scope registration id.
   def ce_registration_by_event_registration
     @ce_registration_by_event_registration ||= ContinuingEducationRegistration
       .where(event_registration_id: registration_ids)
@@ -183,7 +193,7 @@ class TrainingAttendeesRoster
       .transform_values(&:first)
   end
 
-  # Organization ids linked on each person's attended-training registrations
+  # Organization ids linked on each person's in-scope registrations
   # (EventRegistrationOrganization), uniqued per person.
   def linked_org_ids_by_registrant
     @linked_org_ids_by_registrant ||= EventRegistrationOrganization
@@ -195,12 +205,8 @@ class TrainingAttendeesRoster
       end
   end
 
-  # One affiliation's status: Inactive (flagged or ended), Pending (future start),
-  # otherwise Active.
   def affiliation_status(affiliation)
-    return "Inactive" if affiliation.inactive? || (affiliation.end_date && affiliation.end_date < Date.current)
-    return "Pending" if affiliation.start_date && affiliation.start_date > Date.current
-    "Active"
+    affiliation.status_on
   end
 
   def program_status_by_organization

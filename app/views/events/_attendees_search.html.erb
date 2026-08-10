@@ -1,0 +1,125 @@
+<%# Filters for the attendees index. Submits into the results frame; the
+    selects auto-submit on change and the text search on enter/click. `return_to`
+    rides along so the eyebrow keeps pointing back to wherever the admin arrived
+    from. %>
+<% select_class = "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500 has-[option:first-child:checked]:text-gray-400" %>
+<%= form_tag(attendees_events_path, method: :get,
+      data: { controller: "collection", turbo_frame: "attendees_results" },
+      autocomplete: "off",
+      class: "rounded-xl border border-gray-200 bg-white p-4 shadow-sm mb-6") do %>
+  <%= hidden_field_tag :return_to, params[:return_to] %>
+  <%# Keep drill-in filters applied while the admin tweaks a visible select — the
+      auto-submit only sends this form's fields, so the drill-ins ride as hidden
+      inputs and are surfaced (and cleared) via the chip row below. %>
+  <% AttendeesActiveFilters::CHIP_PARAMS.each do |param| %>
+    <%= hidden_field_tag param, params[param] if params[param].present? %>
+  <% end %>
+
+  <% active_filters = AttendeesActiveFilters.new(params).chips %>
+  <% if active_filters.any? %>
+    <div class="flex flex-wrap items-center gap-2 mb-4">
+      <span class="text-xs font-semibold uppercase text-gray-500 tracking-wide">Applied</span>
+      <% active_filters.each do |filter| %>
+        <span class="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+          <%= filter[:label] %>
+          <%= link_to attendees_events_path(request.query_parameters.except("page", filter[:param])),
+                class: "text-blue-400 hover:text-blue-700", aria: { label: "Remove #{filter[:label]} filter" } do %>
+            <i class="fa-solid fa-xmark"></i>
+          <% end %>
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4">
+    <div class="w-full md:flex-1 md:min-w-[14rem]">
+      <%= label_tag :contact_info, "Name, email, or phone", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <div class="relative">
+        <%= text_field_tag :contact_info, params[:contact_info],
+              class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-blue-500 focus:border-blue-500" %>
+        <button type="submit" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600">
+          <i class="fa fa-search"></i>
+        </button>
+      </div>
+    </div>
+
+    <%# Attendance outcome and event type default to "attended" / "trainings" — the
+        population this page has always shown. Rendered pre-selected rather than as a
+        blank "All" so the default filter is visible instead of hidden. %>
+    <div class="w-full md:w-40">
+      <%= label_tag :attendance_status, "Attendance", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <%= select_tag :attendance_status,
+            options_for_select([ [ "All outcomes", EventRegistration::FILTER_ALL ] ] + EventRegistration::ATTENDANCE_FILTER_OPTIONS, @attendance_status),
+            class: select_class, onchange: "this.form.submit();" %>
+    </div>
+
+    <div class="w-full md:w-52">
+      <%= label_tag :event_type, "Event type", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <%= select_tag :event_type,
+            options_for_select([ [ "All events", EventRegistration::FILTER_ALL ] ] + EventRegistration::EVENT_TYPE_FILTER_OPTIONS, @attendee_event_type),
+            class: select_class, onchange: "this.form.submit();" %>
+    </div>
+
+    <div class="w-full md:w-52">
+      <%= label_tag :event_id, "Event", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <%= select_tag :event_id,
+            options_from_collection_for_select(@attendee_event_options, :id, :time_title, params[:event_id].to_i),
+            include_blank: "All events",
+            class: select_class, onchange: "this.form.submit();" %>
+    </div>
+
+    <div class="w-full md:w-32">
+      <%= label_tag :event_year, "Year", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <%= select_tag :event_year,
+            options_for_select(@attendee_years.map { |year| [ year.to_s, year ] }, params[:event_year].presence&.to_i),
+            include_blank: "All years",
+            class: select_class, onchange: "this.form.submit();" %>
+    </div>
+
+    <div class="w-full md:w-44">
+      <%= label_tag :sector, "Sector", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <%= select_tag :sector,
+            options_from_collection_for_select(@attendee_sectors, :id, :name, params[:sector].to_i),
+            include_blank: "All sectors",
+            class: select_class, onchange: "this.form.submit();" %>
+    </div>
+
+    <div class="w-full md:w-44">
+      <%= label_tag :program_status, "Program status", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <%= select_tag :program_status,
+            options_for_select(Organization::FACILITATOR_PROGRAM_STATUSES.map { |status| [ status.to_s.titleize, status.to_s ] }, params[:program_status]),
+            include_blank: "All program statuses",
+            class: select_class, onchange: "this.form.submit();" %>
+    </div>
+
+    <div class="w-full md:w-40">
+      <%= label_tag :affiliation_status, "Affiliation status", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <%= select_tag :affiliation_status,
+            options_for_select(Affiliation::FILTER_STATUSES, params[:affiliation_status]),
+            include_blank: "All statuses",
+            class: select_class, onchange: "this.form.submit();" %>
+    </div>
+
+    <div class="w-full md:w-32">
+      <%= label_tag :state, "State", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <%= select_tag :state,
+            options_for_select(@attendee_states, params[:state]),
+            include_blank: "All states",
+            class: select_class, onchange: "this.form.submit();" %>
+    </div>
+
+    <div class="w-full md:w-52">
+      <%= label_tag :county, "County", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <%= select_tag :county,
+            options_for_select(@attendee_counties.map { |state, county| [ "#{county} (#{state})", "#{state}::#{county}" ] }, params[:county]),
+            include_blank: "All counties",
+            class: select_class, onchange: "this.form.submit();" %>
+    </div>
+
+    <div class="w-full md:w-auto flex justify-end">
+      <%= link_to "Clear filters", attendees_events_path,
+            class: "btn btn-utility-outline",
+            data: { action: "collection#clearAndSubmit" } %>
+    </div>
+  </div>
+<% end %>

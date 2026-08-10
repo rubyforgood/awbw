@@ -1,6 +1,0 @@
-<%# Lazily-loaded charts frame for the training-attendees index. Requested only
-    when the admin reveals the charts panel (see training_attendees_results), so
-    the cross-event breakdowns run solely on demand. %>
-<%= turbo_frame_tag :training_attendees_charts do %>
-  <%= render "events/registrant_breakdowns", data: @breakdowns, context: :index %>
-<% end %>

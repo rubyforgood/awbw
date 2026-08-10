@@ -25,6 +25,35 @@ module EventsHelper
     registrants_event_path(event_or_id, anchor: registrant_row_id(registration_id), highlight: registration_id)
   end
 
+  # Path back to one recipient's card on the Scholarship recipients page, where the
+  # cards are anchored by registration slug (`participant-<slug>`, with a scroll-mt
+  # so the sticky header doesn't cover them). Shared by every page reached from
+  # there — the registration and scholarship edit pages and their post-save
+  # redirects — so the anchor is built once. A blank slug lands at the top.
+  def recipients_event_card_path(event, participant_slug)
+    recipients_event_path(event, anchor: ("participant-#{participant_slug}" if participant_slug.present?))
+  end
+
+  # Where a revenue figure drills in. The money lives on registrations, so these
+  # land on a registrations table with payment columns rather than the attendees
+  # people-index — matching the per-registrant breakdown rows lower down the same
+  # report. Scoped to one event that's its Manage list; across events it's the
+  # registrations index, which takes the same filters.
+  def revenue_drilldown_path(filters)
+    event_id = params[:event_id].presence
+    return registrants_event_path(event_id, **filters.except(:event_year)) if event_id
+    event_registrations_path(**filters)
+  end
+
+  # Human label for the attendees index's population filters — e.g.
+  # "Attended · All trainings". Shown in the page subtitle so the defaults the page
+  # applies are visible rather than implied.
+  def attendee_population_label(attendance_status, event_type)
+    outcome = EventRegistration::ATTENDANCE_FILTER_OPTIONS.rassoc(attendance_status)&.first || "All outcomes"
+    type = EventRegistration::EVENT_TYPE_FILTER_OPTIONS.rassoc(event_type)&.first || "All events"
+    "#{outcome} · #{type}"
+  end
+
   # The scholarships report's filter/toggle state, carried through a drill-in so
   # its eyebrow can rebuild the exact view (period, event type/id, search, funder,
   # split/combined layout, and the report's own origin) the user came from.
@@ -69,15 +98,6 @@ module EventsHelper
     scholarships_events_path(**filters.to_h.symbolize_keys,
       highlight: params[:return_highlight].presence,
       anchor: params[:return_anchor].presence)
-  end
-
-  # Stamp a registrants-page link reached from the background dashboard with the
-  # context its eyebrow needs to send the user back to the exact section they
-  # drilled in from: return_to marks the origin page, return_anchor the section id
-  # (matching that section's `id`/`scroll-mt-*` on the background page).
-  def background_return_path(path, anchor)
-    separator = path.include?("?") ? "&" : "?"
-    "#{path}#{separator}#{{ return_to: "background", return_anchor: anchor }.to_query}"
   end
 
   # Ordered column descriptors for the event Onboarding matrix. The array index
@@ -140,37 +160,37 @@ module EventsHelper
     end
   end
 
-  # The statistics hub and the full revenue/participation reports share the
+  # The reports hub and the full revenue/participation reports share the
   # event-type and specific-event filters directly, but express the time window
   # differently: the hub's `period` select offers this_year/last_year/all_time,
   # while the reports use `time_period` where a specific window is the calendar
   # year "YYYY". These helpers translate a page's active filters into the query
   # params for its cross-link so filters carry across — and back — between the
-  # summaries' "Full report" links and the reports' "Events statistics" eyebrow.
+  # summaries' "Full report" links and the reports' "← Reports" eyebrow.
 
-  # Statistics hub filters → full report query params.
-  def statistics_to_report_params
+  # Reports hub filters → full report query params.
+  def hub_to_report_params
     {
       return_to: params[:return_to],
       event_type: params[:event_type].presence,
       event_id: params[:event_id].presence,
-      time_period: statistics_period_to_time_period(@period)
+      time_period: hub_period_to_time_period(@period)
     }.compact
   end
 
-  # Full report filters → statistics hub query params.
-  def report_to_statistics_params
+  # Full report filters → reports hub query params.
+  def report_to_hub_params
     {
       return_to: params[:return_to],
       event_type: params[:event_type].presence,
       event_id: params[:event_id].presence,
-      period: time_period_to_statistics_period(@time_period)
+      period: time_period_to_hub_period(@time_period)
     }.compact
   end
 
   # "last_year" becomes the prior calendar year (reports name specific years
   # "YYYY"); this_year/all_time pass through unchanged.
-  def statistics_period_to_time_period(period)
+  def hub_period_to_time_period(period)
     return (Date.current.year - 1).to_s if period == "last_year"
     period
   end
@@ -178,7 +198,7 @@ module EventsHelper
   # Inverse: the prior year maps back to "last_year", the current year to
   # "this_year"; any other specific year has no hub equivalent, so fall back to
   # "all_time".
-  def time_period_to_statistics_period(time_period)
+  def time_period_to_hub_period(time_period)
     case time_period
     when "this_year", "all_time" then time_period
     when (Date.current.year - 1).to_s then "last_year"

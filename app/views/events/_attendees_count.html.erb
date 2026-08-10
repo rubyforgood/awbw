@@ -1,0 +1,11 @@
+<%# Header + count for the attendees index. Rendered on the shell (no count yet)
+    and replaced out-of-band by the results frame once the page loads. %>
+<div id="attendees_count">
+  <%= render "events/report_header",
+        title: "Event attendees",
+        icon: "fa-solid fa-user-pen",
+        theme: :event_registrations,
+        event: @filter_event,
+        subtitle: [ (pluralize(@count_display, "person") if @count_display),
+                    attendee_population_label(@attendance_status, @attendee_event_type) ].compact.join(" · ") %>
+</div>

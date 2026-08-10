@@ -1,27 +1,30 @@
-<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
 <%# Opt out of the layout's max-w-7xl cap to match the wider event manage pages. %>
 <% content_for(:full_width, true) %>
 
 <div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8 py-6">
   <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
     <div class="mb-6">
-      <% if params[:return_to] == "events" %>
+      <% if @filter_event %>
+        <%= link_to "← #{@filter_event.title}", dashboard_event_path(@filter_event), class: "text-sm text-gray-500 hover:text-gray-700" %>
+      <% elsif params[:return_to] == "events" || !current_user&.super_user? %>
+        <%# Event owners reach the unfiltered hub too, and can't follow the admin
+            home link — send them back to the events index instead. %>
         <%= link_to "← Events", events_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
       <% else %>
         <%= link_to "← Admin home", admin_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
       <% end %>
     </div>
 
-    <div class="mb-6">
-      <h1 class="text-2xl font-semibold text-gray-900">Events statistics</h1>
-      <p class="text-gray-600 mt-1">
-        Revenue and participation at a glance — open a full report for the year-by-year detail.
-      </p>
-    </div>
+    <%= render "events/report_header",
+          title: "Event reports",
+          icon: "fa-solid fa-chart-line",
+          event: @filter_event,
+          subtitle: "Revenue and participation at a glance." %>
 
     <%# Filters driving both summary cards — time period, event type and event —
         matching the filter selects on the full revenue and participation reports. %>
-    <%= form_with url: statistics_events_path, method: :get, local: true,
+    <%= form_with url: reports_events_path, method: :get, local: true,
           class: "rounded-xl border border-gray-200 bg-white p-4 shadow-sm mb-6" do %>
       <%= hidden_field_tag :return_to, params[:return_to] %>
       <div class="flex flex-wrap items-end gap-4">

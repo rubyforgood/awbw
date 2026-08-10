@@ -1,6 +1,21 @@
 require "rails_helper"
 
 RSpec.describe EventRegistrationDecorator, type: :decorator do
+  describe "attendance-status presentation" do
+    it "maps a known status to its pill classes and icon" do
+      reg = create(:event_registration, status: "attended").decorate
+      expect(reg.attendance_status_classes).to eq("bg-green-50 text-green-700 border-green-200")
+      expect(reg.attendance_status_icon).to eq("fa-circle-check")
+    end
+
+    it "falls back to neutral styling for an unmapped status" do
+      reg = create(:event_registration, status: "registered").decorate
+      allow(reg).to receive(:status).and_return("mystery")
+      expect(reg.attendance_status_classes).to eq("bg-gray-50 text-gray-500 border-gray-200")
+      expect(reg.attendance_status_icon).to eq("fa-question")
+    end
+  end
+
   describe "#deletion_blocked_reason" do
     it "returns nil for a deletable registration" do
       reg = create(:event_registration, status: "registered")

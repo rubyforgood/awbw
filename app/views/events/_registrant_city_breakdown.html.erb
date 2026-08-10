@@ -1,5 +1,5 @@
 <%# Registrants grouped by the city of the organization linked on their
-    registration — shared by the event background dashboard and the
+    registration — shared by the event roster page and the
     scholarship-recipients page. A pure-CSS `peer` toggle swaps between all cities
     and scholarship-only cities: both lists render server-side and are shown/hidden
     via `peer-checked:` (no JS). Locals:
@@ -7,7 +7,7 @@
       metrics:   :registrants, :scholarships, or :both (default :both) — which
                  figure(s) each city row shows. Grouping is always by city.
       title:     heading (default "Registrants by city")
-      return_anchor: optional section id — when set (background dashboard), the card
+      return_anchor: optional section id — when set (roster page), the card
                  gets that id/scroll-mt and its row links carry a back-to-here
                  eyebrow. Omit it elsewhere (recipients page) for plain links. %>
 <% metrics = local_assigns.fetch(:metrics, :both) %>
@@ -46,14 +46,14 @@
     <%# Full list — hidden once the toggle is checked. %>
     <table class="w-full text-sm peer-checked:hidden">
       <tbody>
-        <%= render partial: "events/registrant_city_row", collection: rows, as: :row, locals: { metrics: metrics, event: @event, return_anchor: return_anchor, row_paths: row_paths, scholarship_paths: scholarship_paths } %>
+        <%= render partial: "events/registrant_city_row", collection: rows, as: :row, locals: { metrics: metrics, event: @event, row_paths: row_paths, scholarship_paths: scholarship_paths } %>
       </tbody>
     </table>
     <%# Scholarship-cities-only list — revealed when the toggle is checked. %>
     <% if scholarship_rows.any? %>
       <table class="hidden w-full text-sm peer-checked:table">
         <tbody>
-          <%= render partial: "events/registrant_city_row", collection: scholarship_rows, as: :row, locals: { metrics: metrics, event: @event, return_anchor: return_anchor } %>
+          <%= render partial: "events/registrant_city_row", collection: scholarship_rows, as: :row, locals: { metrics: metrics, event: @event, row_paths: row_paths, scholarship_paths: scholarship_paths } %>
         </tbody>
       </table>
     <% end %>

@@ -30,7 +30,7 @@ module AdminCardsHelper
       custom_card("Portal activity", admin_activities_counts_path, icon: "📊"),
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
       model_card(:notifications, icon: "🔔", title: t("communications.title")),
-      custom_card("Events statistics", statistics_events_path, icon: "📊", color: :blue),
+      custom_card("Event reports", reports_events_path, icon: "📊", color: :blue),
       model_card(:scholarships, icon: "🎓"),
       model_card(:topic_subscriptions, icon: "✉️", intensity: 100, title: "Subscriptions"),
       model_card(:story_ideas, icon: "✍🏾️", intensity: 100),

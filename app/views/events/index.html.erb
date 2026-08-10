@@ -15,8 +15,8 @@
       <div class="text-right text-end">
         <% if allowed_to?(:new?, Event) %>
           <div class="admin-only bg-blue-100 flex flex-wrap items-center justify-end gap-4">
-            <%= link_to "Events statistics",
-                        statistics_events_path(return_to: "events"),
+            <%= link_to "Reports",
+                        reports_events_path(return_to: "events"),
                         class: "whitespace-nowrap text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
             <%= link_to "New event",
                         new_event_path,

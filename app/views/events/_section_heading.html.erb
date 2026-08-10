@@ -1,0 +1,39 @@
+<%# A collapsible section's heading with its Show/Hide toggle inline to the right,
+    shared by the roster, attendees index and scholarship-recipients pages so the
+    three read identically. The heading stays put while its panel is collapsed —
+    it's what tells you what the toggle would reveal.
+    Locals:
+      title:     heading text
+      icon:      Font Awesome icon class (e.g. "fa-chart-pie")
+      theme:     DomainTheme key colouring the heading
+      intensity: optional DomainTheme intensity
+      panel:     the data-panel-toggle-name this section's toggle controls. Omit
+                 (with toggle: false) for a heading whose control lives in actions.
+      open:      whether that panel is open on this render. Default false.
+      toggle:    render the inline Show/Hide pill. Default true; pass false when
+                 `actions` already carries a control for this panel, so the row
+                 doesn't show two toggles for the same thing.
+      section:   accessible name for the toggle. Defaults to the downcased title.
+      actions:   optional captured markup pinned to the right of the same row
+                 (e.g. the page's panel toggle bar).
+      spacing:   extra wrapper classes (e.g. "mt-10").
+      margin:    bottom margin, "mb-4" by default; pass "" when the caller already
+                 spaces the row (e.g. a heading sharing a row with an action). %>
+<% intensity = local_assigns[:intensity] %>
+<% actions = local_assigns[:actions] %>
+<% text_class = intensity ? DomainTheme.text_class_for(theme, intensity: intensity) : DomainTheme.text_class_for(theme) %>
+<div class="flex flex-wrap items-center gap-3 <%= local_assigns.fetch(:margin, "mb-4") %> <%= local_assigns[:spacing] %>">
+  <h2 class="text-xl font-bold flex items-center gap-2 <%= text_class %>">
+    <i class="fa-solid <%= icon %>"></i>
+    <%= title %>
+  </h2>
+  <% if local_assigns.fetch(:toggle, true) %>
+    <%= render "events/panel_cta",
+          name: panel,
+          section: local_assigns.fetch(:section, title.downcase),
+          open: local_assigns.fetch(:open, false) %>
+  <% end %>
+  <% if actions.present? %>
+    <div class="ml-auto print:hidden"><%= actions %></div>
+  <% end %>
+</div>
