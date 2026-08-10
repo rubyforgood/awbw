@@ -1106,6 +1106,114 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "Send bulk emails link" do
+      it "reads 'Send bulk emails' with no filters and links without filter params" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include(">Send bulk emails</a>")
+        expect(response.body).not_to include("Send bulk emails (filtered)")
+        expect(response.body).to include(CGI.escapeHTML(preview_reminder_event_path(event)))
+      end
+
+      it "reads 'Send bulk emails (filtered)' and forwards shared filters when a filter is active" do
+        get registrants_event_path(event, scholarship: "yes", account_status: "invited")
+
+        expect(response.body).to include("Send bulk emails (filtered)")
+        expect(response.body).to include(CGI.escapeHTML(
+          preview_reminder_event_path(event, scholarship: "yes", account_status: "invited")
+        ))
+      end
+
+      it "forwards the shared text filters (city, comment, funder) too" do
+        get registrants_event_path(event, city: "santa", comment: "ramp", funder_name: "acme")
+
+        expect(response.body).to include("Send bulk emails (filtered)")
+        expect(response.body).to include(CGI.escapeHTML(
+          preview_reminder_event_path(event, funder_name: "acme", comment: "ramp", city: "santa")
+        ))
+      end
+
+      it "does not treat roster-only filters (keyword) as reminder filters" do
+        get registrants_event_path(event, keyword: "smith")
+
+        expect(response.body).to include(">Send bulk emails</a>")
+        expect(response.body).not_to include("Send bulk emails (filtered)")
+      end
+    end
+
+    context "shared filter bar" do
+      it "renders the Filters heading and a collapsed More filters toggle by default" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include("fa-filter")
+        expect(response.body).to include(">Filters<")
+        expect(response.body).to include("More filters")
+        expect(response.body).to include('id="more-filters-toggle" class="sr-only">')
+      end
+
+      it "opens the More filters section (checks the toggle) when a collapsed filter is active" do
+        get registrants_event_path(event, account_status: "invited")
+
+        expect(response.body).to include('id="more-filters-toggle" class="sr-only" checked>')
+      end
+
+      it "keeps the More filters section collapsed for a primary-row filter" do
+        get registrants_event_path(event, keyword: "smith")
+
+        expect(response.body).to include('id="more-filters-toggle" class="sr-only">')
+      end
+    end
+
+    context "new roster filters" do
+      let(:event) { create(:event, cost_cents: 10_000) }
+
+      it "renders the new controls and relabeled options" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Submission status")
+        expect(response.body).to include("Funder")
+        expect(response.body).to include("City name")
+        expect(response.body).to include("Comment status")
+        expect(response.body).to include("Comment text")
+        expect(response.body).to include(">Attendance<")
+        expect(response.body).to include("Agreed")
+        expect(response.body).to include("Any status")
+      end
+
+      it "narrows the roster by city" do
+        here = create(:person, first_name: "Cityful", last_name: "Local")
+        create(:address, addressable: here, city: "Santa Monica")
+        there = create(:person, first_name: "Faraway", last_name: "Person")
+        create(:address, addressable: there, city: "Portland")
+        create(:event_registration, event: event, registrant: here)
+        create(:event_registration, event: event, registrant: there)
+
+        get registrants_event_path(event, city: "santa")
+
+        expect(response.body).to include("Cityful")
+        expect(response.body).not_to include("Faraway")
+      end
+
+      it "does not crash on the new funder / comment-text / submission filters" do
+        get registrants_event_path(event, funder_name: "someone")
+        expect(response).to have_http_status(:ok)
+        get registrants_event_path(event, comment: "note")
+        expect(response).to have_http_status(:ok)
+        get registrants_event_path(event, submission_status: "multiple")
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    it "hides cost-only filters (payment, scholarship, funder) on a free event" do
+      free_event = create(:event, cost_cents: 0)
+      get registrants_event_path(free_event)
+
+      expect(response.body).not_to include("Any payment status")
+      expect(response.body).not_to include("Any payment method")
+      expect(response.body).not_to include("Funder name")
+      expect(response.body).not_to include("Any status")
+    end
+
     context "with unknown filter params" do
       it "does not crash on an invalid payment_status" do
         get registrants_event_path(event, payment_status: "bogus")
@@ -1327,9 +1435,10 @@ RSpec.describe "Events", type: :request do
         create(:event_registration_organization, event_registration: ready_registration, organization: create(:organization))
       end
 
-      it "renders the combined Status column with the right badge labels" do
+      it "renders the combined Progress column with the right badge labels" do
         get registrants_event_path(event)
 
+        expect(response.body).to include("Progress")
         expect(response.body).to include("Ready")
         expect(response.body).to include("Not ready")
       end

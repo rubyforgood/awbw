@@ -24,6 +24,16 @@ RSpec.describe "Events::BulkReminders", type: :request do
     expect(checked?(response.body, sam)).to be(true)
   end
 
+  it "renders the shared filter bar with the More filters toggle" do
+    get preview_reminder_event_path(event)
+
+    expect(response.body).to include(">Filters<")
+    expect(response.body).to include("More filters")
+    # Name/email are the primary row; a name filter shouldn't force the section open.
+    get preview_reminder_event_path(event, name: "jane")
+    expect(response.body).to include('id="more-filters-toggle" class="sr-only">')
+  end
+
   it "keeps all registrants visible but only checks the matches when filtered" do
     get preview_reminder_event_path(event, name: "jane"),
         headers: { "Turbo-Frame" => "reminder_recipients" }
@@ -33,6 +43,16 @@ RSpec.describe "Events::BulkReminders", type: :request do
     expect(response.body).to include("Jane Adams")
     expect(response.body).to include("Sam Cole")
     # ...but only the matching registrant stays checked.
+    expect(checked?(response.body, jane)).to be(true)
+    expect(checked?(response.body, sam)).to be(false)
+  end
+
+  it "filters recipients by the shared city search" do
+    create(:address, addressable: jane.registrant, city: "Santa Monica")
+
+    get preview_reminder_event_path(event, city: "santa"),
+        headers: { "Turbo-Frame" => "reminder_recipients" }
+
     expect(checked?(response.body, jane)).to be(true)
     expect(checked?(response.body, sam)).to be(false)
   end

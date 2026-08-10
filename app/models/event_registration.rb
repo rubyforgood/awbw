@@ -108,6 +108,14 @@ class EventRegistration < ApplicationRecord
     conditions[:state] = state if state.present?
     joins(registrant: :addresses).where(addresses: conditions).distinct
   }
+  scope :registrant_city, ->(term) {
+    return all if term.blank?
+    like = "%#{sanitize_sql_like(term.downcase.strip)}%"
+    joins(registrant: :addresses)
+      .where("LOWER(addresses.city) LIKE ?", like)
+      .where(addresses: { inactive: false })
+      .distinct
+  }
   scope :registrant_sector, ->(sector_id) {
     joins(registrant: :sectorable_items)
       .where(sectorable_items: { sector_id: sector_id })
@@ -137,9 +145,22 @@ class EventRegistration < ApplicationRecord
       )
     SQL
   }
+  scope :with_agreed_scholarship, -> {
+    where(<<~SQL.squish)
+      EXISTS (
+        SELECT 1 FROM allocations
+        INNER JOIN scholarships ON scholarships.id = allocations.source_id
+        WHERE allocations.allocatable_type = 'EventRegistration'
+          AND allocations.allocatable_id = event_registrations.id
+          AND allocations.source_type = 'Scholarship'
+          AND scholarships.agreement_signed_at IS NOT NULL
+      )
+    SQL
+  }
   scope :scholarship_status, ->(value) {
     case value
     when "yes" then with_scholarship
+    when "agreed" then with_agreed_scholarship
     when "complete" then scholarship_tasks_completed
     when "incomplete" then scholarship_tasks_incomplete
     else all
@@ -178,6 +199,32 @@ class EventRegistration < ApplicationRecord
     when "external" then with_funded_scholarship
     else all
     end
+  }
+  # Free-text match on the funder behind a registrant's scholarship: the grant's
+  # polymorphic funder (a Person or Organization). Labeled "Funder" in the UI. The
+  # param is :funder_name to stay clear of the awbw/external funding-source
+  # :funder scope above.
+  scope :funder_name, ->(term) {
+    return all if term.blank?
+    like = "%#{sanitize_sql_like(term.downcase.strip)}%"
+    where(<<~SQL.squish, like, like)
+      EXISTS (
+        SELECT 1 FROM allocations
+        INNER JOIN scholarships ON scholarships.id = allocations.source_id
+        INNER JOIN grants ON grants.id = scholarships.grant_id
+        LEFT JOIN people funder_people
+          ON grants.funder_type = 'Person' AND funder_people.id = grants.funder_id
+        LEFT JOIN organizations funder_orgs
+          ON grants.funder_type = 'Organization' AND funder_orgs.id = grants.funder_id
+        WHERE allocations.allocatable_type = 'EventRegistration'
+          AND allocations.allocatable_id = event_registrations.id
+          AND allocations.source_type = 'Scholarship'
+          AND (
+            LOWER(CONCAT(funder_people.first_name, ' ', funder_people.last_name)) LIKE ?
+            OR LOWER(funder_orgs.name) LIKE ?
+          )
+      )
+    SQL
   }
   scope :paid_in_full, -> {
     where(<<~SQL.squish)
@@ -262,6 +309,11 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
+  # Free-text match on a registrant's comments — topic or body.
+  scope :comment_text, ->(term) {
+    return all if term.blank?
+    where(id: Comment.where(commentable_type: "EventRegistration").matching(term).select(:commentable_id))
+  }
   # Mirrors EventRegistration#account_status (none / has_access / invited /
   # no_access) as a DB filter, joining the registrant's login account.
   scope :account_status, ->(value) {
@@ -296,6 +348,18 @@ class EventRegistration < ApplicationRecord
         .where.not(submitted_answer: [ nil, "" ])
         .select(Arel.sql("form_submissions.person_id"))
       where(registrant_id: submitted).where.not(id: linked)
+    else all
+    end
+  }
+  # Filter by how many form submissions the registrant made for this event:
+  # none, at least one, or more than one.
+  scope :submission_status, ->(value, event) {
+    submissions = FormSubmission.where(event_id: event.id)
+    case value
+    when "none" then where.not(registrant_id: submissions.select(:person_id))
+    when "has" then where(registrant_id: submissions.select(:person_id))
+    when "multiple"
+      where(registrant_id: submissions.group(:person_id).having("COUNT(*) > 1").select(:person_id))
     else all
     end
   }
