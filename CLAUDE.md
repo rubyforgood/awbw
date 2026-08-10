@@ -359,7 +359,8 @@ See `ai/` directory for executable scripts:
 |---|---|
 | `ai/recap` | Session recap: accomplishments + unresolved items (see above) |
 | `ai/review` | Code review: agent reviews the workspace diff, posts inline comments, and gives a Recap + Risks + Outstanding decisions summary (runs the `ai-review` skill) |
-| `ai/test [args]` | Run RSpec |
+| `ai/test [args]` | Run RSpec, fast path (no Vite rebuild, excludes system specs) |
+| `ai/test_extra [args]` | Full RSpec run: Vite test build + system specs included |
 | `ai/lint` | Rubocop on all files |
 | `ai/lint --fix` | Auto-fix lint issues |
 | `ai/server` | Start dev services (web + vite) |

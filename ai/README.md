@@ -6,7 +6,8 @@ Quick-reference scripts for common development tasks. Designed for AI agents and
 |---|---|
 | `ai/recap` | Session recap: accomplishments + unresolved items (agent behavior; see below) |
 | `ai/review` | Code review: agent reviews the workspace diff, posts inline comments, and gives a Recap + Risks + Outstanding decisions summary (agent behavior; see below) |
-| `ai/test [args]` | Run RSpec tests (`ai/test spec/models/user_spec.rb:42`) |
+| `ai/test [args]` | Run RSpec tests, fast path — no Vite rebuild, excludes system specs (`ai/test spec/models/user_spec.rb:42`) |
+| `ai/test_extra [args]` | Full RSpec run: Vite test build + the headless-Chrome system specs `ai/test` skips |
 | `ai/lint` | Rubocop on all files |
 | `ai/lint --fix` | Auto-fix lint issues |
 | `ai/server` | Start all dev services (web + vite) |

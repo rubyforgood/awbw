@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
-# Run RSpec tests. Pass any args through (file paths, flags, etc.)
+# Fast RSpec run for day-to-day iteration. Skips the two things that make runs
+# churn: the Vite rebuild and the headless-Chrome system specs.
+#
+#   * VITE_RUBY_AUTO_BUILD=false stops ViteRuby from rebuilding the test bundle
+#     before the first spec that renders a layout. Non-system specs only look up
+#     the asset manifest (they never run the JS), so the last-built bundle is
+#     fine — a stale bundle can't change a request/model/decorator result.
+#   * --tag ~type:system excludes the ~21 Selenium specs, the slow part.
+#
+# When you've touched frontend assets or system-tested behavior, run the full
+# suite (fresh Vite build + system specs) with ai/test_extra instead.
 set -euo pipefail
 source "$(dirname "$0")/.ruby-env"
-bundle exec rspec "$@"
+export VITE_RUBY_AUTO_BUILD=false
+bundle exec rspec --tag ~type:system "$@"
