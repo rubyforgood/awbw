@@ -170,6 +170,33 @@ class EventDashboard
       .sort_by(&:name)
   end
 
+  # Label for the "no scholarship record yet" bucket in the funder grouping —
+  # applicants who requested a scholarship but haven't been awarded one.
+  FUNDER_NONE_LABEL = "No scholarship yet".freeze
+
+  # Label for scholarships awarded without a parent grant (comped directly).
+  FUNDER_UNFUNDED_LABEL = "Unfunded".freeze
+
+  # One funder bucket for the recipients page "group by funder" view: the funder
+  # name, the donor record behind it (an Organization or Person — nil for the
+  # unfunded / no-scholarship buckets), that donor's "City, State", and the
+  # applicants in the bucket.
+  FunderGroup = Struct.new(:name, :donor, :location, :people, keyword_init: true) do
+    def count = people.size
+  end
+
+  # Scholarship applicants bucketed by their scholarship's funder (the grant's
+  # donor), as ordered FunderGroups — alphabetical by funder with the "Unfunded"
+  # and "No scholarship yet" buckets pinned last. Grants from the same donor
+  # share a bucket. People within a group keep #scholarship_applicants'
+  # display-name order.
+  def scholarship_applicants_by_funder
+    @scholarship_applicants_by_funder ||= scholarship_applicants
+      .group_by { |person| funder_key_for(person) }
+      .map { |_key, people| build_applicant_funder_group(people) }
+      .sort_by { |group| funder_group_sort_key(group.name) }
+  end
+
   # Scholarship-application answers for this event's applicants, keyed by Person
   # id and de-duplicated to one answer per question. The scholarship section may
   # be captured on the registration submission (registered with scholarship
@@ -1021,6 +1048,52 @@ class EventDashboard
 
   def scholarship_applicant_ids
     @scholarship_applicant_ids ||= active_registrations.where(scholarship_requested: true).pluck(:registrant_id)
+  end
+
+  # Grouping key for an applicant's funder: the donor identity when the
+  # scholarship is drawn from a grant (so a donor's grants share a bucket), else
+  # the unfunded / no-scholarship bucket.
+  def funder_key_for(person)
+    scholarship = scholarship_by_recipient[person.id]
+    return :none unless scholarship
+    donor = scholarship.grant&.donor
+    return :unfunded unless donor
+    [ donor.class.name, donor.id ]
+  end
+
+  # Builds a FunderGroup from a bucket of applicants that share a funder, reading
+  # the funder name, donor, and location from any member's scholarship (they're
+  # identical across the bucket).
+  def build_applicant_funder_group(people)
+    scholarship = scholarship_by_recipient[people.first.id]
+    grant = scholarship&.grant
+    donor = grant&.donor
+    name = if scholarship.nil?
+      FUNDER_NONE_LABEL
+    else
+      grant&.funder_name.presence || FUNDER_UNFUNDED_LABEL
+    end
+    FunderGroup.new(name: name, donor: donor, location: donor_location(donor), people: people)
+  end
+
+  # "City, State" from the donor's first active address — works for either an
+  # Organization or a Person funder (both are addressable). Nil when the donor
+  # has no address or isn't addressable.
+  def donor_location(donor)
+    return unless donor.respond_to?(:addresses)
+    address = donor.addresses.active.first
+    return unless address
+    [ address.city, address.state ].compact_blank.join(", ").presence
+  end
+
+  # Alphabetical by funder, with the unfunded and no-scholarship buckets last.
+  def funder_group_sort_key(label)
+    pinned = case label
+    when FUNDER_UNFUNDED_LABEL then 1
+    when FUNDER_NONE_LABEL then 2
+    else 0
+    end
+    [ pinned, label.to_s.downcase ]
   end
 
   # Registrant (Person) ids behind active registrations that opted into a

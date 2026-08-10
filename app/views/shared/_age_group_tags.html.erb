@@ -1,20 +1,37 @@
-<%# Age-group chips, themed in lime to match the sector chips. Primary groups lead
-    with an amber star on a darker lime chip; additional groups follow in a lighter
-    lime. `primary` and `additional` are arrays of Category records. `compact`
-    shrinks the chips for dense table cells. %>
+<%# Age-group chips. Each links to the taggings page filtered to that category —
+    the same drill-in the sector chips offer (sectors/_tagging_label) — so the two
+    rows behave alike. Primary groups lead with an amber star on a darker chip;
+    additional groups follow lighter. `primary` and `additional` are arrays of
+    Category records. `compact` shrinks the chips for dense table cells. `muted`
+    swaps the lime theme for a calm neutral grey on pages where the tags aren't
+    the focus (e.g. the scholarship recipients roster). %>
 <% primary ||= [] %>
 <% additional ||= [] %>
 <% compact = local_assigns.fetch(:compact, false) %>
+<% muted = local_assigns.fetch(:muted, false) %>
 <% padding = compact ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm" %>
+<% if muted
+     primary_classes = "border-gray-200 bg-gray-100 text-gray-700 hover:border-gray-300 hover:bg-gray-200"
+     additional_classes = "border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300 hover:bg-gray-100"
+   else
+     primary_classes = "border-lime-300 bg-lime-100 text-lime-800 hover:border-lime-400 hover:bg-lime-200"
+     additional_classes = "border-lime-300 bg-lime-50 text-gray-500 hover:border-lime-400 hover:bg-lime-100"
+   end %>
 <div class="flex flex-wrap gap-1.5">
   <% primary.each do |category| %>
-    <span class="inline-flex items-center whitespace-nowrap rounded-md border border-lime-300 bg-lime-100 <%= padding %> font-medium text-lime-800">
-      <i class="fa-solid fa-star mr-1 text-xs text-amber-400" aria-hidden="true" title="Primary age group"></i><%= category.name %>
-    </span>
+    <%= link_to taggings_path(category_names_all: category.name), title: category.name,
+                data: { turbo_frame: "_top", controller: "tag-link-loading", action: "click->tag-link-loading#showSpinner" },
+                class: "inline-flex items-center whitespace-nowrap rounded-md border #{padding} font-medium transition #{primary_classes}" do %>
+      <span data-tag-link-loading-target="text"><i class="fa-solid fa-star mr-1 text-xs text-amber-400" aria-hidden="true" title="Primary age group"></i><%= category.name %></span>
+      <span data-tag-link-loading-target="spinner" class="hidden"><i class="fa-solid fa-spinner animate-spin" aria-hidden="true"></i></span>
+    <% end %>
   <% end %>
   <% additional.each do |category| %>
-    <span class="inline-flex items-center whitespace-nowrap rounded-md border border-lime-300 bg-lime-50 <%= padding %> font-medium text-gray-500">
-      <%= category.name %>
-    </span>
+    <%= link_to taggings_path(category_names_all: category.name), title: category.name,
+                data: { turbo_frame: "_top", controller: "tag-link-loading", action: "click->tag-link-loading#showSpinner" },
+                class: "inline-flex items-center whitespace-nowrap rounded-md border #{padding} font-medium transition #{additional_classes}" do %>
+      <span data-tag-link-loading-target="text"><%= category.name %></span>
+      <span data-tag-link-loading-target="spinner" class="hidden"><i class="fa-solid fa-spinner animate-spin" aria-hidden="true"></i></span>
+    <% end %>
   <% end %>
 </div>
