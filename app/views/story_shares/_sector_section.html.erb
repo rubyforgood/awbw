@@ -25,14 +25,14 @@
     <ul class="space-y-2 text-sm">
       <% stories.drop(1).first(4).each do |story| %>
         <li class="flex items-start">
-          <i class="fa-solid fa-chevron-right w-3 mr-2 mt-1 <%= theme[:heading] %> flex-shrink-0"></i>
-          <%= link_to story.title, story_share_path(story), class: "text-gray-800 #{theme[:link]}" %>
+          <i class="fa-solid fa-caret-right w-3 mr-2 mt-1 text-purple-700 flex-shrink-0"></i>
+          <%= link_to story.title, story_share_path(story), class: "font-bold text-gray-900 hover:text-purple-700 hover:underline" %>
         </li>
       <% end %>
+      <li class="flex items-start">
+        <i class="fa-solid fa-caret-right w-3 mr-2 mt-1 text-purple-700 flex-shrink-0"></i>
+        <%= link_to "More #{title} stories...", more_path, class: "font-bold text-gray-900 hover:text-purple-700 hover:underline" %>
+      </li>
     </ul>
-
-    <div class="mt-4">
-      <%= link_to "More #{title} stories...", more_path, class: "font-medium text-sm inline-flex items-center #{theme[:link]}" %>
-    </div>
   </div>
 <% end %>
