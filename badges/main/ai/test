@@ -1,5 +1,100 @@
 #!/usr/bin/env bash
-# Run RSpec tests. Pass any args through (file paths, flags, etc.)
+# Fast RSpec run for day-to-day iteration.
+#
+# Runs the whole non-system suite plus ONLY the system specs relevant to your
+# diff (ones changed in the diff, or whose filename mentions a changed
+# model/controller/view/etc.) — not all ~21 headless-Chrome specs. It prints a
+# loud banner naming which system specs it ran and which it skipped, so a green
+# run never masquerades as full coverage. For everything, use ai/test_extra.
+#
+# VITE_RUBY_AUTO_BUILD=false stops ViteRuby rebuilding the test bundle before
+# the first layout-rendering spec (the main churn source). Non-system specs only
+# read the asset manifest, so the last-built bundle is fine. When we do select
+# system specs (which drive a real browser), we build the test bundle first so
+# they render current assets.
+#
+# Pass explicit paths/flags to bypass all of this and run exactly what you name:
+#   ai/test spec/system/foo_spec.rb        # runs that system spec, nothing else
 set -euo pipefail
 source "$(dirname "$0")/.ruby-env"
-bundle exec rspec "$@"
+export VITE_RUBY_AUTO_BUILD=false
+
+# Explicit selection → respect it verbatim (autoBuild still off).
+if [ "$#" -gt 0 ]; then
+  exec bundle exec rspec "$@"
+fi
+
+base="${AI_TEST_BASE:-origin/main}"
+git rev-parse --verify --quiet "$base" >/dev/null 2>&1 || base=""
+
+# Changed files: this branch vs base, plus staged/unstaged/untracked.
+changed=$(
+  {
+    if [ -n "$base" ]; then git diff --name-only "$base"...HEAD; fi
+    git diff --name-only
+    git diff --name-only --cached
+    git ls-files --others --exclude-standard
+  } 2>/dev/null | sort -u
+)
+
+# Keywords = the subject of each changed app/lib file (resource dir for views,
+# else the basename minus extension and role suffix). Skip generic tokens that
+# would match nearly every spec.
+generic=" application base index show new edit create update destroy form layout shared page pages component components helper controller model service concern policy decorator presenter spec "
+app_changed=$(printf "%s\n" "$changed" | grep -E "^(app|lib)/" | grep -vE "_spec\.rb$" || true)
+keywords=""
+while IFS= read -r f; do
+  [ -n "$f" ] || continue
+  case "$f" in
+    app/views/*/*)
+      stem=${f#app/views/}
+      stem=${stem%%/*}
+      ;;
+    *)
+      stem=$(basename "$f")
+      stem=${stem%.*}
+      stem=${stem%.html}
+      for suffix in _controller _helper _decorator _policy _presenter _component; do
+        stem=${stem%$suffix}
+      done
+      ;;
+  esac
+  case "$generic" in *" $stem "*) continue;; esac
+  [ ${#stem} -ge 3 ] || continue
+  keywords="$keywords $stem ${stem%s}"
+done <<<"$app_changed"
+keywords=$(printf "%s\n" $keywords | sort -u | grep -vE "^$" || true)
+
+# Select relevant system specs: changed directly, or filename matches a keyword.
+# Match on filename only, not body — common domain nouns (e.g. "event") appear
+# in most spec bodies and would drag in nearly everything.
+direct=$(printf "%s\n" "$changed" | grep -E "^spec/system/.*_spec\.rb$" || true)
+related=""
+if [ -d spec/system ] && [ -n "$keywords" ]; then
+  pattern=$(printf "%s\n" $keywords | paste -sd"|" -)
+  related=$(find spec/system -name "*_spec.rb" | grep -Ei "$pattern" | sort -u || true)
+fi
+selected=$(printf "%s\n" "$direct" "$related" | grep -E "_spec\.rb$" | sort -u || true)
+
+# Non-system suite = every spec dir except system (+ any root-level specs).
+spec_targets=$(find spec -mindepth 1 -maxdepth 1 -type d ! -name system | sort)
+root_specs=$(find spec -maxdepth 1 -name "*_spec.rb" | sort)
+
+total_system=0
+[ -d spec/system ] && total_system=$(find spec/system -name "*_spec.rb" | wc -l | tr -d " ")
+sel_count=$(printf "%s" "$selected" | grep -c . || true)
+
+echo "────────────────────────────────────────────────────────"
+if [ "$sel_count" -gt 0 ]; then
+  echo "⚠  ai/test (fast): running $sel_count of $total_system system specs — the ones matching your diff. Skipping the rest."
+  printf "     %s\n" $selected
+  echo "   Run ALL system specs with: ai/test_extra"
+  echo "────────────────────────────────────────────────────────"
+  bin/vite build --mode test
+else
+  echo "⚠  ai/test (fast): no system specs matched your diff — skipping all $total_system."
+  echo "   Run ALL system specs with: ai/test_extra"
+  echo "────────────────────────────────────────────────────────"
+fi
+
+bundle exec rspec $spec_targets $root_specs $selected
