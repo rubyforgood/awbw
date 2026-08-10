@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (78) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (77) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -347,7 +347,6 @@ end
 - `searchable_select` — Tom Select autocomplete
 - `share_url` — URL sharing/copying
 - `sortable` — Drag-drop sorting (SortableJS); persists order via a per-row PUT (used by categories index and the registration ticket callouts editor)
-- `subject_select` — Fills the contact form's subject line from a preset picker (Story Share portal contact variant)
 - `submit_once` — Disables a form's submit button after submit to block duplicate submissions; re-enables on Back/bfcache/Turbo restore
 - `tabs` — Tab panel navigation
 - `tag_link_loading` — Loading state for tag links

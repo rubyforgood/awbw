@@ -125,9 +125,9 @@ RSpec.describe "ContactUs", type: :request do
       expect(response.body).to include("1029 1/2 W 24th Street")
       # Rendered inside the story_shares layout
       expect(response.body).to include("Get involved!")
-      # Subject preset picker
+      # Subject preset picker posts straight through as contact_us[subject]
+      expect(response.body).to include('<select name="contact_us[subject]"')
       expect(response.body).to include("Interest in Windows Facilitator trainings")
-      expect(response.body).to include("subject-select")
     end
 
     it "carries the portal flag through submission and offers a way back" do
