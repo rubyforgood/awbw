@@ -78,9 +78,13 @@ module EventRegistrationServices
 
         organization = find_organization if field_value(ORGANIZATION_NAME_IDENTIFIER).present?
         if organization
-          sync_organization_profile(organization)
-          agency_address = create_agency_address(organization)
-          create_affiliation(person, organization, agency_address)
+          filled = sync_organization_profile(organization).filled
+          address_result = create_agency_address(organization)
+          # find_organization only ever finds, so this org already existed and the
+          # registrant just changed it — connect_organization records what, for the
+          # admin linking page's persistent note.
+          @organization_form_fills = filled + [ address_result.saved_label ].compact
+          create_affiliation(person, organization, address_result.address)
         end
 
         assign_tags(person, organization)
@@ -332,8 +336,9 @@ module EventRegistrationServices
     def connect_organization(event_registration, organization)
       return unless organization
 
-      event_registration.event_registration_organizations
+      link = event_registration.event_registration_organizations
         .find_or_create_by!(organization: organization)
+      link.record_form_fills(@organization_form_fills.to_a)
     end
 
     def create_affiliation(person, organization, organization_address = nil)
@@ -354,7 +359,7 @@ module EventRegistrationServices
         state: field_value("agency_state"),
         zip_code: field_value("agency_zip"),
         country: field_value("agency_country")
-      ).address
+      )
     end
 
     def assign_tags(person, organization)

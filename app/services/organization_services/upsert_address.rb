@@ -18,7 +18,18 @@ module OrganizationServices
     # created: the submission added a new address rather than updating one.
     # filled: labels of the fields this call actually changed on an existing
     # address, so a caller can report what was saved instead of assuming.
-    Result = Struct.new(:address, :created, :filled, keyword_init: true)
+    Result = Struct.new(:address, :created, :filled, keyword_init: true) do
+      # What this call actually wrote, named by city so an admin knows which work
+      # address moved. Nil when nothing was saved or nothing changed — a caller
+      # reporting the save must not claim more than happened.
+      def saved_label
+        return if address.nil?
+        return "work address in #{address.city}" if created
+        return if filled.empty?
+
+        "#{filled.to_sentence} on the #{address.city} work address"
+      end
+    end
 
     FIELD_LABELS = {
       "street_address" => "street",

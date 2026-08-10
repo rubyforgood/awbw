@@ -311,6 +311,19 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         expect(organization.addresses.find_by(primary: true).country).to eq("USA")
       end
 
+      # find_organization only ever finds, so a registrant always changes an org
+      # that already existed — the admin linking page shows what they changed.
+      it "records what the registrant's answers filled on the registration's org link" do
+        result = register_with_org(
+          field_id("agency_website") => "helpinghands.org",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV"
+        )
+
+        link = result.event_registration.event_registration_organizations.find_by!(organization: organization)
+        expect(link.form_filled_labels).to contain_exactly("website", "work address in Reno")
+      end
+
       it "overwrites an existing website with the latest answer" do
         organization.update!(website_url: "https://existing.org")
 

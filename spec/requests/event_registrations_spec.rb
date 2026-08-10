@@ -699,7 +699,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("Form answers not applied to this organization")
+          expect(response.body).to include("Form answers differ from this organization")
           expect(response.body).to include("Government agency")
           expect(response.body).to include("For-profit")
         end
@@ -721,7 +721,7 @@ RSpec.describe "EventRegistrations", type: :request do
           # Only the linked-org cards carry an Unlink button, so this skips the
           # submission section above, which also names the submitted org.
           cards = Nokogiri::HTML(response.body).css("li").select { |li| li.text.include?("Unlink") }
-          expect(cards.find { |li| li.text.include?("Zebra Center") }.text).not_to include("not applied")
+          expect(cards.find { |li| li.text.include?("Zebra Center") }.text).not_to include("Government agency")
           expect(cards.find { |li| li.text.include?("Acme") }.text).to include("Government agency")
         end
 
@@ -1067,7 +1067,7 @@ RSpec.describe "EventRegistrations", type: :request do
             .to all(eq(address))
         end
 
-        it "leaves an existing org's blank type and website alone, reporting them instead" do
+        it "fills the org's blank type and website from the submission and says so" do
           organization.update!(agency_type: nil, website_url: nil)
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
@@ -1079,12 +1079,35 @@ RSpec.describe "EventRegistrations", type: :request do
 
           post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
 
-          expect(organization.reload).to have_attributes(website_url: nil, agency_type: nil)
-          expect(flash[:notice]).not_to include("Saved from the form")
-          expect(flash[:warning]).to include("were not applied").and include("helpinghands.org").and include("nothing saved")
+          expect(organization.reload.website_url).to include("helpinghands.org")
+          expect(organization.agency_type).to eq("501c3/nonprofit")
+          expect(flash[:notice]).to include("Saved from the form").and include("type").and include("website")
         end
 
-        it "does not report another org's answers when linking an extra organization" do
+        # The flash is gone by the next page load, so what the form changed on an
+        # org that already existed is recorded on the link itself.
+        it "records what the form filled on the link, and shows it on the page afterwards" do
+          organization.update!(agency_type: nil, website_url: nil)
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_website" => "helpinghands.org", "agency_city" => "Austin", "agency_state" => "TX" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
+
+          link = existing_registration.event_registration_organizations.find_by(organization: organization)
+          expect(link.form_filled_labels).to contain_exactly("website", "work address in Austin")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Filled from this registration's form")
+            .and include("website and work address in Austin")
+        end
+
+        it "does not seed or report another org's answers when linking an extra organization" do
           create(:event_registration_organization, event_registration: existing_registration, organization: organization)
           other = create(:organization, name: "Zebra Center", website_url: nil, agency_type: nil)
           reg_form = create(:form, name: "Reg form")
@@ -1284,7 +1307,7 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(existing_registration.organizations).to include(existing)
         end
 
-        it "leaves a blank website and type on an existing org alone, reporting them instead" do
+        it "fills a blank website and type on an existing org from the submission" do
           existing = create(:organization, name: "Existing Org", website_url: nil, agency_type: nil)
           reg_form = create(:form, name: "Reg form")
           name_field = create(:form_field, form: reg_form, field_identifier: "agency_name")
@@ -1298,8 +1321,29 @@ RSpec.describe "EventRegistrations", type: :request do
 
           post create_organization_event_registration_path(existing_registration)
 
-          expect(existing.reload).to have_attributes(website_url: nil, agency_type: nil)
-          expect(flash[:warning]).to include("Government agency").and include("nothing saved")
+          expect(existing.reload.website_url).to include("helpinghands.org")
+          expect(existing.agency_type).to eq("Government agency")
+          expect(existing_registration.event_registration_organizations.find_by(organization: existing).form_filled_labels)
+            .to contain_exactly("website", "type")
+        end
+
+        # Everything on an org we just created came from the form, so there is
+        # nothing to flag as changed on it.
+        it "records no form fills on an org it created from the submission" do
+          create(:organization_status, name: "Active")
+          reg_form = create(:form, name: "Reg form")
+          name_field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Brand New Org")
+          field = create(:form_field, form: reg_form, field_identifier: "agency_website")
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "brandnew.org")
+
+          post create_organization_event_registration_path(existing_registration)
+
+          organization = Organization.find_by(name: "Brand New Org")
+          expect(organization.website_url).to include("brandnew.org")
+          expect(existing_registration.event_registration_organizations.find_by(organization: organization).form_filled_labels).to be_empty
         end
 
         it "does not overwrite an existing org's curated website and type" do
