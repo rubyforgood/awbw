@@ -4,12 +4,18 @@ RSpec.describe "Story imports", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:regular_user) { create(:user) }
 
-  # Reference data the importer needs to resolve rows.
+  # Reference data the importer needs to resolve the fixture's real rows.
   before do
     create(:windows_type, :adult)
     create(:windows_type, :children)
     create(:windows_type, :combined)
     create(:organization_status, name: "Pending")
+    # Sectors the fixture's categories map onto (see config/story_import_sector_mapping.yml).
+    [
+      "Self-Care/Personal Growth", "Domestic Violence", "Incarceration", "LGBTQIA+",
+      "Substance Use/Recovery", "Community Engagement", "Racial/Social Justice",
+      "Child Abuse/Neglect", "Mental Health", "Foster Care/Adoption"
+    ].each { |name| create(:sector, name: name) }
   end
 
   let(:csv) { fixture_file_upload("spec/fixtures/files/stories_import.csv", "text/csv") }
@@ -95,10 +101,20 @@ RSpec.describe "Story imports", type: :request do
     it "creates ideas for every row and stories for published rows" do
       expect {
         post confirm_story_import_path, params: { signed_id: signed_blob_for_fixture }
-      }.to change(StoryIdea, :count).by(3).and change(Story, :count).by(2)
+      }.to change(StoryIdea, :count).by(10).and change(Story, :count).by(9)
 
       expect(response).to redirect_to(stories_path)
-      expect(flash[:notice]).to match(/3 story ideas and 2 connected stories/)
+      expect(flash[:notice]).to match(/10 story ideas and 9 connected stories/)
+    end
+
+    it "tags stories with the sector their WordPress category maps to" do
+      post confirm_story_import_path, params: { signed_id: signed_blob_for_fixture }
+
+      story = Story.find_by(title: "A Step in the Right Direction")
+      expect(story.sectors.pluck(:name)).to include("Domestic Violence")
+
+      idea = StoryIdea.find_by(title: "Being Your True Self")
+      expect(idea.sectors.pluck(:name)).to include("LGBTQIA+")
     end
 
     it "records the importing admin as the creator" do

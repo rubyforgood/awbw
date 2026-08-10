@@ -34,25 +34,16 @@ class StoryImporter
   # WordPress "publish" status means the post was live and public.
   PUBLISHED_WP_STATUS = "publish"
 
-  # WordPress "Categories" values that map onto an existing Sector. Unmatched
-  # values (e.g. the thematic "Self-Care & Personal Growth") are logged — the
-  # app has no "StoryCategory" taxonomy seeded to receive them yet.
-  SECTOR_SYNONYMS = {
-    "domestic violence" => "Domestic Violence",
-    "foster care" => "Foster Care/Adoption",
-    "mental health" => "Mental Health",
-    "incarceration" => "Incarceration",
-    "substance abuse recovery" => "Substance Use",
-    "homelessness" => "Homeless",
-    "lgbtqia+" => "LGBTQIA+",
-    "child abuse / neglect" => "Child Abuse",
-    "sexual assault" => "Sexual Assault",
-    "community violence" => "Community Oppression/Violence",
-    "disability services" => "Disability",
-    "immigration" => "Immigration",
-    "schools & universities" => "Education/Schools",
-    "social justice" => "Restorative/Transformative Justice"
-  }.freeze
+  # WordPress "Categories" value → portal Sector name. Sourced from the AWBW
+  # "Story Share to Portal Migration" mapping and kept in a data file so staff
+  # can maintain it without touching Ruby. Keys are the human-readable WordPress
+  # spelling; lookups are case-insensitive. Categories with no entry (e.g.
+  # "Facilitator Spotlights") are logged as warnings rather than guessed at.
+  SECTOR_MAP_PATH = Rails.root.join("config/story_import_sector_mapping.yml").freeze
+  SECTOR_BY_CATEGORY = YAML.load_file(SECTOR_MAP_PATH)
+    .fetch("category_to_sector")
+    .transform_keys(&:downcase)
+    .freeze
 
   # WordPress "showhide_the_name" → our author_credit_preference enum.
   AUTHOR_CREDIT_BY_SHOWHIDE = {
@@ -117,15 +108,19 @@ class StoryImporter
     idea = build_idea(row, title:, organization:, windows_type:)
     return record_skip(row, "story idea already exists for this org/title") if duplicate_idea?(idea)
 
+    # Resolve the Sector once per row (warns even on a dry run so the preview
+    # reflects real tagging coverage), then apply it to both records.
+    sector = sector_for(row)
+
     return unless persist(idea)
-    tag_taxonomies(idea, row)
+    tag_sector(idea, sector)
     @result.ideas_created += 1
 
     return unless published?(row)
-    create_connected_story(row, idea:, title:, organization:, windows_type:)
+    create_connected_story(row, idea:, title:, organization:, windows_type:, sector:)
   end
 
-  def create_connected_story(row, idea:, title:, organization:, windows_type:)
+  def create_connected_story(row, idea:, title:, organization:, windows_type:, sector:)
     if Story.where("LOWER(title) = ?", title.downcase).exists?
       return record_warning(row, "published story skipped — title already taken: #{title.inspect}")
     end
@@ -149,7 +144,7 @@ class StoryImporter
       updated_by: @import_user
     )
     return unless persist(story)
-    tag_taxonomies(story, row)
+    tag_sector(story, sector)
     @result.stories_created += 1
   end
 
@@ -174,21 +169,24 @@ class StoryImporter
              .exists?
   end
 
-  # Best-effort: tag whatever WordPress categories resolve to an existing
-  # Sector. Unmatched values are surfaced as warnings, never invented.
-  def tag_taxonomies(record, row)
-    return if @dry_run || record.new_record?
-
+  # Resolve the row's WordPress category to an existing Sector via the mapping.
+  # Unmatched values are surfaced as warnings (never invented), once per row —
+  # including on a dry run so the preview reflects real tagging coverage.
+  def sector_for(row)
     name = clean(row["Categories"])
     return if name.blank? || name.casecmp?("uncategorized")
 
-    sector_name = SECTOR_SYNONYMS[name.downcase] || name
+    sector_name = SECTOR_BY_CATEGORY[name.downcase] || name
     sector = Sector.where("LOWER(name) = ?", sector_name.downcase).first
-    if sector
-      record.sectors |= [ sector ]
-    else
-      record_warning(row, "no Sector match for category #{name.inspect}")
-    end
+    record_warning(row, "no Sector match for category #{name.inspect}") unless sector
+    sector
+  end
+
+  # Persist the tag only for a saved record on a real run; a dry run resolves and
+  # warns above but writes nothing.
+  def tag_sector(record, sector)
+    return if sector.nil? || @dry_run || record.new_record?
+    record.sectors |= [ sector ]
   end
 
   def find_or_create_organization(row)

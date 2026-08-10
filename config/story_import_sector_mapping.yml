@@ -1,0 +1,39 @@
+# WordPress "Story Share" category → portal Sector name.
+#
+# Source: AWBW "Story Share to Portal Migration" mapping (RH/RP, 2026-06-18).
+# The left side is the free-text `Categories` value on a WordPress Posts Export
+# row; the right side is the exact `Sector.name` it should be tagged with in the
+# portal. `StoryImporter` downcases the category for lookup, so keys here are the
+# human-readable WordPress spelling (matched case-insensitively after HTML-entity
+# decoding, e.g. "Schools &amp; Universities" → "Schools & Universities").
+#
+# Categories with no entry (e.g. "Facilitator Spotlights") have no Sector home
+# and are logged as warnings by the importer rather than guessed at. "Uncategorized"
+# is skipped entirely. Keep this list in sync with the Sector taxonomy — a value
+# whose Sector does not exist yet will simply log a "no Sector match" warning.
+category_to_sector:
+  "Batterers Intervention": "Batterers Intervention"
+  "Child Abuse / Neglect": "Child Abuse/Neglect"
+  "Community Engagement": "Community Engagement"
+  "Community Violence": "Community Violence"
+  "Court & Legal System": "Court/Legal System"
+  "Disability Services": "Disability Services"
+  "Domestic Violence": "Domestic Violence"
+  "Schools & Universities": "Education"
+  "Foster Care": "Foster Care/Adoption"
+  "Donor Engagement": "Fundraising/Donor Engagement"
+  "Grief & Loss": "Grief/Loss"
+  "Physical & Terminal Illness": "Health/Medical"
+  "Homelessness": "Homelessness"
+  "Human Trafficking": "Human Trafficking"
+  "Immigration": "Immigration"
+  "Incarceration": "Incarceration"
+  "LGBTQIA+": "LGBTQIA+"
+  "Mental Health": "Mental Health"
+  "Military & Veterans": "Military/Veterans"
+  "Social Justice": "Racial/Social Justice"
+  "Self-Care & Personal Growth": "Self-Care/Personal Growth"
+  "Sexual Assault": "Sexual Assault"
+  "Staff & Organizational Development": "Staff/Organizational Development"
+  "Substance Abuse Recovery": "Substance Use/Recovery"
+  "Advocacy": "Systems/Policy Change"

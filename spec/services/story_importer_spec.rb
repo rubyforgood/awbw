@@ -112,19 +112,25 @@ RSpec.describe StoryImporter do
     expect(StoryIdea.find_by(title: "Only grown").windows_type).to eq(adult_wt)
   end
 
-  it "tags a matching sector via the synonym map" do
-    sector = create(:sector, name: "Domestic Violence")
-    import([ base_row("Categories" => "Domestic Violence") ])
+  it "tags a matching sector via the category mapping" do
+    sector = create(:sector, name: "Substance Use/Recovery")
+    import([ base_row("Categories" => "Substance Abuse Recovery") ])
 
     expect(StoryIdea.sole.sectors).to include(sector)
     expect(Story.sole.sectors).to include(sector)
   end
 
-  it "warns when a category has no matching sector" do
-    result = import([ base_row("Categories" => "Self-Care & Personal Growth") ])
+  it "warns when a category has no mapping and no matching sector" do
+    result = import([ base_row("Categories" => "Facilitator Spotlights") ])
 
     expect(result.warnings).to include(a_string_matching(/no Sector match/))
     expect(StoryIdea.sole.sectors).to be_empty
+  end
+
+  it "resolves and warns about unmatched sectors even on a dry run" do
+    result = import([ base_row("Categories" => "Facilitator Spotlights") ], dry_run: true)
+
+    expect(result.warnings).to include(a_string_matching(/no Sector match/))
   end
 
   it "warns about unmapped fields rather than dropping them" do
