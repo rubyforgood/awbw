@@ -100,6 +100,18 @@ RSpec.describe StoryImporter do
     expect(StoryIdea.find_by(title: "Both").windows_type).to eq(combined_wt)
   end
 
+  it "derives windows type from pipe-delimited multi-audience tags" do
+    import([
+      base_row("ID" => "1", "Title" => "Kids only", "Tags" => "children|teens"),
+      base_row("ID" => "2", "Title" => "Mixed ages", "Tags" => "adults|children"),
+      base_row("ID" => "3", "Title" => "Only grown", "Tags" => "adults|colleagues")
+    ])
+
+    expect(StoryIdea.find_by(title: "Kids only").windows_type).to eq(children_wt)
+    expect(StoryIdea.find_by(title: "Mixed ages").windows_type).to eq(combined_wt)
+    expect(StoryIdea.find_by(title: "Only grown").windows_type).to eq(adult_wt)
+  end
+
   it "tags a matching sector via the synonym map" do
     sector = create(:sector, name: "Domestic Violence")
     import([ base_row("Categories" => "Domestic Violence") ])

@@ -204,7 +204,7 @@ class StoryImporter
   end
 
   def windows_type_for(row)
-    audiences = clean(row["Tags"]).to_s.downcase.split(",").map(&:strip)
+    audiences = clean(row["Tags"]).to_s.downcase.split(/[|,]/).map(&:strip)
     short_name =
       if audiences.intersect?(COMBINED_AUDIENCE) ||
          (audiences.intersect?(CHILD_AUDIENCE) && (audiences - CHILD_AUDIENCE).any?)
