@@ -84,6 +84,17 @@ module EventHelper
     )
   end
 
+  # Registrants-roster filters the bulk-emails (reminder) recipient picker also
+  # understands, pulled from the current request so "Send bulk emails" carries
+  # the roster's active filters straight into the picker (pre-checking the
+  # matching recipients). Roster-only filters (keyword, funder, sector, readiness,
+  # status) have no reminder equivalent, so they're dropped.
+  def reminder_recipient_filters
+    ReminderRecipientFilter::SHARED_ROSTER_KEYS.each_with_object({}) do |key, forwarded|
+      forwarded[key] = params[key] if params[key].present?
+    end
+  end
+
   def event_show_button(event, truncate_at: nil, subtitle: nil, data: {}, path: nil, compact: false, icon: "fa-calendar-days")
     bg = DomainTheme.bg_class_for(:events, intensity: 50)
     hover_bg = DomainTheme.bg_class_for(:events, intensity: 50, hover: true)

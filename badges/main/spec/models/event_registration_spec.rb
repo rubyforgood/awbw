@@ -227,6 +227,101 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe ".registrant_city" do
+    it "matches registrants with an address in the city (case-insensitive, partial)" do
+      in_city = create(:person)
+      create(:address, addressable: in_city, city: "Santa Monica")
+      out_city = create(:person)
+      create(:address, addressable: out_city, city: "Portland")
+      reg_in = create(:event_registration, registrant: in_city)
+      reg_out = create(:event_registration, registrant: out_city)
+
+      results = EventRegistration.registrant_city("santa")
+      expect(results).to include(reg_in)
+      expect(results).not_to include(reg_out)
+    end
+  end
+
+  describe ".comment_text" do
+    it "matches registrations whose comment topic or body contains the term" do
+      reg_body = create(:event_registration)
+      create(:comment, commentable: reg_body, topic: "General", body: "Needs a wheelchair ramp")
+      reg_topic = create(:event_registration)
+      create(:comment, commentable: reg_topic, topic: "Dietary", body: "n/a")
+      reg_none = create(:event_registration)
+      create(:comment, commentable: reg_none, topic: "Other", body: "nothing here")
+
+      expect(EventRegistration.comment_text("wheelchair")).to include(reg_body)
+      expect(EventRegistration.comment_text("wheelchair")).not_to include(reg_none)
+      expect(EventRegistration.comment_text("dietary")).to include(reg_topic)
+    end
+  end
+
+  describe ".funder_name" do
+    it "matches registrations funded by a scholarship whose grant funder name matches" do
+      matching_reg = create(:event_registration)
+      grant = create(:grant, funder: create(:organization, name: "Big Donor Foundation"))
+      scholarship = create(:scholarship, grant: grant, recipient: matching_reg.registrant)
+      create(:allocation, source: scholarship, allocatable: matching_reg, amount: 0)
+
+      other_reg = create(:event_registration)
+      other = create(:scholarship, grant: create(:grant, funder: create(:organization, name: "Someone Else")),
+                     recipient: other_reg.registrant)
+      create(:allocation, source: other, allocatable: other_reg, amount: 0)
+
+      results = EventRegistration.funder_name("big donor")
+      expect(results).to include(matching_reg)
+      expect(results).not_to include(other_reg)
+    end
+  end
+
+  describe ".submission_status" do
+    let(:submission_event) { create(:event) }
+    let!(:none_reg) { create(:event_registration, event: submission_event) }
+    let!(:single_reg) { create(:event_registration, event: submission_event) }
+    let!(:multi_reg) { create(:event_registration, event: submission_event) }
+
+    before do
+      create(:form_submission, event: submission_event, person: single_reg.registrant)
+      create(:form_submission, event: submission_event, person: multi_reg.registrant)
+      create(:form_submission, event: submission_event, person: multi_reg.registrant)
+    end
+
+    it "finds registrants with no submission" do
+      results = EventRegistration.submission_status("none", submission_event)
+      expect(results).to include(none_reg)
+      expect(results).not_to include(single_reg, multi_reg)
+    end
+
+    it "finds registrants with at least one submission" do
+      results = EventRegistration.submission_status("has", submission_event)
+      expect(results).to include(single_reg, multi_reg)
+      expect(results).not_to include(none_reg)
+    end
+
+    it "finds registrants with more than one submission" do
+      results = EventRegistration.submission_status("multiple", submission_event)
+      expect(results).to include(multi_reg)
+      expect(results).not_to include(none_reg, single_reg)
+    end
+  end
+
+  describe ".scholarship_status agreed" do
+    it "matches registrations with an agreement-signed scholarship" do
+      agreed_reg = create(:event_registration)
+      agreed = create(:scholarship, recipient: agreed_reg.registrant, agreement_signed_at: Time.current)
+      create(:allocation, source: agreed, allocatable: agreed_reg, amount: 0)
+
+      pending_reg = create(:event_registration)
+      pending = create(:scholarship, recipient: pending_reg.registrant, agreement_signed_at: nil)
+      create(:allocation, source: pending, allocatable: pending_reg, amount: 0)
+
+      results = EventRegistration.scholarship_status("agreed")
+      expect(results).to include(agreed_reg)
+      expect(results).not_to include(pending_reg)
+    end
+  end
+
   describe "payment and scholarship scopes" do
     let(:event) { create(:event, cost_cents: 1000) }
     let(:paid_reg) { create(:event_registration, event: event) }

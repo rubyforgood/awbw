@@ -71,7 +71,7 @@ RSpec.describe ReminderRecipientFilter do
       award_scholarship(reg, grant: grant)
       ungranted = registration(first_name: "Sam")
       award_scholarship(ungranted) # scholarship with no grant
-      expect(matched({ funder: "acme" }, [ reg, ungranted ])).to eq([ reg.id ].to_set)
+      expect(matched({ funder_name: "acme" }, [ reg, ungranted ])).to eq([ reg.id ].to_set)
     end
 
     it "filters by email address" do
@@ -85,6 +85,15 @@ RSpec.describe ReminderRecipientFilter do
       aisha = registration(first_name: "Aisha", email: "aisha@example.com", user: nil)
       sam = registration(first_name: "Sam", email: "sam@other.com", user: nil)
       expect(matched({ email: "amy@--aisha@" }, [ amy, aisha, sam ])).to eq([ amy.id, aisha.id ].to_set)
+    end
+
+    it "filters by registrant city, skipping inactive addresses like the roster does" do
+      here = registration
+      create(:address, addressable: here.registrant, city: "Santa Monica")
+      moved_away = registration(first_name: "Sam")
+      create(:address, addressable: moved_away.registrant, city: "Santa Monica", inactive: true)
+      expect(matched({ city: "santa" }, [ here, moved_away ])).to eq([ here.id ].to_set)
+      expect(EventRegistration.registrant_city("santa")).not_to include(moved_away)
     end
 
     it "filters by registration comment text" do
@@ -227,7 +236,7 @@ RSpec.describe ReminderRecipientFilter do
       match = registration(first_name: "Jane", last_name: "Adams").tap { |r| award_scholarship(r, grant: grant) }
       name_only = registration(first_name: "Jane", last_name: "Brooks")
       funder_only = registration(first_name: "Sam", last_name: "Cole").tap { |r| award_scholarship(r, grant: grant) }
-      expect(matched({ name: "jane", funder: "acme" }, [ match, name_only, funder_only ]))
+      expect(matched({ name: "jane", funder_name: "acme" }, [ match, name_only, funder_only ]))
         .to eq([ match.id ].to_set)
     end
   end

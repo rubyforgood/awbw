@@ -1,0 +1,169 @@
+<%# Shared registrant filter bar for the registrants roster and the bulk reminder
+    recipient picker. One visible row holds a "Filters" heading, the most meaningful
+    filters, a "More filters" chevron toggle and "Clear filters"; the rest of the
+    dropdowns collapse until expanded. The dropdowns reuse events/filter_select
+    with the same param names and options on both pages, so filters carry between
+    them (see ReminderRecipientFilter / EventsController#registrants).
+    Locals:
+      url                  – form action path
+      frame                – turbo frame id the form submits into
+      clear_url            – "Clear filters" href
+      text_fields          – [{ param:, label:, placeholder:, primary:, search: }]
+                             primary fields sit in the first row (search adds a
+                             magnifier + flex width); the rest collapse
+      include_readiness    – show the readiness "Status" select (roster only)
+      status_filter_hidden – carry the active/inactive hidden field (roster only) %>
+<% field_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+<% label_class = "block text-sm font-medium text-gray-700 mb-1" %>
+<% include_readiness = local_assigns.fetch(:include_readiness, false) %>
+<% status_filter_hidden = local_assigns.fetch(:status_filter_hidden, false) %>
+<% has_cost = @event.cost_cents.to_i > 0 %>
+<% primary_text, more_text = Array(text_fields).partition { |f| f[:primary] } %>
+<%# Open the collapsed section on load when any control inside it already carries
+    a value, so an active filter is never hidden behind the toggle. %>
+<% collapsed_keys = %i[submission_status payment_method org_status scholarship funder_name ce_status city state county account_status comment_status comment] %>
+<% more_active = more_text.any? { |f| params[f[:param]].present? } || collapsed_keys.any? { |k| params[k].present? } %>
+<%# The "More filters" drawer is a pure-CSS disclosure: a visually-hidden
+    checkbox drives the drawer, chevron and label via :has() on this group
+    wrapper. It's rendered outside the form so the collection controller's
+    change-submit doesn't fire when toggling, and starts checked when a collapsed
+    filter is already active so an active filter is never hidden. %>
+<div class="group mb-6">
+  <input type="checkbox" id="more-filters-toggle" class="sr-only"<%= " checked" if more_active %>>
+  <%= form_with url: url, method: :get,
+        data: { controller: "collection", turbo_frame: frame },
+        autocomplete: "off",
+        class: "bg-white border border-gray-200 rounded-xl shadow-sm p-4" do %>
+    <% if status_filter_hidden %>
+      <%= hidden_field_tag :status_filter, params[:status_filter].presence || "active" %>
+    <% end %>
+
+  <div class="flex items-center gap-2 text-gray-600 mb-3">
+    <i class="fa-solid fa-filter text-xs"></i>
+    <span class="text-xs font-semibold uppercase tracking-wide">Filters</span>
+  </div>
+
+  <%# Row 1: the most meaningful filters + More filters toggle + Clear. %>
+  <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4">
+    <% primary_text.each do |f| %>
+      <div class="<%= f[:search] ? "w-full md:flex-1 md:min-w-0" : "w-full md:w-48" %>">
+        <%= label_tag f[:param], f[:label], class: label_class %>
+        <div class="relative">
+          <%= text_field_tag f[:param], params[f[:param]], class: field_class, placeholder: f[:placeholder] %>
+          <% if f[:search] %>
+            <button type="submit"
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600">
+              <i class="fa fa-search"></i>
+            </button>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# Top three, in the order an admin works a registration: overall progress,
+        are they coming, did they pay. %>
+    <% if include_readiness %>
+      <%# Mirrors the far-right Progress column: Not ready → Ready → Certificate
+          pending → Completed. Param stays :readiness (backed by
+          EventRegistrationReadiness); the user-facing label reads "Progress". %>
+      <%= render "events/filter_select", param: :readiness, label: "Progress",
+            options: [ [ "Not ready", "not_ready" ], [ "Ready", "ready" ], [ "Certificate pending", "certificate_due" ], [ "Completed", "completed" ] ],
+            selected: params[:readiness], blank: "Any stage", field_class: field_class %>
+    <% end %>
+
+    <%= render "events/filter_select", param: :attendance_status, label: "Attendance",
+          options: EventRegistration::ATTENDANCE_STATUSES.map { |s| [ EventRegistration.new(status: s).attendance_status_label, s ] },
+          selected: params[:attendance_status], blank: "All statuses", field_class: field_class %>
+
+    <% if has_cost %>
+      <%= render "events/filter_select", param: :payment_status, label: "Payment status",
+            options: [ [ "Due", "unpaid" ], [ "Paid", "paid" ], [ "Intends to pay", "intends_to_pay" ] ],
+            selected: params[:payment_status], blank: "Any payment status", field_class: field_class %>
+    <% end %>
+
+    <div class="w-full md:w-auto md:ml-auto flex items-end gap-4">
+      <label for="more-filters-toggle"
+             class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 cursor-pointer transition">
+        <span class="group-has-[#more-filters-toggle:checked]:hidden">More filters</span>
+        <span class="hidden group-has-[#more-filters-toggle:checked]:inline">Fewer filters</span>
+        <i class="fa-solid fa-chevron-down text-xs transition-transform group-has-[#more-filters-toggle:checked]:rotate-180"></i>
+      </label>
+      <%= link_to "Clear filters", clear_url, class: "btn btn-utility",
+            data: { action: "collection#clearAndSubmit" } %>
+    </div>
+  </div>
+
+  <%# Collapsible: the remaining filters. Shown when the toggle checkbox is
+      checked (via :has() on the group wrapper), which starts checked when a
+      collapsed filter is already active. %>
+  <div class="hidden group-has-[#more-filters-toggle:checked]:block">
+    <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4 mt-4">
+      <%# Page-specific collapsed text fields (e.g. the picker's Organization/Name
+          boxes). Funder/City/Comment text below are shared across both pages. %>
+      <% more_text.each do |f| %>
+        <%= render "events/filter_text", param: f[:param], label: f[:label],
+              placeholder: f[:placeholder], field_class: field_class %>
+      <% end %>
+
+      <%# Ordered by how a registration is worked after the top three: how they
+          pay, whether they submitted, their org, scholarship and funder, CE,
+          then portal access and location — with comments handled last. %>
+      <% if has_cost %>
+        <%= render "events/filter_select", param: :payment_method, label: "Payment method",
+              options: EventRegistrationDecorator.payment_method_filter_choices,
+              selected: params[:payment_method], blank: "Any payment method", field_class: field_class %>
+      <% end %>
+
+      <%= render "events/filter_select", param: :submission_status, label: "Submission status",
+            options: [ [ "No submission", "none" ], [ "Has form submission", "has" ], [ "Multiple form submissions", "multiple" ] ],
+            selected: params[:submission_status], blank: "All statuses", field_class: field_class %>
+
+      <%= render "events/filter_select", param: :org_status, label: "Organization linking",
+            options: [ [ "Pending", "pending" ], [ "Linked", "linked" ], [ "Unlinked", "unlinked" ] ],
+            selected: params[:org_status], blank: "Any linking", field_class: field_class %>
+
+      <% if has_cost %>
+        <%= render "events/filter_select", param: :scholarship, label: "Scholarship",
+              options: [ [ "All recipients", "yes" ], [ "Agreed", "agreed" ], [ "Tasks complete", "complete" ], [ "Tasks not complete", "incomplete" ] ],
+              selected: params[:scholarship], blank: "Any status", field_class: field_class %>
+
+        <%# Free-text on the funder behind a scholarship. Param :funder_name stays
+            clear of the awbw/external :funder funding-source scope. %>
+        <%= render "events/filter_text", param: :funder_name, label: "Funder",
+              placeholder: "Funder name", field_class: field_class %>
+      <% end %>
+
+      <% if @ce_eligible %>
+        <%= render "events/filter_select", param: :ce_status, label: "CE status",
+              options: [ [ "Registered for CE", "registered" ], [ "Requested", "requested" ], [ "Needs license", "needs_license" ], [ "Paid", "paid" ], [ "Issued", "issued" ], [ "Not issued", "not_issued" ] ],
+              selected: params[:ce_status], blank: "Any CE status", field_class: field_class %>
+      <% end %>
+
+      <%= render "events/filter_select", param: :account_status, label: "User account",
+            options: [ [ "No account", "none" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
+            selected: params[:account_status], blank: "Any account status", field_class: field_class %>
+
+      <%= render "events/filter_text", param: :city, label: "City",
+            placeholder: "City name", field_class: field_class %>
+
+      <% if @dashboard&.states&.any? %>
+        <%= render "events/filter_select", param: :state, label: "State",
+              options: @dashboard.states, selected: params[:state], blank: "All states", field_class: field_class, wrapper_class: "w-full md:w-32" %>
+      <% end %>
+
+      <% if @dashboard&.counties&.any? %>
+        <%= render "events/filter_select", param: :county, label: "County",
+              options: @dashboard.counties.map { |state, county| [ "#{state} - #{county}", "#{state}|#{county}" ] },
+              selected: params[:county], blank: "All counties", field_class: field_class %>
+      <% end %>
+
+      <%= render "events/filter_select", param: :comment_status, label: "Comment status",
+            options: [ [ "None", "none" ], [ "Present", "present" ], [ "Flagged", "flagged" ] ],
+            selected: params[:comment_status], blank: "Any comments", field_class: field_class %>
+
+      <%= render "events/filter_text", param: :comment, label: "Comment text",
+            placeholder: "Topic or content", field_class: field_class %>
+    </div>
+  </div>
+  <% end %>
+</div>
