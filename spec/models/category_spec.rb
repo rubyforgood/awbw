@@ -3,6 +3,16 @@ require 'rails_helper'
 RSpec.describe Category do
   let(:category) { build(:category) }
 
+  describe '.story_share_featured' do
+    it 'returns only categories with a position, ordered by it' do
+      second = create(:category, story_share_position: 2)
+      first = create(:category, story_share_position: 1)
+      create(:category, story_share_position: nil)
+
+      expect(Category.story_share_featured).to eq([ first, second ])
+    end
+  end
+
   describe 'associations' do
     it { should belong_to(:category_type) }
     it { should have_many(:categorizable_items).dependent(:destroy) }

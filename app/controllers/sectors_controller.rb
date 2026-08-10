@@ -76,7 +76,7 @@ class SectorsController < ApplicationController
   # Strong parameters
   def sector_params
     params.require(:sector).permit(
-      :name, :published, :description
+      :name, :published, :description, :story_share_position
     )
   end
 end

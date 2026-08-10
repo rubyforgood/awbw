@@ -278,7 +278,13 @@ Rails.application.routes.draw do
   get "search/:model", to: "search#index"
   resources :story_ideas
   resources :stories
-  resources :story_shares, only: [ :index, :show ]
+  resources :story_shares, only: [ :index, :show ] do
+    get :share, on: :collection
+  end
+  get "story_share_admin", to: "story_share_admin#show"
+  match "story_share_admin/reorder", to: "story_share_admin#reorder", via: [ :put, :patch ], as: :story_share_admin_reorder
+  post "story_share_admin/add", to: "story_share_admin#add", as: :story_share_admin_add
+  delete "story_share_admin/remove", to: "story_share_admin#remove", as: :story_share_admin_remove
   resources :video_recordings
   resources :user_forms
   resources :windows_types

@@ -1,0 +1,16 @@
+<%# Sector + audience chips that link back into the portal's own filters
+    (not sectors/_tagging_label, which links to the auth-gated taggings page). %>
+<% sectors = story.sectors.to_a %>
+<% audiences = story.audience_categories.to_a %>
+<% if sectors.any? || audiences.any? %>
+  <div class="flex flex-wrap gap-2 mb-8">
+    <% sectors.each do |sector| %>
+      <%= link_to sector.name, story_shares_path(sector_names_all: sector.name),
+                  class: "inline-flex items-center rounded-full bg-purple-100 text-purple-800 px-3 py-1 text-xs font-medium hover:bg-purple-200 transition-colors" %>
+    <% end %>
+    <% audiences.each do |category| %>
+      <%= link_to category.name, story_shares_path(category_names_all: category.name),
+                  class: "inline-flex items-center rounded-full bg-gray-100 text-gray-700 px-3 py-1 text-xs font-medium hover:bg-gray-200 transition-colors" %>
+    <% end %>
+  </div>
+<% end %>

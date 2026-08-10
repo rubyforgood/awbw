@@ -62,7 +62,9 @@ class SearchController < ApplicationController
       "organization" => Organization,
       "event" => Event,
       "event_registration" => EventRegistration,
-      "resource" => Resource
+      "resource" => Resource,
+      "sector" => Sector,
+      "category" => Category
     }[model_param]
   end
 

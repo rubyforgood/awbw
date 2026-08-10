@@ -1,12 +1,10 @@
 <% content_for(:page_bg_class, "public") %>
 </div><!-- Break out of layout container -->
 
-<% if @sector_names_all.present? %>
-  <%= render "sector_index" %>
+<% if browsing? %>
+  <%= render "browse" %>
 <% else %>
-  <%= render "index" %>
+  <%= render "home" %>
 <% end %>
-
-
 
 <div><!-- Restore layout container -->

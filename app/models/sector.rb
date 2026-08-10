@@ -1,5 +1,6 @@
 class Sector < ApplicationRecord
-  include NameFilterable, Publishable
+  include NameFilterable, Publishable, RemoteSearchable
+  remote_searchable_by :name
   # Canonical sector tags, in display order. "Other" is kept at the end
   # as the catch-all free-text fallback for additional sectors (see
   # OTHER_SECTOR_NAME below) — it isn't a selectable tag itself. Descriptions for
@@ -49,6 +50,8 @@ class Sector < ApplicationRecord
   has_many :sectorable_items, dependent: :destroy
   has_many :workshops, through: :sectorable_items,
            source: :sectorable, source_type: "Workshop"
+  has_many :stories, through: :sectorable_items,
+           source: :sectorable, source_type: "Story"
   # has_many through
   has_many :quotes, through: :workshops
 
@@ -70,6 +73,8 @@ class Sector < ApplicationRecord
     where("LOWER(sectors.name) IN (?)", parsed)
   end
   scope :excluding_other, -> { where.not(name: OTHER_SECTOR_NAME) }
+  # Featured in the Story Share portal, ordered by the admin-set position.
+  scope :story_share_featured, -> { where.not(story_share_position: nil).order(:story_share_position) }
   scope :has_taggings, -> { joins(:sectorable_items).distinct }
   scope :taggings_presence, ->(value) do
     case value
@@ -105,5 +110,6 @@ class Sector < ApplicationRecord
 
   def expire_sectors_cache
     Rails.cache.delete("published_sectors_with_sectorable_items")
+    Rails.cache.delete("story_share_focus_area_sectors")
   end
 end

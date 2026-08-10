@@ -42,6 +42,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/workshop_logs/index.html.erb"           => "admin-or-auth",
 
     "app/views/story_ideas/new.html.erb"               => "admin-or-auth",
+    "app/views/story_shares/share.html.erb"            => "admin-or-auth",
     "app/views/workshop_ideas/new.html.erb"            => "admin-or-auth",
     "app/views/workshop_variation_ideas/new.html.erb"  => "admin-or-auth",
 
@@ -97,6 +98,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/dedupes/index.html.erb"                 => "admin-only bg-blue-100",
     "app/views/dedupes/preview.html.erb"               => "admin-only bg-blue-100",
     "app/views/taggings/matrix.html.erb"               => "admin-only bg-blue-100",
+    "app/views/story_share_admin/show.html.erb"        => "admin-only bg-blue-100",
     # index
     "app/views/allocations/index.html.erb"             => "admin-only bg-blue-100",
     "app/views/other_responses/index.html.erb"         => "admin-only bg-blue-100",
