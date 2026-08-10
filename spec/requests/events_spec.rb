@@ -2853,8 +2853,9 @@ RSpec.describe "Events", type: :request do
 
           expect(response.body).to include('id="all-organizations"')
           expect(response.body).to include('id="primary-sector"')
-          # Rows filter the roster itself — nothing points at the Manage list.
-          expect(response.body).to include(CGI.escapeHTML("#{roster_event_path(owned_event)}?registrant_ids="))
+          # Rows filter the roster itself — nothing points at the Manage list — and
+          # carry charts=1 so the panel they were clicked from is still open on arrival.
+          expect(response.body).to include(CGI.escapeHTML("#{roster_event_path(owned_event)}?charts=1&registrant_ids="))
           expect(response.body).not_to include(registrants_event_path(owned_event))
         end
       end
@@ -3011,11 +3012,11 @@ RSpec.describe "Events", type: :request do
       end
 
       # Same rule as the roster: a breakdown row filters the cards on this page
-      # rather than navigating anywhere.
+      # rather than navigating anywhere, and keeps the charts panel open.
       it "drills its breakdown rows back into this page" do
         get recipients_event_path(event), headers: { "Turbo-Frame" => "recipients_charts" }
 
-        expect(response.body).to include(CGI.escapeHTML("#{recipients_event_path(event)}?registrant_ids="))
+        expect(response.body).to include(CGI.escapeHTML("#{recipients_event_path(event)}?charts=1&registrant_ids="))
       end
 
       it "narrows the cards to a drill-in, leaving the header count whole" do

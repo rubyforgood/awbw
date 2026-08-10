@@ -7,15 +7,16 @@
 <%# row_paths/scholarship_paths (set on the cross-event index and the read-only
     recipients charts) supply per-city paths keyed by city label; a missing entry
     (e.g. Unknown) renders the row non-clickable. Absent, the row builds its own
-    event-scoped roster filter. %>
+    event-scoped roster filter. Either way the path keeps the charts panel open
+    (charts: 1 here, carried in row_paths elsewhere) — the row lives inside it. %>
 <% row_paths = local_assigns[:row_paths] %>
 <% scholarship_paths = local_assigns[:scholarship_paths] %>
 <% if row_paths %>
   <% row_path = row_paths[row.city] %>
   <% scholarship_path = scholarship_paths&.dig(row.city) %>
 <% else %>
-  <% row_path = roster_event_path(event, registrant_ids: row.registrant_ids.join("-").presence || "0") %>
-  <% scholarship_path = roster_event_path(event, registrant_ids: row.scholarship_recipient_ids.join("-").presence || "0") %>
+  <% row_path = roster_event_path(event, registrant_ids: row.registrant_ids.join("-").presence || "0", charts: 1) %>
+  <% scholarship_path = roster_event_path(event, registrant_ids: row.scholarship_recipient_ids.join("-").presence || "0", charts: 1) %>
 <% end %>
 <tr class="border-t border-gray-100 group hover:bg-gray-50 <%= "cursor-pointer" if row_path %> transition-colors"
     <% if row_path %>onclick="window.location='<%= row_path %>'"<% end %>>
