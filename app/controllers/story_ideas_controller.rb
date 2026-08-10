@@ -87,7 +87,10 @@ class StoryIdeasController < ApplicationController
     success = false
 
     StoryIdea.transaction do
-      if @story_idea.update(story_idea_params.except(:images, :category_ids, :sector_ids))
+      @story_idea.assign_attributes(story_idea_params.except(:images, :category_ids, :sector_ids))
+      attribute_comment_authorship
+      stamp_new_notification_recipients
+      if @story_idea.save
         assign_associations(@story_idea)
         success = true
       end
@@ -118,6 +121,24 @@ class StoryIdeasController < ApplicationController
 
   private
 
+  # Stamp authorship on comments edited through the story idea form: author +
+  # editor on new ones, editor on existing ones whose body changed.
+  def attribute_comment_authorship
+    @story_idea.comments.select(&:new_record?).each do |c|
+      c.created_by = current_user
+      c.updated_by = current_user
+    end
+    @story_idea.comments.select { |c| c.persisted? && c.body_changed? }.each do |c|
+      c.updated_by = current_user
+    end
+  end
+
+  # Inline-logged communications are addressed to the idea's submitter.
+  def stamp_new_notification_recipients
+    recipient_email = @story_idea.communications_email.presence || "n/a"
+    @story_idea.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
+  end
+
   def set_story_idea
     @story_idea = StoryIdea.find(params[:id])
   end
@@ -131,7 +152,9 @@ class StoryIdeasController < ApplicationController
       category_ids: [],
       sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],
-      gallery_assets_attributes: [ :id, :file, :_destroy ]
+      gallery_assets_attributes: [ :id, :file, :_destroy ],
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :noticeable_type, :noticeable_id, :_destroy ]
     )
   end
 end

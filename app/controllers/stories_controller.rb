@@ -97,7 +97,10 @@ class StoriesController < ApplicationController
     success = false
 
     Story.transaction do
-      if @story.update(story_params.except(:images, :category_ids, :sector_ids))
+      @story.assign_attributes(story_params.except(:images, :category_ids, :sector_ids))
+      attribute_comment_authorship
+      stamp_new_notification_recipients
+      if @story.save
         assign_associations(@story)
         if params[:promote_idea_assets] == "true"
           @story.attach_assets_from_idea!
@@ -158,6 +161,24 @@ class StoriesController < ApplicationController
 
   private
 
+  # Stamp authorship on comments edited through the story form: author + editor
+  # on new ones, editor on existing ones whose body changed.
+  def attribute_comment_authorship
+    @story.comments.select(&:new_record?).each do |c|
+      c.created_by = current_user
+      c.updated_by = current_user
+    end
+    @story.comments.select { |c| c.persisted? && c.body_changed? }.each do |c|
+      c.updated_by = current_user
+    end
+  end
+
+  # Inline-logged communications are addressed to the story's credited author.
+  def stamp_new_notification_recipients
+    recipient_email = @story.communications_email.presence || "n/a"
+    @story.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
+  end
+
   def set_story
     # Accepts both the bare id ("23") and the slugged param ("23-my-great-story");
     # ActiveRecord casts the leading id via `to_i`, so both resolve the same story.
@@ -195,6 +216,8 @@ class StoriesController < ApplicationController
       sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :noticeable_type, :noticeable_id, :_destroy ],
     )
   end
 

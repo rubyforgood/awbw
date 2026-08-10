@@ -91,6 +91,40 @@ RSpec.describe "/story_ideas", type: :request do
       end
     end
 
+    describe "comments and communications on the edit page" do
+      let(:story_idea) { create(:story_idea, created_by: regular_user) }
+
+      it "renders the comments section" do
+        get edit_story_idea_url(story_idea)
+        expect(response.body).to include("Story idea comments")
+        expect(response.body).to include("Add comment")
+      end
+
+      it "saves a new comment with its topic, authored by the current user" do
+        expect {
+          patch story_idea_url(story_idea),
+                params: { story_idea: { comments_attributes: { "0" => { topic: "Follow-up", body: "Emailed the submitter" } } } }
+        }.to change { story_idea.comments.count }.by(1)
+
+        comment = story_idea.comments.order(:created_at).last
+        expect(comment.body).to eq("Emailed the submitter")
+        expect(comment.topic).to eq("Follow-up")
+        expect(comment.created_by).to eq(admin)
+      end
+
+      it "logs a communication against the story idea's submitter" do
+        expect {
+          patch story_idea_url(story_idea),
+                params: { story_idea: { notifications_attributes: { "0" => { email_subject: "Called the submitter" } } } }
+        }.to change { story_idea.notifications.count }.by(1)
+
+        note = story_idea.notifications.last
+        expect(note.noticeable).to eq(story_idea)
+        expect(note.email_subject).to eq("Called the submitter")
+        expect(note.recipient_email).to eq(regular_user.email)
+      end
+    end
+
     describe "DELETE /destroy" do
       it "can delete any story_idea" do
         story_idea = create(:story_idea, created_by: create(:user))

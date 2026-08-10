@@ -6,7 +6,7 @@ RSpec.describe PersonCommentAggregator do
   let(:person) { create(:person) }
 
   describe "#comments" do
-    it "gathers comments from the person, their registrations, scholarships, CE registrations, and user account" do
+    it "gathers comments from the person, their registrations, scholarships, CE registrations, stories, story ideas, and user account" do
       profile_comment = create(:comment, commentable: person)
 
       registration = create(:event_registration, registrant: person)
@@ -21,10 +21,17 @@ RSpec.describe PersonCommentAggregator do
       subscription = create(:topic_subscription, person: person)
       subscription_comment = create(:comment, commentable: subscription)
 
+      story = create(:story, author: person)
+      story_comment = create(:comment, commentable: story)
+
+      story_idea = create(:story_idea, created_by: person.user)
+      story_idea_comment = create(:comment, commentable: story_idea)
+
       user_comment = create(:comment, commentable: person.user)
 
       expect(aggregator.comments).to contain_exactly(
-        profile_comment, registration_comment, scholarship_comment, ce_comment, subscription_comment, user_comment
+        profile_comment, registration_comment, scholarship_comment, ce_comment, subscription_comment,
+        story_comment, story_idea_comment, user_comment
       )
     end
 

@@ -373,6 +373,65 @@
 
   <%= f.hidden_field :updated_by_id, value: current_user.id %>
 
+  <% if f.object.persisted? %>
+    <%# ---- Communications + comments — same boxes as the registration edit page,
+        shown once the story exists so there's a record to attach them to. ---- %>
+    <div class="space-y-6 mt-8">
+      <% if allowed_to?(:index?, with: NotificationPolicy) %>
+        <%= render "notifications/communications", f: f,
+              title_key: "communications.story_title", none_key: "communications.none_for_story" %>
+      <% end %>
+
+      <%# ---- Comments ---- %>
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="edit-toggle">
+        <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:comments, f.object.comments.any?) %>">
+            <i class="fa-solid fa-comments"></i>
+          </span>
+          <h2 class="text-sm font-semibold text-gray-700">Story comments</h2>
+          <% if f.object.author_person %>
+            <%= link_to all_comments_person_path(f.object.author_person),
+                        class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
+                        target: "_blank", rel: "noopener" do %>
+              View all
+              <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+            <% end %>
+          <% end %>
+        </div>
+
+        <div class="space-y-4 p-4" data-controller="paginated-fields" data-paginated-fields-per-page-value="5">
+          <div id="comment-list" class="space-y-4">
+            <%= f.simple_fields_for :comments do |cf| %>
+              <%= render "comments/comment_fields", f: cf %>
+            <% end %>
+          </div>
+
+          <div data-paginated-fields-target="nav"></div>
+
+          <div class="flex items-center justify-between gap-2">
+            <%= link_to_add_association f, :comments,
+                  partial: "comments/comment_fields",
+                  data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
+                  class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
+              <i class="fa-solid fa-plus text-[0.6rem]"></i>
+              Add comment
+            <% end %>
+
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
+              data-action="edit-toggle#toggle"
+            >
+              <i class="fa-solid fa-pen text-[0.6rem]"></i>
+              <span data-edit-toggle-target="editLabel">Edit comments</span>
+              <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  <% end %>
+
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if allowed_to?(:destroy?, f.object) %>
       <%= link_to "Delete", @story, class: "btn btn-danger-outline",

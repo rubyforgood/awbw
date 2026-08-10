@@ -45,9 +45,13 @@ en:
     resent: "Communication has been resent successfully."
     registration_title: "Registration communications"
     scholarship_title: "Scholarship communications"
+    story_title: "Story communications"
+    story_idea_title: "Story idea communications"
     none_for_person: "No communications for this person yet."
     none_for_registrant: "No communications for this registrant yet."
     none_for_scholarship: "No communications for this scholarship yet."
+    none_for_story: "No communications for this story yet."
+    none_for_story_idea: "No communications for this story idea yet."
   activerecord:
     attributes:
       workshop_variation:

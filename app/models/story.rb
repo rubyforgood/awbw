@@ -16,6 +16,8 @@ class Story < ApplicationRecord
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+  has_many :notifications, as: :noticeable, dependent: :destroy
 
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
@@ -40,6 +42,8 @@ class Story < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
+  accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
 
   # SearchCop
   include SearchCop
@@ -112,6 +116,12 @@ class Story < ApplicationRecord
 
   def name
     title
+  end
+
+  # Email the communications box matches notifications against. Uniform accessor
+  # so the shared notifications/_communications partial works across records.
+  def communications_email
+    author_person&.preferred_email
   end
 
   # Unattributed stories are credited to the facilitator who shared them.
