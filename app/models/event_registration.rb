@@ -33,6 +33,12 @@ class EventRegistration < ApplicationRecord
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance transferred_in ].freeze
   INACTIVE_STATUSES = %w[ cancelled no_show transferred_out ].freeze
   ATTENDANCE_STATUSES = (ACTIVE_STATUSES + INACTIVE_STATUSES).freeze
+  # The per-event Roster's population: active minus incomplete_attendance. The
+  # roster answers "who was here", and someone who made only part of the event
+  # isn't that — so they come out of the table, the stat bar and the breakdowns
+  # alike, and the page reports how many it left out rather than hiding them.
+  # Deliberately narrower than ACTIVE_STATUSES, which every other event page uses.
+  ROSTER_STATUSES = (ACTIVE_STATUSES - %w[ incomplete_attendance ]).freeze
   # Attendance outcomes surfaced as their own participation buckets; every other
   # status falls into "other" (registered, transfers, cancellations).
   NAMED_OUTCOME_STATUSES = %w[ attended incomplete_attendance no_show ].freeze
@@ -54,6 +60,21 @@ class EventRegistration < ApplicationRecord
     [ "Live trainings", "live" ],
     [ "On-demand trainings", "on_demand" ],
     [ "Other events", "other" ]
+  ].freeze
+  # Payment-situation filter options (the .payment_status scope's vocabulary),
+  # shared by the registrants filter bar and the attendees index's applied-filter
+  # chips so a value can't be worded one way in the select and another in the chip.
+  PAYMENT_STATUS_FILTER_OPTIONS = [
+    [ "Due", "unpaid" ],
+    [ "Paid", "paid" ],
+    [ "Intends to pay", "intends_to_pay" ]
+  ].freeze
+  # Scholarship funding-source options (the .funder scope's vocabulary), named the
+  # way Scholarship.externally_funded / .org_subsidized name the same split. No
+  # select offers these yet — they arrive from the revenue report's drill-ins.
+  FUNDER_FILTER_OPTIONS = [
+    [ "Grant-funded", "external" ],
+    [ "Org-subsidized", "awbw" ]
   ].freeze
 
   # Human labels for each attendance status — the single source of truth for
@@ -95,6 +116,7 @@ class EventRegistration < ApplicationRecord
     OR LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name", name: "%#{registrant_name}%") }
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
   scope :active, -> { where(status: ACTIVE_STATUSES) }
+  scope :on_roster, -> { where(status: ROSTER_STATUSES) }
   scope :inactive, -> { where(status: INACTIVE_STATUSES) }
   scope :attended, -> { where(status: "attended") }
   scope :registrant_ids, ->(ids) { where(registrant_id: ids.to_s.split("-").map(&:to_i)) }

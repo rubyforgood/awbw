@@ -125,6 +125,20 @@ RSpec.describe "Events attendees", type: :request do
           .to have_link(href: attendees_events_path(state: "OR"))
       end
 
+      # payment_status and funder narrow the population but have no select here —
+      # without a chip they'd shrink the list silently, and without the hidden
+      # field the next select change would drop them.
+      it "chips the money drill-ins and carries them through the filter form" do
+        get attendees_events_url(payment_status: "unpaid", funder: "external")
+
+        expect(response.body).to include("Payment: Due")
+        expect(response.body).to include("Funding: Grant-funded")
+        page = Capybara.string(response.body)
+        expect(page).to have_selector("input[type=hidden][name=payment_status][value=unpaid]", visible: :all)
+        expect(page).to have_selector("input[type=hidden][name=funder][value=external]", visible: :all)
+        expect(page).to have_link(href: attendees_events_path(funder: "external"))
+      end
+
       it "does not show the applied-filters row when only visible filters are set" do
         get attendees_events_url(state: "OR")
         expect(response.body).not_to include(">Applied<")

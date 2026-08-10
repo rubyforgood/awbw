@@ -43,6 +43,23 @@ RSpec.describe AttendeesActiveFilters do
     expect(chips_for(ce: "no").first[:label]).to eq("No continuing education")
   end
 
+  # These two have no select on the index — they arrive from the revenue report —
+  # so the chip is the only thing telling an admin the list is narrowed, and the
+  # only way to clear it.
+  it "labels the payment and funding drill-ins from their filter's own options" do
+    expect(chips_for(payment_status: "unpaid").first[:label]).to eq("Payment: Due")
+    expect(chips_for(payment_status: "intends_to_pay").first[:label]).to eq("Payment: Intends to pay")
+    expect(chips_for(funder: "external").first[:label]).to eq("Funding: Grant-funded")
+    expect(chips_for(funder: "awbw").first[:label]).to eq("Funding: Org-subsidized")
+  end
+
+  # The matching scopes fall through to `all` on an unrecognized value, so there's
+  # no narrowing to announce.
+  it "drops a payment or funding value its filter doesn't offer" do
+    expect(chips_for(payment_status: "bogus")).to eq([])
+    expect(chips_for(funder: "bogus")).to eq([])
+  end
+
   it "emits chips in CHIP_PARAMS order regardless of param order" do
     params = chips_for(scholarship: "yes", country: "Canada", registrant_ids: "1-2")
     expect(params.map { |c| c[:param] }).to eq(%w[ registrant_ids country scholarship ])
