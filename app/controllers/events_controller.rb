@@ -609,25 +609,26 @@ class EventsController < ApplicationController
   # charts remain the full picture and keep working as a navigation surface while
   # the table below shows what was clicked.
   def filtered_roster_registrants
-    ids = roster_drill_in_ids
-    return @dashboard.registrants unless ids
-    @dashboard.registrants.select { |person| ids.include?(person.id) }
+    registrants = @dashboard.registrants
+    ids = roster_drill_in_ids(registrants.map(&:id))
+    return registrants unless ids
+    registrants.select { |person| ids.include?(person.id) }
   end
 
   # Person ids behind the clicked breakdown row. Most dimensions arrive as an
   # explicit id list (EventDashboard already has the maps); sector and state have
-  # no per-value id map, so they arrive as named filters and resolve here.
-  def roster_drill_in_ids
-    return @roster_drill_in_ids if defined?(@roster_drill_in_ids)
-
-    @roster_drill_in_ids =
-      if params[:registrant_ids].present?
-        params[:registrant_ids].to_s.split("-").map(&:to_i).to_set
-      elsif params[:sector].present?
-        Person.where(id: person_sector_ids(params[:sector])).ids.to_set
-      elsif params[:state].present?
-        Person.where(id: person_address_ids(state: params[:state])).ids.to_set
-      end
+  # no per-value id map, so they arrive as named filters and resolve here — bounded
+  # to `registrant_ids` (this event's roster), since the result is only ever
+  # intersected with it and the unbounded lookup would load every person in the app
+  # tagged with that sector or living in that state.
+  def roster_drill_in_ids(registrant_ids)
+    if params[:registrant_ids].present?
+      params[:registrant_ids].to_s.split("-").map(&:to_i).to_set
+    elsif params[:sector].present?
+      person_sector_ids(params[:sector]).where(sectorable_id: registrant_ids).pluck(:sectorable_id).to_set
+    elsif params[:state].present?
+      person_address_ids(state: params[:state]).where(addressable_id: registrant_ids).pluck(:addressable_id).to_set
+    end
   end
 
   # The events the attendees index draws from: the viewer's reportable events

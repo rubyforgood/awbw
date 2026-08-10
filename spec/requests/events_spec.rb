@@ -2669,6 +2669,22 @@ RSpec.describe "Events", type: :request do
           expect(response.body).to include("Showing 1 of 2")
         end
 
+        # The sector drill-in resolves ids through SectorableItem rather than an
+        # EventDashboard map, so it has to stay bounded to this event's registrants —
+        # someone else carrying the same sector must not leak into the table.
+        it "narrows the table by a sector drill-in without pulling in non-registrants" do
+          sector = create(:sector, name: "Sexual Assault")
+          create(:sectorable_item, sectorable: person, sector: sector)
+          outsider = create(:person, first_name: "Zed", last_name: "Zulu")
+          create(:sectorable_item, sectorable: outsider, sector: sector)
+
+          get roster_event_path(owned_event, sector: sector.id)
+
+          expect(response.body).to include("Lovelace")
+          expect(response.body).not_to include("Zulu")
+          expect(response.body).to include("Showing 1 of 1")
+        end
+
         it "returns to the roster from the registration it opened" do
           get edit_event_registration_path(registration, return_to: "roster")
 
