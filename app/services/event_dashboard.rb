@@ -1056,7 +1056,7 @@ class EventDashboard
   def funder_key_for(person)
     scholarship = scholarship_by_recipient[person.id]
     return :none unless scholarship
-    donor = scholarship.grant&.donor
+    donor = scholarship.grant&.funder
     return :unfunded unless donor
     [ donor.class.name, donor.id ]
   end
@@ -1067,7 +1067,7 @@ class EventDashboard
   def build_applicant_funder_group(people)
     scholarship = scholarship_by_recipient[people.first.id]
     grant = scholarship&.grant
-    donor = grant&.donor
+    donor = grant&.funder
     name = if scholarship.nil?
       FUNDER_NONE_LABEL
     else

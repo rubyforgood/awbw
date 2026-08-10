@@ -516,7 +516,7 @@ RSpec.describe EventDashboard do
         separate_reg = event.event_registrations.find_by(registrant: separate_applicant)
         donor = create(:organization, name: "Joyful Heart Foundation")
         create(:address, addressable: donor, city: "Los Angeles", state: "CA")
-        grant = create(:grant, name: "Healing Arts", donor: donor, amount_cents: 100_000)
+        grant = create(:grant, name: "Healing Arts", funder: donor, amount_cents: 100_000)
         funded = create(:scholarship, recipient: embedded_applicant, grant: grant, amount_cents: 1_000)
         create(:allocation, source: funded, allocatable: embedded_reg, amount: 1_000)
         unfunded = create(:scholarship, recipient: separate_applicant, amount_cents: 1_000)
