@@ -215,7 +215,8 @@ action, or `authorize! :workshop, to: :summary?`).
 - `FormBuilderService` — Builds configurable forms from composable sections with per-field visibility
 - `ModelDeduper` — Deduplication logic
 - `RichTextMigrator` — Rich text migration utility
-- `StoryImporter` — Imports stories from a WordPress Posts Export CSV (idea per row, connected published Story for published rows)
+- `StoryImporter` — Imports stories from a WordPress Posts Export CSV. Every row becomes a Story (published per the WP Status); a non-AWBW author's story also gets a promoted StoryIdea. Resolves the author Person from the facilitator name (unresolvable names kept as a Comment), converts content via wpautop, translates Categories/Tags/User Categories/who_is_your_story_about into Sectors + Categories via `config/story_import_sector_mapping.yml`, resolves orgs via `config/story_import_organization_mapping.yml`, links grant-tagged stories through the author's Scholarship, and returns a row-by-row preview for the dry-run interstitial
+- `AssetUrlImporter` — Downloads a remote file URL and attaches the bytes to ActiveStorage on the given owner as an Asset (open-uri → attach); the subclass's content-type validation still applies
 - `DisplayImagePresenter` — Image display logic
 - `ScholarshipsGrouping` (presenter) — Groups scholarships into the index's funder → grant → recipient hierarchy; grant-free awards collect under a trailing "Unfunded" group
 - `RegistrantCityBreakdown` (presenter) — Groups an event's registrants by the city of the org linked on their registration, counting registrants + scholarship recipients per city; drives the shared "Registrants by city" card inside `events/_registrant_breakdowns` on all three people-pages — per-event roster, cross-event attendees index, and scholarship recipients (fed plucked data by `EventDashboard` or `AttendeesBreakdowns`)
