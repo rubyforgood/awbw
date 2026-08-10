@@ -1,6 +1,7 @@
 <% content_for(:page_bg_class, "public") %>
 <%= render "shared/public_welcome_banner" unless @from_story_share %>
 
+<div class="px-4 sm:px-6 lg:px-8 py-8">
 <div class="w-full max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6" id="contact-us-container">
       <!-- Header -->
       <header class="space-y-4">
@@ -17,37 +18,9 @@
           </div>
         <% end %>
       </header>
-      <!-- Contact Details -->
+      <!-- Contact Details (website variant only; the portal shows it below the form) -->
+      <% unless @from_story_share %>
       <div class="mt-10 text-gray-800">
-        <% if @from_story_share %>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            <div>
-              <div class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-1">
-                Phone
-              </div>
-              <%= link_to "(310) 396-0317", "tel:310-396-0317",
-                          class: "text-blue-600 hover:text-blue-800 font-medium" %>
-            </div>
-            <div>
-              <div class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-1">
-                Email
-              </div>
-              <%= mail_to "info@awbw.org",
-                          class: "text-blue-600 hover:text-blue-800 font-medium" %>
-            </div>
-            <div>
-              <div class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-1">
-                Mailing address
-              </div>
-              <address class="not-italic text-gray-700 leading-relaxed">
-                Attn: Zachery Scott, Executive Director<br>
-                A Window Between Worlds<br>
-                1029 1/2 W 24th Street<br>
-                Los Angeles, CA 90007
-              </address>
-            </div>
-          </div>
-        <% else %>
         <div class="space-y-4">
           <div class="grid grid-cols-3 gap-x-8">
             <div>
@@ -99,8 +72,8 @@
             </div>
           </div>
         </div>
-        <% end %>
       </div>
+      <% end %>
       <!-- Divider -->
       <div class="mt-12 pt-12 border-t border-gray-200">
         <!-- Contact Form -->
@@ -306,5 +279,11 @@
           <% end %>
         </div>
       </div>
+      <% if @from_story_share %>
+        <!-- Contact details below the form (portal variant) -->
+        <div class="mt-12 pt-12 border-t border-gray-200 text-gray-800">
+          <%= render "portal_contact_info" %>
+        </div>
+      <% end %>
     </div>
 </div>
