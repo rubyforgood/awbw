@@ -34,16 +34,24 @@ class StoryImporter
   # WordPress "publish" status means the post was live and public.
   PUBLISHED_WP_STATUS = "publish"
 
-  # WordPress "Categories" value → portal Sector name. Sourced from the AWBW
-  # "Story Share to Portal Migration" mapping and kept in a data file so staff
-  # can maintain it without touching Ruby. Keys are the human-readable WordPress
-  # spelling; lookups are case-insensitive. Categories with no entry (e.g.
-  # "Facilitator Spotlights") are logged as warnings rather than guessed at.
+  # WordPress export value → portal taxonomy tags. Sourced from the AWBW "Story
+  # Share to Portal Migration" mapping and kept in a data file so staff can
+  # maintain it without touching Ruby. Keys are the human-readable WordPress
+  # spelling; lookups are case-insensitive. See the YAML header for the shape.
   SECTOR_MAP_PATH = Rails.root.join("config/story_import_sector_mapping.yml").freeze
-  SECTOR_BY_CATEGORY = YAML.load_file(SECTOR_MAP_PATH)
-    .fetch("category_to_sector")
+  TRANSLATIONS = YAML.load_file(SECTOR_MAP_PATH)
+    .fetch("translations")
     .transform_keys(&:downcase)
     .freeze
+
+  # Columns whose values we translate into portal tags. Categories / User
+  # Categories carry Sector + topic tags; Tags and who_is_your_story_about carry
+  # the audience (age range + story population). Values are split on "|" or ","
+  # and de-duplicated case-insensitively across all columns.
+  TRANSLATION_COLUMNS = [ "Categories", "User Categories", "Tags", "who_is_your_story_about" ].freeze
+
+  # Resolved tags for one row, applied to both the idea and its connected story.
+  RowTags = Struct.new(:sectors, :categories, keyword_init: true)
 
   # WordPress "showhide_the_name" → our author_credit_preference enum.
   AUTHOR_CREDIT_BY_SHOWHIDE = {
@@ -108,19 +116,19 @@ class StoryImporter
     idea = build_idea(row, title:, organization:, windows_type:)
     return record_skip(row, "story idea already exists for this org/title") if duplicate_idea?(idea)
 
-    # Resolve the Sector once per row (warns even on a dry run so the preview
-    # reflects real tagging coverage), then apply it to both records.
-    sector = sector_for(row)
+    # Resolve the row's tags once (warns even on a dry run so the preview reflects
+    # real tagging coverage), then apply them to both records.
+    tags = resolve_tags(row)
 
     return unless persist(idea)
-    tag_sector(idea, sector)
+    apply_tags(idea, tags)
     @result.ideas_created += 1
 
     return unless published?(row)
-    create_connected_story(row, idea:, title:, organization:, windows_type:, sector:)
+    create_connected_story(row, idea:, title:, organization:, windows_type:, tags:)
   end
 
-  def create_connected_story(row, idea:, title:, organization:, windows_type:, sector:)
+  def create_connected_story(row, idea:, title:, organization:, windows_type:, tags:)
     if Story.where("LOWER(title) = ?", title.downcase).exists?
       return record_warning(row, "published story skipped — title already taken: #{title.inspect}")
     end
@@ -144,7 +152,7 @@ class StoryImporter
       updated_by: @import_user
     )
     return unless persist(story)
-    tag_sector(story, sector)
+    apply_tags(story, tags)
     @result.stories_created += 1
   end
 
@@ -169,24 +177,55 @@ class StoryImporter
              .exists?
   end
 
-  # Resolve the row's WordPress category to an existing Sector via the mapping.
-  # Unmatched values are surfaced as warnings (never invented), once per row —
-  # including on a dry run so the preview reflects real tagging coverage.
-  def sector_for(row)
-    name = clean(row["Categories"])
-    return if name.blank? || name.casecmp?("uncategorized")
-
-    sector_name = SECTOR_BY_CATEGORY[name.downcase] || name
-    sector = Sector.where("LOWER(name) = ?", sector_name.downcase).first
-    record_warning(row, "no Sector match for category #{name.inspect}") unless sector
-    sector
+  # Translate a row's WordPress values (Categories, User Categories, audience
+  # Tags) into portal Sectors and Categories via the mapping file. Unmatched
+  # values are surfaced as warnings (never invented), once per row — including on
+  # a dry run so the preview reflects real tagging coverage.
+  def resolve_tags(row)
+    sectors = []
+    categories = []
+    translation_sources(row).each do |source|
+      targets = TRANSLATIONS[source.downcase]
+      if targets.nil?
+        record_warning(row, "no translation for #{source.inspect}")
+        next
+      end
+      targets.each { |target| resolve_target(row, source, target, sectors, categories) }
+    end
+    RowTags.new(sectors: sectors.uniq, categories: categories.uniq)
   end
 
-  # Persist the tag only for a saved record on a real run; a dry run resolves and
+  def resolve_target(row, source, target, sectors, categories)
+    if (name = target["sector"])
+      sector = Sector.where("LOWER(name) = ?", name.downcase).first
+      sector ? sectors << sector : record_warning(row, "no Sector match for #{source.inspect} → #{name.inspect}")
+    elsif (name = target["category"])
+      category = category_named(name, target["type"])
+      category ? categories << category : record_warning(row, "no Category match for #{source.inspect} → #{name.inspect} (#{target['type']})")
+    end
+  end
+
+  def category_named(name, type)
+    scope = Category.where("LOWER(categories.name) = ?", name.downcase)
+    scope = scope.joins(:category_type).where(category_types: { name: type }) if type.present?
+    scope.first
+  end
+
+  # Distinct WordPress source values across the translation columns, de-duplicated
+  # case-insensitively (Categories and User Categories overlap heavily).
+  def translation_sources(row)
+    TRANSLATION_COLUMNS
+      .flat_map { |column| clean(row[column]).split(/[|,]/).map(&:strip) }
+      .reject(&:blank?)
+      .uniq(&:downcase)
+  end
+
+  # Persist tags only for a saved record on a real run; a dry run resolves and
   # warns above but writes nothing.
-  def tag_sector(record, sector)
-    return if sector.nil? || @dry_run || record.new_record?
-    record.sectors |= [ sector ]
+  def apply_tags(record, tags)
+    return if @dry_run || record.new_record?
+    record.sectors |= tags.sectors if tags.sectors.any?
+    record.categories |= tags.categories if tags.categories.any?
   end
 
   def find_or_create_organization(row)

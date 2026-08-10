@@ -1,39 +1,107 @@
-# WordPress "Story Share" category → portal Sector name.
+# WordPress "Story Share" export value → portal taxonomy tag(s).
 #
 # Source: AWBW "Story Share to Portal Migration" mapping (RH/RP, 2026-06-18).
-# The left side is the free-text `Categories` value on a WordPress Posts Export
-# row; the right side is the exact `Sector.name` it should be tagged with in the
-# portal. `StoryImporter` downcases the category for lookup, so keys here are the
+# A "source" is any value that appears in the WordPress Posts Export's
+# `Categories`, `User Categories`, or audience `Tags` columns. Each source
+# TRANSLATES to zero or more portal tags:
+#   - { sector: "Name" }                         → a Sector
+#   - { category: "Name", type: "CategoryType" } → a Category of that type
+#     (AgeRange, StoryPopulation, EmotionalTheme, Focus, …)
+#
+# `StoryImporter` downcases the source for lookup, so keys here are the
 # human-readable WordPress spelling (matched case-insensitively after HTML-entity
 # decoding, e.g. "Schools &amp; Universities" → "Schools & Universities").
 #
-# Categories with no entry (e.g. "Facilitator Spotlights") have no Sector home
-# and are logged as warnings by the importer rather than guessed at. "Uncategorized"
-# is skipped entirely. Keep this list in sync with the Sector taxonomy — a value
-# whose Sector does not exist yet will simply log a "no Sector match" warning.
-category_to_sector:
-  "Batterers Intervention": "Batterers Intervention"
-  "Child Abuse / Neglect": "Child Abuse/Neglect"
-  "Community Engagement": "Community Engagement"
-  "Community Violence": "Community Violence"
-  "Court & Legal System": "Court/Legal System"
-  "Disability Services": "Disability Services"
-  "Domestic Violence": "Domestic Violence"
-  "Schools & Universities": "Education"
-  "Foster Care": "Foster Care/Adoption"
-  "Donor Engagement": "Fundraising/Donor Engagement"
-  "Grief & Loss": "Grief/Loss"
-  "Physical & Terminal Illness": "Health/Medical"
-  "Homelessness": "Homelessness"
-  "Human Trafficking": "Human Trafficking"
-  "Immigration": "Immigration"
-  "Incarceration": "Incarceration"
-  "LGBTQIA+": "LGBTQIA+"
-  "Mental Health": "Mental Health"
-  "Military & Veterans": "Military/Veterans"
-  "Social Justice": "Racial/Social Justice"
-  "Self-Care & Personal Growth": "Self-Care/Personal Growth"
-  "Sexual Assault": "Sexual Assault"
-  "Staff & Organizational Development": "Staff/Organizational Development"
-  "Substance Abuse Recovery": "Substance Use/Recovery"
-  "Advocacy": "Systems/Policy Change"
+# An empty list ([]) means "intentionally no portal tag" (e.g. "Uncategorized",
+# non-taxonomy tags). Entries flagged "# semantic" are best-fit overlaps under
+# review — spot-check them against .context/story_import_audit.csv. Every distinct
+# Categories / User Categories / Tags value in the June 2026 export is listed.
+translations:
+  # ---- Categories / User Categories → Sector (+ semantic Category overlaps) ----
+  "Advocacy":
+    - { sector: "Systems/Policy Change" }
+  "Batterers Intervention":
+    - { sector: "Batterers Intervention" }
+  "Child Abuse / Neglect":
+    - { sector: "Child Abuse/Neglect" }
+  "Community Engagement":
+    # SEMANTIC: the migration doc's "Community Engagement" Sector was never
+    # created; "Community Building" is the real Sector it became. The Focus
+    # category of the same name is applied as an overlap.
+    - { sector: "Community Building" } # semantic
+    - { category: "Community Engagement", type: "Focus" } # semantic
+  "Community Violence":
+    - { sector: "Community Violence" }
+  "Court & Legal System":
+    - { sector: "Court/Legal System" }
+  "Disability Services":
+    - { sector: "Disability Services" }
+  "Domestic Violence":
+    - { sector: "Domestic Violence" }
+  "Donor Engagement":
+    - { sector: "Fundraising/Donor Engagement" }
+  "Facilitator Spotlights":
+    # SEMANTIC: Facilitator Spotlights profile staff/facilitators, so the closest
+    # Sector is Staff/Organizational Development. Tentative — previously unmapped.
+    - { sector: "Staff/Organizational Development" } # semantic
+  "Foster Care":
+    - { sector: "Foster Care/Adoption" }
+  "Grief & Loss":
+    - { sector: "Grief/Loss" }
+    - { category: "Grief", type: "EmotionalTheme" } # semantic
+  "Homelessness":
+    - { sector: "Homelessness" }
+  "Human Trafficking":
+    - { sector: "Human Trafficking" }
+  "Immigration":
+    - { sector: "Immigration" }
+  "Incarceration":
+    - { sector: "Incarceration" }
+  "LGBTQIA+":
+    - { sector: "LGBTQIA+" }
+  "Mental Health":
+    - { sector: "Mental Health" }
+  "Military & Veterans":
+    - { sector: "Military/Veterans" }
+  "Physical & Terminal Illness":
+    - { sector: "Health/Medical" }
+  "Schools & Universities":
+    - { sector: "Education" }
+  "Self-Care & Personal Growth":
+    - { sector: "Self-Care/Personal Growth" }
+    - { category: "Self-Care", type: "EmotionalTheme" } # semantic
+  "Sexual Assault":
+    - { sector: "Sexual Assault" }
+  "Social Justice":
+    - { sector: "Racial/Social Justice" }
+  "Staff & Organizational Development":
+    - { sector: "Staff/Organizational Development" }
+  "Substance Abuse Recovery":
+    - { sector: "Substance Use/Recovery" }
+
+  # ---- Audience Tags → AgeRange + StoryPopulation ----
+  # Age-twin tags apply BOTH the AgeRange category and the underscore-suffixed
+  # StoryPopulation category (the "_" frees the clean name for AgeRange). Non-twin
+  # tags apply only their StoryPopulation category.
+  "Adults":
+    - { category: "Adults", type: "AgeRange" }
+    - { category: "Adults_", type: "StoryPopulation" }
+  "Children":
+    - { category: "Children", type: "AgeRange" }
+    - { category: "Children_", type: "StoryPopulation" }
+  "Teens":
+    - { category: "Teens", type: "AgeRange" }
+    - { category: "Teens_", type: "StoryPopulation" }
+  "Colleagues":
+    - { category: "Colleagues", type: "StoryPopulation" }
+  "Community":
+    - { category: "Community", type: "StoryPopulation" }
+  "Families":
+    - { category: "Families", type: "StoryPopulation" }
+  "Self":
+    - { category: "Self", type: "StoryPopulation" }
+
+  # ---- No portal tag (skipped) ----
+  "Uncategorized": []
+  "Cathy scholarship": [] # non-taxonomy tag
+  "babs mayer": [] # non-taxonomy tag

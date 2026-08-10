@@ -133,6 +133,37 @@ RSpec.describe StoryImporter do
     expect(result.warnings).to include(a_string_matching(/no Sector match/))
   end
 
+  describe "translating audience tags and semantic overlaps into categories" do
+    let(:age_range) { create(:category_type, name: "AgeRange") }
+    let(:story_population) { create(:category_type, name: "StoryPopulation") }
+    let(:emotional_theme) { create(:category_type, name: "EmotionalTheme") }
+
+    it "applies both the AgeRange and the underscore StoryPopulation for an age-twin tag" do
+      adults_age = create(:category, category_type: age_range, name: "Adults")
+      adults_population = create(:category, category_type: story_population, name: "Adults_")
+      import([ base_row("Tags" => "Adults") ])
+
+      expect(StoryIdea.sole.categories).to include(adults_age, adults_population)
+      expect(Story.sole.categories).to include(adults_age, adults_population)
+    end
+
+    it "applies only the StoryPopulation for a tag with no age-range twin" do
+      families = create(:category, category_type: story_population, name: "Families")
+      import([ base_row("Tags" => "Families") ])
+
+      expect(StoryIdea.sole.categories).to contain_exactly(families)
+    end
+
+    it "applies a semantic Category overlap alongside the Sector" do
+      sector = create(:sector, name: "Grief/Loss")
+      grief = create(:category, category_type: emotional_theme, name: "Grief")
+      import([ base_row("Categories" => "Grief & Loss", "Tags" => "") ])
+
+      expect(StoryIdea.sole.sectors).to include(sector)
+      expect(StoryIdea.sole.categories).to include(grief)
+    end
+  end
+
   it "warns about unmapped fields rather than dropping them" do
     result = import([ base_row("state" => "California", "facilitator_name" => "Eydie") ])
 
