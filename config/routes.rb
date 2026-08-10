@@ -278,7 +278,7 @@ Rails.application.routes.draw do
   get "search/:model", to: "search#index"
   resources :story_ideas
   resources :stories
-  resources :story_shares, only: [ :index, :show, :new ]
+  resources :story_shares, path: "story_share", only: [ :index, :show, :new ]
   get "story_share_admin", to: "story_share_admin#show"
   match "story_share_admin/reorder", to: "story_share_admin#reorder", via: [ :put, :patch ], as: :story_share_admin_reorder
   post "story_share_admin/add", to: "story_share_admin#add", as: :story_share_admin_add
