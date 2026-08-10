@@ -161,6 +161,13 @@ class EventDashboard
   # records sorted by display name. Sectors, age-range tags, and affiliations are
   # preloaded for the recipients page header; their application answers appear
   # below it.
+  # Person ids of this event's scholarship recipients — the lightweight id list
+  # behind #scholarship_applicants (no includes/sort), for scoping the recipients
+  # charts frame, which only needs their ids. Public: the controller calls it.
+  def scholarship_applicant_ids
+    @scholarship_applicant_ids ||= active_registrations.where(scholarship_requested: true).pluck(:registrant_id)
+  end
+
   def scholarship_applicants
     @scholarship_applicants ||= Person
       .where(id: scholarship_applicant_ids)
@@ -1051,10 +1058,6 @@ class EventDashboard
     @reference_date ||= (event.start_date || Date.current).to_date
   end
 
-  def scholarship_applicant_ids
-    @scholarship_applicant_ids ||= active_registrations.where(scholarship_requested: true).pluck(:registrant_id)
-  end
-
   # Grouping key for an applicant's funder: the funder identity when the
   # scholarship is drawn from a grant (so a funder's grants share a bucket), else
   # the unfunded / no-scholarship bucket.
@@ -1067,7 +1070,7 @@ class EventDashboard
   end
 
   # Builds a FunderGroup from a bucket of applicants that share a funder, reading
-  # the funder name, funder, and location from any member's scholarship (they're
+  # the funder name, funder record, and location from any member's scholarship (they're
   # identical across the bucket).
   def build_applicant_funder_group(people)
     scholarship = scholarship_by_recipient[people.first.id]
