@@ -6,7 +6,8 @@ Quick-reference scripts for common development tasks. Designed for AI agents and
 |---|---|
 | `ai/recap` | Session recap: accomplishments + unresolved items (agent behavior; see below) |
 | `ai/review` | Code review: agent reviews the workspace diff, posts inline comments, and gives a Recap + Risks + Outstanding decisions summary (agent behavior; see below) |
-| `ai/test [args]` | Run RSpec tests (`ai/test spec/models/user_spec.rb:42`) |
+| `ai/test [args]` | Run RSpec, fast path — no Vite rebuild; runs the non-system suite plus only the system specs related to your diff, with a loud banner naming what it skipped (`ai/test spec/models/user_spec.rb:42` runs exactly that) |
+| `ai/test_extra [args]` | Full RSpec run: Vite test build + all the headless-Chrome system specs `ai/test` narrows |
 | `ai/lint` | Rubocop on all files |
 | `ai/lint --fix` | Auto-fix lint issues |
 | `ai/server` | Start all dev services (web + vite) |
@@ -17,6 +18,8 @@ Quick-reference scripts for common development tasks. Designed for AI agents and
 | `ai/security` | Security scan: Brakeman + bundler-audit (mirrors CI) |
 
 All scripts pass through extra arguments, so `ai/test --fail-fast` works as expected.
+
+**Full tests in a ship flow:** a bare "test" while iterating means `ai/test` (fast path), but when "test" rides along with commit / push / PR — e.g. **"commit push pr test"** — run the **full** suite with `ai/test_extra` (Vite build + all system specs) and only commit/push/PR once it's green.
 
 Only the commands listed above exist. "ai <name>" refers to one of these `ai/` scripts — not a slash-command skill. Two phrases are special:
 
