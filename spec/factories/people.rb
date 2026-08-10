@@ -7,7 +7,7 @@ FactoryBot.define do
     last_name { Faker::Name.last_name.gsub("'", " ") }
 
     trait :anonymous_contributions do
-      contributions_anonymous { true }
+      anonymous_contributions { true }
     end
 
     trait :with_organization do

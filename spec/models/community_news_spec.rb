@@ -110,7 +110,7 @@ RSpec.describe CommunityNews, type: :model do
       end
 
       it 'stops matching once the author marks contributions anonymous' do
-        person.update!(contributions_anonymous: true)
+        person.update!(anonymous_contributions: true)
         expect(CommunityNews.search_by_params(query: 'John')).to be_empty
       end
 

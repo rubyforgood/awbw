@@ -93,15 +93,26 @@ module AuthorCreditable
   # Anonymity is a one-way latch: the profile can set it, the record can set it,
   # and neither can strip it from the other.
   def credit_anonymous?(person)
-    person.contributions_anonymous? || author_credit_preference == ANONYMOUS
+    person.anonymous_contributions? || author_credit_preference == ANONYMOUS
   end
 
-  # True when the stored consent snapshot no longer agrees with the credited
-  # person's current profile — surfaced as a warning on the record's form and as a
-  # row on the author credit divergences page.
+  # The person whose profile actually formats this credit. A legacy free-text name
+  # follows nobody's profile, so a legacy-credited record has no governing person even
+  # when it has a creator — those have to be matched to a real person by hand, not
+  # resolved to whoever happened to enter them.
+  def credit_governing_person
+    person = primary_author_person
+    return person if person
+    return nil if legacy_author_name_text.present?
+    created_by&.person
+  end
+
+  # True when the stored consent snapshot no longer agrees with the profile that
+  # governs this credit — surfaced as a warning on the record's form and as a row on
+  # the author credit divergences page.
   def author_credit_diverged?
     return false if author_credit_preference.blank?
-    person = author_person
+    person = credit_governing_person
     person.present? && author_credit_preference != person.effective_author_credit_preference
   end
 
@@ -211,7 +222,7 @@ module AuthorCreditable
         "(#{preference} = '#{value}' AND (#{expressions.map { |e| name_like(e) }.join(' OR ')}))"
       end
 
-      "(#{sql_alias}.contributions_anonymous = FALSE AND #{not_anonymous_sql} AND (#{by_preference.join(' OR ')}))"
+      "(#{sql_alias}.anonymous_contributions = FALSE AND #{not_anonymous_sql} AND (#{by_preference.join(' OR ')}))"
     end
 
     # Legacy free-text author names have no person, so only the record's own

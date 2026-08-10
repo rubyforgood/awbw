@@ -50,14 +50,15 @@
                 selected: f.object.organization_id,
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
+    <%# Optional on the model, so the form has to allow no author — the credit then
+        falls to the creator's person, or to "AWBW Staff" when there isn't one. %>
     <%= f.input :author_id,
                 as: :select,
                 label: "Author",
-                required: true,
                 collection: author_picker_person(f.object).present? ? [[ author_picker_person(f.object).remote_search_label[:label], author_picker_person(f.object).id ]] : [],
                 selected: author_picker_person(f.object)&.id,
-                input_html: { required: true,
-                              class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
+                include_blank: "Select an author",
+                input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
                               data: { controller: "remote-select",
                                       remote_select_model_value: "person" } } %>
     <%= render "shared/author_credit_note", record: f.object %>

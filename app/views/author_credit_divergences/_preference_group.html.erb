@@ -78,10 +78,10 @@
       </div>
 
       <label class="flex items-center gap-2 text-sm text-gray-700 pb-2">
-        <%= hidden_field_tag "person[contributions_anonymous]", "0", id: nil %>
-        <%= check_box_tag "person[contributions_anonymous]", "1",
-                          group.suggested_preference == AuthorCreditable::ANONYMOUS || person.contributions_anonymous?,
-                          id: "person_contributions_anonymous_#{person.id}",
+        <%= hidden_field_tag "person[anonymous_contributions]", "0", id: nil %>
+        <%= check_box_tag "person[anonymous_contributions]", "1",
+                          group.suggested_preference == AuthorCreditable::ANONYMOUS || person.anonymous_contributions?,
+                          id: "person_anonymous_contributions_#{person.id}",
                           class: "rounded border-gray-300" %>
         Anonymous contributions
       </label>

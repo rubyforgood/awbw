@@ -3,7 +3,7 @@
 <% person = current_user&.person %>
 <div class="rounded-md bg-gray-50 border border-gray-200 p-3 mb-4 text-sm text-gray-700">
   <% if person %>
-    You'll be credited as <strong><%= person.contributions_anonymous? ? "Anonymous" : person.name %></strong>.
+    You'll be credited as <strong><%= person.anonymous_contributions? ? "Anonymous" : person.name %></strong>.
   <% else %>
     You'll be credited as <strong>Anonymous</strong>.
   <% end %>

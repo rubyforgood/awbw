@@ -184,7 +184,7 @@ class AuthorCreditDivergenceQuery
 
   def group_by_person(records)
     records
-      .group_by(&:author_person)
+      .group_by(&:credit_governing_person)
       .filter_map { |person, grouped| build_group(person, grouped) }
       .sort_by { |group| [ group.person.first_name.to_s.downcase, group.person.last_name.to_s.downcase ] }
   end

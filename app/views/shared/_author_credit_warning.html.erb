@@ -2,7 +2,7 @@
     Credits render from the profile, so on most records this is silent. %>
 <% if record.persisted? && record.author_credit_diverged? %>
   <% stored = AuthorCreditable::ADMIN_FORM_OPTIONS.key(record.author_credit_preference) %>
-  <% person = record.author_person %>
+  <% person = record.credit_governing_person %>
   <% profile = AuthorCreditable::ADMIN_FORM_OPTIONS.key(person.effective_author_credit_preference) %>
 
   <% if record.author_credit_preference == AuthorCreditable::ANONYMOUS %>

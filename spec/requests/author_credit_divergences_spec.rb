@@ -41,7 +41,7 @@ RSpec.describe "AuthorCreditDivergences", type: :request do
 
     it "updates the profile and stamps the person reconciled" do
       patch update_person_author_credit_divergences_path,
-            params: { id: person.id, person: { display_name_preference: "first_name_only", contributions_anonymous: "0" } }
+            params: { id: person.id, person: { display_name_preference: "first_name_only", anonymous_contributions: "0" } }
 
       expect(person.reload.display_name_preference).to eq("first_name_only")
       expect(person.author_credit_reconciled_at).to be_present
@@ -49,15 +49,15 @@ RSpec.describe "AuthorCreditDivergences", type: :request do
 
     it "can mark contributions anonymous" do
       patch update_person_author_credit_divergences_path,
-            params: { id: person.id, person: { display_name_preference: "full_name", contributions_anonymous: "1" } }
+            params: { id: person.id, person: { display_name_preference: "full_name", anonymous_contributions: "1" } }
 
-      expect(person.reload.contributions_anonymous).to be(true)
+      expect(person.reload.anonymous_contributions).to be(true)
       expect(story.reload.author_credit).to eq("Anonymous")
     end
 
     it "updates the results in place with a Turbo Stream instead of a full-page redirect" do
       patch update_person_author_credit_divergences_path,
-            params: { id: person.id, person: { display_name_preference: "first_name_only", contributions_anonymous: "0" } },
+            params: { id: person.id, person: { display_name_preference: "first_name_only", anonymous_contributions: "0" } },
             as: :turbo_stream
 
       expect(response.media_type).to eq(Mime[:turbo_stream])
@@ -67,7 +67,7 @@ RSpec.describe "AuthorCreditDivergences", type: :request do
     it "carries the active filters through the redirect" do
       patch update_person_author_credit_divergences_path,
             params: { id: person.id, type: "Story",
-                      person: { display_name_preference: "full_name", contributions_anonymous: "0" } }
+                      person: { display_name_preference: "full_name", anonymous_contributions: "0" } }
 
       expect(response).to redirect_to(author_credit_divergences_path(type: "Story"))
     end

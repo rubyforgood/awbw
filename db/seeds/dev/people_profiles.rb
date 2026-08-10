@@ -124,7 +124,7 @@ test_people.each do |data|
     # Spread the credit preferences across seeded people so the author credit
     # divergences page has something to triage in dev.
     display_name_preference: Person::DISPLAY_NAME_PREFERENCES.sample,
-    contributions_anonymous: [ true, false, false, false ].sample,
+    anonymous_contributions: [ true, false, false, false ].sample,
     created_by: admin_user,
     updated_by: admin_user
   }

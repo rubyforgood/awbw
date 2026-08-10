@@ -50,7 +50,7 @@ RSpec.describe "Person profile stories section", type: :request do
   end
 
   it "never flags a spotlighted story, even when the person is anonymous" do
-    person.update!(contributions_anonymous: true)
+    person.update!(anonymous_contributions: true)
     create(:story, :published, title: "Spotlight Story", spotlighted_facilitator: person)
 
     get_stories_section

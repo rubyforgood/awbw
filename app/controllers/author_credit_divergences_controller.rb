@@ -91,7 +91,7 @@ class AuthorCreditDivergencesController < ApplicationController
   end
 
   def person_params
-    params.require(:person).permit(:display_name_preference, :contributions_anonymous)
+    params.require(:person).permit(:display_name_preference, :anonymous_contributions)
   end
 
   # Carried through every redirect so the admin lands back on the same filtered list.

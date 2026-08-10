@@ -32,7 +32,7 @@ RSpec.shared_examples "author_creditable" do |factory:|
     end
 
     context "when the profile marks contributions anonymous" do
-      before { person.update!(contributions_anonymous: true) }
+      before { person.update!(anonymous_contributions: true) }
 
       it "returns Anonymous regardless of the name format" do
         person.update!(display_name_preference: "full_name")
@@ -48,7 +48,7 @@ RSpec.shared_examples "author_creditable" do |factory:|
       before { record.update!(author_credit_preference: "anonymous") }
 
       it "stays anonymous even though the profile says otherwise" do
-        person.update!(display_name_preference: "full_name", contributions_anonymous: false)
+        person.update!(display_name_preference: "full_name", anonymous_contributions: false)
         expect(record.author_credit).to eq("Anonymous")
       end
 
@@ -94,7 +94,7 @@ RSpec.shared_examples "author_creditable" do |factory:|
     end
 
     it "records anonymous when the profile suppresses credits" do
-      person.update!(contributions_anonymous: true)
+      person.update!(anonymous_contributions: true)
       record = create(factory, created_by: author_user, author_credit_preference: nil)
       expect(record.reload.author_credit_preference).to eq("anonymous")
     end
@@ -166,7 +166,7 @@ RSpec.shared_examples "author_creditable" do |factory:|
     end
 
     it "matches nothing when the profile marks contributions anonymous" do
-      person.update!(contributions_anonymous: true)
+      person.update!(anonymous_contributions: true)
       expect(described_class.by_credited_person_name("Zephyrine")).not_to include(record)
       expect(described_class.by_credited_person_name("Quixotel")).not_to include(record)
     end

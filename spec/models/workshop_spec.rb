@@ -124,6 +124,15 @@ RSpec.describe Workshop do
                                    author_credit_preference: "anonymous")
       expect(workshop.author_credit).to eq("Anonymous")
     end
+
+    it "has no governing person, so the creator's profile can't be said to have drifted" do
+      creator.person.update!(display_name_preference: "first_name_only")
+      workshop = create(:workshop, created_by: creator, author: nil, full_name: "Jane Legacy",
+                                   author_credit_preference: "full_name")
+
+      expect(workshop.credit_governing_person).to be_nil
+      expect(workshop.author_credit_diverged?).to be(false)
+    end
   end
 
   describe "#remote_search_label" do

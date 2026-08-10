@@ -1056,7 +1056,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_010750) do
     t.string "best_time_to_call"
     t.text "bio"
     t.boolean "blog_contributor", default: false, null: false
-    t.boolean "contributions_anonymous", default: false, null: false
     t.datetime "created_at", null: false
     t.integer "created_by_id"
     t.date "date_of_birth"

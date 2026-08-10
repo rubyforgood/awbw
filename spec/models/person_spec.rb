@@ -257,9 +257,9 @@ RSpec.describe Person, type: :model do
       end
     end
 
-    it "is unaffected by contributions_anonymous" do
+    it "is unaffected by anonymous_contributions" do
       person.display_name_preference = "full_name"
-      person.contributions_anonymous = true
+      person.anonymous_contributions = true
       expect(person.name).to eq("Jane Doe")
     end
   end
@@ -295,7 +295,7 @@ RSpec.describe Person, type: :model do
     end
 
     it "is anonymous when contributions are anonymous, whatever the format" do
-      person.contributions_anonymous = true
+      person.anonymous_contributions = true
       expect(person.effective_author_credit_preference).to eq("anonymous")
     end
   end

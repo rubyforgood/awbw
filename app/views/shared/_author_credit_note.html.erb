@@ -2,7 +2,7 @@
     that isn't just the selected author: the person's profile suppresses credits, or
     no author is set and a legacy free-text name is standing in. Locals: record. %>
 <% person = author_picker_person(record) %>
-<% if person&.contributions_anonymous? %>
+<% if person&.anonymous_contributions? %>
   <p class="mt-1 flex items-start gap-2 text-sm text-amber-700">
     <i class="fa-solid fa-eye-slash mt-1"></i>
     <span>

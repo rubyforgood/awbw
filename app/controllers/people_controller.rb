@@ -301,11 +301,11 @@ class PeopleController < ApplicationController
 
   # Anonymously-credited content is listed on the profile only for the person
   # themselves and admins — showing it to anyone else would tie an "Anonymous"
-  # credit back to a name. `contributions_anonymous` anonymizes every item at once;
+  # credit back to a name. `anonymous_contributions` anonymizes every item at once;
   # otherwise only the items whose stored consent is "anonymous" are hidden.
   def visible_authored_content(scope)
     return scope if allowed_to?(:manage?, Person) || current_user&.person_id == @person.id
-    return scope.none if @person.contributions_anonymous?
+    return scope.none if @person.anonymous_contributions?
     scope.credited_openly
   end
 

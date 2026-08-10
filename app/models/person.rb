@@ -82,7 +82,7 @@ class Person < ApplicationRecord
   validates :email_2_type, inclusion: { in: %w[work personal] }, allow_blank: true
 
   # How this person's name is formatted wherever it appears. Anonymity is not one of
-  # these — it's the separate `contributions_anonymous` flag, because a person still
+  # these — it's the separate `anonymous_contributions` flag, because a person still
   # has to be listed *somehow* on the people index.
   DISPLAY_NAME_PREFERENCES = %w[full_name first_name_last_initial first_name_only last_name_only].freeze
 
@@ -249,7 +249,7 @@ class Person < ApplicationRecord
   # axis from the name format: it suppresses author credits without affecting how
   # they're listed on the people index. See AuthorCreditable.
   def effective_author_credit_preference
-    return "anonymous" if contributions_anonymous?
+    return "anonymous" if anonymous_contributions?
     display_name_preference.presence || "full_name"
   end
 
