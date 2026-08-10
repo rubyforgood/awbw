@@ -73,15 +73,26 @@
           },
           prompt: "Type to search workshops…",
           label: "Workshop",
+          wrapper_html: { class: "mb-0" },
           label_html: { class: "block font-medium mb-1 text-gray-700 #{ 'readonly' if promoted_to_story }" } %>
 
-        <%= f.input :external_workshop_title,
-                    as: :text,
-                    label: "Workshop title (if different or unlisted)",
-                    input_html: {
-                      rows: 1,
-                      class: ("readonly" if promoted_to_story)
-                    } %>
+        <%# Native <details> reveals the optional custom-title field on click — no JS.
+            Sits right under the field like a hint. Auto-opens when a title is
+            already set so it isn't hidden on edit. %>
+        <details class="group mt-1"<%= " open".html_safe if f.object.external_workshop_title.present? %>>
+          <summary class="text-sm text-purple-700 hover:underline cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+            Enter custom title
+          </summary>
+          <%= f.input :external_workshop_title,
+                      as: :text,
+                      label: "Workshop title (if different or unlisted)",
+                      wrapper_html: { class: "mt-2" },
+                      label_html: { class: "block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1" },
+                      input_html: {
+                        rows: 1,
+                        class: ("readonly" if promoted_to_story)
+                      } %>
+        </details>
       </div>
       <div class="flex-1 mb-4 md:mb-0">
         <% default_org = default_organization_for_form(f.object) %>

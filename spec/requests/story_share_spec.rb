@@ -249,15 +249,15 @@ RSpec.describe "/story_share", type: :request do
   # ==========================================================
   # SHARE (signed-in submission)
   # ==========================================================
-  describe "GET /share" do
+  describe "GET /new" do
     it "redirects guests to sign in" do
-      get share_story_shares_path
+      get new_story_share_path
       expect(response).to redirect_to(new_user_session_path)
     end
 
     it "renders the submission form for signed-in users" do
       sign_in regular_user
-      get share_story_shares_path
+      get new_story_share_path
       expect(response).to have_http_status(:ok)
     end
   end

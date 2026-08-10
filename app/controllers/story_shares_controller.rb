@@ -32,7 +32,7 @@ class StorySharesController < ApplicationController
   end
 
   # Signed-in "Share your story" — reuses the StoryIdea submission flow.
-  def share
+  def new
     @story_idea = StoryIdea.new
     authorize! @story_idea, to: :create?
     set_story_idea_form_variables
