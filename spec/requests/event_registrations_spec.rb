@@ -1124,6 +1124,24 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(flash[:warning]).to be_nil
         end
 
+        # The registrant typed that title about the org they named, not about an
+        # unrelated one an admin linked by hand.
+        it "does not apply the submitted position to an extra organization the submission doesn't name" do
+          create(:event_registration_organization, event_registration: existing_registration, organization: organization)
+          other = create(:organization, name: "Zebra Center")
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_name" => "Helping Hands", "agency_position" => "Counselor" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post select_organization_event_registration_path(existing_registration), params: { organization_id: other.id }
+
+          expect(regular_user.person.affiliations.where(organization: other).pluck(:title)).to contain_exactly("Facilitator")
+        end
+
         it "keeps curated type/website and warns about the discrepancy" do
           organization.update!(agency_type: "For-profit", website_url: "https://curated.org")
           reg_form = create(:form, name: "Reg form")

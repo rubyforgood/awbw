@@ -50,6 +50,18 @@ RSpec.describe OrganizationServices::UpsertAddress do
     expect(existing.reload.zip_code).to eq("78701")
   end
 
+  it "does not rewrite a different office when the org has two addresses in one city" do
+    other_office = create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
+    submitted_office = create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "78702")
+
+    result = described_class.call(
+      organization: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "78702"
+    )
+
+    expect(result.address).to eq(submitted_office)
+    expect(other_office.reload).to have_attributes(street_address: "1 Main St", zip_code: "78701")
+  end
+
   it "returns no address and creates nothing when no city is given" do
     expect {
       expect(described_class.call(organization: organization, street_address: "1 Main St"))

@@ -54,7 +54,7 @@ module OrganizationServices
       other_text = FormField.other_option?(label) ? specified.strip.presence : nil
       @organization.update!(agency_type: label, agency_type_other: other_text)
       capture_organization_type_other(other_text)
-      true
+      changed?(:agency_type, :agency_type_other)
     end
 
     def capture_organization_type_other(text)
@@ -70,7 +70,14 @@ module OrganizationServices
       return false if value.blank?
       return false if !@overwrite && @organization.public_send(attribute).present?
       @organization.update!(attribute => value.strip)
-      true
+      changed?(attribute)
+    end
+
+    # Read what was written off saved_changes rather than off what we assigned, so
+    # a registrant resubmitting the values already on file isn't reported as having
+    # changed the org.
+    def changed?(*attributes)
+      attributes.any? { |attribute| @organization.saved_changes.key?(attribute.to_s) }
     end
   end
 end

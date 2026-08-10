@@ -111,6 +111,16 @@ RSpec.describe OrganizationServices::SyncProfile do
       expect(result.filled).to contain_exactly("website", "type")
     end
 
+    # A returning registrant resubmitting what's already on file changed nothing,
+    # and the linking page's "filled from the form" note must not claim otherwise.
+    it "reports nothing filled when the answers match what is already stored" do
+      organization.update!(website_url: "https://curated.org", agency_type: "For-profit")
+
+      result = described_class.call(organization: organization, website: "https://curated.org", agency_type: "For-profit")
+
+      expect(result.filled).to be_empty
+    end
+
     it "reports nothing filled when the blanks were left as conflicts" do
       organization.update!(website_url: "https://curated.org", agency_type: "For-profit")
 

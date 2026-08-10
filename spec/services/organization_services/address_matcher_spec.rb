@@ -34,6 +34,17 @@ RSpec.describe OrganizationServices::AddressMatcher do
     expect(described_class.call(organization, city: "Austin", state: "TX", street_address: "1 Main St")).to eq(by_state)
   end
 
+  # An org with several offices in one city: the state alone can't tell them
+  # apart, so the submitted street has to break the tie or we update the wrong one.
+  it "prefers the same-street address when several share the city and state" do
+    create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
+    same_street = create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "78702")
+
+    match = described_class.call(organization, city: "Austin", state: "TX", street_address: "5 Oak Ave", zip_code: "78702")
+
+    expect(match).to eq(same_street)
+  end
+
   it "returns nil when neither state nor street matches" do
     create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX")
 
