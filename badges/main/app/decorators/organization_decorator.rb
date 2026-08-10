@@ -102,12 +102,17 @@ class OrganizationDecorator < ApplicationDecorator
 
   # In-memory program status (:new / :ongoing / :reinstated) for this org as it
   # stood on a given date — the same New/Ongoing/Reinstate classification used in
-  # event context. Delegates to Organization#facilitator_status_on (single source
-  # of truth), which reads the already-loaded affiliations so a profile can
-  # classify many events without an N+1. `date` may be a datetime (event.start_date
-  # is one), so normalize to a Date before the model's date comparisons.
+  # event context (Organization#facilitator_status_on), computed from the
+  # already-loaded affiliations so a profile can classify many events without an
+  # N+1. No facilitator affiliation starting before the date => :new; an earlier
+  # one still active on the date => :ongoing; all earlier ones ended => :reinstated.
   def facilitator_status_as_of(date)
-    object.facilitator_status_on(date&.to_date)
+    reference = date&.to_date || Date.current
+    earlier = affiliations.select { |affiliation| affiliation.facilitator? && affiliation.start_date.present? && affiliation.start_date.to_date < reference }
+    return :new if earlier.empty?
+
+    active = earlier.any? { |affiliation| affiliation.end_date.nil? || affiliation.end_date.to_date >= reference }
+    active ? :ongoing : :reinstated
   end
 
   def badges

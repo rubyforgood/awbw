@@ -1,7 +1,7 @@
-<%# Specific-event filter shared by the revenue/participation/reports report
+<%# Specific-event filter shared by the revenue/participation/statistics report
     forms. Scopes the report(s) to the chosen event. `all_label` overrides the
     blank option (revenue lists paid events only). %>
-<div class="w-full sm:w-96">
+<div class="w-full sm:w-56">
   <label class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" for="event_id">Event</label>
   <%= select_tag :event_id,
         options_from_collection_for_select(@filter_events, :id, :date_title, params[:event_id].to_i),

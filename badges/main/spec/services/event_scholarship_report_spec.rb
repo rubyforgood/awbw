@@ -118,8 +118,8 @@ RSpec.describe EventScholarshipReport do
 
     let(:group) { report.years.first }
 
-    it "totals attended trainees under Live (scheduled) vs On-demand" do
-      expect(group.live_attended_count).to eq(2)
+    it "totals attended trainees under Training (scheduled) vs On-demand" do
+      expect(group.training_attended_count).to eq(2)
       expect(group.on_demand_attended_count).to eq(3)
     end
 
@@ -160,7 +160,7 @@ RSpec.describe EventScholarshipReport do
     end
 
     it "splits by delivery format (a cross-format person counts in each)" do
-      expect(report.live_recipients_attended_count).to eq(1)
+      expect(report.training_recipients_attended_count).to eq(1)
       expect(report.on_demand_recipients_attended_count).to eq(1)
     end
   end

@@ -47,7 +47,7 @@ class EventDashboard
 
   # Every registration status for this event, counted in one query.
   def registration_status_counts
-    @registration_status_counts ||= EventRegistration.status_counts_by_event([ event.id ]).fetch(event.id, {})
+    @registration_status_counts ||= event.event_registrations.group(:status).count
   end
 
   # Count of registrations in a single status.
@@ -161,13 +161,6 @@ class EventDashboard
   # records sorted by display name. Sectors, age-range tags, and affiliations are
   # preloaded for the recipients page header; their application answers appear
   # below it.
-  # Person ids of this event's scholarship recipients — the lightweight id list
-  # behind #scholarship_applicants (no includes/sort), for scoping the recipients
-  # charts frame, which only needs their ids. Public: the controller calls it.
-  def scholarship_applicant_ids
-    @scholarship_applicant_ids ||= active_registrations.where(scholarship_requested: true).pluck(:registrant_id)
-  end
-
   def scholarship_applicants
     @scholarship_applicants ||= Person
       .where(id: scholarship_applicant_ids)
@@ -281,20 +274,9 @@ class EventDashboard
   # The [ event, participant slug ] a registrant's scholarship icon links to: this
   # event's recipients page, anchored to their entry. The shared roster partial
   # reads this so the same column works on the cross-event training-attendees
-  # index (see AttendeesRoster#scholarship_link_target).
+  # index (see TrainingAttendeesRoster#scholarship_link_target).
   def scholarship_link_target(person)
     [ event, registration_slug_by_registrant[person.id] ]
-  end
-
-  # The registration a registrant's roster row links to: their active registration
-  # for this event. The shared roster partial reads this so the same row link works
-  # on the cross-event attendees index (see AttendeesRoster).
-  def registration_link_target(person)
-    registration_by_registrant[person.id]
-  end
-
-  def registration_by_registrant
-    @registration_by_registrant ||= active_registrations.index_by(&:registrant_id)
   end
 
   def scholarship_registrants
@@ -487,10 +469,7 @@ class EventDashboard
   # registrants' affiliations that were active at the time of the event
   # (#reference_date).
   def organizations
-    # Preload affiliations: the program-status breakdown classifies every org via
-    # Organization#facilitator_status_on, which reads the loaded association rather
-    # than re-querying per org.
-    @organizations ||= Organization.where(id: organization_ids).includes(:affiliations).order(:name)
+    @organizations ||= Organization.where(id: organization_ids).order(:name)
   end
 
   def organization_count
@@ -504,8 +483,8 @@ class EventDashboard
   # as the reference when present, otherwise the org's earliest facilitator
   # affiliation; an org with no facilitator history at all counts as :new.
   def program_status_counts
-    @program_status_counts ||= program_status_by_organization.each_with_object({ new: 0, ongoing: 0, reinstated: 0 }) do |(_organization_id, status), counts|
-      counts[status] += 1
+    @program_status_counts ||= organizations.each_with_object({ new: 0, ongoing: 0, reinstated: 0 }) do |organization, counts|
+      counts[program_status_for(organization)] += 1
     end
   end
 
@@ -971,13 +950,22 @@ class EventDashboard
 
   private
 
+  # USPS abbreviations for the 50 states, DC, and the territories the US atlas
+  # draws. The States breakdown only shows these, so international registrants'
+  # regions (e.g. "ON", "England") are excluded — those belong to the Countries map.
+  US_STATE_ABBREVIATIONS = %w[
+    AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO
+    MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY
+    PR GU VI AS MP
+  ].freeze
+
   # Active registrant addresses whose state is a recognized US state/territory —
   # the source for every States figure (count card, choropleth, and drill-in).
   def us_state_addresses
     Address
       .active
       .where(addressable_type: "Person", addressable_id: registrant_ids)
-      .where("UPPER(addresses.state) IN (?)", Address::US_STATE_ABBREVIATIONS)
+      .where("UPPER(addresses.state) IN (?)", US_STATE_ABBREVIATIONS)
   end
 
   def district_addresses
@@ -1058,6 +1046,10 @@ class EventDashboard
     @reference_date ||= (event.start_date || Date.current).to_date
   end
 
+  def scholarship_applicant_ids
+    @scholarship_applicant_ids ||= active_registrations.where(scholarship_requested: true).pluck(:registrant_id)
+  end
+
   # Grouping key for an applicant's funder: the funder identity when the
   # scholarship is drawn from a grant (so a funder's grants share a bucket), else
   # the unfunded / no-scholarship bucket.
@@ -1070,7 +1062,7 @@ class EventDashboard
   end
 
   # Builds a FunderGroup from a bucket of applicants that share a funder, reading
-  # the funder name, funder record, and location from any member's scholarship (they're
+  # the funder name, funder, and location from any member's scholarship (they're
   # identical across the bucket).
   def build_applicant_funder_group(people)
     scholarship = scholarship_by_recipient[people.first.id]
@@ -1260,18 +1252,18 @@ class EventDashboard
 
   # Externally funded = backed by a grant whose funder isn't the org itself.
   def funded_scholarships
-    scholarships.externally_funded(self_funded_grant_ids)
+    scholarships.where.not(grant_id: [ nil, *awbw_grant_ids ])
   end
 
   # Org-subsidized = no grant, or a grant the org (AWBW) donated to itself.
   def unfunded_scholarships
-    scholarships.org_subsidized(self_funded_grant_ids)
+    scholarships.where(grant_id: [ nil, *awbw_grant_ids ])
   end
 
-  # Ids of grants the org donated to itself; memoized so the funded/unfunded split
-  # doesn't re-run Grant.self_funded_ids (an Organization.awbw + pluck) per call.
-  def self_funded_grant_ids
-    @self_funded_grant_ids ||= Grant.self_funded_ids
+  # Ids of grants the org donated to itself; empty when the AWBW org isn't on
+  # file, collapsing the split back to grant-present vs grant-absent.
+  def awbw_grant_ids
+    @awbw_grant_ids ||= Grant.where(funder: Organization.awbw).ids
   end
 
   # [ [ organization_id, registrant_id ], ... ] from the organizations linked on

@@ -1,4 +1,4 @@
-<% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <%# Opt out of the layout's max-w-7xl cap to match the wider event manage pages. %>
 <% content_for(:full_width, true) %>
 
@@ -8,16 +8,16 @@
       <% if params[:return_to] == "dashboard" && params[:event_id].present? %>
         <%= link_to "← Dashboard", dashboard_event_path(params[:event_id]), class: "text-sm text-gray-500 hover:text-gray-700" %>
       <% else %>
-        <%= link_to "← Reports", reports_events_path(report_to_hub_params), class: "text-sm text-gray-500 hover:text-gray-700" %>
+        <%= link_to "← Events statistics", statistics_events_path(report_to_statistics_params), class: "text-sm text-gray-500 hover:text-gray-700" %>
       <% end %>
     </div>
 
-    <%= render "events/report_header",
-          title: "Event scholarships",
-          icon: "fa-solid fa-graduation-cap",
-          theme: :scholarships,
-          event: @filter_event,
-          subtitle: "Scholarship dollars and awards (funded vs unfunded) per facilitator training, by year, with trainees who attended." %>
+    <div class="mb-6">
+      <h1 class="text-2xl font-semibold text-gray-900">Events scholarships</h1>
+      <p class="text-gray-600 mt-1">
+        Scholarship dollars and awards (funded vs unfunded) per facilitator training, by year, with trainees who attended.
+      </p>
+    </div>
 
     <%# Ahoy-style filters — time period, specific training, and abbreviation
         search — each auto-submitting a GET form so the report reshapes on change. %>

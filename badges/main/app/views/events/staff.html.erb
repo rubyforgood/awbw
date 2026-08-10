@@ -9,7 +9,7 @@
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6 print:hidden">
     <%= link_to "← Event", event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
     <% if allowed_to?(:manage?, @event) %>
-      <%= render "events/subnav", event: @event, current: nil %>
+      <%= render "events/subnav", event: @event, current: :staff %>
     <% end %>
   </div>
   <%# Title block — matches the dashboard/background/scholarships report pages:

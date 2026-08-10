@@ -128,10 +128,6 @@ class Organization < ApplicationRecord
     direct.or(legacy).distinct
   end
 
-  # Facilitator program statuses in display order — the values #facilitator_status
-  # and #facilitator_status_on return, and the attendees index filters on.
-  FACILITATOR_PROGRAM_STATUSES = %i[ new ongoing reinstated ].freeze
-
   # Classifies this organization as a facilitator program relative to a reference
   # ("current") facilitator affiliation — typically a registrant's affiliation
   # captured through the event registration form:
@@ -155,18 +151,15 @@ class Organization < ApplicationRecord
   def facilitator_status_on(reference_date, excluding_affiliation_id: nil)
     reference_start = reference_date || Date.current
 
-    # Filter the (often preloaded) affiliations in Ruby rather than firing a query
-    # per org — the event dashboard classifies every represented org this way.
-    earlier = affiliations.select do |affiliation|
-      affiliation.facilitator? &&
-        affiliation.start_date && affiliation.start_date < reference_start &&
-        affiliation.id != excluding_affiliation_id
-    end
+    earlier = affiliations.facilitators
+      .where.not(start_date: nil)
+      .where("affiliations.start_date < ?", reference_start)
+    earlier = earlier.where.not(id: excluding_affiliation_id) if excluding_affiliation_id
 
-    return :new if earlier.empty?
+    return :new unless earlier.exists?
 
-    active_overlap = earlier.any? { |affiliation| affiliation.end_date.nil? || affiliation.end_date >= reference_start }
-    active_overlap ? :ongoing : :reinstated
+    active_overlap = earlier.where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", reference_start)
+    active_overlap.exists? ? :ongoing : :reinstated
   end
 
   # Methods

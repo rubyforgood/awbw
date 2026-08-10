@@ -221,7 +221,7 @@ class ScholarshipsController < ApplicationController
   # Return to the recipients roster, scrolling back to the participant card the
   # Edit link was opened from (its slug rides along in the participant param).
   def recipients_return_path(event)
-    helpers.recipients_event_card_path(event, params[:participant])
+    recipients_event_path(event, anchor: ("participant-#{params[:participant]}" if params[:participant].present?))
   end
 
   # After destroying, leave the scholarship entirely: back to the grant when that

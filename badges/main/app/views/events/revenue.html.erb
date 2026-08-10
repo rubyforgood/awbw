@@ -1,4 +1,4 @@
-<% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <%# Opt out of the layout's max-w-7xl cap to match the wider event manage pages. %>
 <% content_for(:full_width, true) %>
 
@@ -8,16 +8,16 @@
       <% if params[:return_to] == "dashboard" && params[:event_id].present? %>
         <%= link_to "← Dashboard", dashboard_event_path(params[:event_id]), class: "text-sm text-gray-500 hover:text-gray-700" %>
       <% else %>
-        <%= link_to "← Reports", reports_events_path(report_to_hub_params), class: "text-sm text-gray-500 hover:text-gray-700" %>
+        <%= link_to "← Events statistics", statistics_events_path(report_to_statistics_params), class: "text-sm text-gray-500 hover:text-gray-700" %>
       <% end %>
     </div>
 
-    <%= render "events/report_header",
-          title: "Event revenue",
-          icon: "fa-solid fa-sack-dollar",
-          theme: :payments,
-          event: @filter_event,
-          subtitle: "Program revenue by year — money in, what the org subsidized from its own funds, and the net." %>
+    <div class="mb-8">
+      <h1 class="text-2xl font-semibold text-gray-900">Events revenue</h1>
+      <p class="text-gray-600 mt-1">
+        Program revenue by year — money in, what the org subsidized from its own funds, and the net.
+      </p>
+    </div>
 
     <%# Ahoy-style filters shared with the participation report — time period,
         event type and event — each auto-submitting a GET form. %>
@@ -48,19 +48,19 @@
           <%= render "revenue_kpi", label: "Fees collected", value: dollars_from_cents(featured.fees_cents),
                 value_class: "text-blue-700", card_class: "border-blue-300 bg-blue-100", note: "reg + CE paid", cents: featured.fees_cents,
                 prior_cents: prior&.fees_cents, prior_year: prior&.year,
-                href: revenue_drilldown_path(payment_status: "paid", event_year: featured.year) %>
+                href: event_registrations_path(payment_status: "paid", event_year: featured.year, event_id: params[:event_id]) %>
           <%= render "revenue_kpi", label: "Scholarships", value: dollars_from_cents(featured.funded_scholarship_cents),
                 value_class: "text-fuchsia-700", card_class: "border-fuchsia-300 bg-fuchsia-50", note: "grant-funded only", cents: featured.funded_scholarship_cents,
                 prior_cents: prior&.funded_scholarship_cents, prior_year: prior&.year,
-                href: revenue_drilldown_path(funder: "external", event_year: featured.year) %>
+                href: event_registrations_path(funder: "external", event_year: featured.year, event_id: params[:event_id]) %>
           <%= render "revenue_kpi", label: "Org subsidy", value: dollars_from_cents(featured.org_subsidy_cents),
                 value_class: "text-red-600", card_class: "border-red-300 bg-red-50", note: "discounts + unfunded", cents: featured.org_subsidy_cents,
                 prior_cents: prior&.org_subsidy_cents, prior_year: prior&.year,
-                href: revenue_drilldown_path(funder: "awbw", event_year: featured.year) %>
+                href: event_registrations_path(funder: "awbw", event_year: featured.year, event_id: params[:event_id]) %>
           <%= render "revenue_kpi", label: "Outstanding", value: dollars_from_cents(featured.outstanding_cents),
                 value_class: "text-orange-600", card_class: "border-orange-300 bg-orange-50", note: "reg + CE owed", cents: featured.outstanding_cents,
                 prior_cents: prior&.outstanding_cents, prior_year: prior&.year,
-                href: revenue_drilldown_path(payment_status: "unpaid", event_year: featured.year) %>
+                href: event_registrations_path(payment_status: "unpaid", event_year: featured.year, event_id: params[:event_id]) %>
           <%= render "revenue_kpi", label: "Net", value: signed_dollars_from_cents(featured.net_cents),
                 value_class: featured.net_cents.negative? ? "text-rose-700" : "text-gray-500", card_class: "border-gray-300 bg-gray-50",
                 note: "fees + scholarships − subsidies", cents: featured.net_cents, prior_cents: prior&.net_cents, prior_year: prior&.year %>

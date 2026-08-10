@@ -14,13 +14,6 @@ class Grant < ApplicationRecord
 
   scope :by_deadline, -> { order(Arel.sql("funds_allocation_deadline IS NULL, funds_allocation_deadline ASC")) }
 
-  # Ids of grants the org (AWBW) funded itself — treated as org subsidy, not
-  # external funding, by the scholarship funding split. Empty when the AWBW org
-  # isn't on file, collapsing the split back to grant-present vs grant-absent.
-  def self.self_funded_ids
-    where(funder: Organization.awbw).ids
-  end
-
   # Total scholarship draws against a grant, as a correlated subquery. Used by the
   # funds scopes so they stay flat WHERE clauses — no GROUP BY/HAVING, which would
   # break will_paginate's total_entries count on the paginated index.

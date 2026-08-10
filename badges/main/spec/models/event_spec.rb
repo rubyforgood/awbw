@@ -70,17 +70,6 @@ RSpec.describe Event, type: :model do
     end
   end
 
-  describe ".live and .on_demand" do
-    it "partitions events by delivery format" do
-      live = create(:event, on_demand: false)
-      on_demand = create(:event, on_demand: true)
-      expect(Event.live).to include(live)
-      expect(Event.live).not_to include(on_demand)
-      expect(Event.on_demand).to include(on_demand)
-      expect(Event.on_demand).not_to include(live)
-    end
-  end
-
   describe ".upcoming" do
     it "includes an event starting today" do
       # start_date is a date column, so comparing against a time-of-day would

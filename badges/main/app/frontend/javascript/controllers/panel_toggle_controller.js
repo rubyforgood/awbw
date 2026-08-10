@@ -1,59 +1,27 @@
 import { Controller } from "@hotwired/stimulus"
 
 // Connects to data-controller="panel-toggle"
-// Show/hide named panels. Each button and panel carries data-panel-toggle-name;
-// a button toggles every panel sharing its name, and every button controlling
-// that panel is kept in sync — its label and its aria-expanded. This lets one
-// panel have several controls (a top toggle bar plus the Show/Hide button beside
-// the section heading) that never disagree.
-// Revealing a hidden panel that holds a lazy Turbo frame loads the frame on first
-// show, so charts stay off the initial request until asked for.
+// Independent show/hide toggles: each button controls the panel at the same
+// index (DOM order) in panelTargets, swapping its own label and aria-expanded.
+// Revealing a hidden panel that holds a lazy Turbo frame lets the frame load on
+// first show, so charts stay off the initial request until the admin asks.
 export default class extends Controller {
   static targets = ["button", "panel", "label"]
 
-  connect() {
-    // Reconcile every control with its panel's actual visibility on load, so a
-    // section's toggle and the top bar can't disagree (and it self-heals after a
-    // Turbo restore or frame reload).
-    this.panelNames().forEach(name => this.sync(name, this.panelShown(name)))
-  }
-
   toggle(event) {
-    const name = event.currentTarget.dataset.panelToggleName
-    if (this.panelsFor(name).length === 0) return
+    const button = event.currentTarget
+    const index = this.buttonTargets.indexOf(button)
+    const panel = this.panelTargets[index]
+    if (!panel) return
 
-    const shown = !this.panelShown(name)
-    this.panelsFor(name).forEach(panel => panel.classList.toggle("hidden", !shown))
-    this.sync(name, shown)
-  }
+    const hidden = panel.classList.toggle("hidden")
+    button.setAttribute("aria-expanded", String(!hidden))
 
-  // Bring every button that controls the named panel into line with its state.
-  sync(name, shown) {
-    this.buttonsFor(name).forEach(button => {
-      button.setAttribute("aria-expanded", String(shown))
-      const label = this.labelTargets.find(target => button.contains(target))
-      if (label) {
-        label.textContent = shown
-          ? button.dataset.panelToggleShownLabel
-          : button.dataset.panelToggleHiddenLabel
-      }
-    })
-  }
-
-  panelsFor(name) {
-    return this.panelTargets.filter(panel => panel.dataset.panelToggleName === name)
-  }
-
-  buttonsFor(name) {
-    return this.buttonTargets.filter(button => button.dataset.panelToggleName === name)
-  }
-
-  panelShown(name) {
-    const panel = this.panelsFor(name)[0]
-    return panel ? !panel.classList.contains("hidden") : false
-  }
-
-  panelNames() {
-    return [ ...new Set(this.panelTargets.map(panel => panel.dataset.panelToggleName)) ]
+    const label = this.labelTargets[index]
+    if (label) {
+      label.textContent = hidden
+        ? button.dataset.panelToggleHiddenLabel
+        : button.dataset.panelToggleShownLabel
+    }
   }
 }

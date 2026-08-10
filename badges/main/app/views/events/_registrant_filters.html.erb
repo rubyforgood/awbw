@@ -77,7 +77,7 @@
 
     <% if has_cost %>
       <%= render "events/filter_select", param: :payment_status, label: "Payment status",
-            options: EventRegistration::PAYMENT_STATUS_FILTER_OPTIONS,
+            options: [ [ "Due", "unpaid" ], [ "Paid", "paid" ], [ "Intends to pay", "intends_to_pay" ] ],
             selected: params[:payment_status], blank: "Any payment status", field_class: field_class %>
     <% end %>
 

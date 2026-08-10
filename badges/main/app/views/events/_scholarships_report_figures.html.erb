@@ -4,19 +4,13 @@
     `source:` (responds to attended_count / *_count / *_cents), `combined:`, and
     optionally `event:` to link the attended number into the registrants roster
     (omit on totals rows, which span multiple events). %>
-<%# Attended is a completed attendance only; a partial one is reported beside it
-    rather than folded in, since its scholarship and fees still count in the money
-    columns to the right. %>
-<td class="px-3 py-2 border border-gray-200 text-right whitespace-nowrap">
+<td class="px-3 py-2 border border-gray-200 text-right">
   <% if event && source.attended_count.positive? %>
     <%= link_to source.attended_count, attended_registrants_path(event),
           class: "text-blue-600 hover:text-blue-800 hover:underline",
           title: "View attended registrants" %>
   <% else %>
     <%= source.attended_count %>
-  <% end %>
-  <% if source.incomplete_count.positive? %>
-    <span class="text-xs text-gray-500" title="Recorded as incomplete attendance">(<%= source.incomplete_count %>)</span>
   <% end %>
 </td>
 <% if combined %>

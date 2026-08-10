@@ -1,8 +1,29 @@
-<% deco = registration.decorate %>
+<%
+  status_styles = {
+    "registered"              => "bg-blue-50 text-blue-700 border-blue-200",
+    "attended"                => "bg-green-50 text-green-700 border-green-200",
+    "incomplete_attendance"   => "bg-amber-50 text-amber-700 border-amber-200",
+    "cancelled"               => "bg-gray-50 text-gray-500 border-gray-200",
+    "no_show"                 => "bg-red-50 text-red-700 border-red-200",
+    "transferred_in"          => "bg-teal-50 text-teal-700 border-teal-200",
+    "transferred_out"         => "bg-purple-50 text-purple-700 border-purple-200"
+  }
+  status_icons = {
+    "registered"              => "fa-clipboard-list",
+    "attended"                => "fa-circle-check",
+    "incomplete_attendance"   => "fa-clock",
+    "cancelled"               => "fa-ban",
+    "no_show"                 => "fa-circle-xmark",
+    "transferred_in"          => "fa-right-to-bracket",
+    "transferred_out"         => "fa-right-from-bracket"
+  }
+  current_style = status_styles[registration.status] || "bg-gray-50 text-gray-500 border-gray-200"
+  current_icon  = status_icons[registration.status] || "fa-question"
+%>
 <div id="<%= dom_id(registration, :attendance_status) %>">
   <%= form_with model: registration, url: event_registration_path(registration), method: :patch, data: { turbo_frame: "_top" } do |f| %>
-    <div class="relative inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 <%= deco.attendance_status_classes %>">
-      <i class="fas <%= deco.attendance_status_icon %>"></i>
+    <div class="relative inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 <%= current_style %>">
+      <i class="fas <%= current_icon %>"></i>
       <%= f.select :status,
             EventRegistration::ATTENDANCE_STATUSES.map { |s| [EventRegistration.new(status: s).attendance_status_label, s] },
             {},

@@ -36,40 +36,6 @@ class EventRegistration < ApplicationRecord
   # Attendance outcomes surfaced as their own participation buckets; every other
   # status falls into "other" (registered, transfers, cancellations).
   NAMED_OUTCOME_STATUSES = %w[ attended incomplete_attendance no_show ].freeze
-  # Sentinel filter value meaning "don't narrow on this dimension" — for a filter
-  # that defaults to something specific (the attendees index defaults to attended
-  # registrations on trainings, so it needs a way to say "all of them").
-  FILTER_ALL = "all".freeze
-  # Attendance-outcome filter options, shared by the registrations index and the
-  # attendees index so the vocabulary can't drift between them.
-  ATTENDANCE_FILTER_OPTIONS = (
-    ATTENDANCE_STATUSES.map { |status| [ status.humanize, status ] } +
-    [ [ "Other (registered, transfers, cancellations)", "other" ] ]
-  ).freeze
-  # Event-type filter options, matching the .event_type scope's vocabulary and the
-  # report suite's Event type select (events/_event_type_filter), so the same value
-  # means the same thing on a report and on the attendees index it drills into.
-  EVENT_TYPE_FILTER_OPTIONS = [
-    [ "All trainings", "trainings" ],
-    [ "Live trainings", "live" ],
-    [ "On-demand trainings", "on_demand" ],
-    [ "Other events", "other" ]
-  ].freeze
-  # Payment-situation filter options (the .payment_status scope's vocabulary),
-  # shared by the registrants filter bar and the attendees index's applied-filter
-  # chips so a value can't be worded one way in the select and another in the chip.
-  PAYMENT_STATUS_FILTER_OPTIONS = [
-    [ "Due", "unpaid" ],
-    [ "Paid", "paid" ],
-    [ "Intends to pay", "intends_to_pay" ]
-  ].freeze
-  # Scholarship funding-source options (the .funder scope's vocabulary), named the
-  # way Scholarship.externally_funded / .org_subsidized name the same split. No
-  # select offers these yet — they arrive from the revenue report's drill-ins.
-  FUNDER_FILTER_OPTIONS = [
-    [ "Grant-funded", "external" ],
-    [ "Org-subsidized", "awbw" ]
-  ].freeze
 
   # Human labels for each attendance status — the single source of truth for
   # status display (badges, filters, the dashboard breakdown).
@@ -116,14 +82,11 @@ class EventRegistration < ApplicationRecord
   scope :attendance_status, ->(status) {
     status == "other" ? where.not(status: NAMED_OUTCOME_STATUSES) : where(status: status)
   }
-  # Registrations on facilitator-training events ("trainings", narrowable to the
-  # "live"/"on_demand" delivery formats) vs everything else ("other"); any other
-  # value is a no-op so "all events" passes through.
+  # Registrations on facilitator-training events ("trainings") vs everything else
+  # ("other"); any other value is a no-op so "all events" passes through.
   scope :event_type, ->(type) {
     case type
     when "trainings" then joins(:event).where(events: { facilitator_training: true })
-    when "live" then joins(:event).where(events: { facilitator_training: true, on_demand: false })
-    when "on_demand" then joins(:event).where(events: { facilitator_training: true, on_demand: true })
     when "other" then joins(:event).where(events: { facilitator_training: false })
     else all
     end
@@ -203,19 +166,32 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
-  # Funded vs org-subsidized follow the app-wide split (Scholarship.externally_funded
-  # / .org_subsidized): a grant AWBW funded itself counts as subsidy, not
-  # external funding, so it lands in the unfunded set alongside grant-less awards.
-  scope :with_funded_scholarship, -> { where(id: scholarship_allocatable_ids(Scholarship.externally_funded)) }
-  scope :with_unfunded_scholarship, -> { where(id: scholarship_allocatable_ids(Scholarship.org_subsidized)) }
-  # EventRegistration ids that a scholarship in the given relation is allocated to.
-  def self.scholarship_allocatable_ids(scholarships)
-    Allocation
-      .where(allocatable_type: "EventRegistration", source_type: "Scholarship", source_id: scholarships.select(:id))
-      .select(:allocatable_id)
-  end
-  # Funding source of a registrant's scholarship. "awbw" = org-subsidized (no
-  # grant, or a grant AWBW funded itself); "external" = grant-funded (drawn from an
+  scope :with_funded_scholarship, -> {
+    where(<<~SQL.squish)
+      EXISTS (
+        SELECT 1 FROM allocations
+        INNER JOIN scholarships ON scholarships.id = allocations.source_id
+        WHERE allocations.allocatable_type = 'EventRegistration'
+          AND allocations.allocatable_id = event_registrations.id
+          AND allocations.source_type = 'Scholarship'
+          AND scholarships.grant_id IS NOT NULL
+      )
+    SQL
+  }
+  scope :with_unfunded_scholarship, -> {
+    where(<<~SQL.squish)
+      EXISTS (
+        SELECT 1 FROM allocations
+        INNER JOIN scholarships ON scholarships.id = allocations.source_id
+        WHERE allocations.allocatable_type = 'EventRegistration'
+          AND allocations.allocatable_id = event_registrations.id
+          AND allocations.source_type = 'Scholarship'
+          AND scholarships.grant_id IS NULL
+      )
+    SQL
+  }
+  # Funding source of a registrant's scholarship. "awbw" = org-subsidized (a
+  # scholarship drawn from no grant); "external" = grant-funded (drawn from an
   # external funder's grant).
   scope :funder, ->(value) {
     case value
@@ -407,18 +383,6 @@ class EventRegistration < ApplicationRecord
       )
       .distinct
   }
-
-  # { event_id => { status => count } } from a single grouped query, so callers
-  # never round-trip per event. The single-event dashboard reads its own event's
-  # slice; the participation report reads every event's at once.
-  def self.status_counts_by_event(event_ids)
-    where(event_id: event_ids)
-      .group(:event_id, :status)
-      .count
-      .each_with_object({}) do |((event_id, status), count), map|
-        (map[event_id] ||= {})[status] = count
-      end
-  end
 
   def self.search_by_params(params)
     registrations = is_a?(ActiveRecord::Relation) ? self : all

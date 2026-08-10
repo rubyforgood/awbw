@@ -60,14 +60,7 @@
             to the person's registration (new tab). %>
         <div class="min-w-0 xl:w-72 xl:shrink-0">
           <div class="flex items-center gap-2">
-            <%# The registration is what an admin acts on from this page, so the
-                name opens its edit form (the ticket icon beside it is the
-                registrant's own view). Falls back to the profile when this
-                applicant has no active registration to point at. %>
-            <% registration = dashboard.registration_link_target(person) %>
-            <%= link_to person.name,
-                        registration ? edit_event_registration_path(registration, return_to: "recipient_card") : person_path(person),
-                        data: { turbo_frame: "_top" },
+            <%= link_to person.name, person_path(person), data: { turbo_frame: "_top" },
                         class: "text-lg font-bold text-gray-900 hover:underline" %>
             <% if participant_slug %>
               <%= link_to registration_ticket_path(participant_slug), target: "_blank", rel: "noopener",

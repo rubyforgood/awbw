@@ -1,10 +1,10 @@
-<%# Compact scholarship headline for the reports hub, linking to the full
+<%# Compact scholarship headline for the statistics hub, linking to the full
     report. Expects `report` (an EventScholarshipReport) and `period` (its
     resolved PeriodScope: #label, #year and #metrics). %>
 <div class="h-full flex flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
   <div class="flex items-center justify-between mb-4">
     <h3 class="text-base font-semibold text-gray-900">Scholarships</h3>
-    <%= link_to "Full report →", scholarships_events_path(hub_to_report_params),
+    <%= link_to "Full report →", scholarships_events_path(statistics_to_report_params),
           class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
   </div>
 
@@ -15,7 +15,7 @@
       <div class="rounded-lg border border-purple-200 bg-purple-50 p-3">
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Recipients attended</div>
         <div class="mt-1 text-xl font-bold tabular-nums text-purple-700"><%= number_with_delimiter(metrics.recipients_attended_count) %></div>
-        <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= metrics.live_recipients_attended_count %> live · <%= metrics.on_demand_recipients_attended_count %> on-demand</div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums"><%= metrics.training_recipients_attended_count %> non-demand · <%= metrics.on_demand_recipients_attended_count %> on-demand</div>
       </div>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Scholarships awarded</div>
@@ -43,6 +43,6 @@
             library: { borderRadius: 3 } %>
     </div>
   <% else %>
-    <p class="text-sm text-gray-500 my-auto">No facilitator trainings match these filters.</p>
+    <p class="text-sm text-gray-500 my-auto">No facilitator trainings yet.</p>
   <% end %>
 </div>

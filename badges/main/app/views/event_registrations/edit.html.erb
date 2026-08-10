@@ -18,19 +18,9 @@
       <%= link_to onboarding_event_row_path(@event_registration.event, @event_registration.id), class: "text-sm text-gray-500 hover:text-gray-700" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Onboarding
       <% end %>
-    <% elsif params[:return_to] == "attendees" %>
-      <%= link_to attendees_events_path, class: "text-sm text-gray-500 hover:text-gray-700" do %>
-        <i class="fa-solid fa-arrow-left text-xs"></i> Attendees
-      <% end %>
-    <% elsif params[:return_to] == "roster" %>
-      <%= link_to roster_event_path(@event_registration.event), class: "text-sm text-gray-500 hover:text-gray-700" do %>
-        <i class="fa-solid fa-arrow-left text-xs"></i> Registrant roster
-      <% end %>
-    <%# Two ways in from the recipients page: a recipient's name (back to their own
-        card) and the feature-a-shout-out flow (back to the shout-outs section). %>
-    <% elsif params[:return_to] == "recipient_card" %>
-      <%= link_to recipients_event_card_path(@event_registration.event, @event_registration.slug), class: "text-sm text-gray-500 hover:text-gray-700" do %>
-        <i class="fa-solid fa-arrow-left text-xs"></i> Scholarship recipients
+    <% elsif params[:return_to] == "training_attendees" %>
+      <%= link_to training_attendees_events_path, class: "text-sm text-gray-500 hover:text-gray-700" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Training attendees
       <% end %>
     <% elsif params[:return_to] == "recipients" %>
       <%= link_to recipients_event_path(@event_registration.event, anchor: "shout-outs"), class: "text-sm text-gray-500 hover:text-gray-700" do %>

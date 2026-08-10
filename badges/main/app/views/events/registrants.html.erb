@@ -1,12 +1,16 @@
-<% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <%# Opt out of the layout's max-w-7xl cap so this data-dense table can use more
     of the screen; the wrapper restores the layout's gutters at a wider bound. %>
 <% content_for(:full_width, true) %>
 <div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8">
 <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
-  <%# Top bar: eyebrow + sub-nav, matching the other event pages. %>
+  <%# Top bar: eyebrow + sub-nav, matching the other event pages. When the user
+      arrived by drilling into a background-dashboard section, the eyebrow returns
+      to that exact section (via return_anchor) instead of the generic Dashboard. %>
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
-    <% if params[:return_to] == "scholarships" %>
+    <% if params[:return_to] == "background" %>
+      <%= link_to "← Background", background_event_path(@event, anchor: params[:return_anchor].presence), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <% elsif params[:return_to] == "scholarships" %>
       <%= link_to "← Events scholarships", scholarships_report_return_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
     <% else %>
       <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
@@ -14,7 +18,7 @@
     <%= render "events/subnav", event: @event, current: :registrants %>
   </div>
 
-  <%# Title block — matches the dashboard/scholarships report pages:
+  <%# Title block — matches the dashboard/background/scholarships report pages:
       event eyebrow over a text-3xl heading with an icon and a count subtitle,
       with the registrant action controls pinned top-right so they share the
       title's vertical band. On mobile they sit in their own right-aligned row
@@ -37,7 +41,7 @@
       <% end %>
       <h1 class="text-3xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-2">
         <i class="fa-solid fa-users <%= DomainTheme.text_class_for(:event_registrations, intensity: 800) %>"></i>
-        Manage registrants
+        Registrants
       </h1>
       <p class="text-gray-500 mt-2"><%= pluralize(@active_count, "person") %></p>
     </div>

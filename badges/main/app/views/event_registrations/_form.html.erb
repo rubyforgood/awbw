@@ -437,9 +437,7 @@
         when "bulk_payments" then bulk_payments_return_path(event_registration.event)
         when "preview_reminder" then preview_reminder_event_path(event_registration.event)
         when "onboarding" then onboarding_event_row_path(event_registration.event, event_registration.id)
-        when "attendees" then attendees_events_path
-        when "roster" then roster_event_path(event_registration.event)
-        when "recipient_card" then recipients_event_card_path(event_registration.event, event_registration.slug)
+        when "training_attendees" then training_attendees_events_path
         when "recipients" then recipients_event_path(event_registration.event, anchor: "shout-outs")
         else allowed_to?(:manage?, with: EventRegistrationPolicy) ? registrants_event_row_path(event_registration.event, event_registration.id) : registration_ticket_path(event_registration.slug)
         end

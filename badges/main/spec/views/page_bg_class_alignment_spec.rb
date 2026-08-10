@@ -17,10 +17,7 @@ RSpec.describe "page_bg_class alignment with policies" do
   #   "public"                                        → true
   #   "admin-or-auth"                                 → authenticated?
   #   "admin-or-public-or-authpublished"              → admin? || publicly_visible? || (authenticated? && published?)
-  #   "admin-or-owner"                                → admin? || owner? (manage?,
-  #                                                     dashboard?, edit?, the report
-  #                                                     suite — a bg-* utility may ride
-  #                                                     along; the marker is the policy)
+  #   "admin-or-owner"                                → admin? || owner?
   #   "admin-only bg-blue-100"                        → admin?
 
   EXPECTED_MAPPINGS = {
@@ -112,21 +109,21 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/bookmarks/index.html.erb"               => "admin-only bg-blue-100",
     "app/views/categories/index.html.erb"              => "admin-only bg-blue-100",
     "app/views/category_types/index.html.erb"          => "admin-only bg-blue-100",
-    "app/views/events/dashboard.html.erb"              => "admin-or-owner bg-blue-100",
-    "app/views/events/sample_ticket.html.erb"          => "admin-or-owner bg-blue-100",
-    "app/views/events/bulk_payments/index.html.erb"      => "admin-or-owner bg-blue-100",
-    "app/views/events/edit_staff.html.erb"             => "admin-or-owner bg-white",
-    "app/views/events/recipients.html.erb"             => "admin-or-owner bg-blue-100",
-    "app/views/events/registrants.html.erb"         => "admin-or-owner bg-blue-100",
-    "app/views/events/roster.html.erb"                 => "admin-or-owner bg-blue-100",
-    "app/views/events/onboarding.html.erb"             => "admin-or-owner bg-blue-100",
-    "app/views/events/revenue.html.erb"                => "admin-or-owner bg-blue-100",
-    "app/views/events/participation.html.erb"          => "admin-or-owner bg-blue-100",
-    "app/views/events/reports.html.erb"                => "admin-or-owner bg-blue-100",
-    "app/views/events/scholarships.html.erb"           => "admin-or-owner bg-blue-100",
-    "app/views/events/attendees.html.erb"              => "admin-or-owner bg-blue-100",
-    "app/views/events/preview_reminder.html.erb"       => "admin-or-owner bg-blue-100",
-    "app/views/events/confirm_reminder.html.erb"       => "admin-or-owner bg-blue-100",
+    "app/views/events/dashboard.html.erb"              => "admin-only bg-blue-100",
+    "app/views/events/sample_ticket.html.erb"          => "admin-only bg-blue-100",
+    "app/views/events/bulk_payments/index.html.erb"      => "admin-only bg-blue-100",
+    "app/views/events/background.html.erb"             => "admin-only bg-blue-100",
+    "app/views/events/edit_staff.html.erb"             => "admin-only bg-white",
+    "app/views/events/recipients.html.erb"             => "admin-only bg-blue-100",
+    "app/views/events/registrants.html.erb"         => "admin-only bg-blue-100",
+    "app/views/events/onboarding.html.erb"             => "admin-only bg-blue-100",
+    "app/views/events/revenue.html.erb"                => "admin-only bg-blue-100",
+    "app/views/events/participation.html.erb"          => "admin-only bg-blue-100",
+    "app/views/events/statistics.html.erb"              => "admin-only bg-blue-100",
+    "app/views/events/scholarships.html.erb"           => "admin-only bg-blue-100",
+    "app/views/events/training_attendees.html.erb"     => "admin-only bg-blue-100",
+    "app/views/events/preview_reminder.html.erb"       => "admin-only bg-blue-100",
+    "app/views/events/confirm_reminder.html.erb"       => "admin-only bg-blue-100",
     "app/views/event_registrations/index.html.erb"     => "admin-only bg-blue-100",
     "app/views/forms/index.html.erb"                   => "admin-only bg-blue-100",
     "app/views/forms/show.html.erb"                    => "admin-only bg-blue-100",
@@ -200,7 +197,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/event_registrations/edit.html.erb"      => "admin-only bg-blue-100",
     "app/views/continuing_education_registrations/edit.html.erb" => "admin-only bg-blue-100",
     "app/views/continuing_education_registrations/new.html.erb" => "admin-only bg-blue-100",
-    "app/views/events/edit.html.erb"                   => "admin-or-owner bg-blue-100",
+    "app/views/events/edit.html.erb"                   => "admin-only bg-blue-100",
     "app/views/forms/edit.html.erb"                    => "admin-only bg-blue-100",
     "app/views/forms/edit_sections.html.erb"           => "admin-only bg-blue-100",
     "app/views/faqs/edit.html.erb"                     => "admin-only bg-blue-100",

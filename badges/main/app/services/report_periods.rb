@@ -1,4 +1,4 @@
-# Resolves the reports-hub period toggle ("this_year" | "last_year" |
+# Resolves the statistics-hub period toggle ("this_year" | "last_year" |
 # "all_time") to a metric scope + display label for a report's summary card.
 # Included by EventRevenueReport and EventParticipationReport, which each supply
 # an empty_year_group for a year that has no events (so the card shows zeros).

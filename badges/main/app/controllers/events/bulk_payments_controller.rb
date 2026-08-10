@@ -1,11 +1,9 @@
 module Events
   class BulkPaymentsController < ApplicationController
-    include AhoyTracking
     before_action :set_event
 
     def index
       authorize! @event
-      track_view("events.bulk_payments", { event_id: @event.id })
 
       @event_registrations = @event.event_registrations.active.includes(:registrant)
       @submissions = @event.form_submissions
