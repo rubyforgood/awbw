@@ -3046,6 +3046,29 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Showing 1 of 2")
       end
 
+      # The drill-in and the funder grouping are independent controls, so each has
+      # to carry the other through — otherwise switching grouping silently clears
+      # the applied filter and the funder buckets never narrow.
+      it "keeps a drill-in applied when the funder grouping is toggled" do
+        other = create(:person, first_name: "Zed", last_name: "Zulu")
+        create(:event_registration, event: event, registrant: other, status: "registered", scholarship_requested: true)
+
+        get recipients_event_path(event, registrant_ids: applicant.id.to_s)
+
+        expect(response.body).to include(
+          CGI.escapeHTML(recipients_event_path(event, registrant_ids: applicant.id.to_s, group_by: "funder"))
+        )
+
+        get recipients_event_path(event, registrant_ids: applicant.id.to_s, group_by: "funder")
+
+        expect(response.body).to include("Tara Gallagher")
+        expect(response.body).not_to include("Zed Zulu")
+        # Ungrouping drops only group_by, keeping the drill-in.
+        expect(response.body).to include(
+          CGI.escapeHTML(recipients_event_path(event, registrant_ids: applicant.id.to_s))
+        )
+      end
+
       it "gives every section a Show/Hide control beside its heading" do
         get recipients_event_path(event)
         page = Capybara.string(response.body)

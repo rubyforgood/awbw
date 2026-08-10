@@ -62,7 +62,9 @@
     <%= render "events/section_heading", title: "Recipients", icon: "fa-user-graduate",
           theme: :scholarships, toggle: false, actions: toggle_bar %>
     <%# A breakdown row narrows the cards in place; the chip says what's applied so
-        the shorter list doesn't read as missing data, and clears it. %>
+        the shorter list doesn't read as missing data, and clears it. Clearing drops
+        only its own param, so the page's other state (funder grouping, the open
+        charts panel) survives — same rule as the roster's chip. %>
     <% drill_ins = AttendeesActiveFilters.new(params, chip_params: %w[ registrant_ids ]).chips %>
     <% if drill_ins.any? %>
       <div class="flex flex-wrap items-center gap-2 mb-4 print:hidden">
@@ -70,7 +72,8 @@
         <% drill_ins.each do |filter| %>
           <span class="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-200 bg-fuchsia-50 px-3 py-1 text-xs font-medium text-fuchsia-700">
             <%= filter[:label] %>
-            <%= link_to recipients_event_path(@event), class: "text-fuchsia-400 hover:text-fuchsia-700",
+            <%= link_to recipients_event_path(@event, request.query_parameters.except(filter[:param])),
+                  class: "text-fuchsia-400 hover:text-fuchsia-700",
                   aria: { label: "Remove #{filter[:label]} filter" } do %>
               <i class="fa-solid fa-xmark"></i>
             <% end %>
@@ -105,14 +108,19 @@
             <span>Show scholarship status</span>
           </button>
           <%# Group the roster by funder (the scholarship's grant funder), with a
-              header per funder — or return to the flat, name-ordered list. %>
+              header per funder — or return to the flat, name-ordered list. Both
+              carry the rest of the query through, so grouping composes with an
+              active breakdown drill-in (the funder buckets narrow to it below)
+              instead of silently clearing it. %>
           <% if params[:group_by] == "funder" %>
-            <%= link_to recipients_event_path(@event),
+            <%= link_to recipients_event_path(@event, request.query_parameters.except("group_by")),
                         class: "inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800" do %>
               <i class="fa-solid fa-layer-group"></i> Ungroup
             <% end %>
           <% else %>
-            <%= link_to recipients_event_path(@event, group_by: "funder"),
+            <%# String key, so it replaces any group_by already in the query rather
+                than riding alongside it as a second value. %>
+            <%= link_to recipients_event_path(@event, request.query_parameters.merge("group_by" => "funder")),
                         class: "inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800" do %>
               <i class="fa-solid fa-layer-group"></i> Group by funder
             <% end %>
