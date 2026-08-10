@@ -59,7 +59,7 @@
                       onchange: select_caret_onchange
                     } %>
       </div>
-      <div class="flex-1 mb-4 md:mb-0">
+      <div class="flex-1 mb-4 md:mb-0" data-controller="field-disclosure">
         <%= f.input :workshop_id,
           collection: f.object.workshop.present? ? [[ f.object.workshop.remote_search_label[:label], f.object.workshop.id]] : [],
           include_blank: true,
@@ -75,13 +75,23 @@
           label: "Workshop",
           label_html: { class: "block font-medium mb-1 text-gray-700 #{ 'readonly' if promoted_to_story }" } %>
 
-        <%= f.input :external_workshop_title,
-                    as: :text,
-                    label: "Workshop title (if different or unlisted)",
-                    input_html: {
-                      rows: 1,
-                      class: ("readonly" if promoted_to_story)
-                    } %>
+        <button type="button"
+                class="mt-1 text-sm text-purple-700 hover:underline"
+                data-field-disclosure-target="trigger"
+                data-action="field-disclosure#reveal">
+          Enter custom title
+        </button>
+
+        <div class="hidden mt-2" data-field-disclosure-target="content">
+          <%= f.input :external_workshop_title,
+                      as: :text,
+                      label: "Workshop title (if different or unlisted)",
+                      input_html: {
+                        rows: 1,
+                        data: { field_disclosure_target: "field" },
+                        class: ("readonly" if promoted_to_story)
+                      } %>
+        </div>
       </div>
       <div class="flex-1 mb-4 md:mb-0">
         <% default_org = default_organization_for_form(f.object) %>

@@ -57,6 +57,9 @@ application.register("column-toggle", ColumnToggleController)
 import EditToggleController from "./edit_toggle_controller"
 application.register("edit-toggle", EditToggleController)
 
+import FieldDisclosureController from "./field_disclosure_controller"
+application.register("field-disclosure", FieldDisclosureController)
+
 import FieldRequiredController from "./field_required_controller"
 application.register("field-required", FieldRequiredController)
 
