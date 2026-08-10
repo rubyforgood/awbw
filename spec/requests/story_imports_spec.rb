@@ -62,6 +62,8 @@ RSpec.describe "Story imports", type: :request do
       expect(response).to be_successful
       expect(response.body).to include("Preview import")
       expect(response.body).to include("Connected stories")
+      expect(response.body).to include("Row-by-row")
+      expect(response.body).to include("A Step in the Right Direction")
     end
 
     it "stashes the file as a blob so it can be confirmed" do

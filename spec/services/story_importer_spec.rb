@@ -264,6 +264,15 @@ RSpec.describe StoryImporter do
     end
   end
 
+  describe "anonymous contributions" do
+    it "flags the author's profile as anonymous for an anonymous credit" do
+      import([ base_row("showhide_the_name" => "hide_full_name") ])
+
+      author = Person.find_by(first_name: "Jamie", last_name: "Rivera")
+      expect(author.anonymous_contributions).to be(true)
+    end
+  end
+
   describe "dry run" do
     it "writes nothing but reports what would be created" do
       result = import([ base_row ], dry_run: true)
@@ -273,6 +282,26 @@ RSpec.describe StoryImporter do
       expect(Person.count).to eq(0)
       expect(result.ideas_created).to eq(1)
       expect(result.stories_created).to eq(1)
+    end
+
+    it "builds a per-row preview of the matched and new records" do
+      create(:sector, name: "Domestic Violence")
+      result = import([ base_row ], dry_run: true)
+
+      preview = result.previews.sole
+      expect(preview.title).to eq("A story of healing")
+      expect(preview.will_publish).to be(true)
+      expect(preview.creates_story).to be(true)
+      expect(preview.creates_idea).to be(true)
+      expect(preview.organization_new).to be(true)
+      expect(preview.author_new).to be(true)
+      expect(preview.sectors).to include("Domestic Violence")
+    end
+
+    it "records a skip reason in the preview for a blank title" do
+      result = import([ base_row("Title" => "") ], dry_run: true)
+
+      expect(result.previews.sole.skipped_reason).to eq("blank title")
     end
   end
 end

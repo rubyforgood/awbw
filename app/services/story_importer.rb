@@ -10,13 +10,13 @@ require "csv"
 # idea→story flow; AWBW-authored or author-less rows are Story-only.
 #
 # The author comes from the facilitator name; when it can't form a Person (a
-# single name, or "AWBW"), the name is kept as a Comment instead. Content is run
-# through wpautop so the export's raw-newline paragraphs survive as HTML. The
-# original publish Date is preserved as created_at, and the state — which has no
-# valid Address to live in yet (needs locality + city) — is logged as a warning.
+# single name, or "AWBW"), the name is kept as a Comment instead. An anonymous
+# credit flags the author's anonymous_contributions profile setting. Content is
+# run through wpautop so the export's raw-newline paragraphs survive as HTML, and
+# the original publish Date is preserved as created_at.
 class StoryImporter
   Result = Struct.new(
-    :rows_processed, :ideas_created, :stories_created, :skipped, :warnings,
+    :rows_processed, :ideas_created, :stories_created, :skipped, :warnings, :previews,
     keyword_init: true
   ) do
     def summary
@@ -29,6 +29,16 @@ class StoryImporter
       ].join("\n")
     end
   end
+
+  # A row-level summary of what the import would do, for the preview interstitial:
+  # the row's shorthand, the existing records it matches, and the new/updated
+  # records (incl. the sectorable_items / categorizable_items it would tag).
+  RowPreview = Struct.new(
+    :wp_id, :title, :will_publish, :skipped_reason,
+    :organization, :organization_new, :author_label, :author_new, :author_updated,
+    :creates_story, :creates_idea, :workshop_label, :sectors, :categories, :comment, :warnings,
+    keyword_init: true
+  )
 
   # WordPress "publish" status means the post was live and public.
   PUBLISHED_WP_STATUS = "publish"
@@ -99,7 +109,7 @@ class StoryImporter
     @dry_run = dry_run
     @logger = logger || Rails.logger
     @result = Result.new(
-      rows_processed: 0, ideas_created: 0, stories_created: 0, skipped: [], warnings: []
+      rows_processed: 0, ideas_created: 0, stories_created: 0, skipped: [], warnings: [], previews: []
     )
     @organization_cache = {}
     @windows_type_cache = {}
@@ -126,24 +136,37 @@ class StoryImporter
   attr_reader :result
 
   def import_row(row)
-    title = clean(row["Title"])
-    return record_skip(row, "blank title") if title.blank?
+    warnings_before = @result.warnings.size
+    preview = RowPreview.new(
+      wp_id: wp_id(row), title: clean(row["Title"]), will_publish: published?(row),
+      sectors: [], categories: [], warnings: []
+    )
+    @result.previews << preview
+
+    title = preview.title
+    if title.blank?
+      record_skip(row, "blank title")
+      preview.skipped_reason = "blank title"
+      return
+    end
     if Story.where("LOWER(title) = ?", title.downcase).exists?
-      return record_skip(row, "story already exists for title #{title.inspect}")
+      record_skip(row, "story already exists for title #{title.inspect}")
+      preview.skipped_reason = "story already exists"
+      return
     end
 
     organization = resolve_organization(row)
     windows_type = windows_type_for(row)
     author = resolve_author(row)
-    note_unmapped_fields(row)
     tags = resolve_tags(row)
     content = body_html(row, title)
     workshop, external_title = workshop_for(row)
+    describe_row(preview, row, organization, author, tags, workshop, external_title, warnings_before)
 
     # Every row becomes a Story. A non-AWBW author's story also gets a StoryIdea
     # (the submission record) promoted into it; AWBW-authored rows are Story-only.
     idea = nil
-    if from_non_awbw?(author) && organization
+    if preview.creates_idea
       idea = build_idea(row, title:, organization:, windows_type:, content:, workshop:, external_title:)
       return unless persist(idea)
       apply_tags(idea, tags)
@@ -157,6 +180,32 @@ class StoryImporter
     @result.stories_created += 1
   end
 
+  # Fill the preview with what the row resolved to (matched vs new records + the
+  # tags it would create), for the interstitial.
+  def describe_row(preview, row, organization, author, tags, workshop, external_title, warnings_before)
+    preview.organization = organization&.name
+    preview.organization_new = organization&.new_record? || false
+    preview.author_label = author_label(row, author)
+    preview.author_new = author&.new_record? || false
+    preview.author_updated = author&.persisted? && DISPLAY_PREF_BY_CREDIT.key?(author_credit(row))
+    preview.creates_story = true
+    preview.creates_idea = from_non_awbw?(author) && organization.present?
+    preview.workshop_label =
+      if workshop then "Matched workshop: #{workshop.title}"
+      elsif external_title.present? then "External title: #{external_title}"
+      end
+    preview.sectors = tags.sectors.map(&:name)
+    preview.categories = tags.categories.map { |c| "#{c.category_type.name}: #{c.decorate.display_name}" }
+    preview.comment = author ? nil : facilitator_display(row).presence
+    preview.warnings = @result.warnings.drop(warnings_before).map { |w| w.sub(/\Arow \S+ \(.*?\): /, "") }
+  end
+
+  def author_label(row, author)
+    return "#{author.first_name} #{author.last_name}" if author
+    name = facilitator_display(row)
+    name.present? ? "#{name} (unmatched → comment)" : "none (assumed AWBW)"
+  end
+
   # Post-save side effects for a persisted story (skipped on a dry run).
   def finalize_story(row, story, idea, author, organization)
     return if @dry_run
@@ -164,7 +213,7 @@ class StoryImporter
     comment_facilitator(row, story, idea, author)
     link_grant_scholarship(row, story, author)
     create_facilitator_affiliation(author, organization)
-    sync_display_name_preference(author, row)
+    sync_author_profile(author, row)
   end
 
   def build_story(row, idea:, title:, organization:, windows_type:, author:, content:, workshop:, external_title:)
@@ -285,7 +334,7 @@ class StoryImporter
   # Preserve a facilitator name that couldn't become an author (single name,
   # "AWBW") as a Comment on the story (and its idea) so it isn't lost.
   def comment_facilitator(row, story, idea, author)
-    return if author&.persisted?
+    return if author
     name = facilitator_display(row)
     return if name.blank?
 
@@ -302,10 +351,18 @@ class StoryImporter
     Affiliation.create!(person: author, organization: organization, title: Affiliation::FACILITATOR_TITLE)
   end
 
-  # Sync the author's profile display preference to the story's credit, but only
-  # when it is still the default (full_name) — a deliberate choice is honored.
-  def sync_display_name_preference(author, row)
+  # Reflect the story's credit on the author's profile. An anonymous credit flags
+  # anonymous_contributions and leaves the display preference at its full_name
+  # default; otherwise the display preference is synced, but only when it is still
+  # the default (full_name) — a deliberate choice is honored.
+  def sync_author_profile(author, row)
     return unless author&.persisted?
+
+    if author_credit(row) == "anonymous"
+      author.update!(anonymous_contributions: true) unless author.anonymous_contributions?
+      return
+    end
+
     pref = DISPLAY_PREF_BY_CREDIT[author_credit(row)]
     return if pref.nil? || (author.display_name_preference.present? && author.display_name_preference != "full_name")
 
@@ -390,14 +447,6 @@ class StoryImporter
         DEFAULT_WINDOWS_TYPE
       end
     @windows_type_cache[short_name] ||= WindowsType.find_by!(short_name: short_name)
-  end
-
-  # Fields with no home in the current schema — logged, not dropped. The state has
-  # no place to live yet: an Address needs a locality + city we don't have, so it
-  # is only recorded as a warning until that data (or a home for it) exists.
-  def note_unmapped_fields(row)
-    state = clean(row["state"])
-    record_warning(row, "unmapped state #{state.inspect}") if state.present?
   end
 
   def body_html(row, title)
