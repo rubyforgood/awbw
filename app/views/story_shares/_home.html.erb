@@ -96,17 +96,17 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
         <% @recent_stories.each_with_index do |story, index| %>
           <% theme = story_share_slot_theme(index) %>
-          <%= link_to story_share_path(story), class: "group block relative aspect-[3/4] overflow-hidden bg-gray-200 hover:opacity-90 transition-opacity" do %>
+          <%= link_to story_share_path(story), class: "group block relative aspect-[3/4] overflow-hidden bg-gray-200" do %>
             <%= image_tag story.display_image, loading: "lazy", alt: story.title,
-                          class: "absolute inset-0 w-full h-full object-cover" %>
+                          class: "absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" %>
             <div class="absolute inset-0 <%= theme[:overlay] %>"></div>
-            <div class="absolute inset-0 flex flex-col items-center pt-16 p-6 text-center">
+            <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
               <% if story.sectors.first %>
-                <div class="bg-white/20 backdrop-blur-sm text-white text-xs font-bold uppercase px-4 py-3 mb-4 w-32 min-h-12 flex items-center justify-center border border-white/30">
+                <div class="<%= story_share_sector_chip_class(story.sectors.first.name) %> text-white text-sm font-bold uppercase tracking-wide px-4 py-2 mb-4 text-center">
                   <%= story.sectors.first.name %>
                 </div>
               <% end %>
-              <h3 class="font-telefon text-white text-base leading-tight"><%= story.title %></h3>
+              <h3 class="font-telefon text-white text-base leading-tight line-clamp-2 min-h-[2.5rem]"><%= story.title %></h3>
             </div>
           <% end %>
         <% end %>

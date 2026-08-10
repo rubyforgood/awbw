@@ -203,6 +203,27 @@ RSpec.describe "/story_share", type: :request do
   end
 
   # ==========================================================
+  # "What others are reading" — most-read by Ahoy view count
+  # ==========================================================
+  describe "\"What others are reading\" section" do
+    def record_views(story, count)
+      count.times { create(:ahoy_event, name: "view.story", properties: { resource_type: "Story", resource_id: story.id }) }
+    end
+
+    it "orders stories by tracked Ahoy view count, most-read first" do
+      most_read = create(:story, :published, :publicly_visible, title: "The most read story")
+      less_read = create(:story, :published, :publicly_visible, title: "The less read story")
+      record_views(most_read, 3)
+      record_views(less_read, 1)
+
+      get story_shares_path
+
+      section = response.body.split("What others are reading").last
+      expect(section.index(most_read.title)).to be < section.index(less_read.title)
+    end
+  end
+
+  # ==========================================================
   # SHOW edge cases
   # ==========================================================
   describe "GET /show edge cases" do
