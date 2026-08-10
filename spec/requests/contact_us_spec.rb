@@ -116,6 +116,31 @@ RSpec.describe "ContactUs", type: :request do
     end
   end
 
+  describe "portal variant" do
+    it "renders portal contact info and chrome when accessed from the story share" do
+      get contact_us_path(from: "story_share")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("info@awbw.org")
+      expect(response.body).to include("1029 1/2 W 24th Street")
+      # Rendered inside the story_shares layout
+      expect(response.body).to include("Get involved!")
+      # Subject preset picker posts straight through as contact_us[subject]
+      expect(response.body).to include('<select name="contact_us[subject]"')
+      expect(response.body).to include("Interest in Windows Facilitator trainings")
+    end
+
+    it "carries the portal flag through submission and offers a way back" do
+      post contact_us_path, params: valid_params.merge(from: "story_share")
+
+      expect(response).to redirect_to(contact_us_path(anchor: "thank-you", from: "story_share"))
+      follow_redirect!
+      expect(response.body).to include("Thank you for contacting us!")
+      expect(response.body).to include("Back to story share")
+      expect(response.body).to include(story_shares_path)
+    end
+  end
+
   describe "POST /contact_us" do
     context "when not logged in" do
       it "creates notifications and sends email" do
