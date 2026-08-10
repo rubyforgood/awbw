@@ -26,6 +26,7 @@ class StoryIdea < ApplicationRecord
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
   has_many :notifications, as: :noticeable, dependent: :destroy
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :stories
 
   # Asset associations
@@ -49,9 +50,17 @@ class StoryIdea < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
+  accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
 
   def name
     "StoryIdea ##{id}"
+  end
+
+  # Email the communications box matches notifications against. Uniform accessor
+  # so the shared notifications/_communications partial works across records.
+  def communications_email
+    created_by&.email
   end
 
   def full_name
