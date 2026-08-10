@@ -102,7 +102,7 @@
             <div class="absolute inset-0 <%= theme[:overlay] %>"></div>
             <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
               <% if story.sectors.first %>
-                <div class="bg-white/20 backdrop-blur-sm text-white text-sm font-bold uppercase tracking-wide px-4 py-2 mb-4 text-center border border-white/30">
+                <div class="<%= story_share_sector_chip_class(story.sectors.first.name) %> text-white text-sm font-bold uppercase tracking-wide px-4 py-2 mb-4 text-center">
                   <%= story.sectors.first.name %>
                 </div>
               <% end %>
