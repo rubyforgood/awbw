@@ -3,15 +3,23 @@ class EventDashboard
   # and counts, totals, recipients) is scoped to grants that funder gave — for the
   # funder-filtered scholarship report. Attendance/registration figures are
   # unaffected. Default nil = every scholarship, as before.
-  def initialize(event, scholarship_funder: nil)
+  #
+  # registrations: the registration scope every people-facing figure draws from,
+  # always intersected with this event's own registrations so it can only narrow.
+  # Defaults to EventRegistration.active — what the dashboard, recipients page and
+  # revenue figures mean by "on this event". The Roster passes .on_roster, which
+  # drops incomplete_attendance. Attendance counts (#registration_status_counts)
+  # deliberately ignore this and stay whole, so a page can report what it excluded.
+  def initialize(event, scholarship_funder: nil, registrations: EventRegistration.active)
     @event = event
     @scholarship_funder = scholarship_funder
+    @registrations = registrations
   end
 
   attr_reader :event
 
   def registrant_count
-    active_registration_ids.size
+    scoped_registration_ids.size
   end
 
   # Cancelled / no-show registrations.
@@ -19,11 +27,11 @@ class EventDashboard
     event.event_registrations.where(status: EventRegistration::INACTIVE_STATUSES).count
   end
 
-  # Active registrations with no organization linked (via
+  # In-scope registrations with no organization linked (via
   # EventRegistrationOrganization) — flags registrants still needing an agency
   # linked, mirroring the "Unlinked" registrants filter.
   def unlinked_registration_count
-    @unlinked_registration_count ||= active_registrations.where.not(id: linked_registration_ids).count
+    @unlinked_registration_count ||= scoped_registrations.where.not(id: linked_registration_ids).count
   end
 
   # Registrant (Person) ids behind the inactive (cancelled / no-show)
@@ -35,7 +43,7 @@ class EventDashboard
       .pluck(:registrant_id)
   end
 
-  # Active registrants as Person records, ordered by display name.
+  # In-scope registrants as Person records, ordered by display name.
   def registrants
     @registrants ||= people_sorted(registrant_ids)
   end
@@ -157,7 +165,7 @@ class EventDashboard
   # The key sector answers are filed under in the per-applicant header hash.
   HEADER_SECTOR_KEY = "sector".freeze
 
-  # Active registrants who requested a scholarship for this event, as Person
+  # In-scope registrants who requested a scholarship for this event, as Person
   # records sorted by display name. Sectors, age-range tags, and affiliations are
   # preloaded for the recipients page header; their application answers appear
   # below it.
@@ -165,7 +173,7 @@ class EventDashboard
   # behind #scholarship_applicants (no includes/sort), for scoping the recipients
   # charts frame, which only needs their ids. Public: the controller calls it.
   def scholarship_applicant_ids
-    @scholarship_applicant_ids ||= active_registrations.where(scholarship_requested: true).pluck(:registrant_id)
+    @scholarship_applicant_ids ||= scoped_registrations.where(scholarship_requested: true).pluck(:registrant_id)
   end
 
   def scholarship_applicants
@@ -268,14 +276,14 @@ class EventDashboard
   # participant identifier used to anchor a registrant's entry on the recipients
   # page and to link to it from the roster. One active registration per event.
   def registration_slug_by_registrant
-    @registration_slug_by_registrant ||= active_registrations.pluck(:registrant_id, :slug).to_h
+    @registration_slug_by_registrant ||= scoped_registrations.pluck(:registrant_id, :slug).to_h
   end
 
   # Active registration id per registrant (Person id) — links a recipient's
   # shout-out row on the recipients page to their registration edit form, where
   # the shout-out flag and text are set. One active registration per event.
   def registration_id_by_registrant
-    @registration_id_by_registrant ||= active_registrations.pluck(:registrant_id, :id).to_h
+    @registration_id_by_registrant ||= scoped_registrations.pluck(:registrant_id, :id).to_h
   end
 
   # The [ event, participant slug ] a registrant's scholarship icon links to: this
@@ -294,7 +302,7 @@ class EventDashboard
   end
 
   def registration_by_registrant
-    @registration_by_registrant ||= active_registrations.index_by(&:registrant_id)
+    @registration_by_registrant ||= scoped_registrations.index_by(&:registrant_id)
   end
 
   def scholarship_registrants
@@ -345,7 +353,7 @@ class EventDashboard
   # Per-registrant cents still owed after payments and scholarships, keyed by
   # Person id. Aggregates across a person's registrations; sums to outstanding_cents.
   def registration_due_by_registrant
-    @registration_due_by_registrant ||= active_registration_ids.each_with_object(Hash.new(0)) do |id, map|
+    @registration_due_by_registrant ||= scoped_registration_ids.each_with_object(Hash.new(0)) do |id, map|
       due = [ event.cost_cents.to_i - allocated_by_registration.fetch(id, 0), 0 ].max
       next if due.zero?
       registrant_id = registrant_id_by_registration[id]
@@ -360,7 +368,7 @@ class EventDashboard
 
   # Still owed across all active registrations, after payments and scholarships.
   def outstanding_cents
-    active_registration_ids.sum do |id|
+    scoped_registration_ids.sum do |id|
       [ event.cost_cents.to_i - allocated_by_registration.fetch(id, 0), 0 ].max
     end
   end
@@ -409,7 +417,7 @@ class EventDashboard
 
   def paid_count
     return registrant_count if free?
-    active_registration_ids.count { |id| allocated_by_registration.fetch(id, 0) >= event.cost_cents.to_i }
+    scoped_registration_ids.count { |id| allocated_by_registration.fetch(id, 0) >= event.cost_cents.to_i }
   end
 
   def unpaid_count
@@ -424,7 +432,7 @@ class EventDashboard
   end
 
   def unpaid_registrants
-    @unpaid_registrants ||= people_sorted(registrants_for(active_registration_ids - paid_registration_ids))
+    @unpaid_registrants ||= people_sorted(registrants_for(scoped_registration_ids - paid_registration_ids))
   end
 
   # --- Continuing-education fees ---------------------------------------------
@@ -552,7 +560,7 @@ class EventDashboard
     @organization_registrant_ids_by_org ||= begin
       snapshot = EventRegistrationOrganization
         .joins(:event_registration)
-        .where(event_registration_id: active_registration_ids)
+        .where(event_registration_id: scoped_registration_ids)
         .pluck(:organization_id, "event_registrations.registrant_id")
       affiliated = Affiliation.active_on(reference_date)
         .where(person_id: registrant_ids)
@@ -987,24 +995,25 @@ class EventDashboard
       .where.not(district: [ nil, "" ])
   end
 
-  def active_registrations
-    @active_registrations ||= event.event_registrations.active
+  # This event's registrations, narrowed by the caller's scope (see #initialize).
+  def scoped_registrations
+    @scoped_registrations ||= event.event_registrations.merge(@registrations)
   end
 
-  def active_registration_ids
-    @active_registration_ids ||= active_registrations.pluck(:id)
+  def scoped_registration_ids
+    @scoped_registration_ids ||= scoped_registrations.pluck(:id)
   end
 
-  # Ids of active registrations that have at least one organization linked.
+  # Ids of in-scope registrations that have at least one organization linked.
   def linked_registration_ids
     @linked_registration_ids ||= EventRegistrationOrganization
-      .where(event_registration_id: active_registration_ids)
+      .where(event_registration_id: scoped_registration_ids)
       .distinct
       .pluck(:event_registration_id)
   end
 
   def registrant_ids
-    @registrant_ids ||= active_registrations.pluck(:registrant_id)
+    @registrant_ids ||= scoped_registrations.pluck(:registrant_id)
   end
 
   # Registrant (Person) ids grouped by registration status, for the attendance
@@ -1107,7 +1116,7 @@ class EventDashboard
   # Registrant (Person) ids behind active registrations that opted into a
   # shout-out — the candidates for the recipients page shout-out block.
   def shoutout_registrant_ids
-    @shoutout_registrant_ids ||= active_registrations.where(shoutout: true).pluck(:registrant_id)
+    @shoutout_registrant_ids ||= scoped_registrations.where(shoutout: true).pluck(:registrant_id)
   end
 
   # People who opted into a shout-out, sorted by display name, with affiliations,
@@ -1164,7 +1173,7 @@ class EventDashboard
   end
 
   def registration_allocations
-    Allocation.where(allocatable_type: "EventRegistration", allocatable_id: active_registration_ids)
+    Allocation.where(allocatable_type: "EventRegistration", allocatable_id: scoped_registration_ids)
   end
 
   def allocated_by_registration
@@ -1176,7 +1185,7 @@ class EventDashboard
   # CE registrant counts / pie.
   def ce_registrations
     @ce_registrations ||= ContinuingEducationRegistration
-      .where(event_registration_id: active_registration_ids)
+      .where(event_registration_id: scoped_registration_ids)
       .to_a
   end
 
@@ -1246,7 +1255,7 @@ class EventDashboard
     @scholarships ||= begin
       scope = Scholarship
         .joins(:allocation)
-        .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: active_registration_ids })
+        .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: scoped_registration_ids })
       scope = scope.where(grant_id: funder_grant_ids) if @scholarship_funder
       scope
     end
@@ -1280,7 +1289,7 @@ class EventDashboard
   def registration_org_registrant_pairs
     @registration_org_registrant_pairs ||= EventRegistrationOrganization
       .joins(:event_registration)
-      .where(event_registration_id: active_registration_ids)
+      .where(event_registration_id: scoped_registration_ids)
       .pluck(:organization_id, "event_registrations.registrant_id")
   end
 
@@ -1301,13 +1310,13 @@ class EventDashboard
   end
 
   def paid_registration_ids
-    @paid_registration_ids ||= active_registration_ids.select do |id|
+    @paid_registration_ids ||= scoped_registration_ids.select do |id|
       allocated_by_registration.fetch(id, 0) >= event.cost_cents.to_i
     end
   end
 
   def registrant_id_by_registration
-    @registrant_id_by_registration ||= active_registrations.pluck(:id, :registrant_id).to_h
+    @registrant_id_by_registration ||= scoped_registrations.pluck(:id, :registrant_id).to_h
   end
 
   def registrants_for(registration_ids)
@@ -1331,7 +1340,7 @@ class EventDashboard
   def organization_ids
     @organization_ids ||= begin
       snapshot_ids = EventRegistrationOrganization
-        .where(event_registration_id: active_registration_ids)
+        .where(event_registration_id: scoped_registration_ids)
         .pluck(:organization_id)
       affiliated_ids = Affiliation.active_on(reference_date)
         .where(person_id: registrant_ids)

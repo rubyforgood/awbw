@@ -62,6 +62,28 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  # The Roster's population: everything .active covers except a partial
+  # attendance, since the roster answers "who was here".
+  describe ".on_roster" do
+    it "drops incomplete_attendance from the active set, keeping the rest" do
+      registered = create(:event_registration, status: "registered")
+      attended = create(:event_registration, status: "attended")
+      transferred_in = create(:event_registration, status: "transferred_in")
+      partial = create(:event_registration, status: "incomplete_attendance")
+      cancelled = create(:event_registration, status: "cancelled")
+
+      results = EventRegistration.on_roster
+      expect(results).to include(registered, attended, transferred_in)
+      expect(results).not_to include(partial, cancelled)
+      expect(EventRegistration.active).to include(partial)
+    end
+
+    it "is exactly the active statuses minus incomplete_attendance" do
+      expect(EventRegistration::ROSTER_STATUSES)
+        .to eq(EventRegistration::ACTIVE_STATUSES - %w[ incomplete_attendance ])
+    end
+  end
+
   describe "#sync_attendance_status_to_days!" do
     # A two-day event: start and end one day apart → day_count == 2.
     let(:event) { create(:event, start_date: 12.days.from_now, end_date: 13.days.from_now) }

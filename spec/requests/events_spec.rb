@@ -2533,6 +2533,28 @@ RSpec.describe "Events", type: :request do
           expect(response.body).to include("Roster Org")
         end
 
+        # The roster is "who was here", so a partial attendance is out of the
+        # population entirely — table, stat bar and breakdowns alike. The header
+        # says how many that left out, so the count doesn't read as a discrepancy
+        # against the dashboard's active count.
+        it "excludes incomplete attendance from the roster and says how many" do
+          partial = create(:person, first_name: "Zed", last_name: "Zulu")
+          create(:event_registration, event: owned_event, registrant: partial, status: "incomplete_attendance")
+
+          get roster_event_path(owned_event)
+
+          expect(response.body).to include("Lovelace")
+          expect(response.body).not_to include("Zulu")
+          expect(response.body).to include("1 registrant (1 with incomplete attendance excluded)")
+        end
+
+        it "omits the exclusion note when nobody has a partial attendance" do
+          get roster_event_path(owned_event)
+
+          expect(response.body).to include("1 registrant")
+          expect(response.body).not_to include("incomplete attendance excluded")
+        end
+
         it "links each registrant row to their registration, not their profile" do
           get roster_event_path(owned_event)
 

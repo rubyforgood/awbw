@@ -20,12 +20,16 @@
       <i class="fa-solid fa-print"></i> Print
     </button>
   <% end %>
+  <%# The roster's population is EventRegistration.on_roster, so a partial
+      attendance is left out — named in the subtitle so the count reads as a
+      deliberate exclusion rather than a discrepancy against the dashboard. %>
+  <% partial_count = @dashboard.attendance_count_for("incomplete_attendance") %>
   <%= render "events/report_header",
         title: "Registrant roster",
         icon: "fa-solid fa-users-viewfinder",
         theme: :people,
         event: @event,
-        subtitle: pluralize(@dashboard.registrant_count, "active registrant"),
+        subtitle: "#{pluralize(@dashboard.registrant_count, "registrant")}#{" (#{partial_count} with incomplete attendance excluded)" if partial_count.positive?}",
         actions: print_button %>
 
   <%# ---- At-a-glance counts — one compact "stat bar" of metrics; each segment
