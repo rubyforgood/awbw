@@ -2893,7 +2893,7 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("Pat Plain")
       end
 
-      it "renders each recipient's tagged age groups as chips, primary ones starred" do
+      it "renders each recipient's tagged age groups as muted chips linking to the taggings filter, primary ones starred" do
         age_type = create(:category_type, name: "AgeRange", published: true)
         teens = create(:category, :published, category_type: age_type, name: "13-17")
         adults = create(:category, :published, category_type: age_type, name: "18+")
@@ -2904,8 +2904,41 @@ RSpec.describe "Events", type: :request do
         page = Capybara.string(response.body)
         expect(page).to have_content("13-17")
         expect(page).to have_content("18+")
-        # The primary group leads with the starred lime chip from the shared partial.
-        expect(page).to have_css("span.text-lime-800 i.fa-star")
+        # Each age chip links to the taggings page filtered to that category, like
+        # the sector chips do.
+        expect(page).to have_css("a[href*='category_names_all=13-17']")
+        expect(page).to have_css("a[href*='category_names_all=18%2B']")
+        # The primary group leads with a starred, muted (neutral-grey) chip.
+        expect(page).to have_css("a.text-gray-700 i.fa-star")
+      end
+
+      it "links each recipient's name row to their registration ticket" do
+        registration = event.event_registrations.find_by(registrant: applicant)
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include(registration_ticket_path(registration.slug))
+      end
+
+      it "groups recipients by funder with a linked header carrying the funder's city/state, hiding the per-card funder line" do
+        registration = event.event_registrations.find_by(registrant: applicant)
+        org = create(:organization, name: "Joyful Heart Foundation")
+        create(:address, addressable: org, city: "Los Angeles", state: "CA")
+        grant = create(:grant, name: "Healing Arts Fund", funder: org, amount_cents: 100_000)
+        scholarship = create(:scholarship, recipient: applicant, grant: grant, amount_cents: 1_000)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
+
+        get recipients_event_path(event, group_by: "funder")
+
+        expect(response).to have_http_status(:ok)
+        page = Capybara.string(response.body)
+        # The funder name renders as a section header linking to the funder's profile,
+        # with its city/state alongside.
+        expect(page).to have_css("h2 a[href='#{organization_path(org)}']", text: "Joyful Heart Foundation")
+        expect(page).to have_content("Los Angeles, CA")
+        expect(response.body).to include("Ungroup")
+        # The redundant per-card "Funded by" line is dropped when grouped.
+        expect(response.body).not_to include("Funded by")
       end
 
       it "shows the org linked to its website on the left and the bold recipient name linked to their profile on the right" do

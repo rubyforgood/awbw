@@ -52,7 +52,8 @@
   <% if @dashboard.scholarship_applicants.any? %>
     <div data-controller="expandable-cards scholarship-status-toggle"
          data-scholarship-status-toggle-shown-value="true">
-      <%# Title shares a row with the controls (show/hide scholarship status, expand/collapse all) %>
+      <%# Title shares a row with the controls (show/hide scholarship status,
+          group by funder, expand/collapse all). %>
       <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
         <h2 class="text-xl font-bold flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
           <i class="fa-solid fa-user-graduate"></i>
@@ -71,6 +72,19 @@
             </span>
             <span>Show scholarship status</span>
           </button>
+          <%# Group the roster by funder (the scholarship's grant funder), with a
+              header per funder — or return to the flat, name-ordered list. %>
+          <% if params[:group_by] == "funder" %>
+            <%= link_to recipients_event_path(@event),
+                        class: "inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800" do %>
+              <i class="fa-solid fa-layer-group"></i> Ungroup
+            <% end %>
+          <% else %>
+            <%= link_to recipients_event_path(@event, group_by: "funder"),
+                        class: "inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800" do %>
+              <i class="fa-solid fa-layer-group"></i> Group by funder
+            <% end %>
+          <% end %>
           <%# Expand / collapse all %>
           <button type="button" data-action="expandable-cards#toggleAll"
                   class="inline-flex items-center gap-2 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %> hover:<%= DomainTheme.text_class_for(:scholarships) %>">
@@ -80,169 +94,49 @@
         </div>
       </div>
 
-      <div class="space-y-6">
-      <% @dashboard.scholarship_applicants.each do |person| %>
-        <% participant_slug = @dashboard.registration_slug_by_registrant[person.id] %>
-        <% answers = (answers_by_applicant[person.id] || []).reject { |a| a.form_field&.field_identifier == "scholarship_eligibility" } %>
-        <% header = header_answers[person.id] || {} %>
-        <% sector_answer = header[EventDashboard::HEADER_SECTOR_KEY] %>
-        <% age_group_answer = header["primary_age_group"] %>
-        <%# Prefer the registrant's form answers; fall back to their profile data. %>
-        <% sector_text = resolve_answer_text(sector_answer&.form_field, sector_answer&.submitted_answer).presence || person.sectors.map(&:name).join(", ").presence %>
-        <% age_group_text = resolve_answer_text(age_group_answer&.form_field, age_group_answer&.submitted_answer).presence || person.categories.select { |c| c.category_type&.name == "AgeRange" }.map(&:name).join(", ").presence %>
-        <%# The affiliation active at the time of the event, excluding facilitator roles. %>
-        <% recipient_affiliations = person.affiliations.select { |a|
-             !a.facilitator? &&
-             (event_date.blank? || ((a.start_date.nil? || a.start_date <= event_date) && (a.end_date.nil? || a.end_date >= event_date)))
-           } %>
-
-        <div id="<%= "participant-#{participant_slug}" if participant_slug %>"
-             class="scroll-mt-24 bg-white border <%= DomainTheme.border_class_for(:scholarships) %> rounded-xl shadow-sm overflow-hidden break-inside-avoid"
-             data-controller="expandable-card"
-             data-action="expandable-cards:expandAll@window->expandable-card#expand expandable-cards:collapseAll@window->expandable-card#collapse">
-          <%# Recipient header — avatar + name, with title/org beneath the name and
-              the Serves / Ages meta strip set parallel to the name (the space under
-              the avatar stays blank). Calm palette: neutral name/org links, with
-              the sector chips as the single accent. %>
-          <% dp = person.decorate %>
-          <%# Primary sector first (rendered as a darker-green crowned chip),
-              then the additional sectors alphabetically. %>
-          <% sectorable_items = person.sectorable_items_primary_first %>
-          <% has_sectors = sectorable_items.any? %>
-          <%# Primary age groups first (starred amber chips), then the additional
-              ones — matching the sector chips above. Falls back to the form
-              answer / profile text only when the person carries no tagged age
-              groups. %>
-          <% primary_age_groups = person.primary_age_groups.to_a %>
-          <% additional_age_groups = person.additional_age_groups.to_a %>
-          <% has_age_groups = primary_age_groups.any? || additional_age_groups.any? %>
-          <div class="relative px-5 py-4 pr-12 <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:scholarships) %>">
-            <button type="button" data-action="expandable-card#toggle"
-                    aria-label="Toggle <%= person.name %> application"
-                    class="absolute top-3 right-3 p-1 text-gray-400 hover:<%= DomainTheme.text_class_for(:scholarships) %> print:hidden">
-              <i class="fa-solid fa-chevron-down transition-transform rotate-180" data-expandable-card-target="icon"></i>
-            </button>
-
-            <div class="flex items-start gap-3 min-w-0">
-              <% if dp.avatar.present? %>
-                <%= image_tag dp.avatar.variant(:thumbnail),
-                              class: "w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0" %>
-              <% else %>
-                <span class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-500 font-bold border border-gray-200 shrink-0"><%= person.name.to_s.first&.upcase %></span>
-              <% end %>
-
-              <div class="min-w-0 flex-1 flex flex-wrap items-start gap-x-8 gap-y-3">
-                <%# Name with title / organization beneath. Fixed width on wide
-                    screens so the Serves / Ages columns start at a consistent left
-                    edge across rows instead of a jagged one. %>
-                <div class="min-w-0 xl:w-72 xl:shrink-0">
-                  <%= link_to person.name, person_path(person), data: { turbo_frame: "_top" },
-                              class: "text-lg font-bold text-gray-900 hover:underline" %>
-                  <% recipient_affiliations.each do |affiliation| %>
-                    <div class="text-sm text-gray-600 leading-tight">
-                      <% if affiliation.organization %>
-                        <% if allowed_to?(:show?, affiliation.organization) %>
-                          <%= link_to affiliation.organization.name, organization_path(affiliation.organization),
-                                      data: { turbo_frame: "_top" },
-                                      class: "font-medium text-gray-700 hover:text-gray-900 hover:underline" %>
-                        <% else %>
-                          <span class="font-medium text-gray-700"><%= affiliation.organization.name %></span>
-                        <% end %>
-                      <% end %>
-                      <% if affiliation.organization && affiliation.title.present? %><span class="text-gray-300">·</span><% end %>
-                      <% if affiliation.title.present? %><span><%= affiliation.title %></span><% end %>
-                    </div>
-                  <% end %>
-                </div>
-
-                <%# Serves / Ages — two fixed-width columns so each label starts at
-                    a consistent x across rows and its chips wrap within its own
-                    column instead of pushing the next column out of alignment. %>
-                <% if has_sectors || sector_text.present? %>
-                  <div class="flex flex-wrap items-center gap-2 xl:w-[28rem] xl:shrink-0">
-                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Serves</span>
-                    <% if has_sectors %>
-                      <% sectorable_items.each do |si| %>
-                        <%= render "sectors/tagging_label", sector: si.sector, is_primary: si.is_primary? %>
-                      <% end %>
-                    <% else %>
-                      <span class="text-sm text-gray-600"><%= sector_text %></span>
-                    <% end %>
-                  </div>
-                <% end %>
-                <% if has_age_groups || age_group_text.present? %>
-                  <div class="flex flex-wrap items-center gap-2 xl:w-[27rem] xl:shrink-0">
-                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Ages</span>
-                    <% if has_age_groups %>
-                      <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups %>
-                    <% else %>
-                      <span class="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-3 py-1 text-sm font-medium text-gray-600"><%= age_group_text %></span>
-                    <% end %>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-          </div>
-
-          <%# Scholarship status — awarded amount + tasks-completed state. Hidden
-              until toggled on (page-wide) so it doesn't crowd the application;
-              stays visible regardless of the card's expand/collapse state. %>
-          <% scholarship = @dashboard.scholarship_by_recipient[person.id] %>
-          <% if scholarship %>
-            <div class="px-5 py-3 border-b <%= DomainTheme.border_class_for(:scholarships) %> bg-gray-50"
-                 data-scholarship-status-toggle-target="status">
-              <div class="flex flex-wrap items-center gap-3">
-                <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Scholarship</span>
-                <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-900">
-                  <i class="fa-solid fa-sack-dollar text-gray-400"></i>
-                  <%= dollars_from_cents(scholarship.amount_cents) %>
-                </span>
-                <% if scholarship.grant&.funder_name.present? %>
-                  <% if allowed_to?(:show?, scholarship.grant) %>
-                    <%= link_to grant_path(scholarship.grant), target: "_blank", rel: "noopener",
-                                class: "inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-800 hover:underline" do %>
-                      <i class="fa-solid fa-hand-holding-heart text-gray-400"></i>
-                      Funded by <%= scholarship.grant.funder_name %>
-                      <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+      <% card_locals = { dashboard: @dashboard, answers_by_applicant: answers_by_applicant,
+                         header_answers: header_answers, event_date: event_date } %>
+      <% if params[:group_by] == "funder" %>
+        <div class="space-y-8">
+          <% @dashboard.scholarship_applicants_by_funder.each do |group| %>
+            <section class="break-inside-avoid">
+              <%# Bold, dark-fuchsia funder band so each group's header stands out.
+                  The funder name links to the funder's profile (org or person). %>
+              <div class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-fuchsia-800 px-4 py-2.5 mb-4 text-white">
+                <i class="fa-solid fa-hand-holding-heart text-fuchsia-200"></i>
+                <h2 class="text-lg font-bold tracking-tight">
+                  <% if group.funder && allowed_to?(:show?, group.funder) %>
+                    <%= link_to polymorphic_path(group.funder), data: { turbo_frame: "_top" },
+                                class: "inline-flex items-center gap-1.5 hover:underline" do %>
+                      <%= group.name %>
+                      <i class="fa-solid fa-arrow-up-right-from-square text-xs text-fuchsia-200"></i>
                     <% end %>
                   <% else %>
-                    <span class="inline-flex items-center gap-1.5 text-sm text-gray-600">
-                      <i class="fa-solid fa-hand-holding-heart text-gray-400"></i>
-                      Funded by <%= scholarship.grant.funder_name %>
-                    </span>
+                    <%= group.name %>
                   <% end %>
+                </h2>
+                <% if group.location.present? %>
+                  <span class="inline-flex items-center gap-1 text-sm text-fuchsia-100">
+                    <i class="fa-solid fa-location-dot text-xs text-fuchsia-200"></i><%= group.location %>
+                  </span>
                 <% end %>
-                <%= render "scholarships/tasks_status", scholarship: scholarship %>
-                <% if allowed_to?(:edit?, scholarship) %>
-                  <%= link_to edit_scholarship_path(scholarship, return_to: "recipients", participant: participant_slug),
-                              class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
-                              target: "_blank", rel: "noopener" do %>
-                    Edit
-                    <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
-                  <% end %>
+                <span class="ml-auto text-sm font-medium text-fuchsia-100"><%= pluralize(group.count, "recipient") %></span>
+              </div>
+              <div class="space-y-6">
+                <% group.people.each do |person| %>
+                  <%= render "events/recipient_card", card_locals.merge(person: person, grouped: true) %>
                 <% end %>
               </div>
-            </div>
+            </section>
           <% end %>
-
-          <%# Scholarship application answers %>
-          <div class="px-5 py-4 print:block" data-expandable-card-target="body">
-            <% if answers.any? %>
-              <dl class="space-y-4">
-                <% answers.each do |answer| %>
-                  <div>
-                    <dt class="text-sm font-semibold text-gray-800"><%= display_question_label(answer.form_field, answer) %></dt>
-                    <dd class="mt-1 text-sm text-gray-700 whitespace-pre-line"><%= resolve_answer_text(answer.form_field, answer.submitted_answer) %></dd>
-                  </div>
-                <% end %>
-              </dl>
-            <% else %>
-              <p class="text-sm text-gray-400 italic">No scholarship application answers on file.</p>
-            <% end %>
-          </div>
+        </div>
+      <% else %>
+        <div class="space-y-6">
+          <% @dashboard.scholarship_applicants.each do |person| %>
+            <%= render "events/recipient_card", card_locals.merge(person: person) %>
+          <% end %>
         </div>
       <% end %>
-      </div>
     </div>
   <% else %>
     <div class="text-center py-12 text-gray-500">
