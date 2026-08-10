@@ -98,23 +98,30 @@ RSpec.describe "Story imports", type: :request do
   describe "POST /stories/import/confirm" do
     before { sign_in admin }
 
-    it "creates ideas for every row and stories for published rows" do
+    # Every fixture row has a single-name facilitator (no last name), so each
+    # becomes a Story-only record (a StoryIdea is created only for a resolvable,
+    # non-AWBW author). The facilitator name is preserved as a comment.
+    it "creates a Story for every row" do
       expect {
         post confirm_story_import_path, params: { signed_id: signed_blob_for_fixture }
-      }.to change(StoryIdea, :count).by(10).and change(Story, :count).by(9)
+      }.to change(Story, :count).by(10).and change(StoryIdea, :count).by(0)
 
       expect(response).to redirect_to(stories_path)
-      expect(flash[:notice]).to match(/10 story ideas and 9 connected stories/)
+      expect(flash[:notice]).to match(/0 story ideas and 10 connected stories/)
     end
 
     it "tags stories with the sector their WordPress category maps to" do
       post confirm_story_import_path, params: { signed_id: signed_blob_for_fixture }
 
-      story = Story.find_by(title: "A Step in the Right Direction")
-      expect(story.sectors.pluck(:name)).to include("Domestic Violence")
+      expect(Story.find_by(title: "A Step in the Right Direction").sectors.pluck(:name)).to include("Domestic Violence")
+      expect(Story.find_by(title: "Being Your True Self").sectors.pluck(:name)).to include("LGBTQIA+")
+    end
 
-      idea = StoryIdea.find_by(title: "Being Your True Self")
-      expect(idea.sectors.pluck(:name)).to include("LGBTQIA+")
+    it "keeps a single-name facilitator as a comment on the story" do
+      post confirm_story_import_path, params: { signed_id: signed_blob_for_fixture }
+
+      story = Story.find_by(title: "A Step in the Right Direction")
+      expect(story.comments.pluck(:body)).to include(a_string_matching(/Ashley/))
     end
 
     it "records the importing admin as the creator" do
