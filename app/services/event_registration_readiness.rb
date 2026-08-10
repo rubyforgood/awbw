@@ -176,7 +176,7 @@ class EventRegistrationReadiness
   end
 
   def ce_certificate_pending?
-    registration.ce_registered? && !ce_certificate_sent?
+    certifiable_ce.any? && !ce_certificate_sent?
   end
 
   # Post-event criteria are only met by a full "attended". "incomplete_attendance"
@@ -186,10 +186,19 @@ class EventRegistrationReadiness
     registration.status == "incomplete_attendance" ? "Attendance incomplete" : "Did not attend"
   end
 
-  # The admin-created CE billing records for this registration (preloaded on the
-  # roster). Their payment + certificate state drives the CE readiness checks.
+  # The admin-created CE billing records homed on this registration (preloaded on
+  # the roster). Their PAYMENT + license state drives the CE money/license checks;
+  # these stay on the home reg after a transfer.
   def ce_registrations
     registration.continuing_education_registrations
+  end
+
+  # The CE this registration is responsible for CERTIFYING — its own plus any
+  # transferred in to be certified here (a transferred-out reg certifies none).
+  # Certificate checks use this so certification follows the person to the
+  # intended event. (issue #1944)
+  def certifiable_ce
+    registration.certifiable_ce_registrations
   end
 
   # CE is paid once every CE registration is paid in full. A requested-but-not-yet
@@ -204,9 +213,9 @@ class EventRegistrationReadiness
     registration.certificate_sent?
   end
 
-  # CE certificates are sent once every CE registration's certificate has been
-  # sent. No CE registration yet means nothing has been issued.
+  # CE certificates are sent once every CE registration this reg certifies has
+  # been sent. No certifiable CE means nothing has been issued.
   def ce_certificate_sent?
-    ce_registrations.any? && ce_registrations.all?(&:certificate_sent?)
+    certifiable_ce.any? && certifiable_ce.all?(&:certificate_sent?)
   end
 end

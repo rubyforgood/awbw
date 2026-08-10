@@ -374,16 +374,32 @@
                     <%# Canonical CE badge (Requested → License # needed → $X due →
                         Pending → Issued). Each state links to the connected CE
                         registration's edit page; "Create" opens the new CE form. %>
-                    <% ce_registration = registration.continuing_education_registrations.first %>
-                    <% if ce_registration.nil? %>
-                      <%= render "shared/badge",
-                            label: "Create",
-                            classes: "bg-gray-50 text-gray-400 border-gray-200",
-                            href: new_continuing_education_registration_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"),
-                            title: "Add CE registration" %>
+                    <% if registration.transferred_in? %>
+                      <%# CE is certified here but the record + payment live on the
+                          original registration — link there, don't offer "Create". %>
+                      <% certified_ce = registration.certifiable_ce_registrations.first %>
+                      <% if certified_ce %>
+                        <%= render "shared/badge",
+                              label: "CE (transferred)",
+                              classes: "bg-teal-50 text-teal-700 border-teal-200",
+                              href: edit_continuing_education_registration_path(certified_ce, return_to: "registrants"),
+                              title: "CE hours certified here; record + payment on the original registration",
+                              target: "_blank", rel: "noopener" %>
+                      <% else %>
+                        <span class="text-gray-300">—</span>
+                      <% end %>
                     <% else %>
-                      <%= render "event_registrations/ce_status_badge", registration: registration,
-                            href: edit_continuing_education_registration_path(ce_registration, return_to: "registrants") %>
+                      <% ce_registration = registration.continuing_education_registrations.first %>
+                      <% if ce_registration.nil? %>
+                        <%= render "shared/badge",
+                              label: "Create",
+                              classes: "bg-gray-50 text-gray-400 border-gray-200",
+                              href: new_continuing_education_registration_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"),
+                              title: "Add CE registration" %>
+                      <% else %>
+                        <%= render "event_registrations/ce_status_badge", registration: registration,
+                              href: edit_continuing_education_registration_path(ce_registration, return_to: "registrants") %>
+                      <% end %>
                     <% end %>
                   </td>
                 <% end %>

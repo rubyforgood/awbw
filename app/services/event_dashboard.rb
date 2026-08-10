@@ -74,6 +74,12 @@ class EventDashboard
     people_sorted(transferred_in_registrant_ids)
   end
 
+  # Whether a registrant (Person id) transferred into this event — for surfaces
+  # that recognize them but flag that their money is billed to the source event.
+  def transferred_in_recipient?(person_id)
+    transferred_in_registrant_ids.include?(person_id)
+  end
+
   # Registrations with an attendance outcome on record (attended / incomplete /
   # no-show).
   def attendance_outcome_count
