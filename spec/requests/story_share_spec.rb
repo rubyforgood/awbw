@@ -189,6 +189,17 @@ RSpec.describe "/story_share", type: :request do
       get story_shares_path(sector_names_all: "Domestic Violence")
       expect(response.body).not_to include("A published-only secret")
     end
+
+    it "aggregates non-featured sectors on the additional focus areas page" do
+      featured = create(:sector, :published, name: "Featured Sector", story_share_position: 1)
+      extra = create(:sector, :published, name: "Homelessness")
+      create(:story, :published, :publicly_visible, title: "A featured-only story").tap { |s| s.sectorable_items.create!(sector: featured) }
+      create(:story, :published, :publicly_visible, title: "An additional-area story").tap { |s| s.sectorable_items.create!(sector: extra) }
+
+      get story_shares_path(additional_focus_areas: true)
+      expect(response.body).to include("An additional-area story")
+      expect(response.body).not_to include("A featured-only story")
+    end
   end
 
   # ==========================================================

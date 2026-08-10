@@ -5,7 +5,10 @@
          (the nearest positioned ancestor). */
       .nav-item.has-dropdown { position: static; }
 
-      /* Mega menu: full-width overlay under the top row */
+      /* Mega menu: full-width overlay under the top row. All four menus share the
+         same box, so only the hovered one may paint — hover-only (no
+         :focus-within, which would keep a clicked trigger's menu stuck open on
+         top of the others). The hovered menu is lifted above its siblings. */
       .nav-item.has-dropdown .mega-menu {
           position: absolute;           /* anchored to .nav-row.row-1 (position: relative) */
           left: 0;
@@ -14,13 +17,15 @@
           background: #f7f7f9;
           padding: 24px 0;
           box-shadow: 0 10px 30px rgba(0,0,0,0.10);
-          z-index: 9999;
-          display: none;
+          z-index: 9990;
+          visibility: hidden;
+          opacity: 0;
       }
 
-      .nav-item.has-dropdown:hover .mega-menu,
-      .nav-item.has-dropdown:focus-within .mega-menu {
-          display: block;
+      .nav-item.has-dropdown:hover .mega-menu {
+          visibility: visible;
+          opacity: 1;
+          z-index: 9999;
       }
 
       /* Native clear (✕) for the portal search, nudged left so it sits before
@@ -396,24 +401,7 @@
                       class: "font-telefon #{story_share_slot_theme(index)[:heading]} hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
         <% end %>
         <%= link_to "Facilitator Spotlights", story_shares_path(facilitator_spotlights: true), class: "font-telefon text-purple-700 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-        <% if additional_focus_area_sectors.any? %>
-          <div class="relative" data-controller="dropdown">
-            <button type="button"
-                    class="font-telefon text-[#F28C00] hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all"
-                    data-action="dropdown#toggle"
-                    data-dropdown-payload-param='[{"additional-focus-areas":"hidden"}]'>
-              Additional focus areas ▾
-            </button>
-            <div id="additional-focus-areas"
-                 data-dropdown-target="content"
-                 class="hidden absolute left-1/2 -translate-x-1/2 mt-2 w-64 max-h-96 overflow-y-auto bg-white rounded-md shadow-lg ring-1 ring-black/5 z-50 py-2">
-              <% additional_focus_area_sectors.each do |sector| %>
-                <%= link_to sector.name, story_shares_path(sector_names_all: sector.name),
-                            class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
+        <%= link_to "Additional Focus Areas", story_shares_path(additional_focus_areas: true), class: "font-telefon text-[#F28C00] hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
       </div>
     </div>
 
@@ -452,6 +440,7 @@
                       class: "block px-3 py-2 #{story_share_slot_theme(index)[:heading]} hover:bg-gray-100 text-base font-medium rounded-md" %>
         <% end %>
         <%= link_to "Facilitator Spotlights", story_shares_path(facilitator_spotlights: true), class: "block px-3 py-2 text-purple-700 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        <%= link_to "Additional Focus Areas", story_shares_path(additional_focus_areas: true), class: "block px-3 py-2 text-[#F28C00] hover:bg-gray-100 text-base font-medium rounded-md" %>
 
         <div class="border-t border-gray-200 my-2"></div>
 

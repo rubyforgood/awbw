@@ -39,10 +39,10 @@
       <div class="not-signed-in-user flex flex-col min-w-0 w-full <%= yield(:page_bg_class) %>">
         <%= render "shared/flash_messages" %>
         <%= yield %>
+        <%= render "story_shares/get_involved" %>
       </div>
     </div>
 
-    <div class="site-footer print:hidden"><%= render "shared/footer" %></div>
-    <%= render "shared/footer_nav" %>
+    <%= render "story_shares/portal_footer" %>
   </body>
 </html>

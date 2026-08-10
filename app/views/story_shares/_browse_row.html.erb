@@ -1,4 +1,3 @@
-<% sector = story.sectors.first %>
 <div class="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
   <!-- LEFT CONTENT -->
   <div>
@@ -22,15 +21,8 @@
 
   <!-- RIGHT IMAGE -->
   <div class="w-full">
-    <%= link_to story_share_path(story), class: "block relative" do %>
-      <div class="aspect-[4/3] rounded shadow-lg overflow-hidden bg-gray-200">
-        <%= image_tag story.display_image, alt: story.title, class: "w-full h-full object-cover" %>
-      </div>
-      <% if sector %>
-        <div class="absolute top-3 left-3 <%= story_share_sector_chip_class(sector.name) %> text-white text-xs font-semibold uppercase px-3 py-1.5">
-          <%= sector.name %>
-        </div>
-      <% end %>
+    <%= link_to story_share_path(story), class: "block rounded shadow-lg overflow-hidden" do %>
+      <%= render "story_image", story: story, aspect: "aspect-[4/3]" %>
     <% end %>
   </div>
 </div>

@@ -11,7 +11,7 @@ class StorySharesController < ApplicationController
   POPULAR_STORY_LIMIT = 4
   # Any of these params means the visitor is browsing a filtered result set
   # rather than the curated landing page.
-  BROWSE_PARAMS = %i[ sector_names_all category_names_all query facilitator_spotlights year page ].freeze
+  BROWSE_PARAMS = %i[ sector_names_all category_names_all query facilitator_spotlights additional_focus_areas year page ].freeze
 
   helper_method :browsing?
 
@@ -82,10 +82,19 @@ class StorySharesController < ApplicationController
   def load_browse
     per_page = params[:number_of_items_per_page].presence || 12
     filtered = portal_scope.search_by_params(params)
+    filtered = filtered.where(id: additional_focus_area_story_ids) if params[:additional_focus_areas].present?
     @count_display = filtered.count
     @stories = preloaded(filtered).order(created_at: :desc)
                                   .paginate(page: params[:page], per_page: per_page)
                                   .decorate
+  end
+
+  # "Additional focus areas": stories tagged with any published sector beyond the
+  # featured nav sectors — the catch-all page for the rest of the taxonomy.
+  def additional_focus_area_story_ids
+    sector_ids = Sector.published.excluding_other
+                       .where.not(name: Sector.story_share_featured.select(:name)).ids
+    SectorableItem.where(sectorable_type: "Story", sector_id: sector_ids).select(:sectorable_id)
   end
 
   # Related stories share a sector and/or a category, most-read first (then
