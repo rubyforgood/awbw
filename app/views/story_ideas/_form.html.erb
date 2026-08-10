@@ -75,23 +75,21 @@
           label: "Workshop",
           label_html: { class: "block font-medium mb-1 text-gray-700 #{ 'readonly' if promoted_to_story }" } %>
 
-        <button type="button"
-                class="mt-1 text-sm text-purple-700 hover:underline"
-                data-field-disclosure-target="trigger"
-                data-action="field-disclosure#reveal">
-          Enter custom title
-        </button>
-
-        <div class="hidden mt-2" data-field-disclosure-target="content">
+<%# Native <details> reveals the optional custom-title field on click — no JS.
+            Auto-opens when a title is already set so it isn't hidden on edit. %>
+        <details class="group mt-1"<%= " open".html_safe if f.object.external_workshop_title.present? %>>
+          <summary class="text-sm text-purple-700 hover:underline cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+            Enter custom title
+          </summary>
           <%= f.input :external_workshop_title,
                       as: :text,
                       label: "Workshop title (if different or unlisted)",
+                      wrapper_html: { class: "mt-2" },
                       input_html: {
                         rows: 1,
-                        data: { field_disclosure_target: "field" },
                         class: ("readonly" if promoted_to_story)
                       } %>
-        </div>
+        </details>
       </div>
       <div class="flex-1 mb-4 md:mb-0">
         <% default_org = default_organization_for_form(f.object) %>
