@@ -1282,6 +1282,18 @@ RSpec.describe EventDashboard do
       expect(dashboard.registrant_count).to eq(2)
     end
 
+    it "excludes a transferred-out registration from this event's attendee count" do
+      create(:event_registration, event: event, status: "transferred_out")
+
+      # Only paid_reg + the transferred-in incoming reg count; the transferred-out
+      # one withdrew and isn't an attendee here.
+      expect(dashboard.registrant_count).to eq(2)
+      expect(dashboard.expected_attendee_count).to eq(2)
+      expect(dashboard.attendance_registrants("attended", "registered")).not_to include(
+        an_object_having_attributes(id: EventRegistration.find_by(event: event, status: "transferred_out").registrant_id)
+      )
+    end
+
     it "excludes the transferred-in registrant from every financial total" do
       # Only the fully-paid registrant is billable here; the transferred-in one
       # owes nothing to this event (its balance is on the source registration).
