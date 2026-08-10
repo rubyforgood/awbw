@@ -22,6 +22,7 @@
    end || {} %>
 
 <%= render layout: "events/callouts/callout_page", locals: { title: @event.ce_hours_label, **callout_eyebrow } do %>
+  <%= render "event_registrations/transfer_notice", event_registration: @event_registration %>
   <%# Requesting CE flips this frame in place: the POST redirects back here and
       Turbo swaps in the license-entry branch — no full-page reload. %>
   <%= turbo_frame_tag "ce_request_section" do %>

@@ -8,6 +8,7 @@
 <% eyebrow = from_scholarship_edit ? { back_path: edit_scholarship_path(@scholarship), back_label: "Back to scholarship" } : {} %>
 
 <%= render layout: "events/callouts/callout_page", locals: { title: "Scholarship", **eyebrow } do %>
+  <%= render "event_registrations/transfer_notice", event_registration: @event_registration %>
   <div class="space-y-6">
     <% if @scholarship && allowed_to?(:edit?, @scholarship) %>
       <%# Admin-only jump to the management surface for this scholarship. Hidden from
