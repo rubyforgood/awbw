@@ -900,7 +900,7 @@ RSpec.describe "Events", type: :request do
 
       it "materializes the built-in callouts so the preview reads from real rows" do
         expect { get sample_ticket_event_path(event) }
-          .to change { event.registration_ticket_callouts.builtin.count }.from(0).to(8)
+          .to change { event.registration_ticket_callouts.builtin.count }.from(0).to(11)
       end
 
       it "logs an Ahoy page-view event" do
