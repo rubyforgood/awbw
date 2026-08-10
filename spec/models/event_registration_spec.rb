@@ -260,7 +260,7 @@ RSpec.describe EventRegistration, type: :model do
   describe ".funder_name" do
     it "matches registrations funded by a scholarship whose grant funder name matches" do
       matching_reg = create(:event_registration)
-      grant = create(:grant, funder: create(:organization, name: "Big Donor Foundation"))
+      grant = create(:grant, funder: create(:organization, name: "Big Funder Foundation"))
       scholarship = create(:scholarship, grant: grant, recipient: matching_reg.registrant)
       create(:allocation, source: scholarship, allocatable: matching_reg, amount: 0)
 
@@ -269,7 +269,7 @@ RSpec.describe EventRegistration, type: :model do
                      recipient: other_reg.registrant)
       create(:allocation, source: other, allocatable: other_reg, amount: 0)
 
-      results = EventRegistration.funder_name("big donor")
+      results = EventRegistration.funder_name("big funder")
       expect(results).to include(matching_reg)
       expect(results).not_to include(other_reg)
     end
