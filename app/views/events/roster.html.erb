@@ -93,15 +93,19 @@
   <div data-controller="panel-toggle" class="mt-6">
     <%# Toggle bar: hide/show the registrants table and the demographic charts.
         Charts start hidden; revealing the panel loads its lazy Turbo frame on
-        first show, so the breakdown queries only run on demand. %>
-    <%= render "events/charts_toggle_bar", buttons: [
-          { name: "registrants", icon: "fa-table-list", shown_label: "Hide registrants", hidden_label: "Show registrants", expanded: true },
-          { name: "charts", icon: "fa-chart-column", shown_label: "Hide breakdowns", hidden_label: "Show breakdowns", expanded: charts_open }
-        ] %>
+        first show, so the breakdown queries only run on demand. It rides at the
+        right of the Registrants heading's row rather than on a row of its own,
+        so it already carries that panel's control (hence toggle: false). %>
+    <% toggle_bar = capture do %>
+      <%= render "events/charts_toggle_bar", margin: "", buttons: [
+            { name: "registrants", icon: "fa-table-list", shown_label: "Hide registrants", hidden_label: "Show registrants", expanded: true },
+            { name: "charts", icon: "fa-chart-column", shown_label: "Hide breakdowns", hidden_label: "Show breakdowns", expanded: charts_open }
+          ] %>
+    <% end %>
 
     <%# Registrants panel — shown by default. %>
     <%= render "events/section_heading", title: "Registrants", icon: "fa-users",
-          theme: :people, intensity: 700, panel: "registrants", open: true %>
+          theme: :people, intensity: 700, toggle: false, actions: toggle_bar %>
     <div data-panel-toggle-target="panel" data-panel-toggle-name="registrants">
       <%# A breakdown row narrows this table in place. The chip says what's applied
           — otherwise the shorter list looks like missing data — and clears it. %>

@@ -49,14 +49,18 @@
   <div data-controller="panel-toggle">
   <% if @dashboard.scholarship_applicants.any? %>
     <%# Top-right toggle: hide/show the recipient cards and the recipient charts.
-        Charts start hidden; revealing loads the lazy frame on first show. %>
-    <%= render "events/charts_toggle_bar", buttons: [
-          { name: "recipients", icon: "fa-user-graduate", shown_label: "Hide recipients", hidden_label: "Show recipients", expanded: true },
-          ({ name: "shoutouts", icon: "fa-bullhorn", shown_label: "Hide shout outs", hidden_label: "Show shout outs", expanded: true } if @dashboard.shoutouts.any?),
-          { name: "charts", icon: "fa-chart-column", shown_label: "Hide breakdowns", hidden_label: "Show breakdowns", expanded: charts_open }
-        ].compact %>
+        Charts start hidden; revealing loads the lazy frame on first show. It rides
+        at the right of the Recipients heading's row rather than on a row of its
+        own, so it already carries that panel's control. %>
+    <% toggle_bar = capture do %>
+      <%= render "events/charts_toggle_bar", margin: "", buttons: [
+            { name: "recipients", icon: "fa-user-graduate", shown_label: "Hide recipients", hidden_label: "Show recipients", expanded: true },
+            ({ name: "shoutouts", icon: "fa-bullhorn", shown_label: "Hide shout outs", hidden_label: "Show shout outs", expanded: true } if @dashboard.shoutouts.any?),
+            { name: "charts", icon: "fa-chart-column", shown_label: "Hide breakdowns", hidden_label: "Show breakdowns", expanded: charts_open }
+          ].compact %>
+    <% end %>
     <%= render "events/section_heading", title: "Recipients", icon: "fa-user-graduate",
-          theme: :scholarships, panel: "recipients", open: true %>
+          theme: :scholarships, toggle: false, actions: toggle_bar %>
     <%# A breakdown row narrows the cards in place; the chip says what's applied so
         the shorter list doesn't read as missing data, and clears it. %>
     <% drill_ins = AttendeesActiveFilters.new(params, chip_params: %w[ registrant_ids ]).chips %>

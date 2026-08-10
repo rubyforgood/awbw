@@ -3029,14 +3029,20 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Showing 1 of 2")
       end
 
-      it "gives every section a Show/Hide toggle beside its heading" do
+      it "gives every section a Show/Hide control beside its heading" do
         get recipients_event_path(event)
         page = Capybara.string(response.body)
 
         %w[ recipients charts ].each do |panel|
-          expect(page).to have_selector("button[data-panel-toggle-name='#{panel}'][aria-label^='Toggle']", visible: :all)
+          expect(page).to have_selector("button[data-panel-toggle-name='#{panel}']", visible: :all)
         end
-        # Short label; the heading beside it supplies the subject.
+        # The top toggle bar rides at the right of the first heading's row, so that
+        # section's control is the bar's own button — whose visible label already
+        # names the subject — rather than a second inline pill in the same row.
+        expect(page).to have_selector("button[data-panel-toggle-name='recipients']", text: "Hide recipients", visible: :all)
+        expect(page).to have_no_selector("button[data-panel-toggle-name='recipients'][aria-label^='Toggle']", visible: :all)
+        # Sections further down keep the short pill; the heading beside it supplies
+        # the subject, so aria-label carries it for screen readers.
         expect(page).to have_selector("button[aria-label='Toggle breakdowns']", text: "Show", visible: :all)
       end
 
