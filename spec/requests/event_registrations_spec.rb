@@ -1159,6 +1159,25 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(flash[:warning]).to include("were not applied").and include("Government agency").and include("For-profit")
         end
 
+        # An org whose every answer conflicts is written nothing at all, and it's
+        # the one whose note matters most — so the pin follows the submission that
+        # describes the org, not the subset of answers that made it onto the record.
+        it "pins the submission even when every answer conflicted and nothing was written" do
+          organization.update!(agency_type: "For-profit", website_url: "https://curated.org")
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_website" => "https://other.org", "agency_type" => "Government agency" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
+
+          link = existing_registration.event_registration_organizations.find_by(organization: organization)
+          expect(link).to have_attributes(form_submission: submission, form_filled_labels: [])
+        end
+
         # The submission that describes an org is pinned on the link when it's made,
         # so the discrepancy note survives however many orgs are linked afterwards.
         # Recomputing the pairing per request would drop it here: the org's name isn't
@@ -1386,6 +1405,24 @@ RSpec.describe "EventRegistrations", type: :request do
           organization = Organization.find_by(name: "Brand New Org")
           expect(organization.website_url).to include("brandnew.org")
           expect(existing_registration.event_registration_organizations.find_by(organization: organization).form_filled_labels).to be_empty
+        end
+
+        # An org built out of the submission is still an org the submission wrote,
+        # so it's pinned like any other. Only the "filled from the form" note is
+        # skipped for a new org — there's no prior value it could have changed.
+        it "pins the submission on an org it created from it" do
+          create(:organization_status, name: "Active")
+          reg_form = create(:form, name: "Reg form")
+          name_field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Brand New Org")
+
+          post create_organization_event_registration_path(existing_registration)
+
+          organization = Organization.find_by(name: "Brand New Org")
+          link = existing_registration.event_registration_organizations.find_by(organization: organization)
+          expect(link.form_submission).to eq(submission)
         end
 
         it "does not overwrite an existing org's curated website and type" do

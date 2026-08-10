@@ -255,7 +255,7 @@ Which submission's answers apply to which org is decided by `EventRegistrationsC
 Both flows record on `EventRegistrationOrganization` what the submission meant for the org, so the linking page can say it persistently after the flash is gone:
 
 - `form_filled_fields` (`form_filled_labels` / `record_form_fills`) — the labels of what the form actually wrote onto an org that already existed
-- `form_submission_id` (`record_form_submission`) — the submission whose answers describe this org, pinned when the link is made. The name and sole-org rules above are re-derived per request, so without the pin an org linked under a name the registrant didn't type (or renamed afterwards) would lose its answers, and its discrepancy note, the moment a second org was linked
+- `form_submission_id` (`record_form_submission`) — the submission whose answers describe this org, pinned when the link is made. The name and sole-org rules above are re-derived per request, so without the pin an org linked under a name the registrant didn't type (or renamed afterwards) would lose its answers, and its discrepancy note, the moment a second org was linked. Pinned whenever a submission describes the org — including an org the submission itself created, and including one where every answer conflicted so nothing was written (that org is precisely the one whose discrepancy note has to survive). Unlike `form_filled_fields`, which a newly-created org deliberately doesn't get, there is no case where a submission writes to an org without pinning
 
 ### Notifications
 
