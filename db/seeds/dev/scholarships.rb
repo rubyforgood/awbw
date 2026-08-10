@@ -166,7 +166,7 @@ scholarship_answer_sets = [
       "and the ripple effect on the survivors we serve would be immediate.",
     "scholarship_contribution" => "Our agency can contribute about $250 toward the cost.",
     "sector" => "Sexual Assault",
-    "age_group" => "Adults (18+)",
+    "age_group" => "Adults",
     "title" => "Prevention, Education, and Outreach Specialist"
   },
   {
@@ -183,7 +183,7 @@ scholarship_answer_sets = [
       "I've wanted formal facilitation training for years but our continuing-education budget was cut. This scholarship would change that.",
     "scholarship_contribution" => "I could personally cover roughly $150.",
     "sector" => "Mental Health",
-    "age_group" => "Adults (18+)",
+    "age_group" => "Adults",
     "title" => "Behavioral Health Clinician"
   },
   {
@@ -200,7 +200,7 @@ scholarship_answer_sets = [
       "Our program serves families at no cost, so outside funding for my training is what makes this possible. Thank you.",
     "scholarship_contribution" => "Unfortunately we can't contribute anything at this time.",
     "sector" => "Child Abuse/Neglect",
-    "age_group" => "Children (0-12)",
+    "age_group" => "Children",
     "title" => "Youth Program Coordinator"
   },
   {
@@ -217,7 +217,7 @@ scholarship_answer_sets = [
       "I'm so grateful for this opportunity. Investing in me is investing in everyone I'll go on to support.",
     "scholarship_contribution" => "I'm able to pay up to $100 out of pocket.",
     "sector" => "Domestic Violence",
-    "age_group" => "Adults (18+)",
+    "age_group" => "Adults",
     "title" => "Peer Support Specialist"
   }
 ]

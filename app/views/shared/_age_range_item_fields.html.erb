@@ -3,7 +3,7 @@
     shows its name; a new one (added via "Add age range") shows a select. The
     single-select primary star is driven by the shared primary-tag controller.
     There is no leader/crown flag for age ranges. %>
-<% collection ||= @age_ranges_collection || Category.age_ranges.published.order(:position, :name).pluck(:name, :id) %>
+<% collection ||= @age_ranges_collection || Category.age_ranges.published.order(:position, :name).map { |c| [ c.decorate.age_group_label, c.id ] } %>
 <% is_primary = f.object&.is_primary? %>
 <div class="nested-fields inline-flex items-center gap-2
             rounded-md border border-lime-300 <%= is_primary ? "bg-lime-100" : "bg-lime-50" %>
@@ -11,7 +11,7 @@
      data-primary-tag-target="chip">
   <% if f.object&.category_id.present? %>
     <%= f.hidden_field :category_id %>
-    <span><%= f.object.category&.name %></span>
+    <span><%= f.object.category&.decorate&.age_group_label %></span>
   <% else %>
     <%= f.input :category_id,
                 as: :select,

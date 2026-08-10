@@ -153,6 +153,18 @@ OrganizationObligation::OBLIGATION_TYPES.each do |obligation_type|
   OrganizationObligation.where(name: obligation_type).first_or_create!
 end
 
+puts "Creating legacy scholarship Grants…"
+# Named legacy scholarship funds. Story-import rows tagged "Cathy scholarship" /
+# "babs mayer" connect to these via the recipient's Scholarship (grant → scholarship
+# → recipient, who is the story author). Funded by AWBW; change the funder if a
+# legacy fund is attributed to an individual donor instead.
+[ "Cathy Salser Legacy Scholarship", "Babs Mayer Legacy Scholarship" ].each do |grant_name|
+  Grant.find_or_create_by!(name: grant_name) do |grant|
+    grant.funder = awbw_org
+    grant.amount_cents = 0
+  end
+end
+
 puts "Creating Sectors…"
 # Optional descriptions clarify a sector on the public registration form: shown as
 # subtext under the checkbox in the additional sectors list, and folded into
@@ -192,10 +204,7 @@ end
 
 puts "Creating CategoryTypes/Categories…"
 category_type_categories = [
-  [ "AgeRange", "Children (0-12)" ],
-  [ "AgeRange", "Teens (13-17)" ],
-  [ "AgeRange", "Adults (18+)" ],
-  [ "AgeRange", "Elders (65+)" ],
+  # AgeRange is reconciled separately below (clean names + description ranges).
   # ["ArtType", "Boxes", 1],
   [ "ArtType", "Clay", 11 ],
   [ "ArtType", "Collage", 2 ],
@@ -308,20 +317,62 @@ category_type_categories.each do |category_type_name, category_name, _legacy_id|
   cat.update!(published: true) unless cat.published?
 end
 
-# Unpublish any AgeRange category no longer on the canonical list (e.g. the
-# retired "3-5" / "6-12" / "Family windows" buckets), preserving historical
-# taggings rather than destroying them, so the public form's age dropdowns only
-# offer the current ranges. Scoped to AgeRange so other category types are untouched.
-canonical_age_ranges = category_type_categories
-  .select { |type_name, _name| type_name == "AgeRange" }
-  .map { |_type_name, name| name.downcase }
-age_range_type = CategoryType.find_by(name: "AgeRange")
-age_range_type&.categories&.reject { |category| canonical_age_ranges.include?(category.name.downcase) }
-  &.each { |category| category.update!(published: false) }
+# Bulk-reconcile display positions to match the production portal, bypassing the
+# positioning gem (as the workshop-settings block does) so exact numbers — gaps
+# and all — stick. Parks everything high first to dodge the unique
+# [category_type_id, position] index mid-reconcile.
+set_category_positions = ->(category_type, positions) do
+  category_type.categories.order(:id).each_with_index do |cat, i|
+    cat.update_columns(position: 100_000 + i)
+  end
+  positions.each do |name, position|
+    category_type.categories.where("LOWER(name) = LOWER(?)", name).first&.update_columns(position: position)
+  end
+end
 
-puts "Setting AgeRange category positions…"
-Category.heal_position_column!
+# Categories kept in the seeds for their history but no longer offered — flipped
+# to unpublished (taggings preserved) so the published set matches the production portal.
+unpublished_categories = {
+  "ArtType" => [ "Coloring", "Poetry/Creative Writing", "Touchstones", "Watercolor" ],
+  "EmotionalTheme" => [ "Gratitude", "Self-Regulation" ],
+  "Focus" => [ "Collaboration and Mutuality", "Cultural Issues", "Empowerment, Voice, and Choice",
+               "Gender Issues", "Historical Trauma", "Peer Support", "Transparency" ]
+}
+unpublished_categories.each do |type_name, names|
+  ct = CategoryType.find_by(name: type_name)
+  next unless ct
+  ct.categories.where("LOWER(name) IN (?)", names.map(&:downcase)).find_each { |cat| cat.update!(published: false) }
+end
 
+# Display order for the published topic categories, matching the production portal.
+{
+  "ArtType" => [ [ "Clay", 1 ], [ "Collage", 2 ], [ "Cray-Pas (crayon, oil pastels)", 4 ], [ "Digital Media", 5 ],
+                 [ "Dolls", 6 ], [ "Drawing", 7 ], [ "Embodied Art", 8 ], [ "Jewelry", 9 ], [ "Journaling", 10 ],
+                 [ "Masks", 11 ], [ "Mixed-Media", 12 ], [ "Painting", 13 ], [ "Puppets", 15 ], [ "Scratch Art", 16 ],
+                 [ "Sculpture", 17 ], [ "Shrinky Dinks", 18 ] ],
+  "EmotionalTheme" => [ [ "Communication", 1 ], [ "Discovering My Feelings", 2 ], [ "Empathy", 3 ], [ "Grief", 5 ],
+                        [ "Handling Anger", 6 ], [ "Hopeful Future", 7 ], [ "My Body", 8 ],
+                        [ "Relationships / Boundaries", 9 ], [ "Safety and Security", 10 ], [ "Self-Care", 11 ],
+                        [ "Self-Esteem", 12 ], [ "Spirituality", 14 ], [ "Transitions", 15 ], [ "Who Am I?", 16 ] ],
+  "HolidayTheme" => [ [ "Chanukah", 1 ], [ "Child Abuse Prevention Month", 2 ], [ "Christmas", 3 ], [ "Denim Day", 4 ],
+                      [ "DV Awareness Month", 5 ], [ "Easter", 6 ], [ "Father's Day", 7 ], [ "Independence Day", 8 ],
+                      [ "Mother's Day", 9 ], [ "New Year", 10 ], [ "Sexual Assault Awareness Month", 11 ],
+                      [ "St. Patrick's Day", 12 ], [ "Teen Dating Violence Awareness Month", 13 ], [ "Valentine's Day", 14 ] ],
+  "Focus" => [ [ "Adults and Children Together", 1 ], [ "Community Engagement", 3 ], [ "Dating Violence for Teens", 5 ],
+               [ "DV 101", 6 ], [ "Easy Set-up", 7 ], [ "Good for Exhibits", 10 ], [ "Good for New Leaders", 11 ],
+               [ "Good for New Participants", 12 ], [ "Good for One-on-One Sessions", 13 ], [ "Good for Staff", 14 ],
+               [ "Inexpensive Supplies", 16 ], [ "Movement and Body Awareness", 17 ], [ "Resilience", 19 ],
+               [ "Skill Building", 20 ], [ "Social Emotional Learning", 21 ], [ "Spanish Translation", 22 ],
+               [ "Team Building", 23 ] ]
+}.each do |type_name, positions|
+  ct = CategoryType.find_by(name: type_name)
+  set_category_positions.(ct, positions) if ct
+end
+
+# --- StoryPopulation (reconciled BEFORE AgeRange) --------------------------
+# The age twins carry a trailing underscore so the clean names are free for
+# AgeRange (Category names are globally unique). Run before AgeRange so renaming
+# AgeRange to "Children"/"Teens"/"Adults" doesn't collide with these.
 puts "Creating StoryPopulation CategoryType…"
 story_population_type = find_or_create_by_name!(CategoryType, "StoryPopulation") do |ct|
   ct.display_text = "Who is this story about?"
@@ -330,18 +381,56 @@ story_population_type = find_or_create_by_name!(CategoryType, "StoryPopulation")
 end
 story_population_type.update!(display_text: "Who is this story about?", story_specific: true, published: true)
 
-%w[Adults Children Colleagues Community Families Self Teens].each do |name|
-  cat = Category.where("LOWER(name) = LOWER(?)", name).first
-  if cat
-    cat.update!(category_type: story_population_type) unless cat.category_type_id == story_population_type.id
-  else
-    cat = story_population_type.categories.create!(name: name, published: true)
-  end
-  cat.update!(published: true) unless cat.published?
+# [ target name, legacy clean name, position ]. The underscore names match the
+# earlier clean form so a pre-rename category is renamed in place, not duplicated.
+story_populations = [
+  [ "Colleagues", "Colleagues", 1 ],
+  [ "Community", "Community", 2 ],
+  [ "Self", "Self", 3 ],
+  [ "Teens_", "Teens", 4 ],
+  [ "Children_", "Children", 5 ],
+  [ "Adults_", "Adults", 6 ],
+  [ "Families", "Families", 7 ]
+]
+story_populations.each do |name, legacy, _position|
+  cat = story_population_type.categories.where("LOWER(name) = LOWER(?)", name).first ||
+        story_population_type.categories.where("LOWER(name) = LOWER(?)", legacy).first ||
+        story_population_type.categories.create!(name: name)
+  cat.update!(name: name, published: true)
+end
+set_category_positions.(story_population_type, story_populations.map { |name, _, position| [ name, position ] })
+
+# --- AgeRange --------------------------------------------------------------
+# Clean names with the range moved into the description column (matching the
+# production portal). Match the clean name or the earlier "Name (range)" form so a
+# category seeded before the split is renamed in place — preserving taggings.
+puts "Reconciling AgeRange categories…"
+age_range_type = find_or_create_by_name!(CategoryType, "AgeRange", published: true)
+age_range_type.update!(published: true) unless age_range_type.published?
+
+# [ clean name, description, position ]
+age_ranges = [
+  [ "Children", "0-12", 1 ],
+  [ "Teens", "13-17", 2 ],
+  [ "Adults", "18+", 3 ],
+  [ "Elders", "65+", 6 ]
+]
+age_ranges.each do |name, description, _position|
+  cat = age_range_type.categories.where("LOWER(name) = LOWER(?)", name).first ||
+        age_range_type.categories.where("LOWER(name) LIKE LOWER(?)", "#{name} (%").first ||
+        age_range_type.categories.create!(name: name)
+  cat.update!(name: name, published: true, description: description)
 end
 
-# Order the audience nav row in the Story Share portal. Admins can change these
-# from the Categories admin.
+# Unpublish any AgeRange no longer on the canonical list (retired 3-5 / 6-12 /
+# Family windows buckets), preserving taggings.
+canonical_age_names = age_ranges.map { |name, _, _| name.downcase }
+age_range_type.categories.reject { |cat| canonical_age_names.include?(cat.name.downcase) }
+  .each { |cat| cat.update!(published: false) }
+set_category_positions.(age_range_type, age_ranges.map { |name, _, position| [ name, position ] })
+
+# Order the Story Share audience nav. The age groups resolve to the clean-named
+# AgeRange categories; the rest to their StoryPopulation categories.
 %w[Children Teens Adults Families Community Self Colleagues].each_with_index do |name, index|
   Category.where("LOWER(name) = LOWER(?)", name).first&.update!(story_share_position: index + 1)
 end
