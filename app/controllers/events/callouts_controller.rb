@@ -1,6 +1,6 @@
 module Events
   # Public show pages for a registration ticket's built-in callouts (payment, CE,
-  # scholarship, handouts, videoconference, FAQ, certificate).
+  # scholarship, handouts, videoconference, FAQ, certificate, LinkedIn badge).
   # Each is reachable by the registration slug — the slug is the authorization,
   # so no login is required (mirrors the public ticket/invoice pages).
   class CalloutsController < ApplicationController
@@ -12,7 +12,7 @@ module Events
     before_action :set_event
     # These pages carry an editable intro (the built-in row's "Callout page text")
     # above the app-controlled content, plus any resources linked to the row.
-    before_action :set_builtin_content, only: %i[ payment scholarship certificate videoconference staff ]
+    before_action :set_builtin_content, only: %i[ payment scholarship certificate linkedin_badge videoconference staff ]
 
     helper_method :sample_preview?
 
@@ -39,6 +39,14 @@ module Events
     def certificate
       # The page shows the certificate once unlocked, or the pending unlock
       # conditions until then, so there's nothing to gate here.
+    end
+
+    # Add-to-LinkedIn page: the button that pre-fills the member's LinkedIn
+    # certifications form, shown once the facilitator-training certificate unlocks.
+    # Same gate as the certificate card; the sample preview bypasses it.
+    def linkedin_badge
+      return if sample_preview?
+      redirect_to(registration_ticket_path(@event_registration.slug)) unless linkedin_badge_available?
     end
 
     # Scholarship status: the award (amount, funder, criteria, tasks) once a
@@ -302,6 +310,12 @@ module Events
     # a hidden or not-yet-materialized card can't surface via a stray link.
     def builtin_published?(builtin_key)
       @event.registration_ticket_callouts.exists?(builtin_key: builtin_key, hidden: false)
+    end
+
+    # The badge is a facilitator-training credential, so it's reachable only on a
+    # facilitator training whose certificate has unlocked (same gate as the card).
+    def linkedin_badge_available?
+      @event.facilitator_training? && @event_registration.certificate_available?
     end
 
     # Admin-only preview from the sample ticket. Renders these pages for an

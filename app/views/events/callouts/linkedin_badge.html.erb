@@ -1,0 +1,45 @@
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "Add to LinkedIn — #{@event.title}") %>
+<%
+  event = @event.decorate
+  add_to_profile_url = @event_registration.decorate.linkedin_add_to_profile_url
+  org_name = ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds")
+%>
+<%= render layout: "events/callouts/callout_page", locals: { title: "Add to LinkedIn" } do %>
+  <div class="space-y-6">
+    <p class="text-sm leading-relaxed text-gray-600">
+      You've completed a facilitator training with <%= org_name %> — add it to your
+      LinkedIn profile to show that you're a trained art workshop facilitator. We'll
+      pre-fill the details; you just review and save on LinkedIn.
+    </p>
+
+    <%# What LinkedIn will add, so the registrant knows before they click through. %>
+    <dl class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
+      <div class="flex justify-between gap-4 py-1">
+        <dt class="text-gray-500">Credential</dt>
+        <dd class="text-right font-medium text-gray-800"><%= event.title %></dd>
+      </div>
+      <div class="flex justify-between gap-4 py-1">
+        <dt class="text-gray-500">Issued by</dt>
+        <dd class="text-right font-medium text-gray-800"><%= org_name %></dd>
+      </div>
+      <% if @event.end_date.present? %>
+        <div class="flex justify-between gap-4 py-1">
+          <dt class="text-gray-500">Issued</dt>
+          <dd class="text-right font-medium text-gray-800"><%= @event.end_date.to_date.strftime("%B %Y") %></dd>
+        </div>
+      <% end %>
+    </dl>
+
+    <%= link_to add_to_profile_url, target: "_blank", rel: "noopener",
+          class: "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#0a66c2] px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#004182] transition-colors" do %>
+      <i class="fa-brands fa-linkedin text-lg"></i> Add to LinkedIn
+    <% end %>
+
+    <p class="text-center text-xs text-gray-500">
+      Opens LinkedIn in a new tab. Anyone can confirm this credential on your
+      <%= link_to "public verification page", credential_path(@event_registration.slug),
+            class: "font-medium text-purple-700 underline hover:text-purple-900" %>.
+    </p>
+  </div>
+<% end %>

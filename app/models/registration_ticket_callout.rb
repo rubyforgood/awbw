@@ -11,7 +11,7 @@ class RegistrationTicketCallout < ApplicationRecord
   # that key. Admin-authored callouts have a nil builtin_key. Built-in callouts are
   # hidden rather than destroyed so they can be restored to their default.
   BUILTIN_KEYS = %w[
-    payment certificate scholarship ce_hours art_supplies
+    payment certificate linkedin_badge scholarship ce_hours art_supplies
     videoconference staff handouts faq
   ].freeze
 

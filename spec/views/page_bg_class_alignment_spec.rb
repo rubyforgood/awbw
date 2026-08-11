@@ -238,6 +238,8 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/events/callouts/faq.html.erb"              => "public",
     "app/views/events/callouts/payment.html.erb"          => "public",
     "app/views/events/callouts/certificate.html.erb"      => "public",
+    "app/views/events/callouts/linkedin_badge.html.erb"   => "public",
+    "app/views/credentials/show.html.erb"                 => "public",
     "app/views/events/callouts/ce.html.erb"               => "public",
     "app/views/events/callouts/handouts.html.erb"         => "public",
     "app/views/events/callouts/resource.html.erb"         => "public",

@@ -278,6 +278,17 @@ class BuiltinCallouts
         hidden: ->(_event) { true }
       },
       {
+        builtin_key: "linkedin_badge",
+        title: "Add to LinkedIn",
+        subtitle: "Add your facilitator credential to your profile",
+        callout_type: "action",
+        icon_class: "fa-brands fa-linkedin",
+        color_class: "blue",
+        # Only reaches the ticket on a facilitator training, once the certificate
+        # unlocks (BuiltinCalloutCards guards this); like certificate, seeds hidden.
+        hidden: ->(_event) { true }
+      },
+      {
         builtin_key: "faq",
         title: "Frequently asked questions",
         subtitle: "Common questions about the 2-day training",

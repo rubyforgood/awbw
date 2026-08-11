@@ -57,6 +57,7 @@ class BuiltinCalloutCards
       EditorCard.new("staff", "fa-solid fa-people-group", "blue", "Meet the staff", "The team for this event", "When the event has staff", "The roster comes from this event's staff."),
       EditorCard.new("handouts", "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the event", "On facilitator trainings", "Items link to their relevant resources."),
       EditorCard.new("certificate", "fa-solid fa-certificate", "green", "Certificate of completion", "View and download your certificate", "Once the certificate is unlocked", nil),
+      EditorCard.new("linkedin_badge", "fa-brands fa-linkedin", "blue", "Add to LinkedIn", "Add your facilitator credential to your profile", "On facilitator trainings, once the certificate is unlocked", "The credential links to a public verification page for this registrant."),
       EditorCard.new("faq", "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "On facilitator trainings", nil)
     ].reject { |card| materialized.include?(card.builtin_key) }
   end
@@ -70,7 +71,8 @@ class BuiltinCalloutCards
     "ce_hours" => :ce_hours_card,
     "videoconference" => :videoconference_card,
     "staff" => :staff_card,
-    "certificate" => :certificate_card
+    "certificate" => :certificate_card,
+    "linkedin_badge" => :linkedin_badge_card
   }.freeze
 
   # Why a built-in card with this builtin_key can never appear on the given event's
@@ -92,6 +94,8 @@ class BuiltinCalloutCards
       "this event has no videoconference link" if event.videoconference_url.blank?
     when "staff"
       "this event has no staff" unless event.event_staffs.exists?
+    when "linkedin_badge"
+      "this event isn't a facilitator training" unless event.facilitator_training?
     end
   end
 
@@ -106,7 +110,8 @@ class BuiltinCalloutCards
       "scholarship" => "add a scholarship form under form settings",
       "ce_hours" => "set CE hours above 0 under form settings",
       "videoconference" => "add a videoconference link",
-      "staff" => "connect some staff"
+      "staff" => "connect some staff",
+      "linkedin_badge" => "mark this event as a facilitator training"
     }[builtin_key]
   end
 
@@ -207,6 +212,20 @@ class BuiltinCalloutCards
              title: "Certificate of completion",
              subtitle: "View and download your certificate",
              href: registration_certificate_path(registration.slug),
+             target: nil, trailing_icon: "fa-solid fa-arrow-right")
+  end
+
+  # Shown on a facilitator training once the certificate unlocks (same gate as the
+  # certificate card): the registrant has earned the credential, so it links to the
+  # page where they add it to LinkedIn. The sample-ticket preview bypasses the gate
+  # so admins can preview and click through the card.
+  def linkedin_badge_card
+    return if self.class.config_gap(event, "linkedin_badge")
+    return unless @preview || registration.certificate_available?
+    Card.new(icon_class: "fa-brands fa-linkedin", color: "blue",
+             title: "Add to LinkedIn",
+             subtitle: "Add your facilitator credential to your profile",
+             href: registration_linkedin_badge_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 

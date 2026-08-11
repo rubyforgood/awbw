@@ -85,6 +85,7 @@ Rails.application.routes.draw do
   get "registration/:slug/faq", to: "events/callouts#faq", as: :registration_faq
   get "registration/:slug/payment", to: "events/callouts#payment", as: :registration_payment
   get "registration/:slug/certificate", to: "events/callouts#certificate", as: :registration_certificate
+  get "registration/:slug/linkedin_badge", to: "events/callouts#linkedin_badge", as: :registration_linkedin_badge
   get "registration/:slug/ce", to: "events/callouts#ce", as: :registration_ce
   post "registration/:slug/ce/license", to: "events/callouts#update_ce_license", as: :registration_ce_license
   post "registration/:slug/ce/request", to: "events/callouts#request_ce", as: :registration_ce_request
@@ -100,6 +101,9 @@ Rails.application.routes.draw do
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate
   post "registration/:slug/pay", to: "events/registrations#pay", as: :registration_pay
+  # Public per-person credential verification, reached from the certUrl on a
+  # registrant's LinkedIn "Add to Profile" badge. The slug is the authorization.
+  get "credential/:slug", to: "credentials#show", as: :credential
   resources :event_registrations do
     member do
       get :confirm

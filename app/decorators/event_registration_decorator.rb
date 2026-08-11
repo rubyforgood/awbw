@@ -142,6 +142,21 @@ class EventRegistrationDecorator < ApplicationDecorator
     "theme_default.png"
   end
 
+  # The LinkedIn "Add to Profile" deep link for this registration's facilitator
+  # training credential. The credential name is the event title for now — revisit:
+  # we may want a fixed credential name ("Art Workshop Facilitator") rather than the
+  # per-training title. certUrl points at the public per-person verification page.
+  def linkedin_add_to_profile_url
+    LinkedinAddToProfileUrl.new(
+      name: event.title,
+      issued_on: event.end_date,
+      cert_url: h.credential_url(slug),
+      cert_id: slug,
+      organization_name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"),
+      organization_id: ENV["LINKEDIN_ORGANIZATION_ID"].presence
+    ).to_s
+  end
+
   private
 
   def ce_badge(label, icon, color)
