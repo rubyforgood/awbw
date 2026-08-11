@@ -1,37 +1,41 @@
 # Scholarship report: scholarship dollars and award counts (funded vs unfunded)
 # per facilitator training, grouped by calendar year. The sibling of
 # EventRevenueReport / EventParticipationReport — same year-grouped shape and
-# statistics-hub period card, but counting scholarships.
+# reports-hub period card, but counting scholarships.
 #
 # Funded vs unfunded follows the app-wide convention (see EventDashboard):
 # funded = backed by an external grant; unfunded = no grant, or a grant the org
 # (AWBW) donated to itself. Alongside the money it carries a trainee headcount —
-# people who ATTENDED — split by delivery format: scheduled sessions total under
-# "Training" and self-paced ones (event.on_demand?) under "On-demand".
+# people who ATTENDED — split by delivery format: scheduled instructor-led
+# sessions total under "Live" and self-paced ones (event.on_demand?) under
+# "On-demand".
 #
 # Give it a collection of (decorated) facilitator-training events.
 class EventScholarshipReport
-  # One training's column. Sources every figure from EventDashboard so the
-  # funded/unfunded and attendance conventions can't drift from the dashboard.
-  Column = Struct.new(:event, :dashboard, keyword_init: true) do
-    def funded_cents = dashboard.funded_scholarship_cents
-    def unfunded_cents = dashboard.unfunded_scholarship_cents
-    def scholarship_cents = funded_cents + unfunded_cents
+  # One training's column. Sources every figure from EventScholarshipFigures, which
+  # mirrors EventDashboard's funded/unfunded and attendance conventions (held by a
+  # parity spec) but loads all events in a fixed number of queries.
+  Column = Struct.new(:event, :figures, keyword_init: true) do
+    def funded_cents = figures.funded_cents
+    def unfunded_cents = figures.unfunded_cents
+    def scholarship_cents = figures.scholarship_cents
 
-    def funded_count = dashboard.funded_scholarship_count
-    def unfunded_count = dashboard.unfunded_scholarship_count
-    def scholarship_count = funded_count + unfunded_count
+    def funded_count = figures.funded_count
+    def unfunded_count = figures.unfunded_count
+    def scholarship_count = figures.scholarship_count
 
-    # Trainees who fully attended (registration status "attended").
-    def attended_count = dashboard.attendance_count_for("attended")
+    # Trainees who fully attended (registration status "attended"), and — reported
+    # beside it, never folded in — those recorded as partial.
+    def attended_count = figures.attended_count
+    def incomplete_count = figures.incomplete_count
 
     # Per-recipient scholarship breakdown for the row's expander: the funded /
     # unfunded recipients (name-sorted Person records) and their dollars keyed by
     # Person id. A recipient can appear in one split, both, or neither.
-    def funded_recipients = dashboard.funded_scholarship_recipients
-    def unfunded_recipients = dashboard.unfunded_scholarship_recipients
-    def funded_cents_by_recipient = dashboard.funded_scholarship_cents_by_recipient
-    def unfunded_cents_by_recipient = dashboard.unfunded_scholarship_cents_by_recipient
+    def funded_recipients = figures.funded_recipients
+    def unfunded_recipients = figures.unfunded_recipients
+    def funded_cents_by_recipient = figures.funded_cents_by_recipient
+    def unfunded_cents_by_recipient = figures.unfunded_cents_by_recipient
 
     def on_demand? = event.on_demand?
     def label = event.compact_label
@@ -43,7 +47,7 @@ class EventScholarshipReport
   # across every column for the all-time total.
   SUMMABLE = %i[
     funded_cents unfunded_cents scholarship_cents
-    funded_count unfunded_count scholarship_count attended_count
+    funded_count unfunded_count scholarship_count attended_count incomplete_count
   ].freeze
 
   module Aggregates
@@ -52,7 +56,7 @@ class EventScholarshipReport
     end
 
     # Attendance split by delivery format — these sum to attended_count.
-    def training_attended_count = columns.reject(&:on_demand?).sum(&:attended_count)
+    def live_attended_count = columns.reject(&:on_demand?).sum(&:attended_count)
     def on_demand_attended_count = columns.select(&:on_demand?).sum(&:attended_count)
 
     # Distinct scholarship recipients who attended (registration status
@@ -60,7 +64,7 @@ class EventScholarshipReport
     # of these trainings counts once. Split by delivery format (a person attending
     # both formats counts in each split, so the two need not sum to the total).
     def recipients_attended_count = distinct_attended_recipient_count(columns.map { |column| column.event.id })
-    def training_recipients_attended_count = distinct_attended_recipient_count(columns.reject(&:on_demand?).map { |column| column.event.id })
+    def live_recipients_attended_count = distinct_attended_recipient_count(columns.reject(&:on_demand?).map { |column| column.event.id })
     def on_demand_recipients_attended_count = distinct_attended_recipient_count(columns.select(&:on_demand?).map { |column| column.event.id })
 
     private
@@ -89,7 +93,10 @@ class EventScholarshipReport
   end
 
   def columns
-    @columns ||= @events.map { |event| Column.new(event: event, dashboard: EventDashboard.new(event, scholarship_funder: @funder)) }
+    @columns ||= begin
+      figures = EventScholarshipFigures.new(@events, funder: @funder)
+      @events.map { |event| Column.new(event: event, figures: figures.for(event)) }
+    end
   end
 
   def any?

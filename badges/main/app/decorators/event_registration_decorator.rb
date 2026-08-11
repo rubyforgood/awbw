@@ -83,6 +83,36 @@ class EventRegistrationDecorator < ApplicationDecorator
       [ [ "#{BUDDY_PAYMENT_BADGE.label} (#{BUDDY_PAYMENT_BADGE.code})", EventRegistration::BUDDY_PAYMENT_FILTER ] ]
   end
 
+  # Attendance-status pill styling — the single source of truth shared by the
+  # editable badge on the registrants table and the read-only pill on the roster.
+  ATTENDANCE_STATUS_CLASSES = {
+    "registered" => "bg-blue-50 text-blue-700 border-blue-200",
+    "attended" => "bg-green-50 text-green-700 border-green-200",
+    "incomplete_attendance" => "bg-amber-50 text-amber-700 border-amber-200",
+    "cancelled" => "bg-gray-50 text-gray-500 border-gray-200",
+    "no_show" => "bg-red-50 text-red-700 border-red-200",
+    "transferred_in" => "bg-teal-50 text-teal-700 border-teal-200",
+    "transferred_out" => "bg-purple-50 text-purple-700 border-purple-200"
+  }.freeze
+
+  ATTENDANCE_STATUS_ICONS = {
+    "registered" => "fa-clipboard-list",
+    "attended" => "fa-circle-check",
+    "incomplete_attendance" => "fa-clock",
+    "cancelled" => "fa-ban",
+    "no_show" => "fa-circle-xmark",
+    "transferred_in" => "fa-right-to-bracket",
+    "transferred_out" => "fa-right-from-bracket"
+  }.freeze
+
+  def attendance_status_classes
+    ATTENDANCE_STATUS_CLASSES.fetch(status, "bg-gray-50 text-gray-500 border-gray-200")
+  end
+
+  def attendance_status_icon
+    ATTENDANCE_STATUS_ICONS.fetch(status, "fa-question")
+  end
+
   def title
     name
   end

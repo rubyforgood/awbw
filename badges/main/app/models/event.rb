@@ -94,6 +94,9 @@ class Event < ApplicationRecord
   # Events flagged as facilitator trainings (the "TAC" a scholarship recipient
   # attends). Drives the scholarship index's training column.
   scope :facilitator_trainings, -> { where(facilitator_training: true) }
+  # Delivery format: self-paced ("On-demand") vs scheduled instructor-led ("Live").
+  scope :on_demand, -> { where(on_demand: true) }
+  scope :live, -> { where(on_demand: false) }
   # start_date is a date column, so compare against a date — a Time would be cast
   # to midnight and drop events starting today.
   scope :upcoming, -> { where("start_date >= ?", Date.current) }

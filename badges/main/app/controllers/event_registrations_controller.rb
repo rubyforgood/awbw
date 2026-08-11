@@ -104,11 +104,16 @@ class EventRegistrationsController < ApplicationController
           when "ticket" then redirect_to registration_ticket_path(@event_registration.slug), notice: notice, status: :see_other
           when "preview_reminder" then redirect_to preview_reminder_event_path(@event_registration.event), notice: notice, status: :see_other
           when "onboarding" then redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
-          when "training_attendees" then redirect_to training_attendees_events_path, notice: notice, status: :see_other
+          when "attendees" then redirect_to attendees_events_path, notice: notice, status: :see_other
+          when "roster" then redirect_to roster_event_path(@event_registration.event), notice: notice, status: :see_other
+          # Two ways back to the recipients page: the shout-outs section (the
+          # feature-a-shout-out flow) or the recipient's own card (their name).
           when "recipients" then redirect_to recipients_event_path(@event_registration.event, anchor: "shout-outs"), notice: notice, status: :see_other
+          when "recipient_card" then redirect_to helpers.recipients_event_card_path(@event_registration.event, @event_registration.slug), notice: notice, status: :see_other
           else
             # No explicit origin: keep admins in the management context (the
-            # roster) rather than dropping them on the public registration show.
+            # registrants list) rather than dropping them on the public
+            # registration show.
             if allowed_to?(:manage?, with: EventRegistrationPolicy)
               redirect_to helpers.registrants_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
             else
@@ -302,7 +307,9 @@ class EventRegistrationsController < ApplicationController
     case params[:return_to]
     when "registrants" then redirect_to registrants_event_path(event)
     when "onboarding" then redirect_to onboarding_event_path(event)
-    when "training_attendees" then redirect_to training_attendees_events_path
+    when "attendees" then redirect_to attendees_events_path
+    when "roster" then redirect_to roster_event_path(event)
+    when "recipients", "recipient_card" then redirect_to recipients_event_path(event)
     else redirect_to event_registrations_path
     end
   end

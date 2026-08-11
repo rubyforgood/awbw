@@ -197,6 +197,64 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  # The attendees index composes these two rather than using one fixed scope, so
+  # that the same page can also answer "no shows" and "non-trainings".
+  describe ".attended composed with .event_type" do
+    let!(:training) { create(:event, facilitator_training: true) }
+    let!(:other) { create(:event, facilitator_training: false) }
+    let!(:attended) { create(:event_registration, event: training, status: "attended") }
+    let!(:no_show) { create(:event_registration, event: training, status: "no_show") }
+    let!(:other_event) { create(:event_registration, event: other, status: "attended") }
+
+    it "narrows to attended registrations on facilitator trainings" do
+      results = EventRegistration.attended.event_type("trainings")
+      expect(results).to include(attended)
+      expect(results).not_to include(no_show, other_event)
+    end
+
+    it "reaches the rows the old fixed scope could never return" do
+      expect(EventRegistration.attendance_status("no_show").event_type("trainings")).to include(no_show)
+      expect(EventRegistration.attended.event_type("other")).to include(other_event)
+    end
+
+    it "passes everything through when neither is applied" do
+      expect(EventRegistration.event_type(EventRegistration::FILTER_ALL))
+        .to include(attended, no_show, other_event)
+    end
+
+    # Same vocabulary as the report suite's Event type filter, which forwards its
+    # value straight into the attendees index.
+    it "splits trainings by delivery format" do
+      on_demand_training = create(:event, facilitator_training: true, on_demand: true)
+      on_demand_registration = create(:event_registration, event: on_demand_training, status: "attended")
+
+      expect(EventRegistration.event_type("live")).to include(attended)
+      expect(EventRegistration.event_type("live")).not_to include(on_demand_registration, other_event)
+      expect(EventRegistration.event_type("on_demand")).to include(on_demand_registration)
+      expect(EventRegistration.event_type("on_demand")).not_to include(attended, other_event)
+    end
+
+    it "offers the same options the report suite's Event type filter does" do
+      expect(EventRegistration::EVENT_TYPE_FILTER_OPTIONS.map(&:last))
+        .to eq(%w[ trainings live on_demand other ])
+    end
+  end
+
+  describe ".status_counts_by_event" do
+    it "returns { event_id => { status => count } } across the given events" do
+      e1 = create(:event)
+      e2 = create(:event)
+      create(:event_registration, event: e1, status: "attended")
+      create(:event_registration, event: e1, status: "attended")
+      create(:event_registration, event: e1, status: "no_show")
+      create(:event_registration, event: e2, status: "registered")
+
+      counts = EventRegistration.status_counts_by_event([ e1.id, e2.id ])
+      expect(counts[e1.id]).to eq("attended" => 2, "no_show" => 1)
+      expect(counts[e2.id]).to eq("registered" => 1)
+    end
+  end
+
   describe ".registrant_ids" do
     it "returns registrations for the registrants in a hyphenated id list" do
       person_a = create(:person)
@@ -435,6 +493,17 @@ RSpec.describe EventRegistration, type: :model do
         results = EventRegistration.funder("external")
         expect(results).to include(funded_reg)
         expect(results).not_to include(scholarship_reg, incomplete_scholarship_reg, paid_reg, unpaid_reg)
+      end
+
+      it "counts a grant AWBW funded itself as org-subsidized ('awbw'), not external" do
+        # Matches EventDashboard's funded/unfunded split: self-funding is subsidy.
+        awbw = create(:organization, name: "A Window Between Worlds")
+        self_funded_reg = create(:event_registration, event: event)
+        subsidy = create(:scholarship, recipient: self_funded_reg.registrant, grant: create(:grant, funder: awbw), amount_cents: 1000)
+        create(:allocation, source: subsidy, allocatable: self_funded_reg, amount: 1000)
+
+        expect(EventRegistration.funder("awbw")).to include(self_funded_reg)
+        expect(EventRegistration.funder("external")).not_to include(self_funded_reg)
       end
 
       it "returns an unfiltered relation for unknown values" do

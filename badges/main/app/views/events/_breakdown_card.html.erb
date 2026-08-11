@@ -52,9 +52,6 @@
       <tbody>
         <% data.each_with_index do |(label, count), i| %>
           <% path = row_paths[label] %>
-          <%# Registrants links carry a back-to-this-section eyebrow; leave other
-              destinations (e.g. the recipients page) untouched. %>
-          <% path = background_return_path(path, anchor) if path&.include?("/registrants") %>
           <tr class="border-t border-gray-100 <%= "group hover:bg-gray-50 cursor-pointer transition-colors" if path %>"
               <% if path %>onclick="window.location='<%= path %>'"<% end %>>
             <td class="py-1 text-gray-700">

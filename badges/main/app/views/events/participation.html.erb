@@ -1,4 +1,4 @@
-<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
 <%# Opt out of the layout's max-w-7xl cap to match the wider event manage pages. %>
 <% content_for(:full_width, true) %>
 
@@ -8,22 +8,23 @@
       <% if params[:return_to] == "dashboard" && params[:event_id].present? %>
         <%= link_to "← Dashboard", dashboard_event_path(params[:event_id]), class: "text-sm text-gray-500 hover:text-gray-700" %>
       <% else %>
-        <%= link_to "← Events statistics", statistics_events_path(report_to_statistics_params), class: "text-sm text-gray-500 hover:text-gray-700" %>
+        <%= link_to "← Reports", reports_events_path(report_to_hub_params), class: "text-sm text-gray-500 hover:text-gray-700" %>
       <% end %>
     </div>
 
-    <div class="mb-6 flex items-start justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-semibold text-gray-900">Events participation</h1>
-        <p class="text-gray-600 mt-1">
-          People who attended each event by year — counted as unique people, not seats.
-        </p>
-      </div>
-      <%= link_to training_attendees_events_path(return_to: "participation"),
-            class: "btn btn-secondary-outline whitespace-nowrap" do %>
-        <i class="fa-solid fa-user-pen"></i> Training attendees
+    <% attendees_link = capture do %>
+      <%= link_to attendees_events_path(return_to: "participation", event_id: params[:event_id].presence),
+            class: "text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap" do %>
+        <i class="fa-solid fa-user-pen"></i> Attendees
       <% end %>
-    </div>
+    <% end %>
+    <%= render "events/report_header",
+          title: "Event participation",
+          icon: "fa-solid fa-users",
+          theme: :people,
+          event: @filter_event,
+          subtitle: "People who attended each event by year — counted as unique people, not seats.",
+          actions: attendees_link %>
 
     <%# Ahoy-style filters — time period, event type and event — each
         auto-submitting a GET form so the report reshapes on change. %>
@@ -55,23 +56,23 @@
                 value_class: "text-blue-700", card_class: "border-blue-300 bg-blue-100",
                 note: featured.attended_seats == featured.unique_people ? "fully attended" : "#{number_with_delimiter(featured.attended_seats)} seats",
                 prior: prior&.unique_people, prior_year: prior&.year,
-                href: event_registrations_path(attendance_status: "attended", event_year: featured.year) %>
+                href: attendees_events_path(attendance_status: "attended", event_type: EventRegistration::FILTER_ALL, event_year: featured.year, event_id: params[:event_id].presence, return_to: "participation") %>
           <%= render "participation_kpi", label: "Partial (1-day)", value: featured.count_for("incomplete_attendance"),
                 value_class: "text-amber-700", card_class: "border-amber-300 bg-amber-50", note: "some days only",
                 prior: prior&.count_for("incomplete_attendance"), prior_year: prior&.year,
-                href: event_registrations_path(attendance_status: "incomplete_attendance", event_year: featured.year) %>
+                href: attendees_events_path(attendance_status: "incomplete_attendance", event_type: EventRegistration::FILTER_ALL, event_year: featured.year, event_id: params[:event_id].presence, return_to: "participation") %>
           <%= render "participation_kpi", label: "No show", value: featured.count_for("no_show"),
                 value_class: "text-red-600", card_class: "border-red-300 bg-red-50", note: "registered, absent",
                 prior: prior&.count_for("no_show"), prior_year: prior&.year,
-                href: event_registrations_path(attendance_status: "no_show", event_year: featured.year) %>
+                href: attendees_events_path(attendance_status: "no_show", event_type: EventRegistration::FILTER_ALL, event_year: featured.year, event_id: params[:event_id].presence, return_to: "participation") %>
           <%= render "participation_kpi", label: "Other", value: featured.count_other,
                 value_class: "text-purple-700", card_class: "border-purple-300 bg-purple-50", note: "registered, transfers, cancels",
                 prior: prior&.count_other, prior_year: prior&.year,
-                href: event_registrations_path(attendance_status: "other", event_year: featured.year) %>
+                href: attendees_events_path(attendance_status: "other", event_type: EventRegistration::FILTER_ALL, event_year: featured.year, event_id: params[:event_id].presence, return_to: "participation") %>
           <%= render "participation_kpi", label: "Registrations", value: featured.total_registrations,
                 value_class: "text-gray-900", card_class: "border-gray-300 bg-gray-50", note: "all outcomes",
                 prior: prior&.total_registrations, prior_year: prior&.year,
-                href: event_registrations_path(event_year: featured.year) %>
+                href: attendees_events_path(attendance_status: EventRegistration::FILTER_ALL, event_type: EventRegistration::FILTER_ALL, event_year: featured.year, event_id: params[:event_id].presence, return_to: "participation") %>
         </div>
       </section>
 
@@ -155,7 +156,7 @@
                     <div class="grid gap-x-4 gap-y-2 text-sm py-2"
                          style="grid-template-columns: repeat(7, minmax(0, 1fr))">
                       <% EventParticipationReport::STATUS_LABELS.each do |status, label| %>
-                        <%= link_to event_registrations_path(event_id: row.event.id, attendance_status: status),
+                        <%= link_to attendees_events_path(event_id: row.event.id, attendance_status: status, event_type: EventRegistration::FILTER_ALL, return_to: "participation"),
                               class: "flex items-baseline justify-between gap-2 rounded px-1 -mx-1 hover:bg-white transition-colors" do %>
                           <span class="text-gray-500 whitespace-nowrap"><%= label %></span>
                           <span class="tabular-nums text-gray-800"><%= number_with_delimiter(row.count_for(status)) %></span>
