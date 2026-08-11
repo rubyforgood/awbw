@@ -9,19 +9,21 @@ class EventRegistrationOrganization < ApplicationRecord
   validates :organization_id, uniqueness: { scope: :event_registration_id }
 
   # Labels of the org values written from this registration's form answers
-  # ("website", "type", "ZIP on the Austin work address"). Recorded when the org
-  # is linked so the linking page can persistently say what the submission
-  # changed on an org that already existed — the flash notice saying so is gone
-  # by the next page load.
+  # ("website", "type", "ZIP on the Austin work address") — the names of what
+  # changed, not the submitted answers themselves, which stay on the form
+  # submission. Recorded when the org is linked so the linking page can
+  # persistently say what the submission changed on an org that already existed —
+  # the flash notice saying so is gone by the next page load. Reads through the
+  # column so a never-filled link answers with [] rather than nil.
   def form_filled_labels
-    Array(form_filled_fields)
+    Array(super)
   end
 
   def record_form_fills(labels)
     merged = (form_filled_labels + labels).uniq
     return if merged == form_filled_labels
 
-    update!(form_filled_fields: merged)
+    update!(form_filled_labels: merged)
   end
 
   # Pin the submission this org's answers came from. Without it the linking page

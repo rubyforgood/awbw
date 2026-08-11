@@ -52,12 +52,14 @@ RSpec.describe EventRegistrationOrganization, type: :model do
       expect(updates_while { link.record_form_fills([ "website" ]) }).to be_empty
     end
 
-    # Leaves the column NULL rather than writing an empty array.
+    # Leaves the column NULL rather than writing an empty array — read raw, since
+    # the reader is overridden to answer [] for exactly this case.
     it "issues no write when nothing was filled" do
       link.reload
 
       expect(updates_while { link.record_form_fills([]) }).to be_empty
-      expect(link.reload.form_filled_fields).to be_nil
+      expect(link.reload.read_attribute(:form_filled_labels)).to be_nil
+      expect(link.form_filled_labels).to eq([])
     end
 
     # Matches only a statement that starts with UPDATE — "updated_at" appears in
