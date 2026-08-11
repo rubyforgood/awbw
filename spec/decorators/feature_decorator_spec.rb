@@ -1,0 +1,53 @@
+require "rails_helper"
+
+RSpec.describe FeatureDecorator do
+  subject(:decorated) { feature.decorate }
+
+  let(:feature) do
+    build(:feature, :with_pro_tips,
+          name: "Roster slider",
+          area: "registration",
+          display_status: "admin_facing",
+          summary: "Mark certificates from the roster.",
+          released_on: Date.new(2026, 8, 9))
+  end
+
+  it "labels the area and audience" do
+    expect(decorated.area_label).to eq("Registration & tickets")
+    expect(decorated.status_label).to eq("Admin-facing")
+  end
+
+  it "formats the release date and an ISO date for the JS filter" do
+    expect(decorated.released_label).to eq("Aug 9, 2026")
+    expect(decorated.released_iso).to eq("2026-08-09")
+  end
+
+  it "builds a lowercased search haystack from name, summary, tips, area, and audience" do
+    text = decorated.search_text
+    expect(text).to include("roster slider")
+    expect(text).to include("mark certificates")
+    expect(text).to include("first tip")
+    expect(text).to include("registration & tickets")
+    expect(text).to include("admin-facing")
+  end
+
+  it "falls back to a neutral area for an unknown key" do
+    unknown = build(:feature).decorate
+    allow(unknown).to receive(:area).and_return("mystery")
+    expect(unknown.area_label).to eq("More")
+  end
+
+  describe "badges" do
+    it "renders the area badge with its icon and label" do
+      html = decorated.area_badge
+      expect(html).to include("fa-ticket")
+      expect(html).to include("Registration &amp; tickets")
+    end
+
+    it "renders the audience badge with its icon and label" do
+      html = decorated.status_badge
+      expect(html).to include("fa-lock")
+      expect(html).to include("Admin-facing")
+    end
+  end
+end

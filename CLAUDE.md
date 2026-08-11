@@ -50,6 +50,7 @@ When changing a model or controller, check whether these related files need upda
 | Decorator | Decorator spec |
 | Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
 | Add/remove model, concern, service, or gem | AGENTS.md |
+| Ship a user-facing feature | `config/features.yml` (the Features & tips seed — see below) |
 
 ## Code Style
 
@@ -234,6 +235,34 @@ this). Match the existing pattern:
   it must stay identical across `index.html.erb`, the results view, the filter
   form's `data-turbo-frame`, request-spec `Turbo-Frame` headers, and
   `turbo-frame#…` view-spec selectors. Only the filename and render target change.
+
+## Features & tips page (`/features`)
+
+The login-gated **Features & tips** page lists shipped, user-facing features
+(newest first, filterable by area/audience/date) so facilitators and admins can
+see what the portal does. It is **database-backed** (`Feature` model) and edited
+in-app by super-admins — the rich `description` uses the Rhino WYSIWYG (so pages
+can carry screenshots), and each feature can link an external process doc.
+
+**Keep it current as you ship.** When you add a user-facing feature, append an
+entry to `config/features.yml` (the checked-in **seed**):
+
+- Fields: `name`, `area` (a `Feature::AREA_KEYS` value), `display_status`
+  (`public_facing` / `user_facing` / `admin_facing`), `summary` (1–2 plain
+  sentences), `released_on` (ship date), plus optional `pro_tips` (list),
+  `description` (longer HTML/text), and `external_url`.
+- **Sentence case, plain language** — this page is read by facilitators, not devs.
+- `admin_facing` features are visible to super-admins only (`FeaturePolicy` gates
+  this in its relation scope, not just in the UI).
+
+An admin clicks **Import from seed** on `/features` to pull new seed entries into
+the database. Import (`FeatureCatalog#import!`) is **create-missing-only** (matched
+by `name`) — it never overwrites an admin's in-app edits, so appending to the seed
+is always safe.
+
+- **New area?** Add it to `Feature::AREAS` (label + Font Awesome icon + a Tailwind
+  hue already safelisted in `application.tailwind.css`) and use its key in the
+  seed. Area/audience presentation (badges/labels) lives on `FeatureDecorator`.
 
 ## JavaScript
 
