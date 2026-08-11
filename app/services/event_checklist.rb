@@ -352,7 +352,7 @@ class EventChecklist
   def review_reports
     action(key: :review_reports, phase: :after, title: "Review event reports", actor: :admin,
            relevant: @dashboard.event_over?,
-           action_path: statistics_events_path, action_label: "View reports")
+           action_path: reports_events_path, action_label: "View reports")
   end
 
   def post_event_survey

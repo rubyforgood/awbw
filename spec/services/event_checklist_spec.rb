@@ -96,7 +96,7 @@ RSpec.describe EventChecklist do
     it "turns reviewing reports into a standing to-do pointing at the stats hub" do
       reports = item(:review_reports)
       expect(reports).to be_todo
-      expect(reports.action_path).to eq(Rails.application.routes.url_helpers.statistics_events_path)
+      expect(reports.action_path).to eq(Rails.application.routes.url_helpers.reports_events_path)
     end
   end
 
