@@ -8,7 +8,7 @@
 
   <div class="mb-4">
     <h1 class="text-2xl font-semibold text-gray-900">
-      <%= @invite_mode ? "Send portal invite (confirmation) emails" : "Send bulk emails" %>
+      <%= @invite_mode ? "Send Portal invite emails" : "Send bulk emails" %>
     </h1>
     <p class="text-gray-600 mt-1">
       <%= @event.title %><% if @event.start_date.present? %> &bull; <%= @event.date_range %><% end %>
@@ -16,16 +16,16 @@
   </div>
 
   <%# Banner: what this page does, plus a plain link to the other mode. %>
-  <div class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-6 flex items-start gap-2 text-sm text-gray-600">
-    <i class="fa-solid fa-circle-info text-gray-400 mt-0.5 shrink-0"></i>
+  <div class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-6 flex items-center gap-2.5 text-sm text-gray-600">
+    <i class="fa-solid fa-circle-info text-gray-400 shrink-0"></i>
     <p>
       <% if @invite_mode %>
-        You're sending the standard portal invite (confirmation) email to registrants
+        You're sending the standard Portal invite (confirmation) email to registrants
         who don't have an account yet. Want to email everyone instead?
         <%= link_to "Send a bulk email", preview_reminder_event_path(@event), class: "text-blue-600 hover:text-blue-800 font-medium whitespace-nowrap" %>.
       <% else %>
         You're composing a bulk email to registrants. To invite people who can't sign
-        in yet, <%= link_to "send portal invite (confirmation) emails", preview_reminder_event_path(@event, mode: "invite"), class: "text-blue-600 hover:text-blue-800 font-medium" %> instead.
+        in yet, <%= link_to "send Portal invite (confirmation) emails", preview_reminder_event_path(@event, mode: "invite"), class: "text-blue-600 hover:text-blue-800 font-medium" %> instead.
       <% end %>
     </p>
   </div>
@@ -40,7 +40,7 @@
     <h2 class="text-lg font-semibold text-gray-800 mb-2 pb-2 border-b border-gray-200">Recipients</h2>
     <% if @invite_mode %>
       <p class="text-gray-600 mb-3">
-        Only registrants with no portal account yet are listed — a portal invite
+        Only registrants with no Portal account yet are listed — a Portal invite
         (confirmation) email is for people who can't sign in. Filters keep everyone
         in the list and check
         the matches. Separate multiple values with
@@ -80,7 +80,7 @@
           <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-2 text-sm text-blue-800">
             <i class="fa-solid fa-lock mt-0.5 shrink-0"></i>
             <p>
-              This is the standard portal invite email. It can't be edited — each
+              This is the standard Portal invite email. It can't be edited — each
               recipient gets a personalized link to set their password. Preview it below.
             </p>
           </div>

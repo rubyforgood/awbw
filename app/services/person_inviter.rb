@@ -1,7 +1,7 @@
 # Invites a single person to the portal: creates a portal user for them when they
 # don't have one yet, then sends the welcome/invite email (Devise confirmation
 # instructions), attributing it to the staff member who triggered it. Drives the
-# bulk "send portal invite (confirmation) emails" flow on the reminders page, and mirrors the create-user
+# bulk "Send Portal invite emails" flow on the reminders page, and mirrors the create-user
 # + send-invite steps in EventRegistrationServices::ProcessConfirmation.
 class PersonInviter
   Result = Struct.new(:invited, :reason, keyword_init: true)

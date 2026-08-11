@@ -27,7 +27,7 @@ RSpec.describe "Events::BulkInvites", type: :request do
       get preview_reminder_event_path(event, mode: "invite")
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Send portal invite (confirmation) emails")
+      expect(response.body).to include("Send Portal invite emails")
       expect(response.body).to include("Newbie One")
       expect(response.body).not_to include("Existing Two")
       expect(checked?(response.body, no_account)).to be(true)
@@ -59,7 +59,7 @@ RSpec.describe "Events::BulkInvites", type: :request do
       }.not_to change(User, :count)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Send portal invite (confirmation) emails")
+      expect(response.body).to include("Send Portal invite emails")
       expect(response.body).to include("Welcome instructions for Newbie One")
     end
   end

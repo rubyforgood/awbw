@@ -8,7 +8,7 @@
   </div>
 
   <div class="mb-6">
-    <h1 class="text-2xl font-semibold text-gray-900"><%= @invite_mode ? "Send portal invite (confirmation) emails" : "Send bulk emails" %></h1>
+    <h1 class="text-2xl font-semibold text-gray-900"><%= @invite_mode ? "Send Portal invite emails" : "Send bulk emails" %></h1>
     <p class="text-gray-600 mt-1">
       <%= @event.title %><% if @event.start_date.present? %> &bull; <%= @event.date_range %><% end %>
     </p>
@@ -21,7 +21,7 @@
       <div class="text-sm text-blue-800">
         <% if @invite_mode %>
           <p class="font-medium">You're about to invite <%= count %> <%= "person".pluralize(count) %>.</p>
-          <p class="mt-1">Review the recipients and the invite email below, then send. Anyone without a portal account gets one created, and each person receives a personalized link to set their password.</p>
+          <p class="mt-1">Review the recipients and the invite email below, then send. Anyone without a Portal account gets one created, and each person receives a personalized link to set their password.</p>
         <% else %>
           <p class="font-medium">You're about to email <%= count %> registrant<%= "s" if count != 1 %>.</p>
           <p class="mt-1">Review the recipients and the message below, then send. Each person receives their own copy, and one FYI email will be sent to the admin.</p>
