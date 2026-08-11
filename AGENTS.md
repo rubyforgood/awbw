@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~80 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~52 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~53 files |
 | `app/jobs/` | SolidQueue background jobs | 4 files |
 | `app/models/concerns/` | Shared model modules | 16 concerns |
 
@@ -242,6 +242,10 @@ action, or `authorize! :workshop, to: :summary?`).
 ### Other responses
 
 - `OtherResponses::CaptureFromSubmission` — Materializes a form submission's **person-owned** "Other" answers (sectors) as `OtherResponse` records; org-type "Other" is captured separately in `PublicRegistration#sync_agency_type` (owned by the org). Uses `OtherOption.texts`, which keys strictly on the `Other:` prefix, so named specify options and the CE `Yes: N` box are ignored; de-dupes per owner + question. Shared by the registration, scholarship, and bulk-payment submission paths
+
+### Forms
+
+- `SmartFormFields` — Catalog of the `field_identifier`s that carry backend behavior and what each does when a submission arrives with it, grouped by the record they write to (person identity, profile, mailing address, phone, organization, tagging, payment, consent, CE, bulk payment), plus `ANSWER_ONLY_IDENTIFIERS` for the library questions that only store an answer. Powers the admin-only **Smart form settings** page (`FormsController#smart_form_settings`, linked from both form editors), which answers what the editor's "Field identifier" box actually does. `spec/services/smart_form_fields_spec.rb` fails when the app grows an identifier the page doesn't document — it diffs the catalog against `FormBuilderService::SECTION_FIELD_IDENTIFIERS`, the `FormField`/`OtherResponse` identifier constants, and every `field_value("…")` read in `PublicRegistration`, so **add new identifiers to the catalog when you wire one up**
 
 ### Organizations
 

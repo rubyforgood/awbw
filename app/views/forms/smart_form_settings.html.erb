@@ -1,0 +1,100 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="py-8 px-4">
+  <%# Reached from either form editor, so the way back is whichever one sent us —
+      carrying the event so the editor reopens in its dashboard context. %>
+  <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
+    <% if @return_form %>
+      <%= link_to "← Back to #{@return_form.display_name}", edit_form_path(@return_form, event_id: @dashboard_event&.id),
+                  class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1 mr-auto" %>
+    <% end %>
+    <%= link_to "Forms", forms_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+  </div>
+
+  <div class="rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5 bg-purple-900">
+    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-6">
+      <div class="flex items-center gap-4">
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15">
+          <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
+        </div>
+        <div>
+          <p class="text-xs font-medium uppercase tracking-[0.2em] text-purple-200">Reference</p>
+          <h1 class="text-2xl font-bold tracking-tight leading-tight">Smart form settings</h1>
+        </div>
+      </div>
+      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
+    </div>
+
+    <div class="bg-white px-4 sm:px-6 py-6 space-y-6">
+      <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+        <p class="flex items-start gap-2">
+          <i class="fa-solid fa-circle-info mt-0.5 shrink-0"></i>
+          <span>
+            Most questions need no field identifier — their answers are saved on the submission and read there.
+            A <strong>field identifier</strong> is what wires a question to a record, so the answer also updates
+            a person, an organization, or a payment. This page lists every identifier that does something, and
+            what it does. Identifiers are set per question in the form editor, and only one question per form
+            may carry a given identifier.
+          </span>
+        </p>
+      </div>
+
+      <%# Jump list — the page is long and admins arrive looking for one identifier. %>
+      <nav class="flex flex-wrap gap-2" aria-label="Sections">
+        <% @groups.each do |group| %>
+          <%= link_to group.title, "##{group.key}",
+                      class: "inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-medium text-purple-900 hover:bg-purple-100" %>
+        <% end %>
+      </nav>
+
+      <% @groups.each do |group| %>
+        <section id="<%= group.key %>" class="scroll-mt-8 rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div class="px-5 py-3 bg-purple-100 border-b border-purple-300">
+            <h2 class="text-sm font-semibold text-purple-900 uppercase tracking-wide"><%= group.title %></h2>
+          </div>
+          <div class="px-5 py-4">
+            <p class="text-sm text-gray-600 mb-4"><%= group.summary %></p>
+            <% if (note = SmartFormFields.role_note(group.key)) %>
+              <p class="mb-4 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                <i class="fa-solid fa-triangle-exclamation mt-0.5 shrink-0"></i>
+                <span><%= note %></span>
+              </p>
+            <% end %>
+            <dl class="divide-y divide-gray-100">
+              <% group.fields.each do |field| %>
+                <div class="py-3 sm:flex sm:gap-6">
+                  <dt class="sm:w-72 sm:shrink-0">
+                    <code class="inline-block rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-800 break-all"><%= field.identifier %></code>
+                    <p class="mt-1 text-xs text-gray-500"><%= field.question %></p>
+                  </dt>
+                  <dd class="mt-1 sm:mt-0 text-sm text-gray-700"><%= field.effect %></dd>
+                </div>
+              <% end %>
+            </dl>
+          </div>
+        </section>
+      <% end %>
+
+      <section class="rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-3 bg-gray-100 border-b border-gray-300">
+          <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Identifiers that do nothing extra</h2>
+        </div>
+        <div class="px-5 py-4">
+          <p class="text-sm text-gray-600 mb-3">
+            These come with the question library and are stored on the submission like any ordinary question.
+            They carry an identifier only so reports and exports can find them by name — no record is updated.
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <% @answer_only_identifiers.each do |identifier| %>
+              <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-700"><%= identifier %></code>
+            <% end %>
+          </div>
+        </div>
+      </section>
+
+      <p class="text-xs text-gray-500">
+        An identifier not listed here does nothing — the answer is stored on the submission and no record is updated.
+        Changing an identifier on a live form changes where future answers go; answers already submitted stay as they are.
+      </p>
+    </div>
+  </div>
+</div>

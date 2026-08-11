@@ -126,6 +126,9 @@ Rails.application.routes.draw do
     end
   end
   resources :forms do
+    collection do
+      get :smart_form_settings
+    end
     member do
       patch :reorder_field
       put :reorder_fields

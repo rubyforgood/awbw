@@ -26,6 +26,55 @@ RSpec.describe "Forms", type: :request do
     end
   end
 
+  describe "GET /forms/smart_form_settings" do
+    context "as admin" do
+      before { sign_in admin }
+
+      it "documents an identifier alongside what it does" do
+        get smart_form_settings_forms_path
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("Smart form settings")
+        expect(response.body).to include("agency_name")
+        expect(response.body).to include("Looked up against existing organizations by exact name")
+      end
+
+      it "lists the identifiers that only store an answer" do
+        get smart_form_settings_forms_path
+
+        expect(response.body).to include("referral_source")
+        expect(response.body).to include("Identifiers that do nothing extra")
+      end
+
+      # Reached from a form editor, so it has to offer a way back to that editor
+      # rather than dropping the admin on the generic forms list.
+      it "links back to the form it was opened from" do
+        form = create(:form, :standalone, name: "Reg form")
+
+        get smart_form_settings_forms_path(form_id: form.id)
+
+        expect(response.body).to include(edit_form_path(form))
+        expect(response.body).to include("Back to Reg form")
+      end
+
+      it "offers no back link when it was not opened from a form" do
+        get smart_form_settings_forms_path
+
+        expect(response.body).not_to include("Back to")
+      end
+    end
+
+    context "as regular user" do
+      before { sign_in user }
+
+      it "denies access" do
+        get smart_form_settings_forms_path
+
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
   describe "GET /forms/new" do
     before { sign_in admin }
 
