@@ -311,6 +311,29 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         expect(organization.addresses.find_by(primary: true).country).to eq("USA")
       end
 
+      # find_organization only ever finds, so a registrant always changes an org
+      # that already existed — the admin linking page shows what they changed.
+      it "records what the registrant's answers filled on the registration's org link" do
+        result = register_with_org(
+          field_id("agency_website") => "helpinghands.org",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV"
+        )
+
+        link = result.event_registration.event_registration_organizations.find_by!(organization: organization)
+        expect(link.form_autofill_changes.map(&:description)).to contain_exactly("Website", "Work address in Reno")
+      end
+
+      # The admin linking page pairs answers to orgs by this pin. Without it the
+      # pairing falls back to matching the org's current name against what the
+      # registrant typed, which an admin renaming the org would silently break.
+      it "pins the submission the registrant's answers came from on the org link" do
+        result = register_with_org(field_id("agency_website") => "helpinghands.org")
+
+        link = result.event_registration.event_registration_organizations.find_by!(organization: organization)
+        expect(link.form_submission).to eq(result.form_submission)
+      end
+
       it "overwrites an existing website with the latest answer" do
         organization.update!(website_url: "https://existing.org")
 
@@ -328,6 +351,28 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         )
 
         expect(organization.addresses.last.address_type).to eq("work")
+      end
+
+      # street/ZIP are NOT NULL columns, so passing a skipped answer straight
+      # through used to blow up the whole registration.
+      it "stores the org address when the registrant skipped the street and ZIP" do
+        result = register_with_org(
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV"
+        )
+
+        expect(result).to be_success
+        expect(organization.addresses.find_by(city: "Reno")).to have_attributes(street_address: "", zip_code: "")
+      end
+
+      it "saves no org address when the registrant skipped the state, leaving the registration intact" do
+        result = register_with_org(
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno"
+        )
+
+        expect(result).to be_success
+        expect(organization.addresses.find_by(city: "Reno")).to be_nil
       end
 
       it "makes the first org address primary" do

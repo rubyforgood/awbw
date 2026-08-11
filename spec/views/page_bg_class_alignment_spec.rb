@@ -203,6 +203,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/events/edit.html.erb"                   => "admin-or-owner bg-blue-100",
     "app/views/forms/edit.html.erb"                    => "admin-only bg-blue-100",
     "app/views/forms/edit_sections.html.erb"           => "admin-only bg-blue-100",
+    "app/views/forms/smart_form_settings.html.erb"     => "admin-only bg-blue-100",
     "app/views/faqs/edit.html.erb"                     => "admin-only bg-blue-100",
     "app/views/organization_statuses/edit.html.erb"    => "admin-only bg-blue-100",
     "app/views/quotes/edit.html.erb"                   => "admin-only bg-blue-100",

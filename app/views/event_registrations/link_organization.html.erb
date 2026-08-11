@@ -91,6 +91,44 @@
                             data: { turbo_frame: "_top" } %><% if org.city_state.present? %> <span class="text-xs text-gray-500">· <%= org.city_state %></span><% end %></p>
                 <%= render "org_affiliation_pills", org: org, affiliations: (@affiliations_by_org[org.id] || []),
                                                     submitted_org_name: @submitted_org_name, submitted_position: @submitted_position %>
+                <%# Persistent record of what the form wrote onto an org that already existed —
+                    the flash saying so is gone by the next page load. Both notes are lifted above
+                    the card's stretched link (relative z-10) so the admin can read/select them. %>
+                <% autofill = @autofill_by_org[org.id] || [] %>
+                <% if autofill.any? %>
+                  <div class="relative z-10 mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+                    <p class="flex items-center gap-1.5 font-semibold">
+                      <i class="fa-solid fa-circle-info"></i>
+                      Filled from this registration's form:
+                    </p>
+                    <ul class="mt-1 space-y-0.5">
+                      <% autofill.each do |change| %>
+                        <%# An update replaced something that was already there, so show what
+                            it displaced — that's the one an admin might want to put back. %>
+                        <li>
+                          <span class="font-medium"><%= change.description %></span> — “<%= change.value %>”<%
+                          %><% if change.update? %> <span class="text-blue-600">(replaced “<%= change.previous_value %>”)</span><% end %>
+                        </li>
+                      <% end %>
+                    </ul>
+                  </div>
+                <% end %>
+                <%# Persistent flag: the registrant's submitted type/website differ from what's
+                    saved on this org, so the fill-blanks sync left them unapplied. %>
+                <% conflicts = @profile_conflicts_by_org[org] || [] %>
+                <% if conflicts.any? %>
+                  <div class="relative z-10 mt-2 rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
+                    <p class="flex items-center gap-1.5 font-semibold">
+                      <i class="fa-solid fa-triangle-exclamation"></i>
+                      Form answers differ from this organization's profile — not applied:
+                    </p>
+                    <ul class="mt-1 space-y-0.5">
+                      <% conflicts.each do |conflict| %>
+                        <li><span class="font-medium"><%= conflict.label %></span> — form: “<%= conflict.submitted %>”, saved: “<%= conflict.saved %>”</li>
+                      <% end %>
+                    </ul>
+                  </div>
+                <% end %>
               </div>
               <%# Intentional UX choice: Unlink only removes the org from this registration and keeps
                   the person's Affiliation. The confirm dialog spells out the distinction (Affiliations

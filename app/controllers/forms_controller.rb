@@ -7,6 +7,18 @@ class FormsController < ApplicationController
     @forms = Form.standalone.order(:name)
   end
 
+  # Reference page for the field identifiers that wire a question to backend
+  # behavior — the "what will this actually do?" behind the form editor's field
+  # identifier box. Reached from the form editors, so it carries the form and
+  # event it came from to build its own way back.
+  def smart_form_settings
+    authorize! :form, to: :smart_form_settings?
+    @groups = SmartFormFields.groups
+    @answer_only_identifiers = SmartFormFields::ANSWER_ONLY_IDENTIFIERS
+    @return_form = Form.find_by(id: params[:form_id])
+    @dashboard_event = Event.find_by(id: params[:event_id])
+  end
+
   def show
     authorize! @form
     # The forms preview shows every field, highlighting any with conditional
