@@ -525,6 +525,7 @@ class PeopleController < ApplicationController
       :mailing_list_consented,
       :bio, :shoutout_text, :notes,
       :display_name_preference,
+      :anonymous_contributions,
       :pronouns,
       :profile_show_name_preference,
       :profile_is_searchable,
