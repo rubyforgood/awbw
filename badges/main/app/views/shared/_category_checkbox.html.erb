@@ -13,7 +13,7 @@
                       checked,
                       id: id,
                       class: "h-4 w-4 text-blue-600 rounded" %>
-    <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
+    <span class="text-sm text-gray-700 whitespace-nowrap"><%= is_age ? category.decorate.age_group_label : category.name %></span>
   </label>
   <% if is_age %>
     <% primary_id = "#{param_key}_primary_age_#{category.id}" %>

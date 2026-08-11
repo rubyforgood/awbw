@@ -103,7 +103,7 @@ module StorySharesHelper
   def browse_title(params)
     return "Additional Focus Areas" if params[:additional_focus_areas].present?
     return params[:sector_names_all].to_s.split("--").to_sentence if params[:sector_names_all].present?
-    return params[:category_names_all].to_s.split("--").to_sentence if params[:category_names_all].present?
+    return params[:category_names_all].to_s.split("--").map { |name| name.chomp("_") }.to_sentence if params[:category_names_all].present?
     return "Facilitator Spotlights" if params[:facilitator_spotlights].present?
     return "Search results for “#{params[:query]}”" if params[:query].present?
     "All stories"

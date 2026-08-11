@@ -1,0 +1,190 @@
+# WordPress `organization_name` → how the importer should resolve the Organization.
+#
+# Right-hand value:
+#   ""            → create/use an Organization with this exact (left-hand) name
+#   "Other Name"  → this is a spelling variant; map to that Organization instead
+#   "SKIP"        → junk/test data; don't create an org or an affiliation
+#
+# Non-AWBW story authors get a facilitator Affiliation to the resolved org (created
+# only if missing). Fill in the right side wherever a name is a variant or junk.
+# #<count> after each line = how many rows use that spelling.
+organization_mapping:
+  "A Greater Hope": ""                          # 23
+  "Los Angeles Unified School District": ""     # 11
+  "A Window Between Worlds": ""                 # 7
+  "Forty Carrots Family Center": ""             # 6
+  "A New Leaf": ""                              # 5
+  "Garden Grove Unified School District": ""    # 5
+  "Families Together of Orange County": ""      # 4
+  "Los Angeles Centers for Alcohol and Drug Abuse": ""  # 4
+  "The Artistry Circle": ""                     # 4
+  "Trauma and Healing in Color": ""             # 4
+  "YWCA Glendale and Pasadena": ""              # 4
+  "Arts Connection": ""                         # 3
+  "Between Friends": ""                         # 3
+  "Cricket's Hope": ""                          # 3
+  "EveryStep": ""                               # 3
+  "Radiant Futures": ""                         # 3
+  "Rialto Unified School District": ""          # 3
+  "Richstone Family Center": ""                 # 3
+  "Safe Parking LA": ""                         # 3
+  "Safe Place for Youth": ""                    # 3
+  "Shelter from the Storm": ""                  # 3
+  "Shepherd's Door Domestic Violence Resource Center": ""  # 3
+  "Stepping Forward LA": ""                     # 3
+  "Su Casa": ""                                 # 3
+  "The Adult Skills Center": ""                 # 3
+  "United American Indian Involvement (UAII)": ""  # 3
+  "YWCA - San Gabriel Valley": ""               # 3
+  "Adapt Integrated Health Care": ""            # 2
+  "Asian Pacific American Dispute Resolution Center": ""  # 2
+  "Blossoms Windows": ""                        # 2
+  "California Association of Health and Education Linked Professions": ""  # 2
+  "Center For Family Services of Palm Beach County": ""  # 2
+  "Center of Life": ""                          # 2
+  "Children's Institute": ""                    # 2
+  "Counseling Partners LLC": ""                 # 2
+  "IVA Schools": ""                             # 2
+  "Just Detention International": ""            # 2
+  "LACADA": ""                                  # 2
+  "Marlborough School": ""                      # 2
+  "Monterey County Rape Crisis Center": ""      # 2
+  "Nora": ""                                    # 2
+  "Norina Murphy-Verduzco & Associates": ""     # 2
+  "Nuview Bridge Early College High School": ""  # 2
+  "Oregon State University-Cascades": ""        # 2
+  "PAVE - People Against A Violent Environment": ""  # 2
+  "PFLAG San Gabriel Valley / API Chapter": ""  # 2
+  "Proyecto Pastoral": ""                       # 2
+  "Rainbow Labs": ""                            # 2
+  "Safe Passage": ""                            # 2
+  "Safe Passage, Inc.": ""                      # 2
+  "Students Turn 4 Greatness": ""               # 2
+  "test@test.com": ""                           # 2
+  "The Florida Center for Early Childhood": ""  # 2
+  "The Out-of-Door Academy": ""                 # 2
+  "The Way Resource Center": ""                 # 2
+  "Volusia Recovery Alliance, Inc.": ""         # 2
+  "WomenShelter of Long Beach": ""              # 2
+  "Women’s & Children’s Crisis Shelter": ""     # 2
+  "YWCA Greater Los Angeles": ""                # 2
+  "Abraxas Youth & Family Services": ""         # 1
+  "Abused Deaf Women’s Advocacy Services": ""   # 1
+  "Alexandria House": ""                        # 1
+  "Alhambra Unified School District": ""        # 1
+  "Angel Step Inn": ""                          # 1
+  "Arise Daughter": ""                          # 1
+  "Art from the Heart": ""                      # 1
+  "Art Works Collective": ""                    # 1
+  "Being the Best Me and A Window Between Worlds": ""  # 1
+  "Black Infant Health": ""                     # 1
+  "Boys & Girls Clubs of Metro Los Angeles": ""  # 1
+  "Cahuilla Consortium": ""                     # 1
+  "California Rural Indian Health Board, Inc.": ""  # 1
+  "Catalyst": ""                                # 1
+  "Chapter 510": ""                             # 1
+  "Chicana Service Action Center": ""           # 1
+  "Child & Family Services": ""                 # 1
+  "Child and Family Services": ""               # 1
+  "Children's Institute, Inc.": ""              # 1
+  "Community Health Action of Staten Island": ""  # 1
+  "Community Youth Arts Center COYAC": ""       # 1
+  "Connecticut Alliance for Victims of Violence & Their Families": ""  # 1
+  "Cresson Elementary School": ""               # 1
+  "Dallas Office of Arts and Culture": ""       # 1
+  "Desert Sanctuary Inc/Haley House": ""        # 1
+  "Desert Sanctuary, Inc.": ""                  # 1
+  "DOVES of Big Bear Valley, Inc.": ""          # 1
+  "Downtown Women's Center": ""                 # 1
+  "Empowerhouse": ""                            # 1
+  "Family Resource Center": ""                  # 1
+  "Family Shelter Service of Metropolitan Family Services DuPage": ""  # 1
+  "Fresno Pacific University": ""               # 1
+  "Gary Job Corp": ""                           # 1
+  "Healing Through Art": ""                     # 1
+  "Helping Hands Resource Center": ""           # 1
+  "Homeboy Industries": ""                      # 1
+  "Human Options": ""                           # 1
+  "Huntington Park Police Department": ""       # 1
+  "Indigenous Strategies for HONOR Collective": ""  # 1
+  "Inland Empire Immigrant Youth Collective": ""  # 1
+  "Insight Human Services Women's Recovery Center": ""  # 1
+  "Insight Human Services Women’s Recovery Center": ""  # 1
+  "Jewish Family Service": ""                   # 1
+  "Jewish Family Services": ""                  # 1
+  "Juntos/Lennox School District": ""           # 1
+  "Just Detention International & SC Department of Corrections": ""  # 1
+  "Just Detention International - South Africa": ""  # 1
+  "Just Detention International - South Africa, Gauteng Province": ""  # 1
+  "La Amistad Behavioral Health Services": ""   # 1
+  "Lavendar Healing Collective": ""             # 1
+  "Lavender Healing Collective": ""             # 1
+  "Light Machine Arts": ""                      # 1
+  "Little Tokoyo Service Center": ""            # 1
+  "Marjaree Mason Center": ""                   # 1
+  "Mercy Connections": ""                       # 1
+  "Moke Hill Summer Art Program": ""            # 1
+  "Native Connections": ""                      # 1
+  "North County Rape Crisis and Child Protection Center": ""  # 1
+  "Northwest Arkansas Women's Shelter": ""      # 1
+  "Para Los Ninos": ""                          # 1
+  "Para Los Niños": ""                          # 1
+  "Parent Support Network of RI": ""            # 1
+  "Partners Against Violence": ""               # 1
+  "Pathways for Change, Inc.": ""               # 1
+  "Pathways to Healing": ""                     # 1
+  "PAVE": ""                                    # 1
+  "Pinnacle Community Services": ""             # 1
+  "Prevail": ""                                 # 1
+  "Prism Youth": ""                             # 1
+  "Private Practice": ""                        # 1
+  "Proud Mama Bears": ""                        # 1
+  "Riverside County District Attorney's Office": ""  # 1
+  "RUTH Facilitation": ""                       # 1
+  "Sacramento Children's Home": ""              # 1
+  "Sacramento Children’s Home": ""              # 1
+  "SalusCare": ""                               # 1
+  "Sarah King Creates LLC": ""                  # 1
+  "Sexual Assault Response Services of Southern Maine": ""  # 1
+  "Silent No Longer Tennessee": ""              # 1
+  "Sitkans Against Family Violence": ""         # 1
+  "Sojourn, Ocean Park Community Center": ""    # 1
+  "SOTRACE, LLC": ""                            # 1
+  "South Asian Helpline and Referral Agency": ""  # 1
+  "South Asian Helpline And Referral Agency": ""  # 1
+  "South Gate Police Dept. Family Violence Prevention & Education Program": ""  # 1
+  "South Whittier Elementary School District": ""  # 1
+  "Sow Therapeutic": ""                         # 1
+  "Stanislaus Family Justice Center": ""        # 1
+  "Sure Helpline Center": ""                    # 1
+  "Swain Recovery Center": ""                   # 1
+  "SWO Native Connections": ""                  # 1
+  "Tacoma Rescue Mission": ""                   # 1
+  "Teta's Workshops": ""                        # 1
+  "The AMAAD Institute": ""                     # 1
+  "The Healing Chariot Counseling Services": ""  # 1
+  "The Nest": ""                                # 1
+  "The Vermont Network Against Domestic and Sexual Violence": ""  # 1
+  "The Willow Domestic Violence Center": ""     # 1
+  "Tides of Change": ""                         # 1
+  "Tri County Library": ""                      # 1
+  "Turningpoint for Victims of Domestic and Sexual Violence": ""  # 1
+  "UCLA Health": ""                             # 1
+  "Umbrella": ""                                # 1
+  "Unite American Indian Involvement": ""       # 1
+  "United American Indian Involvement": ""      # 1
+  "University of Missouri – Kansas City": ""    # 1
+  "University of Southern California": ""       # 1
+  "Valley Oasis": ""                            # 1
+  "Vistamar School": ""                         # 1
+  "WE RISE": ""                                 # 1
+  "Western Youth Services": ""                  # 1
+  "Whittier City School District": ""           # 1
+  "Wichita Artworx, Inc.": ""                   # 1
+  "Wichita Children's Home": ""                 # 1
+  "Women's & Children's Crisis Shelter": ""     # 1
+  "WomenShelter Long Beach": ""                 # 1
+  "Yoga & Art for Recovery and Healing": ""     # 1
+  "YWCA Greater Lafayette": ""                  # 1
+  "YWCA Pierce County": ""                      # 1
+  "YWCA San Gabriel Valley": ""                 # 1

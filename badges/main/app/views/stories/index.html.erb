@@ -9,7 +9,12 @@
         <p class="text-gray-600">Check out stories from Windows Facilitators around the world and the healing they make possible through art</p>
       </div>
 
-      <div class="text-right text-end">
+      <div class="text-right text-end flex flex-wrap items-center justify-end gap-3">
+        <% if allowed_to?(:import?, Story) %>
+          <%= link_to "Import",
+                      new_story_import_path,
+                      class: "admin-only font-medium text-blue-700 hover:text-blue-900 hover:underline" %>
+        <% end %>
         <% if allowed_to?(:new?, Story) %>
           <%= link_to "New Story",
                       new_story_path,

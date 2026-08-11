@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_10_123041) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_10_225127) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1008,6 +1008,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_10_123041) do
   end
 
   create_table "people", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.boolean "anonymous_contributions", default: false, null: false
     t.string "best_time_to_call"
     t.text "bio"
     t.boolean "blog_contributor", default: false, null: false
