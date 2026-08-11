@@ -78,12 +78,12 @@ module EventRegistrationServices
 
         organization = find_organization if field_value(ORGANIZATION_NAME_IDENTIFIER).present?
         if organization
-          filled = sync_organization_profile(organization).filled
+          profile_changes = sync_organization_profile(organization).changes
           address_result = create_agency_address(organization)
           # find_organization only ever finds, so this org already existed and the
-          # registrant just changed it — connect_organization records what, for the
-          # admin linking page's persistent note.
-          @organization_autofill = filled + [ address_result.saved_label ].compact
+          # registrant just changed it — connect_organization records what, and to
+          # what value, for the admin linking page's persistent note.
+          @organization_autofill = profile_changes + address_result.changes
           create_affiliation(person, organization, address_result.address)
         end
 

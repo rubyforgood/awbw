@@ -97,10 +97,15 @@
                 <% autofill = @autofill_by_org[org.id] || [] %>
                 <% if autofill.any? %>
                   <div class="relative z-10 mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-                    <p class="flex items-center gap-1.5">
+                    <p class="flex items-center gap-1.5 font-semibold">
                       <i class="fa-solid fa-circle-info"></i>
-                      Filled from this registration's form: <span class="font-medium"><%= autofill.to_sentence %></span>.
+                      Filled from this registration's form:
                     </p>
+                    <ul class="mt-1 space-y-0.5">
+                      <% autofill.each do |change| %>
+                        <li><span class="font-medium"><%= change.description %></span> — “<%= change.value %>”</li>
+                      <% end %>
+                    </ul>
                   </div>
                 <% end %>
                 <%# Persistent flag: the registrant's submitted type/website differ from what's

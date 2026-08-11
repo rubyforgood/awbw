@@ -473,7 +473,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_10_123041) do
   create_table "event_registration_organizations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "event_registration_id", null: false
-    t.json "form_autofill_descriptions"
+    t.json "form_autofill_changes"
     t.bigint "form_submission_id"
     t.integer "organization_id", null: false
     t.datetime "updated_at", null: false

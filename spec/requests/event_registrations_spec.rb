@@ -1081,7 +1081,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(organization.reload.website_url).to include("helpinghands.org")
           expect(organization.agency_type).to eq("501c3/nonprofit")
-          expect(flash[:notice]).to include("Saved from the form").and include("type").and include("website")
+          expect(flash[:notice]).to include("Saved from the form").and include("Type").and include("Website")
         end
 
         # The flash is gone by the next page load, so what the form changed on an
@@ -1099,12 +1099,15 @@ RSpec.describe "EventRegistrations", type: :request do
           post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
 
           link = existing_registration.event_registration_organizations.find_by(organization: organization)
-          expect(link.form_autofill_descriptions).to contain_exactly("website", "work address in Austin")
+          expect(link.form_autofill_changes.map(&:description)).to contain_exactly("Website", "Work address in Austin")
+          # The value that landed in each field is recorded, not just its name.
+          expect(link.form_autofill_changes.map(&:value)).to include("helpinghands.org")
 
           get link_organization_event_registration_path(existing_registration)
 
           expect(response.body).to include("Filled from this registration's form")
-            .and include("website and work address in Austin")
+            .and include("Work address in Austin")
+            .and include("helpinghands.org")
         end
 
         it "does not seed or report another org's answers when linking an extra organization" do
@@ -1175,7 +1178,7 @@ RSpec.describe "EventRegistrations", type: :request do
           post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
 
           link = existing_registration.event_registration_organizations.find_by(organization: organization)
-          expect(link).to have_attributes(form_submission: submission, form_autofill_descriptions: [])
+          expect(link).to have_attributes(form_submission: submission, form_autofill_changes: [])
         end
 
         # The submission that describes an org is pinned on the link when it's made,
@@ -1244,7 +1247,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
           post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
 
-          expect(flash[:notice]).to include("Saved from the form: work address in Austin")
+          expect(flash[:notice]).to include("Saved from the form: Work address in Austin")
         end
 
         it "does not claim the work address was saved when the submission changed nothing on it" do
@@ -1384,8 +1387,8 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(existing.reload.website_url).to include("helpinghands.org")
           expect(existing.agency_type).to eq("Government agency")
-          expect(existing_registration.event_registration_organizations.find_by(organization: existing).form_autofill_descriptions)
-            .to contain_exactly("website", "type")
+          expect(existing_registration.event_registration_organizations.find_by(organization: existing).form_autofill_changes.map(&:description))
+            .to contain_exactly("Website", "Type")
         end
 
         # Everything on an org we just created came from the form, so there is
@@ -1404,7 +1407,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
           organization = Organization.find_by(name: "Brand New Org")
           expect(organization.website_url).to include("brandnew.org")
-          expect(existing_registration.event_registration_organizations.find_by(organization: organization).form_autofill_descriptions).to be_empty
+          expect(existing_registration.event_registration_organizations.find_by(organization: organization).form_autofill_changes).to be_empty
         end
 
         # An org built out of the submission is still an org the submission wrote,

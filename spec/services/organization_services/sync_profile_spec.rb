@@ -108,7 +108,7 @@ RSpec.describe OrganizationServices::SyncProfile do
 
       result = described_class.call(organization: organization, website: "acme.org", agency_type: "For-profit", overwrite: false)
 
-      expect(result.filled).to contain_exactly("website", "type")
+      expect(result.changes.map(&:label)).to contain_exactly("Website", "Type")
     end
 
     # A returning registrant resubmitting what's already on file changed nothing,
@@ -118,7 +118,7 @@ RSpec.describe OrganizationServices::SyncProfile do
 
       result = described_class.call(organization: organization, website: "https://curated.org", agency_type: "For-profit")
 
-      expect(result.filled).to be_empty
+      expect(result.changes).to be_empty
     end
 
     it "reports nothing filled when the blanks were left as conflicts" do
@@ -126,7 +126,7 @@ RSpec.describe OrganizationServices::SyncProfile do
 
       result = described_class.call(organization: organization, website: "https://new.org", agency_type: "Government agency", overwrite: false)
 
-      expect(result.filled).to be_empty
+      expect(result.changes).to be_empty
     end
   end
 end

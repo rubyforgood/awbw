@@ -17,11 +17,12 @@ module OrganizationServices
   # passes overwrite: false so it only fills columns that are currently blank,
   # never clobbering an existing org's curated type/website.
   class SyncProfile
-    # filled: human labels of the columns this call actually wrote from the form,
-    # so the caller can tell the admin what was saved. Answers that differ from a
-    # value already on the org (and so weren't applied under fill-blanks) are
-    # reported separately by OrganizationServices::ProfileDiff.
-    Result = Struct.new(:organization, :filled, keyword_init: true)
+    # changes: AutofillChange per column this call actually wrote from the form —
+    # the field and the value that landed in it — so the caller can tell the admin
+    # what was saved and to what. Answers that differ from a value already on the
+    # org (and so weren't applied under fill-blanks) are reported separately by
+    # OrganizationServices::ProfileDiff.
+    Result = Struct.new(:organization, :changes, keyword_init: true)
 
     def self.call(organization:, website: nil, agency_type: nil, overwrite: true)
       new(organization:, website:, agency_type:, overwrite:).call
@@ -35,13 +36,24 @@ module OrganizationServices
     end
 
     def call
-      @filled = []
-      @filled << "website" if apply_value(:website_url, @website)
-      @filled << "type" if sync_agency_type
-      Result.new(organization: @organization, filled: @filled)
+      @changes = []
+      @changes << change("website_url", "Website", @organization.website_url) if apply_value(:website_url, @website)
+      @changes << change("agency_type", "Type", displayed_agency_type) if sync_agency_type
+      Result.new(organization: @organization, changes: @changes)
     end
 
     private
+
+    # Read the value back off the org rather than off the answer, so what we report
+    # is what was actually stored (stripped, and with "Other" folded back together).
+    def change(field, label, value)
+      AutofillChange.new(field: field, label: label, value: value)
+    end
+
+    def displayed_agency_type
+      other = @organization.agency_type_other
+      other.present? ? "#{@organization.agency_type}: #{other}" : @organization.agency_type
+    end
 
     def sync_agency_type
       raw = @agency_type&.strip

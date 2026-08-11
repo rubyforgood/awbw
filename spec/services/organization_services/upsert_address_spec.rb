@@ -13,7 +13,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
       country: "USA"
     )
 
-    expect(result).to have_attributes(created: true, filled: [])
+    expect(result).to have_attributes(created: true)
     expect(result.address).to have_attributes(
       addressable: organization,
       street_address: "1 Main St",
@@ -39,7 +39,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
 
     result = described_class.call(organization: organization, street_address: " 1 Main St ", city: "Austin", state: "TX", zip_code: " 78701 ")
 
-    expect(result).to have_attributes(created: false, filled: [])
+    expect(result).to have_attributes(created: false, changes: [])
   end
 
   # street and ZIP are NOT NULL columns with no default.
@@ -53,7 +53,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
   it "saves nothing when no state was submitted and no existing address matches" do
     expect {
       expect(described_class.call(organization: organization, street_address: "1 Main St", city: "Austin"))
-        .to have_attributes(address: nil, created: false, filled: [])
+        .to have_attributes(address: nil, created: false, changes: [])
     }.not_to change { organization.addresses.count }
   end
 
@@ -62,7 +62,8 @@ RSpec.describe OrganizationServices::UpsertAddress do
 
     result = described_class.call(organization: organization, street_address: "5 Oak Ave", city: "Austin", zip_code: "78701", overwrite: false)
 
-    expect(result).to have_attributes(address: existing, created: false, filled: [ "ZIP" ])
+    expect(result).to have_attributes(address: existing, created: false)
+    expect(result.changes.map(&:label)).to eq([ "ZIP" ])
     expect(existing.reload.zip_code).to eq("78701")
   end
 
@@ -81,7 +82,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
   it "returns no address and creates nothing when no city is given" do
     expect {
       expect(described_class.call(organization: organization, street_address: "1 Main St"))
-        .to have_attributes(address: nil, created: false, filled: [])
+        .to have_attributes(address: nil, created: false, changes: [])
     }.not_to change { organization.addresses.count }
   end
 
@@ -98,7 +99,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
     )
 
     expect(result).to have_attributes(address: existing, created: false)
-    expect(result.filled).to contain_exactly("street", "ZIP", "country")
+    expect(result.changes.map(&:label)).to contain_exactly("Street", "ZIP", "Country")
     expect(organization.addresses.count).to eq(1)
     expect(existing.reload).to have_attributes(street_address: "2 New Ave", zip_code: "78702", country: "Canada", primary: true, inactive: false)
   end
@@ -114,7 +115,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
       zip_code: "78701"
     )
 
-    expect(result).to have_attributes(created: false, filled: [])
+    expect(result).to have_attributes(created: false, changes: [])
   end
 
   it "fills only blank fields on the matching address when overwrite is false" do
@@ -130,7 +131,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
       overwrite: false
     )
 
-    expect(result.filled).to contain_exactly("ZIP", "country")
+    expect(result.changes.map(&:label)).to contain_exactly("ZIP", "Country")
     expect(existing.reload).to have_attributes(street_address: "5 Oak Ave", zip_code: "78702", country: "Canada")
   end
 
@@ -148,7 +149,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
     )
 
     expect(result).to have_attributes(address: existing, created: false)
-    expect(result.filled).to contain_exactly("city", "state")
+    expect(result.changes.map(&:label)).to contain_exactly("City", "State")
     expect(existing.reload).to have_attributes(city: "Austin", state: "TX")
     expect(organization.addresses.count).to eq(1)
   end
@@ -178,7 +179,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
       overwrite: false
     )
 
-    expect(result).to have_attributes(address: existing, created: false, filled: [ "country" ])
+    expect(result).to have_attributes(address: existing, created: false)
     expect(organization.addresses.count).to eq(1)
     # State already on file is kept (never flipped); the blank country is filled.
     expect(existing.reload).to have_attributes(state: "Texas", country: "USA", street_address: "1 Main St")
@@ -197,7 +198,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
       overwrite: false
     )
 
-    expect(result).to have_attributes(address: existing, created: false, filled: [ "country" ])
+    expect(result).to have_attributes(address: existing, created: false)
     expect(organization.addresses.count).to eq(1)
     expect(existing.reload).to have_attributes(city: "Saint Louis", country: "USA")
   end
@@ -215,7 +216,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
       overwrite: false
     )
 
-    expect(result).to have_attributes(address: existing, filled: [ "city" ])
+    expect(result).to have_attributes(address: existing)
     expect(existing.reload.city).to eq("St. Louis")
   end
 

@@ -16,27 +16,20 @@ module OrganizationServices
     # address: the Address the submission was saved to — nil when the submission
     # couldn't be stored (see storable? for what a new address needs).
     # created: the submission added a new address rather than updating one.
-    # filled: labels of the fields this call actually changed on an existing
-    # address, so a caller can report what was saved instead of assuming.
-    Result = Struct.new(:address, :created, :filled, keyword_init: true) do
-      # What this call actually wrote, named by city so an admin knows which work
-      # address moved. Nil when nothing was saved or nothing changed — a caller
-      # reporting the save must not claim more than happened.
-      def saved_label
-        return if address.nil?
-        return "work address in #{address.city}" if created
-        return if filled.empty?
-
-        "#{filled.to_sentence} on the #{address.city} work address"
-      end
-    end
+    # changes: AutofillChange per field this call actually wrote — the field, the
+    # value that landed in it, and which work address it belongs to (an org keeps
+    # one per city, so "ZIP" alone wouldn't say which). Empty when nothing was
+    # saved or nothing changed: a caller reporting the save must not claim more
+    # than happened. A newly created address reports as one change carrying the
+    # whole address rather than five, since none of it was there to begin with.
+    Result = Struct.new(:address, :created, :changes, keyword_init: true)
 
     FIELD_LABELS = {
-      "street_address" => "street",
-      "city" => "city",
-      "state" => "state",
+      "street_address" => "Street",
+      "city" => "City",
+      "state" => "State",
       "zip_code" => "ZIP",
-      "country" => "country"
+      "country" => "Country"
     }.freeze
 
     def self.call(organization:, city: nil, state: nil, street_address: nil, zip_code: nil, country: nil, overwrite: true)
@@ -63,20 +56,36 @@ module OrganizationServices
 
       make_primary = @organization.addresses.active.where(primary: true).none?
 
-      return Result.new(address: create_address(make_primary), created: true, filled: []) unless existing
+      unless existing
+        created = create_address(make_primary)
+        return Result.new(address: created, created: true, changes: [ whole_address_change(created) ])
+      end
 
       existing.assign_attributes(field_updates(existing))
-      # Read the labels off `changed` rather than off what we assigned, so a
+      # Build the changes off `changed` rather than off what we assigned, so a
       # resubmission of values already on file isn't reported as saved.
-      filled = existing.changed.filter_map { |attribute| FIELD_LABELS[attribute] }
+      changes = existing.changed.filter_map { |attribute| field_change(existing, attribute) }
       existing.primary = true if make_primary
       existing.inactive = false
       existing.save!
 
-      Result.new(address: existing, created: false, filled: filled)
+      Result.new(address: existing, created: false, changes: changes)
     end
 
     private
+
+    # Named by city like the per-field changes are, so an admin reading the note
+    # knows which of the org's work addresses appeared — the value carries the rest.
+    def whole_address_change(address)
+      AutofillChange.new(field: "address", label: "Work address in #{address.city}", value: address.name.squish)
+    end
+
+    def field_change(address, attribute)
+      label = FIELD_LABELS[attribute]
+      return unless label
+
+      AutofillChange.new(field: attribute, label: label, value: address.public_send(attribute), scope: "#{address.city} work address")
+    end
 
     # overwrite: false (admin linking) only fills blank fields, so a discrepancy
     # between the form and the org's saved address is kept and surfaced by
@@ -122,7 +131,7 @@ module OrganizationServices
     end
 
     def nothing_saved
-      Result.new(address: nil, created: false, filled: [])
+      Result.new(address: nil, created: false, changes: [])
     end
   end
 end

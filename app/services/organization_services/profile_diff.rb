@@ -7,7 +7,7 @@ module OrganizationServices
   #
   # A blank submitted value, or a submitted value against a blank org column, is
   # not a discrepancy (nothing to reconcile — the latter just gets filled, and
-  # EventRegistrationOrganization#form_autofill_descriptions records that it was).
+  # EventRegistrationOrganization#form_autofill_changes records that it was).
   # Address is compared against the org's corresponding address (AddressMatcher,
   # the one the fill-blanks upsert targets); an address the matcher doesn't
   # recognize isn't a discrepancy because it's added rather than reconciled.

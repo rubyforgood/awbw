@@ -243,7 +243,7 @@ class EventRegistrationsController < ApplicationController
     end
     @autofill_by_org = @event_registration.event_registration_organizations
       .index_by(&:organization_id)
-      .transform_values(&:form_autofill_descriptions)
+      .transform_values(&:form_autofill_changes)
   end
 
   def select_organization
@@ -550,10 +550,10 @@ class EventRegistrationsController < ApplicationController
   def link_and_report(organization, verb:, record_fills:)
     link = @event_registration.event_registration_organizations.find_or_create_by!(organization: organization)
     entry = submission_entry_for(@event_registration, organization)
-    filled = sync_org_profile(organization)
+    profile_changes = sync_org_profile(organization)
     address_result = link_affiliations_for(@event_registration, organization)
 
-    saved = filled + [ address_result.saved_label ].compact
+    saved = profile_changes + address_result.changes
     # Pin the pairing even when nothing was filled — an org whose every answer
     # conflicts fills nothing, and that's exactly the one whose note has to survive.
     link.record_form_submission(entry[:submission]) if entry
@@ -562,14 +562,14 @@ class EventRegistrationsController < ApplicationController
   end
 
   # Fill the linked org's blank type/website from the submission that names it,
-  # and return the labels of what was written.
+  # and return what was written.
   def sync_org_profile(organization)
     entry = submission_entry_for(@event_registration, organization)
     return [] unless entry
 
     OrganizationServices::SyncProfile.call(
       organization: organization, overwrite: false, website: entry[:website], agency_type: entry[:agency_type]
-    ).filled
+    ).changes
   end
 
   # Build the flash notice after linking, and stage a flash warning for any
@@ -585,7 +585,9 @@ class EventRegistrationsController < ApplicationController
     end
 
     notice = "#{flash_safe(organization.name)} #{verb}."
-    notice += " Saved from the form: #{saved.map { |label| flash_safe(label) }.to_sentence}." if saved.any?
+    # The flash names what changed; the values go on the linking page's card note,
+    # which has room for them and is still there after the flash has gone.
+    notice += " Saved from the form: #{saved.map { |change| flash_safe(change.description) }.to_sentence}." if saved.any?
     notice
   end
 
