@@ -12,7 +12,9 @@
                              primary fields sit in the first row (search adds a
                              magnifier + flex width); the rest collapse
       include_readiness    – show the readiness "Status" select (roster only)
-      status_filter_hidden – carry the active/inactive hidden field (roster only) %>
+      status_filter_hidden – carry the active/inactive hidden field (roster only)
+      hidden_params        – { name => value } carried as hidden fields so they
+                             survive the GET filter submit (e.g. mode: "invite") %>
 <% field_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
 <% label_class = "block text-sm font-medium text-gray-700 mb-1" %>
 <% include_readiness = local_assigns.fetch(:include_readiness, false) %>
@@ -36,6 +38,9 @@
         class: "bg-white border border-gray-200 rounded-xl shadow-sm p-4" do %>
     <% if status_filter_hidden %>
       <%= hidden_field_tag :status_filter, params[:status_filter].presence || "active" %>
+    <% end %>
+    <% local_assigns.fetch(:hidden_params, {}).each do |name, value| %>
+      <%= hidden_field_tag name, value %>
     <% end %>
 
   <div class="flex items-center gap-2 text-gray-600 mb-3">
