@@ -25,7 +25,9 @@ class StoryImportsController < ApplicationController
       io: file.open, filename: @filename, content_type: "text/csv"
     )
     @result = run_import(file.path, dry_run: true)
-    render :create
+    # Rendering (not redirecting) on a POST: Turbo only displays non-redirect
+    # form responses when the status is 4xx/5xx, so the preview needs 422.
+    render :create, status: :unprocessable_content
   rescue CSV::MalformedCSVError, ArgumentError => e
     @blob&.purge
     redirect_to new_story_import_path, alert: "Could not read that CSV: #{e.message}"
@@ -58,6 +60,7 @@ class StoryImportsController < ApplicationController
   def import_notice(result)
     "Import complete — #{result.ideas_created} story ideas and " \
       "#{result.stories_created} connected stories created" \
+      "#{" (#{result.images_enqueued} images downloading in the background)" if result.images_enqueued.positive?}" \
       "#{" (#{result.skipped.size} rows skipped)" if result.skipped.any?}."
   end
 end

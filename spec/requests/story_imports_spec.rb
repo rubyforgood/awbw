@@ -59,7 +59,8 @@ RSpec.describe "Story imports", type: :request do
 
       expect(StoryIdea.count).to eq(0)
       expect(Story.count).to eq(0)
-      expect(response).to be_successful
+      # 422 so Turbo renders the preview instead of discarding a non-redirect 200.
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Preview import")
       expect(response.body).to include("Connected stories")
       expect(response.body).to include("Row-by-row")

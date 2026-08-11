@@ -16,7 +16,7 @@ require "csv"
 # the original publish Date is preserved as created_at.
 class StoryImporter
   Result = Struct.new(
-    :rows_processed, :ideas_created, :stories_created, :skipped, :warnings, :previews,
+    :rows_processed, :ideas_created, :stories_created, :images_enqueued, :skipped, :warnings, :previews,
     keyword_init: true
   ) do
     def summary
@@ -24,6 +24,7 @@ class StoryImporter
         "rows processed: #{rows_processed}",
         "story ideas created: #{ideas_created}",
         "connected stories created: #{stories_created}",
+        "images queued: #{images_enqueued}",
         "skipped: #{skipped.size}",
         "warnings: #{warnings.size}"
       ].join("\n")
@@ -36,7 +37,7 @@ class StoryImporter
   RowPreview = Struct.new(
     :wp_id, :title, :will_publish, :skipped_reason,
     :organization, :organization_new, :author_label, :author_new, :author_updated,
-    :creates_story, :creates_idea, :workshop_label, :sectors, :categories, :comment, :warnings,
+    :creates_story, :creates_idea, :workshop_label, :sectors, :categories, :images, :comment, :warnings,
     keyword_init: true
   )
 
@@ -109,7 +110,8 @@ class StoryImporter
     @dry_run = dry_run
     @logger = logger || Rails.logger
     @result = Result.new(
-      rows_processed: 0, ideas_created: 0, stories_created: 0, skipped: [], warnings: [], previews: []
+      rows_processed: 0, ideas_created: 0, stories_created: 0, images_enqueued: 0,
+      skipped: [], warnings: [], previews: []
     )
     @organization_cache = {}
     @windows_type_cache = {}
@@ -139,7 +141,7 @@ class StoryImporter
     warnings_before = @result.warnings.size
     preview = RowPreview.new(
       wp_id: wp_id(row), title: clean(row["Title"]), will_publish: published?(row),
-      sectors: [], categories: [], warnings: []
+      sectors: [], categories: [], images: 0, warnings: []
     )
     @result.previews << preview
 
@@ -178,6 +180,29 @@ class StoryImporter
     apply_tags(story, tags)
     finalize_story(row, story, idea, author, organization)
     @result.stories_created += 1
+
+    import_images(row, story, preview)
+  end
+
+  # Story images come from the WordPress "Image URL" column (pipe-separated; the
+  # first is the featured image → PrimaryAsset, the rest → GalleryAssets).
+  # Downloading them inline would blow the import request's timeout, so we defer
+  # to a background job — counted in the preview but only enqueued on a real run.
+  def import_images(row, story, preview)
+    urls = image_urls(row)
+    preview.images = urls.size
+    return if @dry_run || urls.empty?
+
+    StoryAssetImportJob.perform_later(story, urls, title: image_title(row))
+    @result.images_enqueued += urls.size
+  end
+
+  def image_urls(row)
+    clean(row["Image URL"]).split("|").map(&:strip).reject(&:blank?).uniq
+  end
+
+  def image_title(row)
+    clean(row["Image Alt Text"]).presence || clean(row["Image Title"]).presence
   end
 
   # Fill the preview with what the row resolved to (matched vs new records + the

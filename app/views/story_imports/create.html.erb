@@ -97,6 +97,10 @@
             </div>
           <% end %>
 
+          <% if p.images.to_i.positive? %>
+            <p class="mt-1.5 text-xs text-gray-500"><%= pluralize(p.images, "image") %> will be imported in the background</p>
+          <% end %>
+
           <% if p.comment.present? %>
             <p class="mt-2 text-xs text-gray-500">Facilitator kept as comment: <span class="text-gray-700">“<%= p.comment %>”</span></p>
           <% end %>

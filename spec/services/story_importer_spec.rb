@@ -14,7 +14,7 @@ RSpec.describe StoryImporter do
       ID Title Content Excerpt Status organization_name story_workshop_name
       story_youtube_url showhide_the_name Tags Categories state
       facilitator_name facilitator_last_name facilitator_email home_top_featured_story Date
-    ]
+    ] + [ "Image URL", "Image Alt Text" ]
   end
 
   # Held in an array so the Tempfiles aren't garbage-collected (and deleted)
@@ -302,6 +302,41 @@ RSpec.describe StoryImporter do
       result = import([ base_row("Title" => "") ], dry_run: true)
 
       expect(result.previews.sole.skipped_reason).to eq("blank title")
+    end
+  end
+
+  describe "image import" do
+    let(:image_row) do
+      base_row(
+        "Image URL" => "https://ex.com/cover.jpg|https://ex.com/two.jpg| ",
+        "Image Alt Text" => "Healing hands"
+      )
+    end
+
+    it "enqueues a StoryAssetImportJob for the story with the row's image URLs" do
+      import([ image_row ])
+
+      expect(StoryAssetImportJob).to have_been_enqueued
+        .with(Story.sole, [ "https://ex.com/cover.jpg", "https://ex.com/two.jpg" ], title: "Healing hands")
+    end
+
+    it "counts the queued images in the result" do
+      result = import([ image_row ])
+      expect(result.images_enqueued).to eq(2)
+    end
+
+    it "does not enqueue anything on a dry run, but counts the images in the preview" do
+      result = import([ image_row ], dry_run: true)
+
+      expect(StoryAssetImportJob).not_to have_been_enqueued
+      expect(result.previews.sole.images).to eq(2)
+      expect(result.images_enqueued).to eq(0)
+    end
+
+    it "does not enqueue a job when the row has no image URL" do
+      expect {
+        import([ base_row ])
+      }.not_to have_enqueued_job(StoryAssetImportJob)
     end
   end
 end
