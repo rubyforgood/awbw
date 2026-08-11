@@ -241,9 +241,9 @@ class EventRegistrationsController < ApplicationController
     @profile_conflicts_by_org = @linked_organizations.index_with do |org|
       profile_diff_for(org, linked_count: linked_count)
     end
-    @form_fills_by_org = @event_registration.event_registration_organizations
+    @autofill_by_org = @event_registration.event_registration_organizations
       .index_by(&:organization_id)
-      .transform_values(&:form_filled_labels)
+      .transform_values(&:form_autofill_descriptions)
   end
 
   def select_organization
@@ -557,7 +557,7 @@ class EventRegistrationsController < ApplicationController
     # Pin the pairing even when nothing was filled — an org whose every answer
     # conflicts fills nothing, and that's exactly the one whose note has to survive.
     link.record_form_submission(entry[:submission]) if entry
-    link.record_form_fills(saved) if record_fills
+    link.record_autofill(saved) if record_fills
     link_result_notice(organization, verb, saved)
   end
 

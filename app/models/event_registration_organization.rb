@@ -8,22 +8,24 @@ class EventRegistrationOrganization < ApplicationRecord
 
   validates :organization_id, uniqueness: { scope: :event_registration_id }
 
-  # Labels of the org values written from this registration's form answers
-  # ("website", "type", "ZIP on the Austin work address") — the names of what
-  # changed, not the submitted answers themselves, which stay on the form
-  # submission. Recorded when the org is linked so the linking page can
-  # persistently say what the submission changed on an org that already existed —
-  # the flash notice saying so is gone by the next page load. Reads through the
-  # column so a never-filled link answers with [] rather than nil.
-  def form_filled_labels
+  # Short descriptions of what this registration's form answers wrote onto the org
+  # — "website", "type", "street and ZIP on the Austin work address" — not the
+  # submitted answers themselves, which stay on the form submission. Entries vary
+  # from a single word to a phrase, hence descriptions rather than labels ("label"
+  # already means a form question's display text elsewhere in this codebase).
+  # Recorded when the org is linked so the linking page can persistently say what
+  # the submission changed on an org that already existed — the flash notice saying
+  # so is gone by the next page load. Reads through the column so a link the form
+  # never autofilled answers with [] rather than nil.
+  def form_autofill_descriptions
     Array(super)
   end
 
-  def record_form_fills(labels)
-    merged = (form_filled_labels + labels).uniq
-    return if merged == form_filled_labels
+  def record_autofill(descriptions)
+    merged = (form_autofill_descriptions + descriptions).uniq
+    return if merged == form_autofill_descriptions
 
-    update!(form_filled_labels: merged)
+    update!(form_autofill_descriptions: merged)
   end
 
   # Pin the submission this org's answers came from. Without it the linking page

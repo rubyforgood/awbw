@@ -83,7 +83,7 @@ module EventRegistrationServices
           # find_organization only ever finds, so this org already existed and the
           # registrant just changed it — connect_organization records what, for the
           # admin linking page's persistent note.
-          @organization_form_fills = filled + [ address_result.saved_label ].compact
+          @organization_autofill = filled + [ address_result.saved_label ].compact
           create_affiliation(person, organization, address_result.address)
         end
 
@@ -343,7 +343,7 @@ module EventRegistrationServices
 
       link = event_registration.event_registration_organizations
         .find_or_create_by!(organization: organization)
-      link.record_form_fills(@organization_form_fills.to_a)
+      link.record_autofill(@organization_autofill.to_a)
       link
     end
 

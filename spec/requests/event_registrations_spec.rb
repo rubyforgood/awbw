@@ -1099,7 +1099,7 @@ RSpec.describe "EventRegistrations", type: :request do
           post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
 
           link = existing_registration.event_registration_organizations.find_by(organization: organization)
-          expect(link.form_filled_labels).to contain_exactly("website", "work address in Austin")
+          expect(link.form_autofill_descriptions).to contain_exactly("website", "work address in Austin")
 
           get link_organization_event_registration_path(existing_registration)
 
@@ -1175,7 +1175,7 @@ RSpec.describe "EventRegistrations", type: :request do
           post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
 
           link = existing_registration.event_registration_organizations.find_by(organization: organization)
-          expect(link).to have_attributes(form_submission: submission, form_filled_labels: [])
+          expect(link).to have_attributes(form_submission: submission, form_autofill_descriptions: [])
         end
 
         # The submission that describes an org is pinned on the link when it's made,
@@ -1384,7 +1384,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(existing.reload.website_url).to include("helpinghands.org")
           expect(existing.agency_type).to eq("Government agency")
-          expect(existing_registration.event_registration_organizations.find_by(organization: existing).form_filled_labels)
+          expect(existing_registration.event_registration_organizations.find_by(organization: existing).form_autofill_descriptions)
             .to contain_exactly("website", "type")
         end
 
@@ -1404,7 +1404,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
           organization = Organization.find_by(name: "Brand New Org")
           expect(organization.website_url).to include("brandnew.org")
-          expect(existing_registration.event_registration_organizations.find_by(organization: organization).form_filled_labels).to be_empty
+          expect(existing_registration.event_registration_organizations.find_by(organization: organization).form_autofill_descriptions).to be_empty
         end
 
         # An org built out of the submission is still an org the submission wrote,

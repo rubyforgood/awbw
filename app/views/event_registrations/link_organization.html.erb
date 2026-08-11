@@ -94,12 +94,12 @@
                 <%# Persistent record of what the form wrote onto an org that already existed —
                     the flash saying so is gone by the next page load. Both notes are lifted above
                     the card's stretched link (relative z-10) so the admin can read/select them. %>
-                <% form_fills = @form_fills_by_org[org.id] || [] %>
-                <% if form_fills.any? %>
+                <% autofill = @autofill_by_org[org.id] || [] %>
+                <% if autofill.any? %>
                   <div class="relative z-10 mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
                     <p class="flex items-center gap-1.5">
                       <i class="fa-solid fa-circle-info"></i>
-                      Filled from this registration's form: <span class="font-medium"><%= form_fills.to_sentence %></span>.
+                      Filled from this registration's form: <span class="font-medium"><%= autofill.to_sentence %></span>.
                     </p>
                   </div>
                 <% end %>

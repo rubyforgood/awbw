@@ -321,7 +321,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         )
 
         link = result.event_registration.event_registration_organizations.find_by!(organization: organization)
-        expect(link.form_filled_labels).to contain_exactly("website", "work address in Reno")
+        expect(link.form_autofill_descriptions).to contain_exactly("website", "work address in Reno")
       end
 
       # The admin linking page pairs answers to orgs by this pin. Without it the
