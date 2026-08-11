@@ -11,8 +11,9 @@
 <%# z-10 lifts the cell above the row's whole-row link so the controls are clickable. %>
 <div id="<%= cell %>" class="relative z-10 scroll-mt-24">
   <% if editing %>
-    <%= render "events/attendance_day_form", registration: registration, date: date,
-          entries: entries, state: state, cell: cell %>
+    <%= render "events/attendance_day_form", entries: entries,
+          url: update_attendance_event_registration_path(registration, date: date.iso8601, **state),
+          cancel_path: attendance_event_path(@event, **state, anchor: cell) %>
   <% else %>
     <div class="flex flex-wrap items-center gap-1.5">
       <% if entries.any? %>

@@ -248,25 +248,36 @@
 
     <%#
       Training sign-in/out — the in-portal replacement for the paper CE hour
-      sign-in sheet, shown only once CE is paid in full. One button at a time for
-      today: Sign in when signed out (only inside the day's window), Sign out while
-      signed in (always, so a forgotten sign-out can still be closed that day). Many
-      entries per day is expected (breaks, lunch). An entry left open overnight
-      doesn't carry into today's state — it gets its own catch-up button below,
-      stamped with that day's scheduled end rather than now.
+      sign-in sheet, shown once CE is paid in full. One button at a time for today:
+      Sign in when signed out (only inside the day's window), Sign out while signed in
+      (always, so a forgotten sign-out can still be closed that day). Many entries per
+      day is expected (breaks, lunch). An entry left open overnight doesn't carry into
+      today's state — it gets its own catch-up button below, stamped with that day's
+      scheduled end rather than now.
+
+      Those buttons only stamp "now", though. The day-by-day table underneath stays
+      editable for the whole training and after it, so a registrant who arrived before
+      signing in — or never tapped the buttons at all — writes their own hours up
+      instead of having to ask staff to.
     %>
-    <% attendance_offered = ce_registration&.paid_in_full? %>
+    <%# The sample preview has no payments behind its built CE record, so treat it as
+        paid the way the "Paid in full" badge above does — otherwise the whole section
+        is invisible in the one place it's meant to be previewed. %>
+    <% attendance_offered = ce_registration.present? && (ce_registration.paid_in_full? || simulate_ce_paid || sample_preview?) %>
+    <% attendance_days = attendance_offered ? @event.event_dates : [] %>
+    <% entries_by_day = attendance_offered ? @event_registration.event_attendance_time_entries.chronological.group_by(&:attendance_date) : {} %>
     <% open_entry = attendance_offered ? @event_registration.open_attendance_entry : nil %>
     <% signed_in = open_entry.present? %>
     <% forgotten_entry = attendance_offered ? @event_registration.forgotten_sign_out_entry : nil %>
     <% forgotten_at = forgotten_entry && @event_registration.forgotten_sign_out_at(forgotten_entry) %>
-    <% todays_entries = attendance_offered ? @event_registration.attendance_entries_on(Time.zone.today) : [] %>
-    <% todays_minutes = todays_entries.sum { |entry| entry.duration_minutes.to_i } %>
+    <% todays_entries = entries_by_day[Time.zone.today] || [] %>
     <% opens_at = @event.next_attendance_sign_in_opens_at %>
-    <%# Once the last day's window has passed there's no sign-in left to offer or
-        announce, so the section drops rather than nagging about a training that's
-        over — unless a day is still hanging open and waiting to be closed. %>
-    <% if attendance_offered && (signed_in || forgotten_entry || @event.attendance_sign_in_open? || opens_at || todays_entries.any?) %>
+    <%# A preview is never inside a real sign-in window, so show it the open state —
+        otherwise an admin previewing the ticket never sees the buttons registrants get. %>
+    <% window_open = @event.attendance_sign_in_open? || sample_preview? %>
+    <%# The whole surface stays up once the training is over: the sign-in buttons are
+        gone by then, but the day table is how a registrant fills in what they missed. %>
+    <% if attendance_offered && attendance_days.any? %>
       <section id="attendance" class="mt-7 scroll-mt-6 border-t border-gray-100 pt-6">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Training sign-in</h2>
@@ -288,14 +299,11 @@
                 <span class="block mt-0.5 text-xs text-gray-500">Signing out records <%= attendance_clock_time(forgotten_at) %>, when that day's training ended.</span>
               </span>
             </p>
-            <% if sample_preview? %>
-              <button type="button" disabled
-                      class="shrink-0 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white opacity-60 cursor-not-allowed">Sign out for <%= forgotten_entry.attendance_date.strftime("%b %-d") %></button>
-            <% else %>
-              <%= button_to "Sign out for #{forgotten_entry.attendance_date.strftime("%b %-d")}",
-                    registration_ce_sign_out_path(@event_registration.slug, entry_id: forgotten_entry.id), data: { turbo: false },
-                    class: "shrink-0 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-300 cursor-pointer" %>
-            <% end %>
+            <%# No sample-preview variant: the preview registration has no entries, so
+                it can never have a day hanging open. %>
+            <%= button_to "Sign out for #{forgotten_entry.attendance_date.strftime("%b %-d")}",
+                  registration_ce_sign_out_path(@event_registration.slug, entry_id: forgotten_entry.id), data: { turbo: false },
+                  class: "shrink-0 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-300 cursor-pointer" %>
           </div>
         <% end %>
 
@@ -314,7 +322,7 @@
               <%= button_to "Sign out", registration_ce_sign_out_path(@event_registration.slug), data: { turbo: false },
                     class: "shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer" %>
             <% end %>
-          <% elsif @event.attendance_sign_in_open? %>
+          <% elsif window_open %>
             <%# "Signed out" only makes sense after a session today — first-time
                 visitors just get the Sign in button. %>
             <% if todays_entries.any? %>
@@ -343,32 +351,72 @@
           <% end %>
         </div>
 
-        <% if todays_entries.any? %>
-          <dl class="mt-5 divide-y divide-gray-100 rounded-lg border border-gray-100">
-            <% tz_abbr = Time.zone.now.strftime("%Z") %>
-            <div class="grid grid-cols-3 gap-2 px-3 py-2 text-xs font-medium uppercase tracking-wide text-gray-400">
-              <dt>Time in (<%= tz_abbr %>)</dt>
-              <dt>Time out (<%= tz_abbr %>)</dt>
-              <dt class="text-right">Duration</dt>
-            </div>
-            <% todays_entries.each do |entry| %>
-              <% entry = entry.decorate %>
-              <div class="grid grid-cols-3 gap-2 px-3 py-2 text-sm text-gray-900 tabular-nums">
-                <dd><%= entry.signed_in_label %></dd>
-                <dd><%= entry.signed_out_label %></dd>
-                <dd class="text-right"><%= entry.duration_label %></dd>
-              </div>
-            <% end %>
-            <div class="grid grid-cols-3 gap-2 px-3 py-2 text-sm font-semibold text-gray-900 tabular-nums bg-gray-50">
-              <dt class="col-span-2 uppercase tracking-wide text-xs text-gray-500 self-center">Today's total</dt>
-              <dd class="text-right"><%= attendance_duration_label(todays_minutes) %></dd>
-            </div>
-          </dl>
-        <% end %>
+        <%# Every training day, and every day editable — the registrant's own copy of
+            the sign-in sheet. Read mode lists the day's sessions; Edit swaps the cell
+            for the same clock-time editor staff use on the attendance report. %>
+        <% tz_abbr = Time.zone.now.strftime("%Z") %>
+        <% day_cols = "grid grid-cols-1 sm:grid-cols-[minmax(7rem,1fr)_2.5fr_minmax(3.5rem,auto)] gap-x-3 gap-y-1 px-3 py-2" %>
+        <%# Carry the page's own params so editing, saving and cancelling all land back
+            on the page the registrant (or the admin previewing it) was looking at. %>
+        <% page_state = { return_to: params[:return_to].presence, admin: params[:admin].presence }.compact %>
+        <% editing_date = attendance_days.find { |date| params[:edit] == date.iso8601 } %>
+        <div class="mt-5 overflow-hidden rounded-lg border border-gray-100">
+          <div class="<%= day_cols %> hidden sm:grid text-xs font-medium uppercase tracking-wide text-gray-400">
+            <div>Day</div>
+            <div>Your times (<%= tz_abbr %>)</div>
+            <div class="text-right">Total</div>
+          </div>
 
-        <% if signed_in || @event.attendance_sign_in_open? %>
-          <p class="mt-3 text-xs text-gray-400">Sign in when you arrive and sign out when you leave.<br>Include breaks and lunch so your hours are recorded accurately.</p>
-        <% end %>
+          <% attendance_days.each_with_index do |date, index| %>
+            <% entries = (entries_by_day[date] || []).map(&:decorate) %>
+            <div class="<%= day_cols %> items-center border-t border-gray-100 text-sm">
+              <div class="text-gray-700">Day <%= index + 1 %> · <%= date.strftime("%a, %b %-d") %></div>
+              <div class="min-w-0">
+                <% if editing_date == date %>
+                  <%= render "events/attendance_day_form", entries: entries,
+                        url: registration_ce_attendance_path(@event_registration.slug, date: date.iso8601),
+                        cancel_path: registration_ce_path(@event_registration.slug, **page_state, anchor: "attendance") %>
+                <% else %>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <% entries.each do |entry| %>
+                      <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-700 tabular-nums">
+                        <%= entry.signed_in_label %>–<%= entry.signed_out_label %> · <%= entry.duration_label %>
+                      </span>
+                    <% end %>
+                    <% if entries.none? %>
+                      <span class="text-xs text-gray-400">No times yet</span>
+                    <% end %>
+                    <%# The preview's sentinel slug wouldn't resolve, so it shows the
+                        control without linking anywhere. %>
+                    <% if sample_preview? %>
+                      <span class="ml-1 rounded px-1.5 py-0.5 text-xs font-medium text-teal-700 opacity-60">
+                        <i class="fa-solid fa-pen text-[0.6rem]"></i> Edit
+                      </span>
+                    <% else %>
+                      <%= link_to registration_ce_path(@event_registration.slug, **page_state, edit: date.iso8601, anchor: "attendance"),
+                            class: "ml-1 rounded px-1.5 py-0.5 text-xs font-medium text-teal-700 hover:bg-teal-50 hover:underline",
+                            "aria-label": "Edit your times for #{date.strftime("%b %-d")}" do %>
+                        <i class="fa-solid fa-pen text-[0.6rem]"></i> Edit
+                      <% end %>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+              <div class="text-right font-medium text-gray-900 tabular-nums"><%= attendance_duration_label(entries.sum { |entry| entry.duration_minutes.to_i }) %></div>
+            </div>
+          <% end %>
+
+          <div class="<%= day_cols %> items-center border-t border-gray-100 bg-gray-50 text-sm font-semibold text-gray-900">
+            <div class="uppercase tracking-wide text-xs text-gray-500 sm:col-span-2">Total logged</div>
+            <%# Only the listed days, so the total always equals the rows above it. %>
+            <div class="text-right tabular-nums"><%= attendance_duration_label(attendance_days.sum { |date| entries_by_day.fetch(date, []).sum { |entry| entry.duration_minutes.to_i } }) %></div>
+          </div>
+        </div>
+
+        <p class="mt-3 text-xs text-gray-400">
+          <% if signed_in || window_open %>Sign in when you arrive and sign out when you leave, breaks and lunch included, so your hours are recorded accurately.<br><% end %>
+          You can add or correct any day's times yourself with <span class="font-medium text-teal-700">Edit</span> — during the training or after it.
+        </p>
       </section>
     <% end %>
   <% else %>

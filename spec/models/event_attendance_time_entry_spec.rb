@@ -118,6 +118,19 @@ RSpec.describe EventAttendanceTimeEntry, type: :model do
         expect(entry).not_to be_valid
       end
 
+      # An open entry occupies the rest of its day. Otherwise a session could be
+      # recorded after it and the registrant's own sign-out would then be rejected as
+      # an overlap — leaving them signed in with no way out.
+      it "rejects a session recorded after an entry that's still open" do
+        create(:event_attendance_time_entry, :open, event_registration: registration,
+          signed_in_at: at(13, 0))
+        entry = build(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: at(14, 0), signed_out_at: at(15, 0))
+
+        expect(entry).not_to be_valid
+        expect(entry.errors[:base].join).to match(/overlaps/)
+      end
+
       it "allows a back-to-back entry that only touches at the edge" do
         entry = build(:event_attendance_time_entry, event_registration: registration,
           signed_in_at: at(12, 0), signed_out_at: at(13, 0))
@@ -135,8 +148,12 @@ RSpec.describe EventAttendanceTimeEntry, type: :model do
   describe "scopes" do
     it "separates open from closed entries" do
       reg = create(:event_registration)
-      open_entry = create(:event_attendance_time_entry, :open, event_registration: reg)
-      closed_entry = create(:event_attendance_time_entry, event_registration: reg)
+      # The open one last: an entry with no sign-out occupies the rest of its day, so
+      # nothing can be logged after it until it's closed.
+      closed_entry = create(:event_attendance_time_entry, event_registration: reg,
+        signed_in_at: Time.zone.local(2026, 7, 23, 9, 0), signed_out_at: Time.zone.local(2026, 7, 23, 12, 0))
+      open_entry = create(:event_attendance_time_entry, :open, event_registration: reg,
+        signed_in_at: Time.zone.local(2026, 7, 23, 13, 0))
 
       expect(reg.event_attendance_time_entries.open).to contain_exactly(open_entry)
       expect(reg.event_attendance_time_entries.closed).to contain_exactly(closed_entry)

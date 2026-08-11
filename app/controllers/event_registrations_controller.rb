@@ -177,22 +177,21 @@ class EventRegistrationsController < ApplicationController
   # Inline correction of one registrant's sign-in/out times for one training day, from
   # the event's attendance report. Rows carry clock times only — the day comes from the
   # report section the editor was opened in — plus a blank row to add a session and a
-  # Remove box to drop one. Registrants still stamp their own times from the CE callout;
-  # this is where staff fix a missed sign-in or a forgotten sign-out without leaving the
-  # report.
+  # Remove box to drop one. Registrants edit their own times from the CE callout; this
+  # is the same editor for staff, without leaving the report.
   def update_attendance
     authorize! @event_registration, to: :update_attendance?
-    date = attendance_date_param
+    date = AttendanceDayRows.date_from(params[:date])
     return head :unprocessable_content unless date
 
-    rows = attendance_rows(date)
-    EventAttendanceEntriesUpdate.new(@event_registration, rows, editor: current_user).save!
+    rows = AttendanceDayRows.new(params, date)
+    EventAttendanceEntriesUpdate.new(@event_registration, rows.entry_attributes, editor: current_user).save!
     redirect_to attendance_report_path(date), notice: "Attendance times updated.", status: :see_other
   rescue ActiveRecord::RecordInvalid => e
     flash[:alert] = error_sentence(e.record)
     # Hand the submitted times back so a rejected save doesn't cost the admin what
     # they typed; the editor reopens on this cell prefilled with them.
-    flash[:attendance_rows] = submitted_attendance_rows
+    flash[:attendance_rows] = rows.submitted
     redirect_to attendance_report_path(date, reopen: true), status: :see_other
   end
 
@@ -370,42 +369,6 @@ class EventRegistrationsController < ApplicationController
 
   def set_event_registration
     @event_registration = EventRegistration.includes({ registrant: [ :user, { affiliations: :organization } ] }, { event: [ :location, :event_forms ] }, :organizations, comments: [ :created_by, :updated_by ]).find(params[:id])
-  end
-
-  # The training day the inline editor was opened on. Nil for anything unparseable —
-  # the date comes from the report's own sections, so a bad one is a broken request.
-  def attendance_date_param
-    Date.iso8601(params[:date].to_s)
-  rescue ArgumentError
-    nil
-  end
-
-  # The submitted sessions as attendance-entry attributes. Clock times ("08:50") are
-  # combined with the editor's day, since a session belongs to the day it's listed
-  # under; the CE edit page stays the place to enter a pair that crosses midnight.
-  def attendance_rows(date)
-    submitted_attendance_rows.map do |row|
-      { "id" => row["id"],
-        "signed_in_at" => attendance_time(date, row["in"]),
-        "signed_out_at" => attendance_time(date, row["out"]),
-        "_destroy" => row["_destroy"] }
-    end
-  end
-
-  def submitted_attendance_rows
-    params.fetch(:attendance, {})
-          .permit(entries: [ :id, :in, :out, :_destroy ])
-          .fetch(:entries, {})
-          .values
-          .map { |row| row.to_h.stringify_keys }
-  end
-
-  # Blank stays blank: an empty sign-in marks an untouched row (dropped by the
-  # association's reject_if), an empty sign-out leaves the session open.
-  def attendance_time(date, clock)
-    return nil if clock.blank?
-
-    Time.zone.parse("#{date.iso8601} #{clock}")
   end
 
   # Back to the report in read mode, scrolled to the day cell that was edited, keeping

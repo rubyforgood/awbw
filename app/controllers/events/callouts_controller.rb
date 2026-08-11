@@ -180,6 +180,32 @@ module Events
         alert: e.record.errors.full_messages.to_sentence
     end
 
+    # The registrant editing their own sign-in/out times for one training day. The
+    # buttons above are only a shortcut for stamping "now" — the times themselves stay
+    # editable, so someone who arrived before signing in, or never tapped the buttons
+    # at all, can write the day up afterwards. Deliberately not windowed: the point is
+    # to fix a day after it's over. Left unattributed, like the buttons.
+    def update_ce_attendance
+      return redirect_to(registration_ce_path(@event_registration.slug)) if sample_preview?
+      unless attendance_enabled?
+        return redirect_to registration_ce_path(@event_registration.slug), alert: "Editing your times isn't available yet."
+      end
+
+      date = AttendanceDayRows.date_from(params[:date])
+      return head :unprocessable_content unless date
+
+      rows = AttendanceDayRows.new(params, date)
+      EventAttendanceEntriesUpdate.new(@event_registration, rows.entry_attributes, editor: nil).save!
+      redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"),
+        notice: "Your times for #{date.strftime("%a, %b %-d")} were saved."
+    rescue ActiveRecord::RecordInvalid => e
+      flash[:alert] = error_sentence(e.record)
+      # Hand the typed times back so a rejected save doesn't cost the registrant what
+      # they entered; the day reopens in edit mode prefilled with them.
+      flash[:attendance_rows] = rows.submitted
+      redirect_to registration_ce_path(@event_registration.slug, edit: date.iso8601, anchor: "attendance")
+    end
+
     # Handouts page: callout-card links to the training worksheet/handout
     # resources, in display order, each opening its own registrant resource page
     # (PDF preview + download, with a back-to-handouts eyebrow). Cards read their

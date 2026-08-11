@@ -71,14 +71,20 @@ class EventAttendanceTimeEntry < ApplicationRecord
   def does_not_overlap_same_day
     return unless own_range_valid?
 
-    my_end = signed_out_at || signed_in_at
     clash = same_day_siblings.find do |entry|
-      entry_end = entry.signed_out_at || entry.signed_in_at
-      signed_in_at < entry_end && entry.signed_in_at < my_end
+      signed_in_at < occupied_until(entry) && entry.signed_in_at < occupied_until(self)
     end
     return unless clash
 
     errors.add(:base, "This sign-in overlaps another entry on #{day_label}.")
+  end
+
+  # How far an entry's timeframe reaches for the overlap check: its sign-out, or the
+  # rest of its day while it's still open. An open entry has to occupy the rest of the
+  # day rather than count as a moment, or a later session slips in underneath it and
+  # the eventual sign-out can never save.
+  def occupied_until(entry)
+    entry.signed_out_at || entry.signed_in_at.in_time_zone(Time.zone).end_of_day
   end
 
   # Only run the cross-entry guards on a well-formed range (presence + order are

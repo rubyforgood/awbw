@@ -195,13 +195,13 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
     it "shows a Sign out button and today's entries while signed in" do
       pay_ce!
       create(:event_attendance_time_entry, :open, event_registration: registration,
-        signed_in_at: Time.current - 30.minutes)
+        signed_in_at: Time.zone.local(2026, 7, 23, 9, 30))
       get registration_ce_path(registration.slug)
       expect(response.body).to include("Sign out")
       expect(response.body).to include("Signed in at")
-      # The entries table labels its clock times with the page's zone (Pacific).
-      expect(response.body).to include("Time in (PDT)")
-      expect(response.body).to include("Time out (PDT)")
+      # The day table labels its clock times with the page's zone (Pacific).
+      expect(response.body).to include("Your times (PDT)")
+      expect(response.body).to include("2:30 AM–— · In progress")
     end
 
     it "shows the event dates and daily times on their own header line" do
@@ -235,12 +235,18 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       expect(response.body).not_to include(attendance_event_path(event, ce: "true"))
     end
 
-    it "drops the whole section once the training is over" do
+    # The buttons are done once the training is, but the day table isn't: filling in
+    # a day afterwards is exactly what someone who forgot to tap Sign in needs.
+    it "keeps the day table editable once the training is over, without the buttons" do
       pay_ce!
       travel_to Time.zone.local(2026, 7, 30, 10, 0)
       get registration_ce_path(registration.slug)
-      expect(response.body).not_to include("Training sign-in")
+      expect(response.body).to include("Training sign-in")
       expect(response.body).not_to include("Sign-in opens")
+      expect(response.body).not_to include(registration_ce_sign_in_path(registration.slug))
+      expect(response.body).to include(
+        registration_ce_path(registration.slug, edit: "2026-07-23", anchor: "attendance")
+      )
     end
 
     it "hides the attendance section until CE is paid in full" do
@@ -248,6 +254,95 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
       get registration_ce_path(registration.slug)
       expect(response.body).not_to include("Training sign-in")
+    end
+
+    it "shows the section on the admin sample-ticket preview, with the controls inert" do
+      sign_in create(:user, :admin)
+      get sample_ce_event_path(event)
+
+      expect(response.body).to include("Training sign-in")
+      expect(response.body).to match(/<button[^>]*disabled[^>]*>Sign in</)
+      expect(response.body).not_to include(registration_ce_sign_in_path("sample"))
+    end
+  end
+
+  # The buttons only stamp "now". Someone who arrived before signing in, forgot to tap
+  # them, or is writing the whole training up afterwards edits their own times here
+  # instead of having to ask staff.
+  describe "PATCH /registration/:slug/ce/attendance" do
+    let(:day) { Date.new(2026, 7, 23) }
+
+    it "adds a session for a day the registrant never signed in on" do
+      pay_ce!
+      travel_to Time.zone.local(2026, 7, 30, 10, 0) # well after the training
+
+      expect {
+        patch registration_ce_attendance_path(registration.slug, date: day.iso8601),
+              params: { attendance: { entries: { "0" => { in: "02:00", out: "09:00" } } } }
+      }.to change { registration.event_attendance_time_entries.count }.by(1)
+
+      entry = registration.event_attendance_time_entries.last
+      expect(entry.attendance_date).to eq(day)
+      expect(entry.duration_minutes).to eq(420)
+      # Registrant edits stay unattributed, like their sign-in/out taps.
+      expect(entry.created_by).to be_nil
+      expect(entry.updated_by).to be_nil
+      expect(response).to redirect_to(registration_ce_path(registration.slug, anchor: "attendance"))
+    end
+
+    it "corrects an existing time" do
+      pay_ce!
+      entry = create(:event_attendance_time_entry, event_registration: registration,
+        signed_in_at: Time.zone.local(2026, 7, 23, 9, 30), signed_out_at: Time.zone.local(2026, 7, 23, 12, 0))
+
+      patch registration_ce_attendance_path(registration.slug, date: day.iso8601),
+            params: { attendance: { entries: { "0" => { id: entry.id, in: "02:00", out: "05:00" } } } }
+
+      expect(entry.reload.signed_in_at.in_time_zone("Pacific Time (US & Canada)").strftime("%H:%M")).to eq("02:00")
+      expect(entry.updated_by).to be_nil
+    end
+
+    it "removes a session the registrant logged by mistake" do
+      pay_ce!
+      entry = create(:event_attendance_time_entry, event_registration: registration,
+        signed_in_at: Time.zone.local(2026, 7, 23, 9, 30), signed_out_at: Time.zone.local(2026, 7, 23, 12, 0))
+
+      expect {
+        patch registration_ce_attendance_path(registration.slug, date: day.iso8601),
+              params: { attendance: { entries: { "0" => { id: entry.id, in: "02:30", out: "05:00", _destroy: "1" } } } }
+      }.to change { registration.event_attendance_time_entries.count }.by(-1)
+    end
+
+    it "reopens the day with the submitted times when the save is rejected" do
+      pay_ce!
+
+      patch registration_ce_attendance_path(registration.slug, date: day.iso8601),
+            params: { attendance: { entries: { "0" => { in: "09:00", out: "02:00" } } } }
+
+      expect(flash[:alert]).to eq("Sign-out must be after the sign-in time.")
+      expect(response).to redirect_to(registration_ce_path(registration.slug, edit: day.iso8601, anchor: "attendance"))
+
+      follow_redirect!
+      expect(response.body).to include('value="09:00"')
+      expect(response.body).to include('value="02:00"')
+    end
+
+    it "refuses when CE isn't paid in full" do
+      license = create(:professional_license, person: registration.registrant, number: "LIC123")
+      create(:continuing_education_registration, event_registration: registration, professional_license: license)
+
+      expect {
+        patch registration_ce_attendance_path(registration.slug, date: day.iso8601),
+              params: { attendance: { entries: { "0" => { in: "02:00", out: "09:00" } } } }
+      }.not_to change { registration.event_attendance_time_entries.count }
+      expect(flash[:alert]).to be_present
+    end
+
+    it "rejects an unparseable date rather than guessing a day" do
+      pay_ce!
+      patch registration_ce_attendance_path(registration.slug, date: "not-a-date"),
+            params: { attendance: { entries: { "0" => { in: "02:00", out: "09:00" } } } }
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 end

@@ -91,6 +91,7 @@ Rails.application.routes.draw do
   post "registration/:slug/ce/pay", to: "events/callouts#pay_ce", as: :registration_ce_pay
   post "registration/:slug/ce/sign-in", to: "events/callouts#sign_in_ce", as: :registration_ce_sign_in
   post "registration/:slug/ce/sign-out", to: "events/callouts#sign_out_ce", as: :registration_ce_sign_out
+  patch "registration/:slug/ce/attendance", to: "events/callouts#update_ce_attendance", as: :registration_ce_attendance
   get "registration/:slug/handouts", to: "events/callouts#handouts", as: :registration_handouts
   get "registration/:slug/resource/:resource_id", to: "events/callouts#resource", as: :registration_resource
   get "registration/:slug/videoconference", to: "events/callouts#videoconference", as: :registration_videoconference
