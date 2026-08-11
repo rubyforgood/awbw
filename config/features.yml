@@ -1,0 +1,152 @@
+# Seed for the "Features & tips" page (/features).
+#
+# This file is the STARTER content only. The live page is database-backed and
+# edited in-app by super-admins (rich descriptions with screenshots, external
+# doc links, etc.). An admin clicks "Import from seed" on /features to pull any
+# entries here that aren't in the database yet — it NEVER overwrites an existing
+# feature (matched by name), so admin edits are safe. See CLAUDE.md
+# "Features & tips page" and FeatureCatalog#import!.
+#
+# WHEN YOU SHIP A USER-FACING FEATURE, add an entry here:
+#   name:           Short, sentence-case name.
+#   area:           One of Feature::AREA_KEYS (events, registration, scholarships,
+#                   payments, people, content, stories, communications, reporting).
+#   display_status: Who it's for AND who may see it on the page:
+#                   public_facing | user_facing | admin_facing
+#                   (admin_facing is visible to super-admins only).
+#   summary:        One or two plain-language sentences (shown on the card).
+#   released_on:    Ship date (YYYY-MM-DD).
+#   pro_tips:       Optional list of short, practical tips (0–2 is plenty).
+#   description:    Optional longer write-up (plain text or HTML). Admins usually
+#                   expand this in the WYSIWYG with screenshots.
+#   external_url:   Optional link to a full process doc (e.g. a Google/Word doc).
+
+- name: "Auto-filled organization details when linking a registration"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-11
+  summary: >-
+    Linking a registrant to an organization now fills in the org's type, website,
+    and address from what the registrant typed, and records exactly what changed.
+  pro_tips:
+    - "The linking page lists every value that was filled in, so you can double-check before moving on."
+    - "Existing org details are never overwritten — the portal only fills blanks and flags anything that conflicts."
+
+- name: "Cross-event reports and a new events subnavigation"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-08-10
+  summary: >-
+    Events have a subnavigation linking revenue, participation, and scholarship
+    reports across every training, with breakdowns that filter themselves as you
+    drill into a sector, age group, or location.
+  pro_tips:
+    - "Click any slice of a breakdown to see just the people behind that number."
+
+- name: "Comments and communications on story screens"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-08-10
+  summary: >-
+    Story and story-idea edit screens show the comments and email communications
+    tied to that story, so the whole conversation lives in one place.
+
+- name: "Public Story Share portal"
+  area: stories
+  display_status: public_facing
+  released_on: 2026-08-09
+  summary: >-
+    A public, shareable Story Share portal that mirrors the awbw.org styling, with
+    admin-managed slots, hover-zoom segments, and a "most read" ordering.
+  pro_tips:
+    - "Admins can reorder the featured slots and pick a color for each from the drag menu."
+
+- name: "Shared registrant filter bar"
+  area: events
+  display_status: admin_facing
+  released_on: 2026-08-09
+  summary: >-
+    A single, consistent filter bar across the registrant lists lets you narrow by
+    more criteria, tuck advanced options under "More filters", and prefill a bulk
+    email to exactly the people you filtered to.
+
+- name: "Payment method badge and filter on the roster"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-09
+  summary: >-
+    The registrants roster shows each person's payment method as a badge and lets
+    you filter the list by it.
+
+- name: "Certificate slider on the registrants roster"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-09
+  summary: >-
+    Mark a registrant's certificate as sent right from the roster with a slider —
+    it stays in sync with the certificate date on their registration.
+
+- name: "Scholarship recipients grouped by funder"
+  area: scholarships
+  display_status: admin_facing
+  released_on: 2026-08-09
+  summary: >-
+    The scholarship recipients page groups awards by funder and links each
+    recipient's age chips back to their registration, so it's easy to see who
+    funded whom.
+
+- name: "Feature a recipient shout-out"
+  area: scholarships
+  display_status: admin_facing
+  released_on: 2026-08-09
+  summary: >-
+    Highlight a scholarship recipient as a shout-out straight from the recipients
+    page.
+
+- name: "Meet-the-staff section on the event form"
+  area: events
+  display_status: admin_facing
+  released_on: 2026-08-09
+  summary: >-
+    Add and manage the staff shown on an event's "Meet the staff" roster directly
+    from the edit-event form.
+
+- name: "Archived list for old and unpublished events"
+  area: events
+  display_status: admin_facing
+  released_on: 2026-08-09
+  summary: >-
+    Unpublished and long-past events collapse into a tidy archive list on the
+    events index, so admins see current events first without losing the old ones.
+
+- name: "Per-registrant drilldowns on the revenue report"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-08-09
+  summary: >-
+    Every figure on the events revenue report opens up to the individual
+    registrants behind it.
+
+- name: "Add a subscriber without leaving the form"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-08-09
+  summary: >-
+    When adding a topic subscription for someone who isn't in the system yet, you
+    can create their person record inline instead of starting over.
+
+- name: "Admin emails attributed to the sender"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-08-09
+  summary: >-
+    Invitations, reminders, and resends show who sent them, and are recorded
+    against the sending person rather than a generic account.
+
+- name: "\"Someone else will pay\" toggle on registration"
+  area: registration
+  display_status: public_facing
+  released_on: 2026-08-09
+  summary: >-
+    Registrants can indicate that someone else will pay for them, and that answer
+    is carried onto their registration for admins to see.

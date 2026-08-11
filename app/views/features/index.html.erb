@@ -1,0 +1,130 @@
+<% content_for(:page_bg_class, "admin-or-auth") %>
+
+<div class="w-full max-w-7xl mx-auto bg-gray-50 border border-gray-200 rounded-xl shadow p-6"
+     data-controller="feature-list">
+
+  <!-- Header -->
+  <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
+    <div class="pr-6">
+      <h1 class="text-2xl font-semibold text-gray-900">Features &amp; tips</h1>
+      <p class="text-gray-600 mt-2 max-w-2xl">
+        Everything the portal can do, newest first. Search by name or tip, narrow by area,
+        audience, or date — then open a feature for the full walkthrough and pro tips.
+      </p>
+    </div>
+
+    <% if allowed_to?(:create?, Feature) %>
+      <div class="admin-only bg-blue-100 flex flex-wrap items-center justify-end gap-2 rounded-lg p-2">
+        <%= link_to new_feature_path, class: "btn btn-primary-outline" do %>
+          <i class="fa-solid fa-plus"></i> New feature
+        <% end %>
+        <%= button_to import_features_path,
+                      class: "btn btn-primary-outline",
+                      form: { data: { turbo_confirm: "Import any features from the seed file that aren't here yet? Existing features are left untouched." } } do %>
+          <i class="fa-solid fa-arrows-rotate"></i> Import from seed
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="sm:col-span-2">
+        <label for="feature-search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+        <div class="relative">
+          <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </span>
+          <input type="search" id="feature-search" placeholder="Search features and tips…"
+                 data-feature-list-target="search"
+                 data-action="input->feature-list#search"
+                 class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg">
+        </div>
+      </div>
+
+      <div>
+        <label for="feature-area" class="block text-sm font-medium text-gray-700 mb-1">Area</label>
+        <select id="feature-area" data-feature-list-target="area" data-action="change->feature-list#filterArea"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+          <option value="all">All areas</option>
+          <% @areas.each do |area| %>
+            <option value="<%= area[:key] %>"><%= area[:label] %></option>
+          <% end %>
+        </select>
+      </div>
+
+      <div>
+        <label for="feature-status" class="block text-sm font-medium text-gray-700 mb-1">Audience</label>
+        <select id="feature-status" data-feature-list-target="status" data-action="change->feature-list#filterStatus"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+          <option value="all">All audiences</option>
+          <% @statuses.each do |key, meta| %>
+            <option value="<%= key %>"><%= meta[:label] %></option>
+          <% end %>
+        </select>
+      </div>
+
+      <div>
+        <label for="feature-from" class="block text-sm font-medium text-gray-700 mb-1">Released from</label>
+        <input type="date" id="feature-from"
+               data-feature-list-target="from" data-action="change->feature-list#setFrom"
+               class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+      </div>
+
+      <div>
+        <label for="feature-to" class="block text-sm font-medium text-gray-700 mb-1">Released to</label>
+        <input type="date" id="feature-to"
+               data-feature-list-target="to" data-action="change->feature-list#setTo"
+               class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+      </div>
+
+      <div>
+        <label for="feature-order" class="block text-sm font-medium text-gray-700 mb-1">Sort by date</label>
+        <select id="feature-order" data-feature-list-target="order" data-action="change->feature-list#setOrder"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
+      </div>
+
+      <div class="flex items-end">
+        <button type="button" data-action="feature-list#clear"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+          <i class="fa-solid fa-xmark"></i> Clear filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Count -->
+  <p class="text-sm text-gray-500 mb-3">
+    Showing <span data-feature-list-target="count"><%= @features.size %></span> of <%= @features.size %>
+    <%= "feature".pluralize(@features.size) %>
+  </p>
+
+  <!-- List -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4" data-feature-list-target="list">
+    <%= render partial: "feature", collection: @features, as: :feature %>
+  </div>
+
+  <!-- Empty states -->
+  <% if @features.empty? %>
+    <div class="bg-white border border-dashed border-gray-300 rounded-xl p-10 text-center">
+      <i class="fa-solid fa-star text-3xl text-gray-300"></i>
+      <p class="text-gray-500 mt-3">No features yet.</p>
+      <% if allowed_to?(:create?, Feature) %>
+        <p class="text-gray-400 text-sm mt-1">Add one, or import the starter set from the seed file.</p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div data-feature-list-target="empty"
+       class="hidden bg-white border border-dashed border-gray-300 rounded-xl p-10 text-center">
+    <i class="fa-solid fa-magnifying-glass text-3xl text-gray-300"></i>
+    <p class="text-gray-500 mt-3">No features match your filters.</p>
+    <button type="button" data-action="feature-list#clear" class="text-primary text-sm font-medium hover:underline mt-1">
+      Clear filters
+    </button>
+  </div>
+</div>

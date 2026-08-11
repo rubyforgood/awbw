@@ -610,6 +610,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_114533) do
     t.index ["published"], name: "index_faqs_on_published"
   end
 
+  create_table "features", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "area", null: false
+    t.datetime "created_at", null: false
+    t.string "display_status", default: "user_facing", null: false
+    t.string "external_url"
+    t.string "name", null: false
+    t.text "pro_tips"
+    t.boolean "published", default: true, null: false
+    t.date "released_on", null: false
+    t.string "summary", null: false
+    t.datetime "updated_at", null: false
+    t.index ["area"], name: "index_features_on_area"
+    t.index ["display_status"], name: "index_features_on_display_status"
+    t.index ["released_on"], name: "index_features_on_released_on"
+  end
+
   create_table "footers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "adult_program"
     t.string "children_program"
