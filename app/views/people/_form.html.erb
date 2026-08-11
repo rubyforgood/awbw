@@ -480,6 +480,10 @@
                     ],
                     selected: f.object.display_name_preference || "full_name" %>
 
+          <%= f.input :anonymous_contributions,
+                    label: "Contribute anonymously",
+                    hint: "Hide your name on stories credited to you" %>
+
           <%= f.input :profile_show_credentials, label: "Show credentials" %>
 
           <%= f.input :profile_show_pronouns, label: "Show pronouns" %>

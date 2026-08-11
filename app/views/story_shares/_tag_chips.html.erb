@@ -9,7 +9,7 @@
                   class: "inline-flex items-center rounded-full bg-purple-100 text-purple-800 px-3 py-1 text-xs font-medium hover:bg-purple-200 transition-colors" %>
     <% end %>
     <% audiences.each do |category| %>
-      <%= link_to category.name, story_shares_path(category_names_all: category.name),
+      <%= link_to category.decorate.display_name, story_shares_path(category_names_all: category.name),
                   class: "inline-flex items-center rounded-full bg-gray-100 text-gray-700 px-3 py-1 text-xs font-medium hover:bg-gray-200 transition-colors" %>
     <% end %>
   </div>
