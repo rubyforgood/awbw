@@ -532,6 +532,16 @@ class EventDashboard
     @flagged_comment_registrants ||= people_sorted(flagged_comment_registrant_ids)
   end
 
+  # Active registrants who haven't been fully set up in every onboarding system
+  # (Mailchimp + CMS, per EventRegistration::CHECKLIST_STEPS).
+  def onboarding_incomplete_count
+    onboarding_incomplete_registrant_ids.size
+  end
+
+  def onboarding_incomplete_registrants
+    @onboarding_incomplete_registrants ||= people_sorted(onboarding_incomplete_registrant_ids)
+  end
+
   # Scholarship requested on the registration but no Scholarship created yet.
   def scholarship_uncreated_count
     scholarship_uncreated_registrant_ids.size
@@ -1185,6 +1195,17 @@ class EventDashboard
         .distinct
         .pluck(:commentable_id)
       registration_ids.filter_map { |id| registrant_id_by_registration[id] }.uniq
+    end
+  end
+
+  def onboarding_incomplete_registrant_ids
+    @onboarding_incomplete_registrant_ids ||= begin
+      fully_onboarded_ids = EventRegistrationChecklistCompletion
+        .where(event_registration_id: active_registration_ids)
+        .group(:event_registration_id)
+        .having("COUNT(DISTINCT step) >= ?", EventRegistration::CHECKLIST_STEPS.size)
+        .pluck(:event_registration_id)
+      (active_registration_ids - fully_onboarded_ids).filter_map { |id| registrant_id_by_registration[id] }
     end
   end
 

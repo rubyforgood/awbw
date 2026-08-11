@@ -111,6 +111,24 @@ RSpec.describe EventChecklist do
     end
   end
 
+  describe "trainee onboarding" do
+    let(:event) { create(:event) }
+    let(:person) { create(:person) }
+    let!(:reg) { create(:event_registration, event: event, registrant: person, status: "registered") }
+
+    it "is a to-do until every onboarding step is complete, linking to the onboarding page" do
+      onboarding = item(:onboard_trainees)
+      expect(onboarding).to be_todo
+      expect(onboarding.count).to eq(1)
+      expect(onboarding.registrants).to eq([ person ])
+      expect(onboarding.action_path).to eq(Rails.application.routes.url_helpers.onboarding_event_path(event))
+
+      EventRegistration::CHECKLIST_STEPS.keys.each { |step| reg.checklist_completions.create!(step: step) }
+      refreshed = described_class.new(EventDashboard.new(event)).items.find { |i| i.key == :onboard_trainees }
+      expect(refreshed).to be_done
+    end
+  end
+
   describe "bulk payments" do
     let(:event) { create(:event, cost_cents: 10_000) }
     let(:form) { create(:form) }

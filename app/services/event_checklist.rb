@@ -60,7 +60,7 @@ class EventChecklist
   def items
     @items ||= [
       setup_forms, setup_callouts, setup_publish, setup_event_type, setup_staff,
-      link_organizations, allocate_bulk_payments, review_flagged_comments,
+      link_organizations, onboard_trainees, allocate_bulk_payments, review_flagged_comments,
       collect_registration_fees, issue_scholarships, set_scholarship_funders,
       follow_up_agreements, fix_zero_scholarships, complete_scholarship_tasks,
       collect_ce_licenses, collect_ce_fees, issue_ce_certificates,
@@ -210,6 +210,16 @@ class EventChecklist
       amount_cents: detail.amount_cents,
       path: bulk_payments_event_path(@event, expand: detail.submission_id, anchor: "payment-card-#{detail.submission_id}")
     )
+  end
+
+  def onboard_trainees
+    relevant = @dashboard.has_registrants?
+    count = relevant ? @dashboard.onboarding_incomplete_count : 0
+    task(key: :onboard_trainees, phase: :before, title: "Set up trainee onboarding", actor: :admin,
+         relevant: relevant, count: count,
+         registrants: count.positive? ? @dashboard.onboarding_incomplete_registrants : [],
+         detail: "Mailchimp & CMS setup",
+         action_path: onboarding_event_path(@event), action_label: "Onboarding")
   end
 
   def review_flagged_comments
