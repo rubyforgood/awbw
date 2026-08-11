@@ -78,9 +78,13 @@ module EventRegistrationServices
 
         organization = find_organization if field_value(ORGANIZATION_NAME_IDENTIFIER).present?
         if organization
-          sync_organization_profile(organization)
-          agency_address = create_agency_address(organization)
-          create_affiliation(person, organization, agency_address)
+          profile_changes = sync_organization_profile(organization).changes
+          address_result = create_agency_address(organization)
+          # find_organization only ever finds, so this org already existed and the
+          # registrant just changed it — connect_organization records what, and to
+          # what value, for the admin linking page's persistent note.
+          @organization_autofill = profile_changes + address_result.changes
+          create_affiliation(person, organization, address_result.address)
         end
 
         assign_tags(person, organization)
@@ -99,8 +103,9 @@ module EventRegistrationServices
             existing.update!(status: "registered")
             send_notifications(existing)
           end
-          connect_organization(existing, organization)
+          organization_link = connect_organization(existing, organization)
           submission = update_form_submission(person)
+          organization_link&.record_form_submission(submission)
           save_scholarship_submission(person)
           save_continuing_education_submission(person)
           return Result.new(success?: true, event_registration: existing, form_submission: submission, errors: [])
@@ -108,8 +113,9 @@ module EventRegistrationServices
 
         event_registration = create_event_registration(person)
         create_ce_registration(event_registration, person)
-        connect_organization(event_registration, organization)
+        organization_link = connect_organization(event_registration, organization)
         submission = create_form_submission(person)
+        organization_link&.record_form_submission(submission)
         save_scholarship_submission(person)
         save_continuing_education_submission(person)
 
@@ -217,38 +223,11 @@ module EventRegistrationServices
     end
 
     def sync_organization_profile(organization)
-      apply_value(organization, :website_url, field_value("agency_website"))
-      sync_agency_type(organization)
-    end
-
-    # The "Organization Type" answer folds an "Other" choice's free text in as
-    # "Other: <text>" (a specify option). Split the option label from the typed
-    # text: the label drives agency_type and the stripped text fills
-    # agency_type_other, which is cleared for the non-"Other" classifications so
-    # no stale free text lingers. Follows the same latest-wins / never-clobber-on-
-    # blank contract as apply_value.
-    def sync_agency_type(organization)
-      raw = field_value("agency_type")&.strip
-      return if raw.blank?
-
-      label, _separator, specified = raw.partition(":")
-      label = label.strip
-      return if label.blank?
-      other_text = FormField.other_option?(label) ? specified.strip.presence : nil
-      organization.update!(agency_type: label, agency_type_other: other_text)
-      capture_organization_type_other(organization, other_text)
-    end
-
-    # Materialize the org-type "Other" as an OtherResponse owned by the org, so it
-    # joins the curation queue alongside sector "Other"s. Not promotable yet (no
-    # OrganizationType model), but stored now so nothing is lost; de-duped per org.
-    def capture_organization_type_other(organization, text)
-      return if text.blank?
-
-      organization.other_responses.find_or_create_by!(
-        field_identifier: OtherResponse::ORGANIZATION_TYPE_FIELD_IDENTIFIER,
-        normalized_text: OtherResponse.normalize(text)
-      ) { |response| response.text = text }
+      OrganizationServices::SyncProfile.call(
+        organization: organization,
+        website: field_value("agency_website"),
+        agency_type: field_value("agency_type")
+      )
     end
 
     # Write value onto attribute when a non-blank value was submitted, overwriting
@@ -356,11 +335,16 @@ module EventRegistrationServices
     # multiple orgs only deliberately: an admin links extra ones from the edit
     # page, or the registrant applies again with a different org (each submission
     # adds its single org to the same registration via find_or_create_by!).
+    # Returns the link so the caller can pin this submission on it once it exists —
+    # the admin linking page pairs answers to orgs by that pin, and an org renamed
+    # after registration would otherwise stop matching the name the registrant typed.
     def connect_organization(event_registration, organization)
       return unless organization
 
-      event_registration.event_registration_organizations
+      link = event_registration.event_registration_organizations
         .find_or_create_by!(organization: organization)
+      link.record_autofill(@organization_autofill.to_a)
+      link
     end
 
     def create_affiliation(person, organization, organization_address = nil)
