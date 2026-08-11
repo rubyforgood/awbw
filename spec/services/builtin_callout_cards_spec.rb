@@ -89,6 +89,18 @@ RSpec.describe BuiltinCalloutCards do
       expect(card_titles(registration)).to include("Certificate of completion")
     end
 
+    it "shows the LinkedIn badge card on a facilitator training once the certificate is available" do
+      event.update!(facilitator_training: true, start_date: 3.days.ago, end_date: 2.days.ago)
+      registration.update!(status: "attended")
+      expect(card_titles(registration)).to include("Add to LinkedIn")
+    end
+
+    it "never shows the LinkedIn badge card on a non-facilitator-training event" do
+      event.update!(start_date: 3.days.ago, end_date: 2.days.ago)
+      registration.update!(status: "attended")
+      expect(card_titles(registration)).not_to include("Add to LinkedIn")
+    end
+
     it "shows the videoconference card only when the event has a link" do
       expect(card_titles(registration)).not_to include("Videoconference")
       event.update!(videoconference_url: "https://example.zoom.us/j/123")
@@ -251,7 +263,8 @@ RSpec.describe BuiltinCalloutCards do
         event.ce_hours_label,
         "Videoconference",
         "Meet the staff",
-        "Certificate of completion"
+        "Certificate of completion",
+        "Add to LinkedIn"
       ])
     end
   end

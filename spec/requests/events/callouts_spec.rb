@@ -235,6 +235,39 @@ RSpec.describe "Events::Callouts", type: :request do
     end
   end
 
+  describe "GET /registration/:slug/linkedin_badge" do
+    let(:event) do
+      create(:event, title: "Facilitator Training", facilitator_training: true,
+                     start_date: 3.days.ago, end_date: 2.days.ago)
+    end
+
+    it "renders the Add to LinkedIn page once the certificate is available, with no login" do
+      registration.update!(status: "attended")
+
+      get registration_linkedin_badge_path(registration.slug)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Add to LinkedIn")
+      expect(response.body).to include("https://www.linkedin.com/profile/add")
+      expect(response.body).to include(credential_path(registration.slug))
+    end
+
+    it "redirects to the ticket before the credential is earned" do
+      get registration_linkedin_badge_path(registration.slug)
+
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+    end
+
+    it "redirects to the ticket when the event isn't a facilitator training" do
+      event.update!(facilitator_training: false)
+      registration.update!(status: "attended")
+
+      get registration_linkedin_badge_path(registration.slug)
+
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+    end
+  end
+
   describe "GET /registration/:slug/videoconference" do
     let(:event) { create(:event, videoconference_url: "https://example.com/zoom") }
 

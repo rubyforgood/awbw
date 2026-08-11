@@ -783,7 +783,7 @@ RSpec.describe "Events", type: :request do
 
       it "materializes the built-in callouts so the preview reads from real rows" do
         expect { get sample_ticket_event_path(event) }
-          .to change { event.registration_ticket_callouts.builtin.count }.from(0).to(8)
+          .to change { event.registration_ticket_callouts.builtin.count }.from(0).to(9)
       end
 
       it "logs an Ahoy page-view event" do
@@ -1030,9 +1030,9 @@ RSpec.describe "Events", type: :request do
 
         created = Event.order(created_at: :desc).first
         # The two submitted built-ins persist their edits, and the post-save seed
-        # fills the remaining six — every seeded built-in key present exactly once.
+        # fills the remaining seven — every seeded built-in key present exactly once.
         expect(created.registration_ticket_callouts.builtin.pluck(:builtin_key)).to contain_exactly(
-          "payment", "certificate", "scholarship", "ce_hours", "videoconference", "staff", "handouts", "faq"
+          "payment", "certificate", "linkedin_badge", "scholarship", "ce_hours", "videoconference", "staff", "handouts", "faq"
         )
         payment = created.registration_ticket_callouts.find_by(builtin_key: "payment")
         expect(payment.title).to eq("Pay your balance")

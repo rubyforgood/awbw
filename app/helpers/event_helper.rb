@@ -6,6 +6,7 @@ module EventHelper
     case callout.builtin_key
     when "payment" then sample_payment_event_path(event)
     when "certificate" then sample_certificate_event_path(event)
+    when "linkedin_badge" then sample_linkedin_badge_event_path(event)
     when "scholarship" then sample_scholarship_event_path(event)
     when "ce_hours" then sample_ce_event_path(event)
     when "videoconference" then sample_videoconference_event_path(event)

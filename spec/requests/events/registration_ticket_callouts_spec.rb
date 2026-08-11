@@ -252,7 +252,7 @@ RSpec.describe "Registration ticket callouts", type: :request do
       }
 
       expect(event.registration_ticket_callouts.builtin.pluck(:builtin_key)).to contain_exactly(
-        "payment", "certificate", "scholarship", "ce_hours",
+        "payment", "certificate", "linkedin_badge", "scholarship", "ce_hours",
         "videoconference", "staff", "handouts", "faq"
       )
     end

@@ -2,13 +2,13 @@ require "rails_helper"
 
 RSpec.describe BuiltinCallouts do
   describe "#build" do
-    it "builds all eight built-ins as unsaved in-memory rows on a new event" do
+    it "builds all nine built-ins as unsaved in-memory rows on a new event" do
       event = Event.new
 
       built = described_class.build(event)
 
       expect(built.map(&:builtin_key)).to contain_exactly(
-        "payment", "certificate", "scholarship", "ce_hours",
+        "payment", "certificate", "linkedin_badge", "scholarship", "ce_hours",
         "videoconference", "staff", "handouts", "faq"
       )
       expect(built).to all(be_new_record)
@@ -22,7 +22,7 @@ RSpec.describe BuiltinCallouts do
       built = described_class.build(event)
 
       expect(built).to be_empty
-      expect(event.registration_ticket_callouts.builtin.count).to eq(8)
+      expect(event.registration_ticket_callouts.builtin.count).to eq(9)
     end
 
     it "builds a paid event's Payment card with the W-9 link (subtitle) in memory" do
@@ -39,14 +39,14 @@ RSpec.describe BuiltinCallouts do
   end
 
   describe "#seed" do
-    it "materializes all eight built-in callouts for every event" do
+    it "materializes all nine built-in callouts for every event" do
       event = create(:event, cost_cents: 0) # free, no scholarship form, no VC link
 
       described_class.seed(event)
 
       keys = event.registration_ticket_callouts.builtin.pluck(:builtin_key)
       expect(keys).to contain_exactly(
-        "payment", "certificate", "scholarship", "ce_hours",
+        "payment", "certificate", "linkedin_badge", "scholarship", "ce_hours",
         "videoconference", "staff", "handouts", "faq"
       )
     end
@@ -60,7 +60,7 @@ RSpec.describe BuiltinCallouts do
       described_class.seed(event)
 
       expect(event.registration_ticket_callouts.ordered.map(&:builtin_key)).to eq(
-        %w[payment scholarship ce_hours videoconference staff handouts certificate faq]
+        %w[payment scholarship ce_hours videoconference staff handouts certificate linkedin_badge faq]
       )
     end
 
@@ -245,7 +245,7 @@ RSpec.describe BuiltinCallouts do
 
       keys = event.registration_ticket_callouts.builtin.pluck(:builtin_key)
       expect(keys).to contain_exactly(
-        "payment", "certificate", "scholarship", "ce_hours",
+        "payment", "certificate", "linkedin_badge", "scholarship", "ce_hours",
         "videoconference", "staff", "faq"
       )
     end
@@ -258,7 +258,7 @@ RSpec.describe BuiltinCallouts do
 
       expect(event.registration_ticket_callouts.ordered.first).to eq(custom)
       expect(event.registration_ticket_callouts.ordered.map(&:builtin_key).compact).to eq(
-        %w[payment scholarship ce_hours videoconference staff handouts certificate faq]
+        %w[payment scholarship ce_hours videoconference staff handouts certificate linkedin_badge faq]
       )
     end
   end
