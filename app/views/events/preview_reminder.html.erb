@@ -14,12 +14,12 @@
       <%= @event.title %><% if @event.start_date.present? %> &bull; <%= @event.date_range %><% end %>
     </p>
     <% if @invite_mode %>
-      <%= link_to preview_reminder_event_path(@event), class: "inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 mt-2" do %>
-        <i class="fa-solid fa-envelope text-xs"></i> Send a bulk email instead
+      <%= link_to preview_reminder_event_path(@event), class: "btn btn-secondary-outline inline-flex items-center gap-1.5 mt-3" do %>
+        Send a bulk email instead <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
       <% end %>
     <% else %>
-      <%= link_to preview_reminder_event_path(@event, mode: "invite"), class: "inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 mt-2" do %>
-        <i class="fa-solid fa-user-plus text-xs"></i> Send login invites to people with no account instead
+      <%= link_to preview_reminder_event_path(@event, mode: "invite"), class: "btn btn-secondary-outline inline-flex items-center gap-1.5 mt-3" do %>
+        Send login invites to people with no account instead <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
       <% end %>
     <% end %>
   </div>
@@ -70,9 +70,9 @@
       <% if @invite_mode %>
         <div class="my-14">
           <h2 class="text-lg font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">Email</h2>
-          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-2">
-            <i class="fa-solid fa-lock text-blue-500 mt-0.5"></i>
-            <p class="text-sm text-blue-800">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-2 text-sm text-blue-800">
+            <i class="fa-solid fa-lock mt-0.5 shrink-0"></i>
+            <p>
               This is the standard portal invite email. It can't be edited — each
               recipient gets a personalized link to set their password. Preview it below.
             </p>
