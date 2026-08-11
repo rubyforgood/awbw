@@ -6,22 +6,28 @@
     <%= render "events/subnav", event: @event, current: nil %>
   </div>
 
-  <div class="mb-6">
+  <div class="mb-4">
     <h1 class="text-2xl font-semibold text-gray-900">
-      <%= @invite_mode ? "Send login invites" : "Send bulk emails" %>
+      <%= @invite_mode ? "Send portal invite (confirmation) emails" : "Send bulk emails" %>
     </h1>
     <p class="text-gray-600 mt-1">
       <%= @event.title %><% if @event.start_date.present? %> &bull; <%= @event.date_range %><% end %>
     </p>
-    <% if @invite_mode %>
-      <%= link_to preview_reminder_event_path(@event), class: "btn btn-secondary-outline inline-flex items-center gap-1.5 mt-3" do %>
-        Send a bulk email instead <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+  </div>
+
+  <%# Banner: what this page does, plus a plain link to the other mode. %>
+  <div class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-6 flex items-start gap-2 text-sm text-gray-600">
+    <i class="fa-solid fa-circle-info text-gray-400 mt-0.5 shrink-0"></i>
+    <p>
+      <% if @invite_mode %>
+        You're sending the standard portal invite (confirmation) email to registrants
+        who don't have an account yet. Want to email everyone instead?
+        <%= link_to "Send a bulk email", preview_reminder_event_path(@event), class: "text-blue-600 hover:text-blue-800 font-medium whitespace-nowrap" %>.
+      <% else %>
+        You're composing a bulk email to registrants. To invite people who can't sign
+        in yet, <%= link_to "send portal invite (confirmation) emails", preview_reminder_event_path(@event, mode: "invite"), class: "text-blue-600 hover:text-blue-800 font-medium" %> instead.
       <% end %>
-    <% else %>
-      <%= link_to preview_reminder_event_path(@event, mode: "invite"), class: "btn btn-secondary-outline inline-flex items-center gap-1.5 mt-3" do %>
-        Send login invites to people with no account instead <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-      <% end %>
-    <% end %>
+    </p>
   </div>
   <% if @event_registrations.empty? %>
     <% if @invite_mode %>
@@ -34,8 +40,9 @@
     <h2 class="text-lg font-semibold text-gray-800 mb-2 pb-2 border-b border-gray-200">Recipients</h2>
     <% if @invite_mode %>
       <p class="text-gray-600 mb-3">
-        Only registrants with no portal account yet are listed — a login invite is
-        for people who can't sign in. Filters keep everyone in the list and check
+        Only registrants with no portal account yet are listed — a portal invite
+        (confirmation) email is for people who can't sign in. Filters keep everyone
+        in the list and check
         the matches. Separate multiple values with
         <code class="font-mono">'--'</code> to match multiple values (e.g.
         <code class="font-mono">amy--aisha</code>).

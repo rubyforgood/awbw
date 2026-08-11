@@ -27,7 +27,7 @@ RSpec.describe "Events::BulkInvites", type: :request do
       get preview_reminder_event_path(event, mode: "invite")
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Send login invites")
+      expect(response.body).to include("Send portal invite (confirmation) emails")
       expect(response.body).to include("Newbie One")
       expect(response.body).not_to include("Existing Two")
       expect(checked?(response.body, no_account)).to be(true)
@@ -38,7 +38,7 @@ RSpec.describe "Events::BulkInvites", type: :request do
       expect(response.body).to include(preview_reminder_event_path(event, mode: "invite"))
 
       get preview_reminder_event_path(event, mode: "invite")
-      expect(response.body).to include("Send a bulk email instead")
+      expect(response.body).to include("Send a bulk email")
     end
 
     it "previews the fixed invite email and hides the editable subject/message" do
@@ -59,7 +59,7 @@ RSpec.describe "Events::BulkInvites", type: :request do
       }.not_to change(User, :count)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Send login invites")
+      expect(response.body).to include("Send portal invite (confirmation) emails")
       expect(response.body).to include("Welcome instructions for Newbie One")
     end
   end
@@ -72,7 +72,7 @@ RSpec.describe "Events::BulkInvites", type: :request do
         .and change { ActionMailer::Base.deliveries.count }.by(1)
 
       expect(response).to redirect_to(registrants_event_path(event))
-      expect(flash[:notice]).to include("Login invites")
+      expect(flash[:notice]).to include("Portal invite (confirmation) emails")
     end
 
     it "attributes the invite to the admin who sent it" do

@@ -916,7 +916,7 @@ class EventsController < ApplicationController
     invited = registrations.count { |reg| PersonInviter.call(person: reg.registrant, sender: current_user).invited }
 
     track_view("events.send_invites", { event_id: @event.id, recipient_count: invited })
-    redirect_to registrants_event_path(@event), notice: "Login invites are being sent to #{invited} #{'person'.pluralize(invited)}."
+    redirect_to registrants_event_path(@event), notice: "Portal invite (confirmation) emails are being sent to #{invited} #{'person'.pluralize(invited)}."
   end
 
   # Builds the read-only invite-email preview shown in invite mode. For a registrant
