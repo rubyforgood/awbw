@@ -37,17 +37,21 @@ module OrganizationServices
 
     def call
       @changes = []
-      @changes << change("website_url", "Website", @organization.website_url) if apply_value(:website_url, @website)
-      @changes << change("agency_type", "Type", displayed_agency_type) if sync_agency_type
+      # Snapshot before each write — what was there decides whether the form filled
+      # a blank or replaced something an admin may have curated.
+      website_before = @organization.website_url
+      @changes << change("website_url", "Website", @organization.website_url, website_before) if apply_value(:website_url, @website)
+      type_before = displayed_agency_type
+      @changes << change("agency_type", "Type", displayed_agency_type, type_before) if sync_agency_type
       Result.new(organization: @organization, changes: @changes)
     end
 
     private
 
-    # Read the value back off the org rather than off the answer, so what we report
-    # is what was actually stored (stripped, and with "Other" folded back together).
-    def change(field, label, value)
-      AutofillChange.new(field: field, label: label, value: value)
+    # Read the new value back off the org rather than off the answer, so what we
+    # report is what was actually stored (stripped, "Other" folded back together).
+    def change(field, label, value, previous_value)
+      AutofillChange.new(field: field, label: label, value: value, previous_value: previous_value)
     end
 
     def displayed_agency_type

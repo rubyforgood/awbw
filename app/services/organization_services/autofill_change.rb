@@ -9,15 +9,28 @@ module OrganizationServices
   # org accumulates one work address per city and "ZIP" alone wouldn't say which.
   # It's nil for the org's own columns, which are unambiguous.
   class AutofillChange
-    ATTRIBUTES = %w[field label value scope].freeze
+    # Whether the form put something where there was nothing, or replaced a value
+    # an admin may have curated. Derived from previous_value rather than passed in,
+    # so the two can never disagree once stored.
+    NEW = "new".freeze
+    UPDATE = "update".freeze
 
-    attr_reader :field, :label, :value, :scope
+    attr_reader :field, :label, :value, :previous_value, :scope
 
-    def initialize(field:, label:, value:, scope: nil)
+    def initialize(field:, label:, value:, previous_value: nil, scope: nil)
       @field = field.to_s
       @label = label
       @value = value.to_s
+      @previous_value = previous_value.presence&.to_s
       @scope = scope.presence
+    end
+
+    def change_type
+      previous_value.present? ? UPDATE : NEW
+    end
+
+    def update?
+      change_type == UPDATE
     end
 
     # Rehydrate from the JSON column. Tolerates a row written before a key
@@ -29,15 +42,31 @@ module OrganizationServices
       hash = raw.stringify_keys
       return if hash["field"].blank?
 
-      new(field: hash["field"], label: hash["label"].presence || hash["field"], value: hash["value"], scope: hash["scope"])
+      new(
+        field: hash["field"],
+        label: hash["label"].presence || hash["field"],
+        value: hash["value"],
+        previous_value: hash["previous_value"],
+        scope: hash["scope"]
+      )
     end
 
     def self.all_from_json(raw)
       Array(raw).filter_map { |entry| from_json(entry) }
     end
 
+    # change_type is written out even though it's derivable, so the stored JSON
+    # reads on its own without knowing the rule. previous_value is omitted for a
+    # "new" change — there was nothing there to record.
     def to_json_hash
-      { "field" => field, "label" => label, "value" => value, "scope" => scope }.compact
+      {
+        "field" => field,
+        "label" => label,
+        "value" => value,
+        "change_type" => change_type,
+        "previous_value" => previous_value,
+        "scope" => scope
+      }.compact
     end
 
     # What identifies this change for replacement: a later submission writing the

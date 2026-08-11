@@ -113,6 +113,26 @@ RSpec.describe OrganizationServices::SyncProfile do
 
     # A returning registrant resubmitting what's already on file changed nothing,
     # and the linking page's "filled from the form" note must not claim otherwise.
+    # Filling a blank and overwriting a curated value are different facts about the
+    # org, and only the second one loses something an admin may want back.
+    it "marks a filled blank as new, carrying no previous value" do
+      organization.update!(website_url: nil)
+
+      result = described_class.call(organization: organization, website: "helpinghands.org")
+
+      expect(result.changes.first).to have_attributes(change_type: "new", previous_value: nil, value: "helpinghands.org")
+    end
+
+    it "marks a replaced value as an update, carrying what it displaced" do
+      organization.update!(website_url: "https://curated.org")
+
+      result = described_class.call(organization: organization, website: "helpinghands.org")
+
+      expect(result.changes.first).to have_attributes(
+        change_type: "update", previous_value: "https://curated.org", value: "helpinghands.org"
+      )
+    end
+
     it "reports nothing filled when the answers match what is already stored" do
       organization.update!(website_url: "https://curated.org", agency_type: "For-profit")
 

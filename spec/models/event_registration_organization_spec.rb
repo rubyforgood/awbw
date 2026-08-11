@@ -16,8 +16,15 @@ RSpec.describe EventRegistrationOrganization, type: :model do
   describe "autofill provenance" do
     subject(:link) { create(:event_registration_organization) }
 
-    def change(field, label, value, scope: nil)
-      OrganizationServices::AutofillChange.new(field: field, label: label, value: value, scope: scope)
+    def change(field, label, value, scope: nil, previous_value: nil)
+      OrganizationServices::AutofillChange.new(field: field, label: label, value: value, scope: scope, previous_value: previous_value)
+    end
+
+    it "keeps the value a change displaced through a round trip" do
+      link.record_autofill([ change("website_url", "Website", "https://new.org", previous_value: "https://curated.org") ])
+
+      expect(link.reload.form_autofill_changes.first)
+        .to have_attributes(change_type: "update", previous_value: "https://curated.org")
     end
 
     it "has no changes until the form autofills something" do

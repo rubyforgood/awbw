@@ -17,13 +17,41 @@ RSpec.describe OrganizationServices::AutofillChange do
     end
   end
 
+  describe "#change_type" do
+    it "is new when the form put something where there was nothing" do
+      expect(change).to have_attributes(change_type: "new", update?: false)
+    end
+
+    it "is update when the form replaced a value already on file" do
+      replaced = change(previous_value: "https://curated.org")
+
+      expect(replaced).to have_attributes(change_type: "update", update?: true)
+    end
+
+    # Fill-blanks writes pass "" for the column they filled; that is not a replacement.
+    it "treats a blank previous value as new" do
+      expect(change(previous_value: "")).to have_attributes(change_type: "new")
+    end
+  end
+
   describe "round-tripping through the JSON column" do
     it "restores every part of the change" do
-      original = change(field: "zip_code", label: "ZIP", value: "78701", scope: "Austin work address")
+      original = change(field: "zip_code", label: "ZIP", value: "78701", previous_value: "78702", scope: "Austin work address")
 
       restored = described_class.from_json(original.to_json_hash)
 
       expect(restored).to eq(original)
+      expect(restored).to have_attributes(previous_value: "78702", change_type: "update")
+    end
+
+    it "writes change_type out so the stored JSON reads on its own" do
+      expect(change.to_json_hash).to include("change_type" => "new")
+      expect(change(previous_value: "https://curated.org").to_json_hash)
+        .to include("change_type" => "update", "previous_value" => "https://curated.org")
+    end
+
+    it "omits previous_value on a new change rather than storing a null" do
+      expect(change.to_json_hash).not_to have_key("previous_value")
     end
 
     # The column is JSON, so keys come back as strings after a round trip through

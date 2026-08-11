@@ -80,11 +80,20 @@ module OrganizationServices
       AutofillChange.new(field: "address", label: "Work address in #{address.city}", value: address.name.squish)
     end
 
+    # Called after assign_attributes and before save, so `changes` still holds the
+    # [before, after] pair that says whether this filled a blank or replaced a value.
     def field_change(address, attribute)
       label = FIELD_LABELS[attribute]
       return unless label
 
-      AutofillChange.new(field: attribute, label: label, value: address.public_send(attribute), scope: "#{address.city} work address")
+      before, _after = address.changes[attribute]
+      AutofillChange.new(
+        field: attribute,
+        label: label,
+        value: address.public_send(attribute),
+        previous_value: before,
+        scope: "#{address.city} work address"
+      )
     end
 
     # overwrite: false (admin linking) only fills blank fields, so a discrepancy

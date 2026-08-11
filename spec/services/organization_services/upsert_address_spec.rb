@@ -104,6 +104,32 @@ RSpec.describe OrganizationServices::UpsertAddress do
     expect(existing.reload).to have_attributes(street_address: "2 New Ave", zip_code: "78702", country: "Canada", primary: true, inactive: false)
   end
 
+  # Under the admin flow's fill-blanks rule every write lands in an empty column, so
+  # these should never be reported as replacing anything.
+  it "marks a filled blank as new" do
+    create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "")
+
+    result = described_class.call(organization: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701", overwrite: false)
+
+    expect(result.changes.map(&:change_type)).to eq([ "new" ])
+  end
+
+  # The public flow overwrites, so it can displace a value — and that's the case
+  # where an admin needs to see what the registrant's answer pushed out.
+  it "marks an overwritten field as an update carrying what it displaced" do
+    create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
+
+    result = described_class.call(organization: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78702")
+
+    expect(result.changes.first).to have_attributes(label: "ZIP", change_type: "update", previous_value: "78701", value: "78702")
+  end
+
+  it "marks a newly created address as new" do
+    result = described_class.call(organization: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
+
+    expect(result.changes.map(&:change_type)).to eq([ "new" ])
+  end
+
   it "reports nothing filled when the submission repeats what is already on file" do
     create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701", primary: true)
 

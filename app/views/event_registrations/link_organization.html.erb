@@ -103,7 +103,12 @@
                     </p>
                     <ul class="mt-1 space-y-0.5">
                       <% autofill.each do |change| %>
-                        <li><span class="font-medium"><%= change.description %></span> — “<%= change.value %>”</li>
+                        <%# An update replaced something that was already there, so show what
+                            it displaced — that's the one an admin might want to put back. %>
+                        <li>
+                          <span class="font-medium"><%= change.description %></span> — “<%= change.value %>”<%
+                          %><% if change.update? %> <span class="text-blue-600">(replaced “<%= change.previous_value %>”)</span><% end %>
+                        </li>
                       <% end %>
                     </ul>
                   </div>
