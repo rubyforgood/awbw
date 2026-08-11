@@ -33,6 +33,14 @@ RSpec.describe "Events::BulkInvites", type: :request do
       expect(checked?(response.body, no_account)).to be(true)
     end
 
+    it "links between bulk email and invite mode in both directions" do
+      get preview_reminder_event_path(event)
+      expect(response.body).to include(preview_reminder_event_path(event, mode: "invite"))
+
+      get preview_reminder_event_path(event, mode: "invite")
+      expect(response.body).to include("Send a bulk email instead")
+    end
+
     it "previews the fixed invite email and hides the editable subject/message" do
       get preview_reminder_event_path(event, mode: "invite")
 

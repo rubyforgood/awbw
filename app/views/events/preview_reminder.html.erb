@@ -13,6 +13,15 @@
     <p class="text-gray-600 mt-1">
       <%= @event.title %><% if @event.start_date.present? %> &bull; <%= @event.date_range %><% end %>
     </p>
+    <% if @invite_mode %>
+      <%= link_to preview_reminder_event_path(@event), class: "inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 mt-2" do %>
+        <i class="fa-solid fa-envelope text-xs"></i> Send a bulk email instead
+      <% end %>
+    <% else %>
+      <%= link_to preview_reminder_event_path(@event, mode: "invite"), class: "inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 mt-2" do %>
+        <i class="fa-solid fa-user-plus text-xs"></i> Send login invites to people with no account instead
+      <% end %>
+    <% end %>
   </div>
   <% if @event_registrations.empty? %>
     <% if @invite_mode %>
