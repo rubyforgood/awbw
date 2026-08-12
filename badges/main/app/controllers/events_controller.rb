@@ -347,6 +347,7 @@ class EventsController < ApplicationController
   def preview_reminder
     authorize! @event
     @event = @event.decorate
+    @invite_mode = invite_mode?
     @ce_eligible = @event.ce_eligible?
     @event_registrations = @event.event_registrations
       .includes(
@@ -356,6 +357,10 @@ class EventsController < ApplicationController
       )
       .joins(:registrant)
       .select { |r| r.registrant.preferred_email.present? }
+
+    # Invite mode targets only registrants with no portal account yet — those are
+    # the people a login invite is for.
+    @event_registrations = @event_registrations.select { |r| r.registrant.user.nil? } if @invite_mode
 
     # Filters keep every registrant in the list and only flag who still matches,
     # so the recipient checkboxes pre-check the matched set rather than removing
@@ -370,6 +375,11 @@ class EventsController < ApplicationController
     return render partial: "events/reminder_recipients" if turbo_frame_request?
 
     @sample_registration = @event_registrations.first
+
+    # Invite mode sends the fixed portal welcome email — no editable subject/message,
+    # just a read-only preview built from a sample recipient.
+    return build_invite_preview(@sample_registration) if @invite_mode
+
     days_until_event = @event.start_date.present? ? (@event.start_date.to_date - Date.current).to_i : nil
     # Pre-fill the editable message with the standard reminder sentence (days
     # resolved now). Absent param = first load → default; a present-but-blank
@@ -394,12 +404,19 @@ class EventsController < ApplicationController
   def confirm_reminder
     authorize! @event, to: :send_reminder?
     @event = @event.decorate
+    @invite_mode = invite_mode?
     @event_registrations = selected_reminder_registrations
     @custom_message = params[:custom_message].to_s
     @custom_subject = params[:custom_subject].to_s
 
     if @event_registrations.empty?
-      redirect_to preview_reminder_event_path(@event, custom_message: @custom_message, custom_subject: @custom_subject), alert: "Please select at least one recipient."
+      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: @custom_message, custom_subject: @custom_subject), alert: "Please select at least one recipient."
+      return
+    end
+
+    if @invite_mode
+      build_invite_preview(@event_registrations.first)
+      @reminder_subject = @invite_subject
       return
     end
 
@@ -410,14 +427,17 @@ class EventsController < ApplicationController
 
   def send_reminder
     authorize! @event, to: :send_reminder?
-    custom_message = params[:custom_message].to_s
-    custom_subject = params[:custom_subject].to_s
     registrations = selected_reminder_registrations
 
     if registrations.empty?
-      redirect_to preview_reminder_event_path(@event, custom_message: custom_message, custom_subject: custom_subject), alert: "Please select at least one recipient."
+      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: params[:custom_message].to_s, custom_subject: params[:custom_subject].to_s), alert: "Please select at least one recipient."
       return
     end
+
+    return send_bulk_invites(registrations) if invite_mode?
+
+    custom_message = params[:custom_message].to_s
+    custom_subject = params[:custom_subject].to_s
 
     # Record an individual notification per recipient (delivered + persisted via
     # NotificationMailerJob), so each reminder shows up in that person's
@@ -881,6 +901,35 @@ class EventsController < ApplicationController
     addresses = Address.active.where(addressable_type: "Person", addressable_id: person_ids)
     @attendee_states = addresses.where.not(state: [ nil, "" ]).distinct.pluck(:state).sort
     @attendee_counties = addresses.where.not(county: [ nil, "" ]).where.not(state: [ nil, "" ]).distinct.pluck(:state, :county).sort
+  end
+
+  def invite_mode?
+    params[:mode] == "invite"
+  end
+
+  # Sends the portal welcome/invite email to each selected registrant, creating a
+  # user account for anyone who doesn't have one yet (PersonInviter skips people
+  # who already have a confirmed account). Each invite is delivered async and logs
+  # its own communication record, so there's no separate per-recipient notification
+  # or admin FYI here.
+  def send_bulk_invites(registrations)
+    invited = registrations.count { |reg| PersonInviter.call(person: reg.registrant, sender: current_user).invited }
+
+    track_view("events.send_invites", { event_id: @event.id, recipient_count: invited })
+    redirect_to registrants_event_path(@event), notice: "Portal invite (confirmation) emails are being sent to #{invited} #{'person'.pluralize(invited)}."
+  end
+
+  # Builds the read-only invite-email preview shown in invite mode. For a registrant
+  # with no account, a throwaway in-memory user carries the name into the template;
+  # the preview flag keeps rendering side-effect-free (no notification logged).
+  def build_invite_preview(sample_registration)
+    return unless sample_registration
+
+    person = sample_registration.registrant
+    sample_user = person.user || User.new(person: person, email: person.preferred_email)
+    mail = DeviseMailer.confirmation_instructions(sample_user, "preview-token", preview: true)
+    @invite_subject = mail.subject
+    @reminder_preview_html = mail.html_part&.body&.decoded
   end
 
   # The registrations the admin checked on the recipient picker, narrowed to those

@@ -6,29 +6,60 @@
     <%= render "events/subnav", event: @event, current: nil %>
   </div>
 
-  <div class="mb-6">
+  <div class="mb-4">
     <h1 class="text-2xl font-semibold text-gray-900">
-      Send bulk emails
+      <%= @invite_mode ? "Send Portal invite emails" : "Send bulk emails" %>
     </h1>
     <p class="text-gray-600 mt-1">
       <%= @event.title %><% if @event.start_date.present? %> &bull; <%= @event.date_range %><% end %>
     </p>
   </div>
+
+  <%# Banner: what this page does, plus a plain link to the other mode. %>
+  <div class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-6 flex items-baseline gap-2.5 text-sm text-gray-600">
+    <i class="fa-solid fa-circle-info text-gray-400 shrink-0"></i>
+    <p>
+      <% if @invite_mode %>
+        You're sending the standard Portal invite (confirmation) email to registrants
+        who don't have an account yet. Want to email everyone instead?
+        <%= link_to "Send a bulk email", preview_reminder_event_path(@event), class: "text-blue-600 hover:text-blue-800 font-medium whitespace-nowrap" %>.
+      <% else %>
+        You're composing a bulk email to registrants. To invite people who can't sign
+        in yet, <%= link_to "send Portal invite (confirmation) emails", preview_reminder_event_path(@event, mode: "invite"), class: "text-blue-600 hover:text-blue-800 font-medium" %> instead.
+      <% end %>
+    </p>
+  </div>
   <% if @event_registrations.empty? %>
-    <p class="text-gray-600 mb-4">There are no registrants with an email address to send a reminder to.</p>
+    <% if @invite_mode %>
+      <p class="text-gray-600 mb-4">Every registrant with an email already has a portal account — there's no one to invite.</p>
+    <% else %>
+      <p class="text-gray-600 mb-4">There are no registrants with an email address to send a reminder to.</p>
+    <% end %>
     <%= link_to "Back to registrants", registrants_event_path(@event), class: "btn btn-secondary-outline" %>
   <% else %>
     <h2 class="text-lg font-semibold text-gray-800 mb-2 pb-2 border-b border-gray-200">Recipients</h2>
-    <p class="text-gray-600 mb-3">
-      Choose who will receive this reminder. Filters keep everyone in the list and
-      check the matches. Separate multiple values with
-      <code class="font-mono">'--'</code> to match multiple values (e.g.
-      <code class="font-mono">amy--aisha</code>).
-    </p>
+    <% if @invite_mode %>
+      <p class="text-gray-600 mb-3">
+        Only registrants with no Portal account yet are listed — a Portal invite
+        (confirmation) email is for people who can't sign in. Filters keep everyone
+        in the list and check
+        the matches. Separate multiple values with
+        <code class="font-mono">'--'</code> to match multiple values (e.g.
+        <code class="font-mono">amy--aisha</code>).
+      </p>
+    <% else %>
+      <p class="text-gray-600 mb-3">
+        Choose who will receive this reminder. Filters keep everyone in the list and
+        check the matches. Separate multiple values with
+        <code class="font-mono">'--'</code> to match multiple values (e.g.
+        <code class="font-mono">amy--aisha</code>).
+      </p>
+    <% end %>
     <%= render "events/registrant_filters",
-          url: preview_reminder_event_path(@event),
+          url: preview_reminder_event_path(@event, mode: ("invite" if @invite_mode)),
           frame: "reminder_recipients",
-          clear_url: preview_reminder_event_path(@event),
+          clear_url: preview_reminder_event_path(@event, mode: ("invite" if @invite_mode)),
+          hidden_params: (@invite_mode ? { mode: "invite" } : {}),
           text_fields: [
             { param: :name, label: "Name", placeholder: "Registrant name", primary: true },
             { param: :email, label: "Email", placeholder: "Email address", primary: true },
@@ -36,43 +67,64 @@
           ] %>
     <%# Turbo disabled: this POST renders the confirmation interstitial (a full
         page), not a redirect, so a normal browser navigation is what we want.
-        reminder-preview drives the live message/subject preview as the admin types. %>
-    <%= form_with url: confirm_reminder_event_path(@event), method: :post, data: { controller: "reminder-preview", turbo: false } do |f| %>
+        reminder-preview drives the live message/subject preview as the admin types
+        (reminder mode only — the invite email is fixed and can't be edited). %>
+    <%= form_with url: confirm_reminder_event_path(@event), method: :post, data: { controller: ("reminder-preview" unless @invite_mode), turbo: false } do |f| %>
+      <% if @invite_mode %>
+        <%= hidden_field_tag :mode, "invite" %>
+      <% end %>
       <%= render "events/reminder_recipients" %>
-      <div class="my-14">
-        <h2 class="text-lg font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">Email draft</h2>
-        <div class="bg-white border border-gray-200 rounded-lg p-6 pb-8 space-y-6">
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-2">Subject</h3>
-            <p class="text-gray-600 mb-2">
-              The subject line recipients will see. Edit it as you like — leave it as is to use the default.
-            </p>
-            <%= text_field_tag :custom_subject, @custom_subject,
-                  class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm bg-white",
-                  data: { reminder_preview_target: "subjectInput", action: "input->reminder-preview#updateSubject" } %>
-          </div>
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-2">Message</h3>
-            <p class="text-gray-600 mb-2">
-              The intro shown near the top of the reminder, above the event details. Edit it or clear it as you like — the event details and the "View ticket" button are always included.
-            </p>
-            <%= text_area_tag :custom_message, @custom_message,
-                  rows: 4,
-                  class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm font-mono bg-white",
-                  data: { reminder_preview_target: "input", action: "input->reminder-preview#update" } %>
-            <p class="text-xs text-gray-400 mt-1.5">
-              Accepts basic HTML — bold, italics, links, lists, and line breaks.
+      <% if @invite_mode %>
+        <div class="my-14">
+          <h2 class="text-lg font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">Email</h2>
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-baseline gap-2 text-sm text-blue-800">
+            <i class="fa-solid fa-lock shrink-0"></i>
+            <p>
+              This is the standard Portal invite email. It can't be edited — each
+              recipient gets a personalized link to set their password. Preview it below.
             </p>
           </div>
         </div>
-      </div>
+      <% else %>
+        <div class="my-14">
+          <h2 class="text-lg font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">Email draft</h2>
+          <div class="bg-white border border-gray-200 rounded-lg p-6 pb-8 space-y-6">
+            <div>
+              <h3 class="font-semibold text-gray-700 mb-2">Subject</h3>
+              <p class="text-gray-600 mb-2">
+                The subject line recipients will see. Edit it as you like — leave it as is to use the default.
+              </p>
+              <%= text_field_tag :custom_subject, @custom_subject,
+                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm bg-white",
+                    data: { reminder_preview_target: "subjectInput", action: "input->reminder-preview#updateSubject" } %>
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-700 mb-2">Message</h3>
+              <p class="text-gray-600 mb-2">
+                The intro shown near the top of the reminder, above the event details. Edit it or clear it as you like — the event details and the "View ticket" button are always included.
+              </p>
+              <%= text_area_tag :custom_message, @custom_message,
+                    rows: 4,
+                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm font-mono bg-white",
+                    data: { reminder_preview_target: "input", action: "input->reminder-preview#update" } %>
+              <p class="text-xs text-gray-400 mt-1.5">
+                Accepts basic HTML — bold, italics, links, lists, and line breaks.
+              </p>
+            </div>
+          </div>
+        </div>
+      <% end %>
       <% if @reminder_preview_html.present? %>
         <div class="mb-6">
           <h2 class="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">Preview (sample registrant)</h2>
           <div class="border border-gray-200 rounded-lg bg-white overflow-hidden">
             <div class="border-b border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-700">
               <span class="font-semibold text-gray-500">Subject:</span>
-              <span data-reminder-preview-target="subjectPreview"><%= @custom_subject %></span>
+              <% if @invite_mode %>
+                <span><%= @invite_subject %></span>
+              <% else %>
+                <span data-reminder-preview-target="subjectPreview"><%= @custom_subject %></span>
+              <% end %>
             </div>
             <div class="email-preview overflow-auto max-h-[70vh] p-4" style="font-family: Lato, sans-serif; zoom: 0.6;">
               <%= raw @reminder_preview_html %>
@@ -82,7 +134,7 @@
       <% end %>
       <div class="mt-8 flex justify-center gap-3">
         <%= link_to "Cancel", registrants_event_path(@event), class: "btn btn-secondary-outline" %>
-        <%= f.submit "Review & send", class: "btn btn-primary" %>
+        <%= f.submit(@invite_mode ? "Review & send invites" : "Review & send", class: "btn btn-primary") %>
       </div>
     <% end %>
   <% end %>

@@ -339,7 +339,10 @@ class EventRegistration < ApplicationRecord
     where(id: Comment.where(commentable_type: "EventRegistration").matching(term).select(:commentable_id))
   }
   # Mirrors EventRegistration#account_status (none / has_access / invited /
-  # no_access) as a DB filter, joining the registrant's login account.
+  # no_access) as a DB filter, joining the registrant's login account. Also
+  # supports "not_invited" — an umbrella for everyone who still needs an invite
+  # (no account at all, or an account that was never sent a welcome invite),
+  # i.e. none ∪ no_access.
   scope :account_status, ->(value) {
     # Guard every subquery against NULL person_id (system/audit users) — a NULL in
     # a NOT IN list makes the whole comparison return no rows.
@@ -351,6 +354,7 @@ class EventRegistration < ApplicationRecord
     when "has_access" then where(registrant_id: has_access)
     when "invited" then where(registrant_id: invited).where.not(registrant_id: has_access)
     when "no_access" then where(registrant_id: with_user).where.not(registrant_id: has_access).where.not(registrant_id: invited)
+    when "not_invited" then where.not(registrant_id: invited).where.not(registrant_id: has_access)
     else all
     end
   }

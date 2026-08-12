@@ -16,6 +16,7 @@
     <% reminder_filters = reminder_recipient_filters %>
     <%= link_to reminder_filters.any? ? "Send bulk emails (filtered)" : "Send bulk emails",
         preview_reminder_event_path(@event, reminder_filters), class: item_class %>
+    <%= link_to "Send invite emails", preview_reminder_event_path(@event, mode: "invite"), class: item_class %>
     <%= link_to "Bulk payments", bulk_payments_event_path(@event), class: item_class %>
     <%= link_to registrants_event_path(@event, format: :csv), class: item_class, data: { turbo_frame: "_top" } do %>
       Download CSV <i class="fa-solid fa-download text-gray-400 ml-1"></i>

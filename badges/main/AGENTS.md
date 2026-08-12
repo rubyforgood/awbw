@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~80 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~56 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~57 files |
 | `app/jobs/` | SolidQueue background jobs | 5 files |
 | `app/models/concerns/` | Shared model modules | 16 concerns |
 
@@ -212,6 +212,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `PersonFromUserService` — Create Person from User account
 - `PersonCommentAggregator` — Unifies every comment connected to a person (their profile, event registrations, scholarships, CE registrations, topic subscriptions, and user account) into one newest-first `Comment` relation for the aggregated `/people/:id/all_comments` page
 - `BulkInviteService` — Bulk send welcome instructions and reset created_at for users
+- `PersonInviter` — Invites a single person to the portal: creates a user account if they have none, then sends the welcome/invite email attributed to the sender. Backs the bulk "Send Portal invite emails" flow on the reminders page (`?mode=invite`)
 - `FormBuilderService` — Builds configurable forms from composable sections with per-field visibility
 - `ModelDeduper` — Deduplication logic
 - `RichTextMigrator` — Rich text migration utility
