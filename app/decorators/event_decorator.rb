@@ -48,6 +48,14 @@ class EventDecorator < ApplicationDecorator
     ce_payment_due_deadline.in_time_zone(Time.zone).strftime("%-l:%M %p %Z on %B %-d, %Y")
   end
 
+  # The ticket payment deadline in the viewer's TZ (e.g. "5:00 PM UTC on April 9,
+  # 2026"). Nil when unset. Distinct from ce_payment_due_deadline, which is the
+  # continuing-education payment deadline.
+  def payment_due_deadline_display
+    return if payment_due_deadline.blank?
+    payment_due_deadline.in_time_zone(Time.zone).strftime("%-l:%M %p %Z on %B %-d, %Y")
+  end
+
   # Weekday-prefixed date range (e.g. "Thu-Fri, Jan 1-2, 2026") that collapses the
   # year — and the month/weekday where possible — so nothing repeats unnecessarily.
   def date_range

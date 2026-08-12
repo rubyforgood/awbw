@@ -471,6 +471,20 @@ RSpec.describe EventDecorator do
     end
   end
 
+  describe "#payment_due_deadline_display" do
+    it "renders the deadline with the time and zone, e.g. '5:00 PM PDT on April 9, 2026'" do
+      deadline = Time.zone.local(2026, 4, 9, 17, 0)
+      event = build(:event, payment_due_deadline: deadline).decorate
+      tz = deadline.strftime("%Z")
+      expect(event.payment_due_deadline_display).to eq("5:00 PM #{tz} on April 9, 2026")
+    end
+
+    it "is nil when no deadline is set" do
+      event = build(:event, payment_due_deadline: nil).decorate
+      expect(event.payment_due_deadline_display).to be_nil
+    end
+  end
+
   describe "#times" do
     it "shows a multi-day event as a date range with a single daily time range" do
       event = build(:event, start_date: Time.zone.local(2026, 4, 21, 9), end_date: Time.zone.local(2026, 4, 23, 16, 30)).decorate

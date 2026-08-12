@@ -80,7 +80,7 @@
         <div class="md:col-span-2 space-y-6">
           <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
             <div class="bg-white border border-gray-200 rounded-lg p-3">
-              <h3 class="font-medium mb-2">Start</h3>
+              <h3 class="font-medium mb-2">Start <abbr title="required">*</abbr></h3>
 
               <div class="mb-2"><label class="block text-xs text-gray-600 mb-0.5">Date</label><%= f.text_field :start_date_date,
                          type: "date",
@@ -97,7 +97,7 @@
             </div>
 
             <div class="bg-white border border-gray-200 rounded-lg p-3">
-              <h3 class="font-medium mb-2">End</h3>
+              <h3 class="font-medium mb-2">End <abbr title="required">*</abbr></h3>
 
               <div class="mb-2"><label class="block text-xs text-gray-600 mb-0.5">Date</label><%= f.text_field :end_date_date,
                          type: "date",
@@ -160,6 +160,18 @@
               <% end %>
             </div>
 
+            <div>
+              <%= f.label :payment_due_deadline_date, "Payment due by", class: "block font-medium mb-1" %>
+              <div class="flex gap-2">
+                <%= f.text_field :payment_due_deadline_date, type: "date",
+                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
+                <%= f.text_field :payment_due_deadline_time, type: "time",
+                      class: "w-28 shrink-0 rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><%= f.input :pre_date_text,
                   label: "Pre-date text",
                   input_html: {
