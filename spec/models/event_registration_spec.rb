@@ -643,6 +643,12 @@ RSpec.describe EventRegistration, type: :model do
         expect(results).not_to include(none_reg, access_reg, invited_reg)
       end
 
+      it "maps 'not_invited' to everyone who still needs an invite (no account or never invited)" do
+        results = EventRegistration.account_status("not_invited")
+        expect(results).to include(none_reg, no_access_reg)
+        expect(results).not_to include(access_reg, invited_reg)
+      end
+
       it "returns an unfiltered relation for unknown values" do
         expect(EventRegistration.account_status("bogus")).to include(none_reg, access_reg, invited_reg, no_access_reg)
       end

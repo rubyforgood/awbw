@@ -1061,7 +1061,7 @@ class EventsController < ApplicationController
       row << (registration.checklist_step_completed?(step) ? "Yes" : "No")
     end
     account_status = registration.account_status
-    row << { "none" => "No account", "has_access" => "Has access", "invited" => "Already invited", "no_access" => "Not invited yet" }.fetch(account_status, account_status.to_s.humanize)
+    row << { "none" => "No account", "has_access" => "Has access", "invited" => "Invited", "no_access" => "No access" }.fetch(account_status, account_status.to_s.humanize)
     row << (account_status == "has_access" ? "Yes" : "No")
     (1..day_count).each do |day|
       row << (registration.public_send("completed_day_#{day}") ? "Yes" : "No")

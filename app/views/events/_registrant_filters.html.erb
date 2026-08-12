@@ -145,7 +145,7 @@
       <% end %>
 
       <%= render "events/filter_select", param: :account_status, label: "User account",
-            options: [ [ "No account", "none" ], [ "Not invited yet", "no_access" ], [ "Already invited", "invited" ], [ "Has access", "has_access" ] ],
+            options: [ [ "No account", "none" ], [ "Not invited yet", "not_invited" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
             selected: params[:account_status], blank: "Any account status", field_class: field_class %>
 
       <%= render "events/filter_text", param: :city, label: "City",
