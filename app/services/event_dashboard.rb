@@ -542,6 +542,16 @@ class EventDashboard
     @onboarding_incomplete_registrants ||= people_sorted(onboarding_incomplete_registrant_ids)
   end
 
+  # Active registrants with no portal account yet — the people a login invite is for
+  # (matches the reminders flow's invite mode, which targets user-less registrants).
+  def uninvited_registration_count
+    uninvited_registrant_ids.size
+  end
+
+  def uninvited_registrants
+    @uninvited_registrants ||= people_sorted(uninvited_registrant_ids)
+  end
+
   # Scholarship requested on the registration but no Scholarship created yet.
   def scholarship_uncreated_count
     scholarship_uncreated_registrant_ids.size
@@ -1196,6 +1206,10 @@ class EventDashboard
         .pluck(:commentable_id)
       registration_ids.filter_map { |id| registrant_id_by_registration[id] }.uniq
     end
+  end
+
+  def uninvited_registrant_ids
+    @uninvited_registrant_ids ||= active_registrations.account_status("none").distinct.pluck(:registrant_id)
   end
 
   def onboarding_incomplete_registrant_ids

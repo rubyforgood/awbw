@@ -60,7 +60,7 @@ class EventChecklist
   def items
     @items ||= [
       setup_forms, setup_callouts, setup_publish, setup_event_type, setup_staff,
-      link_organizations, onboard_trainees, allocate_bulk_payments, review_flagged_comments,
+      link_organizations, onboard_trainees, send_portal_invites, allocate_bulk_payments, review_flagged_comments,
       collect_registration_fees, issue_scholarships, set_scholarship_funders,
       follow_up_agreements, fix_zero_scholarships, complete_scholarship_tasks,
       collect_ce_licenses, collect_ce_fees, issue_ce_certificates,
@@ -220,6 +220,16 @@ class EventChecklist
          registrants: count.positive? ? @dashboard.onboarding_incomplete_registrants : [],
          detail: "Mailchimp & CMS setup",
          action_path: onboarding_event_path(@event), action_label: "Onboarding")
+  end
+
+  def send_portal_invites
+    relevant = @dashboard.has_registrants?
+    count = relevant ? @dashboard.uninvited_registration_count : 0
+    task(key: :send_portal_invites, phase: :before, title: "Send portal invites", actor: :admin,
+         relevant: relevant, count: count,
+         registrants: count.positive? ? @dashboard.uninvited_registrants : [],
+         detail: "Registrants with no portal account yet",
+         action_path: preview_reminder_event_path(@event, mode: "invite"), action_label: "Send invites")
   end
 
   def review_flagged_comments

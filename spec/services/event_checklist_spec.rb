@@ -129,6 +129,24 @@ RSpec.describe EventChecklist do
     end
   end
 
+  describe "portal invites" do
+    let(:event) { create(:event) }
+    let(:person) { create(:person, user: nil) }
+    let!(:reg) { create(:event_registration, event: event, registrant: person, status: "registered") }
+
+    it "is a to-do for registrants with no portal account, linking to invite mode" do
+      invites = item(:send_portal_invites)
+      expect(invites).to be_todo
+      expect(invites.count).to eq(1)
+      expect(invites.registrants).to eq([ person ])
+      expect(invites.action_path).to include("preview_reminder", "mode=invite")
+
+      create(:user, person: person)
+      refreshed = described_class.new(EventDashboard.new(event)).items.find { |i| i.key == :send_portal_invites }
+      expect(refreshed).to be_done
+    end
+  end
+
   describe "bulk payments" do
     let(:event) { create(:event, cost_cents: 10_000) }
     let(:form) { create(:form) }

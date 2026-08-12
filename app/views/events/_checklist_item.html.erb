@@ -12,7 +12,7 @@
     setup_forms: "fa-file-lines", setup_callouts: "fa-comment-dots",
     setup_publish: "fa-globe", setup_event_type: "fa-tags", setup_staff: "fa-user-tie",
     link_organizations: "fa-building-circle-exclamation", onboard_trainees: "fa-user-gear",
-    allocate_bulk_payments: "fa-money-check-dollar",
+    send_portal_invites: "fa-right-to-bracket", allocate_bulk_payments: "fa-money-check-dollar",
     review_flagged_comments: "fa-flag", collect_registration_fees: "fa-hand-holding-dollar",
     issue_scholarships: "fa-graduation-cap", set_scholarship_funders: "fa-hand-holding-heart",
     follow_up_agreements: "fa-file-signature", fix_zero_scholarships: "fa-dollar-sign",
@@ -26,7 +26,7 @@
   chip = item.registrant_task? ? { label: "remind", classes: "bg-emerald-50 text-emerald-600" } : { label: "admin", classes: "bg-blue-50 text-blue-600" }
   cta_classes = case item.action_label
     when "Scholarships" then "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
-    when "Send reminder", "Send" then "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+    when "Send reminder", "Send", "Send invites" then "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
     else "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
     end
 %>
