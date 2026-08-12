@@ -402,9 +402,12 @@ end
 
 ### Tailwind Theme
 
-Custom colors defined in `app/frontend/stylesheets/application.tailwind.css`:
+Custom tokens defined in the `@theme` block of `app/frontend/stylesheets/application.tailwind.css`:
 - `--color-primary: #063b8d` (dark blue)
 - Standard semantic colors: secondary, danger, warning, info, success
+- Sub-`xs` font sizes for dense UI, a 2px-step scale below `text-xs` (12px): `text-2xs` (10px), `text-3xs` (8px), `text-4xs` (6px) — use these instead of arbitrary `text-[…px]` values
+
+Tailwind class order is sorted with rustywind via `ai/tw-sort` (Prettier's Tailwind plugin can't parse ERB). Prefer named theme tokens and static class literals over arbitrary/interpolated classes.
 
 ## Testing
 

@@ -20,7 +20,7 @@
    } %>
 
 <div id="<%= "participant-#{participant_slug}" if participant_slug %>"
-     class="scroll-mt-24 bg-white border <%= DomainTheme.border_class_for(:scholarships) %> rounded-xl shadow-sm overflow-hidden break-inside-avoid"
+     class="scroll-mt-24 border bg-white <%= DomainTheme.border_class_for(:scholarships) %> break-inside-avoid overflow-hidden rounded-xl shadow-sm"
      data-controller="expandable-card"
      data-action="expandable-cards:expandAll@window->expandable-card#expand expandable-cards:collapseAll@window->expandable-card#collapse">
   <%# Recipient header — avatar + name, with title/org beneath the name and the
@@ -74,7 +74,7 @@
                           title: "View #{person.name}'s registration",
                           class: "shrink-0 inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600" do %>
                 <i class="fa-solid fa-ticket"></i>
-                <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+                <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
               <% end %>
             <% end %>
           </div>
@@ -132,7 +132,7 @@
     <div class="px-5 py-3 border-b <%= DomainTheme.border_class_for(:scholarships) %> bg-gray-50"
          data-scholarship-status-toggle-target="status">
       <div class="flex flex-wrap items-center gap-3">
-        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Scholarship</span>
+        <span class="text-xs font-semibold tracking-wide text-gray-400 uppercase">Scholarship</span>
         <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-900">
           <i class="fa-solid fa-sack-dollar text-gray-400"></i>
           <%= dollars_from_cents(scholarship.amount_cents) %>
@@ -143,7 +143,7 @@
                         class: "inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-800 hover:underline" do %>
               <i class="fa-solid fa-hand-holding-heart text-gray-400"></i>
               Funded by <%= scholarship.grant.funder_name %>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+              <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
             <% end %>
           <% else %>
             <span class="inline-flex items-center gap-1.5 text-sm text-gray-600">
@@ -158,7 +158,7 @@
                       class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
                       target: "_blank", rel: "noopener" do %>
             Edit
-            <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+            <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
           <% end %>
         <% end %>
       </div>
@@ -172,7 +172,7 @@
         <% answers.each do |answer| %>
           <div>
             <dt class="text-sm font-semibold text-gray-800"><%= display_question_label(answer.form_field, answer) %></dt>
-            <dd class="mt-1 text-sm text-gray-700 whitespace-pre-line"><%= resolve_answer_text(answer.form_field, answer.submitted_answer) %></dd>
+            <dd class="mt-1 text-sm whitespace-pre-line text-gray-700"><%= resolve_answer_text(answer.form_field, answer.submitted_answer) %></dd>
           </div>
         <% end %>
       </dl>

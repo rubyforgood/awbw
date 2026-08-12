@@ -4,8 +4,8 @@
 <% content_for(:page_title, "#{title} — #{@event.title}") %>
 <% event = @event.decorate %>
 
-<div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6">
-  <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+  <div class="<%= DomainTheme.bg_class_for(:events) %> rounded-xl border border-gray-200 p-6 shadow">
     <%# Sign-ins has no tab of its own, so nothing in the subnav is marked current. %>
     <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
       <% case params[:return_to] %>
@@ -24,7 +24,7 @@
     <% ce_badge = capture do %>
       <% if @report.ce_only? %>
         <span class="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
-          <i class="fa-solid fa-graduation-cap text-[0.65rem]"></i>
+          <i class="fa-solid fa-graduation-cap text-2xs"></i>
           Continuing education
         </span>
       <% end %>
@@ -47,7 +47,7 @@
     <% if @report.any? %>
       <%# The id anchors the return trip from the per-row CE edit links. %>
       <section id="totals" class="mb-8 scroll-mt-6">
-        <h2 class="text-sm font-semibold uppercase tracking-wide text-teal-700 mb-3">Totals</h2>
+        <h2 class="mb-3 text-sm font-semibold tracking-wide text-teal-700 uppercase">Totals</h2>
         <%= render "events/attendance_totals", report: @report, return_to: "attendance" %>
       </section>
 
@@ -78,7 +78,7 @@
                edit_continuing_education_registration_path(ce_reg, return_to: "attendance") :
                edit_event_registration_path(row.registration, return_to: "attendance") %>
           <section class="mb-8">
-            <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+            <div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
               <h2 class="text-sm font-semibold text-gray-900">
                 <%= row.name %>
                 <%# Each licence gets its own heading, named, so two sections for the
@@ -87,7 +87,7 @@
                   <span class="ml-1 text-xs font-normal text-gray-400 tabular-nums"><%= row.license_number %></span>
                 <% end %>
                 <% if @report.open?(row) %>
-                  <span class="ml-1.5 inline-flex items-center gap-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200 px-1.5 py-0.5 text-[0.65rem] font-medium">signed in</span>
+                  <span class="ml-1.5 inline-flex items-center gap-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200 px-1.5 py-0.5 text-2xs font-medium">signed in</span>
                 <% end %>
               </h2>
               <span class="text-xs text-gray-400">Total <%= attendance_duration_label(@report.total_minutes(row)) %></span>
@@ -168,11 +168,11 @@
                     <%# Day-scoped: this row is one day, so the flag has to be about
                         this day's entries, not any open entry on any day. %>
                     <% if entries.any?(&:open?) %>
-                      <span class="ml-1.5 inline-flex items-center gap-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200 px-1.5 py-0.5 text-[0.65rem] font-medium">signed in</span>
+                      <span class="text-2xs ml-1.5 inline-flex items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-1.5 py-0.5 font-medium text-teal-700">signed in</span>
                     <% end %>
                   </div>
                   <% if @report.ce_only? %>
-                    <div class="text-gray-600 tabular-nums truncate"><%= row.license_number.presence || "—" %></div>
+                    <div class="truncate text-gray-600 tabular-nums"><%= row.license_number.presence || "—" %></div>
                   <% end %>
                   <%= render "events/attendance_sessions", row: row, date: date,
                         entries: entries, editing: editing, state: cell_state %>
@@ -192,7 +192,7 @@
         that day has an entry with no sign-out yet. Totals sum every completed in/out pair.
       </p>
     <% else %>
-      <div class="text-center py-12 text-gray-500">
+      <div class="py-12 text-center text-gray-500">
         <%= @report.ce_only? ? "No one has registered for CE credit on this event yet." : "No attendance has been logged for this event yet." %>
       </div>
     <% end %>

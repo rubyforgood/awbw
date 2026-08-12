@@ -21,21 +21,21 @@
   </div>
 <% else %>
   <details class="group/rev">
-    <summary class="flex items-baseline justify-between gap-3 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden rounded px-1 -mx-1 py-0.5 hover:bg-gray-100">
-      <span class="flex items-center gap-1.5 min-w-0 text-gray-500">
-        <i class="fa-solid fa-chevron-down text-[10px] text-gray-300 shrink-0 transition-transform group-open/rev:rotate-180"></i>
-        <span class="truncate min-w-0" title="<%= label %>"><%= label %></span>
+    <summary class="-mx-1 flex cursor-pointer list-none items-baseline justify-between gap-3 rounded px-1 py-0.5 select-none hover:bg-gray-100 [&::-webkit-details-marker]:hidden">
+      <span class="flex min-w-0 items-center gap-1.5 text-gray-500">
+        <i class="fa-solid fa-chevron-down text-2xs shrink-0 text-gray-300 transition-transform group-open/rev:rotate-180"></i>
+        <span class="min-w-0 truncate" title="<%= label %>"><%= label %></span>
       </span>
       <span class="tabular-nums <%= value_class %> shrink-0"><%= dollars_from_cents(cents) %></span>
     </summary>
-    <ul class="mt-1 mb-1 ml-5 space-y-0.5 text-xs text-gray-700 max-h-40 overflow-y-auto">
+    <ul class="mt-1 mb-1 ml-5 max-h-40 space-y-0.5 overflow-y-auto text-xs text-gray-700">
       <% contributors.each do |contributor| %>
         <li>
           <%= link_to registrants_event_path(event, registrant_ids: contributor.person.id),
                 title: contributor.person.name,
                 class: "group/revlink flex items-baseline justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-100" do %>
-            <span class="truncate min-w-0 group-hover/revlink:underline"><%= contributor.person.name %></span>
-            <span class="tabular-nums text-gray-600 shrink-0"><%= dollars_from_cents(contributor.cents) %></span>
+            <span class="min-w-0 truncate group-hover/revlink:underline"><%= contributor.person.name %></span>
+            <span class="shrink-0 text-gray-600 tabular-nums"><%= dollars_from_cents(contributor.cents) %></span>
           <% end %>
         </li>
       <% end %>

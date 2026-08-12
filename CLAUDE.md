@@ -425,6 +425,7 @@ See `ai/` directory for executable scripts:
 | `ai/test_extra [args]` | Full RSpec run: Vite test build + all system specs |
 | `ai/lint` | Rubocop on all files |
 | `ai/lint --fix` | Auto-fix lint issues |
+| `ai/tw-sort` | Sort Tailwind class order (rustywind) on files changed vs main; `--all` for the whole tree, `--check` to verify without writing |
 | `ai/server` | Start dev services (web + vite) |
 | `ai/console` | Rails console |
 | `ai/routes -g pattern` | Search Rails routes |

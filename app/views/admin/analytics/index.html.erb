@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex flex-wrap items-center gap-y-2 mb-2">
+<div class="<%= DomainTheme.bg_class_for(:admin_only) %> rounded-xl border border-gray-200 p-6 shadow">
+  <div class="mb-2 flex flex-wrap items-center gap-y-2">
     <% if allowed_to?(:index?, with: Admin::HomePolicy) %>
       <%= link_to admin_path, class: "inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700" do %>
         <i class="fas fa-arrow-left"></i>
@@ -12,15 +12,15 @@
     </div>
   </div>
 
-  <div class="flex items-baseline gap-3 mb-6 leading-none">
-    <h1 class="text-2xl font-semibold text-gray-900 leading-none">Counts</h1>
+  <div class="mb-6 flex items-baseline gap-3 leading-none">
+    <h1 class="text-2xl leading-none font-semibold text-gray-900">Counts</h1>
   </div>
 
-  <div class="flex flex-wrap items-start justify-between gap-3 mb-6 text-sm min-h-10">
+  <div class="mb-6 flex min-h-10 flex-wrap items-start justify-between gap-3 text-sm">
     <%= render "admin/shared/active_filters_subheader" %>
 
     <div class="flex flex-wrap items-center gap-3">
-      <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Filters</h3>
+      <h3 class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Filters</h3>
       <%= form_with url: admin_activities_counts_path, method: :get, local: true, class: "flex items-center gap-4" do |f| %>
         <%= render "admin/shared/audience_dropdown" %>
 
@@ -44,22 +44,21 @@
 
       <!-- Summary -->
       <section>
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">
             View counts
           </h2>
 
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             <% @summary.each do |label, data| %>
               <%= link_to polymorphic_path(label.to_s.classify.constantize), class: "block group" do %>
-                <div class="<%= DomainTheme.bg_class_for(label) %> relative border border-gray-200 rounded-xl p-5
-                shadow-sm hover:shadow-md transition min-h-[120px]">
-                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 group-hover:text-blue-600 absolute top-3 right-3 transition-colors"></i>
-                  <div class="text-xs font-semibold tracking-wide uppercase text-gray-500 pr-4">
+                <div class="<%= DomainTheme.bg_class_for(label) %> relative min-h-[120px] rounded-xl border border-gray-200 p-5 shadow-sm transition hover:shadow-md">
+                  <i class="fa-solid fa-arrow-up-right-from-square text-2xs absolute top-3 right-3 text-gray-400 transition-colors group-hover:text-blue-600"></i>
+                  <div class="pr-4 text-xs font-semibold tracking-wide text-gray-500 uppercase">
                     <%= label.to_s.humanize %>
                   </div>
 
-                  <div class="text-3xl font-bold text-gray-900 group-hover:text-blue-600 leading-none tabular-nums transition-colors mt-2">
+                  <div class="mt-2 text-3xl leading-none font-bold text-gray-900 tabular-nums transition-colors group-hover:text-blue-600">
                     <%= number_with_delimiter(data[:views]) %>
                   </div>
 
@@ -79,9 +78,9 @@
       </section>
 
       <section class="mt-6">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Workshops</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">Workshops</h2>
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
             <%= render "admin/analytics/popular_list",
                        title: "Most viewed",
                        records: @most_viewed_workshops,
@@ -102,9 +101,9 @@
       </section>
 
       <section class="mt-6">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Resources</h2>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">Resources</h2>
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
             <%= render "admin/analytics/popular_list",
                        title: "Most viewed",
                        records: @most_viewed_resources,
@@ -128,9 +127,9 @@
       </section>
 
       <section class="mt-6">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4"><%= CommunityNews.model_name.human.pluralize %></h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800"><%= CommunityNews.model_name.human.pluralize %></h2>
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
             <%= render "admin/analytics/popular_list",
                        title: "Most viewed",
                        records: @most_viewed_community_news,
@@ -151,9 +150,9 @@
       </section>
 
       <section class="mt-6">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Stories</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">Stories</h2>
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
             <%= render "admin/analytics/popular_list",
                        title: "Most viewed",
                        records: @most_viewed_stories,
@@ -174,9 +173,9 @@
       </section>
 
       <section class="mt-6">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Other</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">Other</h2>
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
             <%= render "admin/analytics/popular_list",
                        title: "Events",
                        records: @most_viewed_events,
@@ -230,12 +229,12 @@
 
       <!-- Zero Engagement -->
       <section class="mt-6">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">
             No engagement
           </h2>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
             <%= render "zero_list",
                        title: "Workshops",
                        records: @zero_engagement_workshops,

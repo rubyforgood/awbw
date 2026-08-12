@@ -27,7 +27,7 @@
       <span class="flex items-center gap-1.5 text-xs font-medium text-gray-500">
         <% if icon_bg.present? %>
           <span class="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full <%= icon_bg %>">
-            <i class="fa-solid <%= icon %> <%= icon_color %> text-[10px]"></i>
+            <i class="fa-solid <%= icon %> <%= icon_color %> text-2xs"></i>
           </span>
         <% else %>
           <i class="fa-solid <%= icon %> <%= icon_color %>"></i>
@@ -37,7 +37,7 @@
       </span>
       <span class="flex items-center gap-2">
         <span class="text-sm font-semibold tabular-nums <%= amount_color %>"><%= dollars_from_cents(amount_cents) %></span>
-        <i class="fa-solid fa-chevron-down text-[10px] text-gray-300 transition-transform group-open/row:rotate-180"></i>
+        <i class="fa-solid fa-chevron-down text-2xs text-gray-300 transition-transform group-open/row:rotate-180"></i>
       </span>
     </summary>
     <% if registrants.any? %>
@@ -53,7 +53,7 @@
                 <% if person_cents %>
                   <span class="tabular-nums text-gray-500"><%= dollars_from_cents(person_cents) %></span>
                 <% end %>
-                <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-white group-hover/rowlink:text-gray-500"></i>
+                <i class="fa-solid fa-arrow-up-right-from-square text-2xs text-white group-hover/rowlink:text-gray-500"></i>
               </span>
             <% end %>
           </li>
@@ -64,6 +64,6 @@
     <% end %>
   </details>
   <%= link_to filter_path, class: "shrink-0 flex h-7 items-center text-gray-300 hover:text-gray-500", title: "View #{label.downcase} registrants" do %>
-    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+    <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
   <% end %>
 </div>

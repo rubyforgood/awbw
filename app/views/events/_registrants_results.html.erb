@@ -1,8 +1,8 @@
 <%= turbo_frame_tag :registrants_results do %>
   <%# Scholarship column shows by default only when the event charges a fee. %>
   <% scholarship_on = @event.cost_cents.to_i > 0 %>
-  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit" data-column-toggle-root data-column-toggle-scope="event-<%= @event.id %>">
-    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+  <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm blur-on-submit" data-column-toggle-root data-column-toggle-scope="event-<%= @event.id %>">
+    <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
       <% current_filter = params[:attendance_status].present? ? nil : (params[:status_filter].presence || "active") %>
       <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Attendance filter">
         <%= link_to registrants_event_path(@event, status_filter: "active", keyword: params[:keyword].presence),
@@ -19,7 +19,7 @@
 
       <div class="flex items-center gap-4">
         <%# On by default — Organization shows unless the admin hides it. %>
-        <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+        <label class="inline-flex cursor-pointer items-center gap-2 select-none"
                data-controller="column-toggle" data-column-toggle-group-value="organization">
           <span class="text-sm text-gray-500">Linked org</span>
 
@@ -31,14 +31,14 @@
             class="sr-only"
           >
 
-          <span class="relative inline-block w-9 h-5">
+          <span class="relative inline-block h-5 w-9">
             <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-blue-600 transition-colors"></span>
-            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform" style="transform: translateX(16px)"></span>
+            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform" style="transform: translateX(16px)"></span>
           </span>
         </label>
 
         <% if @ce_eligible %>
-          <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+          <label class="inline-flex cursor-pointer items-center gap-2 select-none"
                  data-controller="column-toggle" data-column-toggle-group-value="ce">
             <span class="text-sm text-gray-500">CE</span>
 
@@ -51,15 +51,15 @@
               class="sr-only"
             >
 
-            <span class="relative inline-block w-9 h-5">
+            <span class="relative inline-block h-5 w-9">
               <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-blue-600 transition-colors"></span>
-              <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform" style="transform: translateX(16px)"></span>
+              <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform" style="transform: translateX(16px)"></span>
             </span>
           </label>
         <% end %>
 
         <%# On by default when the event charges a fee; always togglable. %>
-        <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+        <label class="inline-flex cursor-pointer items-center gap-2 select-none"
                data-controller="column-toggle" data-column-toggle-group-value="scholarship">
           <span class="text-sm text-gray-500">Scholarship</span>
 
@@ -71,15 +71,15 @@
             class="sr-only"
           >
 
-          <span class="relative inline-block w-9 h-5">
+          <span class="relative inline-block h-5 w-9">
             <span data-column-toggle-target="track" class="absolute inset-0 rounded-full <%= scholarship_on ? "bg-blue-600" : "bg-gray-300" %> transition-colors"></span>
-            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform" style="transform: <%= scholarship_on ? "translateX(16px)" : "none" %>"></span>
+            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform" style="transform: <%= scholarship_on ? "translateX(16px)" : "none" %>"></span>
           </span>
         </label>
 
         <% if @event.cost_cents.to_i > 0 %>
           <%# Off by default — the payment-method chips are hidden until the admin reveals them. %>
-          <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+          <label class="inline-flex cursor-pointer items-center gap-2 select-none"
                  data-controller="column-toggle" data-column-toggle-group-value="payment_method">
             <span class="text-sm text-gray-500">Payment method</span>
 
@@ -90,15 +90,15 @@
               class="sr-only"
             >
 
-            <span class="relative inline-block w-9 h-5">
+            <span class="relative inline-block h-5 w-9">
               <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
-              <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
+              <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"></span>
             </span>
           </label>
         <% end %>
 
         <%# Off by default — Date registered is hidden until the admin reveals it. %>
-        <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+        <label class="inline-flex cursor-pointer items-center gap-2 select-none"
                data-controller="column-toggle" data-column-toggle-group-value="date">
           <span class="text-sm text-gray-500">Date registered</span>
 
@@ -109,14 +109,14 @@
             class="sr-only"
           >
 
-          <span class="relative inline-block w-9 h-5">
+          <span class="relative inline-block h-5 w-9">
             <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
-            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
+            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"></span>
           </span>
         </label>
 
         <%# On by default — Attendance shows unless the admin hides it. %>
-        <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+        <label class="inline-flex cursor-pointer items-center gap-2 select-none"
                data-controller="column-toggle" data-column-toggle-group-value="attendance">
           <span class="text-sm text-gray-500">Attendance</span>
 
@@ -128,13 +128,13 @@
             class="sr-only"
           >
 
-          <span class="relative inline-block w-9 h-5">
+          <span class="relative inline-block h-5 w-9">
             <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-blue-600 transition-colors"></span>
-            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform" style="transform: translateX(16px)"></span>
+            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform" style="transform: translateX(16px)"></span>
           </span>
         </label>
 
-        <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+        <label class="inline-flex cursor-pointer items-center gap-2 select-none"
                data-controller="column-toggle" data-column-toggle-group-value="confirmed">
           <span class="text-sm text-gray-500">User account</span>
 
@@ -145,14 +145,14 @@
             class="sr-only"
           >
 
-          <span class="relative inline-block w-9 h-5">
+          <span class="relative inline-block h-5 w-9">
             <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
-            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
+            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"></span>
           </span>
         </label>
 
         <%# Off by default — Certificate issued is hidden until the admin reveals it. %>
-        <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+        <label class="inline-flex cursor-pointer items-center gap-2 select-none"
                data-controller="column-toggle" data-column-toggle-group-value="certificate">
           <span class="text-sm text-gray-500">Certificate</span>
 
@@ -163,9 +163,9 @@
             class="sr-only"
           >
 
-          <span class="relative inline-block w-9 h-5">
+          <span class="relative inline-block h-5 w-9">
             <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
-            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
+            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"></span>
           </span>
         </label>
       </div>
@@ -349,7 +349,7 @@
                                     class: "#{icon_only_pill} bg-gray-50 text-gray-500 border-gray-200",
                                     data: { turbo_frame: "_top" } do %>
                           <span class="invisible w-0 min-w-0 overflow-hidden">None</span>
-                          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
+                          <i class="fa-solid fa-arrow-up-right-from-square text-2xs opacity-70"></i>
                         <% end %>
                       </span>
                     <% end %>
@@ -398,7 +398,7 @@
                    else
                      3
                    end %>
-                <td class="px-4 py-2 text-sm text-center <%= "hidden" unless scholarship_on %>" data-column-toggle-col="scholarship" data-sort-value="<%= scholarship_sort %>">
+                <td class="px-4 py-2 text-center text-sm <%= "hidden" unless scholarship_on %>" data-column-toggle-col="scholarship" data-sort-value="<%= scholarship_sort %>">
                   <% if (s = scholarship) %>
                     <% if s.tasks_completed? %>
                       <%= render "shared/badge",
@@ -429,7 +429,7 @@
                 <% if @event.cost_cents.to_i > 0 %>
                   <% paid_cents = registration.allocations_sum %>
                   <% due_cents = @event.cost_cents - paid_cents %>
-                  <td class="px-4 py-2 text-sm text-center" data-sort-value="<%= due_cents %>">
+                  <td class="px-4 py-2 text-center text-sm" data-sort-value="<%= due_cents %>">
                     <% is_paid = registration.paid_in_full? %>
                     <% is_discounted = !is_paid && registration.discounted? %>
                     <% is_partial = !is_discounted && registration.partially_paid? %>
@@ -460,7 +460,7 @@
                           title: badge_title %>
 
                     <% if !is_paid && registration.intends_to_pay? %>
-                      <div class="mt-1 inline-flex items-center gap-1 whitespace-nowrap text-[0.65rem] font-medium text-blue-600">
+                      <div class="text-2xs mt-1 inline-flex items-center gap-1 font-medium whitespace-nowrap text-blue-600">
                         <i class="fa-solid fa-hand-holding-dollar"></i>
                         <span>Intends to pay</span>
                       </div>
@@ -468,9 +468,9 @@
 
                     <% payment_badges = registration.decorate.payment_badges %>
                     <% if payment_badges.any? %>
-                      <div class="mt-1 hidden flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5" data-column-toggle-col="payment_method">
+                      <div class="mt-1 flex hidden flex-wrap items-center justify-center gap-x-2 gap-y-0.5" data-column-toggle-col="payment_method">
                         <% payment_badges.each do |payment_badge| %>
-                          <span class="inline-flex items-center gap-1 whitespace-nowrap text-[0.65rem] font-medium <%= payment_badge.classes %>"
+                          <span class="text-2xs inline-flex items-center gap-1 font-medium whitespace-nowrap <%= payment_badge.classes %>"
                                 title="<%= payment_badge.label %>">
                             <i class="<%= payment_badge.icon %>" aria-hidden="true"></i>
                             <%= payment_badge.code %>
@@ -481,7 +481,7 @@
                   </td>
                 <% end %>
 
-                <td class="px-4 py-2 text-center align-top hidden" data-column-toggle-col="confirmed">
+                <td class="hidden px-4 py-2 text-center align-top" data-column-toggle-col="confirmed">
                   <% if person.user.present? %>
                     <%= render "users/confirmed_status", user: person.user, invite_params: {} %>
                   <% else %>
@@ -492,17 +492,17 @@
                   <% end %>
                 </td>
 
-                <td class="px-4 py-2 text-sm text-nowrap text-center" data-column-toggle-col="attendance" data-sort-value="<%= registration.status %>"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
-                <td class="px-4 py-2 text-sm text-nowrap text-center text-gray-600 hidden" data-column-toggle-col="date" data-sort-value="<%= registration.created_at.to_i %>" title="<%= registration.created_at.strftime("%B %-d, %Y at %l:%M %P") %>"><%= registration.created_at.strftime("%b %-d, %Y") %></td>
+                <td class="px-4 py-2 text-center text-sm text-nowrap" data-column-toggle-col="attendance" data-sort-value="<%= registration.status %>"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
+                <td class="hidden px-4 py-2 text-center text-sm text-nowrap text-gray-600" data-column-toggle-col="date" data-sort-value="<%= registration.created_at.to_i %>" title="<%= registration.created_at.strftime("%B %-d, %Y at %l:%M %P") %>"><%= registration.created_at.strftime("%b %-d, %Y") %></td>
                 <% readiness = @readiness[registration.id] %>
-                <td class="px-4 py-2 text-sm text-center" data-sort-value="<%= readiness.status_sort_key %>">
+                <td class="px-4 py-2 text-center text-sm" data-sort-value="<%= readiness.status_sort_key %>">
                   <%= render "event_registrations/readiness_badge",
                         status: readiness.status,
                         label: readiness.status_label,
                         issues: readiness.status_issues,
                         subtext: readiness.status_reason %>
                 </td>
-                <td class="px-4 py-2 text-sm text-center hidden" data-column-toggle-col="certificate">
+                <td class="hidden px-4 py-2 text-center text-sm" data-column-toggle-col="certificate">
                   <%= render "event_registrations/certificate_issued_toggle", registration: registration %>
                 </td>
                 <td class="px-4 py-2 text-right text-sm"><%= link_to "Edit", edit_event_registration_path(registration, return_to: "registrants"), class: "text-gray-500 hover:text-gray-700 underline", data: { turbo_frame: "_top" } %></td>
@@ -512,7 +512,7 @@
         </table>
       </div>
     <% else %>
-      <p class="text-gray-500 text-center py-8">No registrants found.</p>
+      <p class="py-8 text-center text-gray-500">No registrants found.</p>
     <% end %>
   </div>
 <% end %>
