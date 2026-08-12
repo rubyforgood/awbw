@@ -82,20 +82,20 @@ class TailwindPaginationRenderer < WillPaginate::ActionView::LinkRenderer
   private
 
   def arrow_classes
-    "arrow-classes px-3 py-1 border border-gray-200 rounded-md
-     bg-white text-gray-300 hover:bg-gray-100 hover:text-gray-200"
+    "arrow-classes px-3 py-1 border border-gray-300 rounded-md
+     bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900"
   end
 
   def active_page_classes
-    "active-classes px-3 py-1 rounded-md bg-transparent text-gray-700"
+    "active-classes px-3 py-1 rounded-md bg-primary text-white font-semibold"
   end
 
   def page_link_classes
-    "page-link-classes px-3 py-1 border border-gray-200 rounded-md
-     bg-white text-gray-300 hover:bg-gray-100 hover:text-gray-200"
+    "page-link-classes px-3 py-1 border border-gray-300 rounded-md
+     bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900"
   end
 
   def gap_classes
-    "gap-classes px-3 py-1 text-gray-300"
+    "gap-classes px-3 py-1 text-gray-400"
   end
 end
