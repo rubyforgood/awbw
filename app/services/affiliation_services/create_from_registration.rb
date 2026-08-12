@@ -16,11 +16,11 @@ module AffiliationServices
   # facilitator-ish job title that isn't exactly "Facilitator" (e.g. "Lead
   # Facilitator") still gets its own standing "Facilitator" affiliation alongside it.
   #
-  # Start dates: the facilitator affiliation begins on the first day of the
-  # training's month (that's when they become a facilitator). The job affiliation
-  # is left without a start date — we don't know when the person began that role
-  # (they may have been with the org for years before this training), and dating it
-  # to registration would misrepresent that.
+  # Start dates: the facilitator affiliation begins on the training date itself
+  # (that's when they become a facilitator). The job affiliation is left without a
+  # start date — we don't know when the person began that role (they may have been
+  # with the org for years before this training), and dating it to registration
+  # would misrepresent that.
   class CreateFromRegistration
     def self.call(person:, organization:, job_title: nil, training_date: nil, organization_address: nil)
       new(person:, organization:, job_title:, training_date:, organization_address:).call
@@ -82,7 +82,7 @@ module AffiliationServices
     end
 
     def facilitator_start_date
-      (@training_date || Date.current).to_date.beginning_of_month
+      (@training_date || Date.current).to_date
     end
 
     def active_or_pending_affiliations_with_title(title)

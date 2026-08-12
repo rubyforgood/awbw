@@ -15,7 +15,7 @@ class Affiliation < ApplicationRecord
 
   # Not flagged inactive and not past its end date. Includes affiliations whose
   # start_date is still in the future (e.g. a Facilitator affiliation dated to an
-  # upcoming training's month) — they are "pending" but counted here.
+  # upcoming training) — they are "pending" but counted here.
   scope :active_or_pending, -> {
     where(inactive: false)
       .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", Date.current)

@@ -144,18 +144,18 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
     expect(job.start_date).to be_nil
   end
 
-  it "starts the facilitator affiliation on the first day of the training's month" do
+  it "starts the facilitator affiliation on the training date" do
     described_class.call(person: person, organization: organization,
                          job_title: "Counselor", training_date: Date.new(2026, 9, 17))
 
     facilitator = person.affiliations.find_by(organization: organization, title: "Facilitator")
-    expect(facilitator.start_date).to eq(Date.new(2026, 9, 1))
+    expect(facilitator.start_date).to eq(Date.new(2026, 9, 17))
   end
 
-  it "falls back to the current month for the facilitator affiliation when no training date is given" do
+  it "falls back to today for the facilitator affiliation when no training date is given" do
     described_class.call(person: person, organization: organization, job_title: nil)
 
     facilitator = person.affiliations.find_by(organization: organization, title: "Facilitator")
-    expect(facilitator.start_date).to eq(Date.current.beginning_of_month)
+    expect(facilitator.start_date).to eq(Date.current)
   end
 end
