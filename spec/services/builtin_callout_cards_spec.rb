@@ -63,6 +63,18 @@ RSpec.describe BuiltinCalloutCards do
       expect(paid.trailing_icon).to eq("fa-solid fa-arrow-right")
     end
 
+    it "appends the ticket payment deadline to the due badge when the event sets one" do
+      event.update!(payment_due_deadline: Time.zone.local(2026, 4, 9, 17, 0))
+      due = card(registration, "Make your payment")
+      expect(due.badge).to eq("$10.99 due by Apr 9")
+    end
+
+    it "shows a plain due badge when the event sets no payment deadline" do
+      event.update!(payment_due_deadline: nil)
+      due = card(registration, "Make your payment")
+      expect(due.badge).to eq("$10.99 due")
+    end
+
     it "uses the arrow trailing icon for every card" do
       event.update!(videoconference_url: "https://example.zoom.us/j/1")
       trailing = described_class.new(registration).cards.map(&:trailing_icon).uniq

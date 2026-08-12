@@ -183,10 +183,19 @@ class BuiltinCalloutCards
     Card.new(icon_class: "fa-solid fa-credit-card", color: due ? "orange" : "blue",
              title: due ? "Make your payment" : "Payment",
              subtitle: due ? "view your balance" : "view your payment history",
-             badge: due ? "#{MoneyFormatter.dollars_from_cents(registration.remaining_cost)} due" : "Paid",
+             badge: due ? payment_due_badge : "Paid",
              badge_classes: due ? nil : "bg-blue-100 text-blue-800 border border-blue-300",
              href: registration_payment_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
+  end
+
+  # The amount-owed chip while a balance is due, with the event's ticket payment
+  # deadline appended when set (e.g. "$1,350 due by Apr 9"). Mirrors the CE card's
+  # amount-due chip.
+  def payment_due_badge
+    amount = MoneyFormatter.dollars_from_cents(registration.remaining_cost)
+    return "#{amount} due" if event.payment_due_deadline.blank?
+    "#{amount} due by #{ce_deadline_text(event.payment_due_deadline)}"
   end
 
   # Shown only once the certificate of completion is unlocked (training over,
