@@ -16,7 +16,7 @@
   </div>
 
   <%# Banner: what this page does, plus a plain link to the other mode. %>
-  <div class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-6 flex items-center gap-2.5 text-sm text-gray-600">
+  <div class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-6 flex items-baseline gap-2.5 text-sm text-gray-600">
     <i class="fa-solid fa-circle-info text-gray-400 shrink-0"></i>
     <p>
       <% if @invite_mode %>
@@ -77,8 +77,8 @@
       <% if @invite_mode %>
         <div class="my-14">
           <h2 class="text-lg font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">Email</h2>
-          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-2 text-sm text-blue-800">
-            <i class="fa-solid fa-lock mt-0.5 shrink-0"></i>
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-baseline gap-2 text-sm text-blue-800">
+            <i class="fa-solid fa-lock shrink-0"></i>
             <p>
               This is the standard Portal invite email. It can't be edited — each
               recipient gets a personalized link to set their password. Preview it below.
