@@ -2,7 +2,7 @@
 #
 # This file is the STARTER content only. The live page is database-backed and
 # edited in-app by super-admins (rich descriptions with screenshots, external
-# doc links, etc.). An admin clicks "Import from seed" on /features to pull any
+# doc links, etc.). An admin clicks "Sync latest updates" on /features to pull any
 # entries here that aren't in the database yet — it NEVER overwrites an existing
 # feature (matched by name), so admin edits are safe. See CLAUDE.md
 # "Features & tips page" and FeatureCatalog#import!.
@@ -16,6 +16,8 @@
 #                   (admin_facing is visible to super-admins only).
 #   summary:        One or two plain-language sentences (shown on the card).
 #   released_on:    Ship date (YYYY-MM-DD).
+#   action_path:    In-app path for the "Check out this feature" link (e.g. /events).
+#   pr_number:      GitHub PR number it shipped in (adds a "View the pull request" link).
 #   pro_tips:       Optional list of short, practical tips (0–2 is plenty).
 #   description:    Optional longer write-up (plain text or HTML). Admins usually
 #                   expand this in the WYSIWYG with screenshots.
@@ -27,6 +29,8 @@
   area: registration
   display_status: public_facing
   released_on: 2026-08-11
+  action_path: "/events"
+  pr_number: 2173
   summary: >-
     Events can set a payment due date, and it shows on the registration ticket so
     registrants know by when they need to pay.
@@ -35,6 +39,8 @@
   area: communications
   display_status: admin_facing
   released_on: 2026-08-11
+  action_path: "/communications"
+  pr_number: 2168
   summary: >-
     Switch the bulk reminder tool into invite mode to send portal login invitations
     to a filtered set of registrants in one pass, creating accounts for anyone who
@@ -44,6 +50,8 @@
   area: stories
   display_status: admin_facing
   released_on: 2026-08-11
+  action_path: "/stories"
+  pr_number: 2163
   summary: >-
     Bring stories over from a WordPress export, translating the old categories, tags,
     authors, and organizations into the portal's sectors and records, with a preview
@@ -55,6 +63,8 @@
   area: people
   display_status: admin_facing
   released_on: 2026-08-11
+  action_path: "/people"
+  pr_number: 2140
   summary: >-
     Linking a registrant to an organization now fills in the org's type, website,
     and address from what the registrant typed, and records exactly what changed.
@@ -66,6 +76,8 @@
   area: reporting
   display_status: admin_facing
   released_on: 2026-08-10
+  action_path: "/events/reports"
+  pr_number: 2113
   summary: >-
     Events have a subnavigation linking revenue, participation, and scholarship
     reports across every training, with breakdowns that filter themselves as you
@@ -77,6 +89,8 @@
   area: stories
   display_status: admin_facing
   released_on: 2026-08-10
+  action_path: "/stories"
+  pr_number: 2166
   summary: >-
     Story and story-idea edit screens show the comments and email communications
     tied to that story, so the whole conversation lives in one place.
@@ -85,6 +99,8 @@
   area: reporting
   display_status: admin_facing
   released_on: 2026-08-08
+  action_path: "/events/reports"
+  pr_number: 2101
   summary: >-
     A single attendees page lists everyone who registered across all trainings, with
     the same roster columns and breakdown charts as a single event, filterable and
@@ -94,6 +110,8 @@
   area: stories
   display_status: public_facing
   released_on: 2026-08-09
+  action_path: "/stories"
+  pr_number: 2148
   summary: >-
     A public, shareable Story Share portal that mirrors the awbw.org styling, with
     admin-managed slots, hover-zoom segments, and a "most read" ordering.
@@ -104,6 +122,8 @@
   area: events
   display_status: admin_facing
   released_on: 2026-08-09
+  action_path: "/events"
+  pr_number: 2143
   summary: >-
     A single, consistent filter bar across the registrant lists lets you narrow by
     more criteria, tuck advanced options under "More filters", and prefill a bulk
@@ -113,6 +133,8 @@
   area: registration
   display_status: admin_facing
   released_on: 2026-08-09
+  action_path: "/events"
+  pr_number: 2138
   summary: >-
     The registrants roster shows each person's payment method as a badge and lets
     you filter the list by it.
@@ -121,6 +143,8 @@
   area: registration
   display_status: admin_facing
   released_on: 2026-08-09
+  action_path: "/events"
+  pr_number: 2107
   summary: >-
     Mark a registrant's certificate as sent right from the roster with a slider —
     it stays in sync with the certificate date on their registration.
@@ -129,6 +153,8 @@
   area: scholarships
   display_status: admin_facing
   released_on: 2026-08-09
+  action_path: "/scholarships"
+  pr_number: 2054
   summary: >-
     The scholarship recipients page groups awards by funder and links each
     recipient's age chips back to their registration, so it's easy to see who
@@ -138,6 +164,8 @@
   area: scholarships
   display_status: admin_facing
   released_on: 2026-08-09
+  action_path: "/scholarships"
+  pr_number: 2134
   summary: >-
     Highlight a scholarship recipient as a shout-out straight from the recipients
     page.
@@ -146,6 +174,8 @@
   area: events
   display_status: admin_facing
   released_on: 2026-08-09
+  action_path: "/events"
+  pr_number: 2130
   summary: >-
     Add and manage the staff shown on an event's "Meet the staff" roster directly
     from the edit-event form.
@@ -154,6 +184,8 @@
   area: events
   display_status: admin_facing
   released_on: 2026-08-09
+  action_path: "/events"
+  pr_number: 2131
   summary: >-
     Unpublished and long-past events collapse into a tidy archive list on the
     events index, so admins see current events first without losing the old ones.
@@ -162,6 +194,8 @@
   area: reporting
   display_status: admin_facing
   released_on: 2026-08-09
+  action_path: "/events/reports"
+  pr_number: 2124
   summary: >-
     Every figure on the events revenue report opens up to the individual
     registrants behind it.
@@ -170,6 +204,8 @@
   area: communications
   display_status: admin_facing
   released_on: 2026-08-09
+  action_path: "/communications"
+  pr_number: 2132
   summary: >-
     When adding a topic subscription for someone who isn't in the system yet, you
     can create their person record inline instead of starting over.
@@ -178,6 +214,8 @@
   area: communications
   display_status: admin_facing
   released_on: 2026-08-09
+  action_path: "/communications"
+  pr_number: 2089
   summary: >-
     Invitations, reminders, and resends show who sent them, and are recorded
     against the sending person rather than a generic account.
@@ -186,6 +224,8 @@
   area: registration
   display_status: public_facing
   released_on: 2026-08-09
+  action_path: "/events"
+  pr_number: 2139
   summary: >-
     Registrants can indicate that someone else will pay for them, and that answer
     is carried onto their registration for admins to see.
@@ -194,6 +234,8 @@
   area: people
   display_status: admin_facing
   released_on: 2026-08-06
+  action_path: "/people"
+  pr_number: 2059
   summary: >-
     One page gathers every comment connected to a person — their profile, event
     registrations, scholarships, CE, and subscriptions — plus a global comments
@@ -203,6 +245,8 @@
   area: reporting
   display_status: admin_facing
   released_on: 2026-08-06
+  action_path: "/events/reports"
+  pr_number: 2053
   summary: >-
     A cross-event scholarship report totals award dollars and counts by funding
     source and training, split by live vs. on-demand attendance.
@@ -211,6 +255,8 @@
   area: payments
   display_status: user_facing
   released_on: 2026-08-05
+  action_path: "/payments"
+  pr_number: 2094
   summary: >-
     Members can sign up for a recurring membership and pay dues through the portal.
 
@@ -218,6 +264,8 @@
   area: communications
   display_status: user_facing
   released_on: 2026-08-04
+  action_path: "/communications"
+  pr_number: 2070
   summary: >-
     Facilitators can subscribe to the topics they want to hear about — upcoming
     trainings, news, resources — and admins manage the list of topics and who's
@@ -227,6 +275,8 @@
   area: communications
   display_status: admin_facing
   released_on: 2026-08-04
+  action_path: "/communications"
+  pr_number: 2091
   summary: >-
     Compose and send a one-off communication to a person straight from the
     communications index, without going through a record first.
@@ -235,6 +285,8 @@
   area: registration
   display_status: admin_facing
   released_on: 2026-08-04
+  action_path: "/events"
+  pr_number: 2081
   summary: >-
     A clean, one-page printable certificate of completion for a training registrant.
 
@@ -242,6 +294,8 @@
   area: reporting
   display_status: admin_facing
   released_on: 2026-08-02
+  action_path: "/events/reports"
+  pr_number: 2037
   summary: >-
     The per-event dashboard shows how many registrants actually attended alongside
     the registration and revenue figures.
@@ -250,6 +304,8 @@
   area: reporting
   display_status: admin_facing
   released_on: 2026-08-02
+  action_path: "/events/reports"
+  pr_number: 2036
   summary: >-
     A cross-event participation report counts unique people trained versus seats
     filled by year, anchored by an events statistics hub.
@@ -258,6 +314,7 @@
   area: reporting
   display_status: admin_facing
   released_on: 2026-08-02
+  action_path: "/events/reports"
   summary: >-
     Rosters and the attendees page include a US map coloring states by registrant
     count, plus city and location breakdowns.
@@ -266,6 +323,8 @@
   area: people
   display_status: admin_facing
   released_on: 2026-08-03
+  action_path: "/people"
+  pr_number: 2076
   summary: >-
     Mark an organization as high-profile so it stands out in lists.
 
@@ -275,6 +334,8 @@
   area: events
   display_status: admin_facing
   released_on: 2026-07-15
+  action_path: "/events"
+  pr_number: 1995
   summary: >-
     Give an event a short abbreviation that shows in tight spaces like cards and
     chips instead of the full title.
@@ -283,6 +344,8 @@
   area: people
   display_status: admin_facing
   released_on: 2026-07-14
+  action_path: "/people"
+  pr_number: 1939
   summary: >-
     Free-text "Other" answers people type on forms (like a sector that isn't
     listed) are captured as records you can promote, keep, or dismiss.
@@ -293,6 +356,8 @@
   area: scholarships
   display_status: public_facing
   released_on: 2026-07-14
+  action_path: "/scholarships"
+  pr_number: 1794
   summary: >-
     Recipients accept a scholarship agreement before the award is shown as granted,
     so acceptance is on record.
@@ -301,6 +366,8 @@
   area: registration
   display_status: public_facing
   released_on: 2026-07-14
+  action_path: "/events"
+  pr_number: 1979
   summary: >-
     Callout detail pages render expandable sections from the admin's content, so
     long instructions and FAQs stay tidy.
@@ -309,6 +376,8 @@
   area: registration
   display_status: admin_facing
   released_on: 2026-07-06
+  action_path: "/events"
+  pr_number: 1943
   summary: >-
     Admins can review the raw answers a registrant submitted on any form.
 
@@ -316,6 +385,8 @@
   area: communications
   display_status: user_facing
   released_on: 2026-07-04
+  action_path: "/communications"
+  pr_number: 1941
   summary: >-
     The user-facing "Notifications" area is now called "Communications" throughout
     the portal.
@@ -324,6 +395,8 @@
   area: reporting
   display_status: admin_facing
   released_on: 2026-07-04
+  action_path: "/events/reports"
+  pr_number: 1817
   summary: >-
     A chart of event revenue over time, breaking money in from organization
     subsidy and net.
@@ -332,6 +405,8 @@
   area: people
   display_status: admin_facing
   released_on: 2026-07-04
+  action_path: "/people"
+  pr_number: 1872
   summary: >-
     Pick a person's primary and additional age ranges with a chip editor, matching
     how sectors are edited.
@@ -340,6 +415,8 @@
   area: communications
   display_status: admin_facing
   released_on: 2026-07-08
+  action_path: "/communications"
+  pr_number: 1942
   summary: >-
     Edit a communication in place, with icons showing the channel and message
     bodies gated to admins.
@@ -348,6 +425,8 @@
   area: stories
   display_status: public_facing
   released_on: 2026-07-08
+  action_path: "/stories"
+  pr_number: 1951
   summary: >-
     Every story has a friendly, shareable slug URL.
 
@@ -355,6 +434,8 @@
   area: registration
   display_status: user_facing
   released_on: 2026-06-29
+  action_path: "/events"
+  pr_number: 1916
   summary: >-
     Registrants can request continuing-education hours against a professional
     license, with fees, deadlines, and a certificate tracked per event.
@@ -363,6 +444,8 @@
   area: scholarships
   display_status: admin_facing
   released_on: 2026-06-29
+  action_path: "/scholarships"
+  pr_number: 1920
   summary: >-
     Browse grants in a fast, filterable list with scholarship theming.
 
@@ -370,6 +453,8 @@
   area: content
   display_status: user_facing
   released_on: 2026-07-13
+  action_path: "/workshops"
+  pr_number: 1893
   summary: >-
     PDF resources open in the browser's built-in viewer instead of forcing a
     download.
@@ -378,6 +463,8 @@
   area: content
   display_status: admin_facing
   released_on: 2026-07-09
+  action_path: "/workshops"
+  pr_number: 1940
   summary: >-
     Workshops, stories, resources, and community news can be credited to any
     person, not just people with active login accounts.
@@ -388,6 +475,8 @@
   area: registration
   display_status: public_facing
   released_on: 2026-06-22
+  action_path: "/events"
+  pr_number: 1751
   summary: >-
     The registration ticket got a cleaner look with a thumbnail header, compact
     details, and status chips.
@@ -396,6 +485,7 @@
   area: events
   display_status: public_facing
   released_on: 2026-06-22
+  action_path: "/events"
   summary: >-
     Videoconference links, passcodes, and room details appear on the ticket only
     around the event time and for paid registrants.
@@ -404,6 +494,8 @@
   area: registration
   display_status: admin_facing
   released_on: 2026-06-21
+  action_path: "/events"
+  pr_number: 1788
   summary: >-
     A per-event Onboarding tab tracks each registrant through their setup steps
     with a checkbox matrix.
@@ -412,6 +504,8 @@
   area: registration
   display_status: admin_facing
   released_on: 2026-06-21
+  action_path: "/events"
+  pr_number: 1812
   summary: >-
     Built-in and custom registration ticket callouts are edited together in one
     drag-to-reorder editor, with live color and icon preview.
@@ -420,6 +514,8 @@
   area: people
   display_status: admin_facing
   released_on: 2026-06-21
+  action_path: "/people"
+  pr_number: 1809
   summary: >-
     Registering or linking an org automatically creates the person's job title
     affiliation plus a standing Facilitator affiliation.
@@ -428,6 +524,8 @@
   area: people
   display_status: admin_facing
   released_on: 2026-06-21
+  action_path: "/people"
+  pr_number: 1818
   summary: >-
     Point a person's affiliation at one of the organization's specific addresses.
 
@@ -435,6 +533,8 @@
   area: registration
   display_status: admin_facing
   released_on: 2026-06-21
+  action_path: "/events"
+  pr_number: 1825
   summary: >-
     Returning registrants are recognized even when they swap a nickname for a legal
     first name, so they aren't duplicated.
@@ -443,6 +543,8 @@
   area: events
   display_status: public_facing
   released_on: 2026-06-21
+  action_path: "/events"
+  pr_number: 1791
   summary: >-
     Events spanning several days display as a date range with a single daily time.
 
@@ -450,6 +552,8 @@
   area: registration
   display_status: admin_facing
   released_on: 2026-06-17
+  action_path: "/events"
+  pr_number: 1721
   summary: >-
     Admins add call-out cards to an event's registration ticket — for payment,
     handouts, videoconference, and more — each linking to its own detail page.
@@ -458,6 +562,8 @@
   area: payments
   display_status: public_facing
   released_on: 2026-06-17
+  action_path: "/payments"
+  pr_number: 1709
   summary: >-
     A registration generates an invoice reflecting the balance due, downloadable as
     a PDF.
@@ -466,6 +572,8 @@
   area: payments
   display_status: public_facing
   released_on: 2026-07-04
+  action_path: "/payments"
+  pr_number: 1830
   summary: >-
     A receipt is available once a registration is paid in full.
 
@@ -473,6 +581,8 @@
   area: payments
   display_status: public_facing
   released_on: 2026-06-17
+  action_path: "/payments"
+  pr_number: 1707
   summary: >-
     Registrants can download AWBW's W-9 from the payment callout on their ticket.
 
@@ -480,6 +590,8 @@
   area: payments
   display_status: public_facing
   released_on: 2026-06-18
+  action_path: "/payments"
+  pr_number: 1733
   summary: >-
     Payers can enter a custom amount at checkout rather than only a fixed price.
 
@@ -487,6 +599,8 @@
   area: payments
   display_status: public_facing
   released_on: 2026-06-08
+  action_path: "/payments"
+  pr_number: 1600
   summary: >-
     A bulk-payment ticket lets one payer cover several participants at once and
     allocate the total across them.
@@ -495,6 +609,8 @@
   area: payments
   display_status: admin_facing
   released_on: 2026-06-18
+  action_path: "/payments"
+  pr_number: 1737
   summary: >-
     Payment and allocation changes are recorded in a change log admins can review.
 
@@ -502,6 +618,8 @@
   area: scholarships
   display_status: admin_facing
   released_on: 2026-06-07
+  action_path: "/scholarships"
+  pr_number: 1594
   summary: >-
     Grants hold a funder, amount, eligibility, and deadlines, and scholarships draw
     from them without exceeding the grant total.
@@ -510,6 +628,8 @@
   area: scholarships
   display_status: admin_facing
   released_on: 2026-06-08
+  action_path: "/scholarships"
+  pr_number: 1597
   summary: >-
     Awarding a scholarship shows each grant's remaining-of-total funds as you pick
     the funding source.
@@ -518,6 +638,8 @@
   area: reporting
   display_status: admin_facing
   released_on: 2026-06-06
+  action_path: "/events/reports"
+  pr_number: 1565
   summary: >-
     Each event has a dashboard summarizing registrants, organizations, sectors,
     locations, scholarships, and payments, with drill-in filters.
@@ -526,6 +648,8 @@
   area: registration
   display_status: admin_facing
   released_on: 2026-06-06
+  action_path: "/events"
+  pr_number: 1563
   summary: >-
     Build registration, scholarship, and other forms from composable sections and
     fields, with per-field width, hints, options, and visibility rules.
@@ -534,6 +658,8 @@
   area: events
   display_status: admin_facing
   released_on: 2026-06-11
+  action_path: "/events"
+  pr_number: 1616
   summary: >-
     Attach staff to an event with titles and an expected-to-attend flag, driving the
     public "Meet the staff" roster.
@@ -542,6 +668,8 @@
   area: events
   display_status: admin_facing
   released_on: 2026-06-13
+  action_path: "/events"
+  pr_number: 1664
   summary: >-
     Give a staff member a bio written just for one event, alongside their profile
     bio.
@@ -550,6 +678,8 @@
   area: events
   display_status: admin_facing
   released_on: 2026-06-11
+  action_path: "/events"
+  pr_number: 1630
   summary: >-
     Sort the registrants table by clicking its column headers.
 
@@ -557,6 +687,8 @@
   area: communications
   display_status: admin_facing
   released_on: 2026-06-18
+  action_path: "/communications"
+  pr_number: 1734
   summary: >-
     Send reminder emails to a filtered set of registrants, with a confirm step
     showing exactly who will receive it.
@@ -565,6 +697,8 @@
   area: communications
   display_status: admin_facing
   released_on: 2026-06-18
+  action_path: "/communications"
+  pr_number: 1727
   summary: >-
     Personalize the message and subject on a bulk reminder, with a live preview as
     you type.
@@ -573,6 +707,8 @@
   area: people
   display_status: admin_facing
   released_on: 2026-06-16
+  action_path: "/people"
+  pr_number: 1669
   summary: >-
     Manage a registrant's organizations and affiliations from one editor, resolving
     the org they typed to a saved record.
@@ -581,6 +717,8 @@
   area: people
   display_status: admin_facing
   released_on: 2026-06-23
+  action_path: "/people"
+  pr_number: 1882
   summary: >-
     Contact info, organization details, mailing consent, and racial/ethnic identity
     submitted on registration are stored as structured profile data.
@@ -589,6 +727,8 @@
   area: people
   display_status: admin_facing
   released_on: 2026-06-23
+  action_path: "/people"
+  pr_number: 1883
   summary: >-
     Capture and edit a person's racial and ethnic identity as structured profile
     data.
@@ -597,6 +737,8 @@
   area: payments
   display_status: admin_facing
   released_on: 2026-06-20
+  action_path: "/payments"
+  pr_number: 1722
   summary: >-
     Choose who paid — a person or organization — and designate additional payers on
     the allocation form.
@@ -605,6 +747,8 @@
   area: events
   display_status: admin_facing
   released_on: 2026-06-19
+  action_path: "/events"
+  pr_number: 1793
   summary: >-
     Preview an event's registration ticket as a typical registrant would see it,
     without creating any data.
@@ -615,6 +759,8 @@
   area: events
   display_status: admin_facing
   released_on: 2026-06-13
+  action_path: "/events"
+  pr_number: 1666
   summary: >-
     Pin a favorite event for a one-click shortcut to it in the nav.
 
@@ -622,6 +768,8 @@
   area: payments
   display_status: admin_facing
   released_on: 2026-06-16
+  action_path: "/payments"
+  pr_number: 1679
   summary: >-
     Allocate a bulk payment across unpaid registrants with a clear allocation UI.
 
@@ -631,6 +779,8 @@
   area: payments
   display_status: admin_facing
   released_on: 2026-06-05
+  action_path: "/payments"
+  pr_number: 1487
   summary: >-
     Card payments through Stripe, with allocations recording what each payment
     covers and support for refunds and discounts.
@@ -639,6 +789,8 @@
   area: communications
   display_status: admin_facing
   released_on: 2026-04-05
+  action_path: "/communications"
+  pr_number: 1433
   summary: >-
     Send reminder emails to an event's registrants from the management screens.
 
@@ -646,6 +798,8 @@
   area: reporting
   display_status: admin_facing
   released_on: 2026-04-04
+  action_path: "/events/reports"
+  pr_number: 1462
   summary: >-
     Charts of portal usage and tagging activity across the admin analytics pages.
 
@@ -653,6 +807,7 @@
   area: reporting
   display_status: admin_facing
   released_on: 2026-01-18
+  action_path: "/events/reports"
   summary: >-
     A searchable, filterable feed of visits and events across the portal for admins,
     powered by activity tracking.
@@ -661,6 +816,8 @@
   area: reporting
   display_status: admin_facing
   released_on: 2026-02-16
+  action_path: "/events/reports"
+  pr_number: 999
   summary: >-
     Admins can run ad-hoc SQL reports through Blazer.
 
@@ -668,6 +825,8 @@
   area: people
   display_status: admin_facing
   released_on: 2026-03-01
+  action_path: "/people"
+  pr_number: 1277
   summary: >-
     Track account changes — email changes, password resets, confirmations — with
     dynamic search on a person's account activity.
@@ -676,6 +835,8 @@
   area: communications
   display_status: admin_facing
   released_on: 2026-03-01
+  action_path: "/communications"
+  pr_number: 1278
   summary: >-
     Email-change and confirmation workflows guide admins through clear interstitial
     pages and send the right copy to the right address.
@@ -684,6 +845,8 @@
   area: registration
   display_status: public_facing
   released_on: 2026-02-24
+  action_path: "/events"
+  pr_number: 1206
   summary: >-
     Events can accept registrations from the public through a polished registration
     form, gated by a per-event toggle.
@@ -692,6 +855,8 @@
   area: registration
   display_status: public_facing
   released_on: 2026-03-01
+  action_path: "/events"
+  pr_number: 1268
   summary: >-
     Each event registration has a friendly slug URL for the ticket.
 
@@ -699,6 +864,8 @@
   area: reporting
   display_status: admin_facing
   released_on: 2026-02-10
+  action_path: "/events/reports"
+  pr_number: 888
   summary: >-
     Download an event's registrations as a CSV.
 
@@ -706,6 +873,8 @@
   area: scholarships
   display_status: admin_facing
   released_on: 2026-02-28
+  action_path: "/scholarships"
+  pr_number: 1262
   summary: >-
     Track scholarship recipients against event registrations.
 
@@ -713,6 +882,8 @@
   area: scholarships
   display_status: public_facing
   released_on: 2026-02-28
+  action_path: "/scholarships"
+  pr_number: 1253
   summary: >-
     A dedicated scholarship application form, whose answers surface wherever the
     scholarship is reviewed.
@@ -721,6 +892,8 @@
   area: people
   display_status: admin_facing
   released_on: 2026-02-14
+  action_path: "/people"
+  pr_number: 990
   summary: >-
     Creating a person or user warns about likely duplicates before you save.
 
@@ -728,6 +901,8 @@
   area: content
   display_status: admin_facing
   released_on: 2026-02-15
+  action_path: "/workshops"
+  pr_number: 989
   summary: >-
     Tools to find and merge duplicate categories and sectors, keeping the taxonomy
     clean.
@@ -736,6 +911,8 @@
   area: people
   display_status: admin_facing
   released_on: 2026-02-15
+  action_path: "/people"
+  pr_number: 996
   summary: >-
     Leave threaded comments on a person or organization, with optional topic and
     follow-up flags.
@@ -744,6 +921,8 @@
   area: people
   display_status: admin_facing
   released_on: 2026-02-12
+  action_path: "/people"
+  pr_number: 893
   summary: >-
     Invite people to the portal with a confirmation and welcome page where they set
     their password.
@@ -752,6 +931,8 @@
   area: communications
   display_status: admin_facing
   released_on: 2026-02-22
+  action_path: "/communications"
+  pr_number: 1162
   summary: >-
     Send welcome instructions to many people at once as a background job.
 
@@ -759,6 +940,8 @@
   area: communications
   display_status: admin_facing
   released_on: 2026-05-25
+  action_path: "/communications"
+  pr_number: 1493
   summary: >-
     Mark contact-us submissions as responded so nothing slips through.
 
@@ -766,6 +949,8 @@
   area: reporting
   display_status: admin_facing
   released_on: 2026-05-25
+  action_path: "/events/reports"
+  pr_number: 1530
   summary: >-
     Monthly reports use standard list screens with the same search and filters as
     the rest of the portal.
@@ -774,6 +959,8 @@
   area: communications
   display_status: admin_facing
   released_on: 2026-02-10
+  action_path: "/communications"
+  pr_number: 900
   summary: >-
     Resend a notification while keeping the parent/child chain so the history is
     intact.
@@ -782,6 +969,8 @@
   area: communications
   display_status: public_facing
   released_on: 2026-03-01
+  action_path: "/communications"
+  pr_number: 1287
   summary: >-
     Cancelling an event registration sends the registrant a cancellation email.
 
@@ -789,6 +978,8 @@
   area: people
   display_status: admin_facing
   released_on: 2026-01-23
+  action_path: "/people"
+  pr_number: 760
   summary: >-
     Admins can lock or unlock a user's account from the edit screen.
 
@@ -796,6 +987,8 @@
   area: content
   display_status: admin_facing
   released_on: 2026-01-25
+  action_path: "/workshops"
+  pr_number: 712
   summary: >-
     Reorder categories within a category type by dragging them.
 
@@ -803,6 +996,8 @@
   area: content
   display_status: user_facing
   released_on: 2026-03-09
+  action_path: "/workshops"
+  pr_number: 1228
   summary: >-
     A gallery of video recordings, flagged as instructional or podcast, that
     facilitators can browse and bookmark.
@@ -811,6 +1006,8 @@
   area: content
   display_status: admin_facing
   released_on: 2026-01-15
+  action_path: "/workshops"
+  pr_number: 662
   summary: >-
     Mention people and records inside rich-text fields, with links back to what you
     referenced.
@@ -819,6 +1016,8 @@
   area: content
   display_status: admin_facing
   released_on: 2026-03-01
+  action_path: "/workshops"
+  pr_number: 1297
   summary: >-
     Content across the portal uses the Rhino rich-text editor with images, links,
     grids, and formatting.
@@ -829,6 +1028,7 @@
   area: content
   display_status: user_facing
   released_on: 2025-09-13
+  action_path: "/workshops"
   summary: >-
     The core library of AWBW workshops with rich descriptions, categories, sectors,
     and variations.
@@ -837,6 +1037,7 @@
   area: content
   display_status: user_facing
   released_on: 2025-09-17
+  action_path: "/workshops"
   summary: >-
     Group related workshops as a series, shown as parent and member workshops.
 
@@ -844,6 +1045,7 @@
   area: content
   display_status: user_facing
   released_on: 2025-09-20
+  action_path: "/workshops"
   summary: >-
     Facilitator-contributed variations on a workshop, with their own images and
     videos.
@@ -852,6 +1054,7 @@
   area: content
   display_status: user_facing
   released_on: 2025-09-13
+  action_path: "/workshops"
   summary: >-
     Downloadable handouts, toolkits, and templates that facilitators can search and
     save.
@@ -860,6 +1063,7 @@
   area: content
   display_status: user_facing
   released_on: 2025-09-23
+  action_path: "/workshops"
   summary: >-
     Bookmark workshops, resources, events, and more, then sort and filter your
     saved items.
@@ -868,6 +1072,7 @@
   area: content
   display_status: user_facing
   released_on: 2025-10-25
+  action_path: "/workshops"
   summary: >-
     Fast keyword search and filtering across workshops, resources, and other
     libraries.
@@ -876,6 +1081,7 @@
   area: content
   display_status: user_facing
   released_on: 2025-09-27
+  action_path: "/workshops"
   summary: >-
     Facilitators log the workshops they lead, with attendance and reflection fields.
 
@@ -883,6 +1089,7 @@
   area: content
   display_status: user_facing
   released_on: 2025-11-06
+  action_path: "/workshops"
   summary: >-
     Facilitators submit workshop ideas that admins can review and promote into full
     workshops.
@@ -891,6 +1098,8 @@
   area: content
   display_status: user_facing
   released_on: 2026-02-09
+  action_path: "/workshops"
+  pr_number: 871
   summary: >-
     Facilitators submit ideas for workshop variations, promotable into published
     variations.
@@ -899,6 +1108,7 @@
   area: content
   display_status: user_facing
   released_on: 2025-09-23
+  action_path: "/workshops"
   summary: >-
     A searchable, accordion-style FAQ and Help section, with reorderable, inline-
     editable questions.
@@ -907,6 +1117,7 @@
   area: content
   display_status: admin_facing
   released_on: 2025-11-26
+  action_path: "/workshops"
   summary: >-
     Curate participant quotes and surface them alongside workshop logs.
 
@@ -914,6 +1125,7 @@
   area: content
   display_status: admin_facing
   released_on: 2025-12-22
+  action_path: "/workshops"
   summary: >-
     A tagging system of categories and sectors, with admin CRUD, that organizes
     content across the portal.
@@ -922,6 +1134,8 @@
   area: content
   display_status: admin_facing
   released_on: 2025-11-27
+  action_path: "/workshops"
+  pr_number: 515
   summary: >-
     Classify content by Windows audience type for filtering and display.
 
@@ -929,6 +1143,7 @@
   area: events
   display_status: public_facing
   released_on: 2025-09-13
+  action_path: "/events"
   summary: >-
     Create and publish events with public event pages and registrations.
 
@@ -936,6 +1151,7 @@
   area: events
   display_status: public_facing
   released_on: 2025-11-19
+  action_path: "/events"
   summary: >-
     Add-to-calendar links and location/zoom details on event pages.
 
@@ -943,6 +1159,8 @@
   area: events
   display_status: public_facing
   released_on: 2026-02-21
+  action_path: "/events"
+  pr_number: 1144
   summary: >-
     A social-share sidebar lets visitors share an event page.
 
@@ -950,6 +1168,7 @@
   area: people
   display_status: admin_facing
   released_on: 2025-09-13
+  action_path: "/people"
   summary: >-
     Organization records with affiliations, addresses, logos, and profile details.
 
@@ -957,6 +1176,7 @@
   area: people
   display_status: admin_facing
   released_on: 2025-11-08
+  action_path: "/people"
   summary: >-
     Rich profiles for the people in AWBW's network, with contact info, sectors, and
     affiliations.
@@ -965,6 +1185,7 @@
   area: people
   display_status: admin_facing
   released_on: 2026-02-16
+  action_path: "/people"
   summary: >-
     Connect people to organizations with titles and date ranges, distinguishing
     facilitator affiliations.
@@ -973,6 +1194,7 @@
   area: people
   display_status: admin_facing
   released_on: 2025-11-16
+  action_path: "/people"
   summary: >-
     Organizations hold multiple structured addresses instead of a single set of
     fields.
@@ -981,6 +1203,7 @@
   area: people
   display_status: admin_facing
   released_on: 2025-09-13
+  action_path: "/people"
   summary: >-
     Manage portal login accounts, tied to people, with confirmation and invite
     states.
@@ -989,6 +1212,7 @@
   area: people
   display_status: public_facing
   released_on: 2025-09-22
+  action_path: "/people"
   summary: >-
     Secure login with a clear password reset and change flow.
 
@@ -996,6 +1220,7 @@
   area: stories
   display_status: public_facing
   released_on: 2025-11-06
+  action_path: "/stories"
   summary: >-
     Editorial stories with facilitators, images, and links back to the public site.
 
@@ -1003,6 +1228,7 @@
   area: stories
   display_status: user_facing
   released_on: 2025-11-02
+  action_path: "/stories"
   summary: >-
     Facilitators submit story ideas that admins can promote into published stories.
 
@@ -1010,6 +1236,7 @@
   area: stories
   display_status: public_facing
   released_on: 2025-11-12
+  action_path: "/stories"
   summary: >-
     Post and browse community news with images and rich text.
 
@@ -1017,6 +1244,7 @@
   area: communications
   display_status: public_facing
   released_on: 2025-11-07
+  action_path: "/communications"
   summary: >-
     A contact form that emails AWBW and sets expectations for a reply.
 
@@ -1024,6 +1252,7 @@
   area: communications
   display_status: admin_facing
   released_on: 2025-11-07
+  action_path: "/communications"
   summary: >-
     Admins publish banners with sanitized content across the portal.
 
@@ -1031,6 +1260,7 @@
   area: communications
   display_status: admin_facing
   released_on: 2026-01-18
+  action_path: "/communications"
   summary: >-
     A unified system that sends, tracks, and records the portal's emails and
     notifications, with delivery status.
@@ -1039,6 +1269,7 @@
   area: content
   display_status: user_facing
   released_on: 2025-09-28
+  action_path: "/workshops"
   summary: >-
     A home dashboard surfacing featured workshops, stories, news, and events for
     signed-in facilitators.
@@ -1047,6 +1278,7 @@
   area: content
   display_status: admin_facing
   released_on: 2025-11-18
+  action_path: "/workshops"
   summary: >-
     Flag workshops, stories, and other content as featured to intentionally place
     it on the home dashboard.
@@ -1055,6 +1287,8 @@
   area: stories
   display_status: user_facing
   released_on: 2026-02-04
+  action_path: "/stories"
+  pr_number: 738
   summary: >-
     Stories and community news have print-friendly layouts.
 
@@ -1062,6 +1296,7 @@
   area: reporting
   display_status: admin_facing
   released_on: 2025-11-08
+  action_path: "/events/reports"
   summary: >-
     A universal recent-activity feed showing the latest content changes across the
     portal.

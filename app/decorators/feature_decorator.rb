@@ -13,6 +13,19 @@ class FeatureDecorator < ApplicationDecorator
     area_meta[:icon]
   end
 
+  def area_color
+    area_meta[:color]
+  end
+
+  GITHUB_REPO = "rubyforgood/awbw".freeze
+
+  # Link to the GitHub PR the feature shipped in, or nil when unknown.
+  def pr_url
+    return if pr_number.blank?
+
+    "https://github.com/#{GITHUB_REPO}/pull/#{pr_number}"
+  end
+
   def status_meta
     Feature::DISPLAY_STATUSES.fetch(display_status, DEFAULT_STATUS)
   end

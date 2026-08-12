@@ -611,11 +611,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_114533) do
   end
 
   create_table "features", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "action_path"
     t.string "area", null: false
     t.datetime "created_at", null: false
     t.string "display_status", default: "user_facing", null: false
     t.string "external_url"
     t.string "name", null: false
+    t.integer "pr_number"
     t.text "pro_tips"
     t.boolean "published", default: true, null: false
     t.date "released_on", null: false

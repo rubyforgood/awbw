@@ -26,6 +26,20 @@ RSpec.describe Feature, type: :model do
     it "accepts an https external_url" do
       expect(build(:feature, external_url: "https://docs.example.com/x")).to be_valid
     end
+
+    it "accepts a relative action_path" do
+      expect(build(:feature, action_path: "/events")).to be_valid
+    end
+
+    it "rejects an action_path that is neither a path nor a URL" do
+      expect(build(:feature, action_path: "events")).not_to be_valid
+    end
+
+    it "rejects a non-positive pr_number" do
+      expect(build(:feature, pr_number: 0)).not_to be_valid
+      expect(build(:feature, pr_number: 2170)).to be_valid
+      expect(build(:feature, pr_number: nil)).to be_valid
+    end
   end
 
   describe "#pro_tips_list" do

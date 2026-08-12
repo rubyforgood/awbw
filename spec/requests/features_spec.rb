@@ -27,7 +27,7 @@ RSpec.describe "/features", type: :request do
 
       it "does not show admin actions" do
         get features_path
-        expect(response.body).not_to include("Import from seed")
+        expect(response.body).not_to include("Sync latest updates")
         expect(response.body).not_to include("New feature")
       end
     end
@@ -41,7 +41,7 @@ RSpec.describe "/features", type: :request do
         expect(response.body).to include("Facilitator feature")
         expect(response.body).to include("Admin-only feature")
         expect(response.body).to include("Draft feature")
-        expect(response.body).to include("Import from seed")
+        expect(response.body).to include("Sync latest updates")
         expect(response.body).to include("New feature")
       end
     end

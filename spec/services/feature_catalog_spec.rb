@@ -11,6 +11,8 @@ RSpec.describe FeatureCatalog do
           display_status: user_facing
           summary: "First seeded feature."
           released_on: 2026-08-01
+          action_path: "/events"
+          pr_number: 1234
           pro_tips:
             - "Tip A"
             - "Tip B"
@@ -32,8 +34,11 @@ RSpec.describe FeatureCatalog do
       expect { catalog.import! }.to change(Feature, :count).by(2)
     end
 
-    it "returns the number created" do
-      expect(catalog.import!).to eq(2)
+    it "reports how many were created and updated" do
+      result = catalog.import!
+      expect(result.created).to eq(2)
+      expect(result.updated).to eq(0)
+      expect(result.total).to eq(2)
     end
 
     it "maps every field, joining pro_tips with newlines" do
@@ -46,23 +51,40 @@ RSpec.describe FeatureCatalog do
         summary: "First seeded feature.",
         released_on: Date.new(2026, 8, 1),
         external_url: "https://docs.example.com/one",
+        action_path: "/events",
+        pr_number: 1234,
         published: true
       )
       expect(feature.pro_tips_list).to eq([ "Tip A", "Tip B" ])
       expect(feature.rhino_description.to_plain_text).to include("Longer write-up")
     end
 
-    it "does not overwrite an existing feature with the same name" do
+    it "does not overwrite a field an admin already filled in" do
       existing = create(:feature, name: "Seed feature one", summary: "Edited in-app")
 
       expect { catalog.import! }.to change(Feature, :count).by(1) # only "two" is new
       expect(existing.reload.summary).to eq("Edited in-app")
     end
 
+    it "fills in blank fields on an existing feature (missing info)" do
+      existing = create(:feature, name: "Seed feature one", summary: "Edited in-app",
+                                  action_path: nil, pr_number: nil, external_url: nil)
+
+      result = catalog.import!
+
+      expect(result.updated).to eq(1)
+      expect(existing.reload).to have_attributes(
+        action_path: "/events",
+        pr_number: 1234,
+        external_url: "https://docs.example.com/one"
+      )
+      expect(existing.summary).to eq("Edited in-app") # non-blank field left alone
+    end
+
     it "is a no-op on a second run" do
       catalog.import!
       expect { catalog.import! }.not_to change(Feature, :count)
-      expect(catalog.import!).to eq(0)
+      expect(catalog.import!.any?).to be(false)
     end
   end
 

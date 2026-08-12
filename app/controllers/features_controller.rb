@@ -52,12 +52,21 @@ class FeaturesController < ApplicationController
     redirect_to features_path, notice: "Feature was successfully deleted.", status: :see_other
   end
 
-  # Admin-only "Import from seed" button: pull any features from config/features.yml
-  # not already in the database (never overwrites existing ones).
+  # Admin-only "Sync latest updates" button: add any newly-shipped features from
+  # config/features.yml and fill in blank fields on existing ones (never
+  # overwrites details an admin has already filled in).
   def import
     authorize! Feature, to: :create?
-    created = FeatureCatalog.new.import!
-    notice = created.zero? ? "All seed features are already imported." : "Imported #{created} #{'feature'.pluralize(created)} from the seed file."
+    result = FeatureCatalog.new.import!
+
+    notice = if result.any?
+      parts = []
+      parts << "added #{result.created}" if result.created.positive?
+      parts << "filled in #{result.updated}" if result.updated.positive?
+      "Latest updates synced — #{parts.join(', ')} #{'feature'.pluralize(result.total)}."
+    else
+      "You're all caught up — no new updates."
+    end
     redirect_to features_path, notice: notice
   end
 
@@ -70,7 +79,7 @@ class FeaturesController < ApplicationController
   def feature_params
     params.require(:feature).permit(
       :name, :area, :display_status, :summary, :pro_tips,
-      :external_url, :released_on, :published, :rhino_description
+      :external_url, :action_path, :pr_number, :released_on, :published, :rhino_description
     )
   end
 end

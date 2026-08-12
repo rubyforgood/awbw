@@ -33,6 +33,15 @@
                      hint: "Add a step-by-step walkthrough and screenshots.") %>
   </div>
 
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <%= f.input :action_path, label: "\"Check out this feature\" link",
+                hint: "In-app path the detail page links to, e.g. /events.",
+                input_html: { class: "w-full", placeholder: "/events" } %>
+    <%= f.input :pr_number, label: "GitHub PR number",
+                hint: "Adds a \"View the pull request\" link on the detail page.",
+                input_html: { class: "w-full", placeholder: "2170" } %>
+  </div>
+
   <%= f.input :external_url, label: "External guide link",
               hint: "Optional link to a full write-up (e.g. a Google or Word doc).",
               input_html: { class: "w-full", placeholder: "https://…" } %>

@@ -43,6 +43,12 @@ class Feature < ApplicationRecord
   validates :released_on, presence: true
   validates :external_url, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]),
                                      message: "must start with http:// or https://" }, allow_blank: true
+  # In-app destination for the "Check out this feature" link on the detail page —
+  # a relative path ("/events") or a full URL.
+  validates :action_path, format: { with: %r{\A(/|https?://)[^\n]*\z},
+                                     message: "must be a path (/…) or a URL" }, allow_blank: true
+  # GitHub PR the feature shipped in (adds a "View the pull request" link).
+  validates :pr_number, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
 
   scope :published, -> { where(published: true) }
   scope :readable_by_non_admins, -> { where.not(display_status: ADMIN_ONLY_STATUS) }

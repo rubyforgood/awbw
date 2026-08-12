@@ -239,14 +239,15 @@ entry to `config/features.yml` (the checked-in **seed**):
 - Fields: `name`, `area` (a `Feature::AREA_KEYS` value), `display_status`
   (`public_facing` / `user_facing` / `admin_facing`), `summary` (1–2 plain
   sentences), `released_on` (ship date), plus optional `pro_tips` (list),
-  `description`, and `external_url`.
+  `description`, `external_url`, `action_path` (in-app "Check out this feature"
+  link), and `pr_number` (GitHub PR link).
 - **Sentence case, plain language** — read by facilitators, not devs.
 - `admin_facing` features are visible to super-admins only (`FeaturePolicy`).
 
-Admins click **Import from seed** on `/features` to pull new seed entries into the
-database. Import (`FeatureCatalog#import!`) is **create-missing-only** (matched by
-`name`) — it never overwrites in-app edits, so appending to the seed is safe. New
-area → add it to `Feature::AREAS` (label + FA icon + safelisted Tailwind hue).
+Admins click **Sync latest updates** on `/features` to add newly-shipped features
+and **fill in blank fields on existing ones** (`FeatureCatalog#import!`, matched by
+`name`) — it never overwrites a field an admin already filled in. New area → add it
+to `Feature::AREAS` (label + FA icon + safelisted Tailwind hue).
 
 ## JavaScript
 

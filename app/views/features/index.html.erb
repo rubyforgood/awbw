@@ -20,8 +20,8 @@
         <% end %>
         <%= button_to import_features_path,
                       class: "btn btn-primary-outline",
-                      form: { data: { turbo_confirm: "Import any features from the seed file that aren't here yet? Existing features are left untouched." } } do %>
-          <i class="fa-solid fa-arrows-rotate"></i> Import from seed
+                      form: { data: { turbo_confirm: "Add any newly-shipped features and fill in missing details? Your existing edits are kept." } } do %>
+          <i class="fa-solid fa-arrows-rotate"></i> Sync latest updates
         <% end %>
       </div>
     <% end %>

@@ -15,6 +15,18 @@ RSpec.describe FeatureDecorator do
   it "labels the area and audience" do
     expect(decorated.area_label).to eq("Registration & tickets")
     expect(decorated.status_label).to eq("Admin-facing")
+    expect(decorated.area_color).to eq("amber")
+  end
+
+  describe "#pr_url" do
+    it "builds a GitHub PR link when a pr_number is set" do
+      expect(build(:feature, pr_number: 2170).decorate.pr_url)
+        .to eq("https://github.com/rubyforgood/awbw/pull/2170")
+    end
+
+    it "is nil without a pr_number" do
+      expect(build(:feature, pr_number: nil).decorate.pr_url).to be_nil
+    end
   end
 
   it "formats the release date and an ISO date for the JS filter" do
