@@ -234,7 +234,8 @@ class Event < ApplicationRecord
   attr_writer :start_date_date, :start_date_time,
               :end_date_date, :end_date_time,
               :registration_close_date_date, :registration_close_date_time,
-              :ce_payment_due_deadline_date, :ce_payment_due_deadline_time
+              :ce_payment_due_deadline_date, :ce_payment_due_deadline_time,
+              :payment_due_deadline_date, :payment_due_deadline_time
 
   def start_date_date
     @start_date_date || start_date&.strftime("%Y-%m-%d")
@@ -266,6 +267,14 @@ class Event < ApplicationRecord
 
   def ce_payment_due_deadline_time
     @ce_payment_due_deadline_time || ce_payment_due_deadline&.strftime("%H:%M")
+  end
+
+  def payment_due_deadline_date
+    @payment_due_deadline_date || payment_due_deadline&.strftime("%Y-%m-%d")
+  end
+
+  def payment_due_deadline_time
+    @payment_due_deadline_time || payment_due_deadline&.strftime("%H:%M")
   end
 
   # Virtual attribute for cost in dollars (converts to/from cost_cents)
@@ -333,6 +342,7 @@ class Event < ApplicationRecord
     merge_date_time(:end_date)
     merge_date_time(:registration_close_date)
     merge_date_time(:ce_payment_due_deadline)
+    merge_date_time(:payment_due_deadline)
   end
 
   def merge_date_time(field)

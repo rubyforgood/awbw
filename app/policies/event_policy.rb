@@ -153,6 +153,8 @@ class EventPolicy < ApplicationPolicy
                   :ce_hours_request_deadline,
                   :ce_payment_due_deadline_date,
                   :ce_payment_due_deadline_time,
+                  :payment_due_deadline_date,
+                  :payment_due_deadline_time,
                   :autoshow_cost,
                   :autoshow_date,
                   :autoshow_location,

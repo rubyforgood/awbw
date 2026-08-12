@@ -24,6 +24,9 @@
       <p class="mt-1">
         <span class="inline-flex items-center rounded-full px-3 py-1 text-2xl font-semibold tabular-nums <%= @event_registration.remaining_cost.positive? ? "bg-amber-200 text-amber-900" : "bg-blue-100 text-blue-800" %>"><%= dollars_from_cents(@event_registration.remaining_cost) %></span>
       </p>
+      <% if @event_registration.remaining_cost.positive? && (due_display = @event.decorate.payment_due_deadline_display) %>
+        <p class="mt-2 text-sm font-medium text-amber-800">Due by <%= due_display %></p>
+      <% end %>
     </div>
   </div>
 
@@ -48,7 +51,11 @@
         <p class="font-medium text-gray-900">1210 Fernside Dr.<br>La Cañada, CA 91011</p>
         <p>Please send us an email letting us know the date the check will be mailed. If that date changes, please let us know.</p>
         <p><strong>Note:</strong> AWBW had an address change in recent years. Please be sure your accounting department has this current address — mail sent to the old address will not be received.</p>
-        <p>Payment is due no later than 5:00 PM PT on April 9th. We'll send more information after your payment is received, so we encourage you to submit it as soon as possible.</p>
+        <% if (due_display = @event.decorate.payment_due_deadline_display) %>
+          <p>Payment is due no later than <%= due_display %>. We'll send more information after your payment is received, so we encourage you to submit it as soon as possible.</p>
+        <% else %>
+          <p>We'll send more information after your payment is received, so we encourage you to submit it as soon as possible.</p>
+        <% end %>
       </div>
     </details>
   <% end %>
