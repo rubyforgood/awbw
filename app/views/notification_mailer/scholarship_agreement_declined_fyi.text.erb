@@ -1,0 +1,23 @@
+Scholarship declined
+====================
+
+<%= @person&.full_name %><% if @person&.preferred_email.present? %> (<%= @person.preferred_email %>)<% end %>
+
+Declined on
+<%= Time.current
+         .in_time_zone("Pacific Time (US & Canada)")
+         .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+------------------------------------------------------------
+
+<%= dollars_from_cents(@scholarship.amount_cents) %> scholarship<% if @event.present? %> for <%= @event.title %><% end %>
+
+------------------------------------------------------------
+
+Reason given
+<%= @reason.presence || "No reason was provided." %>
+
+------------------------------------------------------------
+
+View scholarship:
+<%= edit_scholarship_url(@scholarship) %>

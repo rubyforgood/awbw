@@ -268,7 +268,7 @@ class BuiltinCalloutCards
 
   def scholarship_badge(awarded, tasks_outstanding)
     return unless awarded
-    amount = MoneyFormatter.dollars_from_cents(registration.scholarships.sum(:amount_cents))
+    amount = MoneyFormatter.dollars_from_cents(registration.scholarships.not_declined.sum(:amount_cents))
     tasks_outstanding ? "#{amount} · Tasks outstanding" : amount
   end
 

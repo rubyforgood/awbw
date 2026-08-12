@@ -9,8 +9,9 @@ class ScholarshipsGrouping
   UNFUNDED_LABEL = "Unfunded".freeze
 
   GrantGroup = Struct.new(:grant, :scholarships, keyword_init: true) do
-    def total_cents = scholarships.sum { |s| s.amount_cents.to_i }
-    def count = scholarships.size
+    # Declined awards still list (badged) but never count toward the group totals.
+    def total_cents = scholarships.reject(&:agreement_declined?).sum { |s| s.amount_cents.to_i }
+    def count = scholarships.reject(&:agreement_declined?).size
   end
 
   FunderGroup = Struct.new(:name, :funder, :grant_groups, keyword_init: true) do

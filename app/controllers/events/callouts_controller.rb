@@ -65,11 +65,42 @@ module Events
       end
 
       if params[:agreement] == "yes"
-        scholarship.update!(agreement_signed: true) unless scholarship.agreement_signed?
+        # Agreeing clears any prior decline — the two states are mutually exclusive.
+        scholarship.update!(agreement_signed: true, agreement_declined_at: nil, agreement_declined_reason: nil) unless scholarship.agreement_signed?
         redirect_to registration_scholarship_path(@event_registration.slug), notice: "Thanks — your agreement has been recorded."
       else
         redirect_to registration_scholarship_path(@event_registration.slug), alert: "Something went wrong recording your agreement. Please try again."
       end
+    end
+
+    # Records the recipient declining the scholarship, from their scholarship page,
+    # with an optional reason. Stamps the decline and emails the admin team an FYI
+    # so they can follow up. Only the first decline emails — re-submitting is a no-op.
+    def decline_agreement
+      scholarship = @event_registration.scholarships.first
+      unless scholarship
+        redirect_to registration_scholarship_path(@event_registration.slug)
+        return
+      end
+
+      if scholarship.agreement_declined?
+        redirect_to registration_scholarship_path(@event_registration.slug), notice: "You've already declined this scholarship. Contact us if you'd like to reconsider."
+        return
+      end
+
+      reason = params[:decline_reason].to_s.strip
+      scholarship.decline_agreement!(reason)
+
+      NotificationServices::CreateNotification.call(
+        noticeable: scholarship,
+        kind: :scholarship_agreement_declined_fyi,
+        recipient_role: :admin,
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        notification_type: 0,
+        custom_message: reason.presence
+      )
+
+      redirect_to registration_scholarship_path(@event_registration.slug), notice: "Thanks for letting us know — we've told the team and they'll follow up with you."
     end
 
     # CE hours status: hours, amount owed, and license number. The heading and the

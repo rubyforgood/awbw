@@ -27,6 +27,18 @@
         <% end %>
       </dd>
     </div>
+    <% if @scholarship.agreement_declined? %>
+      <div class="sm:col-span-2">
+        <dt class="text-sm font-medium text-gray-500">Agreement declined</dt>
+        <dd class="mt-1 text-sm text-gray-900">
+          <span class="font-medium text-red-700">Declined</span>
+          <span class="text-gray-500">· <%= @scholarship.agreement_declined_at.strftime("%B %d, %Y") %></span>
+          <% if @scholarship.agreement_declined_reason.present? %>
+            <p class="mt-1 text-gray-700">“<%= @scholarship.agreement_declined_reason %>”</p>
+          <% end %>
+        </dd>
+      </div>
+    <% end %>
     <% if @scholarship.grant.present? %>
       <div>
         <dt class="text-sm font-medium text-gray-500">Grant</dt>

@@ -142,6 +142,84 @@ RSpec.describe Scholarship, type: :model do
     end
   end
 
+  describe "agreement_declined (backed by agreement_declined_at)" do
+    it "infers the flag from the timestamp" do
+      scholarship = create(:scholarship)
+      expect(scholarship.agreement_declined?).to be(false)
+
+      scholarship.update!(agreement_declined_at: Time.current)
+      expect(scholarship.agreement_declined?).to be(true)
+    end
+
+    it "#decline_agreement! stamps the time and stores the reason" do
+      scholarship = create(:scholarship)
+
+      scholarship.decline_agreement!("Timing no longer works")
+
+      expect(scholarship.agreement_declined?).to be(true)
+      expect(scholarship.agreement_declined_at).to be_present
+      expect(scholarship.agreement_declined_reason).to eq("Timing no longer works")
+    end
+
+    it "#decline_agreement! clears any prior signed state (mutually exclusive)" do
+      scholarship = create(:scholarship, agreement_signed: true)
+
+      scholarship.decline_agreement!("Changed my mind")
+
+      expect(scholarship.agreement_signed?).to be(false)
+      expect(scholarship.agreement_declined?).to be(true)
+    end
+
+    it "#decline_agreement! stores nil for a blank reason" do
+      scholarship = create(:scholarship)
+
+      scholarship.decline_agreement!("")
+
+      expect(scholarship.agreement_declined_reason).to be_nil
+    end
+
+    it "clears the decline when the award amount is changed (re-offer)" do
+      event = create(:event, cost_cents: 10_000)
+      registration = create(:event_registration, event:)
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 5_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 5_000)
+      scholarship.reload
+      scholarship.decline_agreement!("No longer available")
+      expect(scholarship.agreement_declined?).to be(true)
+
+      scholarship.update!(amount_cents: 6_000)
+
+      expect(scholarship.reload.agreement_declined?).to be(false)
+      expect(scholarship.agreement_declined_reason).to be_nil
+      # sync re-funds the allocation the decline had zeroed.
+      expect(scholarship.allocation.reload.amount).to eq(6_000)
+    end
+
+    it "excludes declined scholarships from the .not_declined scope" do
+      active = create(:scholarship)
+      declined = create(:scholarship)
+      declined.decline_agreement!("out")
+
+      expect(Scholarship.not_declined).to include(active)
+      expect(Scholarship.not_declined).not_to include(declined)
+    end
+  end
+
+  describe "#event" do
+    it "returns the event the scholarship was awarded at via its allocation" do
+      event = create(:event, cost_cents: 10_000)
+      registration = create(:event_registration, event:)
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 5_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 5_000)
+
+      expect(scholarship.reload.event).to eq(event)
+    end
+
+    it "returns nil when the scholarship has no event registration" do
+      expect(create(:scholarship).event).to be_nil
+    end
+  end
+
   describe "report filter scopes" do
     let(:event) { create(:event, cost_cents: 50_000) }
     let(:funder) { create(:organization, name: "Community Trust") }

@@ -569,6 +569,29 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(response.body).to include("Agreement signed")
         expect(response.body).not_to include("Pending agreement")
       end
+
+      it "shows the amount still owed after this scholarship (event cost minus allocations)" do
+        get registration_scholarship_path(registration.slug)
+
+        # $100 event cost − $50 scholarship allocation = $50 still owed.
+        expect(response.body).to include("you'll owe")
+        expect(response.body).to include("$50")
+      end
+
+      it "offers a Decline option with a reason box while unsigned" do
+        get registration_scholarship_path(registration.slug)
+
+        expect(response.body).to include("Decline")
+        expect(response.body).to match(/name="decline_reason"/)
+      end
+
+      it "shows the declined state instead of the buttons once declined" do
+        scholarship.decline_agreement!("Timing no longer works")
+        get registration_scholarship_path(registration.slug)
+
+        expect(response.body).to include("You declined this scholarship")
+        expect(response.body).not_to match(/name="agreement" value="yes"/)
+      end
     end
 
     describe "POST /registration/:slug/scholarship/agreement" do
@@ -593,6 +616,58 @@ RSpec.describe "Events::Callouts", type: :request do
         other = create(:event_registration, event: event, scholarship_requested: true)
 
         post registration_scholarship_agreement_path(other.slug), params: { agreement: "yes" }
+
+        expect(response).to redirect_to(registration_scholarship_path(other.slug))
+      end
+    end
+
+    describe "POST /registration/:slug/scholarship/decline" do
+      it "records the decline with the reason and clears any signed state" do
+        scholarship.update!(agreement_signed: true)
+
+        post registration_scholarship_decline_path(registration.slug), params: { decline_reason: "Timing no longer works" }
+
+        expect(response).to redirect_to(registration_scholarship_path(registration.slug))
+        scholarship.reload
+        expect(scholarship.agreement_declined?).to be(true)
+        expect(scholarship.agreement_declined_reason).to eq("Timing no longer works")
+        expect(scholarship.agreement_signed?).to be(false)
+      end
+
+      it "zeroes the scholarship allocation so it stops counting toward the balance" do
+        expect(registration.reload.remaining_cost).to eq(5_000)
+
+        post registration_scholarship_decline_path(registration.slug), params: { decline_reason: "No thanks" }
+
+        expect(allocation.reload.amount).to eq(0)
+        expect(registration.reload.remaining_cost).to eq(10_000)
+      end
+
+      it "emails the admin team an FYI with the reason" do
+        expect {
+          post registration_scholarship_decline_path(registration.slug), params: { decline_reason: "Moving away" }
+        }.to change { Notification.where(kind: "scholarship_agreement_declined_fyi").count }.by(1)
+
+        notification = Notification.where(kind: "scholarship_agreement_declined_fyi").last
+        expect(notification.recipient_email).to eq(ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))
+        expect(notification.custom_message).to eq("Moving away")
+        expect(notification.noticeable).to eq(scholarship)
+      end
+
+      it "does not email again when already declined" do
+        scholarship.decline_agreement!("first")
+
+        expect {
+          post registration_scholarship_decline_path(registration.slug), params: { decline_reason: "second" }
+        }.not_to change { Notification.where(kind: "scholarship_agreement_declined_fyi").count }
+
+        expect(response).to redirect_to(registration_scholarship_path(registration.slug))
+      end
+
+      it "redirects to the scholarship page when there is no awarded scholarship" do
+        other = create(:event_registration, event: event, scholarship_requested: true)
+
+        post registration_scholarship_decline_path(other.slug), params: { decline_reason: "n/a" }
 
         expect(response).to redirect_to(registration_scholarship_path(other.slug))
       end

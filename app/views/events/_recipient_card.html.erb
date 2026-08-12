@@ -133,10 +133,14 @@
          data-scholarship-status-toggle-target="status">
       <div class="flex flex-wrap items-center gap-3">
         <span class="text-xs font-semibold tracking-wide text-gray-400 uppercase">Scholarship</span>
-        <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-900">
+        <span class="inline-flex items-center gap-1.5 text-sm font-semibold <%= scholarship.agreement_declined? ? "text-gray-400 line-through" : "text-gray-900" %>">
+
           <i class="fa-solid fa-sack-dollar text-gray-400"></i>
           <%= dollars_from_cents(scholarship.amount_cents) %>
         </span>
+        <% if scholarship.agreement_declined? %>
+          <%= render "shared/badge", label: "Declined", classes: "bg-red-50 text-red-700 border-red-200", icon: "fa-solid fa-circle-xmark text-xs" %>
+        <% end %>
         <% if !grouped && scholarship.grant&.funder_name.present? %>
           <% if allowed_to?(:show?, scholarship.grant) %>
             <%= link_to grant_path(scholarship.grant), target: "_blank", rel: "noopener",

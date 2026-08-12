@@ -26,8 +26,12 @@
           <p class="text-xs font-medium uppercase tracking-wide text-gray-400"><%= @scholarship.agreement_signed? ? "Amount awarded" : "Amount offered" %></p>
           <p class="mt-1 text-3xl font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@scholarship.amount_cents) %></p>
         </div>
-        <%# Status chip: pending until the agreement is signed, then the tasks state. %>
-        <% if !@scholarship.agreement_signed? %>
+        <%# Status chip: declined, else pending until the agreement is signed, then the tasks state. %>
+        <% if @scholarship.agreement_declined? %>
+          <span class="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-sm font-medium text-red-700">
+            <i class="fa-solid fa-circle-xmark"></i> Declined
+          </span>
+        <% elsif !@scholarship.agreement_signed? %>
           <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">
             <i class="fa-solid fa-file-signature"></i> Pending agreement
           </span>
@@ -42,6 +46,20 @@
         <% end %>
       </div>
 
+      <%# What the registrant still owes with this scholarship applied — event cost
+          minus every allocation (this scholarship, payments, discounts). Only shown
+          for a paid event; remaining_cost already nets out the scholarship. %>
+      <% if @event.cost_cents.to_i.positive? && !@scholarship.agreement_declined? %>
+        <% owed = @event_registration.remaining_cost %>
+        <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
+          <% if owed.zero? %>
+            <p class="text-sm text-gray-700">With this scholarship applied, your <%= dollars_from_cents(@event.cost_cents) %> registration is fully covered — you'll owe <strong>nothing</strong>.</p>
+          <% else %>
+            <p class="text-sm text-gray-700">With this scholarship applied, you'll owe <strong><%= dollars_from_cents(owed) %></strong> toward the <%= dollars_from_cents(@event.cost_cents) %> registration cost.</p>
+          <% end %>
+        </div>
+      <% end %>
+
       <%# Scholarship agreement — shown above the details so accepting comes first.
           A single Agree button signs it; afterwards we confirm with the date. %>
       <div class="border-t border-gray-100 pt-5">
@@ -50,13 +68,37 @@
             <i class="fa-solid fa-circle-check"></i>
             Agreement signed<% if @scholarship.agreement_signed_at %> · <%= @scholarship.agreement_signed_at.strftime("%B %-d, %Y") %><% end %>
           </p>
+        <% elsif @scholarship.agreement_declined? %>
+          <p class="flex items-center gap-2 text-sm font-medium text-red-700">
+            <i class="fa-solid fa-circle-xmark"></i>
+            You declined this scholarship<% if @scholarship.agreement_declined_at %> · <%= @scholarship.agreement_declined_at.strftime("%B %-d, %Y") %><% end %>
+          </p>
+          <p class="mt-2 text-sm text-gray-600">We've let the team know. If you'd like to reconsider, please contact us.</p>
         <% else %>
           <p class="text-sm text-gray-600">Agree to complete your scholarship tasks to accept this award.</p>
-          <%= form_with url: registration_scholarship_agreement_path(@event_registration.slug), method: :post, class: "mt-3" do %>
-            <button type="submit" name="agreement" value="yes" class="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700">
-              <i class="fa-solid fa-check"></i> Agree
-            </button>
-          <% end %>
+          <div class="mt-3 flex flex-wrap items-center gap-3">
+            <%= form_with url: registration_scholarship_agreement_path(@event_registration.slug), method: :post do %>
+              <button type="submit" name="agreement" value="yes" class="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700">
+                <i class="fa-solid fa-check"></i> Agree
+              </button>
+            <% end %>
+
+            <%# Native disclosure so the reason box only appears when declining — no JS needed. %>
+            <details class="group">
+              <summary class="inline-flex cursor-pointer list-none items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 [&::-webkit-details-marker]:hidden">
+                <i class="fa-solid fa-xmark"></i> Decline
+              </summary>
+              <%= form_with url: registration_scholarship_decline_path(@event_registration.slug), method: :post, class: "mt-3 w-full max-w-md" do %>
+                <label for="decline_reason" class="block text-sm font-medium text-gray-700">Let us know why you're declining</label>
+                <textarea id="decline_reason" name="decline_reason" rows="3" required
+                          class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-red-400 focus:ring-red-400"
+                          placeholder="Your reason helps us follow up."></textarea>
+                <button type="submit" class="mt-3 inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700">
+                  <i class="fa-solid fa-paper-plane"></i> Decline scholarship
+                </button>
+              <% end %>
+            </details>
+          </div>
         <% end %>
       </div>
 

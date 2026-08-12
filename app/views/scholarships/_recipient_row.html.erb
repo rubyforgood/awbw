@@ -5,6 +5,9 @@
 <tr class="relative hover:bg-fuchsia-50">
   <td class="px-4 py-2 whitespace-nowrap text-sm">
     <%= link_to scholarship.recipient_name, edit_scholarship_path(scholarship), class: "font-medium text-blue-700 hover:text-blue-900 hover:underline after:absolute after:inset-0 after:content-['']" %>
+    <% if scholarship.agreement_declined? %>
+      <%= render "shared/badge", label: "Declined", classes: "bg-red-50 text-red-700 border-red-200", icon: "fa-solid fa-circle-xmark text-xs" %>
+    <% end %>
   </td>
   <td class="px-4 py-2 text-sm text-gray-900"><%= scholarship.program_name %></td>
   <td class="px-4 py-2 text-sm text-gray-600 whitespace-nowrap"><%= scholarship.program_location %></td>
@@ -18,7 +21,8 @@
     <% end %>
   </td>
   <td class="px-4 py-2 text-sm text-gray-600 whitespace-nowrap"><%= scholarship.training_label %></td>
-  <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right tabular-nums"><%= scholarship.amount %></td>
+  <%# Declined awards don't count toward totals, so the amount is struck through. %>
+  <td class="px-4 py-2 whitespace-nowrap text-sm text-right tabular-nums <%= scholarship.agreement_declined? ? "text-gray-400 line-through" : "text-gray-900" %>"><%= scholarship.amount %></td>
   <td class="px-4 py-2 whitespace-nowrap text-sm text-center">
     <% if scholarship.tasks_completed? %>
       <%= render "shared/badge",

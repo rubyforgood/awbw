@@ -11,21 +11,31 @@ class Scholarship < ApplicationRecord
   validates :amount_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :recipient_must_match_allocation_registrant
   validate :allocation_must_be_valid
-  validate :within_grant_budget, if: :grant
+  validate :within_grant_budget, if: -> { grant && !agreement_declined? }
 
   after_update :sync_allocation_amount, if: -> { saved_change_to_amount_cents? }
+  # Changing the award amount re-offers the scholarship, so a prior decline is
+  # cleared — the recipient decides afresh on the new amount (and sync_allocation_amount
+  # above re-funds the allocation the decline had zeroed).
+  after_update :reset_decline_on_amount_change, if: -> { saved_change_to_amount_cents? && agreement_declined? }
   after_create_commit :flag_event_registration_scholarship_requested
 
   scope :completed, -> { where(tasks_completed: true) }
   scope :agreement_signed, -> { where.not(agreement_signed_at: nil) }
+  scope :agreement_declined, -> { where.not(agreement_declined_at: nil) }
+  # Declined scholarships are excluded from every total — the recipient turned the
+  # award down, so it no longer counts toward amounts, counts, or budgets.
+  scope :not_declined, -> { where(agreement_declined_at: nil) }
 
   # Funding split (the app-wide convention, mirrored by EventDashboard and
   # EventRevenueFigures): externally funded = backed by a grant whose funder isn't
   # the org itself; org-subsidized = no grant, or a grant AWBW funded itself.
   # Callers rendering both sides can pass an already-loaded self_funded set to
   # avoid re-running Grant.self_funded_ids (an Organization.awbw + pluck) per scope.
-  scope :externally_funded, ->(self_funded = Grant.self_funded_ids) { where.not(grant_id: [ nil, *self_funded ]) }
-  scope :org_subsidized, ->(self_funded = Grant.self_funded_ids) { where(grant_id: [ nil, *self_funded ]) }
+  # The funding split excludes declined awards — a declined scholarship funds
+  # nothing, so it counts as neither externally funded nor org-subsidized.
+  scope :externally_funded, ->(self_funded = Grant.self_funded_ids) { not_declined.where.not(grant_id: [ nil, *self_funded ]) }
+  scope :org_subsidized, ->(self_funded = Grant.self_funded_ids) { not_declined.where(grant_id: [ nil, *self_funded ]) }
 
   # Scholarships from grants a given funder (Person/Organization) gave — the
   # "funder" filter. A blank funder matches nothing.
@@ -62,6 +72,26 @@ class Scholarship < ApplicationRecord
     self.agreement_signed_at = signed ? (agreement_signed_at || Time.current) : nil
   end
 
+  def agreement_declined? = agreement_declined_at.present?
+
+  # The recipient declining stamps the time + their reason and clears any signed
+  # state (signed and declined are mutually exclusive), and zeroes the allocation
+  # so the award stops counting in every allocation-based total (registration
+  # balances, dashboards, grant budgets). The row is kept for history.
+  def decline_agreement!(reason)
+    transaction do
+      update!(agreement_declined_at: Time.current, agreement_declined_reason: reason.presence, agreement_signed_at: nil)
+      allocation&.update!(amount: 0)
+    end
+  end
+
+  # The event this scholarship was awarded at, via its allocation's registration
+  # (nil for a grant-funded scholarship with no event registration).
+  def event
+    registration = allocation&.allocatable
+    registration.event if registration.respond_to?(:event)
+  end
+
   def amount_dollars
     amount_cents.to_d / 100 if amount_cents
   end
@@ -81,7 +111,7 @@ class Scholarship < ApplicationRecord
   def within_grant_budget
     return unless amount_cents
 
-    others_total = grant.scholarships.where.not(id: id).sum(:amount_cents)
+    others_total = grant.scholarships.not_declined.where.not(id: id).sum(:amount_cents)
     if others_total + amount_cents > grant.amount_cents
       errors.add(:amount_cents, "would exceed the grant's available funds")
     end
@@ -113,6 +143,11 @@ class Scholarship < ApplicationRecord
     return unless allocation
 
     allocation.update!(amount: amount_cents.to_i)
+  end
+
+  # update_columns so this second write doesn't re-enter the after_update chain.
+  def reset_decline_on_amount_change
+    update_columns(agreement_declined_at: nil, agreement_declined_reason: nil)
   end
 
   # When a scholarship is awarded against an event registration, the registration

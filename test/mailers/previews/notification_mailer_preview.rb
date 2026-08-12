@@ -194,6 +194,24 @@ class NotificationMailerPreview < ActionMailer::Preview
     NotificationMailer.workshop_log_submitted_fyi(notification)
   end
 
+  def scholarship_agreement_declined_fyi
+    scholarship = Scholarship.where.not(agreement_declined_at: nil).order(id: :desc).first ||
+      Scholarship.order(id: :desc).first ||
+      raise("Need a Scholarship to preview")
+
+    notification = find_valid_notification("scholarship_agreement_declined_fyi") ||
+      Notification.create!(
+        noticeable: scholarship,
+        notification_type: 0,
+        kind: "scholarship_agreement_declined_fyi",
+        recipient_role: "admin",
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        custom_message: scholarship.agreement_declined_reason.presence || "The timing no longer works for me this year."
+      )
+
+    NotificationMailer.scholarship_agreement_declined_fyi(notification)
+  end
+
   private
 
   def find_valid_notification(kind)

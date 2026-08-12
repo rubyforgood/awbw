@@ -189,6 +189,18 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
+  def scholarship_agreement_declined_fyi(notification)
+    @scholarship = notification.noticeable
+    @person = @scholarship.recipient
+    @event = @scholarship.event&.decorate
+    @reason = notification.custom_message
+    @notification_type = "Scholarship declined"
+
+    mail(
+      subject: "#{FYI_PREFIX} Scholarship declined by #{@person&.full_name}"
+    )
+  end
+
   private
 
   def extract_attachments(noticeable)

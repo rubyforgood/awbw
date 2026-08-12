@@ -51,7 +51,12 @@
             the organizations card's "Connect organization" link. %>
         <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3">
           <%# Agreement first, then tasks — the recipient agrees before completing tasks. %>
-          <% if scholarship.agreement_signed? %>
+          <% if scholarship.agreement_declined? %>
+            <%= render "shared/badge",
+                       label: "Agreement declined",
+                       classes: "bg-red-50 text-red-700 border-red-200",
+                       icon: "fa-solid fa-circle-xmark" %>
+          <% elsif scholarship.agreement_signed? %>
             <%= render "shared/badge",
                        label: "Agreement signed",
                        classes: "#{DomainTheme.bg_class_for(:scholarships, intensity: 50)} #{DomainTheme.text_class_for(:scholarships, intensity: 700)} #{DomainTheme.border_class_for(:scholarships, intensity: 200)}",

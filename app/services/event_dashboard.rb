@@ -1217,6 +1217,7 @@ class EventDashboard
   def scholarships
     @scholarships ||= begin
       scope = Scholarship
+        .not_declined
         .joins(:allocation)
         .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: active_registration_ids })
       scope = scope.where(grant_id: funder_grant_ids) if @scholarship_funder
