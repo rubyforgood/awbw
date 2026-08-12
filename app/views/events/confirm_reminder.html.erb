@@ -3,12 +3,12 @@
   <%# Top bar: eyelash + sub-nav, matching the other event pages. The eyebrow
       returns to the recipient picker so the admin can adjust the selection. %>
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
-    <%= link_to "← Recipients", preview_reminder_event_path(@event, custom_subject: @custom_subject, custom_message: @custom_message), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <%= link_to "← Recipients", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message), class: "text-sm text-gray-500 hover:text-gray-700" %>
     <%= render "events/subnav", event: @event, current: nil %>
   </div>
 
   <div class="mb-6">
-    <h1 class="text-2xl font-semibold text-gray-900">Send bulk emails</h1>
+    <h1 class="text-2xl font-semibold text-gray-900"><%= @invite_mode ? "Send Portal invite emails" : "Send bulk emails" %></h1>
     <p class="text-gray-600 mt-1">
       <%= @event.title %><% if @event.start_date.present? %> &bull; <%= @event.date_range %><% end %>
     </p>
@@ -19,8 +19,13 @@
     <div class="flex items-start gap-2">
       <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
       <div class="text-sm text-blue-800">
-        <p class="font-medium">You're about to email <%= count %> registrant<%= "s" if count != 1 %>.</p>
-        <p class="mt-1">Review the recipients and the message below, then send. Each person receives their own copy, and one FYI email will be sent to the admin.</p>
+        <% if @invite_mode %>
+          <p class="font-medium">You're about to invite <%= count %> <%= "person".pluralize(count) %>.</p>
+          <p class="mt-1">Review the recipients and the invite email below, then send. Anyone without a Portal account gets one created, and each person receives a personalized link to set their password.</p>
+        <% else %>
+          <p class="font-medium">You're about to email <%= count %> registrant<%= "s" if count != 1 %>.</p>
+          <p class="mt-1">Review the recipients and the message below, then send. Each person receives their own copy, and one FYI email will be sent to the admin.</p>
+        <% end %>
       </div>
     </div>
   </div>
@@ -63,12 +68,16 @@
     <% @event_registrations.each do |reg| %>
       <%= hidden_field_tag "registration_ids[]", reg.id %>
     <% end %>
-    <%# Carry the composed subject/message through to the send untouched. %>
-    <%= hidden_field_tag :custom_subject, @custom_subject %>
-    <%= hidden_field_tag :custom_message, @custom_message %>
+    <% if @invite_mode %>
+      <%= hidden_field_tag :mode, "invite" %>
+    <% else %>
+      <%# Carry the composed subject/message through to the send untouched. %>
+      <%= hidden_field_tag :custom_subject, @custom_subject %>
+      <%= hidden_field_tag :custom_message, @custom_message %>
+    <% end %>
     <div class="flex justify-center gap-3">
-      <%= link_to "Cancel", preview_reminder_event_path(@event, custom_subject: @custom_subject, custom_message: @custom_message), class: "btn btn-secondary-outline" %>
-      <%= f.submit "Send reminder", class: "btn btn-primary" %>
+      <%= link_to "Cancel", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message), class: "btn btn-secondary-outline" %>
+      <%= f.submit(@invite_mode ? "Send invites" : "Send reminder", class: "btn btn-primary") %>
     </div>
   <% end %>
 </div>
