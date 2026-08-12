@@ -50,7 +50,7 @@ This codebase (Rails 8.1)
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~80 files |
 | `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~57 files |
-| `app/jobs/` | SolidQueue background jobs | 5 files |
+| `app/jobs/` | SolidQueue background jobs | 6 files |
 | `app/models/concerns/` | Shared model modules | 16 concerns |
 
 ### Presentation

@@ -102,6 +102,14 @@ class Event < ApplicationRecord
   scope :upcoming, -> { where("start_date >= ?", Date.current) }
   # Events that charge a registration fee (cost_cents may be nil for free ones).
   scope :paid, -> { where("cost_cents > 0") }
+  # Paid events whose ticket payment deadline lands on the given date (in the app
+  # time zone). Drives the payment reminders' "one week before" / "one day before"
+  # windows. payment_due_deadline is a datetime, so match against the whole day.
+  scope :payment_due_on, ->(date) { paid.where(payment_due_deadline: date.all_day) }
+  # Paid events whose ticket payment deadline has already passed, within the given
+  # half-open time window (`from...to`). Drives the one-time overdue reminder,
+  # bounded so a fresh deploy or a stalled cron never blasts long-past deadlines.
+  scope :payment_due_between, ->(from, to) { paid.where(payment_due_deadline: from...to) }
   # Events whose start date falls in the given calendar year. Keyed off the year
   # of start_date directly — a date range would miss same-day times on Dec 31,
   # since start_date is a datetime and the range's upper bound is midnight.

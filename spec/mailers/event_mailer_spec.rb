@@ -398,4 +398,37 @@ RSpec.describe EventMailer, type: :mailer do
       end
     end
   end
+
+  describe "#event_payment_reminder" do
+    let(:event) { create(:event, cost_cents: 135_000, payment_due_deadline: Time.zone.local(2026, 4, 9, 17, 0)) }
+    let(:event_registration) { create(:event_registration, event:) }
+
+    it "renders each phase without raising" do
+      %i[ week day overdue ].each do |phase|
+        expect { described_class.event_payment_reminder(event_registration, phase:).deliver_now }.not_to raise_error
+      end
+    end
+
+    it "sends to the registrant" do
+      mail = described_class.event_payment_reminder(event_registration, phase: :week)
+      expect(mail.to).to eq([ event_registration.registrant.preferred_email ])
+    end
+
+    it "frames the subject as a reminder before the deadline and past due after" do
+      expect(described_class.event_payment_reminder(event_registration, phase: :week).subject).to include("Payment reminder")
+      expect(described_class.event_payment_reminder(event_registration, phase: :day).subject).to include("Payment reminder")
+      expect(described_class.event_payment_reminder(event_registration, phase: :overdue).subject).to include("Payment past due")
+    end
+
+    it "shows the amount due and the deadline in the body" do
+      mail = described_class.event_payment_reminder(event_registration, phase: :week)
+      expect(mail.body.encoded).to include("$1,350")
+      expect(mail.body.encoded).to include("April 9, 2026")
+    end
+
+    it "links to the registrant's payment page" do
+      mail = described_class.event_payment_reminder(event_registration, phase: :day)
+      expect(mail.body.encoded).to include("/registration/#{event_registration.slug}/payment")
+    end
+  end
 end

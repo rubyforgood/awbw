@@ -22,6 +22,18 @@ class EventMailerPreview < ActionMailer::Preview
     )
   end
 
+  def event_payment_reminder_week
+    EventMailer.event_payment_reminder(sample_unpaid_registration, phase: :week)
+  end
+
+  def event_payment_reminder_day
+    EventMailer.event_payment_reminder(sample_unpaid_registration, phase: :day)
+  end
+
+  def event_payment_reminder_overdue
+    EventMailer.event_payment_reminder(sample_unpaid_registration, phase: :overdue)
+  end
+
   def event_registration_cancelled
     event_registration = sample_event_registration
     event_registration.status = "cancelled"
@@ -54,6 +66,16 @@ class EventMailerPreview < ActionMailer::Preview
     registration.event.ce_hours_offered ||= 6
     registration.event.ce_hours_request_deadline ||= 2.weeks.from_now.to_date
     registration.event.ce_payment_due_deadline ||= 3.weeks.from_now.to_date
+    registration
+  end
+
+  # A registration with a balance due and a ticket payment deadline, for the
+  # payment-reminder previews. Cost + deadline set in memory only (not persisted),
+  # like sample_event_registration's CE showcase.
+  def sample_unpaid_registration
+    registration = sample_event_registration
+    registration.event.cost_cents = 135_000 if registration.event.cost_cents.to_i.zero?
+    registration.event.payment_due_deadline ||= 1.week.from_now
     registration
   end
 

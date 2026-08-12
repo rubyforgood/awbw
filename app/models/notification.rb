@@ -27,6 +27,9 @@ class Notification < ApplicationRecord
     event_registration_cancelled
     event_registration_cancelled_fyi
     event_registration_reminder
+    event_payment_reminder_week
+    event_payment_reminder_day
+    event_payment_reminder_overdue
     bulk_payment_confirmation
     bulk_payment_confirmation_fyi
     idea_submitted

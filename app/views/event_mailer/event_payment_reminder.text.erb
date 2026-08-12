@@ -1,0 +1,25 @@
+<%= @phase == :overdue ? "Payment past due" : "Payment reminder" %>
+
+Hello <%= @person.full_name %>,
+<% case @phase
+   when :week %>
+This is a friendly reminder that your payment for the event below is due in about a week.
+<% when :day %>
+This is a reminder that your payment for the event below is due tomorrow.
+<% when :overdue %>
+Our records show your payment for the event below is now past due and hasn't been received yet.
+<% end %>
+<%= @event.title %>
+<% Time.use_zone(@time_zone) do %>
+  <% if event_dates_detail_label(@event.object).present? %>
+    <%= event_dates_detail_label(@event.object) %>
+  <% end %>
+<% end %>
+Amount due: <%= dollars_from_cents(@amount_due) %>
+<% if (due_display = @event.payment_due_deadline_display) %>Due by <%= due_display %>
+<% end %>
+<% if @event_registration.slug.present? %>
+Pay online or view your payment options:
+<%= registration_payment_url(@event_registration.slug) %>
+<% end %>
+-- This is an automated reminder from <%= @organization_name %>. If you've already paid, please disregard this message.

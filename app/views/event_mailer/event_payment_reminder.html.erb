@@ -1,0 +1,31 @@
+<h1><%= @phase == :overdue ? "Payment past due" : "Payment reminder" %></h1>
+
+<div style="margin-top: 36px; text-align: left;">
+  <p>Hello <strong><%= @person.full_name %></strong>,</p>
+
+  <% case @phase
+     when :week %>
+    <p>This is a friendly reminder that your payment for the event below is due in about a week.</p>
+  <% when :day %>
+    <p>This is a reminder that your payment for the event below is due tomorrow.</p>
+  <% when :overdue %>
+    <p>Our records show your payment for the event below is now past due and hasn't been received yet.</p>
+  <% end %>
+
+  <%= render "event_details_card", event: @event, time_zone: @time_zone %>
+
+  <div style="text-align: center; background-color: #fef3c7; border-radius: 6px; padding: 20px; margin: 16px 0;">
+    <p style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #92400e; margin: 0 0 4px;">Amount due</p>
+    <p style="font-size: 28px; font-weight: bold; color: #92400e; margin: 0;"><%= dollars_from_cents(@amount_due) %></p>
+    <% if (due_display = @event.payment_due_deadline_display) %>
+      <p style="font-size: 14px; color: #92400e; margin: 8px 0 0;">Due by <strong><%= due_display %></strong></p>
+    <% end %>
+  </div>
+</div>
+
+<% if @event_registration.persisted? && @event_registration.slug.present? %>
+  <p>You can pay online or view your payment options here:</p>
+  <p><a href="<%= registration_payment_url(@event_registration.slug) %>" class="button">Make your payment</a></p>
+<% end %>
+
+<p style="margin-top: 24px; font-size: 12px; color: #6b7280;">This is an automated reminder from <%= @organization_name %>. If you've already paid, please disregard this message.</p>

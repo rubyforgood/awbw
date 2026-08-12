@@ -99,6 +99,36 @@ class EventMailer < ApplicationMailer
     )
   end
 
+  # Automated ticket-payment reminder sent by EventPaymentRemindersJob. `phase` is
+  # one of :week (a week before the deadline), :day (the day before), or :overdue
+  # (once after the deadline has passed and a balance is still owed) and drives the
+  # subject line and the body's framing.
+  def event_payment_reminder(event_registration, phase:)
+    @event_registration = event_registration
+    @event = event_registration.event.decorate
+    @person = event_registration.registrant
+    @phase = phase.to_sym
+    @amount_due = event_registration.remaining_cost
+
+    @notification_type = "Event payment reminder"
+
+    @time_zone = @person.user&.time_zone || Time.zone.name
+    @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    @organization_website = ENV.fetch("ORGANIZATION_WEBSITE", root_url)
+
+    subject = case @phase
+    when :overdue then "AWBW Portal: Payment past due for #{@event.title}"
+    else "AWBW Portal: Payment reminder for #{@event.title}"
+    end
+
+    mail(
+      to: @person.preferred_email,
+      from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
+      reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      subject: subject
+    )
+  end
+
   def event_registration_cancelled(event_registration)
     @event_registration = event_registration
     @event = event_registration.event.decorate
