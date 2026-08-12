@@ -213,6 +213,25 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).to include("Custom W-9 line")
       expect(response.body).not_to include("AWBW's W-9 tax form for your records")
     end
+
+    it "shows the ticket payment deadline while a balance is due" do
+      event.update!(payment_due_deadline: Time.zone.local(2026, 4, 9, 17, 0))
+
+      get registration_payment_path(registration.slug)
+
+      expect(response.body).to include("Due by")
+      expect(response.body).to include("April 9, 2026")
+    end
+
+    it "omits the deadline once the balance is paid in full" do
+      event.update!(payment_due_deadline: Time.zone.local(2026, 4, 9, 17, 0))
+      payment = create(:payment, type: "CashPayment", amount_cents: event.cost_cents, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: registration, amount: event.cost_cents)
+
+      get registration_payment_path(registration.slug)
+
+      expect(response.body).not_to include("April 9, 2026")
+    end
   end
 
   describe "GET /registration/:slug/videoconference" do
