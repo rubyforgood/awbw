@@ -9,27 +9,28 @@
   <span class="absolute inset-y-0 left-0 w-1.5 bg-<%= feature.area_meta[:color] %>-500"></span>
 
   <div class="p-4 pl-6">
-    <div class="flex items-start justify-between gap-2 mb-2">
-      <div class="flex flex-wrap items-center gap-2">
-        <%= feature.area_badge %>
-        <%= feature.status_badge %>
-        <% unless feature.published? %>
-          <span class="admin-only <%= badge_classes("bg-gray-100 text-gray-700 border-gray-200") %>">
-            <i class="fa-solid fa-eye-slash"></i> Draft
-          </span>
-        <% end %>
-      </div>
-      <span class="text-xs font-medium text-gray-500 whitespace-nowrap mt-0.5">
-        <i class="fa-regular fa-calendar"></i> <%= feature.released_label %>
-      </span>
-    </div>
-
     <div class="md:flex md:items-start md:gap-6">
       <div class="md:flex-1 min-w-0">
-        <h3 class="text-lg font-semibold text-gray-900 leading-tight">
-          <%= link_to feature.name, feature_path(feature), class: "hover:text-primary" %>
-        </h3>
-        <p class="text-gray-600 text-sm mt-1"><%= feature.summary %></p>
+        <div class="flex items-start justify-between gap-2">
+          <h3 class="text-lg font-semibold text-gray-900 leading-tight">
+            <%= link_to feature.name, feature_path(feature), class: "hover:text-primary" %>
+          </h3>
+          <span class="text-xs font-medium text-gray-500 whitespace-nowrap mt-1 shrink-0">
+            <i class="fa-regular fa-calendar"></i> <%= feature.released_label %>
+          </span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 mt-2">
+          <%= feature.area_badge %>
+          <%= feature.status_badge %>
+          <% unless feature.published? %>
+            <span class="admin-only <%= badge_classes("bg-gray-100 text-gray-700 border-gray-200") %>">
+              <i class="fa-solid fa-eye-slash"></i> Draft
+            </span>
+          <% end %>
+        </div>
+
+        <p class="text-gray-600 text-sm mt-2"><%= feature.summary %></p>
 
         <div class="mt-3 flex items-center gap-4 text-sm">
           <%= link_to feature_path(feature), class: "text-primary font-medium hover:underline" do %>
