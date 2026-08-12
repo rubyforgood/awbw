@@ -147,6 +147,9 @@ application.register("reveal-section", RevealSectionController)
 import RhinoSourceController from "./rhino_source_controller"
 application.register("rhino-source", RhinoSourceController)
 
+import ScholarshipDeclineGuardController from "./scholarship_decline_guard_controller"
+application.register("scholarship-decline-guard", ScholarshipDeclineGuardController)
+
 import ScholarshipPreviewController from "./scholarship_preview_controller"
 application.register("scholarship-preview", ScholarshipPreviewController)
 

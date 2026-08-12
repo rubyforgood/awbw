@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (77) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (78) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -376,6 +376,7 @@ end
 - `remote_select` — AJAX-powered select dropdown
 - `reveal_section` — Expand a collapsible section and scroll to it when loaded via matching URL hash
 - `rhino_source` — Rich text editor integration
+- `scholarship_decline_guard` — Confirm before an amount change clears a declined scholarship's decline (re-offer) on the edit form
 - `scholarship_preview` — Live-preview the scholarship's allocated amount as the edit form changes
 - `scroll_to_top` — Scrolls the window to the top on connect (used by the duplicate-person warning so it comes into view on create)
 - `searchable_checkbox` — TomSelect checkbox-style multi-select
