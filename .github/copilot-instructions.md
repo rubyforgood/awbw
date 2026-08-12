@@ -244,10 +244,12 @@ entry to `config/features.yml` (the checked-in **seed**):
 - **Sentence case, plain language** — read by facilitators, not devs.
 - `admin_facing` features are visible to super-admins only (`FeaturePolicy`).
 
-Admins click **Sync latest updates** on `/features` to add newly-shipped features
-and **fill in blank fields on existing ones** (`FeatureCatalog#import!`, matched by
-`name`) — it never overwrites a field an admin already filled in. New area → add it
-to `Feature::AREAS` (label + FA icon + safelisted Tailwind hue).
+Admins click **Sync latest updates** on `/features` (`FeatureCatalog#import!`,
+matched by `name`) to add newly-shipped features, **re-sync catalog classification**
+on existing records (`CATALOG_FIELDS` — area, audience, links, date, PR — so seed
+fixes propagate) and **fill blank content** (`CONTENT_FIELDS` — summary, tips,
+guide, description) without overwriting admin writing. New area → add it to
+`Feature::AREAS` (label + FA icon + safelisted Tailwind hue).
 
 ## JavaScript
 

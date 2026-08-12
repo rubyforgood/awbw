@@ -26,6 +26,23 @@ class FeatureDecorator < ApplicationDecorator
     "https://github.com/#{GITHUB_REPO}/pull/#{pr_number}"
   end
 
+  # The "Check out this feature" destination. Record-scoped pages are seeded with
+  # the sample id 1 (e.g. /events/1/registrants); when no such record exists we
+  # fall back to that resource's index (/events) so the link never 404s on a
+  # fresh or differently-keyed database.
+  def resolved_action_url
+    path = action_path.to_s
+    return action_path if path.blank?
+
+    match = path.match(%r{\A/(?<resource>[a-z_]+)/1(?:/|\z)})
+    return action_path unless match
+
+    model = match[:resource].classify.safe_constantize
+    return action_path if model.respond_to?(:exists?) && model.exists?(1)
+
+    "/#{match[:resource]}"
+  end
+
   def status_meta
     Feature::DISPLAY_STATUSES.fetch(display_status, DEFAULT_STATUS)
   end

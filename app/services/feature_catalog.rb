@@ -6,17 +6,22 @@ require "yaml"
 # newly-shipped features (and fill in details) an AI/dev added to the YAML.
 #
 # `import!` (the "Sync latest updates" button):
-#   - creates any seed feature not already in the database (matched by name), and
-#   - fills in BLANK fields on existing features from the seed.
-# It never overwrites a field an admin has already filled in, so syncing is safe.
-# See CLAUDE.md "Features & tips page".
+#   - creates any seed feature not already in the database (matched by name),
+#   - keeps CATALOG_FIELDS (the classification the catalog owns — area, audience,
+#     links, date, PR) in step with the seed on existing records, and
+#   - fills in blank CONTENT_FIELDS (the admin-owned write-up — summary, tips,
+#     guide link, rich description) without ever overwriting what an admin wrote.
+# So a seed fix to a feature's audience/area/link propagates on the next sync,
+# while an admin's screenshots and prose are left alone. See CLAUDE.md.
 class FeatureCatalog
   DATA_PATH = Rails.root.join("config/features.yml")
 
-  # Fields the sync may fill in on an existing record when they're blank. Excludes
-  # name (the match key), released_on (always present), and published (a boolean,
-  # which is never "blank").
-  FILLABLE_FIELDS = %i[ area display_status summary pro_tips external_url action_path pr_number rhino_description ].freeze
+  # Catalog-owned classification — always re-synced from the seed so corrections
+  # (e.g. a wrong display_status) reach existing records.
+  CATALOG_FIELDS = %i[ area display_status released_on action_path pr_number ].freeze
+
+  # Admin-owned content — only filled in when blank, never overwritten.
+  CONTENT_FIELDS = %i[ summary pro_tips external_url rhino_description ].freeze
 
   Result = Struct.new(:created, :updated) do
     def total = created + updated
@@ -37,8 +42,8 @@ class FeatureCatalog
       if feature.nil?
         Feature.create!(attributes)
         created += 1
-      elsif (fills = blank_fills(feature, attributes)).any?
-        feature.update!(fills)
+      elsif (changes = sync_changes(feature, attributes)).any?
+        feature.update!(changes)
         updated += 1
       end
     end
@@ -69,15 +74,25 @@ class FeatureCatalog
     }
   end
 
-  # The subset of seed attributes whose target column is currently blank on the
-  # record — i.e. the "missing info" a sync should fill in.
-  def blank_fills(feature, attributes)
-    FILLABLE_FIELDS.each_with_object({}) do |field, fills|
-      seed_value = attributes[field]
-      next if seed_value.blank?
-      next if feature.public_send(field).present?
+  # What a sync should change on an existing record: re-align catalog-owned
+  # classification with the seed, and fill in any blank admin-owned content.
+  def sync_changes(feature, attributes)
+    changes = {}
 
-      fills[field] = seed_value
+    CATALOG_FIELDS.each do |field|
+      seed_value = attributes[field]
+      next if seed_value.nil? || feature.public_send(field) == seed_value
+
+      changes[field] = seed_value
     end
+
+    CONTENT_FIELDS.each do |field|
+      seed_value = attributes[field]
+      next if seed_value.blank? || feature.public_send(field).present?
+
+      changes[field] = seed_value
+    end
+
+    changes
   end
 end

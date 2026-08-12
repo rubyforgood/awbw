@@ -59,26 +59,38 @@ RSpec.describe FeatureCatalog do
       expect(feature.rhino_description.to_plain_text).to include("Longer write-up")
     end
 
-    it "does not overwrite a field an admin already filled in" do
+    it "does not overwrite admin-written content (summary)" do
       existing = create(:feature, name: "Seed feature one", summary: "Edited in-app")
 
       expect { catalog.import! }.to change(Feature, :count).by(1) # only "two" is new
       expect(existing.reload.summary).to eq("Edited in-app")
     end
 
-    it "fills in blank fields on an existing feature (missing info)" do
+    it "fills in blank content fields (missing info)" do
       existing = create(:feature, name: "Seed feature one", summary: "Edited in-app",
-                                  action_path: nil, pr_number: nil, external_url: nil)
+                                  external_url: nil)
+
+      result = catalog.import!
+
+      expect(result.updated).to eq(1)
+      expect(existing.reload.external_url).to eq("https://docs.example.com/one")
+      expect(existing.summary).to eq("Edited in-app") # admin content left alone
+    end
+
+    it "re-syncs catalog classification (audience/area/links) that has drifted from the seed" do
+      existing = create(:feature, name: "Seed feature one",
+                                  display_status: "admin_facing", area: "reporting",
+                                  action_path: "/reports", pr_number: nil)
 
       result = catalog.import!
 
       expect(result.updated).to eq(1)
       expect(existing.reload).to have_attributes(
+        display_status: "user_facing", # corrected back to the seed
+        area: "events",
         action_path: "/events",
-        pr_number: 1234,
-        external_url: "https://docs.example.com/one"
+        pr_number: 1234
       )
-      expect(existing.summary).to eq("Edited in-app") # non-blank field left alone
     end
 
     it "is a no-op on a second run" do

@@ -257,10 +257,13 @@ entry to `config/features.yml` (the checked-in **seed**):
 - `admin_facing` features are visible to super-admins only (`FeaturePolicy` gates
   this in its relation scope, not just in the UI).
 
-An admin clicks **Sync latest updates** on `/features` to pull newly-shipped
-features from the seed **and fill in blank fields on existing ones**
-(`FeatureCatalog#import!`, matched by `name`) — it never overwrites a field an
-admin has already filled in, so appending to (or enriching) the seed is safe.
+An admin clicks **Sync latest updates** on `/features` (`FeatureCatalog#import!`,
+matched by `name`) to pull newly-shipped features from the seed, **re-align the
+catalog-owned classification** on existing records (`CATALOG_FIELDS` — area,
+`display_status`, `released_on`, `action_path`, `pr_number`, so a seed fix like a
+wrong audience propagates), **and fill in blank content** (`CONTENT_FIELDS` —
+`summary`, `pro_tips`, `external_url`, `description`) without ever overwriting what
+an admin wrote.
 
 - **New area?** Add it to `Feature::AREAS` (label + Font Awesome icon + a Tailwind
   hue already safelisted in `application.tailwind.css`) and use its key in the

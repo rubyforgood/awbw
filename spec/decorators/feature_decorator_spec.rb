@@ -18,6 +18,29 @@ RSpec.describe FeatureDecorator do
     expect(decorated.area_color).to eq("amber")
   end
 
+  describe "#resolved_action_url" do
+    it "returns a non-record path unchanged" do
+      expect(build(:feature, action_path: "/events/reports").decorate.resolved_action_url).to eq("/events/reports")
+      expect(build(:feature, action_path: "/people").decorate.resolved_action_url).to eq("/people")
+    end
+
+    it "keeps the deep link when the sample record (id 1) exists" do
+      allow(Event).to receive(:exists?).with(1).and_return(true)
+      expect(build(:feature, action_path: "/events/1/registrants").decorate.resolved_action_url)
+        .to eq("/events/1/registrants")
+    end
+
+    it "falls back to the resource index when id 1 is missing" do
+      allow(Event).to receive(:exists?).with(1).and_return(false)
+      expect(build(:feature, action_path: "/events/1/registrants").decorate.resolved_action_url)
+        .to eq("/events")
+    end
+
+    it "leaves a blank action_path nil" do
+      expect(build(:feature, action_path: nil).decorate.resolved_action_url).to be_nil
+    end
+  end
+
   describe "#pr_url" do
     it "builds a GitHub PR link when a pr_number is set" do
       expect(build(:feature, pr_number: 2170).decorate.pr_url)

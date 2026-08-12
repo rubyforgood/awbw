@@ -41,7 +41,7 @@
 
       <div class="mt-4 flex flex-wrap gap-2">
         <% if @feature.action_path.present? %>
-          <%= link_to @feature.action_path, class: "btn btn-primary" do %>
+          <%= link_to @feature.resolved_action_url, class: "btn btn-primary" do %>
             <i class="fa-solid fa-arrow-up-right-from-square"></i> Check out this feature
           <% end %>
         <% end %>
