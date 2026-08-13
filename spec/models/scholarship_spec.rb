@@ -170,21 +170,36 @@ RSpec.describe Scholarship, type: :model do
       expect(scholarship.latest_agreement_response.reason).to be_nil
     end
 
-    it "re-offers (back to pending) when the award amount is changed" do
+    it "stays declined (allocation still zero) when only the amount is edited" do
       event = create(:event, cost_cents: 10_000)
       registration = create(:event_registration, event:)
       scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 5_000)
       create(:allocation, source: scholarship, allocatable: registration, amount: 5_000)
       scholarship.reload
       scholarship.decline_agreement!("No longer available")
-      expect(scholarship.agreement_declined?).to be(true)
 
       scholarship.update!(amount_cents: 6_000)
 
-      expect(scholarship.reload.agreement_pending?).to be(true)
-      expect(scholarship.latest_agreement_response.reason).to be_nil
-      # sync re-funds the allocation the decline had zeroed.
+      # Editing the amount no longer reactivates a decline — that's the explicit
+      # Re-offer action now.
+      expect(scholarship.reload.agreement_declined?).to be(true)
+      expect(scholarship.allocation.reload.amount).to eq(0)
+    end
+
+    it "#reoffer_agreement! returns a declined award to pending and re-funds it" do
+      event = create(:event, cost_cents: 10_000)
+      registration = create(:event_registration, event:)
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 5_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 5_000)
+      scholarship.reload
+      scholarship.decline_agreement!("No longer available")
+      scholarship.update!(amount_cents: 6_000) # adjust terms first, still declined
+
+      scholarship.reoffer_agreement!
+
+      expect(scholarship.agreement_pending?).to be(true)
       expect(scholarship.allocation.reload.amount).to eq(6_000)
+      expect(scholarship.latest_agreement_response).to have_attributes(status: "pending", responder: "admin")
     end
 
     it "excludes declined scholarships from the .not_declined scope" do
@@ -219,7 +234,7 @@ RSpec.describe Scholarship, type: :model do
       scholarship = create(:scholarship, amount_cents: 5_000)
 
       scholarship.decline_agreement!("Not this year", by: "recipient")
-      scholarship.update!(amount_cents: 6_000) # admin re-offer → pending
+      scholarship.reoffer_agreement!(by: "admin")
       scholarship.accept_agreement!(by: "recipient")
 
       history = scholarship.agreement_responses.chronological

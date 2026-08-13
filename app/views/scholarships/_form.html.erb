@@ -97,20 +97,6 @@
           <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
         </label>
       </div>
-      <%# The recipient declined from their scholarship page. Shown here so admins
-          see it at a glance; editing the amount re-offers the award and clears this. %>
-      <% if f.object.agreement_declined? %>
-        <% latest_response = f.object.latest_agreement_response %>
-        <div class="mt-3 flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          <i class="fa-solid fa-circle-xmark mt-0.5"></i>
-          <div>
-            <p class="font-medium">Declined by recipient<% if latest_response&.responded_at %> · <%= latest_response.responded_at.strftime("%B %-d, %Y") %><% end %></p>
-            <% if latest_response&.reason.present? %>
-              <p class="mt-0.5 text-red-600">“<%= latest_response.reason %>”</p>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
     </div>
 
     <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">

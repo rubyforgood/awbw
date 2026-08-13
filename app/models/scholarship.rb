@@ -17,9 +17,6 @@ class Scholarship < ApplicationRecord
   validate :allocation_must_be_valid
   validate :within_grant_budget, if: -> { grant && !agreement_declined? }
 
-  # Changing the award amount on a declined scholarship re-offers it: back to
-  # pending in the same save, so the recipient decides afresh on the new amount.
-  before_update :reoffer_declined_on_amount_change, if: -> { will_save_change_to_amount_cents? && agreement_declined? }
   # The allocation carries the award financially: zero while declined, else the
   # amount. Re-synced on any amount or status change so every allocation-based
   # total (balances, dashboards, grant budgets) stays correct.
@@ -104,6 +101,16 @@ class Scholarship < ApplicationRecord
     save!
   end
 
+  # Admin re-offering a declined award: back to pending (the recipient decides
+  # again) and the allocation is re-funded to the current amount. Explicit action —
+  # editing the amount alone no longer reactivates a decline.
+  def reoffer_agreement!(by: "admin")
+    return if agreement_pending?
+
+    assign_agreement_response("pending", by:)
+    save!
+  end
+
   # The event this scholarship was awarded at, via its allocation's registration
   # (nil for a grant-funded scholarship with no event registration).
   def event
@@ -172,10 +179,6 @@ class Scholarship < ApplicationRecord
     self.agreement_response_status = status
     @agreement_response_reason = (status == "declined" ? reason.presence : nil)
     @agreement_response_by = by
-  end
-
-  def reoffer_declined_on_amount_change
-    assign_agreement_response("pending", by: "admin")
   end
 
   def sync_allocation_amount

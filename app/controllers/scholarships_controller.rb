@@ -1,5 +1,5 @@
 class ScholarshipsController < ApplicationController
-  before_action :set_scholarship, only: [ :show, :edit, :update, :destroy, :toggle_tasks ]
+  before_action :set_scholarship, only: [ :show, :edit, :update, :destroy, :toggle_tasks, :reoffer ]
   before_action :set_grant, only: [ :new, :create ]
 
   def index
@@ -106,6 +106,19 @@ class ScholarshipsController < ApplicationController
       format.turbo_stream
       format.html { redirect_back fallback_location: recipients_fallback_path, notice: "Scholarship updated." }
     end
+  end
+
+  # Re-offer a declined award: back to pending and re-fund the allocation, so the
+  # recipient can respond again. Explicit admin action (editing the amount alone no
+  # longer reactivates a decline).
+  def reoffer
+    authorize! @scholarship, to: :update?
+    @scholarship.reoffer_agreement!(by: "admin")
+    redirect_to edit_scholarship_path(@scholarship, return_to: params[:return_to].presence, participant: params[:participant].presence),
+                notice: "Scholarship re-offered — awaiting the recipient's response."
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to edit_scholarship_path(@scholarship, return_to: params[:return_to].presence, participant: params[:participant].presence),
+                alert: e.record.errors.full_messages.to_sentence.presence || "Couldn't re-offer this scholarship."
   end
 
   private

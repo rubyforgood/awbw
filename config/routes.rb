@@ -149,7 +149,10 @@ Rails.application.routes.draw do
   resources :form_submissions, only: [ :index, :show ]
   resources :grants
   resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
-    member { patch :toggle_tasks }
+    member do
+      patch :toggle_tasks
+      post :reoffer
+    end
     resources :comments, only: [ :create, :update ]
   end
   resources :continuing_education_registrations, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
