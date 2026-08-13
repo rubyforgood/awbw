@@ -115,6 +115,14 @@
           <%= render "scholarships/grant_criteria_tasks", grant: %>
         </div>
       <% end %>
+
+      <%# Admin-only agreement history, rendered with admin styling on this
+          registrant-facing page — registrants never see it. %>
+      <% if allowed_to?(:edit?, @scholarship) && @scholarship.agreement_responses.exists? %>
+        <div class="border-t border-gray-100 pt-5">
+          <%= render "scholarships/agreement_history", scholarship: @scholarship, admin: true %>
+        </div>
+      <% end %>
     <% else %>
       <div class="flex items-start gap-3">
         <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">

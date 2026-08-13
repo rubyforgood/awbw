@@ -592,6 +592,26 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(response.body).to include("You declined this scholarship")
         expect(response.body).not_to match(/name="agreement" value="yes"/)
       end
+
+      it "hides the agreement history from a registrant (public view)" do
+        scholarship.decline_agreement!("Timing no longer works")
+        get registration_scholarship_path(registration.slug)
+
+        expect(response.body).not_to include("Agreement history")
+      end
+
+      context "when an admin is viewing" do
+        let(:admin) { create(:user, :with_person, super_user: true) }
+        before { sign_in admin }
+
+        it "shows the admin-only agreement history once there are responses" do
+          scholarship.decline_agreement!("Timing no longer works")
+          get registration_scholarship_path(registration.slug)
+
+          expect(response.body).to include("Agreement history")
+          expect(response.body).to include("Admin only")
+        end
+      end
     end
 
     describe "POST /registration/:slug/scholarship/agreement" do

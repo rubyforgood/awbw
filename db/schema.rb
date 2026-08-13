@@ -806,11 +806,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_115845) do
   end
 
   create_table "notifications", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.boolean "bulk", default: false, null: false
     t.string "channel", default: "autoemail", null: false
     t.datetime "created_at", precision: nil, null: false
     t.text "custom_message"
     t.string "custom_subject"
     t.datetime "delivered_at"
+    t.string "direction", default: "outgoing", null: false
     t.text "email_body_html", size: :medium
     t.text "email_body_text", size: :medium
     t.text "email_subject", size: :medium

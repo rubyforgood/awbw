@@ -1,13 +1,19 @@
 <%# Collapsible timeline of the recipient/admin accept ↔ decline back-and-forth,
     newest first. Built from the scholarship's agreement_responses (the audit log
-    behind the denormalized status). Native <details> so no JS is needed. %>
+    behind the denormalized status). Native <details> so no JS is needed.
+    `admin: true` gives it the sky "admin only" styling for the registrant-facing
+    callout page (where it renders only for admins). %>
+<% admin = local_assigns.fetch(:admin, false) %>
 <% responses = scholarship.agreement_responses.to_a %>
 <% if responses.any? %>
   <% status_classes = { "accepted" => "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200", "declined" => "bg-red-50 text-red-700 border-red-200", "pending" => "bg-amber-50 text-amber-700 border-amber-200" } %>
-  <details class="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+  <details class="mt-6 overflow-hidden rounded-xl border shadow-sm <%= admin ? "border-sky-200 bg-sky-50" : "border-gray-200 bg-white" %>">
     <summary class="flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-700 [&::-webkit-details-marker]:hidden">
       <i class="fa-solid fa-clock-rotate-left text-gray-400"></i>
       Agreement history
+      <% if admin %>
+        <span class="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700"><i class="fa-solid fa-user-shield text-[0.6rem]"></i> Admin only</span>
+      <% end %>
       <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500"><%= responses.size %></span>
     </summary>
     <ol class="divide-y divide-gray-100 border-t border-gray-100">
