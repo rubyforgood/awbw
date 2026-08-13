@@ -256,6 +256,30 @@ RSpec.describe Notification do
 
       expect(notification.stuck_pending?).to be false
     end
+
+    it "is false once archived (pre-launch), even past the grace period" do
+      notification = create(:notification, delivered_at: nil, error_at: nil, created_at: Date.new(2025, 12, 1))
+
+      expect(notification.stuck_pending?).to be false
+    end
+  end
+
+  describe "#archived?" do
+    it "is true for an undelivered email created before launch" do
+      expect(build(:notification, delivered_at: nil, error_at: nil, created_at: Date.new(2025, 12, 1)).archived?).to be true
+    end
+
+    it "is false for an undelivered email created on/after launch" do
+      expect(build(:notification, delivered_at: nil, error_at: nil, created_at: Notification::LAUNCHED_ON).archived?).to be false
+    end
+
+    it "is false when delivered, even if created before launch" do
+      expect(build(:notification, delivered_at: Time.current, created_at: Date.new(2025, 12, 1)).archived?).to be false
+    end
+
+    it "is false when failed, even if created before launch" do
+      expect(build(:notification, delivered_at: nil, error_at: Time.current, created_at: Date.new(2025, 12, 1)).archived?).to be false
+    end
   end
 
   describe "#record_error!" do

@@ -37,6 +37,12 @@ RSpec.describe NotificationDecorator, type: :decorator do
 
       expect(notification.decorate.row_class).to eq("hover:bg-gray-50")
     end
+
+    it "uses the default hover treatment for an archived (pre-launch) email" do
+      notification = build_stubbed(:notification, delivered_at: nil, error_at: nil, created_at: Date.new(2025, 12, 1))
+
+      expect(notification.decorate.row_class).to eq("hover:bg-gray-50")
+    end
   end
 
   describe "#card_bg_class" do
@@ -60,6 +66,12 @@ RSpec.describe NotificationDecorator, type: :decorator do
 
     it "uses the notifications domain colour once delivered" do
       notification = build_stubbed(:notification, delivered_at: Time.current)
+
+      expect(notification.decorate.card_bg_class).to eq("#{DomainTheme.bg_class_for(:notifications)} border-gray-200")
+    end
+
+    it "uses the notifications domain colour for an archived (pre-launch) email" do
+      notification = build_stubbed(:notification, delivered_at: nil, error_at: nil, created_at: Date.new(2025, 12, 1))
 
       expect(notification.decorate.card_bg_class).to eq("#{DomainTheme.bg_class_for(:notifications)} border-gray-200")
     end
