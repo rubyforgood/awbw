@@ -353,7 +353,7 @@ class EventsController < ApplicationController
       .includes(
         :event, :organizations, :comments,
         { scholarships: { grant: :funder } },
-        registrant: [ :user, :contact_methods, :addresses ]
+        registrant: [ :user, :contact_methods, :addresses, :topic_subscriptions ]
       )
       .joins(:registrant)
       .select { |r| r.registrant.preferred_email.present? }
@@ -368,6 +368,7 @@ class EventsController < ApplicationController
     # filters reuse the registrants-roster scopes (via the event), so both pages
     # stay in sync; @dashboard supplies the state/county options.
     @dashboard = EventDashboard.new(@event)
+    @topic_subscription_types = TopicSubscriptionType.active.ordered
     recipient_filter = ReminderRecipientFilter.new(@event_registrations, params, event: @event)
     @matched_ids = recipient_filter.matched_ids
     @filtering = recipient_filter.filtering?
