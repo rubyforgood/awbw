@@ -122,7 +122,7 @@ RSpec.describe Scholarship, type: :model do
       scholarship.update!(agreement_signed: true)
 
       expect(scholarship.agreement_signed?).to be(true)
-      expect(scholarship.agreement_responded_at).to be_present
+      expect(scholarship.latest_agreement_response.responded_at).to be_present
     end
 
     it "returns to pending when unsigned" do
@@ -149,8 +149,8 @@ RSpec.describe Scholarship, type: :model do
       scholarship.decline_agreement!("Timing no longer works")
 
       expect(scholarship.agreement_declined?).to be(true)
-      expect(scholarship.agreement_responded_at).to be_present
-      expect(scholarship.agreement_response_reason).to eq("Timing no longer works")
+      expect(scholarship.latest_agreement_response.responded_at).to be_present
+      expect(scholarship.latest_agreement_response.reason).to eq("Timing no longer works")
     end
 
     it "#decline_agreement! clears any prior signed state (mutually exclusive)" do
@@ -167,7 +167,7 @@ RSpec.describe Scholarship, type: :model do
 
       scholarship.decline_agreement!("")
 
-      expect(scholarship.agreement_response_reason).to be_nil
+      expect(scholarship.latest_agreement_response.reason).to be_nil
     end
 
     it "re-offers (back to pending) when the award amount is changed" do
@@ -182,7 +182,7 @@ RSpec.describe Scholarship, type: :model do
       scholarship.update!(amount_cents: 6_000)
 
       expect(scholarship.reload.agreement_pending?).to be(true)
-      expect(scholarship.agreement_response_reason).to be_nil
+      expect(scholarship.latest_agreement_response.reason).to be_nil
       # sync re-funds the allocation the decline had zeroed.
       expect(scholarship.allocation.reload.amount).to eq(6_000)
     end

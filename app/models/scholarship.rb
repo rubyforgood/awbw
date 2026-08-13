@@ -111,6 +111,13 @@ class Scholarship < ApplicationRecord
     registration.event if registration.respond_to?(:event)
   end
 
+  # The current agreement response — the source for the responded-at date and
+  # decline reason (which aren't stored on the scholarship; only the status is).
+  # Nil while pending with no response yet.
+  def latest_agreement_response
+    agreement_responses.loaded? ? agreement_responses.max_by(&:responded_at) : agreement_responses.chronological.last
+  end
+
   def amount_dollars
     amount_cents.to_d / 100 if amount_cents
   end
@@ -159,11 +166,11 @@ class Scholarship < ApplicationRecord
   end
 
   # Assign the new agreement state in memory (persisted by the caller's save).
-  # `by` is stashed for the history row the after_update callback writes.
+  # The reason + responder are stashed for the history row the after_update
+  # callback writes — they live on the response, not on the scholarship.
   def assign_agreement_response(status, reason: nil, by: "admin")
     self.agreement_response_status = status
-    self.agreement_responded_at = Time.current
-    self.agreement_response_reason = (status == "declined" ? reason.presence : nil)
+    @agreement_response_reason = (status == "declined" ? reason.presence : nil)
     @agreement_response_by = by
   end
 
@@ -181,11 +188,12 @@ class Scholarship < ApplicationRecord
   def log_agreement_response
     agreement_responses.create!(
       status: agreement_response_status,
-      reason: agreement_response_reason,
-      responded_at: agreement_responded_at || Time.current,
+      reason: @agreement_response_reason,
+      responded_at: Time.current,
       responder: @agreement_response_by.presence || "admin",
       amount_cents: amount_cents
     )
+    @agreement_response_reason = nil
     @agreement_response_by = nil
   end
 

@@ -90,7 +90,7 @@ module Events
       reason = params[:decline_reason].to_s.strip
       scholarship.decline_agreement!(reason)
 
-      NotificationServices::CreateNotification.call(
+      notification = NotificationServices::CreateNotification.call(
         noticeable: scholarship,
         kind: :scholarship_agreement_declined_fyi,
         recipient_role: :admin,
@@ -98,6 +98,8 @@ module Events
         notification_type: 0,
         custom_message: reason.presence
       )
+      # Link the decline's history row to the FYI it produced.
+      scholarship.latest_agreement_response&.update!(notification: notification)
 
       redirect_to registration_scholarship_path(@event_registration.slug), notice: "Thanks for letting us know — we've told the team and they'll follow up with you."
     end

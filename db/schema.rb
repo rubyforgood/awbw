@@ -1267,18 +1267,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_115845) do
   create_table "scholarship_agreement_responses", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "amount_cents"
     t.datetime "created_at", null: false
+    t.integer "notification_id"
     t.text "reason"
     t.datetime "responded_at", null: false
     t.string "responder"
     t.bigint "scholarship_id", null: false
     t.string "status", null: false
     t.datetime "updated_at", null: false
+    t.index ["notification_id"], name: "index_scholarship_agreement_responses_on_notification_id"
     t.index ["scholarship_id"], name: "index_scholarship_agreement_responses_on_scholarship_id"
   end
 
   create_table "scholarships", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "agreement_responded_at"
-    t.text "agreement_response_reason"
     t.string "agreement_response_status", default: "pending", null: false
     t.integer "amount_cents", default: 0, null: false
     t.datetime "created_at", null: false
@@ -1897,6 +1897,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_115845) do
   add_foreign_key "resources", "users", column: "created_by_id"
   add_foreign_key "resources", "windows_types"
   add_foreign_key "resources", "workshops"
+  add_foreign_key "scholarship_agreement_responses", "notifications"
   add_foreign_key "scholarship_agreement_responses", "scholarships"
   add_foreign_key "scholarships", "grants"
   add_foreign_key "scholarships", "people", column: "recipient_id"

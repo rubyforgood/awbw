@@ -62,16 +62,17 @@
 
       <%# Scholarship agreement — shown above the details so accepting comes first.
           A single Agree button signs it; afterwards we confirm with the date. %>
+      <% latest_response = @scholarship.latest_agreement_response %>
       <div class="border-t border-gray-100 pt-5">
         <% if @scholarship.agreement_signed? %>
           <p class="flex items-center gap-2 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
             <i class="fa-solid fa-circle-check"></i>
-            Agreement signed<% if @scholarship.agreement_responded_at %> · <%= @scholarship.agreement_responded_at.strftime("%B %-d, %Y") %><% end %>
+            Agreement signed<% if latest_response&.responded_at %> · <%= latest_response.responded_at.strftime("%B %-d, %Y") %><% end %>
           </p>
         <% elsif @scholarship.agreement_declined? %>
           <p class="flex items-center gap-2 text-sm font-medium text-red-700">
             <i class="fa-solid fa-circle-xmark"></i>
-            You declined this scholarship<% if @scholarship.agreement_responded_at %> · <%= @scholarship.agreement_responded_at.strftime("%B %-d, %Y") %><% end %>
+            You declined this scholarship<% if latest_response&.responded_at %> · <%= latest_response.responded_at.strftime("%B %-d, %Y") %><% end %>
           </p>
           <p class="mt-2 text-sm text-gray-600">We've let the team know. If you'd like to reconsider, please contact us.</p>
         <% else %>

@@ -206,7 +206,7 @@ class NotificationMailerPreview < ActionMailer::Preview
         kind: "scholarship_agreement_declined_fyi",
         recipient_role: "admin",
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-        custom_message: scholarship.agreement_response_reason.presence || "The timing no longer works for me this year."
+        custom_message: scholarship.latest_agreement_response&.reason.presence || "The timing no longer works for me this year."
       )
 
     NotificationMailer.scholarship_agreement_declined_fyi(notification)

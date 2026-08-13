@@ -602,7 +602,7 @@ RSpec.describe "Events::Callouts", type: :request do
 
         expect(response).to redirect_to(registration_scholarship_path(registration.slug))
         expect(scholarship.reload.agreement_signed?).to be(true)
-        expect(scholarship.agreement_responded_at).to be_present
+        expect(scholarship.latest_agreement_response.responded_at).to be_present
       end
 
       it "does not sign the agreement without an affirmative submission" do
@@ -630,7 +630,7 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(response).to redirect_to(registration_scholarship_path(registration.slug))
         scholarship.reload
         expect(scholarship.agreement_declined?).to be(true)
-        expect(scholarship.agreement_response_reason).to eq("Timing no longer works")
+        expect(scholarship.latest_agreement_response.reason).to eq("Timing no longer works")
         expect(scholarship.agreement_signed?).to be(false)
       end
 
@@ -652,6 +652,8 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(notification.recipient_email).to eq(ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))
         expect(notification.custom_message).to eq("Moving away")
         expect(notification.noticeable).to eq(scholarship)
+        # The decline's history row links back to the FYI it produced.
+        expect(scholarship.latest_agreement_response.notification).to eq(notification)
       end
 
       it "does not email again when already declined" do

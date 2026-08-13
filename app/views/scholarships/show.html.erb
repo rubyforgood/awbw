@@ -18,12 +18,13 @@
       <dt class="text-sm font-medium text-gray-500">Tasks Completed</dt>
       <dd class="mt-1 text-sm text-gray-900"><%= @scholarship.tasks_completed? ? "Yes" : "No" %></dd>
     </div>
+    <% latest_response = @scholarship.latest_agreement_response %>
     <div>
       <dt class="text-sm font-medium text-gray-500">Agreement signed</dt>
       <dd class="mt-1 text-sm text-gray-900">
         <%= @scholarship.agreement_signed? ? "Yes" : "No" %>
-        <% if @scholarship.agreement_signed? && @scholarship.agreement_responded_at %>
-          <span class="text-gray-500">· <%= @scholarship.agreement_responded_at.strftime("%B %d, %Y") %></span>
+        <% if @scholarship.agreement_signed? && latest_response&.responded_at %>
+          <span class="text-gray-500">· <%= latest_response.responded_at.strftime("%B %d, %Y") %></span>
         <% end %>
       </dd>
     </div>
@@ -32,11 +33,11 @@
         <dt class="text-sm font-medium text-gray-500">Agreement declined</dt>
         <dd class="mt-1 text-sm text-gray-900">
           <span class="font-medium text-red-700">Declined</span>
-          <% if @scholarship.agreement_responded_at %>
-            <span class="text-gray-500">· <%= @scholarship.agreement_responded_at.strftime("%B %d, %Y") %></span>
+          <% if latest_response&.responded_at %>
+            <span class="text-gray-500">· <%= latest_response.responded_at.strftime("%B %d, %Y") %></span>
           <% end %>
-          <% if @scholarship.agreement_response_reason.present? %>
-            <p class="mt-1 text-gray-700">“<%= @scholarship.agreement_response_reason %>”</p>
+          <% if latest_response&.reason.present? %>
+            <p class="mt-1 text-gray-700">“<%= latest_response.reason %>”</p>
           <% end %>
         </dd>
       </div>

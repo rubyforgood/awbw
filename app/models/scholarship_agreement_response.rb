@@ -7,6 +7,8 @@ class ScholarshipAgreementResponse < ApplicationRecord
   RESPONDERS = %w[recipient admin system].freeze
 
   belongs_to :scholarship
+  # The admin FYI a decline produced, when one was sent (declines only).
+  belongs_to :notification, optional: true
 
   validates :status, inclusion: { in: STATUSES }
   validates :responder, inclusion: { in: RESPONDERS }, allow_nil: true
