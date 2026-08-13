@@ -13,7 +13,9 @@
 
   <tbody class="divide-y divide-gray-100">
   <% @notifications.each do |notification| %>
-    <tr class="<%= notification.decorate.row_class %>">
+    <% n = notification.decorate %>
+    <tr class="<%= n.row_class %>">
+
       <!-- Sent -->
       <td class="px-4 py-3 text-gray-700 whitespace-nowrap">
         <% if notification.delivered_at.present? %>
@@ -32,10 +34,13 @@
       <%#= notification.kind.to_s.humanize %>
       <!--          </td>-->
 
-      <!-- People -->
+      <!-- People (To on top; From/To values flip for incoming — the person sent it.
+           Names shown when the email is on file, with the email on hover.) -->
       <td class="px-4 py-3 text-gray-700">
-        <div><span class="text-xs uppercase text-gray-500">To:</span> <%= notification.recipient_email %></div>
-        <div class="text-[10px] text-gray-400"><span class="uppercase">From:</span> <%= notification.decorate.sender_name %></div>
+        <div><span class="text-xs uppercase text-gray-500">To:</span> <span title="<%= n.to_title %>"><%= n.to_name %></span></div>
+        <div class="text-[10px] text-gray-400">
+          <span class="uppercase">From:</span> <span title="<%= n.from_title %>"><%= n.from_name %></span>
+        </div>
       </td>
 
       <!-- Subject -->
@@ -43,11 +48,16 @@
         <%= notification.email_subject.presence || "—" %>
       </td>
 
-      <!-- Record -->
+      <!-- Record (with the audience chip to the right of the record type) -->
       <td class="px-4 py-3 text-gray-700">
+        <div class="flex items-center gap-1.5">
+          <% if notification.noticeable.present? %>
+            <span class="text-[10px] uppercase text-gray-400"><%= noticeable_type_label(notification.noticeable) %></span>
+          <% end %>
+          <%= n.flag_badges %>
+        </div>
         <% if notification.noticeable.present? %>
           <% record_path = routable_path(notification.noticeable) %>
-          <div class="text-[10px] uppercase text-gray-400"><%= noticeable_type_label(notification.noticeable) %></div>
           <% if record_path %>
             <%= link_to noticeable_label(notification.noticeable),
                         record_path,

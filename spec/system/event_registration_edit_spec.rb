@@ -267,9 +267,12 @@ RSpec.describe "Event registration edit page", type: :system do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
+      notification = Notification.find_by!(email_subject: "Event registration confirmed")
+
       within("section", text: "Registration communications") do
         expect(page).to have_text("Event registration confirmed")
-        expect(page).to have_no_link("Event registration confirmed")
+        # The whole row links through to the communication's detail page.
+        expect(page).to have_link("Event registration confirmed", href: notification_path(notification))
         expect(page).to have_link("View all")
       end
     end

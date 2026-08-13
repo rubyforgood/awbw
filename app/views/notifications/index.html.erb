@@ -1,25 +1,46 @@
-<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
-      <div class="flex justify-between items-center mb-6">
-        <section class="w-full">
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h1 class="text-3xl font-bold text-gray-900 my-2"><%= t("communications.title") %></h1>
-            <% if allowed_to?(:new?, with: NotificationPolicy) %>
-              <%= link_to new_notification_path,
-                          class: "inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700" do %>
-                <i class="fa-solid fa-plus text-xs"></i>
-                <%= t("communications.new") %>
-              <% end %>
-            <% end %>
-          </div>
+<% content_for(:page_bg_class, "admin-only bg-white") %>
+<% return_record = notification_return_record %>
 
-          <%= render "search_boxes" %>
+<%# Eyebrow: back to the record we came from (a person/registration's "View all"),
+    or to admin home when reached directly. %>
+<div class="mb-3">
+  <% if return_record %>
+    <%= link_to notification_return_path(return_record), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> <%= noticeable_label(return_record) %>
+    <% end %>
+  <% else %>
+    <%= link_to admin_path, class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Admin home
+    <% end %>
+  <% end %>
+</div>
 
-          <% result_src = notifications_path + "?" + request.query_string %>
+<div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+  <div class="<%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:notifications) %> px-8 py-3">
+    <div class="flex items-center gap-2">
+      <i class="fa-solid fa-bell <%= DomainTheme.text_class_for(:notifications, intensity: 700) %>"></i>
+      <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:notifications, intensity: 900) %> uppercase tracking-wide"><%= t("communications.title") %></span>
+    </div>
+  </div>
 
-          <%= turbo_frame_tag "notifications_results", src: result_src do %>
-            <%= render "results_skeleton" %>
-          <% end %>
-        </section>
-      </div>
+  <div class="p-4 sm:p-8 space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h1 class="text-2xl font-semibold text-gray-900"><%= t("communications.title") %></h1>
+      <% if allowed_to?(:new?, with: NotificationPolicy) %>
+        <%= link_to new_notification_path,
+                    class: "inline-flex items-center gap-2 rounded-lg #{DomainTheme.bg_class_for(:notifications, intensity: 600)} #{DomainTheme.bg_class_for(:notifications, intensity: 600, hover: true)} px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors" do %>
+          <i class="fa-solid fa-plus text-xs"></i>
+          <%= t("communications.new") %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <%= render "search_boxes" %>
+
+    <% result_src = notifications_path + "?" + request.query_string %>
+
+    <%= turbo_frame_tag "notifications_results", src: result_src do %>
+      <%= render "results_skeleton" %>
+    <% end %>
+  </div>
 </div>

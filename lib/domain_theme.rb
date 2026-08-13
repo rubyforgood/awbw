@@ -30,6 +30,7 @@ module DomainTheme
 
     banners:                  :yellow,
     users:                    :rose,
+    notifications:            :sky,
     comments:                 :purple,
     topic_subscriptions:      :stone,
     topic_subscription_types: :stone,

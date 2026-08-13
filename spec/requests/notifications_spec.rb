@@ -32,6 +32,26 @@ RSpec.describe "Notifications", type: :request do
       expect(value).to eq("kim.davis@gmail.com")
     end
 
+    context "back eyebrow" do
+      it "links to the originating record when arrived from it" do
+        person = create(:person, first_name: "Umberto", last_name: "User")
+        get notifications_path(return_to_type: "Person", return_to_id: person.id)
+
+        expect(response.body).to include(edit_person_path(person))
+        expect(response.body).to include("Umberto User")
+      end
+
+      it "falls back to admin home when reached directly" do
+        get notifications_path
+        expect(response.body).to include("Admin home")
+      end
+
+      it "ignores an unrecognized return_to_type" do
+        get notifications_path(return_to_type: "User", return_to_id: user_notification.id)
+        expect(response.body).to include("Admin home")
+      end
+    end
+
     it "filters by email_topic" do
       matching = create(:notification, email_subject: "Confirm your new email address")
       get notifications_path, params: { email_topic: "User: confirm new email" }, headers: turbo_headers
@@ -185,6 +205,16 @@ RSpec.describe "Notifications", type: :request do
         expect(response).to redirect_to(notifications_path)
       end
 
+      it "defaults a logged communication to outgoing" do
+        post notifications_path, params: valid_params
+        expect(Notification.last.direction).to eq("outgoing")
+      end
+
+      it "logs an incoming communication when the direction is set" do
+        post notifications_path, params: valid_params.deep_merge(notification: { direction: "incoming" })
+        expect(Notification.last).to be_incoming
+      end
+
       it "re-renders with an error when no person is selected" do
         expect {
           post notifications_path, params: valid_params.except(:person_id)
@@ -256,6 +286,10 @@ RSpec.describe "Notifications", type: :request do
         Capybara.string(body).find(:xpath, "//dt[normalize-space()='From']/following-sibling::dd[1]")
       end
 
+      def to_row(body)
+        Capybara.string(body).find(:xpath, "//dt[normalize-space()='To']/following-sibling::dd[1]")
+      end
+
       it "names the sending person in the From row when a sender is set" do
         sender = create(:user, :admin, first_name: "Dana", last_name: "Sender")
         sent = create(:notification, kind: "event_registration_reminder", sender: sender)
@@ -271,6 +305,17 @@ RSpec.describe "Notifications", type: :request do
         get notification_path(automated)
 
         expect(from_row(response.body)).to have_text("AWBW Portal")
+      end
+
+      it "flips From/To for an incoming communication — the person sent it to the author" do
+        author = create(:user, :admin, first_name: "Dana", last_name: "Sender")
+        incoming = create(:notification, :incoming, kind: "manual_log", channel: "phone",
+                          email_subject: "They called us", sender: author, recipient_email: "kim@example.com")
+
+        get notification_path(incoming)
+
+        expect(from_row(response.body)).to have_text("kim@example.com")
+        expect(to_row(response.body)).to have_text("Dana Sender")
       end
     end
 
