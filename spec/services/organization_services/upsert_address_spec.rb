@@ -87,7 +87,12 @@ RSpec.describe OrganizationServices::UpsertAddress do
   end
 
   it "updates the matching city/state address in place instead of duplicating" do
-    existing = create(:address, addressable: organization, city: "Austin", state: "TX", primary: true)
+    # Pin the fields this example expects to change to values distinct from the
+    # upsert below. The factory otherwise fills them from Faker's shared,
+    # order-dependent stream, which can coincidentally match a new value (e.g.
+    # country "Canada") and drop it from the reported changes under some seeds.
+    existing = create(:address, addressable: organization, city: "Austin", state: "TX", primary: true,
+                      street_address: "1 Old St", zip_code: "10001", country: "United States")
 
     result = described_class.call(
       organization: organization,
