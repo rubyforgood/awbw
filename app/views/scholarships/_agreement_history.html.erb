@@ -1,0 +1,31 @@
+<%# Collapsible timeline of the recipient/admin accept ↔ decline back-and-forth,
+    newest first. Built from the scholarship's agreement_responses (the audit log
+    behind the denormalized status). Native <details> so no JS is needed. %>
+<% responses = scholarship.agreement_responses.to_a %>
+<% if responses.any? %>
+  <% status_classes = { "accepted" => "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200", "declined" => "bg-red-50 text-red-700 border-red-200", "pending" => "bg-amber-50 text-amber-700 border-amber-200" } %>
+  <details class="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+    <summary class="flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-700 [&::-webkit-details-marker]:hidden">
+      <i class="fa-solid fa-clock-rotate-left text-gray-400"></i>
+      Agreement history
+      <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500"><%= responses.size %></span>
+    </summary>
+    <ol class="divide-y divide-gray-100 border-t border-gray-100">
+      <% responses.reverse_each do |response| %>
+        <li class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-sm">
+          <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= status_classes[response.status] %>"><%= response.status.capitalize %></span>
+          <span class="text-gray-500"><%= response.responded_at.strftime("%B %-d, %Y at %-l:%M %p") %></span>
+          <% if response.responder.present? %>
+            <span class="text-gray-400">· by <%= response.responder %></span>
+          <% end %>
+          <% if response.amount_cents.present? %>
+            <span class="text-gray-400">· <%= dollars_from_cents(response.amount_cents) %></span>
+          <% end %>
+          <% if response.reason.present? %>
+            <p class="w-full text-gray-700">“<%= response.reason %>”</p>
+          <% end %>
+        </li>
+      <% end %>
+    </ol>
+  </details>
+<% end %>

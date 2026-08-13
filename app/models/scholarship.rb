@@ -4,28 +4,37 @@ class Scholarship < ApplicationRecord
   has_one :allocation, as: :source, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :nullify
+  has_many :agreement_responses, -> { chronological }, class_name: "ScholarshipAgreementResponse", dependent: :destroy
+
+  AGREEMENT_RESPONSE_STATUSES = %w[pending accepted declined].freeze
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
 
   validates :amount_cents, numericality: { greater_than_or_equal_to: 0 }
+  validates :agreement_response_status, inclusion: { in: AGREEMENT_RESPONSE_STATUSES }
   validate :recipient_must_match_allocation_registrant
   validate :allocation_must_be_valid
   validate :within_grant_budget, if: -> { grant && !agreement_declined? }
 
-  after_update :sync_allocation_amount, if: -> { saved_change_to_amount_cents? }
-  # Changing the award amount re-offers the scholarship, so a prior decline is
-  # cleared — the recipient decides afresh on the new amount (and sync_allocation_amount
-  # above re-funds the allocation the decline had zeroed).
-  after_update :reset_decline_on_amount_change, if: -> { saved_change_to_amount_cents? && agreement_declined? }
+  # Changing the award amount on a declined scholarship re-offers it: back to
+  # pending in the same save, so the recipient decides afresh on the new amount.
+  before_update :reoffer_declined_on_amount_change, if: -> { will_save_change_to_amount_cents? && agreement_declined? }
+  # The allocation carries the award financially: zero while declined, else the
+  # amount. Re-synced on any amount or status change so every allocation-based
+  # total (balances, dashboards, grant budgets) stays correct.
+  after_update :sync_allocation_amount, if: -> { saved_change_to_amount_cents? || saved_change_to_agreement_response_status? }
+  # Every status transition appends a history row (the audit trail of the
+  # accept ↔ decline back-and-forth).
+  after_update :log_agreement_response, if: -> { saved_change_to_agreement_response_status? }
   after_create_commit :flag_event_registration_scholarship_requested
 
   scope :completed, -> { where(tasks_completed: true) }
-  scope :agreement_signed, -> { where.not(agreement_signed_at: nil) }
-  scope :agreement_declined, -> { where.not(agreement_declined_at: nil) }
+  scope :agreement_signed, -> { where(agreement_response_status: "accepted") }
+  scope :agreement_declined, -> { where(agreement_response_status: "declined") }
   # Declined scholarships are excluded from every total — the recipient turned the
   # award down, so it no longer counts toward amounts, counts, or budgets.
-  scope :not_declined, -> { where(agreement_declined_at: nil) }
+  scope :not_declined, -> { where.not(agreement_response_status: "declined") }
 
   # Funding split (the app-wide convention, mirrored by EventDashboard and
   # EventRevenueFigures): externally funded = backed by a grant whose funder isn't
@@ -60,29 +69,39 @@ class Scholarship < ApplicationRecord
     EventRegistration.where(id: registration_ids).distinct.pluck(:event_id)
   end
 
-  # The agreement is signed when a signed-at timestamp is present — a single
-  # source of truth. `agreement_signed` reads/writes as a virtual boolean so the
-  # admin form checkbox and strong params keep working, stamping or clearing the
-  # timestamp accordingly (and preserving an existing time across re-saves).
-  def agreement_signed? = agreement_signed_at.present?
+  # Agreement state is a single tri-state column (pending → accepted → declined),
+  # so the states are mutually exclusive by construction. `agreement_signed`
+  # reads/writes as a virtual boolean so the admin form checkbox and strong
+  # params keep working (checking it accepts, unchecking returns to pending).
+  def agreement_pending? = agreement_response_status == "pending"
+  def agreement_signed? = agreement_response_status == "accepted"
+  def agreement_declined? = agreement_response_status == "declined"
   alias_method :agreement_signed, :agreement_signed?
 
   def agreement_signed=(value)
     signed = ActiveModel::Type::Boolean.new.cast(value)
-    self.agreement_signed_at = signed ? (agreement_signed_at || Time.current) : nil
+    if signed
+      assign_agreement_response("accepted") unless agreement_signed?
+    elsif agreement_signed?
+      assign_agreement_response("pending")
+    end
   end
 
-  def agreement_declined? = agreement_declined_at.present?
+  # The recipient (or an admin) accepting the award. Idempotent — a repeat accept
+  # is a no-op, so it doesn't append a duplicate history row.
+  def accept_agreement!(by: "recipient")
+    return if agreement_signed?
 
-  # The recipient declining stamps the time + their reason and clears any signed
-  # state (signed and declined are mutually exclusive), and zeroes the allocation
-  # so the award stops counting in every allocation-based total (registration
-  # balances, dashboards, grant budgets). The row is kept for history.
-  def decline_agreement!(reason)
-    transaction do
-      update!(agreement_declined_at: Time.current, agreement_declined_reason: reason.presence, agreement_signed_at: nil)
-      allocation&.update!(amount: 0)
-    end
+    assign_agreement_response("accepted", by:)
+    save!
+  end
+
+  # The recipient declining, with their reason. Recording it (via after_update)
+  # zeroes the allocation so the award stops counting in every total and appends
+  # a history row; the row is kept for history.
+  def decline_agreement!(reason, by: "recipient")
+    assign_agreement_response("declined", reason:, by:)
+    save!
   end
 
   # The event this scholarship was awarded at, via its allocation's registration
@@ -139,15 +158,35 @@ class Scholarship < ApplicationRecord
     end
   end
 
+  # Assign the new agreement state in memory (persisted by the caller's save).
+  # `by` is stashed for the history row the after_update callback writes.
+  def assign_agreement_response(status, reason: nil, by: "admin")
+    self.agreement_response_status = status
+    self.agreement_responded_at = Time.current
+    self.agreement_response_reason = (status == "declined" ? reason.presence : nil)
+    @agreement_response_by = by
+  end
+
+  def reoffer_declined_on_amount_change
+    assign_agreement_response("pending", by: "admin")
+  end
+
   def sync_allocation_amount
     return unless allocation
 
-    allocation.update!(amount: amount_cents.to_i)
+    desired = agreement_declined? ? 0 : amount_cents.to_i
+    allocation.update!(amount: desired) unless allocation.amount == desired
   end
 
-  # update_columns so this second write doesn't re-enter the after_update chain.
-  def reset_decline_on_amount_change
-    update_columns(agreement_declined_at: nil, agreement_declined_reason: nil)
+  def log_agreement_response
+    agreement_responses.create!(
+      status: agreement_response_status,
+      reason: agreement_response_reason,
+      responded_at: agreement_responded_at || Time.current,
+      responder: @agreement_response_by.presence || "admin",
+      amount_cents: amount_cents
+    )
+    @agreement_response_by = nil
   end
 
   # When a scholarship is awarded against an event registration, the registration

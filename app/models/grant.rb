@@ -55,7 +55,7 @@ class Grant < ApplicationRecord
   # funds scopes so they stay flat WHERE clauses — no GROUP BY/HAVING, which would
   # break will_paginate's total_entries count on the paginated index.
   ALLOCATED_CENTS_SUBQUERY =
-    "COALESCE((SELECT SUM(scholarships.amount_cents) FROM scholarships WHERE scholarships.grant_id = grants.id AND scholarships.agreement_declined_at IS NULL), 0)".freeze
+    "COALESCE((SELECT SUM(scholarships.amount_cents) FROM scholarships WHERE scholarships.grant_id = grants.id AND scholarships.agreement_response_status <> 'declined'), 0)".freeze
 
   # Grants that still have unallocated funds (grant amount exceeds the sum of
   # scholarships drawn against them).

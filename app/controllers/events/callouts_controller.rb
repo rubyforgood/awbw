@@ -55,8 +55,8 @@ module Events
     end
 
     # Records the recipient agreeing, from their scholarship page, to complete the
-    # scholarship's tasks. The Agree button submits agreement=yes, which stamps
-    # agreement_signed_at via the model.
+    # scholarship's tasks. The Agree button submits agreement=yes, which records an
+    # "accepted" response via the model.
     def sign_agreement
       scholarship = @event_registration.scholarships.first
       unless scholarship
@@ -65,8 +65,7 @@ module Events
       end
 
       if params[:agreement] == "yes"
-        # Agreeing clears any prior decline — the two states are mutually exclusive.
-        scholarship.update!(agreement_signed: true, agreement_declined_at: nil, agreement_declined_reason: nil) unless scholarship.agreement_signed?
+        scholarship.accept_agreement!(by: "recipient")
         redirect_to registration_scholarship_path(@event_registration.slug), notice: "Thanks — your agreement has been recorded."
       else
         redirect_to registration_scholarship_path(@event_registration.slug), alert: "Something went wrong recording your agreement. Please try again."

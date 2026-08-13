@@ -91,7 +91,7 @@
           <p class="text-xs text-gray-400">Signed agreement on file from the recipient</p>
         </div>
         <label class="flex items-center gap-2.5 cursor-pointer">
-          <%= f.check_box :agreement_signed, class: "sr-only peer" %>
+          <%= f.check_box :agreement_signed, class: "sr-only peer", data: { "scholarship-decline-guard-target": "signed" } %>
           <span class="text-sm text-gray-400 peer-checked:hidden">Not signed</span>
           <span class="hidden text-sm font-medium text-fuchsia-700 peer-checked:inline">Signed</span>
           <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
@@ -103,9 +103,9 @@
         <div class="mt-3 flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           <i class="fa-solid fa-circle-xmark mt-0.5"></i>
           <div>
-            <p class="font-medium">Declined by recipient<% if f.object.agreement_declined_at %> · <%= f.object.agreement_declined_at.strftime("%B %-d, %Y") %><% end %></p>
-            <% if f.object.agreement_declined_reason.present? %>
-              <p class="mt-0.5 text-red-600">“<%= f.object.agreement_declined_reason %>”</p>
+            <p class="font-medium">Declined by recipient<% if f.object.agreement_responded_at %> · <%= f.object.agreement_responded_at.strftime("%B %-d, %Y") %><% end %></p>
+            <% if f.object.agreement_response_reason.present? %>
+              <p class="mt-0.5 text-red-600">“<%= f.object.agreement_response_reason %>”</p>
             <% end %>
           </div>
         </div>

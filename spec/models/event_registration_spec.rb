@@ -393,11 +393,11 @@ RSpec.describe EventRegistration, type: :model do
   describe ".scholarship_status agreed" do
     it "matches registrations with an agreement-signed scholarship" do
       agreed_reg = create(:event_registration)
-      agreed = create(:scholarship, recipient: agreed_reg.registrant, agreement_signed_at: Time.current)
+      agreed = create(:scholarship, recipient: agreed_reg.registrant, agreement_signed: true)
       create(:allocation, source: agreed, allocatable: agreed_reg, amount: 0)
 
       pending_reg = create(:event_registration)
-      pending = create(:scholarship, recipient: pending_reg.registrant, agreement_signed_at: nil)
+      pending = create(:scholarship, recipient: pending_reg.registrant, agreement_signed: false)
       create(:allocation, source: pending, allocatable: pending_reg, amount: 0)
 
       results = EventRegistration.scholarship_status("agreed")

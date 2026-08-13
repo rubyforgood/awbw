@@ -242,7 +242,7 @@ class EventRegistration < ApplicationRecord
         WHERE allocations.allocatable_type = 'EventRegistration'
           AND allocations.allocatable_id = event_registrations.id
           AND allocations.source_type = 'Scholarship'
-          AND scholarships.agreement_signed_at IS NOT NULL
+          AND scholarships.agreement_response_status = 'accepted'
       )
     SQL
   }
