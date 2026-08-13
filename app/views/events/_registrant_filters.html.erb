@@ -23,7 +23,8 @@
 <% primary_text, more_text = Array(text_fields).partition { |f| f[:primary] } %>
 <%# Open the collapsed section on load when any control inside it already carries
     a value, so an active filter is never hidden behind the toggle. %>
-<% collapsed_keys = %i[submission_status payment_method org_status scholarship funder_name ce_status city state county account_status comment_status comment] %>
+<% topic_subscription_types = local_assigns.fetch(:topic_subscription_types, []) %>
+<% collapsed_keys = %i[submission_status payment_method org_status scholarship funder_name ce_status city state county account_status comment_status comment topic_subscription] %>
 <% more_active = more_text.any? { |f| params[f[:param]].present? } || collapsed_keys.any? { |k| params[k].present? } %>
 <%# The "More filters" drawer is a pure-CSS disclosure: a visually-hidden
     checkbox drives the drawer, chevron and label via :has() on this group
@@ -147,6 +148,14 @@
       <%= render "events/filter_select", param: :account_status, label: "User account",
             options: [ [ "No account", "none" ], [ "Not invited yet", "not_invited" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
             selected: params[:account_status], blank: "Any account status", field_class: field_class %>
+
+      <%# Picker-only: registrants with an active subscription to a topic subscription
+          list. Only rendered when the caller supplies the topic types. %>
+      <% if topic_subscription_types.any? %>
+        <%= render "events/filter_select", param: :topic_subscription, label: "Topic subscription list",
+              options: topic_subscription_types.map { |t| [ t.name, t.id ] },
+              selected: params[:topic_subscription], blank: "Any topic", field_class: field_class %>
+      <% end %>
 
       <%= render "events/filter_text", param: :city, label: "City",
             placeholder: "City name", field_class: field_class %>

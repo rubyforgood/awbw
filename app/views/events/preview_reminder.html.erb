@@ -60,6 +60,7 @@
           frame: "reminder_recipients",
           clear_url: preview_reminder_event_path(@event, mode: ("invite" if @invite_mode)),
           hidden_params: (@invite_mode ? { mode: "invite" } : {}),
+          topic_subscription_types: @topic_subscription_types,
           text_fields: [
             { param: :name, label: "Name", placeholder: "Registrant name", primary: true },
             { param: :email, label: "Email", placeholder: "Email address", primary: true },
