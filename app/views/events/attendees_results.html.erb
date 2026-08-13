@@ -50,7 +50,7 @@
 
       <%# Charts panel — hidden by default; the lazy frame loads on first reveal. %>
       <%= render "events/section_heading", title: "Breakdowns", icon: "fa-chart-pie",
-            theme: :event_registrations, intensity: 700, panel: "charts", open: charts_open, spacing: "mt-10" %>
+            theme: :event_registrations, intensity: 700, panel: "charts", open: charts_open, spacing: "mt-10", id: "breakdowns" %>
       <div data-panel-toggle-target="panel" data-panel-toggle-name="charts" class="<%= "hidden" unless charts_open %>">
         <%= turbo_frame_tag :attendees_charts, src: charts_src, loading: :lazy do %>
           <%= render "events/charts_loading" %>

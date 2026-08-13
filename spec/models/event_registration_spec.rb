@@ -422,6 +422,14 @@ RSpec.describe EventRegistration, type: :model do
       end
     end
 
+    describe ".without_scholarship" do
+      it "returns only registrations with no scholarship" do
+        results = EventRegistration.without_scholarship
+        expect(results).to include(paid_reg, unpaid_reg)
+        expect(results).not_to include(scholarship_reg, incomplete_scholarship_reg)
+      end
+    end
+
     describe ".scholarship_tasks_completed" do
       it "returns recipients whose scholarship tasks are complete" do
         results = EventRegistration.scholarship_tasks_completed
@@ -442,6 +450,11 @@ RSpec.describe EventRegistration, type: :model do
       it "maps 'yes' to all recipients" do
         expect(EventRegistration.scholarship_status("yes")).to include(scholarship_reg, incomplete_scholarship_reg)
         expect(EventRegistration.scholarship_status("yes")).not_to include(paid_reg, unpaid_reg)
+      end
+
+      it "maps 'no' to registrations without a scholarship" do
+        expect(EventRegistration.scholarship_status("no")).to include(paid_reg, unpaid_reg)
+        expect(EventRegistration.scholarship_status("no")).not_to include(scholarship_reg, incomplete_scholarship_reg)
       end
 
       it "maps 'complete' to completed-task recipients" do

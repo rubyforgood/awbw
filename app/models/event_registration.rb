@@ -158,6 +158,10 @@ class EventRegistration < ApplicationRecord
       .where(sectorable_items: { sector_id: sector_id })
       .distinct
   }
+  # Registrant holds an active subscription to the given topic subscription list.
+  scope :registrant_topic_subscription, ->(type_id) {
+    where(registrant_id: TopicSubscription.active.where(topic_subscription_type_id: type_id).select(:person_id)).distinct
+  }
   scope :with_scholarship, -> {
     where(<<~SQL.squish)
       EXISTS (
@@ -194,9 +198,20 @@ class EventRegistration < ApplicationRecord
       )
     SQL
   }
+  scope :without_scholarship, -> {
+    where(<<~SQL.squish)
+      NOT EXISTS (
+        SELECT 1 FROM allocations
+        WHERE allocations.allocatable_type = 'EventRegistration'
+          AND allocations.allocatable_id = event_registrations.id
+          AND allocations.source_type = 'Scholarship'
+      )
+    SQL
+  }
   scope :scholarship_status, ->(value) {
     case value
     when "yes" then with_scholarship
+    when "no" then without_scholarship
     when "agreed" then with_agreed_scholarship
     when "complete" then scholarship_tasks_completed
     when "incomplete" then scholarship_tasks_incomplete

@@ -36,11 +36,15 @@ RSpec.describe AttendeesActiveFilters do
     expect(chips_for(org_city: "Austin, TX").first[:label]).to eq("Org city: Austin, TX")
   end
 
-  it "labels the yes/no scholarship and CE drill-ins" do
-    expect(chips_for(scholarship: "yes").first[:label]).to eq("Scholarship recipients")
-    expect(chips_for(scholarship: "no").first[:label]).to eq("No scholarship")
+  it "labels the yes/no CE drill-in" do
     expect(chips_for(ce: "yes").first[:label]).to eq("Continuing education")
     expect(chips_for(ce: "no").first[:label]).to eq("No continuing education")
+  end
+
+  # Scholarship status has its own visible select on the index, so it's not a chip.
+  it "does not chip scholarship status" do
+    expect(chips_for(scholarship: "yes")).to eq([])
+    expect(chips_for(scholarship: "no")).to eq([])
   end
 
   # These two have no select on the index — they arrive from the revenue report —
@@ -61,7 +65,7 @@ RSpec.describe AttendeesActiveFilters do
   end
 
   it "emits chips in CHIP_PARAMS order regardless of param order" do
-    params = chips_for(scholarship: "yes", country: "Canada", registrant_ids: "1-2")
-    expect(params.map { |c| c[:param] }).to eq(%w[ registrant_ids country scholarship ])
+    params = chips_for(ce: "yes", country: "Canada", registrant_ids: "1-2")
+    expect(params.map { |c| c[:param] }).to eq(%w[ registrant_ids country ce ])
   end
 end

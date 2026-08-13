@@ -11,6 +11,9 @@ import { Controller } from "@hotwired/stimulus"
 //
 // The toggle target is clicked (reusing the dropdown controller) only when the
 // content is currently hidden, keeping the dropdown's open/closed state honest.
+// Both targets are optional: with neither, this is a scroll-to-my-anchor on
+// connect, which is what a section arriving inside a lazily-loaded Turbo frame
+// needs (the browser resolved the hash long before the frame's content existed).
 export default class extends Controller {
   static targets = ["toggle", "content"]
   static values = { anchor: String }

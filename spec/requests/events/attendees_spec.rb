@@ -299,6 +299,16 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).not_to include("All sectors")
         end
 
+        # The heading lands in the DOM only once the results frame resolves, long
+        # after the browser gave up on the #breakdowns fragment — so it has to scroll
+        # itself into view on connect rather than rely on the hash.
+        it "anchors the breakdowns heading so a #breakdowns link still scrolls to it" do
+          get attendees_events_url, headers: frame_headers
+
+          expect(Capybara.string(response.body))
+            .to have_selector("#breakdowns[data-controller='reveal-section'][data-reveal-section-anchor-value='breakdowns']", visible: :all)
+        end
+
         it "renders the breakdown charts in the lazy charts frame" do
           create(:sectorable_item, sectorable: attendee, sector: create(:sector, name: "Healthcare"), is_primary: true)
           get attendees_events_url, headers: charts_frame_headers
@@ -398,6 +408,128 @@ RSpec.describe "Events attendees", type: :request do
 
           expect(Capybara.string(response.body))
             .to have_selector("select#affiliation_status option[selected]", text: "Active & Upcoming")
+        end
+
+        it "filters by scholarship status, including the recipient sub-statuses" do
+          complete = create(:scholarship, recipient: attendee, amount_cents: 1_000, grant: create(:grant), tasks_completed: true)
+          create(:allocation, source: complete, allocatable: attendee_registration, amount: 1_000)
+
+          incomplete_person = create(:person, first_name: "Ivy", last_name: "Incomplete")
+          incomplete_reg = create(:event_registration, event: recent_training, registrant: incomplete_person, status: "attended")
+          incomplete = create(:scholarship, recipient: incomplete_person, amount_cents: 1_000, grant: create(:grant), tasks_completed: false)
+          create(:allocation, source: incomplete, allocatable: incomplete_reg, amount: 1_000)
+
+          no_award = create(:person, first_name: "Nell", last_name: "Nograant")
+          create(:event_registration, event: recent_training, registrant: no_award, status: "attended")
+
+          get attendees_events_url(scholarship: "yes"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace", "Ivy Incomplete")
+          expect(response.body).not_to include("Nell Nograant")
+
+          get attendees_events_url(scholarship: "complete"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).not_to include("Ivy Incomplete", "Nell Nograant")
+
+          get attendees_events_url(scholarship: "no"), headers: frame_headers
+          expect(response.body).to include("Nell Nograant")
+          expect(response.body).not_to include("Ada Lovelace", "Ivy Incomplete")
+        end
+
+        it "answers 'No scholarship' per event when scoped, but person-wide cross-event" do
+          # Ada is a recipient at the recent training but holds no scholarship at the
+          # older one she also attended.
+          award = create(:scholarship, recipient: attendee, amount_cents: 1_000, grant: create(:grant))
+          create(:allocation, source: award, allocatable: attendee_registration, amount: 1_000)
+          create(:event_registration, event: older_training, registrant: attendee, status: "attended")
+
+          never = create(:person, first_name: "Nora", last_name: "Never")
+          create(:event_registration, event: recent_training, registrant: never, status: "attended")
+
+          # Cross-event: "No scholarship" means never a recipient — excludes Ada.
+          get attendees_events_url(scholarship: "no"), headers: frame_headers
+          expect(response.body).to include("Nora Never")
+          expect(response.body).not_to include("Ada Lovelace")
+
+          # Scoped to the older training, where Ada holds no scholarship — includes her.
+          get attendees_events_url(scholarship: "no", event_id: older_training.id), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+        end
+
+        it "filters by address data (city) without requiring a registration to carry it" do
+          create(:address, addressable: attendee, city: "Portland", state: "OR", inactive: false)
+          other = create(:person, first_name: "Cara", last_name: "Coast")
+          create(:event_registration, event: recent_training, registrant: other, status: "attended")
+          create(:address, addressable: other, city: "Seattle", state: "WA", inactive: false)
+
+          get attendees_events_url(city: "portland"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).not_to include("Cara Coast")
+        end
+
+        it "filters by an active topic subscription, matching any of the person's registrations" do
+          type = create(:topic_subscription_type)
+          create(:topic_subscription, person: attendee, topic_subscription_type: type)
+          unsubbed = create(:person, first_name: "Uma", last_name: "Unsub")
+          create(:event_registration, event: recent_training, registrant: unsubbed, status: "attended")
+          create(:topic_subscription, :unsubscribed, person: unsubbed, topic_subscription_type: type)
+
+          get attendees_events_url(topic_subscription: type.id), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).not_to include("Uma Unsub")
+        end
+
+        it "filters by a registration-level attribute (CE status) across events" do
+          # Ada has a CE registration at the older training; the filter should surface
+          # her on the cross-event index even though her recent-training reg has none.
+          older_reg = create(:event_registration, event: older_training, registrant: attendee, status: "attended")
+          create(:continuing_education_registration, event_registration: older_reg)
+          plain = create(:person, first_name: "Cy", last_name: "Noce")
+          create(:event_registration, event: recent_training, registrant: plain, status: "attended")
+
+          get attendees_events_url(ce_status: "registered"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).not_to include("Cy Noce")
+        end
+
+        it "always offers the scholarship filter and keeps its selection" do
+          get attendees_events_url(scholarship: "complete")
+          expect(response.body).to include("Scholarship")
+          expect(Capybara.string(response.body))
+            .to have_selector("select#scholarship option[selected][value='complete']", text: "Tasks complete")
+        end
+
+        # A param the index narrows on but the form doesn't render would shrink the
+        # list silently and then be dropped by the form's next auto-submit, since
+        # only rendered fields and the CHIP_PARAMS hidden inputs are sent.
+        it "renders a control for every registration-level filter it honours" do
+          topic = create(:topic_subscription_type)
+          get attendees_events_url
+
+          page = Capybara.string(response.body)
+          EventsController::ATTENDEE_REGISTRATION_FILTERS.each_key do |param|
+            expect(page).to have_selector("##{param}", visible: :all), "no control for #{param}"
+          end
+          expect(page).to have_selector("#city", visible: :all)
+          expect(page).to have_selector("#topic_subscription option[value='#{topic.id}']", visible: :all)
+        end
+
+        it "keeps the registration-level filter selections" do
+          get attendees_events_url(ce_status: "issued", city: "Portland", comment: "late")
+
+          page = Capybara.string(response.body)
+          expect(page).to have_selector("select#ce_status option[selected][value='issued']", text: "Issued")
+          expect(page).to have_selector("input#city[value='Portland']", visible: :all)
+          expect(page).to have_selector("input#comment[value='late']", visible: :all)
+        end
+
+        # The form posts into the results frame, and the frame's own links (the
+        # charts frame, its drill-ins) are built from that request's params — so
+        # return_to has to survive a filter change or the eyebrow loses its origin.
+        it "carries return_to through the filter form" do
+          get attendees_events_url(return_to: "participation")
+
+          expect(Capybara.string(response.body))
+            .to have_selector("input[type=hidden][name=return_to][value=participation]", visible: :all)
         end
 
         it "filters by the org's facilitator program status" do

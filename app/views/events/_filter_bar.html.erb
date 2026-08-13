@@ -1,0 +1,81 @@
+<%# Shared filter-bar shell for the event registrant/attendee filter forms. A
+    primary row of the most meaningful controls sits beside a "More filters"
+    chevron and "Clear filters"; the rest collapse into a drawer until expanded.
+    Each caller supplies its own fields as captured markup (via events/filter_select
+    and events/filter_text), so the registrants roster, the bulk-reminder picker and
+    the attendees index all read identically while filtering different populations.
+    Locals:
+      url         – form action path
+      frame       – turbo frame id the form submits into
+      clear_url   – "Clear filters" href
+      more_active – start the drawer open (an already-active collapsed filter)
+      primary     – captured markup for the primary row's fields
+      more        – captured markup for the drawer's fields (optional; when blank
+                    the drawer, its toggle and checkbox are omitted entirely)
+      hidden      – captured hidden inputs carried through the GET submit (optional)
+      applied     – captured markup pinned to the right of the "Filters" heading
+                    row, e.g. the applied-filter chip row (optional) %>
+<% hidden = local_assigns.fetch(:hidden, "") %>
+<% applied = local_assigns.fetch(:applied, "") %>
+<% more = local_assigns.fetch(:more, "") %>
+<%# A page with no collapsed fields (e.g. the attendees index shows every filter)
+    skips the drawer, toggle and its checkbox entirely. %>
+<% has_more = more.present? %>
+<%# The "More filters" drawer is a pure-CSS disclosure: a visually-hidden checkbox
+    drives the drawer, chevron and label via :has() on this group wrapper. It's
+    rendered outside the form so the collection controller's change-submit doesn't
+    fire when toggling, and starts checked when a collapsed filter is already active
+    so an active filter is never hidden behind the toggle. %>
+<div class="group mb-6">
+  <% if has_more %>
+    <input type="checkbox" id="more-filters-toggle" class="sr-only"<%= " checked" if more_active %>>
+  <% end %>
+  <%= form_with url: url, method: :get,
+        data: { controller: "collection", turbo_frame: frame },
+        autocomplete: "off",
+        class: "bg-white border border-gray-200 rounded-xl shadow-sm p-4" do %>
+    <%= hidden %>
+
+    <%# The applied-filter chips share the heading's row, pushed to the far right —
+        they read as a summary of the bar rather than a band above it. They wrap to
+        their own line when the chips outgrow the row. %>
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-2 mb-3">
+      <div class="flex items-center gap-2 text-gray-600">
+        <i class="fa-solid fa-filter text-xs"></i>
+        <span class="text-xs font-semibold uppercase tracking-wide">Filters</span>
+      </div>
+      <% if applied.present? %>
+        <div class="ml-auto"><%= applied %></div>
+      <% end %>
+    </div>
+
+    <%# Row 1: the most meaningful filters + More filters toggle + Clear. %>
+    <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4">
+      <%= primary %>
+
+      <div class="w-full md:w-auto md:ml-auto flex items-end gap-4">
+        <% if has_more %>
+          <label for="more-filters-toggle"
+                 class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 cursor-pointer transition">
+            <span class="group-has-[#more-filters-toggle:checked]:hidden">More filters</span>
+            <span class="hidden group-has-[#more-filters-toggle:checked]:inline">Fewer filters</span>
+            <i class="fa-solid fa-chevron-down text-xs transition-transform group-has-[#more-filters-toggle:checked]:rotate-180"></i>
+          </label>
+        <% end %>
+        <%= link_to "Clear filters", clear_url, class: "btn btn-utility",
+              data: { action: "collection#clearAndSubmit" } %>
+      </div>
+    </div>
+
+    <%# Collapsible: the remaining filters. Shown when the toggle checkbox is
+        checked (via :has() on the group wrapper), which starts checked when a
+        collapsed filter is already active. %>
+    <% if has_more %>
+      <div class="hidden group-has-[#more-filters-toggle:checked]:block">
+        <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4 mt-4">
+          <%= more %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+</div>
