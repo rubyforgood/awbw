@@ -77,6 +77,53 @@ RSpec.describe NotificationDecorator, type: :decorator do
     end
   end
 
+  describe "#from_name / #to_name" do
+    let(:sender) { build_stubbed(:user, first_name: "Dana", last_name: "Sender", person: nil) }
+
+    it "puts the sender on From and the recipient on To for an outgoing communication" do
+      notification = build_stubbed(:notification, sender: sender, recipient_email: "kim@example.com").decorate
+      expect(notification.from_name).to eq("Dana Sender")
+      expect(notification.to_name).to eq("kim@example.com")
+    end
+
+    it "flips them for an incoming communication — the person is From, the author is To" do
+      notification = build_stubbed(:notification, :incoming, sender: sender, recipient_email: "kim@example.com").decorate
+      expect(notification.from_name).to eq("kim@example.com")
+      expect(notification.to_name).to eq("Dana Sender")
+    end
+  end
+
+  describe "person-name resolution" do
+    it "shows the person's name and hovers the email when the recipient is on file" do
+      create(:person, first_name: "Tiombe", last_name: "Wallace", email: "tiombe@example.com")
+      decorated = create(:notification, recipient_email: "tiombe@example.com").decorate
+
+      expect(decorated.to_name).to eq("Tiombe Wallace")
+      expect(decorated.to_title).to eq("tiombe@example.com")
+    end
+
+    it "falls back to the raw email (no hover) when nobody matches" do
+      decorated = build_stubbed(:notification, recipient_email: "stranger@example.com").decorate
+
+      expect(decorated.to_name).to eq("stranger@example.com")
+      expect(decorated.to_title).to be_nil
+    end
+  end
+
+  describe "#audience" do
+    it "is incoming for a communication the person sent" do
+      expect(build_stubbed(:notification, :incoming).decorate.audience).to eq("incoming")
+    end
+
+    it "is fyi for an admin-directed communication" do
+      expect(build_stubbed(:notification, recipient_role: "admin").decorate.audience).to eq("fyi")
+    end
+
+    it "is nil for a normal message to the person" do
+      expect(build_stubbed(:notification, recipient_role: "person").decorate.audience).to be_nil
+    end
+  end
+
   describe "#channel_icon" do
     {
       "email" => "fa-envelope",
@@ -94,6 +141,43 @@ RSpec.describe NotificationDecorator, type: :decorator do
 
     it "renders nothing for a blank or unknown channel" do
       expect(build_stubbed(:notification, channel: nil).decorate.channel_icon).to eq("")
+    end
+  end
+
+  describe "#flag_badges" do
+    it "shows a sky Incoming pill for an incoming communication" do
+      html = build_stubbed(:notification, :incoming).decorate.flag_badges
+      expect(html).to include("bg-sky-100")
+      expect(html).to include("Incoming")
+    end
+
+    it "shows a grey FYI pill for an admin-directed communication" do
+      html = build_stubbed(:notification, recipient_role: "admin").decorate.flag_badges
+      expect(html).to include("bg-gray-100")
+      expect(html).to include("FYI")
+    end
+
+    it "shows a Bulk pill for a bulk communication, alongside FYI when it's an FYI copy" do
+      html = build_stubbed(:notification, kind: "bulk_payment_confirmation_fyi", recipient_role: "admin").decorate.flag_badges
+      expect(html).to include("Bulk")
+      expect(html).to include("FYI")
+    end
+
+    it "shows only Bulk for the bulk copy sent to the person" do
+      html = build_stubbed(:notification, kind: "bulk_payment_confirmation", recipient_role: "person").decorate.flag_badges
+      expect(html).to include("Bulk")
+      expect(html).not_to include("FYI")
+      expect(html).not_to include("Incoming")
+    end
+
+    it "renders nothing for a plain message to the person" do
+      expect(build_stubbed(:notification, recipient_role: "person").decorate.flag_badges).to eq("")
+    end
+
+    it "appends a caller-supplied class to each pill" do
+      html = build_stubbed(:notification, :incoming).decorate.flag_badges(class: "mr-1")
+      expect(html).to include("mr-1")
+      expect(html).to include("bg-sky-100")
     end
   end
 end

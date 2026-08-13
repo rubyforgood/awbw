@@ -544,7 +544,7 @@ class EventsController < ApplicationController
       message = @event.errors.full_messages.to_sentence.presence || "Event could not be destroyed."
       respond_to do |format|
         format.html { redirect_to event_path(@event), status: :see_other, alert: message }
-        format.json { render json: { errors: @event.errors.full_messages }, status: :unprocessable_entity }
+        format.json { render json: { errors: @event.errors.full_messages }, status: :unprocessable_content }
       end
     end
   end

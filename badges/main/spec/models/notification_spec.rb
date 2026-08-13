@@ -56,6 +56,26 @@ RSpec.describe Notification do
     end
   end
 
+  describe "direction" do
+    it "defaults to outgoing" do
+      expect(Notification.new.direction).to eq("outgoing")
+    end
+
+    it "is invalid with an unknown direction" do
+      notification = build(:notification, direction: "sideways")
+      expect(notification).not_to be_valid
+      expect(notification.errors[:direction]).to be_present
+    end
+
+    it "reports incoming? for an incoming communication" do
+      expect(build(:notification, :incoming)).to be_incoming
+    end
+
+    it "does not report incoming? for an outgoing communication" do
+      expect(build(:notification)).not_to be_incoming
+    end
+  end
+
   describe "KINDS" do
     it "includes account_email_change_requested" do
       expect(Notification::KINDS).to include("account_email_change_requested")

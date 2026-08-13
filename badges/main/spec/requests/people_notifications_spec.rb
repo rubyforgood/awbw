@@ -24,6 +24,16 @@ RSpec.describe "Person notifications", type: :request do
       expect(notification.noticeable).to eq(person)
     end
 
+    it "logs an incoming communication when the direction is set" do
+      patch person_path(person), params: {
+        person: {
+          notifications_attributes: { "0" => { channel: "phone", email_subject: "They called us", direction: "incoming" } }
+        }
+      }
+
+      expect(person.notifications.order(:created_at).last).to be_incoming
+    end
+
     it "ignores a blank notification with no note" do
       expect {
         patch person_path(person), params: {

@@ -43,7 +43,7 @@ class NotificationsController < ApplicationController
     if @person && @notification.save
       redirect_to notifications_path, notice: "Communication logged."
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -92,6 +92,6 @@ class NotificationsController < ApplicationController
   end
 
   def notification_params
-    params.require(:notification).permit(:responded, :channel, :email_subject, :email_body_text)
+    params.require(:notification).permit(:responded, :channel, :email_subject, :email_body_text, :direction)
   end
 end

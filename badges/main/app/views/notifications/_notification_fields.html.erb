@@ -1,8 +1,8 @@
 <%# ---- One manual-log communication, editable inline (mirrors the comment
     edit-mode pattern). A persisted entry renders a read-only view target row
     plus a hidden edit target form; the shared `edit-toggle` controller flips
-    between them. A new, unsaved entry renders the amber add
-    form directly. Only manually logged communications addressed to this record
+    between them. A new, unsaved entry renders the add form directly, tinted with
+    the notifications theme color. Only manually logged communications addressed to this record
     render through this partial — automated notifications stay read-only in the
     notifications box. The sender defaults to whoever logs it. ---- %>
 <% channel_default = Notification::MANUAL_CHANNELS.include?(f.object.channel) ? f.object.channel : "email" %>
@@ -24,11 +24,11 @@
     <div data-edit-toggle-target="view">
       <%= render "notifications/notification_row", notification: f.object, admin: true, mark_admin_only: mark_admin_only %>
     </div>
-    <div class="hidden rounded-md border border-amber-200 bg-amber-50 p-3" data-edit-toggle-target="edit">
+    <div class="hidden rounded-md border <%= DomainTheme.border_class_for(:notifications, intensity: 200) %> <%= DomainTheme.bg_class_for(:notifications, intensity: 50) %> p-3" data-edit-toggle-target="edit">
       <%= render "notifications/notification_form", f: f, channel_default: channel_default %>
     </div>
   <% else %>
-    <div class="rounded-md border border-amber-200 bg-amber-50 p-3">
+    <div class="rounded-md border <%= DomainTheme.border_class_for(:notifications, intensity: 200) %> <%= DomainTheme.bg_class_for(:notifications, intensity: 50) %> p-3">
       <%= render "notifications/notification_form", f: f, channel_default: channel_default %>
     </div>
   <% end %>

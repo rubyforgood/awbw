@@ -17,6 +17,50 @@ RSpec.describe "notifications/_notification_row", type: :view do
     expect(rendered).to include("Called them")
   end
 
+  it "links an admin's row to the communication detail in a new tab" do
+    render partial: "notifications/notification_row", locals: { notification: hand_noted, admin: true }
+
+    expect(rendered).to have_css("a[href='#{notification_path(hand_noted)}'][target='_blank']")
+  end
+
+  it "does not link the row for a non-admin viewer" do
+    render partial: "notifications/notification_row", locals: { notification: autoemail, admin: false }
+
+    expect(rendered).not_to have_css("a")
+  end
+
+  it "shows an incoming badge for an incoming communication" do
+    incoming = build_stubbed(:notification, :incoming, kind: "manual_log", channel: "phone",
+                             email_subject: "They called us")
+    render partial: "notifications/notification_row", locals: { notification: incoming, admin: true }
+
+    expect(rendered).to include("Incoming")
+  end
+
+  it "shows an FYI badge for an admin-directed communication" do
+    fyi = build_stubbed(:notification, recipient_role: "admin", email_subject: "FYI note")
+    render partial: "notifications/notification_row", locals: { notification: fyi, admin: true }
+
+    expect(rendered).to include("FYI")
+  end
+
+  it "shows the person as the from-name for an incoming communication" do
+    incoming = build_stubbed(:notification, :incoming, kind: "manual_log", channel: "phone",
+                             recipient_email: "kim@example.com", email_subject: "They called us")
+    render partial: "notifications/notification_row", locals: { notification: incoming, admin: true }
+
+    expect(rendered).to include("kim@example.com")
+  end
+
+  it "omits the audience pill for a regular message to the person" do
+    regular = build_stubbed(:notification, recipient_role: "person", email_subject: "A note")
+    render partial: "notifications/notification_row", locals: { notification: regular, admin: true }
+
+    expect(rendered).not_to include("Incoming")
+    expect(rendered).not_to include("Outgoing")
+    expect(rendered).not_to include("FYI")
+  end
+
   it "flags a hand-noted body with the admin-only blue wash when mark_admin_only is set" do
     render partial: "notifications/notification_row",
            locals: { notification: hand_noted, admin: true, mark_admin_only: true }

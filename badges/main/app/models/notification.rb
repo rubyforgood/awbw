@@ -100,6 +100,11 @@ class Notification < ApplicationRecord
     person
   ].freeze
 
+  # Direction of a communication relative to the person it is about. "outgoing"
+  # (the default) was sent to the person by staff or the portal; "incoming" was
+  # sent by the person themselves and is being logged after the fact.
+  DIRECTIONS = %w[outgoing incoming].freeze
+
   # Scopes
   scope :delivered, -> { where.not(delivered_at: nil) }
   scope :undelivered, -> { where(delivered_at: nil) }
@@ -115,6 +120,7 @@ class Notification < ApplicationRecord
   validates :recipient_email, presence: true
   validates :notification_type, presence: true
   validates :channel, inclusion: { in: CHANNELS }, allow_nil: true
+  validates :direction, presence: true, inclusion: { in: DIRECTIONS }
   # A hand-logged communication must carry a subject (it's the line shown to the
   # user); the nested flow drops blank-subject rows via reject_if, so this only
   # bites the standalone "New communication" form.
@@ -138,6 +144,10 @@ class Notification < ApplicationRecord
 
   def manual_log?
     kind == "manual_log"
+  end
+
+  def incoming?
+    direction == "incoming"
   end
 
   # Scopes

@@ -33,13 +33,16 @@
 <% own_notifications_by_id = admin ? record.notifications.index_by(&:id) : {} %>
 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" data-controller="edit-toggle">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:users, intensity: 100) %> <%= DomainTheme.text_class_for(:users, intensity: 600) %>">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>">
       <i class="fa-solid fa-bell"></i>
     </span>
     <h2 class="text-sm font-semibold text-gray-700"><%= t(title_key) %></h2>
     <% if email.present? && admin %>
-      <%= link_to notifications_path(email: email),
-                  class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
+      <%# Admin-only link; on a page non-admins can view, flag it with the blue wash. %>
+      <% view_all_marker = mark_admin_only ? "admin-only bg-blue-100 rounded px-1.5 py-0.5" : "" %>
+      <%# Carry the origin so the index can show a back eyebrow to this record. %>
+      <%= link_to notifications_path(email: email, return_to_type: record_type, return_to_id: record.id),
+                  class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline #{view_all_marker}",
                   target: "_blank", rel: "noopener" do %>
         View all
         <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>

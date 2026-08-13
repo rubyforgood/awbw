@@ -620,7 +620,7 @@ class PeopleController < ApplicationController
         :_destroy
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
-      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :noticeable_type, :noticeable_id, :_destroy ],
+      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :noticeable_type, :noticeable_id, :_destroy ],
       professional_licenses_attributes: [ :id, :number, :kind, :issuing_state, :expires_on, :_destroy ]
     )
   end
