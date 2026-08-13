@@ -11,7 +11,7 @@
       <%# Attendees and breakdowns for the scholarship population — the attendees
           index pre-filtered to scholarship recipients. ?charts=1 + #breakdowns opens
           and scrolls to the panel; return_to keeps the eyebrow on the reports hub. %>
-      <% scholarship_attendee_params = hub_to_report_params.merge(scholarship: "yes", return_to: "reports") %>
+      <% scholarship_attendee_params = hub_to_attendees_params(scholarship: "yes") %>
       <%= link_to "Attendees →", attendees_events_path(scholarship_attendee_params),
             class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
       <%= link_to "Breakdowns →", attendees_events_path(scholarship_attendee_params.merge(charts: 1, anchor: "breakdowns")),

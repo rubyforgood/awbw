@@ -18,8 +18,8 @@
 <% hidden = local_assigns.fetch(:hidden, "") %>
 <% applied = local_assigns.fetch(:applied, "") %>
 <% more = local_assigns.fetch(:more, "") %>
-<%# A page with no collapsed fields (e.g. the attendees index shows every filter)
-    skips the drawer, toggle and its checkbox entirely. %>
+<%# Both current callers fill the drawer; a page that passes no collapsed fields
+    skips the drawer, its toggle and the checkbox entirely. %>
 <% has_more = more.present? %>
 <%# The "More filters" drawer is a pure-CSS disclosure: a visually-hidden checkbox
     drives the drawer, chevron and label via :has() on this group wrapper. It's
