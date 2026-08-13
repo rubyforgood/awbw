@@ -140,9 +140,10 @@ end
 end
 
 # A few emails that never went out, so the warning styling is visible: the index
-# tints the whole row amber and the detail card takes the warning background for
-# any undelivered email (pending or failed). Created a few hours ago so they sort
-# to the top (index is created_at desc). Left undelivered with no subject/body —
+# tints the whole row (and the detail card) amber for a stuck-pending email and
+# red for a failed one. Created a few hours ago so they sort to the top (index is
+# created_at desc) and are past the 1-hour delivery grace period, so the pending
+# ones read as stuck rather than fresh. Left undelivered with no subject/body —
 # exactly the state a real stuck or failed send leaves behind.
 delivery_problem_samples = [
   { kind: "idea_submitted_fyi", hours_ago: 2, state: :failed },

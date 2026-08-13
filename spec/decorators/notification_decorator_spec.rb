@@ -14,8 +14,8 @@ RSpec.describe NotificationDecorator, type: :decorator do
   end
 
   describe "#row_class" do
-    it "tints the row amber for a pending (not-yet-delivered) email" do
-      notification = build_stubbed(:notification, delivered_at: nil, error_at: nil)
+    it "tints the row amber for an email stuck pending past the grace period" do
+      notification = build_stubbed(:notification, delivered_at: nil, error_at: nil, created_at: 2.hours.ago)
 
       expect(notification.decorate.row_class).to eq("bg-amber-50 hover:bg-amber-100")
     end
@@ -26,6 +26,12 @@ RSpec.describe NotificationDecorator, type: :decorator do
       expect(notification.decorate.row_class).to eq("bg-red-50 hover:bg-red-100")
     end
 
+    it "uses the default hover treatment for a fresh in-flight send" do
+      notification = build_stubbed(:notification, delivered_at: nil, error_at: nil, created_at: 5.minutes.ago)
+
+      expect(notification.decorate.row_class).to eq("hover:bg-gray-50")
+    end
+
     it "uses the default hover treatment once delivered" do
       notification = build_stubbed(:notification, delivered_at: Time.current)
 
@@ -34,8 +40,8 @@ RSpec.describe NotificationDecorator, type: :decorator do
   end
 
   describe "#card_bg_class" do
-    it "uses the amber warning background for a pending email" do
-      notification = build_stubbed(:notification, delivered_at: nil, error_at: nil)
+    it "uses the amber warning background for an email stuck pending past the grace period" do
+      notification = build_stubbed(:notification, delivered_at: nil, error_at: nil, created_at: 2.hours.ago)
 
       expect(notification.decorate.card_bg_class).to eq("bg-amber-50 border-amber-300")
     end
@@ -44,6 +50,12 @@ RSpec.describe NotificationDecorator, type: :decorator do
       notification = build_stubbed(:notification, delivered_at: nil, error_at: Time.current)
 
       expect(notification.decorate.card_bg_class).to eq("bg-red-50 border-red-300")
+    end
+
+    it "uses the notifications domain colour for a fresh in-flight send" do
+      notification = build_stubbed(:notification, delivered_at: nil, error_at: nil, created_at: 5.minutes.ago)
+
+      expect(notification.decorate.card_bg_class).to eq("#{DomainTheme.bg_class_for(:notifications)} border-gray-200")
     end
 
     it "uses the notifications domain colour once delivered" do

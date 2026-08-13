@@ -183,6 +183,18 @@ class Notification < ApplicationRecord
     error_at.present? && !delivered?
   end
 
+  # An autoemail normally delivers within seconds of enqueue, so one still
+  # undelivered past this window is stuck (its job never completed). Fresh
+  # pending emails inside the window aren't flagged, so a normal in-flight send
+  # doesn't briefly read as a problem.
+  DELIVERY_GRACE_PERIOD = 1.hour
+
+  def stuck_pending?
+    return false if delivered? || failed?
+
+    created_at.present? && created_at < DELIVERY_GRACE_PERIOD.ago
+  end
+
   def record_error!(exception)
     update!(
       error_message: exception.message.truncate(500),
