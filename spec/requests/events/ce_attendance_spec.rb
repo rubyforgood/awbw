@@ -218,7 +218,7 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       expect(response.body).to include("Sign-in opens")
       # 8:30/9:00 UTC (open/start) shown in the page's Pacific zone.
       expect(response.body).to include("1:30 AM PDT")
-      expect(response.body).to include("Event begins 30 min later, at 2:00 AM PDT.")
+      expect(response.body).to include("Event begins 30 minutes later, at 2:00 AM PDT.")
       expect(response.body).not_to include("in about 2 hours")
     end
 

@@ -345,7 +345,9 @@
               <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-blue-400"></i>
               <span>Sign-in opens
                 <time datetime="<%= opens_at.iso8601 %>" class="font-medium text-gray-900"><%= opens_at.strftime("%A, %B %-d at %-I:%M %p %Z") %></time>.
-                <span class="block mt-0.5 text-xs text-gray-500">Event begins 30 min later, at <%= (opens_at + Event::ATTENDANCE_SIGN_IN_LEAD).strftime("%-I:%M %p %Z") %>.</span>
+                <%# Both the gap and the time come from the lead, so widening the window
+                    can't leave the sentence claiming a stale "30 min". %>
+                <span class="block mt-0.5 text-xs text-gray-500">Event begins <%= Event::ATTENDANCE_SIGN_IN_LEAD.inspect %> later, at <%= (opens_at + Event::ATTENDANCE_SIGN_IN_LEAD).strftime("%-I:%M %p %Z") %>.</span>
               </span>
             </p>
           <% end %>
