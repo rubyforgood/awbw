@@ -232,6 +232,32 @@ RSpec.describe Notification do
     end
   end
 
+  describe "#stuck_pending?" do
+    it "is true when undelivered past the grace period" do
+      notification = create(:notification, delivered_at: nil, error_at: nil, created_at: 2.hours.ago)
+
+      expect(notification.stuck_pending?).to be true
+    end
+
+    it "is false while still within the grace period (a normal in-flight send)" do
+      notification = create(:notification, delivered_at: nil, error_at: nil, created_at: 5.minutes.ago)
+
+      expect(notification.stuck_pending?).to be false
+    end
+
+    it "is false once delivered" do
+      notification = create(:notification, delivered_at: Time.current, created_at: 2.hours.ago)
+
+      expect(notification.stuck_pending?).to be false
+    end
+
+    it "is false when failed (that is an error, not a stuck-pending state)" do
+      notification = create(:notification, error_at: Time.current, delivered_at: nil, created_at: 2.hours.ago)
+
+      expect(notification.stuck_pending?).to be false
+    end
+  end
+
   describe "#record_error!" do
     it "stores exception details on the notification" do
       notification = create(:notification)
