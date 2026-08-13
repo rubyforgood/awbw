@@ -17,11 +17,13 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
   after { travel_back }
 
   # A CE registration paid in full — the gate for the whole attendance surface.
-  def pay_ce!
-    license = create(:professional_license, person: registration.registrant, number: "LIC123")
-    ce = create(:continuing_education_registration, event_registration: registration, professional_license: license)
-    create(:allocation, source: create(:payment), allocatable: ce, amount: ce.cost_cents)
+  def pay_ce!(number: "LIC123", hours: 6, paid: true)
+    license = create(:professional_license, person: registration.registrant, number: number)
+    ce = create(:continuing_education_registration, event_registration: registration,
+      professional_license: license, hours: hours)
+    create(:allocation, source: create(:payment), allocatable: ce, amount: ce.cost_cents) if paid
     registration.reload
+    ce
   end
 
   describe "POST /registration/:slug/ce/sign-in" do
@@ -254,6 +256,63 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
       get registration_ce_path(registration.slug)
       expect(response.body).not_to include("Training sign-in")
+    end
+
+    # Two licences means two boards, each audited on its own sheet showing its own
+    # licence number and awarded hours — over one shared set of times, since the
+    # registrant sat in one room once.
+    context "with CE claimed against two licences" do
+      it "renders a titled sheet per licence over the same times, and one set of controls" do
+        pay_ce!(number: "LIC123", hours: 6)
+        pay_ce!(number: "MFT999", hours: 3)
+        create(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 23, 9, 30), signed_out_at: Time.zone.local(2026, 7, 23, 12, 0))
+
+        get registration_ce_path(registration.slug)
+
+        page = Capybara.string(response.body)
+        expect(response.body).to include("LIC123", "MFT999")
+        expect(response.body).to include("6 hours awarded", "3 hours awarded")
+        # The same logged time appears on both sheets...
+        expect(response.body.scan("Total logged").size).to eq(2)
+        # Session chip + day total + sheet total, on each of the two sheets.
+        expect(response.body.scan("2h 30m").size).to eq(6)
+        # ...but signing in is a single act, so there's exactly one button for it.
+        expect(page.all("form[action='#{registration_ce_sign_in_path(registration.slug)}']").size).to eq(1)
+      end
+
+      it "keeps the paid licence's sheet when the second licence is still unpaid" do
+        paid = pay_ce!(number: "LIC123")
+        pay_ce!(number: "MFT999", paid: false)
+
+        get registration_ce_path(registration.slug)
+
+        expect(response.body).to include("Training sign-in")
+        expect(response.body).to include("LIC123")
+        expect(response.body).not_to include("MFT999")
+        # A lone sheet isn't titled, so it renders exactly as a single-licence one does.
+        expect(response.body).not_to include("hours awarded")
+        expect(paid.reload).to be_paid_in_full
+      end
+
+      # Without ce_id, one date would open an editor on every sheet at once.
+      it "opens the editor on just the sheet whose Edit was used" do
+        first = pay_ce!(number: "LIC123")
+        pay_ce!(number: "MFT999")
+
+        get registration_ce_path(registration.slug, edit: "2026-07-23", ce_id: first.id)
+
+        expect(response.body.scan("attendance[entries][0][in]").size).to eq(1)
+      end
+
+      it "lets the registrant sign in while only one licence is paid" do
+        pay_ce!(number: "LIC123")
+        pay_ce!(number: "MFT999", paid: false)
+
+        expect {
+          post registration_ce_sign_in_path(registration.slug)
+        }.to change { registration.event_attendance_time_entries.count }.by(1)
+      end
     end
 
     it "shows the section on the admin sample-ticket preview, with the controls inert" do

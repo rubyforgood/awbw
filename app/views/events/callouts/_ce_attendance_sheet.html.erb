@@ -1,0 +1,79 @@
+<%#
+  One CE registration's sign-in sheet: every training day, its sessions, and the
+  day/overall totals — the registrant's own copy of what their board will see. A
+  registrant claiming CE against two licences gets one of these per licence, headed
+  by that licence and its awarded hours, because each board is shown only its own.
+  The times underneath are the same on every sheet: one person, one room, one set of
+  hours. Editing from any sheet edits those shared times.
+
+  Read mode lists a day's sessions; Edit swaps the cell for the same clock-time
+  editor staff use on the attendance report.
+  locals: sheet (RegistrantAttendanceSheet), ce_registration, titled (Boolean —
+  whether this registrant has more than one sheet), editing_date, page_state.
+%>
+<% cols = "grid grid-cols-1 sm:grid-cols-[minmax(7rem,1fr)_2.5fr_minmax(3.5rem,auto)] gap-x-3 gap-y-1 px-3 py-2" %>
+<% editable = !sample_preview? %>
+<%# Which sheet an Edit link opens — without it, one date would open an editor on
+    every sheet at once. A lone sheet doesn't need to say so. %>
+<% opening_this_sheet = !titled || params[:ce_id].to_s == ce_registration.id.to_s %>
+
+<% if titled %>
+  <div class="mt-5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+    <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+      <%= ce_registration.professional_license&.number.presence || "Licence on file" %>
+    </span>
+    <span class="text-xs text-gray-400"><%= plain_number(ce_registration.hours) %> hours awarded</span>
+  </div>
+<% end %>
+
+<div class="<%= titled ? "mt-2" : "mt-5" %> overflow-hidden rounded-lg border border-gray-100">
+  <div class="<%= cols %> hidden sm:grid text-xs font-medium uppercase tracking-wide text-gray-400">
+    <div>Day</div>
+    <div>Your times (<%= Time.zone.now.strftime("%Z") %>)</div>
+    <div class="text-right">Total</div>
+  </div>
+
+  <% sheet.days.each_with_index do |date, index| %>
+    <% entries = sheet.entries_on(date) %>
+    <div class="<%= cols %> items-center border-t border-gray-100 text-sm">
+      <div class="text-gray-700">Day <%= index + 1 %> · <%= date.strftime("%a, %b %-d") %></div>
+      <div class="min-w-0">
+        <% if editing_date == date && opening_this_sheet %>
+          <%= render "events/attendance_day_form", entries: entries,
+                url: registration_ce_attendance_path(@event_registration.slug, date: date.iso8601, ce_id: (ce_registration.id if titled)),
+                cancel_path: registration_ce_path(@event_registration.slug, **page_state, anchor: "attendance") %>
+        <% else %>
+          <div class="flex flex-wrap items-center gap-1.5">
+            <% entries.each do |entry| %>
+              <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-700 tabular-nums">
+                <%= entry.signed_in_label %>–<%= entry.signed_out_label %> · <%= entry.duration_label %>
+              </span>
+            <% end %>
+            <% if entries.none? %>
+              <span class="text-xs text-gray-400">No times yet</span>
+            <% end %>
+            <%# The preview's sentinel slug wouldn't resolve, so it shows the control
+                without linking anywhere. %>
+            <% if editable %>
+              <%= link_to registration_ce_path(@event_registration.slug, **page_state, edit: date.iso8601, ce_id: (ce_registration.id if titled), anchor: "attendance"),
+                    class: "ml-1 rounded px-1.5 py-0.5 text-xs font-medium text-teal-700 hover:bg-teal-50 hover:underline",
+                    "aria-label": "Edit your times for #{date.strftime("%b %-d")}" do %>
+                <i class="fa-solid fa-pen text-[0.6rem]"></i> Edit
+              <% end %>
+            <% else %>
+              <span class="ml-1 rounded px-1.5 py-0.5 text-xs font-medium text-teal-700 opacity-60">
+                <i class="fa-solid fa-pen text-[0.6rem]"></i> Edit
+              </span>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+      <div class="text-right font-medium text-gray-900 tabular-nums"><%= attendance_duration_label(sheet.day_minutes(date)) %></div>
+    </div>
+  <% end %>
+
+  <div class="<%= cols %> items-center border-t border-gray-100 bg-gray-50 text-sm font-semibold text-gray-900">
+    <div class="uppercase tracking-wide text-xs text-gray-500 sm:col-span-2">Total logged</div>
+    <div class="text-right tabular-nums"><%= attendance_duration_label(sheet.total_minutes) %></div>
+  </div>
+</div>

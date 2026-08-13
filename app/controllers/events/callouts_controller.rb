@@ -203,7 +203,10 @@ module Events
       # Hand the typed times back so a rejected save doesn't cost the registrant what
       # they entered; the day reopens in edit mode prefilled with them.
       flash[:attendance_rows] = rows.submitted
-      redirect_to registration_ce_path(@event_registration.slug, edit: date.iso8601, anchor: "attendance")
+      # ce_id names which licence's sheet was open, so the editor reopens on that one
+      # rather than on every sheet at once.
+      redirect_to registration_ce_path(@event_registration.slug, edit: date.iso8601,
+        ce_id: params[:ce_id].presence, anchor: "attendance")
     end
 
     # Handouts page: callout-card links to the training worksheet/handout
@@ -258,10 +261,12 @@ module Events
 
     private
 
-    # Attendance sign-in/out is offered only once CE is paid in full — it's the CE
-    # sign-in sheet, so it follows the CE payment, and mirrors the callout view's gate.
+    # Attendance sign-in/out follows the CE payment — it's the CE sign-in sheet. Any-of
+    # rather than all-of, matching the callout view: each paid CE registration renders
+    # its own sheet, and since they all record the same hours, one paid licence is
+    # enough to let the registrant write those hours down.
     def attendance_enabled?
-      @event_registration.ce_registered? && @event_registration.ce_paid_in_full?
+      @event_registration.ce_attendance_offered?
     end
 
     # A datetime rendered in the app zone as "9:02 AM", for sign-in/out flash notices.

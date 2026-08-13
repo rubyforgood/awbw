@@ -812,6 +812,15 @@ class EventRegistration < ApplicationRecord
     continuing_education_registrations.all?(&:paid_in_full?)
   end
 
+  # Whether the attendance sign-in sheet is open to this registrant. Deliberately
+  # any-of, not the all-of ce_paid_in_full? the status badge uses: each paid CE
+  # registration gets its own sheet, and they all record the same hours in the same
+  # room, so one paid licence is enough to justify writing those hours down. Someone
+  # part-way through paying for a second licence keeps signing in for the first.
+  def ce_attendance_offered?
+    continuing_education_registrations.any?(&:paid_in_full?)
+  end
+
   # License numbers on file across this registration's CE registrations.
   def ce_license_numbers
     continuing_education_registrations.filter_map { |c| c.professional_license&.number }
