@@ -18,7 +18,11 @@ class ReminderRecipientFilter
     attendance_status payment_status payment_method ce_status scholarship
     submission_status comment_status org_status account_status state county
   ].freeze
-  FILTER_KEYS = (TEXT_KEYS + DROPDOWN_KEYS).freeze
+  # Picker-only dropdowns that don't map to a shared roster scope. `topic_subscription`
+  # keeps registrants whose person holds an active subscription to the chosen topic
+  # subscription list; matched in memory against the registrant's topic_subscriptions.
+  PICKER_KEYS = %i[ topic_subscription ].freeze
+  FILTER_KEYS = (TEXT_KEYS + DROPDOWN_KEYS + PICKER_KEYS).freeze
   # Every key above that is also a registrants-roster param, so the roster's
   # "Send bulk emails" link can carry the active filters straight into the picker
   # (see EventHelper#reminder_recipient_filters). The remaining text keys (name,
@@ -33,7 +37,7 @@ class ReminderRecipientFilter
 
   def matched_ids
     text_matched = @event_registrations.select { |reg| matches_text?(reg) }.map(&:id).to_set
-    text_matched & dropdown_matched_ids
+    text_matched & dropdown_matched_ids & topic_matched_ids
   end
 
   # True when at least one filter is narrowing the list. The view uses this to
@@ -73,6 +77,20 @@ class ReminderRecipientFilter
     scope = scope.registrant_state(@params[:state]) if @params[:state].present?
     scope = scope.registrant_county(@params[:county]) if @params[:county].present?
     scope.pluck(:id).to_set
+  end
+
+  # Keeps registrants whose person holds an active subscription to the chosen topic
+  # subscription list. With no topic set this is every registration, so it passes
+  # the other matches through unchanged.
+  def topic_matched_ids
+    return @event_registrations.map(&:id).to_set if @params[:topic_subscription].blank?
+
+    type_id = @params[:topic_subscription].to_i
+    @event_registrations.select do |reg|
+      reg.registrant.topic_subscriptions.any? do |sub|
+        sub.active? && sub.topic_subscription_type_id == type_id
+      end
+    end.map(&:id).to_set
   end
 
   def matches_name?(reg)

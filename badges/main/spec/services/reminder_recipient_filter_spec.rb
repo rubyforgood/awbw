@@ -230,6 +230,27 @@ RSpec.describe ReminderRecipientFilter do
       end
     end
 
+    context "topic subscription" do
+      let(:topic) { create(:topic_subscription_type) }
+      let(:other_topic) { create(:topic_subscription_type) }
+      let!(:subscribed) do
+        registration(first_name: "Sub").tap { |r| create(:topic_subscription, person: r.registrant, topic_subscription_type: topic) }
+      end
+      let!(:other) do
+        registration(first_name: "Other").tap { |r| create(:topic_subscription, person: r.registrant, topic_subscription_type: other_topic) }
+      end
+      let!(:none) { registration(first_name: "None") }
+
+      it "filters registrants with an active subscription to the chosen topic" do
+        expect(matched({ topic_subscription: topic.id }, [ subscribed, other, none ])).to eq([ subscribed.id ].to_set)
+      end
+
+      it "ignores unsubscribed subscriptions" do
+        create(:topic_subscription, :unsubscribed, person: none.registrant, topic_subscription_type: topic)
+        expect(matched({ topic_subscription: topic.id }, [ subscribed, other, none ])).to eq([ subscribed.id ].to_set)
+      end
+    end
+
     it "combines filters with AND" do
       funder = create(:organization, name: "Acme Foundation")
       grant = create(:grant, funder: funder)
