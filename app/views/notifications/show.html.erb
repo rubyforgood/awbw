@@ -4,14 +4,21 @@
    Safe email preview + metadata
    ========================================= %>
 
+<div class="mb-3">
+  <%= link_to notifications_path, class: "text-sm text-gray-500 hover:text-gray-700" do %>
+    <i class="fa-solid fa-arrow-left text-xs"></i> <%= t("communications.back_link") %>
+  <% end %>
+</div>
+
 <div class="<%= @notification.decorate.card_bg_class %> border rounded-xl shadow p-6" data-turbo="false">
   <div class="space-y-6">
 
   <!-- Header -->
   <div class="flex items-start justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-semibold text-gray-900">
+      <h1 class="flex items-center gap-2 text-2xl font-semibold text-gray-900">
         <%= t("communications.detail_title") %>
+        <%= @notification.decorate.flag_badges %>
       </h1>
 
       <p class="text-sm text-gray-500">
@@ -101,19 +108,20 @@
 
   <!-- Metadata -->
   <div class="bg-white rounded-lg shadow-sm p-4">
+    <% nd = @notification.decorate %>
     <dl class="space-y-3 text-sm">
 
       <div class="flex items-start gap-4">
-        <dt class="w-28 text-gray-500">To</dt>
-        <dd class="text-gray-900 font-medium break-all">
-          <%= @notification.recipient_email || "—" %>
+        <dt class="w-28 text-gray-500">From</dt>
+        <dd class="text-gray-900 font-medium break-all" title="<%= nd.from_title %>">
+          <%= nd.from_name.presence || "—" %>
         </dd>
       </div>
 
       <div class="flex items-start gap-4">
-        <dt class="w-28 text-gray-500">From</dt>
-        <dd class="text-gray-900 font-medium">
-          <%= @notification.decorate.sender_name %>
+        <dt class="w-28 text-gray-500">To</dt>
+        <dd class="text-gray-900 font-medium break-all" title="<%= nd.to_title %>">
+          <%= nd.to_name.presence || "—" %>
         </dd>
       </div>
 
@@ -220,12 +228,6 @@
     <% end %>
   </div>
 
-  <!-- Actions -->
-  <div class="flex justify-between items-center">
-    <%= link_to t("communications.back_link"),
-                notifications_path,
-                class: "text-sm text-blue-600 hover:underline" %>
-  </div>
 
 </div>
 </div>

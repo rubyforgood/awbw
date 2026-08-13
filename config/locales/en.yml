@@ -36,7 +36,7 @@ en:
   communications:
     title: "Communications"
     detail_title: "Communication"
-    back_link: "← Back to communications"
+    back_link: "Communications"
     empty: "No communications found."
     add: "Add communication"
     new: "New communication"

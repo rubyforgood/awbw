@@ -47,7 +47,7 @@
           <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-1/2 text-center" title="<%= created_name %>"><%= created_initials.presence || "--" %></span>
           <span class="<%= updated_color[0] %> <%= updated_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-1/2 text-center" title="Edited by <%= updated_name %>"><%= updated_initials.presence || "--" %></span>
         <% else %>
-          <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= created_name %>"><%= truncate(created_first_name.presence || "--", length: 10, omission: "..") %></span>
+          <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate max-w-full text-left" title="<%= created_name %>"><%= truncate(created_first_name.presence || "--", length: 10, omission: "..") %></span>
         <% end %>
       </span>
       <span class="text-sm <%= is_age_range_data ? "text-amber-700" : "text-gray-900" %> truncate" data-edit-toggle-target="body" title="<%= [ f.object.topic, f.object.body ].compact_blank.join(" — ") %>">
@@ -64,7 +64,7 @@
           <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-1/2 text-center" title="<%= created_name %>"><%= created_initials.presence || "--" %></span>
           <span class="<%= updated_color[0] %> <%= updated_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-1/2 text-center" title="Edited by <%= updated_name %>"><%= updated_initials.presence || "--" %></span>
         <% else %>
-          <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= created_name %>"><%= truncate(created_first_name.presence || "--", length: 10, omission: "..") %></span>
+          <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate max-w-full text-left" title="<%= created_name %>"><%= truncate(created_first_name.presence || "--", length: 10, omission: "..") %></span>
         <% end %>
       </span>
       <div class="grow flex items-start gap-x-2"
@@ -89,13 +89,13 @@
     </div>
   <% else %>
     <% current_first_name = current_user&.person&.first_name || current_user&.name.to_s.split.first %>
-    <%# New, unsaved comment — amber background until the registration form is saved. %>
-    <div class="flex items-start mb-3 gap-x-1 rounded-md border border-amber-200 bg-amber-50 px-4 py-2">
+    <%# New, unsaved comment — tinted with the comments theme until the parent form is saved. %>
+    <div class="flex items-start mb-3 gap-x-1 rounded-md border <%= DomainTheme.border_class_for(:comments, intensity: 200) %> <%= DomainTheme.bg_class_for(:comments, intensity: 50) %> px-4 py-2">
       <span class="text-xs text-gray-400 whitespace-nowrap shrink-0 mt-2">
         <%= Time.current.strftime("%-m/%-d/%Y %-I:%M %p") %>
       </span>
       <span class="inline-flex items-center w-20 shrink-0 mt-2">
-        <span class="<%= current_color[0] %> <%= current_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= current_user&.person&.name || current_user&.name %>"><%= truncate(current_first_name.to_s, length: 10, omission: "..") %></span>
+        <span class="<%= current_color[0] %> <%= current_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate max-w-full text-left" title="<%= current_user&.person&.name || current_user&.name %>"><%= truncate(current_first_name.to_s, length: 10, omission: "..") %></span>
       </span>
       <div class="grow flex items-start gap-x-2"
            data-controller="field-required"

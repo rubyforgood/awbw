@@ -24,21 +24,22 @@
 <% select_class = "min-w-0 flex-1 truncate bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
 <div data-controller="field-required" data-action="input->field-required#update">
   <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
-    <div class="space-y-2 sm:w-48 sm:shrink-0">
-      <%# Invisible spacer matching the Subject/Body field label, so the From row
-          lines up with the top of the Subject input rather than its label. %>
-      <span class="block invisible font-medium mb-1" aria-hidden="true">From</span>
+    <div class="space-y-2 sm:w-56 sm:shrink-0">
+      <label class="flex items-center gap-2">
+        <span class="w-20 shrink-0 text-sm font-medium text-gray-700">Channel</span>
+        <%= f.select :channel, options_for_select(Notification::MANUAL_CHANNELS.map { |c| [ c.titleize, c ] }, channel_default), { include_blank: false }, class: select_class %>
+      </label>
       <%# From — a non-editable sender chip (the comment-author badge); the sender
           is whoever logs the communication, submitted via a hidden field. %>
       <div class="flex items-center gap-2">
-        <span class="w-16 shrink-0 text-sm font-medium text-gray-700">From</span>
+        <span class="w-20 shrink-0 text-sm font-medium text-gray-700">From</span>
         <span class="<%= sender_color[0] %> <%= sender_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate" title="<%= sender_user&.full_name %>"><%= truncate(sender_first.presence || "--", length: 10, omission: "..") %></span>
       </div>
       <%= f.hidden_field :sender_id, value: sender_user&.id %>
-      <label class="flex items-center gap-2">
-        <span class="w-16 shrink-0 text-sm font-medium text-gray-700">Channel</span>
-        <%= f.select :channel, options_for_select(Notification::MANUAL_CHANNELS.map { |c| [ c.titleize, c ] }, channel_default), { include_blank: false }, class: select_class %>
-      </label>
+      <div class="flex items-center gap-2">
+        <span class="w-20 shrink-0 text-sm font-medium text-gray-700">Direction</span>
+        <%= render "notifications/direction_toggle", f: f, compact: true %>
+      </div>
     </div>
     <%# Subject marked required (shows the asterisk) — a blank subject is dropped
         on save. field-required only enforces it once the row is in use, so an
