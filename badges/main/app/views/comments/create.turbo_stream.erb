@@ -9,12 +9,4 @@
                comment_targets: @comment_targets %>
   <% end %>
   <%= turbo_stream.remove "aggregated_comments_empty" %>
-<% else %>
-  <%= turbo_stream.replace "comment_form" do %>
-    <%= render "comments/form", commentable: @commentable %>
-  <% end %>
-
-  <%= turbo_stream.replace "comments_list" do %>
-    <%= render "comments/list", commentable: @commentable, comments: @comments %>
-  <% end %>
 <% end %>

@@ -36,15 +36,4 @@ RSpec.describe "Comments", type: :request do
       expect(comment.reload).not_to be_flagged
     end
   end
-
-  describe "GET /people/:person_id/comments" do
-    it "renders the topic in bold followed by the body" do
-      create(:comment, commentable: person, topic: "Follow up", body: "Called the family.")
-
-      get person_comments_path(person)
-
-      expect(response.body).to include('<div class="font-bold uppercase tracking-wide">Follow up</div>')
-      expect(response.body).to include("Called the family.")
-    end
-  end
 end

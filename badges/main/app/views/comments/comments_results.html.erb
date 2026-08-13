@@ -1,0 +1,8 @@
+<%= turbo_frame_tag "comments_results" do %>
+  <div class="border-t border-gray-100 pt-4 mb-3">
+    <h2 class="text-sm font-semibold text-gray-700">Comments <span class="font-normal text-gray-400">· <%= @count_display %> shown</span></h2>
+  </div>
+  <%= render "comments/feed",
+             comments: @comments,
+             pagination_params: params.slice(:source, :query, :author_id, :from, :to, :flagged, :person_id, :event_id).permit! %>
+<% end %>
