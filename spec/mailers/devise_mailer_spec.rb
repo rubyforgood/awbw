@@ -117,6 +117,22 @@ RSpec.describe DeviseMailer, type: :mailer do
 
         described_class.confirmation_instructions(user, token).deliver_now
       end
+
+      it "flags the notification bulk when the invite is part of a bulk send" do
+        expect(NotificationServices::CreateNotification).to receive(:call).with(
+          hash_including(kind: "account_confirmation", bulk: true)
+        ).and_return(notification)
+
+        described_class.confirmation_instructions(user, token, bulk: true).deliver_now
+      end
+
+      it "leaves a one-off invite unflagged" do
+        expect(NotificationServices::CreateNotification).to receive(:call).with(
+          hash_including(kind: "account_confirmation", bulk: false)
+        ).and_return(notification)
+
+        described_class.confirmation_instructions(user, token).deliver_now
+      end
     end
 
     context "when sending confirmation for email change (reconfirmation)" do

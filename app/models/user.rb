@@ -221,11 +221,12 @@ class User < ApplicationRecord
   # notification it logs, since it has no request and no current_user. Passing an
   # id rather than stashing it on the record keeps it intact if the confirmation
   # is ever delivered async (the record round-trips through GlobalID; the opts don't).
-  def send_confirmation_instructions(sender: nil)
+  def send_confirmation_instructions(sender: nil, bulk: false)
     generate_confirmation_token! unless @raw_confirmation_token
     target = unconfirmed_email.presence || email
     opts = { to: target }
     opts[:sender_id] = sender.id if sender
+    opts[:bulk] = true if bulk
     send_devise_notification(:confirmation_instructions, @raw_confirmation_token, opts)
   end
 

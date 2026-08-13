@@ -170,6 +170,13 @@ RSpec.describe NotificationDecorator, type: :decorator do
       expect(html).not_to include("Incoming")
     end
 
+    it "shows a Bulk pill for a send flagged via the bulk column, even when its kind isn't bulk_" do
+      html = build_stubbed(:notification, :bulk, kind: "event_registration_reminder", recipient_role: "person").decorate.flag_badges
+      expect(html).to include("Bulk")
+      expect(html).not_to include("FYI")
+      expect(html).not_to include("Incoming")
+    end
+
     it "renders nothing for a plain message to the person" do
       expect(build_stubbed(:notification, recipient_role: "person").decorate.flag_badges).to eq("")
     end

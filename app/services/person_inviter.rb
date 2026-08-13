@@ -6,13 +6,14 @@
 class PersonInviter
   Result = Struct.new(:invited, :reason, keyword_init: true)
 
-  def self.call(person:, sender: nil)
-    new(person: person, sender: sender).call
+  def self.call(person:, sender: nil, bulk: false)
+    new(person: person, sender: sender, bulk: bulk).call
   end
 
-  def initialize(person:, sender: nil)
+  def initialize(person:, sender: nil, bulk: false)
     @person = person
     @sender = sender
+    @bulk = bulk
   end
 
   def call
@@ -50,6 +51,6 @@ class PersonInviter
     user.updated_by = @sender
     user.set_welcome_instructions_token!
     user.update!(welcome_instructions_sent_at: Time.current, welcome_instructions_sent_by: @sender)
-    user.send_confirmation_instructions(sender: @sender)
+    user.send_confirmation_instructions(sender: @sender, bulk: @bulk)
   end
 end
