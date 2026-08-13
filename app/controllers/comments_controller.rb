@@ -7,7 +7,7 @@ class CommentsController < ApplicationController
   # person's aggregated feed plus remote person/event filters. The nested
   # create/update actions below manage a single record's comments.
   def index
-    authorize! Comment, to: :index?
+    authorize!
 
     base = Comment.all
     if turbo_frame_request?
