@@ -152,7 +152,7 @@ This codebase (Rails 8.1)
 ### Namespaces
 
 - **Root level** (~58 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
-- **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController, CommentsController (global comments index at `/admin/comments` with search + remote person/event filters)
+- **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController
 - **`events/`**: Registrations sub-resource (create/destroy + slug-based show at `/registration/:slug`)
 - **Devise overrides**: Registrations, Confirmations, Passwords
 

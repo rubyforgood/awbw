@@ -1,12 +1,24 @@
 class CommentsController < ApplicationController
-  before_action :set_commentable
+  include AhoyTracking
 
+  before_action :set_commentable, except: :index
+
+  # Global, admin-only index of every comment, with the same search boxes as a
+  # person's aggregated feed plus remote person/event filters. The nested
+  # create/update actions below manage a single record's comments.
   def index
-    authorize!
-    @comments = @commentable.comments.newest_first.paginate(page: params[:page], per_page: 10)
+    authorize! Comment, to: :index?
 
-    respond_to do |format|
-      format.html { render partial: "comments/list", locals: { commentable: @commentable, comments: @comments } }
+    base = Comment.all
+    if turbo_frame_request?
+      filtered = base.search_by_params(params).includes(:commentable, :created_by, :updated_by).newest_first
+      @total_count = base.count
+      @count_display = filtered.count == @total_count ? @total_count : "#{filtered.count}/#{@total_count}"
+      @comments = filtered.paginate(page: params[:page], per_page: 25)
+      render :comments_results
+    else
+      @total_count = base.count
+      track_view("comments", { page: "index" })
     end
   end
 
@@ -19,17 +31,12 @@ class CommentsController < ApplicationController
     if @comment.save
       @created_comment = @comment
       setup_aggregated_context if aggregated?
-      @comment = @commentable.comments.build
-      @comments = @commentable.comments.newest_first.paginate(page: 1, per_page: 10)
       respond_to do |format|
         format.turbo_stream
         format.html { redirect_back fallback_location: root_path, notice: "Comment created successfully." }
       end
     else
-      respond_to do |format|
-        format.turbo_stream { render turbo_stream: turbo_stream.replace("comment_form", partial: "comments/form", locals: { commentable: @commentable }) }
-        format.html { redirect_back fallback_location: root_path, alert: "Failed to create comment." }
-      end
+      redirect_back fallback_location: root_path, alert: "Failed to create comment."
     end
   end
 
