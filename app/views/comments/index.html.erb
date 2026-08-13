@@ -1,2 +1,34 @@
-<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<%= render "comments/list", commentable: @commentable, comments: @comments %>
+<% content_for(:page_bg_class, "admin-only bg-white") %>
+<div class="mb-3">
+  <%= link_to admin_path, class: "text-sm text-gray-500 hover:text-gray-700" do %>
+    <i class="fa-solid fa-arrow-left text-xs"></i> Admin home
+  <% end %>
+</div>
+
+<div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+  <div class="<%= DomainTheme.bg_class_for(:comments, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:comments) %> px-8 py-3">
+    <div class="flex items-center gap-2">
+      <i class="fa-solid fa-comments <%= DomainTheme.text_class_for(:comments, intensity: 700) %>"></i>
+      <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:comments, intensity: 900) %> uppercase tracking-wide">Comments</span>
+    </div>
+  </div>
+
+  <div class="p-4 sm:p-8 space-y-6">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+      <h1 class="text-2xl font-semibold text-gray-900">All comments</h1>
+      <p class="text-sm text-gray-500"><%= pluralize(@total_count, "comment") %></p>
+    </div>
+
+    <%= render "comments/search_boxes",
+               url: comments_path,
+               clear_path: comments_path,
+               frame: "comments_results",
+               show_person: true,
+               show_event: true %>
+
+    <% result_src = comments_path + "?" + request.query_string %>
+    <%= turbo_frame_tag "comments_results", src: result_src, data: { turbo: "temporary" } do %>
+      <div class="py-6 text-center text-sm text-gray-400">Loading comments…</div>
+    <% end %>
+  </div>
+</div>

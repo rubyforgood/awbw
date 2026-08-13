@@ -33,7 +33,7 @@ Rails.application.routes.draw do
       get :confirm_email_manual
       post :process_email_manual
     end
-    resources :comments, only: [ :index, :create, :update ]
+    resources :comments, only: [ :create, :update ]
   end
 
   get "contact_us", to: "contact_us#index"
@@ -53,8 +53,9 @@ Rails.application.routes.draw do
     get "activities/charts",         to: "ahoy_activities#charts", as: "activities_charts"
     get "activities/counts",         to: "analytics#index", as: "activities_counts"
     post "activities/counts/print",  to: "analytics#print", as: "analytics_print"
-    resources :comments, only: [ :index ]
   end
+
+  resources :comments, only: [ :index ]
 
   resources :banners
   resources :bookmarks do
@@ -107,7 +108,7 @@ Rails.application.routes.draw do
       patch :update_onboarding
       patch :toggle_certificate_issued
     end
-    resources :comments, only: [ :index, :create, :update ]
+    resources :comments, only: [ :create, :update ]
   end
   resources :topic_subscriptions, except: [ :show ] do
     collection do
@@ -117,7 +118,7 @@ Rails.application.routes.draw do
       patch :unsubscribe
       patch :resubscribe
     end
-    resources :comments, only: [ :index, :create, :update ]
+    resources :comments, only: [ :create, :update ]
   end
   resources :topic_subscription_types, except: [ :show ] do
     member do
@@ -140,11 +141,11 @@ Rails.application.routes.draw do
   resources :grants
   resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
     member { patch :toggle_tasks }
-    resources :comments, only: [ :index, :create, :update ]
+    resources :comments, only: [ :create, :update ]
   end
   resources :continuing_education_registrations, only: [ :new, :create, :edit, :update, :destroy ] do
     member { patch :toggle_certificate }
-    resources :comments, only: [ :index, :create, :update ]
+    resources :comments, only: [ :create, :update ]
   end
   resources :discounts, only: [ :create, :show, :destroy ] do
     collection do
@@ -207,7 +208,7 @@ Rails.application.routes.draw do
       get :bio
       get :all_comments
     end
-    resources :comments, only: [ :index, :create, :update ]
+    resources :comments, only: [ :create, :update ]
     resources :memberships, only: [ :index, :new, :create ]
   end
   resources :faqs
@@ -232,7 +233,7 @@ Rails.application.routes.draw do
     member do
       get :populations_served
     end
-    resources :comments, only: [ :index, :create, :update ]
+    resources :comments, only: [ :create, :update ]
     resources :monthly_reports, only: :index
   end
   resources :payments, only: [ :new, :create, :show, :index, :edit, :update ] do
@@ -299,7 +300,7 @@ Rails.application.routes.draw do
   resources :workshop_variation_ideas
   resources :workshop_variations
   resources :workshops do
-    resources :comments, only: [ :index, :create, :update ]
+    resources :comments, only: [ :create, :update ]
   end
 
   resources :workshop_mentions, only: [ :index ]
