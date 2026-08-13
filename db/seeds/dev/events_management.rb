@@ -1492,7 +1492,13 @@ if facilitator_training && registration_form
   demo_people = Person.where("email LIKE ? OR email LIKE ?",
     "orgchip.demo.%@seed.example.com", "affdemo.%@seed.example.com")
   Resource.where(author_id: demo_people).update_all(author_id: nil)
-  demo_people.find_each(&:destroy)
+  # Drop payments first: payments.rb (which runs later) records payments against
+  # some of these registrants, and payments reference the person without a destroy
+  # cascade, so on a re-seed the person destroy would hit that foreign key.
+  demo_people.find_each do |person|
+    Payment.where(person: person).destroy_all
+    person.destroy
+  end
 
   # Each scenario => one registrant. :orgs link real orgs (→ chip shows links);
   # :agency stores a submitted name. A typed name matching an existing org is linked
