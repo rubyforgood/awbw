@@ -104,6 +104,12 @@ class Notification < ApplicationRecord
   scope :delivered, -> { where.not(delivered_at: nil) }
   scope :undelivered, -> { where(delivered_at: nil) }
 
+  # The portal launched on this date. Any undelivered email created before it is
+  # pre-launch data (imported/legacy) whose delivery job is long gone — it will
+  # never send, so we retire it from the "pending" treatment (see #archived?)
+  # rather than flagging tens of thousands of old rows as stuck.
+  LAUNCHED_ON = Date.new(2026, 1, 1)
+
   validates :kind, presence: true, inclusion: { in: KINDS }
   validates :recipient_role, presence: true, inclusion: { in: RECIPIENT_ROLES }
   validates :recipient_email, presence: true
@@ -183,14 +189,24 @@ class Notification < ApplicationRecord
     error_at.present? && !delivered?
   end
 
+  # A pre-launch undelivered email — legacy data that never sent. Shown as
+  # "Archived" (neutral) instead of "Pending" so the old backlog doesn't read
+  # as a live problem. Delivered/failed rows keep their own status.
+  def archived?
+    return false if delivered? || failed?
+
+    created_at.present? && created_at.to_date < LAUNCHED_ON
+  end
+
   # An autoemail normally delivers within seconds of enqueue, so one still
   # undelivered past this window is stuck (its job never completed). Fresh
   # pending emails inside the window aren't flagged, so a normal in-flight send
-  # doesn't briefly read as a problem.
+  # doesn't briefly read as a problem; archived ones are intentionally retired,
+  # so they aren't flagged either.
   DELIVERY_GRACE_PERIOD = 1.hour
 
   def stuck_pending?
-    return false if delivered? || failed?
+    return false if delivered? || failed? || archived?
 
     created_at.present? && created_at < DELIVERY_GRACE_PERIOD.ago
   end

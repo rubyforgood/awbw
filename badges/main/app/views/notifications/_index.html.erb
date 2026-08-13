@@ -20,6 +20,8 @@
           <%= time_ago_in_words(notification.delivered_at.in_time_zone("Pacific Time (US & Canada)")) %> ago
         <% elsif notification.failed? %>
           <span class="text-red-600 font-medium" title="<%= notification.error_class %>: <%= notification.error_message %>">Failed</span>
+        <% elsif notification.archived? %>
+          <span class="text-gray-400 font-medium" title="Retired — old undelivered email, no longer tracked as pending">Archived</span>
         <% else %>
           <span class="text-yellow-600 font-medium">Pending</span>
         <% end %>

@@ -139,21 +139,25 @@ end
   notification.update!(email_body_html: body_html, email_body_text: body_text) if notification.email_body_html.blank?
 end
 
-# A few emails that never went out, so the warning styling is visible: the index
-# tints the whole row (and the detail card) amber for a stuck-pending email and
-# red for a failed one. Created a few hours ago so they sort to the top (index is
-# created_at desc) and are past the 1-hour delivery grace period, so the pending
-# ones read as stuck rather than fresh. Left undelivered with no subject/body —
-# exactly the state a real stuck or failed send leaves behind.
+# A few emails that never went out, so each status is visible in the index: a
+# stuck-pending one (amber row + card), a failed one (red), and an archived one
+# (neutral — a stale row an admin retired so it stops reading as pending).
+# Created a few hours ago so they sort to the top (index is created_at desc) and
+# are past the 1-hour delivery grace period. Left undelivered with no
+# subject/body — exactly the state a real stuck, failed, or retired send leaves.
 delivery_problem_samples = [
   { kind: "idea_submitted_fyi", hours_ago: 2, state: :failed },
   { kind: "workshop_log_submitted_fyi", hours_ago: 3, state: :pending },
-  { kind: "event_registration_confirmation_fyi", hours_ago: 4, state: :pending }
+  { kind: "event_registration_confirmation_fyi", hours_ago: 4, state: :pending },
+  { kind: "report_submitted_fyi", hours_ago: 5, state: :archived }
 ]
 
 delivery_problem_samples.each do |sample|
-  created_at = sample[:hours_ago].hours.ago
   failed = sample[:state] == :failed
+  archived = sample[:state] == :archived
+  # Archived reads off the pre-launch date, so date it before the portal launched;
+  # the rest sit a few hours back so they sort to the top of the list.
+  created_at = archived ? (Notification::LAUNCHED_ON - 2.weeks).to_time : sample[:hours_ago].hours.ago
 
   notification = Notification.find_or_create_by!(
     recipient_email: reply_to_email,
@@ -168,11 +172,10 @@ delivery_problem_samples.each do |sample|
     n.error_class = failed ? "Net::SMTPServerBusy" : nil
     n.error_message = failed ? "451 Temporary server error. Please try again later." : nil
   end
-  # Re-anchor to a fresh few-hours-ago each seed run so they stay at the top.
   notification.update_columns(created_at: created_at)
 end
 
-puts "  Created #{delivery_problem_samples.size} undelivered notifications (pending → warning, failed → error styling)"
+puts "  Created #{delivery_problem_samples.size} undelivered notifications (pending → warning, failed → error, archived → neutral)"
 
 puts "  Created #{Notification.where(kind: %w[contact_us contact_us_fyi]).count} contact_us notifications"
 
