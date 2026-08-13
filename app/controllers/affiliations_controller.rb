@@ -19,7 +19,7 @@ class AffiliationsController < ApplicationController
           render turbo_stream: turbo_stream.remove("affiliation_#{affiliation.id}")
         else
           render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages"),
-                 status: :unprocessable_entity
+                 status: :unprocessable_content
         end
       end
       format.html do

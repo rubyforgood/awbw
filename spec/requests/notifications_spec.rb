@@ -190,7 +190,7 @@ RSpec.describe "Notifications", type: :request do
           post notifications_path, params: valid_params.except(:person_id)
         }.not_to change(Notification, :count)
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include("Select a person")
       end
 
@@ -199,7 +199,7 @@ RSpec.describe "Notifications", type: :request do
           post notifications_path, params: valid_params.deep_merge(notification: { email_subject: "" })
         }.not_to change(Notification, :count)
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
 
