@@ -26,6 +26,9 @@ class DeviseMailer < Devise::Mailer
     # The invite sender arrives as a plain id in opts (GlobalID-safe for async
     # delivery); pull it out before super so Devise doesn't fold it into the headers.
     @confirmation_sender_id = opts.delete(:sender_id)
+    # Set when this confirmation is part of a bulk invite send, so the logged
+    # communication is flagged bulk. Pulled out before super for the same reason.
+    @confirmation_bulk = opts.delete(:bulk) { false }
     @record = record
     @token  = token
     @user = record
@@ -94,6 +97,7 @@ class DeviseMailer < Devise::Mailer
       kind: kind,
       notification_type: 1,
       sender: confirmation_sender, # the staff member who triggered it, when one did
+      bulk: @confirmation_bulk || false, # part of a bulk invite send (only ever set on confirmations)
       deliver: false # Devise already sent the email, so no need to deliver via the job
     )
 

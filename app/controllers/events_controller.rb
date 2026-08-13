@@ -450,6 +450,7 @@ class EventsController < ApplicationController
         recipient_email: event_registration.registrant.preferred_email,
         notification_type: 0,
         sender: current_user, # an admin sent these by hand from the reminders page
+        bulk: true,
         custom_message: custom_message.presence,
         custom_subject: custom_subject.presence
       )
@@ -913,7 +914,7 @@ class EventsController < ApplicationController
   # its own communication record, so there's no separate per-recipient notification
   # or admin FYI here.
   def send_bulk_invites(registrations)
-    invited = registrations.count { |reg| PersonInviter.call(person: reg.registrant, sender: current_user).invited }
+    invited = registrations.count { |reg| PersonInviter.call(person: reg.registrant, sender: current_user, bulk: true).invited }
 
     track_view("events.send_invites", { event_id: @event.id, recipient_count: invited })
     redirect_to registrants_event_path(@event), notice: "Portal invite (confirmation) emails are being sent to #{invited} #{'person'.pluralize(invited)}."

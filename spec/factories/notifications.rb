@@ -9,5 +9,9 @@ FactoryBot.define do
     trait :incoming do
       direction { "incoming" }
     end
+
+    trait :bulk do
+      bulk { true }
+    end
   end
 end
