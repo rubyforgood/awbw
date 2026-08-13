@@ -13,7 +13,7 @@
 
   <tbody class="divide-y divide-gray-100">
   <% @notifications.each do |notification| %>
-    <tr class="hover:bg-gray-50">
+    <tr class="<%= notification.decorate.row_class %>">
       <!-- Sent -->
       <td class="px-4 py-3 text-gray-700 whitespace-nowrap">
         <% if notification.delivered_at.present? %>

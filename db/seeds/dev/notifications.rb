@@ -139,6 +139,40 @@ end
   notification.update!(email_body_html: body_html, email_body_text: body_text) if notification.email_body_html.blank?
 end
 
+# A few emails that never went out, so the warning styling is visible: the index
+# tints the whole row amber and the detail card takes the warning background for
+# any undelivered email (pending or failed). Created a few hours ago so they sort
+# to the top (index is created_at desc). Left undelivered with no subject/body —
+# exactly the state a real stuck or failed send leaves behind.
+delivery_problem_samples = [
+  { kind: "idea_submitted_fyi", hours_ago: 2, state: :failed },
+  { kind: "workshop_log_submitted_fyi", hours_ago: 3, state: :pending },
+  { kind: "event_registration_confirmation_fyi", hours_ago: 4, state: :pending }
+]
+
+delivery_problem_samples.each do |sample|
+  created_at = sample[:hours_ago].hours.ago
+  failed = sample[:state] == :failed
+
+  notification = Notification.find_or_create_by!(
+    recipient_email: reply_to_email,
+    kind: sample[:kind],
+    email_subject: nil
+  ) do |n|
+    n.noticeable = sample_user&.person
+    n.recipient_role = "admin"
+    n.notification_type = 0
+    n.delivered_at = nil
+    n.error_at = failed ? created_at : nil
+    n.error_class = failed ? "Net::SMTPServerBusy" : nil
+    n.error_message = failed ? "451 Temporary server error. Please try again later." : nil
+  end
+  # Re-anchor to a fresh few-hours-ago each seed run so they stay at the top.
+  notification.update_columns(created_at: created_at)
+end
+
+puts "  Created #{delivery_problem_samples.size} undelivered notifications (pending → warning, failed → error styling)"
+
 puts "  Created #{Notification.where(kind: %w[contact_us contact_us_fyi]).count} contact_us notifications"
 
 # Custom event reminders Amy received. These demonstrate the editable subject and

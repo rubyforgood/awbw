@@ -24,6 +24,22 @@ class NotificationDecorator < ApplicationDecorator
   def detail(length: nil)
   end
 
+  # Whole-row tint on the communications index: red error for a failed send,
+  # amber warning for one still pending, default hover once delivered.
+  def row_class
+    return "hover:bg-gray-50" if delivered?
+
+    failed? ? "bg-red-50 hover:bg-red-100" : "bg-amber-50 hover:bg-amber-100"
+  end
+
+  # Detail-page card background: red error for a failed send, amber warning for
+  # one still pending, the notifications domain colour once delivered.
+  def card_bg_class
+    return "#{DomainTheme.bg_class_for(:notifications)} border-gray-200" if delivered?
+
+    failed? ? "bg-red-50 border-red-300" : "bg-amber-50 border-amber-300"
+  end
+
   def channel_icon(**options)
     icon_class = CHANNEL_ICONS[channel]
     return "" if icon_class.blank?
