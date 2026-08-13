@@ -123,5 +123,13 @@ RSpec.describe "Events::BulkReminders", type: :request do
       # carry a sender so the index/show page name the admin.
       expect(reminders.map(&:sender_id)).not_to include(nil)
     end
+
+    it "flags each reminder as bulk so the index marks it with a Bulk pill" do
+      post send_reminder_event_path(event), params: { registration_ids: [ jane.id, sam.id ] }
+
+      reminders = Notification.where(kind: "event_registration_reminder")
+      expect(reminders.count).to eq(2)
+      expect(reminders).to all(be_bulk)
+    end
   end
 end

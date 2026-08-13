@@ -86,10 +86,12 @@ class NotificationDecorator < ApplicationDecorator
     pill(AUDIENCE_META[audience], **options)
   end
 
-  # Part of a bulk operation (bulk payment) — sent as part of a bulk or its admin
-  # FYI. Both bulk kinds start with "bulk_".
+  # Part of a bulk send, so the index can flag it with a "Bulk" pill. Two things
+  # count: the bulk_payment_* kinds (unambiguous from the kind alone), and any
+  # send explicitly marked via the `bulk` column — bulk reminders and invites,
+  # whose kind is shared with one-off sends.
   def bulk?
-    kind.to_s.start_with?("bulk_")
+    object.bulk? || kind.to_s.start_with?("bulk_")
   end
 
   # Every applicable flag pill for this communication, rendered together:

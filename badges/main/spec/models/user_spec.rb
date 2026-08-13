@@ -489,5 +489,28 @@ RSpec.describe User do
           .with(user, anything, hash_excluding(:sender_id))
       end
     end
+
+    context "when part of a bulk invite send" do
+      let(:user) { create(:user, confirmed_at: nil) }
+
+      before do
+        user
+        allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)
+      end
+
+      it "passes bulk through the mailer opts so the logged communication is flagged" do
+        user.send_confirmation_instructions(bulk: true)
+
+        expect(DeviseMailer).to have_received(:confirmation_instructions)
+          .with(user, anything, hash_including(bulk: true))
+      end
+
+      it "omits bulk for a one-off invite" do
+        user.send_confirmation_instructions
+
+        expect(DeviseMailer).to have_received(:confirmation_instructions)
+          .with(user, anything, hash_excluding(:bulk))
+      end
+    end
   end
 end

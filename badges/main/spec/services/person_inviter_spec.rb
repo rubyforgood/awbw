@@ -32,6 +32,15 @@ RSpec.describe PersonInviter do
         .and change(User, :count).by(0)
     end
 
+    it "forwards the bulk flag so a bulk invite is logged as bulk" do
+      user = create(:user, :unconfirmed, email: "pending@example.com")
+      person = create(:person, user: user)
+
+      expect(user).to receive(:send_confirmation_instructions).with(sender: sender, bulk: true)
+
+      described_class.call(person: person, sender: sender, bulk: true)
+    end
+
     it "skips a person who already has a confirmed account" do
       person = create(:person) # factory associates a confirmed user
 
