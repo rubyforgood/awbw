@@ -36,7 +36,7 @@ class RegistrationTicketCalloutsController < ApplicationController
     if @callout.update(callout_params)
       head :ok
     else
-      head :unprocessable_entity
+      head :unprocessable_content
     end
   end
 

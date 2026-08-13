@@ -14,7 +14,7 @@ Devise.setup do |config|
   config.sign_in_after_reset_password = true
 
   # Use Turbo-compatible HTTP status codes
-  config.responder.error_status = :unprocessable_entity
+  config.responder.error_status = :unprocessable_content
   config.responder.redirect_status = :see_other
 
   # Configure the class responsible to send e-mails.
