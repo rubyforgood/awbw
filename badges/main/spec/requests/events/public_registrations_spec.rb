@@ -315,9 +315,10 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
     it "uses singular date and time labels for a single-day event" do
       pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+      day = 2.weeks.from_now.in_time_zone(pacific)
       event.update!(autoshow_registration_details: true,
-                    start_date: pacific.local(2026, 8, 12, 9),
-                    end_date: pacific.local(2026, 8, 12, 12))
+                    start_date: day.change(hour: 9),
+                    end_date: day.change(hour: 12))
 
       get new_event_public_registration_path(event)
 
