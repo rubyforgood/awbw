@@ -22,6 +22,8 @@ class NotificationMailerJob < ApplicationJob
       "bulk_payment_confirmation_fyi" => ->(n) { NotificationMailer.bulk_payment_confirmation_fyi(n) },
       "form_submission_confirmation" => ->(n) { NotificationMailer.form_submission_confirmation(n) },
       "form_submission_confirmation_fyi" => ->(n) { NotificationMailer.form_submission_confirmation_fyi(n) },
+      "scholarship_agreement_signed" => ->(n) { NotificationMailer.scholarship_agreement_signed(n) },
+      "scholarship_agreement_signed_fyi" => ->(n) { NotificationMailer.scholarship_agreement_signed_fyi(n) },
       "scholarship_agreement_declined_fyi" => ->(n) { NotificationMailer.scholarship_agreement_declined_fyi(n) }
     }
 

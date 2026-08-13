@@ -36,6 +36,21 @@
   </p>
 </div>
 
+<% if @registration.present? %>
+  <div style="text-align: left; margin: 16px 0;">
+    <p style="margin: 0 0 6px; font-size: 13px; color: #6b7280;">
+      Sent from the scholarship page for
+      <strong><%= @registration.event&.title %></strong>
+      (<%= @registration.registrant&.full_name %>).
+    </p>
+    <a href="<%= edit_event_registration_url(@registration) %>"
+       style="display:inline-block;background:#e5e7eb;color:#111827;
+         text-decoration:none;padding:8px 14px;border-radius:6px;font-weight:bold;">
+      View registration
+    </a>
+  </div>
+<% end %>
+
 <div style="text-align: left;">
   <p style="font-size: 13px; color: #6b7280;">
     Submitted on

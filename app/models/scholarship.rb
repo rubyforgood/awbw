@@ -111,11 +111,17 @@ class Scholarship < ApplicationRecord
     save!
   end
 
+  # The event registration this scholarship is allocated against (nil for a
+  # grant-funded scholarship with no registration).
+  def event_registration
+    registration = allocation&.allocatable
+    registration if registration.is_a?(EventRegistration)
+  end
+
   # The event this scholarship was awarded at, via its allocation's registration
   # (nil for a grant-funded scholarship with no event registration).
   def event
-    registration = allocation&.allocatable
-    registration.event if registration.respond_to?(:event)
+    event_registration&.event
   end
 
   # The current agreement response — the source for the responded-at date and

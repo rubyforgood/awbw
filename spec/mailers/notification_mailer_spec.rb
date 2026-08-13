@@ -1,6 +1,36 @@
 require "rails_helper"
 
 RSpec.describe NotificationMailer, type: :mailer do
+  describe "scholarship agreement signed" do
+    let(:event) { create(:event, cost_cents: 10_000, title: "Facilitator Training") }
+    let(:registration) { create(:event_registration, event:) }
+    let(:person) { registration.registrant }
+    let(:scholarship) { create(:scholarship, recipient: person, amount_cents: 5_000) }
+    let!(:allocation) { create(:allocation, source: scholarship, allocatable: registration, amount: 5_000) }
+
+    describe "#scholarship_agreement_signed (to the recipient)" do
+      let(:notification) do
+        create(:notification, kind: "scholarship_agreement_signed", noticeable: Scholarship.find(scholarship.id),
+               recipient_role: "person", recipient_email: person.preferred_email)
+      end
+
+      it "is addressed to the recipient and links back to their ticket" do
+        mail = described_class.scholarship_agreement_signed(notification)
+        expect(mail.to).to eq([ person.preferred_email ])
+        expect(mail.subject).to include("Your scholarship agreement is confirmed")
+        expect(mail.body.encoded).to include("/registration/#{registration.slug}")
+      end
+    end
+
+    describe "#scholarship_agreement_signed_fyi (admin)" do
+      let(:notification) { create(:notification, kind: "scholarship_agreement_signed_fyi", noticeable: scholarship) }
+
+      it "names the recipient in the subject" do
+        expect(described_class.scholarship_agreement_signed_fyi(notification).subject).to include("Scholarship agreement signed by #{person.full_name}")
+      end
+    end
+  end
+
   describe "#scholarship_agreement_declined_fyi" do
     let(:event) { create(:event, cost_cents: 10_000, title: "Facilitator Training") }
     let(:registration) { create(:event_registration, event:) }

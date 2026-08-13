@@ -3,6 +3,10 @@ class ContactUsMailer < ApplicationMailer
     @contact_us = contact_us
     @user = user
 
+    # When the message came from a scholarship page, link the team to that
+    # registration (threaded through as a slug on the form).
+    @registration = EventRegistration.find_by(slug: contact_us[:registration_id]) if contact_us[:registration_id].present?
+
     @mail_to = ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
 
     sender_name = if user.present?

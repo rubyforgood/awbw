@@ -189,6 +189,31 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
+  def scholarship_agreement_signed(notification)
+    @scholarship = notification.noticeable
+    @person = @scholarship.recipient
+    @event = @scholarship.event&.decorate
+    registration = @scholarship.event_registration
+    @ticket_url = registration_ticket_url(registration.slug) if registration
+    @notification_type = "Scholarship agreement confirmation"
+
+    mail(
+      to: notification.recipient_email,
+      subject: "#{SUBJECT_PREFIX} Your scholarship agreement is confirmed"
+    )
+  end
+
+  def scholarship_agreement_signed_fyi(notification)
+    @scholarship = notification.noticeable
+    @person = @scholarship.recipient
+    @event = @scholarship.event&.decorate
+    @notification_type = "Scholarship agreement signed"
+
+    mail(
+      subject: "#{FYI_PREFIX} Scholarship agreement signed by #{@person&.full_name}"
+    )
+  end
+
   def scholarship_agreement_declined_fyi(notification)
     @scholarship = notification.noticeable
     @person = @scholarship.recipient

@@ -122,6 +122,11 @@
               <% if @from_story_share %>
                 <input type="hidden" name="from" value="story_share">
               <% end %>
+              <%# Carries the scholarship registration through to the FYI so the team
+                  can jump to the registration the message is about. %>
+              <% if params[:registration_id].present? %>
+                <input type="hidden" name="contact_us[registration_id]" value="<%= params[:registration_id] %>">
+              <% end %>
               <% unless current_user %>
                 <!-- Name Row -->
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">

@@ -65,7 +65,9 @@ module Events
       end
 
       if params[:agreement] == "yes"
+        newly_signed = !scholarship.agreement_signed?
         scholarship.accept_agreement!(by: "recipient")
+        notify_scholarship_agreement_signed(scholarship) if newly_signed
         redirect_to registration_scholarship_path(@event_registration.slug), notice: "Thanks — your agreement has been recorded."
       else
         redirect_to registration_scholarship_path(@event_registration.slug), alert: "Something went wrong recording your agreement. Please try again."
@@ -326,6 +328,30 @@ module Events
       return "Signed out at #{time}." if entry.attendance_date == Time.zone.today
 
       "Signed out for #{entry.attendance_date.strftime("%a, %b %-d")} at #{time}."
+    end
+
+    # On the recipient signing: confirm to them (with a link back to their ticket)
+    # and send the team an FYI. The FYI is linked to the accept history row.
+    def notify_scholarship_agreement_signed(scholarship)
+      recipient_email = scholarship.recipient&.preferred_email
+      if recipient_email.present?
+        NotificationServices::CreateNotification.call(
+          noticeable: scholarship,
+          kind: :scholarship_agreement_signed,
+          recipient_role: :person,
+          recipient_email: recipient_email,
+          notification_type: 0
+        )
+      end
+
+      fyi = NotificationServices::CreateNotification.call(
+        noticeable: scholarship,
+        kind: :scholarship_agreement_signed_fyi,
+        recipient_role: :admin,
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        notification_type: 0
+      )
+      scholarship.latest_agreement_response&.update!(notification: fyi)
     end
 
     # Whether the event's built-in callout for this key is materialized and

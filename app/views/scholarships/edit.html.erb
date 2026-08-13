@@ -72,7 +72,8 @@
           <% if declined_response&.reason.present? %>
             <p class="mt-0.5 text-red-600">“<%= declined_response.reason %>”</p>
           <% end %>
-          <p class="mt-1 text-xs text-red-500">This award isn't counted in any totals while declined. Adjust the amount first if you want to re-offer at new terms.</p>
+          <p class="mt-1 text-xs text-red-500">This award isn't counted in any totals while declined.</p>
+          <p class="text-xs text-red-500">To re-offer at new terms, change the amount and save first — then click Re-offer.</p>
         </div>
       </div>
       <%= button_to reoffer_scholarship_path(@scholarship, return_to: params[:return_to].presence, participant: params[:participant].presence),
