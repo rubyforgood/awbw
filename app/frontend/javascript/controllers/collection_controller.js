@@ -65,8 +65,12 @@ export default class extends Controller {
   clearAndSubmit(event) {
     event.preventDefault();
 
+    // Clear to empty rather than calling form.reset(): a page reached with its
+    // filters already in the URL renders them as value/selected attributes, which
+    // are exactly what reset() restores — so resetting puts back the filters we
+    // just cleared and "Clear filters" re-submits them.
     this.element
-      .querySelectorAll('input[type="text"], input[type="search"]')
+      .querySelectorAll('input[type="text"], input[type="search"], input[type="date"]')
       .forEach((input) => {
         input.value = "";
       });
@@ -81,11 +85,10 @@ export default class extends Controller {
         }
         input.checked = false;
       });
-    this.element.reset();
 
-    // TomSelect (remote-select) renders its own UI and ignores selectedIndex and
-    // form.reset(), so clear each enhanced control explicitly. Silent clear avoids
-    // a redundant submit before the one below.
+    // TomSelect (remote-select) renders its own UI and ignores selectedIndex, so
+    // clear each enhanced control explicitly. Silent clear avoids a redundant
+    // submit before the one below.
     this.element.querySelectorAll("select").forEach((select) => {
       if (select.tomselect) select.tomselect.clear(true);
     });
