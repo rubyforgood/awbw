@@ -455,6 +455,27 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).to include("Ada Lovelace")
         end
 
+        it "answers 'No comments' person-wide cross-event, per event when scoped" do
+          # Ada commented on her recent-training registration but not on the older
+          # training she also attended.
+          create(:comment, commentable: attendee_registration)
+          older_reg = create(:event_registration, event: older_training, registrant: attendee, status: "attended")
+
+          quiet = create(:person, first_name: "Quinn", last_name: "Quiet")
+          create(:event_registration, event: recent_training, registrant: quiet, status: "attended")
+
+          # Cross-event: "None" means commented on nothing — excludes Ada, whose
+          # older-training registration is uncommented.
+          get attendees_events_url(comment_status: "none"), headers: frame_headers
+          expect(response.body).to include("Quinn Quiet")
+          expect(response.body).not_to include("Ada Lovelace")
+
+          # Scoped to the older training, where Ada's registration carries no
+          # comment — includes her.
+          get attendees_events_url(comment_status: "none", event_id: older_reg.event_id), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+        end
+
         it "filters by address data (city) without requiring a registration to carry it" do
           create(:address, addressable: attendee, city: "Portland", state: "OR", inactive: false)
           other = create(:person, first_name: "Cara", last_name: "Coast")
