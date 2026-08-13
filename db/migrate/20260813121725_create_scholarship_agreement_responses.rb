@@ -11,8 +11,6 @@ class CreateScholarshipAgreementResponses < ActiveRecord::Migration[8.1]
       t.datetime :responded_at, null: false
       t.string :responder
       t.integer :amount_cents
-      # notifications.id is an integer PK, so the FK column must match.
-      t.references :notification, type: :integer, null: true, foreign_key: true
       t.timestamps
     end
   end

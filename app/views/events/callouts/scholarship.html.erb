@@ -74,7 +74,7 @@
             <i class="fa-solid fa-circle-xmark"></i>
             You declined this scholarship<% if latest_response&.responded_at %> · <%= latest_response.responded_at.strftime("%B %-d, %Y") %><% end %>
           </p>
-          <p class="mt-2 text-sm text-gray-600">Thank you for letting us know. If you'd like to reconsider, please <%= link_to "contact us", contact_us_path(registration_id: @event_registration.slug), class: "font-medium text-red-700 hover:underline" %>.</p>
+          <p class="mt-2 text-sm text-gray-600">Thank you for letting us know. If you'd like to reconsider, please contact us.</p>
         <% else %>
           <p class="text-sm text-gray-600">Agree to complete your scholarship tasks to accept this award.</p>
           <%# Native disclosure so the reason box only appears when declining — no JS.

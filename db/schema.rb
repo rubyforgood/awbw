@@ -107,6 +107,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_115845) do
   create_table "affiliations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.date "end_date"
+    t.bigint "event_registration_id"
     t.string "filemaker_code"
     t.boolean "inactive", default: false, null: false
     t.bigint "organization_address_id"
@@ -119,6 +120,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_115845) do
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "user_id"
+    t.index ["event_registration_id"], name: "index_affiliations_on_event_registration_id"
     t.index ["organization_address_id"], name: "index_affiliations_on_organization_address_id"
     t.index ["organization_agency_id"], name: "index_affiliations_on_organization_agency_id"
     t.index ["organization_id"], name: "index_affiliations_on_organization_id"
@@ -447,6 +449,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_115845) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "event_attendance_time_entries", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.bigint "event_registration_id", null: false
+    t.datetime "signed_in_at", null: false
+    t.datetime "signed_out_at"
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
+    t.index ["created_by_id"], name: "index_event_attendance_time_entries_on_created_by_id"
+    t.index ["event_registration_id", "signed_out_at"], name: "index_attendance_entries_on_registration_and_signed_out"
+    t.index ["updated_by_id"], name: "index_event_attendance_time_entries_on_updated_by_id"
+  end
+
   create_table "event_forms", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "event_id", null: false
@@ -544,6 +559,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_115845) do
     t.decimal "ce_hours_offered", precision: 5, scale: 2
     t.date "ce_hours_request_deadline"
     t.datetime "ce_payment_due_deadline"
+    t.date "completion_deadline"
     t.integer "cost_cents"
     t.datetime "created_at", null: false
     t.integer "created_by_id"
@@ -819,6 +835,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_115845) do
     t.datetime "error_at"
     t.string "error_class"
     t.text "error_message"
+    t.boolean "hide_event_card", default: false, null: false
     t.string "kind", null: false
     t.integer "noticeable_id"
     t.string "noticeable_type"
@@ -1269,14 +1286,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_115845) do
   create_table "scholarship_agreement_responses", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "amount_cents"
     t.datetime "created_at", null: false
-    t.integer "notification_id"
     t.text "reason"
     t.datetime "responded_at", null: false
     t.string "responder"
     t.bigint "scholarship_id", null: false
     t.string "status", null: false
     t.datetime "updated_at", null: false
-    t.index ["notification_id"], name: "index_scholarship_agreement_responses_on_notification_id"
     t.index ["scholarship_id"], name: "index_scholarship_agreement_responses_on_scholarship_id"
   end
 
@@ -1810,6 +1825,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_115845) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "affiliations", "addresses", column: "organization_address_id", on_delete: :nullify
+  add_foreign_key "affiliations", "event_registrations", on_delete: :nullify
   add_foreign_key "affiliations", "organizations"
   add_foreign_key "affiliations", "organizations", column: "organization_agency_id"
   add_foreign_key "affiliations", "people"
@@ -1839,6 +1855,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_115845) do
   add_foreign_key "contact_methods", "addresses"
   add_foreign_key "continuing_education_registrations", "event_registrations"
   add_foreign_key "continuing_education_registrations", "professional_licenses"
+  add_foreign_key "event_attendance_time_entries", "event_registrations"
   add_foreign_key "event_forms", "events"
   add_foreign_key "event_forms", "forms"
   add_foreign_key "event_registration_checklist_completions", "event_registrations"
@@ -1899,7 +1916,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_115845) do
   add_foreign_key "resources", "users", column: "created_by_id"
   add_foreign_key "resources", "windows_types"
   add_foreign_key "resources", "workshops"
-  add_foreign_key "scholarship_agreement_responses", "notifications"
   add_foreign_key "scholarship_agreement_responses", "scholarships"
   add_foreign_key "scholarships", "grants"
   add_foreign_key "scholarships", "people", column: "recipient_id"

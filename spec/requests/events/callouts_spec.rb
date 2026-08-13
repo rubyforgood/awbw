@@ -625,23 +625,6 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(scholarship.latest_agreement_response.responded_at).to be_present
       end
 
-      it "confirms to the recipient and sends the team an FYI" do
-        recipient_email = registration.registrant.preferred_email
-
-        post registration_scholarship_agreement_path(registration.slug), params: { agreement: "yes" }
-
-        expect(Notification.where(kind: "scholarship_agreement_signed", recipient_email:)).to exist
-        expect(Notification.where(kind: "scholarship_agreement_signed_fyi", recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))).to exist
-      end
-
-      it "does not re-notify when the agreement is already signed" do
-        scholarship.update!(agreement_signed: true)
-
-        expect {
-          post registration_scholarship_agreement_path(registration.slug), params: { agreement: "yes" }
-        }.not_to change { Notification.where("kind LIKE 'scholarship_agreement_signed%'").count }
-      end
-
       it "does not sign the agreement without an affirmative submission" do
         post registration_scholarship_agreement_path(registration.slug), params: { agreement: "" }
 
@@ -680,25 +663,12 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(registration.reload.remaining_cost).to eq(10_000)
       end
 
-      it "emails the admin team an FYI with the reason" do
-        expect {
-          post registration_scholarship_decline_path(registration.slug), params: { decline_reason: "Moving away" }
-        }.to change { Notification.where(kind: "scholarship_agreement_declined_fyi").count }.by(1)
-
-        notification = Notification.where(kind: "scholarship_agreement_declined_fyi").last
-        expect(notification.recipient_email).to eq(ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))
-        expect(notification.custom_message).to eq("Moving away")
-        expect(notification.noticeable).to eq(scholarship)
-        # The decline's history row links back to the FYI it produced.
-        expect(scholarship.latest_agreement_response.notification).to eq(notification)
-      end
-
-      it "does not email again when already declined" do
+      it "is a no-op when already declined (no duplicate response row)" do
         scholarship.decline_agreement!("first")
 
         expect {
           post registration_scholarship_decline_path(registration.slug), params: { decline_reason: "second" }
-        }.not_to change { Notification.where(kind: "scholarship_agreement_declined_fyi").count }
+        }.not_to change { scholarship.agreement_responses.count }
 
         expect(response).to redirect_to(registration_scholarship_path(registration.slug))
       end

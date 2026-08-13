@@ -39,10 +39,7 @@ class Notification < ApplicationRecord
     workshop_log_submitted_fyi
 
     form_submission_confirmation
-    form_submission_confirmation_fyi,
-    scholarship_agreement_signed
-    scholarship_agreement_signed_fyi
-    scholarship_agreement_declined_fyi
+    form_submission_confirmation_fyi
 
     manual_log
   ].freeze
@@ -70,7 +67,6 @@ class Notification < ApplicationRecord
     FormSubmission
     Person
     Report
-    Scholarship
     Story
     StoryIdea
     User
@@ -92,9 +88,6 @@ class Notification < ApplicationRecord
     [ "Admin FYI: password reset", "[FYI] New password reset" ],
     [ "Admin FYI: workshop log submission", "New WorkshopLog submission" ],
     [ "Admin FYI: form submission", "[FYI] New form submission" ],
-    [ "Admin FYI: scholarship agreement signed", "Scholarship agreement signed" ],
-    [ "Admin FYI: scholarship declined", "Scholarship declined" ],
-    [ "Scholarship: agreement confirmation", "scholarship agreement is confirmed" ],
     [ "Admin FYI: contact form submission", "contact form submission" ],
     [ "Form: submission confirmation", "We received your response" ],
     [ "Contact: form confirmation", "We received your message" ],
