@@ -43,6 +43,13 @@
                 delete: [ "Will be deleted", "bg-red-100 text-red-800" ] } %>
 
   <% if @person_groups.any? %>
+    <% actionable_count = @person_groups.sum { |g| g[:rows].size } %>
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <h2 class="text-base font-bold text-gray-900">To reconcile <span class="text-gray-400 font-normal">(<%= actionable_count %>)</span></h2>
+      <span class="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">
+        <i class="fa-solid fa-triangle-exclamation"></i> Checked boxes change facilitator affiliations
+      </span>
+    </div>
     <%= form_with url: reconcile_affiliations_event_path(@event), method: :post do %>
       <div class="space-y-4">
         <% @person_groups.each do |group| %>
@@ -51,6 +58,12 @@
                reactivate: "has-[:checked]:bg-green-50 has-[:checked]:text-green-700 has-[:checked]:border-green-300",
                deactivate: "has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300",
                delete: "has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300"
+             } %>
+          <% action_notes = {
+               create: "Uncheck to skip creating this facilitator affiliation.",
+               reactivate: "Uncheck to leave this facilitator affiliation inactive.",
+               deactivate: "Change attendance to Attended, or uncheck, to keep this facilitator affiliation active.",
+               delete: "Uncheck to keep this facilitator affiliation."
              } %>
           <% button_base = "group relative inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm cursor-pointer hover:bg-gray-50" %>
           <section class="rounded-lg border border-gray-200 bg-white p-4">
@@ -71,6 +84,8 @@
             <div class="divide-y divide-gray-100 border-t border-gray-100">
               <% group[:rows].each do |row| %>
                 <% heading, _badge_class = badges[row.action] %>
+                <% included_checked = @pre_included.nil? || @pre_included.include?(row.key) %>
+                <% delete_checked = @pre_delete.include?(row.key) %>
                 <div class="flex flex-wrap items-center gap-3 py-2">
                   <% if row.affiliation %>
                     <%= link_to edit_person_path(row.person, anchor: dom_id(row.affiliation)), target: "_blank", rel: "noopener", title: "Edit affiliation", class: "flex-1 min-w-0 text-sm hover:underline" do %>
@@ -81,19 +96,22 @@
                     <span class="flex-1 min-w-0 text-sm text-gray-800"><%= row.organization.name %></span>
                   <% end %>
                   <%# Checkbox lives inside the button; has-[:checked] colors the whole button when selected. %>
-                  <div class="flex items-center gap-2"<% if row.action == :deactivate %> data-controller="exclusive-checkboxes"<% end %>>
-                    <% if row.action == :deactivate %>
-                      <label class="<%= button_base %> has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300">
-                        <%= check_box_tag "delete[]", row.key, false, id: "delete_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-red-600", data: { exclusive_checkboxes_target: "box", action: "exclusive-checkboxes#select" } %>
-                        Delete instead
-                        <%= render "tooltip", kind: :delete %>
+                  <div class="flex shrink-0 flex-col items-end gap-1">
+                    <div class="flex items-center gap-2"<% if row.action == :deactivate %> data-controller="exclusive-checkboxes"<% end %>>
+                      <% if row.action == :deactivate %>
+                        <label class="<%= button_base %> has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300">
+                          <%= check_box_tag "delete[]", row.key, delete_checked, id: "delete_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-red-600", data: { exclusive_checkboxes_target: "box", action: "exclusive-checkboxes#select" } %>
+                          Delete instead
+                          <%= render "tooltip", kind: :delete %>
+                        </label>
+                      <% end %>
+                      <label class="<%= button_base %> <%= checked_class[row.action] %>">
+                        <%= check_box_tag "included[]", row.key, included_checked, id: "included_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-blue-600", data: (row.action == :deactivate ? { exclusive_checkboxes_target: "box", action: "exclusive-checkboxes#select" } : {}) %>
+                        <%= heading %>
+                        <%= render "tooltip", kind: row.action %>
                       </label>
-                    <% end %>
-                    <label class="<%= button_base %> <%= checked_class[row.action] %>">
-                      <%= check_box_tag "included[]", row.key, true, id: "included_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-blue-600", data: (row.action == :deactivate ? { exclusive_checkboxes_target: "box", action: "exclusive-checkboxes#select" } : {}) %>
-                      <%= heading %>
-                      <%= render "tooltip", kind: row.action %>
-                    </label>
+                    </div>
+                    <p class="max-w-xs text-right text-xs text-gray-400"><%= action_notes[row.action] %></p>
                   </div>
                 </div>
               <% end %>
@@ -104,7 +122,7 @@
 
       <div class="mt-6 flex items-center justify-end gap-3">
         <%= link_to "Cancel", registrants_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
-        <%= submit_tag "Reconcile affiliations", class: "btn btn-primary" %>
+        <%= submit_tag "Preview changes", class: "btn btn-primary" %>
       </div>
     <% end %>
   <% end %>

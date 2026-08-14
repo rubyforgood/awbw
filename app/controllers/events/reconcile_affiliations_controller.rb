@@ -17,7 +17,22 @@ module Events
       @person_groups = reconcile.actionable_person_groups
       @skipped_sections = reconcile.skipped_reason_sections
       @has_rows = reconcile.any_rows?
+      # Restore the admin's selections when they come back from the confirm screen.
+      @pre_included = params[:included]
+      @pre_delete = Array(params[:delete]).to_set
       @event = @event.decorate
+    end
+
+    # Step 2: show exactly what "Perform changes" will do (no writes yet).
+    def confirm
+      authorize! @event, to: :reconcile_affiliations?
+
+      @included = Array(params[:included])
+      @delete = Array(params[:delete])
+      @changes = AffiliationServices::ReconcileEvent.new(@event).planned_changes(included_keys: @included, delete_keys: @delete)
+      @event = @event.decorate
+
+      redirect_to reconcile_affiliations_event_path(@event), notice: "Nothing selected to change." and return if @changes.empty?
     end
 
     def create

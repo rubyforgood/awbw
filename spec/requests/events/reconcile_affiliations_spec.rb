@@ -85,11 +85,32 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
     end
   end
 
-  describe "POST create" do
-    it "deactivates the included non-completer and stamps the event" do
+  describe "POST confirm (preview changes)" do
+    it "shows the selected change without writing" do
       _person, affiliation = registrant_with_affiliation(status: "no_show")
 
       post reconcile_affiliations_event_path(event), params: { included: [ "aff:#{affiliation.id}" ] }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Confirm affiliation changes")
+      expect(response.body).to include("Perform changes")
+      expect(affiliation.reload).to be_active
+    end
+
+    it "redirects back when nothing is selected" do
+      registrant_with_affiliation(status: "no_show")
+
+      post reconcile_affiliations_event_path(event), params: { included: [] }
+
+      expect(response).to redirect_to(reconcile_affiliations_event_path(event))
+    end
+  end
+
+  describe "POST perform" do
+    it "deactivates the included non-completer and stamps the event" do
+      _person, affiliation = registrant_with_affiliation(status: "no_show")
+
+      post perform_reconcile_affiliations_event_path(event), params: { included: [ "aff:#{affiliation.id}" ] }
 
       expect(response).to redirect_to(registrants_event_path(event))
       expect(affiliation.reload).not_to be_active
@@ -99,7 +120,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
     it "spares an opted-out row" do
       _person, affiliation = registrant_with_affiliation(status: "no_show")
 
-      post reconcile_affiliations_event_path(event), params: { included: [] }
+      post perform_reconcile_affiliations_event_path(event), params: { included: [] }
 
       expect(affiliation.reload).to be_active
     end
@@ -111,7 +132,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       create(:event_registration_organization, event_registration: reg, organization: organization)
 
       expect {
-        post reconcile_affiliations_event_path(upcoming), params: { included: [ "create:#{person.id}:#{organization.id}" ] }
+        post perform_reconcile_affiliations_event_path(upcoming), params: { included: [ "create:#{person.id}:#{organization.id}" ] }
       }.to change { person.affiliations.facilitators.where(organization: organization).count }.by(1)
     end
 
@@ -119,7 +140,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       _person, affiliation = registrant_with_affiliation(status: "no_show")
       key = "aff:#{affiliation.id}"
 
-      post reconcile_affiliations_event_path(event), params: { included: [ key ], delete: [ key ] }
+      post perform_reconcile_affiliations_event_path(event), params: { included: [ key ], delete: [ key ] }
 
       expect(Affiliation.exists?(affiliation.id)).to be(false)
     end
@@ -130,7 +151,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       create(:event_registration_organization, event_registration: reg, organization: organization)
       hand_entered = create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago.to_date)
 
-      post reconcile_affiliations_event_path(event), params: { included: [ "aff:#{hand_entered.id}" ] }
+      post perform_reconcile_affiliations_event_path(event), params: { included: [ "aff:#{hand_entered.id}" ] }
 
       expect(hand_entered.reload).not_to be_active
     end
@@ -145,7 +166,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       job = create(:affiliation, person: person, organization: organization, title: "Counselor",
                    event_registration: reg)
 
-      post reconcile_affiliations_event_path(non_training), params: { included: [ "aff:#{facilitator.id}" ] }
+      post perform_reconcile_affiliations_event_path(non_training), params: { included: [ "aff:#{facilitator.id}" ] }
 
       expect(Affiliation.exists?(facilitator.id)).to be(false)
       expect(Affiliation.exists?(job.id)).to be(true)

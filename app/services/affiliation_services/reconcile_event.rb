@@ -58,6 +58,23 @@ module AffiliationServices
       all_rows.any?
     end
 
+    Change = Struct.new(:person, :organization, :affiliation, :action, keyword_init: true)
+
+    # The concrete changes the given selection will make, for the confirmation
+    # screen: a `:delete` key wins over its include (delete instead of same-day).
+    def planned_changes(included_keys:, delete_keys: [])
+      included = Array(included_keys).to_set
+      deletes = Array(delete_keys).to_set
+
+      all_rows.select(&:actionable?).filter_map do |row|
+        if deletes.include?(row.key) && row.affiliation
+          Change.new(person: row.person, organization: row.organization, affiliation: row.affiliation, action: :delete)
+        elsif included.include?(row.key)
+          Change.new(person: row.person, organization: row.organization, affiliation: row.affiliation, action: row.action)
+        end
+      end
+    end
+
     # Apply the actionable rows whose keys are in `included_keys`. For :deactivate
     # rows whose key is also in `delete_keys`, delete the affiliation instead of
     # same-daying it. Stamps the event and returns the number of rows changed.
