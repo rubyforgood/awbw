@@ -76,6 +76,12 @@ module EventRegistrationServices
         create_mailing_address(person) if field_value("mailing_city").present?
         create_phone_contact(person) if field_value("phone").present?
 
+        # Resolve the registration before creating affiliations so each one can record
+        # which registration created it. Capture `existing` first — the find_by must
+        # see prior state, not the row we're about to create.
+        existing = @event.event_registrations.find_by(registrant: person)
+        event_registration = existing || create_event_registration(person)
+
         organization = find_organization if field_value(ORGANIZATION_NAME_IDENTIFIER).present?
         if organization
           profile_changes = sync_organization_profile(organization).changes
@@ -84,12 +90,11 @@ module EventRegistrationServices
           # registrant just changed it — connect_organization records what, and to
           # what value, for the admin linking page's persistent note.
           @organization_autofill = profile_changes + address_result.changes
-          create_affiliation(person, organization, address_result.address)
+          create_affiliation(person, organization, address_result.address, event_registration)
         end
 
         assign_tags(person, organization)
 
-        existing = @event.event_registrations.find_by(registrant: person)
         if existing
           existing.update!(scholarship_requested: true) if @scholarship_requested
           create_ce_registration(existing, person)
@@ -111,7 +116,6 @@ module EventRegistrationServices
           return Result.new(success?: true, event_registration: existing, form_submission: submission, errors: [])
         end
 
-        event_registration = create_event_registration(person)
         create_ce_registration(event_registration, person)
         organization_link = connect_organization(event_registration, organization)
         submission = create_form_submission(person)
@@ -347,13 +351,15 @@ module EventRegistrationServices
       link
     end
 
-    def create_affiliation(person, organization, organization_address = nil)
+    def create_affiliation(person, organization, organization_address = nil, event_registration = nil)
       AffiliationServices::CreateFromRegistration.call(
         person: person,
         organization: organization,
         job_title: field_value(ORGANIZATION_POSITION_IDENTIFIER),
         training_date: @event.start_date,
-        organization_address: organization_address
+        organization_address: organization_address,
+        facilitator_training: @event.facilitator_training,
+        event_registration: event_registration
       )
     end
 

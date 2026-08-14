@@ -1007,6 +1007,10 @@ RSpec.describe "EventRegistrations", type: :request do
       end
 
       describe "POST /event_registrations/:id/select_organization" do
+        # The facilitator affiliation these link-flow examples assert is only minted
+        # off a facilitator-training event.
+        let(:event) { create(:event, title: "Test Event", facilitator_training: true) }
+
         it "links the org to the registration and the person, then returns to the edit page" do
           expect {
             post select_organization_event_registration_path(existing_registration),
@@ -1037,6 +1041,29 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
             .to contain_exactly("Facilitator")
+        end
+
+        it "records the linking registration on the created affiliations" do
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(regular_user.person.affiliations.where(organization: organization).map(&:event_registration))
+            .to all(eq(existing_registration))
+        end
+
+        it "creates only the job affiliation for a non-facilitator-training event" do
+          existing_registration.event.update!(facilitator_training: false)
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: EventRegistrationServices::PublicRegistration::ORGANIZATION_POSITION_IDENTIFIER)
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Counselor")
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
+            .to contain_exactly("Counselor")
         end
 
         it "builds the org address from the submission and links the affiliations to it" do
@@ -1283,6 +1310,10 @@ RSpec.describe "EventRegistrations", type: :request do
       end
 
       describe "POST /event_registrations/:id/create_organization" do
+        # The facilitator affiliation these link-flow examples assert is only minted
+        # off a facilitator-training event.
+        let(:event) { create(:event, title: "Test Event", facilitator_training: true) }
+
         it "creates an org from the submitted name and links it" do
           create(:organization_status, name: "Active")
           reg_form = create(:form, name: "Reg form")
