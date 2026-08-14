@@ -797,9 +797,13 @@ class EventsController < ApplicationController
       end
     end
     # Address filters read the person's own address data directly (no registration
-    # required) — city is a free-text match, state/county exact.
-    scope = scope.where(id: person_address_ids(state: params[:state])) if params[:state].present?
-    scope = scope.where(id: person_address_ids(city: params[:city])) if params[:city].present?
+    # required) — city is a free-text match, state/county exact. City and state ask
+    # one subquery so they describe the same address, matching the roster's shared
+    # join; two subqueries would let someone with homes in two states through on a
+    # city from one and a state from the other.
+    if params[:state].present? || params[:city].present?
+      scope = scope.where(id: person_address_ids(state: params[:state], city: params[:city]))
+    end
     if params[:county].present?
       # County options carry their state ("STATE::County") so same-named counties
       # across states don't collide.

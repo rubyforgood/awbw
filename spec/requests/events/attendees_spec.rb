@@ -507,6 +507,20 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).not_to include("Cara Coast")
         end
 
+        # City and state have to describe one address, the way the roster's shared
+        # join does — otherwise someone with homes in two states matches a city from
+        # one and a state from the other.
+        it "matches city and state against the same address" do
+          create(:address, addressable: attendee, city: "Portland", state: "OR", inactive: false)
+          create(:address, addressable: attendee, city: "Seattle", state: "WA", inactive: false)
+
+          get attendees_events_url(city: "Seattle", state: "WA"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+
+          get attendees_events_url(city: "Seattle", state: "OR"), headers: frame_headers
+          expect(response.body).not_to include("Ada Lovelace")
+        end
+
         it "filters by an active topic subscription, matching any of the person's registrations" do
           type = create(:topic_subscription_type)
           create(:topic_subscription, person: attendee, topic_subscription_type: type)
