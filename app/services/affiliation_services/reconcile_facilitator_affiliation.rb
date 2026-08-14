@@ -49,6 +49,16 @@ module AffiliationServices
       end
     end
 
+    # Whether the person has any `attended` registration to this org from a
+    # facilitator-training event — i.e. actually became a facilitator there.
+    def completed_training?
+      @person.event_registrations.attended
+        .joins(:event).where(events: { facilitator_training: true })
+        .joins(:event_registration_organizations)
+        .where(event_registration_organizations: { organization_id: @organization.id })
+        .exists?
+    end
+
     private
 
     def deactivate(rows)
@@ -78,15 +88,6 @@ module AffiliationServices
       @person.affiliations.facilitators
         .where(organization: @organization)
         .where.not(event_registration_id: nil)
-    end
-
-    # Any `attended` registration to this org from a facilitator-training event.
-    def completed_training?
-      @person.event_registrations.attended
-        .joins(:event).where(events: { facilitator_training: true })
-        .joins(:event_registration_organizations)
-        .where(event_registration_organizations: { organization_id: @organization.id })
-        .exists?
     end
   end
 end

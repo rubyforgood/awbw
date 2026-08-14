@@ -30,6 +30,17 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       expect(response.body).to include("Will be deactivated")
     end
 
+    it "previews a missing affiliation as a creation before the event" do
+      upcoming = create(:event, facilitator_training: true, start_date: 3.days.from_now, end_date: 5.days.from_now)
+      person = create(:person)
+      reg = create(:event_registration, event: upcoming, registrant: person, status: "registered")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+
+      get reconcile_affiliations_event_path(upcoming)
+
+      expect(response.body).to include("Will be created")
+    end
+
     it "redirects for a non-training event" do
       non_training = create(:event, :ended, facilitator_training: false)
 
@@ -65,6 +76,18 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       post reconcile_affiliations_event_path(event), params: { included: [] }
 
       expect(affiliation.reload).to be_active
+    end
+
+    it "creates a missing affiliation before the event when included" do
+      upcoming = create(:event, facilitator_training: true, start_date: 3.days.from_now, end_date: 5.days.from_now)
+      person = create(:person)
+      reg = create(:event_registration, event: upcoming, registrant: person, status: "registered")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+      key = AffiliationServices::ReconcileEvent.key_for(person, organization)
+
+      expect {
+        post reconcile_affiliations_event_path(upcoming), params: { included: [ key ] }
+      }.to change { person.affiliations.facilitators.where(organization: organization).count }.by(1)
     end
   end
 end

@@ -10,10 +10,10 @@
 
   <div class="text-sm text-gray-600 space-y-2 mb-6">
     <p>
-      Facilitator affiliations are created optimistically when someone registers for a training. This step brings
-      them in line with who actually <strong>attended</strong>: anyone who didn't complete the training has their
-      auto-created facilitator affiliation <strong>same-dayed</strong> (its end date is set to its start date, so it
-      no longer counts as active). Someone later marked attended is reactivated on the next run.
+      This step brings facilitator affiliations in line with who registered and attended. Before the training it
+      <strong>creates</strong> any missing facilitator affiliations for linked organizations. After the training it
+      <strong>same-days</strong> the affiliation of anyone who didn't attend (its end date is set to its start
+      date, so it no longer counts as active), and reactivates anyone later marked attended.
     </p>
     <p>
       Only affiliations this app created from a registration are touched — hand-entered affiliations are always left
@@ -41,9 +41,14 @@
               <span class="font-medium text-gray-900"><%= row.person.name %></span>
               <span class="text-gray-500">— <%= row.organization.name %></span>
             </span>
-            <% if row.action == :deactivate %>
+            <% case row.action %>
+            <% when :deactivate %>
               <span class="inline-flex items-center rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700">
                 Will be deactivated
+              </span>
+            <% when :create %>
+              <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                Will be created
               </span>
             <% else %>
               <span class="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">
