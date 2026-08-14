@@ -77,9 +77,8 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
   describe "POST create" do
     it "deactivates the included non-completer and stamps the event" do
       _person, affiliation = registrant_with_affiliation(status: "no_show")
-      key = AffiliationServices::ReconcileEvent.key_for(affiliation.person, organization)
 
-      post reconcile_affiliations_event_path(event), params: { included: [ key ] }
+      post reconcile_affiliations_event_path(event), params: { included: [ "aff:#{affiliation.id}" ] }
 
       expect(response).to redirect_to(registrants_event_path(event))
       expect(affiliation.reload).not_to be_active
@@ -99,16 +98,15 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       person = create(:person)
       reg = create(:event_registration, event: upcoming, registrant: person, status: "registered")
       create(:event_registration_organization, event_registration: reg, organization: organization)
-      key = AffiliationServices::ReconcileEvent.key_for(person, organization)
 
       expect {
-        post reconcile_affiliations_event_path(upcoming), params: { included: [ key ] }
+        post reconcile_affiliations_event_path(upcoming), params: { included: [ "create:#{person.id}:#{organization.id}" ] }
       }.to change { person.affiliations.facilitators.where(organization: organization).count }.by(1)
     end
 
     it "deletes instead of same-daying when the delete option is checked" do
       _person, affiliation = registrant_with_affiliation(status: "no_show")
-      key = AffiliationServices::ReconcileEvent.key_for(affiliation.person, organization)
+      key = "aff:#{affiliation.id}"
 
       post reconcile_affiliations_event_path(event), params: { included: [ key ], delete: [ key ] }
 
@@ -124,9 +122,8 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
                            start_date: 1.month.ago.to_date, event_registration: reg)
       job = create(:affiliation, person: person, organization: organization, title: "Counselor",
                    event_registration: reg)
-      key = AffiliationServices::ReconcileEvent.key_for(person, organization)
 
-      post reconcile_affiliations_event_path(non_training), params: { included: [ key ] }
+      post reconcile_affiliations_event_path(non_training), params: { included: [ "aff:#{facilitator.id}" ] }
 
       expect(Affiliation.exists?(facilitator.id)).to be(false)
       expect(Affiliation.exists?(job.id)).to be(true)

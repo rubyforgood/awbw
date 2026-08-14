@@ -13,8 +13,8 @@
       <p>
         This step brings facilitator affiliations in line with who registered and attended. Before the training it
         <strong>creates</strong> any missing facilitator affiliations for linked organizations. After the training it
-        <strong>same-days</strong> the affiliation of anyone who didn't attend (its end date is set to its start
-        date, so it no longer counts as active), and reactivates anyone later marked attended.
+        <strong>same-days</strong> the affiliation of anyone who didn't attend, and reactivates anyone later marked
+        attended. Job affiliations are never touched.
       </p>
     <% else %>
       <p>
@@ -22,88 +22,108 @@
         This <strong>deletes</strong> those. Job affiliations are left untouched.
       </p>
     <% end %>
-    <p>
-      Only affiliations this app created from a registration are touched — hand-entered affiliations are always left
-      alone. Uncheck a row to spare it this time.
-    </p>
+    <p>Only affiliations this app created from a registration are touched — hand-entered ones are always left alone.</p>
     <% if @event.affiliations_reconciled_at %>
       <p class="text-gray-500">Last reconciled <%= @event.affiliations_reconciled_at.to_fs(:long) %>.</p>
     <% end %>
-    <% if @event.affiliations_reconciliation_stale? %>
-      <p class="text-amber-700">Attendance has changed since the last reconciliation — re-run to bring affiliations up to date.</p>
+    <% if @person_groups.any? && @event.affiliations_reconciliation_stale? %>
+      <p class="text-amber-700">Attendance has changed since the last reconciliation — apply again below to bring affiliations up to date.</p>
     <% end %>
   </div>
 
-  <% actionable = @rows.select(&:actionable?) %>
-  <% skipped = @rows.reject(&:actionable?) %>
-
-  <% if @rows.empty? %>
+  <% unless @has_rows %>
     <div class="rounded-lg border border-gray-200 bg-white p-6 text-center text-gray-500">
       No registrants have linked an organization, so there's nothing to reconcile.
     </div>
-  <% else %>
-    <% if actionable.any? %>
-      <%= form_with url: reconcile_affiliations_event_path(@event), method: :post do %>
-        <% sections = { create: [ "Will be created", "bg-blue-50 text-blue-700" ],
-                        reactivate: [ "Will be reactivated", "bg-green-50 text-green-700" ],
-                        deactivate: [ "Will be deactivated", "bg-red-50 text-red-700" ],
-                        delete: [ "Will be deleted", "bg-red-100 text-red-800" ] } %>
-        <% sections.each do |action, (heading, badge_class)| %>
-          <% action_rows = actionable.select { |row| row.action == action } %>
-          <% next if action_rows.empty? %>
-          <section class="mb-6">
-            <h2 class="text-sm font-semibold text-gray-900 mb-2"><%= heading %> (<%= action_rows.size %>)</h2>
-            <div class="overflow-hidden rounded-lg border border-gray-200 bg-white divide-y divide-gray-100">
-              <% action_rows.each do |row| %>
-                <div class="flex items-center gap-3 px-4 py-3">
+  <% end %>
+
+  <% badges = { create: [ "Will be created", "bg-blue-50 text-blue-700" ],
+                reactivate: [ "Will be reactivated", "bg-green-50 text-green-700" ],
+                deactivate: [ "Will be deactivated", "bg-red-50 text-red-700" ],
+                delete: [ "Will be deleted", "bg-red-100 text-red-800" ] } %>
+
+  <% if @person_groups.any? %>
+    <%= form_with url: reconcile_affiliations_event_path(@event), method: :post do %>
+      <div class="space-y-4">
+        <% @person_groups.each do |group| %>
+          <section class="rounded-lg border border-gray-200 bg-white p-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+              <span class="font-semibold text-gray-900"><%= group[:person].name %></span>
+              <%= render "event_registrations/attendance_status_badge", registration: group[:registration] %>
+            </div>
+            <% if group[:other_facilitators].any? %>
+              <p class="text-xs text-gray-500 mb-3">
+                Also a facilitator at <%= group[:other_facilitators].map { |a| a.organization.name }.to_sentence %>.
+              </p>
+            <% end %>
+
+            <div class="divide-y divide-gray-100 border-t border-gray-100">
+              <% group[:rows].each do |row| %>
+                <% heading, badge_class = badges[row.action] %>
+                <div class="flex flex-wrap items-center gap-3 py-2">
                   <%= check_box_tag "included[]", row.key, true, id: "included_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-blue-600" %>
-                  <label for="included_<%= row.key %>" class="flex-1 min-w-0 cursor-pointer">
-                    <span class="font-medium text-gray-900"><%= row.person.name %></span>
-                    <span class="text-gray-500">— <%= row.organization.name %></span>
-                  </label>
-                  <span class="text-xs text-gray-400"><%= row.registration.attendance_status_label %></span>
+                  <span class="flex-1 min-w-0 text-sm">
+                    <span class="text-gray-800"><%= row.organization.name %></span>
+                    <% if row.affiliation %>
+                      <span class="text-gray-400">· <%= row.affiliation.decorate.date_range %></span>
+                    <% end %>
+                  </span>
                   <% if row.action == :deactivate %>
                     <label class="inline-flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
                       <%= check_box_tag "delete[]", row.key, false, id: "delete_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-red-600" %>
                       Delete instead
                     </label>
                   <% end %>
-                  <span class="inline-flex items-center rounded-full <%= badge_class %> px-2.5 py-0.5 text-xs font-medium">
-                    <%= heading %>
-                  </span>
+                  <% if row.affiliation %>
+                    <%= link_to "Edit", edit_person_path(row.person, anchor: "affiliations"), class: "text-xs text-blue-600 hover:underline", target: "_blank", rel: "noopener" %>
+                  <% end %>
+                  <span class="inline-flex items-center rounded-full <%= badge_class %> px-2.5 py-0.5 text-xs font-medium"><%= heading %></span>
                 </div>
               <% end %>
             </div>
           </section>
         <% end %>
+      </div>
 
-        <div class="mt-6 flex items-center justify-end gap-3">
-          <%= link_to "Cancel", registrants_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
-          <%= submit_tag "Reconcile affiliations", class: "btn btn-primary" %>
-        </div>
-      <% end %>
+      <div class="mt-6 flex items-center justify-end gap-3">
+        <%= link_to "Cancel", registrants_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
+        <%= submit_tag "Reconcile affiliations", class: "btn btn-primary" %>
+      </div>
     <% end %>
+  <% end %>
 
-    <% if skipped.any? %>
-      <section class="mt-8">
-        <h2 class="text-sm font-semibold text-gray-900 mb-2">Not reconciled (<%= skipped.size %>)</h2>
-        <% skipped.group_by(&:reason).each do |reason, reason_rows| %>
-          <div class="mb-4">
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1"><%= reason %></p>
-            <div class="overflow-hidden rounded-lg border border-gray-200 bg-white divide-y divide-gray-100">
-              <% reason_rows.each do |row| %>
-                <div class="flex items-center gap-3 px-4 py-3 text-gray-600">
+  <% if @skipped_sections.any? %>
+    <% skipped_count = @skipped_sections.sum { |(_reason, rows)| rows.size } %>
+    <details class="mt-8 rounded-lg border border-gray-200 bg-white">
+      <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-gray-900">
+        Not reconciled (<%= skipped_count %>)
+      </summary>
+      <div class="border-t border-gray-100 px-4 py-3 space-y-3">
+        <% @skipped_sections.each do |reason, rows| %>
+          <details class="rounded border border-gray-100">
+            <summary class="cursor-pointer select-none px-3 py-2 text-xs font-medium text-gray-600 uppercase tracking-wide">
+              <%= reason %> (<%= rows.size %>)
+            </summary>
+            <div class="divide-y divide-gray-100 border-t border-gray-100">
+              <% rows.each do |row| %>
+                <div class="flex flex-wrap items-center gap-3 px-3 py-2 text-sm text-gray-600">
                   <span class="flex-1 min-w-0">
                     <span class="font-medium text-gray-800"><%= row.person.name %></span>
                     <span class="text-gray-400">— <%= row.organization.name %></span>
+                    <% if row.affiliation %>
+                      <span class="text-gray-400">· <%= row.affiliation.decorate.date_range %></span>
+                    <% end %>
                   </span>
                   <span class="text-xs text-gray-400"><%= row.registration.attendance_status_label %></span>
+                  <% if row.affiliation %>
+                    <%= link_to "Edit", edit_person_path(row.person, anchor: "affiliations"), class: "text-xs text-blue-600 hover:underline", target: "_blank", rel: "noopener" %>
+                  <% end %>
                 </div>
               <% end %>
             </div>
-          </div>
+          </details>
         <% end %>
-      </section>
-    <% end %>
+      </div>
+    </details>
   <% end %>
 </div>

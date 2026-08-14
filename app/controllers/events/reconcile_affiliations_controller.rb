@@ -13,7 +13,10 @@ module Events
       authorize! @event, to: :reconcile_affiliations?
       track_view("events.reconcile_affiliations", { event_id: @event.id })
 
-      @rows = AffiliationServices::ReconcileEvent.new(@event).preview
+      reconcile = AffiliationServices::ReconcileEvent.new(@event)
+      @person_groups = reconcile.actionable_person_groups
+      @skipped_sections = reconcile.skipped_reason_sections
+      @has_rows = reconcile.any_rows?
       @event = @event.decorate
     end
 

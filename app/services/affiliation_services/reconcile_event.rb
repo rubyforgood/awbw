@@ -1,51 +1,63 @@
 module AffiliationServices
   # Event-level orchestration for the "Reconcile affiliations" bulk action. Walks
-  # the event's registrants and the organizations they linked, and classifies each
-  # (person, org) so the confirm page can show exactly what will (and won't) happen
-  # to their **owned** facilitator affiliation. Job affiliations are never touched.
+  # the event's registrants and, for each facilitator affiliation tied to an org
+  # they linked, works out what should happen to it (job affiliations are never
+  # touched). Produces one row per affiliation so each is individually actionable.
   #
   # Actions:
   #   :create      — facilitator training, none exists yet but one should (pre-event
   #                  for anyone, post-event only for attendees).
-  #   :deactivate  — facilitator training, an owned affiliation whose (ended)
-  #                  training they didn't complete. The admin may delete it instead
-  #                  of same-daying it (see `delete_keys`).
-  #   :reactivate  — facilitator training, an owned affiliation same-dayed earlier,
-  #                  now attended.
-  #   :delete      — NOT a facilitator training: facilitator affiliation(s)
-  #                  auto-created off this event that shouldn't exist.
-  #   :noop        — nothing to do; the row carries a `reason` for the page.
+  #   :deactivate  — facilitator training, owned, its (ended) training wasn't
+  #                  completed. The admin may delete it instead of same-daying it.
+  #   :reactivate  — facilitator training, owned, same-dayed earlier, now attended.
+  #   :delete      — NOT a facilitator training: an owned affiliation auto-created
+  #                  off this event that shouldn't exist.
+  #   :noop        — nothing to do; the row carries a `reason`.
   #
-  # `preview` returns every pair (actionable and not) so the admin sees the full
-  # picture; `apply` performs the kept actionable rows and stamps the event's
-  # `affiliations_reconciled_at`.
+  # `actionable_person_groups` groups the actionable rows by person (with their
+  # attendance registration and other-org facilitator affiliations for context);
+  # `skipped_reason_sections` groups the no-action rows by reason (hand-entered
+  # last). `apply` performs the kept actionable rows and stamps the event.
   class ReconcileEvent
-    Row = Struct.new(:person, :organization, :registration, :affiliation, :action, :reason, :key, keyword_init: true) do
+    HAND_ENTERED = "Hand-entered affiliation — left alone".freeze
+
+    Row = Struct.new(:person, :registration, :organization, :affiliation, :action, :reason, :key, keyword_init: true) do
       def actionable?
         action != :noop
       end
-    end
-
-    def self.key_for(person, organization)
-      "#{person.id}:#{organization.id}"
     end
 
     def initialize(event)
       @event = event
     end
 
-    def preview
-      rows
+    # Actionable rows grouped by person: [{ person:, registration:, rows:,
+    # other_facilitators: }]. `other_facilitators` are the person's active
+    # facilitator affiliations with orgs they did NOT link on this event.
+    def actionable_person_groups
+      all_rows.select(&:actionable?).group_by(&:person).map do |person, rows|
+        { person:, registration: rows.first.registration, rows:, other_facilitators: other_facilitators(person) }
+      end
+    end
+
+    # No-action rows grouped by reason, hand-entered last: [[reason, [rows]]].
+    def skipped_reason_sections
+      grouped = all_rows.reject(&:actionable?).group_by(&:reason)
+      grouped.keys.sort_by { |reason| [ reason == HAND_ENTERED ? 1 : 0, reason ] }.map { |reason| [ reason, grouped[reason] ] }
+    end
+
+    def any_rows?
+      all_rows.any?
     end
 
     # Apply the actionable rows whose keys are in `included_keys`. For :deactivate
     # rows whose key is also in `delete_keys`, delete the affiliation instead of
-    # same-daying it. Stamps the event and returns the number of pairs changed.
+    # same-daying it. Stamps the event and returns the number of rows changed.
     def apply(included_keys:, delete_keys: [])
       included = Array(included_keys).to_set
       delete_instead = Array(delete_keys).to_set
 
-      changed = rows.count do |row|
+      changed = all_rows.count do |row|
         row.actionable? && included.include?(row.key) && perform(row, delete_instead: delete_instead.include?(row.key))
       end
 
@@ -55,82 +67,78 @@ module AffiliationServices
 
     private
 
-    def rows
-      @rows ||= pairs.map do |person, organization, registration|
-        action, reason, affiliation = classify(person, organization)
-        Row.new(person:, organization:, registration:, affiliation:, action:, reason:, key: self.class.key_for(person, organization))
+    def all_rows
+      @all_rows ||= registrations_by_person.flat_map do |person, registrations|
+        registration = registrations.first
+        linked_organizations(registrations).flat_map { |organization| rows_for(person, registration, organization) }
       end
     end
 
-    def classify(person, organization)
-      owned = owned_facilitators(person, organization)
-      @event.facilitator_training? ? classify_training(person, organization, owned) : classify_non_training(person, organization, owned)
-    end
-
-    def classify_training(person, organization, owned)
+    def rows_for(person, registration, organization)
       attended = completed_training?(person, organization)
+      facilitators = person.affiliations.facilitators
+        .where(organization:)
+        .includes(event_registration: :event)
+        .to_a
 
-      if owned.any?
-        return [ :reactivate, nil, owned.find { |a| !a.active? } ] if attended && owned.any? { |a| !a.active? }
-        return [ :noop, "Active — attended", owned.first ] if attended
+      rows = facilitators.map { |affiliation| affiliation_row(person, registration, organization, affiliation, attended) }
+      rows << create_row(person, registration, organization, attended) if facilitators.empty? && @event.facilitator_training?
+      rows.compact
+    end
 
-        deactivatable = owned.select { |a| a.active? && source_ended?(a) }
-        return [ :deactivate, nil, deactivatable.first ] if deactivatable.any?
-        return [ :noop, "Already deactivated — didn't attend", owned.first ] if owned.none?(&:active?)
+    def affiliation_row(person, registration, organization, affiliation, attended)
+      action, reason = classify_affiliation(affiliation, attended)
+      Row.new(person:, registration:, organization:, affiliation:, action:, reason:, key: "aff:#{affiliation.id}")
+    end
 
-        [ :noop, "Training hasn't ended yet", owned.first ]
-      elsif hand_facilitator?(person, organization)
-        [ :noop, "Hand-entered affiliation — left alone", nil ]
-      elsif !@event.ended? || attended
-        [ :create, nil, nil ]
+    def classify_affiliation(affiliation, attended)
+      owned = affiliation.event_registration_id.present?
+
+      unless @event.facilitator_training?
+        return [ :delete, nil ] if owned && affiliation.event_registration&.event_id == @event.id
+        return [ :noop, "Facilitator affiliation from another event" ] if owned
+
+        return [ :noop, HAND_ENTERED ]
+      end
+
+      return [ :noop, HAND_ENTERED ] unless owned
+
+      if attended
+        affiliation.active? ? [ :noop, "Active — attended" ] : [ :reactivate, nil ]
+      elsif affiliation.active? && source_ended?(affiliation)
+        [ :deactivate, nil ]
+      elsif affiliation.active?
+        [ :noop, "Training hasn't ended yet" ]
       else
-        [ :noop, "Didn't attend — no affiliation to create", nil ]
+        [ :noop, "Already deactivated — didn't attend" ]
       end
     end
 
-    def classify_non_training(person, organization, owned)
-      from_event = owned.select { |a| a.event_registration&.event_id == @event.id }
-      return [ :delete, nil, from_event.first ] if from_event.any?
-      return [ :noop, "Facilitator affiliation from another event — left alone", owned.first ] if owned.any?
-      return [ :noop, "Hand-entered affiliation — left alone", nil ] if hand_facilitator?(person, organization)
-
-      [ :noop, "No facilitator affiliation", nil ]
+    def create_row(person, registration, organization, attended)
+      if !@event.ended? || attended
+        Row.new(person:, registration:, organization:, affiliation: nil, action: :create, reason: nil,
+                key: "create:#{person.id}:#{organization.id}")
+      else
+        Row.new(person:, registration:, organization:, affiliation: nil, action: :noop,
+                reason: "Didn't attend — no affiliation created", key: "none:#{person.id}:#{organization.id}")
+      end
     end
 
     def perform(row, delete_instead:)
       case row.action
       when :create
-        apply_create(row)
-        true
+        AffiliationServices::CreateFromRegistration.call(
+          person: row.person, organization: row.organization, facilitator_training: true,
+          training_date: @event.start_date, event_registration: row.registration
+        )
       when :delete
-        destroy_from_event(row.person, row.organization)
-        true
+        row.affiliation.destroy!
       when :deactivate
-        service = ReconcileFacilitatorAffiliation.new(person: row.person, organization: row.organization)
-        targets = service.deactivatable_affiliations
-        return false if targets.empty?
-
-        delete_instead ? targets.each(&:destroy!) : service.call
-        true
-      else # :reactivate
-        ReconcileFacilitatorAffiliation.call(person: row.person, organization: row.organization) != :noop
+        delete_instead ? row.affiliation.destroy! : row.affiliation.update!(end_date: row.affiliation.start_date || Date.current)
+      when :reactivate
+        row.affiliation.update!(end_date: nil)
       end
-    end
-
-    def apply_create(row)
-      AffiliationServices::CreateFromRegistration.call(
-        person: row.person,
-        organization: row.organization,
-        facilitator_training: true,
-        training_date: @event.start_date,
-        event_registration: row.registration
-      )
-    end
-
-    def destroy_from_event(person, organization)
-      owned_facilitators(person, organization)
-        .select { |a| a.event_registration&.event_id == @event.id }
-        .each(&:destroy!)
+      true
     end
 
     def completed_training?(person, organization)
@@ -141,33 +149,23 @@ module AffiliationServices
       affiliation.event_registration&.event&.ended?
     end
 
-    def hand_facilitator?(person, organization)
-      person.affiliations.facilitators.where(organization:, event_registration_id: nil).active_or_pending.exists?
-    end
-
-    def owned_facilitators(person, organization)
-      person.affiliations.facilitators
-        .where(organization:)
-        .where.not(event_registration_id: nil)
-        .includes(event_registration: :event)
+    def other_facilitators(person)
+      person.affiliations.active.facilitators
+        .where.not(organization_id: linked_org_ids(person))
+        .includes(:organization)
         .to_a
     end
 
-    # Distinct (person, organization, registration) triples from the event's
-    # registrants and the organizations each linked to their registration.
-    def pairs
-      @pairs ||= begin
-        seen = Set.new
-        @event.event_registrations.includes(:registrant, :organizations).flat_map do |registration|
-          registration.organizations.filter_map do |organization|
-            key = [ registration.registrant_id, organization.id ]
-            next if seen.include?(key)
+    def linked_org_ids(person)
+      linked_organizations(registrations_by_person[person]).map(&:id)
+    end
 
-            seen << key
-            [ registration.registrant, organization, registration ]
-          end
-        end
-      end
+    def linked_organizations(registrations)
+      registrations.flat_map(&:organizations).uniq
+    end
+
+    def registrations_by_person
+      @registrations_by_person ||= @event.event_registrations.includes(:registrant, :organizations).group_by(&:registrant)
     end
   end
 end
