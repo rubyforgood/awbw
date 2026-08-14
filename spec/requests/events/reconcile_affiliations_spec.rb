@@ -54,6 +54,17 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       expect(response.body).to include("Will be deleted")
     end
 
+    it "lists a no-action registrant under Not reconciled with the reason and attendance status" do
+      person, _affiliation = registrant_with_affiliation(status: "attended")
+
+      get reconcile_affiliations_event_path(event)
+
+      expect(response.body).to include("Not reconciled")
+      expect(response.body).to include("Active — attended")
+      expect(response.body).to include("Attended")
+      expect(response.body).to include(person.name)
+    end
+
     it "denies a non-admin" do
       sign_in create(:user)
 
