@@ -6,14 +6,14 @@ module Api
       MAX_PER_PAGE = 100
 
       # GET /api/v1/stories
-      # All publicly visible stories (published + publicly_visible). Each record
-      # exposes its `featured` and `publicly_featured` flags.
+      # Publicly featured stories only (published + publicly_visible +
+      # publicly_featured).
       def index
         authorize! Story, to: :index?
-        # `authorized_scope` applies StoryPolicy (anonymous callers collapse to
-        # `publicly_visible`); starting from `Story.publicly_visible` guarantees
-        # the public floor for any caller.
-        @stories = authorized_scope(Story.publicly_visible)
+        # `authorized_scope` layers StoryPolicy (anonymous callers collapse to
+        # `publicly_visible`) over the `publicly_featured` scope, which already
+        # includes the public floor.
+        @stories = authorized_scope(Story.publicly_featured)
           .includes(:windows_type, :organization, :author, :primary_asset, :sectors,
                     { categories: :category_type }, created_by: :person)
           .order(created_at: :desc)
@@ -22,7 +22,7 @@ module Api
 
       # GET /api/v1/stories/:id
       def show
-        @story = Story.publicly_visible.find(params[:id])
+        @story = Story.publicly_featured.find(params[:id])
         authorize! @story
       end
 

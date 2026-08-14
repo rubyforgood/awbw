@@ -10,10 +10,6 @@ end
 
 json.url story_url(story)
 
-json.flags do
-  json.publicly_featured story.publicly_featured
-end
-
 # Tags applied to the story: the windows type, categories (grouped by category
 # type, e.g. "Age range", "Story category"), and sectors.
 json.tags do
