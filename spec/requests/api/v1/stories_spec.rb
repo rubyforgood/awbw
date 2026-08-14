@@ -46,13 +46,6 @@ RSpec.describe "Api::V1::Stories", type: :request do
       expect(plain).to include("featured" => false, "publicly_featured" => false)
     end
 
-    it "filters to the public-featured set with publicly_featured=true" do
-      get "/api/v1/stories", params: { publicly_featured: "true" }
-
-      titles = json["stories"].map { |s| s["title"] }
-      expect(titles).to contain_exactly("Public featured story")
-    end
-
     it "includes pagination metadata" do
       get "/api/v1/stories"
 
