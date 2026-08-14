@@ -13,8 +13,10 @@
       more        – captured markup for the drawer's fields (optional; when blank
                     the drawer, its toggle and checkbox are omitted entirely)
       hidden      – captured hidden inputs carried through the GET submit (optional)
-      applied     – captured markup pinned to the right of the "Filters" heading
-                    row, e.g. the applied-filter chip row (optional) %>
+      applied     – captured markup sharing the "Filters" heading row, e.g. the
+                    applied-filter chip row (optional). It owns its own placement
+                    (ml-auto) so it can be a stable element the results frame
+                    replaces out-of-band. %>
 <% hidden = local_assigns.fetch(:hidden, "") %>
 <% applied = local_assigns.fetch(:applied, "") %>
 <% more = local_assigns.fetch(:more, "") %>
@@ -44,9 +46,7 @@
         <i class="fa-solid fa-filter text-xs"></i>
         <span class="text-xs font-semibold uppercase tracking-wide">Filters</span>
       </div>
-      <% if applied.present? %>
-        <div class="ml-auto"><%= applied %></div>
-      <% end %>
+      <%= applied %>
     </div>
 
     <%# Row 1: the most meaningful filters + More filters toggle + Clear. %>

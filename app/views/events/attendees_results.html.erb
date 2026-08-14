@@ -5,6 +5,10 @@
     data-attributes drive every toggle after that. %>
 <% charts_open = params[:charts].present? %>
   <%= turbo_stream.replace("attendees_count", partial: "attendees_count") %>
+  <%# The filter bar sits outside this frame, so its chips are refreshed from here:
+      their remove links are built from the request's params and would otherwise
+      still describe the page's original URL, dropping every filter set since. %>
+  <%= turbo_stream.replace("attendees_chips", partial: "events/attendees_chips") %>
 
   <% if @people.any? %>
     <% charts_src = attendees_events_path(request.query_parameters) %>

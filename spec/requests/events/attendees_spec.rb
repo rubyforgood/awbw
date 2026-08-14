@@ -573,6 +573,24 @@ RSpec.describe "Events attendees", type: :request do
             .to have_selector("input[type=hidden][name=return_to][value=participation]", visible: :all)
         end
 
+        # The chip row lives outside the results frame, so its remove links would
+        # otherwise keep pointing at the params the page loaded with — dropping every
+        # filter the admin set through the frame since.
+        it "refreshes the applied-filter chips from the results frame" do
+          get attendees_events_url(country: "Canada", ce_status: "issued"), headers: frame_headers
+
+          # Turbo stream payloads sit inside a <template>, which selectors don't
+          # descend into — read the replacement's markup out first.
+          template = Nokogiri::HTML5(response.body)
+            .at_css("turbo-stream[action='replace'][target='attendees_chips'] template")
+          expect(template).to be_present
+
+          remove_link = "a[aria-label='Remove Country: Canada filter']"
+          expect(Capybara.string(template.inner_html)).to have_selector(
+            "#{remove_link}[href='#{attendees_events_path(ce_status: "issued")}']", visible: :all
+          )
+        end
+
         it "filters by the org's facilitator program status" do
           # Ada's org is new (no earlier facilitator affiliation); Zed's org is
           # ongoing (a facilitator affiliation predates and still overlaps today).
