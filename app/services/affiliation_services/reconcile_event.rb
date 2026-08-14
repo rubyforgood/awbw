@@ -16,11 +16,10 @@ module AffiliationServices
   #
   # `actionable_person_groups` groups the actionable rows by person (with their
   # attendance registration and other-org facilitator affiliations for context);
-  # `skipped_reason_sections` groups the no-action rows by reason (hand-entered
-  # last). `apply` performs the kept actionable rows and stamps the event.
+  # `skipped_reason_sections` groups the no-action rows by reason. `apply` performs
+  # the kept actionable rows and stamps the event. Every facilitator affiliation for
+  # a linked org is reconciled — hand-entered rows included, not just app-created ones.
   class ReconcileEvent
-    HAND_ENTERED = "Hand-entered affiliation — left alone".freeze
-
     Row = Struct.new(:person, :registration, :organization, :affiliation, :action, :reason, :key, keyword_init: true) do
       def actionable?
         action != :noop
@@ -43,7 +42,7 @@ module AffiliationServices
     # No-action rows grouped by reason, hand-entered last: [[reason, [rows]]].
     def skipped_reason_sections
       grouped = all_rows.reject(&:actionable?).group_by(&:reason)
-      grouped.keys.sort_by { |reason| [ reason == HAND_ENTERED ? 1 : 0, reason ] }.map { |reason| [ reason, grouped[reason] ] }
+      grouped.keys.sort.map { |reason| [ reason, grouped[reason] ] }
     end
 
     def any_rows?
@@ -75,14 +74,24 @@ module AffiliationServices
     end
 
     def rows_for(person, registration, organization)
-      attended = completed_training?(person, organization)
       facilitators = person.affiliations.facilitators
         .where(organization:)
         .includes(event_registration: :event)
         .to_a
 
+      unless @event.facilitator_training?
+        # A non-training event confers no facilitation, so it only removes
+        # facilitator affiliations that were auto-created off it.
+        return facilitators.filter_map do |affiliation|
+          next unless affiliation.event_registration&.event_id == @event.id
+
+          Row.new(person:, registration:, organization:, affiliation:, action: :delete, reason: nil, key: "aff:#{affiliation.id}")
+        end
+      end
+
+      attended = completed_training?(person, organization)
       rows = facilitators.map { |affiliation| affiliation_row(person, registration, organization, affiliation, attended) }
-      rows << create_row(person, registration, organization, attended) if facilitators.empty? && @event.facilitator_training?
+      rows << create_row(person, registration, organization, attended) if facilitators.empty?
       rows.compact
     end
 
@@ -91,27 +100,24 @@ module AffiliationServices
       Row.new(person:, registration:, organization:, affiliation:, action:, reason:, key: "aff:#{affiliation.id}")
     end
 
+    # Reconciles EVERY facilitator affiliation for the org — hand-entered ones
+    # included, not just app-created rows. Deactivation only applies once the
+    # governing training has ended (a hand-entered row has no source training, so
+    # it's gated on this event ending) — so a pre-event run never deactivates.
     def classify_affiliation(affiliation, attended)
-      owned = affiliation.event_registration_id.present?
-
-      unless @event.facilitator_training?
-        return [ :delete, nil ] if owned && affiliation.event_registration&.event_id == @event.id
-        return [ :noop, "Facilitator affiliation from another event" ] if owned
-
-        return [ :noop, HAND_ENTERED ]
-      end
-
-      return [ :noop, HAND_ENTERED ] unless owned
-
       if attended
         affiliation.active? ? [ :noop, "Active — attended" ] : [ :reactivate, nil ]
-      elsif affiliation.active? && source_ended?(affiliation)
+      elsif affiliation.active? && deactivation_ready?(affiliation)
         [ :deactivate, nil ]
       elsif affiliation.active?
         [ :noop, "Training hasn't ended yet" ]
       else
         [ :noop, "Already deactivated — didn't attend" ]
       end
+    end
+
+    def deactivation_ready?(affiliation)
+      affiliation.event_registration_id ? source_ended?(affiliation) : @event.ended?
     end
 
     def create_row(person, registration, organization, attended)

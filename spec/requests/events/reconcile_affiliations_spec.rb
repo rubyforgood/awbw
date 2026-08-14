@@ -65,6 +65,17 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       expect(response.body).to include(person.name)
     end
 
+    it "reconciles a hand-entered (unowned) facilitator affiliation too" do
+      person = create(:person)
+      reg = create(:event_registration, event: event, registrant: person, status: "no_show")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+      create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago.to_date)
+
+      get reconcile_affiliations_event_path(event)
+
+      expect(response.body).to include("Will be deactivated")
+    end
+
     it "denies a non-admin" do
       sign_in create(:user)
 
@@ -111,6 +122,17 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       post reconcile_affiliations_event_path(event), params: { included: [ key ], delete: [ key ] }
 
       expect(Affiliation.exists?(affiliation.id)).to be(false)
+    end
+
+    it "deactivates a hand-entered facilitator affiliation when included" do
+      person = create(:person)
+      reg = create(:event_registration, event: event, registrant: person, status: "no_show")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+      hand_entered = create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago.to_date)
+
+      post reconcile_affiliations_event_path(event), params: { included: [ "aff:#{hand_entered.id}" ] }
+
+      expect(hand_entered.reload).not_to be_active
     end
 
     it "deletes a facilitator affiliation auto-created off a non-training event, keeping the job affiliation" do
