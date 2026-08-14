@@ -63,10 +63,19 @@ module AffiliationServices
     # same-daying it. Stamps the event and returns the number of rows changed.
     def apply(included_keys:, delete_keys: [])
       included = Array(included_keys).to_set
-      delete_instead = Array(delete_keys).to_set
+      deletes = Array(delete_keys).to_set
 
       changed = all_rows.count do |row|
-        row.actionable? && included.include?(row.key) && perform(row, delete_instead: delete_instead.include?(row.key))
+        next false unless row.actionable?
+
+        if deletes.include?(row.key) && row.affiliation
+          row.affiliation.destroy!
+          true
+        elsif included.include?(row.key)
+          perform(row)
+        else
+          false
+        end
       end
 
       @event.update!(affiliations_reconciled_at: Time.current)
@@ -139,7 +148,7 @@ module AffiliationServices
       end
     end
 
-    def perform(row, delete_instead:)
+    def perform(row)
       case row.action
       when :create
         AffiliationServices::CreateFromRegistration.call(
@@ -149,7 +158,9 @@ module AffiliationServices
       when :delete
         row.affiliation.destroy!
       when :deactivate
-        delete_instead ? row.affiliation.destroy! : row.affiliation.update!(end_date: row.affiliation.start_date || Date.current)
+        # Same-day it: end_date = the affiliation's own start_date (start_date itself
+        # is never changed), which the model turns into inactive.
+        row.affiliation.update!(end_date: row.affiliation.start_date || Date.current)
       when :reactivate
         row.affiliation.update!(end_date: nil)
       end

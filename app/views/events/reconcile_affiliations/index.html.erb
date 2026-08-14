@@ -47,12 +47,12 @@
       <div class="space-y-4">
         <% @person_groups.each do |group| %>
           <% checked_class = {
-               create: "peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:border-blue-300",
-               reactivate: "peer-checked:bg-green-50 peer-checked:text-green-700 peer-checked:border-green-300",
-               deactivate: "peer-checked:bg-red-50 peer-checked:text-red-700 peer-checked:border-red-300",
-               delete: "peer-checked:bg-red-50 peer-checked:text-red-700 peer-checked:border-red-300"
+               create: "has-[:checked]:bg-blue-50 has-[:checked]:text-blue-700 has-[:checked]:border-blue-300",
+               reactivate: "has-[:checked]:bg-green-50 has-[:checked]:text-green-700 has-[:checked]:border-green-300",
+               deactivate: "has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300",
+               delete: "has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300"
              } %>
-          <% button_base = "inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm hover:bg-gray-50 peer-focus-visible:ring-2 peer-focus-visible:ring-blue-400" %>
+          <% button_base = "group relative inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm cursor-pointer hover:bg-gray-50" %>
           <section class="rounded-lg border border-gray-200 bg-white p-4">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
               <div class="flex items-center gap-2 min-w-0">
@@ -80,18 +80,18 @@
                   <% else %>
                     <span class="flex-1 min-w-0 text-sm text-gray-800"><%= row.organization.name %></span>
                   <% end %>
-                  <div class="flex items-center gap-2">
+                  <%# Checkbox lives inside the button; has-[:checked] colors the whole button when selected. %>
+                  <div class="flex items-center gap-2"<% if row.action == :deactivate %> data-controller="exclusive-checkboxes"<% end %>>
                     <% if row.action == :deactivate %>
-                      <label class="group relative inline-flex cursor-pointer">
-                        <%= check_box_tag "delete[]", row.key, false, id: "delete_#{row.key}", class: "peer sr-only" %>
-                        <span class="<%= button_base %> peer-checked:bg-red-50 peer-checked:text-red-700 peer-checked:border-red-300">Delete instead</span>
+                      <label class="<%= button_base %> has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300">
+                        <%= check_box_tag "delete[]", row.key, false, id: "delete_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-red-600", data: { exclusive_checkboxes_target: "box", action: "exclusive-checkboxes#select" } %>
+                        Delete instead
                         <%= render "tooltip", kind: :delete %>
                       </label>
                     <% end %>
-                    <%# Hidden checkbox toggles a button-styled label: it only shows the action color when selected. %>
-                    <label class="group relative inline-flex cursor-pointer">
-                      <%= check_box_tag "included[]", row.key, true, id: "included_#{row.key}", class: "peer sr-only" %>
-                      <span class="<%= button_base %> <%= checked_class[row.action] %>"><%= heading %></span>
+                    <label class="<%= button_base %> <%= checked_class[row.action] %>">
+                      <%= check_box_tag "included[]", row.key, true, id: "included_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-blue-600", data: (row.action == :deactivate ? { exclusive_checkboxes_target: "box", action: "exclusive-checkboxes#select" } : {}) %>
+                      <%= heading %>
                       <%= render "tooltip", kind: row.action %>
                     </label>
                   </div>
