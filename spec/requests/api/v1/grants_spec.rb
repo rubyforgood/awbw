@@ -56,12 +56,9 @@ RSpec.describe "Api::V1::Grants", type: :request do
 
         payload = json["grants"].find { |g| g["name"] == "Spring 2026 Fund" }
         expect(payload["funder"]).to eq("name" => "Acme Foundation", "type" => "Organization")
-        expect(payload["funds"]).to include(
+        expect(payload["funds"]).to eq(
           "amount_cents" => 5_000_000,
-          "amount" => "$50,000",
-          "allocated_cents" => 2_000_000,
-          "remaining_cents" => 3_000_000,
-          "fully_issued" => false
+          "amount" => "$50,000"
         )
         expect(payload["eligibility_criteria"]).to eq([ "Facilitator-nominated", "Underserved region" ])
         expect(payload["tags"]["categories"]).to eq("Age range" => [ "6-12" ])
