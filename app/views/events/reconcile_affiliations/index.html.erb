@@ -111,15 +111,13 @@
 
   <% if @skipped_sections.any? %>
     <% skipped_count = @skipped_sections.sum { |(_reason, rows)| rows.size } %>
-    <details open class="mt-8 rounded-lg border border-gray-200 bg-white">
-      <summary class="cursor-pointer select-none px-4 py-3 bg-gray-100 text-base font-bold text-gray-900 hover:bg-gray-200">
+    <details open data-controller="toggle-details" class="mt-8 rounded-lg border border-gray-200 bg-white">
+      <summary class="relative cursor-pointer select-none px-4 py-3 pr-28 bg-gray-100 text-base font-bold text-gray-900 hover:bg-gray-200">
         Not reconciled <span class="text-gray-400 font-normal">(<%= skipped_count %>)</span>
+        <button type="button" data-toggle-details-target="toggleBtn" data-action="toggle-details#toggleAll:prevent"
+                class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-normal text-blue-600 hover:underline">Collapse all</button>
       </summary>
-      <div class="border-t border-gray-100 px-4 py-3 space-y-3" data-controller="toggle-details">
-        <div class="flex justify-end">
-          <button type="button" data-toggle-details-target="toggleBtn" data-action="toggle-details#toggleAll"
-                  class="text-xs text-blue-600 hover:underline">Collapse all</button>
-        </div>
+      <div class="border-t border-gray-100 px-4 py-4 space-y-6">
         <% @skipped_sections.each do |reason, rows| %>
           <details open class="rounded-lg border border-gray-200 overflow-hidden">
             <summary class="cursor-pointer select-none px-3 py-2 bg-gray-100 border-b border-gray-200 text-sm font-semibold text-gray-700 tracking-wide hover:bg-gray-200">
