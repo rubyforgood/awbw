@@ -46,11 +46,13 @@ module Events
       @event = Event.find(params[:id])
     end
 
-    # `outcome` is a { row.key => choice } map with dynamic keys; the service only
-    # acts on known choices, so the actual values are validated downstream.
+    # `outcome` is a { row.key => choice } map with dynamic keys, read as a plain
+    # string hash (never mass-assigned); the service only acts on known choices.
     def outcome_params
-      outcome = params[:outcome]
-      outcome.respond_to?(:permit!) ? outcome.permit!.to_h : {}
+      raw = params[:outcome]
+      return {} unless raw.respond_to?(:each_pair)
+
+      raw.each_pair.map { |key, value| [ key.to_s, value.to_s ] }.to_h
     end
 
     def reconcile_notice(changed)
