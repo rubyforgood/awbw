@@ -40,14 +40,18 @@
   <%# Attendance and event type default to "attended" / "trainings" — the population
       this page has always shown — so the neutral "All …" is the first option rather
       than a blank placeholder. These two plus the search make up the primary row,
-      mirroring the registrants bar's search + attendance + payment status. %>
+      mirroring the registrants bar's search + attendance + payment status. They
+      clear back to that default population rather than to the "All …" they lead
+      with, since the default is what this page means by unfiltered. %>
   <%= render "events/filter_select", param: :attendance_status, label: "Attendance",
         options: [ [ "All outcomes", EventRegistration::FILTER_ALL ] ] + EventRegistration::ATTENDANCE_FILTER_OPTIONS,
-        selected: @attendance_status, blank: nil, field_class: field_class, wrapper_class: "w-full md:w-40" %>
+        selected: @attendance_status, blank: nil, clear_to: EventsController::DEFAULT_ATTENDANCE_STATUS,
+        field_class: field_class, wrapper_class: "w-full md:w-40" %>
 
   <%= render "events/filter_select", param: :event_type, label: "Event type",
         options: [ [ "All events", EventRegistration::FILTER_ALL ] ] + EventRegistration::EVENT_TYPE_FILTER_OPTIONS,
-        selected: @attendee_event_type, blank: nil, field_class: field_class, wrapper_class: "w-full md:w-52" %>
+        selected: @attendee_event_type, blank: nil, clear_to: EventsController::DEFAULT_ATTENDEE_EVENT_TYPE,
+        field_class: field_class, wrapper_class: "w-full md:w-52" %>
 <% end %>
 
 <% more = capture do %>

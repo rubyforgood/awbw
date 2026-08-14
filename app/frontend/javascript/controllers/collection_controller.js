@@ -74,8 +74,16 @@ export default class extends Controller {
       .forEach((input) => {
         input.value = "";
       });
+    // Index 0 is the neutral state only for a select with a placeholder first
+    // option. One rendered pre-selected (no include_blank) leads with a real value,
+    // so it says what it clears to via data-clear-to.
     this.element.querySelectorAll("select").forEach((select) => {
-      select.selectedIndex = 0;
+      const { clearTo } = select.dataset;
+      if (clearTo === undefined) {
+        select.selectedIndex = 0;
+      } else {
+        select.value = clearTo;
+      }
     });
     this.element
       .querySelectorAll('input[type="checkbox"], input[type="radio"]')
