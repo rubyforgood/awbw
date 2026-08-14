@@ -24,5 +24,11 @@ export default class extends Controller {
       this.toggleTarget.click()
     }
     this.element.scrollIntoView({ behavior: "smooth", block: "start" })
+    // Drop the hash once it has been honoured. A section inside a lazily-loaded
+    // frame reconnects on every frame render (each filter change), and a Turbo
+    // frame submit never touches the address bar — so the hash would still match
+    // and pull the page back here for the rest of the visit.
+    const { pathname, search } = window.location
+    history.replaceState(history.state, "", pathname + search)
   }
 }
