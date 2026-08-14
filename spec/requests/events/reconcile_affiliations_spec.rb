@@ -27,7 +27,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(person.name)
-      expect(response.body).to include("Will be deactivated")
+      expect(response.body).to include("Deactivate affiliation")
     end
 
     it "previews a missing affiliation as a creation before the event" do
@@ -73,7 +73,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
 
       get reconcile_affiliations_event_path(event)
 
-      expect(response.body).to include("Will be deactivated")
+      expect(response.body).to include("Deactivate affiliation")
     end
 
     it "denies a non-admin" do
