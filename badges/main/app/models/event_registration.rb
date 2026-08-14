@@ -19,6 +19,9 @@ class EventRegistration < ApplicationRecord
   has_many :scholarships, -> { distinct },
     through: :allocations, source: :source, source_type: "Scholarship"
   has_many :checklist_completions, class_name: "EventRegistrationChecklistCompletion", dependent: :destroy
+  # Affiliations this registration auto-minted; keep them but drop the link if the
+  # registration is deleted (mirrors the FK's on_delete: :nullify).
+  has_many :affiliations, dependent: :nullify, inverse_of: :event_registration
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }

@@ -16,6 +16,10 @@ class Affiliation < ApplicationRecord
   belongs_to :person, touch: true
   # Which of the organization's addresses this person is affiliated with (optional).
   belongs_to :organization_address, class_name: "Address", optional: true
+  # The registration that auto-minted this affiliation, when it came from one. NULL
+  # for manually/historically created rows — reconciliation only sweeps rows that
+  # have this link.
+  belongs_to :event_registration, optional: true, inverse_of: :affiliations
 
   # Validations
   validates_presence_of :organization_id
@@ -72,6 +76,7 @@ class Affiliation < ApplicationRecord
 
   before_validation :skip_if_duplicate
   before_save :set_inactive_from_dates
+  before_update :clear_event_registration_on_org_change
   after_save :sync_organization_status_with_affiliations
   after_save :sync_organization_affiliation_dates
   after_destroy :sync_organization_status_with_affiliations
@@ -129,6 +134,14 @@ class Affiliation < ApplicationRecord
     scope = scope.where.not(id: id) if persisted?
 
     throw(:abort) if scope.exists?
+  end
+
+  # event_registration_id records the registration that created this affiliation for
+  # its original org. If an admin moves the affiliation to a different org, that link
+  # no longer applies, so clear it — a row with no link counts as manually created,
+  # which reconciliation leaves alone.
+  def clear_event_registration_on_org_change
+    self.event_registration_id = nil if organization_id_changed?
   end
 
   def set_inactive_from_dates

@@ -25,6 +25,8 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
   end
 
   describe "affiliation creation" do
+    # A facilitator affiliation is only minted off a facilitator-training event.
+    let(:event) { create(:event, :published, :publicly_visible, facilitator_training: true) }
     let!(:organization) { create(:organization, name: "Helping Hands") }
 
     def register_with(position:)
@@ -75,6 +77,23 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       person = register_with(position: "Counselor")
 
       expect(person.affiliations.where(organization: organization).map(&:organization_address)).to all(be_nil)
+    end
+
+    it "creates only the job affiliation for a non-facilitator-training event" do
+      event.update!(facilitator_training: false)
+
+      person = register_with(position: "Counselor")
+
+      expect(person.affiliations.where(organization: organization).pluck(:title))
+        .to contain_exactly("Counselor")
+    end
+
+    it "links the created affiliations to the resulting registration" do
+      person = register_with(position: "Counselor")
+
+      registration = event.event_registrations.find_by(registrant: person)
+      expect(person.affiliations.where(organization: organization).map(&:event_registration))
+        .to all(eq(registration))
     end
   end
 

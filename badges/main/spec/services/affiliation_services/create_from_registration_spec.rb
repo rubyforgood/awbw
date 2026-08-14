@@ -26,6 +26,31 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
     expect(titles).to contain_exactly("Facilitator")
   end
 
+  describe "a non-facilitator-training event" do
+    it "creates only the job affiliation, not a facilitator affiliation" do
+      described_class.call(person: person, organization: organization,
+                           job_title: "Counselor", facilitator_training: false)
+
+      expect(titles).to contain_exactly("Counselor")
+    end
+
+    it "creates no affiliations when no job title is given" do
+      described_class.call(person: person, organization: organization,
+                           job_title: nil, facilitator_training: false)
+
+      expect(titles).to be_empty
+    end
+
+    it "leaves an existing facilitator affiliation alone rather than ending it" do
+      create(:affiliation, person: person, organization: organization, title: "Facilitator")
+
+      described_class.call(person: person, organization: organization,
+                           job_title: "Counselor", facilitator_training: false)
+
+      expect(titles).to contain_exactly("Counselor", "Facilitator")
+    end
+  end
+
   it "still adds a Facilitator affiliation alongside a facilitator-ish job title" do
     described_class.call(person: person, organization: organization, job_title: "Lead Facilitator")
 
@@ -134,6 +159,34 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
       described_class.call(person: person, organization: organization)
 
       expect(facilitator.reload.organization_address).to be_nil
+    end
+  end
+
+  describe "recording the registration that created the affiliation" do
+    let(:registration) { create(:event_registration) }
+
+    it "stamps the event_registration onto every row it creates" do
+      described_class.call(person: person, organization: organization,
+                           job_title: "Counselor", event_registration: registration)
+
+      created = person.affiliations.where(organization: organization)
+      expect(created.pluck(:title)).to contain_exactly("Counselor", "Facilitator")
+      expect(created.map(&:event_registration)).to all(eq(registration))
+    end
+
+    it "leaves the link nil when no registration is given" do
+      described_class.call(person: person, organization: organization, job_title: "Counselor")
+
+      expect(person.affiliations.where(organization: organization).map(&:event_registration)).to all(be_nil)
+    end
+
+    it "does not stamp an existing (manual) affiliation it only backfills" do
+      manual = create(:affiliation, person: person, organization: organization, title: "Facilitator")
+
+      described_class.call(person: person, organization: organization,
+                           job_title: "Counselor", event_registration: registration)
+
+      expect(manual.reload.event_registration).to be_nil
     end
   end
 

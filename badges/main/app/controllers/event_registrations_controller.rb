@@ -615,7 +615,9 @@ class EventRegistrationsController < ApplicationController
       organization: organization,
       job_title: submitted_position(registration, organization),
       training_date: registration.event.start_date,
-      organization_address: address_result.address || sole_address(organization)
+      organization_address: address_result.address || sole_address(organization),
+      facilitator_training: registration.event.facilitator_training,
+      event_registration: registration
     )
 
     address_result
