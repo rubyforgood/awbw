@@ -1,11 +1,22 @@
-<%# Compact scholarship headline for the reports hub, linking to the full
-    report. Expects `report` (an EventScholarshipReport) and `period` (its
-    resolved PeriodScope: #label, #year and #metrics). %>
+<%# Compact scholarship headline for the reports hub, linking to the full report
+    (Details) plus the recipient attendees/breakdowns. Expects `report` (an
+    EventScholarshipReport) and `period` (its resolved PeriodScope: #label, #year
+    and #metrics). %>
 <div class="h-full flex flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-  <div class="flex items-center justify-between mb-4">
+  <div class="flex items-start justify-between mb-4">
     <h3 class="text-base font-semibold text-gray-900">Scholarships</h3>
-    <%= link_to "Full report →", scholarships_events_path(hub_to_report_params),
-          class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+    <div class="flex flex-col items-end gap-1">
+      <%= link_to "Details →", scholarships_events_path(hub_to_report_params),
+            class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+      <%# Attendees and breakdowns for the scholarship population — the attendees
+          index pre-filtered to scholarship recipients. ?charts=1 + #breakdowns opens
+          and scrolls to the panel; return_to keeps the eyebrow on the reports hub. %>
+      <% scholarship_attendee_params = hub_to_attendees_params(scholarship: "yes") %>
+      <%= link_to "Attendees →", attendees_events_path(scholarship_attendee_params),
+            class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+      <%= link_to "Breakdowns →", attendees_events_path(scholarship_attendee_params.merge(charts: 1, anchor: "breakdowns")),
+            class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+    </div>
   </div>
 
   <% if report.any? %>

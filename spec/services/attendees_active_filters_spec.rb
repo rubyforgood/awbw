@@ -36,11 +36,13 @@ RSpec.describe AttendeesActiveFilters do
     expect(chips_for(org_city: "Austin, TX").first[:label]).to eq("Org city: Austin, TX")
   end
 
-  it "labels the yes/no scholarship and CE drill-ins" do
-    expect(chips_for(scholarship: "yes").first[:label]).to eq("Scholarship recipients")
-    expect(chips_for(scholarship: "no").first[:label]).to eq("No scholarship")
-    expect(chips_for(ce: "yes").first[:label]).to eq("Continuing education")
-    expect(chips_for(ce: "no").first[:label]).to eq("No continuing education")
+  # Scholarship and CE status each have their own visible select on the index, so
+  # neither is a chip — the CE pie's drill-ins target ce_status for that reason.
+  it "does not chip scholarship or CE status" do
+    expect(chips_for(scholarship: "yes")).to eq([])
+    expect(chips_for(scholarship: "no")).to eq([])
+    expect(chips_for(ce_status: "registered")).to eq([])
+    expect(chips_for(ce_status: "none")).to eq([])
   end
 
   # These two have no select on the index — they arrive from the revenue report —
@@ -61,7 +63,7 @@ RSpec.describe AttendeesActiveFilters do
   end
 
   it "emits chips in CHIP_PARAMS order regardless of param order" do
-    params = chips_for(scholarship: "yes", country: "Canada", registrant_ids: "1-2")
-    expect(params.map { |c| c[:param] }).to eq(%w[ registrant_ids country scholarship ])
+    params = chips_for(payment_status: "unpaid", country: "Canada", registrant_ids: "1-2")
+    expect(params.map { |c| c[:param] }).to eq(%w[ registrant_ids country payment_status ])
   end
 end

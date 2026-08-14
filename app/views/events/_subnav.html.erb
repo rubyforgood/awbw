@@ -8,7 +8,7 @@
 <nav class="flex flex-wrap items-center gap-1" aria-label="Event views">
   <% tabs = [
        { key: :dashboard, label: "Dashboard", path: dashboard_event_path(event), visible: allowed_to?(:dashboard?, event) },
-       { key: :registrants, label: "Manage", path: registrants_event_path(event), visible: allowed_to?(:registrants?, event) },
+       { key: :registrants, label: "Registrations", path: registrants_event_path(event), visible: allowed_to?(:registrants?, event) },
        { key: :roster, label: "Roster", path: roster_event_path(event), visible: allowed_to?(:roster?, event) },
        { key: :reports, label: "Reports", path: reports_events_path(event_id: event.id), visible: allowed_to?(:event_reports?, event) },
        { key: :scholarships, label: "Scholarships", path: recipients_event_path(event), visible: allowed_to?(:recipients?, event) },
@@ -16,8 +16,6 @@
      ] %>
   <% tabs.each do |tab| %>
     <% next unless tab[:visible] %>
-    <%# The dashboard is the event's home; don't echo a Dashboard tab back on it. %>
-    <% next if tab[:key] == :dashboard && current == :dashboard %>
     <% if tab[:key] == current %>
       <span aria-current="page" class="text-sm font-semibold text-gray-900 border-b-2 border-indigo-600 px-2 py-1"><%= tab[:label] %></span>
     <% else %>

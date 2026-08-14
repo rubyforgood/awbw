@@ -70,6 +70,43 @@ class EventRegistration < ApplicationRecord
     [ "Grant-funded", "external" ],
     [ "Org-subsidized", "awbw" ]
   ].freeze
+  # Scholarship-status filter options (the .scholarship_status scope's vocabulary).
+  SCHOLARSHIP_STATUS_FILTER_OPTIONS = [
+    [ "All recipients", "yes" ],
+    [ "Agreed", "agreed" ],
+    [ "Tasks complete", "complete" ],
+    [ "Tasks not complete", "incomplete" ],
+    [ "No scholarship", "no" ]
+  ].freeze
+  # The ce_status value meaning "never signed up for CE" — the only one that asks
+  # about the absence of a CE registration rather than its stage.
+  NO_CE = "none".freeze
+  # CE-status filter options (the .ce_status scope's vocabulary). Issued/not issued
+  # are worded as the certificate's state because they read as overlapping
+  # otherwise — one person can match both across two registrations.
+  CE_STATUS_FILTER_OPTIONS = [
+    [ "Registered for CE", "registered" ],
+    [ "Requested", "requested" ],
+    [ "Needs license", "needs_license" ],
+    [ "Paid", "paid" ],
+    [ "Certificate issued", "issued" ],
+    [ "Certificate outstanding", "not_issued" ],
+    [ "No CE", NO_CE ]
+  ].freeze
+  # Login-account filter options (the .account_status scope's vocabulary).
+  ACCOUNT_STATUS_FILTER_OPTIONS = [
+    [ "No account", "none" ],
+    [ "Not invited yet", "not_invited" ],
+    [ "Invited", "invited" ],
+    [ "Has access", "has_access" ],
+    [ "No access", "no_access" ]
+  ].freeze
+  # Comment filter options (the .comment_status scope's vocabulary).
+  COMMENT_STATUS_FILTER_OPTIONS = [
+    [ "None", "none" ],
+    [ "Present", "present" ],
+    [ "Flagged", "flagged" ]
+  ].freeze
 
   # Human labels for each attendance status — the single source of truth for
   # status display (badges, filters, the dashboard breakdown).
@@ -158,6 +195,10 @@ class EventRegistration < ApplicationRecord
       .where(sectorable_items: { sector_id: sector_id })
       .distinct
   }
+  # Registrant holds an active subscription to the given topic subscription list.
+  scope :registrant_topic_subscription, ->(type_id) {
+    where(registrant_id: TopicSubscription.active.where(topic_subscription_type_id: type_id).select(:person_id)).distinct
+  }
   scope :with_scholarship, -> {
     where(<<~SQL.squish)
       EXISTS (
@@ -194,9 +235,20 @@ class EventRegistration < ApplicationRecord
       )
     SQL
   }
+  scope :without_scholarship, -> {
+    where(<<~SQL.squish)
+      NOT EXISTS (
+        SELECT 1 FROM allocations
+        WHERE allocations.allocatable_type = 'EventRegistration'
+          AND allocations.allocatable_id = event_registrations.id
+          AND allocations.source_type = 'Scholarship'
+      )
+    SQL
+  }
   scope :scholarship_status, ->(value) {
     case value
     when "yes" then with_scholarship
+    when "no" then without_scholarship
     when "agreed" then with_agreed_scholarship
     when "complete" then scholarship_tasks_completed
     when "incomplete" then scholarship_tasks_incomplete
@@ -298,6 +350,7 @@ class EventRegistration < ApplicationRecord
   # issued/not_issued read the certificate delivery; needs_license is a CE
   # registration sitting on a placeholder license. "registered" adds no condition
   # of its own — the EXISTS alone means "signed up for CE, whatever its state".
+  # NO_CE is the one value asking about the absence of a CE registration.
   scope :ce_status, ->(value) {
     paid_sql = <<~SQL.squish
       COALESCE((SELECT SUM(a.amount) FROM allocations a
@@ -312,11 +365,17 @@ class EventRegistration < ApplicationRecord
       when "requested" then "NOT (#{paid_sql})"
       when "issued" then "cer.certificate_sent_at IS NOT NULL"
       when "not_issued" then "cer.certificate_sent_at IS NULL"
+      when NO_CE then "TRUE"
       end
     next all if condition.blank?
 
+    # "No CE" is the one value that asks for the absence of a CE registration, so it
+    # negates the same EXISTS the others qualify. The license join never drops a row
+    # (professional_license_id is NOT NULL), so "registered" and NO_CE are exact
+    # complements.
+    existence = value == NO_CE ? "NOT EXISTS" : "EXISTS"
     where(<<~SQL.squish)
-      EXISTS (
+      #{existence} (
         SELECT 1 FROM continuing_education_registrations cer
         JOIN professional_licenses pl ON pl.id = cer.professional_license_id
         WHERE cer.event_registration_id = event_registrations.id

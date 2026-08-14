@@ -178,6 +178,18 @@ module EventsHelper
     }.compact
   end
 
+  # Reports hub filters → attendees index query params, plus the reports origin so
+  # the index's eyebrow comes back here. The index defaults its event-type filter
+  # to facilitator trainings, so a hub scoped to an event of any other type would
+  # drill in to an empty list — when one event is the scope it already answers the
+  # question the event-type filter asks, so pin that filter open.
+  def hub_to_attendees_params(extra = {})
+    attendees_params = hub_to_report_params.merge(return_to: "reports")
+    attendees_params[:event_type] ||= EventRegistration::FILTER_ALL if attendees_params[:event_id].present?
+    attendees_params[:event_year] = time_period_to_event_year(attendees_params.delete(:time_period))
+    attendees_params.compact.merge(extra)
+  end
+
   # Full report filters → reports hub query params.
   def report_to_hub_params
     {
@@ -186,6 +198,16 @@ module EventsHelper
       event_id: params[:event_id].presence,
       period: time_period_to_hub_period(@time_period)
     }.compact
+  end
+
+  # Report time_period → the attendees index's `event_year` filter. The index has
+  # no time_period vocabulary of its own — it narrows by the event's calendar year
+  # (the same translation the participation card's figure links already do) — so
+  # passing time_period through would silently drop the period. "all_time" is nil,
+  # which leaves the year filter open.
+  def time_period_to_event_year(time_period)
+    return Date.current.year.to_s if time_period == "this_year"
+    time_period if Integer(time_period, exception: false)
   end
 
   # "last_year" becomes the prior calendar year (reports name specific years

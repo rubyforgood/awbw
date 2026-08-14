@@ -5,6 +5,10 @@
     data-attributes drive every toggle after that. %>
 <% charts_open = params[:charts].present? %>
   <%= turbo_stream.replace("attendees_count", partial: "attendees_count") %>
+  <%# The filter bar sits outside this frame, so its chips are refreshed from here:
+      their remove links are built from the request's params and would otherwise
+      still describe the page's original URL, dropping every filter set since. %>
+  <%= turbo_stream.replace("attendees_chips", partial: "events/attendees_chips") %>
 
   <% if @people.any? %>
     <% charts_src = attendees_events_path(request.query_parameters) %>
@@ -50,7 +54,7 @@
 
       <%# Charts panel — hidden by default; the lazy frame loads on first reveal. %>
       <%= render "events/section_heading", title: "Breakdowns", icon: "fa-chart-pie",
-            theme: :event_registrations, intensity: 700, panel: "charts", open: charts_open, spacing: "mt-10" %>
+            theme: :event_registrations, intensity: 700, panel: "charts", open: charts_open, spacing: "mt-10", id: "breakdowns" %>
       <div data-panel-toggle-target="panel" data-panel-toggle-name="charts" class="<%= "hidden" unless charts_open %>">
         <%= turbo_frame_tag :attendees_charts, src: charts_src, loading: :lazy do %>
           <%= render "events/charts_loading" %>

@@ -18,11 +18,17 @@
                  (e.g. the page's panel toggle bar).
       spacing:   extra wrapper classes (e.g. "mt-10").
       margin:    bottom margin, "mb-4" by default; pass "" when the caller already
-                 spaces the row (e.g. a heading sharing a row with an action). %>
+                 spaces the row (e.g. a heading sharing a row with an action).
+      id:        optional anchor id; adds scroll-mt so a #fragment link isn't
+                 hidden under the sticky header, plus reveal-section so the scroll
+                 still happens when the heading arrives inside a lazily-loaded
+                 Turbo frame (the browser has given up on the hash by then). %>
 <% intensity = local_assigns[:intensity] %>
 <% actions = local_assigns[:actions] %>
+<% anchor_id = local_assigns[:id] %>
+<% anchor_attrs = tag.attributes(id: anchor_id, data: { controller: "reveal-section", reveal_section_anchor_value: anchor_id }) if anchor_id %>
 <% text_class = intensity ? DomainTheme.text_class_for(theme, intensity: intensity) : DomainTheme.text_class_for(theme) %>
-<div class="flex flex-wrap items-center gap-3 <%= local_assigns.fetch(:margin, "mb-4") %> <%= local_assigns[:spacing] %>">
+<div <%= anchor_attrs %> class="flex flex-wrap items-center gap-3 <%= "scroll-mt-24" if anchor_id %> <%= local_assigns.fetch(:margin, "mb-4") %> <%= local_assigns[:spacing] %>">
   <h2 class="text-xl font-bold flex items-center gap-2 <%= text_class %>">
     <i class="fa-solid <%= icon %>"></i>
     <%= title %>

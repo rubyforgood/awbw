@@ -422,6 +422,14 @@ RSpec.describe EventRegistration, type: :model do
       end
     end
 
+    describe ".without_scholarship" do
+      it "returns only registrations with no scholarship" do
+        results = EventRegistration.without_scholarship
+        expect(results).to include(paid_reg, unpaid_reg)
+        expect(results).not_to include(scholarship_reg, incomplete_scholarship_reg)
+      end
+    end
+
     describe ".scholarship_tasks_completed" do
       it "returns recipients whose scholarship tasks are complete" do
         results = EventRegistration.scholarship_tasks_completed
@@ -442,6 +450,11 @@ RSpec.describe EventRegistration, type: :model do
       it "maps 'yes' to all recipients" do
         expect(EventRegistration.scholarship_status("yes")).to include(scholarship_reg, incomplete_scholarship_reg)
         expect(EventRegistration.scholarship_status("yes")).not_to include(paid_reg, unpaid_reg)
+      end
+
+      it "maps 'no' to registrations without a scholarship" do
+        expect(EventRegistration.scholarship_status("no")).to include(paid_reg, unpaid_reg)
+        expect(EventRegistration.scholarship_status("no")).not_to include(scholarship_reg, incomplete_scholarship_reg)
       end
 
       it "maps 'complete' to completed-task recipients" do
@@ -576,6 +589,23 @@ RSpec.describe EventRegistration, type: :model do
         results = EventRegistration.ce_status("not_issued")
         expect(results).to include(paid_ce, requested_ce)
         expect(results).not_to include(issued_ce, no_ce)
+      end
+
+      it "maps 'none' to registrations that never signed up for CE" do
+        results = EventRegistration.ce_status(EventRegistration::NO_CE)
+        expect(results).to include(no_ce)
+        expect(results).not_to include(paid_ce, requested_ce, needs_license_ce, issued_ce)
+      end
+
+      # The license join is an inner join, so this only holds because
+      # professional_license_id is NOT NULL — every CE row has one.
+      it "makes 'none' the exact complement of 'registered'" do
+        all_ids = EventRegistration.where(event: event).ids
+        registered = EventRegistration.where(event: event).ce_status("registered").ids
+        none = EventRegistration.where(event: event).ce_status(EventRegistration::NO_CE).ids
+
+        expect(registered & none).to be_empty
+        expect((registered + none).sort).to eq(all_ids.sort)
       end
 
       it "returns an unfiltered relation for unknown values" do
