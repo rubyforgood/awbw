@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_14_022129) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_14_201638) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -798,6 +798,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_022129) do
     t.datetime "error_at"
     t.string "error_class"
     t.text "error_message"
+    t.boolean "hide_event_card", default: false, null: false
     t.string "kind", null: false
     t.integer "noticeable_id"
     t.string "noticeable_type"

@@ -2,6 +2,7 @@ Event reminder Hello<%= @person.full_name %>,
 <% if @custom_message.present? %>
   <%= strip_tags(@custom_message).strip %>
 <% end %>
+<% unless @hide_event_card %>
 <% if @event.respond_to?(:pre_title) && @event.pre_title.present? %>
   <%= @event.pre_title %>
 <% end %><%= @event.title %>
@@ -25,6 +26,7 @@ Event reminder Hello<%= @person.full_name %>,
 
 <% if @event.labelled_cost.present? %>
   <%= @event.labelled_cost %>
+<% end %>
 <% end %>
 <%= render "ce_deadlines", event: @event %>
 <% if @event_registration.slug.present? %>

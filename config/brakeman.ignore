@@ -37,13 +37,13 @@
     {
       "warning_type": "Cross-Site Scripting",
       "warning_code": 2,
-      "fingerprint": "343336d81aa87ab12862c5f9ca2b0f9ac4155488c053c1ce9c7ed27c456e3dba",
+      "fingerprint": "c0a7785bbcfe39ba0b0ec792dacfbf3b12596ef585e9eba974b6ed85ab106d30",
       "check_name": "CrossSiteScripting",
       "message": "Unescaped parameter value",
       "file": "app/views/events/confirm_reminder.html.erb",
-      "line": 58,
+      "line": 63,
       "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
-      "code": "EventMailer.event_registration_reminder(selected_reminder_registrations.first, :custom_message => params[:custom_message].to_s, :custom_subject => params[:custom_subject].to_s).html_part.body.decoded",
+      "code": "EventMailer.event_registration_reminder(selected_reminder_registrations.first, :custom_message => params[:custom_message].to_s, :custom_subject => params[:custom_subject].to_s, :hide_event_card => hide_event_card_param).html_part.body.decoded",
       "render_path": [
         {
           "type": "controller",

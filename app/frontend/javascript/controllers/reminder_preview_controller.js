@@ -7,7 +7,7 @@ import { Controller } from "@hotwired/stimulus"
 // above the rendered email. The actual send re-sanitizes the message server-side,
 // so injecting the raw values here is only for the on-page preview.
 export default class extends Controller {
-  static targets = ["input", "message", "subjectInput", "subjectPreview"]
+  static targets = ["input", "message", "subjectInput", "subjectPreview", "eventCard", "eventCardToggle"]
 
   inputTargetConnected() {
     this.update()
@@ -25,6 +25,14 @@ export default class extends Controller {
     this.updateSubject()
   }
 
+  eventCardTargetConnected() {
+    this.toggleEventCard()
+  }
+
+  eventCardToggleTargetConnected() {
+    this.toggleEventCard()
+  }
+
   update() {
     if (!this.hasMessageTarget || !this.hasInputTarget) return
 
@@ -37,5 +45,11 @@ export default class extends Controller {
     if (!this.hasSubjectPreviewTarget || !this.hasSubjectInputTarget) return
 
     this.subjectPreviewTarget.textContent = this.subjectInputTarget.value.trim()
+  }
+
+  toggleEventCard() {
+    if (!this.hasEventCardTarget || !this.hasEventCardToggleTarget) return
+
+    this.eventCardTarget.style.display = this.eventCardToggleTarget.checked ? "none" : ""
   }
 }

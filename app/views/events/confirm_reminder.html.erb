@@ -3,7 +3,7 @@
   <%# Top bar: eyelash + sub-nav, matching the other event pages. The eyebrow
       returns to the recipient picker so the admin can adjust the selection. %>
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
-    <%= link_to "← Recipients", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <%= link_to "← Recipients", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message, hide_event_card: (@hide_event_card ? "1" : nil)), class: "text-sm text-gray-500 hover:text-gray-700" %>
     <%= render "events/subnav", event: @event, current: nil %>
   </div>
 
@@ -71,12 +71,13 @@
     <% if @invite_mode %>
       <%= hidden_field_tag :mode, "invite" %>
     <% else %>
-      <%# Carry the composed subject/message through to the send untouched. %>
+      <%# Carry the composed subject/message and the hide-card choice through to the send untouched. %>
       <%= hidden_field_tag :custom_subject, @custom_subject %>
       <%= hidden_field_tag :custom_message, @custom_message %>
+      <%= hidden_field_tag :hide_event_card, (@hide_event_card ? "1" : "0") %>
     <% end %>
     <div class="flex justify-center gap-3">
-      <%= link_to "Cancel", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message), class: "btn btn-secondary-outline" %>
+      <%= link_to "Cancel", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message, hide_event_card: (@hide_event_card ? "1" : nil)), class: "btn btn-secondary-outline" %>
       <%= f.submit(@invite_mode ? "Send invites" : "Send reminder", class: "btn btn-primary") %>
     </div>
   <% end %>

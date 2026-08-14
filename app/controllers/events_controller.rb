@@ -390,11 +390,12 @@ class EventsController < ApplicationController
     # absent-vs-present logic as the message, so a bounce-back keeps the admin's
     # edit; a blank subject falls back to the default at send time.
     @custom_subject = params.key?(:custom_subject) ? params[:custom_subject].to_s : helpers.default_reminder_subject(@event)
+    @hide_event_card = hide_event_card_param
 
     if @sample_registration
       # Render in preview mode so the custom-message container is always present
       # in the markup for the live preview, even before any text is typed.
-      mail = EventMailer.event_registration_reminder(@sample_registration, custom_message: @custom_message, custom_subject: @custom_subject, preview: true)
+      mail = EventMailer.event_registration_reminder(@sample_registration, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: @hide_event_card, preview: true)
       @reminder_preview_html = mail.html_part&.body&.decoded
     end
   end
@@ -409,9 +410,10 @@ class EventsController < ApplicationController
     @event_registrations = selected_reminder_registrations
     @custom_message = params[:custom_message].to_s
     @custom_subject = params[:custom_subject].to_s
+    @hide_event_card = hide_event_card_param
 
     if @event_registrations.empty?
-      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: @custom_message, custom_subject: @custom_subject), alert: "Please select at least one recipient."
+      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: ("1" if hide_event_card_param)), alert: "Please select at least one recipient."
       return
     end
 
@@ -421,7 +423,7 @@ class EventsController < ApplicationController
       return
     end
 
-    mail = EventMailer.event_registration_reminder(@event_registrations.first, custom_message: @custom_message, custom_subject: @custom_subject)
+    mail = EventMailer.event_registration_reminder(@event_registrations.first, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: @hide_event_card)
     @reminder_subject = mail.subject
     @reminder_preview_html = mail.html_part&.body&.decoded
   end
@@ -431,7 +433,7 @@ class EventsController < ApplicationController
     registrations = selected_reminder_registrations
 
     if registrations.empty?
-      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: params[:custom_message].to_s, custom_subject: params[:custom_subject].to_s), alert: "Please select at least one recipient."
+      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: params[:custom_message].to_s, custom_subject: params[:custom_subject].to_s, hide_event_card: ("1" if hide_event_card_param)), alert: "Please select at least one recipient."
       return
     end
 
@@ -439,6 +441,7 @@ class EventsController < ApplicationController
 
     custom_message = params[:custom_message].to_s
     custom_subject = params[:custom_subject].to_s
+    hide_event_card = hide_event_card_param
 
     # Record an individual notification per recipient (delivered + persisted via
     # NotificationMailerJob), so each reminder shows up in that person's
@@ -453,7 +456,8 @@ class EventsController < ApplicationController
         sender: current_user, # an admin sent these by hand from the reminders page
         bulk: true,
         custom_message: custom_message.presence,
-        custom_subject: custom_subject.presence
+        custom_subject: custom_subject.presence,
+        hide_event_card: hide_event_card
       )
     end
 
@@ -461,7 +465,7 @@ class EventsController < ApplicationController
     # was sent. Roster passed as plain "Name <email>" labels so the delivery job
     # needs no record lookups.
     recipient_labels = registrations.map { |r| "#{r.registrant.full_name} <#{r.registrant.preferred_email}>" }
-    EventMailer.event_registration_reminder_fyi(@event, recipient_labels, custom_message: custom_message.presence).deliver_later
+    EventMailer.event_registration_reminder_fyi(@event, recipient_labels, custom_message: custom_message.presence, hide_event_card: hide_event_card).deliver_later
 
     track_view("events.send_reminder", { event_id: @event.id, recipient_count: registrations.size })
     redirect_to registrants_event_path(@event), notice: "Reminder emails are being sent to #{registrations.size} registrant#{'s' if registrations.size != 1}."
@@ -1003,6 +1007,11 @@ class EventsController < ApplicationController
     mail = DeviseMailer.confirmation_instructions(sample_user, "preview-token", preview: true)
     @invite_subject = mail.subject
     @reminder_preview_html = mail.html_part&.body&.decoded
+  end
+
+  # Whether the admin ticked "hide the event details box" on the compose page.
+  def hide_event_card_param
+    ActiveModel::Type::Boolean.new.cast(params[:hide_event_card]) || false
   end
 
   # The registrations the admin checked on the recipient picker, narrowed to those

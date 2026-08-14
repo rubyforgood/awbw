@@ -112,6 +112,17 @@
                 Accepts basic HTML — bold, italics, links, lists, and line breaks.
               </p>
             </div>
+            <div>
+              <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <%= check_box_tag :hide_event_card, "1", @hide_event_card,
+                      class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500",
+                      data: { reminder_preview_target: "eventCardToggle", action: "reminder-preview#toggleEventCard" } %>
+                Hide the event details box
+              </label>
+              <p class="text-xs text-gray-400 mt-1.5 ml-6">
+                Leaves out the grey box with the event's date, time, cost, and location — send just your message and the "View ticket" button.
+              </p>
+            </div>
           </div>
         </div>
       <% end %>

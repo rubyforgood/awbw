@@ -267,6 +267,35 @@ RSpec.describe EventMailer, type: :mailer do
         expect(mail.html_part.body.encoded).to include("reminder-custom-message")
       end
     end
+
+    context "with the event card hidden" do
+      let(:event) { create(:event, title: "Confidential Retreat") }
+      let(:event_registration) { create(:event_registration, event: event) }
+      let(:mail) { described_class.event_registration_reminder(event_registration, hide_event_card: true) }
+
+      it "renders without raising" do
+        expect { mail.deliver_now }.not_to raise_error
+      end
+
+      it "omits the grey event-details card from the HTML body" do
+        # #166534 is the card's green event-title colour — present only inside the card.
+        expect(mail.html_part.body.encoded).not_to include("#166534")
+        expect(mail.html_part.body.encoded).not_to include("Confidential Retreat")
+      end
+
+      it "omits the event details from the plain-text body" do
+        expect(mail.text_part.body.encoded).not_to include("Confidential Retreat")
+      end
+
+      context "in preview mode" do
+        let(:mail) { described_class.event_registration_reminder(event_registration, hide_event_card: true, preview: true) }
+
+        it "still renders the card markup (hidden), so the live toggle can reveal it" do
+          expect(mail.html_part.body.encoded).to include("reminder-event-card")
+          expect(mail.html_part.body.encoded).to include("#166534")
+        end
+      end
+    end
   end
 
   describe "#event_registration_reminder_fyi" do
@@ -301,6 +330,20 @@ RSpec.describe EventMailer, type: :mailer do
     it "uses the singular noun for a single recipient" do
       mail = described_class.event_registration_reminder_fyi(event, [ "Alex Rivera <alex@example.org>" ])
       expect(mail.subject).to include("1 registrant ")
+    end
+
+    context "with the event card hidden" do
+      let(:mail) { described_class.event_registration_reminder_fyi(event, recipient_labels, hide_event_card: true) }
+
+      it "omits the event-details card, matching what registrants received" do
+        # #166534 is the card's green event-title colour — present only inside the card.
+        expect(mail.html_part.body.encoded).not_to include("#166534")
+      end
+
+      it "still names the event and lists recipients" do
+        expect(mail.html_part.body.encoded).to include("Art Workshop")
+        expect(mail.html_part.body.encoded).to include("Alex Rivera")
+      end
     end
   end
 end
