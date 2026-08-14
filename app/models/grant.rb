@@ -13,6 +13,15 @@ class Grant < ApplicationRecord
   has_many :categories, through: :categorizable_items
   has_many :category_types, through: :categories
 
+  has_one :primary_asset, -> { where(type: "PrimaryAsset") },
+          as: :owner, class_name: "PrimaryAsset", dependent: :destroy
+  has_many :gallery_assets, -> { where(type: "GalleryAsset") },
+           as: :owner, class_name: "GalleryAsset", dependent: :destroy
+  has_many :assets, as: :owner, dependent: :destroy
+
+  accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :gallery_assets, reject_if: :all_blank, allow_destroy: true
+
   # Grants have no publish lifecycle — they're admin-only and always visible to
   # their audience. This no-op `published` scope satisfies the shared taggings
   # machinery (the matrix heatmap, Sector/Category#has_published_taggings, and the
@@ -47,11 +56,11 @@ class Grant < ApplicationRecord
   ALLOCATED_CENTS_SUBQUERY =
     "COALESCE((SELECT SUM(scholarships.amount_cents) FROM scholarships WHERE scholarships.grant_id = grants.id), 0)".freeze
 
-  # Grants that still have unallocated funds (donation amount exceeds the sum of
+  # Grants that still have unallocated funds (grant amount exceeds the sum of
   # scholarships drawn against them).
   scope :with_funds_remaining, -> { where("grants.amount_cents > #{ALLOCATED_CENTS_SUBQUERY}") }
 
-  # Grants whose full donation has been issued as scholarships (nothing left to
+  # Grants whose full amount has been issued as scholarships (nothing left to
   # award) — the complement of with_funds_remaining.
   scope :fully_issued, -> { where("grants.amount_cents <= #{ALLOCATED_CENTS_SUBQUERY}") }
 

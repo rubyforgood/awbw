@@ -110,7 +110,7 @@ class EventDashboard
   end
 
   # Scholarship dollars the org comps from its own pocket: awards with no grant,
-  # plus awards from a grant the org donated to itself (AWBW) — that's subsidy,
+  # plus awards from a grant the org (AWBW) self-funded — that's subsidy,
   # not external funding.
   def unfunded_scholarship_cents
     unfunded_scholarships.sum(:amount_cents)
@@ -1263,12 +1263,12 @@ class EventDashboard
     scholarships.externally_funded(self_funded_grant_ids)
   end
 
-  # Org-subsidized = no grant, or a grant the org (AWBW) donated to itself.
+  # Org-subsidized = no grant, or a grant the org (AWBW) self-funded.
   def unfunded_scholarships
     scholarships.org_subsidized(self_funded_grant_ids)
   end
 
-  # Ids of grants the org donated to itself; memoized so the funded/unfunded split
+  # Ids of grants the org self-funded; memoized so the funded/unfunded split
   # doesn't re-run Grant.self_funded_ids (an Organization.awbw + pluck) per call.
   def self_funded_grant_ids
     @self_funded_grant_ids ||= Grant.self_funded_ids

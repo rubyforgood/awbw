@@ -25,11 +25,18 @@
     </div>
   </div>
 
+  <!-- Photos -->
+  <% if @grant.primary_asset&.file&.attached? || @grant.gallery_assets.any? { |asset| asset.file.attached? } %>
+    <div class="bg-white rounded-lg shadow p-5">
+      <%= render "assets/display_assets", resource: @grant, link: true %>
+    </div>
+  <% end %>
+
   <!-- Budget summary -->
   <div class="bg-white rounded-lg shadow p-5">
     <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
       <div>
-        <dt class="text-sm font-medium text-gray-500">Donation amount</dt>
+        <dt class="text-sm font-medium text-gray-500">Funding amount</dt>
         <dd class="mt-1 text-xl font-semibold text-gray-900"><%= grant.amount %></dd>
       </div>
       <div>

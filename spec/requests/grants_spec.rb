@@ -157,6 +157,19 @@ RSpec.describe "/grants", type: :request do
         expect(response).to be_successful
       end
 
+      it "shows an uploaded primary photo" do
+        grant = create(:grant)
+        grant.create_primary_asset!.file.attach(
+          io: File.open(Rails.root.join("spec/fixtures/files/sample.png")),
+          filename: "sample.png",
+          content_type: "image/png"
+        )
+
+        get grant_url(grant)
+        expect(response).to be_successful
+        expect(response.body).to include("sample")
+      end
+
       it "shows the grant's sector and category tags" do
         sector = create(:sector, :published, name: "Domestic Violence")
         category = create(:category, :published, name: "Ages 6-9")
@@ -198,6 +211,20 @@ RSpec.describe "/grants", type: :request do
         it "redirects to the created grant" do
           post grants_url, params: { grant: valid_attributes }
           expect(response).to redirect_to(grant_url(Grant.last))
+        end
+
+        it "attaches an uploaded primary photo" do
+          expect {
+            post grants_url, params: {
+              grant: valid_attributes.merge(
+                primary_asset_attributes: {
+                  file: fixture_file_upload("spec/fixtures/files/sample.png", "image/png")
+                }
+              )
+            }
+          }.to change(Grant, :count).by(1)
+
+          expect(Grant.last.primary_asset.file).to be_attached
         end
 
         it "attaches the selected sectors and categories" do
