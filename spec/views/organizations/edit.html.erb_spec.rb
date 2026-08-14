@@ -75,11 +75,11 @@ RSpec.describe "organizations/edit", type: :view do
   end
 
   describe "new affiliation defaults" do
-    it "defaults the start date to the first of the current month and leaves primary contact unchecked" do
+    it "defaults the start date to today and leaves primary contact unchecked" do
       organization.affiliations.build
       render
       assert_select "input[name*='start_date'][value=?]",
-                    Date.current.beginning_of_month.strftime("%Y-%m-%d")
+                    Date.current.strftime("%Y-%m-%d")
       assert_select "input[type=checkbox][name*='primary_contact']"
       assert_select "input[type=checkbox][name*='primary_contact'][checked]", false
     end
