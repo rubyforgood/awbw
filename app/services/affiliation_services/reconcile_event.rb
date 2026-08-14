@@ -39,10 +39,19 @@ module AffiliationServices
       end
     end
 
-    # No-action rows grouped by reason, hand-entered last: [[reason, [rows]]].
+    # No-action rows grouped by reason: [[reason, [rows]]]. "Active — attended" sorts
+    # second-to-last and the trivial "no affiliation" bucket last; the rest alphabetical.
     def skipped_reason_sections
       grouped = all_rows.reject(&:actionable?).group_by(&:reason)
-      grouped.keys.sort.map { |reason| [ reason, grouped[reason] ] }
+      grouped.keys.sort_by { |reason| [ reason_rank(reason), reason ] }.map { |reason| [ reason, grouped[reason] ] }
+    end
+
+    def reason_rank(reason)
+      case reason
+      when "Active — attended" then 8
+      when "Didn't attend — no affiliation created" then 9
+      else 0
+      end
     end
 
     def any_rows?
