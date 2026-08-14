@@ -93,7 +93,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       patch event_registration_path(registration, return_to: "reconcile_affiliations"),
             params: { event_registration: { status: "attended" } }
 
-      expect(response).to redirect_to(reconcile_affiliations_event_path(event))
+      expect(response).to redirect_to(reconcile_affiliations_event_path(event, anchor: "attendance_status_event_registration_#{registration.id}"))
       expect(flash[:notice]).to be_present
     end
   end
@@ -102,7 +102,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
     it "shows the selected change without writing" do
       _person, affiliation = registrant_with_affiliation(status: "no_show")
 
-      post reconcile_affiliations_event_path(event), params: { included: [ "aff:#{affiliation.id}" ] }
+      post reconcile_affiliations_event_path(event), params: { outcome: { "aff:#{affiliation.id}" => "deactivate" } }
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Confirm affiliation changes")
@@ -111,60 +111,59 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
     end
 
     it "redirects back when nothing is selected" do
-      registrant_with_affiliation(status: "no_show")
+      _person, affiliation = registrant_with_affiliation(status: "no_show")
 
-      post reconcile_affiliations_event_path(event), params: { included: [] }
+      post reconcile_affiliations_event_path(event), params: { outcome: { "aff:#{affiliation.id}" => "keep" } }
 
       expect(response).to redirect_to(reconcile_affiliations_event_path(event))
     end
   end
 
   describe "POST perform" do
-    it "deactivates the included non-completer and stamps the event" do
+    it "deactivates the chosen non-completer and stamps the event" do
       _person, affiliation = registrant_with_affiliation(status: "no_show")
 
-      post perform_reconcile_affiliations_event_path(event), params: { included: [ "aff:#{affiliation.id}" ] }
+      post perform_reconcile_affiliations_event_path(event), params: { outcome: { "aff:#{affiliation.id}" => "deactivate" } }
 
       expect(response).to redirect_to(registrants_event_path(event))
       expect(affiliation.reload).not_to be_active
       expect(event.reload.affiliations_reconciled_at).to be_present
     end
 
-    it "spares an opted-out row" do
+    it "spares a row set to keep" do
       _person, affiliation = registrant_with_affiliation(status: "no_show")
 
-      post perform_reconcile_affiliations_event_path(event), params: { included: [] }
+      post perform_reconcile_affiliations_event_path(event), params: { outcome: { "aff:#{affiliation.id}" => "keep" } }
 
       expect(affiliation.reload).to be_active
     end
 
-    it "creates a missing affiliation before the event when included" do
+    it "creates a missing affiliation before the event when chosen" do
       upcoming = create(:event, facilitator_training: true, start_date: 3.days.from_now, end_date: 5.days.from_now)
       person = create(:person)
       reg = create(:event_registration, event: upcoming, registrant: person, status: "registered")
       create(:event_registration_organization, event_registration: reg, organization: organization)
 
       expect {
-        post perform_reconcile_affiliations_event_path(upcoming), params: { included: [ "create:#{person.id}:#{organization.id}" ] }
+        post perform_reconcile_affiliations_event_path(upcoming), params: { outcome: { "create:#{person.id}:#{organization.id}" => "create" } }
       }.to change { person.affiliations.facilitators.where(organization: organization).count }.by(1)
     end
 
-    it "deletes instead of same-daying when the delete option is checked" do
+    it "deletes when the delete outcome is chosen" do
       _person, affiliation = registrant_with_affiliation(status: "no_show")
-      key = "aff:#{affiliation.id}"
 
-      post perform_reconcile_affiliations_event_path(event), params: { included: [ key ], delete: [ key ] }
+      post perform_reconcile_affiliations_event_path(event), params: { outcome: { "aff:#{affiliation.id}" => "delete" } }
 
       expect(Affiliation.exists?(affiliation.id)).to be(false)
     end
 
-    it "deactivates a hand-entered facilitator affiliation when included" do
+    it "deactivates a hand-entered facilitator affiliation when chosen" do
       person = create(:person)
       reg = create(:event_registration, event: event, registrant: person, status: "no_show")
       create(:event_registration_organization, event_registration: reg, organization: organization)
       hand_entered = create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago.to_date)
 
-      post perform_reconcile_affiliations_event_path(event), params: { included: [ "aff:#{hand_entered.id}" ] }
+      post perform_reconcile_affiliations_event_path(event), params: { outcome: { "aff:#{hand_entered.id}" => "deactivate" } }
 
       expect(hand_entered.reload).not_to be_active
     end
@@ -179,7 +178,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       job = create(:affiliation, person: person, organization: organization, title: "Counselor",
                    event_registration: reg)
 
-      post perform_reconcile_affiliations_event_path(non_training), params: { included: [ "aff:#{facilitator.id}" ] }
+      post perform_reconcile_affiliations_event_path(non_training), params: { outcome: { "aff:#{facilitator.id}" => "delete" } }
 
       expect(Affiliation.exists?(facilitator.id)).to be(false)
       expect(Affiliation.exists?(job.id)).to be(true)

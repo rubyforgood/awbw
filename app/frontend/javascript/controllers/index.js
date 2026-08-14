@@ -84,9 +84,6 @@ application.register("dropdown", DropdownController)
 import ExpandAllController from "./expand_all_controller"
 application.register("expand-all", ExpandAllController)
 
-import ExclusiveCheckboxesController from "./exclusive_checkboxes_controller"
-application.register("exclusive-checkboxes", ExclusiveCheckboxesController)
-
 import FilePreviewController from "./file_preview_controller"
 application.register("file-preview", FilePreviewController)
 

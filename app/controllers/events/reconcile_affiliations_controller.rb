@@ -17,9 +17,8 @@ module Events
       @person_groups = reconcile.actionable_person_groups
       @skipped_sections = reconcile.skipped_reason_sections
       @has_rows = reconcile.any_rows?
-      # Restore the admin's selections when they come back from the confirm screen.
-      @pre_included = params[:included]
-      @pre_delete = Array(params[:delete]).to_set
+      # Restore the admin's per-row radio choices when they come back from confirm.
+      @pre_outcome = params[:outcome]
       @event = @event.decorate
     end
 
@@ -27,9 +26,8 @@ module Events
     def confirm
       authorize! @event, to: :reconcile_affiliations?
 
-      @included = Array(params[:included])
-      @delete = Array(params[:delete])
-      @changes = AffiliationServices::ReconcileEvent.new(@event).planned_changes(included_keys: @included, delete_keys: @delete)
+      @outcome = outcome_params
+      @changes = AffiliationServices::ReconcileEvent.new(@event).planned_changes(outcome: @outcome)
       @event = @event.decorate
 
       redirect_to reconcile_affiliations_event_path(@event), notice: "Nothing selected to change." and return if @changes.empty?
@@ -38,10 +36,7 @@ module Events
     def create
       authorize! @event, to: :reconcile_affiliations?
 
-      changed = AffiliationServices::ReconcileEvent.new(@event).apply(
-        included_keys: params[:included] || [],
-        delete_keys: params[:delete] || []
-      )
+      changed = AffiliationServices::ReconcileEvent.new(@event).apply(outcome: outcome_params)
       redirect_to registrants_event_path(@event), notice: reconcile_notice(changed)
     end
 
@@ -49,6 +44,13 @@ module Events
 
     def set_event
       @event = Event.find(params[:id])
+    end
+
+    # `outcome` is a { row.key => choice } map with dynamic keys; the service only
+    # acts on known choices, so the actual values are validated downstream.
+    def outcome_params
+      outcome = params[:outcome]
+      outcome.respond_to?(:permit!) ? outcome.permit!.to_h : {}
     end
 
     def reconcile_notice(changed)

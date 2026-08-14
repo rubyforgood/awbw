@@ -60,39 +60,30 @@ module AffiliationServices
 
     Change = Struct.new(:person, :organization, :affiliation, :action, keyword_init: true)
 
-    # The concrete changes the given selection will make, for the confirmation
-    # screen: a `:delete` key wins over its include (delete instead of same-day).
-    def planned_changes(included_keys:, delete_keys: [])
-      included = Array(included_keys).to_set
-      deletes = Array(delete_keys).to_set
+    # Each row's outcome is one radio choice keyed by row.key: the action itself
+    # (deactivate/delete/reactivate/create) or "keep" (do nothing).
+    ACTION_FOR_CHOICE = { "deactivate" => :deactivate, "delete" => :delete, "reactivate" => :reactivate, "create" => :create }.freeze
+
+    # The concrete changes the given `outcome` map will make, for the confirmation
+    # screen. `outcome` is `{ row.key => choice }`.
+    def planned_changes(outcome:)
+      outcome = outcome.to_h
 
       all_rows.select(&:actionable?).filter_map do |row|
-        if deletes.include?(row.key) && row.affiliation
-          Change.new(person: row.person, organization: row.organization, affiliation: row.affiliation, action: :delete)
-        elsif included.include?(row.key)
-          Change.new(person: row.person, organization: row.organization, affiliation: row.affiliation, action: row.action)
-        end
+        action = ACTION_FOR_CHOICE[outcome[row.key]]
+        next unless action
+
+        Change.new(person: row.person, organization: row.organization, affiliation: row.affiliation, action:)
       end
     end
 
-    # Apply the actionable rows whose keys are in `included_keys`. For :deactivate
-    # rows whose key is also in `delete_keys`, delete the affiliation instead of
-    # same-daying it. Stamps the event and returns the number of rows changed.
-    def apply(included_keys:, delete_keys: [])
-      included = Array(included_keys).to_set
-      deletes = Array(delete_keys).to_set
+    # Apply each row's chosen outcome, stamp the event, and return the number of
+    # rows actually changed ("keep"/unknown choices are no-ops).
+    def apply(outcome:)
+      outcome = outcome.to_h
 
       changed = all_rows.count do |row|
-        next false unless row.actionable?
-
-        if deletes.include?(row.key) && row.affiliation
-          row.affiliation.destroy!
-          true
-        elsif included.include?(row.key)
-          perform(row)
-        else
-          false
-        end
+        row.actionable? && perform_outcome(row, outcome[row.key])
       end
 
       @event.update!(affiliations_reconciled_at: Time.current)
@@ -165,21 +156,23 @@ module AffiliationServices
       end
     end
 
-    def perform(row)
-      case row.action
-      when :create
+    def perform_outcome(row, choice)
+      case choice
+      when "create"
         AffiliationServices::CreateFromRegistration.call(
           person: row.person, organization: row.organization, facilitator_training: true,
           training_date: @event.start_date, event_registration: row.registration
         )
-      when :delete
+      when "delete"
         row.affiliation.destroy!
-      when :deactivate
+      when "deactivate"
         # Same-day it: end_date = the affiliation's own start_date (start_date itself
         # is never changed), which the model turns into inactive.
         row.affiliation.update!(end_date: row.affiliation.start_date || Date.current)
-      when :reactivate
+      when "reactivate"
         row.affiliation.update!(end_date: nil)
+      else
+        return false # "keep" or unknown
       end
       true
     end

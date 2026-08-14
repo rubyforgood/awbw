@@ -37,99 +37,84 @@
     </div>
   <% end %>
 
-  <% badges = { create: [ "Will be created", "bg-blue-50 text-blue-700" ],
-                reactivate: [ "Will be reactivated", "bg-green-50 text-green-700" ],
-                deactivate: [ "Will be deactivated", "bg-red-50 text-red-700" ],
-                delete: [ "Will be deleted", "bg-red-100 text-red-800" ] } %>
-
   <% if @person_groups.any? %>
     <% actionable_count = @person_groups.sum { |g| g[:rows].size } %>
+    <% color_class = {
+         red: "has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300",
+         green: "has-[:checked]:bg-green-50 has-[:checked]:text-green-700 has-[:checked]:border-green-300",
+         blue: "has-[:checked]:bg-blue-50 has-[:checked]:text-blue-700 has-[:checked]:border-blue-300",
+         gray: "has-[:checked]:bg-gray-100 has-[:checked]:text-gray-800 has-[:checked]:border-gray-400"
+       } %>
+    <% outcome_options = {
+         create: [ [ "create", "Will be created", :blue ], [ "keep", "Skip", :gray ] ],
+         reactivate: [ [ "reactivate", "Will be reactivated", :green ], [ "keep", "Leave inactive", :gray ] ],
+         deactivate: [ [ "deactivate", "Will be deactivated", :red ], [ "delete", "Delete instead", :red ], [ "keep", "Keep active", :green ] ],
+         delete: [ [ "delete", "Will be deleted", :red ], [ "keep", "Keep", :gray ] ]
+       } %>
+    <% button_base = "group relative inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm cursor-pointer hover:bg-gray-50" %>
+
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
       <h2 class="text-base font-bold text-gray-900">To reconcile <span class="text-gray-400 font-normal">(<%= actionable_count %>)</span></h2>
       <span class="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">
-        <i class="fa-solid fa-triangle-exclamation"></i> Checked boxes change facilitator affiliations
+        <i class="fa-solid fa-triangle-exclamation"></i> These buttons change facilitator affiliations
       </span>
     </div>
-    <%# turbo: false so the POST renders the confirmation page (Turbo ignores a 200 HTML render on POST). %>
-    <%= form_with url: reconcile_affiliations_event_path(@event), method: :post, data: { turbo: false } do %>
-      <div class="space-y-4">
-        <% @person_groups.each do |group| %>
-          <% checked_class = {
-               create: "has-[:checked]:bg-blue-50 has-[:checked]:text-blue-700 has-[:checked]:border-blue-300",
-               reactivate: "has-[:checked]:bg-green-50 has-[:checked]:text-green-700 has-[:checked]:border-green-300",
-               deactivate: "has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300",
-               delete: "has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300"
-             } %>
-          <% action_notes = {
-               create: [ "Uncheck to skip creating this facilitator affiliation." ],
-               reactivate: [ "Uncheck to leave this facilitator affiliation inactive." ],
-               deactivate: [ "To keep Affiliation active:", "Mark as Attended or uncheck both boxes" ],
-               delete: [ "Uncheck to keep this facilitator affiliation." ]
-             } %>
-          <% button_base = "group relative inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm cursor-pointer hover:bg-gray-50" %>
-          <section class="rounded-lg border border-gray-200 bg-white p-4">
-            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-              <div class="flex items-center gap-2 min-w-0">
-                <%= link_to group[:person].name, edit_event_registration_path(group[:registration]), target: "_blank", rel: "noopener", class: "font-semibold text-gray-900 hover:underline hover:text-blue-700 shrink-0" %>
-                <% others = group[:other_facilitators] %>
-                <% if others.any? %>
-                  <% note = "Also a facilitator at #{others.map { |a| a.organization.name }.to_sentence}." %>
-                  <% anchor = others.one? ? dom_id(others.first) : "affiliations" %>
-                  <%= link_to note, edit_person_path(group[:person], anchor: anchor), target: "_blank", rel: "noopener",
-                        title: note, class: "text-xs text-gray-500 truncate hover:underline hover:text-blue-700 min-w-0" %>
-                <% end %>
-              </div>
-              <%= render "event_registrations/attendance_status_badge", registration: group[:registration], return_to: "reconcile_affiliations" %>
-            </div>
 
-            <div class="divide-y divide-gray-100 border-t border-gray-100">
-              <% group[:rows].each do |row| %>
-                <% heading, _badge_class = badges[row.action] %>
-                <% included_checked = @pre_included.nil? || @pre_included.include?(row.key) %>
-                <% delete_checked = @pre_delete.include?(row.key) %>
-                <div class="flex flex-wrap items-center gap-3 py-2">
-                  <% if row.affiliation %>
-                    <%= link_to edit_person_path(row.person, anchor: dom_id(row.affiliation)), target: "_blank", rel: "noopener", title: "Edit affiliation", class: "flex-1 min-w-0 text-sm hover:underline" do %>
-                      <span class="text-gray-800 hover:text-blue-700"><%= row.organization.name %></span>
-                      <span class="text-gray-400">· <%= row.affiliation.decorate.date_range %></span>
-                    <% end %>
-                  <% else %>
-                    <span class="flex-1 min-w-0 text-sm text-gray-800"><%= row.organization.name %></span>
-                  <% end %>
-                  <%# Checkbox lives inside the button; has-[:checked] colors the whole button when selected. %>
-                  <div class="flex shrink-0 flex-col items-end gap-1">
-                    <div class="flex items-center gap-2"<% if row.action == :deactivate %> data-controller="exclusive-checkboxes"<% end %>>
-                      <% if row.action == :deactivate %>
-                        <label class="<%= button_base %> has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300">
-                          <%= check_box_tag "delete[]", row.key, delete_checked, id: "delete_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-red-600", data: { exclusive_checkboxes_target: "box", action: "change->exclusive-checkboxes#select" } %>
-                          Delete instead
-                          <%= render "tooltip", kind: :delete %>
-                        </label>
-                      <% end %>
-                      <label class="<%= button_base %> <%= checked_class[row.action] %>">
-                        <%= check_box_tag "included[]", row.key, included_checked, id: "included_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-blue-600", data: (row.action == :deactivate ? { exclusive_checkboxes_target: "box", action: "change->exclusive-checkboxes#select" } : {}) %>
-                        <%= heading %>
-                        <%= render "tooltip", kind: row.action %>
-                      </label>
-                    </div>
-                    <div class="max-w-sm text-right text-xs text-gray-400">
-                      <% action_notes[row.action].each do |line| %>
-                        <p><%= line %></p>
-                      <% end %>
-                    </div>
-                  </div>
-                </div>
+    <%# Standalone form (turbo:false so the POST renders the confirm page). The cards
+        live OUTSIDE it — the attendance chip renders its own form and nesting forms is
+        invalid — so the radios and submit join this form via the HTML form= attribute. %>
+    <%= form_with url: reconcile_affiliations_event_path(@event), method: :post, id: "reconcile_form", data: { turbo: false } do %><% end %>
+
+    <div class="space-y-4">
+      <% @person_groups.each do |group| %>
+        <section class="rounded-lg border border-gray-200 bg-white p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <%= link_to group[:person].name, edit_event_registration_path(group[:registration]), target: "_blank", rel: "noopener", class: "font-semibold text-gray-900 hover:underline hover:text-blue-700 shrink-0" %>
+              <% others = group[:other_facilitators] %>
+              <% if others.any? %>
+                <% note = "Also a facilitator at #{others.map { |a| a.organization.name }.to_sentence}." %>
+                <% anchor = others.one? ? dom_id(others.first) : "affiliations" %>
+                <%= link_to note, edit_person_path(group[:person], anchor: anchor), target: "_blank", rel: "noopener",
+                      title: note, class: "text-xs text-gray-500 truncate hover:underline hover:text-blue-700 min-w-0" %>
               <% end %>
             </div>
-          </section>
-        <% end %>
-      </div>
+            <%= render "event_registrations/attendance_status_badge", registration: group[:registration], return_to: "reconcile_affiliations" %>
+          </div>
 
-      <div class="mt-6 flex items-center justify-end gap-3">
-        <%= link_to "Cancel", registrants_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
-        <%= submit_tag "Preview changes", class: "btn btn-primary" %>
-      </div>
-    <% end %>
+          <div class="divide-y divide-gray-100 border-t border-gray-100">
+            <% group[:rows].each do |row| %>
+              <% chosen = (@pre_outcome && @pre_outcome[row.key]) || row.action.to_s %>
+              <div class="flex flex-wrap items-center gap-3 py-2">
+                <% if row.affiliation %>
+                  <%= link_to edit_person_path(row.person, anchor: dom_id(row.affiliation)), target: "_blank", rel: "noopener", title: "Edit affiliation", class: "flex-1 min-w-0 text-sm hover:underline" do %>
+                    <span class="text-gray-800 hover:text-blue-700"><%= row.organization.name %></span>
+                    <span class="text-gray-400">· <%= row.affiliation.decorate.date_range %></span>
+                  <% end %>
+                <% else %>
+                  <span class="flex-1 min-w-0 text-sm text-gray-800"><%= row.organization.name %></span>
+                <% end %>
+                <%# One radio per outcome (native mutual exclusion — no JS). has-[:checked] colors the chosen button. %>
+                <div class="flex shrink-0 items-center gap-2">
+                  <% outcome_options[row.action].each do |value, label, color| %>
+                    <label class="<%= button_base %> <%= color_class[color] %>">
+                      <%= radio_button_tag "outcome[#{row.key}]", value, chosen == value, id: "outcome_#{row.key}_#{value}", class: "h-4 w-4 border-gray-300", form: "reconcile_form" %>
+                      <%= label %>
+                      <%= render "tooltip", kind: value.to_sym %>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+    </div>
+
+    <div class="mt-6 flex items-center justify-end gap-3">
+      <%= link_to "Cancel", registrants_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
+      <%= submit_tag "Preview changes", form: "reconcile_form", class: "btn btn-primary" %>
+    </div>
   <% end %>
 
   <% if @skipped_sections.any? %>

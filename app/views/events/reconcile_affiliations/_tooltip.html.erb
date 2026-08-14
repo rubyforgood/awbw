@@ -13,5 +13,7 @@
     Creates the facilitator affiliation for this organization.
   <% when :reactivate %>
     Clears the end date so this facilitator affiliation counts as active again.
+  <% when :keep %>
+    Leaves this facilitator affiliation exactly as it is — no change.
   <% end %>
 </span>

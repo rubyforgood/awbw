@@ -2,7 +2,7 @@
 <% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
 <div class="max-w-3xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
   <div class="mb-6">
-    <%= link_to "← Go back to edit", reconcile_affiliations_event_path(@event, included: @included, delete: @delete), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <%= link_to "← Go back to edit", reconcile_affiliations_event_path(@event, outcome: @outcome), class: "text-sm text-gray-500 hover:text-gray-700" %>
   </div>
 
   <h1 class="text-2xl font-semibold text-gray-900 mb-2">Confirm affiliation changes</h1>
@@ -42,10 +42,9 @@
   </div>
 
   <div class="mt-6 flex items-center justify-between gap-3">
-    <%= link_to "← Go back to edit", reconcile_affiliations_event_path(@event, included: @included, delete: @delete), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <%= link_to "← Go back to edit", reconcile_affiliations_event_path(@event, outcome: @outcome), class: "text-sm text-gray-500 hover:text-gray-700" %>
     <%= form_with url: perform_reconcile_affiliations_event_path(@event), method: :post do %>
-      <% @included.each do |key| %><%= hidden_field_tag "included[]", key %><% end %>
-      <% @delete.each do |key| %><%= hidden_field_tag "delete[]", key %><% end %>
+      <% @outcome.each do |key, value| %><%= hidden_field_tag "outcome[#{key}]", value %><% end %>
       <%= submit_tag "Perform changes", class: "btn btn-primary" %>
     <% end %>
   </div>
