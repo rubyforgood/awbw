@@ -317,5 +317,12 @@ Rails.application.routes.draw do
     resources :video_recordings, only: :index
   end
 
+  # Public, read-only JSON API for publicly visible stories. No authentication.
+  namespace :api, defaults: { format: "json" } do
+    namespace :v1 do
+      resources :stories, only: [ :index, :show ]
+    end
+  end
+
   root to: "home#index"
 end

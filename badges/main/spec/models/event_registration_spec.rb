@@ -1239,6 +1239,19 @@ RSpec.describe EventRegistration, type: :model do
 
       expect(registration.reload.program_statuses).to eq([ :ongoing ])
     end
+
+    it "counts a facilitator affiliation started earlier the same month as the training" do
+      event = create(:event, start_date: Date.new(2026, 6, 20))
+      reg = create(:event_registration, event: event)
+      create(:event_registration_organization, event_registration: reg, organization: linked_org)
+      # Earlier that same month, before the training date — still counts as ongoing.
+      create(:affiliation, organization: linked_org, title: "Facilitator",
+             start_date: Date.new(2026, 6, 5), end_date: nil)
+      create(:affiliation, organization: linked_org, person: reg.registrant,
+             title: "Facilitator", start_date: Date.new(2026, 6, 20))
+
+      expect(reg.reload.program_statuses).to eq([ :ongoing ])
+    end
   end
 
   describe "onboarding checklist" do
