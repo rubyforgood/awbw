@@ -48,7 +48,7 @@
     <% outcome_options = {
          create: [ [ "create", "Will be created", :blue ], [ "keep", "Skip", :gray ] ],
          reactivate: [ [ "reactivate", "Will be reactivated", :green ], [ "keep", "Leave inactive", :gray ] ],
-         deactivate: [ [ "deactivate", "Will be deactivated", :red ], [ "delete", "Delete instead", :red ], [ "keep", "Keep active", :green ] ],
+         deactivate: [ [ "keep", "Keep active", :green ], [ "delete", "Delete affiliation", :red ], [ "deactivate", "Deactivate affiliation", :red ] ],
          delete: [ [ "delete", "Will be deleted", :red ], [ "keep", "Keep", :gray ] ]
        } %>
     <% button_base = "group relative inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm cursor-pointer hover:bg-gray-50" %>
