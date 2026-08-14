@@ -85,6 +85,19 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
     end
   end
 
+  describe "toggling attendance from the reconcile page" do
+    it "stays on the reconcile page with a flash instead of leaving for the roster" do
+      person, _affiliation = registrant_with_affiliation(status: "no_show")
+      registration = person.event_registrations.first
+
+      patch event_registration_path(registration, return_to: "reconcile_affiliations"),
+            params: { event_registration: { status: "attended" } }
+
+      expect(response).to redirect_to(reconcile_affiliations_event_path(event))
+      expect(flash[:notice]).to be_present
+    end
+  end
+
   describe "POST confirm (preview changes)" do
     it "shows the selected change without writing" do
       _person, affiliation = registrant_with_affiliation(status: "no_show")

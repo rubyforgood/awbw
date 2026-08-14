@@ -121,6 +121,7 @@ class EventRegistrationsController < ApplicationController
           when "onboarding" then redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
           when "attendees" then redirect_to attendees_events_path, notice: notice, status: :see_other
           when "roster" then redirect_to roster_event_path(@event_registration.event), notice: notice, status: :see_other
+          when "reconcile_affiliations" then redirect_to reconcile_affiliations_event_path(@event_registration.event), notice: notice, status: :see_other
           # Two ways back to the recipients page: the shout-outs section (the
           # feature-a-shout-out flow) or the recipient's own card (their name).
           when "recipients" then redirect_to recipients_event_path(@event_registration.event, anchor: "shout-outs"), notice: notice, status: :see_other

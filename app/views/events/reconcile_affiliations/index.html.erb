@@ -78,7 +78,7 @@
                         title: note, class: "text-xs text-gray-500 truncate hover:underline hover:text-blue-700 min-w-0" %>
                 <% end %>
               </div>
-              <%= render "event_registrations/attendance_status_badge", registration: group[:registration] %>
+              <%= render "event_registrations/attendance_status_badge", registration: group[:registration], return_to: "reconcile_affiliations" %>
             </div>
 
             <div class="divide-y divide-gray-100 border-t border-gray-100">
@@ -154,7 +154,7 @@
                       <span class="text-gray-400"><%= row.organization.name %></span>
                     <% end %>
                   </span>
-                  <%= render "event_registrations/attendance_status_badge", registration: row.registration %>
+                  <%= render "event_registrations/attendance_status_badge", registration: row.registration, return_to: "reconcile_affiliations" %>
                 </div>
               <% end %>
             </div>
