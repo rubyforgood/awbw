@@ -270,4 +270,25 @@ RSpec.describe Affiliation do
       expect(op.reload.inactive).to be true
     end
   end
+
+  describe "the registration that created the affiliation" do
+    it "drops the link when the affiliation is moved to a different organization" do
+      registration = create(:event_registration)
+      affiliation = create(:affiliation, event_registration: registration)
+      other_org = create(:organization)
+
+      affiliation.update!(organization: other_org)
+
+      expect(affiliation.reload.event_registration_id).to be_nil
+    end
+
+    it "keeps the link when other attributes change" do
+      registration = create(:event_registration)
+      affiliation = create(:affiliation, event_registration: registration)
+
+      affiliation.update!(title: "Lead Facilitator")
+
+      expect(affiliation.reload.event_registration).to eq(registration)
+    end
+  end
 end

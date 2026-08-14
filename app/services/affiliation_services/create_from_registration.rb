@@ -4,7 +4,12 @@ module AffiliationServices
   #
   #   1. a "job affiliation" with the title the person typed on their form, when
   #      one was provided, and
-  #   2. a standing "facilitator affiliation" titled "Facilitator".
+  #   2. a standing "facilitator affiliation" titled "Facilitator" — but ONLY for
+  #      facilitator-training events (`facilitator_training: true`). A non-training
+  #      registration still gets its job affiliation; we don't mint a facilitator
+  #      affiliation off it, because being a facilitator is conferred by a training,
+  #      not by any org-linked event. (Manual/historical facilitator affiliations
+  #      are created directly, not through this service, so they're unaffected.)
   #
   # The facilitator affiliation is skipped only when the person already has an
   # active-or-pending affiliation titled exactly "Facilitator" with the
@@ -22,22 +27,24 @@ module AffiliationServices
   # (they may have been with the org for years before this training), and dating it
   # to registration would misrepresent that.
   class CreateFromRegistration
-    def self.call(person:, organization:, job_title: nil, training_date: nil, organization_address: nil)
-      new(person:, organization:, job_title:, training_date:, organization_address:).call
+    def self.call(person:, organization:, job_title: nil, training_date: nil, organization_address: nil, facilitator_training: true, event_registration: nil)
+      new(person:, organization:, job_title:, training_date:, organization_address:, facilitator_training:, event_registration:).call
     end
 
-    def initialize(person:, organization:, job_title: nil, training_date: nil, organization_address: nil)
+    def initialize(person:, organization:, job_title: nil, training_date: nil, organization_address: nil, facilitator_training: true, event_registration: nil)
       @person = person
       @organization = organization
       @job_title = job_title.presence&.strip
       @training_date = training_date
       @organization_address = organization_address
+      @facilitator_training = facilitator_training
+      @event_registration = event_registration
     end
 
     def call
       ActiveRecord::Base.transaction do
         create_job_affiliation
-        create_facilitator_affiliation
+        create_facilitator_affiliation if @facilitator_training
       end
     end
 
@@ -77,7 +84,8 @@ module AffiliationServices
         organization: @organization,
         title: title,
         start_date: start_date,
-        organization_address: @organization_address
+        organization_address: @organization_address,
+        event_registration: @event_registration
       )
     end
 
