@@ -35,11 +35,13 @@
       <!--          </td>-->
 
       <!-- People (To on top; From/To values flip for incoming — the person sent it.
-           Names shown when the email is on file, with the email on hover.) -->
+           A value links to the person's profile when the email is on file (name
+           shown, email on hover), otherwise a mailto for the raw email. The AWBW
+           Portal has no address, so it stays plain text.) -->
       <td class="px-4 py-3 text-gray-700">
-        <div><span class="text-xs uppercase text-gray-500">To:</span> <span title="<%= n.to_title %>"><%= n.to_name %></span></div>
+        <div><span class="text-xs uppercase text-gray-500">To:</span> <%= n.to_value %></div>
         <div class="text-[10px] text-gray-400">
-          <span class="uppercase">From:</span> <span title="<%= n.from_title %>"><%= n.from_name %></span>
+          <span class="uppercase">From:</span> <%= n.from_value %>
         </div>
       </td>
 
