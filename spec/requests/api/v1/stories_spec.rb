@@ -70,7 +70,7 @@ RSpec.describe "Api::V1::Stories", type: :request do
       expect(response).to have_http_status(:ok)
       expect(json["story"]).to include(
         "title" => "Public story",
-        "slug" => public_story.to_param
+        "url" => story_url(public_story)
       )
     end
 

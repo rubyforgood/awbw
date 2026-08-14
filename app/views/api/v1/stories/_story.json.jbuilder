@@ -27,7 +27,6 @@ end
 
 json.body story.rhino_body.to_plain_text
 
-json.slug story.to_param
 json.windows_type story.windows_type&.name
 
 if story.primary_asset&.file&.attached?
