@@ -9,27 +9,26 @@
                   input_html: { class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
     </div>
 
-    <div>
-      <% funder_label_data = @grant.funder&.compound_search_label %>
-      <%= f.input :funder_sgid,
-                  collection: funder_label_data ? [ [ funder_label_data[:label], funder_label_data[:id] ] ] : [],
-                  selected: funder_label_data&.dig(:id),
-                  required: true,
-                  input_html: {
-                    class: "bg-white",
-                    data: {
-                      controller: "remote-select",
-                      remote_select_model_value: "person_or_organization"
-                    }
-                  },
-                  prompt: "Search organizations and people",
-                  label: "Funder",
-                  hint: "The organization or person donating the funds." %>
-    </div>
-
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div>
-        <%= f.label :amount_dollars, "Donation amount", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <% funder_label_data = @grant.funder&.compound_search_label %>
+        <%= f.input :funder_sgid,
+                    collection: funder_label_data ? [ [ funder_label_data[:label], funder_label_data[:id] ] ] : [],
+                    selected: funder_label_data&.dig(:id),
+                    required: true,
+                    input_html: {
+                      class: "bg-white",
+                      data: {
+                        controller: "remote-select",
+                        remote_select_model_value: "person_or_organization"
+                      }
+                    },
+                    prompt: "Search organizations and people",
+                    label: "Funder",
+                    hint: "The organization or person funding the grant." %>
+      </div>
+      <div>
+        <%= f.label :amount_dollars, "Funding amount", class: "block text-sm font-medium text-gray-700 mb-1" %>
         <div class="relative">
           <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-sm">$</span>
           <%= f.number_field :amount_dollars, step: 0.01, value: @grant.amount_dollars,
@@ -37,6 +36,9 @@
         </div>
         <p class="mt-1 text-xs text-gray-500">Total scholarship amounts awarded from this grant cannot exceed this.</p>
       </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div>
         <%= f.input :funds_received_on,
                     label: "Funds received on",
@@ -47,39 +49,123 @@
                       class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm"
                     } %>
       </div>
+      <div>
+        <%= f.input :funds_allocation_deadline,
+                    label: "Funds allocation deadline",
+                    hint: "Award this grant's full amount in scholarships by this date.",
+                    as: :string,
+                    input_html: {
+                      type: "date",
+                      value: @grant.funds_allocation_deadline&.strftime("%Y-%m-%d"),
+                      class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm"
+                    } %>
+      </div>
     </div>
 
-    <div>
-      <%= f.input :funds_allocation_deadline,
-                  label: "Funds allocation deadline",
-                  as: :string,
-                  input_html: {
-                    type: "date",
-                    value: @grant.funds_allocation_deadline&.strftime("%Y-%m-%d"),
-                    class: "w-full sm:w-1/2 rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm"
-                  } %>
+    <%# Collapse the free-text fields once a grant is fully documented; keep them
+        open while any is still blank so nothing goes unnoticed on a new grant. %>
+    <% details_filled = @grant.description.present? && @grant.eligibility_criteria.present? && @grant.tasks.present? %>
+    <div data-controller="dropdown" class="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <button type="button"
+              class="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-800 hover:bg-gray-50 transition"
+              data-action="dropdown#toggle"
+              data-dropdown-payload-param='[{"grant_detail_fields":"hidden"}, {"grant_detail_fields_show_label":"hidden"}, {"grant_detail_fields_hide_label":"hidden"}, {"grant_detail_fields_chevron":"rotate-180"}]'>
+        <span>
+          <span id="grant_detail_fields_show_label" class="<%= "hidden" unless details_filled %>">Description, criteria &amp; tasks</span>
+          <span id="grant_detail_fields_hide_label" class="<%= "hidden" if details_filled %>">Hide description, criteria &amp; tasks</span>
+        </span>
+        <i id="grant_detail_fields_chevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200 <%= "rotate-180" unless details_filled %>"></i>
+      </button>
+
+      <div id="grant_detail_fields" class="border-t border-gray-200 p-4 space-y-6 <%= "hidden" if details_filled %>">
+        <div>
+          <%= f.input :description,
+                      as: :text,
+                      input_html: { rows: 4, class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
+        </div>
+
+        <div>
+          <%= f.input :eligibility_criteria,
+                      label: "Eligibility criteria",
+                      hint: "One criterion per line.",
+                      as: :text,
+                      input_html: { rows: 5, class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
+        </div>
+
+        <div>
+          <%= f.input :tasks,
+                      label: "Tasks to complete",
+                      hint: "One task per line.",
+                      as: :text,
+                      input_html: { rows: 5, class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
+        </div>
+      </div>
     </div>
 
-    <div>
-      <%= f.input :description,
-                  as: :text,
-                  input_html: { rows: 4, class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
+    <div data-controller="dropdown" class="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <button type="button"
+              class="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-800 hover:bg-gray-50 transition"
+              data-action="dropdown#toggle"
+              data-dropdown-payload-param='[{"grant_tag_fields":"hidden"}, {"grant_tag_fields_chevron":"rotate-180"}]'>
+        <span>Sectors &amp; categories</span>
+        <i id="grant_tag_fields_chevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+      </button>
+
+      <div id="grant_tag_fields" class="hidden border-t border-gray-200 p-4 space-y-6">
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+        <h3 class="text-base font-semibold text-gray-800 mb-3">Sectors</h3>
+        <div class="flex flex-wrap gap-3">
+          <% @sectors.each do |sector| %>
+            <% id = "grant_sector_ids_#{sector.id}" %>
+            <label for="<%= id %>"
+                   class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+              <%= hidden_field_tag "grant[sector_ids][]", "" %>
+              <%= check_box_tag "grant[sector_ids][]",
+                                sector.id,
+                                @grant.sector_ids.include?(sector.id),
+                                id: id,
+                                class: "h-4 w-4 text-blue-600 rounded" %>
+              <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+
+      <% @categories_grouped.each do |type, cats| %>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+          <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type ? type.name.underscore.humanize : "Other" %></h3>
+          <div class="flex flex-wrap gap-3">
+            <% cats.each do |category| %>
+              <% id = "grant_category_ids_#{category.id}" %>
+              <label for="<%= id %>"
+                     class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+                <%= hidden_field_tag "grant[category_ids][]", "" %>
+                <%= check_box_tag "grant[category_ids][]",
+                                  category.id,
+                                  @grant.category_ids.include?(category.id),
+                                  id: id,
+                                  class: "h-4 w-4 text-blue-600 rounded" %>
+                <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+      </div>
     </div>
 
-    <div>
-      <%= f.input :eligibility_criteria,
-                  label: "Eligibility criteria",
-                  hint: "One criterion per line.",
-                  as: :text,
-                  input_html: { rows: 5, class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
-    </div>
+    <div data-controller="dropdown" class="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <button type="button"
+              class="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-800 hover:bg-gray-50 transition"
+              data-action="dropdown#toggle"
+              data-dropdown-payload-param='[{"grant_photo_fields":"hidden"}, {"grant_photo_fields_chevron":"rotate-180"}]'>
+        <span>Photos</span>
+        <i id="grant_photo_fields_chevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+      </button>
 
-    <div>
-      <%= f.input :tasks,
-                  label: "Tasks to complete",
-                  hint: "One task per line.",
-                  as: :text,
-                  input_html: { rows: 5, class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
+      <div id="grant_photo_fields" class="hidden border-t border-gray-200 p-4">
+        <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
+      </div>
     </div>
   </div>
 

@@ -119,6 +119,21 @@ RSpec.describe "/grants", type: :request do
         expect(response.body).not_to include("All done")
       end
 
+      it "filters by sector and category tags for the taggings deep link" do
+        sector = create(:sector, :published, name: "Homelessness")
+        category = create(:category, :published, name: "Ages 10-13")
+        tagged = create(:grant, name: "Tagged grant", sectors: [ sector ], categories: [ category ])
+        create(:grant, name: "Untagged grant")
+
+        get grants_url(sector_names_all: sector.name), headers: frame_headers
+        expect(response.body).to include("Tagged grant")
+        expect(response.body).not_to include("Untagged grant")
+
+        get grants_url(category_names_all: category.name), headers: frame_headers
+        expect(response.body).to include("Tagged grant")
+        expect(response.body).not_to include("Untagged grant")
+      end
+
       it "scopes to a single funder via funder_id and names it in the banner" do
         funder = create(:person, first_name: "Dana", last_name: "Funder")
         create(:grant, name: "Dana Fund", funder: funder)
@@ -140,6 +155,29 @@ RSpec.describe "/grants", type: :request do
       it "renders a successful response" do
         get grant_url(create(:grant))
         expect(response).to be_successful
+      end
+
+      it "shows an uploaded primary photo" do
+        grant = create(:grant)
+        grant.create_primary_asset!.file.attach(
+          io: File.open(Rails.root.join("spec/fixtures/files/sample.png")),
+          filename: "sample.png",
+          content_type: "image/png"
+        )
+
+        get grant_url(grant)
+        expect(response).to be_successful
+        expect(response.body).to include("sample")
+      end
+
+      it "shows the grant's sector and category tags" do
+        sector = create(:sector, :published, name: "Domestic Violence")
+        category = create(:category, :published, name: "Ages 6-9")
+        grant = create(:grant, sectors: [ sector ], categories: [ category ])
+
+        get grant_url(grant)
+        expect(response.body).to include("Domestic Violence")
+        expect(response.body).to include("Ages 6-9")
       end
     end
 
@@ -174,6 +212,33 @@ RSpec.describe "/grants", type: :request do
           post grants_url, params: { grant: valid_attributes }
           expect(response).to redirect_to(grant_url(Grant.last))
         end
+
+        it "attaches an uploaded primary photo" do
+          expect {
+            post grants_url, params: {
+              grant: valid_attributes.merge(
+                primary_asset_attributes: {
+                  file: fixture_file_upload("spec/fixtures/files/sample.png", "image/png")
+                }
+              )
+            }
+          }.to change(Grant, :count).by(1)
+
+          expect(Grant.last.primary_asset.file).to be_attached
+        end
+
+        it "attaches the selected sectors and categories" do
+          sector = create(:sector, :published)
+          category = create(:category, :published)
+
+          post grants_url, params: {
+            grant: valid_attributes.merge(sector_ids: [ sector.id ], category_ids: [ category.id ])
+          }
+
+          grant = Grant.last
+          expect(grant.sectors).to contain_exactly(sector)
+          expect(grant.categories).to contain_exactly(category)
+        end
       end
 
       context "with invalid parameters" do
@@ -186,6 +251,15 @@ RSpec.describe "/grants", type: :request do
         it "renders a 422 response" do
           post grants_url, params: { grant: invalid_attributes }
           expect(response).to have_http_status(:unprocessable_content)
+        end
+
+        it "surfaces the missing-funder error on the funder field, not just the summary" do
+          post grants_url, params: { grant: invalid_attributes }
+
+          # simple_form wraps the funder_sgid input with the error class when the
+          # attribute has an error, so the message renders inline on the field.
+          expect(response.body).to include("Funder must be selected")
+          expect(response.body).to include("must be selected")
         end
       end
     end
@@ -202,6 +276,20 @@ RSpec.describe "/grants", type: :request do
         grant = create(:grant)
         patch grant_url(grant), params: { grant: invalid_attributes }
         expect(response).to have_http_status(:unprocessable_content)
+      end
+
+      it "replaces the grant's sectors and categories" do
+        old_sector = create(:sector, :published)
+        grant = create(:grant, sectors: [ old_sector ])
+        new_sector = create(:sector, :published)
+        category = create(:category, :published)
+
+        patch grant_url(grant), params: {
+          grant: valid_attributes.merge(sector_ids: [ new_sector.id ], category_ids: [ category.id ])
+        }
+
+        expect(grant.reload.sectors).to contain_exactly(new_sector)
+        expect(grant.categories).to contain_exactly(category)
       end
     end
 

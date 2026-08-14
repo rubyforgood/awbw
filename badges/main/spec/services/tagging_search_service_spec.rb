@@ -111,6 +111,33 @@ RSpec.describe TaggingSearchService do
       end
     end
 
+    context "with grants (admin-only)" do
+      let!(:admin) { create(:user, :admin) }
+      let!(:grant) { create(:grant, name: "Youth Fund", sectors: [ sector ]) }
+
+      it "returns matching grants for an admin" do
+        results = described_class.new(user: admin).call(
+          sector_names_all: "Youth",
+          category_names_all: nil,
+          pages: {},
+          number_of_items_per_page: 9
+        )
+
+        expect(results[:grants].map(&:name)).to include("Youth Fund")
+      end
+
+      it "hides grants from non-admins" do
+        results = described_class.new(user: user).call(
+          sector_names_all: "Youth",
+          category_names_all: nil,
+          pages: {},
+          number_of_items_per_page: 9
+        )
+
+        expect(results[:grants]).to be_empty
+      end
+    end
+
     context "as a guest (nil user)" do
       it "returns only publicly visible results" do
         results = described_class.new(user: nil).call(

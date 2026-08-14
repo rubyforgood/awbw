@@ -5,7 +5,7 @@
 #
 # Funded vs unfunded follows the app-wide convention (see EventDashboard):
 # funded = backed by an external grant; unfunded = no grant, or a grant the org
-# (AWBW) donated to itself. Alongside the money it carries a trainee headcount —
+# (AWBW) self-funded. Alongside the money it carries a trainee headcount —
 # people who ATTENDED — split by delivery format: scheduled instructor-led
 # sessions total under "Live" and self-paced ones (event.on_demand?) under
 # "On-demand".

@@ -44,6 +44,11 @@ class Tag
       icon: "🎬",
       path: -> { Rails.application.routes.url_helpers.video_recordings_path },
       klass: VideoRecording
+    },
+    grants: {
+      icon: "💰",
+      path: -> { Rails.application.routes.url_helpers.grants_path },
+      klass: Grant
     }
   }.freeze
 
