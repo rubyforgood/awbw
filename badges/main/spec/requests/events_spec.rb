@@ -470,18 +470,68 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(CGI.escapeHTML(attendees_events_path(charts: 1)))
       end
 
-      it "links to that event's own breakdowns when scoped to one event" do
+      it "links to that event's own breakdowns on the attendees index when scoped to one event" do
         sign_in admin
         get reports_events_path(event_id: training.id)
 
-        expect(response.body).to include(CGI.escapeHTML(roster_event_path(training, charts: 1)))
+        # The scoped breakdowns link now lands on the attendees index (not the
+        # roster), pre-filtered to the event with its charts panel open.
+        expect(response.body).to include(attendees_events_path)
+        expect(response.body).to include("event_id=#{training.id}", "charts=1")
+        expect(response.body).not_to include(CGI.escapeHTML(roster_event_path(training, charts: 1)))
       end
 
-      it "shows the scholarship summary card linking to its full report" do
+      # The attendees index defaults its event-type filter to facilitator trainings,
+      # so a hub scoped to an event of any other type has to pin that filter open —
+      # otherwise the event is filtered out and the drill-in lands on an empty list.
+      it "opens the attendees event-type filter when scoped to a non-training event" do
+        webinar = create(:event, facilitator_training: false, start_date: Date.current)
+        create(:event_registration, event: webinar, status: "attended")
+        sign_in admin
+        get reports_events_path(event_id: webinar.id)
+
+        expect(response.body).to match(%r{/events/attendees\?[^"']*event_id=#{webinar.id}[^"']*event_type=all})
+      end
+
+      # Unscoped, the index's own "trainings" default is the population the hub
+      # counted, so the link leaves the filter alone.
+      it "leaves the attendees event-type filter alone when the hub is unscoped" do
+        sign_in admin
+        get reports_events_path
+
+        expect(response.body).to include(
+          CGI.escapeHTML(attendees_events_path(charts: 1, event_year: Date.current.year.to_s, return_to: "reports", anchor: "breakdowns"))
+        )
+      end
+
+      # The index has no time_period vocabulary — it narrows by the event's calendar
+      # year, the same translation the card's own figure links already do — so the
+      # hub's period is converted rather than passed along to be silently dropped.
+      it "translates the hub period into the attendees year filter" do
+        sign_in admin
+        get reports_events_path(period: "last_year")
+
+        expect(response.body).to match(%r{/events/attendees\?charts=1[^"']*event_year=#{Date.current.year - 1}})
+        expect(response.body).not_to match(%r{/events/attendees\?[^"']*time_period=})
+      end
+
+      it "leaves the attendees year filter open for an all-time hub" do
+        sign_in admin
+        get reports_events_path(period: "all_time")
+
+        expect(response.body).to include(CGI.escapeHTML(attendees_events_path(charts: 1, return_to: "reports", anchor: "breakdowns")))
+      end
+
+      it "shows the scholarship summary card linking to its details and to the recipient attendees/breakdowns" do
         sign_in admin
         get reports_events_path
         expect(response.body).to include("Scholarships")
         expect(response.body).to include(scholarships_events_path)
+        # Attendees and Breakdowns eyebrows land on the attendees index pre-filtered
+        # to scholarship recipients, returning to the reports hub. (Rails serializes
+        # query params alphabetically, so return_to precedes scholarship.)
+        expect(response.body).to match(%r{/events/attendees\?[^"']*scholarship=yes})
+        expect(response.body).to match(%r{/events/attendees\?[^"']*return_to=reports[^"']*scholarship=yes})
       end
 
       it "carries the active filters into the full report links" do
@@ -2545,7 +2595,7 @@ RSpec.describe "Events", type: :request do
           get roster_event_path(owned_event)
 
           expect(response).to have_http_status(:ok)
-          expect(response.body).to include("Registrant roster")
+          expect(response.body).to include("Roster")
           expect(response.body).to include("Ada")
           expect(response.body).to include("Lovelace")
           expect(response.body).to include("Roster Org")
@@ -2728,7 +2778,7 @@ RSpec.describe "Events", type: :request do
         it "returns to the roster from the registration it opened" do
           get edit_event_registration_path(registration, return_to: "roster")
 
-          expect(response.body).to include("Registrant roster")
+          expect(response.body).to include("Roster")
           expect(response.body).to include(roster_event_path(owned_event))
         end
 

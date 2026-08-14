@@ -1,0 +1,21 @@
+<%# The attendees index's applied drill-in filters, as removable chips. Rendered
+    into the filter bar on the shell and replaced out-of-band by the results frame
+    on every filter change: the bar sits outside that frame, so the remove links
+    would otherwise keep pointing at the params the page loaded with and drop
+    whatever the admin has filtered on since. The wrapper renders even with no
+    chips so the frame always has something to replace. %>
+<div id="attendees_chips" class="ml-auto flex flex-wrap items-center justify-end gap-2">
+  <% active_filters = AttendeesActiveFilters.new(params).chips %>
+  <% if active_filters.any? %>
+    <span class="text-xs font-semibold uppercase text-gray-500 tracking-wide">Applied</span>
+    <% active_filters.each do |filter| %>
+      <span class="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+        <%= filter[:label] %>
+        <%= link_to attendees_events_path(request.query_parameters.except("page", filter[:param])),
+              class: "text-blue-400 hover:text-blue-700", aria: { label: "Remove #{filter[:label]} filter" } do %>
+          <i class="fa-solid fa-xmark"></i>
+        <% end %>
+      </span>
+    <% end %>
+  <% end %>
+</div>

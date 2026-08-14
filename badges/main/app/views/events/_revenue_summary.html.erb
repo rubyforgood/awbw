@@ -2,9 +2,12 @@
     Expects `report` (an EventRevenueReport) and `period` (its resolved
     PeriodScope: #label, #year and #metrics). %>
 <div class="h-full flex flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-  <div class="flex items-center justify-between mb-4">
+  <%# min-h reserves the height the participation/scholarship cards get from their
+      stacked Attendees/Breakdowns links, so this card's period label and stat
+      boxes line up with theirs even though it has only the one link. %>
+  <div class="flex items-start justify-between mb-4 min-h-[3.5rem]">
     <h3 class="text-base font-semibold text-gray-900">Revenue</h3>
-    <%= link_to "Full report →", revenue_events_path(hub_to_report_params),
+    <%= link_to "Details →", revenue_events_path(hub_to_report_params),
           class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
   </div>
 

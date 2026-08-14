@@ -5,17 +5,18 @@
   <div class="flex items-start justify-between mb-4">
     <h3 class="text-base font-semibold text-gray-900">Participation</h3>
     <div class="flex flex-col items-end gap-1">
-      <%= link_to "Full report →", participation_events_path(hub_to_report_params),
+      <%= link_to "Details →", participation_events_path(hub_to_report_params),
             class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
-      <%= link_to "Attendees →", attendees_events_path(hub_to_report_params),
+      <%= link_to "Attendees →", attendees_events_path(hub_to_attendees_params),
             class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
       <%# Demographics live next to the people they describe, so this points at the
-          breakdowns rather than duplicating them here: one event's roster when the
-          hub is scoped, the cross-event attendees index otherwise. ?charts=1 opens
-          the panel on arrival so the link doesn't land on a collapsed section. %>
-      <% breakdowns_path = @filter_event ? roster_event_path(@filter_event, charts: 1) :
-           attendees_events_path(hub_to_report_params.merge(charts: 1)) %>
-      <%= link_to "Breakdowns →", breakdowns_path,
+          attendees index's breakdowns rather than duplicating them here — scoped to
+          the one event when the hub is, cross-event otherwise (hub_to_attendees_params
+          carries event_id either way, and opens the index's event-type filter so a
+          non-training event isn't filtered out). ?charts=1 opens the panel on arrival
+          and the #breakdowns anchor scrolls to it, so the link doesn't land on a
+          collapsed section. return_to keeps the eyebrow pointing back to the hub. %>
+      <%= link_to "Breakdowns →", attendees_events_path(hub_to_attendees_params(charts: 1, anchor: "breakdowns")),
             class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
     </div>
   </div>

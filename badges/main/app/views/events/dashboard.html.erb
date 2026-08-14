@@ -81,7 +81,7 @@
                     class: "text-3xl sm:text-4xl font-bold #{DomainTheme.text_class_for(:event_dashboard, intensity: 700)} tabular-nums #{addend_class.call(:event_dashboard)}",
                     title: "View the event revenue report" %>
               <span class="text-2xl font-light text-gray-300 select-none">=</span>
-              <%= link_to registrants_event_path(@event), class: addend_class.call(:payments), title: "Manage registrants" do %>
+              <%= link_to registrants_event_path(@event), class: addend_class.call(:payments), title: "Manage registrations" do %>
                 <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:payments, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.registration_subtotal_cents) %></p>
                 <p class="hidden lg:block text-xs text-gray-500">Registration fees</p>
               <% end %>
