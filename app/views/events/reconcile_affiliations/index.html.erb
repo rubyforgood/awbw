@@ -60,10 +60,10 @@
                delete: "has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300"
              } %>
           <% action_notes = {
-               create: "Uncheck to skip creating this facilitator affiliation.",
-               reactivate: "Uncheck to leave this facilitator affiliation inactive.",
-               deactivate: "To keep this facilitator affiliation active: mark them Attended (permanent), or just uncheck this box (one-time).",
-               delete: "Uncheck to keep this facilitator affiliation."
+               create: [ "Uncheck to skip creating this facilitator affiliation." ],
+               reactivate: [ "Uncheck to leave this facilitator affiliation inactive." ],
+               deactivate: [ "Mark Attended to keep active (permanent),", "or uncheck this box to keep active (one-time)." ],
+               delete: [ "Uncheck to keep this facilitator affiliation." ]
              } %>
           <% button_base = "group relative inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm cursor-pointer hover:bg-gray-50" %>
           <section class="rounded-lg border border-gray-200 bg-white p-4">
@@ -111,7 +111,11 @@
                         <%= render "tooltip", kind: row.action %>
                       </label>
                     </div>
-                    <p class="max-w-xs text-right text-xs text-gray-400"><%= action_notes[row.action] %></p>
+                    <div class="max-w-sm text-right text-xs text-gray-400">
+                      <% action_notes[row.action].each do |line| %>
+                        <p><%= line %></p>
+                      <% end %>
+                    </div>
                   </div>
                 </div>
               <% end %>
