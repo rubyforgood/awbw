@@ -9,12 +9,19 @@
   <h1 class="text-2xl font-semibold text-gray-900 mb-2">Reconcile affiliations</h1>
 
   <div class="text-sm text-gray-600 space-y-2 mb-6">
-    <p>
-      This step brings facilitator affiliations in line with who registered and attended. Before the training it
-      <strong>creates</strong> any missing facilitator affiliations for linked organizations. After the training it
-      <strong>same-days</strong> the affiliation of anyone who didn't attend (its end date is set to its start
-      date, so it no longer counts as active), and reactivates anyone later marked attended.
-    </p>
+    <% if @event.facilitator_training? %>
+      <p>
+        This step brings facilitator affiliations in line with who registered and attended. Before the training it
+        <strong>creates</strong> any missing facilitator affiliations for linked organizations. After the training it
+        <strong>same-days</strong> the affiliation of anyone who didn't attend (its end date is set to its start
+        date, so it no longer counts as active), and reactivates anyone later marked attended.
+      </p>
+    <% else %>
+      <p>
+        This event isn't a facilitator training, so any facilitator affiliation auto-created from it shouldn't exist.
+        This <strong>deletes</strong> those. Job affiliations are left untouched.
+      </p>
+    <% end %>
     <p>
       Only affiliations this app created from a registration are touched — hand-entered affiliations are always left
       alone. Uncheck a row to spare it this time.
@@ -35,16 +42,24 @@
     <%= form_with url: reconcile_affiliations_event_path(@event), method: :post do %>
       <div class="overflow-hidden rounded-lg border border-gray-200 bg-white divide-y divide-gray-100">
         <% @rows.each do |row| %>
-          <label class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer">
-            <%= check_box_tag "included[]", row.key, true, class: "h-4 w-4 rounded border-gray-300 text-blue-600" %>
-            <span class="flex-1 min-w-0">
+          <div class="flex items-center gap-3 px-4 py-3">
+            <%= check_box_tag "included[]", row.key, true, id: "included_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-blue-600" %>
+            <label for="included_<%= row.key %>" class="flex-1 min-w-0 cursor-pointer">
               <span class="font-medium text-gray-900"><%= row.person.name %></span>
               <span class="text-gray-500">— <%= row.organization.name %></span>
-            </span>
+            </label>
             <% case row.action %>
             <% when :deactivate %>
+              <label class="inline-flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
+                <%= check_box_tag "delete[]", row.key, false, id: "delete_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-red-600" %>
+                Delete instead
+              </label>
               <span class="inline-flex items-center rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700">
                 Will be deactivated
+              </span>
+            <% when :delete %>
+              <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                Will be deleted
               </span>
             <% when :create %>
               <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
@@ -55,7 +70,7 @@
                 Will be reactivated
               </span>
             <% end %>
-          </label>
+          </div>
         <% end %>
       </div>
 

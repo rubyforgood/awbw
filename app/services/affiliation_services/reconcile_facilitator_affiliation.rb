@@ -42,7 +42,7 @@ module AffiliationServices
 
       if completed_training?
         rows.any? { |affiliation| !affiliation.active? } ? :reactivate : :noop
-      elsif rows.any? { |affiliation| affiliation.active? && source_training_ended?(affiliation) }
+      elsif deactivatable_affiliations.any?
         :deactivate
       else
         :noop
@@ -59,16 +59,20 @@ module AffiliationServices
         .exists?
     end
 
+    # The owned facilitator affiliations #call would same-day: active, and tied to a
+    # training that has already ended. Exposed so the bulk action can offer "delete
+    # instead of same-day" over the exact same set.
+    def deactivatable_affiliations
+      owned_facilitator_affiliations.select { |affiliation| affiliation.active? && source_training_ended?(affiliation) }
+    end
+
     private
 
-    def deactivate(rows)
-      # Only same-day affiliations whose source training has actually ended. A row
-      # tied to a still-upcoming training is a legitimate assumptive/upcoming
-      # affiliation — leave it alone until that training is over.
-      ended = rows.select { |affiliation| affiliation.active? && source_training_ended?(affiliation) }
-      return :noop if ended.empty?
+    def deactivate(_rows)
+      targets = deactivatable_affiliations
+      return :noop if targets.empty?
 
-      ended.each { |affiliation| affiliation.update!(end_date: affiliation.start_date || Date.current) }
+      targets.each { |affiliation| affiliation.update!(end_date: affiliation.start_date || Date.current) }
       :deactivate
     end
 

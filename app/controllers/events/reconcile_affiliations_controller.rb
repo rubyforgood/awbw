@@ -1,14 +1,13 @@
 module Events
   # The "Reconcile affiliations" bulk action: a preview-and-confirm page that
-  # brings each registrant's owned facilitator affiliation in line with whether
-  # they actually completed this facilitator training. Post-event it same-days the
-  # affiliations of non-completers; the admin can opt individual rows out before
-  # applying. Only facilitator-training events have facilitator affiliations to
-  # reconcile, so the action is limited to them.
+  # brings each registrant's owned facilitator affiliation in line with reality.
+  # For a facilitator training it creates missing affiliations, same-days
+  # non-completers, and reactivates late attendees; for a non-training event it
+  # removes facilitator affiliations that were auto-created off it. The admin can
+  # opt individual rows out (and, for same-day rows, delete instead) before applying.
   class ReconcileAffiliationsController < ApplicationController
     include AhoyTracking
     before_action :set_event
-    before_action :require_facilitator_training
 
     def index
       authorize! @event, to: :reconcile_affiliations?
@@ -21,7 +20,10 @@ module Events
     def create
       authorize! @event, to: :reconcile_affiliations?
 
-      changed = AffiliationServices::ReconcileEvent.new(@event).apply(included_keys: params[:included])
+      changed = AffiliationServices::ReconcileEvent.new(@event).apply(
+        included_keys: params[:included] || [],
+        delete_keys: params[:delete] || []
+      )
       redirect_to registrants_event_path(@event), notice: reconcile_notice(changed)
     end
 
@@ -29,13 +31,6 @@ module Events
 
     def set_event
       @event = Event.find(params[:id])
-    end
-
-    def require_facilitator_training
-      return if @event.facilitator_training?
-
-      redirect_to registrants_event_path(@event),
-                  alert: "Affiliation reconciliation applies to facilitator trainings only."
     end
 
     def reconcile_notice(changed)
