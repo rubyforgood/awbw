@@ -102,7 +102,7 @@
 
   <% if has_cost %>
     <%= render "events/filter_select", param: :scholarship, label: "Scholarship",
-          options: [ [ "All recipients", "yes" ], [ "Agreed", "agreed" ], [ "Tasks complete", "complete" ], [ "Tasks not complete", "incomplete" ], [ "No scholarship", "no" ] ],
+          options: EventRegistration::SCHOLARSHIP_STATUS_FILTER_OPTIONS,
           selected: params[:scholarship], blank: "Any status", field_class: field_class %>
 
     <%# Free-text on the funder behind a scholarship. Param :funder_name stays
@@ -113,12 +113,12 @@
 
   <% if @ce_eligible %>
     <%= render "events/filter_select", param: :ce_status, label: "CE status",
-          options: [ [ "Registered for CE", "registered" ], [ "Requested", "requested" ], [ "Needs license", "needs_license" ], [ "Paid", "paid" ], [ "Certificate issued", "issued" ], [ "Certificate outstanding", "not_issued" ], [ "No CE", "none" ] ],
+          options: EventRegistration::CE_STATUS_FILTER_OPTIONS,
           selected: params[:ce_status], blank: "Any CE status", field_class: field_class %>
   <% end %>
 
   <%= render "events/filter_select", param: :account_status, label: "User account",
-        options: [ [ "No account", "none" ], [ "Not invited yet", "not_invited" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
+        options: EventRegistration::ACCOUNT_STATUS_FILTER_OPTIONS,
         selected: params[:account_status], blank: "Any account status", field_class: field_class %>
 
   <%# Picker-only: registrants with an active subscription to a topic subscription
@@ -144,7 +144,7 @@
   <% end %>
 
   <%= render "events/filter_select", param: :comment_status, label: "Comment status",
-        options: [ [ "None", "none" ], [ "Present", "present" ], [ "Flagged", "flagged" ] ],
+        options: EventRegistration::COMMENT_STATUS_FILTER_OPTIONS,
         selected: params[:comment_status], blank: "Any comments", field_class: field_class %>
 
   <%= render "events/filter_text", param: :comment, label: "Comment text",

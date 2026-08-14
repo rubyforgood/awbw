@@ -70,6 +70,43 @@ class EventRegistration < ApplicationRecord
     [ "Grant-funded", "external" ],
     [ "Org-subsidized", "awbw" ]
   ].freeze
+  # Scholarship-status filter options (the .scholarship_status scope's vocabulary).
+  SCHOLARSHIP_STATUS_FILTER_OPTIONS = [
+    [ "All recipients", "yes" ],
+    [ "Agreed", "agreed" ],
+    [ "Tasks complete", "complete" ],
+    [ "Tasks not complete", "incomplete" ],
+    [ "No scholarship", "no" ]
+  ].freeze
+  # The ce_status value meaning "never signed up for CE" — the only one that asks
+  # about the absence of a CE registration rather than its stage.
+  NO_CE = "none".freeze
+  # CE-status filter options (the .ce_status scope's vocabulary). Issued/not issued
+  # are worded as the certificate's state because they read as overlapping
+  # otherwise — one person can match both across two registrations.
+  CE_STATUS_FILTER_OPTIONS = [
+    [ "Registered for CE", "registered" ],
+    [ "Requested", "requested" ],
+    [ "Needs license", "needs_license" ],
+    [ "Paid", "paid" ],
+    [ "Certificate issued", "issued" ],
+    [ "Certificate outstanding", "not_issued" ],
+    [ "No CE", NO_CE ]
+  ].freeze
+  # Login-account filter options (the .account_status scope's vocabulary).
+  ACCOUNT_STATUS_FILTER_OPTIONS = [
+    [ "No account", "none" ],
+    [ "Not invited yet", "not_invited" ],
+    [ "Invited", "invited" ],
+    [ "Has access", "has_access" ],
+    [ "No access", "no_access" ]
+  ].freeze
+  # Comment filter options (the .comment_status scope's vocabulary).
+  COMMENT_STATUS_FILTER_OPTIONS = [
+    [ "None", "none" ],
+    [ "Present", "present" ],
+    [ "Flagged", "flagged" ]
+  ].freeze
 
   # Human labels for each attendance status — the single source of truth for
   # status display (badges, filters, the dashboard breakdown).
@@ -313,9 +350,7 @@ class EventRegistration < ApplicationRecord
   # issued/not_issued read the certificate delivery; needs_license is a CE
   # registration sitting on a placeholder license. "registered" adds no condition
   # of its own — the EXISTS alone means "signed up for CE, whatever its state".
-  # The ce_status value meaning "never signed up for CE" — the only one that asks
-  # about the absence of a CE registration rather than its stage.
-  NO_CE = "none".freeze
+  # NO_CE is the one value asking about the absence of a CE registration.
   scope :ce_status, ->(value) {
     paid_sql = <<~SQL.squish
       COALESCE((SELECT SUM(a.amount) FROM allocations a
