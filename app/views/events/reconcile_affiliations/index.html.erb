@@ -62,7 +62,7 @@
           <% action_notes = {
                create: "Uncheck to skip creating this facilitator affiliation.",
                reactivate: "Uncheck to leave this facilitator affiliation inactive.",
-               deactivate: "Change attendance to Attended, or uncheck, to keep this facilitator affiliation active.",
+               deactivate: "To keep this facilitator affiliation active: mark them Attended (permanent), or just uncheck this box (one-time).",
                delete: "Uncheck to keep this facilitator affiliation."
              } %>
           <% button_base = "group relative inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm cursor-pointer hover:bg-gray-50" %>
@@ -100,13 +100,13 @@
                     <div class="flex items-center gap-2"<% if row.action == :deactivate %> data-controller="exclusive-checkboxes"<% end %>>
                       <% if row.action == :deactivate %>
                         <label class="<%= button_base %> has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300">
-                          <%= check_box_tag "delete[]", row.key, delete_checked, id: "delete_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-red-600", data: { exclusive_checkboxes_target: "box", action: "exclusive-checkboxes#select" } %>
+                          <%= check_box_tag "delete[]", row.key, delete_checked, id: "delete_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-red-600", data: { exclusive_checkboxes_target: "box", action: "change->exclusive-checkboxes#select" } %>
                           Delete instead
                           <%= render "tooltip", kind: :delete %>
                         </label>
                       <% end %>
                       <label class="<%= button_base %> <%= checked_class[row.action] %>">
-                        <%= check_box_tag "included[]", row.key, included_checked, id: "included_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-blue-600", data: (row.action == :deactivate ? { exclusive_checkboxes_target: "box", action: "exclusive-checkboxes#select" } : {}) %>
+                        <%= check_box_tag "included[]", row.key, included_checked, id: "included_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-blue-600", data: (row.action == :deactivate ? { exclusive_checkboxes_target: "box", action: "change->exclusive-checkboxes#select" } : {}) %>
                         <%= heading %>
                         <%= render "tooltip", kind: row.action %>
                       </label>
