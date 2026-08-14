@@ -1,9 +1,29 @@
 class Grant < ApplicationRecord
+  include TagFilterable
+
   belongs_to :funder, polymorphic: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
 
   has_many :scholarships, dependent: :restrict_with_error
+
+  has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
+  has_many :sectors, through: :sectorable_items
+  has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
+  has_many :categories, through: :categorizable_items
+  has_many :category_types, through: :categories
+
+  # Grants have no publish lifecycle — they're admin-only and always visible to
+  # their audience. This no-op `published` scope satisfies the shared taggings
+  # machinery (the matrix heatmap, Sector/Category#has_published_taggings, and the
+  # tagged-index deep link), which calls `.published` on every TAGGABLE_META klass.
+  scope :published, ->(*) { all }
+
+  # Defer sector/category assignment on new records: the form submits sector_ids/
+  # category_ids, but the polymorphic join rows need the grant's id, so we stash
+  # them and attach after_create. Mirrors Workshop.
+  attr_accessor :pending_sector_ids, :pending_category_ids
+  after_create :assign_pending_associations
 
   FUNDER_TYPES = %w[Organization Person].freeze
 
@@ -119,7 +139,31 @@ class Grant < ApplicationRecord
     text_to_list(tasks)
   end
 
+  # Defer association assignment until after save on new records (see
+  # pending_* accessors above); update existing records directly.
+  def sector_ids=(ids)
+    new_record? ? @pending_sector_ids = ids : super
+  end
+
+  def category_ids=(ids)
+    new_record? ? @pending_category_ids = ids : super
+  end
+
   private
+
+  def assign_pending_associations
+    return unless @pending_sector_ids || @pending_category_ids
+
+    if @pending_sector_ids
+      self.sectors = Sector.where(id: @pending_sector_ids)
+      @pending_sector_ids = nil
+    end
+
+    if @pending_category_ids
+      self.categories = Category.where(id: @pending_category_ids)
+      @pending_category_ids = nil
+    end
+  end
 
   # A grant's amount can't be lowered below what has already been awarded against
   # it — the scholarships are committed, so the grant must at least cover them.

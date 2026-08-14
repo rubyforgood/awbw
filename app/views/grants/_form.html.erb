@@ -81,6 +81,48 @@
                   as: :text,
                   input_html: { rows: 5, class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
     </div>
+
+    <div class="space-y-6">
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+        <h3 class="text-base font-semibold text-gray-800 mb-3">Sectors</h3>
+        <div class="flex flex-wrap gap-3">
+          <% @sectors.each do |sector| %>
+            <% id = "grant_sector_ids_#{sector.id}" %>
+            <label for="<%= id %>"
+                   class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+              <%= hidden_field_tag "grant[sector_ids][]", "" %>
+              <%= check_box_tag "grant[sector_ids][]",
+                                sector.id,
+                                @grant.sector_ids.include?(sector.id),
+                                id: id,
+                                class: "h-4 w-4 text-blue-600 rounded" %>
+              <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+
+      <% @categories_grouped.each do |type, cats| %>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+          <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type ? type.name.underscore.humanize : "Other" %></h3>
+          <div class="flex flex-wrap gap-3">
+            <% cats.each do |category| %>
+              <% id = "grant_category_ids_#{category.id}" %>
+              <label for="<%= id %>"
+                     class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+                <%= hidden_field_tag "grant[category_ids][]", "" %>
+                <%= check_box_tag "grant[category_ids][]",
+                                  category.id,
+                                  @grant.category_ids.include?(category.id),
+                                  id: id,
+                                  class: "h-4 w-4 text-blue-600 rounded" %>
+                <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
   </div>
 
   <div class="action-buttons mt-8 flex justify-center gap-3">

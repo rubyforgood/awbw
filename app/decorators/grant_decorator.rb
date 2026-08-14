@@ -1,4 +1,14 @@
 class GrantDecorator < ApplicationDecorator
+  # Title/detail back the shared taggings card (app/views/taggings/_tagged_item_card).
+  def title
+    object.name
+  end
+
+  def detail(length: nil)
+    text = object.description
+    length ? text&.truncate(length) : text
+  end
+
   def amount
     h.dollars_from_cents(object.amount_cents)
   end

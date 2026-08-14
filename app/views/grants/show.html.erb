@@ -66,6 +66,23 @@
     <% end %>
   </div>
 
+  <!-- Tags -->
+  <% grant_sectors = @grant.sectors.order(:name) %>
+  <% grant_categories = @grant.categories.includes(:category_type).order(Arel.sql("category_types.name, categories.position, categories.name")) %>
+  <% if grant_sectors.any? || grant_categories.any? %>
+    <div class="bg-white rounded-lg shadow p-5">
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Tags</h2>
+      <div class="flex flex-wrap gap-2">
+        <% grant_sectors.each do |sector| %>
+          <%= render "sectors/tagging_label", sector: sector %>
+        <% end %>
+        <% grant_categories.each do |category| %>
+          <%= render "categories/tagging_label", category: category %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
   <!-- Eligibility criteria -->
   <div class="bg-white rounded-lg shadow p-5">
     <h2 class="text-lg font-semibold text-gray-900 mb-2">Eligibility criteria</h2>

@@ -6,6 +6,47 @@ RSpec.describe Grant, type: :model do
     it { is_expected.to belong_to(:created_by).class_name("User").optional }
     it { is_expected.to belong_to(:updated_by).class_name("User").optional }
     it { is_expected.to have_many(:scholarships).dependent(:restrict_with_error) }
+    it { is_expected.to have_many(:sectorable_items).dependent(:destroy) }
+    it { is_expected.to have_many(:sectors).through(:sectorable_items) }
+    it { is_expected.to have_many(:categorizable_items).dependent(:destroy) }
+    it { is_expected.to have_many(:categories).through(:categorizable_items) }
+  end
+
+  describe "tagging" do
+    let(:sector) { create(:sector) }
+    let(:category) { create(:category) }
+
+    it "attaches sectors and categories assigned by id on a new record" do
+      grant = create(:grant, sector_ids: [ sector.id ], category_ids: [ category.id ])
+
+      expect(grant.reload.sectors).to contain_exactly(sector)
+      expect(grant.categories).to contain_exactly(category)
+    end
+
+    it "updates sectors and categories by id on an existing record" do
+      grant = create(:grant, sectors: [ sector ])
+      other_sector = create(:sector)
+
+      grant.update!(sector_ids: [ other_sector.id ], category_ids: [ category.id ])
+
+      expect(grant.reload.sectors).to contain_exactly(other_sector)
+      expect(grant.categories).to contain_exactly(category)
+    end
+
+    describe ".sector_names_all / .category_names_all" do
+      it "finds grants carrying the given tags" do
+        tagged = create(:grant, sectors: [ sector ], categories: [ category ])
+        create(:grant)
+
+        expect(Grant.sector_names_all(sector.name)).to contain_exactly(tagged)
+        expect(Grant.category_names_all(category.name)).to contain_exactly(tagged)
+      end
+    end
+
+    it "responds to a no-op published scope covering every grant" do
+      grant = create(:grant)
+      expect(Grant.published).to include(grant)
+    end
   end
 
   describe "validations" do

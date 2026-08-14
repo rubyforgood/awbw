@@ -37,11 +37,13 @@ class GrantsController < ApplicationController
   def new
     @grant = Grant.new
     authorize! @grant
+    set_tag_collections
   end
 
   def edit
     authorize! @grant
     set_scholarships
+    set_tag_collections
   end
 
   def create
@@ -53,6 +55,7 @@ class GrantsController < ApplicationController
     if @grant.save
       redirect_to @grant, notice: "Grant was successfully created."
     else
+      set_tag_collections
       render :new, status: :unprocessable_content
     end
   end
@@ -65,6 +68,7 @@ class GrantsController < ApplicationController
       redirect_to @grant, notice: "Grant was successfully updated.", status: :see_other
     else
       set_scholarships
+      set_tag_collections
       render :edit, status: :unprocessable_content
     end
   end
@@ -96,6 +100,11 @@ class GrantsController < ApplicationController
     scope = scope.where(funder_type: params[:funder_type]) if Grant::FUNDER_TYPES.include?(params[:funder_type])
     scope = scope.where(funder_id: params[:funder_id]) if params[:funder_id].present?
 
+    # Sector/category filters back the "View all grants" deep link from the
+    # taggings browse page (see TaggingsHelper#tagged_index_path).
+    scope = scope.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    scope = scope.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
+
     case params[:tasks]
     when "completed" then scope.all_tasks_completed
     when "outstanding" then scope.tasks_outstanding
@@ -125,10 +134,24 @@ class GrantsController < ApplicationController
                           .paginate(page: params[:page], per_page: 10)
   end
 
+  # Sector chips and the grouped category checkboxes on the grant form.
+  def set_tag_collections
+    @sectors = Sector.published.order(:name)
+    @categories_grouped =
+      Category
+        .includes(:category_type)
+        .published
+        .order(:position, :name)
+        .group_by(&:category_type)
+        .select { |type, _| type.nil? || (type.published? && !type.story_specific? && !type.profile_specific?) }
+        .sort_by { |type, _| type&.name.to_s.downcase }
+  end
+
   def grant_params
     params.require(:grant).permit(
       :name, :description, :amount_dollars, :amount_cents, :funder_sgid,
-      :funds_allocation_deadline, :funds_received_on, :eligibility_criteria, :tasks
+      :funds_allocation_deadline, :funds_received_on, :eligibility_criteria, :tasks,
+      sector_ids: [], category_ids: []
     )
   end
 end
