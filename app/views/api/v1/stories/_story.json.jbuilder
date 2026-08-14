@@ -14,9 +14,10 @@ json.flags do
   json.publicly_featured story.publicly_featured
 end
 
-# Tags applied to the story, split into their two taxonomies: categories
-# (grouped by category type, e.g. "Age range", "Story category") and sectors.
+# Tags applied to the story: the windows type, categories (grouped by category
+# type, e.g. "Age range", "Story category"), and sectors.
 json.tags do
+  json.windows_type story.windows_type&.name
   # Always emit `categories` as an object (`{}` when untagged) so consumers can
   # iterate it unconditionally.
   json.categories story.categories
@@ -26,8 +27,6 @@ json.tags do
 end
 
 json.body story.rhino_body.to_plain_text
-
-json.windows_type story.windows_type&.name
 
 if story.primary_asset&.file&.attached?
   json.image_url rails_blob_url(story.primary_asset.file)
