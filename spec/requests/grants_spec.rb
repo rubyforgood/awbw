@@ -252,6 +252,15 @@ RSpec.describe "/grants", type: :request do
           post grants_url, params: { grant: invalid_attributes }
           expect(response).to have_http_status(:unprocessable_content)
         end
+
+        it "surfaces the missing-funder error on the funder field, not just the summary" do
+          post grants_url, params: { grant: invalid_attributes }
+
+          # simple_form wraps the funder_sgid input with the error class when the
+          # attribute has an error, so the message renders inline on the field.
+          expect(response.body).to include("Funder must be selected")
+          expect(response.body).to include("must be selected")
+        end
       end
     end
 

@@ -1,7 +1,7 @@
 class Grant < ApplicationRecord
   include TagFilterable
 
-  belongs_to :funder, polymorphic: true
+  belongs_to :funder, polymorphic: true, optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
 
@@ -38,7 +38,8 @@ class Grant < ApplicationRecord
 
   validates :name, presence: true
   validates :amount_cents, numericality: { greater_than_or_equal_to: 0 }
-  validates :funder_type, inclusion: { in: FUNDER_TYPES }
+  validates :funder_type, inclusion: { in: FUNDER_TYPES }, allow_nil: true
+  validate :funder_present
   validate :amount_covers_scholarships_already_issued
 
   scope :by_deadline, -> { order(Arel.sql("funds_allocation_deadline IS NULL, funds_allocation_deadline ASC")) }
@@ -159,6 +160,13 @@ class Grant < ApplicationRecord
   end
 
   private
+
+  # The funder is chosen through the virtual funder_sgid field, so attach the
+  # "no funder picked" error there — that's the input the form renders, so the
+  # error shows inline on the field, not just in the summary.
+  def funder_present
+    errors.add(:funder_sgid, "must be selected") if funder.blank?
+  end
 
   def assign_pending_associations
     return unless @pending_sector_ids || @pending_category_ids

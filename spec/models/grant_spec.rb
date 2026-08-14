@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe Grant, type: :model do
   describe "associations" do
-    it { is_expected.to belong_to(:funder) }
+    it { is_expected.to belong_to(:funder).optional }
     it { is_expected.to belong_to(:created_by).class_name("User").optional }
     it { is_expected.to belong_to(:updated_by).class_name("User").optional }
     it { is_expected.to have_many(:scholarships).dependent(:restrict_with_error) }
@@ -59,6 +59,14 @@ RSpec.describe Grant, type: :model do
 
     it "is valid with a person funder" do
       expect(build(:grant, :donated_by_person)).to be_valid
+    end
+
+    it "attaches the missing-funder error to funder_sgid so the form field shows it" do
+      grant = build(:grant, funder: nil)
+
+      expect(grant).not_to be_valid
+      expect(grant.errors[:funder_sgid]).to include("must be selected")
+      expect(grant.errors.full_messages).to include("Funder must be selected")
     end
 
     describe "amount cannot drop below scholarships already issued" do
