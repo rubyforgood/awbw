@@ -68,14 +68,14 @@
                       <span class="text-gray-400">· <%= row.affiliation.decorate.date_range %></span>
                     <% end %>
                   </span>
+                  <% if row.affiliation %>
+                    <%= link_to "Edit", edit_person_path(row.person, anchor: "affiliations"), class: "text-xs text-blue-600 hover:underline", target: "_blank", rel: "noopener" %>
+                  <% end %>
                   <% if row.action == :deactivate %>
                     <label class="inline-flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
                       <%= check_box_tag "delete[]", row.key, false, id: "delete_#{row.key}", class: "h-4 w-4 rounded border-gray-300 text-red-600" %>
                       Delete instead
                     </label>
-                  <% end %>
-                  <% if row.affiliation %>
-                    <%= link_to "Edit", edit_person_path(row.person, anchor: "affiliations"), class: "text-xs text-blue-600 hover:underline", target: "_blank", rel: "noopener" %>
                   <% end %>
                   <span class="inline-flex items-center rounded-full <%= badge_class %> px-2.5 py-0.5 text-xs font-medium"><%= heading %></span>
                 </div>
@@ -114,10 +114,10 @@
                       <span class="text-gray-400">· <%= row.affiliation.decorate.date_range %></span>
                     <% end %>
                   </span>
-                  <span class="text-xs text-gray-400"><%= row.registration.attendance_status_label %></span>
                   <% if row.affiliation %>
                     <%= link_to "Edit", edit_person_path(row.person, anchor: "affiliations"), class: "text-xs text-blue-600 hover:underline", target: "_blank", rel: "noopener" %>
                   <% end %>
+                  <%= render "event_registrations/attendance_status_badge", registration: row.registration %>
                 </div>
               <% end %>
             </div>
