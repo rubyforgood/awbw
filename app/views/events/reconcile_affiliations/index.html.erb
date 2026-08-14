@@ -50,7 +50,8 @@
         <i class="fa-solid fa-triangle-exclamation"></i> Checked boxes change facilitator affiliations
       </span>
     </div>
-    <%= form_with url: reconcile_affiliations_event_path(@event), method: :post do %>
+    <%# turbo: false so the POST renders the confirmation page (Turbo ignores a 200 HTML render on POST). %>
+    <%= form_with url: reconcile_affiliations_event_path(@event), method: :post, data: { turbo: false } do %>
       <div class="space-y-4">
         <% @person_groups.each do |group| %>
           <% checked_class = {
@@ -62,7 +63,7 @@
           <% action_notes = {
                create: [ "Uncheck to skip creating this facilitator affiliation." ],
                reactivate: [ "Uncheck to leave this facilitator affiliation inactive." ],
-               deactivate: [ "To keep Affiliation active:", "Mark as Attended or uncheck this box" ],
+               deactivate: [ "To keep Affiliation active:", "Mark as Attended or uncheck both boxes" ],
                delete: [ "Uncheck to keep this facilitator affiliation." ]
              } %>
           <% button_base = "group relative inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm cursor-pointer hover:bg-gray-50" %>
