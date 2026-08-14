@@ -1,4 +1,14 @@
 class GrantDecorator < ApplicationDecorator
+  # Title/detail back the shared taggings card (app/views/taggings/_tagged_item_card).
+  def title
+    object.name
+  end
+
+  def detail(length: nil)
+    text = object.description
+    length ? text&.truncate(length) : text
+  end
+
   def amount
     h.dollars_from_cents(object.amount_cents)
   end
@@ -23,7 +33,7 @@ class GrantDecorator < ApplicationDecorator
     object.remaining_cents <= 0
   end
 
-  # Whole-number percentage of the donation awarded in scholarships, clamped to
+  # Whole-number percentage of the grant awarded in scholarships, clamped to
   # 0–100, for rendering the allocation progress bar on the index.
   def allocation_percentage
     return 0 if object.amount_cents.to_i.zero?
@@ -31,7 +41,7 @@ class GrantDecorator < ApplicationDecorator
     ((object.scholarships_total_cents.to_d / object.amount_cents) * 100).clamp(0, 100).round
   end
 
-  # Whole-number percentage of the donation still unallocated, for the "Remaining"
+  # Whole-number percentage of the grant still unallocated, for the "Remaining"
   # bar on the index — full green when untouched, empty (grey track) when spent.
   def remaining_percentage
     100 - allocation_percentage
@@ -67,7 +77,7 @@ class GrantDecorator < ApplicationDecorator
     MoneyFormatter.compact_from_cents(object.remaining_cents)
   end
 
-  # Short human-readable total donation for the grant picker, e.g. "$10k".
+  # Short human-readable total funding amount for the grant picker, e.g. "$10k".
   def amount_compact
     MoneyFormatter.compact_from_cents(object.amount_cents)
   end

@@ -84,6 +84,23 @@ RSpec.describe "Taggings index", type: :request do
     end
   end
 
+  describe "grants (admin-only)" do
+    let!(:admin) { create(:user, :admin) }
+    let!(:grant) { create(:grant, name: "Youth Healing Fund", sectors: [ sector_2 ]) }
+
+    it "shows a matching grant card to an admin" do
+      sign_in admin
+      get taggings_path(sector_names_all: sector_2.name)
+      expect(response.body).to include("Youth Healing Fund")
+      expect(response.body).to include(grant_path(grant))
+    end
+
+    it "hides grants from a regular signed-in user" do
+      get taggings_path(sector_names_all: sector_2.name)
+      expect(response.body).not_to include("Youth Healing Fund")
+    end
+  end
+
   describe "edit buttons for non-admins" do
     it "does not show edit buttons to a regular signed-in user" do
       get taggings_path(sector_names_all: sector_2.name)

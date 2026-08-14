@@ -54,6 +54,8 @@ en:
     none_for_story_idea: "No communications for this story idea yet."
   activerecord:
     attributes:
+      grant:
+        funder_sgid: "Funder"
       workshop_variation:
         rhino_body: "Details"
       workshop_variation_idea:
