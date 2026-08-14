@@ -11,7 +11,6 @@ end
 json.url story_url(story)
 
 json.flags do
-  json.featured story.featured
   json.publicly_featured story.publicly_featured
 end
 

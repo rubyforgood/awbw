@@ -36,14 +36,14 @@ RSpec.describe "Api::V1::Stories", type: :request do
       expect(titles).not_to include("Internal story", "Draft story")
     end
 
-    it "exposes the featured and publicly_featured flags on each story" do
+    it "exposes the publicly_featured flag on each story (and hides internal featured)" do
       get "/api/v1/stories"
 
       featured = json["stories"].find { |s| s["title"] == "Public featured story" }
       plain    = json["stories"].find { |s| s["title"] == "Public story" }
 
-      expect(featured["flags"]).to eq("featured" => true, "publicly_featured" => true)
-      expect(plain["flags"]).to eq("featured" => false, "publicly_featured" => false)
+      expect(featured["flags"]).to eq("publicly_featured" => true)
+      expect(plain["flags"]).to eq("publicly_featured" => false)
     end
 
     it "includes pagination metadata" do
