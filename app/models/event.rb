@@ -186,6 +186,15 @@ class Event < ApplicationRecord
     end_date < Time.current
   end
 
+  # A registrant's status changed after affiliations were last reconciled, so the
+  # reconciliation may be out of date and worth re-running. False when never
+  # reconciled (nothing to be stale against).
+  def affiliations_reconciliation_stale?
+    return false unless affiliations_reconciled_at
+
+    event_registrations.where("event_registrations.updated_at > ?", affiliations_reconciled_at).exists?
+  end
+
   # Whether the event shows as a full card on the events index. Unpublished
   # events and events that ended more than a month ago collapse into the compact
   # archive list instead of taking up a card.

@@ -46,6 +46,16 @@ RSpec.describe AffiliationServices::ReconcileFacilitatorAffiliation do
       end
     end
 
+    it "leaves an assumptive affiliation alone while its training is still upcoming" do
+      reg = training_registration(status: "registered", ended: false)
+      affiliation = owned_facilitator(registration: reg, start_date: Date.current)
+
+      described_class.call(person: person, organization: organization)
+
+      expect(affiliation.reload).to be_active
+      expect(affiliation.end_date).to be_nil
+    end
+
     it "leaves an unowned (hand-created) facilitator affiliation untouched" do
       training_registration(status: "no_show")
       hand_created = create(:affiliation, person: person, organization: organization,

@@ -224,6 +224,8 @@ Rails.application.routes.draw do
       get :recipients
       post :feature_recipient_shoutout
       get :bulk_payments, to: "events/bulk_payments#index"
+      get :reconcile_affiliations, to: "events/reconcile_affiliations#index"
+      post :reconcile_affiliations, to: "events/reconcile_affiliations#create"
       get :preview_reminder
       patch :preview
       post :copy_registration_form

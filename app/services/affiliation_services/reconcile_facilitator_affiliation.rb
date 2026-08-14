@@ -42,19 +42,28 @@ module AffiliationServices
 
       if completed_training?
         rows.any? { |affiliation| !affiliation.active? } ? :reactivate : :noop
+      elsif rows.any? { |affiliation| affiliation.active? && source_training_ended?(affiliation) }
+        :deactivate
       else
-        rows.any?(&:active?) ? :deactivate : :noop
+        :noop
       end
     end
 
     private
 
     def deactivate(rows)
-      active = rows.select(&:active?)
-      return :noop if active.empty?
+      # Only same-day affiliations whose source training has actually ended. A row
+      # tied to a still-upcoming training is a legitimate assumptive/upcoming
+      # affiliation — leave it alone until that training is over.
+      ended = rows.select { |affiliation| affiliation.active? && source_training_ended?(affiliation) }
+      return :noop if ended.empty?
 
-      active.each { |affiliation| affiliation.update!(end_date: affiliation.start_date || Date.current) }
+      ended.each { |affiliation| affiliation.update!(end_date: affiliation.start_date || Date.current) }
       :deactivate
+    end
+
+    def source_training_ended?(affiliation)
+      affiliation.event_registration&.event&.ended?
     end
 
     def reactivate(rows)

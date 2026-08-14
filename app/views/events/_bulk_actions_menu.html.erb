@@ -29,6 +29,9 @@
         Import registrants <i class="fa-solid fa-upload text-gray-400 ml-1"></i>
       <% end %>
     <% end %>
+    <% if @event.facilitator_training? %>
+      <%= link_to "Reconcile affiliations", reconcile_affiliations_event_path(@event), class: item_class %>
+    <% end %>
     <%= link_to registrants_event_path(@event, format: :csv), class: item_class, data: { turbo_frame: "_top" } do %>
       Download CSV <i class="fa-solid fa-download text-gray-400 ml-1"></i>
     <% end %>
