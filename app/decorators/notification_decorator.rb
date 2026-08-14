@@ -74,6 +74,40 @@ class NotificationDecorator < ApplicationDecorator
     incoming? ? nil : contact_hover
   end
 
+  # The contact Person sits on the To side of an outgoing communication and the
+  # From side of an incoming one; the opposite side is staff or the AWBW Portal,
+  # which has no person to link to. nil when the contact isn't on file either.
+  def to_person
+    contact_person unless incoming?
+  end
+
+  def from_person
+    contact_person if incoming?
+  end
+
+  # The contact's email for each side, mirroring to_person/from_person — always
+  # recipient_email, on whichever side the contact sits. nil on the staff/portal
+  # side, which is a person's name (or "AWBW Portal"), not an address.
+  def to_email
+    recipient_email unless incoming?
+  end
+
+  def from_email
+    recipient_email if incoming?
+  end
+
+  # People-column value for the index: the name linked to the person's profile
+  # when we've resolved them, a mailto link when we only have their email, plain
+  # text otherwise. The AWBW Portal (and any staff name) has no address, so it
+  # renders unlinked.
+  def to_value
+    people_value(to_name, to_person, to_email, to_title)
+  end
+
+  def from_value
+    people_value(from_name, from_person, from_email, from_title)
+  end
+
   # "incoming" (the person wrote to us), "fyi" (an admin FYI copy), or nil for a
   # regular message to the person (the norm — no pill). Drives the audience pill.
   def audience
@@ -139,6 +173,16 @@ class NotificationDecorator < ApplicationDecorator
   end
 
   private
+
+  # Links the value to the person's profile when we have one, to a mailto when we
+  # only have their email, otherwise a plain span. The profile link keeps the
+  # email available on hover (title).
+  def people_value(name, person, email, title)
+    return h.link_to(name, h.person_path(person), title: title, data: { turbo_frame: "_top" }, class: "hover:underline") if person
+    return h.mail_to(email, name, class: "hover:underline") if email.present?
+
+    h.content_tag(:span, name, title: title)
+  end
 
   # Renders a coloured label pill from a *_META entry. Returns "" for a nil
   # entry. A caller-supplied `class:` is appended to the pill's own styling
