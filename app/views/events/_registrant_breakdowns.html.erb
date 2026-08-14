@@ -66,7 +66,9 @@
   <% program_status_paths = program_status_data.to_h { |label, _| [ label, index_path.(program_status: label.downcase) ] } %>
   <% other_response_paths = {} %>
   <% scholarship_pie_paths = { "Scholarship" => index_path.(scholarship: "yes"), "No scholarship" => index_path.(scholarship: "no") } %>
-  <% ce_pie_paths = { "CE" => index_path.(ce: "yes"), "No CE" => index_path.(ce: "no") } %>
+  <%# Both slices drill into the CE status dropdown rather than a chip-only param, so
+      the arrival shows which filter is applied in the control itself. %>
+  <% ce_pie_paths = { "CE" => index_path.(ce_status: "registered"), "No CE" => index_path.(ce_status: EventRegistration::NO_CE) } %>
 <% elsif event_context %>
   <% primary_sector_paths = data.primary_sectors.to_h { |s| [ s.name, by_ids.(data.primary_sector_registrant_ids_by_sector.fetch(s.id, [])) ] } %>
   <% sector_paths = data.sectors.to_h { |s| [ s.name, roster_event_path(event, sector: s.id, charts: 1) ] } %>

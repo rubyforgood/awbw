@@ -313,6 +313,9 @@ class EventRegistration < ApplicationRecord
   # issued/not_issued read the certificate delivery; needs_license is a CE
   # registration sitting on a placeholder license. "registered" adds no condition
   # of its own — the EXISTS alone means "signed up for CE, whatever its state".
+  # The ce_status value meaning "never signed up for CE" — the only one that asks
+  # about the absence of a CE registration rather than its stage.
+  NO_CE = "none".freeze
   scope :ce_status, ->(value) {
     paid_sql = <<~SQL.squish
       COALESCE((SELECT SUM(a.amount) FROM allocations a
@@ -327,11 +330,17 @@ class EventRegistration < ApplicationRecord
       when "requested" then "NOT (#{paid_sql})"
       when "issued" then "cer.certificate_sent_at IS NOT NULL"
       when "not_issued" then "cer.certificate_sent_at IS NULL"
+      when NO_CE then "TRUE"
       end
     next all if condition.blank?
 
+    # "No CE" is the one value that asks for the absence of a CE registration, so it
+    # negates the same EXISTS the others qualify. The license join never drops a row
+    # (professional_license_id is NOT NULL), so "registered" and NO_CE are exact
+    # complements.
+    existence = value == NO_CE ? "NOT EXISTS" : "EXISTS"
     where(<<~SQL.squish)
-      EXISTS (
+      #{existence} (
         SELECT 1 FROM continuing_education_registrations cer
         JOIN professional_licenses pl ON pl.id = cer.professional_license_id
         WHERE cer.event_registration_id = event_registrations.id

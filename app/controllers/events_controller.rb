@@ -796,10 +796,6 @@ class EventsController < ApplicationController
         scope.where(id: scholarship_status_person_ids(params[:scholarship]))
       end
     end
-    if params[:ce].present?
-      ids = ce_person_ids
-      scope = params[:ce] == "no" ? scope.where.not(id: ids) : scope.where(id: ids)
-    end
     # Address filters read the person's own address data directly (no registration
     # required) — city is a free-text match, state/county exact.
     scope = scope.where(id: person_address_ids(state: params[:state])) if params[:state].present?
@@ -817,15 +813,18 @@ class EventsController < ApplicationController
     # organization linking and readiness are event/form-specific, so they stay on the
     # single-event roster/picker only.)
     ATTENDEE_REGISTRATION_FILTERS.each do |param, scope_name|
-      next if params[param].blank?
-      # "No comments" is the one negative among them: matched on any single
-      # registration it lets through anyone who commented on a different one, so ask
-      # the positive scope and exclude — the same shape as "No scholarship" above.
-      # (Scoped to one event the two agree, so this needs no @filter_event branch.)
-      scope = if param == :comment_status && params[param] == NO_COMMENTS
-        scope.where.not(id: registration_scope_person_ids(scope_name, "present"))
+      value = params[param].presence
+      next if value.nil?
+      # A value asking for an absence ("No comments", "No CE") can't be matched one
+      # registration at a time: that lets through anyone who commented — or took CE —
+      # on a different one. Ask the positive scope and exclude instead, the same shape
+      # as "No scholarship" above. (Scoped to one event the two readings agree, so
+      # this needs no @filter_event branch.)
+      positive = ATTENDEE_NEGATIVE_FILTER_VALUES[[ param, value ]]
+      scope = if positive
+        scope.where.not(id: registration_scope_person_ids(scope_name, positive))
       else
-        scope.where(id: registration_scope_person_ids(scope_name, params[param]))
+        scope.where(id: registration_scope_person_ids(scope_name, value))
       end
     end
 
@@ -846,9 +845,13 @@ class EventsController < ApplicationController
     comment: :comment_text,
     topic_subscription: :registrant_topic_subscription
   }.freeze
-  # The comment_status value meaning "commented on nothing" — a person-level
-  # question cross-event, unlike every other value in the table above.
-  NO_COMMENTS = "none".freeze
+  # [ param, value ] => the positive value to ask for and exclude. These are the
+  # values that assert an absence about the person, which cross-event can only be
+  # answered by inverting the positive set — see the loop above.
+  ATTENDEE_NEGATIVE_FILTER_VALUES = {
+    [ :comment_status, "none" ] => "present",
+    [ :ce_status, EventRegistration::NO_CE ] => "registered"
+  }.freeze
 
   # People behind the attended registrations that match a registration-level scope.
   def registration_scope_person_ids(scope_name, value)
@@ -931,12 +934,6 @@ class EventsController < ApplicationController
     EventRegistration
       .where(id: attendee_registrations.select(:id))
       .scholarship_status(value)
-      .select(:registrant_id)
-  end
-
-  def ce_person_ids
-    EventRegistration
-      .where(id: ContinuingEducationRegistration.where(event_registration_id: attendee_registrations.select(:id)).select(:event_registration_id))
       .select(:registrant_id)
   end
 

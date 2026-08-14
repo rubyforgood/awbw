@@ -7,7 +7,8 @@
 # event, year, sector, program status, affiliation status, and the registration-level
 # filters shared with the roster — payment method, scholarship, funder name, CE
 # status, user account, topic subscription, city, state, county, comment status and
-# text) are intentionally omitted — the control itself already shows them.
+# text) are intentionally omitted — the control itself already shows them. That's why
+# the CE pie's drill-ins use ce_status rather than a chip-only param.
 class AttendeesActiveFilters
   # Drill-in params in chip display order. Each renders via #label_for. Keep this
   # in step with every param the attendees index narrows on: a param the index
@@ -15,7 +16,7 @@ class AttendeesActiveFilters
   # filter form's hidden fields on the next change, since both read this list.
   CHIP_PARAMS = %w[
     registrant_ids organization_id org_city age_group life_experience setting
-    country school_district ce payment_status funder
+    country school_district payment_status funder
   ].freeze
   # The roster has no filter form at all, so every drill-in it accepts needs a
   # chip — including the two the index leaves out because it has controls for them.
@@ -52,7 +53,6 @@ class AttendeesActiveFilters
     when "setting" then record_label("Setting", Category, value)
     when "country" then "Country: #{value}"
     when "school_district" then "School district: #{value}"
-    when "ce" then value == "no" ? "No continuing education" : "Continuing education"
     when "payment_status" then option_label("Payment", EventRegistration::PAYMENT_STATUS_FILTER_OPTIONS, value)
     when "funder" then option_label("Funding", EventRegistration::FUNDER_FILTER_OPTIONS, value)
     end

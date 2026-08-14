@@ -108,7 +108,7 @@
         placeholder: "Funder name", field_class: field_class %>
 
   <%= render "events/filter_select", param: :ce_status, label: "CE status",
-        options: [ [ "Registered for CE", "registered" ], [ "Requested", "requested" ], [ "Needs license", "needs_license" ], [ "Paid", "paid" ], [ "Issued", "issued" ], [ "Not issued", "not_issued" ] ],
+        options: [ [ "Registered for CE", "registered" ], [ "Requested", "requested" ], [ "Needs license", "needs_license" ], [ "Paid", "paid" ], [ "Certificate issued", "issued" ], [ "Certificate outstanding", "not_issued" ], [ "No CE", "none" ] ],
         selected: params[:ce_status], blank: "Any CE status", field_class: field_class %>
 
   <%= render "events/filter_select", param: :account_status, label: "User account",

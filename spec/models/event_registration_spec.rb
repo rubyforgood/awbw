@@ -591,6 +591,23 @@ RSpec.describe EventRegistration, type: :model do
         expect(results).not_to include(issued_ce, no_ce)
       end
 
+      it "maps 'none' to registrations that never signed up for CE" do
+        results = EventRegistration.ce_status(EventRegistration::NO_CE)
+        expect(results).to include(no_ce)
+        expect(results).not_to include(paid_ce, requested_ce, needs_license_ce, issued_ce)
+      end
+
+      # The license join is an inner join, so this only holds because
+      # professional_license_id is NOT NULL — every CE row has one.
+      it "makes 'none' the exact complement of 'registered'" do
+        all_ids = EventRegistration.where(event: event).ids
+        registered = EventRegistration.where(event: event).ce_status("registered").ids
+        none = EventRegistration.where(event: event).ce_status(EventRegistration::NO_CE).ids
+
+        expect(registered & none).to be_empty
+        expect((registered + none).sort).to eq(all_ids.sort)
+      end
+
       it "returns an unfiltered relation for unknown values" do
         expect(EventRegistration.ce_status("bogus")).to include(paid_ce, requested_ce, no_ce)
       end

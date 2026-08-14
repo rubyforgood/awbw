@@ -476,6 +476,26 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).to include("Ada Lovelace")
         end
 
+        it "answers 'No CE' person-wide cross-event, per event when scoped" do
+          # Ada took CE at the recent training but not at the older one she also
+          # attended.
+          create(:continuing_education_registration, event_registration: attendee_registration)
+          older_reg = create(:event_registration, event: older_training, registrant: attendee, status: "attended")
+
+          never = create(:person, first_name: "Nan", last_name: "Nocredit")
+          create(:event_registration, event: recent_training, registrant: never, status: "attended")
+
+          # Cross-event: "No CE" means never signed up — excludes Ada, whose
+          # older-training registration carries no CE.
+          get attendees_events_url(ce_status: "none"), headers: frame_headers
+          expect(response.body).to include("Nan Nocredit")
+          expect(response.body).not_to include("Ada Lovelace")
+
+          # Scoped to the older training, where Ada took no CE — includes her.
+          get attendees_events_url(ce_status: "none", event_id: older_reg.event_id), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+        end
+
         it "filters by address data (city) without requiring a registration to carry it" do
           create(:address, addressable: attendee, city: "Portland", state: "OR", inactive: false)
           other = create(:person, first_name: "Cara", last_name: "Coast")
@@ -538,7 +558,7 @@ RSpec.describe "Events attendees", type: :request do
           get attendees_events_url(ce_status: "issued", city: "Portland", comment: "late")
 
           page = Capybara.string(response.body)
-          expect(page).to have_selector("select#ce_status option[selected][value='issued']", text: "Issued")
+          expect(page).to have_selector("select#ce_status option[selected][value='issued']", text: "Certificate issued")
           expect(page).to have_selector("input#city[value='Portland']", visible: :all)
           expect(page).to have_selector("input#comment[value='late']", visible: :all)
         end
