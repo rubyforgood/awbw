@@ -24,11 +24,11 @@ json.windows_type story.windows_type&.name
 # Tags applied to the story, split into their two taxonomies: categories
 # (grouped by category type, e.g. "Age range", "Story category") and sectors.
 json.tags do
-  json.categories do
-    story.categories.group_by { |c| c.category_type&.display_label || "Other" }.each do |type_label, cats|
-      json.set! type_label, cats.map(&:name).sort
-    end
-  end
+  # Always emit `categories` as an object (`{}` when untagged) so consumers can
+  # iterate it unconditionally.
+  json.categories story.categories
+    .group_by { |c| c.category_type&.display_label || "Other" }
+    .transform_values { |cats| cats.map(&:name).sort }
   json.sectors story.sector_names_all
 end
 
