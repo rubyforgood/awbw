@@ -110,6 +110,31 @@ RSpec.describe NotificationDecorator, type: :decorator do
     end
   end
 
+  describe "#to_person / #from_person" do
+    it "puts the contact on the To side of an outgoing communication" do
+      person = create(:person, email: "kim@example.com")
+      decorated = create(:notification, recipient_email: "kim@example.com").decorate
+
+      expect(decorated.to_person).to eq(person)
+      expect(decorated.from_person).to be_nil
+    end
+
+    it "puts the contact on the From side of an incoming communication" do
+      person = create(:person, email: "kim@example.com")
+      decorated = create(:notification, :incoming, recipient_email: "kim@example.com").decorate
+
+      expect(decorated.from_person).to eq(person)
+      expect(decorated.to_person).to be_nil
+    end
+
+    it "has no person when the contact isn't on file" do
+      decorated = build_stubbed(:notification, recipient_email: "stranger@example.com").decorate
+
+      expect(decorated.to_person).to be_nil
+      expect(decorated.from_person).to be_nil
+    end
+  end
+
   describe "#audience" do
     it "is incoming for a communication the person sent" do
       expect(build_stubbed(:notification, :incoming).decorate.audience).to eq("incoming")

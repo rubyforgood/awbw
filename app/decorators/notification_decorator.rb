@@ -74,6 +74,28 @@ class NotificationDecorator < ApplicationDecorator
     incoming? ? nil : contact_hover
   end
 
+  # The contact Person sits on the To side of an outgoing communication and the
+  # From side of an incoming one; the opposite side is staff or the AWBW Portal,
+  # which has no person to link to. nil when the contact isn't on file either.
+  def to_person
+    contact_person unless incoming?
+  end
+
+  def from_person
+    contact_person if incoming?
+  end
+
+  # People-column value for the index: the name linked to the person's profile
+  # when we've resolved them, plain text (email on hover) otherwise. The AWBW
+  # Portal and unmatched raw emails have no person, so they render unlinked.
+  def to_value
+    people_value(to_name, to_person, to_title)
+  end
+
+  def from_value
+    people_value(from_name, from_person, from_title)
+  end
+
   # "incoming" (the person wrote to us), "fyi" (an admin FYI copy), or nil for a
   # regular message to the person (the norm — no pill). Drives the audience pill.
   def audience
@@ -139,6 +161,17 @@ class NotificationDecorator < ApplicationDecorator
   end
 
   private
+
+  # Links the value to the person's profile when we have one, otherwise a plain
+  # span. Either way the email (when resolved) stays available on hover.
+  def people_value(name, person, title)
+    return h.content_tag(:span, name, title: title) unless person
+
+    h.link_to name, h.person_path(person),
+      title: title,
+      data: { turbo_frame: "_top" },
+      class: "hover:underline"
+  end
 
   # Renders a coloured label pill from a *_META entry. Returns "" for a nil
   # entry. A caller-supplied `class:` is appended to the pill's own styling
