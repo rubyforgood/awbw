@@ -64,9 +64,9 @@
     <%# Collapse the free-text fields once a grant is fully documented; keep them
         open while any is still blank so nothing goes unnoticed on a new grant. %>
     <% details_filled = @grant.description.present? && @grant.eligibility_criteria.present? && @grant.tasks.present? %>
-    <div data-controller="dropdown">
+    <div data-controller="dropdown" class="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
       <button type="button"
-              class="w-full flex items-center justify-between rounded-lg border border-gray-300 bg-white px-4 py-3 text-left text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 transition"
+              class="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-800 hover:bg-gray-50 transition"
               data-action="dropdown#toggle"
               data-dropdown-payload-param='[{"grant_detail_fields":"hidden"}, {"grant_detail_fields_show_label":"hidden"}, {"grant_detail_fields_hide_label":"hidden"}, {"grant_detail_fields_chevron":"rotate-180"}]'>
         <span>
@@ -76,7 +76,7 @@
         <i id="grant_detail_fields_chevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200 <%= "rotate-180" unless details_filled %>"></i>
       </button>
 
-      <div id="grant_detail_fields" class="mt-4 space-y-6 <%= "hidden" if details_filled %>">
+      <div id="grant_detail_fields" class="border-t border-gray-200 p-4 space-y-6 <%= "hidden" if details_filled %>">
         <div>
           <%= f.input :description,
                       as: :text,
@@ -101,16 +101,16 @@
       </div>
     </div>
 
-    <div data-controller="dropdown">
+    <div data-controller="dropdown" class="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
       <button type="button"
-              class="w-full flex items-center justify-between rounded-lg border border-gray-300 bg-white px-4 py-3 text-left text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 transition"
+              class="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-800 hover:bg-gray-50 transition"
               data-action="dropdown#toggle"
               data-dropdown-payload-param='[{"grant_tag_fields":"hidden"}, {"grant_tag_fields_chevron":"rotate-180"}]'>
         <span>Sectors &amp; categories</span>
         <i id="grant_tag_fields_chevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
       </button>
 
-      <div id="grant_tag_fields" class="hidden mt-4 space-y-6">
+      <div id="grant_tag_fields" class="hidden border-t border-gray-200 p-4 space-y-6">
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
         <h3 class="text-base font-semibold text-gray-800 mb-3">Sectors</h3>
         <div class="flex flex-wrap gap-3">
@@ -153,16 +153,16 @@
       </div>
     </div>
 
-    <div data-controller="dropdown">
+    <div data-controller="dropdown" class="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
       <button type="button"
-              class="w-full flex items-center justify-between rounded-lg border border-gray-300 bg-white px-4 py-3 text-left text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 transition"
+              class="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-800 hover:bg-gray-50 transition"
               data-action="dropdown#toggle"
               data-dropdown-payload-param='[{"grant_photo_fields":"hidden"}, {"grant_photo_fields_chevron":"rotate-180"}]'>
         <span>Photos</span>
         <i id="grant_photo_fields_chevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
       </button>
 
-      <div id="grant_photo_fields" class="hidden mt-4">
+      <div id="grant_photo_fields" class="hidden border-t border-gray-200 p-4">
         <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
       </div>
     </div>
