@@ -4,12 +4,10 @@ json.title story.title
 json.body story.rhino_body.to_plain_text
 json.url story_url(story)
 
-json.featured story.featured
-json.publicly_featured story.publicly_featured
-json.published story.published
-
-json.website_url story.website_url
-json.youtube_url story.youtube_url
+json.flags do
+  json.featured story.featured
+  json.publicly_featured story.publicly_featured
+end
 
 # Credited author, honoring the story's privacy preference (may be "Anonymous").
 json.author story.author_credit

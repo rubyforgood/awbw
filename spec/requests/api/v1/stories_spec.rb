@@ -42,8 +42,8 @@ RSpec.describe "Api::V1::Stories", type: :request do
       featured = json["stories"].find { |s| s["title"] == "Public featured story" }
       plain    = json["stories"].find { |s| s["title"] == "Public story" }
 
-      expect(featured).to include("featured" => true, "publicly_featured" => true, "published" => true)
-      expect(plain).to include("featured" => false, "publicly_featured" => false)
+      expect(featured["flags"]).to eq("featured" => true, "publicly_featured" => true)
+      expect(plain["flags"]).to eq("featured" => false, "publicly_featured" => false)
     end
 
     it "includes pagination metadata" do
