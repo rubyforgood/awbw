@@ -75,6 +75,21 @@ RSpec.describe "Api::V1::Stories", type: :request do
       )
     end
 
+    it "groups the story's tags into categories (by type) and sectors" do
+      story    = create(:story, :published, :publicly_visible, title: "Tagged story")
+      age_type = create(:category_type, name: "AgeRange")
+      category = create(:category, name: "6-12", category_type: age_type)
+      sector   = create(:sector, name: "Domestic violence")
+      create(:categorizable_item, category: category, categorizable: story)
+      create(:sectorable_item, sector: sector, sectorable: story)
+
+      get "/api/v1/stories/#{story.id}"
+
+      tags = json["story"]["tags"]
+      expect(tags["categories"]).to eq("Age range" => [ "6-12" ])
+      expect(tags["sectors"]).to eq([ "Domestic violence" ])
+    end
+
     it "404s for a story that is not publicly visible" do
       get "/api/v1/stories/#{internal_story.id}"
 

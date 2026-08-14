@@ -20,8 +20,17 @@ json.organization do
 end
 
 json.windows_type story.windows_type&.name
-json.sectors story.sector_names_all
-json.audience_categories story.audience_categories.pluck(:name)
+
+# Tags applied to the story, split into their two taxonomies: categories
+# (grouped by category type, e.g. "Age range", "Story category") and sectors.
+json.tags do
+  json.categories do
+    story.categories.group_by { |c| c.category_type&.display_label || "Other" }.each do |type_label, cats|
+      json.set! type_label, cats.map(&:name).sort
+    end
+  end
+  json.sectors story.sector_names_all
+end
 
 if story.primary_asset&.file&.attached?
   json.image_url rails_blob_url(story.primary_asset.file)

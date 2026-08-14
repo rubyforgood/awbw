@@ -14,7 +14,8 @@ module Api
         # `publicly_visible`); starting from `Story.publicly_visible` guarantees
         # the public floor for any caller.
         @stories = authorized_scope(Story.publicly_visible)
-          .includes(:windows_type, :organization, :author, :primary_asset, :sectors, created_by: :person)
+          .includes(:windows_type, :organization, :author, :primary_asset, :sectors,
+                    { categories: :category_type }, created_by: :person)
           .order(created_at: :desc)
           .paginate(page: params[:page], per_page: per_page)
       end
