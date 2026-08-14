@@ -85,15 +85,27 @@ class NotificationDecorator < ApplicationDecorator
     contact_person if incoming?
   end
 
+  # The contact's email for each side, mirroring to_person/from_person — always
+  # recipient_email, on whichever side the contact sits. nil on the staff/portal
+  # side, which is a person's name (or "AWBW Portal"), not an address.
+  def to_email
+    recipient_email unless incoming?
+  end
+
+  def from_email
+    recipient_email if incoming?
+  end
+
   # People-column value for the index: the name linked to the person's profile
-  # when we've resolved them, plain text (email on hover) otherwise. The AWBW
-  # Portal and unmatched raw emails have no person, so they render unlinked.
+  # when we've resolved them, a mailto link when we only have their email, plain
+  # text otherwise. The AWBW Portal (and any staff name) has no address, so it
+  # renders unlinked.
   def to_value
-    people_value(to_name, to_person, to_title)
+    people_value(to_name, to_person, to_email, to_title)
   end
 
   def from_value
-    people_value(from_name, from_person, from_title)
+    people_value(from_name, from_person, from_email, from_title)
   end
 
   # "incoming" (the person wrote to us), "fyi" (an admin FYI copy), or nil for a
@@ -162,15 +174,14 @@ class NotificationDecorator < ApplicationDecorator
 
   private
 
-  # Links the value to the person's profile when we have one, otherwise a plain
-  # span. Either way the email (when resolved) stays available on hover.
-  def people_value(name, person, title)
-    return h.content_tag(:span, name, title: title) unless person
+  # Links the value to the person's profile when we have one, to a mailto when we
+  # only have their email, otherwise a plain span. The profile link keeps the
+  # email available on hover (title).
+  def people_value(name, person, email, title)
+    return h.link_to(name, h.person_path(person), title: title, data: { turbo_frame: "_top" }, class: "hover:underline") if person
+    return h.mail_to(email, name, class: "hover:underline") if email.present?
 
-    h.link_to name, h.person_path(person),
-      title: title,
-      data: { turbo_frame: "_top" },
-      class: "hover:underline"
+    h.content_tag(:span, name, title: title)
   end
 
   # Renders a coloured label pill from a *_META entry. Returns "" for a nil
