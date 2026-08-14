@@ -70,9 +70,18 @@
   <% grant_sectors = @grant.sectors.order(:name) %>
   <% grant_categories = @grant.categories.includes(:category_type).order(Arel.sql("category_types.name, categories.position, categories.name")) %>
   <% if grant_sectors.any? || grant_categories.any? %>
-    <div class="bg-white rounded-lg shadow p-5">
-      <h2 class="text-lg font-semibold text-gray-900 mb-3">Tags</h2>
-      <div class="flex flex-wrap gap-2">
+    <% tag_count = grant_sectors.size + grant_categories.size %>
+    <div class="bg-white rounded-lg shadow p-5" data-controller="dropdown">
+      <button type="button"
+              class="inline-flex items-center gap-2 text-lg font-semibold text-gray-900 hover:text-gray-700 cursor-pointer transition"
+              data-action="dropdown#toggle"
+              data-dropdown-payload-param='[{"grant_tags_content":"hidden"}, {"grant_tags_show_label":"hidden"}, {"grant_tags_hide_label":"hidden"}, {"grant_tags_chevron":"rotate-180"}]'>
+        <i id="grant_tags_chevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+        <span id="grant_tags_show_label">Tags (<%= tag_count %>)</span>
+        <span id="grant_tags_hide_label" class="hidden">Hide tags (<%= tag_count %>)</span>
+      </button>
+
+      <div id="grant_tags_content" class="hidden mt-4 flex flex-wrap gap-2">
         <% grant_sectors.each do |sector| %>
           <%= render "sectors/tagging_label", sector: sector %>
         <% end %>
