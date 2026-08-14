@@ -384,7 +384,7 @@ module ApplicationHelper
   def noticeable_label(record)
     label = case record
     when EventRegistration
-      [ record.registrant&.name, record.event&.title ].compact_blank.join(" · ")
+      [ record.registrant&.name, event_title_with_month_year(record.event) ].compact_blank.join(" · ")
     when FormSubmission
       [ record.person&.name, record.form&.name ].compact_blank.join(" · ")
     else
@@ -392,6 +392,15 @@ module ApplicationHelper
     end
 
     label.presence || "##{record.id}"
+  end
+
+  # Event title with its month and year appended (e.g. "AWBW Facilitator
+  # Training (August 2026)") so a registration reads as which occurrence it's for.
+  def event_title_with_month_year(event)
+    return if event.blank?
+    return event.title if event.start_date.blank?
+
+    "#{event.title} (#{event.start_date.strftime('%B %Y')})"
   end
 
   def search_page(params)
