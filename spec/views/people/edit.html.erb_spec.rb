@@ -48,8 +48,8 @@ RSpec.describe "people/edit", type: :view do
     expect(rendered).to have_link("Memberships", href: person_memberships_path(person))
   end
 
-  it "shows a placeholder CE registrations card in associated records" do
-    expect(rendered).to have_content("CE registrations (placeholder)")
+  it "shows a CE registrations card linking to the filtered index" do
+    expect(rendered).to have_link("CE registrations", href: continuing_education_registrations_path(person_id: person.id))
   end
 
   context "when person has an associated user" do

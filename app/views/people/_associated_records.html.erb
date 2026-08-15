@@ -9,8 +9,7 @@
   <ul class="columns-1 sm:columns-2 md:columns-3 gap-x-6">
     <li class="break-inside-avoid mb-2"><%= index_button notifications, params: { email: email }, label: "#{t("communications.title")} (universal)" %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.event_registrations, params: { registrant_id: person.id } %></li>
-    <%# No CE registrations index yet — placeholder card surfaces the count; wire up the path once the index exists. %>
-    <li class="break-inside-avoid mb-2"><%= index_button ContinuingEducationRegistration.where(event_registration_id: person.event_registrations.select(:id)), path: "#", label: "CE registrations (placeholder)" %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button ContinuingEducationRegistration.for_registrant(person.id), params: { person_id: person.id }, label: "CE registrations" %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.form_submissions, params: { person_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.grants, params: { funder_id: person.id, funder_type: "Person" }, label: "Grants (as funder)" %></li>
     <% if Membership.enabled? %>
