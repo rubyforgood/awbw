@@ -140,6 +140,14 @@
           </li>
         <% end %>
       </ul>
+      <%# An obligation on the registrant rather than an unlock condition, so it
+          sits below the checklist — a tick beside it would read as "already done". %>
+      <% if @event.completion_deadline %>
+        <p class="pt-2 border-t border-gray-200 text-gray-700">
+          <i class="fa-solid fa-hourglass-half text-gray-400"></i>
+          Complete this training by <strong><%= @event.decorate.completion_deadline_display %></strong>.
+        </p>
+      <% end %>
     </div>
   <% end %>
 <% end %>

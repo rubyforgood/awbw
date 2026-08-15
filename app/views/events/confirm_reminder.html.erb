@@ -3,7 +3,7 @@
   <%# Top bar: eyelash + sub-nav, matching the other event pages. The eyebrow
       returns to the recipient picker so the admin can adjust the selection. %>
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
-    <%= link_to "← Recipients", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message, hide_event_card: (@hide_event_card ? "1" : nil)), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <%= link_to "← Recipients", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message, hide_event_card: (@hide_event_card ? "1" : "0")), class: "text-sm text-gray-500 hover:text-gray-700" %>
     <%= render "events/subnav", event: @event, current: nil %>
   </div>
 
@@ -58,6 +58,14 @@
     <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
       <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Subject</p>
       <p class="text-sm font-medium text-gray-900"><%= @reminder_subject %></p>
+      <%# Name the omission explicitly — the preview below shows an absence, which
+          is easy to miss when you're scanning for what's there. %>
+      <% if @hide_event_card && !@invite_mode %>
+        <p class="text-xs text-gray-500 mt-1.5">
+          <i class="fa-solid fa-eye-slash text-gray-400"></i>
+          Event details box hidden — the date, time, cost, and location won't be in this email.
+        </p>
+      <% end %>
     </div>
     <div class="email-preview overflow-auto max-h-[70vh] p-4" style="font-family: Lato, sans-serif;">
       <%= raw @reminder_preview_html %>
@@ -77,7 +85,7 @@
       <%= hidden_field_tag :hide_event_card, (@hide_event_card ? "1" : "0") %>
     <% end %>
     <div class="flex justify-center gap-3">
-      <%= link_to "Cancel", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message, hide_event_card: (@hide_event_card ? "1" : nil)), class: "btn btn-secondary-outline" %>
+      <%= link_to "Cancel", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message, hide_event_card: (@hide_event_card ? "1" : "0")), class: "btn btn-secondary-outline" %>
       <%= f.submit(@invite_mode ? "Send invites" : "Send reminder", class: "btn btn-primary") %>
     </div>
   <% end %>

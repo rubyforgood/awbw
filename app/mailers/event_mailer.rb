@@ -65,14 +65,13 @@ class EventMailer < ApplicationMailer
     @organization_website = ENV.fetch("ORGANIZATION_WEBSITE", root_url)
 
     # Admins can override the subject from the bulk-reminder page; fall back to
-    # the standard portal subject when they left it blank.
-    date_suffix = @event.start_date.present? ? " – #{@event.start_date.in_time_zone(@time_zone).strftime('%B %-d, %Y')}" : ""
-    default_subject = "AWBW Portal: Reminder: #{@event.title}#{date_suffix}"
+    # the standard portal subject when they left it blank. Shared with the compose
+    # page's pre-fill so the preview and the delivered email can't drift apart.
     mail(
       to: @person.preferred_email,
       from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: @custom_subject || default_subject
+      subject: @custom_subject || @event.default_reminder_subject(time_zone: @time_zone)
     )
   end
 

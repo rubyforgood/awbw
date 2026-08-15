@@ -385,12 +385,15 @@ class EventsController < ApplicationController
     # Pre-fill the editable message with the standard reminder sentence (days
     # resolved now). Absent param = first load → default; a present-but-blank
     # param = the admin cleared it (e.g. bounced back here) → respect the blank.
-    @custom_message = params.key?(:custom_message) ? params[:custom_message].to_s : helpers.default_reminder_message(days_until_event)
+    @custom_message = params.key?(:custom_message) ? params[:custom_message].to_s : helpers.default_reminder_message(days_until_event, event: @event)
     # Pre-fill the editable subject with the standard portal subject. Same
     # absent-vs-present logic as the message, so a bounce-back keeps the admin's
     # edit; a blank subject falls back to the default at send time.
     @custom_subject = params.key?(:custom_subject) ? params[:custom_subject].to_s : helpers.default_reminder_subject(@event)
-    @hide_event_card = hide_event_card_param
+    # Same absent-vs-present logic as the message: on-demand training defaults to
+    # hiding the box (its dates/times/cost describe nothing), but an explicit "0"
+    # from a bounce-back means the admin unticked it and we respect that.
+    @hide_event_card = params.key?(:hide_event_card) ? hide_event_card_param : @event.on_demand?
 
     if @sample_registration
       # Render in preview mode so the custom-message container is always present
@@ -413,7 +416,7 @@ class EventsController < ApplicationController
     @hide_event_card = hide_event_card_param
 
     if @event_registrations.empty?
-      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: ("1" if hide_event_card_param)), alert: "Please select at least one recipient."
+      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: (hide_event_card_param ? "1" : "0")), alert: "Please select at least one recipient."
       return
     end
 
@@ -433,7 +436,7 @@ class EventsController < ApplicationController
     registrations = selected_reminder_registrations
 
     if registrations.empty?
-      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: params[:custom_message].to_s, custom_subject: params[:custom_subject].to_s, hide_event_card: ("1" if hide_event_card_param)), alert: "Please select at least one recipient."
+      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: params[:custom_message].to_s, custom_subject: params[:custom_subject].to_s, hide_event_card: (hide_event_card_param ? "1" : "0")), alert: "Please select at least one recipient."
       return
     end
 

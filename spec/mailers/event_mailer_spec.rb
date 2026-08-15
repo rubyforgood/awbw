@@ -235,6 +235,43 @@ RSpec.describe EventMailer, type: :mailer do
       end
     end
 
+    # The deadline reaches registrants through the composed message (see
+    # ApplicationHelper#default_reminder_message), not a template block — so it
+    # survives the event-details card being hidden, which is the on-demand case.
+    context "when the event has a completion deadline" do
+      let(:event) { create(:event, completion_deadline: Date.new(2026, 8, 30)) }
+      let(:event_registration) { create(:event_registration, event: event) }
+      let(:mail) do
+        described_class.event_registration_reminder(
+          event_registration,
+          custom_message: "Please complete it by <strong>August 30, 2026</strong>.",
+          hide_event_card: true
+        )
+      end
+
+      it "carries the deadline in the HTML body with the card hidden" do
+        expect(mail.html_part.body.encoded).to include("August 30, 2026")
+      end
+
+      it "carries the deadline in the plain-text body with the card hidden" do
+        expect(mail.text_part.body.encoded).to include("August 30, 2026")
+      end
+
+      it "states it exactly once" do
+        expect(mail.html_part.body.encoded.scan("August 30, 2026").size).to eq(1)
+      end
+    end
+
+    context "for an on-demand event" do
+      let(:event) { create(:event, title: "Self-Paced Training", start_date: Time.zone.local(2026, 8, 7, 18, 0), on_demand: true) }
+      let(:event_registration) { create(:event_registration, event: event) }
+
+      # Matches the subject the compose page pre-fills, so preview and send agree.
+      it "omits the date from the default subject" do
+        expect(mail.subject).to eq("AWBW Portal: Reminder: Self-Paced Training")
+      end
+    end
+
     context "with a custom message" do
       let(:mail) { described_class.event_registration_reminder(event_registration, custom_message: custom_message) }
       let(:custom_message) { "Please bring <strong>your art supplies</strong>." }

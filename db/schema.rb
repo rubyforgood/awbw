@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_14_201638) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_15_114533) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -546,6 +546,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_201638) do
     t.decimal "ce_hours_offered", precision: 5, scale: 2
     t.date "ce_hours_request_deadline"
     t.datetime "ce_payment_due_deadline"
+    t.date "completion_deadline"
     t.integer "cost_cents"
     t.datetime "created_at", null: false
     t.integer "created_by_id"

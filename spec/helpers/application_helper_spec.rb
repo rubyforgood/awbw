@@ -399,6 +399,58 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.default_reminder_message(nil))
         .to eq("This is a reminder that you're registered for the following A Window Between Worlds event.")
     end
+
+    # Self-paced training has no session date, and admins hide the details box for
+    # it — so "the following event" would point at nothing. The copy carries the
+    # title itself instead, and drops the day count.
+    it "names an on-demand event inline instead of pointing at the details box" do
+      event = build(:event, title: "Trauma-Informed Basics", on_demand: true)
+      expect(helper.default_reminder_message(60, event: event))
+        .to eq("This is a reminder that you're registered for the A Window Between Worlds training <strong>Trauma-Informed Basics</strong>.")
+    end
+
+    # These titles already carry the format ("On-Demand Training 2026"), so the
+    # copy says "training" and lets the title speak for itself.
+    it "does not repeat 'on-demand' ahead of a title that already says it" do
+      event = build(:event, title: "On-Demand Training 2026", on_demand: true)
+      expect(helper.default_reminder_message(nil, event: event))
+        .to eq("This is a reminder that you're registered for the A Window Between Worlds training <strong>On-Demand Training 2026</strong>.")
+    end
+
+    it "escapes HTML in an on-demand event title" do
+      event = build(:event, title: "Art & <Healing>", on_demand: true)
+      expect(helper.default_reminder_message(nil, event: event)).to include("Art &amp; &lt;Healing&gt;")
+    end
+
+    it "keeps the live-event copy when the event is not on-demand" do
+      event = build(:event, title: "Healing Workshop", on_demand: false)
+      expect(helper.default_reminder_message(60, event: event))
+        .to eq("This is a reminder that you're registered for the following A Window Between Worlds event in <strong>60 days</strong>.")
+    end
+
+    # Every event with a deadline carries it in the editable copy, so admins can
+    # reword it. There is no standalone block in the email template.
+    it "adds the completion deadline to an on-demand event's copy" do
+      event = build(:event, title: "On-Demand Training 2026", on_demand: true, completion_deadline: Date.new(2026, 8, 30))
+      expect(helper.default_reminder_message(nil, event: event))
+        .to eq("This is a reminder that you're registered for the A Window Between Worlds training <strong>On-Demand Training 2026</strong>. Please complete it by <strong>August 30, 2026</strong>.")
+    end
+
+    it "leaves the deadline sentence out when an on-demand event has no deadline" do
+      event = build(:event, title: "On-Demand Training 2026", on_demand: true, completion_deadline: nil)
+      expect(helper.default_reminder_message(nil, event: event)).not_to include("Please complete it by")
+    end
+
+    it "adds the completion deadline to a live event's copy too" do
+      event = build(:event, title: "Healing Workshop", on_demand: false, completion_deadline: Date.new(2026, 8, 30))
+      expect(helper.default_reminder_message(60, event: event))
+        .to eq("This is a reminder that you're registered for the following A Window Between Worlds event in <strong>60 days</strong>. Please complete it by <strong>August 30, 2026</strong>.")
+    end
+
+    it "leaves the deadline sentence out when a live event has no deadline" do
+      event = build(:event, title: "Healing Workshop", on_demand: false, completion_deadline: nil)
+      expect(helper.default_reminder_message(60, event: event)).not_to include("Please complete it by")
+    end
   end
 
   describe "#default_reminder_subject" do
@@ -410,6 +462,14 @@ RSpec.describe ApplicationHelper, type: :helper do
 
     it "omits the date suffix when the event has no start date" do
       event = build(:event, title: "Healing Workshop", start_date: nil)
+      expect(helper.default_reminder_subject(event))
+        .to eq("AWBW Portal: Reminder: Healing Workshop")
+    end
+
+    # A start date on self-paced training is an enrollment boundary, not a session
+    # time — putting it in the subject reads as "be there on August 7".
+    it "omits the date suffix for an on-demand event that has a start date" do
+      event = build(:event, title: "Healing Workshop", start_date: Time.zone.local(2026, 8, 7, 18, 0), on_demand: true)
       expect(helper.default_reminder_subject(event))
         .to eq("AWBW Portal: Reminder: Healing Workshop")
     end

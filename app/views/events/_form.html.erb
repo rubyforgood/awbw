@@ -169,6 +169,13 @@
                       class: "w-28 shrink-0 rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
               </div>
             </div>
+
+            <div>
+              <%= f.label :completion_deadline, "Complete training by", class: "block font-medium mb-1" %>
+              <%= f.text_field :completion_deadline, type: "date",
+                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
+              <p class="text-xs text-gray-500 mt-1">The date registrants must finish the training by. Leave blank if there's no deadline.</p>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

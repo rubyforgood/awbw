@@ -73,10 +73,12 @@ RSpec.describe "Events::BulkReminders", type: :request do
       expect(response.body).to include("value=\"#{jane.id}\"")
     end
 
+    # hide_event_card rides along explicitly rather than being omitted when false,
+    # so the bounce-back can't be re-defaulted by the event's on-demand flag.
     it "redirects back to the picker when nothing is selected" do
       post confirm_reminder_event_path(event), params: { registration_ids: [] }
 
-      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: "", custom_subject: ""))
+      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: "", custom_subject: "", hide_event_card: "0"))
       expect(flash[:alert]).to be_present
     end
 
@@ -203,6 +205,92 @@ RSpec.describe "Events::BulkReminders", type: :request do
       card = html.at_css("#reminder-event-card")
       expect(card).to be_present
       expect(card["style"]).to include("display: none")
+    end
+
+    it "says on the confirm page when the details box is hidden" do
+      post confirm_reminder_event_path(event), params: { registration_ids: [ jane.id ], hide_event_card: "1" }
+
+      expect(response.body).to include("Event details box hidden")
+    end
+
+    it "says nothing about the box on the confirm page when it is shown" do
+      post confirm_reminder_event_path(event), params: { registration_ids: [ jane.id ] }
+
+      expect(response.body).not_to include("Event details box hidden")
+    end
+
+    # Gated on the event carrying a deadline, not on it being on-demand.
+    it "puts the completion deadline in the pre-filled message for a live event" do
+      event.update!(completion_deadline: Date.new(2026, 8, 30))
+
+      get preview_reminder_event_path(event)
+
+      message = Nokogiri::HTML(response.body).at_css("#custom_message").text
+      expect(message).to include("Please complete it by <strong>August 30, 2026</strong>.")
+    end
+
+    it "leaves the deadline out of the pre-filled message when the event has none" do
+      get preview_reminder_event_path(event)
+
+      message = Nokogiri::HTML(response.body).at_css("#custom_message").text
+      expect(message).not_to include("Please complete it by")
+    end
+  end
+
+  # Self-paced training has no session date, time, or "see you there" — the grey
+  # box is wrong for it on every send, so the page defaults to hiding it.
+  describe "the compose page for an on-demand event" do
+    let(:event) { create(:event, title: "Self-Paced Training", on_demand: true, cost_cents: 10_000) }
+
+    it "pre-checks the hide box and pre-hides the card in the live preview" do
+      get preview_reminder_event_path(event)
+
+      html = Nokogiri::HTML(response.body)
+      expect(html.at_css("#hide_event_card")["checked"]).to be_present
+      expect(html.at_css("#reminder-event-card")["style"]).to include("display: none")
+    end
+
+    it "respects an explicit choice to show the box" do
+      get preview_reminder_event_path(event, hide_event_card: "0")
+
+      html = Nokogiri::HTML(response.body)
+      expect(html.at_css("#hide_event_card")["checked"]).to be_nil
+      expect(html.at_css("#reminder-event-card")["style"].to_s).not_to include("display: none")
+    end
+
+    # Without the box, nothing else in the body names the event, so the pre-filled
+    # message has to carry the title.
+    it "names the event in the pre-filled message" do
+      get preview_reminder_event_path(event)
+
+      message = Nokogiri::HTML(response.body).at_css("#custom_message").text
+      expect(message).to include("training <strong>Self-Paced Training</strong>")
+    end
+
+    it "puts the completion deadline in the pre-filled message when the event has one" do
+      event.update!(completion_deadline: Date.new(2026, 8, 30))
+
+      get preview_reminder_event_path(event)
+
+      message = Nokogiri::HTML(response.body).at_css("#custom_message").text
+      expect(message).to include("Please complete it by <strong>August 30, 2026</strong>.")
+    end
+
+    it "leaves the date out of the pre-filled subject" do
+      get preview_reminder_event_path(event)
+
+      subject_value = Nokogiri::HTML(response.body).at_css("#custom_subject")["value"]
+      expect(subject_value).to eq("AWBW Portal: Reminder: Self-Paced Training")
+    end
+
+    # The bounce-back carries the choice as an explicit 0, otherwise the on-demand
+    # default would silently re-check the box the admin just cleared.
+    it "keeps the box unchecked through an empty-recipient bounce-back" do
+      post confirm_reminder_event_path(event), params: { registration_ids: [], hide_event_card: "0" }
+
+      expect(response.headers["Location"]).to include("hide_event_card=0")
+      follow_redirect!
+      expect(Nokogiri::HTML(response.body).at_css("#hide_event_card")["checked"]).to be_nil
     end
   end
 end
