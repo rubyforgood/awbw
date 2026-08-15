@@ -1,9 +1,6 @@
 module Api
   module V1
     class StoriesController < Api::BaseController
-      # Public endpoint — no login required.
-      skip_before_action :authenticate_user!
-
       # Cap page size so a caller can't request an unbounded payload.
       DEFAULT_PER_PAGE = 25
       MAX_PER_PAGE = 100
