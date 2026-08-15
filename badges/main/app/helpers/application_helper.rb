@@ -346,8 +346,9 @@ module ApplicationHelper
       count_tag = if hide_count
         "".html_safe
       else
+        count = collection.count
         content_tag(:span,
-                    number_with_delimiter(collection.count),
+                    count.zero? ? "None" : number_with_delimiter(count),
                     class: "ml-auto inline-flex items-center justify-center min-w-[2.25rem] px-2 py-0.5 text-sm font-semibold rounded-full bg-white #{text} border #{border}")
       end
 
