@@ -73,7 +73,7 @@ RSpec.describe EventRegistrationServices::SurveySubmission do
     expect(person.reload.anonymous_contributions).to be(true)
     expect(person.display_name_preference).to eq("first_name_only")
     expect(service.profile_changes).to include(
-      anonymous_contributions: [ nil, true ],
+      anonymous_contributions: [ false, true ], # main's column defaults to false, not nil
       display_name_preference: [ nil, "first_name_only" ]
     )
   end
