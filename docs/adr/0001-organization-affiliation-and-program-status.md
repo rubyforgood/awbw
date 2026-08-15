@@ -44,11 +44,19 @@ with a registrant**. Rendered as merged year-based periods
 (`AffiliationPeriods.label`), e.g. `2010-2012, 2026`; falls back to the org's own
 `start_date`, then blank. See `OrganizationDecorator#affiliated_since_display`.
 
-### D2 — "Facilitations/program since": facilitator affiliations only
+### D2 — "Art program since": facilitator affiliations only, month precision
 
-Same merged-year-period rendering as D1, but over **facilitator** affiliations
-only. Blank when the org has never facilitated. See
+Same merged-period rendering as D1 but over **facilitator** affiliations only,
+and at **month** precision (`AffiliationPeriods.label(…, precision: :month)`) —
+when a program started or lapsed is the point of the figure. Ongoing reads
+`Feb 2024`, closed reads `Aug 2015 – Jun 2018`, e.g.
+`Aug 2015 – Jun 2018, Feb 2024`. Blank when the org has never facilitated. See
 `OrganizationDecorator#program_since_display`.
+
+**One value on every surface** (index chip, profile, edit form). The edit form
+previously rendered its own earliest-start→latest-end span, which collapsed a
+lapse-and-return into a single unbroken range and hid the gap; that is why this
+is a single decorator method rather than per-page view logic.
 
 ### D3 — Org-wide status chip: Active / Formerly active / Never active
 

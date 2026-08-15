@@ -69,4 +69,37 @@ RSpec.describe AffiliationPeriods do
       Interval.new(Date.new(2010, 1, 1), Date.new(2012, 6, 1))
     )).to eq("2010-2012, 2026")
   end
+
+  describe "month precision" do
+    def month_label(*intervals)
+      described_class.label(intervals, today: today, precision: :month)
+    end
+
+    it "shows the month on both ends of a closed period" do
+      expect(month_label(Interval.new(Date.new(2015, 8, 1), Date.new(2018, 6, 1)))).to eq("Aug 2015 – Jun 2018")
+    end
+
+    it "shows only the start month for an ongoing period" do
+      expect(month_label(Interval.new(Date.new(2015, 8, 1), nil))).to eq("Aug 2015")
+    end
+
+    it "keeps a lapse and a return as separate periods" do
+      expect(month_label(
+        Interval.new(Date.new(2015, 8, 1), Date.new(2018, 6, 1)),
+        Interval.new(Date.new(2024, 2, 1), nil)
+      )).to eq("Aug 2015 – Jun 2018, Feb 2024")
+    end
+
+    it "keeps the month even when a period starts and ends in the same year" do
+      expect(month_label(Interval.new(Date.new(2010, 3, 1), Date.new(2010, 9, 1)))).to eq("Mar 2010 – Sep 2010")
+    end
+
+    it "returns nil when no affiliation carries a start date" do
+      expect(month_label(Interval.new(nil, nil))).to be_nil
+    end
+  end
+
+  it "rejects an unknown precision rather than silently formatting as years" do
+    expect { described_class.label([], precision: :day) }.to raise_error(ArgumentError, /day/)
+  end
 end

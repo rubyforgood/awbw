@@ -1,6 +1,6 @@
 <%= simple_form_for(@organization, html: { data: {
       controller: "affiliation-dates affiliation-facilitator-warning",
-      affiliation_dates_affiliated_since_periods_value: true,
+      affiliation_dates_merged_periods_value: true,
       affiliation_dates_affiliated_since_fallback_value: @organization.start_date&.strftime("%b %Y") || "",
       affiliation_dates_status_buckets_value: OrganizationDecorator.status_bucket_styles.to_json
     } }) do |f| %>
@@ -327,10 +327,10 @@
             Art program since <i class="fa-solid fa-circle-info text-gray-400 text-xs"></i>
           </label>
           <div class="hidden group-hover:block absolute z-50 left-0 bottom-full mb-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
-            <p>When this organization's art program began — the earliest 'Facilitator' affiliation's start — through the latest end once every facilitator has ended. Updates live as you edit the affiliation rows below.</p>
+            <p>When this organization's art program ran, from its 'Facilitator' affiliations — one period per stretch of facilitating, so a lapse and a return read as separate periods (e.g. "Aug 2015 – Jun 2018, Feb 2024"). Updates live as you edit the affiliation rows below.</p>
           </div>
           <div class="pt-1">
-            <span class="text-gray-900 font-medium" data-affiliation-dates-target="facilitatorSince"><% if org_decorated.facilitation_end_date %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active facilitator affiliations"></i><% end %><%= org_decorated.facilitator_since_date&.strftime("%b %Y") || "—" %><%= " – #{org_decorated.facilitation_end_date.strftime('%b %Y')}" if org_decorated.facilitation_end_date %></span>
+            <span class="text-gray-900 font-medium" data-affiliation-dates-target="facilitatorSince"><%= org_decorated.program_since_display.presence || "—" %></span>
           </div>
         </div>
         <% if allowed_to?(:manage?, Organization) %>

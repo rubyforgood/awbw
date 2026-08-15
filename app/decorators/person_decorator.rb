@@ -90,6 +90,18 @@ class PersonDecorator < ApplicationDecorator
     @affiliated_since_date ||= affiliations.filter_map(&:start_date).min
   end
 
+  # The person form's two live-updating date figures. Both render a single
+  # "Mon YYYY – Mon YYYY" span, prefixed with a ✗ once the range has closed —
+  # the server-rendered twin of affiliation_dates_controller#updateDisplay, which
+  # replaces this content as the affiliation rows are edited.
+  def affiliated_since_range
+    date_range_display(affiliated_since_date, affiliation_end_date, ended_title: "No active affiliations")
+  end
+
+  def facilitator_since_range
+    date_range_display(facilitator_since_date, facilitation_end_date, ended_title: "No active facilitator affiliations")
+  end
+
   private
 
   def compute_badges
@@ -110,6 +122,14 @@ class PersonDecorator < ApplicationDecorator
       badges << badge("Affiliated since #{affiliated_since_date.strftime('%B %Y')}", :affiliated_person)
     end
     badges
+  end
+
+  def date_range_display(since, ended, ended_title:)
+    parts = []
+    parts << h.content_tag(:i, "", class: "fa-solid fa-circle-xmark text-red-400 mr-1", title: ended_title) if ended
+    parts << (since&.strftime("%b %Y") || "—")
+    parts << " – #{ended.strftime('%b %Y')}" if ended
+    h.safe_join(parts)
   end
 
   def badge(label, key)

@@ -2,17 +2,18 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["affiliatedSince", "facilitatorSince", "affiliationsContainer", "programStatus"]
-  // "Affiliated since" has two live formats: the person form shows a single
-  // Mon YYYY – Mon YYYY range; the org form (affiliatedSincePeriods) shows merged
-  // year-based periods, mirroring the AffiliationPeriods service so the live value
-  // matches the server render. affiliatedSinceFallback is the org's own start_date
-  // (already formatted) shown when no affiliation carries a start date.
+  // Two live formats. The person form shows a single Mon YYYY – Mon YYYY range for
+  // both figures. The org form (mergedPeriods) shows merged periods mirroring the
+  // AffiliationPeriods service, so the live value matches the server render:
+  // "Affiliated since" at year precision, "Art program since" at month precision.
+  // affiliatedSinceFallback is the org's own start_date (already formatted), shown
+  // when no affiliation carries a start date.
   //
   // Program status (org edit form): derived live from the visible Facilitator rows
   // alone, mirroring OrganizationDecorator#organization_status_bucket. statusBuckets
   // holds each bucket's label + pill classes (from DomainTheme).
   static values = {
-    affiliatedSincePeriods: Boolean,
+    mergedPeriods: Boolean,
     affiliatedSinceFallback: String,
     statusBuckets: Object
   }
@@ -58,8 +59,8 @@ export default class extends Controller {
     // Affiliated since — the org form shows merged year-based periods, the person
     // form a single Mon YYYY range. Both live-update from the visible rows.
     if (this.hasAffiliatedSinceTarget) {
-      if (this.affiliatedSincePeriodsValue) {
-        const label = this.affiliatedSincePeriodsLabel(affiliations, today) || this.affiliatedSinceFallbackValue
+      if (this.mergedPeriodsValue) {
+        const label = this.periodsLabel(affiliations, today, "year") || this.affiliatedSinceFallbackValue
         this.affiliatedSinceTarget.textContent = label || "—"
       } else {
         const startDates = affiliations.map(a => a.startDate).filter(Boolean)
@@ -75,9 +76,9 @@ export default class extends Controller {
       }
     }
 
-    // Facilitations/program since — unchanged single-range display, filtered by
-    // title. Mirror Affiliation#facilitator?: an exact, case-sensitive match on
-    // "Facilitator" (trimmed), so the live figure matches the server render.
+    // Facilitator rows drive "Art program since". Mirror Affiliation#facilitator?:
+    // an exact, case-sensitive match on "Facilitator" (trimmed), so the live figure
+    // matches the server render.
     const facilitatorAffiliations = affiliations.filter(a =>
       a.title.trim() === "Facilitator"
     )
@@ -92,7 +93,12 @@ export default class extends Controller {
       : null
 
     if (this.hasFacilitatorSinceTarget) {
-      this.updateDisplay(this.facilitatorSinceTarget, facilitatorSince, facilitatorEnd)
+      if (this.mergedPeriodsValue) {
+        this.facilitatorSinceTarget.textContent =
+          this.periodsLabel(facilitatorAffiliations, today, "month") || "—"
+      } else {
+        this.updateDisplay(this.facilitatorSinceTarget, facilitatorSince, facilitatorEnd)
+      }
     }
 
     // Program status — active when any Facilitator row is still active, formerly
@@ -136,13 +142,17 @@ export default class extends Controller {
     return `${months[date.getUTCMonth()]} ${date.getUTCFullYear()}`
   }
 
-  // Merged, year-based "Affiliated since" label for the org form, mirroring the
-  // AffiliationPeriods service: overlapping/touching intervals collapse into one
-  // period (a nil end is ongoing and swallows later intervals), a real gap starts
-  // a new one. A single ongoing period keeps month precision when it began this
-  // year; any multi-period list is year-only. Returns null when no affiliation
-  // carries a start date, so the caller can fall back to the org's start_date.
-  affiliatedSincePeriodsLabel(affiliations, today) {
+  // Merged-period label for the org form, mirroring the AffiliationPeriods service:
+  // overlapping/touching intervals collapse into one period (a nil end is ongoing
+  // and swallows later intervals), a real gap starts a new one.
+  //
+  // precision "year": a single ongoing period keeps month precision when it began
+  // this year, any multi-period list is year-only. precision "month": every period
+  // carries its month ("Aug 2015 – Jun 2018, Feb 2024").
+  //
+  // Returns null when no affiliation carries a start date, so the caller can fall
+  // back to the org's start_date.
+  periodsLabel(affiliations, today, precision) {
     const intervals = affiliations
       .filter(a => a.startDate)
       .map(a => [ new Date(a.startDate), a.endDate ? new Date(a.endDate) : null ])
@@ -160,6 +170,14 @@ export default class extends Controller {
     })
 
     const ongoing = finish => finish === null || finish >= today
+    if (precision === "month") {
+      return periods
+        .map(([ start, finish ]) =>
+          ongoing(finish)
+            ? this.formatDate(start)
+            : `${this.formatDate(start)} – ${this.formatDate(finish)}`)
+        .join(", ")
+    }
     // A single ongoing period is a fresh org — worth the month's precision.
     if (periods.length === 1 && ongoing(periods[0][1])) {
       return this.yearOrMonth(periods[0][0], today)

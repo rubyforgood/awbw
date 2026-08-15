@@ -131,6 +131,23 @@ RSpec.describe "organizations/edit", type: :view do
       assert_select "[data-affiliation-dates-target='facilitatorSince']", text: /Aug 2025/
       assert_select "[data-affiliation-dates-target='facilitatorSince']", text: /Sep 2026/, count: 0
     end
+
+    # This form and the profile used to render "Art program since" two different
+    # ways — the profile as merged periods, this form as one earliest→latest span,
+    # which silently swallowed the gap. Both now render the one decorator value.
+    it "renders a lapse and a return as separate periods, matching the profile" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+                           start_date: Date.new(2015, 8, 1), end_date: Date.new(2018, 6, 1))
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+                           start_date: Date.new(2024, 2, 1), end_date: nil)
+      assign(:organization, org.reload)
+      render
+
+      expect(org.reload.decorate.program_since_display).to eq("Aug 2015 – Jun 2018, Feb 2024")
+      assert_select "[data-affiliation-dates-target='facilitatorSince']",
+                    text: org.decorate.program_since_display
+    end
   end
 
   describe "program status" do

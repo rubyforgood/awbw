@@ -35,7 +35,7 @@ RSpec.describe OrganizationDecorator do
       create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: Date.new(2015, 1, 1), end_date: Date.new(2018, 6, 1))
       create(:affiliation, organization: organization, person: create(:person), title: "Volunteer", start_date: Date.new(2005, 1, 1), end_date: nil)
       create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: Date.new(2024, 2, 1), end_date: nil)
-      expect(organization.reload.decorate.program_since_display).to eq("2015-2018, 2024")
+      expect(organization.reload.decorate.program_since_display).to eq("Jan 2015 – Jun 2018, Feb 2024")
     end
   end
 

@@ -98,11 +98,14 @@ class OrganizationDecorator < ApplicationDecorator
     AffiliationPeriods.label(affiliations) || object.start_date&.strftime("%b %Y") || ""
   end
 
-  # "Program since" display: the org's facilitator-affiliation history as merged
-  # year-based periods (see AffiliationPeriods). Blank when it has never
-  # facilitated. Pass a preloaded affiliations collection on list pages.
+  # "Art program since" display: the org's facilitator-affiliation history as
+  # merged periods (see AffiliationPeriods), at month precision — when a program
+  # started or lapsed is the whole point of the figure. One value for every
+  # surface that shows it (index chip, profile, edit form), so they can't drift.
+  # Blank when the org has never facilitated. Pass a preloaded affiliations
+  # collection on list pages.
   def program_since_display(affiliations = object.affiliations)
-    AffiliationPeriods.label(affiliations.select(&:facilitator?)) || ""
+    AffiliationPeriods.label(affiliations.select(&:facilitator?), precision: :month) || ""
   end
 
   ORG_STATUS_BUCKET_LABELS = {
@@ -181,15 +184,6 @@ class OrganizationDecorator < ApplicationDecorator
                   class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{organization_status_classes}")
   end
 
-  def facilitator_since_date
-    @facilitator_since_date ||= affiliations.facilitators.minimum(:start_date)
-  end
-
-  def facilitation_end_date
-    facilitator_affiliations = affiliations.facilitators
-    return nil if facilitator_affiliations.active.exists?
-    facilitator_affiliations.maximum(:end_date)
-  end
 
   # In-memory program status (:new / :ongoing / :reinstated) for this org as it
   # stood on a given date — the same New/Ongoing/Reinstate classification used in
