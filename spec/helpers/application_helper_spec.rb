@@ -501,12 +501,12 @@ RSpec.describe ApplicationHelper, type: :helper do
   end
 
   describe "#noticeable_label" do
-    it "describes a registration by registrant and event" do
+    it "describes a registration by registrant and event, with the event's month and year" do
       person = create(:person, first_name: "Jane", last_name: "Doe")
-      event = create(:event, title: "Summer Workshop")
+      event = create(:event, title: "Summer Workshop", start_date: Time.zone.local(2026, 8, 14))
       registration = create(:event_registration, registrant: person, event: event)
 
-      expect(helper.noticeable_label(registration)).to eq("#{person.name} · Summer Workshop")
+      expect(helper.noticeable_label(registration)).to eq("#{person.name} · Summer Workshop (August 2026)")
     end
 
     it "describes a form submission by submitter and form" do
