@@ -84,6 +84,7 @@ module AdminCardsHelper
       custom_card("Monthly reports", monthly_reports_path, icon: "📈", color: :sky, intensity: 100),
       custom_card("Payments", payments_path, icon: "💳", color: :sky, intensity: 100),
       custom_card("Bookmarks", bookmarks_path, icon: "🔖", color: :sky, intensity: 100),
+      custom_card("CE registrations", continuing_education_registrations_path, icon: "📜", color: :sky, intensity: 100),
       custom_card("Comments", comments_path, icon: "💬", color: :sky, intensity: 100),
       disabled_card("Affiliations", icon: "🤝"),
       disabled_card("Reports", icon: "📄"),

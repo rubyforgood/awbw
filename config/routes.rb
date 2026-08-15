@@ -143,7 +143,7 @@ Rails.application.routes.draw do
     member { patch :toggle_tasks }
     resources :comments, only: [ :create, :update ]
   end
-  resources :continuing_education_registrations, only: [ :new, :create, :edit, :update, :destroy ] do
+  resources :continuing_education_registrations, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
     member { patch :toggle_certificate }
     resources :comments, only: [ :create, :update ]
   end
@@ -159,6 +159,9 @@ Rails.application.routes.draw do
       get :reports
       get :scholarships
       get :attendees
+      # CE sign-in report — action + view ship with the CE sign-in feature branch;
+      # the CE registrations index links here from its top-left menu.
+      get :signins
     end
     member do
       get :dashboard

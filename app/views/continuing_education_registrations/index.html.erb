@@ -1,0 +1,28 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:continuing_education) %> border border-gray-200 rounded-xl shadow p-6">
+  <%# Top-left menu: jump to the CE sign-in reports. %>
+  <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+    <%= link_to signins_events_path, class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <i class="fa-solid fa-clipboard-check text-xs"></i> CE sign-in reports
+    <% end %>
+    <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <div class="flex items-center gap-3 mb-6">
+    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
+      <i class="fa-solid fa-certificate"></i>
+    </span>
+    <div>
+      <h1 class="text-2xl font-semibold text-gray-900">CE registrations</h1>
+      <p class="text-gray-600 mt-1">Continuing-education registrations across every event</p>
+    </div>
+  </div>
+
+  <%= render "search_boxes" %>
+
+  <% result_src = continuing_education_registrations_path + "?" + request.query_string %>
+  <%= turbo_frame_tag :continuing_education_registrations_results, src: result_src, data: { turbo: "temporary" } do %>
+    <%= render "results_skeleton" %>
+  <% end %>
+</div>

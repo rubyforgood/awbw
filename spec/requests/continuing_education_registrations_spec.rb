@@ -12,6 +12,44 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
   describe "as an admin" do
     before { sign_in admin }
 
+    it "renders the index shell with the CE sign-in reports menu" do
+      ce_registration
+      get continuing_education_registrations_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("CE registrations")
+      expect(response.body).to include("CE sign-in reports")
+    end
+
+    it "renders the results turbo frame with only the matching event's registrations" do
+      ce_registration
+      other = create(:continuing_education_registration)
+
+      get continuing_education_registrations_path(event_id: event.id),
+        headers: { "Turbo-Frame" => "continuing_education_registrations_results" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(registration.registrant.full_name)
+      expect(response.body).not_to include(other.event_registration.registrant.full_name)
+    end
+
+    it "filters by certificate status" do
+      ce_registration.update!(certificate_sent_at: Time.current)
+      pending = create(:continuing_education_registration)
+
+      get continuing_education_registrations_path(certificate: "issued"),
+        headers: { "Turbo-Frame" => "continuing_education_registrations_results" }
+
+      expect(response.body).to include(registration.registrant.full_name)
+      expect(response.body).not_to include(pending.event_registration.registrant.full_name)
+    end
+
+    it "renders the show page" do
+      get continuing_education_registration_path(ce_registration)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("CE registration")
+      expect(response.body).to include(registration.registrant.full_name)
+    end
+
     it "renders the edit page" do
       get edit_continuing_education_registration_path(ce_registration)
       expect(response).to have_http_status(:ok)
@@ -232,6 +270,12 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
   it "forbids non-admins" do
     sign_in create(:user)
     get edit_continuing_education_registration_path(ce_registration)
+    expect(response).not_to have_http_status(:ok)
+  end
+
+  it "forbids non-admins from the index" do
+    sign_in create(:user)
+    get continuing_education_registrations_path
     expect(response).not_to have_http_status(:ok)
   end
 end
