@@ -1,0 +1,48 @@
+<p style="margin-bottom: 6px;">
+  Story idea promoted to a story
+</p>
+
+<h1 style="margin: 0;">
+  <strong><%= @story.title %></strong>
+  <% if @story.windows_type.present? %>
+    <span style="font-weight: normal; color:#6b7280;">
+      (<%= @story.windows_type.short_name %>)
+    </span>
+  <% end %>
+</h1>
+
+<% if @user.present? %>
+  <p style="margin: 4px 0 16px; font-size: 13px; color: #6b7280;">
+    Idea submitted by <%= @user.full_name %>
+  </p>
+<% end %>
+
+<hr style="margin: 24px 0;">
+
+<% if @story.detail(length: nil).present? %>
+  <div style="text-align: left;">
+    <%= simple_format(@story.detail(length: nil)) %>
+  </div>
+<% end %>
+
+<hr style="margin: 24px 0;">
+
+<p>
+  <%= link_to "View story",
+              polymorphic_url(@story),
+              style: "display:inline-block;
+                      padding:10px 16px;
+                      background:#2563eb;
+                      color:#ffffff;
+                      text-decoration:none;
+                      border-radius:6px;
+                      font-weight:bold;" %>
+
+  <% if @story_idea.present? %>
+    <%= link_to "View original idea",
+                polymorphic_url(@story_idea),
+                style: "display:inline-block;background:#e5e7eb;color:#111827;
+                        text-decoration:none;padding:10px 16px;border-radius:6px;
+                        font-weight:bold;" %>
+  <% end %>
+</p>

@@ -76,6 +76,7 @@ class StoriesController < ApplicationController
         elsif params.dig(:library_asset, :new_assets).present?
           update_asset_owner(@story)
         end
+        notify_story_promoted if @story.story_idea.present?
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
@@ -171,6 +172,22 @@ class StoriesController < ApplicationController
     @story.comments.select { |c| c.persisted? && c.body_changed? }.each do |c|
       c.updated_by = current_user
     end
+  end
+
+  # Promoting a story idea into a story emails the idea's submitter and an admin FYI.
+  def notify_story_promoted
+    NotificationServices::CreateNotification.call(
+      noticeable: @story,
+      kind: :story_promoted,
+      recipient_role: :person,
+      recipient_email: @story.story_idea.created_by.email,
+      notification_type: 0)
+    NotificationServices::CreateNotification.call(
+      noticeable: @story,
+      kind: :story_promoted_fyi,
+      recipient_role: :admin,
+      recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      notification_type: 0)
   end
 
   # Inline-logged communications are addressed to the story's credited author.

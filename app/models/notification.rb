@@ -31,6 +31,8 @@ class Notification < ApplicationRecord
     bulk_payment_confirmation_fyi
     idea_submitted
     idea_submitted_fyi
+    story_promoted
+    story_promoted_fyi
     report_submitted
     report_submitted_fyi
     workshop_log_submitted
@@ -62,6 +64,7 @@ class Notification < ApplicationRecord
     FormSubmission
     Person
     Report
+    Story
     StoryIdea
     User
     WorkshopLog
@@ -78,6 +81,7 @@ class Notification < ApplicationRecord
     [ "Admin FYI: event scholarship registration cancelled", "[FYI] Event scholarship registration cancelled" ],
     [ "Admin FYI: bulk payment", "[FYI] New bulk payment" ],
     [ "Admin FYI: idea submitted", "submission by" ],
+    [ "Admin FYI: story promoted", "Story idea promoted" ],
     [ "Admin FYI: password reset", "[FYI] New password reset" ],
     [ "Admin FYI: workshop log submission", "New WorkshopLog submission" ],
     [ "Admin FYI: contact form submission", "contact form submission" ],
@@ -88,6 +92,7 @@ class Notification < ApplicationRecord
     [ "Event scholarship registration received", "Event scholarship registration received" ],
     [ "Bulk payment: confirmation", "Bulk payment received" ],
     [ "Idea: confirmation (all)", "has been received" ],
+    [ "Story: promotion confirmation", "is now a story" ],
     [ "Idea: confirmation: workshop log", "workshop log has been received" ],
     [ "User: confirm new email", "Confirm your new email address" ],
     [ "User: password reset", "Password reset request" ],
