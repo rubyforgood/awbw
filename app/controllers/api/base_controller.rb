@@ -1,8 +1,10 @@
 module Api
-  # Base for the JSON API. Renders errors as JSON rather than the HTML redirects
-  # ApplicationController uses. Authentication stays on by default — public
-  # endpoints opt out with `skip_before_action :authenticate_user!` themselves.
+  # Base for the public, read-only JSON API. These endpoints serve only
+  # unconditionally public data, so authentication is skipped and errors are
+  # rendered as JSON rather than the HTML redirects ApplicationController uses.
   class BaseController < ApplicationController
+    skip_before_action :authenticate_user!
+
     rescue_from ActiveRecord::RecordNotFound do
       render json: { error: "Not found" }, status: :not_found
     end
