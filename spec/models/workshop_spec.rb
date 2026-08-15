@@ -125,6 +125,21 @@ RSpec.describe Workshop do
       expect(workshop.author_credit).to eq("Anonymous")
     end
 
+    it "takes no consent snapshot, since the creator's profile doesn't format it" do
+      creator.person.update!(display_name_preference: "first_name_only")
+      workshop = create(:workshop, created_by: creator, author: nil, full_name: "Jane Legacy")
+
+      expect(workshop.reload.author_credit_preference).to be_nil
+    end
+
+    it "is not findable by the creator's name, which the credit never shows" do
+      creator.person.update!(first_name: "Marguerite", last_name: "Enterer")
+      create(:workshop, created_by: creator, author: nil, full_name: "Jane Legacy")
+
+      expect(Workshop.by_credited_person_name("Marguerite")).to be_empty
+      expect(Workshop.by_credited_person_name("JaneLegacy")).not_to be_empty
+    end
+
     it "has no governing person, so the creator's profile can't be said to have drifted" do
       creator.person.update!(display_name_preference: "first_name_only")
       workshop = create(:workshop, created_by: creator, author: nil, full_name: "Jane Legacy",

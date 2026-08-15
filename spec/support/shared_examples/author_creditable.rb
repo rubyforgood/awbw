@@ -74,11 +74,13 @@ RSpec.shared_examples "author_creditable" do |factory:|
     end
 
     context "when there is no credited person" do
-      it "falls back to the model's missing_author_label" do
+      # The portal is behind a login, so an unattributed credit names the org's
+      # facilitators rather than hiding behind "Anonymous".
+      it "falls back to AWBW Facilitator" do
         user_without_person = create(:user, person: nil)
         record.update!(created_by: user_without_person)
-        expect(record.author_credit).to eq(record.missing_author_label)
-        expect(record.missing_author_label).to be_present
+        expect(record.missing_author_label).to eq("AWBW Facilitator")
+        expect(record.author_credit).to eq("AWBW Facilitator")
       end
     end
   end

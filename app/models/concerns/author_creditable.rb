@@ -86,15 +86,19 @@ module AuthorCreditable
     person.present? && author_credit_preference != person.effective_author_credit_preference
   end
 
-  # Shown when there's no credited person or legacy name. Overridable per model.
+  # Shown when there's no credited person or legacy name. The portal is behind a
+  # login, so this names the org's facilitators rather than hiding behind
+  # "Anonymous", which would read as a deliberate privacy choice.
   def missing_author_label
-    "Anonymous"
+    "AWBW Facilitator"
   end
 
   def snapshot_author_credit_preference
     # Promotion services copy the originating idea's snapshot forward — keep it.
     return if author_credit_preference.present?
-    person = primary_author_person || created_by&.person
+    # Only the governing profile, so a legacy credit doesn't snapshot the profile of
+    # whoever entered it and then read as drift against it.
+    person = credit_governing_person
     self.author_credit_preference = person.effective_author_credit_preference if person
   end
 
@@ -180,7 +184,15 @@ module AuthorCreditable
         "(#{preference} = '#{value}' AND (#{expressions.map { |e| name_like(e) }.join(' OR ')}))"
       end
 
-      "(#{sql_alias}.anonymous_contributions = FALSE AND #{not_anonymous_sql} AND (#{by_preference.join(' OR ')}))"
+      # A legacy name outranks the creator in the credit, so the creator's name isn't
+      # displayed on those rows and mustn't find them either.
+      gate = sql_alias == "credited_creator" ? " AND #{no_legacy_name_sql}" : ""
+      "(#{sql_alias}.anonymous_contributions = FALSE AND #{not_anonymous_sql}#{gate} AND (#{by_preference.join(' OR ')}))"
+    end
+
+    def no_legacy_name_sql
+      return "1 = 1" if legacy_author_name_columns.empty?
+      legacy_author_name_columns.map { |col| "(#{col} IS NULL OR #{col} = '')" }.join(" AND ")
     end
 
     # No person behind a legacy name, so only the record's own anonymity applies.

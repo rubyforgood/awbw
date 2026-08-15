@@ -32,11 +32,6 @@ class CommunityNews < ApplicationRecord
   validates :reference_url, length: { maximum: 255 }
   validates :youtube_url, length: { maximum: 255 }
 
-  # Unattributed community news is credited to the organization's staff.
-  def missing_author_label
-    "AWBW Staff"
-  end
-
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank

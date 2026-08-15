@@ -89,11 +89,6 @@ class Resource < ApplicationRecord
     legacy_author_name
   end
 
-  # Unattributed resources are credited to the organization's staff.
-  def missing_author_label
-    "AWBW Staff"
-  end
-
   # Scopes
   scope :by_created, -> { order(created_at: :desc) }
   scope :by_featured_first, -> { order(featured: :desc, created_at: :desc) }

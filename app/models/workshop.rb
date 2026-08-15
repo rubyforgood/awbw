@@ -197,11 +197,6 @@ class Workshop < ApplicationRecord
     full_name
   end
 
-  # With no credited person or legacy name, attribute to the generic facilitator.
-  def missing_author_label
-    "AWBW Facilitator"
-  end
-
   def date
     if month.present? && year.present?
       Date.new(year.to_i, month.to_i).strftime("%B %Y")
