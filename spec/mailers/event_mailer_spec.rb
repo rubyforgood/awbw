@@ -235,6 +235,43 @@ RSpec.describe EventMailer, type: :mailer do
       end
     end
 
+    # The deadline reaches registrants through the composed message (see
+    # ApplicationHelper#default_reminder_message), not a template block — so it
+    # survives the event-details card being hidden, which is the on-demand case.
+    context "when the event has a completion deadline" do
+      let(:event) { create(:event, completion_deadline: Date.new(2026, 8, 30)) }
+      let(:event_registration) { create(:event_registration, event: event) }
+      let(:mail) do
+        described_class.event_registration_reminder(
+          event_registration,
+          custom_message: "Please complete it by <strong>August 30, 2026</strong>.",
+          hide_event_card: true
+        )
+      end
+
+      it "carries the deadline in the HTML body with the card hidden" do
+        expect(mail.html_part.body.encoded).to include("August 30, 2026")
+      end
+
+      it "carries the deadline in the plain-text body with the card hidden" do
+        expect(mail.text_part.body.encoded).to include("August 30, 2026")
+      end
+
+      it "states it exactly once" do
+        expect(mail.html_part.body.encoded.scan("August 30, 2026").size).to eq(1)
+      end
+    end
+
+    context "for an on-demand event" do
+      let(:event) { create(:event, title: "Self-Paced Training", start_date: Time.zone.local(2026, 8, 7, 18, 0), on_demand: true) }
+      let(:event_registration) { create(:event_registration, event: event) }
+
+      # Matches the subject the compose page pre-fills, so preview and send agree.
+      it "omits the date from the default subject" do
+        expect(mail.subject).to eq("AWBW Portal: Reminder: Self-Paced Training")
+      end
+    end
+
     context "with a custom message" do
       let(:mail) { described_class.event_registration_reminder(event_registration, custom_message: custom_message) }
       let(:custom_message) { "Please bring <strong>your art supplies</strong>." }
@@ -265,6 +302,35 @@ RSpec.describe EventMailer, type: :mailer do
 
       it "renders the custom-message container even when blank" do
         expect(mail.html_part.body.encoded).to include("reminder-custom-message")
+      end
+    end
+
+    context "with the event card hidden" do
+      let(:event) { create(:event, title: "Confidential Retreat") }
+      let(:event_registration) { create(:event_registration, event: event) }
+      let(:mail) { described_class.event_registration_reminder(event_registration, hide_event_card: true) }
+
+      it "renders without raising" do
+        expect { mail.deliver_now }.not_to raise_error
+      end
+
+      it "omits the grey event-details card from the HTML body" do
+        # #166534 is the card's green event-title colour — present only inside the card.
+        expect(mail.html_part.body.encoded).not_to include("#166534")
+        expect(mail.html_part.body.encoded).not_to include("Confidential Retreat")
+      end
+
+      it "omits the event details from the plain-text body" do
+        expect(mail.text_part.body.encoded).not_to include("Confidential Retreat")
+      end
+
+      context "in preview mode" do
+        let(:mail) { described_class.event_registration_reminder(event_registration, hide_event_card: true, preview: true) }
+
+        it "still renders the card markup (hidden), so the live toggle can reveal it" do
+          expect(mail.html_part.body.encoded).to include("reminder-event-card")
+          expect(mail.html_part.body.encoded).to include("#166534")
+        end
       end
     end
   end
@@ -298,9 +364,38 @@ RSpec.describe EventMailer, type: :mailer do
       expect(mail.html_part.body.encoded).to include("Art Workshop")
     end
 
+    it "includes the event details in the plain-text body" do
+      expect(mail.text_part.body.encoded).to include(event.decorate.labelled_cost)
+    end
+
     it "uses the singular noun for a single recipient" do
       mail = described_class.event_registration_reminder_fyi(event, [ "Alex Rivera <alex@example.org>" ])
       expect(mail.subject).to include("1 registrant ")
+    end
+
+    context "with the event card hidden" do
+      let(:mail) { described_class.event_registration_reminder_fyi(event, recipient_labels, hide_event_card: true) }
+
+      it "omits the event-details card, matching what registrants received" do
+        # #166534 is the card's green event-title colour — present only inside the card.
+        expect(mail.html_part.body.encoded).not_to include("#166534")
+      end
+
+      it "still names the event and lists recipients" do
+        expect(mail.html_part.body.encoded).to include("Art Workshop")
+        expect(mail.html_part.body.encoded).to include("Alex Rivera")
+      end
+
+      it "omits the event details from the plain-text body" do
+        expect(mail.text_part.body.encoded).not_to include(event.decorate.labelled_cost)
+      end
+
+      # The event title sits inside the hidden section too, so this guards the
+      # summary line above it from being swallowed along with the card.
+      it "still names the event and lists recipients in the plain-text body" do
+        expect(mail.text_part.body.encoded).to include("Art Workshop")
+        expect(mail.text_part.body.encoded).to include("Alex Rivera <alex@example.org>")
+      end
     end
   end
 end

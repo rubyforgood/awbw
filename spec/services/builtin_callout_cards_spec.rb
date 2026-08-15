@@ -291,6 +291,17 @@ RSpec.describe BuiltinCalloutCards do
       expect(card.badge).to eq("Available after the event")
     end
 
+    # The deadline goes in the badge, not the subtitle: card_for overwrites title
+    # and subtitle with the admin row's values, so a subtitle would be discarded.
+    it "badges the pending certificate with the completion deadline when the event has one" do
+      event.update!(completion_deadline: Date.new(2026, 8, 30))
+      callout = create(:registration_ticket_callout, event:, builtin_key: "certificate",
+        title: "Certificate of completion", subtitle: "View and download your certificate")
+
+      card = described_class.new(registration).card_for(callout)
+      expect(card.badge).to eq("Complete by Aug 30")
+    end
+
     it "returns nil for a behavioral card that truly can't apply (no videoconference URL)" do
       callout = create(:registration_ticket_callout, event:, builtin_key: "videoconference",
         title: "Videoconference")

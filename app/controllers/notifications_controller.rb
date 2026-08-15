@@ -64,13 +64,19 @@ class NotificationsController < ApplicationController
     parent_id = @notification.id
     root_id = @notification.root_notification_id || @notification.id
 
-    # Create and send a new notification using the service
+    # Create and send a new notification using the service. Everything that shaped
+    # the original body travels with it so the resend is the same email, not a
+    # default-shaped one; only the provenance (sender, and `bulk` — a resend is an
+    # individual action, not part of the original batch) reflects the resend itself.
     new_notification = NotificationServices::CreateNotification.call(
       noticeable: @notification.noticeable,
       kind: @notification.kind,
       recipient_email: @notification.recipient_email,
       recipient_role: @notification.recipient_role,
       notification_type: @notification.notification_type,
+      custom_message: @notification.custom_message,
+      custom_subject: @notification.custom_subject,
+      hide_event_card: @notification.hide_event_card,
       sender: current_user, # a resend is an admin action — attribute it to them
       deliver: true,
       persist_delivered_email: true

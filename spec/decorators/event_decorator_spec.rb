@@ -485,6 +485,19 @@ RSpec.describe EventDecorator do
     end
   end
 
+  describe "#completion_deadline_display" do
+    # Date-only, so no time or zone — unlike the two payment deadlines above.
+    it "renders the deadline as a plain date, e.g. 'August 30, 2026'" do
+      event = build(:event, completion_deadline: Date.new(2026, 8, 30)).decorate
+      expect(event.completion_deadline_display).to eq("August 30, 2026")
+    end
+
+    it "is nil when no deadline is set" do
+      event = build(:event, completion_deadline: nil).decorate
+      expect(event.completion_deadline_display).to be_nil
+    end
+  end
+
   describe "#times" do
     it "shows a multi-day event as a date range with a single daily time range" do
       event = build(:event, start_date: Time.zone.local(2026, 4, 21, 9), end_date: Time.zone.local(2026, 4, 23, 16, 30)).decorate

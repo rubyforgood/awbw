@@ -155,6 +155,7 @@ class EventPolicy < ApplicationPolicy
                   :ce_payment_due_deadline_time,
                   :payment_due_deadline_date,
                   :payment_due_deadline_time,
+                  :completion_deadline,
                   :autoshow_cost,
                   :autoshow_date,
                   :autoshow_location,

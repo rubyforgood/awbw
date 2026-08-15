@@ -70,17 +70,30 @@ module ApplicationHelper
   # Default text pre-filled into the editable reminder message on the bulk
   # reminder page (admins can edit or clear it). The day count is resolved when
   # the page renders — it's event-level, so the same for every recipient.
-  def default_reminder_message(days_until_event)
+  # Self-paced training gets its own copy: there's no meaningful day count, and
+  # its details box is hidden by default, so "the following event" would dangle
+  # with nothing under it. Naming the title inline keeps the email identifiable.
+  # Just "training", not "on-demand training" — these titles already say so
+  # ("On-Demand Training 2026"), and the pairing reads as a stutter.
+  def default_reminder_message(days_until_event, event: nil)
     organization = ENV.fetch("ORGANIZATION_NAME", "AWBW")
-    "This is a reminder that you're registered for the following #{organization} event#{reminder_days_phrase(days_until_event)}."
+    opening = if event&.on_demand?
+      "This is a reminder that you're registered for the #{organization} training <strong>#{ERB::Util.html_escape(event.title)}</strong>."
+    else
+      "This is a reminder that you're registered for the following #{organization} event#{reminder_days_phrase(days_until_event)}."
+    end
+    # Any event with a deadline states it here, in copy the admin can reword — the
+    # email template has no standalone deadline block, so this is the only place
+    # it appears and it can't land twice.
+    deadline = event&.decorate&.completion_deadline_display
+    [ opening, ("Please complete it by <strong>#{deadline}</strong>." if deadline) ].compact.join(" ")
   end
 
   # Default subject line pre-filled into the editable subject field on the bulk
   # reminder page (admins can edit it). Mirrors the mailer's fallback subject; the
   # event date is event-level, resolved here in the app default time zone.
   def default_reminder_subject(event)
-    date_suffix = event.start_date.present? ? " – #{event.start_date.in_time_zone.strftime('%B %-d, %Y')}" : ""
-    "AWBW Portal: Reminder: #{event.title}#{date_suffix}"
+    event.decorate.default_reminder_subject
   end
 
   # Tokens an admin can drop into a form header; each is filled from the event the

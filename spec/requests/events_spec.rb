@@ -1085,6 +1085,11 @@ RSpec.describe "Events", type: :request do
         expect(event.reload.facilitator_training).to be(true)
       end
 
+      it "persists the training completion deadline" do
+        patch event_path(event), params: { event: { completion_deadline: "2026-08-30" } }
+        expect(event.reload.completion_deadline).to eq(Date.new(2026, 8, 30))
+      end
+
       it "persists the registration detail hints" do
         patch event_path(event), params: { event: {
           hint_dates: "must attend both days",
@@ -3748,7 +3753,7 @@ RSpec.describe "Events", type: :request do
         post send_reminder_event_path(event), params: { registration_ids: [] }
       }.not_to change(Notification, :count)
 
-      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: "", custom_subject: ""))
+      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: "", custom_subject: "", hide_event_card: "0"))
     end
 
     it "logs an Ahoy event with the recipient count on a successful send" do

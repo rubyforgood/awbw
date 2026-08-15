@@ -221,8 +221,17 @@ class BuiltinCalloutCards
              subtitle: "Unlocks after the training",
              href: registration_certificate_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right",
-             badge: "Available after the event",
+             badge: certificate_pending_badge,
              badge_classes: "bg-gray-100 text-gray-600 border border-gray-300")
+  end
+
+  # A completion deadline is the more actionable thing to badge — it tells the
+  # registrant what they owe, not just when the certificate turns up. Only the
+  # badge survives #card_for, which overwrites title and subtitle from the row.
+  def certificate_pending_badge
+    return "Available after the event" if event.completion_deadline.blank?
+
+    "Complete by #{ce_deadline_text(event.completion_deadline)}"
   end
 
   # Shown only when the registrant requested a scholarship. Its page surfaces the

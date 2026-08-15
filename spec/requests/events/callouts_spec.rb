@@ -619,6 +619,26 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).not_to include("This certifies that")
     end
 
+    # An obligation on the registrant, not an unlock condition — so it sits below
+    # the checklist rather than in it, where a tick would imply it was already met.
+    it "states the completion deadline on the pending page when the event has one" do
+      registration.update!(status: "registered")
+      event.update!(completion_deadline: Date.new(2026, 8, 30))
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("Complete this training by")
+      expect(response.body).to include("August 30, 2026")
+    end
+
+    it "says nothing about a deadline on the pending page when the event has none" do
+      registration.update!(status: "registered")
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).not_to include("Complete this training by")
+    end
+
     it "adds the CE accreditation clause once CE credit is registered and paid" do
       event.update!(ce_hours_offered: 6)
       license = create(:professional_license, person: registration.registrant, number: "LIC-1")

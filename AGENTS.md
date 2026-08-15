@@ -357,7 +357,7 @@ end
 - `prefetch_lazy` — Prefetch lazy-loaded content
 - `primary_tag` — Shared single-primary star for the sector and age-range cocoon chip editors (clears other stars, highlights via configurable classes, no reorder)
 - `print_options` — Print options toggle for analytics
-- `reminder_preview` — Live-preview a custom message in the reminder email as the admin types it on the bulk-reminder page
+- `reminder_preview` — Live-preview the reminder email as the admin composes it on the bulk-reminder page: custom message, subject, and the event-details box toggle (announced to screen readers)
 - `remote_select` — AJAX-powered select dropdown
 - `reveal_section` — Expand a collapsible section and scroll to it when loaded via matching URL hash
 - `rhino_source` — Rich text editor integration
