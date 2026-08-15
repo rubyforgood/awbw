@@ -180,6 +180,68 @@ RSpec.describe Payment, type: :model do
         expect(result).to include(person_payment)
         expect(result).not_to include(org_payment)
       end
+
+      it "returns all payments when no filters are given" do
+        result = Payment.search_by_params({})
+        expect(result).to include(person_payment, org_payment)
+      end
+
+      describe "search (metadata / stripe charge id)" do
+        let!(:metadata_match) { create(:payment, metadata: { "note" => "reunion gala" }) }
+        let!(:stripe_match) { create(:payment, stripe_charge_id: "ch_ABC123") }
+        let!(:no_match) { create(:payment, metadata: { "note" => "something else" }) }
+
+        it "matches on metadata contents" do
+          result = Payment.search_by_params({ search: "reunion" })
+          expect(result).to include(metadata_match)
+          expect(result).not_to include(no_match, stripe_match)
+        end
+
+        it "matches on stripe charge id" do
+          result = Payment.search_by_params({ search: "ch_ABC" })
+          expect(result).to include(stripe_match)
+          expect(result).not_to include(no_match, metadata_match)
+        end
+
+        it "returns all payments when search is blank" do
+          result = Payment.search_by_params({ search: "" })
+          expect(result).to include(metadata_match, stripe_match, no_match)
+        end
+
+        it "escapes LIKE wildcards in the query" do
+          result = Payment.search_by_params({ search: "%" })
+          expect(result).not_to include(metadata_match, stripe_match, no_match)
+        end
+      end
+
+      describe "amount range" do
+        let!(:small) { create(:payment, amount_cents: 500) }
+        let!(:medium) { create(:payment, amount_cents: 1500) }
+        let!(:large) { create(:payment, amount_cents: 5000) }
+
+        it "filters by minimum dollar amount" do
+          result = Payment.search_by_params({ amount_min: "15" })
+          expect(result).to include(medium, large)
+          expect(result).not_to include(small)
+        end
+
+        it "filters by maximum dollar amount" do
+          result = Payment.search_by_params({ amount_max: "15" })
+          expect(result).to include(small, medium)
+          expect(result).not_to include(large)
+        end
+
+        it "filters by a min/max range" do
+          result = Payment.search_by_params({ amount_min: "10", amount_max: "20" })
+          expect(result).to include(medium)
+          expect(result).not_to include(small, large)
+        end
+
+        it "returns all payments when the range is blank" do
+          result = Payment.search_by_params({ amount_min: "", amount_max: "" })
+          expect(result).to include(small, medium, large)
+        end
+      end
     end
 
     describe ".has_remaining" do

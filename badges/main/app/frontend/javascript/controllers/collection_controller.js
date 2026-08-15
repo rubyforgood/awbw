@@ -25,7 +25,7 @@ export default class extends Controller {
     this.element.addEventListener("input", (event) => {
       // skip submit on tom-select keyboard input
       const target = event.target;
-      if (target.type !== "text") return;
+      if (target.type !== "text" && target.type !== "number") return;
 
       const isTomSelect = target.closest(".ts-control");
 
@@ -70,7 +70,7 @@ export default class extends Controller {
     // are exactly what reset() restores — so resetting puts back the filters we
     // just cleared and "Clear filters" re-submits them.
     this.element
-      .querySelectorAll('input[type="text"], input[type="search"], input[type="date"]')
+      .querySelectorAll('input[type="text"], input[type="search"], input[type="date"], input[type="number"]')
       .forEach((input) => {
         input.value = "";
       });
