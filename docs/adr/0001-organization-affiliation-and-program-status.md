@@ -149,9 +149,15 @@ The classification anchors on the event's actual `start_date`.
   excludes the recipient's own affiliations to answer a scholarship-specific
   question). It is intentionally **not** covered by D5; reconcile with the
   per-event model later if the two need to agree.
-- **Affiliation date precision:** if facilitator affiliations are ever recorded
-  at month precision (e.g. the 1st of the month) rather than the actual event
-  date, the raw-start-date anchor (D7) can read a same-month affiliation as
-  Ongoing instead of New. Observed data uses the actual event start date;
-  revisit if month-precision data appears (this is why `program_statuses`
-  originally used `beginning_of_month`).
+- **Affiliation date precision:** the raw-start-date anchor (D7) reads a
+  month-precision affiliation (dated to the 1st) as Ongoing where the actual date
+  would read New — which is why `program_statuses` originally used
+  `beginning_of_month`. Newly minted affiliations are safe: #2176 changed both the
+  registration-minted and manually added rows to use the actual date. **Rows
+  created before that change may still be dated to the 1st**, so a historical
+  same-month training can still classify as Ongoing.
+- **What creates a facilitator affiliation:** since #2194 only a facilitator
+  *training* registration mints one (non-training registrations get a job
+  affiliation instead), and the row records its creating `event_registration_id`.
+  That makes the D3 status buckets — which now key off facilitator affiliations
+  alone — a read on training participation rather than on any registration.
