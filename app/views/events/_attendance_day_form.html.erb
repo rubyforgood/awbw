@@ -23,7 +23,9 @@
             class: input_class, "aria-label": "Time out" %>
       <% if row["id"].present? %>
         <label class="inline-flex items-center gap-1 text-xs text-gray-500">
-          <%= check_box_tag "attendance[entries][#{index}][_destroy]", "1", false, id: nil,
+          <%# Stays ticked when a rejected save reopens the editor, or the row the
+              admin meant to drop quietly survives the retry. %>
+          <%= check_box_tag "attendance[entries][#{index}][_destroy]", "1", row["_destroy"] == "1", id: nil,
                 class: "h-3.5 w-3.5 rounded border-gray-300 text-red-600 focus:ring-red-400" %>
           Remove
         </label>

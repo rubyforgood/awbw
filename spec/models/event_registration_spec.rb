@@ -1463,6 +1463,16 @@ RSpec.describe EventRegistration, type: :model do
         expect(registration.forgotten_sign_out_entry).to be_nil
       end
 
+      # With no end time on the event there's no scheduled end to stamp, so the
+      # one-click close isn't offered either.
+      it "declines when the event has no end time" do
+        event.update!(end_date: Time.zone.local(2026, 7, 24))
+        create(:event_attendance_time_entry, :open, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 23, 9, 5))
+
+        expect(registration.forgotten_sign_out_entry).to be_nil
+      end
+
       # Nothing sensible to stamp, so it isn't offered as a one-click close — staff
       # correct it on the attendance report instead.
       it "declines a sign-in recorded after that day had already ended" do

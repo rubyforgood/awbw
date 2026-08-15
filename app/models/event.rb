@@ -236,20 +236,30 @@ class Event < ApplicationRecord
     combine_date_and_time(date, start_date)
   end
 
-  # A day's end datetime: that date at end_date's time-of-day (falling back to the
-  # start time for events with no end), in the app zone.
+  # A day's scheduled end datetime: that date at end_date's time-of-day, in the app
+  # zone. Nil when no end time was entered (the form's End time is optional, so
+  # end_date lands at midnight) — there's no scheduled end to work from, and each
+  # caller decides what to do without one.
   def daily_end_at(date)
-    combine_date_and_time(date, end_date.presence || start_date)
+    source = end_date.presence || start_date
+    return nil if source.blank?
+
+    time = source.in_time_zone(Time.zone)
+    return nil if time.hour.zero? && time.min.zero?
+
+    combine_date_and_time(date, source)
   end
 
   # Whether a registrant may start a new sign-in right now: it's an event day and
   # now falls within [day start − lead, day end]. Sign-out is deliberately not
-  # gated by this (see ATTENDANCE_SIGN_IN_LEAD).
+  # gated by this (see ATTENDANCE_SIGN_IN_LEAD). With no end time on the event the
+  # day stays open to its end rather than never opening at all.
   def attendance_sign_in_open?(at = Time.current)
     date = event_dates.find { |d| d == at.in_time_zone(Time.zone).to_date }
     return false unless date
 
-    at.between?(daily_start_at(date) - ATTENDANCE_SIGN_IN_LEAD, daily_end_at(date))
+    closes_at = daily_end_at(date) || daily_start_at(date).end_of_day
+    at.between?(daily_start_at(date) - ATTENDANCE_SIGN_IN_LEAD, closes_at)
   end
 
   # When sign-in next becomes available — the earliest upcoming day's window opening

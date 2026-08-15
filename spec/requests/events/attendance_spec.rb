@@ -258,6 +258,22 @@ RSpec.describe "Events attendance report", type: :request do
         expect(response.body).to include('value="09:00"')
       end
 
+      # The Remove tick has to survive the reopen too, or the row the admin meant to
+      # drop quietly comes back once they fix the error and save again.
+      it "keeps a ticked Remove box ticked when the save is rejected" do
+        log_ce_time!
+        entry = registration.event_attendance_time_entries.first
+
+        patch update_attendance_event_registration_path(registration, date: day.iso8601, ce: "true", row: ce_row_key),
+              params: { attendance: { entries: {
+                "0" => { id: entry.id, in: "08:50", out: "10:34", _destroy: "1" },
+                "1" => { in: "16:00", out: "09:00" }
+              } } }
+
+        follow_redirect!
+        expect(Capybara.string(response.body)).to have_checked_field("attendance[entries][0][_destroy]")
+      end
+
       it "rejects an unparseable date rather than guessing a day" do
         patch update_attendance_event_registration_path(registration, date: "not-a-date"),
               params: { attendance: { entries: { "0" => { in: "08:50", out: "16:00" } } } }

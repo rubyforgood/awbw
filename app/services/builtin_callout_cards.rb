@@ -307,8 +307,11 @@ class BuiltinCalloutCards
   # The live attendance nudge for the CE card on a training day, once CE is paid —
   # :signed_in while an entry is open, :sign_in while sign-in is open and they're
   # not signed in, nil otherwise (so the resting CE status chip shows instead).
+  # Gated on the same any-paid-licence rule as the sheet itself, not the all-of
+  # ce_paid_in_full? — otherwise a second licence still being paid for silently
+  # takes the nudge away from someone who can, and should, be signing in.
   def ce_attendance_reminder
-    return unless registration.ce_paid_in_full?
+    return unless registration.ce_attendance_offered?
     return :signed_in if registration.signed_in?
 
     :sign_in if event.attendance_sign_in_open?

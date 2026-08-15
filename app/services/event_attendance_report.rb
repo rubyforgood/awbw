@@ -106,6 +106,13 @@ class EventAttendanceReport
     reported_registrations.sum { |registration| minutes_on(registration, date) }
   end
 
+  # How many people logged time on one day — the day heading's "N of M signed in".
+  # Counted over people rather than lines for the same reason the totals are: two
+  # licences share one set of times, so counting both would report one person twice.
+  def registrations_present_on(date)
+    reported_registrations.count { |registration| entries_on(registration, date).any? }
+  end
+
   # CE hours awarded across every reported line — the All row's awarded figure. Summed
   # per line, not per person: each board awards its own hours against its own licence.
   def total_hours_awarded
@@ -136,8 +143,11 @@ class EventAttendanceReport
     entries_on(registration, date).sum { |entry| entry.duration_minutes.to_i }
   end
 
+  # Active registrations only, like the roster and onboarding tabs: nobody chases a
+  # cancelled or no-show registrant for sign-ins, and their awarded hours aren't part
+  # of what the training certified.
   def scoped_registrations
-    list = event.event_registrations
+    list = event.event_registrations.active
       .includes(:registrant, :event_attendance_time_entries,
         continuing_education_registrations: :professional_license)
       .to_a

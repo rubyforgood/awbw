@@ -124,11 +124,12 @@
         <% end %>
       <% else %>
       <% @report.dates.each_with_index do |date, index| %>
-        <% signed_in_count = @report.rows.count { |row| @report.entries_for(row, date).any? } %>
         <section class="mb-8">
           <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
             <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Day <%= index + 1 %> · <%= date.strftime("%A, %b %-d") %> · <%= event.times %></h2>
-            <span class="text-xs text-gray-400"><%= signed_in_count %> of <%= @report.rows.size %> signed in</span>
+            <%# Counted over people, not reported lines — a registrant claiming CE against
+                two licences has two rows here but is one person on the day. %>
+            <span class="text-xs text-gray-400"><%= @report.registrations_present_on(date) %> of <%= @report.reported_registrations.size %> signed in</span>
           </div>
 
           <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">

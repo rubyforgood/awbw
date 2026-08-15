@@ -546,6 +546,32 @@ RSpec.describe Event, type: :model do
       end
     end
 
+    # The event form's End time is optional, so end_date can land at midnight. With
+    # no scheduled end to close the window against, the day stays open rather than
+    # the window never opening at all.
+    context "when the event has no end time" do
+      let(:event) do
+        create(:event,
+          start_date: Time.zone.local(2026, 7, 23, 9, 0),
+          end_date: Time.zone.local(2026, 7, 23),
+          registration_close_date: Time.zone.local(2026, 7, 20, 9, 0))
+      end
+
+      it "has no scheduled daily end" do
+        expect(event.daily_end_at(Date.new(2026, 7, 23))).to be_nil
+      end
+
+      it "keeps sign-in open for the rest of the event day" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 8, 30))).to be(true)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 20, 0))).to be(true)
+      end
+
+      it "still closes sign-in outside the event's days" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 22, 20, 0))).to be(false)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 24, 9, 0))).to be(false)
+      end
+    end
+
     describe "#next_attendance_sign_in_opens_at" do
       it "returns the first day's opening before the event" do
         expect(event.next_attendance_sign_in_opens_at(Time.zone.local(2026, 7, 23, 7, 0)))

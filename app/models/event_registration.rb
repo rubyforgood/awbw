@@ -697,10 +697,10 @@ class EventRegistration < ApplicationRecord
   # The time a forgotten sign-out is stamped with: the scheduled end of the training
   # day it belongs to — what staff wrote on the paper sheet — never "now", which would
   # bank every hour since. Nil when that end isn't after the sign-in (someone signed in
-  # after the day was over), leaving it for staff.
+  # after the day was over) or the event has no end time at all, leaving it for staff.
   def forgotten_sign_out_at(entry)
     close_at = event.daily_end_at(entry.attendance_date)
-    close_at if close_at > entry.signed_in_at
+    close_at if close_at && close_at > entry.signed_in_at
   end
 
   # Whether the registrant is currently signed in (today).

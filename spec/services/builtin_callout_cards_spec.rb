@@ -364,6 +364,16 @@ RSpec.describe BuiltinCalloutCards do
       expect(ce_card.theme).to eq(DomainTheme.swatch("orange"))
     end
 
+    # The sheet opens on any paid licence, so the nudge has to as well — someone
+    # part-way through paying for a second licence still signs in for the first.
+    it "nudges when only one of two licences is paid" do
+      pay_ce!
+      create(:continuing_education_registration, event_registration: registration,
+        professional_license: create(:professional_license, person: registration.registrant, number: "LIC999"))
+
+      expect(card(registration.reload, event.ce_hours_label).badge).to eq("Sign in for today")
+    end
+
     it "shows a signed-in chip while an entry is open, in teal" do
       pay_ce!
       create(:event_attendance_time_entry, :open, event_registration: registration)

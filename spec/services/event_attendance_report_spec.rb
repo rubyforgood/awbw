@@ -105,6 +105,18 @@ RSpec.describe EventAttendanceReport do
       expect(report.open?(row_for(alice))).to be(false)
     end
 
+    # Nobody chases a cancelled registrant for sign-ins, and their awarded hours
+    # aren't part of what the training certified — same active-only scoping the
+    # roster and onboarding tabs use.
+    it "leaves out registrations that are no longer active" do
+      dana = create(:event_registration, event: event, status: "cancelled",
+        registrant: create(:person, first_name: "Dana", last_name: "Dean"))
+      make_ce(dana, number: "DDD444")
+
+      expect(report.rows.map(&:registration)).not_to include(dana)
+      expect(report.total_hours_awarded).to eq(12) # Alice 6 + Bob 6, not Dana's too
+    end
+
     # Two licences means two boards, audited separately: each is shown only its own
     # licence and its own awarded hours, over the one set of times the registrant
     # actually logged.
@@ -129,6 +141,14 @@ RSpec.describe EventAttendanceReport do
         expect(report.day_grand_minutes(Date.new(2026, 7, 23))).to eq(248) # 188 + 60, not 188 + 120
         expect(report.grand_total_minutes).to eq(668)
       end
+
+      # The day heading's "N of M signed in" counts people for the same reason.
+      it "counts each person present on a day once" do
+        entry(bob, Time.zone.local(2026, 7, 23, 9, 0), Time.zone.local(2026, 7, 23, 10, 0))
+
+        expect(report.registrations_present_on(Date.new(2026, 7, 23))).to eq(2) # Alice + Bob, not 3 lines
+        expect(report.reported_registrations.size).to eq(2)
+      end
     end
   end
 
@@ -148,6 +168,14 @@ RSpec.describe EventAttendanceReport do
       expect(rows.map(&:ce_registration)).to all(be_nil)
       # Keyed by registration alone, so the generic report's cell ids are unchanged.
       expect(rows.first.key).to eq(alice.id.to_s)
+    end
+
+    it "leaves out an inactive registration even when it logged time" do
+      dana = create(:event_registration, event: event, status: "no_show",
+        registrant: create(:person, first_name: "Dana", last_name: "Dean"))
+      entry(dana, Time.zone.local(2026, 7, 23, 9, 0), Time.zone.local(2026, 7, 23, 10, 0))
+
+      expect(described_class.new(event).rows.map(&:registration)).to eq([ alice, carol ])
     end
   end
 end
