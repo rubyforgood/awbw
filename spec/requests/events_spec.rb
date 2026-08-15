@@ -513,18 +513,18 @@ RSpec.describe "Events", type: :request do
       it "returns to the organization profile when arriving from its program-status chips" do
         organization = create(:organization)
         sign_in admin
-        get participation_events_path(event_id: training_2026.id, organization_id: organization.id, return_to: "organization")
+        get participation_events_path(event_id: training_2026.id, return_organization_id: organization.id, return_to: "organization")
 
         expect(response.body).to include("← Organization")
         expect(response.body).to include(CGI.escapeHTML(organization_path(organization, anchor: "program-status")))
         # The origin has to survive a filter change, or the eyebrow reverts.
-        expect(response.body).to match(/<input[^>]*name="organization_id"[^>]*value="#{organization.id}"/)
+        expect(response.body).to match(/<input[^>]*name="return_organization_id"[^>]*value="#{organization.id}"/)
       end
 
       it "returns to the organization edit form when arriving from its program-status chips" do
         organization = create(:organization)
         sign_in admin
-        get participation_events_path(event_id: training_2026.id, organization_id: organization.id, return_to: "organization_edit")
+        get participation_events_path(event_id: training_2026.id, return_organization_id: organization.id, return_to: "organization_edit")
 
         expect(response.body).to include("← Organization")
         expect(response.body).to include(CGI.escapeHTML(edit_organization_path(organization, anchor: "program-status")))

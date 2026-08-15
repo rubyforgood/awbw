@@ -8,7 +8,7 @@ module EventParticipationHelper
   # chips on an organization's profile or edit form; each origin passes return_to
   # (plus the id the path needs) so the user goes back where they came from.
   def participation_return_link
-    organization_id = params[:organization_id]
+    organization_id = params[:return_organization_id]
 
     case params[:return_to]
     when "organization"

@@ -5,7 +5,7 @@
 <% decorated = organization.decorate %>
 <% events.each do |event| %>
   <% status = decorated.facilitator_status_as_of(event.start_date) %>
-  <%= link_to participation_events_path(event_id: event.id, organization_id: organization.id, return_to: return_to),
+  <%= link_to participation_events_path(event_id: event.id, return_organization_id: organization.id, return_to: return_to),
               target: "_blank", rel: "noopener noreferrer",
               title: event.title,
               class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{OrganizationDecorator.program_status_classes(status)}" do %>

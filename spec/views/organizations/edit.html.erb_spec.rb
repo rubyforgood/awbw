@@ -167,7 +167,7 @@ RSpec.describe "organizations/edit", type: :view do
       # Opens in a new tab, so the report needs the route back to this form —
       # and the block needs the id that back-link anchors to.
       expect(rendered).to include(CGI.escapeHTML(
-        participation_events_path(event_id: event.id, organization_id: org.id, return_to: "organization_edit")
+        participation_events_path(event_id: event.id, return_organization_id: org.id, return_to: "organization_edit")
       ))
       expect(rendered).to include("id=\"#{EventParticipationHelper::PROGRAM_STATUS_ANCHOR}\"")
     end
