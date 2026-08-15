@@ -327,6 +327,10 @@ RSpec.describe EventMailer, type: :mailer do
       expect(mail.html_part.body.encoded).to include("Art Workshop")
     end
 
+    it "includes the event details in the plain-text body" do
+      expect(mail.text_part.body.encoded).to include(event.decorate.labelled_cost)
+    end
+
     it "uses the singular noun for a single recipient" do
       mail = described_class.event_registration_reminder_fyi(event, [ "Alex Rivera <alex@example.org>" ])
       expect(mail.subject).to include("1 registrant ")
@@ -343,6 +347,17 @@ RSpec.describe EventMailer, type: :mailer do
       it "still names the event and lists recipients" do
         expect(mail.html_part.body.encoded).to include("Art Workshop")
         expect(mail.html_part.body.encoded).to include("Alex Rivera")
+      end
+
+      it "omits the event details from the plain-text body" do
+        expect(mail.text_part.body.encoded).not_to include(event.decorate.labelled_cost)
+      end
+
+      # The event title sits inside the hidden section too, so this guards the
+      # summary line above it from being swallowed along with the card.
+      it "still names the event and lists recipients in the plain-text body" do
+        expect(mail.text_part.body.encoded).to include("Art Workshop")
+        expect(mail.text_part.body.encoded).to include("Alex Rivera <alex@example.org>")
       end
     end
   end
