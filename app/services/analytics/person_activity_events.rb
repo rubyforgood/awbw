@@ -42,6 +42,7 @@ module Analytics
         # reuses PersonCommentAggregator so History and the comments page agree.
         "Comment" => PersonCommentAggregator.new(@person).comments.reorder(nil).select(:id),
         "EventRegistration" => @person.event_registrations.select(:id),
+        "ContinuingEducationRegistration" => ContinuingEducationRegistration.where(event_registration_id: @person.event_registrations.select(:id)).select(:id),
         "FormSubmission" => @person.form_submissions.select(:id),
         "Grant" => @person.grants.select(:id),
         "Payment" => Payment.where(person_id: @person.id).select(:id),

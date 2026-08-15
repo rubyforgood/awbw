@@ -44,6 +44,14 @@ RSpec.describe Analytics::PersonActivityEvents do
       expect(described_class.new(person).relation).to include(target)
     end
 
+    it "includes events about the person's continuing education registrations" do
+      registration = create(:event_registration, registrant: person)
+      ce = create(:continuing_education_registration, event_registration: registration)
+      target = event(resource_type: "ContinuingEducationRegistration", resource_id: ce.id,
+                     name: "update.continuing_education_registration")
+      expect(described_class.new(person).relation).to include(target)
+    end
+
     it "includes events about comments connected to the person's associated records" do
       scholarship = create(:scholarship, recipient: person)
       comment = create(:comment, commentable: scholarship)
