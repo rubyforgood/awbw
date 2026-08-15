@@ -22,6 +22,8 @@
           <%= link_to "← Event reports", reports_events_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
         <% end %>
       <% end %>
+      </div>
+      <%= render "events/report_subnav", current: :attendees %>
     </div>
 
     <%= render "attendees_count" %>

@@ -370,17 +370,80 @@ RSpec.describe "Events", type: :request do
 
       # The four angles on this population sit on the eyebrow's row, each carrying the
       # report's own filters so switching angle keeps the same events in scope.
-      it "offers Details / Attendees / Breakdowns / Sign-ins carrying the filters" do
+      it "offers Details / Attendees / Scholarships / Sign-ins carrying the filters" do
         sign_in admin
         get participation_events_path(event_id: training_2026.id, event_type: "trainings")
 
         nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
         expect(nav).to have_text("Details")
         expect(nav).to have_link("Attendees")
-        expect(nav).to have_link("Breakdowns")
+        expect(nav).to have_link("Scholarships")
         expect(nav).to have_link("Sign-ins", href: signins_events_path(event_id: training_2026.id, event_type: "trainings"))
         # Details is the current page, so it isn't a link.
         expect(nav).to have_no_link("Details")
+      end
+
+      context "report sub-nav" do
+        it "renders on the attendees index with Attendees current" do
+          sign_in admin
+          get attendees_events_path
+
+          nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
+          expect(nav).to have_link("Details")
+          expect(nav).to have_link("Sign-ins")
+          expect(nav).to have_link("Scholarships")
+          expect(nav).to have_no_link("Attendees")
+        end
+
+        it "renders on the scholarship report with Scholarships current" do
+          sign_in admin
+          get scholarships_events_path
+
+          nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
+          expect(nav).to have_link("Details")
+          expect(nav).to have_link("Attendees")
+          expect(nav).to have_no_link("Scholarships")
+        end
+
+        # Breakdowns is a panel on the attendees index, not a page, so it has no tab.
+        it "has no Breakdowns tab" do
+          sign_in admin
+          get attendees_events_path(charts: "open")
+
+          nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
+          expect(nav).to have_no_text("Breakdowns")
+        end
+
+        # The scholarship report's own filters have to survive a trip through the
+        # other angles and back, or switching tab quietly rewrites the report.
+        it "round-trips the scholarship report's funder and period filters" do
+          sign_in admin
+          funder = create(:organization)
+          get scholarships_events_path(funder_sgid: funder.to_sgid.to_s, time_period: "2026")
+
+          nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
+          details = nav.find_link("Details")[:href]
+          expect(details).to include("funder_sgid", "time_period=2026")
+
+          get details
+          nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
+          expect(nav.find_link("Scholarships")[:href]).to include("funder_sgid", "time_period=2026")
+        end
+      end
+
+      # Switching angle must not silently widen the population, so every filter that
+      # is set travels with the tab — including the attendees index's own scholarship
+      # and payment vocabulary, which the report pages don't read but shouldn't drop.
+      it "carries the scholarship and other selected filters across the tabs" do
+        sign_in admin
+        get participation_events_path(event_type: "trainings", scholarship: "agreed",
+          payment_status: "unpaid", funder: "external", search: "TAC")
+
+        nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
+        %w[ Attendees Scholarships Sign-ins ].each do |label|
+          href = nav.find_link(label)[:href]
+          expect(href).to include("scholarship=agreed", "payment_status=unpaid", "funder=external", "search=TAC")
+        end
       end
 
       it "links each event to its sign-ins, CE-scoped only when CE is enabled" do

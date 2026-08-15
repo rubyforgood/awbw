@@ -90,6 +90,19 @@ RSpec.describe "Events sign-ins report", type: :request do
     expect(response.body).to include("No sign-in time has been logged")
   end
 
+  # The sub-nav is the point of the page family: every angle reaches every other.
+  it "shows the sub-nav with Sign-ins current" do
+    log_time!(training(title: "Facilitator training A", abbreviation: "TAC-A"))
+
+    get signins_events_path
+
+    nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
+    expect(nav).to have_link("Details")
+    expect(nav).to have_link("Attendees")
+    expect(nav).to have_link("Scholarships")
+    expect(nav).to have_no_link("Sign-ins")
+  end
+
   it "forbids a non-admin with no events of their own" do
     sign_in create(:user)
     get signins_events_path
