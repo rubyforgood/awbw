@@ -70,6 +70,16 @@ module Admin
         scope = scope.where(resource_id: params[:resource_id])
       end
 
+      # Filter to a person's full history: the person, their user, and every
+      # associated record (see Analytics::PersonActivityEvents).
+      if params[:person_id].present?
+        person = Person.find_by(id: params[:person_id])
+        if person
+          @person = person
+          scope = scope.where(id: Analytics::PersonActivityEvents.new(person).relation.select(:id))
+        end
+      end
+
       @events = scope.paginate(page: page, per_page: per_page)
     end
 

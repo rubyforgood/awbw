@@ -36,6 +36,13 @@ RSpec.describe "people/edit", type: :view do
     expect(rendered).to have_link('Home', href: root_path)
   end
 
+  it "shows a History card linking to the person's full Ahoy activity" do
+    expect(rendered).to have_link(
+      "History",
+      href: admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff])
+    )
+  end
+
   context "when person has an associated user" do
     it "displays the user's email as read-only" do
       expect(rendered).to have_content(person.user.email)

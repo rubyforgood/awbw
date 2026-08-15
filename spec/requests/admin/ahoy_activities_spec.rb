@@ -174,6 +174,42 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).to include("create.bookmark")
         expect(response.body).not_to include("auth.login")
       end
+
+      it "filters by person_id to the person, their user, and associated data" do
+        person = create(:person)
+        payment = create(:payment, person: person)
+        unrelated_person = create(:person)
+
+        create(:ahoy_event, name: "update.person", visit: visit_for_admin,
+                            resource_type: "Person", resource_id: person.id, time: 1.day.ago,
+                            properties: { "resource_type" => "Person", "resource_id" => person.id, "resource_title" => "person_history_row" })
+        create(:ahoy_event, name: "update.user", visit: visit_for_admin,
+                            resource_type: "User", resource_id: person.user.id, time: 1.day.ago,
+                            properties: { "resource_type" => "User", "resource_id" => person.user.id, "resource_title" => "user_history_row" })
+        create(:ahoy_event, name: "create.payment", visit: visit_for_admin,
+                            resource_type: "Payment", resource_id: payment.id, time: 1.day.ago,
+                            properties: { "resource_type" => "Payment", "resource_id" => payment.id, "resource_title" => "payment_history_row" })
+        create(:ahoy_event, name: "update.person", visit: visit_for_admin,
+                            resource_type: "Person", resource_id: unrelated_person.id, time: 1.day.ago,
+                            properties: { "resource_type" => "Person", "resource_id" => unrelated_person.id, "resource_title" => "unrelated_history_row" })
+
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("person_history_row")
+        expect(response.body).to include("user_history_row")
+        expect(response.body).to include("payment_history_row")
+        expect(response.body).not_to include("unrelated_history_row")
+      end
+
+      it "surfaces a person chip in the applied filters when person_id is set" do
+        person = create(:person, first_name: "Ada", last_name: "Lovelace")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Person: #{person.name}")
+      end
     end
 
     describe "GET /admin/activities/visits" do
