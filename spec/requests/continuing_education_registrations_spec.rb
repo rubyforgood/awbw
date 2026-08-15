@@ -12,12 +12,12 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
   describe "as an admin" do
     before { sign_in admin }
 
-    it "renders the index shell with the CE sign-in reports menu" do
+    it "renders the index shell with the CE sign-ins menu" do
       ce_registration
       get continuing_education_registrations_path
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("CE registrations")
-      expect(response.body).to include("CE sign-in reports")
+      expect(response.body).to include("CE sign-ins")
     end
 
     it "renders the results turbo frame with only the matching event's registrations" do
