@@ -6,10 +6,7 @@
 
 <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6">
   <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
-    <%# Top bar: eyelash + sub-nav, matching the other event pages. The eyelash returns
-        to wherever the page was opened from (the participation report by default; the
-        event dashboard or registrants roster when linked from there). Sign-ins has no
-        tab of its own, so nothing in the subnav is marked current. %>
+    <%# Sign-ins has no tab of its own, so nothing in the subnav is marked current. %>
     <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
       <% case params[:return_to] %>
       <% when "dashboard" %>
@@ -48,9 +45,7 @@
     <% end %>
 
     <% if @report.any? %>
-      <%# Totals across all days lead the report — the headline figures the CE board
-          certifies — set apart from the per-day tables with a teal treatment. The id
-          anchors the return trip from the per-row CE edit links. %>
+      <%# The id anchors the return trip from the per-row CE edit links. %>
       <section id="totals" class="mb-8 scroll-mt-6">
         <h2 class="text-sm font-semibold uppercase tracking-wide text-teal-700 mb-3">Totals</h2>
         <%= render "events/attendance_totals", report: @report, return_to: "attendance" %>

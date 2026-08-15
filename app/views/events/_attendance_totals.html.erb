@@ -5,8 +5,7 @@
   the whole of each event's section on the cross-event sign-ins page.
   locals: report (EventAttendanceReport); return_to (origin the row links carry back).
 %>
-<%# One "Day N logged" column per event day, between Hours awarded and Total logged.
-    Shared column template keeps header, rows, and the All row aligned. %>
+<%# One column template, so the header, the rows and the All row stay aligned. %>
 <% day_col = "minmax(5rem,auto) " %>
 <% cols = report.ce_only? ?
      "2fr minmax(6rem,1fr) minmax(6rem,auto) #{day_col * report.dates.size}minmax(6rem,auto)" :

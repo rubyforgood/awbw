@@ -11,9 +11,6 @@
       <%= render "events/report_subnav", current: :signins %>
     </div>
 
-    <%# The event slot names what's in scope: the one event when filtered to it,
-        every filtered event's abbreviation otherwise, or "All events" when nothing
-        narrows it. %>
     <%= render "events/report_header",
           title: title,
           icon: "fa-solid fa-clock",
@@ -44,7 +41,6 @@
                     title: report.event.title, class: "hover:text-gray-700 hover:underline" %>
               <span class="ml-1 normal-case font-normal text-gray-400"><%= event.date_range %></span>
             </h2>
-            <%# Into that event's full report, where the sessions are editable. %>
             <%= link_to "Open sign-ins →", attendance_event_path(report.event, ce: ("true" if report.ce_only?), return_to: "signins"),
                   class: "text-xs font-medium text-teal-700 hover:underline" %>
           </div>

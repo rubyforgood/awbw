@@ -7,7 +7,8 @@
         report drill-in would bounce the user to that event's dashboard instead of
         back to the report they were reading. %>
     <% report_return = { event_id: params[:event_id].presence } %>
-    <div class="mb-6">
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+      <div>
       <% case params[:return_to] %>
       <% when "participation" %>
         <%= link_to "← Event participation", participation_events_path(report_return), class: "text-sm text-gray-500 hover:text-gray-700" %>

@@ -247,29 +247,21 @@
     <% end %>
 
     <%#
-      Training sign-in/out — the in-portal replacement for the paper CE hour
-      sign-in sheet, shown once CE is paid in full. One button at a time for today:
-      Sign in when signed out (only inside the day's window), Sign out while signed in
-      (always, so a forgotten sign-out can still be closed that day). Many entries per
-      day is expected (breaks, lunch). An entry left open overnight doesn't carry into
-      today's state — it gets its own catch-up button below, stamped with that day's
-      scheduled end rather than now.
+      Training sign-in/out — the in-portal replacement for the paper CE hour sign-in
+      sheet. One button at a time for today: Sign in when signed out (only inside the
+      day's window), Sign out while signed in (always, so a forgotten sign-out can
+      still be closed that day). Many entries per day is expected (breaks, lunch). An
+      entry left open overnight doesn't carry into today's state — it gets its own
+      catch-up button below, stamped with that day's scheduled end rather than now.
 
-      Those buttons only stamp "now", though. The day-by-day sheets underneath stay
-      editable for the whole training and after it, so a registrant who arrived before
-      signing in — or never tapped the buttons at all — writes their own hours up
-      instead of having to ask staff to.
+      The buttons only ever stamp "now"; the sheets underneath stay editable during
+      the training and after it (see events/callouts/_ce_attendance_sheet), and the
+      controls stay singular above them because every sheet shares one set of times.
     %>
-    <%# One sheet per paid CE registration, each headed by its own licence: a registrant
-        claiming CE against two licences is audited by two boards, and each is shown
-        only its own. The sign-in controls stay singular above them, because the times
-        are shared — one person, one room, one set of hours — so signing in once fills
-        in every sheet. Gated per licence: a second licence still being paid for
-        doesn't take the first one's sheet away.
-
-        The sample preview has no payments behind its built CE record, so treat it as
-        paid the way the "Paid in full" badge above does — otherwise the whole section
-        is invisible in the one place it's meant to be previewed. %>
+    <%# Gated per licence, so a second still being paid for doesn't take the first
+        one's sheet away. The sample preview has no payments behind its built CE
+        record, so treat it as paid the way the "Paid in full" badge above does —
+        otherwise the section is invisible where it's meant to be previewed. %>
     <% attendance_sheets = @event_registration.continuing_education_registrations
          .select { |ce| ce.paid_in_full? || simulate_ce_paid || sample_preview? } %>
     <% sheet = RegistrantAttendanceSheet.new(@event_registration) %>
