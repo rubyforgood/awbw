@@ -59,45 +59,76 @@ RSpec.describe EventAttendanceReport do
 
     subject(:report) { described_class.new(event, ce_only: true) }
 
-    it "lists every CE registrant sorted by name, even with no entries yet" do
-      expect(report.registrations).to eq([ alice, bob ])
+    def row_for(registration)
+      report.rows.find { |row| row.registration == registration }
     end
 
-    it "groups a registrant's entries by day in sign-in order" do
-      day1 = report.entries_for(alice, Date.new(2026, 7, 23))
+    it "lists a line per CE registrant sorted by name, even with no entries yet" do
+      expect(report.rows.map(&:registration)).to eq([ alice, bob ])
+      expect(report.rows.map(&:name)).to eq([ "Alice Adams", "Bob Baker" ])
+    end
+
+    it "groups a line's entries by day in sign-in order" do
+      day1 = report.entries_for(row_for(alice), Date.new(2026, 7, 23))
       expect(day1.map(&:signed_in_label)).to eq([ "8:50 AM", "10:44 AM" ])
     end
 
     it "totals minutes per day and overall" do
-      expect(report.day_minutes(alice, Date.new(2026, 7, 23))).to eq(188)
-      expect(report.day_minutes(alice, Date.new(2026, 7, 24))).to eq(420)
-      expect(report.total_minutes(alice)).to eq(608)
-      expect(report.total_minutes(bob)).to eq(0)
+      expect(report.day_minutes(row_for(alice), Date.new(2026, 7, 23))).to eq(188)
+      expect(report.day_minutes(row_for(alice), Date.new(2026, 7, 24))).to eq(420)
+      expect(report.total_minutes(row_for(alice))).to eq(608)
+      expect(report.total_minutes(row_for(bob))).to eq(0)
       expect(report.grand_total_minutes).to eq(608)
     end
 
-    it "surfaces license numbers and awarded hours" do
-      expect(report.license_numbers(alice)).to eq([ "AAA111" ])
-      expect(report.ce_hours(alice)).to eq(6)
+    it "surfaces the line's own license number and awarded hours" do
+      expect(row_for(alice).license_number).to eq("AAA111")
+      expect(row_for(alice).hours_awarded).to eq(6)
     end
 
-    it "totals minutes per day and hours awarded across all registrants" do
+    it "totals minutes per day and hours awarded across all lines" do
       expect(report.day_grand_minutes(Date.new(2026, 7, 23))).to eq(188)
       expect(report.day_grand_minutes(Date.new(2026, 7, 24))).to eq(420)
       expect(report.total_hours_awarded).to eq(12) # Alice 6 + Bob 6
     end
 
-    it "excludes time logged outside the event's days from a registrant's total" do
+    it "excludes time logged outside the event's days from a line's total" do
       # 8 hours on a date the training doesn't run — must not inflate the total.
       create(:event_attendance_time_entry, event_registration: alice,
         signed_in_at: Time.zone.local(2026, 8, 1, 9, 0), signed_out_at: Time.zone.local(2026, 8, 1, 17, 0))
-      expect(report.total_minutes(alice)).to eq(608) # still just Jul 23 (188) + Jul 24 (420)
+      expect(report.total_minutes(row_for(alice))).to eq(608) # still just Jul 23 (188) + Jul 24 (420)
     end
 
-    it "flags a registrant with an open (not signed out) entry" do
+    it "flags a line with an open (not signed out) entry" do
       create(:event_attendance_time_entry, :open, event_registration: bob)
-      expect(report.open?(bob)).to be(true)
-      expect(report.open?(alice)).to be(false)
+      expect(report.open?(row_for(bob))).to be(true)
+      expect(report.open?(row_for(alice))).to be(false)
+    end
+
+    # Two licences means two boards, audited separately: each is shown only its own
+    # licence and its own awarded hours, over the one set of times the registrant
+    # actually logged.
+    context "when a registrant claims CE against two licences" do
+      before { make_ce(bob, number: "AAA999", hours: 3) }
+
+      it "reports a line per licence, each keyed separately" do
+        bob_rows = report.rows.select { |row| row.registration == bob }
+        expect(bob_rows.map(&:license_number)).to eq([ "AAA999", "BBB222" ])
+        expect(bob_rows.map(&:hours_awarded)).to eq([ 3, 6 ])
+        expect(bob_rows.map(&:key).uniq.size).to eq(2)
+      end
+
+      it "sums hours awarded across the lines — each board awards its own" do
+        expect(report.total_hours_awarded).to eq(15) # Alice 6 + Bob 6 + 3
+      end
+
+      # The lines share one set of times, so counting both would bank Bob's hours twice.
+      it "counts each person's logged time once in the everyone-totals" do
+        entry(bob, Time.zone.local(2026, 7, 23, 9, 0), Time.zone.local(2026, 7, 23, 10, 0)) # 60m
+
+        expect(report.day_grand_minutes(Date.new(2026, 7, 23))).to eq(248) # 188 + 60, not 188 + 120
+        expect(report.grand_total_minutes).to eq(668)
+      end
     end
   end
 
@@ -111,8 +142,12 @@ RSpec.describe EventAttendanceReport do
       entry(carol, Time.zone.local(2026, 7, 23, 9, 0), Time.zone.local(2026, 7, 23, 10, 0))
     end
 
-    it "lists only registrations that logged time" do
-      expect(described_class.new(event).registrations).to eq([ alice, carol ])
+    it "lists only registrations that logged time, one line each" do
+      rows = described_class.new(event).rows
+      expect(rows.map(&:registration)).to eq([ alice, carol ])
+      expect(rows.map(&:ce_registration)).to all(be_nil)
+      # Keyed by registration alone, so the generic report's cell ids are unchanged.
+      expect(rows.first.key).to eq(alice.id.to_s)
     end
   end
 end

@@ -374,7 +374,9 @@ class EventRegistrationsController < ApplicationController
   # Back to the report in read mode, scrolled to the day cell that was edited, keeping
   # whichever view the admin had open. `reopen:` puts that cell back into edit mode.
   def attendance_report_path(date, reopen: false)
-    cell = helpers.attendance_cell_id(@event_registration, date)
+    # `row` names the reported line the editor was opened on — a registrant reported
+    # once per CE licence has one cell per licence, and only that one should reopen.
+    cell = helpers.attendance_cell_id(params[:row].presence || @event_registration.id, date)
     attendance_event_path(@event_registration.event,
       ce: params[:ce].presence, group: params[:group].presence, return_to: params[:return_to].presence,
       edit: (cell if reopen), anchor: cell)

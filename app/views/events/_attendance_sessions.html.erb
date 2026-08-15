@@ -1,18 +1,19 @@
 <%#
-  One registrant's sign-in/out sessions on one training day — the report's editable
+  One reported line's sign-in/out sessions on one training day — the report's editable
   unit, shared by the by-person and by-day groupings (same cell, different axis).
   Read mode shows a chip per session; Edit swaps the cell for a form so staff can
   correct a time, add the pair for a day nobody signed in on, or drop a stray row,
   without leaving the report. Registrants still stamp their own times from the CE
   callout — this is the correction surface, not a replacement for it.
-  locals: registration, date, entries (decorated), editing (Boolean), state (page params).
+  locals: row (EventAttendanceReport::Row), date, entries (decorated),
+  editing (Boolean), state (page params).
 %>
-<% cell = attendance_cell_id(registration, date) %>
+<% cell = attendance_cell_id(row.key, date) %>
 <%# z-10 lifts the cell above the row's whole-row link so the controls are clickable. %>
 <div id="<%= cell %>" class="relative z-10 scroll-mt-24">
   <% if editing %>
     <%= render "events/attendance_day_form", entries: entries,
-          url: update_attendance_event_registration_path(registration, date: date.iso8601, **state),
+          url: update_attendance_event_registration_path(row.registration, date: date.iso8601, row: row.key, **state),
           cancel_path: attendance_event_path(@event, **state, anchor: cell) %>
   <% else %>
     <div class="flex flex-wrap items-center gap-1.5">
@@ -30,7 +31,7 @@
           on a touch screen. %>
       <%= link_to attendance_event_path(@event, **state, edit: cell, anchor: cell),
             class: "ml-1 rounded px-1.5 py-0.5 text-xs font-medium text-teal-700 opacity-50 transition-opacity hover:bg-teal-50 hover:underline group-hover:opacity-100 focus:opacity-100",
-            "aria-label": "Edit #{registration.registrant.full_name}'s times for #{date.strftime("%b %-d")}" do %>
+            "aria-label": "Edit #{row.name}'s times for #{date.strftime("%b %-d")}" do %>
         <i class="fa-solid fa-pen text-[0.6rem]"></i> Edit
       <% end %>
     </div>

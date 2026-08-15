@@ -132,6 +132,29 @@ RSpec.describe "Events attendance report", type: :request do
       expect(day_two).to have_no_css("span.bg-teal-50")
     end
 
+    # Each board audits its own licence, so each gets its own line showing its own
+    # number and hours — over the one set of times the registrant actually logged.
+    it "reports a line per licence when a registrant claims CE against two" do
+      log_ce_time!
+      second = create(:professional_license, person: registration.registrant, number: "ZZZ999")
+      create(:continuing_education_registration, event_registration: registration,
+        professional_license: second, hours: 3)
+
+      get attendance_event_path(event, ce: "true")
+
+      expect(response.body).to include("AAA111", "ZZZ999")
+      # Two lines, one editor each — a shared cell id would open both at once.
+      cells = response.body.scan(/id="(attendance-#{registration.id}-\d+-2026-07-23)"/).flatten
+      expect(cells.uniq.size).to eq(2)
+      # 1h 44m was logged once and is credited on both lines, so the All row has to
+      # count it once — not bank 3h 28m for a person who sat there for 1h 44m.
+      all_row = Capybara.string(response.body).find("#totals").find(".bg-teal-100")
+      expect(all_row).to have_text("1h 44m")
+      expect(all_row).to have_no_text("3h 28m")
+      # Hours awarded do sum across the lines — each board awards its own.
+      expect(all_row).to have_text("9")
+    end
+
     it "warns when the event runs longer than the report's 5-day cap" do
       event.update!(end_date: Time.zone.local(2026, 7, 30, 16, 0))
       get attendance_event_path(event)
@@ -142,12 +165,15 @@ RSpec.describe "Events attendance report", type: :request do
     # than clicking out to the CE edit page for a single correction.
     describe "editing a day's times in place" do
       let(:day) { Date.new(2026, 7, 23) }
-      let(:cell) { "attendance-#{registration.id}-#{day.iso8601}" }
+      # On the CE report a line is a licence, so its cells are keyed by both — see
+      # EventAttendanceReport::Row#key.
+      let(:ce_row_key) { "#{registration.id}-#{registration.continuing_education_registrations.first.id}" }
+      let(:cell) { "attendance-#{ce_row_key}-#{day.iso8601}" }
 
       it "offers an Edit link on every day's sessions cell, including empty days" do
         log_ce_time!
         event.update!(end_date: Time.zone.local(2026, 7, 24, 16, 0))
-        empty_cell = "attendance-#{registration.id}-2026-07-24"
+        empty_cell = "attendance-#{ce_row_key}-2026-07-24"
 
         get attendance_event_path(event, ce: "true")
 
@@ -170,7 +196,7 @@ RSpec.describe "Events attendance report", type: :request do
         create(:continuing_education_registration, event_registration: registration, professional_license: license)
 
         expect {
-          patch update_attendance_event_registration_path(registration, date: day.iso8601, ce: "true"),
+          patch update_attendance_event_registration_path(registration, date: day.iso8601, ce: "true", row: ce_row_key),
                 params: { attendance: { entries: { "0" => { in: "08:50", out: "16:00" } } } }
         }.to change { registration.event_attendance_time_entries.count }.by(1)
 
@@ -218,7 +244,7 @@ RSpec.describe "Events attendance report", type: :request do
       it "reopens the cell with the submitted times when the save is rejected" do
         log_ce_time!
 
-        patch update_attendance_event_registration_path(registration, date: day.iso8601, ce: "true"),
+        patch update_attendance_event_registration_path(registration, date: day.iso8601, ce: "true", row: ce_row_key),
               params: { attendance: { entries: { "0" => { in: "16:00", out: "09:00" } } } }
 
         expect(response).to redirect_to(attendance_event_path(event, ce: "true", edit: cell, anchor: cell))

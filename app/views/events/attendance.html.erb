@@ -72,33 +72,33 @@
               <div class="text-right leading-tight">Total<span class="<%= qualifier %>">logged</span></div>
             </div>
             <div class="divide-y divide-teal-50">
-              <% @report.registrations.each do |reg| %>
-                <% ce_reg = @report.ce_registration_for(reg) %>
-                <div class="relative grid items-center gap-x-3 px-4 py-2.5 text-sm <%= "hover:bg-teal-50" if @report.ce_only? && ce_reg %>"
+              <% @report.rows.each do |row| %>
+                <% ce_reg = row.ce_registration %>
+                <div class="relative grid items-center gap-x-3 px-4 py-2.5 text-sm <%= "hover:bg-teal-50" if ce_reg %>"
                      style="grid-template-columns: <%= totals_cols %>">
                   <%# Whole row → CE edit page; the name link (z-10, above) → the
                       registrant's CE callout page instead. %>
-                  <% if @report.ce_only? && ce_reg %>
+                  <% if ce_reg %>
                     <%= link_to "", edit_continuing_education_registration_path(ce_reg, return_to: "attendance"),
-                          class: "absolute inset-0", "aria-label": "Edit CE registration for #{reg.registrant.full_name}" %>
+                          class: "absolute inset-0", "aria-label": "Edit CE registration for #{row.name}" %>
                   <% end %>
                   <div class="relative z-10 min-w-0 justify-self-start">
-                    <% if @report.ce_only? && ce_reg %>
-                      <%= link_to reg.registrant.full_name, registration_ce_path(reg.slug, return_to: "attendance"),
+                    <% if ce_reg %>
+                      <%= link_to row.name, registration_ce_path(row.registration.slug, return_to: "attendance"),
                             class: "font-medium text-gray-900 hover:text-teal-700 hover:underline" %>
                     <% else %>
-                      <%= link_to reg.registrant.full_name, edit_event_registration_path(reg, return_to: "attendance"),
+                      <%= link_to row.name, edit_event_registration_path(row.registration, return_to: "attendance"),
                             class: "font-medium text-gray-900 hover:text-teal-700 hover:underline" %>
                     <% end %>
                   </div>
                   <% if @report.ce_only? %>
-                    <div class="text-gray-600 tabular-nums truncate"><%= @report.license_numbers(reg).join(", ").presence || "—" %></div>
-                    <div class="text-right text-gray-600 tabular-nums"><%= plain_number(@report.ce_hours(reg)) %></div>
+                    <div class="text-gray-600 tabular-nums truncate"><%= row.license_number.presence || "—" %></div>
+                    <div class="text-right text-gray-600 tabular-nums"><%= plain_number(row.hours_awarded) %></div>
                   <% end %>
                   <% @report.dates.each do |date| %>
-                    <div class="text-right text-gray-700 tabular-nums"><%= attendance_duration_label(@report.day_minutes(reg, date)) %></div>
+                    <div class="text-right text-gray-700 tabular-nums"><%= attendance_duration_label(@report.day_minutes(row, date)) %></div>
                   <% end %>
-                  <div class="text-right font-semibold text-gray-900 tabular-nums"><%= attendance_duration_label(@report.total_minutes(reg)) %></div>
+                  <div class="text-right font-semibold text-gray-900 tabular-nums"><%= attendance_duration_label(@report.total_minutes(row)) %></div>
                 </div>
               <% end %>
             </div>
@@ -137,22 +137,27 @@
       </div>
 
       <% unless group_by_day %>
-        <% @report.registrations.each do |reg| %>
-          <% ce_reg = @report.ce_registration_for(reg) %>
+        <% @report.rows.each do |row| %>
+          <% ce_reg = row.ce_registration %>
           <%# Whole row → the CE edit page on the CE report, the registration edit
               page otherwise (kept in sync with those pages' return_to handling). %>
-          <% row_path = @report.ce_only? && ce_reg ?
+          <% row_path = ce_reg ?
                edit_continuing_education_registration_path(ce_reg, return_to: "attendance") :
-               edit_event_registration_path(reg, return_to: "attendance") %>
+               edit_event_registration_path(row.registration, return_to: "attendance") %>
           <section class="mb-8">
             <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
               <h2 class="text-sm font-semibold text-gray-900">
-                <%= reg.registrant.full_name %>
-                <% if @report.open?(reg) %>
+                <%= row.name %>
+                <%# Each licence gets its own heading, named, so two sections for the
+                    same person don't read as a duplicate. %>
+                <% if ce_reg && row.license_number.present? %>
+                  <span class="ml-1 text-xs font-normal text-gray-400 tabular-nums"><%= row.license_number %></span>
+                <% end %>
+                <% if @report.open?(row) %>
                   <span class="ml-1.5 inline-flex items-center gap-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200 px-1.5 py-0.5 text-[0.65rem] font-medium">signed in</span>
                 <% end %>
               </h2>
-              <span class="text-xs text-gray-400">Total <%= attendance_duration_label(@report.total_minutes(reg)) %></span>
+              <span class="text-xs text-gray-400">Total <%= attendance_duration_label(@report.total_minutes(row)) %></span>
             </div>
 
             <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
@@ -164,20 +169,20 @@
               </div>
               <div class="divide-y divide-gray-100">
                 <% @report.dates.each_with_index do |date, index| %>
-                  <% entries = @report.entries_for(reg, date) %>
-                  <% editing = params[:edit] == attendance_cell_id(reg, date) %>
+                  <% entries = @report.entries_for(row, date) %>
+                  <% editing = params[:edit] == attendance_cell_id(row.key, date) %>
                   <div class="group relative grid items-center gap-x-3 px-4 py-2.5 text-sm hover:bg-gray-50"
                        style="grid-template-columns: minmax(11rem,1.2fr) 3fr minmax(5rem,auto)">
                     <%# No whole-row link while the cell is being edited — a stray click
                         outside the inputs would navigate away mid-correction. %>
                     <% unless editing %>
                       <%= link_to "", row_path, class: "absolute inset-0",
-                            "aria-label": "Edit #{@report.ce_only? ? "CE registration" : "registration"} for #{reg.registrant.full_name}" %>
+                            "aria-label": "Edit #{ce_reg ? "CE registration" : "registration"} for #{row.name}" %>
                     <% end %>
                     <div class="text-gray-700">Day <%= index + 1 %> · <%= date.strftime("%a, %b %-d") %></div>
-                    <%= render "events/attendance_sessions", registration: reg, date: date,
+                    <%= render "events/attendance_sessions", row: row, date: date,
                           entries: entries, editing: editing, state: cell_state %>
-                    <div class="text-right font-medium text-gray-900 tabular-nums"><%= attendance_duration_label(@report.day_minutes(reg, date)) %></div>
+                    <div class="text-right font-medium text-gray-900 tabular-nums"><%= attendance_duration_label(@report.day_minutes(row, date)) %></div>
                   </div>
                 <% end %>
               </div>
@@ -186,11 +191,11 @@
         <% end %>
       <% else %>
       <% @report.dates.each_with_index do |date, index| %>
-        <% signed_in_count = @report.registrations.count { |reg| @report.entries_for(reg, date).any? } %>
+        <% signed_in_count = @report.rows.count { |row| @report.entries_for(row, date).any? } %>
         <section class="mb-8">
           <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
             <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Day <%= index + 1 %> · <%= date.strftime("%A, %b %-d") %> · <%= event.times %></h2>
-            <span class="text-xs text-gray-400"><%= signed_in_count %> of <%= @report.registrations.size %> signed in</span>
+            <span class="text-xs text-gray-400"><%= signed_in_count %> of <%= @report.rows.size %> signed in</span>
           </div>
 
           <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
@@ -203,27 +208,27 @@
             </div>
 
             <div class="divide-y divide-gray-100">
-              <% @report.registrations.each do |reg| %>
-                <% entries = @report.entries_for(reg, date) %>
-                <% ce_reg = @report.ce_registration_for(reg) %>
-                <% row_path = @report.ce_only? && ce_reg ?
+              <% @report.rows.each do |row| %>
+                <% entries = @report.entries_for(row, date) %>
+                <% ce_reg = row.ce_registration %>
+                <% row_path = ce_reg ?
                      edit_continuing_education_registration_path(ce_reg, return_to: "attendance") :
-                     edit_event_registration_path(reg, return_to: "attendance") %>
-                <% editing = params[:edit] == attendance_cell_id(reg, date) %>
+                     edit_event_registration_path(row.registration, return_to: "attendance") %>
+                <% editing = params[:edit] == attendance_cell_id(row.key, date) %>
                 <div class="group relative grid items-center gap-x-3 px-4 py-2.5 text-sm hover:bg-gray-50"
                      style="grid-template-columns: <%= @report.ce_only? ? "minmax(9rem,1.2fr) minmax(6rem,0.8fr) 3fr minmax(5rem,auto)" : "minmax(9rem,1.4fr) 3fr minmax(5rem,auto)" %>">
                   <%# No whole-row link while the cell is being edited — a stray click
                       outside the inputs would navigate away mid-correction. %>
                   <% unless editing %>
                     <%= link_to "", row_path, class: "absolute inset-0",
-                          "aria-label": "Edit #{@report.ce_only? && ce_reg ? "CE registration" : "registration"} for #{reg.registrant.full_name}" %>
+                          "aria-label": "Edit #{ce_reg ? "CE registration" : "registration"} for #{row.name}" %>
                   <% end %>
                   <div class="relative z-10 min-w-0 justify-self-start">
-                    <% if @report.ce_only? && ce_reg %>
-                      <%= link_to reg.registrant.full_name, registration_ce_path(reg.slug, return_to: "attendance"),
+                    <% if ce_reg %>
+                      <%= link_to row.name, registration_ce_path(row.registration.slug, return_to: "attendance"),
                             class: "font-medium text-gray-900 hover:text-teal-700 hover:underline" %>
                     <% else %>
-                      <%= link_to reg.registrant.full_name, edit_event_registration_path(reg, return_to: "attendance"),
+                      <%= link_to row.name, edit_event_registration_path(row.registration, return_to: "attendance"),
                             class: "font-medium text-gray-900 hover:text-teal-700 hover:underline" %>
                     <% end %>
                     <%# Day-scoped: this row is one day, so the flag has to be about
@@ -233,11 +238,11 @@
                     <% end %>
                   </div>
                   <% if @report.ce_only? %>
-                    <div class="text-gray-600 tabular-nums truncate"><%= @report.license_numbers(reg).join(", ").presence || "—" %></div>
+                    <div class="text-gray-600 tabular-nums truncate"><%= row.license_number.presence || "—" %></div>
                   <% end %>
-                  <%= render "events/attendance_sessions", registration: reg, date: date,
+                  <%= render "events/attendance_sessions", row: row, date: date,
                         entries: entries, editing: editing, state: cell_state %>
-                  <div class="text-right font-medium text-gray-900 tabular-nums"><%= attendance_duration_label(@report.day_minutes(reg, date)) %></div>
+                  <div class="text-right font-medium text-gray-900 tabular-nums"><%= attendance_duration_label(@report.day_minutes(row, date)) %></div>
                 </div>
               <% end %>
             </div>

@@ -9,11 +9,13 @@ module EventAttendanceHelper
     AttendanceTimeFormatter.clock_time(time)
   end
 
-  # Identifies one registrant's sessions on one training day — the report's editable
+  # Identifies one reported line's sessions on one training day — the report's editable
   # unit. Doubles as the cell's DOM id, the `edit` param that opens it, and the anchor
-  # the page returns to after a save.
-  def attendance_cell_id(registration, date)
-    "attendance-#{registration.id}-#{date.iso8601}"
+  # the page returns to after a save. Keyed by the line (EventAttendanceReport::Row#key)
+  # rather than the registration, so a registrant reported once per CE licence doesn't
+  # get two cells sharing one id and opening both editors at once.
+  def attendance_cell_id(row_key, date)
+    "attendance-#{row_key}-#{date.iso8601}"
   end
 
   # The rows the inline day editor renders: one per logged session plus a trailing
