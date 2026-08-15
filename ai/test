@@ -75,6 +75,9 @@ if [ -d spec/system ] && [ -n "$keywords" ]; then
   related=$(find spec/system -name "*_spec.rb" | grep -Ei "$pattern" | sort -u || true)
 fi
 selected=$(printf "%s\n" "$direct" "$related" | grep -E "_spec\.rb$" | sort -u || true)
+# A branch that DELETES a system spec still lists it in the diff, and handing rspec
+# a path that no longer exists aborts the whole run with a LoadError.
+selected=$(printf "%s\n" $selected | while IFS= read -r f; do [ -f "$f" ] && printf "%s\n" "$f"; done || true)
 
 # Non-system suite = every spec dir except system (+ any root-level specs).
 spec_targets=$(find spec -mindepth 1 -maxdepth 1 -type d ! -name system | sort)
