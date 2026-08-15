@@ -352,6 +352,26 @@ If there are unresolved items:
 
 After creating or submitting a pull request, automatically perform the session recap (Recap + Unresolved) using the format above.
 
+### On every completed task
+
+**Close every message that reports work as done with the same two parts** — Recap, then
+Unresolved with its count header — not just when the user asks for a recap or a PR is
+submitted. A prose summary doesn't say whether anything still needs the user's attention;
+the count header answers that in one line, before any detail. Mid-task progress notes are
+exempt; this is for the message that says the work is finished.
+
+## Response formatting
+
+**Structure the answer; don't hand back a wall of text.** Long replies are for scanning
+first and reading second.
+
+- **Lead with the direct answer** when the user asked a question, then the detail.
+- **Group under headers** (`##`/`###`) once a reply covers more than one topic.
+- **Use titled bullets** — a bold lead-in naming the thing, then the explanation — rather
+  than consecutive bare paragraphs.
+- **Nest detail under the point it belongs to** instead of running it inline.
+- Keep tables for genuinely tabular comparisons; keep prose short inside each bullet.
+
 ## Quick Commands
 
 See `ai/` directory for executable scripts:
