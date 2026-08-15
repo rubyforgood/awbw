@@ -12,12 +12,12 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
   describe "as an admin" do
     before { sign_in admin }
 
-    it "renders the index shell with the CE sign-in reports menu" do
+    it "renders the index shell with the CE sign-ins menu" do
       ce_registration
       get continuing_education_registrations_path
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("CE registrations")
-      expect(response.body).to include("CE sign-in reports")
+      expect(response.body).to include("CE sign-ins")
     end
 
     it "renders the results turbo frame with only the matching event's registrations" do
@@ -118,6 +118,25 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       }.not_to change(ProfessionalLicense, :count)
 
       expect(ce_registration.reload.professional_license).to eq(other)
+    end
+
+    describe "opened from the CE sign-ins (return_to=attendance)" do
+      it "points the back and cancel links at the report" do
+        get edit_continuing_education_registration_path(ce_registration, return_to: "attendance")
+        expect(response.body).to include("CE sign-ins")
+        expect(response.body).to include(attendance_event_path(event, ce: "true", anchor: "totals"))
+      end
+
+      it "returns to the report after saving" do
+        patch continuing_education_registration_path(ce_registration, return_to: "attendance"),
+              params: { continuing_education_registration: { hours: "6", cost_dollars: "120" } }
+        expect(response).to redirect_to(attendance_event_path(event, ce: "true", anchor: "totals"))
+      end
+
+      it "returns to the report after deleting" do
+        delete continuing_education_registration_path(ce_registration, return_to: "attendance")
+        expect(response).to redirect_to(attendance_event_path(event, ce: "true", anchor: "totals"))
+      end
     end
 
     it "marks the certificate issued and back to not issued" do
@@ -263,6 +282,111 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
         delete continuing_education_registration_path(ce_registration, return_to: "registrants")
 
         expect(response).to redirect_to(row_path)
+      end
+    end
+
+    describe "attendance time entries" do
+      it "adds an entry from a blank row, attributed to the editing admin" do
+        expect {
+          patch continuing_education_registration_path(ce_registration),
+                params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
+                  time_entries: { "0" => { signed_in_at: "2026-07-23T08:50", signed_out_at: "2026-07-23T10:34" } } } }
+        }.to change { registration.event_attendance_time_entries.count }.by(1)
+
+        entry = registration.event_attendance_time_entries.last
+        # Datetime-local values are parsed in the editing admin's zone (Pacific).
+        pt = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+        expect(entry.signed_in_at.in_time_zone(pt).strftime("%FT%R")).to eq("2026-07-23T08:50")
+        expect(entry.signed_out_at.in_time_zone(pt).strftime("%FT%R")).to eq("2026-07-23T10:34")
+        expect(entry.created_by).to eq(admin)
+        expect(entry.updated_by).to eq(admin)
+      end
+
+      it "corrects an existing entry's time and stamps updated_by" do
+        entry = create(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 23, 8, 50), signed_out_at: Time.zone.local(2026, 7, 23, 10, 0))
+
+        patch continuing_education_registration_path(ce_registration),
+              params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
+                time_entries: { "0" => { id: entry.id, signed_in_at: "2026-07-23T08:50", signed_out_at: "2026-07-23T10:34" } } } }
+
+        expect(entry.reload.signed_out_at.in_time_zone("Pacific Time (US & Canada)").strftime("%FT%R")).to eq("2026-07-23T10:34")
+        expect(entry.updated_by).to eq(admin)
+      end
+
+      it "removes an entry when its _destroy box is ticked" do
+        entry = create(:event_attendance_time_entry, event_registration: registration)
+
+        expect {
+          patch continuing_education_registration_path(ce_registration),
+                params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
+                  time_entries: { "0" => { id: entry.id, signed_in_at: "2026-07-23T08:50", _destroy: "1" } } } }
+        }.to change { registration.event_attendance_time_entries.count }.by(-1)
+      end
+
+      it "ignores a remove for an entry that no longer exists (stale form / double submit)" do
+        expect {
+          patch continuing_education_registration_path(ce_registration),
+                params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
+                  time_entries: { "0" => { id: "999999", signed_in_at: "2026-07-23T08:50", signed_out_at: "2026-07-23T10:34", _destroy: "1" } } } }
+        }.not_to raise_error
+
+        expect(response).to redirect_to(edit_event_registration_path(registration))
+      end
+
+      it "ignores blank rows" do
+        expect {
+          patch continuing_education_registration_path(ce_registration),
+                params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
+                  time_entries: { "0" => { signed_in_at: "", signed_out_at: "" } } } }
+        }.not_to change { registration.event_attendance_time_entries.count }
+      end
+
+      it "rejects overlapping times on the same day with a helpful error" do
+        pt = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+        create(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: pt.local(2026, 7, 23, 9, 0), signed_out_at: pt.local(2026, 7, 23, 12, 0))
+
+        expect {
+          patch continuing_education_registration_path(ce_registration),
+                params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
+                  time_entries: { "0" => { signed_in_at: "2026-07-23T11:00", signed_out_at: "2026-07-23T13:00" } } } }
+        }.not_to change { registration.event_attendance_time_entries.count }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        # Verbatim: entry messages are whole sentences, so the nested-attributes
+        # association prefix ("Event attendance time entries …") must not be pasted on.
+        expect(flash[:alert]).to eq("This sign-in overlaps another entry on Jul 23.")
+      end
+
+      it "rejects a sign-out before the sign-in with a helpful error" do
+        patch continuing_education_registration_path(ce_registration),
+              params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
+                time_entries: { "0" => { signed_in_at: "2026-07-23T10:00", signed_out_at: "2026-07-23T09:00" } } } }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(flash[:alert]).to eq("Sign-out must be after the sign-in time.")
+        expect(registration.event_attendance_time_entries).to be_empty
+      end
+
+      it "still spells out the CE record's own attribute errors in full" do
+        patch continuing_education_registration_path(ce_registration),
+              params: { continuing_education_registration: { hours: "", cost_dollars: "120" } }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(flash[:alert]).to match(/\AHours /)
+      end
+
+      # The rejected save re-renders the form, so the admin's typed times have to
+      # survive it — otherwise their correction is thrown away with only the flash
+      # to explain, and they have to retype it from memory.
+      it "keeps the submitted times on screen when the save is rejected" do
+        patch continuing_education_registration_path(ce_registration),
+              params: { continuing_education_registration: { hours: "6", cost_dollars: "120",
+                time_entries: { "0" => { signed_in_at: "2026-07-23T10:00", signed_out_at: "2026-07-23T09:00" } } } }
+
+        expect(response.body).to include('value="2026-07-23T10:00"')
+        expect(response.body).to include('value="2026-07-23T09:00"')
       end
     end
   end

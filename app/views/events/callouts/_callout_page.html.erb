@@ -31,7 +31,10 @@
           <%# @event is decorated in some callout actions and raw in others; the date
               range lives on the decorator, so decorate only when it isn't already. %>
           <% event = @event.respond_to?(:short_date_range) ? @event : @event.decorate %>
-          <p class="text-sm text-blue-200"><%= event.title %><% if event.start_date.present? %> · <%= event.short_date_range %><% end %></p>
+          <p class="text-sm text-blue-200"><%= event.title %></p>
+          <% if event.start_date.present? %>
+            <p class="text-sm text-blue-200"><%= event.short_date_range %> · <%= event.times %></p>
+          <% end %>
         </div>
       </div>
       <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>

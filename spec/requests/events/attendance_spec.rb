@@ -1,0 +1,302 @@
+require "rails_helper"
+
+RSpec.describe "Events attendance report", type: :request do
+  let(:admin) { create(:user, :admin) }
+  let(:event) do
+    create(:event, ce_hours_offered: 6,
+      start_date: Time.zone.local(2026, 7, 23, 9, 0),
+      end_date: Time.zone.local(2026, 7, 23, 16, 0),
+      registration_close_date: Time.zone.local(2026, 7, 20, 9, 0))
+  end
+  let(:registration) do
+    create(:event_registration, event: event, registrant: create(:person, first_name: "Alice", last_name: "Adams"))
+  end
+
+  def log_ce_time!
+    license = create(:professional_license, person: registration.registrant, number: "AAA111")
+    create(:continuing_education_registration, event_registration: registration, professional_license: license)
+    create(:event_attendance_time_entry, event_registration: registration,
+      signed_in_at: Time.zone.local(2026, 7, 23, 8, 50), signed_out_at: Time.zone.local(2026, 7, 23, 10, 34))
+  end
+
+  describe "as an admin" do
+    before { sign_in admin }
+
+    it "renders the CE report with license number and hours when ce=true" do
+      log_ce_time!
+      get attendance_event_path(event, ce: "true")
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("CE sign-ins")
+      expect(response.body).to include("Alice Adams")
+      expect(response.body).to include("AAA111")
+    end
+
+    it "renders the generic attendance report without CE scoping" do
+      get attendance_event_path(event)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Sign-ins")
+      expect(response.body).not_to include("CE sign-ins")
+    end
+
+    it "makes each row link to the CE edit page and the name link to the CE callout" do
+      log_ce_time!
+      ce = registration.continuing_education_registrations.first
+      get attendance_event_path(event, ce: "true")
+      expect(response.body).to include(edit_continuing_education_registration_path(ce)) # whole-row link
+      expect(response.body).to include(registration_ce_path(registration.slug))         # name link
+    end
+
+    it "groups sessions by person by default" do
+      log_ce_time!
+      get attendance_event_path(event, ce: "true")
+      expect(response.body).to include("Sessions by person")
+      expect(response.body).not_to include("Sessions by day")
+    end
+
+    it "groups sessions by day when toggled" do
+      log_ce_time!
+      get attendance_event_path(event, ce: "true", group: "day")
+      expect(response.body).to include("Sessions by day")
+      expect(response.body).to include("Day 1 ·")
+    end
+
+    it "links session rows to the registration edit page on the generic report" do
+      log_ce_time!
+      get attendance_event_path(event)
+      expect(response.body).to include("#{edit_event_registration_path(registration)}?return_to=attendance")
+
+      get attendance_event_path(event, group: "day")
+      expect(response.body).to include("#{edit_event_registration_path(registration)}?return_to=attendance")
+    end
+
+    it "gives CE-report name links a path back to the report via the CE page eyebrow" do
+      log_ce_time!
+      get attendance_event_path(event, ce: "true")
+      expect(response.body).to include("#{registration_ce_path(registration.slug)}?return_to=attendance")
+      expect(response.body).not_to include("return_to=ce_registration")
+    end
+
+    it "links session rows to the CE edit page on the CE report" do
+      log_ce_time!
+      ce = registration.continuing_education_registrations.first
+      get attendance_event_path(event, ce: "true")
+      expect(response.body).to include("#{edit_continuing_education_registration_path(ce)}?return_to=attendance")
+      expect(response.body).not_to include("#{edit_event_registration_path(registration)}?return_to=attendance")
+    end
+
+    # The name link opens the registrant-facing callout; its eyebrow has to lead back
+    # to the report, not to the registration edit default two hops away.
+    it "sends the name link to a CE callout that points back at the report" do
+      log_ce_time!
+      get attendance_event_path(event, ce: "true")
+      expect(response.body).to include("#{registration_ce_path(registration.slug)}?return_to=attendance")
+
+      get registration_ce_path(registration.slug, return_to: "attendance")
+      expect(response.body).to include("Back to CE sign-ins")
+      expect(response.body).to include(attendance_event_path(event, ce: "true", anchor: "totals"))
+    end
+
+    it "returns to the registrants page when opened from there" do
+      get attendance_event_path(event, ce: "true", return_to: "registrants")
+      expect(response.body).to include("← Registrants")
+    end
+
+    it "shows the event's daily times in the page header and each day header" do
+      # Pin the viewer to UTC so the times render exactly as the event was built
+      # (requests otherwise display in the admin's zone, Pacific by default).
+      sign_in create(:user, :admin, time_zone: "UTC")
+      log_ce_time!
+      get attendance_event_path(event, ce: "true", group: "day")
+      # The shared report header carries the date range and the daily times on
+      # separate lines; the day headings still combine them.
+      expect(response.body).to include(event.decorate.date_range)
+      expect(response.body).to include("9 am - 4 pm UTC")
+      expect(response.body).to include("Day 1 · #{Date.new(2026, 7, 23).strftime("%A, %b %-d")} · 9 am - 4 pm UTC")
+    end
+
+    # The chip flags an entry with no sign-out, so on a per-day table it has to be
+    # about that day — otherwise one forgotten sign-out lights up every later day too,
+    # which is exactly what staff are scanning the report to find.
+    it "flags 'signed in' only on the day whose entry is still open" do
+      event.update!(end_date: Time.zone.local(2026, 7, 24, 16, 0))
+      license = create(:professional_license, person: registration.registrant, number: "AAA111")
+      create(:continuing_education_registration, event_registration: registration, professional_license: license)
+      create(:event_attendance_time_entry, :open, event_registration: registration,
+        signed_in_at: Time.zone.local(2026, 7, 23, 9, 0))
+      create(:event_attendance_time_entry, event_registration: registration,
+        signed_in_at: Time.zone.local(2026, 7, 24, 9, 0), signed_out_at: Time.zone.local(2026, 7, 24, 12, 0))
+
+      get attendance_event_path(event, ce: "true", group: "day")
+
+      sections = Capybara.string(response.body).all("section")
+      day_one = sections.find { |section| section.text.squish.start_with?("Day 1 ·") }
+      day_two = sections.find { |section| section.text.squish.start_with?("Day 2 ·") }
+      expect(day_one).to have_css("span.bg-teal-50", text: "signed in")
+      expect(day_two).to have_no_css("span.bg-teal-50")
+    end
+
+    # Each board audits its own licence, so each gets its own line showing its own
+    # number and hours — over the one set of times the registrant actually logged.
+    it "reports a line per licence when a registrant claims CE against two" do
+      log_ce_time!
+      second = create(:professional_license, person: registration.registrant, number: "ZZZ999")
+      create(:continuing_education_registration, event_registration: registration,
+        professional_license: second, hours: 3)
+
+      get attendance_event_path(event, ce: "true")
+
+      expect(response.body).to include("AAA111", "ZZZ999")
+      # Two lines, one editor each — a shared cell id would open both at once.
+      cells = response.body.scan(/id="(attendance-#{registration.id}-\d+-2026-07-23)"/).flatten
+      expect(cells.uniq.size).to eq(2)
+      # 1h 44m was logged once and is credited on both lines, so the All row has to
+      # count it once — not bank 3h 28m for a person who sat there for 1h 44m.
+      all_row = Capybara.string(response.body).find("#totals").find(".bg-teal-100")
+      expect(all_row).to have_text("1h 44m")
+      expect(all_row).to have_no_text("3h 28m")
+      # Hours awarded do sum across the lines — each board awards its own.
+      expect(all_row).to have_text("9")
+    end
+
+    it "warns when the event runs longer than the report's 5-day cap" do
+      event.update!(end_date: Time.zone.local(2026, 7, 30, 16, 0))
+      get attendance_event_path(event)
+      expect(response.body).to include("only the first 5 days")
+    end
+
+    # Staff fix a missed sign-in or a forgotten sign-out on the report itself rather
+    # than clicking out to the CE edit page for a single correction.
+    describe "editing a day's times in place" do
+      let(:day) { Date.new(2026, 7, 23) }
+      # On the CE report a line is a licence, so its cells are keyed by both — see
+      # EventAttendanceReport::Row#key.
+      let(:ce_row_key) { "#{registration.id}-#{registration.continuing_education_registrations.first.id}" }
+      let(:cell) { "attendance-#{ce_row_key}-#{day.iso8601}" }
+
+      it "offers an Edit link on every day's sessions cell, including empty days" do
+        log_ce_time!
+        event.update!(end_date: Time.zone.local(2026, 7, 24, 16, 0))
+        empty_cell = "attendance-#{ce_row_key}-2026-07-24"
+
+        get attendance_event_path(event, ce: "true")
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link(href: attendance_event_path(event, ce: "true", edit: cell, anchor: cell))
+        expect(page).to have_link(href: attendance_event_path(event, ce: "true", edit: empty_cell, anchor: empty_cell))
+      end
+
+      it "opens the editor for one cell and leaves the rest read-only" do
+        log_ce_time!
+        get attendance_event_path(event, ce: "true", edit: cell)
+
+        expect(response.body).to include("attendance[entries][0][in]")
+        # One editor: the cell asked for, not every cell on the page.
+        expect(response.body.scan("attendance[entries][0][in]").size).to eq(1)
+      end
+
+      it "adds both times for a day nobody signed in on" do
+        license = create(:professional_license, person: registration.registrant, number: "AAA111")
+        create(:continuing_education_registration, event_registration: registration, professional_license: license)
+
+        expect {
+          patch update_attendance_event_registration_path(registration, date: day.iso8601, ce: "true", row: ce_row_key),
+                params: { attendance: { entries: { "0" => { in: "08:50", out: "16:00" } } } }
+        }.to change { registration.event_attendance_time_entries.count }.by(1)
+
+        entry = registration.event_attendance_time_entries.last
+        expect(attendance_clock(entry.signed_in_at)).to eq("08:50")
+        expect(attendance_clock(entry.signed_out_at)).to eq("16:00")
+        expect(entry.attendance_date).to eq(day)
+        expect(entry.created_by).to eq(admin)
+        expect(response).to redirect_to(attendance_event_path(event, ce: "true", anchor: cell))
+      end
+
+      it "corrects an existing time and closes a forgotten sign-out" do
+        log_ce_time!
+        entry = registration.event_attendance_time_entries.first
+
+        patch update_attendance_event_registration_path(registration, date: day.iso8601),
+              params: { attendance: { entries: { "0" => { id: entry.id, in: "08:50", out: "16:00" } } } }
+
+        expect(attendance_clock(entry.reload.signed_out_at)).to eq("16:00")
+        expect(entry.updated_by).to eq(admin)
+      end
+
+      it "removes a session when its Remove box is ticked" do
+        log_ce_time!
+        entry = registration.event_attendance_time_entries.first
+
+        expect {
+          patch update_attendance_event_registration_path(registration, date: day.iso8601),
+                params: { attendance: { entries: { "0" => { id: entry.id, in: "08:50", out: "10:34", _destroy: "1" } } } }
+        }.to change { registration.event_attendance_time_entries.count }.by(-1)
+      end
+
+      it "keeps a session open when the sign-out is left blank" do
+        log_ce_time!
+        expect {
+          patch update_attendance_event_registration_path(registration, date: day.iso8601),
+                params: { attendance: { entries: { "0" => { in: "13:00", out: "" } } } }
+        }.to change { registration.event_attendance_time_entries.count }.by(1)
+
+        expect(registration.event_attendance_time_entries.order(:signed_in_at).last).to be_open
+      end
+
+      # A rejected save reopens the cell with what was typed, rather than making the
+      # admin reconstruct it from the flash alone.
+      it "reopens the cell with the submitted times when the save is rejected" do
+        log_ce_time!
+
+        patch update_attendance_event_registration_path(registration, date: day.iso8601, ce: "true", row: ce_row_key),
+              params: { attendance: { entries: { "0" => { in: "16:00", out: "09:00" } } } }
+
+        expect(response).to redirect_to(attendance_event_path(event, ce: "true", edit: cell, anchor: cell))
+        expect(flash[:alert]).to eq("Sign-out must be after the sign-in time.")
+
+        follow_redirect!
+        expect(response.body).to include('value="16:00"')
+        expect(response.body).to include('value="09:00"')
+      end
+
+      # The Remove tick has to survive the reopen too, or the row the admin meant to
+      # drop quietly comes back once they fix the error and save again.
+      it "keeps a ticked Remove box ticked when the save is rejected" do
+        log_ce_time!
+        entry = registration.event_attendance_time_entries.first
+
+        patch update_attendance_event_registration_path(registration, date: day.iso8601, ce: "true", row: ce_row_key),
+              params: { attendance: { entries: {
+                "0" => { id: entry.id, in: "08:50", out: "10:34", _destroy: "1" },
+                "1" => { in: "16:00", out: "09:00" }
+              } } }
+
+        follow_redirect!
+        expect(Capybara.string(response.body)).to have_checked_field("attendance[entries][0][_destroy]")
+      end
+
+      it "rejects an unparseable date rather than guessing a day" do
+        patch update_attendance_event_registration_path(registration, date: "not-a-date"),
+              params: { attendance: { entries: { "0" => { in: "08:50", out: "16:00" } } } }
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
+  end
+
+  it "forbids users who are neither admin nor the event owner" do
+    sign_in create(:user)
+    get attendance_event_path(event, ce: "true")
+    expect(response).not_to have_http_status(:ok)
+  end
+
+  it "forbids a non-admin from editing attendance times" do
+    sign_in create(:user)
+    patch update_attendance_event_registration_path(registration, date: "2026-07-23"),
+          params: { attendance: { entries: { "0" => { in: "08:50", out: "16:00" } } } }
+    expect(registration.event_attendance_time_entries).to be_empty
+  end
+
+  # Times are stored UTC and rendered in the viewing admin's zone (Pacific by default).
+  def attendance_clock(time)
+    time.in_time_zone("Pacific Time (US & Canada)").strftime("%H:%M")
+  end
+end

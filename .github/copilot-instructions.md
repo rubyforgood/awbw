@@ -229,6 +229,7 @@ this). Match the existing pattern:
 
 - ES6+ syntax, ESM imports/exports, `const`/`let` (no `var`)
 - Use `const` for fixed values — not `SCREAMING_SNAKE_CASE` constants (e.g., `const styleId = "foo"` not `const STYLE_ID = "foo"`)
+- **Default to no new JavaScript.** Prefer a server-rendered (ERB/decorator/helper) or Turbo solution over adding a new Stimulus controller. Only reach for JS when the behavior genuinely can't be done server-side or with Turbo (e.g. it needs live client-side state, the browser's own time zone, or DOM the server can't produce). If a change seems to need JS, first ask whether rendering it on the server — even with a small trade-off — is acceptable, and flag that trade-off. When JS is truly required, reuse or generalize an existing controller before writing a new one.
 - **Strongly prefer Stimulus** for JavaScript behavior — do not write raw/inline JS or jQuery
 - **Always use Tailwind CSS** utility classes for styling — do not write custom CSS unless absolutely necessary
 - **Prefer static Tailwind classes over dynamically-constructed ones.** Tailwind's JIT scanner only generates classes it finds as complete literal strings in the source — a class built by interpolation (e.g. `bg-#{color}-500`, `text-${size}`, `class="w-#{n}"`) won't be generated and silently renders unstyled. Write the full class names out, and select between complete literals (e.g. a lookup hash mapping a value to a whole class string, or a ternary picking between two literal classes) rather than splicing fragments. Only build a class dynamically when the set of values is open-ended and can't be enumerated; in that case add the candidates to the Tailwind safelist.
@@ -331,6 +332,26 @@ If there are unresolved items:
 ### After submitting a PR
 
 After creating or submitting a pull request, automatically perform the session recap (Recap + Unresolved) using the format above.
+
+### On every completed task
+
+**Close every message that reports work as done with the same two parts** — Recap, then
+Unresolved with its count header — not just when the user asks for a recap or a PR is
+submitted. A prose summary doesn't say whether anything still needs the user's attention;
+the count header answers that in one line, before any detail. Mid-task progress notes are
+exempt; this is for the message that says the work is finished.
+
+## Response formatting
+
+**Structure the answer; don't hand back a wall of text.** Long replies are for scanning
+first and reading second.
+
+- **Lead with the direct answer** when the user asked a question, then the detail.
+- **Group under headers** (`##`/`###`) once a reply covers more than one topic.
+- **Use titled bullets** — a bold lead-in naming the thing, then the explanation — rather
+  than consecutive bare paragraphs.
+- **Nest detail under the point it belongs to** instead of running it inline.
+- Keep tables for genuinely tabular comparisons; keep prose short inside each bullet.
 
 ## Quick Commands
 

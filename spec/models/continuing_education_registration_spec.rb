@@ -130,6 +130,27 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce_reg_for(event: event, status: "attended", cost_cents: 10_000).certificate_available?).to be(false)
     end
 
+    it "requires logged attendance to approximately cover the awarded hours once time is tracked" do
+      event = create(:event, ce_hours_offered: 6, start_date: 3.days.ago, end_date: 1.day.ago)
+      ce_reg = ce_reg_for(event: event, status: "attended") # 6h awarded → needs 324 min (90%)
+      reg = ce_reg.event_registration
+
+      # Only 5 hours (300 min) logged — short of the 324-minute threshold.
+      create(:event_attendance_time_entry, event_registration: reg,
+        signed_in_at: 2.days.ago.change(hour: 9), signed_out_at: 2.days.ago.change(hour: 14))
+      expect(ce_reg.certificate_available?).to be(false)
+
+      # Another 30 minutes clears the threshold (330 ≥ 324).
+      create(:event_attendance_time_entry, event_registration: reg,
+        signed_in_at: 2.days.ago.change(hour: 14), signed_out_at: 2.days.ago.change(hour: 14, min: 30))
+      expect(ce_reg.reload.certificate_available?).to be(true)
+    end
+
+    it "isn't gated on logged time when no attendance was tracked" do
+      event = create(:event, ce_hours_offered: 6, start_date: 3.days.ago, end_date: 1.day.ago)
+      expect(ce_reg_for(event: event, status: "attended").certificate_available?).to be(true)
+    end
+
     it "records delivery via certificate_sent_at" do
       ce_reg = create(:continuing_education_registration)
       expect(ce_reg.certificate_sent?).to be(false)

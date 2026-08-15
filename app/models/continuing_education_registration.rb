@@ -55,13 +55,36 @@ class ContinuingEducationRegistration < ApplicationRecord
   # Payment interface (allocations_sum / paid_in_full? / remaining_cost / …) comes from
   # Registerable, driven by this record's own cost_cents column.
 
+  # The logged sign-in time must cover at least this fraction of the awarded CE
+  # contact hours before the certificate unlocks — a little slack for slightly-late
+  # sign-ins/early sign-outs. You can't certify hours the sign-in sheet doesn't support.
+  ATTENDANCE_COVERAGE_THRESHOLD = 0.9
+
   # CE certificate eligibility — its own rule (not shared): the event grants CE,
-  # the registrant attended, the training has ended, and the CE balance is paid.
+  # the registrant attended, the training has ended, the CE balance is paid, and
+  # (when attendance was tracked) the logged time approximately covers the hours.
   def certificate_available?
     event = event_registration&.event
     return false unless event&.ce_eligible?
+    return false unless event.end_date&.past? && event_registration.attended? && paid_in_full?
 
-    event.end_date&.past? && event_registration.attended? && paid_in_full?
+    attendance_time_sufficient?
+  end
+
+  # When attendance time has been logged for this registrant, it must approximately
+  # cover the awarded hours before the certificate unlocks. With nothing logged (the
+  # portal sign-in wasn't used for this event), day-level attendance alone governs,
+  # so this doesn't block — it never retroactively gates events that never tracked time.
+  def attendance_time_sufficient?
+    logged = event_registration.attendance_minutes_total
+    return true if logged.zero?
+
+    logged >= required_attendance_minutes
+  end
+
+  # Minutes of logged attendance needed to certify the awarded hours (with tolerance).
+  def required_attendance_minutes
+    (hours.to_d * 60 * ATTENDANCE_COVERAGE_THRESHOLD).round
   end
 
   # Point this registration at a license for the typed type + number. `license_id`

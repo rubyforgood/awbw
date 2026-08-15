@@ -481,4 +481,111 @@ RSpec.describe Event, type: :model do
       expect(create(:event, cost_cents: nil)).not_to be_scholarship_eligible
     end
   end
+
+  describe "attendance sign-in window" do
+    # A two-day training running 9:00am–4:00pm each day.
+    let(:event) do
+      create(:event,
+        start_date: Time.zone.local(2026, 7, 23, 9, 0),
+        end_date: Time.zone.local(2026, 7, 24, 16, 0),
+        registration_close_date: Time.zone.local(2026, 7, 20, 9, 0))
+    end
+
+    describe "#event_dates" do
+      it "lists each consecutive calendar day, inclusive" do
+        expect(event.event_dates).to eq([ Date.new(2026, 7, 23), Date.new(2026, 7, 24) ])
+      end
+
+      it "is empty without a start date" do
+        expect(build(:event, start_date: nil).event_dates).to eq([])
+      end
+    end
+
+    describe "#event_dates_truncated?" do
+      it "is false when the event fits inside the day cap" do
+        expect(event.event_dates_truncated?).to be(false)
+      end
+
+      # day_count clamps to 5, so a longer training has days with no sign-in window,
+      # no report column and no sheet row. Both surfaces warn off this.
+      it "is true when the event runs past the last covered day" do
+        event.update!(end_date: Time.zone.local(2026, 7, 30, 16, 0))
+        expect(event.event_dates_truncated?).to be(true)
+      end
+    end
+
+    describe "#daily_start_at / #daily_end_at" do
+      it "applies the event's start/end time-of-day to each day" do
+        day2 = Date.new(2026, 7, 24)
+        expect(event.daily_start_at(day2)).to eq(Time.zone.local(2026, 7, 24, 9, 0))
+        expect(event.daily_end_at(day2)).to eq(Time.zone.local(2026, 7, 24, 16, 0))
+      end
+    end
+
+    describe "#attendance_sign_in_open?" do
+      it "opens 30 minutes before a day's start" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 8, 30))).to be(true)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 8, 29))).to be(false)
+      end
+
+      it "stays open through the day's end time" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 16, 0))).to be(true)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 16, 1))).to be(false)
+      end
+
+      it "applies the same window to every event day" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 24, 9, 0))).to be(true)
+      end
+
+      it "is closed overnight between event days" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 20, 0))).to be(false)
+      end
+
+      it "is closed on non-event days" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 25, 9, 0))).to be(false)
+      end
+    end
+
+    # The event form's End time is optional, so end_date can land at midnight. With
+    # no scheduled end to close the window against, the day stays open rather than
+    # the window never opening at all.
+    context "when the event has no end time" do
+      let(:event) do
+        create(:event,
+          start_date: Time.zone.local(2026, 7, 23, 9, 0),
+          end_date: Time.zone.local(2026, 7, 23),
+          registration_close_date: Time.zone.local(2026, 7, 20, 9, 0))
+      end
+
+      it "has no scheduled daily end" do
+        expect(event.daily_end_at(Date.new(2026, 7, 23))).to be_nil
+      end
+
+      it "keeps sign-in open for the rest of the event day" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 8, 30))).to be(true)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 20, 0))).to be(true)
+      end
+
+      it "still closes sign-in outside the event's days" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 22, 20, 0))).to be(false)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 24, 9, 0))).to be(false)
+      end
+    end
+
+    describe "#next_attendance_sign_in_opens_at" do
+      it "returns the first day's opening before the event" do
+        expect(event.next_attendance_sign_in_opens_at(Time.zone.local(2026, 7, 23, 7, 0)))
+          .to eq(Time.zone.local(2026, 7, 23, 8, 30))
+      end
+
+      it "skips to the next day's opening once the current window has opened" do
+        expect(event.next_attendance_sign_in_opens_at(Time.zone.local(2026, 7, 23, 10, 0)))
+          .to eq(Time.zone.local(2026, 7, 24, 8, 30))
+      end
+
+      it "is nil once the last day's window has opened" do
+        expect(event.next_attendance_sign_in_opens_at(Time.zone.local(2026, 7, 24, 12, 0))).to be_nil
+      end
+    end
+  end
 end

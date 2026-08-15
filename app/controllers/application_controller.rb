@@ -35,6 +35,18 @@ class ApplicationController < ActionController::Base
     cents.positive? ? helpers.dollars_from_cents(cents) : ""
   end
 
+  # A failed save's errors as one flash-ready sentence. Errors on a nested association
+  # are copied onto the parent keyed "<association>.<attribute>", so their full message
+  # pastes the humanized association name in front ("Event attendance time entries
+  # Sign-out must be after…"). Phrase those the way the child model does instead: a
+  # whole-sentence message reads verbatim, and an attribute-level one keeps its subject
+  # ("Signed in at can't be blank") rather than arriving as a bare fragment.
+  def error_sentence(record)
+    record.errors.map { |error|
+      error.is_a?(ActiveModel::NestedError) ? error.inner_error.full_message : error.full_message
+    }.to_sentence
+  end
+
   def after_sign_out_path_for(resource_or_scope)
     if params[:reset_password].present? # needed for custom "log out and reset it" flow
       new_user_password_path

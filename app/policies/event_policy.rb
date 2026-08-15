@@ -93,6 +93,12 @@ class EventPolicy < ApplicationPolicy
     manage?
   end
 
+  # The per-event attendance (CE sign-in) report shows registrant PII, so it's
+  # gated like the dashboard — admins and the event's owner.
+  def attendance?
+    admin? || owner?
+  end
+
   def dashboard?
     admin? || owner?
   end
