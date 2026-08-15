@@ -11,7 +11,7 @@
       collection_selected_class: selected_btn
     }, autocomplete: "off" do %>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="md:col-span-2">
+      <div>
         <label for="search" class="text-sm font-medium text-gray-500 mb-1 block">Search metadata / Stripe charge ID</label>
 
         <%= text_field_tag "search", params[:search],
@@ -44,23 +44,6 @@
       </div>
 
       <div>
-        <label for="has_remaining" class="text-sm font-medium text-gray-500 mb-1 block">Amount Remaining</label>
-
-        <%= select_tag "has_remaining",
-          options_for_select({ "All" => "all", "Yes" => "yes", "No" => "no" }, params[:has_remaining] || "all"),
-          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
-      </div>
-
-      <div>
-        <label for="payer_type" class="text-sm font-medium text-gray-500 mb-1 block">Payer Type</label>
-
-        <%= select_tag "payer_type",
-          options_for_select(["Person", "Organization"], params[:payer_type]),
-          include_blank: "All",
-          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
-      </div>
-
-      <div>
         <label for="person_id" class="text-sm font-medium text-gray-500 mb-1 block">Person</label>
 
         <%= select_tag "person_id",
@@ -86,6 +69,23 @@
             remote_select_model_value: "organization"
           },
           prompt: "Search for an organization" %>
+      </div>
+
+      <div>
+        <label for="has_remaining" class="text-sm font-medium text-gray-500 mb-1 block">Amount Remaining</label>
+
+        <%= select_tag "has_remaining",
+          options_for_select({ "All" => "all", "Yes" => "yes", "No" => "no" }, params[:has_remaining] || "all"),
+          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
+      </div>
+
+      <div>
+        <label for="payer_type" class="text-sm font-medium text-gray-500 mb-1 block">Payer Type</label>
+
+        <%= select_tag "payer_type",
+          options_for_select(["Person", "Organization"], params[:payer_type]),
+          include_blank: "All",
+          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
       </div>
 
       <div class="md:col-span-4 flex gap-2 justify-end"><%= submit_tag "Search", class: "btn btn-primary" %><%= link_to "Clear filters", payments_path, class: "btn btn-secondary", data: { action: "collection#clearAndSubmit" } %></div>
