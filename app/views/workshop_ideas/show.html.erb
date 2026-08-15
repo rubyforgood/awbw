@@ -43,12 +43,12 @@
         </div>
         <div>
           <span class="font-semibold text-gray-700">Created by:</span>
-          <%= @workshop_idea.created_by&.full_name %>
+          <%= @workshop_idea.created_by&.name %>
           <br><span class="text-gray-400"><%= @workshop_idea.created_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
         </div>
         <div>
           <span class="font-semibold text-gray-700">Updated by:</span>
-          <%= @workshop_idea.updated_by&.full_name %>
+          <%= @workshop_idea.updated_by&.name %>
           <br><span class="text-gray-400"><%= @workshop_idea.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
         </div>
       </div>
