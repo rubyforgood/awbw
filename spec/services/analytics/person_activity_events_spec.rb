@@ -44,6 +44,12 @@ RSpec.describe Analytics::PersonActivityEvents do
       expect(described_class.new(person).relation).to include(target)
     end
 
+    it "includes events about notifications sent to the person's email" do
+      notification = create(:notification, recipient_email: person.preferred_email)
+      target = event(resource_type: "Notification", resource_id: notification.id, name: "create.notification")
+      expect(described_class.new(person).relation).to include(target)
+    end
+
     it "includes events about the person's continuing education registrations" do
       registration = create(:event_registration, registrant: person)
       ce = create(:continuing_education_registration, event_registration: registration)

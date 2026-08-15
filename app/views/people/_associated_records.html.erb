@@ -11,9 +11,12 @@
     <li class="break-inside-avoid mb-2"><%= index_button person.event_registrations, params: { registrant_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.form_submissions, params: { person_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.grants, params: { funder_id: person.id, funder_type: "Person" }, label: "Grants (as funder)" %></li>
+    <% if Membership.enabled? %>
+      <li class="break-inside-avoid mb-2"><%= index_button person.memberships, path: person_memberships_path(person) %></li>
+    <% end %>
     <li class="break-inside-avoid mb-2"><%= index_button Payment.where(person_id: person.id), params: { person_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.scholarships, params: { recipient_id: person.id } %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button person.topic_subscriptions, params: { person_id: person.id }, label: "Subscriptions" %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button person.topic_subscriptions, params: { person_id: person.id }, label: "Topic subscriptions" %></li>
     <li class="break-inside-avoid mb-2"><%= index_button(person.user&.workshop_logs || WorkshopLog.none, path: workshop_logs_person_path(person)) %></li>
     <%# Aggregate Ahoy history (person + user + all associated data). Placed last
         so the column flow lands it in the otherwise-empty bottom-right cell. %>

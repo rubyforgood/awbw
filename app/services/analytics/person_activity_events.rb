@@ -61,6 +61,11 @@ module Analytics
         map["User"] = [ user.id ]
         map["WorkshopLog"] = user.workshop_logs.select(:id)
       end
+      # Notifications match the person by recipient email — mirrors the panel's
+      # "Communications (universal)" card, which now emits events (see AhoyTrackable).
+      if (email = @person.preferred_email).present?
+        map["Notification"] = Notification.email(email).select(:id)
+      end
       map
     end
 

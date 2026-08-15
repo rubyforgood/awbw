@@ -34,6 +34,7 @@ module DomainTheme
     comments:                 :purple,
     topic_subscriptions:      :stone,
     topic_subscription_types: :stone,
+    memberships:              :orange,
 
     # Event dashboard cards
     payments:                 :green,

@@ -43,6 +43,11 @@ RSpec.describe "people/edit", type: :view do
     )
   end
 
+  it "shows Topic subscriptions and Memberships cards in associated records" do
+    expect(rendered).to have_link("Topic subscriptions")
+    expect(rendered).to have_link("Memberships", href: person_memberships_path(person))
+  end
+
   context "when person has an associated user" do
     it "displays the user's email as read-only" do
       expect(rendered).to have_content(person.user.email)

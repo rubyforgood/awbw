@@ -308,6 +308,7 @@ module ApplicationHelper
     form_submissions:    "fa-file-signature",
     payments:            "fa-money-check-dollar",
     topic_subscriptions: "fa-envelope-open-text",
+    memberships:         "fa-id-card",
     workshop_ideas:          "fa-lightbulb",
     workshop_variation_ideas: "fa-lightbulb"
   }.freeze
