@@ -4,7 +4,7 @@ class AddHideEventCardToNotifications < ActiveRecord::Migration[8.0]
 
     # When true, the bulk reminder email (event_registration_reminder) omits the
     # grey event-details card. Set per-send from the compose page; defaults false
-    # so existing/resent reminders keep showing the card.
+    # so existing reminders keep showing the card. Resends carry the stored value.
     add_column :notifications, :hide_event_card, :boolean, default: false, null: false
   end
 

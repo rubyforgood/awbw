@@ -403,6 +403,47 @@ RSpec.describe "Notifications", type: :request do
         expect(Notification.last.sender).to eq(admin)
       end
 
+      # A resend is meant to put the same email back in the inbox, so everything
+      # that shaped the original body and subject has to travel with it.
+      context "with a composed bulk reminder" do
+        let(:reminder) do
+          create(:notification, :bulk,
+                 kind: "event_registration_reminder",
+                 noticeable: create(:event_registration),
+                 recipient_role: :person,
+                 custom_message: "See you tomorrow!",
+                 custom_subject: "Reminder: see you tomorrow",
+                 hide_event_card: true)
+        end
+
+        it "carries the composed message, subject, and hide-card choice onto the resent copy" do
+          post resend_notification_path(reminder)
+
+          resent = Notification.last
+          expect(resent.custom_message).to eq("See you tomorrow!")
+          expect(resent.custom_subject).to eq("Reminder: see you tomorrow")
+          expect(resent.hide_event_card).to be(true)
+        end
+
+        it "delivers the same email the registrant originally received" do
+          perform_enqueued_jobs { post resend_notification_path(reminder) }
+
+          mail = ActionMailer::Base.deliveries.last
+          expect(mail.subject).to eq("Reminder: see you tomorrow")
+          expect(mail.html_part.body.encoded).to include("See you tomorrow!")
+          # #166534 is the event-details card's green title colour — hidden here.
+          expect(mail.html_part.body.encoded).not_to include("#166534")
+        end
+
+        # The copy is a fresh, individually-triggered send, so it isn't part of
+        # the original batch and shouldn't wear the "Bulk" pill.
+        it "does not mark the resent copy as bulk" do
+          post resend_notification_path(reminder)
+
+          expect(Notification.last).not_to be_bulk
+        end
+      end
+
       it "tracks resend chain correctly when resending a resent notification" do
         # Create first resend
         first_resend = nil
