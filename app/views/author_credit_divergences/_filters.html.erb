@@ -1,6 +1,5 @@
 <div class="rounded-lg border border-gray-200 bg-white shadow-sm p-4 mb-6">
-  <%# The collection controller auto-submits into the results frame, so filters
-      apply as you type/pick — no Filter button needed. %>
+  <%# The collection controller auto-submits, so there's no Filter button. %>
   <%= form_with url: author_credit_divergences_path, method: :get,
                 data: { controller: "collection", turbo_frame: "author_credit_divergences_results" },
                 html: { autocomplete: "off" },

@@ -1,22 +1,13 @@
-# Everything on the author credit divergences page: content whose credit doesn't
-# resolve cleanly through the credited person's profile.
+# Content whose credit doesn't resolve cleanly through a profile, in four sections:
 #
-# Four sections, in the order an admin should work them. The first is about a
-# preference that drifted; the other three are all forms of "this credit isn't
-# coming from an author_id", which is the only path that links to a profile and
-# lists the record on it.
-#
-#   preference   — stored consent snapshot no longer matches the profile
+#   preference   — snapshot no longer matches the profile
 #   legacy       — credited by a free-text name column, no person at all
-#   creator      — author_id is blank, so the credit falls back to the creator
-#   unattributed — nothing to credit; renders the model's missing_author_label
+#   creator      — author_id blank, so the credit falls back to the creator
+#   unattributed — nothing to credit at all
 #
-# Comparisons run in Ruby because they walk the author fallback chain. The
-# candidate sets are small: the preference column was added with no default and
-# no backfill, and the legacy columns only hold pre-person data.
+# Comparisons run in Ruby because they walk the author fallback chain.
 class AuthorCreditDivergenceQuery
-  # Every AuthorCreditable model. Doubles as the allowlist for the `type` param —
-  # never constantize a raw param.
+  # Doubles as the allowlist for the `type` param — never constantize a raw param.
   MODEL_NAMES = %w[
     Story
     StoryIdea
@@ -30,8 +21,7 @@ class AuthorCreditDivergenceQuery
 
   SECTIONS = %w[preference legacy creator unattributed].freeze
 
-  # Which preference reveals the least, for suggesting a profile value that
-  # satisfies all of a person's content.
+  # Which preference reveals the least, for suggesting one that fits all their content.
   RESTRICTIVENESS = {
     "anonymous" => 4,
     "last_name_only" => 3,
@@ -42,13 +32,11 @@ class AuthorCreditDivergenceQuery
 
   PersonGroup = Struct.new(:person, :records, :suggested_preference, keyword_init: true)
 
-  # One per legacy column, kept even when empty so the page can congratulate each
-  # field separately — clearing a column is what makes it safe to drop.
+  # Kept even when empty — clearing a column is what makes it safe to drop.
   LegacyGroup = Struct.new(:model, :column, :entries, keyword_init: true) do
     def empty? = entries.empty?
     def field = column.split(".").last
   end
-  # A row an admin can resolve by picking a person, optionally pre-guessed.
   AssignableRow = Struct.new(:record, :suggested_author, keyword_init: true)
 
   Result = Struct.new(:preference, :legacy, :creator, :unattributed, keyword_init: true) do
@@ -87,9 +75,8 @@ class AuthorCreditDivergenceQuery
     @models ||= type ? [ self.class.model_for(type) ].compact : MODEL_NAMES.map(&:constantize)
   end
 
-  # Only models that actually have an author_id can be "missing" one — the idea
-  # models have no such column, so crediting through the creator is their normal
-  # and correct behavior, not something to resolve.
+  # The idea models have no author_id, so crediting through the creator is correct
+  # for them, not something to resolve.
   def authorable_models
     models.select { |model| model.column_names.include?("author_id") }
   end
@@ -104,7 +91,6 @@ class AuthorCreditDivergenceQuery
     includes
   end
 
-  # ── Section 1: the stored snapshot drifted from the profile ────────────────
   def preference_groups
     records = models.flat_map do |model|
       scope = scoped(model).where.not(author_credit_preference: nil)
@@ -115,10 +101,7 @@ class AuthorCreditDivergenceQuery
     group_by_person(records)
   end
 
-  # ── Section 2: credited by a free-text name, with no person behind it ──────
-  # One group per legacy column, so each field can be reported (and retired)
-  # on its own. The person filter can't apply here: these records have no
-  # credited person, which is the whole problem with them.
+  # No credited person here, which is the whole problem — so no person filter.
   def legacy_groups
     groups = authorable_models.flat_map do |model|
       model.legacy_author_name_columns.map { |column| [ model, column ] }
@@ -142,9 +125,7 @@ class AuthorCreditDivergenceQuery
     end
   end
 
-  # Guess who each free-text name refers to, so an admin can confirm rather than
-  # look every one up. Matches on the whole name, or on first + last token, in one
-  # query for the whole page rather than one per row.
+  # Guess who each free-text name means, in one query for the page, not one per row.
   def suggested_authors_for(records)
     names = records.filter_map { |record| record.legacy_author_name_text.presence }.uniq
     return {} if names.empty?
@@ -160,7 +141,6 @@ class AuthorCreditDivergenceQuery
     value.to_s.downcase.gsub(/\s+/, "")
   end
 
-  # ── Section 3: author_id blank, so the credit falls back to the creator ────
   def creator_groups
     records = authorable_models.flat_map do |model|
       scoped(model)
@@ -171,7 +151,6 @@ class AuthorCreditDivergenceQuery
     group_by_person(records)
   end
 
-  # ── Section 4: nothing to credit at all ────────────────────────────────────
   def unattributed_records
     return [] if preference || person_id
 

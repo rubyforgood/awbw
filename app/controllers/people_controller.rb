@@ -62,8 +62,7 @@ class PeopleController < ApplicationController
       when "stories"
         # Credit the person for stories they authored or were spotlighted in —
         # not ones their user merely entered (created_by is a pure audit trail).
-        # Spotlighted stories are always listed: the spotlight is a separate credit
-        # from authorship, so the anonymity flag doesn't apply to it.
+        # The spotlight is a separate credit from authorship, so anonymity doesn't apply.
         story_ids = visible_authored_content(@person.stories_as_author).pluck(:id) +
           @person.stories_as_spotlighted_facilitator.pluck(:id)
         @stories = Story.where(id: story_ids).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
@@ -299,10 +298,8 @@ class PeopleController < ApplicationController
 
   private
 
-  # Anonymously-credited content is listed on the profile only for the person
-  # themselves and admins — showing it to anyone else would tie an "Anonymous"
-  # credit back to a name. `anonymous_contributions` anonymizes every item at once;
-  # otherwise only the items whose stored consent is "anonymous" are hidden.
+  # Showing anonymous content to anyone but the person and admins would tie an
+  # "Anonymous" credit back to a name.
   def visible_authored_content(scope)
     return scope if allowed_to?(:manage?, Person) || current_user&.person_id == @person.id
     return scope.none if @person.anonymous_contributions?

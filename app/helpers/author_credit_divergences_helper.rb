@@ -1,26 +1,22 @@
 module AuthorCreditDivergencesHelper
-  # The 8 AuthorCreditable models label their content differently (title vs name).
+  # The models label their content differently (title vs name).
   def divergence_record_title(record)
     record.try(:title).presence || record.try(:name).presence || "##{record.id}"
   end
 
-  # Wraps plain records for the shared assign-a-person table. Sections 3 and 4 have
-  # no free-text name to guess from, so the suggestion is passed in (the creator) or
-  # omitted entirely.
+  # Sections 3 and 4 have no name to guess from, so any suggestion is passed in.
   def assignable_rows(records, suggested_author: nil)
     records.map do |record|
       AuthorCreditDivergenceQuery::AssignableRow.new(record: record, suggested_author: suggested_author)
     end
   end
 
-  # An empty page means "nothing left to reconcile" only when nothing is filtered
-  # out — otherwise the congratulations would be reporting on the filter.
+  # Otherwise the congratulations would be reporting on the filter.
   def divergence_filters_applied?
     AuthorCreditDivergencesController::FILTER_KEYS.any? { |key| params[key].present? }
   end
 
-  # New tab rather than an eyebrow: these rows link to 8 different destinations,
-  # none of which carries a return_to today.
+  # New tab rather than an eyebrow: 8 destinations, none carrying a return_to today.
   def divergence_record_link(record)
     link_to divergence_record_title(record), polymorphic_path(record),
             target: "_blank", rel: "noopener",
@@ -28,9 +24,7 @@ module AuthorCreditDivergencesHelper
             class: "text-blue-700 hover:underline"
   end
 
-  # The suggestion is the most restrictive preference across the person's content,
-  # but `anonymous` isn't a name format — it's the separate checkbox — so fall back
-  # to the profile's current format when that's what was suggested.
+  # `anonymous` isn't a name format — it's the separate checkbox — so fall back.
   def suggested_display_name_preference(group)
     suggested = group.suggested_preference
     return suggested if Person::DISPLAY_NAME_PREFERENCES.include?(suggested)

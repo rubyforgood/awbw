@@ -40,8 +40,7 @@
               <%= hidden_field_tag :record_type, record.class.name, id: nil %>
               <%= hidden_field_tag :record_id, record.id, id: nil %>
               <%= render "filter_fields" %>
-              <%# "None" clears the snapshot so the item just follows the profile —
-                  offered on anonymous items too, since that's how they're reconciled. %>
+              <%# "None" clears the snapshot so the item follows the profile. %>
               <%= select_tag "author_credit_preference",
                              options_for_select(AuthorCreditable::ADMIN_FORM_OPTIONS.to_a, record.author_credit_preference),
                              include_blank: "None (follow profile)",
@@ -60,7 +59,6 @@
     re-record what was consented to.
   </p>
 
-  <%# The action lands after the supportive data above: read the content, then apply. %>
   <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
     <%= form_with url: update_person_author_credit_divergences_path, method: :patch,
                   class: "flex flex-wrap items-end gap-3" do %>

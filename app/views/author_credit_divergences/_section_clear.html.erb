@@ -1,7 +1,5 @@
-<%# All-clear note for one section. Locals: message (required), cleanup (optional —
-    the code that can now be retired, which is the real payoff of clearing it).
-    Under a filter an empty section is the filter's doing, not a milestone, so both
-    the congratulations and the cleanup instruction are withheld. %>
+<%# Locals: message (required), cleanup (optional). Withheld under a filter, where
+    an empty section is the filter's doing rather than a milestone. %>
 <% if divergence_filters_applied? %>
   <div class="rounded-lg border border-gray-200 bg-gray-50 p-6">
     <p class="text-sm text-gray-600">

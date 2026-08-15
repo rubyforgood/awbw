@@ -19,7 +19,6 @@
       </p>
     </div>
   <% else %>
-    <%# Section counts up front so the admin can see the full scope and jump to any section. %>
     <% overview = [
          { anchor: "section-preference",   num: 1, label: "Preference drift", count: @result.preference.size,   unit: "person" },
          { anchor: "section-legacy",       num: 2, label: "Legacy name",      count: @result.legacy.sum { |g| g.entries.size },       unit: "record" },

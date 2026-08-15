@@ -3,8 +3,6 @@ class AuthorCreditDivergencesController < ApplicationController
 
   FILTER_KEYS = %i[person_id type preference include_reconciled].freeze
 
-  # The full page renders only the header, filters, and an empty results frame;
-  # the frame's src request builds the divergences.
   def index
     return unless turbo_frame_request?
 
@@ -12,8 +10,7 @@ class AuthorCreditDivergencesController < ApplicationController
     render :author_credit_divergences_results
   end
 
-  # Resolve a whole person: point their profile at one preference and stamp them
-  # reconciled so a deliberate divergence stops reappearing on the worklist.
+  # Stamped reconciled so a deliberate divergence stops reappearing on the worklist.
   def update_person
     person = Person.find(params[:id])
     person.assign_attributes(person_params)
@@ -27,18 +24,16 @@ class AuthorCreditDivergencesController < ApplicationController
     end
   end
 
-  # Resolve a single item by rewriting its stored consent snapshot. Setting
-  # "anonymous" here is a live override that suppresses that item's credit alone;
-  # any other value only re-records history (see AuthorCreditable).
+  # "anonymous" here suppresses this item's credit; any other value only re-records
+  # history (see AuthorCreditable).
   def update_item
     model = AuthorCreditDivergenceQuery.model_for(params[:record_type])
     return render_divergence_change("Unknown record type.", :alert) unless model
 
     record = model.find(params[:record_id])
 
-    # Clearing an "anonymous" snapshot hands the item back to the profile, which may
-    # well credit it. That's the point: a per-item anonymous flag is the legacy state
-    # this page exists to drain, and the person's profile is the source of truth.
+    # Clearing "anonymous" hands the item back to the profile, which may credit it —
+    # that's what this page exists to do.
     record.author_credit_preference = params[:author_credit_preference]
     record.updated_by = current_user if record.respond_to?(:updated_by=)
 
@@ -49,10 +44,8 @@ class AuthorCreditDivergencesController < ApplicationController
     end
   end
 
-  # Point a record at a real person. This is the fix for every section below the
-  # first: an author_id is the only credit path that follows the person's profile,
-  # links to it, and lists the record there. Once set, any legacy free-text name on
-  # the record stops being used.
+  # The fix for every section below the first: an author_id is the only credit path
+  # that follows a profile, links to it, and lists the record there.
   def assign_author
     model = AuthorCreditDivergenceQuery.model_for(params[:record_type])
     return render_divergence_change("Unknown record type.", :alert) unless model
@@ -73,8 +66,7 @@ class AuthorCreditDivergencesController < ApplicationController
 
   private
 
-  # Update in place: re-render the results frame and flash over Turbo so a save
-  # doesn't flip the whole page. Falls back to a redirect for non-Turbo requests.
+  # Re-render the frame over Turbo so a save doesn't flip the whole page.
   def render_divergence_change(message, type)
     respond_to do |format|
       format.turbo_stream do
@@ -94,9 +86,8 @@ class AuthorCreditDivergencesController < ApplicationController
     params.require(:person).permit(:display_name_preference, :anonymous_contributions)
   end
 
-  # Carried through every redirect so the admin lands back on the same filtered list.
-  # The write actions deliberately name their own params `id` / `record_type` /
-  # `record_id` so a record identifier can never be mistaken for a filter.
+  # The write actions name their params `id` / `record_type` / `record_id` so a
+  # record identifier can never be mistaken for a filter.
   def filters
     params.permit(*FILTER_KEYS).to_h.compact_blank
   end
