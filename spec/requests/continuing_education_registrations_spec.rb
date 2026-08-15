@@ -120,10 +120,10 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(ce_registration.reload.professional_license).to eq(other)
     end
 
-    describe "opened from the CE sign-in report (return_to=attendance)" do
+    describe "opened from the CE sign-ins (return_to=attendance)" do
       it "points the back and cancel links at the report" do
         get edit_continuing_education_registration_path(ce_registration, return_to: "attendance")
-        expect(response.body).to include("CE sign-in report")
+        expect(response.body).to include("CE sign-ins")
         expect(response.body).to include(attendance_event_path(event, ce: "true", anchor: "totals"))
       end
 

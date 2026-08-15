@@ -21,9 +21,9 @@
     <%# Sits with Download CSV: both are ways of taking the roster's attendance record
         out of the page, rather than actions performed on the registrants. %>
     <% if @event.ce_eligible? %>
-      <%= link_to "CE sign-in report", attendance_event_path(@event, ce: "true", return_to: "registrants"), class: item_class %>
+      <%= link_to "CE sign-ins", attendance_event_path(@event, ce: "true", return_to: "registrants"), class: item_class %>
     <% else %>
-      <%= link_to "Sign-in report", attendance_event_path(@event, return_to: "registrants"), class: item_class %>
+      <%= link_to "Sign-ins", attendance_event_path(@event, return_to: "registrants"), class: item_class %>
     <% end %>
     <%= link_to registrants_event_path(@event, format: :csv), class: item_class, data: { turbo_frame: "_top" } do %>
       Download CSV <i class="fa-solid fa-download text-gray-400 ml-1"></i>

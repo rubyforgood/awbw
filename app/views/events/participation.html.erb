@@ -4,27 +4,23 @@
 
 <div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8 py-6">
   <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
-    <div class="mb-6">
+    <%# Eyebrow left, report sub-nav right on the same row — the four angles on this
+        population sit together, above the title rather than beside it. %>
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
       <% if params[:return_to] == "dashboard" && params[:event_id].present? %>
         <%= link_to "← Dashboard", dashboard_event_path(params[:event_id]), class: "text-sm text-gray-500 hover:text-gray-700" %>
       <% else %>
         <%= link_to "← Reports", reports_events_path(report_to_hub_params), class: "text-sm text-gray-500 hover:text-gray-700" %>
       <% end %>
+      <%= render "events/report_subnav", current: :details %>
     </div>
 
-    <% attendees_link = capture do %>
-      <%= link_to attendees_events_path(return_to: "participation", event_id: params[:event_id].presence),
-            class: "text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap" do %>
-        <i class="fa-solid fa-user-pen"></i> Attendees
-      <% end %>
-    <% end %>
     <%= render "events/report_header",
           title: "Event participation",
           icon: "fa-solid fa-users",
           theme: :people,
           event: @filter_event,
-          subtitle: "People who attended each event by year — counted as unique people, not seats.",
-          actions: attendees_link %>
+          subtitle: "People who attended each event by year — counted as unique people, not seats." %>
 
     <%# Ahoy-style filters — time period, event type and event — each
         auto-submitting a GET form so the report reshapes on change. %>
@@ -167,10 +163,10 @@
                       <%= link_to "Open event dashboard →", dashboard_event_path(row.event),
                             class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
                       <% if row.event.ce_eligible? %>
-                        <%= link_to "CE sign-in report →", attendance_event_path(row.event, ce: "true", return_to: "participation"),
+                        <%= link_to "CE sign-ins →", attendance_event_path(row.event, ce: "true", return_to: "participation"),
                               class: "text-xs font-medium text-teal-700 hover:underline" %>
                       <% else %>
-                        <%= link_to "Sign-in report →", attendance_event_path(row.event, return_to: "participation"),
+                        <%= link_to "Sign-ins →", attendance_event_path(row.event, return_to: "participation"),
                               class: "text-xs font-medium text-teal-700 hover:underline" %>
                       <% end %>
                     </div>

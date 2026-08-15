@@ -3,18 +3,18 @@ class EventsController < ApplicationController
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
   before_action :set_event, only: %i[ show edit update destroy preview dashboard attendance sample_ticket registrants roster onboarding staff edit_staff update_staff recipients preview_reminder confirm_reminder send_reminder copy_registration_form feature_recipient_shoutout ]
-  before_action :set_report_filters, only: %i[ revenue participation reports scholarships ]
+  before_action :set_report_filters, only: %i[ revenue participation reports scholarships signins ]
   # The cross-event report suite is visible to admins and event owners alike; what
   # differs is the rows, which EventPolicy's :reportable scope narrows to the
   # viewer's own events. #attendance is per-event, so it authorizes its own record
   # rather than joining this list.
-  before_action :authorize_report!, only: %i[ revenue participation reports scholarships attendees ]
+  before_action :authorize_report!, only: %i[ revenue participation reports scholarships attendees signins ]
   # Log a visit to each event page / report. after_action so it only fires once
   # the action rendered successfully (authorization inside the actions has passed);
   # the turbo_frame_request? / redirect guards skip the lazy results/charts
   # sub-requests and the confirm-reminder bounce-back. send_reminder is logged
   # inline on a successful send (it always redirects).
-  after_action :track_page_view, only: %i[ dashboard attendance roster registrants recipients staff onboarding edit preview sample_ticket revenue participation reports scholarships attendees confirm_reminder ]
+  after_action :track_page_view, only: %i[ dashboard attendance roster registrants recipients staff onboarding edit preview sample_ticket revenue participation reports scholarships attendees signins confirm_reminder ]
 
   def index
     authorize!
@@ -109,6 +109,21 @@ class EventsController < ApplicationController
   def attendance
     authorize! @event
     @report = EventAttendanceReport.new(@event, ce_only: params[:ce] == "true")
+  end
+
+  # Cross-event sign-ins: the totals table for each event the report filters reach,
+  # so staff can read a training's logged hours without opening it, and compare
+  # across a year. Sibling of the revenue/participation/scholarship reports, sharing
+  # their filter bar. CE columns switch on when any event in scope grants CE —
+  # otherwise a mixed selection would hide the licence numbers the boards audit.
+  def signins
+    @events = report_events(Event.all).select { |event| event.event_dates.any? }
+    # Whether anything narrows the scope, so the header can say "All events" rather
+    # than reciting every event the portal holds.
+    @signins_narrowed = [ @filter_event, @event_type, @event_search ].any?(&:present?)
+    @signins_ce = @events.any?(&:ce_eligible?)
+    @reports = @events.map { |event| EventAttendanceReport.new(event, ce_only: @signins_ce) }
+      .select(&:any?)
   end
 
   def new

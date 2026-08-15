@@ -2,7 +2,7 @@ module ContinuingEducationRegistrationsHelper
   # One source of truth for where a CE registration form (new or edit) returns to —
   # the eyebrow, Cancel, and the controller's post-save/create/destroy redirects all
   # agree. Reached from the registrants roster (return_to=registrants) it lands back
-  # on that registrant's row (scroll + highlight); from the CE sign-in report
+  # on that registrant's row (scroll + highlight); from the CE sign-ins
   # (return_to=attendance) on the report's totals table; from the admin CE index
   # (return_to=ce_index) on that index; any other origin falls back to the
   # registration's own edit page.
@@ -21,7 +21,7 @@ module ContinuingEducationRegistrationsHelper
     case params[:return_to]
     when "ce_index" then "CE registrations"
     when "registrants" then "Registrants"
-    when "attendance" then "CE sign-in report"
+    when "attendance" then "CE sign-ins"
     else "Registration"
     end
   end

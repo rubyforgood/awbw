@@ -210,6 +210,23 @@ module EventsHelper
     time_period if Integer(time_period, exception: false)
   end
 
+  # How many events the sign-ins header names before trailing off — enough to read
+  # the scope at a glance without running the header onto three lines.
+  SIGNINS_LABEL_LIMIT = 6
+
+  # What the cross-event sign-ins page is scoped to, for the header's event slot.
+  # With no filter applied it reads "All events"; a narrowed set names its events by
+  # abbreviation (falling back to the title), so the scope is legible without counting
+  # the sections below. The single-event case never reaches here — the header's own
+  # `event:` slot renders that one linked to the event.
+  def signins_scope_label(events, narrowed:)
+    return "All events" unless narrowed && events.present?
+
+    labels = events.map { |event| event.decorate.compact_label }
+    shown = labels.first(SIGNINS_LABEL_LIMIT).join(", ")
+    labels.size > SIGNINS_LABEL_LIMIT ? "#{shown} +#{labels.size - SIGNINS_LABEL_LIMIT} more" : shown
+  end
+
   # "last_year" becomes the prior calendar year (reports name specific years
   # "YYYY"); this_year/all_time pass through unchanged.
   def hub_period_to_time_period(period)

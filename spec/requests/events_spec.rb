@@ -368,13 +368,28 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include(%(href="#{event_registrations_path}?))
       end
 
-      it "links each event to its sign-in report, CE-scoped only when CE is enabled" do
+      # The four angles on this population sit on the eyebrow's row, each carrying the
+      # report's own filters so switching angle keeps the same events in scope.
+      it "offers Details / Attendees / Breakdowns / Sign-ins carrying the filters" do
+        sign_in admin
+        get participation_events_path(event_id: training_2026.id, event_type: "trainings")
+
+        nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
+        expect(nav).to have_text("Details")
+        expect(nav).to have_link("Attendees")
+        expect(nav).to have_link("Breakdowns")
+        expect(nav).to have_link("Sign-ins", href: signins_events_path(event_id: training_2026.id, event_type: "trainings"))
+        # Details is the current page, so it isn't a link.
+        expect(nav).to have_no_link("Details")
+      end
+
+      it "links each event to its sign-ins, CE-scoped only when CE is enabled" do
         training_2026.update!(ce_hours_offered: 6)
         sign_in admin
         get participation_events_path
-        expect(response.body).to include("CE sign-in report")
+        expect(response.body).to include("CE sign-ins")
         expect(response.body).to include(attendance_event_path(training_2026))
-        expect(response.body).to include("Sign-in report →")
+        expect(response.body).to include("Sign-ins →")
         expect(response.body).to include(attendance_event_path(webinar_2025))
       end
 
@@ -1376,21 +1391,21 @@ RSpec.describe "Events", type: :request do
       expect(response.body).not_to include("Any status")
     end
 
-    context "CE sign-in report link in bulk actions" do
+    context "CE sign-ins link in bulk actions" do
       it "links to the CE attendance report for a CE-eligible event" do
         event.update!(ce_hours_offered: 6)
         get registrants_event_path(event)
 
-        expect(response.body).to include("CE sign-in report")
+        expect(response.body).to include("CE sign-ins")
         expect(response.body).to include(attendance_event_path(event))
       end
 
-      it "links the generic sign-in report when the event offers no CE" do
+      it "links the generic sign-ins when the event offers no CE" do
         event.update!(ce_hours_offered: 0)
         get registrants_event_path(event)
 
-        expect(response.body).not_to include("CE sign-in report")
-        expect(response.body).to include("Sign-in report")
+        expect(response.body).not_to include("CE sign-ins")
+        expect(response.body).to include("Sign-ins")
         expect(response.body).to include(attendance_event_path(event))
       end
     end

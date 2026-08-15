@@ -166,8 +166,6 @@ Rails.application.routes.draw do
       get :reports
       get :scholarships
       get :attendees
-      # CE sign-in report — action + view ship with the CE sign-in feature branch;
-      # the CE registrations index links here from its top-left menu.
       get :signins
     end
     member do

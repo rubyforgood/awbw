@@ -26,7 +26,7 @@ RSpec.describe "Events attendance report", type: :request do
       log_ce_time!
       get attendance_event_path(event, ce: "true")
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("CE sign-in report")
+      expect(response.body).to include("CE sign-ins")
       expect(response.body).to include("Alice Adams")
       expect(response.body).to include("AAA111")
     end
@@ -34,8 +34,8 @@ RSpec.describe "Events attendance report", type: :request do
     it "renders the generic attendance report without CE scoping" do
       get attendance_event_path(event)
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Attendance sign-in")
-      expect(response.body).not_to include("CE sign-in report")
+      expect(response.body).to include("Sign-ins")
+      expect(response.body).not_to include("CE sign-ins")
     end
 
     it "makes each row link to the CE edit page and the name link to the CE callout" do
@@ -92,7 +92,7 @@ RSpec.describe "Events attendance report", type: :request do
       expect(response.body).to include("#{registration_ce_path(registration.slug)}?return_to=attendance")
 
       get registration_ce_path(registration.slug, return_to: "attendance")
-      expect(response.body).to include("Back to CE sign-in report")
+      expect(response.body).to include("Back to CE sign-ins")
       expect(response.body).to include(attendance_event_path(event, ce: "true", anchor: "totals"))
     end
 
@@ -107,7 +107,10 @@ RSpec.describe "Events attendance report", type: :request do
       sign_in create(:user, :admin, time_zone: "UTC")
       log_ce_time!
       get attendance_event_path(event, ce: "true", group: "day")
-      expect(response.body).to include("#{event.decorate.date_range} · 9 am - 4 pm UTC")
+      # The shared report header carries the date range and the daily times on
+      # separate lines; the day headings still combine them.
+      expect(response.body).to include(event.decorate.date_range)
+      expect(response.body).to include("9 am - 4 pm UTC")
       expect(response.body).to include("Day 1 · #{Date.new(2026, 7, 23).strftime("%A, %b %-d")} · 9 am - 4 pm UTC")
     end
 

@@ -5,7 +5,7 @@
 <%#
   Reached from an admin page (return_to): point the eyebrow back at that page
   instead of the registrant's ticket — the CE registration edit page, or the event's
-  CE sign-in report, whose registrant links land here. Each gated on access to the
+  CE sign-ins, whose registrant links land here. Each gated on access to the
   destination so a registrant who lands on one of these URLs still gets the default
   ticket back.
 %>
@@ -17,7 +17,7 @@
      end
    when "attendance"
      if allowed_to?(:attendance?, @event)
-       { back_path: attendance_event_path(@event, ce: "true", anchor: "totals"), back_label: "Back to CE sign-in report" }
+       { back_path: attendance_event_path(@event, ce: "true", anchor: "totals"), back_label: "Back to CE sign-ins" }
      end
    end || {} %>
 

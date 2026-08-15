@@ -500,10 +500,10 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response).to redirect_to(attendance_event_path(existing_registration.event))
       end
 
-      it "shows a sign-in report eyebrow when opened from the attendance report" do
+      it "shows a sign-ins eyebrow when opened from the attendance report" do
         get edit_event_registration_path(existing_registration, return_to: "attendance")
 
-        expect(response.body).to include("Sign-in report")
+        expect(response.body).to include("Sign-ins")
         expect(response.body).to include(attendance_event_path(existing_registration.event))
       end
 
