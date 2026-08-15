@@ -627,6 +627,25 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#index_button" do
+    it "renders 'None' instead of a zero count" do
+      html = helper.index_button(Story.all)
+
+      expect(Story.count).to eq(0)
+      expect(html).to include("None")
+      expect(html).not_to include(">0<")
+    end
+
+    it "renders the delimited count when records exist" do
+      create_list(:story, 2)
+
+      html = helper.index_button(Story.all)
+
+      expect(html).to include(">2<")
+      expect(html).not_to include("None")
+    end
+  end
+
   describe "#badge_classes" do
     it "builds the pill recipe with the theme classes and default padding" do
       result = helper.badge_classes("bg-green-50 text-green-700 border-green-200")
