@@ -1,6 +1,23 @@
 class ContinuingEducationRegistrationsController < ApplicationController
-  before_action :set_ce_registration, except: [ :new, :create ]
+  before_action :set_ce_registration, except: [ :index, :new, :create ]
   before_action :set_event_registration, only: [ :new, :create ]
+
+  def index
+    authorize!
+    base = ContinuingEducationRegistration.search_by_params(params)
+    # Totals over the whole (unpaginated) filtered set so the header stays true
+    # across pages.
+    @ce_total_cost_cents = base.sum(:cost_cents)
+    @ce_total_hours = base.sum(:hours)
+    @ce_registrations = base.includes(:allocations, professional_license: [], event_registration: [ :registrant, :event ])
+      .order(created_at: :desc)
+      .paginate(page: params[:page], per_page: 25)
+    render :continuing_education_registrations_results if turbo_frame_request?
+  end
+
+  def show
+    authorize! @ce_registration
+  end
 
   def new
     authorize!

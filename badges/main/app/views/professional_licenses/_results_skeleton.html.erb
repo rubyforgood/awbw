@@ -1,0 +1,25 @@
+<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50 animate-pulse">
+      <tr>
+        <% [ "w-28", "w-16", "w-20", "w-12", "w-24", "w-20", "w-8" ].each_with_index do |w, i| %>
+          <th class="px-4 py-3 <%= i == 6 ? "text-right" : "text-left" %>">
+            <div class="h-4 <%= w %> rounded bg-gray-200 <%= "ml-auto" if i == 6 %>"></div>
+          </th>
+        <% end %>
+      </tr>
+    </thead>
+
+    <tbody class="divide-y divide-gray-100 animate-pulse">
+      <% 10.times do %>
+        <tr>
+          <% [ "w-32", "w-16", "w-20", "w-10", "w-28", "w-20", "w-6" ].each_with_index do |w, i| %>
+            <td class="px-4 py-4 <%= i == 6 ? "text-right" : "" %>">
+              <div class="h-4 <%= w %> rounded bg-gray-200 <%= "ml-auto" if i == 6 %>"></div>
+            </td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

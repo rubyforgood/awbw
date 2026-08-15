@@ -37,6 +37,21 @@ class ContinuingEducationRegistration < ApplicationRecord
   validate :license_belongs_to_registrant
   validate :cost_not_below_allocations, on: :update
 
+  scope :for_event, ->(event_id) { joins(:event_registration).where(event_registrations: { event_id: event_id }) }
+  scope :for_registrant, ->(person_id) { joins(:event_registration).where(event_registrations: { registrant_id: person_id }) }
+  scope :certificate_issued, -> { where.not(certificate_sent_at: nil) }
+  scope :certificate_pending, -> { where(certificate_sent_at: nil) }
+
+  # Drives the admin index filters (event, registrant, certificate status).
+  def self.search_by_params(params)
+    results = all
+    results = results.for_event(params[:event_id]) if params[:event_id].present?
+    results = results.for_registrant(params[:person_id]) if params[:person_id].present?
+    results = results.certificate_issued if params[:certificate] == "issued"
+    results = results.certificate_pending if params[:certificate] == "pending"
+    results
+  end
+
   # Payment interface (allocations_sum / paid_in_full? / remaining_cost / …) comes from
   # Registerable, driven by this record's own cost_cents column.
 

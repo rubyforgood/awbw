@@ -200,7 +200,9 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/community_news/edit.html.erb"           => "admin-only bg-blue-100",
     "app/views/event_registrations/edit.html.erb"      => "admin-only bg-blue-100",
     "app/views/continuing_education_registrations/edit.html.erb" => "admin-only bg-blue-100",
+    "app/views/continuing_education_registrations/index.html.erb" => "admin-only bg-blue-100",
     "app/views/continuing_education_registrations/new.html.erb" => "admin-only bg-blue-100",
+    "app/views/continuing_education_registrations/show.html.erb" => "admin-only bg-blue-100",
     "app/views/events/edit.html.erb"                   => "admin-or-owner bg-blue-100",
     "app/views/forms/edit.html.erb"                    => "admin-only bg-blue-100",
     "app/views/forms/edit_sections.html.erb"           => "admin-only bg-blue-100",
@@ -220,6 +222,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/scholarships/edit.html.erb"             => "admin-only bg-blue-100",
     "app/views/grants/edit.html.erb"                   => "admin-only bg-blue-100",
     "app/views/payments/edit.html.erb"                 => "admin-only bg-blue-100",
+    "app/views/professional_licenses/index.html.erb"   => "admin-only bg-blue-100",
     "app/views/workshop_variations/edit.html.erb"      => "admin-only bg-blue-100",
     "app/views/workshops/edit.html.erb"                => "admin-only bg-blue-100",
 
