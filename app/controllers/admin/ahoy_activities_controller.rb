@@ -77,6 +77,12 @@ module Admin
         if person
           @person = person
           scope = scope.where(id: Analytics::PersonActivityEvents.new(person).relation.select(:id))
+          # Notifications aren't ahoy-tracked, so surface the person's
+          # communications straight from the notifications table.
+          email = person.communications_email
+          @person_communications = email.present? ?
+            Notification.email(email).includes(:noticeable, sender: :person).order(created_at: :desc).limit(10) :
+            Notification.none
         end
       end
 

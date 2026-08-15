@@ -265,7 +265,7 @@ module AhoyTrackable
   def track_lifecycle_event(action, extra_properties = {})
     return unless Current.user || Current.source
     return if self.class.name.start_with?("Ahoy::")
-    return if self.class.name.in?(%w[ActiveStorage::Attachment ActiveStorage::Blob])
+    return if self.class.name.in?(%w[Notification ActiveStorage::Attachment ActiveStorage::Blob])
 
     # prevent nested tracking loops
     return if Thread.current[:_ahoy_tracking]

@@ -219,6 +219,17 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include(edit_person_path(person))
       end
+
+      it "surfaces the person's communications (notifications) on the activities page" do
+        person = create(:person)
+        create(:notification, recipient_email: person.communications_email, email_subject: "Comms row marker xyz")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Communications")
+        expect(response.body).to include("Comms row marker xyz")
+      end
     end
 
     describe "GET /admin/activities/visits" do

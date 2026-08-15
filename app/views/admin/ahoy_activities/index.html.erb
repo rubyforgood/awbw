@@ -149,6 +149,28 @@
         <% end %>
       </div>
 
+      <%# Person-scoped view: notifications aren't ahoy events, so list the
+          person's communications here from the notifications table. %>
+      <% if @person && @person_communications.present? %>
+        <section class="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>">
+              <i class="fa-solid fa-bell"></i>
+            </span>
+            <h2 class="text-sm font-semibold text-gray-700">Communications</h2>
+            <%= link_to "View all",
+                        notifications_path(email: @person.communications_email, return_to_type: "Person", return_to_id: @person.id),
+                        class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
+                        target: "_blank", rel: "noopener" %>
+          </div>
+          <div class="space-y-2 p-4">
+            <% @person_communications.each do |notification| %>
+              <%= render "notifications/notification_row", notification: notification, admin: true %>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+
       <!-- Activities Table -->
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-x-auto">
         <table class="responsive-table min-w-full divide-y divide-gray-200 text-sm">

@@ -4,22 +4,15 @@ RSpec.describe Notification do
   describe "Ahoy lifecycle tracking" do
     after { Current.reset }
 
-    it "tracks a create.notification event when created in a user context" do
+    # Notifications are intentionally excluded from AhoyTrackable — they're
+    # already a durable, timestamped log, so ahoy events would be redundant.
+    # The activities page surfaces them from the notifications table instead.
+    it "does not emit ahoy lifecycle events, even in a user context" do
       allow(Analytics::LifecycleBuffer).to receive(:push)
       noticeable = create(:user)
       Current.user = create(:user)
 
       create(:notification, noticeable: noticeable)
-
-      expect(Analytics::LifecycleBuffer).to have_received(:push)
-        .with(hash_including(name: "create.notification"))
-    end
-
-    it "does not track without a current user or source" do
-      Current.reset
-      allow(Analytics::LifecycleBuffer).to receive(:push)
-
-      create(:notification)
 
       expect(Analytics::LifecycleBuffer).not_to have_received(:push)
         .with(hash_including(name: "create.notification"))
