@@ -222,6 +222,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/scholarships/edit.html.erb"             => "admin-only bg-blue-100",
     "app/views/grants/edit.html.erb"                   => "admin-only bg-blue-100",
     "app/views/payments/edit.html.erb"                 => "admin-only bg-blue-100",
+    "app/views/professional_licenses/index.html.erb"   => "admin-only bg-blue-100",
     "app/views/workshop_variations/edit.html.erb"      => "admin-only bg-blue-100",
     "app/views/workshops/edit.html.erb"                => "admin-only bg-blue-100",
 

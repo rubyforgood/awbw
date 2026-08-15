@@ -17,6 +17,21 @@ class ProfessionalLicense < ApplicationRecord
   # different kinds is allowed; only a duplicate (kind, number) pair is rejected.
   validates :number, uniqueness: { scope: [ :person_id, :kind ] }, allow_nil: true
 
+  scope :for_person, ->(person_id) { where(person_id: person_id) }
+  scope :of_kind, ->(kind) { where(kind: kind) }
+  scope :expired, -> { where.not(expires_on: nil).where("expires_on < ?", Date.current) }
+  scope :not_expired, -> { where("expires_on IS NULL OR expires_on >= ?", Date.current) }
+
+  # Drives the admin index filters (registrant, kind, expiry status).
+  def self.search_by_params(params)
+    results = all
+    results = results.for_person(params[:person_id]) if params[:person_id].present?
+    results = results.of_kind(params[:kind]) if params[:kind].present?
+    results = results.expired if params[:expired] == "yes"
+    results = results.not_expired if params[:expired] == "no"
+    results
+  end
+
   # Find the person's license for this type + number, or create it. Licenses are
   # identified by (kind, number), so an opt-in without either on file resolves to
   # the person's single placeholder license (both nil) rather than spawning

@@ -1,0 +1,56 @@
+<%= turbo_frame_tag :professional_licenses_results do %>
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit">
+    <% if @professional_licenses.any? %>
+      <% total = @professional_licenses.respond_to?(:total_entries) ? @professional_licenses.total_entries : @professional_licenses.size %>
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <p class="text-sm text-gray-500"><%= total %> license<%= "s" if total != 1 %></p>
+      </div>
+
+      <div class="overflow-x-auto animate-fade">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registrant</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Number</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expires</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">CE</th>
+            </tr>
+          </thead>
+
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% @professional_licenses.each do |license| %>
+              <% decorated = license.decorate %>
+              <% status = decorated.expiry_badge %>
+              <tr class="hover:bg-gray-50 transition-colors duration-150">
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <% if license.person %>
+                    <%= link_to license.person.full_name, edit_person_path(license.person), class: "text-primary hover:text-primary-dark", data: { turbo_frame: "_top" } %>
+                  <% else %>
+                    <span class="text-gray-400">—</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700"><%= license.kind.presence || "—" %></td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700"><%= license.number.presence || "—" %></td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700"><%= license.issuing_state.presence || "—" %></td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700"><%= license.expires_on&.to_fs(:long) || "—" %></td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                  <%= render "shared/badge", label: status.label, classes: status.classes, icon: status.icon %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-right text-sm text-gray-700 tabular-nums"><%= license.continuing_education_registrations.size %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-gray-500 text-center py-8">There are no licenses that match your search. Please try again.</p>
+    <% end %>
+  </div>
+
+  <% if @professional_licenses.respond_to?(:total_pages) && @professional_licenses.total_pages > 1 %>
+    <div class="pagination flex justify-center mt-6"><%= tailwind_paginate @professional_licenses %></div>
+  <% end %>
+<% end %>
