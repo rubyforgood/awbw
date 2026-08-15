@@ -27,7 +27,9 @@
     </div>
   <% end %>
 
-  <%= render "event_details_card", event: @event, time_zone: @time_zone %>
+  <% unless @hide_event_card %>
+    <%= render "event_details_card", event: @event, time_zone: @time_zone %>
+  <% end %>
 
   <p style="font-size: 12px; color: #6b7280; margin: 8px 0 0;">
     Each registrant also received a personalized "View ticket" link.

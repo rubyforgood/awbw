@@ -8,6 +8,7 @@ module NotificationServices
       notification_type:,
       custom_message: nil,
       custom_subject: nil,
+      hide_event_card: false,
       sender: nil,
       bulk: false,
       deliver: true,
@@ -22,6 +23,7 @@ module NotificationServices
         recipient_email: recipient_email,
         custom_message: custom_message,
         custom_subject: custom_subject,
+        hide_event_card: hide_event_card,
         sender: sender,
         bulk: bulk
       )

@@ -18,7 +18,18 @@
           style: "margin: 8px 0; font-size: 14px; line-height: 1.5;#{' display: none;' if @preview && @custom_message.blank?}" %>
   <% end %>
 
-  <%= render "event_details_card", event: @event, time_zone: @time_zone %>
+  <%#
+    The grey event-details card. In preview the wrapper always renders (hidden
+    when the admin ticked "hide") so the reminder-preview controller can toggle it
+    live; a real send just omits it when hidden.
+  %>
+  <% if @preview %>
+    <div id="reminder-event-card" data-reminder-preview-target="eventCard" style="<%= "display: none;" if @hide_event_card %>">
+      <%= render "event_details_card", event: @event, time_zone: @time_zone %>
+    </div>
+  <% elsif !@hide_event_card %>
+    <%= render "event_details_card", event: @event, time_zone: @time_zone %>
+  <% end %>
 
   <%= render "ce_deadlines", event: @event %>
 </div>

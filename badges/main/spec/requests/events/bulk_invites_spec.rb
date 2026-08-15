@@ -85,7 +85,7 @@ RSpec.describe "Events::BulkInvites", type: :request do
     it "redirects back to the picker when nothing is selected" do
       post send_reminder_event_path(event), params: { mode: "invite", registration_ids: [] }
 
-      expect(response).to redirect_to(preview_reminder_event_path(event, mode: "invite", custom_message: "", custom_subject: ""))
+      expect(response).to redirect_to(preview_reminder_event_path(event, mode: "invite", custom_message: "", custom_subject: "", hide_event_card: "0"))
       expect(flash[:alert]).to be_present
     end
   end

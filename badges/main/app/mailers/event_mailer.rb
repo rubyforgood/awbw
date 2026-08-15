@@ -44,12 +44,15 @@ class EventMailer < ApplicationMailer
     )
   end
 
-  def event_registration_reminder(event_registration, custom_message: nil, custom_subject: nil, preview: false)
+  def event_registration_reminder(event_registration, custom_message: nil, custom_subject: nil, hide_event_card: false, preview: false)
     @event_registration = event_registration
     @event = event_registration.event.decorate
     @person = event_registration.registrant
     @custom_message = custom_message.presence
     @custom_subject = custom_subject.presence
+    # When true, the grey event-details card is dropped from the email — the admin
+    # chose to send a plainer message on the bulk-reminder page.
+    @hide_event_card = hide_event_card
     # When true, the HTML body always renders the custom-message container (even
     # when blank) with hooks the on-page preview's Stimulus controller fills in
     # live. Never set on a real send.
@@ -62,14 +65,13 @@ class EventMailer < ApplicationMailer
     @organization_website = ENV.fetch("ORGANIZATION_WEBSITE", root_url)
 
     # Admins can override the subject from the bulk-reminder page; fall back to
-    # the standard portal subject (e.g. on a resend that carries no custom value).
-    date_suffix = @event.start_date.present? ? " – #{@event.start_date.in_time_zone(@time_zone).strftime('%B %-d, %Y')}" : ""
-    default_subject = "AWBW Portal: Reminder: #{@event.title}#{date_suffix}"
+    # the standard portal subject when they left it blank. Shared with the compose
+    # page's pre-fill so the preview and the delivered email can't drift apart.
     mail(
       to: @person.preferred_email,
       from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: @custom_subject || default_subject
+      subject: @custom_subject || @event.default_reminder_subject(time_zone: @time_zone)
     )
   end
 
@@ -78,10 +80,12 @@ class EventMailer < ApplicationMailer
   # is passed as "Name <email>" labels (not records), so the job that delivers
   # this needs no extra lookups. The per-recipient reminders are tracked
   # notifications; this is just an at-a-glance heads-up for the team.
-  def event_registration_reminder_fyi(event, recipient_labels, custom_message: nil)
+  def event_registration_reminder_fyi(event, recipient_labels, custom_message: nil, hide_event_card: false)
     @event = event.decorate
     @recipient_labels = Array(recipient_labels)
     @custom_message = custom_message.presence
+    # Mirror what registrants received: drop the card from the admin copy too.
+    @hide_event_card = hide_event_card
     @notification_type = "Event registration reminder"
     @time_zone = Time.zone.name
     @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
