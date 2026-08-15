@@ -39,8 +39,8 @@ class ContinuingEducationRegistrationsController < ApplicationController
       @ce_registration.save!
     end
     redirect_to helpers.ce_registration_return_path(@ce_registration.event_registration), notice: "CE registration created.", status: :see_other
-  rescue ActiveRecord::RecordInvalid
-    flash.now[:alert] = @ce_registration.errors.full_messages.to_sentence
+  rescue ActiveRecord::RecordInvalid => e
+    flash.now[:alert] = error_sentence(e.record)
     render :new, status: :unprocessable_content
   end
 
@@ -54,10 +54,11 @@ class ContinuingEducationRegistrationsController < ApplicationController
     ActiveRecord::Base.transaction do
       apply_ce_params(@ce_registration)
       @ce_registration.save!
+      apply_time_entries(@ce_registration.event_registration)
     end
     redirect_to helpers.ce_registration_return_path(@ce_registration.event_registration), notice: "CE registration updated.", status: :see_other
-  rescue ActiveRecord::RecordInvalid
-    flash.now[:alert] = @ce_registration.errors.full_messages.to_sentence
+  rescue ActiveRecord::RecordInvalid => e
+    flash.now[:alert] = error_sentence(e.record)
     render :edit, status: :unprocessable_content
   end
 
@@ -112,5 +113,19 @@ class ContinuingEducationRegistrationsController < ApplicationController
     comments = params.fetch(:continuing_education_registration, {})
       .permit(comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ])[:comments_attributes]
     ce_registration.comments_attributes = comments if comments.present?
+  end
+
+  # Staff corrections to the registrant's attendance times, submitted alongside the
+  # CE form under continuing_education_registration[time_entries] as full datetimes
+  # (this form spans every day, unlike the report's per-day editor).
+  def apply_time_entries(registration)
+    EventAttendanceEntriesUpdate.new(registration, time_entries_attributes, editor: current_user).save!
+  end
+
+  def time_entries_attributes
+    params.fetch(:continuing_education_registration, {})
+          .permit(time_entries: [ :id, :signed_in_at, :signed_out_at, :_destroy ])
+          .fetch(:time_entries, {})
+          .values
   end
 end

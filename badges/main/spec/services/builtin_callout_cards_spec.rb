@@ -337,4 +337,57 @@ RSpec.describe BuiltinCalloutCards do
       expect(card.badge).to eq("$150 due by Aug 15")   # app keeps the live deadline badge
     end
   end
+
+  describe "CE card attendance reminder" do
+    # Paid CE registration on a training day so the sign-in nudge is live.
+    let(:event) do
+      create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 15_000,
+        start_date: Time.zone.local(2026, 7, 23, 9, 0),
+        end_date: Time.zone.local(2026, 7, 23, 16, 0),
+        registration_close_date: Time.zone.local(2026, 7, 20, 9, 0))
+    end
+
+    before { travel_to Time.zone.local(2026, 7, 23, 10, 0) }
+    after { travel_back }
+
+    def pay_ce!
+      license = create(:professional_license, person: registration.registrant, number: "LIC123")
+      ce = create(:continuing_education_registration, event_registration: registration, professional_license: license)
+      create(:allocation, source: create(:payment), allocatable: ce, amount: ce.cost_cents)
+      registration.reload
+    end
+
+    it "nudges to sign in during the window once paid, in orange" do
+      pay_ce!
+      ce_card = card(registration, event.ce_hours_label)
+      expect(ce_card.badge).to eq("Sign in for today")
+      expect(ce_card.theme).to eq(DomainTheme.swatch("orange"))
+    end
+
+    # The sheet opens on any paid licence, so the nudge has to as well — someone
+    # part-way through paying for a second licence still signs in for the first.
+    it "nudges when only one of two licences is paid" do
+      pay_ce!
+      create(:continuing_education_registration, event_registration: registration,
+        professional_license: create(:professional_license, person: registration.registrant, number: "LIC999"))
+
+      expect(card(registration.reload, event.ce_hours_label).badge).to eq("Sign in for today")
+    end
+
+    it "shows a signed-in chip while an entry is open, in teal" do
+      pay_ce!
+      create(:event_attendance_time_entry, :open, event_registration: registration)
+      ce_card = card(registration.reload, event.ce_hours_label)
+      expect(ce_card.badge).to eq("Signed in")
+      expect(ce_card.theme).to eq(DomainTheme.swatch("teal"))
+      expect(ce_card.badge_classes).to include("teal")
+    end
+
+    it "falls back to the resting CE status badge outside the sign-in window" do
+      pay_ce!
+      travel_to Time.zone.local(2026, 7, 23, 20, 0)
+      # Fully paid with no license number needed → no resting badge, and no nudge.
+      expect(card(registration.reload, event.ce_hours_label).badge).to be_nil
+    end
+  end
 end

@@ -1389,4 +1389,99 @@ RSpec.describe EventRegistration, type: :model do
       expect(preloaded.paid_in_full?).to be(true)
     end
   end
+
+  describe "attendance time entries" do
+    let(:registration) { create(:event_registration) }
+
+    describe "#signed_in? / #open_attendance_entry" do
+      it "is signed in while today's entry has no sign-out" do
+        entry = create(:event_attendance_time_entry, :open, event_registration: registration,
+          signed_in_at: Time.zone.now.change(hour: 9))
+        expect(registration.signed_in?).to be(true)
+        expect(registration.open_attendance_entry).to eq(entry)
+      end
+
+      it "is not signed in once every entry is closed" do
+        create(:event_attendance_time_entry, event_registration: registration)
+        expect(registration.signed_in?).to be(false)
+        expect(registration.open_attendance_entry).to be_nil
+      end
+
+      # A forgotten sign-out must not follow the registrant into the next training
+      # day, where it would block the new day's sign-in and, once closed, bank a
+      # ~24-hour session. Staff close it from the attendance report instead.
+      it "ignores an entry left open on an earlier day" do
+        stale = create(:event_attendance_time_entry, :open, event_registration: registration,
+          signed_in_at: 1.day.ago.change(hour: 9))
+        expect(registration.signed_in?).to be(false)
+        expect(registration.open_attendance_entry).to be_nil
+        expect(registration.open_attendance_entry(1.day.ago.to_date)).to eq(stale)
+      end
+    end
+
+    describe "#attendance_entries_on" do
+      it "returns that day's entries in sign-in order" do
+        second = create(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 23, 11, 0), signed_out_at: Time.zone.local(2026, 7, 23, 12, 0))
+        first = create(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 23, 8, 50), signed_out_at: Time.zone.local(2026, 7, 23, 10, 34))
+        create(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 24, 8, 50), signed_out_at: Time.zone.local(2026, 7, 24, 10, 0))
+
+        expect(registration.attendance_entries_on(Date.new(2026, 7, 23))).to eq([ first, second ])
+      end
+    end
+
+    describe "#forgotten_sign_out_entry / #forgotten_sign_out_at" do
+      # A two-day training running 9:00–16:00 each day.
+      let(:event) do
+        create(:event, start_date: Time.zone.local(2026, 7, 23, 9, 0), end_date: Time.zone.local(2026, 7, 24, 16, 0))
+      end
+      let(:registration) { create(:event_registration, event: event) }
+
+      around { |example| travel_to(Time.zone.local(2026, 7, 24, 10, 0)) { example.run } }
+
+      it "stamps an earlier day's forgotten sign-out with that day's scheduled end" do
+        stale = create(:event_attendance_time_entry, :open, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 23, 9, 5))
+
+        expect(registration.forgotten_sign_out_entry).to eq(stale)
+        expect(registration.forgotten_sign_out_at(stale)).to eq(Time.zone.local(2026, 7, 23, 16, 0))
+      end
+
+      it "ignores today's open entry — that one is closed by the ordinary Sign out" do
+        create(:event_attendance_time_entry, :open, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 24, 9, 5))
+
+        expect(registration.forgotten_sign_out_entry).to be_nil
+      end
+
+      it "ignores earlier days that were closed properly" do
+        create(:event_attendance_time_entry, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 23, 9, 0), signed_out_at: Time.zone.local(2026, 7, 23, 16, 0))
+
+        expect(registration.forgotten_sign_out_entry).to be_nil
+      end
+
+      # With no end time on the event there's no scheduled end to stamp, so the
+      # one-click close isn't offered either.
+      it "declines when the event has no end time" do
+        event.update!(end_date: Time.zone.local(2026, 7, 24))
+        create(:event_attendance_time_entry, :open, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 23, 9, 5))
+
+        expect(registration.forgotten_sign_out_entry).to be_nil
+      end
+
+      # Nothing sensible to stamp, so it isn't offered as a one-click close — staff
+      # correct it on the attendance report instead.
+      it "declines a sign-in recorded after that day had already ended" do
+        late = create(:event_attendance_time_entry, :open, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 23, 18, 0))
+
+        expect(registration.forgotten_sign_out_at(late)).to be_nil
+        expect(registration.forgotten_sign_out_entry).to be_nil
+      end
+    end
+  end
 end

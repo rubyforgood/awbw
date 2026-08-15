@@ -12,8 +12,12 @@
       theme:    DomainTheme key colouring the heading (default :events)
       subtitle: optional line under the title
       event:    optional Event the page is scoped to (@event / @filter_event)
+      event_label: optional plain text to stand in that slot instead of an event —
+                for a page over a *set* of events ("All events", or the abbreviations
+                of the events filtered to). Ignored when `event` is given.
       actions:  optional captured markup pinned top-right (its own row on mobile) %>
 <% event = local_assigns[:event] %>
+<% event_label = local_assigns[:event_label].presence unless event %>
 <% actions = local_assigns[:actions] %>
 <% theme = local_assigns.fetch(:theme, :events) %>
 <div class="relative mb-8">
@@ -30,6 +34,8 @@
       <% if event.start_date.present? %>
         <p class="text-sm text-gray-500 mt-1"><%= event.decorate.date_range %></p>
       <% end %>
+    <% elsif event_label %>
+      <p class="text-sm font-semibold text-gray-500 uppercase tracking-wide"><%= event_label %></p>
     <% end %>
     <h1 class="text-3xl font-bold <%= "mt-2" if event %> flex items-center justify-center gap-2 <%= DomainTheme.text_class_for(theme) %>">
       <i class="<%= icon %>"></i>

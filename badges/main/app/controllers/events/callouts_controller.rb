@@ -137,6 +137,78 @@ module Events
       redirect_to registration_ce_path(@event_registration.slug), notice: "Continuing education credit requested."
     end
 
+    # Record the registrant signing in from their CE callout. Self-service and
+    # public (no login), so created_by stays nil — only staff edits are attributed.
+    # Gated on CE being paid in full and the day's sign-in window being open; a
+    # second sign-in while already signed in is a no-op.
+    def sign_in_ce
+      return redirect_to(registration_ce_path(@event_registration.slug)) if sample_preview?
+      unless attendance_enabled?
+        return redirect_to registration_ce_path(@event_registration.slug), alert: "Signing in isn't available yet."
+      end
+      if @event_registration.signed_in?
+        return redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"), notice: "You're already signed in."
+      end
+      unless @event.attendance_sign_in_open?
+        return redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"),
+          alert: "Sign-in is only open during the training day."
+      end
+
+      entry = @event_registration.event_attendance_time_entries.create!(signed_in_at: Time.current)
+      redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"),
+        notice: "Signed in at #{local_time(entry.signed_in_at)}."
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"),
+        alert: e.record.errors.full_messages.to_sentence
+    end
+
+    # Close an open attendance entry. Not windowed — a forgotten sign-out can always
+    # be recorded. Two cases: today's entry (stamped now) and the catch-up button for
+    # a day the registrant left open (stamped that day's scheduled end) — see
+    # #sign_out_target.
+    def sign_out_ce
+      return redirect_to(registration_ce_path(@event_registration.slug)) if sample_preview?
+      entry, signed_out_at = sign_out_target
+      unless entry
+        return redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"), alert: "You're not signed in."
+      end
+
+      entry.update!(signed_out_at: signed_out_at)
+      redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"), notice: sign_out_notice(entry)
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"),
+        alert: e.record.errors.full_messages.to_sentence
+    end
+
+    # The registrant editing their own sign-in/out times for one training day. The
+    # buttons above are only a shortcut for stamping "now" — the times themselves stay
+    # editable, so someone who arrived before signing in, or never tapped the buttons
+    # at all, can write the day up afterwards. Deliberately not windowed: the point is
+    # to fix a day after it's over. Left unattributed, like the buttons.
+    def update_ce_attendance
+      return redirect_to(registration_ce_path(@event_registration.slug)) if sample_preview?
+      unless attendance_enabled?
+        return redirect_to registration_ce_path(@event_registration.slug), alert: "Editing your times isn't available yet."
+      end
+
+      date = AttendanceDayRows.date_from(params[:date])
+      return head :unprocessable_content unless date
+
+      rows = AttendanceDayRows.new(params, date)
+      EventAttendanceEntriesUpdate.new(@event_registration, rows.entry_attributes, editor: nil).save!
+      redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"),
+        notice: "Your times for #{date.strftime("%a, %b %-d")} were saved."
+    rescue ActiveRecord::RecordInvalid => e
+      flash[:alert] = error_sentence(e.record)
+      # Hand the typed times back so a rejected save doesn't cost the registrant what
+      # they entered; the day reopens in edit mode prefilled with them.
+      flash[:attendance_rows] = rows.submitted
+      # ce_id names which licence's sheet was open, so the editor reopens on that one
+      # rather than on every sheet at once.
+      redirect_to registration_ce_path(@event_registration.slug, edit: date.iso8601,
+        ce_id: params[:ce_id].presence, anchor: "attendance")
+    end
+
     # Handouts page: callout-card links to the training worksheet/handout
     # resources, in display order, each opening its own registrant resource page
     # (PDF preview + download, with a back-to-handouts eyebrow). Cards read their
@@ -188,6 +260,41 @@ module Events
     end
 
     private
+
+    # Attendance sign-in/out follows the CE payment — it's the CE sign-in sheet. Any-of
+    # rather than all-of, matching the callout view: each paid CE registration renders
+    # its own sheet, and since they all record the same hours, one paid licence is
+    # enough to let the registrant write those hours down.
+    def attendance_enabled?
+      @event_registration.ce_attendance_offered?
+    end
+
+    # A datetime rendered in the app zone as "9:02 AM", for sign-in/out flash notices.
+    def local_time(time)
+      helpers.attendance_clock_time(time)
+    end
+
+    # Which open entry this sign-out closes, and the time to stamp it with. The
+    # catch-up button names an earlier day's entry explicitly (?entry_id) so it can't
+    # be confused with today's — it lands on that day's scheduled end rather than now,
+    # which would bank every hour since. Anything else closes today's entry at now.
+    def sign_out_target
+      return [ @event_registration.open_attendance_entry, Time.current ] if params[:entry_id].blank?
+
+      forgotten = @event_registration.forgotten_sign_out_entry
+      return [] unless forgotten && forgotten.id.to_s == params[:entry_id].to_s
+
+      [ forgotten, @event_registration.forgotten_sign_out_at(forgotten) ]
+    end
+
+    # Name the day when the sign-out isn't for today, so a catch-up close reads as
+    # what it is rather than looking like a stray time.
+    def sign_out_notice(entry)
+      time = local_time(entry.signed_out_at)
+      return "Signed out at #{time}." if entry.attendance_date == Time.zone.today
+
+      "Signed out for #{entry.attendance_date.strftime("%a, %b %-d")} at #{time}."
+    end
 
     # Whether the event's built-in callout for this key is materialized and
     # published (visible). These public pages gate on that alone now — the admin's

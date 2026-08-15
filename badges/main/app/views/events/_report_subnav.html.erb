@@ -1,0 +1,41 @@
+<%# Sub-navigation across the participation report and the pages that read the same
+    population from a different angle: the year-by-year Details, the people behind
+    them (Attendees), the awards they received (Scholarships), and their logged time
+    (Sign-ins). Sits on the eyebrow's row, so the tabs read as siblings of the back
+    link rather than of the page title. Breakdowns isn't here — it's a panel on the
+    attendees index, not a page of its own.
+
+    Every tab carries whichever filters are set (see EventsHelper::REPORT_SUBNAV_PARAMS)
+    — the event, the event type, the abbreviation search, the funder, and the
+    attendees index's own scholarship/payment/demographic filters — so switching angle
+    keeps the same population in scope. Each destination reads what it knows and
+    ignores the rest. The current page renders as a non-link underlined tab, matching
+    events/_subnav.
+    Locals: current (one of :details, :attendees, :scholarships, :signins). %>
+<% carried = report_subnav_params %>
+<%# The report pages narrow by time_period; the attendees index has no such
+    vocabulary — it narrows by the event's calendar year — so the period is
+    translated rather than passed through. %>
+<% attendee_filters = carried.merge(
+     event_year: params[:event_year].presence || time_period_to_event_year(params[:time_period].presence || "all_time"),
+     # The index defaults to attended registrants on trainings; a report that hasn't
+     # narrowed either dimension means "all of them", so say so explicitly.
+     attendance_status: carried[:attendance_status] || EventRegistration::FILTER_ALL,
+     event_type: carried[:event_type] || EventRegistration::FILTER_ALL,
+     return_to: "participation"
+   ).compact %>
+<nav class="flex flex-wrap items-center gap-1" aria-label="Report views">
+  <% tabs = [
+       { key: :details, label: "Details", path: participation_events_path(carried) },
+       { key: :attendees, label: "Attendees", path: attendees_events_path(attendee_filters) },
+       { key: :scholarships, label: "Scholarships", path: scholarships_events_path(carried) },
+       { key: :signins, label: "Sign-ins", path: signins_events_path(carried) }
+     ] %>
+  <% tabs.each do |tab| %>
+    <% if tab[:key] == current %>
+      <span aria-current="page" class="text-sm font-semibold text-gray-900 border-b-2 border-indigo-600 px-2 py-1"><%= tab[:label] %></span>
+    <% else %>
+      <%= link_to tab[:label], tab[:path], class: "text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+    <% end %>
+  <% end %>
+</nav>

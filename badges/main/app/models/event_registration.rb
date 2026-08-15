@@ -16,6 +16,7 @@ class EventRegistration < ApplicationRecord
   has_many :organizations, through: :event_registration_organizations
   has_many :allocations, as: :allocatable
   has_many :continuing_education_registrations, dependent: :destroy
+  has_many :event_attendance_time_entries, dependent: :destroy
   has_many :scholarships, -> { distinct },
     through: :allocations, source: :source, source_type: "Scholarship"
   has_many :checklist_completions, class_name: "EventRegistrationChecklistCompletion", dependent: :destroy
@@ -25,6 +26,10 @@ class EventRegistration < ApplicationRecord
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
+  # Staff correct/add attendance times on the CE edit form; a row with no sign-in
+  # time is an untouched blank and dropped.
+  accepts_nested_attributes_for :event_attendance_time_entries, allow_destroy: true,
+    reject_if: proc { |attrs| attrs["signed_in_at"].blank? }
   # Lets the registration edit form edit the registrant's shout-out text (which
   # lives on the Person) inline, alongside the registration's own shout-out flag.
   accepts_nested_attributes_for :registrant
@@ -666,6 +671,56 @@ class EventRegistration < ApplicationRecord
     event.cost_cents
   end
 
+  # The registrant's currently-open attendance entry (signed in, not yet out) for
+  # one day, or nil when they're not signed in that day. Drives which sign-in/out
+  # button the CE callout shows. Deliberately day-scoped: an entry left open when
+  # someone forgets to sign out must not carry into the next training day, where it
+  # would block the new day's sign-in and, once closed, bank every hour since. The
+  # earlier day is closed separately, through #forgotten_sign_out_entry.
+  # Uses the most recent open entry if more than one somehow exists.
+  def open_attendance_entry(date = Time.zone.today)
+    attendance_entries_on(date).select(&:open?).last
+  end
+
+  # A sign-out the registrant forgot on an earlier day: the most recent entry still
+  # open from before `date`. Offered on today's callout as its own catch-up button,
+  # separate from today's sign-in/out, so the two days can't be confused. Only when
+  # #forgotten_sign_out_at has something sensible to stamp — otherwise it's a staff
+  # correction on the attendance report, not a one-click fix.
+  def forgotten_sign_out_entry(date = Time.zone.today)
+    entry = event_attendance_time_entries.chronological
+      .select { |candidate| candidate.open? && candidate.attendance_date && candidate.attendance_date < date }
+      .last
+    entry if entry && forgotten_sign_out_at(entry)
+  end
+
+  # The time a forgotten sign-out is stamped with: the scheduled end of the training
+  # day it belongs to — what staff wrote on the paper sheet — never "now", which would
+  # bank every hour since. Nil when that end isn't after the sign-in (someone signed in
+  # after the day was over) or the event has no end time at all, leaving it for staff.
+  def forgotten_sign_out_at(entry)
+    close_at = event.daily_end_at(entry.attendance_date)
+    close_at if close_at && close_at > entry.signed_in_at
+  end
+
+  # Whether the registrant is currently signed in (today).
+  def signed_in?
+    open_attendance_entry.present?
+  end
+
+  # This registration's attendance entries for one event day (a Date), in
+  # sign-in order — the day's rows on the CE callout and the report.
+  def attendance_entries_on(date)
+    event_attendance_time_entries.chronological.select { |entry| entry.attendance_date == date }
+  end
+
+  # Total completed (signed-out) attendance minutes across all days — the figure the
+  # CE certificate gate compares against the awarded hours. Open entries contribute
+  # nothing until they're signed out.
+  def attendance_minutes_total
+    event_attendance_time_entries.sum { |entry| entry.duration_minutes.to_i }
+  end
+
   # CE is now tracked as one or more ContinuingEducationRegistration records,
   # each against a professional license. These aggregate across them so callers
   # (callouts, onboarding, CSV) read a single registration-level figure.
@@ -755,6 +810,15 @@ class EventRegistration < ApplicationRecord
     return false unless ce_registered?
 
     continuing_education_registrations.all?(&:paid_in_full?)
+  end
+
+  # Whether the attendance sign-in sheet is open to this registrant. Deliberately
+  # any-of, not the all-of ce_paid_in_full? the status badge uses: each paid CE
+  # registration gets its own sheet, and they all record the same hours in the same
+  # room, so one paid licence is enough to justify writing those hours down. Someone
+  # part-way through paying for a second licence keeps signing in for the first.
+  def ce_attendance_offered?
+    continuing_education_registrations.any?(&:paid_in_full?)
   end
 
   # License numbers on file across this registration's CE registrations.

@@ -3,16 +3,23 @@
 <% ce_registration = @event_registration.continuing_education_registrations.first %>
 
 <%#
-  Reached from the admin CE registration edit page (return_to=ce_registration):
-  point the eyebrow back there instead of the registrant's ticket. Gated on edit
-  access so a registrant who lands on this URL still gets the default ticket back.
+  Reached from an admin page (return_to): point the eyebrow back at that page
+  instead of the registrant's ticket — the CE registration edit page, or the event's
+  CE sign-ins, whose registrant links land here. Each gated on access to the
+  destination so a registrant who lands on one of these URLs still gets the default
+  ticket back.
 %>
 
-<% callout_eyebrow = if params[:return_to] == "ce_registration" && ce_registration && allowed_to?(:edit?, ce_registration)
-     { back_path: edit_continuing_education_registration_path(ce_registration), back_label: "Back to CE registration" }
-   else
-     {}
-   end %>
+<% callout_eyebrow = case params[:return_to]
+   when "ce_registration"
+     if ce_registration && allowed_to?(:edit?, ce_registration)
+       { back_path: edit_continuing_education_registration_path(ce_registration), back_label: "Back to CE registration" }
+     end
+   when "attendance"
+     if allowed_to?(:attendance?, @event)
+       { back_path: attendance_event_path(@event, ce: "true", anchor: "totals"), back_label: "Back to CE sign-ins" }
+     end
+   end || {} %>
 
 <%= render layout: "events/callouts/callout_page", locals: { title: @event.ce_hours_label, **callout_eyebrow } do %>
   <%# Requesting CE flips this frame in place: the POST redirects back here and
@@ -33,51 +40,58 @@
     <% simulate_ce_paid = params[:admin] == "true" && ce_registration && allowed_to?(:edit?, ce_registration) %>
     <%#
       Admin-only jump to the management surface for this CE registration. Hidden
-      from registrants; opens in a new tab so the registrant view is kept.
+      from registrants; opens in a new tab so the registrant view is kept. Carries
+      this page's origin through so the new tab's eyebrow returns where the admin
+      started rather than to the registration edit default.
     %>
     <% if ce_registration && allowed_to?(:edit?, ce_registration) && !sample_preview? %>
       <div class="mb-4 flex justify-end">
-        <%= render "events/callouts/admin_edit_link", path: edit_continuing_education_registration_path(ce_registration), label: "Edit CE registration" %>
+        <%= render "events/callouts/admin_edit_link", path: edit_continuing_education_registration_path(ce_registration, return_to: params[:return_to].presence), label: "Edit CE registration" %>
       </div>
     <% end %>
     <%= turbo_frame_tag "license_section" do %>
       <section>
-        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Your CE credit</h2>
+        <%# Heading row carries the status chip; the stats sit together on one
+            wrapping row beneath it, all at the same scale. %>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Your CE credit</h2>
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-medium uppercase tracking-wide text-gray-400">Status</span>
+            <%= render "event_registrations/ce_status_badge", registration: @event_registration, simulate_paid: simulate_ce_paid %>
+          </div>
+        </div>
 
-        <dl class="mt-3 flex flex-wrap items-center gap-x-8 gap-y-3">
+        <dl class="mt-3 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm">
           <div class="flex items-baseline gap-2">
             <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Hours</dt>
-            <dd class="text-lg font-semibold text-gray-900 tabular-nums"><%= plain_number(ce_registration&.hours) || "—" %></dd>
+            <dd class="font-semibold text-gray-900 tabular-nums"><%= plain_number(ce_registration&.hours) || "—" %></dd>
           </div>
 
-          <div class="flex items-center gap-3 sm:ml-auto">
-            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Status</dt>
-            <dd><%= render "event_registrations/ce_status_badge", registration: @event_registration, simulate_paid: simulate_ce_paid %></dd>
+          <div class="flex items-baseline gap-2">
+            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Cost</dt>
+            <dd class="font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(ce_registration&.cost_cents) %></dd>
+          </div>
+
+          <% if ce_registration&.discounted? %>
+            <div class="flex items-baseline gap-2">
+              <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Discount</dt>
+              <dd class="font-semibold text-gray-900 tabular-nums">−<%= dollars_from_cents(ce_registration.discount_sum) %></dd>
+            </div>
+          <% end %>
+
+          <div class="flex items-center gap-2">
+            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount paid</dt>
+            <dd class="flex items-center gap-2 font-semibold text-gray-900 tabular-nums">
+              <%= dollars_from_cents(ce_registration&.payments_sum.to_i) %>
+              <% if ce_registration&.paid_in_full? || simulate_ce_paid %>
+                <%= render "shared/badge",
+                      label: "Paid in full",
+                      classes: "bg-green-50 text-green-700 border-green-200",
+                      icon: "fa-solid fa-circle-check text-[0.6rem]" %>
+              <% end %>
+            </dd>
           </div>
         </dl>
-
-        <p class="mt-3 flex items-baseline gap-2 text-sm">
-          <span class="text-xs font-medium uppercase tracking-wide text-gray-400">Cost</span>
-          <span class="font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(ce_registration&.cost_cents) %></span>
-        </p>
-
-        <% if ce_registration&.discounted? %>
-          <p class="mt-3 flex items-baseline gap-2 text-sm">
-            <span class="text-xs font-medium uppercase tracking-wide text-gray-400">Discount</span>
-            <span class="font-semibold text-gray-900 tabular-nums">−<%= dollars_from_cents(ce_registration.discount_sum) %></span>
-          </p>
-        <% end %>
-
-        <p class="mt-3 flex items-baseline gap-2 text-sm">
-          <span class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount paid</span>
-          <span class="font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(ce_registration&.payments_sum.to_i) %></span>
-          <% if ce_registration&.paid_in_full? || simulate_ce_paid %>
-            <%= render "shared/badge",
-                  label: "Paid in full",
-                  classes: "bg-green-50 text-green-700 border-green-200",
-                  icon: "fa-solid fa-circle-check text-[0.6rem]" %>
-          <% end %>
-        </p>
 
         <% if ce_registration && ce_registration.remaining_cost.positive? %>
           <% if (due_text = @event.decorate.ce_payment_due_deadline_display) %>
@@ -130,26 +144,26 @@
         </div>
 
         <% if license_locked || (license_on_file && !editing_license) %>
-          <%# Each license field on its own row, labels in a fixed column so the values line up. %>
-          <dl class="mt-3 flex flex-col gap-2">
+          <%# License fields on one wrapping row, matching the CE credit stats above. %>
+          <dl class="mt-3 flex flex-wrap items-baseline gap-x-8 gap-y-3 text-sm">
             <div class="flex items-baseline gap-2">
-              <dt class="w-32 shrink-0 text-xs font-medium uppercase tracking-wide text-gray-400">License type</dt>
-              <dd class="text-sm font-medium text-gray-900"><%= license_kind.presence || "—" %></dd>
+              <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">License type</dt>
+              <dd class="font-medium text-gray-900"><%= license_kind.presence || "—" %></dd>
             </div>
 
             <div class="flex items-baseline gap-2">
-              <dt class="w-32 shrink-0 text-xs font-medium uppercase tracking-wide text-gray-400">License number</dt>
-              <dd class="text-sm font-medium text-gray-900 tabular-nums"><%= license_number %></dd>
+              <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">License number</dt>
+              <dd class="font-medium text-gray-900 tabular-nums"><%= license_number %></dd>
             </div>
 
             <div class="flex items-baseline gap-2">
-              <dt class="w-32 shrink-0 text-xs font-medium uppercase tracking-wide text-gray-400">Issuing state</dt>
-              <dd class="text-sm font-medium text-gray-900"><%= license_issuing_state.presence || "—" %></dd>
+              <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Issuing state</dt>
+              <dd class="font-medium text-gray-900"><%= license_issuing_state.presence || "—" %></dd>
             </div>
 
             <div class="flex items-baseline gap-2">
-              <dt class="w-32 shrink-0 text-xs font-medium uppercase tracking-wide text-gray-400">Expires</dt>
-              <dd class="text-sm font-medium text-gray-900 tabular-nums"><%= license_expires_on&.to_fs(:long) || "—" %></dd>
+              <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Expires</dt>
+              <dd class="font-medium text-gray-900 tabular-nums"><%= license_expires_on&.to_fs(:long) || "—" %></dd>
             </div>
           </dl>
           <% if license_locked %>
@@ -229,6 +243,138 @@
             <p class="mt-2 text-xs text-gray-400">Acceptance of CE hours is determined by each state board; we can't guarantee yours will accept them.</p>
           <% end %>
         <% end %>
+      </section>
+    <% end %>
+
+    <%#
+      Training sign-in/out — the in-portal replacement for the paper CE hour sign-in
+      sheet. One button at a time for today: Sign in when signed out (only inside the
+      day's window), Sign out while signed in (always, so a forgotten sign-out can
+      still be closed that day). Many entries per day is expected (breaks, lunch). An
+      entry left open overnight doesn't carry into today's state — it gets its own
+      catch-up button below, stamped with that day's scheduled end rather than now.
+
+      The buttons only ever stamp "now"; the sheets underneath stay editable during
+      the training and after it (see events/callouts/_ce_attendance_sheet), and the
+      controls stay singular above them because every sheet shares one set of times.
+    %>
+    <%# Gated per licence, so a second still being paid for doesn't take the first
+        one's sheet away. The sample preview has no payments behind its built CE
+        record, so treat it as paid the way the "Paid in full" badge above does —
+        otherwise the section is invisible where it's meant to be previewed. %>
+    <% attendance_sheets = @event_registration.continuing_education_registrations
+         .select { |ce| ce.paid_in_full? || simulate_ce_paid || sample_preview? } %>
+    <% sheet = RegistrantAttendanceSheet.new(@event_registration) %>
+    <% signed_in = sheet.signed_in? %>
+    <% forgotten_entry = sheet.forgotten_entry %>
+    <% opens_at = sheet.next_opens_at %>
+    <%# A preview is never inside a real sign-in window, so show it the open state —
+        otherwise an admin previewing the ticket never sees the buttons registrants get. %>
+    <% window_open = sheet.window_open? || sample_preview? %>
+    <%# The whole surface stays up once the training is over: the sign-in buttons are
+        gone by then, but the sheets are how a registrant fills in what they missed. %>
+    <% if attendance_sheets.any? && sheet.any_days? %>
+      <section id="attendance" class="mt-7 scroll-mt-6 border-t border-gray-100 pt-6">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Training sign-in</h2>
+          <%# Admin-only jump to the event's attendance report, mirroring the
+              "Edit CE registration" chip up top. %>
+          <% if allowed_to?(:attendance?, @event) && !sample_preview? %>
+            <%= render "events/callouts/admin_edit_link", path: attendance_event_path(@event, ce: "true"), label: "Attendance report" %>
+          <% end %>
+        </div>
+
+        <%# A day left open: its own prompt above today's controls, naming the day and
+            the time it will be recorded as, so closing it can't be mistaken for
+            signing out of today. %>
+        <% if forgotten_entry %>
+          <div class="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-amber-50 px-3 py-2.5 ring-1 ring-amber-200">
+            <p class="flex items-start gap-2 text-sm text-gray-700">
+              <i class="fa-solid fa-triangle-exclamation mt-0.5 shrink-0 text-amber-500"></i>
+              <span>You never signed out on <span class="font-medium text-gray-900"><%= forgotten_entry.attendance_date.strftime("%A, %B %-d") %></span>, after signing in at <%= forgotten_entry.signed_in_label %>.
+                <span class="block mt-0.5 text-xs text-gray-500">Signing out records <%= attendance_clock_time(sheet.forgotten_at) %>, when that day's training ended.</span>
+              </span>
+            </p>
+            <%# No sample-preview variant: the preview registration has no entries, so
+                it can never have a day hanging open. %>
+            <%= button_to "Sign out for #{forgotten_entry.attendance_date.strftime("%b %-d")}",
+                  registration_ce_sign_out_path(@event_registration.slug, entry_id: forgotten_entry.id), data: { turbo: false },
+                  class: "shrink-0 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-300 cursor-pointer" %>
+          </div>
+        <% end %>
+
+        <div class="mt-3 flex flex-wrap items-center gap-3">
+          <% if signed_in %>
+            <span class="inline-flex items-center gap-1.5 rounded-full border bg-teal-50 text-teal-700 border-teal-200 px-2.5 py-0.5 text-xs font-medium">
+              <i class="fa-solid fa-circle-check text-[0.6rem]"></i>
+              Signed in at <%= sheet.open_entry.signed_in_label %>
+            </span>
+            <%# Signing out is the one action left while signed in, so it gets the
+                primary CTA treatment, same as Sign in. %>
+            <% if sample_preview? %>
+              <button type="button" disabled
+                      class="shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white opacity-60 cursor-not-allowed">Sign out</button>
+            <% else %>
+              <%= button_to "Sign out", registration_ce_sign_out_path(@event_registration.slug), data: { turbo: false },
+                    class: "shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer" %>
+            <% end %>
+          <% elsif window_open %>
+            <%# "Signed out" only makes sense after a session today — first-time
+                visitors just get the Sign in button. %>
+            <% if sheet.todays_entries.any? %>
+              <span class="inline-flex items-center gap-1.5 rounded-full border bg-gray-50 text-gray-600 border-gray-200 px-2.5 py-0.5 text-xs font-medium">Signed out</span>
+            <% end %>
+            <% sign_in_label = sheet.todays_entries.any? ? "Sign in again" : "Sign in" %>
+            <% if sample_preview? %>
+              <button type="button" disabled
+                      class="shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white opacity-60 cursor-not-allowed"><%= sign_in_label %></button>
+            <% else %>
+              <%= button_to sign_in_label, registration_ce_sign_in_path(@event_registration.slug), data: { turbo: false },
+                    class: "shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer" %>
+            <% end %>
+          <% elsif opens_at %>
+            <%# Sign-in window not open yet: standard gating notice (matching the
+                videoconference pending-note style) naming the concrete opening time,
+                with the event's own start beneath it. Shown in the event's zone
+                (Pacific), labeled — no JS to detect the viewer's own zone. %>
+            <p class="flex items-start gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-sm text-gray-700 ring-1 ring-blue-200">
+              <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-blue-400"></i>
+              <span>Sign-in opens
+                <time datetime="<%= opens_at.iso8601 %>" class="font-medium text-gray-900"><%= opens_at.strftime("%A, %B %-d at %-I:%M %p %Z") %></time>.
+                <%# Both the gap and the time come from the lead, so widening the window
+                    can't leave the sentence claiming a stale "30 min". %>
+                <span class="block mt-0.5 text-xs text-gray-500">Event begins <%= Event::ATTENDANCE_SIGN_IN_LEAD.inspect %> later, at <%= (opens_at + Event::ATTENDANCE_SIGN_IN_LEAD).strftime("%-I:%M %p %Z") %>.</span>
+              </span>
+            </p>
+          <% end %>
+        </div>
+
+        <%# The sheet stops at the last day it covers, so a longer training has days
+            with nowhere to record them and no sign-in window. Say so plainly and point
+            at staff — the admin report carries the matching warning at their end. %>
+        <% if sheet.days_truncated? %>
+          <p class="mt-3 flex items-start gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-sm text-gray-700 ring-1 ring-blue-200">
+            <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-blue-400"></i>
+            <span>Sign-in covers the first <%= pluralize(sheet.days.size, "day") %> of this training, through
+              <span class="font-medium text-gray-900"><%= sheet.days.last.strftime("%A, %B %-d") %></span>.
+              <span class="block mt-0.5 text-xs text-gray-500">If you attend beyond that date, please contact the training staff so your additional hours can be recorded.</span>
+            </span>
+          </p>
+        <% end %>
+
+        <%# Carry the page's own params so editing, saving and cancelling all land back
+            on the page the registrant (or the admin previewing it) was looking at. %>
+        <% page_state = { return_to: params[:return_to].presence, admin: params[:admin].presence }.compact %>
+        <% editing_date = sheet.days.find { |date| params[:edit] == date.iso8601 } %>
+        <% attendance_sheets.each do |ce_reg| %>
+          <%= render "events/callouts/ce_attendance_sheet", sheet: sheet, ce_registration: ce_reg,
+                titled: attendance_sheets.many?, editing_date: editing_date, page_state: page_state %>
+        <% end %>
+
+        <p class="mt-3 text-xs text-gray-400">
+          <% if signed_in || window_open %>Sign in when you arrive and sign out when you leave, breaks and lunch included, so your hours are recorded accurately.<br><% end %>
+          You can add or correct any day's times yourself with <span class="font-medium text-teal-700">Edit</span> — during the training or after it.
+        </p>
       </section>
     <% end %>
   <% else %>

@@ -493,6 +493,20 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(existing_registration.reload.event_id).to eq(new_event.id)
       end
 
+      it "returns to the attendance report after saving when opened from it" do
+        patch event_registration_path(existing_registration, return_to: "attendance"),
+              params: { event_registration: { expected_payment_method: "Check" } }
+
+        expect(response).to redirect_to(attendance_event_path(existing_registration.event))
+      end
+
+      it "shows a sign-ins eyebrow when opened from the attendance report" do
+        get edit_event_registration_path(existing_registration, return_to: "attendance")
+
+        expect(response.body).to include("Sign-ins")
+        expect(response.body).to include(attendance_event_path(existing_registration.event))
+      end
+
       it "sets the shout-out flag and stores the shout-out text on the registrant" do
         patch event_registration_path(existing_registration),
               params: { event_registration: {

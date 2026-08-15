@@ -22,6 +22,10 @@ class EventRegistrationPolicy < ApplicationPolicy
   # action, so mirror the roster's audience (admins and the event's owner).
   def toggle_certificate_issued? = admin? || event_owner?
 
+  # Correcting attendance times inline on the event's sign-in report — same reach as
+  # reading that report (EventPolicy#attendance?).
+  def update_attendance? = admin? || event_owner?
+
 
   relation_scope do |relation|
     return relation if admin?

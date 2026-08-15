@@ -2,7 +2,7 @@ class EventRegistrationsController < ApplicationController
   require "csv"
 
   # show redirects to slug URL; kept for backwards compatibility
-  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding, :toggle_certificate_issued ]
+  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding, :toggle_certificate_issued, :update_attendance ]
 
   def index
     authorize!
@@ -110,6 +110,7 @@ class EventRegistrationsController < ApplicationController
           # feature-a-shout-out flow) or the recipient's own card (their name).
           when "recipients" then redirect_to recipients_event_path(@event_registration.event, anchor: "shout-outs"), notice: notice, status: :see_other
           when "recipient_card" then redirect_to helpers.recipients_event_card_path(@event_registration.event, @event_registration.slug), notice: notice, status: :see_other
+          when "attendance" then redirect_to attendance_event_path(@event_registration.event), notice: notice, status: :see_other
           else
             # No explicit origin: keep admins in the management context (the
             # registrants list) rather than dropping them on the public
@@ -171,6 +172,27 @@ class EventRegistrationsController < ApplicationController
       format.turbo_stream
       format.html { redirect_to helpers.registrants_event_row_path(@event_registration.event, @event_registration.id) }
     end
+  end
+
+  # Inline correction of one registrant's sign-in/out times for one training day, from
+  # the event's attendance report. Rows carry clock times only — the day comes from the
+  # report section the editor was opened in — plus a blank row to add a session and a
+  # Remove box to drop one. Registrants edit their own times from the CE callout; this
+  # is the same editor for staff, without leaving the report.
+  def update_attendance
+    authorize! @event_registration, to: :update_attendance?
+    date = AttendanceDayRows.date_from(params[:date])
+    return head :unprocessable_content unless date
+
+    rows = AttendanceDayRows.new(params, date)
+    EventAttendanceEntriesUpdate.new(@event_registration, rows.entry_attributes, editor: current_user).save!
+    redirect_to attendance_report_path(date), notice: "Attendance times updated.", status: :see_other
+  rescue ActiveRecord::RecordInvalid => e
+    flash[:alert] = error_sentence(e.record)
+    # Hand the submitted times back so a rejected save doesn't cost the admin what
+    # they typed; the editor reopens on this cell prefilled with them.
+    flash[:attendance_rows] = rows.submitted
+    redirect_to attendance_report_path(date, reopen: true), status: :see_other
   end
 
   def confirm
@@ -347,6 +369,17 @@ class EventRegistrationsController < ApplicationController
 
   def set_event_registration
     @event_registration = EventRegistration.includes({ registrant: [ :user, { affiliations: :organization } ] }, { event: [ :location, :event_forms ] }, :organizations, comments: [ :created_by, :updated_by ]).find(params[:id])
+  end
+
+  # Back to the report in read mode, scrolled to the day cell that was edited, keeping
+  # whichever view the admin had open. `reopen:` puts that cell back into edit mode.
+  def attendance_report_path(date, reopen: false)
+    # `row` names the reported line the editor was opened on — a registrant reported
+    # once per CE licence has one cell per licence, and only that one should reopen.
+    cell = helpers.attendance_cell_id(params[:row].presence || @event_registration.id, date)
+    attendance_event_path(@event_registration.event,
+      ce: params[:ce].presence, group: params[:group].presence, return_to: params[:return_to].presence,
+      edit: (cell if reopen), anchor: cell)
   end
 
   # Creates the audited completion row for a checklist step (recording who/when),

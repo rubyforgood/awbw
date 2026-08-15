@@ -18,6 +18,12 @@
         preview_reminder_event_path(@event, reminder_filters), class: item_class %>
     <%= link_to "Send invite emails", preview_reminder_event_path(@event, mode: "invite"), class: item_class %>
     <%= link_to "Bulk payments", bulk_payments_event_path(@event), class: item_class %>
+    <%# Grouped with Download CSV: both take the roster's record out of the page. %>
+    <% if @event.ce_eligible? %>
+      <%= link_to "CE sign-ins", attendance_event_path(@event, ce: "true", return_to: "registrants"), class: item_class %>
+    <% else %>
+      <%= link_to "Sign-ins", attendance_event_path(@event, return_to: "registrants"), class: item_class %>
+    <% end %>
     <%= link_to registrants_event_path(@event, format: :csv), class: item_class, data: { turbo_frame: "_top" } do %>
       Download CSV <i class="fa-solid fa-download text-gray-400 ml-1"></i>
     <% end %>
