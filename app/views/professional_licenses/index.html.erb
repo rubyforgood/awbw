@@ -1,0 +1,27 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:continuing_education) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+    <%= link_to continuing_education_registrations_path, class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <i class="fa-solid fa-certificate text-xs"></i> CE registrations
+    <% end %>
+    <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <div class="flex items-center gap-3 mb-6">
+    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
+      <i class="fa-solid fa-id-card"></i>
+    </span>
+    <div>
+      <h1 class="text-2xl font-semibold text-gray-900">Licenses</h1>
+      <p class="text-gray-600 mt-1">Professional licenses on file across all registrants</p>
+    </div>
+  </div>
+
+  <%= render "search_boxes" %>
+
+  <% result_src = professional_licenses_path + "?" + request.query_string %>
+  <%= turbo_frame_tag :professional_licenses_results, src: result_src, data: { turbo: "temporary" } do %>
+    <%= render "results_skeleton" %>
+  <% end %>
+</div>
