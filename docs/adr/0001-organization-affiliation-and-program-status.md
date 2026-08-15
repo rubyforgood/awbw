@@ -53,17 +53,27 @@ only. Blank when the org has never facilitated. See
 ### D3 — Org-wide status chip: Active / Formerly active / Never active
 
 Three display buckets (`OrganizationDecorator#organization_status_bucket`), **not
-event-relative**:
+event-relative**, derived from **facilitator affiliations only**:
 
-- When the org has **any** facilitator affiliation: any **active** one → **Active**;
-  otherwise → **Formerly active**.
-- When the org has **no** facilitator affiliation: fall back to the stored
-  `OrganizationStatus`, bucketed via `PROGRAM_STATUS_BUCKETS`:
-  - `Active`, `Reinstate` → **Active**
-  - `Inactive`, `Suspended` → **Formerly active**
-  - `Pending`, `Unknown` → **Never active**
+- Any **active** facilitator affiliation → **Active**
+- Facilitator affiliation(s), but **all ended** → **Formerly active**
+- **No** facilitator affiliation → **Never active**
+
+The stored `OrganizationStatus` column plays **no part**. It is legacy data that
+was maintained by hand and drifted; an org is "active" because someone is
+facilitating there, not because a column says so. The same rule backs the index
+filter (`Organization.program_status`), so the filter and the chip can't disagree.
 
 On the edit form this chip **live-updates** from the visible facilitator rows.
+
+### D3a — The legacy status column: flagged, never consulted
+
+`OrganizationStatus::PROGRAM_STATUS_BUCKETS` survives for one purpose: bucketing
+the stored value (`Active`/`Reinstate` → active, `Inactive`/`Suspended` → formerly
+active, `Pending`/`Unknown`/missing → never active) so the **org edit form** can
+show a warning where it contradicts the affiliations
+(`OrganizationDecorator#legacy_status_mismatch?`). Nothing else reads it. Expect
+the warning on a fair number of orgs — that is the drift it exists to surface.
 
 ### D4 — Per-event program status: New / Ongoing / Reinstate
 

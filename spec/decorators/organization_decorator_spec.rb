@@ -40,14 +40,12 @@ RSpec.describe OrganizationDecorator do
   end
 
   describe "#organization_status_label" do
-    {
-      "Active" => "Active", "Reinstate" => "Active",
-      "Inactive" => "Formerly active", "Suspended" => "Formerly active",
-      "Pending" => "Never active", "Unknown" => "Never active"
-    }.each do |stored, label|
-      it "collapses stored '#{stored}' to '#{label}'" do
+    # Every stored status reads "Never active" here: with no facilitator affiliation
+    # there is no program, whatever the legacy column says.
+    OrganizationStatus::ORGANIZATION_STATUSES.each do |stored|
+      it "ignores stored '#{stored}' and reads 'Never active' without facilitator affiliations" do
         org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: stored))
-        expect(org.decorate.organization_status_label).to eq(label)
+        expect(org.decorate.organization_status_label).to eq("Never active")
       end
     end
 
@@ -58,7 +56,7 @@ RSpec.describe OrganizationDecorator do
     end
   end
 
-  describe "#organization_status_bucket (facilitator affiliations win over stored status)" do
+  describe "#organization_status_bucket (facilitator affiliations only)" do
     it "is :active for an active facilitator affiliation even when stored status is Suspended" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Suspended"))
       create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.year.ago, end_date: nil)
@@ -70,12 +68,43 @@ RSpec.describe OrganizationDecorator do
       create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
       expect(org.reload.decorate.organization_status_bucket).to eq(:formerly_active)
     end
+
+    it "is :never_active when a stored 'Active' org has only non-facilitator affiliations" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
+      create(:affiliation, organization: org, person: create(:person), title: "Volunteer", start_date: 1.year.ago, end_date: nil)
+      expect(org.reload.decorate.organization_status_bucket).to eq(:never_active)
+    end
+  end
+
+  describe "#legacy_status_mismatch?" do
+    it "is true when the stored status outranks the affiliations" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
+      expect(org.reload.decorate).to be_legacy_status_mismatch
+    end
+
+    it "is true for a stored 'Active' org that has never had a facilitator affiliation" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
+      expect(org.decorate).to be_legacy_status_mismatch
+    end
+
+    it "is false when the stored status buckets the same way as the affiliations" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Reinstate"))
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.year.ago, end_date: nil)
+      expect(org.reload.decorate).not_to be_legacy_status_mismatch
+    end
+
+    it "is false for a stored 'Pending' org with no facilitator affiliations" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Pending"))
+      expect(org.decorate).not_to be_legacy_status_mismatch
+    end
   end
 
   describe "#organization_status_chip" do
     it "renders a pill with the bucketed label and its status color" do
-      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Inactive"))
-      chip = org.decorate.organization_status_chip
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
+      chip = org.reload.decorate.organization_status_chip
       expect(Capybara.string(chip)).to have_css("span", text: "Formerly active")
       expect(chip).to include("orange")
     end
@@ -83,15 +112,17 @@ RSpec.describe OrganizationDecorator do
 
   describe "#program_since_chip" do
     it "shows the years in the org's status colour (Active → green)" do
-      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
-      chip = org.decorate.program_since_chip("2021")
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.year.ago, end_date: nil)
+      chip = org.reload.decorate.program_since_chip("2021")
       expect(Capybara.string(chip)).to have_css("span", text: "2021")
       expect(chip).to include("green")
     end
 
     it "falls back to the status label (orange) when there are no facilitator years" do
-      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Inactive"))
-      chip = org.decorate.program_since_chip("")
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
+      chip = org.reload.decorate.program_since_chip("")
       expect(Capybara.string(chip)).to have_css("span", text: "Formerly active")
       expect(chip).to include("orange")
     end

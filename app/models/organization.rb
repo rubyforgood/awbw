@@ -37,6 +37,10 @@ class Organization < ApplicationRecord
   # catch-all; any stored value not in this list (e.g. a legacy label like the
   # pre-rename "Other (please specify below)") is folded into it for display so an
   # unmatched select can't silently save as the first option.
+  # The affiliated-people nest every org-level roll-up reads (see #affiliated_people).
+  # List pages must preload people with exactly this, or each row re-queries.
+  PEOPLE_TAGGINGS = [ { sectorable_items: :sector }, { categorizable_items: { category: :category_type } } ].freeze
+
   AGENCY_TYPE_OTHER = "Other"
   AGENCY_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", AGENCY_TYPE_OTHER ].freeze
 
@@ -105,28 +109,18 @@ class Organization < ApplicationRecord
     end
     scope.distinct
   end
-  # Index filter over the stored organization_status, bucketed for display:
-  # "never_active" covers stored "Unknown" and orgs with no status at all;
-  # "formerly_or_never" is either of the two non-active buckets.
-  # Program status filter: facilitator affiliations win — an active facilitator
+  # Program-status filter, keyed purely off facilitator affiliations (the legacy
+  # organization_status plays no part — see ADR-0001 D3): an active facilitator
   # affiliation => active, facilitator affiliations but none active => formerly
-  # active. Orgs with NO facilitator affiliations fall back to the stored
-  # organization_status bucket (a missing status counts as never active).
+  # active, none at all => never active.
   scope :program_status, ->(bucket) {
     fac_ids = Affiliation.facilitators.select(:organization_id)
     active_fac_ids = Affiliation.facilitators.active.select(:organization_id)
-    # Orgs with no facilitator affiliations whose stored status is in the bucket.
-    stored = ->(b) { where.not(id: fac_ids).where(organization_status_id: OrganizationStatus.where(name: OrganizationStatus.names_for_bucket(b)).select(:id)) }
-    stored_never = -> {
-      never_ids = OrganizationStatus.where(name: OrganizationStatus.names_for_bucket(:never_active)).pluck(:id)
-      where.not(id: fac_ids).where(organization_status_id: never_ids + [ nil ])
-    }
-    formerly = -> { where(id: fac_ids).where.not(id: active_fac_ids).or(stored.call(:formerly_active)) }
     case bucket.to_s
-    when "active"            then where(id: active_fac_ids).or(stored.call(:active))
-    when "formerly_active"   then formerly.call
-    when "never_active"      then stored_never.call
-    when "formerly_or_never" then formerly.call.or(stored_never.call)
+    when "active"            then where(id: active_fac_ids)
+    when "formerly_active"   then where(id: fac_ids).where.not(id: active_fac_ids)
+    when "never_active"      then where.not(id: fac_ids)
+    when "formerly_or_never" then where.not(id: active_fac_ids)
     else all
     end
   }
@@ -293,6 +287,10 @@ class Organization < ApplicationRecord
 
   def published? # needed for my_bookmarks
     return true if organization_status&.name == "Active"
+    # Affiliation#active? is the in-memory twin of the `active` scope, so a list
+    # page that preloaded affiliations doesn't query once per row.
+    return affiliations.any?(&:active?) if affiliations.loaded?
+
     affiliations.active.exists?
   end
 
@@ -307,8 +305,7 @@ class Organization < ApplicationRecord
   # Only affiliated people's PRIMARY sector (a person has at most one) — their
   # non-primary sectors don't roll up to the org.
   def affiliated_sectors
-    people.includes(sectorable_items: :sector)
-          .flat_map { |person| person.sectorable_items.filter_map { |item| item.sector if item.is_primary? } }
+    affiliated_people.flat_map { |person| person.sectorable_items.filter_map { |item| item.sector if item.is_primary? } }
   end
 
   def all_sectors
@@ -344,16 +341,18 @@ class Organization < ApplicationRecord
 
   private
 
-  # Union of the org's own age groups and its affiliated people's, deduped. The
-  # affiliated people (with their taggings) are loaded once and memoized so the
-  # several aggregation calls a page render makes don't re-query.
+  # Union of the org's own age groups and its affiliated people's, deduped.
   def collect_age_groups(kind)
-    ([ self ] + affiliated_people_with_age_data).flat_map { |record| record.public_send(kind) }.uniq
+    ([ self ] + affiliated_people).flat_map { |record| record.public_send(kind) }.uniq
   end
 
-  def affiliated_people_with_age_data
-    @affiliated_people_with_age_data ||=
-      people.includes(categorizable_items: { category: :category_type }).to_a
+  # The affiliated people behind every org-level roll-up (sectors and age groups),
+  # with the taggings those roll-ups read. Memoized, and reused as-is when the
+  # caller has already preloaded them — list pages preload `people` with the
+  # PEOPLE_TAGGINGS nest (see OrganizationsController#index) so a 25-row page
+  # doesn't re-query per org. Preloading a bare `:people` would defeat that.
+  def affiliated_people
+    @affiliated_people ||= people.loaded? ? people.to_a : people.includes(PEOPLE_TAGGINGS).to_a
   end
 
   def affiliation_dates_locked

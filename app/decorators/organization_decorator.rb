@@ -112,24 +112,29 @@ class OrganizationDecorator < ApplicationDecorator
     active: :org_active, formerly_active: :org_formerly_active, never_active: :org_never_active
   }.freeze
 
-  # The org's program-status bucket (:active / :formerly_active / :never_active).
-  # Derived from facilitator affiliations when the org has any (an active one =>
-  # :active, otherwise :formerly_active); only when the org has NO facilitator
-  # affiliations does it fall back to the stored organization_status (so a manual
-  # "Active" backs it into :active, and Pending/Suspended keep their buckets).
+  # The org's program-status bucket (:active / :formerly_active / :never_active),
+  # derived purely from facilitator affiliations: an active one => :active, only
+  # ended ones => :formerly_active, none at all => :never_active. The stored
+  # organization_status never feeds into this (see ADR-0001 D3).
   def organization_status_bucket
     facilitators = object.affiliations.select(&:facilitator?)
-    return OrganizationStatus.program_bucket(object.organization_status&.name) if facilitators.none?
+    return :never_active if facilitators.none?
 
     facilitators.any?(&:active?) ? :active : :formerly_active
   end
 
-  # The stored-status bucket, used as the fallback when an org has no facilitator
-  # affiliations (mirrors organization_status_bucket's fallback branch). Exposed
-  # so the edit form's Stimulus controller can restore it live if the last
-  # facilitator row is removed.
+  # The bucket the stored (legacy) OrganizationStatus would imply. Not used to
+  # decide the org's status — only to flag on the edit form where the legacy
+  # column disagrees with the affiliations.
   def stored_status_bucket
     OrganizationStatus.program_bucket(object.organization_status&.name)
+  end
+
+  # True when the legacy OrganizationStatus column contradicts what the org's
+  # facilitator affiliations say — e.g. a stored "Active" on an org that has never
+  # had a facilitator affiliation. Surfaced as a warning on the edit form.
+  def legacy_status_mismatch?
+    organization_status_bucket != stored_status_bucket
   end
 
   def organization_status_label

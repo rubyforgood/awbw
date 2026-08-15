@@ -3,8 +3,10 @@ require "rails_helper"
 RSpec.describe "Organization program status live update", type: :system do
   let(:admin) { create(:user, :admin) }
   let!(:person) { create(:person) }
-  let!(:pending_status) { create(:organization_status, name: "Pending") }
-  let!(:organization) { create(:organization, organization_status: pending_status) }
+  # A stored status that contradicts the affiliations, to prove it never feeds the
+  # chip: the org reads Active purely because a facilitator affiliation is active.
+  let!(:stored_status) { create(:organization_status, name: "Pending") }
+  let!(:organization) { create(:organization, organization_status: stored_status) }
 
   before do
     driven_by(:selenium_chrome_headless)
@@ -39,7 +41,7 @@ RSpec.describe "Organization program status live update", type: :system do
     expect(status_chip).to have_text("Formerly active", wait: 5)
   end
 
-  it "falls back to the stored status when the only facilitator is removed" do
+  it "drops to Never active when the only facilitator row is removed" do
     visit_and_wait edit_organization_path(organization)
     expect(status_chip).to have_text("Active")
 

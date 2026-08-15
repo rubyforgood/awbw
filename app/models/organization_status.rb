@@ -1,9 +1,10 @@
 class OrganizationStatus < ApplicationRecord
   ORGANIZATION_STATUSES = [ "Active", "Inactive", "Pending", "Reinstate", "Suspended", "Unknown" ]
 
-  # The stored values are kept as-is (legacy data), but the UI collapses them into
-  # three "program status" buckets for display and filtering. Anything unmapped —
-  # including a missing status — reads as :never_active.
+  # The stored values are legacy: nothing derives an organization's program status
+  # from them any more (see ADR-0001 D3). This mapping survives only so the edit
+  # form can flag where the stored value contradicts the facilitator affiliations.
+  # Anything unmapped — including a missing status — reads as :never_active.
   PROGRAM_STATUS_BUCKETS = {
     "Active" => :active,
     "Reinstate" => :active,
@@ -19,10 +20,5 @@ class OrganizationStatus < ApplicationRecord
 
   def self.program_bucket(name)
     PROGRAM_STATUS_BUCKETS.fetch(name.to_s, :never_active)
-  end
-
-  # Stored status names that fall into a given program-status bucket.
-  def self.names_for_bucket(bucket)
-    PROGRAM_STATUS_BUCKETS.select { |_, value| value == bucket }.keys
   end
 end

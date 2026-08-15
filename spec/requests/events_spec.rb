@@ -509,6 +509,34 @@ RSpec.describe "Events", type: :request do
         )
         expect(response.body).to match(/<input[^>]*name="return_to"[^>]*value="events"/)
       end
+
+      it "returns to the organization profile when arriving from its program-status chips" do
+        organization = create(:organization)
+        sign_in admin
+        get participation_events_path(event_id: training_2026.id, organization_id: organization.id, return_to: "organization")
+
+        expect(response.body).to include("← Organization")
+        expect(response.body).to include(CGI.escapeHTML(organization_path(organization, anchor: "program-status")))
+        # The origin has to survive a filter change, or the eyebrow reverts.
+        expect(response.body).to match(/<input[^>]*name="organization_id"[^>]*value="#{organization.id}"/)
+      end
+
+      it "returns to the organization edit form when arriving from its program-status chips" do
+        organization = create(:organization)
+        sign_in admin
+        get participation_events_path(event_id: training_2026.id, organization_id: organization.id, return_to: "organization_edit")
+
+        expect(response.body).to include("← Organization")
+        expect(response.body).to include(CGI.escapeHTML(edit_organization_path(organization, anchor: "program-status")))
+      end
+
+      it "falls back to the reports eyebrow when the organization origin has no id" do
+        sign_in admin
+        get participation_events_path(return_to: "organization")
+
+        expect(response.body).to include("← Reports")
+        expect(response.body).not_to include("← Organization")
+      end
     end
 
     context "as non-admin" do

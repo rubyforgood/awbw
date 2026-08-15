@@ -5,11 +5,8 @@
 <div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8 py-6">
   <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
     <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
-      <% if params[:return_to] == "dashboard" && params[:event_id].present? %>
-        <%= link_to "← Dashboard", dashboard_event_path(params[:event_id]), class: "text-sm text-gray-500 hover:text-gray-700" %>
-      <% else %>
-        <%= link_to "← Reports", reports_events_path(report_to_hub_params), class: "text-sm text-gray-500 hover:text-gray-700" %>
-      <% end %>
+      <% label, return_path = participation_return_link %>
+      <%= link_to label, return_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
       <%= render "events/report_subnav", current: :details %>
     </div>
 
@@ -25,6 +22,8 @@
     <%= form_with url: participation_events_path, method: :get, local: true,
           class: "rounded-xl border border-gray-200 bg-white p-4 shadow-sm mb-8" do %>
       <%= hidden_field_tag :return_to, params[:return_to] %>
+      <%# Carries the origin org through a filter change, so the eyebrow survives it. %>
+      <%= hidden_field_tag :organization_id, params[:organization_id] %>
       <div class="flex flex-wrap items-end gap-4">
         <%= render "time_period_filter" %>
         <%= render "event_type_filter" %>

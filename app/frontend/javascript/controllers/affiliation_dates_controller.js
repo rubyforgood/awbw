@@ -8,15 +8,13 @@ export default class extends Controller {
   // matches the server render. affiliatedSinceFallback is the org's own start_date
   // (already formatted) shown when no affiliation carries a start date.
   //
-  // Program status (org edit form): derived live from the visible Facilitator rows,
-  // mirroring OrganizationDecorator#organization_status_bucket. statusBuckets holds
-  // each bucket's label + pill classes (from DomainTheme) and statusFallback is the
-  // stored-status bucket to show when there are no facilitator rows.
+  // Program status (org edit form): derived live from the visible Facilitator rows
+  // alone, mirroring OrganizationDecorator#organization_status_bucket. statusBuckets
+  // holds each bucket's label + pill classes (from DomainTheme).
   static values = {
     affiliatedSincePeriods: Boolean,
     affiliatedSinceFallback: String,
-    statusBuckets: Object,
-    statusFallback: String
+    statusBuckets: Object
   }
 
   initialize() {
@@ -98,11 +96,11 @@ export default class extends Controller {
     }
 
     // Program status — active when any Facilitator row is still active, formerly
-    // active when they've all ended, else the stored-status fallback.
+    // active when they've all ended, never active when there are none.
     if (this.hasProgramStatusTarget) {
       let bucket
       if (facilitatorAffiliations.length === 0) {
-        bucket = this.statusFallbackValue
+        bucket = "never_active"
       } else {
         bucket = allFacInactive ? "formerly_active" : "active"
       }

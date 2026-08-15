@@ -255,7 +255,8 @@ RSpec.describe Organization do
     end
 
     context 'with program status filter' do
-      it 'filters to the active bucket' do
+      it 'filters to orgs with an active facilitator affiliation' do
+        create(:affiliation, organization: active_org, person: create(:person), title: "Facilitator", end_date: nil)
         results = Organization.search_by_params(program_status: "active")
         expect(results).to include(active_org)
         expect(results).not_to include(inactive_org)
@@ -263,52 +264,40 @@ RSpec.describe Organization do
     end
   end
 
+  # Buckets come from facilitator affiliations alone — the stored organization_status
+  # is deliberately ignored, so each org here carries a status that contradicts its
+  # affiliations (see ADR-0001 D3).
   describe ".program_status scope" do
-    let!(:active) { create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active")) }
-    let!(:reinstate) { create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Reinstate")) }
-    let!(:inactive) { create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Inactive")) }
-    let!(:suspended) { create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Suspended")) }
-    let!(:pending) { create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Pending")) }
-    let!(:unknown) { create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Unknown")) }
-    let!(:no_status) { create(:organization).tap { |o| o.update_columns(organization_status_id: nil) } }
-
-    it "buckets Active + Reinstate as active" do
-      expect(Organization.program_status("active")).to contain_exactly(active, reinstate)
+    def org_with(status_name, **affiliation_attrs)
+      create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: status_name)).tap do |org|
+        next if affiliation_attrs.empty?
+        create(:affiliation, organization: org, person: create(:person), title: "Facilitator", **affiliation_attrs)
+      end
     end
 
-    it "buckets Inactive + Suspended as formerly_active" do
-      expect(Organization.program_status("formerly_active")).to contain_exactly(inactive, suspended)
+    let!(:active_fac) { org_with("Suspended", start_date: 1.year.ago, end_date: nil) }
+    let!(:lapsed_fac) { org_with("Active", start_date: 3.years.ago, end_date: 1.year.ago) }
+    let!(:no_fac) { org_with("Active") }
+    let!(:non_fac_only) do
+      create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Reinstate")).tap do |org|
+        create(:affiliation, organization: org, person: create(:person), title: "Volunteer", start_date: 1.year.ago, end_date: nil)
+      end
     end
 
-    it "buckets Pending, Unknown, and no-status as never_active" do
-      expect(Organization.program_status("never_active")).to contain_exactly(pending, unknown, no_status)
+    it "buckets an active facilitator affiliation as active" do
+      expect(Organization.program_status("active")).to contain_exactly(active_fac)
+    end
+
+    it "buckets only-lapsed facilitator affiliations as formerly_active" do
+      expect(Organization.program_status("formerly_active")).to contain_exactly(lapsed_fac)
+    end
+
+    it "buckets orgs with no facilitator affiliation as never_active, whatever the stored status" do
+      expect(Organization.program_status("never_active")).to contain_exactly(no_fac, non_fac_only)
     end
 
     it "combines formerly + never" do
-      expect(Organization.program_status("formerly_or_never")).to contain_exactly(inactive, suspended, pending, unknown, no_status)
-    end
-
-    context "when the org has facilitator affiliations (they win over stored status)" do
-      let!(:active_fac_org) do
-        create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Suspended")).tap do |o|
-          create(:affiliation, organization: o, person: create(:person), title: "Facilitator", start_date: 1.year.ago, end_date: nil)
-        end
-      end
-      let!(:lapsed_fac_org) do
-        create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active")).tap do |o|
-          create(:affiliation, organization: o, person: create(:person), title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
-        end
-      end
-
-      it "buckets an active facilitator as active, regardless of the stored status" do
-        expect(Organization.program_status("active")).to include(active_fac_org)
-        expect(Organization.program_status("active")).not_to include(lapsed_fac_org)
-      end
-
-      it "buckets only-lapsed facilitators as formerly_active, regardless of the stored status" do
-        expect(Organization.program_status("formerly_active")).to include(lapsed_fac_org)
-        expect(Organization.program_status("formerly_active")).not_to include(active_fac_org)
-      end
+      expect(Organization.program_status("formerly_or_never")).to contain_exactly(lapsed_fac, no_fac, non_fac_only)
     end
   end
 

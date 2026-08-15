@@ -69,6 +69,12 @@ RSpec.describe "Organization profile events-attended section", type: :request do
     expect(response.body).to include("Program status")
     expect(response.body).to include("TOS205")
     expect(response.body).to include("Ongoing")
+    # The chip opens in a new tab, so it must tell the report how to get back here —
+    # and the block needs the id the report's eyebrow anchors to.
+    expect(response.body).to include(
+      CGI.escapeHTML(participation_events_path(event_id: event.id, organization_id: organization.id, return_to: "organization"))
+    )
+    expect(response.body).to include("id=\"#{EventParticipationHelper::PROGRAM_STATUS_ANCHOR}\"")
   end
 
   it "renders the section heading and lazy frame on the profile page" do

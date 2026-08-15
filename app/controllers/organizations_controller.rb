@@ -10,6 +10,8 @@ class OrganizationsController < ApplicationController
       base_scope = authorized_scope(Organization.includes(
         :organization_status, :sectors, :addresses, :affiliations,
         { categorizable_items: { category: :category_type } },
+        # Feeds the sector and age-group roll-ups per row — see Organization#affiliated_people.
+        { people: Organization::PEOPLE_TAGGINGS },
         logo_attachment: :blob
       ))
       filtered = base_scope.search_by_params(params).order(:name)

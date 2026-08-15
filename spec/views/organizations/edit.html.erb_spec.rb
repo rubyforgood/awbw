@@ -79,6 +79,39 @@ RSpec.describe "organizations/edit", type: :view do
       render
       expect(rendered).not_to include("Legacy organization status does not match affiliation status")
     end
+
+    # The mismatch is judged on program-status buckets, so a stored status that
+    # buckets the same way as the affiliations is not a mismatch, whatever its name.
+    it "warns when a stored 'Active' org has affiliations but none are facilitators" do
+      org = org_with_status("Active")
+      create(:affiliation, organization: org, person: create(:person), title: "Volunteer", inactive: false, end_date: nil)
+      assign(:organization, org.reload)
+      render
+      expect(rendered).to include("Legacy organization status does not match affiliation status")
+    end
+
+    it "shows no warning icon for a stored 'Pending' org with no facilitator affiliations" do
+      assign(:organization, org_with_status("Pending"))
+      render
+      expect(rendered).not_to include("Legacy organization status does not match affiliation status")
+    end
+
+    it "shows no warning icon for stored 'Reinstate' with an active facilitator (both active)" do
+      org = org_with_status("Reinstate")
+      create(:affiliation, organization: org, person: create(:person), inactive: false, end_date: nil)
+      assign(:organization, org.reload)
+      render
+      expect(rendered).not_to include("Legacy organization status does not match affiliation status")
+    end
+
+    it "shows no warning icon for stored 'Suspended' with only lapsed facilitators (both formerly active)" do
+      org = org_with_status("Suspended")
+      create(:affiliation, organization: org, person: create(:person),
+                           start_date: 3.years.ago.to_date, end_date: 1.year.ago.to_date)
+      assign(:organization, org.reload)
+      render
+      expect(rendered).not_to include("Legacy organization status does not match affiliation status")
+    end
   end
 
   describe "art program since" do
@@ -114,6 +147,12 @@ RSpec.describe "organizations/edit", type: :view do
       render
 
       expect(rendered).to include("Aug 2026 · Ongoing · PES205")
+      # Opens in a new tab, so the report needs the route back to this form —
+      # and the block needs the id that back-link anchors to.
+      expect(rendered).to include(CGI.escapeHTML(
+        participation_events_path(event_id: event.id, organization_id: org.id, return_to: "organization_edit")
+      ))
+      expect(rendered).to include("id=\"#{EventParticipationHelper::PROGRAM_STATUS_ANCHOR}\"")
     end
 
     it "always shows the general status chip, even with no events" do
