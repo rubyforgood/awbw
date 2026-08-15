@@ -40,6 +40,7 @@ module DomainTheme
     payments:                 :green,
     scholarships:             :fuchsia,
     continuing_education:     :teal,
+    continuing_education_registrations: :teal,
     bulk_payments:            :amber,
     event_dashboard:          :indigo,
     addresses:                :slate,

@@ -210,6 +210,15 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Person: #{person.name}")
       end
+
+      it "shows a back-to-person eyebrow (not Admin) when scoped to a person" do
+        person = create(:person, first_name: "Ada", last_name: "Lovelace")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(edit_person_path(person))
+      end
     end
 
     describe "GET /admin/activities/visits" do

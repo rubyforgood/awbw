@@ -309,6 +309,7 @@ module ApplicationHelper
     payments:            "fa-money-check-dollar",
     topic_subscriptions: "fa-envelope-open-text",
     memberships:         "fa-id-card",
+    continuing_education_registrations: "fa-award",
     workshop_ideas:          "fa-lightbulb",
     workshop_variation_ideas: "fa-lightbulb"
   }.freeze

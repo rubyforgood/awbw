@@ -2,7 +2,13 @@
 <div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
 
       <div class="flex flex-wrap items-center gap-y-2 mb-2">
-        <% if allowed_to?(:index?, with: Admin::HomePolicy) %>
+        <%# Scoped to a person (from their edit page's History card) — return there, not to Admin. %>
+        <% if @person %>
+          <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700" do %>
+            <i class="fas fa-arrow-left"></i>
+            <span><%= truncate(@person.name, length: 30) %></span>
+          <% end %>
+        <% elsif allowed_to?(:index?, with: Admin::HomePolicy) %>
           <%= link_to admin_path, class: "inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700" do %>
             <i class="fas fa-arrow-left"></i>
             <span>Admin</span>
