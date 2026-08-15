@@ -23,6 +23,13 @@ class RegistrantAttendanceSheet
     days.any?
   end
 
+  # Whether the training runs past the last day this sheet covers. There's no row to
+  # log those days against and no sign-in window for them, so the page says so and
+  # points the registrant at staff rather than leaving them to wonder.
+  def days_truncated?
+    event.event_dates_truncated?
+  end
+
   # A day's sessions, decorated and in sign-in order.
   def entries_on(date)
     entries_by_day.fetch(date, [])

@@ -501,6 +501,19 @@ RSpec.describe Event, type: :model do
       end
     end
 
+    describe "#event_dates_truncated?" do
+      it "is false when the event fits inside the day cap" do
+        expect(event.event_dates_truncated?).to be(false)
+      end
+
+      # day_count clamps to 5, so a longer training has days with no sign-in window,
+      # no report column and no sheet row. Both surfaces warn off this.
+      it "is true when the event runs past the last covered day" do
+        event.update!(end_date: Time.zone.local(2026, 7, 30, 16, 0))
+        expect(event.event_dates_truncated?).to be(true)
+      end
+    end
+
     describe "#daily_start_at / #daily_end_at" do
       it "applies the event's start/end time-of-day to each day" do
         day2 = Date.new(2026, 7, 24)

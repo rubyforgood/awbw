@@ -218,6 +218,18 @@ class Event < ApplicationRecord
     (0...day_count).map { |offset| first + offset }
   end
 
+  # Whether the event actually runs past the last day #event_dates covers — day_count
+  # is clamped to 5, so a longer event has no sign-in window, no report column and no
+  # sheet row past day 5. Both the attendance report (for staff) and the registrant's
+  # own sign-in sheet say so rather than silently stopping.
+  def event_dates_truncated?
+    last_day = end_date&.in_time_zone(Time.zone)&.to_date
+    dates = event_dates
+    return false unless last_day && dates.any?
+
+    last_day > dates.last
+  end
+
   # A day's start datetime: that date at start_date's time-of-day, in the app zone.
   # Every event day is assumed to start at the same time (the only time we have).
   def daily_start_at(date)

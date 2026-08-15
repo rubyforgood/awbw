@@ -315,6 +315,26 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       end
     end
 
+    # A training longer than the day cap has days the sheet can't hold and no sign-in
+    # window for them. The registrant is told where those hours go instead of finding
+    # a sheet that just stops.
+    it "tells the registrant to see staff when the training runs past the covered days" do
+      pay_ce!
+      event.update!(end_date: Time.zone.local(2026, 7, 30, 16, 0))
+
+      get registration_ce_path(registration.slug)
+
+      expect(response.body).to include("Sign-in covers the first 5 days of this training, through")
+      expect(response.body).to include("Monday, July 27")
+      expect(response.body).to include("please contact the training staff so your additional hours can be recorded")
+    end
+
+    it "leaves the note off a training that fits inside the covered days" do
+      pay_ce!
+      get registration_ce_path(registration.slug)
+      expect(response.body).not_to include("Sign-in covers the first")
+    end
+
     it "shows the section on the admin sample-ticket preview, with the controls inert" do
       sign_in create(:user, :admin)
       get sample_ce_event_path(event)

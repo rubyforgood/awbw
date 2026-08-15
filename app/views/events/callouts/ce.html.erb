@@ -357,6 +357,19 @@
           <% end %>
         </div>
 
+        <%# The sheet stops at the last day it covers, so a longer training has days
+            with nowhere to record them and no sign-in window. Say so plainly and point
+            at staff — the admin report carries the matching warning at their end. %>
+        <% if sheet.days_truncated? %>
+          <p class="mt-3 flex items-start gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-sm text-gray-700 ring-1 ring-blue-200">
+            <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-blue-400"></i>
+            <span>Sign-in covers the first <%= pluralize(sheet.days.size, "day") %> of this training, through
+              <span class="font-medium text-gray-900"><%= sheet.days.last.strftime("%A, %B %-d") %></span>.
+              <span class="block mt-0.5 text-xs text-gray-500">If you attend beyond that date, please contact the training staff so your additional hours can be recorded.</span>
+            </span>
+          </p>
+        <% end %>
+
         <%# Carry the page's own params so editing, saving and cancelling all land back
             on the page the registrant (or the admin previewing it) was looking at. %>
         <% page_state = { return_to: params[:return_to].presence, admin: params[:admin].presence }.compact %>
