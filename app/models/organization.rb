@@ -32,15 +32,15 @@ class Organization < ApplicationRecord
       saver: { quality: 80 }
   end
 
+  # The affiliated-people nest every org-level roll-up reads (see #affiliated_people).
+  # List pages must preload people with exactly this, or each row re-queries.
+  PEOPLE_TAGGINGS = [ { sectorable_items: :sector }, { categorizable_items: { category: :category_type } } ].freeze
+
   # The organization classifications offered by the org form and the registration
   # form's "Organization Type" question, in display order. "Other" is the generic
   # catch-all; any stored value not in this list (e.g. a legacy label like the
   # pre-rename "Other (please specify below)") is folded into it for display so an
   # unmatched select can't silently save as the first option.
-  # The affiliated-people nest every org-level roll-up reads (see #affiliated_people).
-  # List pages must preload people with exactly this, or each row re-queries.
-  PEOPLE_TAGGINGS = [ { sectorable_items: :sector }, { categorizable_items: { category: :category_type } } ].freeze
-
   AGENCY_TYPE_OTHER = "Other"
   AGENCY_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", AGENCY_TYPE_OTHER ].freeze
 
