@@ -13,16 +13,18 @@
        data-dropdown-target="content"
        class="hidden absolute right-0 z-10 mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[180px]">
     <%= link_to "Onboarding tracker", onboarding_event_path(@event), class: item_class %>
-    <% if @event.ce_eligible? %>
-      <%= link_to "CE sign-in report", attendance_event_path(@event, ce: "true", return_to: "registrants"), class: item_class %>
-    <% else %>
-      <%= link_to "Sign-in report", attendance_event_path(@event, return_to: "registrants"), class: item_class %>
-    <% end %>
     <% reminder_filters = reminder_recipient_filters %>
     <%= link_to reminder_filters.any? ? "Send bulk emails (filtered)" : "Send bulk emails",
         preview_reminder_event_path(@event, reminder_filters), class: item_class %>
     <%= link_to "Send invite emails", preview_reminder_event_path(@event, mode: "invite"), class: item_class %>
     <%= link_to "Bulk payments", bulk_payments_event_path(@event), class: item_class %>
+    <%# Sits with Download CSV: both are ways of taking the roster's attendance record
+        out of the page, rather than actions performed on the registrants. %>
+    <% if @event.ce_eligible? %>
+      <%= link_to "CE sign-in report", attendance_event_path(@event, ce: "true", return_to: "registrants"), class: item_class %>
+    <% else %>
+      <%= link_to "Sign-in report", attendance_event_path(@event, return_to: "registrants"), class: item_class %>
+    <% end %>
     <%= link_to registrants_event_path(@event, format: :csv), class: item_class, data: { turbo_frame: "_top" } do %>
       Download CSV <i class="fa-solid fa-download text-gray-400 ml-1"></i>
     <% end %>
