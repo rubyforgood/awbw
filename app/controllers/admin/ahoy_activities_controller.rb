@@ -83,6 +83,15 @@ module Admin
           @person_communications = email.present? ?
             Notification.email(email).includes(:noticeable, sender: :person).order(created_at: :desc).limit(10) :
             Notification.none
+
+          # Attendance sign-ins happen on a login-free public callout (no Current),
+          # so they aren't ahoy-tracked either — read the entries directly.
+          @person_time_entries = EventAttendanceTimeEntry
+            .where(event_registration_id: person.event_registrations.select(:id))
+            .includes(event_registration: :event)
+            .order(signed_in_at: :desc)
+            .limit(15)
+            .decorate
         end
       end
 

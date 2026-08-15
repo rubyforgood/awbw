@@ -230,6 +230,19 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).to include("Communications")
         expect(response.body).to include("Comms row marker xyz")
       end
+
+      it "surfaces the person's attendance time entries on the activities page" do
+        person = create(:person)
+        event = create(:event, title: "Attendance marker event")
+        registration = create(:event_registration, registrant: person, event: event)
+        create(:event_attendance_time_entry, event_registration: registration)
+
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Attendance time entries")
+        expect(response.body).to include("Attendance marker event")
+      end
     end
 
     describe "GET /admin/activities/visits" do

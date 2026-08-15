@@ -171,6 +171,41 @@
         </section>
       <% end %>
 
+      <%# Attendance sign-ins aren't ahoy-tracked (login-free public callout), so
+          list the entries directly, newest first. %>
+      <% if @person && @person_time_entries.present? %>
+        <section class="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
+              <i class="fa-solid fa-clock"></i>
+            </span>
+            <h2 class="text-sm font-semibold text-gray-700">Attendance time entries</h2>
+          </div>
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+              <tr>
+                <th class="px-4 py-2 text-left">Event</th>
+                <th class="px-4 py-2 text-left">Date</th>
+                <th class="px-4 py-2 text-left">In</th>
+                <th class="px-4 py-2 text-left">Out</th>
+                <th class="px-4 py-2 text-left">Duration</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <% @person_time_entries.each do |entry| %>
+                <tr>
+                  <td class="px-4 py-2 text-gray-900"><%= entry.event_registration.event.title %></td>
+                  <td class="px-4 py-2 text-gray-500"><%= entry.attendance_date&.strftime("%b %-d, %Y") %></td>
+                  <td class="px-4 py-2 text-gray-500"><%= entry.signed_in_label %></td>
+                  <td class="px-4 py-2 text-gray-500"><%= entry.signed_out_label %></td>
+                  <td class="px-4 py-2 text-gray-500"><%= entry.duration_label %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </section>
+      <% end %>
+
       <!-- Activities Table -->
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-x-auto">
         <table class="responsive-table min-w-full divide-y divide-gray-200 text-sm">
