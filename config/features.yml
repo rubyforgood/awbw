@@ -38,15 +38,24 @@
   pro_tips:
     - "Registrants can record their own times on their CE ticket; staff can adjust them on the report."
 
-- name: "Browse CE registrations and licenses"
+- name: "Browse continuing-education registrations"
   area: registration
   display_status: admin_facing
   released_on: 2026-08-15
   action_path: "/continuing_education_registrations"
   pr_number: 2208
   summary: >-
-    New admin index pages to browse every continuing-education registration and
-    every professional license on file.
+    A new admin index to browse every continuing-education registration on file,
+    across all events.
+
+- name: "Browse professional licenses"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-15
+  action_path: "/professional_licenses"
+  pr_number: 2208
+  summary: >-
+    A new admin index to browse every professional license people have on file.
 
 - name: "Search payments by Stripe id, metadata, and amount"
   area: payments
