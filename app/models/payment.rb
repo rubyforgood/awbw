@@ -2,9 +2,6 @@ class Payment < ApplicationRecord
   has_paper_trail
   PAYER_TYPES = %w[Person Organization].freeze
 
-  # Rolling time windows for the index "Time period" filter, keyed label => value.
-  # The index defaults to DEFAULT_PERIOD so the first search shows recent payments;
-  # pick "All time" to intentionally search the full history.
   PERIOD_OPTIONS = {
     "Past day" => "past_day",
     "Past week" => "past_week",
