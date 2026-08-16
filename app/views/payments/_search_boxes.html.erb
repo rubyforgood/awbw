@@ -45,7 +45,7 @@
           prompt: "Search for an organization" %>
       </div>
 
-      <div class="md:col-span-3">
+      <div class="md:col-span-4">
         <label for="search" class="<%= label_class %>">Search metadata / Stripe charge ID</label>
 
         <%= text_field_tag "search", params[:search],
@@ -61,7 +61,7 @@
           class: placeholder_select_class %>
       </div>
 
-      <div class="md:col-span-3">
+      <div class="md:col-span-2">
         <label for="payer_type" class="<%= label_class %>">Payer type</label>
 
         <%= select_tag "payer_type",
@@ -108,7 +108,11 @@
           class: placeholder_select_class %>
       </div>
 
-      <div class="md:col-span-2 flex items-end justify-end"><%= link_to "Clear filters", payments_path, class: "btn btn-utility-outline", data: { action: "collection#clearAndSubmit" } %></div>
+      <div class="md:col-span-2 flex flex-col">
+        <span class="<%= label_class %>" aria-hidden="true">&nbsp;</span>
+
+        <%= link_to "Clear filters", payments_path, class: "btn btn-utility-outline flex-1 w-full justify-center", data: { action: "collection#clearAndSubmit" } %>
+      </div>
     </div>
   <% end %>
 </div>
