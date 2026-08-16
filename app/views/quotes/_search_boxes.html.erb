@@ -7,20 +7,19 @@
                 class: "flex flex-wrap gap-4" do |f| %>
     <div class="flex-grow min-w-[200px]">
       <%= f.label :query, "Keywords",
-                  class: "text-sm font-medium text-gray-500 mb-1" %>
+                  class: "search-label" %>
 
       <%= f.text_field :query,
                        value: params[:query],
                        placeholder: "Search quotes…",
-                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
-                                 focus:ring-blue-500 focus:border-blue-500",
+                       class: "search-field bg-white",
                        oninput: "this.form.requestSubmit()" %>
     </div>
 
     <% if allowed_to?(:manage?, Quote) %>
       <!-- PUBLISHED -->
       <div class="min-w-[150px] admin-only bg-blue-100 p-2 rounded-md">
-        <label for="published" class="block text-xs font-semibold uppercase text-gray-600 tracking-wide mb-1">
+        <label for="published" class="search-label">
           Published
         </label>
 
@@ -29,15 +28,12 @@
                          [["All", ""], ["Published", "true"], ["Unpublished", "false"]],
                          params[:published]
                        ),
-                       class: "border border-gray-300 rounded-lg px-3 py-2 text-gray-700 w-full",
+                       class: "search-field search-select-placeholder",
                        onchange: "this.form.requestSubmit()" %>
       </div>
     <% end %>
 
     <!-- Clear -->
-    <div><%= link_to "Clear filters",
-                  quotes_path,
-                  class: "btn btn-utility-outline whitespace-nowrap",
-                  data: { action: "collection#clearAndSubmit" } %></div>
+    <div><%= render "shared/search_clear", url: quotes_path %></div>
   <% end %>
 </div>

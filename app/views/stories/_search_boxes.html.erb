@@ -8,46 +8,41 @@
   <div class="flex flex-wrap md:flex-nowrap items-end gap-6">
     <!-- TITLE -->
     <div class="min-w-[150px] pb-2">
-      <label for="title" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">
+      <label for="title" class="search-label">
         Title contains
       </label>
 
       <%= f.text_field :title,
                        value: params[:title],
                        placeholder: "e.g. Art, Music…",
-                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
-                                 focus:ring-blue-500 focus:border-blue-500",
+                       class: "search-field bg-white",
                        oninput: "this.form.requestSubmit()" %>
     </div>
 
     <!-- KEYWORDS -->
     <div class="flex-1 min-w-[200px] pb-2">
-      <label for="query" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">
+      <label for="query" class="search-label">
         Keywords
       </label>
 
       <div class="relative">
         <%= f.text_field :query,
                          value: params[:query],
-                         class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-10
-                                 focus:ring-blue-500 focus:border-blue-500" %>
+                         class: "search-field bg-white pr-10" %>
 
-        <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
-          <i class="fa fa-search"></i>
-        </button>
+        <%= render "shared/search_submit" %>
       </div>
     </div>
 
     <!-- YEAR -->
     <div class="w-24 pb-2">
-      <label for="year" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">
+      <label for="year" class="search-label">
         Year
       </label>
 
       <%= f.text_field :year,
                        placeholder: "e.g. 2025",
-                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
-                                 focus:ring-blue-500 focus:border-blue-500",
+                       class: "search-field bg-white",
                        oninput: "this.form.requestSubmit()" %>
     </div>
 
@@ -57,27 +52,26 @@
                  model_class: Story,
                  admin: allowed_to?(:manage?, Story),
                  authenticated: user_signed_in?,
-                 label_class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1",
+                 label_class: "search-label",
                  button_text: "All" %>
     </div>
 
     <!-- ORGANIZATION -->
     <div class="min-w-[200px] pb-2">
-      <label for="organization_id" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">
+      <label for="organization_id" class="search-label">
         Organization
       </label>
       <%= f.select :organization_id,
                    options_from_collection_for_select(@organizations, :id, :name, params[:organization_id]),
                    { include_blank: "All organizations" },
-                   class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
-                           focus:ring-blue-500 focus:border-blue-500",
+                   class: "search-field bg-white search-select-placeholder",
                    onchange: "this.form.requestSubmit()" %>
     </div>
 
     <!-- CLEAR FILTERS -->
     <div class="min-w-[120px] pb-3">
-      <label class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">&nbsp;</label>
-      <%= link_to "Clear filters", stories_path, class: "btn btn-utility", data: { action: "collection#clearAndSubmit" } %>
+      <label class="search-label">&nbsp;</label>
+      <%= render "shared/search_clear", url: stories_path %>
     </div>
   </div>
 <% end %>

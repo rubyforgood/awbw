@@ -1,25 +1,23 @@
 <%= form_tag(event_registrations_path, method: :get, class: "space-y-4") do |f| %>
   <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4 mb-6">
     <div class="w-full md:flex-1">
-      <%= label_tag :event_id, "Event", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= label_tag :event_id, "Event", class: "search-label" %>
       <%= select_tag :event_id,
                      options_from_collection_for_select(@events, :id, :time_title, params[:event_id].to_i),
                      include_blank: "All events",
-                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                     class: "search-field search-select-placeholder",
                      onchange: "this.form.submit();" %>
     </div>
     <div class="w-full md:flex-1">
-      <%= label_tag :event_type, "Event type", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= label_tag :event_type, "Event type", class: "search-label" %>
       <%= select_tag :event_type,
                      options_for_select([ [ "Trainings", "trainings" ], [ "Other", "other" ] ], params[:event_type]),
                      include_blank: "All events",
-                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                     class: "search-field search-select-placeholder",
                      onchange: "this.form.submit();" %>
     </div>
     <div class="w-full md:flex-1">
-      <%= label_tag :registrant_id, "Registrant", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= label_tag :registrant_id, "Registrant", class: "search-label" %>
       <%= select_tag :registrant_id,
                      options_for_select(
                        @selected_registrant ? [[@selected_registrant.full_name_with_email, @selected_registrant.id]] : [],
@@ -30,40 +28,34 @@
                        controller: "remote-select",
                        remote_select_model_value: "person"
                      },
-                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                     class: "search-field",
                      onchange: "this.form.submit();" %>
     </div>
     <div class="w-full md:flex-1">
-      <%= label_tag :organization_id, "Organization", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= label_tag :organization_id, "Organization", class: "search-label" %>
       <%= select_tag :organization_id,
                      options_from_collection_for_select(@organizations, :id, :name, params[:organization_id]),
                      include_blank: "All organizations",
-                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                     class: "search-field search-select-placeholder",
                      onchange: "this.form.submit();" %>
     </div>
     <div class="w-full md:flex-1">
-      <%= label_tag :attendance_status, "Attendance", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= label_tag :attendance_status, "Attendance", class: "search-label" %>
       <%= select_tag :attendance_status,
                      options_for_select(EventRegistration::ATTENDANCE_FILTER_OPTIONS, params[:attendance_status]),
                      include_blank: "All statuses",
-                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                     class: "search-field search-select-placeholder",
                      onchange: "this.form.submit();" %>
     </div>
     <div class="w-full md:flex-1">
-      <%= label_tag :event_year, "Year", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= label_tag :event_year, "Year", class: "search-label" %>
       <%= select_tag :event_year,
                      options_for_select(@event_years.map { |year| [ year.to_s, year ] }, params[:event_year].presence&.to_i),
                      include_blank: "All years",
-                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                     class: "search-field search-select-placeholder",
                      onchange: "this.form.submit();" %>
     </div>
     <!-- Clear filters -->
-    <div class="w-full md:w-auto flex justify-end"><%= link_to 'Clear filters', event_registrations_path,
-                  class: "btn btn-utility-outline",
-                  data: { action: "collection#clearAndSubmit" } %></div>
+    <div class="w-full md:w-auto flex justify-end"><%= render "shared/search_clear", url: event_registrations_path %></div>
   </div>
 <% end %>

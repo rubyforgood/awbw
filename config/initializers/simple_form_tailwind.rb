@@ -19,7 +19,7 @@ SimpleForm.setup do |config|
 
     # Input
     b.use :input,
-          class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+          class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none placeholder:text-sm placeholder:text-gray-400",
           error_class: "border-red-500",
           valid_class: "border-green-500"
 

@@ -5,48 +5,40 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-end">
     <!-- Search -->
     <div>
-      <%= label_tag :search, "Search", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= label_tag :search, "Search", class: "search-label" %>
       <div class="relative">
         <%= text_field_tag :search, params[:search],
-                           class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                                 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                           class: "search-field pr-10",
                            placeholder: "Name, email, or phone" %>
-        <button type="submit"
-                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600">
-          <i class="fa fa-search"></i>
-        </button>
+        <%= render "shared/search_submit" %>
       </div>
     </div>
 
     <!-- Access -->
     <div>
-      <%= label_tag :access, "Access", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= label_tag :access, "Access", class: "search-label" %>
       <%= select_tag :access,
                      options_for_select([["All", ""],
                                          ["Has access", "true"],
                                          ["No access", "false"]],
                                         params[:access]),
-                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                           focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none pe-10" %>
+                     class: "search-field search-select-placeholder" %>
     </div>
 
     <!-- Admin -->
     <div>
-      <%= label_tag :super_user, "Permission level", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= label_tag :super_user, "Permission level", class: "search-label" %>
       <%= select_tag :super_user,
                      options_for_select([["All users", ""],
                                          ["Admins", true],
                                          ["Regular users", false]],
                                         params[:super_user]),
-                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                           focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none pe-10" %>
+                     class: "search-field search-select-placeholder" %>
     </div>
 
     <!-- Clear filters -->
     <div class="flex sm:justify-end items-end">
-      <%= link_to "Clear filters", users_path,
-                  class: "btn btn-utility-outline",
-                  data: { action: "collection#clearAndSubmit" } %>
+      <%= render "shared/search_clear", url: users_path %>
     </div>
   </div>
 <% end %>

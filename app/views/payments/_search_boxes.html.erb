@@ -1,12 +1,9 @@
 <!-- Filters — field, label, and button styling modeled on the allocations search. -->
 <% default_btn = "text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-800 shadow-sm" %>
 <% selected_btn = "text-white bg-blue-600 border-blue-600 hover:bg-blue-700 hover:text-white shadow-md ring-2 ring-blue-300" %>
-<% field_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
-<% label_class = "block text-sm font-medium text-gray-700 mb-1" %>
-<%# Grey the placeholder while the "All" option (rendered first) is the current
-    selection, so an unfiltered dropdown reads like a placeholder and a chosen value
-    reads in dark text — matching the events/allocations filter selects. %>
-<% placeholder_select_class = "#{field_class} has-[option:first-child:checked]:text-gray-400" %>
+<% field_class = "search-field" %>
+<% label_class = "search-label" %>
+<% placeholder_select_class = "#{field_class} search-select-placeholder" %>
 
 <div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
   <%= form_tag payments_path, method: :get, class: "space-y-4",
@@ -50,7 +47,7 @@
 
         <%= text_field_tag "search", params[:search],
           placeholder: "Search metadata or Stripe charge ID",
-          class: "#{field_class} placeholder:text-sm" %>
+          class: field_class %>
       </div>
 
       <div class="md:col-span-2">

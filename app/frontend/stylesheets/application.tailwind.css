@@ -108,6 +108,38 @@
   }
 }
 
+/* Unified filter/search bar controls (used by every *_search_boxes partial).
+   Change the look of all filter fields/labels here in one place. Defined in the
+   components layer so utility overrides in markup (w-64, bg-white, pr-10, …) win. */
+@layer components {
+  .search-field {
+    @apply w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm;
+    @apply focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none;
+  }
+
+  .search-field::placeholder {
+    @apply text-sm text-gray-400;
+  }
+
+  .search-label {
+    @apply block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1;
+  }
+
+  /* Native <select> whose first <option> is an "All"/blank prompt: grey it small
+     like a placeholder while that option is the current selection. Uses text-sm/6
+     (not plain text-sm) so the smaller font keeps the line-height a text input has,
+     leaving the select the same height as a sibling .search-field input. */
+  .search-select-placeholder:has(option:first-child:checked) {
+    @apply text-sm/6 text-gray-400;
+  }
+
+  /* Magnifier submit button tucked into a filter field's relative wrapper.
+     Pair with a `.search-field pr-10` input inside a `relative` parent. */
+  .search-submit {
+    @apply absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600;
+  }
+}
+
 /* Optional fields get a subtle gray background */
 .optional input,
 .optional select,

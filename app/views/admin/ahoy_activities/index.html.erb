@@ -40,33 +40,33 @@
           <div class="flex flex-wrap lg:flex-nowrap gap-4">
 
             <div class="flex-[2] min-w-0">
-              <label class="block text-sm font-medium text-gray-600 mb-1">
+              <label class="search-label">
                 Activity name
               </label>
               <%= text_field_tag :event_name,
                                  params[:event_name],
                                  placeholder: "e.g. view workshop, account-auth",
-                                 class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+                                 class: "search-field" %>
             </div>
 
             <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-600 mb-1">
+              <label class="search-label">
                 Properties
               </label>
               <%= text_field_tag :props,
                                  params[:props],
                                  placeholder: "Search properties...",
-                                 class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+                                 class: "search-field" %>
             </div>
 
             <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-600 mb-1">
+              <label class="search-label">
                 User
               </label>
               <%= text_field_tag :user_search,
                                  params[:user_search],
                                  placeholder: "Name or email",
-                                 class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+                                 class: "search-field" %>
             </div>
 
             <div class="flex-1 min-w-0">
@@ -74,7 +74,7 @@
             </div>
 
             <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-600 mb-1">
+              <label class="search-label">
                 Time Period
               </label>
               <%= select_tag :time_period,
@@ -82,35 +82,35 @@
                                [["All time", "all_time"], ["Past day", "past_day"], ["Past week", "past_week"], ["Past month", "past_month"], ["Past year", "past_year"]],
                                params[:time_period] || "past_month"
                              ),
-                             class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+                             class: "search-field" %>
             </div>
 
             <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-600 mb-1">
+              <label class="search-label">
                 From
               </label>
               <%= date_field_tag :from,
                                  params[:from],
-                                 class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm" %>
+                                 class: "search-field" %>
             </div>
 
             <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-600 mb-1">
+              <label class="search-label">
                 To
               </label>
               <%= date_field_tag :to,
                                  params[:to],
-                                 class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm" %>
+                                 class: "search-field" %>
             </div>
 
             <div class="flex-none w-24">
-              <label class="block text-sm font-medium text-gray-600 mb-1">
+              <label class="search-label">
                 Visit ID
               </label>
               <%= number_field_tag :visit_id,
                                    params[:visit_id],
                                    placeholder: "e.g. 42",
-                                   class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+                                   class: "search-field" %>
             </div>
 
           </div>

@@ -1,8 +1,9 @@
 <%# Filters — field, label, and button styling modeled on the registrants search. %>
 <% default_btn = "text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-800 shadow-sm" %>
 <% selected_btn = "text-white bg-blue-600 border-blue-600 hover:bg-blue-700 hover:text-white shadow-md ring-2 ring-blue-300" %>
-<% field_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
-<% label_class = "block text-sm font-medium text-gray-700 mb-1" %>
+<% field_class = "search-field" %>
+<% label_class = "search-label" %>
+<% placeholder_select_class = "#{field_class} search-select-placeholder" %>
 <div class="mb-6 p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
   <%= form_tag allocations_path, method: :get, class: "space-y-4",
     data: {
@@ -18,13 +19,13 @@
           <label for="source_type" class="<%= label_class %>">Source type</label>
           <%= select_tag "source_type[]",
           options_for_select({ "All" => "", "Cash" => "CashPayment", "Check" => "CheckPayment", "Stripe" => "ExternalProcessorPayment", "Discount" => "Discount" }, Array(params[:source_type]).first),
-          class: field_class %>
+          class: placeholder_select_class %>
         </div>
         <div>
           <label for="has_reverted" class="<%= label_class %>">Reverted</label>
           <%= select_tag "has_reverted",
           options_for_select({ "All" => "all", "Yes" => "yes", "No" => "no" }, params[:has_reverted] || "all"),
-          class: field_class %>
+          class: placeholder_select_class %>
         </div>
       </div>
       <div>
@@ -32,7 +33,7 @@
         <%= select_tag "payer_type",
         options_for_select(["Person", "Organization"], params[:payer_type]),
         include_blank: "All",
-        class: field_class %>
+        class: placeholder_select_class %>
       </div>
       <div>
         <label for="person_id" class="<%= label_class %>">Person</label>
@@ -64,7 +65,7 @@
           <%= select_tag "allocatable_type",
           options_for_select(["EventRegistration"], params[:allocatable_type]),
           include_blank: true,
-          class: field_class,
+          class: placeholder_select_class,
           data: { action: "search-type-select#toggle" } %>
         </div>
         <template data-search-type-select-target="template" data-type="EventRegistration">
@@ -91,7 +92,7 @@
     </div>
     <div class="md:col-span-3 flex gap-2 justify-end">
       <%= submit_tag "Search", class: "btn btn-primary" %>
-      <%= link_to "Clear filters", allocations_path, class: "btn btn-utility-outline", data: { action: "collection#clearAndSubmit" } %>
+      <%= render "shared/search_clear", url: allocations_path %>
     </div>
   <% end %>
 </div>
