@@ -242,6 +242,33 @@ RSpec.describe Payment, type: :model do
           expect(result).to include(small, medium, large)
         end
       end
+
+      describe "time period" do
+        let!(:recent) { create(:payment, created_at: 2.days.ago) }
+        let!(:old) { create(:payment, created_at: 2.months.ago) }
+
+        it "defaults to the past month, excluding older payments" do
+          result = Payment.search_by_params({})
+          expect(result).to include(recent)
+          expect(result).not_to include(old)
+        end
+
+        it "honors an explicit period window" do
+          result = Payment.search_by_params({ period: "past_year" })
+          expect(result).to include(recent, old)
+        end
+
+        it "returns the full history for all_time" do
+          result = Payment.search_by_params({ period: "all_time" })
+          expect(result).to include(recent, old)
+        end
+
+        it "falls back to the default when period is blank" do
+          result = Payment.search_by_params({ period: "" })
+          expect(result).to include(recent)
+          expect(result).not_to include(old)
+        end
+      end
     end
 
     describe ".has_remaining" do

@@ -2,6 +2,18 @@ class Payment < ApplicationRecord
   has_paper_trail
   PAYER_TYPES = %w[Person Organization].freeze
 
+  # Rolling time windows for the index "Time period" filter, keyed label => value.
+  # The index defaults to DEFAULT_PERIOD so the first search shows recent payments;
+  # pick "All time" to intentionally search the full history.
+  PERIOD_OPTIONS = {
+    "Past day" => "past_day",
+    "Past week" => "past_week",
+    "Past month" => "past_month",
+    "Past year" => "past_year",
+    "All time" => "all_time"
+  }.freeze
+  DEFAULT_PERIOD = "past_month".freeze
+
   has_many :allocations, as: :source
   has_many :refunds, as: :refundable
   belongs_to :person, optional: true
@@ -34,6 +46,15 @@ class Payment < ApplicationRecord
     when "no" then where("amount_cents_remaining = 0")
     end
   }
+  scope :in_period, ->(period) {
+    window = case period
+    when "past_day" then 1.day.ago
+    when "past_week" then 1.week.ago
+    when "past_month" then 1.month.ago
+    when "past_year" then 1.year.ago
+    end
+    where(created_at: window..) if window
+  }
 
   def self.search_by_params(params)
     results = all
@@ -45,6 +66,7 @@ class Payment < ApplicationRecord
     results = results.matching_search(params[:search]) if params[:search].present?
     results = results.where("amount_cents >= ?", (params[:amount_min].to_d * 100).to_i) if params[:amount_min].present?
     results = results.where("amount_cents <= ?", (params[:amount_max].to_d * 100).to_i) if params[:amount_max].present?
+    results = results.in_period(params[:period].presence || DEFAULT_PERIOD)
     results
   end
 

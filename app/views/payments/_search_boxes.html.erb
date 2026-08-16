@@ -16,8 +16,8 @@
       collection_unselected_class: default_btn,
       collection_selected_class: selected_btn
     }, autocomplete: "off" do %>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div>
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+      <div class="md:col-span-3">
         <label for="person_id" class="<%= label_class %>">Person</label>
 
         <%= select_tag "person_id",
@@ -31,7 +31,7 @@
           prompt: "Search for a person" %>
       </div>
 
-      <div>
+      <div class="md:col-span-3">
         <label for="organization_id" class="<%= label_class %>">Organization</label>
 
         <%= select_tag "organization_id",
@@ -45,7 +45,7 @@
           prompt: "Search for an organization" %>
       </div>
 
-      <div>
+      <div class="md:col-span-4">
         <label for="search" class="<%= label_class %>">Search metadata / Stripe charge ID</label>
 
         <%= text_field_tag "search", params[:search],
@@ -53,7 +53,7 @@
           class: field_class %>
       </div>
 
-      <div>
+      <div class="md:col-span-2">
         <label for="type" class="<%= label_class %>">Payment method</label>
 
         <%= select_tag "type[]",
@@ -61,7 +61,7 @@
           class: placeholder_select_class %>
       </div>
 
-      <div>
+      <div class="md:col-span-2">
         <label for="amount_min" class="<%= label_class %>">Min amount ($)</label>
 
         <%= number_field_tag "amount_min", params[:amount_min], min: 0, step: "0.01",
@@ -69,7 +69,7 @@
           class: field_class %>
       </div>
 
-      <div>
+      <div class="md:col-span-2">
         <label for="amount_max" class="<%= label_class %>">Max amount ($)</label>
 
         <%= number_field_tag "amount_max", params[:amount_max], min: 0, step: "0.01",
@@ -77,7 +77,7 @@
           class: field_class %>
       </div>
 
-      <div>
+      <div class="md:col-span-3">
         <label for="has_remaining" class="<%= label_class %>">Amount remaining</label>
 
         <%= select_tag "has_remaining",
@@ -85,7 +85,7 @@
           class: placeholder_select_class %>
       </div>
 
-      <div>
+      <div class="md:col-span-3">
         <label for="payer_type" class="<%= label_class %>">Payer type</label>
 
         <%= select_tag "payer_type",
@@ -94,7 +94,15 @@
           class: placeholder_select_class %>
       </div>
 
-      <div class="md:col-span-4 flex gap-2 justify-end"><%= link_to "Clear filters", payments_path, class: "btn btn-utility-outline", data: { action: "collection#clearAndSubmit" } %></div>
+      <div class="md:col-span-2">
+        <label for="period" class="<%= label_class %>">Time period</label>
+
+        <%= select_tag "period",
+          options_for_select(Payment::PERIOD_OPTIONS, params[:period].presence || Payment::DEFAULT_PERIOD),
+          class: field_class %>
+      </div>
+
+      <div class="md:col-span-12 flex gap-2 justify-end"><%= link_to "Clear filters", payments_path, class: "btn btn-utility-outline", data: { action: "collection#clearAndSubmit" } %></div>
     </div>
   <% end %>
 </div>
