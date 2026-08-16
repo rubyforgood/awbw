@@ -40,6 +40,7 @@ When changing a model or controller, check whether these related files need upda
 | Decorator | Decorator spec |
 | Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
 | Add/remove model, concern, service, or gem | AGENTS.md |
+| Ship a user-facing feature | `config/features.yml` (the Features & tips seed — see below) |
 
 ## Code Style
 
@@ -205,8 +206,8 @@ it needs a `page_bg_class` and register it:**
 Filterable index pages load their rows lazily in a Turbo frame so changing a
 filter swaps just the results, not the whole page (grants, people, users,
 organizations, stories, community_news, video_recordings, monthly_reports,
-bookmarks, payments, resources, workshops, notifications, allocations all follow
-this). Match the existing pattern:
+bookmarks, payments, resources, workshops, notifications, allocations, features all
+follow this). Match the existing pattern:
 
 - `index.html.erb` renders the header, the filter/search form, and a skeleton
   inside `<%= turbo_frame_tag :<resource>_results, src: result_src, data: { turbo: "temporary" } %>`.
@@ -224,6 +225,31 @@ this). Match the existing pattern:
   it must stay identical across `index.html.erb`, the results view, the filter
   form's `data-turbo-frame`, request-spec `Turbo-Frame` headers, and
   `turbo-frame#…` view-spec selectors. Only the filename and render target change.
+
+## Features & tips page (`/features`)
+
+The login-gated **Features & tips** page lists shipped, user-facing features
+(newest first, filterable by area/audience/date). It is **database-backed**
+(`Feature` model) and edited in-app by super-admins — the rich `description` uses
+the Rhino WYSIWYG (for screenshots), plus an optional external process-doc link.
+
+**Keep it current as you ship.** When you add a user-facing feature, append an
+entry to `config/features.yml` (the checked-in **seed**):
+
+- Fields: `name`, `area` (a `Feature::AREA_KEYS` value), `display_status`
+  (`public_facing` / `user_facing` / `admin_facing`), `summary` (1–2 plain
+  sentences), `released_on` (ship date), plus optional `pro_tips` (list),
+  `description`, `external_url`, `action_path` (in-app "Check out this feature"
+  link), and `pr_number` (GitHub PR link).
+- **Sentence case, plain language** — read by facilitators, not devs.
+- `admin_facing` features are visible to super-admins only (`FeaturePolicy`).
+
+Admins click **Sync latest updates** on `/features` (`FeatureCatalog#import!`,
+matched by `name`) to add newly-shipped features, **re-sync catalog classification**
+on existing records (`CATALOG_FIELDS` — area, audience, links, date, PR — so seed
+fixes propagate) and **fill blank content** (`CONTENT_FIELDS` — summary, tips,
+guide, description) without overwriting admin writing. New area → add it to
+`Feature::AREAS` (label + FA icon + safelisted Tailwind hue).
 
 ## JavaScript
 
@@ -274,6 +300,10 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 
 ## PRs
 
+- **"Prefix" (without other context) means the PR title prefix.** When the user
+  refers to "a prefix" and it doesn't fit the current work (e.g. "remove the JM
+  prefix"), they mean a leading tag on the **pull request title** (like `JM: …`,
+  often auto-added). Act on the PR title via `gh pr edit --title`, not on code.
 - **Always create PRs as drafts** — every PR starts in draft (`gh pr create --draft`), no exceptions. Never open a PR ready for review, and never promote it. Only the user runs `gh pr ready`, manually and intentionally, when they decide the work is ready.
 - **Push to a draft PR early** — create the draft PR as soon as work begins, rather than keeping changes in a local branch. Push on every commit.
   - **In a new Conductor workspace, do this immediately** — as the first step of any task, make an initial commit on the workspace branch and open the draft PR right away (before the work is done), then keep pushing on every commit as you go. Don't wait until there's a finished change to show.
