@@ -77,6 +77,21 @@ RSpec.describe FormAnswerValidator do
     end
   end
 
+  describe "file upload" do
+    it "flags a required file question with no upload" do
+      field = create(:form_field, :file_upload, form: form, required: true)
+
+      expect(validate(field, "")).to eq(field.id => "can't be blank")
+    end
+
+    it "accepts a signed blob id and skips the text-shaped checks" do
+      field = create(:form_field, :file_upload, form: form, required: true)
+
+      # A long signed id would trip a character cap, but file uploads have none.
+      expect(validate(field, "a" * 5_000)).to eq({})
+    end
+  end
+
   describe "min words / max characters" do
     it "surfaces the min-words error" do
       field = create(:form_field, form: form, answer_type: :free_form_input_paragraph, min_words: 3)

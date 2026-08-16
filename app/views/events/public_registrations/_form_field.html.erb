@@ -174,6 +174,28 @@
       <% end %>
     <% end %>
 
+  <% when "file_upload" %>
+    <%# Direct upload: the file streams to storage via JS and the input's value
+        becomes a signed blob id, submitted as a normal param — so the form needs
+        no multipart encoding and the persistence service attaches the blob.
+        Reuses the file_preview controller (image thumbnail / file-type icon). %>
+    <div data-controller="file-preview">
+      <input type="file"
+             name="<%= field_name %>"
+             id="<%= field_id %>"
+             accept="<%= Asset.accept_attribute %>"
+             data-direct-upload-url="<%= rails_direct_uploads_path %>"
+             data-file-preview-target="input"
+             data-action="change->file-preview#update"
+             class="block w-full text-sm text-gray-700 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 rounded-lg border <%= error_border %> bg-white px-2 py-2"
+             <%= "required" if field.required %>>
+      <p data-file-preview-target="filename" class="mt-1.5 text-xs font-medium text-gray-600"></p>
+      <p class="mt-1 text-xs text-gray-400">Accepted: <%= Asset.accepted_types_label %></p>
+      <img data-file-preview-target="preview"
+           class="hidden mt-3 max-h-48 w-auto rounded-lg border border-gray-200 shadow-sm"
+           alt="Selected file preview">
+    </div>
+
   <% end %>
 
   <% if field.hint_text.present? %>

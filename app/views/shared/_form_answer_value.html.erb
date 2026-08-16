@@ -1,0 +1,22 @@
+<%# Renders one form answer's value: a file-upload answer shows an inline image
+    preview (or a file link for non-images) plus a download link; every other
+    answer type shows its resolved text. Locals: field, response. %>
+<% if field.file_upload? && (uploaded = response&.uploaded_file) %>
+  <div class="mt-1 flex flex-col items-start gap-2">
+    <% if uploaded.content_type.to_s.start_with?("image/") %>
+      <%= link_to url_for(uploaded), target: "_blank", rel: "noopener" do %>
+        <%= image_tag(uploaded.variable? ? uploaded.variant(:thumbnail) : uploaded,
+              class: "max-h-48 w-auto rounded-lg border border-gray-200 shadow-sm",
+              alt: uploaded.filename.to_s) %>
+      <% end %>
+    <% end %>
+    <%= link_to url_for(uploaded), target: "_blank", rel: "noopener",
+          class: "inline-flex items-center gap-1.5 text-sm text-blue-700 hover:text-blue-900 underline" do %>
+      <i class="fa-solid fa-paperclip text-xs"></i><%= uploaded.filename %>
+    <% end %>
+  </div>
+<% elsif field.file_upload? %>
+  <span class="text-gray-400">—</span>
+<% else %>
+  <%= display_response_text(field, response) %>
+<% end %>
