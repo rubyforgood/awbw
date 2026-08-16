@@ -89,11 +89,17 @@ class DisplayImagePresenter
       resolve_previewable
     elsif @variant == :hero
       @file
+    elsif large_display?
+      @file.variant(:card)
     elsif use_thumbnail?
       @file.variant(:thumbnail)
     else
       @file
     end
+  end
+
+  def large_display?
+    @width == "full" && @file.variable?
   end
 
   def resolve_previewable

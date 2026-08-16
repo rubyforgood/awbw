@@ -7,7 +7,7 @@
 %>
 <% if assets.any? %>
   <div data-controller="carousel"
-       class="relative swiper my-6 max-w-2xl mx-auto"
+       class="relative swiper my-6 w-full"
        data-carousel-options-value='{ "loop": false, "spaceBetween": 16, "slidesPerView": 1, "breakpoints": {} }'>
     <div class="swiper-wrapper">
       <% assets.each_with_index do |asset, idx| %>
