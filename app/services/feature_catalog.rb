@@ -1,19 +1,15 @@
 require "yaml"
 
-# Syncs the checked-in feature seed (config/features.yml) into the DB behind the
-# "Features & tips" page. `import!` (the "Sync latest updates" button) creates
-# missing features and, on existing ones, re-syncs CATALOG_FIELDS from the seed
-# while only filling BLANK CONTENT_FIELDS — so a seed fix to a feature's
-# classification propagates, but an admin's prose/screenshots are never
-# overwritten. See CLAUDE.md.
+# Syncs config/features.yml into the DB behind /features. `import!` creates
+# missing features, re-syncs CATALOG_FIELDS from the seed, and only fills BLANK
+# CONTENT_FIELDS — so seed fixes propagate without clobbering admin writing.
 class FeatureCatalog
   DATA_PATH = Rails.root.join("config/features.yml")
 
-  # Catalog-owned classification — always re-synced so seed corrections reach
-  # existing records.
+  # Always re-synced from the seed (so corrections reach existing records).
   CATALOG_FIELDS = %i[ area display_status released_on action_path pr_number ].freeze
 
-  # Admin-owned content — only filled when blank, never overwritten.
+  # Only filled when blank; never overwritten.
   CONTENT_FIELDS = %i[ summary pro_tips external_url rhino_description ].freeze
 
   Result = Struct.new(:created, :updated) do

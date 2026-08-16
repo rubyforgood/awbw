@@ -25,13 +25,10 @@ class FeatureDecorator < ApplicationDecorator
     "https://github.com/#{GITHUB_REPO}/pull/#{pr_number}"
   end
 
-  # Sentinel action_path for ticket/callout features: resolves to a live ticket.
   TICKET_PATH = "/registration/sample".freeze
 
-  # The "Check out this feature" destination. TICKET_PATH resolves to a real (or
-  # sample) ticket; a page seeded with the sample id 1 (e.g. /events/1/registrants)
-  # falls back to that resource's index when no such record exists, so the link
-  # never 404s on a fresh or differently-keyed database.
+  # TICKET_PATH → a live/sample ticket; a `/…/1/…` path falls back to that
+  # resource's index when id 1 is absent, so the link never 404s.
   def resolved_action_url
     path = action_path.to_s
     return ticket_url if path == TICKET_PATH

@@ -10,7 +10,6 @@ class FeaturesController < ApplicationController
       @features = filtered_features(scope).decorate
       render :features_results
     else
-      # Only offer filter options the viewer can actually see something under.
       present_areas = scope.distinct.pluck(:area)
       present_statuses = scope.distinct.pluck(:display_status)
       @areas = Feature::AREAS.select { |area| present_areas.include?(area[:key]) }

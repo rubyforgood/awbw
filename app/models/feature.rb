@@ -2,9 +2,8 @@ class Feature < ApplicationRecord
   # `rhino_`-prefixed per the app's ActionText/Rhino convention (see rhino_editor helper).
   has_rich_text :rhino_description
 
-  # Each area draws its colour + icon from a shared `domain` key (DomainTheme +
-  # ApplicationHelper::INDEX_BUTTON_ICONS, resolved by FeatureDecorator). `content`
-  # and `reporting` have no matching domain, so they carry a manual colour + icon.
+  # Colour + icon resolve from the `domain` key (DomainTheme + INDEX_BUTTON_ICONS);
+  # content/reporting have no domain, so they set a manual colour + icon.
   AREAS = [
     { key: "events",         label: "Events & trainings",     domain: :events },
     { key: "registration",   label: "Registration & tickets", domain: :event_registrations },
@@ -20,8 +19,7 @@ class Feature < ApplicationRecord
   AREAS_BY_KEY = AREAS.index_by { |area| area[:key] }.freeze
   AREA_KEYS = AREAS.map { |area| area[:key] }.freeze
 
-  # Audience label that also gates visibility: `admin_facing` is restricted to
-  # super-admins by FeaturePolicy.
+  # Audience that also gates visibility (`admin_facing` = super-admins only).
   DISPLAY_STATUSES = {
     "public_facing" => { label: "Public-facing",   icon: "fa-globe", color: "green" },
     "user_facing"   => { label: "For facilitators", icon: "fa-user",  color: "blue" },
@@ -45,7 +43,6 @@ class Feature < ApplicationRecord
   scope :readable_by_non_admins, -> { where.not(display_status: ADMIN_ONLY_STATUS) }
   scope :by_release, -> { order(released_on: :desc, name: :asc) }
 
-  # Pro tips are stored one per line.
   def pro_tips_list
     pro_tips.to_s.split("\n").map(&:strip).reject(&:blank?)
   end
