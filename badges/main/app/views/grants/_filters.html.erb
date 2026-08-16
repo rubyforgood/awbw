@@ -32,6 +32,13 @@
                      include_blank: "All",
                      class: field_class %>
     </div>
+    <div class="w-full md:w-40">
+      <%= label_tag :planned_giving, "Legacy scholarship", class: label_class %>
+      <%= select_tag :planned_giving,
+                     options_for_select([ [ "Legacy scholarships", "yes" ], [ "Other grants", "no" ] ], params[:planned_giving]),
+                     include_blank: "All",
+                     class: field_class %>
+    </div>
     <div class="w-full md:w-32">
       <%= label_tag :tasks, "Tasks completed", class: label_class %>
       <%= select_tag :tasks,

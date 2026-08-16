@@ -34,11 +34,13 @@ module DomainTheme
     comments:                 :purple,
     topic_subscriptions:      :stone,
     topic_subscription_types: :stone,
+    memberships:              :orange,
 
     # Event dashboard cards
     payments:                 :green,
     scholarships:             :fuchsia,
     continuing_education:     :teal,
+    continuing_education_registrations: :teal,
     bulk_payments:            :amber,
     event_dashboard:          :indigo,
     addresses:                :slate,

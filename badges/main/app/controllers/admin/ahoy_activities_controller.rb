@@ -70,6 +70,31 @@ module Admin
         scope = scope.where(resource_id: params[:resource_id])
       end
 
+      # Filter to a person's full history: the person, their user, and every
+      # associated record (see Analytics::PersonActivityEvents).
+      if params[:person_id].present?
+        person = Person.find_by(id: params[:person_id])
+        if person
+          @person = person
+          scope = scope.where(id: Analytics::PersonActivityEvents.new(person).relation.select(:id))
+          # Notifications aren't ahoy-tracked, so surface the person's
+          # communications straight from the notifications table.
+          email = person.communications_email
+          @person_communications = email.present? ?
+            Notification.email(email).includes(:noticeable, sender: :person).order(created_at: :desc).limit(10) :
+            Notification.none
+
+          # Attendance sign-ins happen on a login-free public callout (no Current),
+          # so they aren't ahoy-tracked either — read the entries directly.
+          @person_time_entries = EventAttendanceTimeEntry
+            .where(event_registration_id: person.event_registrations.select(:id))
+            .includes(event_registration: :event)
+            .order(signed_in_at: :desc)
+            .limit(15)
+            .decorate
+        end
+      end
+
       @events = scope.paginate(page: page, per_page: per_page)
     end
 

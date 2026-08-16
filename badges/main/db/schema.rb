@@ -715,6 +715,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_114533) do
     t.date "funds_allocation_deadline"
     t.date "funds_received_on"
     t.string "name", null: false
+    t.boolean "planned_giving", default: false, null: false
     t.text "tasks"
     t.datetime "updated_at", null: false
     t.bigint "updated_by_id"
