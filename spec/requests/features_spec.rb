@@ -40,10 +40,10 @@ RSpec.describe "/features", type: :request do
     context "as an admin" do
       before { sign_in admin }
 
-      it "shows the admin actions" do
+      it "shows the New feature action (sync lives on the admin home)" do
         get features_path
-        expect(response.body).to include("Sync latest updates")
         expect(response.body).to include("New feature")
+        expect(response.body).not_to include("Sync latest updates")
       end
     end
   end
