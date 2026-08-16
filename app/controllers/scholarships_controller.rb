@@ -5,9 +5,9 @@ class ScholarshipsController < ApplicationController
   def index
     authorize! Scholarship
     set_report_filter_state
-    scholarships = filtered_scholarships
-    @funder_groups = ScholarshipsGrouping.new(scholarships).funder_groups
-    @scholarships_count = scholarships.size
+    grouping = ScholarshipsGrouping.new(filtered_scholarships)
+    @funder_groups = grouping.funder_groups
+    @scholarships_count = grouping.total_count
     @scholarship_report = EventScholarshipReport.new(report_training_events, featured_year: @selected_year, funder: @filter_funder)
   end
 

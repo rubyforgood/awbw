@@ -170,12 +170,16 @@
               <%= mobile_label.("Scholarship") %>
               <% if scholarship %>
                 <% target_event, participant_slug = roster.scholarship_link_target(person) %>
+                <% declined = scholarship.agreement_declined? %>
                 <%= link_to recipients_event_path(target_event, anchor: ("participant-#{participant_slug}" if participant_slug)),
-                            class: "inline-flex items-center gap-1 #{DomainTheme.text_class_for(:scholarships, intensity: 600)} hover:#{DomainTheme.text_class_for(:scholarships)}",
-                            title: show_event_column ? "Scholarship from #{target_event.decorate.compact_label} — view application" : "Scholarship recipient — view application",
+                            class: "inline-flex items-center gap-1 #{declined ? "text-gray-400 hover:text-gray-600" : "#{DomainTheme.text_class_for(:scholarships, intensity: 600)} hover:#{DomainTheme.text_class_for(:scholarships)}"}",
+                            title: declined ? "Scholarship declined — view application" : (show_event_column ? "Scholarship from #{target_event.decorate.compact_label} — view application" : "Scholarship recipient — view application"),
                             onclick: "event.stopPropagation()" do %>
                   <i class="fa-solid fa-graduation-cap"></i>
                   <% if show_event_column %><span class="text-xs font-medium text-gray-400"><%= target_event.decorate.compact_label %></span><% end %>
+                  <% if declined %>
+                    <%= render "shared/badge", label: "Declined", classes: "bg-red-50 text-red-700 border-red-200", icon: "fa-solid fa-circle-xmark text-xs" %>
+                  <% end %>
                 <% end %>
               <% else %>
                 <span class="sm:hidden text-gray-300">—</span>

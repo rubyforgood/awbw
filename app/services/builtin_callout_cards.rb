@@ -237,7 +237,8 @@ class BuiltinCalloutCards
   # Shown only when the registrant requested a scholarship. Its page surfaces the
   # award amount, funder, and tasks once awarded. Awarded but with tasks still
   # pending shows an amber "$X · Tasks outstanding" badge (action needed); fully
-  # met shows a fuchsia amount badge.
+  # met shows a fuchsia amount badge. A declined award keeps the card — the page
+  # behind it holds the decline confirmation — but with nothing left to act on.
   def scholarship_status_card
     return if config_gap?("scholarship")
     return unless registration.scholarship_requested?
@@ -245,7 +246,8 @@ class BuiltinCalloutCards
     # is only shown as awarded once the recipient signs the agreement. Until then
     # the card prompts them to accept.
     awarded = registration.scholarship_awarded?
-    needs_agreement = registration.scholarship? && !awarded
+    declined = registration.scholarships.any?(&:agreement_declined?)
+    needs_agreement = registration.scholarship? && !awarded && !declined
     tasks_outstanding = awarded && !registration.scholarship_tasks_met?
     action_needed = needs_agreement || tasks_outstanding
     Card.new(icon_class: "fa-solid fa-award",
@@ -253,17 +255,23 @@ class BuiltinCalloutCards
              # tasks), otherwise the scholarship colour.
              color: action_needed ? "amber" : DomainTheme.color_for(:scholarships).to_s,
              title: "Scholarship",
-             subtitle: scholarship_subtitle(awarded, needs_agreement),
+             subtitle: scholarship_subtitle(awarded, needs_agreement, declined),
              href: registration_scholarship_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right",
-             badge: scholarship_badge(awarded, tasks_outstanding),
-             badge_classes: tasks_outstanding ? nil : "bg-fuchsia-100 text-fuchsia-800 border border-fuchsia-300")
+             badge: declined ? "Declined" : scholarship_badge(awarded, tasks_outstanding),
+             badge_classes: scholarship_badge_classes(declined, tasks_outstanding))
   end
 
-  def scholarship_subtitle(awarded, needs_agreement)
+  def scholarship_subtitle(awarded, needs_agreement, declined)
+    return "You declined this award" if declined
     return "Your award — amount, funder, and tasks" if awarded
     return "Review and accept your scholarship agreement" if needs_agreement
     "Your scholarship request status"
+  end
+
+  def scholarship_badge_classes(declined, tasks_outstanding)
+    return "bg-red-100 text-red-800 border border-red-300" if declined
+    tasks_outstanding ? nil : "bg-fuchsia-100 text-fuchsia-800 border border-fuchsia-300"
   end
 
   def scholarship_badge(awarded, tasks_outstanding)

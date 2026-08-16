@@ -235,6 +235,20 @@ RSpec.describe BuiltinCalloutCards do
       expect(scholarship_card.badge_classes).to include("fuchsia")
     end
 
+    it "stops prompting for the agreement once the recipient declines" do
+      add_scholarship_form(event)
+      registration.update!(scholarship_requested: true)
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 1000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
+      scholarship.reload.decline_agreement!("Timing no longer works")
+
+      scholarship_card = card(registration.reload, "Scholarship")
+      expect(scholarship_card.subtitle).to eq("You declined this award")
+      expect(scholarship_card.badge).to eq("Declined")
+      expect(scholarship_card.badge_classes).to include("red")
+      expect(scholarship_card.theme).to eq(DomainTheme.swatch(DomainTheme.color_for(:scholarships)))
+    end
+
     it "orders the code-fallback cards from payment downward" do
       # Handouts/FAQ/art supplies are row-driven, so they never appear in this fallback.
       event.update!(facilitator_training: true, ce_hours_offered: 6,

@@ -30,6 +30,10 @@ class ScholarshipsGrouping
       .sort_by { |group| sort_key(group) }
   end
 
+  # The index header count — summed from the groups so it reconciles with the
+  # per-group badges rather than counting the declined rows they leave out.
+  def total_count = funder_groups.sum(&:count)
+
   private
 
   def build_funder_group(scholarships)

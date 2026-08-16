@@ -804,6 +804,28 @@ RSpec.describe EventDashboard do
     end
   end
 
+  context "with a declined scholarship" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:recipient) { create(:person) }
+    let!(:registration) { create(:event_registration, event: event, registrant: recipient, status: "registered", scholarship_requested: true) }
+    let!(:scholarship) do
+      create(:scholarship, recipient: recipient, amount_cents: 10_000).tap do |award|
+        create(:allocation, source: award, allocatable: registration, amount: 10_000)
+        award.reload.decline_agreement!("Timing no longer works")
+      end
+    end
+
+    it "drops the award from the money figures and recipient counts" do
+      expect(dashboard.scholarship_total_cents).to eq(0)
+      expect(dashboard.scholarship_recipient_count).to eq(0)
+      expect(dashboard.scholarship_registrants).to be_empty
+    end
+
+    it "still surfaces the award for display, so the roster can badge it declined" do
+      expect(dashboard.scholarship_by_recipient[recipient.id]).to eq(scholarship)
+    end
+  end
+
   context "with a free event" do
     let(:event) { create(:event, cost_cents: 0) }
 

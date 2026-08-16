@@ -244,21 +244,6 @@ RSpec.describe Scholarship, type: :model do
     end
   end
 
-  describe "#event" do
-    it "returns the event the scholarship was awarded at via its allocation" do
-      event = create(:event, cost_cents: 10_000)
-      registration = create(:event_registration, event:)
-      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 5_000)
-      create(:allocation, source: scholarship, allocatable: registration, amount: 5_000)
-
-      expect(scholarship.reload.event).to eq(event)
-    end
-
-    it "returns nil when the scholarship has no event registration" do
-      expect(create(:scholarship).event).to be_nil
-    end
-  end
-
   describe "report filter scopes" do
     let(:event) { create(:event, cost_cents: 50_000) }
     let(:funder) { create(:organization, name: "Community Trust") }

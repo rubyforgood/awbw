@@ -98,15 +98,6 @@ class Scholarship < ApplicationRecord
     save!
   end
 
-  def event_registration
-    registration = allocation&.allocatable
-    registration if registration.is_a?(EventRegistration)
-  end
-
-  def event
-    event_registration&.event
-  end
-
   # Source for the responded-at date and decline reason (not stored on the
   # scholarship). Nil while pending with no response yet.
   def latest_agreement_response

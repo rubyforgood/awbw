@@ -259,9 +259,13 @@ class EventDashboard
 
   # The scholarship record per recipient, keyed by Person id — lets the roster
   # decide whether to flag a registrant as a scholarship recipient. First
-  # scholarship wins if a person has several.
+  # scholarship wins if a person has several, preferring a live award over a
+  # declined one so a re-award isn't hidden behind the decline it replaced.
   def scholarship_by_recipient
-    @scholarship_by_recipient ||= scholarships.includes(grant: :funder).group_by(&:recipient_id).transform_values(&:first)
+    @scholarship_by_recipient ||= all_scholarships
+      .includes(grant: :funder)
+      .group_by(&:recipient_id)
+      .transform_values { |awards| awards.reject(&:agreement_declined?).first || awards.first }
   end
 
   # Active registration slug per registrant (Person id) — a stable, non-db
@@ -1214,15 +1218,21 @@ class EventDashboard
     )
   end
 
-  def scholarships
-    @scholarships ||= begin
+  # Every award on this event's active registrations, declined included — the
+  # display lookups still surface a declined award (badged). Money and counts run
+  # off #scholarships, which drops them.
+  def all_scholarships
+    @all_scholarships ||= begin
       scope = Scholarship
-        .not_declined
         .joins(:allocation)
         .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: active_registration_ids })
       scope = scope.where(grant_id: funder_grant_ids) if @scholarship_funder
       scope
     end
+  end
+
+  def scholarships
+    @scholarships ||= all_scholarships.not_declined
   end
 
   # Ids of grants the scoped funder gave — used to narrow scholarships to one
