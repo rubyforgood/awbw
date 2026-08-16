@@ -29,6 +29,7 @@ class ScholarshipsController < ApplicationController
     @scholarship = Scholarship.new(recipient: @allocatable.registrant)
     @grants = Grant.selectable_for(@scholarship)
     authorize! @scholarship
+    return if redirect_transferred_in_scholarship
     load_scholarship_submission
   end
 
@@ -51,6 +52,7 @@ class ScholarshipsController < ApplicationController
     @scholarship = Scholarship.new(scholarship_params.merge(recipient: @allocatable.registrant))
     @scholarship.build_allocation(allocatable: @allocatable, amount: @scholarship.amount_cents.to_i)
     authorize! @scholarship
+    return if redirect_transferred_in_scholarship
 
     if @scholarship.save
       redirect_to scholarship_save_path, notice: "Scholarship created."
@@ -268,6 +270,18 @@ class ScholarshipsController < ApplicationController
   def locate_allocatable
     sgid = params[:allocatable_sgid] || params.dig(:scholarship, :allocatable_sgid)
     GlobalID::Locator.locate_signed(sgid) if sgid
+  end
+
+  # A transferred-in reg carries no scholarship of its own — its recognition comes
+  # from the source it transferred from (see EventRegistration#effective_scholarship)
+  # and the dollars stay there. The UI hides the add link, but block the URL too and
+  # send the admin to the source, where the scholarship belongs. (#1944)
+  def redirect_transferred_in_scholarship
+    return false unless @allocatable.is_a?(EventRegistration) && @allocatable.transferred_in?
+
+    redirect_to edit_event_registration_path(@allocatable.transferred_from_registration),
+      alert: "This registrant transferred in from another event — add the scholarship on their original registration."
+    true
   end
 
   def scholarship_params

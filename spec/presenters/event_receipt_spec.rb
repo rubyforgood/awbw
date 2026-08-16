@@ -90,5 +90,23 @@ RSpec.describe EventReceipt do
         expect(receipt.client_id).to eq(organization.id)
       end
     end
+
+    context "for a transferred-in registration" do
+      let(:new_event) { create(:event, title: "On-Demand Follow-up", cost_cents: 40_000) }
+
+      it "documents the source event's charge and payments, not the new event's" do
+        payment = create(:payment, type: "CashPayment", amount_cents: 150_000)
+        create(:allocation, source: payment, allocatable: registration, amount: 150_000)
+        transferred_in = create(:event_registration, event: new_event, registrant: registrant,
+          transferred_from_registration: registration)
+
+        receipt = described_class.from_registration(transferred_in)
+
+        expect(receipt.line_items.first.description).to eq("AWBW 2-Day Art Facilitator Training")
+        expect(receipt.total_cents).to eq(150_000)
+        expect(receipt.amount_paid_cents).to eq(150_000)
+        expect(receipt.balance_cents).to eq(0)
+      end
+    end
   end
 end

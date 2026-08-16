@@ -591,6 +591,24 @@ RSpec.describe EventRegistration, type: :model do
       end
     end
 
+    describe "payment-status scopes for a transferred-in reg" do
+      let(:new_event) { create(:event, cost_cents: 5000) }
+
+      it "reads a transferred-in reg's paid status from its source, not its own event" do
+        # The new event costs $50 and the transfer holds no allocations, but its
+        # paid-in-full source means it belongs in .paid_in_full, not .not_paid_in_full.
+        from_paid = create(:event_registration, event: new_event, registrant: paid_reg.registrant,
+          transferred_from_registration: paid_reg)
+        from_unpaid = create(:event_registration, event: new_event, registrant: unpaid_reg.registrant,
+          transferred_from_registration: unpaid_reg)
+
+        expect(EventRegistration.paid_in_full).to include(from_paid)
+        expect(EventRegistration.paid_in_full).not_to include(from_unpaid)
+        expect(EventRegistration.not_paid_in_full).to include(from_unpaid)
+        expect(EventRegistration.not_paid_in_full).not_to include(from_paid)
+      end
+    end
+
     describe ".with_scholarship" do
       it "returns only registrations funded by a scholarship" do
         results = EventRegistration.with_scholarship
@@ -1560,6 +1578,18 @@ RSpec.describe EventRegistration, type: :model do
       create(:allocation, source: payment, allocatable: reg, amount: 4_000)
 
       expect(reg.reload.receipt_available?).to be(false)
+    end
+
+    it "mirrors the source for a transferred-in reg (no re-billing here)" do
+      payment = create(:payment, type: "CashPayment", amount_cents: 10_000, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 10_000)
+      transferred_in = create(:event_registration, event: create(:event, cost_cents: 20_000),
+        registrant: reg.registrant, transferred_from_registration: reg)
+
+      # The new event costs $200, but the source paid its balance in full, so the
+      # transfer owes nothing here — remaining is zero and the receipt is available.
+      expect(transferred_in.remaining_cost).to eq(0)
+      expect(transferred_in.receipt_available?).to be(true)
     end
   end
 

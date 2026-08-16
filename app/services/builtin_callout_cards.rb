@@ -418,6 +418,7 @@ class BuiltinCalloutCards
   # so the card only appears once someone's been connected in the Event staff section.
   def staff_card
     return if config_gap?("staff")
+    return if registration.transferred_out?
     Card.new(icon_class: "fa-solid fa-people-group", color: "blue",
              title: "Meet the staff",
              subtitle: "The team for this event",
@@ -425,9 +426,11 @@ class BuiltinCalloutCards
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
-  # Shown only when the event has a videoconference URL set.
+  # Shown only when the event has a videoconference URL set. Hidden once the
+  # registrant has transferred out — they no longer attend this event. (#1944)
   def videoconference_card
     return if config_gap?("videoconference")
+    return if registration.transferred_out?
     Card.new(icon_class: "fa-solid fa-video", color: "blue",
              title: "Videoconference",
              subtitle: "Join details and add to calendar links",

@@ -723,6 +723,26 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response).to redirect_to(edit_event_registration_path(final))
         end
 
+        it "logs an Ahoy destroy lifecycle capturing the dropped middle registration's data" do
+          allow(Analytics::LifecycleBuffer).to receive(:push)
+          original = create(:event_registration, status: "transferred_out")
+          middle = create(:event_registration, registrant: original.registrant,
+            status: "transferred_out", transferred_from_registration: original)
+
+          post process_transfer_event_registration_path(middle),
+               params: { destination_event_id: destination_event.id }
+
+          expect(Analytics::LifecycleBuffer).to have_received(:push).with(
+            hash_including(
+              name: "destroy.event_registration",
+              properties: hash_including(
+                resource_id: middle.id,
+                attributes: hash_including("transferred_from_registration_id" => original.id)
+              )
+            )
+          )
+        end
+
         it "restores the origin to its pre-transfer status and drops the middle when transferred back" do
           origin_event = create(:event, published: true)
           person = create(:person)

@@ -31,6 +31,13 @@ class RegistrationTicketCallout < ApplicationRecord
   # selected one (see BuiltinCalloutCards#card_for).
   APP_COLORED_BUILTIN_KEYS = %w[ payment scholarship ce_hours ].freeze
 
+  # Built-ins that represent a financial or credit *record* the registrant keeps
+  # even after withdrawing (their balance/invoice/receipt, scholarship award, CE
+  # credit, certificate). Everything else — videoconference, staff, handouts, FAQ,
+  # and admin-authored custom callouts — is event participation material a
+  # transferred-out registrant no longer needs, so the ticket hides those. (#1944)
+  FINANCIAL_RECORD_BUILTIN_KEYS = %w[ payment scholarship ce_hours certificate ].freeze
+
   # Per-type fallbacks for the icon and colour. These are callout-specific (unlike
   # the generic colour swatches and palette, which live in DomainTheme so the whole
   # app can reuse them for tinted boxes — amount-due, scholarship box, etc.).
@@ -121,6 +128,13 @@ class RegistrationTicketCallout < ApplicationRecord
   # (live status), as opposed to a content callout that renders from its own row.
   def behavioral_builtin?
     builtin? && CONTENT_BUILTIN_KEYS.exclude?(builtin_key)
+  end
+
+  # A financial/credit record the registrant keeps after withdrawing (vs. event
+  # participation material the ticket hides once transferred out). Custom callouts
+  # (no builtin_key) are participation content, so they read as non-record. (#1944)
+  def financial_record?
+    builtin_key.in?(FINANCIAL_RECORD_BUILTIN_KEYS)
   end
 
   # Whether the row carries the inline CE config fields (hours offered / cost).

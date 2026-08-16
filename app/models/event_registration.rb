@@ -343,30 +343,30 @@ class EventRegistration < ApplicationRecord
       )
     SQL
   }
+  # Payment-status filters evaluate the "billing" registration: a transferred-in
+  # reg carries no money of its own, so its paid status is the source reg's (they
+  # paid at the old event). For a normal reg the billing reg is itself. Both the
+  # amount applied and the cost owed are read from that billing reg. (#1944)
+  BILLING_REGISTRATION_ID_SQL = "COALESCE(event_registrations.transferred_from_registration_id, event_registrations.id)".freeze
+  BILLING_ALLOCATIONS_SUM_SQL = <<~SQL.squish.freeze
+    COALESCE((
+      SELECT SUM(allocations.amount) FROM allocations
+      WHERE allocations.allocatable_type = 'EventRegistration'
+        AND allocations.allocatable_id = #{BILLING_REGISTRATION_ID_SQL}
+    ), 0)
+  SQL
+  BILLING_COST_CENTS_SQL = <<~SQL.squish.freeze
+    COALESCE((
+      SELECT events.cost_cents FROM events
+      INNER JOIN event_registrations billing_reg ON billing_reg.id = #{BILLING_REGISTRATION_ID_SQL}
+      WHERE events.id = billing_reg.event_id
+    ), 0)
+  SQL
   scope :paid_in_full, -> {
-    where(<<~SQL.squish)
-      COALESCE((
-        SELECT SUM(allocations.amount) FROM allocations
-        WHERE allocations.allocatable_type = 'EventRegistration'
-          AND allocations.allocatable_id = event_registrations.id
-      ), 0) >= COALESCE((
-        SELECT events.cost_cents FROM events WHERE events.id = event_registrations.event_id
-      ), 0)
-    SQL
+    where("#{BILLING_ALLOCATIONS_SUM_SQL} >= #{BILLING_COST_CENTS_SQL}")
   }
   scope :not_paid_in_full, -> {
-    where(<<~SQL.squish)
-      COALESCE((
-        SELECT events.cost_cents FROM events WHERE events.id = event_registrations.event_id
-      ), 0) > 0
-      AND COALESCE((
-        SELECT SUM(allocations.amount) FROM allocations
-        WHERE allocations.allocatable_type = 'EventRegistration'
-          AND allocations.allocatable_id = event_registrations.id
-      ), 0) < COALESCE((
-        SELECT events.cost_cents FROM events WHERE events.id = event_registrations.event_id
-      ), 0)
-    SQL
+    where("#{BILLING_COST_CENTS_SQL} > 0 AND #{BILLING_ALLOCATIONS_SUM_SQL} < #{BILLING_COST_CENTS_SQL}")
   }
   scope :payment_status, ->(value) {
     case value
@@ -720,6 +720,7 @@ class EventRegistration < ApplicationRecord
   # An invoice (and receipt) only make sense for a paid event — free events have
   # nothing to bill or receipt.
   def invoice_available?
+    return transferred_from_registration.invoice_available? if transferred_in?
     event.cost_cents.to_i.positive?
   end
 
@@ -741,6 +742,27 @@ class EventRegistration < ApplicationRecord
   # Cost source for the Registerable payment interface: the event's price.
   def cost_cents
     event.cost_cents
+  end
+
+  # A transferred-in reg carries no money of its own — its balance and payments
+  # live on the source registration (the old event, where they actually paid). Its
+  # remaining balance, paid status, and payment-on-file therefore mirror the
+  # source, so the ticket never re-bills a paid transfer and the invoice/receipt
+  # (built from the source) reflect the old cost. Reached through this ticket, but
+  # the money is the source's. (#1944)
+  def remaining_cost
+    return transferred_from_registration.remaining_cost if transferred_in?
+    super
+  end
+
+  def paid_in_full?
+    return transferred_from_registration.paid_in_full? if transferred_in?
+    super
+  end
+
+  def payment_received?
+    return transferred_from_registration.payment_received? if transferred_in?
+    super
   end
 
   # The registrant's currently-open attendance entry (signed in, not yet out) for
