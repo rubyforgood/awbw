@@ -12,6 +12,11 @@ RSpec.describe ProfessionalLicenseDecorator do
       expect(badge.label).to eq("Active (until Apr 2099)")
     end
 
+    it "flags a soon-to-expire license with its month" do
+      badge = build(:professional_license, expires_on: 30.days.from_now.to_date).decorate.expiry_badge
+      expect(badge.label).to start_with("Expiring soon (")
+    end
+
     it "reads as expired with the past expiry month" do
       badge = build(:professional_license, expires_on: Date.new(2024, 4, 10)).decorate.expiry_badge
       expect(badge.label).to eq("Expired (Apr 2024)")
