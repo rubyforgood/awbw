@@ -1,0 +1,21 @@
+<%# Placeholder shown while the activity_results frame loads its filtered rows. %>
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+  <table class="min-w-full border-collapse">
+    <thead>
+      <tr class="border-b border-gray-200 bg-gray-50 animate-pulse">
+        <% 6.times do %>
+          <th class="px-4 py-3"><div class="h-3 w-16 rounded bg-gray-200"></div></th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      <% 8.times do %>
+        <tr class="animate-pulse">
+          <% 6.times do %>
+            <td class="px-4 py-3.5"><div class="h-4 w-20 rounded bg-gray-100"></div></td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

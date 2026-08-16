@@ -1,0 +1,4 @@
+<%# Rendered in the page header and replaced via turbo_stream from the results
+    view when the frame loads, so the total reflects the active filters. @events
+    is nil on the initial full-page render (the frame fills it in moments later). %>
+<span id="activities_count" class="text-sm text-gray-500 leading-none"><%= @events&.total_entries %> total</span>
