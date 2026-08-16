@@ -78,6 +78,7 @@ module AdminCardsHelper
       custom_card("Allocations", allocations_path, icon: "📤", color: :sky, intensity: 100),
       disabled_card("Bulk payments", icon: "💳"),
       custom_card("Event registrations", event_registrations_path, icon: "🎟️", color: :sky, intensity: 100),
+      custom_card("Features & tips", features_path, icon: "⭐", color: :sky, intensity: 100),
       custom_card("Forms", forms_path, icon: "📋", color: :sky, intensity: 100),
       custom_card("Licenses", professional_licenses_path, icon: "🪪", color: :sky, intensity: 100),
       disabled_card("Form submissions", icon: "📨"),

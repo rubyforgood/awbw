@@ -43,6 +43,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/organizations/index.html.erb"           => "admin-or-auth",
     "app/views/people/index.html.erb"                  => "admin-or-auth",
     "app/views/workshop_logs/index.html.erb"           => "admin-or-auth",
+    "app/views/features/index.html.erb"                => "admin-or-auth",
 
     "app/views/story_ideas/new.html.erb"               => "admin-or-auth",
     "app/views/story_shares/new.html.erb"              => "admin-or-auth",
@@ -67,6 +68,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/story_shares/show.html.erb"             => "admin-or-public-or-authpublished",
 
     "app/views/organizations/populations_served.html.erb" => "admin-or-authpublished",
+    "app/views/features/show.html.erb"                 => "admin-or-authpublished",
 
     # ─── admin-or-owner (policy: admin? || owner?) ───
     "app/views/quotes/show.html.erb"                   => "admin-or-owner",
@@ -177,6 +179,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/event_registrations/new.html.erb"       => "admin-only bg-blue-100",
     "app/views/events/new.html.erb"                    => "admin-only bg-blue-100",
     "app/views/faqs/new.html.erb"                      => "admin-only bg-blue-100",
+    "app/views/features/new.html.erb"                  => "admin-only bg-blue-100",
     "app/views/forms/new.html.erb"                     => "admin-only bg-blue-100",
     "app/views/organizations/new.html.erb"             => "admin-only bg-blue-100",
     "app/views/organization_statuses/new.html.erb"     => "admin-only bg-blue-100",
@@ -210,6 +213,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/forms/edit_sections.html.erb"           => "admin-only bg-blue-100",
     "app/views/forms/smart_form_settings.html.erb"     => "admin-only bg-blue-100",
     "app/views/faqs/edit.html.erb"                     => "admin-only bg-blue-100",
+    "app/views/features/edit.html.erb"                 => "admin-only bg-blue-100",
     "app/views/organization_statuses/edit.html.erb"    => "admin-only bg-blue-100",
     "app/views/quotes/edit.html.erb"                   => "admin-only bg-blue-100",
     "app/views/resources/edit.html.erb"                => "admin-only bg-blue-100",

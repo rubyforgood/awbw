@@ -214,6 +214,14 @@
         <span>FAQs</span>
       <% end %>
 
+      <% if allowed_to?(:create?, Feature) %>
+        <%= link_to features_path,
+                    class: "admin-only bg-blue-100 flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+          <i class="fas fa-star"></i>
+          <span>Features &amp; tips</span>
+        <% end %>
+      <% end %>
+
       <%= link_to contact_us_path,
                   class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
         <i class="fas fa-envelope"></i>

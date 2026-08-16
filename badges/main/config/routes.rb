@@ -221,6 +221,11 @@ Rails.application.routes.draw do
     resources :memberships, only: [ :index, :new, :create ]
   end
   resources :faqs
+  resources :features do
+    collection do
+      post :import
+    end
+  end
   resources :other_responses, only: [ :index, :update ] do
     collection do
       post :promote

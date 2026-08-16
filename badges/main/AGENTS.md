@@ -113,6 +113,7 @@ This codebase (Rails 8.1)
 | `TopicSubscriptionType` | Admin-editable list of subscribable topics (`TopicSubscriptionTypesController` CRUD). Editable `name` + immutable derived `key` slug (stable for code lookups like `interested_in_more` → `INTERESTED_IN_MORE_KEY`); `archived_at` retires a topic without deleting it (`active`/`archived` scopes) since types in use can't be destroyed (`restrict_with_error`). Seeded (all envs) from `CANONICAL` — facilitator_trainings/news/resources |
 | `Report` | STI base class for MonthlyReport |
 | `WorkshopLog` | Standalone model for workshop log submissions (attendance, form fields) |
+| `Feature` | One shipped, user-facing capability shown on the login-gated **Features & tips** page (`/features`): `name`, `area` (`AREAS`/`AREA_KEYS`), `display_status` (public/user/admin-facing — a string+constant audience gate, `admin_facing` = super-admins only via `FeaturePolicy`), `summary`, `pro_tips` (newline text → `pro_tips_list`), rich `rhino_description` (Rhino WYSIWYG, screenshots), `external_url`, `action_path` (in-app "Check out this feature" link), `pr_number` (GitHub PR link), `released_on`, `published`. Admin-editable in-app; `config/features.yml` is the checked-in seed synced by `FeatureCatalog#import!`. Presentation on `FeatureDecorator` |
 
 ### STI Models
 
@@ -226,6 +227,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `RichTextMigrator` — Rich text migration utility
 - `StoryImporter` — Imports stories from a WordPress Posts Export CSV. Every row becomes a Story (published per the WP Status); a non-AWBW author's story also gets a promoted StoryIdea. Resolves the author Person from the facilitator name (unresolvable names kept as a Comment), converts content via wpautop, translates Categories/Tags/User Categories/who_is_your_story_about into Sectors + Categories via `config/story_import_sector_mapping.yml`, resolves orgs via `config/story_import_organization_mapping.yml`, links grant-tagged stories through the author's Scholarship, enqueues a `StoryAssetImportJob` per story to download its "Image URL" images in the background, and returns a row-by-row preview for the dry-run interstitial
 - `AssetUrlImporter` — Downloads a remote file URL and attaches the bytes to ActiveStorage on the given owner as an Asset (open-uri → attach); the subclass's content-type validation still applies
+- `FeatureCatalog` — Syncs the checked-in feature seed (`config/features.yml`) into the `Feature` table behind the `/features` page (the "Sync latest updates" button). `#import!` (matched by `name`) creates missing features, re-aligns catalog-owned classification (`CATALOG_FIELDS` — area, display_status, released_on, action_path, pr_number, so seed corrections propagate), and fills blank admin content (`CONTENT_FIELDS` — summary, pro_tips, external_url, rhino_description) without overwriting it; returns a `Result` (`created`/`updated`)
 - `DisplayImagePresenter` — Image display logic
 - `ScholarshipsGrouping` (presenter) — Groups scholarships into the index's funder → grant → recipient hierarchy; grant-free awards collect under a trailing "Unfunded" group
 - `RegistrantCityBreakdown` (presenter) — Groups an event's registrants by the city of the org linked on their registration, counting registrants + scholarship recipients per city; drives the shared "Registrants by city" card inside `events/_registrant_breakdowns` on all three people-pages — per-event roster, cross-event attendees index, and scholarship recipients (fed plucked data by `EventDashboard` or `AttendeesBreakdowns`)
@@ -290,7 +292,7 @@ All inherit from `ApplicationDecorator` which provides:
 - `display_image` — selects primary/gallery/downloadable asset intelligently
 - `link_target` — polymorphic path generation
 
-Key decorators: WorkshopDecorator, StoryDecorator, ResourceDecorator, PersonDecorator, OrganizationDecorator, UserDecorator, EventDecorator, ReportDecorator, GrantDecorator, ScholarshipDecorator (derives the scholarship index's program/location/training/status columns), CommentDecorator (source chip label/link/theme + author + timestamp for the aggregated person-comments feed).
+Key decorators: WorkshopDecorator, StoryDecorator, ResourceDecorator, PersonDecorator, OrganizationDecorator, UserDecorator, EventDecorator, ReportDecorator, GrantDecorator, ScholarshipDecorator (derives the scholarship index's program/location/training/status columns), CommentDecorator (source chip label/link/theme + author + timestamp for the aggregated person-comments feed), FeatureDecorator (area/audience badges, release-date labels, and the "Check out this feature"/PR links for the Features & tips page).
 
 ## Policies (ActionPolicy)
 
