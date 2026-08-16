@@ -100,6 +100,24 @@ module EventsHelper
       anchor: params[:return_anchor].presence)
   end
 
+  # Header for any "Program status" column. A program status is only meaningful
+  # relative to a date, so the header names the event it was judged at — "Program
+  # status (TOS205)" — and the caveat below covers the case where there is none.
+  def program_status_column_label(event = nil)
+    return "Program status" if event.blank?
+
+    "Program status (#{event.decorate.compact_label})"
+  end
+
+  # The hover note for a Program status column: which date the verdicts were
+  # judged on. Cross-event lists have no event date to anchor on, so they read as
+  # of the start of the current year (see FacilitatorProgramStatus).
+  def program_status_column_note(event = nil)
+    return "New / Ongoing / Reinstate as of #{event.start_date.strftime('%b %-d, %Y')}, this event's start date." if event&.start_date
+
+    "No single event in view, so each organization reads as of #{Date.current.beginning_of_year.strftime('%b %-d, %Y')} — the start of the current reporting year."
+  end
+
   # Ordered column descriptors for the event Onboarding matrix. The array index
   # is the table-sort column index, so the header row and every body row iterate
   # this same list — keeping header buttons and cell positions aligned no matter
@@ -116,7 +134,7 @@ module EventsHelper
     columns << { key: "attendance", label: "Event attendance", kind: :attendance, sortable: true, align: "center", toggle: "attendance" }
     columns += [
       { key: "program", label: "Organization", kind: :program, sortable: true, align: "left", toggle: "program" },
-      { key: "program_type", label: "Program type", kind: :program_type, sortable: true, align: "center", toggle: "program_type" }
+      { key: "program_type", label: program_status_column_label(event), kind: :program_type, sortable: true, align: "center", toggle: "program_type", note: program_status_column_note(event) }
     ]
     if event.cost_cents.to_i > 0
       columns << { key: "payment", label: "Payment", kind: :payment, sortable: true, align: "center", toggle: "payment" }

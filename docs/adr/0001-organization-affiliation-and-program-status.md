@@ -83,31 +83,51 @@ show a warning where it contradicts the affiliations
 (`OrganizationDecorator#legacy_status_mismatch?`). Nothing else reads it. Expect
 the warning on a fair number of orgs — that is the drift it exists to surface.
 
-### D4 — Per-event program status: New / Ongoing / Reinstate
+### D4 — Program status: New / Ongoing / Reinstate, judged on one anchor date
 
-**One value per (org, event)**, keyed off the **event's start date**, computed
-over **all** of the org's facilitator affiliations as of that date
-(`Organization#facilitator_status_on` / `OrganizationDecorator#facilitator_status_as_of`):
+**One value per (organization, anchor date)**, computed over **all** of the org's
+facilitator affiliations by a single class, `FacilitatorProgramStatus`:
 
-- **New** — no facilitator affiliation started **before** the event date
-  (strict `<`). An affiliation starting **on** the event date, if it is the org's
-  first, reads **New**. _(e.g. event starts Feb 14, the org's first facilitator
-  affiliation starts Feb 14 → New as of that event.)_
-- **Ongoing** — an earlier facilitator affiliation is **still active** at the
-  event date.
-- **Reinstate** — earlier facilitator affiliation(s) existed but **all ended**
-  before the event date (a lapse, now returning).
+- **New** — no facilitator affiliation started **before** the anchor (strict `<`).
+- **Ongoing** — an earlier facilitator affiliation is **still active** on the
+  anchor (no end date, or it ends on/after it).
+- **Reinstated** — earlier facilitator affiliation(s) existed but **all ended**
+  before the anchor (a lapse, now returning).
 
-### D5 — Per-event status is per-EVENT, not per-registrant (no self-exclusion)
+`Organization#facilitator_program_status(as_of:)` returns that object;
+`#facilitator_status_on(date)` is the bare symbol for counting and filtering.
+Nothing else classifies a program — the dashboard breakdown, the onboarding
+matrix, the rosters, the org profile/edit chips and the annual report all call
+this one method, so they cannot disagree.
+
+The status object also carries **why**: the anchor date, the month the program
+went (or last was) active, and the full facilitator history as merged periods
+(`AffiliationPeriods`). `#explanation` renders that as one sentence, which every
+display hangs on the badge as hover text.
+
+The symbols are `:new` / `:ongoing` / `:reinstated`, and `#label` is the one
+display word — "New", "Ongoing", **"Reinstated"**. (The scholarship index's
+separate `Organization#program_status(recipient)` says "Reinstate"; that string is
+not this vocabulary.)
+
+### D5 — Per-event, not per-registrant: no self-exclusion
 
 Program status includes **all** of the org's facilitator affiliations, including
 those held by the registrants at the event. We do **not** exclude "the
 registrant's own affiliation."
 
-Previously `EventRegistration#program_statuses` and
-`EventDashboard#program_status_for` excluded it (to answer "was the org already a
-program *before I joined*"); that per-registrant framing is **dropped**. The
-question is per-event: "at this event, was the org New / Ongoing / Reinstate?"
+The old per-registrant framing ("was the org already a program *before I
+joined*?") is dropped. Two versions of it existed —
+`EventRegistration#program_statuses` excluded the registrant's own affiliation as
+of the event date, while `EventDashboard#program_status_for` re-anchored on that
+affiliation's own start date — so the same org at the same event could read
+Ongoing on the onboarding matrix and New in the dashboard pie, and the dashboard's
+answer moved when a different registrant signed up. Both now ask the per-event
+question: "at this event, was the org New / Ongoing / Reinstate?"
+
+**What makes this safe:** the affiliation a training mints starts **on the
+training date** (D8), and "before" is strict, so a first-time organization still
+reads New at its own first training without any exclusion.
 
 ### D6 — Per-event chips only on facilitator-training events
 
@@ -117,39 +137,61 @@ active registrations). Attendance at a non-training event does **not** produce a
 program-status chip — this is what stops attendance-only events from reading
 "New" or "Reinstate".
 
-### D7 — Reference date = the event's start date
+### D7 — The anchor date: the event's start date, else January 1
 
-The classification anchors on the event's actual `start_date`.
+The classification anchors on the event's actual `start_date` (not the 1st of its
+month, not "today"), so revisiting a past event always reports what was true then.
 
-## Boundary conventions
+**With no event in view** — the cross-event attendees roster — there is no event
+date to anchor on, so the status reads as of **January 1 of the current year**:
+where each program stands this reporting year. `FacilitatorProgramStatus` applies
+that fallback itself and flags `year_anchored?`, and those views carry a caveat
+saying so. Any column showing a status names its anchor: "Program status (TOS205)"
+in event context, with a hover giving the exact date.
 
-- **Strict `<`** for "earlier": `start_date == event date` is **not** earlier
-  (so a same-day first affiliation is **New**, not Ongoing).
-- **Active-at-date** uses `end_date IS NULL OR end_date >= reference`.
+### D8 — Registration mints the facilitator affiliation, dated to the training
+
+A facilitator-training registration creates the registrant's Facilitator
+affiliation at submission time (`AffiliationServices::CreateFromRegistration`,
+from both the public registration flow and admin org-linking), with
+`start_date = event.start_date`. Dating it to the training rather than to the
+submission is what lets D5 drop self-exclusion: the minted row is never "prior
+history" for its own training. An event with no start date is the one gap — the
+affiliation then falls back to the creation date. That event has no anchor either,
+so both its dashboard and the annual report read it as year-anchored (D7) rather
+than one of them silently using "today".
+
+### D9 — Annual reporting counts organizations two ways
+
+`EventProgramStatusReport` (the "Program status" report page, alongside revenue /
+participation / scholarships) reports, per facilitator training and grouped by
+calendar year:
+
+- **Organization-trainings** (the row and year totals) — one count per
+  organization **per training**, using that training's own anchor date. An org at
+  three trainings in a year counts three times. This is the per-event figure that
+  adds up across a year.
+- **Distinct organizations** — each organization counted **once** for the period,
+  classified at the **earliest** training it appeared at. This is "how many
+  distinct programs did we touch, and what were they when we first saw them."
+
+Both are shown, always labelled, because they answer different questions and only
+coincide when no organization attended twice.
 
 ## The classifiers (map)
 
 | Method | Role |
 |---|---|
-| `Organization#facilitator_status_on(date, excluding_affiliation_id:)` | Canonical SQL classifier. |
-| `OrganizationDecorator#facilitator_status_as_of(date)` | In-memory mirror for the org-profile chips. |
-| `Organization#facilitator_status(affiliation)` | Thin wrapper — **no callers, retire it**. |
+| `FacilitatorProgramStatus` | The rule. Verdict + anchor + reasoning. |
+| `Organization#facilitator_program_status(as_of:)` | Entry point; reads preloaded affiliations. |
+| `Organization#facilitator_status_on(date)` | The bare symbol, for counting/filtering. |
 | `Organization#program_status(recipient)` | Scholarship-index string variant, **recipient-relative** — a distinct context (see below). |
 
-## Consequences / follow-up code changes
+## Boundary conventions
 
-1. **Remove self-exclusion (D5):** `EventRegistration#program_statuses` →
-   `organization.facilitator_status_on(reference_date)` (drop the `own` lookup);
-   `EventDashboard#program_status_for` collapses to
-   `organization.facilitator_status_on(reference_date)`. Update their specs (they
-   currently assert the exclusion).
-2. **Gate org-profile chips to facilitator-training events (D6):** filter
-   `@organization_events` by `facilitator_training: true`.
-3. **Align the reference date (D7):** `EventRegistration#program_statuses`
-   currently anchors on `event.start_date.beginning_of_month`; the org-profile
-   chip and `EventDashboard#reference_date` use the raw `event.start_date`.
-   Standardize on the **raw start date**.
-4. **Retire** the dead `Organization#facilitator_status(affiliation)` wrapper.
+- **Strict `<`** for "earlier": `start_date == anchor` is **not** earlier (so the
+  affiliation a training mints is **New**, not Ongoing).
+- **Active-at-date** uses `end_date IS NULL OR end_date >= anchor`.
 
 ## Notes / open items
 
@@ -157,13 +199,13 @@ The classification anchors on the event's actual `start_date`.
   excludes the recipient's own affiliations to answer a scholarship-specific
   question). It is intentionally **not** covered by D5; reconcile with the
   per-event model later if the two need to agree.
-- **Affiliation date precision:** the raw-start-date anchor (D7) reads a
-  month-precision affiliation (dated to the 1st) as Ongoing where the actual date
-  would read New — which is why `program_statuses` originally used
-  `beginning_of_month`. Newly minted affiliations are safe: #2176 changed both the
-  registration-minted and manually added rows to use the actual date. **Rows
-  created before that change may still be dated to the 1st**, so a historical
-  same-month training can still classify as Ongoing.
+- **Legacy affiliation dates are the one risk in dropping self-exclusion.** D5 is
+  safe for anything minted since #2176, which dates the row to the training (D8).
+  **Rows created before that may still be dated to the 1st of the month**, so a
+  registrant's own affiliation can precede a same-month training and read that org
+  as Ongoing where it should be New. Worth a one-off count of facilitator
+  affiliations dated to the 1st that precede a training the same month before
+  trusting a historical year's New figures.
 - **What creates a facilitator affiliation:** since #2194 only a facilitator
   *training* registration mints one (non-training registrations get a job
   affiliation instead), and the row records its creating `event_registration_id`.

@@ -44,6 +44,7 @@
       <%= render "events/participation_summary", report: @participation_report, period: @participation_report.period_scope(@period) %>
       <%= render "events/scholarship_summary", report: @scholarship_report, period: @scholarship_report.period_scope(@period) %>
       <%= render "events/revenue_summary", report: @revenue_report, period: @revenue_report.period_scope(@period) %>
+      <%= render "events/program_status_summary", report: @program_status_report, period: @program_status_report.period_scope(@period) %>
     </div>
   </div>
 </div>

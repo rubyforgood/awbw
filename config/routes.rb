@@ -165,6 +165,7 @@ Rails.application.routes.draw do
       get :participation
       get :reports
       get :scholarships
+      get :program_statuses
       get :attendees
       get :signins
     end

@@ -1244,6 +1244,7 @@ RSpec.describe EventRegistration, type: :model do
 
   describe "#program_statuses" do
     let(:registration) { create(:event_registration) }
+    let(:training_date) { registration.event.start_date.to_date }
     let(:linked_org) { create(:organization, name: "Registration Org") }
     let(:other_org) { create(:organization, name: "Other Org") }
 
@@ -1251,19 +1252,29 @@ RSpec.describe EventRegistration, type: :model do
       create(:event_registration_organization, event_registration: registration, organization: linked_org)
       # An unrelated facilitator affiliation to a different org must be ignored.
       create(:affiliation, organization: other_org, person: registration.registrant,
-             title: "Facilitator", start_date: Date.current)
+             title: "Facilitator", start_date: training_date)
 
-      expect(registration.reload.program_statuses).to eq([ :new ])
+      expect(registration.reload.program_statuses.map(&:status)).to eq([ :new ])
     end
 
-    it "is ongoing when the linked org already had an active facilitator, excluding the registrant's own" do
+    # The registrant's own affiliation is dated to the training, so it isn't prior
+    # history — no exclusion needed to read New (ADR-0001 D5).
+    it "is new when the registrant's own affiliation is the org's first, dated to the training" do
+      create(:event_registration_organization, event_registration: registration, organization: linked_org)
+      create(:affiliation, organization: linked_org, person: registration.registrant,
+             title: "Facilitator", start_date: training_date)
+
+      expect(registration.reload.program_statuses.map(&:status)).to eq([ :new ])
+    end
+
+    it "is ongoing when the linked org already had an active facilitator" do
       create(:event_registration_organization, event_registration: registration, organization: linked_org)
       create(:affiliation, organization: linked_org, title: "Facilitator",
              start_date: 2.years.ago, end_date: nil)
       create(:affiliation, organization: linked_org, person: registration.registrant,
-             title: "Facilitator", start_date: Date.current)
+             title: "Facilitator", start_date: training_date)
 
-      expect(registration.reload.program_statuses).to eq([ :ongoing ])
+      expect(registration.reload.program_statuses.map(&:status)).to eq([ :ongoing ])
     end
 
     it "counts a facilitator affiliation started earlier the same month as the training" do
@@ -1276,7 +1287,17 @@ RSpec.describe EventRegistration, type: :model do
       create(:affiliation, organization: linked_org, person: reg.registrant,
              title: "Facilitator", start_date: Date.new(2026, 6, 20))
 
-      expect(reg.reload.program_statuses).to eq([ :ongoing ])
+      expect(reg.reload.program_statuses.map(&:status)).to eq([ :ongoing ])
+    end
+
+    it "anchors on the training date and explains itself" do
+      create(:event_registration_organization, event_registration: registration, organization: linked_org)
+
+      status = registration.reload.program_statuses.first
+
+      expect(status.as_of).to eq(training_date)
+      expect(status.label).to eq("New")
+      expect(status.explanation).to include("No facilitator affiliation started before this date")
     end
   end
 

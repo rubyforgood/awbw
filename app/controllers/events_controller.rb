@@ -3,18 +3,18 @@ class EventsController < ApplicationController
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
   before_action :set_event, only: %i[ show edit update destroy preview dashboard attendance sample_ticket registrants roster onboarding staff edit_staff update_staff recipients preview_reminder confirm_reminder send_reminder copy_registration_form feature_recipient_shoutout ]
-  before_action :set_report_filters, only: %i[ revenue participation reports scholarships signins ]
+  before_action :set_report_filters, only: %i[ revenue participation reports scholarships program_statuses signins ]
   # The cross-event report suite is visible to admins and event owners alike; what
   # differs is the rows, which EventPolicy's :reportable scope narrows to the
   # viewer's own events. #attendance is per-event, so it authorizes its own record
   # rather than joining this list.
-  before_action :authorize_report!, only: %i[ revenue participation reports scholarships attendees signins ]
+  before_action :authorize_report!, only: %i[ revenue participation reports scholarships program_statuses attendees signins ]
   # Log a visit to each event page / report. after_action so it only fires once
   # the action rendered successfully (authorization inside the actions has passed);
   # the turbo_frame_request? / redirect guards skip the lazy results/charts
   # sub-requests and the confirm-reminder bounce-back. send_reminder is logged
   # inline on a successful send (it always redirects).
-  after_action :track_page_view, only: %i[ dashboard attendance roster registrants recipients staff onboarding edit preview sample_ticket revenue participation reports scholarships attendees signins confirm_reminder ]
+  after_action :track_page_view, only: %i[ dashboard attendance roster registrants recipients staff onboarding edit preview sample_ticket revenue participation reports scholarships program_statuses attendees signins confirm_reminder ]
 
   def index
     authorize!
@@ -63,6 +63,7 @@ class EventsController < ApplicationController
     @revenue_report = EventRevenueReport.new(report_events(Event.paid))
     @participation_report = EventParticipationReport.new(report_events(Event.all))
     @scholarship_report = EventScholarshipReport.new(report_events(Event.facilitator_trainings))
+    @program_status_report = EventProgramStatusReport.new(report_events(Event.facilitator_trainings))
   end
 
   # Cross-event scholarship report: scholarship dollars and award counts (funded
@@ -72,6 +73,14 @@ class EventsController < ApplicationController
   def scholarships
     events, selected_year = filtered_report_events(Event.facilitator_trainings)
     @report = EventScholarshipReport.new(events, featured_year: selected_year, funder: @filter_funder)
+  end
+
+  # Cross-event program-status report: how many organizations were New / Ongoing /
+  # Reinstate at each facilitator training, by year — the annual-reporting figures.
+  # Sibling of the revenue, participation and scholarship reports.
+  def program_statuses
+    events, selected_year = filtered_report_events(Event.facilitator_trainings)
+    @report = EventProgramStatusReport.new(events, featured_year: selected_year)
   end
 
   # Cross-event index of the people behind event registrations, deduped to one row
@@ -944,14 +953,16 @@ class EventsController < ApplicationController
       .transform_values { |pairs| pairs.map(&:first) }
   end
 
-  # Person ids whose linked training org currently has the given facilitator
-  # program status (new / ongoing / reinstated).
+  # Person ids whose linked training org has the given facilitator program status
+  # (new / ongoing / reinstated). Anchored the same way the index's own column is —
+  # this list spans events, so both read as of the start of the current year (see
+  # FacilitatorProgramStatus) rather than the filter and the column disagreeing.
   def person_program_status_ids(status)
     status_sym = status.to_sym
     org_ids = Organization
       .where(id: EventRegistrationOrganization.where(event_registration_id: attendee_registrations.select(:id)).select(:organization_id))
       .includes(:affiliations)
-      .select { |organization| organization.facilitator_status_on(Date.current) == status_sym }
+      .select { |organization| organization.facilitator_status_on == status_sym }
       .map(&:id)
     return Person.none if org_ids.empty?
     person_linked_organization_ids(org_ids)
@@ -1137,7 +1148,7 @@ class EventsController < ApplicationController
   def onboarding_csv_row(registration, cost_required, day_count, include_ce = false)
     person = registration.registrant
     scholarship = registration.scholarships.first
-    statuses = registration.program_statuses.map { |status| status.to_s.titleize }.join(", ")
+    statuses = registration.program_statuses.map(&:label).join(", ")
 
     row = [
       person.first_name,

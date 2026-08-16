@@ -1,0 +1,123 @@
+<%# Program-status report card: one row per facilitator training with the
+    organizations represented there split into New / Ongoing / Reinstated as of that
+    training's start date, a subtotal per year, and an all-time total. Below the
+    table, the distinct-organization view of the same period — each org counted
+    once, at the earliest training it appeared at — because the row totals count an
+    org once per training it attended. Pass `report:` (an EventProgramStatusReport)
+    and `all_time:`. Emerald-branded, matching the organizations domain colour. %>
+<% years = report.years %>
+<% multi_year = years.size > 1 %>
+<section id="program-status-report" class="rounded-xl border border-emerald-300 bg-white overflow-hidden">
+  <div class="flex items-center justify-between gap-3 px-4 py-3 bg-emerald-50 border-b border-emerald-300">
+    <h3 class="flex items-center gap-2 text-base font-semibold text-emerald-900">
+      <i class="fa-solid fa-seedling text-emerald-500"></i>
+      <%= all_time ? "All facilitator trainings" : "#{years.first.year || "Undated"} facilitator trainings" %>
+    </h3>
+    <span class="text-xs text-gray-500"><%= pluralize(report.columns.size, "training") %></span>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm border-collapse">
+      <thead>
+        <tr class="bg-emerald-50 text-emerald-900">
+          <th class="text-left font-semibold px-3 py-2 border border-gray-200">Training</th>
+          <th class="text-left font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap">Status as of</th>
+          <th class="text-right font-medium px-3 py-2 border border-gray-200 border-l-2 border-l-emerald-300">New</th>
+          <th class="text-right font-medium px-3 py-2 border border-gray-200">Ongoing</th>
+          <th class="text-right font-medium px-3 py-2 border border-gray-200">Reinstated</th>
+          <th class="text-right font-semibold px-3 py-2 border border-gray-200">Organizations</th>
+        </tr>
+      </thead>
+      <tbody class="tabular-nums">
+        <% years.each do |group| %>
+          <% if multi_year %>
+            <tr class="bg-emerald-100 text-emerald-900">
+              <th colspan="6" class="text-left font-semibold px-3 py-1.5 border border-gray-200"><%= group.year || "Undated" %></th>
+            </tr>
+          <% end %>
+          <% group.columns.each do |column| %>
+            <tr id="<%= training_report_row_id(column.event) %>" class="scroll-mt-24">
+              <td class="px-3 py-2 border border-gray-200">
+                <%= link_to column.label, dashboard_event_path(column.event), class: "text-blue-600 hover:underline", title: column.event.title %>
+                <% if column.date_label %><span class="text-gray-400 text-xs ml-1"><%= column.date_label %></span><% end %>
+              </td>
+              <td class="px-3 py-2 border border-gray-200 whitespace-nowrap text-gray-600">
+                <%= column.anchor_date&.strftime("%b %-d, %Y") || "—" %>
+              </td>
+              <td class="px-3 py-2 border border-gray-200 text-right border-l-2 border-l-emerald-300"><%= column.new_count %></td>
+              <td class="px-3 py-2 border border-gray-200 text-right"><%= column.ongoing_count %></td>
+              <td class="px-3 py-2 border border-gray-200 text-right"><%= column.reinstated_count %></td>
+              <td class="px-3 py-2 border border-gray-200 text-right font-semibold"><%= column.organization_count %></td>
+            </tr>
+          <% end %>
+          <% if multi_year %>
+            <tr class="bg-gray-50 font-semibold text-gray-900">
+              <td class="px-3 py-2 border border-gray-200" colspan="2"><%= group.year || "Undated" %> total</td>
+              <td class="px-3 py-2 border border-gray-200 text-right border-l-2 border-l-emerald-300"><%= group.new_count %></td>
+              <td class="px-3 py-2 border border-gray-200 text-right"><%= group.ongoing_count %></td>
+              <td class="px-3 py-2 border border-gray-200 text-right"><%= group.reinstated_count %></td>
+              <td class="px-3 py-2 border border-gray-200 text-right"><%= group.organization_count %></td>
+            </tr>
+          <% end %>
+        <% end %>
+        <tr class="bg-gray-100 font-bold text-gray-900">
+          <td class="px-3 py-2 border border-gray-200" colspan="2"><%= all_time ? "All-time total" : "Total" %></td>
+          <td class="px-3 py-2 border border-gray-200 text-right border-l-2 border-l-emerald-300"><%= report.new_count %></td>
+          <td class="px-3 py-2 border border-gray-200 text-right"><%= report.ongoing_count %></td>
+          <td class="px-3 py-2 border border-gray-200 text-right"><%= report.reinstated_count %></td>
+          <td class="px-3 py-2 border border-gray-200 text-right"><%= report.organization_count %></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <%# The rows above count an organization once per training it attended. This is
+      the same period counted once per organization, at the earliest training it
+      appeared at — the figure to report when "how many programs" means distinct
+      programs rather than program-events. %>
+  <div class="border-t border-emerald-200 bg-emerald-50 px-4 py-3">
+    <p class="text-xs font-semibold text-emerald-900 mb-2">
+      Distinct organizations
+      <i class="fa-solid fa-circle-info text-emerald-400 ml-0.5"
+         title="Each organization counted once for this period, classified at the earliest training it appeared at. The table above counts it once per training, so these are smaller whenever an organization attended more than one."></i>
+    </p>
+    <% groups = multi_year ? years : [] %>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm border-collapse bg-white">
+        <thead>
+          <tr class="bg-emerald-50 text-emerald-900">
+            <th class="text-left font-semibold px-3 py-1.5 border border-gray-200">Period</th>
+            <th class="text-right font-medium px-3 py-1.5 border border-gray-200">New</th>
+            <th class="text-right font-medium px-3 py-1.5 border border-gray-200">Ongoing</th>
+            <th class="text-right font-medium px-3 py-1.5 border border-gray-200">Reinstated</th>
+            <th class="text-right font-semibold px-3 py-1.5 border border-gray-200">Organizations</th>
+          </tr>
+        </thead>
+        <tbody class="tabular-nums">
+          <% groups.each do |group| %>
+            <tr>
+              <td class="px-3 py-1.5 border border-gray-200"><%= group.year || "Undated" %></td>
+              <td class="px-3 py-1.5 border border-gray-200 text-right"><%= group.distinct_new_count %></td>
+              <td class="px-3 py-1.5 border border-gray-200 text-right"><%= group.distinct_ongoing_count %></td>
+              <td class="px-3 py-1.5 border border-gray-200 text-right"><%= group.distinct_reinstated_count %></td>
+              <td class="px-3 py-1.5 border border-gray-200 text-right font-semibold"><%= group.distinct_organization_count %></td>
+            </tr>
+          <% end %>
+          <tr class="bg-gray-100 font-bold text-gray-900">
+            <td class="px-3 py-1.5 border border-gray-200"><%= all_time ? "All time" : (years.first&.year || "Total") %></td>
+            <td class="px-3 py-1.5 border border-gray-200 text-right"><%= report.distinct_new_count %></td>
+            <td class="px-3 py-1.5 border border-gray-200 text-right"><%= report.distinct_ongoing_count %></td>
+            <td class="px-3 py-1.5 border border-gray-200 text-right"><%= report.distinct_reinstated_count %></td>
+            <td class="px-3 py-1.5 border border-gray-200 text-right"><%= report.distinct_organization_count %></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <% if report.repeat_organizations? %>
+      <p class="mt-2 text-xs text-gray-500">
+        The table above totals <%= pluralize(report.organization_count, "organization-training") %> across
+        <%= pluralize(report.distinct_organization_count, "distinct organization") %> — the difference is organizations that attended more than one training.
+      </p>
+    <% end %>
+  </div>
+</section>

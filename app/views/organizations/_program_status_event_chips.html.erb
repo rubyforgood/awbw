@@ -1,14 +1,16 @@
-<%# Per-event program status (New / Ongoing / Reinstated as of each event's start
+<%# Per-event program status (New / Ongoing / Reinstate as of each event's start
     date). Rendered on both the org profile and the org edit form, so return_to
     names which of the two the participation report should send the user back to —
-    the chips open in a new tab, where the back button is no help. %>
+    the chips open in a new tab, where the back button is no help. Each chip hovers
+    to explain the verdict: the anchor date, what made the program active, and the
+    facilitator periods behind it (FacilitatorProgramStatus#explanation). %>
 <% decorated = organization.decorate %>
 <% events.each do |event| %>
   <% status = decorated.facilitator_status_as_of(event.start_date) %>
   <%= link_to participation_events_path(event_id: event.id, return_organization_id: organization.id, return_to: return_to),
               target: "_blank", rel: "noopener noreferrer",
-              title: event.title,
-              class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{OrganizationDecorator.program_status_classes(status)}" do %>
-    <%= "#{event.start_date.strftime('%b %Y')} · " if event.start_date %><%= status.to_s.titleize %> · <%= event.decorate.compact_label.truncate(24) %>
+              title: "#{event.title} — #{status.explanation}",
+              class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{OrganizationDecorator.program_status_classes(status.status)}" do %>
+    <%= "#{event.start_date.strftime('%b %Y')} · " if event.start_date %><%= status.label %> · <%= event.decorate.compact_label.truncate(24) %>
   <% end %>
 <% end %>

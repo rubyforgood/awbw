@@ -1,0 +1,45 @@
+<%# Compact program-status headline for the reports hub, linking to the full
+    report. Expects `report` (an EventProgramStatusReport) and `period` (its
+    resolved PeriodScope: #label, #year and #metrics). The tiles count
+    organizations once per training; the footnote gives the distinct-organization
+    figure, which is what "how many programs" usually means. %>
+<div class="h-full flex flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+  <div class="flex items-start justify-between mb-4">
+    <h3 class="text-base font-semibold text-gray-900">Program status</h3>
+    <%= link_to "Details →", program_statuses_events_path(hub_to_report_params),
+          class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+  </div>
+
+  <% if report.any? %>
+    <% metrics = period.metrics %>
+    <div class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2"><%= period.label %></div>
+    <div class="grid grid-cols-3 gap-3 mb-4">
+      <div class="rounded-lg border border-indigo-200 bg-indigo-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">New</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-indigo-700"><%= number_with_delimiter(metrics.new_count) %></div>
+      </div>
+      <div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Ongoing</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-blue-700"><%= number_with_delimiter(metrics.ongoing_count) %></div>
+      </div>
+      <div class="rounded-lg border border-purple-200 bg-purple-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Reinstated</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-purple-700"><%= number_with_delimiter(metrics.reinstated_count) %></div>
+      </div>
+    </div>
+    <p class="text-xs text-gray-500 mb-3">
+      <%= pluralize(metrics.organization_count, "organization-training") %> ·
+      <span class="font-medium text-gray-700"><%= metrics.distinct_organization_count %></span> distinct organizations
+    </p>
+    <div class="mt-auto"
+         data-controller="chart-tooltip-footer"
+         data-chart-tooltip-footer-chart-id-value="program-status-hub-chart"
+         data-chart-tooltip-footer-total-value="true">
+      <%= column_chart report.chart_series, id: "program-status-hub-chart", stacked: true, thousands: ",",
+            colors: [ "#6366f1", "#3b82f6", "#a855f7" ], height: "120px", legend: false,
+            library: { borderRadius: 3 } %>
+    </div>
+  <% else %>
+    <p class="text-sm text-gray-500 my-auto">No facilitator trainings match these filters.</p>
+  <% end %>
+</div>

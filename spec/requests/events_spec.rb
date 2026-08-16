@@ -405,6 +405,16 @@ RSpec.describe "Events", type: :request do
           expect(nav).to have_no_link("Scholarships")
         end
 
+        it "renders on the program-status report with Program status current" do
+          sign_in admin
+          get program_statuses_events_path
+
+          nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
+          expect(nav).to have_link("Details")
+          expect(nav).to have_link("Scholarships")
+          expect(nav).to have_no_link("Program status")
+        end
+
         # Breakdowns is a panel on the attendees index, not a page, so it has no tab.
         it "has no Breakdowns tab" do
           sign_in admin
@@ -2544,12 +2554,14 @@ RSpec.describe "Events", type: :request do
         expect(page).to have_link(href: registrants_event_path(event, ce_status: "registered"), visible: :all)
       end
 
-      it "shows a program status badge next to each organization" do
+      it "shows a program status badge next to each organization, hovering to explain it" do
         get dashboard_event_path(event)
 
         # The org list lives inside a collapsed <details>, so match hidden nodes too.
         page = Capybara.string(response.body)
-        expect(page).to have_css("span[title='New']", text: "N", visible: :all)
+        badge = page.all("span", text: "N", visible: :all).find { |node| node[:title]&.start_with?("New as of") }
+        expect(badge).to be_present
+        expect(badge[:title]).to include("event start date")
       end
 
       it "renders the payments section with totals for a paid event" do

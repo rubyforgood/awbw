@@ -914,20 +914,16 @@ class EventRegistration < ApplicationRecord
     true
   end
 
-  # Program status(es) for THIS registration only: classify each organization
-  # linked to the registration as of the training date, excluding the registrant's
-  # own facilitator affiliation to that org so the status reflects whether the *org*
-  # was already a facilitator program when they joined. Using the actual training
-  # date (not the 1st of its month) means a facilitator affiliation started earlier
-  # that same month still counts toward the org's activity. Distinct, so one linked
-  # org shows one badge — unlike the registrant-wide rollup, this ignores
-  # affiliations to other organizations.
+  # Program status(es) for the organizations linked to THIS registration, as of the
+  # training date (see FacilitatorProgramStatus — the same verdict the dashboard,
+  # the org profile and the annual report show for this event). Returns the status
+  # objects so a badge can explain itself on hover. Deduped by verdict, so two
+  # linked orgs at the same status show one badge; unlike the registrant-wide
+  # rollup, affiliations to other organizations are ignored.
   def program_statuses
-    reference_date = event&.start_date&.to_date || Date.current
-    organizations.filter_map do |organization|
-      own = registrant.affiliations.find { |affiliation| affiliation.organization_id == organization.id && affiliation.facilitator? }
-      organization.facilitator_status_on(reference_date, excluding_affiliation_id: own&.id)
-    end.uniq
+    reference_date = event&.start_date&.to_date
+    organizations.map { |organization| organization.facilitator_program_status(as_of: reference_date) }
+                 .uniq(&:status)
   end
 
   remote_searchable_by :registrant,

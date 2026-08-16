@@ -52,17 +52,17 @@
     <% when :program_type %>
       <% statuses = registration.program_statuses %>
       <% org = registration.organizations.first %>
-      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= statuses.map(&:to_s).sort.join %>">
+      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= statuses.map(&:label).sort.join %>">
         <% if statuses.any? && org %>
           <%= link_to edit_organization_path(org, anchor: "affiliations", **onboarding_back), class: "inline-flex flex-col items-center gap-1 hover:opacity-80", title: "Edit #{org.name} affiliations", data: { turbo_frame: "_top" } do %>
             <% statuses.each do |status| %>
-              <%= render "shared/badge", label: status.to_s.titleize, classes: OrganizationDecorator.program_status_classes(status) %>
+              <%= render "shared/badge", label: status.label, classes: OrganizationDecorator.program_status_classes(status.status), title: status.explanation %>
             <% end %>
           <% end %>
         <% elsif statuses.any? %>
           <div class="flex flex-col items-center gap-1">
             <% statuses.each do |status| %>
-              <%= render "shared/badge", label: status.to_s.titleize, classes: OrganizationDecorator.program_status_classes(status) %>
+              <%= render "shared/badge", label: status.label, classes: OrganizationDecorator.program_status_classes(status.status), title: status.explanation %>
             <% end %>
           </div>
         <% else %>

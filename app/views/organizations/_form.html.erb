@@ -278,8 +278,6 @@
       <% end %>
       <% org_earliest_aff = f.object.persisted? ? f.object.affiliations.minimum(:start_date) : nil %>
       <% org_aff_ended = f.object.persisted? && f.object.affiliations.any? && !f.object.affiliations.active.exists? %>
-      <% org_latest_end = f.object.persisted? ? f.object.affiliations.maximum(:end_date) : nil %>
-      <% org_end_date = org_aff_ended ? org_latest_end : f.object.end_date %>
       <% org_decorated = f.object.decorate %>
       <div class="flex flex-col md:flex-row gap-6 mb-4">
         <div class="shrink-0 relative group cursor-help">

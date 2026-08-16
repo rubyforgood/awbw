@@ -499,18 +499,17 @@ class EventDashboard
 
   # Every organization represented at this event (the same set counted by
   # organization_count) bucketed as :new, :ongoing, or :reinstated — so the three
-  # buckets always total organization_count. Each org is classified by its
-  # facilitator history, using the registrant's own (earliest) affiliation to it
-  # as the reference when present, otherwise the org's earliest facilitator
-  # affiliation; an org with no facilitator history at all counts as :new.
+  # buckets always total organization_count. Each org is classified as it stood on
+  # the event's start date; an org with no facilitator history before then is :new.
   def program_status_counts
     @program_status_counts ||= program_status_by_organization.each_with_object({ new: 0, ongoing: 0, reinstated: 0 }) do |(_organization_id, status), counts|
-      counts[status] += 1
+      counts[status.status] += 1
     end
   end
 
-  # Program status (:new / :ongoing / :reinstated) per represented organization,
-  # keyed by organization id — the same classification as program_status_counts.
+  # FacilitatorProgramStatus per represented organization, keyed by organization
+  # id — the classification behind program_status_counts, carrying the anchor date
+  # and reasoning each display hovers to explain.
   def program_status_by_organization
     @program_status_by_organization ||= organizations.to_h { |organization| [ organization.id, program_status_for(organization) ] }
   end
@@ -523,7 +522,7 @@ class EventDashboard
   def program_status_registrant_ids
     @program_status_registrant_ids ||= program_status_by_organization
       .each_with_object({ new: [], ongoing: [], reinstated: [] }) do |(organization_id, status), map|
-        map[status].concat(organization_registrant_ids_by_org.fetch(organization_id, []).to_a)
+        map[status.status].concat(organization_registrant_ids_by_org.fetch(organization_id, []).to_a)
       end
       .transform_values(&:uniq)
   end
@@ -532,7 +531,7 @@ class EventDashboard
   # Person id — for the registrant roster's program-status column.
   def program_statuses_by_registrant
     @program_statuses_by_registrant ||= organization_ids_by_registrant.transform_values do |organization_ids|
-      organization_ids.filter_map { |organization_id| program_status_by_organization[organization_id] }.uniq
+      organization_ids.filter_map { |organization_id| program_status_by_organization[organization_id] }.uniq(&:status)
     end
   end
 
@@ -1017,37 +1016,15 @@ class EventDashboard
       end
   end
 
-  # Facilitator status for one represented organization, used by the
-  # program-status breakdown. Prefers a registrant's own active affiliation to
-  # the org as the reference point, falling back to the org's earliest
-  # facilitator affiliation, and treating an org with no facilitator history as
-  # new.
+  # Facilitator status for one represented organization, as the org stood at the
+  # time of the event (#reference_date) — the shared rule, so this breakdown, the
+  # onboarding matrix, the org profile chips and the annual report all say the
+  # same thing about this org at this event (see FacilitatorProgramStatus).
   def program_status_for(organization)
-    reference = registrant_affiliations_by_org[organization.id]
-      &.select(&:facilitator?)
-      &.min_by { |affiliation| affiliation.start_date || reference_date }
-    if reference
-      return organization.facilitator_status_on(reference.start_date || reference_date,
-                                                excluding_affiliation_id: reference.id)
-    end
-
-    # The registrant has no facilitator affiliation to this org as of the event
-    # (admins create those manually after the fact). Classify the org as it stood
-    # at the time of the event rather than today, so an org that already had an
-    # active facilitator reads as :ongoing and a lapsed one as :reinstated — and
-    # the breakdown doesn't drift as affiliations change afterward.
-    organization.facilitator_status_on(reference_date)
-  end
-
-  # This event's active registrants' affiliations that overlapped the event date,
-  # grouped by organization id — the reference points for the program-status
-  # breakdown. Anchored to the event (#reference_date) rather than "now" so the
-  # breakdown reflects the programs as they stood at the time of the event.
-  def registrant_affiliations_by_org
-    @registrant_affiliations_by_org ||= Affiliation.active_on(reference_date)
-      .where(person_id: registrant_ids)
-      .includes(:organization)
-      .group_by(&:organization_id)
+    # The event's own start date, not #reference_date's today-fallback: an undated
+    # event has no anchor, and FacilitatorProgramStatus's year fallback is what the
+    # annual report uses for the same event — the two must not diverge.
+    organization.facilitator_program_status(as_of: event.start_date&.to_date)
   end
 
   # The fixed point in time the organization breakdown is reported as of: the

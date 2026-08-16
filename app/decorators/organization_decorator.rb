@@ -8,10 +8,11 @@ class OrganizationDecorator < ApplicationDecorator
     reinstated: :program_reinstated
   }.freeze
 
-  # Normalize either the :new/:ongoing/:reinstated symbol (EventDashboard / index
-  # controller) or the "New"/"Ongoing"/"Reinstate" string (Organization#program_status)
-  # to the canonical symbol; nil when blank or unrecognized.
+  # Normalize a FacilitatorProgramStatus, the :new/:ongoing/:reinstated symbol, or
+  # the "New"/"Ongoing"/"Reinstate" string (Organization#program_status) to the
+  # canonical symbol; nil when blank or unrecognized.
   def self.program_status_key(status)
+    status = status.status if status.respond_to?(:status)
     return if status.blank?
 
     key = status.to_s.downcase.start_with?("reinstat") ? :reinstated : status.to_s.downcase.to_sym
@@ -39,8 +40,10 @@ class OrganizationDecorator < ApplicationDecorator
     key = self.class.program_status_key(status)
     return unless key
 
+    # A FacilitatorProgramStatus explains its own verdict (anchor date, what made
+    # the program active); anything else can only name it.
     h.content_tag(:span, key.to_s.first.upcase,
-                  title: key.to_s.titleize,
+                  title: status.respond_to?(:explanation) ? status.explanation : key.to_s.titleize,
                   class: "inline-flex shrink-0 items-center justify-center w-5 h-5 rounded-full border text-xs font-semibold #{self.class.program_status_classes(status)}")
   end
 
@@ -185,14 +188,12 @@ class OrganizationDecorator < ApplicationDecorator
   end
 
 
-  # In-memory program status (:new / :ongoing / :reinstated) for this org as it
-  # stood on a given date — the same New/Ongoing/Reinstate classification used in
-  # event context. Delegates to Organization#facilitator_status_on (single source
-  # of truth), which reads the already-loaded affiliations so a profile can
-  # classify many events without an N+1. `date` may be a datetime (event.start_date
-  # is one), so normalize to a Date before the model's date comparisons.
+  # This org's program status as it stood on a given date, as a
+  # FacilitatorProgramStatus (verdict + anchor + reasoning for the hover). Reads
+  # the already-loaded affiliations, so a profile classifies many events without
+  # an N+1. `date` may be a datetime (event.start_date is one).
   def facilitator_status_as_of(date)
-    object.facilitator_status_on(date&.to_date)
+    object.facilitator_program_status(as_of: date&.to_date)
   end
 
   def badges

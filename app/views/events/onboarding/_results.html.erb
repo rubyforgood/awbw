@@ -57,6 +57,10 @@
                   <% else %>
                     <%= column[:label] %>
                   <% end %>
+                  <%# Says which date the column's verdicts were judged on. %>
+                  <% if column[:note] %>
+                    <i class="fa-solid fa-circle-info text-gray-400 text-[0.65rem] ml-0.5" title="<%= column[:note] %>"></i>
+                  <% end %>
                 </th>
               <% end %>
             </tr>

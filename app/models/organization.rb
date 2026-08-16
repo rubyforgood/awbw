@@ -175,45 +175,22 @@ class Organization < ApplicationRecord
     direct.or(legacy).distinct
   end
 
-  # Facilitator program statuses in display order — the values #facilitator_status
-  # and #facilitator_status_on return, and the attendees index filters on.
-  FACILITATOR_PROGRAM_STATUSES = %i[ new ongoing reinstated ].freeze
+  # Facilitator program statuses in display order — the values
+  # FacilitatorProgramStatus returns, and the attendees index filters on.
+  FACILITATOR_PROGRAM_STATUSES = FacilitatorProgramStatus::STATUSES
 
-  # Classifies this organization as a facilitator program relative to a reference
-  # ("current") facilitator affiliation — typically a registrant's affiliation
-  # captured through the event registration form:
-  #   :new        — the reference is the organization's first facilitator
-  #                 affiliation (none started before it)
-  #   :ongoing    — the organization already had a facilitator affiliation that
-  #                 was still active when the reference one started
-  #   :reinstated — the organization had facilitator affiliation(s) before, but
-  #                 they all ended before the reference one started (a lapse)
-  def facilitator_status(current_affiliation)
-    facilitator_status_on(current_affiliation.start_date, excluding_affiliation_id: current_affiliation.id)
+  # This organization's program status (New / Ongoing / Reinstate) as of a date —
+  # the event's start date, or the start of the current year when there's no event
+  # in view. Returns a FacilitatorProgramStatus, which carries the verdict plus the
+  # anchor date, the affiliation month behind it and the facilitator history, so
+  # every display can explain itself. See ADR-0001 D4.
+  def facilitator_program_status(as_of: nil)
+    FacilitatorProgramStatus.for(self, as_of: as_of)
   end
 
-  # Classifies this organization relative to a reference DATE rather than a
-  # reference affiliation — used when a registrant has no facilitator affiliation
-  # yet (admins create those manually), so we ask "if they got one today, would
-  # this org be new/ongoing/reinstated?":
-  #   :new        — the org has no facilitator affiliation starting before the date
-  #   :ongoing    — an earlier facilitator affiliation is still active on the date
-  #   :reinstated — earlier facilitator affiliation(s) existed but all ended first
-  def facilitator_status_on(reference_date, excluding_affiliation_id: nil)
-    reference_start = reference_date || Date.current
-
-    # Filter the (often preloaded) affiliations in Ruby rather than firing a query
-    # per org — the event dashboard classifies every represented org this way.
-    earlier = affiliations.select do |affiliation|
-      affiliation.facilitator? &&
-        affiliation.start_date && affiliation.start_date < reference_start &&
-        affiliation.id != excluding_affiliation_id
-    end
-
-    return :new if earlier.empty?
-
-    active_overlap = earlier.any? { |affiliation| affiliation.end_date.nil? || affiliation.end_date >= reference_start }
-    active_overlap ? :ongoing : :reinstated
+  # The bare :new / :ongoing / :reinstated symbol, for counting and filtering.
+  def facilitator_status_on(reference_date = nil)
+    facilitator_program_status(as_of: reference_date).status
   end
 
   # Methods
@@ -323,6 +300,17 @@ class Organization < ApplicationRecord
   # just their primary age groups (via all_primary_age_groups), not additional.
   def all_additional_age_groups
     additional_age_groups - all_primary_age_groups
+  end
+
+  # Cache version for the roll-up cells on list pages (#all_sectors and the age
+  # groups), which aggregate across affiliated people: retagging a person or
+  # adding an affiliation leaves the organizations row untouched, so `[organization]`
+  # alone caches those cells stale. Count + latest timestamp over the contributing
+  # taggings, read from the already-preloaded associations so it costs no queries.
+  def rollup_cache_version
+    records = affiliations.to_a + sectorable_items.to_a + categorizable_items.to_a +
+      affiliated_people.flat_map { |person| person.sectorable_items.to_a + person.categorizable_items.to_a }
+    [ records.size, records.filter_map(&:updated_at).max ]
   end
 
   remote_searchable_by :name

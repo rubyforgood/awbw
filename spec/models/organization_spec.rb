@@ -79,40 +79,6 @@ RSpec.describe Organization do
     end
   end
 
-  describe '#facilitator_status' do
-    let(:organization) { create(:organization) }
-    let(:current) do
-      create(:affiliation, organization: organization, title: "Facilitator", start_date: Date.new(2026, 1, 1))
-    end
-
-    it 'is :new when it is the only facilitator affiliation' do
-      expect(organization.facilitator_status(current)).to eq(:new)
-    end
-
-    it 'is :new when every other facilitator affiliation started on or after it' do
-      create(:affiliation, organization: organization, title: "Facilitator", start_date: Date.new(2026, 6, 1))
-      expect(organization.facilitator_status(current)).to eq(:new)
-    end
-
-    it 'is :ongoing when an earlier facilitator affiliation was still active when it started' do
-      create(:affiliation, organization: organization, title: "Facilitator",
-             start_date: Date.new(2024, 1, 1), end_date: nil)
-      expect(organization.facilitator_status(current)).to eq(:ongoing)
-    end
-
-    it 'is :reinstated when all earlier facilitator affiliations ended before it started' do
-      create(:affiliation, organization: organization, title: "Facilitator",
-             start_date: Date.new(2022, 1, 1), end_date: Date.new(2023, 1, 1))
-      expect(organization.facilitator_status(current)).to eq(:reinstated)
-    end
-
-    it 'ignores non-facilitator affiliations when classifying' do
-      create(:affiliation, organization: organization, title: "Volunteer",
-             start_date: Date.new(2020, 1, 1), end_date: nil)
-      expect(organization.facilitator_status(current)).to eq(:new)
-    end
-  end
-
   describe '#facilitator_status_on' do
     let(:organization) { create(:organization) }
     let(:reference_date) { Date.new(2026, 1, 1) }
@@ -133,10 +99,16 @@ RSpec.describe Organization do
       expect(organization.facilitator_status_on(reference_date)).to eq(:reinstated)
     end
 
-    it 'can exclude a specific affiliation from the classification' do
-      own = create(:affiliation, organization: organization, title: "Facilitator",
-             start_date: Date.new(2020, 1, 1), end_date: nil)
-      expect(organization.facilitator_status_on(reference_date, excluding_affiliation_id: own.id)).to eq(:new)
+    it 'ignores an affiliation starting ON the date — the one that event mints' do
+      create(:affiliation, organization: organization, title: "Facilitator",
+             start_date: reference_date, end_date: nil)
+      expect(organization.facilitator_status_on(reference_date)).to eq(:new)
+    end
+
+    it 'falls back to the start of the current year when given no date' do
+      create(:affiliation, organization: organization, title: "Facilitator",
+             start_date: Date.current.beginning_of_year - 1.day, end_date: nil)
+      expect(organization.facilitator_status_on).to eq(:ongoing)
     end
   end
 
@@ -355,6 +327,35 @@ RSpec.describe Organization do
       person.sectorable_items.create!(sector: other, is_primary: false)
 
       expect(organization.all_sectors).to contain_exactly(housing, legal)
+    end
+  end
+
+  # The index caches each row, and the roll-up cells aggregate across affiliated
+  # people — none of which touches the organizations row itself.
+  describe "#rollup_cache_version" do
+    let!(:sector) { create(:sector, :published, name: "Housing") }
+    let(:organization) { create(:organization) }
+    let(:person) { create(:person) }
+
+    # A fresh instance each time, the way a page render loads it — the roll-ups
+    # memoize their affiliated people, so #reload wouldn't re-read them.
+    def version = Organization.find(organization.id).rollup_cache_version
+
+    it "changes when an affiliated person is retagged" do
+      create(:affiliation, organization: organization, person: person)
+      before_version = version
+
+      person.sectorable_items.create!(sector: sector, is_primary: true)
+
+      expect(version).not_to eq(before_version)
+    end
+
+    it "changes when an affiliation is added" do
+      before_version = version
+
+      create(:affiliation, organization: organization, person: person)
+
+      expect(version).not_to eq(before_version)
     end
   end
 

@@ -8,7 +8,7 @@ class OrganizationsController < ApplicationController
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
       base_scope = authorized_scope(Organization.includes(
-        :organization_status, :sectors, :addresses, :affiliations,
+        :organization_status, :sectors, :sectorable_items, :addresses, :affiliations,
         { categorizable_items: { category: :category_type } },
         # Feeds the sector and age-group roll-ups per row — see Organization#affiliated_people.
         { people: Organization::PEOPLE_TAGGINGS },
@@ -213,7 +213,6 @@ class OrganizationsController < ApplicationController
   end
 
   def set_index_variables
-    @organization_statuses = OrganizationStatus.all
     @sector_options = Sector.published.order(:name).pluck(:name)
     @age_group_options = Category.joins(:category_type)
                                  .where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE })

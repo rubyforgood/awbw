@@ -293,9 +293,13 @@ class AttendeesBreakdowns
       .pluck(:organization_id, Arel.sql("event_registrations.registrant_id"))
   end
 
+  # Cross-event, so there is no event date to anchor on: each org reads as of the
+  # start of the current year (see FacilitatorProgramStatus), which is what the
+  # breakdown card's note and the index's own column say. Symbols here — these
+  # feed counts and drill-in buckets, not a badge.
   def program_status_by_organization
     @program_status_by_organization ||= organizations.to_h do |organization|
-      [ organization.id, organization.facilitator_status_on(Date.current) ]
+      [ organization.id, organization.facilitator_status_on ]
     end
   end
 

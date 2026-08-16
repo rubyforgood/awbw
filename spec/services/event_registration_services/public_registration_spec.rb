@@ -52,6 +52,17 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         .to contain_exactly("Facilitator")
     end
 
+    # The facilitator affiliation is dated to the training, not to the day the form
+    # was submitted — the whole New/Ongoing/Reinstate rule leans on that, since an
+    # affiliation starting ON the training isn't prior history (ADR-0001 D8).
+    it "dates the facilitator affiliation to the event's start date" do
+      person = register_with(position: nil)
+
+      facilitator = person.affiliations.find_by(organization: organization, title: "Facilitator")
+      expect(facilitator.start_date).to eq(event.start_date.to_date)
+      expect(organization.reload.facilitator_status_on(event.start_date.to_date)).to eq(:new)
+    end
+
     it "links the created affiliations to the agency address built from the form" do
       params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
         field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands",
