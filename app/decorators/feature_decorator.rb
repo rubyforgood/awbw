@@ -10,11 +10,11 @@ class FeatureDecorator < ApplicationDecorator
   end
 
   def area_icon
-    area_meta[:icon]
+    area_meta[:icon] || ApplicationHelper::INDEX_BUTTON_ICONS[area_meta[:domain]]
   end
 
   def area_color
-    area_meta[:color]
+    area_meta[:color] || DomainTheme.color_for(area_meta[:domain]).to_s
   end
 
   GITHUB_REPO = "rubyforgood/awbw".freeze
@@ -25,12 +25,16 @@ class FeatureDecorator < ApplicationDecorator
     "https://github.com/#{GITHUB_REPO}/pull/#{pr_number}"
   end
 
-  # The "Check out this feature" destination. Record-scoped pages are seeded with
-  # the sample id 1 (e.g. /events/1/registrants); when no such record exists we
-  # fall back to that resource's index (/events) so the link never 404s on a
-  # fresh or differently-keyed database.
+  # Sentinel action_path for ticket/callout features: resolves to a live ticket.
+  TICKET_PATH = "/registration/sample".freeze
+
+  # The "Check out this feature" destination. TICKET_PATH resolves to a real (or
+  # sample) ticket; a page seeded with the sample id 1 (e.g. /events/1/registrants)
+  # falls back to that resource's index when no such record exists, so the link
+  # never 404s on a fresh or differently-keyed database.
   def resolved_action_url
     path = action_path.to_s
+    return ticket_url if path == TICKET_PATH
     return action_path if path.blank?
 
     match = path.match(%r{\A/(?<resource>[a-z_]+)/1(?:/|\z)})
@@ -59,7 +63,7 @@ class FeatureDecorator < ApplicationDecorator
   end
 
   def area_badge
-    badge(area_icon, area_label, area_meta[:color])
+    badge(area_icon, area_label, area_color)
   end
 
   def status_badge
@@ -70,6 +74,14 @@ class FeatureDecorator < ApplicationDecorator
 
   DEFAULT_AREA = { key: "other", label: "More", icon: "fa-star", color: "gray" }.freeze
   DEFAULT_STATUS = { label: "Feature", icon: "fa-star", color: "gray" }.freeze
+
+  def ticket_url
+    registration = EventRegistration.where.not(slug: [ nil, "" ]).first
+    return h.registration_ticket_path(registration.slug) if registration
+
+    event = Event.first
+    event ? h.sample_ticket_event_path(event) : h.events_path
+  end
 
   def badge(icon, label, color)
     classes = h.badge_classes("bg-#{color}-100 text-#{color}-800 border-#{color}-200")

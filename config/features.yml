@@ -17,6 +17,8 @@
 #   summary:        One or two plain-language sentences (shown on the card).
 #   released_on:    Ship date (YYYY-MM-DD).
 #   action_path:    In-app path for the "Check out this feature" link (e.g. /events).
+#                   Use "/registration/sample" for ticket/callout features — it
+#                   resolves to a real registrant's ticket, else a sample ticket.
 #   pr_number:      GitHub PR number it shipped in (adds a "View the pull request" link).
 #   pro_tips:       Optional list of short, practical tips (0–2 is plenty).
 #   description:    Optional longer write-up (plain text or HTML). Admins usually
@@ -101,7 +103,7 @@
   area: registration
   display_status: public_facing
   released_on: 2026-08-11
-  action_path: "/events/1/registrants"
+  action_path: "/registration/sample"
   pr_number: 2173
   summary: >-
     Events can set a payment due date, and it shows on the registration ticket so
@@ -296,7 +298,7 @@
   area: registration
   display_status: public_facing
   released_on: 2026-08-09
-  action_path: "/events/1/registrants"
+  action_path: "/registration/sample"
   pr_number: 2139
   summary: >-
     Registrants can indicate that someone else will pay for them, and that answer
@@ -357,7 +359,7 @@
   area: registration
   display_status: admin_facing
   released_on: 2026-08-04
-  action_path: "/events/1/registrants"
+  action_path: "/registration/sample"
   pr_number: 2081
   summary: >-
     A clean, one-page printable certificate of completion for a training registrant.
@@ -428,7 +430,7 @@
   area: scholarships
   display_status: public_facing
   released_on: 2026-07-14
-  action_path: "/events"
+  action_path: "/registration/sample"
   pr_number: 1794
   summary: >-
     Recipients accept a scholarship agreement before the award is shown as granted,
@@ -438,7 +440,7 @@
   area: registration
   display_status: public_facing
   released_on: 2026-07-14
-  action_path: "/events"
+  action_path: "/registration/sample"
   pr_number: 1979
   summary: >-
     Callout detail pages render expandable sections from the admin's content, so
@@ -506,7 +508,7 @@
   area: registration
   display_status: public_facing
   released_on: 2026-06-29
-  action_path: "/events"
+  action_path: "/registration/sample"
   pr_number: 1916
   summary: >-
     Registrants can request continuing-education hours against a professional
@@ -547,7 +549,7 @@
   area: registration
   display_status: public_facing
   released_on: 2026-06-22
-  action_path: "/events"
+  action_path: "/registration/sample"
   pr_number: 1751
   summary: >-
     The registration ticket got a cleaner look with a thumbnail header, compact
@@ -557,7 +559,7 @@
   area: events
   display_status: public_facing
   released_on: 2026-06-22
-  action_path: "/events"
+  action_path: "/registration/sample"
   summary: >-
     Videoconference links, passcodes, and room details appear on the ticket only
     around the event time and for paid registrants.
@@ -634,7 +636,7 @@
   area: payments
   display_status: public_facing
   released_on: 2026-06-17
-  action_path: "/events"
+  action_path: "/registration/sample"
   pr_number: 1709
   summary: >-
     A registration generates an invoice reflecting the balance due, downloadable as
@@ -653,7 +655,7 @@
   area: payments
   display_status: public_facing
   released_on: 2026-06-17
-  action_path: "/events"
+  action_path: "/registration/sample"
   pr_number: 1707
   summary: >-
     Registrants can download AWBW's W-9 from the payment callout on their ticket.

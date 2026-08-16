@@ -12,10 +12,11 @@ RSpec.describe FeatureDecorator do
           released_on: Date.new(2026, 8, 9))
   end
 
-  it "labels the area and audience" do
+  it "labels the area and audience, drawing colour/icon from the shared domain maps" do
     expect(decorated.area_label).to eq("Registration & tickets")
     expect(decorated.status_label).to eq("Admin-facing")
-    expect(decorated.area_color).to eq("amber")
+    expect(decorated.area_color).to eq("teal") # DomainTheme.color_for(:event_registrations)
+    expect(decorated.area_icon).to eq("fa-ticket") # INDEX_BUTTON_ICONS[:event_registrations]
   end
 
   describe "#resolved_action_url" do
@@ -38,6 +39,28 @@ RSpec.describe FeatureDecorator do
 
     it "leaves a blank action_path nil" do
       expect(build(:feature, action_path: nil).decorate.resolved_action_url).to be_nil
+    end
+  end
+
+  describe "#resolved_action_url with the ticket sentinel" do
+    subject(:url) { build(:feature, action_path: FeatureDecorator::TICKET_PATH).decorate.resolved_action_url }
+
+    it "links to a real registrant's ticket when one exists" do
+      registration = double(slug: "abc123")
+      allow(EventRegistration).to receive(:where).and_return(double(not: double(first: registration)))
+      expect(url).to eq("/registration/abc123")
+    end
+
+    it "falls back to a sample ticket when there are no registrations" do
+      allow(EventRegistration).to receive(:where).and_return(double(not: double(first: nil)))
+      allow(Event).to receive(:first).and_return(double(to_param: "5"))
+      expect(url).to eq("/events/5/sample_ticket")
+    end
+
+    it "falls back to the events index when there are no events" do
+      allow(EventRegistration).to receive(:where).and_return(double(not: double(first: nil)))
+      allow(Event).to receive(:first).and_return(nil)
+      expect(url).to eq("/events")
     end
   end
 

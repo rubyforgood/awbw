@@ -2,18 +2,19 @@ class Feature < ApplicationRecord
   # `rhino_`-prefixed per the app's ActionText/Rhino convention (see rhino_editor helper).
   has_rich_text :rhino_description
 
-  # `color` must be a Tailwind hue safelisted in application.tailwind.css or the
-  # tinted classes won't render; `icon` is a Font Awesome name.
+  # Each area draws its colour + icon from a shared `domain` key (DomainTheme +
+  # ApplicationHelper::INDEX_BUTTON_ICONS, resolved by FeatureDecorator). `content`
+  # and `reporting` have no matching domain, so they carry a manual colour + icon.
   AREAS = [
-    { key: "events",         label: "Events & trainings",       icon: "fa-calendar-days",      color: "teal" },
-    { key: "registration",   label: "Registration & tickets",   icon: "fa-ticket",             color: "amber" },
-    { key: "scholarships",   label: "Scholarships & grants",    icon: "fa-graduation-cap",     color: "fuchsia" },
-    { key: "payments",       label: "Payments & billing",       icon: "fa-money-check-dollar", color: "green" },
-    { key: "people",         label: "People & organizations",   icon: "fa-user-group",         color: "cyan" },
-    { key: "content",        label: "Workshops & resources",    icon: "fa-palette",            color: "indigo" },
-    { key: "stories",        label: "Stories & community",      icon: "fa-book-open",          color: "orange" },
-    { key: "communications", label: "Communications",           icon: "fa-bell",               color: "sky" },
-    { key: "reporting",      label: "Reporting & admin",        icon: "fa-chart-line",         color: "slate" }
+    { key: "events",         label: "Events & trainings",     domain: :events },
+    { key: "registration",   label: "Registration & tickets", domain: :event_registrations },
+    { key: "scholarships",   label: "Scholarships & grants",   domain: :scholarships },
+    { key: "payments",       label: "Payments & billing",     domain: :payments },
+    { key: "people",         label: "People & organizations", domain: :people },
+    { key: "content",        label: "Workshops & resources",  color: "indigo", icon: "fa-palette" },
+    { key: "stories",        label: "Stories & community",    domain: :stories },
+    { key: "communications", label: "Communications",         domain: :notifications },
+    { key: "reporting",      label: "Reporting & admin",      color: "slate", icon: "fa-chart-line" }
   ].freeze
 
   AREAS_BY_KEY = AREAS.index_by { |area| area[:key] }.freeze
