@@ -19,6 +19,16 @@
   --color-transparent: transparent;
   --font-telefon: "Telefon Bold", sans-serif;
 
+  /* Social network brand colors, used for the hover fill on share/follow
+     buttons. Instagram is a three-stop gradient rather than a single fill. */
+  --color-linkedin: #0a66c2;
+  --color-facebook: #1877f2;
+  --color-twitter: #1da1f2;
+  --color-youtube: #ff0000;
+  --color-instagram-start: #f58529;
+  --color-instagram-mid: #dd2a7b;
+  --color-instagram-end: #8134af;
+
   /* Sub-`text-xs` sizes for dense UI (badges, pills, stat rows). A small named
      scale in even 2px steps below Tailwind's text-xs (12px), replacing all the
      scattered arbitrary font-size values so tiny type stays consistent and is

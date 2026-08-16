@@ -28,7 +28,7 @@
       </span>
       <span class="tabular-nums <%= value_class %> shrink-0"><%= dollars_from_cents(cents) %></span>
     </summary>
-    <ul class="mt-1 mb-1 ml-5 max-h-40 space-y-0.5 overflow-y-auto text-xs text-gray-700">
+    <ul class="my-1 ml-5 max-h-40 space-y-0.5 overflow-y-auto text-xs text-gray-700">
       <% contributors.each do |contributor| %>
         <li>
           <%= link_to registrants_event_path(event, registrant_ids: contributor.person.id),

@@ -446,7 +446,7 @@
     </div>
 
     <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-      <div class="flex flex-col gap-4 pr-3 pb-3 pl-3 md:flex-row">
+      <div class="flex flex-col gap-4 px-3 pb-3 md:flex-row">
         <%= f.input :linked_in_url, as: :text, input_html: { rows: 1 } %>
         <%= f.input :facebook_url, as: :text, input_html: { rows: 1 } %>
         <%= f.input :instagram_url, as: :text, input_html: { rows: 1 } %>
@@ -462,7 +462,7 @@
     </div>
 
     <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-      <div class="pr-3 pb-3 pl-3">
+      <div class="px-3 pb-3">
         <div class="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <%= f.input :profile_is_searchable,
                     hint: ("Findable on " + (link_to "people index",

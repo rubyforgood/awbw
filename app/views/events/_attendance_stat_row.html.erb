@@ -26,7 +26,7 @@
       <i class="fa-solid fa-chevron-down text-2xs text-gray-300 shrink-0 transition-transform group-open/row:rotate-180"></i>
     </summary>
     <% if registrants.any? %>
-      <ul class="mt-1 mb-1 ml-5 space-y-0.5 text-xs text-gray-700 max-h-40 overflow-y-auto">
+      <ul class="my-1 ml-5 space-y-0.5 text-xs text-gray-700 max-h-40 overflow-y-auto">
         <% registrants.each do |registrant| %>
           <li>
             <%= link_to registrants_event_path(@event, registrant_ids: registrant.id),
@@ -39,7 +39,7 @@
         <% end %>
       </ul>
     <% else %>
-      <p class="mt-1 mb-1 ml-5 text-xs text-gray-400">None</p>
+      <p class="my-1 ml-5 text-xs text-gray-400">None</p>
     <% end %>
   </details>
   <%= link_to filter_path, class: "shrink-0 flex h-7 items-center text-gray-300 hover:text-gray-500", title: "View #{label.downcase} registrants" do %>

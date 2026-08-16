@@ -1,18 +1,18 @@
 <% content_for(:page_bg_class, "public") %>
 <%= render "shared/public_welcome_banner" unless @from_story_share %>
 
-<div class="px-4 sm:px-6 lg:px-8 py-8">
-<div class="w-full max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6" id="contact-us-container">
+<div class="px-4 py-8 sm:px-6 lg:px-8">
+<div class="mx-auto w-full max-w-7xl rounded-xl border border-gray-200 bg-white p-6 shadow" id="contact-us-container">
       <!-- Header -->
       <header class="space-y-4">
         <h2 class="text-3xl font-bold tracking-tight text-gray-900">
           Contact us
         </h2>
-        <p class="text-lg text-gray-600 leading-relaxed max-w-2xl">
+        <p class="max-w-2xl text-lg leading-relaxed text-gray-600">
           We welcome you to contact us with any questions. We are here to help.
         </p>
         <% unless user_signed_in? %>
-          <div class="text-sm text-amber-700 bg-amber-50 border border-amber-300 rounded-lg p-4">
+          <div class="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-700">
             <strong>Please note:</strong> We are a training organization. If you are a survivor and in need of support,
             call <strong>211</strong>, which connects people with social service organizations.
           </div>
@@ -24,7 +24,7 @@
         <div class="space-y-4">
           <div class="grid grid-cols-3 gap-x-8">
             <div>
-              <div class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-1">
+              <div class="mb-1 text-sm font-semibold tracking-wide text-gray-500 uppercase">
                 Email
               </div>
               <%= mail_to ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
@@ -32,7 +32,7 @@
                           class: "text-blue-600 hover:text-blue-800 font-medium" %>
             </div>
             <div>
-              <div class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-1">
+              <div class="mb-1 text-sm font-semibold tracking-wide text-gray-500 uppercase">
                 Phone
               </div>
               <%= link_to "310-396-0317",
@@ -40,33 +40,33 @@
                           class: "text-blue-600 hover:text-blue-800 font-medium" %>
             </div>
             <div>
-              <div class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-2">
+              <div class="mb-2 text-sm font-semibold tracking-wide text-gray-500 uppercase">
                 Social Media
               </div>
               <div class="flex flex-wrap items-center gap-3">
                 <!-- LinkedIn -->
                 <%= link_to "https://www.linkedin.com/company/a-window-between-worlds",
                             target: "_blank", rel: "noopener noreferrer",
-                            class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-[#0A66C2] transition" do %>
-                  <i class="fab fa-linkedin-in text-gray-600 group-hover:text-white text-lg"></i>
+                            class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-linkedin transition" do %>
+                  <i class="fab fa-linkedin-in text-lg text-gray-600 group-hover:text-white"></i>
                 <% end %>
                 <!-- Instagram -->
                 <%= link_to "https://www.instagram.com/awbworg",
                             target: "_blank", rel: "noopener noreferrer",
-                            class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-gradient-to-tr hover:from-[#F58529] hover:via-[#DD2A7B] hover:to-[#8134AF] transition" do %>
-                  <i class="fab fa-instagram text-gray-600 group-hover:text-white text-lg"></i>
+                            class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-gradient-to-tr hover:from-instagram-start hover:via-instagram-mid hover:to-instagram-end transition" do %>
+                  <i class="fab fa-instagram text-lg text-gray-600 group-hover:text-white"></i>
                 <% end %>
                 <!-- Facebook -->
                 <%= link_to "https://www.facebook.com/awbworg",
                             target: "_blank", rel: "noopener noreferrer",
-                            class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-[#1877F2] transition" do %>
-                  <i class="fab fa-facebook-f text-gray-600 group-hover:text-white text-lg"></i>
+                            class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-facebook transition" do %>
+                  <i class="fab fa-facebook-f text-lg text-gray-600 group-hover:text-white"></i>
                 <% end %>
                 <!-- YouTube -->
                 <%= link_to "https://www.youtube.com/@awbworg",
                             target: "_blank", rel: "noopener noreferrer",
-                            class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-[#FF0000] transition" do %>
-                  <i class="fa-brands fa-youtube text-gray-600 group-hover:text-white text-lg"></i>
+                            class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-youtube transition" do %>
+                  <i class="fa-brands fa-youtube text-lg text-gray-600 group-hover:text-white"></i>
                 <% end %>
               </div>
             </div>
@@ -75,21 +75,21 @@
       </div>
       <% end %>
       <!-- Divider -->
-      <div class="mt-12 pt-12 border-t border-gray-200">
+      <div class="mt-12 border-t border-gray-200 pt-12">
         <!-- Contact Form -->
         <div id="contact-form" class="space-y-8">
           <% if @form_submitted %>
             <!-- Thank You Message -->
-            <div id="thank-you" class="text-center py-12 space-y-4">
-              <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
-                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div id="thank-you" class="space-y-4 py-12 text-center">
+              <div class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+                <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
               </div>
               <h3 class="text-2xl font-semibold text-gray-900">
                 Thank you for contacting us!
               </h3>
-              <p class="text-gray-600 max-w-md mx-auto">
+              <p class="mx-auto max-w-md text-gray-600">
                 Your message has been received and our team will respond as soon as possible.
                 <% if current_user && @user %>
                   We'll reply by email to <strong><%= @user.email %></strong>.
@@ -113,7 +113,7 @@
               </p>
             </div>
             <% if current_user && @user %>
-              <div class="text-sm text-blue-700 bg-blue-50 border border-blue-300 rounded-lg p-4">
+              <div class="rounded-lg border border-blue-300 bg-blue-50 p-4 text-sm text-blue-700">
                 Hello, <%= @user.first_name_or_email %>! We're glad to hear from you. We'll reply by email to <%= @user.email %>.
               </div>
             <% end %>
@@ -124,28 +124,28 @@
               <% end %>
               <% unless current_user %>
                 <!-- Name Row -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <label class="mb-1 block text-sm font-medium text-gray-700">
                       First Name *
                     </label>
                     <input type="text"
                            name="contact_us[first_name]"
                            required
                            data-error-message="First name is required"
-                           class="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
-                    <p class="field-error hidden mt-1 text-xs text-red-600"></p>
+                           class="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none">
+                    <p class="field-error mt-1 hidden text-xs text-red-600"></p>
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <label class="mb-1 block text-sm font-medium text-gray-700">
                       Last Name
                     </label>
                     <input type="text"
                            name="contact_us[last_name]"
-                           class="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
+                           class="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none">
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <label class="mb-1 block text-sm font-medium text-gray-700">
                       Email *
                     </label>
                     <input type="email"
@@ -153,19 +153,19 @@
                            required
                            pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
                            data-error-message="Please enter a valid email address"
-                           class="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
-                    <p class="field-error hidden mt-1 text-xs text-red-600"></p>
+                           class="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none">
+                    <p class="field-error mt-1 hidden text-xs text-red-600"></p>
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <label class="mb-1 block text-sm font-medium text-gray-700">
                       Agency / Organization *
                     </label>
                     <input type="text"
                            name="contact_us[agency]"
                            required
                            data-error-message="Agency / Organization is required"
-                           class="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
-                    <p class="field-error hidden mt-1 text-xs text-red-600"></p>
+                           class="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none">
+                    <p class="field-error mt-1 hidden text-xs text-red-600"></p>
                   </div>
                 </div>
               <% else %>
@@ -175,7 +175,7 @@
                 <input type="hidden" name="contact_us[agency]" value="<%= @user.person&.primary_organization&.name || '' %>">
               <% end %>
               <!-- Honeypot -->
-              <div class="absolute opacity-0 top-0 left-0 h-0 w-0 -z-10" aria-hidden="true">
+              <div class="absolute top-0 left-0 -z-10 h-0 w-0 opacity-0" aria-hidden="true">
                 <label for="website_url">Website</label>
                 <input type="text" name="contact_us[website_url]" id="website_url" tabindex="-1" autocomplete="off">
               </div>
@@ -183,23 +183,23 @@
               <% if @from_story_share %>
                 <!-- Preset picker posts straight through as the subject -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <label class="mb-1 block text-sm font-medium text-gray-700">
                     Select from the choices below so we can best serve you *
                   </label>
                   <select name="contact_us[subject]"
                           required
                           data-error-message="Please choose an option"
-                          class="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
+                          class="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none">
                     <option value="" disabled selected>Choose an option…</option>
                     <% ContactUsController::PORTAL_SUBJECT_OPTIONS.each do |option| %>
                       <option value="<%= option %>"><%= option %></option>
                     <% end %>
                   </select>
-                  <p class="field-error hidden mt-1 text-xs text-red-600"></p>
+                  <p class="field-error mt-1 hidden text-xs text-red-600"></p>
                 </div>
               <% else %>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <label class="mb-1 block text-sm font-medium text-gray-700">
                     Subject Line *
                   </label>
                   <input type="text"
@@ -207,21 +207,21 @@
                          required
                          maxlength="100"
                          data-error-message="Subject line is required"
-                         class="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
-                  <p class="field-error hidden mt-1 text-xs text-red-600"></p>
+                         class="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none">
+                  <p class="field-error mt-1 hidden text-xs text-red-600"></p>
                 </div>
               <% end %>
               <!-- Message -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
+                <label class="mb-1 block text-sm font-medium text-gray-700">
                   Your Message *
                 </label>
                 <textarea name="contact_us[message]"
                           required
                           rows="6"
                           data-error-message="Message is required"
-                          class="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition resize-none"></textarea>
-                <p class="field-error hidden mt-1 text-xs text-red-600"></p>
+                          class="w-full resize-none rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"></textarea>
+                <p class="field-error mt-1 hidden text-xs text-red-600"></p>
               </div>
               <!-- Submit -->
               <div class="flex justify-end">
@@ -283,7 +283,7 @@
       </div>
       <% if @from_story_share %>
         <!-- Contact details below the form (portal variant) -->
-        <div class="mt-12 pt-12 border-t border-gray-200 text-gray-800">
+        <div class="mt-12 border-t border-gray-200 pt-12 text-gray-800">
           <%= render "portal_contact_info" %>
         </div>
       <% end %>
