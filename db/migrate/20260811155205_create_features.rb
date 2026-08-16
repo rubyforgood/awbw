@@ -7,6 +7,8 @@ class CreateFeatures < ActiveRecord::Migration[8.1]
       t.string :summary, null: false
       t.text :pro_tips
       t.string :external_url
+      t.string :action_path
+      t.integer :pr_number
       t.date :released_on, null: false
       t.boolean :published, null: false, default: true
 
