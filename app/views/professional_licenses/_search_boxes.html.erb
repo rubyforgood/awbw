@@ -13,8 +13,8 @@
       collection_unselected_class: default_btn,
       collection_selected_class: selected_btn
     }, autocomplete: "off" do %>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div>
+    <div class="flex flex-wrap md:flex-nowrap items-end gap-4">
+      <div class="flex-1 min-w-[200px]">
         <label for="person_query" class="<%= label_class %>">Registrant</label>
         <%= text_field_tag "person_query", params[:person_query],
           class: field_class,
@@ -22,7 +22,7 @@
           autocomplete: "off" %>
       </div>
 
-      <div>
+      <div class="min-w-[150px]">
         <label for="kind" class="<%= label_class %>">Type</label>
         <%= select_tag "kind",
           options_for_select(kinds, params[:kind]),
@@ -30,17 +30,16 @@
           class: field_class %>
       </div>
 
-      <div>
+      <div class="min-w-[150px]">
         <label for="expired" class="<%= label_class %>">Active</label>
         <%= select_tag "expired",
           options_for_select({ "All" => "", "Active" => "no", "Expired" => "yes" }, params[:expired]),
           class: field_class %>
       </div>
-    </div>
 
-    <div class="md:col-span-3 flex gap-2 justify-end">
-      <%= submit_tag "Search", class: "btn btn-primary" %>
-      <%= link_to "Clear filters", professional_licenses_path, class: "btn btn-secondary", data: { action: "collection#clearAndSubmit" } %>
+      <div class="ml-auto">
+        <%= link_to "Clear filters", professional_licenses_path, class: "btn btn-utility", data: { action: "collection#clearAndSubmit" } %>
+      </div>
     </div>
   <% end %>
 </div>
