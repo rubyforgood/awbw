@@ -52,7 +52,7 @@ RSpec.describe "AuthorCreditDivergences", type: :request do
             params: { id: person.id, person: { display_name_preference: "full_name", anonymous_contributions: "1" } }
 
       expect(person.reload.anonymous_contributions).to be(true)
-      expect(story.reload.author_credit).to eq("Anonymous")
+      expect(story.reload.author_credit).to eq("AWBW Facilitator")
     end
 
     it "updates the results in place with a Turbo Stream instead of a full-page redirect" do
@@ -186,13 +186,13 @@ RSpec.describe "AuthorCreditDivergences", type: :request do
       expect(story.author_credit).to eq(person.full_name)
     end
 
-    it "makes one item anonymous without touching the person's others" do
+    it "suppresses one item's credit without touching the person's others" do
       other = create(:story, created_by: author_user, author: person)
 
       patch update_item_author_credit_divergences_path,
             params: { record_type: "Story", record_id: story.id, author_credit_preference: "anonymous" }
 
-      expect(story.reload.author_credit).to eq("Anonymous")
+      expect(story.reload.author_credit).to eq("AWBW Facilitator")
       expect(other.reload.author_credit).to eq(person.full_name)
     end
 

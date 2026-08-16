@@ -52,11 +52,11 @@ module AuthorCreditable
 
   def author_credit
     # Outranks every source, including a legacy name no profile can suppress.
-    return "Anonymous" if author_credit_preference == ANONYMOUS
+    return missing_author_label if author_credit_preference == ANONYMOUS
     person = primary_author_person
     return credit_for(person) if person
     return legacy_author_name_text if legacy_author_name_text.present?
-    creator = created_by&.person
+    creator = self.class.credits_creator? ? created_by&.person : nil
     creator ? credit_for(creator) : missing_author_label
   end
 
@@ -71,12 +71,13 @@ module AuthorCreditable
     person.anonymous_contributions? || author_credit_preference == ANONYMOUS
   end
 
-  # A legacy name follows nobody's profile, so those have no governing person.
+  # A legacy name follows nobody's profile, and neither does a record that never
+  # named an author, so neither has a governing person.
   def credit_governing_person
     person = primary_author_person
     return person if person
     return nil if legacy_author_name_text.present?
-    created_by&.person
+    self.class.credits_creator? ? created_by&.person : nil
   end
 
   # Snapshot no longer agrees with the governing profile.
@@ -103,11 +104,18 @@ module AuthorCreditable
   end
 
   private def credit_for(person)
-    return "Anonymous" if credit_anonymous?(person)
+    return missing_author_label if credit_anonymous?(person)
     person.name.presence || missing_author_label
   end
 
   class_methods do
+    # Whoever entered a record didn't claim it, so a model that can name an author
+    # credits only that author. The idea models have no author_id at all, so their
+    # creator is the only credit they can carry.
+    def credits_creator?
+      !column_names.include?("author_id")
+    end
+
     # Fully-qualified legacy name columns, e.g. "resources.legacy_author_name".
     def legacy_author_name_columns
       []
@@ -136,34 +144,29 @@ module AuthorCreditable
 
     private
 
-    # Person SQL aliases in credit precedence order.
+    # The one person a credit can name — author XOR creator, never both, so search
+    # and sort can't reach a person the credit never displays.
     def credited_person_aliases
-      aliases = []
-      aliases << "credited_author" if column_names.include?("author_id")
-      aliases << "credited_creator"
-      aliases
+      credits_creator? ? [ "credited_creator" ] : [ "credited_author" ]
     end
 
     def credited_person_join_sql
-      sql = []
-      if column_names.include?("author_id")
-        sql << "LEFT OUTER JOIN people credited_author ON credited_author.id = #{table_name}.author_id"
-      end
-      sql << "LEFT OUTER JOIN users credited_creator_user ON credited_creator_user.id = #{table_name}.created_by_id"
-      sql << "LEFT OUTER JOIN people credited_creator ON credited_creator.id = credited_creator_user.person_id"
-      sql
+      return [
+        "LEFT OUTER JOIN users credited_creator_user ON credited_creator_user.id = #{table_name}.created_by_id",
+        "LEFT OUTER JOIN people credited_creator ON credited_creator.id = credited_creator_user.person_id"
+      ] if credits_creator?
+
+      [ "LEFT OUTER JOIN people credited_author ON credited_author.id = #{table_name}.author_id" ]
     end
 
-    # Arel keeps interpolated SQL out of the ORDER BY. Ordered author → legacy →
-    # creator to match `author_credit`, so a row sorts under the name it displays.
+    # Arel keeps interpolated SQL out of the ORDER BY. Same precedence as
+    # `author_credit`, so a row sorts under the name it displays.
     def coalesced_author_arel(field, ascending)
-      parts = []
-      parts << Arel::Table.new("credited_author")[field] if column_names.include?("author_id")
+      parts = credited_person_aliases.map { |sql_alias| Arel::Table.new(sql_alias)[field] }
       parts += legacy_author_name_columns.map do |col|
         table, column = col.split(".")
         Arel::Table.new(table)[column]
       end
-      parts << Arel::Table.new("credited_creator")[field]
       node = Arel::Nodes::NamedFunction.new("COALESCE", parts)
       ascending ? node.asc : node.desc
     end
@@ -184,15 +187,7 @@ module AuthorCreditable
         "(#{preference} = '#{value}' AND (#{expressions.map { |e| name_like(e) }.join(' OR ')}))"
       end
 
-      # A legacy name outranks the creator in the credit, so the creator's name isn't
-      # displayed on those rows and mustn't find them either.
-      gate = sql_alias == "credited_creator" ? " AND #{no_legacy_name_sql}" : ""
-      "(#{sql_alias}.anonymous_contributions = FALSE AND #{not_anonymous_sql}#{gate} AND (#{by_preference.join(' OR ')}))"
-    end
-
-    def no_legacy_name_sql
-      return "1 = 1" if legacy_author_name_columns.empty?
-      legacy_author_name_columns.map { |col| "(#{col} IS NULL OR #{col} = '')" }.join(" AND ")
+      "(#{sql_alias}.anonymous_contributions = FALSE AND #{not_anonymous_sql} AND (#{by_preference.join(' OR ')}))"
     end
 
     # No person behind a legacy name, so only the record's own anonymity applies.

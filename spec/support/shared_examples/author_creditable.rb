@@ -1,8 +1,20 @@
 RSpec.shared_examples "author_creditable" do |factory:|
+  # A model with an author_id must name its author — the credit never falls back to
+  # whoever entered the record. The idea models have no author_id, so their creator
+  # is the only credit path they have.
+  def credits_creator?
+    !described_class.column_names.include?("author_id")
+  end
+
+  def credited_record(factory, user, person, **attrs)
+    attrs[:author] = person unless credits_creator?
+    create(factory, created_by: user, **attrs)
+  end
+
   describe "#author_credit" do
     let(:author_user) { create(:user, :with_person) }
     let(:person) { author_user.person }
-    let(:record) { create(factory, created_by: author_user) }
+    let(:record) { credited_record(factory, author_user, person) }
 
     context "when the profile formats the name" do
       it "returns the full name for full_name" do
@@ -34,9 +46,11 @@ RSpec.shared_examples "author_creditable" do |factory:|
     context "when the profile marks contributions anonymous" do
       before { person.update!(anonymous_contributions: true) }
 
-      it "returns Anonymous regardless of the name format" do
+      # Behind a login, so a suppressed credit names the org rather than saying
+      # "Anonymous", which would read as being about the reader's access.
+      it "returns the generic label regardless of the name format" do
         person.update!(display_name_preference: "full_name")
-        expect(record.author_credit).to eq("Anonymous")
+        expect(record.author_credit).to eq("AWBW Facilitator")
       end
 
       it "does not link the credit to a profile" do
@@ -47,9 +61,9 @@ RSpec.shared_examples "author_creditable" do |factory:|
     context "when the record itself was submitted anonymously" do
       before { record.update!(author_credit_preference: "anonymous") }
 
-      it "stays anonymous even though the profile says otherwise" do
+      it "stays suppressed even though the profile says otherwise" do
         person.update!(display_name_preference: "full_name", anonymous_contributions: false)
-        expect(record.author_credit).to eq("Anonymous")
+        expect(record.author_credit).to eq("AWBW Facilitator")
       end
 
       it "does not link the credit to a profile" do
@@ -77,8 +91,8 @@ RSpec.shared_examples "author_creditable" do |factory:|
       # The portal is behind a login, so an unattributed credit names the org's
       # facilitators rather than hiding behind "Anonymous".
       it "falls back to AWBW Facilitator" do
-        user_without_person = create(:user, person: nil)
-        record.update!(created_by: user_without_person)
+        record.update!(created_by: create(:user, person: nil))
+        record.update!(author: nil) unless credits_creator?
         expect(record.missing_author_label).to eq("AWBW Facilitator")
         expect(record.author_credit).to eq("AWBW Facilitator")
       end
@@ -91,30 +105,30 @@ RSpec.shared_examples "author_creditable" do |factory:|
 
     it "records the profile's preference on create" do
       person.update!(display_name_preference: "first_name_only")
-      record = create(factory, created_by: author_user, author_credit_preference: nil)
+      record = credited_record(factory, author_user, person, author_credit_preference: nil)
       expect(record.reload.author_credit_preference).to eq("first_name_only")
     end
 
     it "records anonymous when the profile suppresses credits" do
       person.update!(anonymous_contributions: true)
-      record = create(factory, created_by: author_user, author_credit_preference: nil)
+      record = credited_record(factory, author_user, person, author_credit_preference: nil)
       expect(record.reload.author_credit_preference).to eq("anonymous")
     end
 
     it "does not overwrite a preference carried forward from an idea" do
-      record = create(factory, created_by: author_user, author_credit_preference: "last_name_only")
+      record = credited_record(factory, author_user, person, author_credit_preference: "last_name_only")
       expect(record.reload.author_credit_preference).to eq("last_name_only")
     end
 
     it "normalizes a blank preference to nil so the record just follows the profile" do
-      record = create(factory, created_by: author_user, author_credit_preference: "full_name")
+      record = credited_record(factory, author_user, person, author_credit_preference: "full_name")
       record.update!(author_credit_preference: "")
       expect(record.reload.author_credit_preference).to be_nil
     end
 
     it "is left alone when the profile later changes, and reports the divergence" do
       person.update!(display_name_preference: "first_name_only")
-      record = create(factory, created_by: author_user, author_credit_preference: nil)
+      record = credited_record(factory, author_user, person, author_credit_preference: nil)
 
       person.update!(display_name_preference: "full_name")
 
@@ -125,7 +139,7 @@ RSpec.shared_examples "author_creditable" do |factory:|
 
     it "reports no divergence when the snapshot matches the profile" do
       person.update!(display_name_preference: "full_name")
-      record = create(factory, created_by: author_user, author_credit_preference: nil)
+      record = credited_record(factory, author_user, person, author_credit_preference: nil)
       expect(record.author_credit_diverged?).to be(false)
     end
   end
@@ -154,11 +168,11 @@ RSpec.shared_examples "author_creditable" do |factory:|
   describe ".by_credited_person_name" do
     let(:author_user) { create(:user, :with_person) }
     let(:person) { author_user.person }
-    let!(:record) { create(factory, created_by: author_user) }
+    let!(:record) { credited_record(factory, author_user, person) }
 
     before { person.update!(first_name: "Zephyrine", last_name: "Quixotel") }
 
-    it "matches the creating user's person by name" do
+    it "matches the credited person by name" do
       expect(described_class.by_credited_person_name("Zephyrine")).to include(record)
       expect(described_class.by_credited_person_name("Quixotel")).to include(record)
     end

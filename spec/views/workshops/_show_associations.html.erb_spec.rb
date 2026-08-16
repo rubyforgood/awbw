@@ -30,11 +30,11 @@ RSpec.describe "workshops/_show_associations", type: :view do
       expect(rendered).not_to include("Rosalind Franklin")
     end
 
-    it "renders Anonymous when the author's profile suppresses credits" do
+    it "renders the generic credit when the author's profile suppresses credits" do
       author.update!(anonymous_contributions: true)
       render partial: "workshops/show_associations", locals: { workshop: workshop.decorate }
 
-      expect(rendered).to include("Anonymous")
+      expect(rendered).to include("AWBW Facilitator")
       expect(rendered).not_to include("Rosalind")
     end
   end

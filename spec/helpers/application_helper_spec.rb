@@ -23,12 +23,12 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.credited_author_link(workshop)).to eq("Ada Lovelace")
     end
 
-    it "never links an anonymous credit, even to a searchable person" do
+    it "never links a suppressed credit, even to a searchable person" do
       allow(person).to receive(:profile_is_searchable).and_return(true)
       workshop = create(:workshop, author_credit_preference: "anonymous")
       allow(workshop).to receive(:author).and_return(person)
 
-      expect(helper.credited_author_link(workshop)).to eq("Anonymous")
+      expect(helper.credited_author_link(workshop)).to eq("AWBW Facilitator")
     end
 
     it "renders a legacy free-text author as plain text with no link" do
@@ -38,7 +38,7 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.credited_author_link(workshop)).to eq("Jane Legacy")
     end
 
-    it "shows a creator-fallback credit as plain text, never linking the creator's profile" do
+    it "credits the org, not the creator, when no author is named" do
       creator_person = create(:person, first_name: "Cara", last_name: "Creator")
       allow(creator_person).to receive(:profile_is_searchable).and_return(true)
       creator = create(:user)
@@ -48,7 +48,7 @@ RSpec.describe ApplicationHelper, type: :helper do
       allow(workshop).to receive(:created_by).and_return(creator)
 
       result = helper.credited_author_link(workshop)
-      expect(result).to eq("Cara Creator")
+      expect(result).to eq("AWBW Facilitator")
       expect(result).not_to include("<a")
     end
   end

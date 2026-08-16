@@ -421,8 +421,9 @@ RSpec.describe WorkshopSearchService, type: :service do
     context "filtering by author_name" do
       let!(:author_user) { create(:user, :with_person) }
       let!(:author_person) { author_user.person }
-      let!(:workshop_by_user) do
-        create(:workshop, :published, title: "User Workshop", created_by: author_user)
+      # Names its author explicitly — entering a record no longer credits the enterer.
+      let!(:workshop_by_person) do
+        create(:workshop, :published, title: "User Workshop", created_by: author_user, author: author_person)
       end
       let!(:workshop_with_full_name) do
         create(:workshop, :published, title: "Full Name Workshop", full_name: "#{author_person.first_name} #{author_person.last_name}")
@@ -433,13 +434,13 @@ RSpec.describe WorkshopSearchService, type: :service do
 
       it "finds workshops by person first_name" do
         service = WorkshopSearchService.new({ author_name: author_person.first_name }, user: user).call
-        expect(service.workshops).to include(workshop_by_user)
+        expect(service.workshops).to include(workshop_by_person)
         expect(service.workshops).not_to include(workshop_no_match)
       end
 
       it "finds workshops by person last_name" do
         service = WorkshopSearchService.new({ author_name: author_person.last_name }, user: user).call
-        expect(service.workshops).to include(workshop_by_user)
+        expect(service.workshops).to include(workshop_by_person)
         expect(service.workshops).not_to include(workshop_no_match)
       end
 
@@ -450,17 +451,17 @@ RSpec.describe WorkshopSearchService, type: :service do
 
       it "finds workshops by person name with reversed order" do
         service = WorkshopSearchService.new({ author_name: "#{author_person.last_name}#{author_person.first_name}" }, user: user).call
-        expect(service.workshops).to include(workshop_by_user)
+        expect(service.workshops).to include(workshop_by_person)
       end
 
       it "is case insensitive" do
         service = WorkshopSearchService.new({ author_name: "#{author_person.first_name} #{author_person.last_name}".downcase }, user: user).call
-        expect(service.workshops).to include(workshop_by_user)
+        expect(service.workshops).to include(workshop_by_person)
       end
 
       it "ignores blank author_name" do
         service = WorkshopSearchService.new({ author_name: "" }, user: user).call
-        expect(service.workshops).to include(workshop_by_user, workshop_no_match)
+        expect(service.workshops).to include(workshop_by_person, workshop_no_match)
       end
 
       context "with an explicit person author who is not the creator" do

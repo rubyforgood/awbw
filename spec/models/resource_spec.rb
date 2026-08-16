@@ -43,10 +43,10 @@ RSpec.describe Resource do
       expect(resource.author_credit).to eq("Jane Legacy")
     end
 
-    it "stays anonymous rather than exposing the legacy name" do
+    it "is suppressed rather than exposing the legacy name" do
       resource = create(:resource, created_by: creator, author: nil, legacy_author_name: "Jane Legacy",
                                    author_credit_preference: "anonymous")
-      expect(resource.author_credit).to eq("Anonymous")
+      expect(resource.author_credit).to eq("AWBW Facilitator")
     end
   end
 

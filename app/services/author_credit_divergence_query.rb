@@ -141,6 +141,8 @@ class AuthorCreditDivergenceQuery
     value.to_s.downcase.gsub(/\s+/, "")
   end
 
+  # Grouped by the creator as a *suggestion*, not as a governing profile — the credit
+  # itself already shows the generic label, since nobody claimed these.
   def creator_groups
     records = authorable_models.flat_map do |model|
       scoped(model)
@@ -148,7 +150,7 @@ class AuthorCreditDivergenceQuery
         .select { |record| record.legacy_author_name_text.blank? && record.created_by&.person.present? }
     end
 
-    group_by_person(records)
+    group_by_person(records) { |record| record.created_by.person }
   end
 
   def unattributed_records
@@ -161,9 +163,9 @@ class AuthorCreditDivergenceQuery
     end
   end
 
-  def group_by_person(records)
+  def group_by_person(records, &grouper)
     records
-      .group_by(&:credit_governing_person)
+      .group_by(&(grouper || :credit_governing_person.to_proc))
       .filter_map { |person, grouped| build_group(person, grouped) }
       .sort_by { |group| [ group.person.first_name.to_s.downcase, group.person.last_name.to_s.downcase ] }
   end

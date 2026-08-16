@@ -111,6 +111,31 @@ RSpec.describe Workshop do
     end
   end
 
+  describe "#author_credit with no author named" do
+    let(:creator) { create(:user, :with_person) }
+
+    it "credits the org rather than the person who entered it" do
+      workshop = create(:workshop, created_by: creator, author: nil)
+      expect(workshop.author_credit).to eq("AWBW Facilitator")
+    end
+
+    it "is not findable by the creator's name" do
+      creator.person.update!(first_name: "Marguerite", last_name: "Enterer")
+      create(:workshop, created_by: creator, author: nil)
+
+      expect(Workshop.by_credited_person_name("Marguerite")).to be_empty
+    end
+
+    it "is not findable by the creator when a different person is the author" do
+      creator.person.update!(first_name: "Marguerite", last_name: "Enterer")
+      author = create(:person, first_name: "Rosalind", last_name: "Franklin")
+      create(:workshop, created_by: creator, author: author)
+
+      expect(Workshop.by_credited_person_name("Marguerite")).to be_empty
+      expect(Workshop.by_credited_person_name("Rosalind")).not_to be_empty
+    end
+  end
+
   describe "#author_credit with a legacy free-text name" do
     let(:creator) { create(:user, :with_person) }
 
@@ -119,10 +144,10 @@ RSpec.describe Workshop do
       expect(workshop.author_credit).to eq("Jane Legacy")
     end
 
-    it "stays anonymous rather than exposing the legacy name" do
+    it "is suppressed rather than exposing the legacy name" do
       workshop = create(:workshop, created_by: creator, author: nil, full_name: "Jane Legacy",
                                    author_credit_preference: "anonymous")
-      expect(workshop.author_credit).to eq("Anonymous")
+      expect(workshop.author_credit).to eq("AWBW Facilitator")
     end
 
     it "takes no consent snapshot, since the creator's profile doesn't format it" do
