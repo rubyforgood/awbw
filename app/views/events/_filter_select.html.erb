@@ -15,8 +15,6 @@
                      placeholder — see collection#clearAndSubmit. %>
 <div class="<%= local_assigns.fetch(:wrapper_class, "w-full md:w-44") %>">
   <%= label_tag param, label, class: "search-label" %>
-  <%# search-select-placeholder greys + shrinks the text only while the include_blank
-      placeholder (the first option) is selected, so a chosen value reads dark. %>
   <%= select_tag param,
                  options_for_select(options, selected),
                  include_blank: blank,

@@ -1,5 +1,3 @@
-<%# Standard "Clear filters" button for filter bars. Locals:
-      url    – href to reset the filters to (required)
-      action – Stimulus data-action (defaults to the collection clear; pass nil to omit) %>
+<%# "Clear filters" button. Locals: url (required); action (data-action, defaults to the collection clear). %>
 <%= link_to "Clear filters", url, class: "btn btn-utility whitespace-nowrap",
       data: { action: local_assigns.fetch(:action, "collection#clearAndSubmit") } %>
