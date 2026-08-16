@@ -101,7 +101,7 @@
       </div>
 
       <div class="md:col-span-2">
-        <label for="has_remaining" class="<%= label_class %>">Amount remaining</label>
+        <label for="has_remaining" class="<%= label_class %>">Has unallocated</label>
 
         <%= select_tag "has_remaining",
           options_for_select({ "All" => "all", "Yes" => "yes", "No" => "no" }, params[:has_remaining] || "all"),
