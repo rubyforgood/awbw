@@ -5,8 +5,11 @@
 <% label_class = "block text-sm font-medium text-gray-700 mb-1" %>
 <% ce_event_ids = ContinuingEducationRegistration.joins(:event_registration).distinct.pluck(Arel.sql("event_registrations.event_id")) %>
 <% ce_events = Event.where(id: ce_event_ids).order(start_date: :desc) %>
+<% scoped_license = ProfessionalLicense.find_by(id: params[:professional_license_id]) %>
 
 <div class="mb-6 p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+  <%= render "shared/filtered_to", record: scoped_license,
+        clear_path: continuing_education_registrations_path(request.query_parameters.except("professional_license_id")) %>
   <%= form_tag continuing_education_registrations_path, method: :get, class: "space-y-4",
     data: {
       controller: "collection",
@@ -14,6 +17,7 @@
       collection_unselected_class: default_btn,
       collection_selected_class: selected_btn
     }, autocomplete: "off" do %>
+    <%= hidden_field_tag "professional_license_id", params[:professional_license_id] if params[:professional_license_id].present? %>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
         <label for="event_id" class="<%= label_class %>">Event</label>
@@ -41,6 +45,18 @@
         <%= select_tag "certificate",
           options_for_select({ "All" => "", "Issued" => "issued", "Not issued" => "pending" }, params[:certificate]),
           class: field_class %>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label for="issued_from" class="<%= label_class %>">Issued from</label>
+        <%= date_field_tag "issued_from", params[:issued_from], class: field_class %>
+      </div>
+
+      <div>
+        <label for="issued_to" class="<%= label_class %>">Issued to</label>
+        <%= date_field_tag "issued_to", params[:issued_to], class: field_class %>
       </div>
     </div>
 

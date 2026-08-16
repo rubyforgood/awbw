@@ -3,7 +3,7 @@
 <% selected_btn = "text-white bg-blue-600 border-blue-600 hover:bg-blue-700 hover:text-white shadow-md ring-2 ring-blue-300" %>
 <% field_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
 <% label_class = "block text-sm font-medium text-gray-700 mb-1" %>
-<% kinds = ProfessionalLicense.where.not(kind: [ nil, "" ]).distinct.order(:kind).pluck(:kind) %>
+<% kinds = ProfessionalLicense.where.not(kind: [ nil, "" ]).distinct.order(:kind).limit(20).pluck(:kind) %>
 
 <div class="mb-6 p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
   <%= form_tag professional_licenses_path, method: :get, class: "space-y-4",
@@ -13,21 +13,16 @@
       collection_unselected_class: default_btn,
       collection_selected_class: selected_btn
     }, autocomplete: "off" do %>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div>
-        <label for="person_id" class="<%= label_class %>">Registrant</label>
-        <%= select_tag "person_id",
-          options_for_select(Person.where(id: params[:person_id]).map { |p| [ p.full_name, p.id ] }, params[:person_id]),
-          include_blank: true,
+    <div class="flex flex-wrap md:flex-nowrap items-end gap-4">
+      <div class="flex-1 min-w-[200px]">
+        <label for="person_query" class="<%= label_class %>">Registrant</label>
+        <%= text_field_tag "person_query", params[:person_query],
           class: field_class,
-          data: {
-            controller: "remote-select",
-            remote_select_model_value: "person"
-          },
-          prompt: "Search for a person" %>
+          placeholder: "Search by name or email",
+          autocomplete: "off" %>
       </div>
 
-      <div>
+      <div class="min-w-[150px]">
         <label for="kind" class="<%= label_class %>">Type</label>
         <%= select_tag "kind",
           options_for_select(kinds, params[:kind]),
@@ -35,17 +30,16 @@
           class: field_class %>
       </div>
 
-      <div>
-        <label for="expired" class="<%= label_class %>">Expiry</label>
+      <div class="min-w-[150px]">
+        <label for="expired" class="<%= label_class %>">Active</label>
         <%= select_tag "expired",
-          options_for_select({ "All" => "", "Expired" => "yes", "Not expired" => "no" }, params[:expired]),
+          options_for_select({ "All" => "", "Active" => "no", "Expired" => "yes" }, params[:expired]),
           class: field_class %>
       </div>
-    </div>
 
-    <div class="md:col-span-3 flex gap-2 justify-end">
-      <%= submit_tag "Search", class: "btn btn-primary" %>
-      <%= link_to "Clear filters", professional_licenses_path, class: "btn btn-secondary", data: { action: "collection#clearAndSubmit" } %>
+      <div class="ml-auto">
+        <%= link_to "Clear filters", professional_licenses_path, class: "btn btn-utility", data: { action: "collection#clearAndSubmit" } %>
+      </div>
     </div>
   <% end %>
 </div>
