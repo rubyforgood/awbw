@@ -44,12 +44,8 @@
 
       <%= render "tag_chips", story: @story %>
 
-      <!-- Story image -->
-      <% if @story.primary_asset&.file&.attached? || @story.gallery_assets.any? %>
-        <div class="mb-8 rounded-lg overflow-hidden bg-black">
-          <%= image_tag @story.display_image, alt: @story.title, class: "w-full h-auto" %>
-        </div>
-      <% end %>
+      <!-- Story images -->
+      <%= render "assets/display_assets_carousel", resource: @story %>
 
       <!-- Body -->
       <div class="prose prose-lg max-w-none text-gray-700 mb-10">
@@ -61,13 +57,6 @@
         <div class="aspect-video mb-10">
           <iframe src="<%= embed_url %>" class="w-full h-full rounded-lg"
                   title="<%= @story.title %> video" allowfullscreen loading="lazy"></iframe>
-        </div>
-      <% end %>
-
-      <!-- Additional artwork gallery -->
-      <% if @story.assets.count > 1 %>
-        <div class="mb-10">
-          <%= render "assets/display_assets", resource: @story, link: true %>
         </div>
       <% end %>
 
