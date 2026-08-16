@@ -1007,5 +1007,51 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(result.success?).to be false
       expect(Person.find_by(email: "bad@example.com")).to be_nil
     end
+
+    it "rejects a file larger than Asset's maximum" do
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: File.open(Rails.root.join("spec/fixtures/files/sample.png")),
+        filename: "huge.png", content_type: "image/png"
+      )
+      blob.update!(byte_size: Asset::MAX_FILE_SIZE + 1)
+      params = base_form_params(first_name: "Too", last_name: "Big", email: "big@example.com").merge(
+        upload_field.id.to_s => blob.signed_id
+      )
+
+      result = described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(result.success?).to be false
+      expect(Person.find_by(email: "big@example.com")).to be_nil
+    end
+
+    # A tampered/expired signed id used to reach ActiveStorage's find_signed!,
+    # whose InvalidSignature isn't in this service's rescue list — a 500 on a
+    # public endpoint.
+    it "returns a form error rather than raising when the value isn't a usable signed id" do
+      params = base_form_params(first_name: "Bad", last_name: "Id", email: "badid@example.com").merge(
+        upload_field.id.to_s => "not-a-signed-id"
+      )
+
+      result = described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(result.success?).to be false
+      expect(result.errors.join).to match(/uploaded file/i)
+      expect(Person.find_by(email: "badid@example.com")).to be_nil
+    end
+
+    it "keeps the file already on the answer when a re-submission leaves the field blank" do
+      params = base_form_params(first_name: "Re", last_name: "Sub", email: "resub@example.com").merge(
+        upload_field.id.to_s => signed_id_for("sample.png", "image/png")
+      )
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      result = described_class.call(event: event, registration_form: form,
+                                    form_params: params.merge(upload_field.id.to_s => ""))
+
+      expect(result.success?).to be true
+      answer = result.form_submission.form_answers.find_by(form_field: upload_field)
+      expect(answer.uploaded_file).to be_attached
+      expect(answer.submitted_answer).to eq("sample.png")
+    end
   end
 end

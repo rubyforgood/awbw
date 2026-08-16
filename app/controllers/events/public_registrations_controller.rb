@@ -33,7 +33,7 @@ module Events
       @scholarship_form = @event.scholarship_form if @scholarship
       @continuing_education_form = @event.continuing_education_form
 
-      all_params = params.dig(:public_registration, :form_fields)&.to_unsafe_h || {}
+      all_params = merge_retained_uploads(params.dig(:public_registration, :form_fields)&.to_unsafe_h || {})
       registration_params, scholarship_params, continuing_education_params = split_form_params(all_params)
 
       @field_errors = validate_required_fields(registration_params)
@@ -96,6 +96,12 @@ module Events
         person = registration.registrant
       elsif params[:person_id].present?
         person = Person.find(params[:person_id])
+        # Unlike the registration slug — an unguessable token handed to the
+        # registrant — person ids are sequential, so this branch is not a
+        # capability. It exists as the admin-side fallback for registrations with
+        # no slug, so gate it on the same access as the event's other submission
+        # views (or on the viewer being that person).
+        authorize! @event, to: :form_submissions? unless current_user&.person_id == person.id
         registration = @event.event_registrations.find_by(registrant: person)
       else
         redirect_to event_path(@event), alert: "Registration not found."
@@ -131,6 +137,22 @@ module Events
     end
 
     private
+
+    # A file input can't be repopulated, so a form re-rendered after a validation
+    # error carries the already-uploaded blob's signed id in retained_uploads.
+    # An untouched file input still posts a blank value, so fall back to the
+    # retained id wherever the field itself came back empty.
+    def merge_retained_uploads(form_params)
+      retained = params.dig(:public_registration, :retained_uploads)&.to_unsafe_h || {}
+      return form_params if retained.blank?
+
+      retained.each do |field_id, signed_id|
+        next if signed_id.blank? || form_params[field_id].present?
+
+        form_params[field_id] = signed_id
+      end
+      form_params
+    end
 
     def credit_card_payment?(form_params)
       payment_method_field = @registration_form.form_fields.find_by(field_identifier: "payment_method")

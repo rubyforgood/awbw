@@ -179,7 +179,21 @@
         becomes a signed blob id, submitted as a normal param — so the form needs
         no multipart encoding and the persistence service attaches the blob.
         Reuses the file_preview controller (image thumbnail / file-type icon). %>
-    <div data-controller="file-preview">
+    <% retained_upload = retained_upload_blob(value) %>
+    <div data-controller="file-preview" data-file-preview-max-size-value="<%= Asset::MAX_FILE_SIZE %>">
+      <%# A file input can't be repopulated, so a re-render after a validation
+          error would otherwise discard a file the registrant already uploaded.
+          Carry its signed id back under its own param — a separate name because
+          an untouched file input still posts a blank value that would win on
+          duplicate keys — and let the controller fall back to it. %>
+      <% if retained_upload %>
+        <input type="hidden"
+               name="public_registration[retained_uploads][<%= field.id %>]"
+               value="<%= value %>">
+        <p class="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-600">
+          <i class="fa-solid fa-paperclip"></i><%= retained_upload.filename %> already uploaded — choose another file to replace it.
+        </p>
+      <% end %>
       <input type="file"
              name="<%= field_name %>"
              id="<%= field_id %>"
@@ -188,9 +202,9 @@
              data-file-preview-target="input"
              data-action="change->file-preview#update"
              class="block w-full text-sm text-gray-700 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 rounded-lg border <%= error_border %> bg-white px-2 py-2"
-             <%= "required" if field.required %>>
+             <%= "required" if field.required && retained_upload.nil? %>>
       <p data-file-preview-target="filename" class="mt-1.5 text-xs font-medium text-gray-600"></p>
-      <p class="mt-1 text-xs text-gray-400">Accepted: <%= Asset.accepted_types_label %></p>
+      <p class="mt-1 text-xs text-gray-400">Accepted: <%= Asset.accepted_types_label %> (max <%= Asset.max_file_size_label %>)</p>
       <img data-file-preview-target="preview"
            class="hidden mt-3 max-h-48 w-auto rounded-lg border border-gray-200 shadow-sm"
            alt="Selected file preview">

@@ -2,6 +2,13 @@ module EventRegistrationServices
   class PublicRegistration
     Result = Struct.new(:success?, :event_registration, :form_submission, :errors, keyword_init: true)
 
+    # Raised when a file-upload answer's value isn't a usable upload — a tampered,
+    # stale, or otherwise unverifiable direct-upload signed id. Rescued in #call so
+    # the registrant gets a form error instead of an unhandled exception.
+    UnreadableUpload = Class.new(StandardError)
+
+    UNREADABLE_UPLOAD_MESSAGE = "We couldn't read one of your uploaded files. Please choose it again."
+
     # Well-known field_identifier of the "magic" CE question seeded onto the
     # registration form. Answering it "Yes" creates a ContinuingEducationRegistration
     # (hours come from the event). Kept here so the seed, service, and specs agree.
@@ -127,6 +134,8 @@ module EventRegistrationServices
 
         Result.new(success?: true, event_registration: event_registration, form_submission: submission, errors: [])
       end
+    rescue UnreadableUpload => e
+      Result.new(success?: false, event_registration: nil, errors: [ e.message ])
     rescue ActiveRecord::ValueTooLong => e
       Result.new(success?: false, event_registration: nil, errors: [ too_long_message(e) ])
     rescue ActiveRecord::RecordInvalid => e
@@ -535,16 +544,30 @@ module EventRegistrationServices
     # Attach the uploaded blob (a direct-upload signed id, or an uploaded file)
     # to the answer's Asset. The answer row is saved first so the polymorphic
     # owner id resolves; submitted_answer keeps the filename so text-only views,
-    # exports, and notifications still read. Asset enforces the content type on
-    # save, rolling back the whole submission on an unaccepted file.
+    # exports, and notifications still read. Asset enforces the content type and
+    # size on save, rolling back the whole submission on a rejected file.
     def attach_uploaded_file(record, raw_value)
-      record.update!(submitted_answer: "")
+      # An untouched file input still posts a blank value, so blank means "no new
+      # upload" — keep the file, and its filename, the answer already has.
+      record.update!(submitted_answer: record.uploaded_file&.filename.to_s)
       return if raw_value.blank?
 
       asset = record.asset || record.build_asset
-      asset.file.attach(raw_value)
+      asset.file.attach(upload_attachable(raw_value))
       asset.save!
       record.update!(submitted_answer: asset.file.filename.to_s)
+    end
+
+    # A direct upload arrives as a signed blob id. Handing the raw string to
+    # `attach` resolves it with find_signed!, which raises InvalidSignature or
+    # RecordNotFound on a tampered or stale id — neither is rescued here, so a
+    # forged param would 500 a public endpoint. Resolve it leniently instead and
+    # turn a miss into a form error. Anything else (a multipart UploadedFile,
+    # when the direct-upload JS didn't run) attaches as-is.
+    def upload_attachable(raw_value)
+      return raw_value unless raw_value.is_a?(String)
+
+      ActiveStorage::Blob.find_signed(raw_value) || raise(UnreadableUpload, UNREADABLE_UPLOAD_MESSAGE)
     end
 
     # Persist the answers to the separate scholarship form (when one is asked and a
