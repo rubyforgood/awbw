@@ -39,17 +39,34 @@ class ContinuingEducationRegistration < ApplicationRecord
 
   scope :for_event, ->(event_id) { joins(:event_registration).where(event_registrations: { event_id: event_id }) }
   scope :for_registrant, ->(person_id) { joins(:event_registration).where(event_registrations: { registrant_id: person_id }) }
+  scope :for_license, ->(license_id) { where(professional_license_id: license_id) }
   scope :certificate_issued, -> { where.not(certificate_sent_at: nil) }
   scope :certificate_pending, -> { where(certificate_sent_at: nil) }
+  scope :issued_on_or_after, ->(date) { where(certificate_sent_at: date.beginning_of_day..) }
+  scope :issued_on_or_before, ->(date) { where(certificate_sent_at: ..date.end_of_day) }
 
-  # Drives the admin index filters (event, registrant, certificate status).
+  # Drives the admin index filters (event, registrant, license, certificate
+  # status, and issued-date range).
   def self.search_by_params(params)
     results = all
     results = results.for_event(params[:event_id]) if params[:event_id].present?
     results = results.for_registrant(params[:person_id]) if params[:person_id].present?
+    results = results.for_license(params[:professional_license_id]) if params[:professional_license_id].present?
     results = results.certificate_issued if params[:certificate] == "issued"
     results = results.certificate_pending if params[:certificate] == "pending"
+    if (from = parse_iso_date(params[:issued_from]))
+      results = results.issued_on_or_after(from)
+    end
+    if (to = parse_iso_date(params[:issued_to]))
+      results = results.issued_on_or_before(to)
+    end
     results
+  end
+
+  def self.parse_iso_date(value)
+    return if value.blank?
+    parts = Date._parse(value.to_s)
+    Date.new(parts[:year], parts[:mon], parts[:mday]) if parts[:year] && parts[:mon] && parts[:mday]
   end
 
   # Payment interface (allocations_sum / paid_in_full? / remaining_cost / …) comes from

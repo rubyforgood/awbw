@@ -151,9 +151,9 @@ Rails.application.routes.draw do
     member { patch :toggle_certificate }
     resources :comments, only: [ :create, :update ]
   end
-  # Licenses are created/edited inline on the person + CE forms; this is the
-  # admin-only browse index.
-  resources :professional_licenses, only: [ :index ]
+  # The admin-only browse index plus standalone new/edit flows. (Licenses can
+  # also be edited inline on the person + CE forms.)
+  resources :professional_licenses, only: [ :index, :new, :create, :edit, :update ]
   resources :discounts, only: [ :create, :show, :destroy ] do
     collection do
       post :allocation_form
