@@ -71,6 +71,12 @@ RSpec.describe DisplayImagePresenter do
         expect(result.renderable).to be_a(ActiveStorage::VariantWithRecord)
       end
 
+      it "uses the larger card variant for a full-width display" do
+        result = described_class.call(file: file, variant: :index, width: "full", height: "full", view_context: view_context)
+        expect(result.renderable).to be_a(ActiveStorage::VariantWithRecord)
+        expect(result.renderable.variation.transformations[:resize_to_limit]).to eq([ 1200, 1200 ])
+      end
+
       it "builds alt text with filename" do
         result = described_class.call(file: file, idx: 0, item_type: "Main", view_context: view_context)
         expect(result.alt_text).to include("missing.png")
