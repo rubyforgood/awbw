@@ -76,6 +76,12 @@ RSpec.describe "/features", type: :request do
         expect(response.body).to include('data-turbo-frame="_top"')
       end
 
+      it "renders collapsible cards with a bulk expand/collapse toggle" do
+        get features_path, headers: frame_headers
+        expect(response.body).to include('data-controller="expandable-card"')
+        expect(response.body).to include("expandable-cards#toggleAll")
+      end
+
       it "filters by a search query across name/summary" do
         get features_path, params: { query: "Admin-only" }, headers: frame_headers
         expect(response.body).to include("Admin-only feature")

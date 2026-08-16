@@ -1,18 +1,30 @@
 <%= turbo_frame_tag :features_results do %>
-  <p class="text-sm text-gray-500 mb-3">
-    Showing <%= @features.size %> of <%= @total %> <%= "feature".pluralize(@total) %>
-  </p>
-
-  <div class="grid grid-cols-1 gap-4">
-    <%= render partial: "feature", collection: @features, as: :feature %>
-  </div>
-
-  <% if @features.empty? %>
-    <div class="bg-white border border-dashed border-gray-300 rounded-xl p-10 text-center">
-      <i class="fa-solid fa-magnifying-glass text-3xl text-gray-300"></i>
-      <p class="text-gray-500 mt-3">
-        <%= @total.zero? ? "No features yet." : "No features match your filters." %>
+  <div data-controller="expandable-cards" data-expandable-cards-expanded-value="false">
+    <div class="flex items-center justify-between gap-3 mb-3">
+      <p class="text-sm text-gray-500">
+        Showing <%= @features.size %> of <%= @total %> <%= "feature".pluralize(@total) %>
       </p>
+
+      <% if @features.any? %>
+        <button type="button" data-action="expandable-cards#toggleAll"
+                class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800">
+          <span data-expandable-cards-target="label">Expand all</span>
+          <i class="fa-solid fa-chevron-down text-xs transition-transform" data-expandable-cards-target="icon"></i>
+        </button>
+      <% end %>
     </div>
-  <% end %>
+
+    <div class="grid grid-cols-1 gap-4">
+      <%= render partial: "feature", collection: @features, as: :feature %>
+    </div>
+
+    <% if @features.empty? %>
+      <div class="bg-white border border-dashed border-gray-300 rounded-xl p-10 text-center">
+        <i class="fa-solid fa-magnifying-glass text-3xl text-gray-300"></i>
+        <p class="text-gray-500 mt-3">
+          <%= @total.zero? ? "No features yet." : "No features match your filters." %>
+        </p>
+      </div>
+    <% end %>
+  </div>
 <% end %>
