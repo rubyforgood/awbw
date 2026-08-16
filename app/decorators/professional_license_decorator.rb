@@ -10,4 +10,26 @@ class ProfessionalLicenseDecorator < ApplicationDecorator
     end
     Badge.new(label: "Valid", icon: "fa-solid fa-circle-check", classes: "bg-green-50 text-green-700 border-green-200")
   end
+
+  # CE hours issued against this license this calendar year — only registrations
+  # whose certificate has been sent (in the current year) count.
+  def ce_hours_issued_this_year
+    issued_ce_hours { |registration| registration.certificate_sent_at.year == Date.current.year }
+  end
+
+  # CE hours issued against this license across all years.
+  def ce_hours_issued_all_years
+    issued_ce_hours
+  end
+
+  private
+
+  # Sum CE hours from registrations whose certificate has been sent, optionally
+  # narrowed by the given block. Whole totals drop the decimal.
+  def issued_ce_hours
+    issued = continuing_education_registrations.select { |registration| registration.certificate_sent_at.present? }
+    issued = issued.select { |registration| yield(registration) } if block_given?
+    total = issued.sum { |registration| registration.hours || 0 }
+    total == total.to_i ? total.to_i : total
+  end
 end

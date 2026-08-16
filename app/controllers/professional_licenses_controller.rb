@@ -1,10 +1,14 @@
 class ProfessionalLicensesController < ApplicationController
+  VALID_SORTS = %w[kind number].freeze
+
   def index
     authorize!
-    @professional_licenses = ProfessionalLicense.search_by_params(params)
+    scope = ProfessionalLicense.search_by_params(params)
       .includes(:person, :continuing_education_registrations)
-      .order(created_at: :desc)
-      .paginate(page: params[:page], per_page: 25)
+    @sort = VALID_SORTS.include?(params[:sort]) ? params[:sort] : nil
+    @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
+    scope = @sort ? scope.order(@sort.to_sym => @sort_direction) : scope.order(created_at: :desc)
+    @professional_licenses = scope.paginate(page: params[:page], per_page: 25)
     render :professional_licenses_results if turbo_frame_request?
   end
 

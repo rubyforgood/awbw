@@ -1,3 +1,5 @@
+<% sort_base = params.permit(:person_query, :kind, :expired).to_h.symbolize_keys %>
+<% sort_link = sort_header_link(frame: "professional_licenses_results", path: ->(p) { professional_licenses_path(p) }, base: sort_base) %>
 <%= turbo_frame_tag :professional_licenses_results do %>
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit">
     <% if @professional_licenses.any? %>
@@ -10,13 +12,13 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registrant</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Number</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expires</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">CE</th>
+              <th class="px-4 py-3 align-bottom text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registrant</th>
+              <th class="px-4 py-3 align-bottom text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"><%= sort_link.call("kind", "Type") %> / <%= sort_link.call("number", "Number") %></th>
+              <th class="px-4 py-3 align-bottom text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
+              <th class="px-4 py-3 align-bottom text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expires</th>
+              <th class="px-4 py-3 align-bottom text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-4 py-3 align-bottom text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">CE hours issued<br>(this year)</th>
+              <th class="px-4 py-3 align-bottom text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">CE hours issued<br>(all years)</th>
             </tr>
           </thead>
 
@@ -27,19 +29,30 @@
               <tr class="hover:bg-gray-50 transition-colors duration-150">
                 <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                   <% if license.person %>
-                    <%= link_to license.person.full_name, edit_person_path(license.person), class: "text-primary hover:text-primary-dark", data: { turbo_frame: "_top" } %>
+                    <%= link_to license.person.full_name, person_path(license.person), class: "text-primary hover:text-primary-dark hover:underline", data: { turbo_frame: "_top" } %>
                   <% else %>
                     <span class="text-gray-400">—</span>
                   <% end %>
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700"><%= license.kind.presence || "—" %></td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700"><%= license.number.presence || "—" %></td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                  <% type_number = [ license.kind.presence, license.number.presence ].compact.join(" ").presence || "License (details pending)" %>
+                  <% if license.person %>
+                    <%= link_to edit_person_path(license.person), title: "Edit license", data: { turbo_frame: "_top" },
+                          class: "inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100 px-2 py-1 text-gray-700 transition-colors" do %>
+                      <span><%= type_number %></span>
+                      <i class="fa-solid fa-pen text-[0.65rem] text-gray-400"></i>
+                    <% end %>
+                  <% else %>
+                    <span class="text-gray-700"><%= type_number %></span>
+                  <% end %>
+                </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700"><%= license.issuing_state.presence || "—" %></td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700"><%= license.expires_on&.to_fs(:long) || "—" %></td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm">
                   <%= render "shared/badge", label: status.label, classes: status.classes, icon: status.icon %>
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-right text-sm text-gray-700 tabular-nums"><%= license.continuing_education_registrations.size %></td>
+                <td class="px-4 py-3 whitespace-nowrap text-right text-sm text-gray-700 tabular-nums"><%= decorated.ce_hours_issued_this_year %></td>
+                <td class="px-4 py-3 whitespace-nowrap text-right text-sm text-gray-700 tabular-nums"><%= decorated.ce_hours_issued_all_years %></td>
               </tr>
             <% end %>
           </tbody>

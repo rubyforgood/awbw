@@ -66,6 +66,17 @@ RSpec.describe "ProfessionalLicenses", type: :request do
       expect(response.body).not_to include("222")
     end
 
+    it "sorts by license number" do
+      holder = create(:person)
+      create(:professional_license, person: holder, kind: "LMFT", number: "111")
+      create(:professional_license, person: holder, kind: "LMFT", number: "999")
+
+      get professional_licenses_path(person_query: holder.full_name, sort: "number", direction: "asc"),
+        headers: { "Turbo-Frame" => "professional_licenses_results" }
+
+      expect(response.body.index("111")).to be < response.body.index("999")
+    end
+
     it "renders the new license form" do
       get new_professional_license_path
       expect(response).to have_http_status(:ok)

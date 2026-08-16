@@ -758,9 +758,9 @@ registrations_data = []
 if facilitator_training
   facilitator_training.update!(ce_hours_offered: 12, ce_hours_cost_cents: 12_000)
   [
-    { person: amy_person, status: "registered", scholarship_requested: true, w9_requested: true, invoice_requested: true, ce_credit_requested: true, ce_license_number: "LMFT 90210" },
+    { person: amy_person, status: "registered", scholarship_requested: true, w9_requested: true, invoice_requested: true, ce_credit_requested: true, ce_license_kind: "LMFT", ce_license_number: "90210" },
     { person: maria_j, status: "registered", invoice_requested: true, ce_credit_requested: true, intends_to_pay: true },
-    { person: anna_g, status: "attended", ce_credit_requested: true, intends_to_pay: true, ce_license_number: "LCSW 11223", ce_status: "issued" },
+    { person: anna_g, status: "attended", ce_credit_requested: true, intends_to_pay: true, ce_license_kind: "LCSW", ce_license_number: "11223", ce_status: "issued" },
     { person: mario_j, status: "registered" },
     { person: kim_d, status: "cancelled" },
     { person: aisha_person, status: "registered", intends_to_pay: true }
@@ -778,7 +778,7 @@ end
 if trauma_training
   trauma_training.update!(ce_hours_offered: 18, ce_hours_cost_cents: 15_000)
   [
-    { person: sarah_s, status: "registered", invoice_requested: true, ce_credit_requested: true, ce_license_number: "LPCC 44556" },
+    { person: sarah_s, status: "registered", invoice_requested: true, ce_credit_requested: true, ce_license_kind: "LPCC", ce_license_number: "44556" },
     { person: jessica_b, status: "registered", scholarship_requested: true, ce_credit_requested: true },
     { person: angel_g, status: "registered" },
     { person: linda_w, status: "no_show" }
@@ -853,7 +853,7 @@ registrations_data.each do |data|
   # CE opt-in becomes a ContinuingEducationRegistration against the registrant's
   # license (a placeholder when no number is seeded). Hours come from the event.
   if data[:ce_credit_requested] && registration.continuing_education_registrations.none?
-    license = ProfessionalLicense.find_or_create_for(person: data[:person], number: data[:ce_license_number])
+    license = ProfessionalLicense.find_or_create_for(person: data[:person], number: data[:ce_license_number], kind: data[:ce_license_kind])
     ce_registration = registration.continuing_education_registrations.create!(professional_license: license)
     # "issued" in the seed data means the CE certificate was delivered.
     ce_registration.mark_certificate_sent! if data[:ce_status] == "issued"
