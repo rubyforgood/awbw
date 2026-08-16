@@ -345,12 +345,12 @@ module ApplicationHelper
 
       label_tag = content_tag(:span, label, class: "font-medium #{text} truncate")
 
-      count_tag = if hide_count
+      count = collection.count
+      count_tag = if hide_count || count.zero?
         "".html_safe
       else
-        count = collection.count
         content_tag(:span,
-                    count.zero? ? "None" : number_with_delimiter(count),
+                    number_with_delimiter(count),
                     class: "ml-auto inline-flex items-center justify-center min-w-[2.25rem] px-2 py-0.5 text-sm font-semibold rounded-full bg-white #{text} border #{border}")
       end
 
