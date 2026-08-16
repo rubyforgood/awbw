@@ -282,11 +282,13 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 - Use `docs/pull_request_template.md` for PR description structure
 - **Remove the `Closes …` line when there's no ticket** — it's a template placeholder. Keep it (with a real issue link) only when the PR closes a tracked ticket; otherwise drop the line entirely rather than leaving the placeholder.
 - **Keep descriptions as short as possible** — a few terse bullets, not paragraphs. Cut anything a reviewer can see from the diff; only keep what explains *why*.
+  - **Bullets over prose, always.** Never write a paragraph where a bullet works. One idea per bullet; if a bullet needs a comma-spliced second clause, split it into two bullets instead.
+  - **Short sentences.** Aim for one clause per bullet. Drop filler ("this PR", "in order to", "as well as"), hedging, and restating the ticket. Prefer sentence fragments over full sentences when they're clear.
+  - **Group with headers** once the description covers more than one topic — a `##`/`###` header per section, bullets underneath — instead of a long undifferentiated list or run of paragraphs.
 - **Start the description with a review-depth tag** on its own single line, in the form `🤖 suggested review level: <N> <Name> <icon> <reason>`, followed by a blank line, then the rest of the description. The tag is the prefix, the level number, the level name, its icon, and a short reason — e.g. `🤖 suggested review level: 5 Inspect 🔬 substantive logic across 13 admin pages incl. filter behavior`. Always spell out the reason inline; never post the number/name/icon alone. The number is a 1–5 scale with three named levels (2 and 4 are unused in-betweens). The tag tells the reviewer how closely to look (depth of review, not how risky/good the change is):
   - **1 Skim 👀** — view-only: markup/copy/styling, no logic or data changes
   - **3 Read 📖** — light-logic: small, contained logic changes with low blast radius
   - **5 Inspect 🔬** — big change: substantive logic, migrations that rename or transform data (backfills), or wide-reaching changes that warrant careful review
-- Use bullet points, not paragraphs, when filling out each section
 - Description must explain why the change was made, not just what
 - Include screenshots for UI changes
 - **On every push**, update the PR title and content to reflect the current diff — preserve any existing images/screenshots in the description
