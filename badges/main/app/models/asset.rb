@@ -69,6 +69,10 @@ class Asset < ApplicationRecord
       resize_to_limit: [ 256, 256 ],
       format: :webp,
       saver: { quality: 80 }
+    attachable.variant :card,
+      resize_to_limit: [ 1200, 1200 ],
+      format: :webp,
+      saver: { quality: 80 }
   end
   validate :file_type
 
