@@ -49,6 +49,7 @@ class EventRegistration < ApplicationRecord
   accepts_nested_attributes_for :registrant
 
   before_create :generate_slug
+  before_save :capture_pre_transfer_status, if: :becoming_transferred_out?
   after_update :release_scholarships, if: :status_changed_to_cancelled?
   after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?
 
@@ -1048,6 +1049,16 @@ class EventRegistration < ApplicationRecord
 
   def status_changed_to_cancelled?
     saved_change_to_status? && status == "cancelled"
+  end
+
+  def becoming_transferred_out?
+    will_save_change_to_status? && status == "transferred_out"
+  end
+
+  # Remember the status held just before a reg is transferred out, so a later
+  # transfer back to this event can restore it rather than leaving it "out". (#1944)
+  def capture_pre_transfer_status
+    self.status_before_transfer = status_was
   end
 
   # On cancellation, release any awarded scholarship back to its grant by zeroing

@@ -45,7 +45,7 @@
               required: true,
               class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
         <p class="mt-1.5 text-xs text-gray-500">
-          Only <%= source.event.facilitator_training? ? "other facilitator trainings" : "other (non-training) events" %> are shown.
+          Only <%= source.event.on_demand? ? "other on-demand events" : "other scheduled (non-on-demand) events" %> are shown.
         </p>
       </div>
 

@@ -652,29 +652,30 @@ RSpec.describe "EventRegistrations", type: :request do
       let!(:source) { create(:event_registration, event: event, status: "transferred_out") }
 
       describe "GET /event_registrations/:id/transfer" do
-        it "offers same-kind events, excluding the source and the other kind" do
-          same_kind = create(:event, title: "Destination Event", published: true, facilitator_training: false)
-          other_kind = create(:event, title: "A Facilitator Training", published: true, facilitator_training: true)
+        it "offers same-format events, excluding the source and the other format" do
+          # source's event defaults to on_demand: false (scheduled).
+          same_format = create(:event, title: "Destination Event", published: true, on_demand: false)
+          other_format = create(:event, title: "An On-Demand Event", published: true, on_demand: true)
 
           get transfer_event_registration_path(source)
 
           expect(response).to have_http_status(:success)
           expect(response.body).to include("Destination Event")
-          # The source event and the opposite kind aren't offered as destinations.
+          # The source event and the opposite format aren't offered as destinations.
           expect(response.body).not_to include("<option value=\"#{event.id}\"")
-          expect(response.body).not_to include("<option value=\"#{other_kind.id}\"")
+          expect(response.body).not_to include("<option value=\"#{other_format.id}\"")
         end
 
-        it "offers only other facilitator trainings when transferring out of one" do
-          training = create(:event, title: "Source Training", facilitator_training: true)
-          training_source = create(:event_registration, event: training, status: "transferred_out")
-          another_training = create(:event, title: "Another Training", published: true, facilitator_training: true)
-          non_training = create(:event, title: "A Non-Training Event", published: true, facilitator_training: false)
+        it "offers only other on-demand events when transferring out of one" do
+          on_demand = create(:event, title: "Source On-Demand", on_demand: true)
+          on_demand_source = create(:event_registration, event: on_demand, status: "transferred_out")
+          another_on_demand = create(:event, title: "Another On-Demand", published: true, on_demand: true)
+          scheduled = create(:event, title: "A Scheduled Event", published: true, on_demand: false)
 
-          get transfer_event_registration_path(training_source)
+          get transfer_event_registration_path(on_demand_source)
 
-          expect(response.body).to include("<option value=\"#{another_training.id}\"")
-          expect(response.body).not_to include("<option value=\"#{non_training.id}\"")
+          expect(response.body).to include("<option value=\"#{another_on_demand.id}\"")
+          expect(response.body).not_to include("<option value=\"#{scheduled.id}\"")
         end
       end
 
@@ -720,6 +721,27 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(EventRegistration.exists?(middle.id)).to be(false)
           expect(original.reload.transferred_to_registration).to eq(final)
           expect(response).to redirect_to(edit_event_registration_path(final))
+        end
+
+        it "restores the origin to its pre-transfer status and drops the middle when transferred back" do
+          origin_event = create(:event, published: true)
+          person = create(:person)
+          origin = create(:event_registration, registrant: person, event: origin_event, status: "attended")
+          origin.update!(status: "transferred_out")
+          middle = create(:event_registration, registrant: person,
+            status: "transferred_out", transferred_from_registration: origin)
+
+          expect {
+            post process_transfer_event_registration_path(middle),
+                 params: { destination_event_id: origin_event.id }
+          }.to change(EventRegistration, :count).by(-1)
+
+          expect(EventRegistration.exists?(middle.id)).to be(false)
+          origin.reload
+          expect(origin.status).to eq("attended")
+          expect(origin.transferred_from_registration).to be_nil
+          expect(origin.status_before_transfer).to be_nil
+          expect(response).to redirect_to(edit_event_registration_path(origin))
         end
 
         it "sends the admin back to pick an event when none was chosen" do

@@ -226,10 +226,19 @@ class EventRegistrationsController < ApplicationController
       event_id: destination_event.id
     )
     # Collapse a double transfer (A→B→C) to two live regs: when the reg being
-    # transferred out is itself a transfer-in, it's a temporary middle stop —
-    # point the new reg straight at the original source and drop the middle. (#1944)
+    # transferred out is itself a transfer-in, its predecessor is the real origin,
+    # so the new reg points straight there and the middle stop is dropped. (#1944)
     source = @event_registration.transferred_from_registration || @event_registration
-    destination.transferred_from_registration = source
+
+    if destination == source
+      # Transferring back to the origin event undoes the whole chain: restore the
+      # origin to the status it held before it was transferred out, instead of
+      # linking it to itself.
+      destination.status = destination.status_before_transfer.presence || "registered"
+      destination.status_before_transfer = nil
+    else
+      destination.transferred_from_registration = source
+    end
 
     saved = ActiveRecord::Base.transaction do
       next false unless destination.save
@@ -440,11 +449,11 @@ class EventRegistrationsController < ApplicationController
   end
 
   # Events a registrant can be transferred into: published events of the same
-  # kind as the one they're leaving — a facilitator training only transfers to
-  # another facilitator training, and a non-training only to another
-  # non-training — excluding the source event, most recent first.
+  # format as the one they're leaving — an on-demand event only transfers to
+  # another on-demand event, and a scheduled (non-on-demand) event only to
+  # another scheduled event — excluding the source event, most recent first.
   def transfer_destination_events
-    Event.where(published: true, facilitator_training: @event_registration.event.facilitator_training)
+    Event.where(published: true, on_demand: @event_registration.event.on_demand)
          .where.not(id: @event_registration.event_id)
          .order(start_date: :desc)
   end

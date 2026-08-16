@@ -519,6 +519,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_144446) do
     t.string "slug"
     t.boolean "someone_else_will_pay", default: false, null: false
     t.string "status", default: "registered", null: false
+    t.string "status_before_transfer"
     t.bigint "transferred_from_registration_id"
     t.datetime "updated_at", null: false
     t.boolean "w9_requested", default: false, null: false

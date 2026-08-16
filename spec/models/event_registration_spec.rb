@@ -90,6 +90,12 @@ RSpec.describe EventRegistration, type: :model do
       expect(incoming).not_to be_transfer_destination_pending
     end
 
+    it "records the prior status when a reg is transferred out, so it can be restored" do
+      reg = create(:event_registration, status: "attended")
+      expect { reg.update!(status: "transferred_out") }
+        .to change { reg.status_before_transfer }.from(nil).to("attended")
+    end
+
     it "nullifies the back-link if the source is destroyed" do
       source.update_column(:status, "registered") # bypass the deletion guard for the test
       source.destroy
