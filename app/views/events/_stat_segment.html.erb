@@ -10,10 +10,10 @@
     <span class="block leading-tight">
       <span class="text-xl font-bold text-gray-900 tabular-nums"><%= metric[:value] %></span>
       <span class="text-xs text-gray-500"><%= metric[:label] %></span>
-      <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+      <i class="fa-solid fa-arrow-up-right-from-square text-2xs text-gray-400 opacity-0 transition-opacity group-hover:opacity-100"></i>
     </span>
     <% if metric[:sub].present? %>
-      <span class="block text-xs text-gray-400 mt-0.5 truncate"><%= metric[:sub] %></span>
+      <span class="mt-0.5 block truncate text-xs text-gray-400"><%= metric[:sub] %></span>
     <% end %>
   </span>
 <% end %>

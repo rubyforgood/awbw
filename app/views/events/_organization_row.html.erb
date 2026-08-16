@@ -5,17 +5,17 @@
     arrow sits after the percentage, matching the other breakdown cards. %>
 <% is_scholarship = row[:scholarship_count].positive? %>
 <% path = row[:path] %>
-<tr class="border-t border-gray-100 group hover:bg-gray-50 <%= "cursor-pointer" if path.present? %> transition-colors"
+<tr class="group border-t border-gray-100 hover:bg-gray-50 <%= "cursor-pointer" if path.present? %> transition-colors"
     <% if path.present? %>onclick="window.location='<%= path %>'"<% end %>>
-  <td class="py-1 text-gray-700 w-full">
-    <span class="inline-block w-5 mr-1 text-center align-middle">
+  <td class="w-full py-1 text-gray-700">
+    <span class="mr-1 inline-block w-5 text-center align-middle">
       <% if is_scholarship %>
         <i class="fa-solid fa-graduation-cap <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>"
            title="<%= pluralize(row[:scholarship_count], "scholarship recipient") %>" aria-hidden="true"></i>
       <% end %>
     </span>
     <% if row[:high_profile] %>
-      <i class="fa-solid fa-gem text-purple-600 mr-1 align-middle" title="High-profile organization" aria-hidden="true"></i>
+      <i class="fa-solid fa-gem mr-1 align-middle text-purple-600" title="High-profile organization" aria-hidden="true"></i>
     <% end %>
     <% if path.present? %>
       <%= link_to row[:name], path, class: "group-hover:underline align-middle" %>
@@ -23,11 +23,11 @@
       <span class="align-middle"><%= row[:name] %></span>
     <% end %>
   </td>
-  <td class="py-1 pl-3 text-right text-gray-500 tabular-nums whitespace-nowrap">
+  <td class="py-1 pl-3 text-right whitespace-nowrap text-gray-500 tabular-nums">
     <span class="<%= "group-hover:underline" if path.present? %>"><%= row[:count] %><span class="text-gray-400"> · <%= total.zero? ? 0 : (row[:count] * 100.0 / total).round(1) %>%</span></span>
     <%# Jump-link affordance: invisible (white) until the row is hovered, matching the other breakdown cards. %>
     <% if path.present? %>
-      <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-white group-hover:text-gray-400 ml-1 align-middle" aria-hidden="true"></i>
+      <i class="fa-solid fa-arrow-up-right-from-square text-2xs ml-1 align-middle text-white group-hover:text-gray-400" aria-hidden="true"></i>
     <% end %>
   </td>
 </tr>

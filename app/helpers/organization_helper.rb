@@ -56,7 +56,7 @@ module OrganizationHelper
 
       label_tag = if label.present?
         content_tag(:span, label,
-                    class: "absolute top-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-200 text-gray-600")
+                    class: "absolute top-1 right-1 px-1.5 py-0.5 rounded text-2xs font-semibold bg-gray-200 text-gray-600")
       else
         "".html_safe
       end

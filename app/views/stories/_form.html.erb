@@ -103,7 +103,7 @@
   </div>
 
   <!-- Story-specific tags (sectors + story-specific categories) -->
-  <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6 mt-6">
+  <div class="my-6 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
     <h3 class="text-base font-semibold text-gray-800 mb-3">
       <%= Sector::STORY_DISPLAY_TEXT %>
       <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply)</span>
@@ -394,7 +394,7 @@
                         class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
                         target: "_blank", rel: "noopener" do %>
               View all
-              <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+              <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
             <% end %>
           <% end %>
         </div>
@@ -413,7 +413,7 @@
                   partial: "comments/comment_fields",
                   data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
                   class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
-              <i class="fa-solid fa-plus text-[0.6rem]"></i>
+              <i class="fa-solid fa-plus text-2xs"></i>
               Add comment
             <% end %>
 
@@ -422,7 +422,7 @@
               class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
               data-action="edit-toggle#toggle"
             >
-              <i class="fa-solid fa-pen text-[0.6rem]"></i>
+              <i class="fa-solid fa-pen text-2xs"></i>
               <span data-edit-toggle-target="editLabel">Edit comments</span>
               <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
             </button>

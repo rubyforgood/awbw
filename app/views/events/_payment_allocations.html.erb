@@ -1,6 +1,6 @@
 <% allocations = payment.allocations.includes(:allocatable) %>
 <% if allocations.any? %>
-  <div class="border border-gray-200 rounded-lg overflow-hidden">
+  <div class="overflow-hidden rounded-lg border border-gray-200">
     <table class="min-w-full divide-y divide-gray-200 text-sm">
       <thead class="bg-gray-100">
         <tr>
@@ -23,14 +23,14 @@
             <td class="px-3 py-2 text-gray-800">
               <%= render "allocations/allocatable_link", allocation: allocation, return_params: local_assigns.fetch(:return_params, {}) %>
             </td>
-            <td class="px-3 py-2 font-medium text-gray-900 whitespace-nowrap tabular-nums"><%= dollars_from_cents(allocation.amount) %></td>
-            <td class="px-3 py-2 text-gray-500 whitespace-nowrap"><%= allocation.created_at.strftime("%b %-d, %Y") %></td>
+            <td class="px-3 py-2 font-medium whitespace-nowrap text-gray-900 tabular-nums"><%= dollars_from_cents(allocation.amount) %></td>
+            <td class="px-3 py-2 whitespace-nowrap text-gray-500"><%= allocation.created_at.strftime("%b %-d, %Y") %></td>
             <td class="px-3 py-2 text-right whitespace-nowrap">
               <% unless allocation.reverted? || allocation.amount.to_i < 0 %>
                 <%= button_to revert_allocation_path(allocation), method: :post,
                       class: "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-red-700 cursor-pointer",
                       data: { turbo_confirm: "Are you sure?" } do %>
-                  <i class="fa-solid fa-rotate-left text-[0.7rem]"></i>
+                  <i class="fa-solid fa-rotate-left text-2xs"></i>
                   Revert
                 <% end %>
               <% end %>
@@ -40,7 +40,7 @@
       </tbody>
     </table>
   </div>
-  <div class="text-sm text-gray-500 font-medium text-right">
+  <div class="text-right text-sm font-medium text-gray-500">
     <%= dollars_from_cents(payment.amount_cents_remaining) %> remaining
   </div>
 <% else %>

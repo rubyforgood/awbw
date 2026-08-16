@@ -6,15 +6,15 @@
   <%= hidden_field_tag :event_registration_id, params[:event_registration_id] if params[:event_registration_id].present? %>
 
   <!-- Account Details -->
-  <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-    <h4 class="text-sm font-semibold uppercase text-gray-700 mb-4">Account Details</h4>
+  <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+    <h4 class="mb-4 text-sm font-semibold text-gray-700 uppercase">Account Details</h4>
 
     <% if @person %>
       <%= f.hidden_field :first_name, value: @person.first_name %>
       <%= f.hidden_field :last_name, value: @person.last_name %>
     <% end %>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
       <div id="email_field_wrapper">
         <% if allowed_to?(:manage?, User) %>
           <%= f.input :email,
@@ -25,22 +25,22 @@
                       wrapper_html: { class: "w-full" },
                       label_html: { id: "email_label" } %>
         <% else %>
-          <label class="block text-sm font-medium text-gray-500 mb-1">
+          <label class="mb-1 block text-sm font-medium text-gray-500">
             Email <%= email_confirmation_icon(@user) %>
           </label>
-          <div class="text-gray-900 font-medium"><%= f.object.email.presence || @person&.email %></div>
-          <p class="text-sm text-gray-500 mt-1">Only editable by admins</p>
+          <div class="font-medium text-gray-900"><%= f.object.email.presence || @person&.email %></div>
+          <p class="mt-1 text-sm text-gray-500">Only editable by admins</p>
         <% end %>
       </div>
 
       <% if allowed_to?(:manage?, User) %>
         <div>
-          <label class="block font-medium text-gray-700 mb-2">Account flags</label>
-          <div class="flex items-center gap-6 mt-2">
+          <label class="mb-2 block font-medium text-gray-700">Account flags</label>
+          <div class="mt-2 flex items-center gap-6">
             <% if params[:admin].present? || f.object.inactive? %>
               <%= f.input :inactive, wrapper_html: { class: "mb-0" } %>
             <% end %>
-            <label class="flex items-center gap-2 cursor-pointer">
+            <label class="flex cursor-pointer items-center gap-2">
               <%= f.hidden_field :locked, value: "0" %>
               <%= f.check_box :locked,
                               { checked: f.object.locked_at.present?,
@@ -51,7 +51,7 @@
               <i class="fa-solid fa-lock text-red-500" data-toggle-user-icon-target="lockIcon"
                  style="<%= 'display:none' unless f.object.locked_at.present? %>"></i>
             </label>
-            <label class="flex items-center gap-2 cursor-pointer">
+            <label class="flex cursor-pointer items-center gap-2">
               <%= f.hidden_field :super_user, value: "0" %>
               <%= f.check_box :super_user,
                               { checked: f.object.super_user?,
@@ -71,14 +71,14 @@
   <!-- Notes -->
   <% if allowed_to?(:manage?, User) %>
     <% if params[:admin].present? || f.object.comment.present? %>
-      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-        <h4 class="text-sm font-semibold uppercase text-gray-700 mb-4">Notes</h4>
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h4 class="mb-4 text-sm font-semibold text-gray-700 uppercase">Notes</h4>
         <div class="space-y-4">
           <% if params[:admin].present? || f.object.comment.present? %>
             <%= f.input :comment, as: :text, input_html: { rows: 3, class: "w-full" } %>
           <% end %>
           <% if params[:admin] %>
-            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="rounded-lg border border-red-200 bg-red-50 p-4">
               <%= f.input :notes, as: :text, input_html: { rows: 3, class: "w-full" } %>
             </div>
           <% end %>
@@ -88,14 +88,14 @@
   <% end %>
 
   <!-- Preferences -->
-  <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-    <h4 class="text-sm font-semibold uppercase text-gray-700 mb-4">Preferences</h4>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+    <h4 class="mb-4 text-sm font-semibold text-gray-700 uppercase">Preferences</h4>
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
       <% if @person %>
         <div>
-          <label class="block text-sm font-medium text-gray-500 mb-1">Time zone</label>
-          <div class="text-gray-900 font-medium"><%= f.object.time_zone || "Pacific Time (US & Canada)" %></div>
-          <p class="text-sm text-gray-500 mt-2">
+          <label class="mb-1 block text-sm font-medium text-gray-500">Time zone</label>
+          <div class="font-medium text-gray-900"><%= f.object.time_zone || "Pacific Time (US & Canada)" %></div>
+          <p class="mt-2 text-sm text-gray-500">
             Edit on <%= link_to "person profile", edit_person_path(@person), class: "text-indigo-600 hover:underline" %>
           </p>
         </div>
@@ -112,7 +112,7 @@
 
       <% if allowed_to?(:manage?, User) %>
         <div>
-          <label class="block font-medium text-gray-700 mb-2">Favorite event</label>
+          <label class="mb-2 block font-medium text-gray-700">Favorite event</label>
           <%= f.input :favorite_event_id,
                       label: false,
                       collection: f.object.favorite_event ? [ [ f.object.favorite_event.remote_search_label[:label], f.object.favorite_event.id ] ] : [],
@@ -131,15 +131,15 @@
 
   <% if f.object.persisted? %>
     <!-- Comments -->
-    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6" id="comments-section">
-      <div class="flex items-center mb-4">
-        <h4 class="text-sm font-semibold uppercase text-gray-700">Comments</h4>
+    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm" id="comments-section">
+      <div class="mb-4 flex items-center">
+        <h4 class="text-sm font-semibold text-gray-700 uppercase">Comments</h4>
         <% if f.object.person %>
           <%= link_to all_comments_person_path(f.object.person),
                       class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
                       target: "_blank", rel: "noopener" do %>
             View all
-            <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+            <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
           <% end %>
         <% end %>
       </div>
@@ -153,14 +153,14 @@
 
         <div data-paginated-fields-target="nav"></div>
 
-        <div class="flex items-center justify-between mt-3">
+        <div class="mt-3 flex items-center justify-between">
           <%= link_to_add_association "➕ Add Comment",
                                       f,
                                       :comments,
                                       partial: "comments/comment_fields",
                                       class: "btn btn-secondary-outline" %>
           <button type="button"
-                  class="text-sm text-gray-400 hover:text-blue-600 underline cursor-pointer whitespace-nowrap"
+                  class="cursor-pointer text-sm whitespace-nowrap text-gray-400 underline hover:text-blue-600"
                   data-action="edit-toggle#toggle">
             <span data-edit-toggle-target="editLabel">Edit Comments</span>
             <span data-edit-toggle-target="viewLabel" class="hidden">Done Editing</span>

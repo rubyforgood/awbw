@@ -13,14 +13,14 @@
                 class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
                 target: "_blank", rel: "noopener" do %>
       View all
-      <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+      <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
     <% end %>
   </div>
 
   <div class="p-4">
     <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <div class="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3">
-        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">CE cost</dt>
+        <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">CE cost</dt>
         <% if params[:admin] == "true" %>
           <dd class="mt-1">
             <%= number_field_tag "continuing_education_registration[cost_dollars]",
@@ -35,14 +35,14 @@
       <%= link_to allocations_path(allocatable_sgid: ce_registration.to_sgid.to_s, return_to: "ce_registration"),
             target: "_blank", rel: "noopener",
             class: "rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 block transition hover:border-gray-400 hover:shadow-sm" do %>
-        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount allocated</dt>
+        <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Amount allocated</dt>
         <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(paid_cents) %></dd>
       <% end %>
       <% amount_due = due_cents > 0 %>
       <%= link_to allocations_path(allocatable_sgid: ce_registration.to_sgid.to_s, return_to: "ce_registration"),
             target: "_blank", rel: "noopener",
             class: "rounded-lg border px-4 py-3 block transition hover:shadow-sm #{amount_due ? "border-amber-300 bg-amber-50 hover:border-amber-400" : "border-gray-300 bg-gray-50 hover:border-gray-400"}" do %>
-        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount due</dt>
+        <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Amount due</dt>
         <dd class="mt-1 flex items-center gap-1.5 text-sm font-semibold tabular-nums <%= amount_due ? "text-amber-700" : "text-gray-500" %>">
           <% if amount_due %>
             <i class="fa-solid fa-circle-exclamation"></i>

@@ -16,7 +16,7 @@ class TopicSubscriptionDecorator < ApplicationDecorator
       label = "Active"
     else
       classes = "bg-slate-600 text-white border-slate-600"
-      icon = "fa-solid fa-bell-slash text-[0.65rem]"
+      icon = "fa-solid fa-bell-slash text-2xs"
       label = "Unsubscribed"
     end
 

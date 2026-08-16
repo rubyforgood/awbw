@@ -63,7 +63,7 @@
                end %>
             <% account_box = capture do %>
               <i class="fa-solid <%= account_icon %> <%= account_icon_color %> text-base"></i>
-              <span class="text-[0.6rem] font-medium leading-tight text-gray-700">User account</span>
+              <span class="text-2xs font-medium leading-tight text-gray-700">User account</span>
             <% end %>
             <% if allowed_to?(:show?, account) %>
               <%= link_to user_path(account), class: "#{box_base} #{account_border}", title: "User account: #{account_status}", data: { turbo_frame: "_top" } do %>
@@ -75,12 +75,12 @@
           <% elsif allowed_to?(:new?, User) %>
             <%= link_to new_user_path(person_id: f.object.registrant_id, event_registration_id: f.object.id), class: "#{box_base} border-gray-300 text-gray-600", title: "Create a user account", data: { turbo_frame: "_top" } do %>
               <i class="fa-solid fa-user-plus text-base"></i>
-              <span class="text-[0.6rem] font-medium leading-tight">Create user</span>
+              <span class="text-2xs font-medium leading-tight">Create user</span>
             <% end %>
           <% else %>
             <div class="<%= box_base %> border-gray-300 text-gray-500" title="No user account">
               <i class="fa-solid fa-user-slash text-base"></i>
-              <span class="text-[0.6rem] font-medium leading-tight">No account</span>
+              <span class="text-2xs font-medium leading-tight">No account</span>
             </div>
           <% end %>
 
@@ -88,9 +88,9 @@
             <div class="mb-1 flex items-center justify-between gap-2">
               <span class="text-xs font-medium text-gray-400">Registration status</span>
               <span data-attendance-status-target="dirty"
-                    class="hidden items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[0.65rem] font-medium text-amber-700"
+                    class="hidden items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-2xs font-medium text-amber-700"
                     title="Save the form to apply this change">
-                <i class="fa-solid fa-pen text-[0.55rem]"></i>
+                <i class="fa-solid fa-pen text-3xs"></i>
                 Unsaved
               </span>
             </div>
@@ -122,7 +122,7 @@
                         data: { turbo_frame: "_top" } do %>
               <i class="fa-solid fa-ticket"></i>
               View ticket
-              <i class="fa-solid fa-arrow-up-right-from-square text-[0.55rem] text-gray-400"></i>
+              <i class="fa-solid fa-arrow-up-right-from-square text-3xs text-gray-400"></i>
             <% end %>
           <% end %>
 
@@ -134,7 +134,7 @@
                         data: { turbo_frame: "_top" } do %>
               <i class="fa-solid fa-file-lines"></i>
               View form submission<%= " ##{i + 1}" if submissions.size > 1 %>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[0.55rem] text-gray-400"></i>
+              <i class="fa-solid fa-arrow-up-right-from-square text-3xs text-gray-400"></i>
             <% end %>
           <% end %>
 
@@ -210,7 +210,7 @@
                 data-org-toggle-target="addButton"
                 data-action="org-toggle#showAddForm"
                 class="inline-flex items-center gap-1.5 self-start rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer">
-                <i class="fa-solid fa-plus text-[0.6rem]"></i>
+                <i class="fa-solid fa-plus text-2xs"></i>
                 Connect organization
               </button>
             </div>
@@ -287,7 +287,7 @@
                         class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
                         target: "_blank", rel: "noopener" do %>
               View all
-              <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+              <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
             <% end %>
           <% end %>
         </div>
@@ -306,7 +306,7 @@
                   partial: "comments/comment_fields",
                   data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
                   class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
-              <i class="fa-solid fa-plus text-[0.6rem]"></i>
+              <i class="fa-solid fa-plus text-2xs"></i>
               Add comment
             <% end %>
 
@@ -315,7 +315,7 @@
               class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
               data-action="edit-toggle#toggle"
             >
-              <i class="fa-solid fa-pen text-[0.6rem]"></i>
+              <i class="fa-solid fa-pen text-2xs"></i>
               <span data-edit-toggle-target="editLabel">Edit comments</span>
               <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
             </button>

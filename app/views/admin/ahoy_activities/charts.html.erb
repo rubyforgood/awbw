@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
-      <div class="flex flex-wrap items-center gap-y-2 mb-2">
+<div class="<%= DomainTheme.bg_class_for(:admin_only) %> rounded-xl border border-gray-200 p-6 shadow">
+      <div class="mb-2 flex flex-wrap items-center gap-y-2">
         <% if allowed_to?(:index?, with: Admin::HomePolicy) %>
           <%= link_to admin_path, class: "inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700" do %>
             <i class="fas fa-arrow-left"></i>
@@ -12,15 +12,15 @@
         </div>
       </div>
 
-      <div class="flex items-baseline gap-3 mb-6 leading-none">
-        <h1 class="text-2xl font-semibold text-gray-900 leading-none">Charts</h1>
+      <div class="mb-6 flex items-baseline gap-3 leading-none">
+        <h1 class="text-2xl leading-none font-semibold text-gray-900">Charts</h1>
       </div>
 
-      <div class="flex flex-wrap items-start justify-between gap-3 mb-6 text-sm min-h-10">
+      <div class="mb-6 flex min-h-10 flex-wrap items-start justify-between gap-3 text-sm">
         <%= render "admin/shared/active_filters_subheader" %>
 
         <div class="flex flex-wrap items-center gap-3">
-          <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Filters</h3>
+          <h3 class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Filters</h3>
           <%= form_with url: admin_activities_charts_path, method: :get, local: true,
                         class: "flex items-center gap-4" do %>
             <%= render "admin/shared/audience_dropdown" %>
@@ -46,7 +46,7 @@
       </div>
 
       <section>
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <% has_users = @audience_labels.include?("users")
              has_staff = @audience_labels.include?("staff")
              audience_note = if has_users && has_staff
@@ -63,55 +63,55 @@
                                      else
                                        "non-admin accounts"
                                      end %>
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">
             Portal usage
             <% if audience_note %>
-              <span class="text-xs font-normal text-blue-500 ml-2">(<%= audience_note %>)</span>
+              <span class="ml-2 text-xs font-normal text-blue-500">(<%= audience_note %>)</span>
             <% end %>
           </h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+          <div class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
             <%= link_to users_path, class: "group relative bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 group-hover:text-blue-600 absolute top-3.5 right-3.5 transition-colors"></i>
-              <h3 class="text-sm font-semibold text-gray-700 mb-2 pr-4">Total users</h3>
+              <i class="fa-solid fa-arrow-up-right-from-square text-2xs absolute top-3.5 right-3.5 text-gray-400 transition-colors group-hover:text-blue-600"></i>
+              <h3 class="mb-2 pr-4 text-sm font-semibold text-gray-700">Total users</h3>
               <div class="flex flex-col items-center justify-center py-4">
-                <div class="text-5xl font-bold text-gray-900 group-hover:text-blue-600 tabular-nums transition-colors"><%= number_with_delimiter(@filtered_user_count) %></div>
+                <div class="text-5xl font-bold text-gray-900 tabular-nums transition-colors group-hover:text-blue-600"><%= number_with_delimiter(@filtered_user_count) %></div>
                 <% if @audience_labels.include?("users") && @audience_labels.include?("staff") %>
-                  <div class="text-xs text-gray-400 mt-2">All user accounts in the system</div>
-                  <div class="text-xs text-gray-400 mt-1"><%= number_with_delimiter(@non_staff_users) %> non-admin · <%= number_with_delimiter(@staff_users) %> admin</div>
+                  <div class="mt-2 text-xs text-gray-400">All user accounts in the system</div>
+                  <div class="mt-1 text-xs text-gray-400"><%= number_with_delimiter(@non_staff_users) %> non-admin · <%= number_with_delimiter(@staff_users) %> admin</div>
                 <% elsif @audience_labels.include?("staff") %>
-                  <div class="text-xs text-gray-400 mt-2">Admin accounts</div>
-                  <div class="text-xs text-gray-400 mt-1">of <%= number_with_delimiter(@total_users) %> total</div>
+                  <div class="mt-2 text-xs text-gray-400">Admin accounts</div>
+                  <div class="mt-1 text-xs text-gray-400">of <%= number_with_delimiter(@total_users) %> total</div>
                 <% else %>
-                  <div class="text-xs text-gray-400 mt-2">Non-admin accounts</div>
-                  <div class="text-xs text-gray-400 mt-1">of <%= number_with_delimiter(@total_users) %> total</div>
+                  <div class="mt-2 text-xs text-gray-400">Non-admin accounts</div>
+                  <div class="mt-1 text-xs text-gray-400">of <%= number_with_delimiter(@total_users) %> total</div>
                 <% end %>
               </div>
             <% end %>
 
             <%= link_to users_path(invited: "true"), class: "group relative bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 group-hover:text-blue-600 absolute top-3.5 right-3.5 transition-colors"></i>
-              <h3 class="text-sm font-semibold text-gray-700 mb-2 pr-4">Invited users</h3>
+              <i class="fa-solid fa-arrow-up-right-from-square text-2xs absolute top-3.5 right-3.5 text-gray-400 transition-colors group-hover:text-blue-600"></i>
+              <h3 class="mb-2 pr-4 text-sm font-semibold text-gray-700">Invited users</h3>
               <div class="flex flex-col items-center justify-center py-4">
-                <div class="text-5xl font-bold text-gray-900 group-hover:text-blue-600 tabular-nums transition-colors"><%= number_with_delimiter(@portal_access_users) %></div>
-                <div class="text-xs text-gray-400 mt-2">Sent the welcome instructions email</div>
+                <div class="text-5xl font-bold text-gray-900 tabular-nums transition-colors group-hover:text-blue-600"><%= number_with_delimiter(@portal_access_users) %></div>
+                <div class="mt-2 text-xs text-gray-400">Sent the welcome instructions email</div>
                 <% if @has_access_users != @portal_access_users %>
-                  <div class="text-xs text-gray-400 mt-1"><%= @has_access_users %> have access of <%= number_with_delimiter(@filtered_user_count) %> <%= audience_count_label %></div>
+                  <div class="mt-1 text-xs text-gray-400"><%= @has_access_users %> have access of <%= number_with_delimiter(@filtered_user_count) %> <%= audience_count_label %></div>
                 <% else %>
-                  <div class="text-xs text-gray-400 mt-1">of <%= number_with_delimiter(@filtered_user_count) %> <%= audience_count_label %></div>
+                  <div class="mt-1 text-xs text-gray-400">of <%= number_with_delimiter(@filtered_user_count) %> <%= audience_count_label %></div>
                 <% end %>
               </div>
             <% end %>
 
             <%= link_to users_path(authenticated: "true"), class: "group relative bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 group-hover:text-blue-600 absolute top-3.5 right-3.5 transition-colors"></i>
-              <h3 class="text-sm font-semibold text-gray-700 mb-2 pr-4">Authenticated users</h3>
+              <i class="fa-solid fa-arrow-up-right-from-square text-2xs absolute top-3.5 right-3.5 text-gray-400 transition-colors group-hover:text-blue-600"></i>
+              <h3 class="mb-2 pr-4 text-sm font-semibold text-gray-700">Authenticated users</h3>
               <div class="flex flex-col items-center justify-center py-4">
-                <div class="text-5xl font-bold text-gray-900 group-hover:text-blue-600 tabular-nums transition-colors"><%= number_with_delimiter(@authenticated_users) %></div>
-                <div class="text-xs text-gray-400 mt-2">Logged in at least once</div>
+                <div class="text-5xl font-bold text-gray-900 tabular-nums transition-colors group-hover:text-blue-600"><%= number_with_delimiter(@authenticated_users) %></div>
+                <div class="mt-2 text-xs text-gray-400">Logged in at least once</div>
                 <% if @confirmed_users != @authenticated_users %>
-                  <div class="text-xs text-gray-400 mt-1"><%= @confirmed_users %> confirmed of <%= number_with_delimiter(@filtered_user_count) %> <%= audience_count_label %></div>
+                  <div class="mt-1 text-xs text-gray-400"><%= @confirmed_users %> confirmed of <%= number_with_delimiter(@filtered_user_count) %> <%= audience_count_label %></div>
                 <% else %>
-                  <div class="text-xs text-gray-400 mt-1">of <%= number_with_delimiter(@filtered_user_count) %> <%= audience_count_label %></div>
+                  <div class="mt-1 text-xs text-gray-400">of <%= number_with_delimiter(@filtered_user_count) %> <%= audience_count_label %></div>
                 <% end %>
               </div>
             <% end %>
@@ -131,40 +131,40 @@
       </section>
 
       <section class="mt-6">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Engagement patterns</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">Engagement patterns</h2>
+          <div class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
             <%= link_to admin_activities_visits_path, class: "group relative bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 group-hover:text-blue-600 absolute top-3.5 right-3.5 transition-colors"></i>
-              <h3 class="text-sm font-semibold text-gray-700 mb-2 pr-4">Total visits</h3>
+              <i class="fa-solid fa-arrow-up-right-from-square text-2xs absolute top-3.5 right-3.5 text-gray-400 transition-colors group-hover:text-blue-600"></i>
+              <h3 class="mb-2 pr-4 text-sm font-semibold text-gray-700">Total visits</h3>
               <div class="flex flex-col items-center justify-center py-4">
-                <div class="text-5xl font-bold text-gray-900 group-hover:text-blue-600 tabular-nums transition-colors"><%= number_with_delimiter(scoped_visits.count) %></div>
-                <div class="text-xs text-gray-400 mt-2">Sessions in selected period</div>
+                <div class="text-5xl font-bold text-gray-900 tabular-nums transition-colors group-hover:text-blue-600"><%= number_with_delimiter(scoped_visits.count) %></div>
+                <div class="mt-2 text-xs text-gray-400">Sessions in selected period</div>
                 <% if @authenticated_visits > 0 && @public_visits > 0 %>
-                <div class="text-xs text-gray-400 mt-1"><%= number_with_delimiter(@authenticated_visits) %> authenticated · <%= number_with_delimiter(@public_visits) %> public</div>
+                <div class="mt-1 text-xs text-gray-400"><%= number_with_delimiter(@authenticated_visits) %> authenticated · <%= number_with_delimiter(@public_visits) %> public</div>
               <% end %>
               </div>
             <% end %>
 
             <%= link_to admin_activities_events_path, class: "group relative bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 group-hover:text-blue-600 absolute top-3.5 right-3.5 transition-colors"></i>
-              <h3 class="text-sm font-semibold text-gray-700 mb-2 pr-4">Total activities</h3>
+              <i class="fa-solid fa-arrow-up-right-from-square text-2xs absolute top-3.5 right-3.5 text-gray-400 transition-colors group-hover:text-blue-600"></i>
+              <h3 class="mb-2 pr-4 text-sm font-semibold text-gray-700">Total activities</h3>
               <div class="flex flex-col items-center justify-center py-4">
-                <div class="text-5xl font-bold text-gray-900 group-hover:text-blue-600 tabular-nums transition-colors"><%= number_with_delimiter(scoped_events.count) %></div>
-                <div class="text-xs text-gray-400 mt-2">Actions in selected period</div>
+                <div class="text-5xl font-bold text-gray-900 tabular-nums transition-colors group-hover:text-blue-600"><%= number_with_delimiter(scoped_events.count) %></div>
+                <div class="mt-2 text-xs text-gray-400">Actions in selected period</div>
                 <% if @authenticated_visits > 0 && @public_visits > 0 %>
-                <div class="text-xs text-gray-400 mt-1"><%= number_with_delimiter(@authenticated_visits) %> authenticated · <%= number_with_delimiter(@public_visits) %> public</div>
+                <div class="mt-1 text-xs text-gray-400"><%= number_with_delimiter(@authenticated_visits) %> authenticated · <%= number_with_delimiter(@public_visits) %> public</div>
               <% end %>
               </div>
             <% end %>
 
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-              <h3 class="text-sm font-semibold text-gray-700 mb-2">Avg activities per visit</h3>
+            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 class="mb-2 text-sm font-semibold text-gray-700">Avg activities per visit</h3>
               <div class="flex flex-col items-center justify-center py-4">
                 <div class="text-5xl font-bold text-gray-900 tabular-nums"><%= @avg_events_per_visit %></div>
-                <div class="text-xs text-gray-400 mt-2">Actions per session</div>
+                <div class="mt-2 text-xs text-gray-400">Actions per session</div>
                 <% if @authenticated_visits > 0 && @public_visits > 0 %>
-                <div class="text-xs text-gray-400 mt-1"><%= number_with_delimiter(@authenticated_visits) %> authenticated · <%= number_with_delimiter(@public_visits) %> public</div>
+                <div class="mt-1 text-xs text-gray-400"><%= number_with_delimiter(@authenticated_visits) %> authenticated · <%= number_with_delimiter(@public_visits) %> public</div>
               <% end %>
               </div>
             </div>
@@ -192,19 +192,19 @@
             <% end %>
 
             <div class="flex flex-col gap-4">
-              <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex-1">
-                <h3 class="text-sm font-semibold text-gray-700 mb-1">Avg session duration</h3>
+              <div class="flex-1 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                <h3 class="mb-1 text-sm font-semibold text-gray-700">Avg session duration</h3>
                 <div class="flex flex-col items-center justify-center py-2">
                   <div class="text-3xl font-bold text-gray-900 tabular-nums"><%= @avg_session_minutes %></div>
-                  <div class="text-xs text-gray-400 mt-1">Minutes per session</div>
+                  <div class="mt-1 text-xs text-gray-400">Minutes per session</div>
                 </div>
               </div>
-              <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex-1">
-                <h3 class="text-sm font-semibold text-gray-700 mb-1">Public activities</h3>
+              <div class="flex-1 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                <h3 class="mb-1 text-sm font-semibold text-gray-700">Public activities</h3>
                 <div class="flex flex-col items-center justify-center py-2">
                   <div class="text-3xl font-bold text-gray-900 tabular-nums"><%= @public_events_pct %>%</div>
-                  <div class="text-xs text-gray-400 mt-1">Activities from public visitors</div>
-                  <div class="text-xs text-gray-400 mt-1"><%= @public_visits_pct %>% of visits are public</div>
+                  <div class="mt-1 text-xs text-gray-400">Activities from public visitors</div>
+                  <div class="mt-1 text-xs text-gray-400"><%= @public_visits_pct %>% of visits are public</div>
                 </div>
               </div>
             </div>
@@ -230,7 +230,7 @@
               <% max_val = @heatmap_data.values.max.to_i %>
               <% max_val = 1 if max_val == 0 %>
               <div class="overflow-x-auto">
-                <table class="w-full table-fixed text-xs border-collapse">
+                <table class="w-full table-fixed border-collapse text-xs">
                   <colgroup>
                     <col class="w-12">
                     <% 7.times do %><col><% end %>
@@ -239,18 +239,18 @@
                     <tr>
                       <th class="p-1 text-right text-gray-500"></th>
                       <% days.each do |d| %>
-                        <th class="p-1 text-center text-gray-500 font-medium"><%= d %></th>
+                        <th class="p-1 text-center font-medium text-gray-500"><%= d %></th>
                       <% end %>
                     </tr>
                   </thead>
                   <tbody>
                     <% (0..23).each do |hour| %>
                       <tr>
-                        <td class="p-1 text-right text-gray-500 whitespace-nowrap font-mono"><%= "#{hour}:00" %></td>
+                        <td class="p-1 text-right font-mono whitespace-nowrap text-gray-500"><%= "#{hour}:00" %></td>
                         <% (1..7).each do |dow| %>
                           <% val = @heatmap_data[[hour, dow]] || 0 %>
                           <% opacity = (val.to_f / max_val).round(2) %>
-                          <td class="p-1 text-center rounded-sm"
+                          <td class="rounded-sm p-1 text-center"
                               style="background-color: rgba(59, 130, 246, <%= opacity %>);"
                               title="<%= days[dow - 1] %> <%= hour %>:00 — <%= val %> activities">
                             <span class="<%= opacity > 0.5 ? 'text-white' : 'text-gray-700' %>">
@@ -269,9 +269,9 @@
       </section>
 
       <section class="mt-6">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Workshop analytics</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">Workshop analytics</h2>
+          <div class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
             <%= chart_card("Workshop search: category types") { bar_chart(@ws_category_types) } %>
             <%= chart_card("Workshop search: categories") { bar_chart(@ws_category_names) } %>
             <%= chart_card("Workshop search: sectors") { bar_chart(@ws_sectors) } %>
@@ -286,9 +286,9 @@
       </section>
 
       <section class="mt-6">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Resource analytics</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">Resource analytics</h2>
+          <div class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
             <%= chart_card("Resource search: keywords") { bar_chart(@rs_keywords) } %>
             <%= chart_card("Resource search: kinds") { bar_chart(@rs_kinds) } %>
             <%= chart_card("Resource discovery funnel") { column_chart(@rs_funnel) } %>
@@ -297,27 +297,27 @@
       </section>
 
       <section class="mt-6">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Tag analytics</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">Tag analytics</h2>
+          <div class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
             <%= link_to tags_path, class: "group relative bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 group-hover:text-blue-600 absolute top-3.5 right-3.5 transition-colors"></i>
-              <h3 class="text-sm font-semibold text-gray-700 mb-2 pr-4">Tags page views</h3>
+              <i class="fa-solid fa-arrow-up-right-from-square text-2xs absolute top-3.5 right-3.5 text-gray-400 transition-colors group-hover:text-blue-600"></i>
+              <h3 class="mb-2 pr-4 text-sm font-semibold text-gray-700">Tags page views</h3>
               <div class="flex flex-col items-center justify-center py-4">
-                <div class="text-5xl font-bold text-gray-900 group-hover:text-blue-600 tabular-nums transition-colors"><%= number_with_delimiter(@tags_page_views) %></div>
+                <div class="text-5xl font-bold text-gray-900 tabular-nums transition-colors group-hover:text-blue-600"><%= number_with_delimiter(@tags_page_views) %></div>
               </div>
             <% end %>
 
             <%= link_to taggings_path, class: "group relative bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-400 group-hover:text-blue-600 absolute top-3.5 right-3.5 transition-colors"></i>
-              <h3 class="text-sm font-semibold text-gray-700 mb-2 pr-4">Taggings page views</h3>
+              <i class="fa-solid fa-arrow-up-right-from-square text-2xs absolute top-3.5 right-3.5 text-gray-400 transition-colors group-hover:text-blue-600"></i>
+              <h3 class="mb-2 pr-4 text-sm font-semibold text-gray-700">Taggings page views</h3>
               <div class="flex flex-col items-center justify-center py-4">
-                <div class="text-5xl font-bold text-gray-900 group-hover:text-blue-600 tabular-nums transition-colors"><%= number_with_delimiter(@taggings_page_views) %></div>
+                <div class="text-5xl font-bold text-gray-900 tabular-nums transition-colors group-hover:text-blue-600"><%= number_with_delimiter(@taggings_page_views) %></div>
               </div>
             <% end %>
 
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-              <h3 class="text-sm font-semibold text-gray-700 mb-2">Tagging searches</h3>
+            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 class="mb-2 text-sm font-semibold text-gray-700">Tagging searches</h3>
               <div class="flex flex-col items-center justify-center py-4">
                 <div class="text-5xl font-bold text-gray-900 tabular-nums"><%= number_with_delimiter(@tagging_searches) %></div>
               </div>
@@ -329,13 +329,13 @@
 
             <%= chart_card("Tagging search origin") { pie_chart(@tagging_search_origin) } %>
 
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 md:col-span-2 xl:col-span-2">
-              <h3 class="text-sm font-semibold text-gray-700 mb-4">Top filter combinations</h3>
+            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm md:col-span-2 xl:col-span-2">
+              <h3 class="mb-4 text-sm font-semibold text-gray-700">Top filter combinations</h3>
               <ul class="space-y-1 text-sm text-gray-700">
                 <% @top_filter_combos.each do |label, count| %>
-                  <li class="flex items-center min-w-0">
-                    <span class="font-semibold text-gray-900 tabular-nums shrink-0 inline-block w-[4ch] text-right font-mono"><%= count %></span>
-                    <span class="text-gray-400 mx-1 shrink-0">&times;</span>
+                  <li class="flex min-w-0 items-center">
+                    <span class="inline-block w-[4ch] shrink-0 text-right font-mono font-semibold text-gray-900 tabular-nums"><%= count %></span>
+                    <span class="mx-1 shrink-0 text-gray-400">&times;</span>
                     <span class="truncate" title="<%= label %>"><%= label %></span>
                   </li>
                 <% end %>
@@ -346,9 +346,9 @@
       </section>
 
       <section class="mt-6">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Content discovery</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">Content discovery</h2>
+          <div class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
             <%= chart_card("Content types people view most") do %>
               <%= pie_chart(
                     scoped_events
@@ -376,33 +376,33 @@
       </section>
 
       <section class="mt-6">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Content creation</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-              <h3 class="text-sm font-semibold text-gray-700 mb-2">Ideas submitted</h3>
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">Content creation</h2>
+          <div class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
+            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 class="mb-2 text-sm font-semibold text-gray-700">Ideas submitted</h3>
               <div class="flex flex-col items-center justify-center py-4">
                 <div class="text-5xl font-bold text-gray-900 tabular-nums"><%= number_with_delimiter(@ideas_submitted) %></div>
               </div>
             </div>
 
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-              <h3 class="text-sm font-semibold text-gray-700 mb-2">Ideas promoted</h3>
+            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 class="mb-2 text-sm font-semibold text-gray-700">Ideas promoted</h3>
               <div class="flex flex-col items-center justify-center py-4">
                 <div class="text-5xl font-bold text-gray-900 tabular-nums"><%= number_with_delimiter(@ideas_promoted) %></div>
-                <div class="text-xs text-gray-400 mt-2">Converted to published content</div>
+                <div class="mt-2 text-xs text-gray-400">Converted to published content</div>
               </div>
             </div>
 
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-              <h3 class="text-sm font-semibold text-gray-700 mb-2">Avg ideas per person</h3>
+            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 class="mb-2 text-sm font-semibold text-gray-700">Avg ideas per person</h3>
               <div class="flex flex-col items-center justify-center py-4">
                 <div class="text-5xl font-bold text-gray-900 tabular-nums"><%= @avg_ideas_per_person %></div>
               </div>
             </div>
 
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-              <h3 class="text-sm font-semibold text-gray-700 mb-4">Total content created</h3>
+            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 class="mb-4 text-sm font-semibold text-gray-700">Total content created</h3>
               <ul class="space-y-1 text-sm text-gray-700">
                 <% @total_generated_content.each do |row| %>
                   <% if row == [ :spacer ] %>
@@ -411,7 +411,7 @@
                     <% label, total, idea_count, admin_count, promoted = row %>
                     <li>
                       <span class="font-semibold text-gray-900 tabular-nums"><%= total %></span>
-                      <span class="text-gray-400 mx-1">&times;</span>
+                      <span class="mx-1 text-gray-400">&times;</span>
                       <%= label %>
                       <% if idea_count.present? && admin_count.present? %>
                         <% p = promoted || 0 %>
@@ -426,24 +426,24 @@
               </ul>
             </div>
 
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-              <h3 class="text-sm font-semibold text-gray-700 mb-4">User-generated content</h3>
+            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 class="mb-4 text-sm font-semibold text-gray-700">User-generated content</h3>
               <ul class="space-y-1 text-sm text-gray-700">
                 <% @user_generated_content.each do |label, count, promoted| %>
                   <li>
                     <span class="font-semibold text-gray-900 tabular-nums"><%= count %></span>
-                    <span class="text-gray-400 mx-1">&times;</span>
+                    <span class="mx-1 text-gray-400">&times;</span>
                     <%= label %>
                     <% if promoted.present? && promoted > 0 %>
-                      <span class="text-xs text-gray-400 ml-1">(<%= promoted %> promoted)</span>
+                      <span class="ml-1 text-xs text-gray-400">(<%= promoted %> promoted)</span>
                     <% end %>
                   </li>
                 <% end %>
               </ul>
             </div>
 
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-              <h3 class="text-sm font-semibold text-gray-700 mb-4">Admin-generated content</h3>
+            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 class="mb-4 text-sm font-semibold text-gray-700">Admin-generated content</h3>
               <ul class="space-y-1 text-sm text-gray-700">
                 <% @admin_generated_content.each do |row| %>
                   <% if row == [ :spacer ] %>
@@ -452,10 +452,10 @@
                     <% label, count, promoted = row %>
                     <li>
                       <span class="font-semibold text-gray-900 tabular-nums"><%= count %></span>
-                      <span class="text-gray-400 mx-1">&times;</span>
+                      <span class="mx-1 text-gray-400">&times;</span>
                       <%= label %>
                       <% if promoted.present? && promoted > 0 %>
-                        <span class="text-xs text-gray-400 ml-1">(incl <%= promoted %> promoted ideas)</span>
+                        <span class="ml-1 text-xs text-gray-400">(incl <%= promoted %> promoted ideas)</span>
                       <% end %>
                     </li>
                   <% end %>
@@ -467,9 +467,9 @@
       </section>
 
       <section class="mt-6">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Referrals & technical</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">Referrals & technical</h2>
+          <div class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
             <%= chart_card("Top referrer → landing pages") do %>
               <%= bar_chart @top_referrer_landing, library: { indexAxis: "y" } %>
             <% end %>

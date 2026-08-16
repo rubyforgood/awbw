@@ -1,7 +1,7 @@
 <% deco = registration.decorate %>
 <div id="<%= dom_id(registration, :attendance_status) %>">
   <%= form_with model: registration, url: event_registration_path(registration), method: :patch, data: { turbo_frame: "_top" } do |f| %>
-    <div class="relative inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 <%= deco.attendance_status_classes %>">
+    <div class="relative inline-flex items-center gap-1.5 rounded-full border px-5 py-0.5 text-xs font-medium <%= deco.attendance_status_classes %>">
       <i class="fas <%= deco.attendance_status_icon %>"></i>
       <%= f.select :status,
             EventRegistration::ATTENDANCE_STATUSES.map { |s| [EventRegistration.new(status: s).attendance_status_label, s] },
@@ -10,7 +10,7 @@
             onchange: "this.form.requestSubmit()",
             "aria-label": "Change attendance status" %>
       <span><%= registration.attendance_status_label %></span>
-      <i class="fas fa-chevron-down text-[0.6rem]"></i>
+      <i class="fas fa-chevron-down text-2xs"></i>
     </div>
   <% end %>
 </div>

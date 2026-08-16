@@ -20,6 +20,6 @@
 <div class="inline-flex flex-col items-center gap-0.5">
   <%= render "shared/badge", label: label, classes: style, icon: "fas #{icon}", title: tooltip %>
   <% if subtext.present? %>
-    <span class="text-[0.65rem] font-medium <%= subtext_color %>"><%= subtext %></span>
+    <span class="text-2xs font-medium <%= subtext_color %>"><%= subtext %></span>
   <% end %>
 </div>

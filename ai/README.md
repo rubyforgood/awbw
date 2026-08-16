@@ -10,6 +10,7 @@ Quick-reference scripts for common development tasks. Designed for AI agents and
 | `ai/test_extra [args]` | Full RSpec run: Vite test build + all the headless-Chrome system specs `ai/test` narrows |
 | `ai/lint` | Rubocop on all files |
 | `ai/lint --fix` | Auto-fix lint issues |
+| `ai/tw-sort` | Sort Tailwind utility-class order with rustywind. Defaults to files changed vs `origin/main` (gradual convergence); `--all` sorts the whole tree, `--check` verifies without writing (non-zero exit if any file is unsorted) |
 | `ai/server` | Start all dev services (web + vite) |
 | `ai/console` | Rails console |
 | `ai/routes -g pattern` | Search Rails routes |

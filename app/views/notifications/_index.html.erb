@@ -17,15 +17,15 @@
     <tr class="<%= n.row_class %>">
 
       <!-- Sent -->
-      <td class="px-4 py-3 text-gray-700 whitespace-nowrap">
+      <td class="px-4 py-3 whitespace-nowrap text-gray-700">
         <% if notification.delivered_at.present? %>
           <%= time_ago_in_words(notification.delivered_at.in_time_zone("Pacific Time (US & Canada)")) %> ago
         <% elsif notification.failed? %>
-          <span class="text-red-600 font-medium" title="<%= notification.error_class %>: <%= notification.error_message %>">Failed</span>
+          <span class="font-medium text-red-600" title="<%= notification.error_class %>: <%= notification.error_message %>">Failed</span>
         <% elsif notification.archived? %>
-          <span class="text-gray-400 font-medium" title="Retired — old undelivered email, no longer tracked as pending">Archived</span>
+          <span class="font-medium text-gray-400" title="Retired — old undelivered email, no longer tracked as pending">Archived</span>
         <% else %>
-          <span class="text-yellow-600 font-medium">Pending</span>
+          <span class="font-medium text-yellow-600">Pending</span>
         <% end %>
       </td>
 
@@ -39,14 +39,14 @@
            shown, email on hover), otherwise a mailto for the raw email. The AWBW
            Portal has no address, so it stays plain text.) -->
       <td class="px-4 py-3 text-gray-700">
-        <div><span class="text-xs uppercase text-gray-500">To:</span> <%= n.to_value %></div>
-        <div class="text-[10px] text-gray-400">
+        <div><span class="text-xs text-gray-500 uppercase">To:</span> <%= n.to_value %></div>
+        <div class="text-2xs text-gray-400">
           <span class="uppercase">From:</span> <%= n.from_value %>
         </div>
       </td>
 
       <!-- Subject -->
-      <td class="px-4 py-3 text-gray-900 font-medium">
+      <td class="px-4 py-3 font-medium text-gray-900">
         <%= notification.email_subject.presence || "—" %>
       </td>
 
@@ -54,7 +54,7 @@
       <td class="px-4 py-3 text-gray-700">
         <div class="flex items-center gap-1.5">
           <% if notification.noticeable.present? %>
-            <span class="text-[10px] uppercase text-gray-400"><%= noticeable_type_label(notification.noticeable) %></span>
+            <span class="text-2xs text-gray-400 uppercase"><%= noticeable_type_label(notification.noticeable) %></span>
           <% end %>
           <%= n.flag_badges %>
         </div>
@@ -85,7 +85,7 @@
                  name="notification[responded]"
                  value="1"
                  <%= "checked" if notification.responded? %>
-                 class="w-5 h-5 rounded border-gray-300 text-green-600 accent-green-600 focus:ring-green-500 cursor-pointer"
+                 class="h-5 w-5 cursor-pointer rounded border-gray-300 text-green-600 accent-green-600 focus:ring-green-500"
                  title="Responded to by staff">
         <% else %>
           <span class="text-gray-300">—</span>

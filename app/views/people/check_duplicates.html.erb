@@ -1,8 +1,8 @@
 <div class="min-h-screen py-10">
-  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="bg-white border border-gray-200 rounded-2xl shadow-lg p-6 sm:p-8">
-      <div class="flex items-center mb-6">
-        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+  <div class="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
+    <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg sm:p-8">
+      <div class="mb-6 flex items-center">
+        <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100">
           <svg
             class="h-6 w-6 text-yellow-600"
             fill="none"
@@ -21,7 +21,7 @@
         <h1 class="ml-4 text-xl font-semibold text-gray-900">Possible duplicate person</h1>
       </div>
 
-      <p class="text-sm text-gray-600 mb-2">
+      <p class="mb-2 text-sm text-gray-600">
         Checking:
         <span class="font-medium text-gray-900"><%= @first_name %> <%= @last_name %></span>
         <% if @email.present? %>
@@ -29,41 +29,41 @@
         <% end %>
       </p>
 
-      <p class="text-sm text-gray-500 mb-4">
+      <p class="mb-4 text-sm text-gray-500">
         We found existing people in the system with a similar name or email.
       </p>
 
-      <p class="text-sm text-gray-500 mt-4 mb-2">
+      <p class="mt-4 mb-2 text-sm text-gray-500">
         Please review the list below:
       </p>
 
-      <ul class="divide-y divide-gray-200 border border-gray-200 rounded-lg mb-6">
+      <ul class="mb-6 divide-y divide-gray-200 rounded-lg border border-gray-200">
         <% @duplicates.each do |dup| %>
           <li class="px-4 py-3">
-            <div class="flex items-center gap-2 flex-wrap">
+            <div class="flex flex-wrap items-center gap-2">
               <%= link_to dup[:name],
                           person_path(dup[:id]),
                           target: "_blank",
                           class: "text-blue-600 hover:text-blue-800 underline font-medium" %>
 
               <% if dup[:blocked] %>
-                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700">exact match</span>
+                <span class="text-2xs rounded bg-red-100 px-1.5 py-0.5 font-medium text-red-700">exact match</span>
               <% elsif dup[:match_type] == "approximate" %>
-                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-700">approximate match</span>
+                <span class="text-2xs rounded bg-orange-100 px-1.5 py-0.5 font-medium text-orange-700">approximate match</span>
               <% else %>
                 <% if dup[:name_match] %>
-                  <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700">name match</span>
+                  <span class="text-2xs rounded bg-green-100 px-1.5 py-0.5 font-medium text-green-700">name match</span>
                 <% end %>
                 <% if dup[:match_type] == "nickname" %>
-                  <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-yellow-100 text-yellow-700">similar name</span>
+                  <span class="text-2xs rounded bg-yellow-100 px-1.5 py-0.5 font-medium text-yellow-700">similar name</span>
                 <% end %>
                 <% if dup[:match_type] == "email" %>
-                  <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">email match</span>
+                  <span class="text-2xs rounded bg-blue-100 px-1.5 py-0.5 font-medium text-blue-700">email match</span>
                 <% end %>
               <% end %>
             </div>
 
-            <div class="text-gray-500 text-xs mt-0.5">
+            <div class="mt-0.5 text-xs text-gray-500">
               <% if dup[:labeled_emails].present? %>
                 <% dup[:labeled_emails].each_with_index do |entry, i| %>
                   <span class="text-gray-400"><%= entry[:label] %>:</span><%= entry[:value] %><%= ", " unless i == dup[:labeled_emails].size - 1 %>
@@ -77,20 +77,20 @@
       </ul>
 
       <% if @blocked %>
-        <p class="text-sm text-red-600 font-medium">
+        <p class="text-sm font-medium text-red-600">
           A person with this exact name and primary email already exists.
         </p>
-        <p class="text-sm text-red-600 font-medium mb-6">
+        <p class="mb-6 text-sm font-medium text-red-600">
           Please edit the existing record instead.
         </p>
       <% elsif @duplicates.any? { |d| d[:match_type] == "approximate" } %>
-        <p class="text-sm text-orange-600 font-medium mb-6">
+        <p class="mb-6 text-sm font-medium text-orange-600">
           A person with this name has a matching secondary or user email. You can still create them if this is a different person.
         </p>
       <% end %>
 
       <% if @email.present? && @duplicates.any? { |d| d[:labeled_emails]&.any? { |e| e[:value]&.downcase == @email.downcase } } %>
-        <p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-6">
+        <p class="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
           Multiple people can share the same email address, but each user account requires a unique email. If you plan to create a user account for this person, they will need a different email than the one shown above.
         </p>
       <% end %>

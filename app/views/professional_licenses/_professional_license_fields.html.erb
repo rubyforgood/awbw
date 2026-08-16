@@ -6,8 +6,8 @@
     submits unchanged. %>
 <% editable = f.object.new_record? || allowed_to?(:edit?, f.object) %>
 <% if editable %>
-  <div class="nested-fields rounded-lg bg-white border border-gray-200 p-6 mb-4">
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+  <div class="nested-fields mb-4 rounded-lg border border-gray-200 bg-white p-6">
+    <div class="grid grid-cols-1 items-end gap-4 md:grid-cols-5">
       <div>
         <%= f.input :number,
                     wrapper: false,
@@ -41,7 +41,7 @@
                     input_html: { class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
       </div>
 
-      <div class="text-right text-end">
+      <div class="text-end text-right">
         <% if f.object.new_record? || f.object.removable? %>
           <%= link_to_remove_association "Remove",
                                          f,
@@ -53,27 +53,27 @@
     </div>
   </div>
 <% else %>
-  <div class="nested-fields rounded-lg bg-blue-50 border border-blue-200 p-6 mb-4">
+  <div class="nested-fields mb-4 rounded-lg border border-blue-200 bg-blue-50 p-6">
     <div class="flex items-start justify-between gap-4">
-      <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2 text-sm">
+      <dl class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
         <div>
-          <dt class="text-xs uppercase tracking-wide text-gray-400">License number</dt>
+          <dt class="text-xs tracking-wide text-gray-400 uppercase">License number</dt>
           <dd class="font-medium text-gray-900"><%= f.object.number.presence || "—" %></dd>
         </div>
         <div>
-          <dt class="text-xs uppercase tracking-wide text-gray-400">Type</dt>
+          <dt class="text-xs tracking-wide text-gray-400 uppercase">Type</dt>
           <dd class="font-medium text-gray-900"><%= f.object.kind.presence || "—" %></dd>
         </div>
         <div>
-          <dt class="text-xs uppercase tracking-wide text-gray-400">Issuing state</dt>
+          <dt class="text-xs tracking-wide text-gray-400 uppercase">Issuing state</dt>
           <dd class="font-medium text-gray-900"><%= f.object.issuing_state.presence || "—" %></dd>
         </div>
         <div>
-          <dt class="text-xs uppercase tracking-wide text-gray-400">Expires</dt>
+          <dt class="text-xs tracking-wide text-gray-400 uppercase">Expires</dt>
           <dd class="font-medium text-gray-900"><%= f.object.expires_on&.to_fs(:long) || "—" %></dd>
         </div>
       </dl>
-      <%= render "shared/badge", label: "Admin only", classes: "bg-blue-100 text-blue-700 border-blue-200", icon: "fa-solid fa-lock text-[0.65rem]", extra: "shrink-0" %>
+      <%= render "shared/badge", label: "Admin only", classes: "bg-blue-100 text-blue-700 border-blue-200", icon: "fa-solid fa-lock text-2xs", extra: "shrink-0" %>
     </div>
     <p class="mt-3 text-xs text-gray-500">Locked because this license has CE registrations — only an admin can edit it.</p>
   </div>
