@@ -43,11 +43,57 @@ RSpec.describe "ProfessionalLicenses", type: :request do
       expect(response.body).to include("555")
       expect(response.body).not_to include("222")
     end
+
+    it "renders the new license form" do
+      get new_professional_license_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("New license")
+    end
+
+    it "creates a license for the selected person" do
+      expect do
+        post professional_licenses_path, params: {
+          professional_license: { person_id: person.id, number: "777", kind: "LCSW", issuing_state: "CA" }
+        }
+      end.to change(ProfessionalLicense, :count).by(1)
+
+      expect(response).to redirect_to(professional_licenses_path)
+      created = ProfessionalLicense.order(:created_at).last
+      expect(created.person).to eq(person)
+      expect(created.number).to eq("777")
+      expect(created.created_by).to eq(admin)
+    end
+
+    it "re-renders new when the person is missing" do
+      expect do
+        post professional_licenses_path, params: {
+          professional_license: { number: "888", kind: "LMFT" }
+        }
+      end.not_to change(ProfessionalLicense, :count)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
   end
 
   it "forbids non-admins" do
     sign_in create(:user)
     get professional_licenses_path
+    expect(response).not_to have_http_status(:ok)
+  end
+
+  it "forbids non-admins from the new license form" do
+    sign_in create(:user)
+    get new_professional_license_path
+    expect(response).not_to have_http_status(:ok)
+  end
+
+  it "forbids non-admins from creating a license for another person" do
+    sign_in create(:user)
+    expect do
+      post professional_licenses_path, params: {
+        professional_license: { person_id: person.id, number: "999", kind: "LMFT" }
+      }
+    end.not_to change(ProfessionalLicense, :count)
     expect(response).not_to have_http_status(:ok)
   end
 end
