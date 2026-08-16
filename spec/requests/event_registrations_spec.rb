@@ -704,6 +704,24 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(existing.reload.transferred_from_registration).to eq(source)
         end
 
+        it "collapses a double transfer, pointing the new reg at the original and dropping the middle" do
+          original = create(:event_registration, status: "transferred_out")
+          middle = create(:event_registration, registrant: original.registrant,
+            status: "transferred_out", transferred_from_registration: original)
+
+          # One reg created, the middle destroyed — net zero.
+          expect {
+            post process_transfer_event_registration_path(middle),
+                 params: { destination_event_id: destination_event.id }
+          }.not_to change(EventRegistration, :count)
+
+          final = EventRegistration.find_by(registrant: middle.registrant, event: destination_event)
+          expect(final.transferred_from_registration).to eq(original)
+          expect(EventRegistration.exists?(middle.id)).to be(false)
+          expect(original.reload.transferred_to_registration).to eq(final)
+          expect(response).to redirect_to(edit_event_registration_path(final))
+        end
+
         it "sends the admin back to pick an event when none was chosen" do
           post process_transfer_event_registration_path(source)
 

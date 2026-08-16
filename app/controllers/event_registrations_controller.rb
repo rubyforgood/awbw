@@ -225,11 +225,21 @@ class EventRegistrationsController < ApplicationController
       registrant_id: @event_registration.registrant_id,
       event_id: destination_event.id
     )
-    destination.transferred_from_registration = @event_registration
+    # Collapse a double transfer (A→B→C) to two live regs: when the reg being
+    # transferred out is itself a transfer-in, it's a temporary middle stop —
+    # point the new reg straight at the original source and drop the middle. (#1944)
+    source = @event_registration.transferred_from_registration || @event_registration
+    destination.transferred_from_registration = source
 
-    if destination.save
+    saved = ActiveRecord::Base.transaction do
+      next false unless destination.save
+      @event_registration.destroy! if @event_registration.transferred_in?
+      true
+    end
+
+    if saved
       redirect_to edit_event_registration_path(destination, return_to: params[:return_to].presence),
-        notice: "Transfer recorded — #{@event_registration.registrant.full_name} is now registered for #{destination_event.title}.",
+        notice: "Transfer recorded — #{source.registrant.full_name} is now registered for #{destination_event.title}.",
         status: :see_other
     else
       @return_to = params[:return_to]
