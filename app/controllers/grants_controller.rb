@@ -155,6 +155,7 @@ class GrantsController < ApplicationController
     params.require(:grant).permit(
       :name, :description, :amount_dollars, :amount_cents, :funder_sgid,
       :funds_allocation_deadline, :funds_received_on, :eligibility_criteria, :tasks,
+      :planned_giving,
       sector_ids: [], category_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ]

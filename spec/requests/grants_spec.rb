@@ -227,6 +227,12 @@ RSpec.describe "/grants", type: :request do
           expect(Grant.last.primary_asset.file).to be_attached
         end
 
+        it "flags the grant as planned giving when checked" do
+          post grants_url, params: { grant: valid_attributes.merge(planned_giving: "1") }
+
+          expect(Grant.last).to be_planned_giving
+        end
+
         it "attaches the selected sectors and categories" do
           sector = create(:sector, :published)
           category = create(:category, :published)

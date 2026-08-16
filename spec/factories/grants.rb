@@ -21,5 +21,9 @@ FactoryBot.define do
     trait :donated_by_person do
       association :funder, factory: :person
     end
+
+    trait :planned_giving do
+      planned_giving { true }
+    end
   end
 end
