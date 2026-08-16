@@ -2,8 +2,6 @@ class Payment < ApplicationRecord
   has_paper_trail
   PAYER_TYPES = %w[Person Organization].freeze
 
-  DEFAULT_DATE_RANGE = 1.month
-
   has_many :allocations, as: :source
   has_many :refunds, as: :refundable
   belongs_to :person, optional: true
@@ -53,14 +51,8 @@ class Payment < ApplicationRecord
     results = results.matching_search(params[:search]) if params[:search].present?
     results = results.where("amount_cents >= ?", (params[:amount_min].to_d * 100).to_i) if params[:amount_min].present?
     results = results.where("amount_cents <= ?", (params[:amount_max].to_d * 100).to_i) if params[:amount_max].present?
-    start_date = parse_date(params[:start_date]) || default_start_date
-    end_date = parse_date(params[:end_date]) || Date.current
-    results = results.created_between(start_date, end_date)
+    results = results.created_between(parse_date(params[:start_date]), parse_date(params[:end_date]))
     results
-  end
-
-  def self.default_start_date
-    DEFAULT_DATE_RANGE.ago.to_date
   end
 
   def self.parse_date(value)

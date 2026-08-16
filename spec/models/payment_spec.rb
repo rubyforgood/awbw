@@ -247,15 +247,15 @@ RSpec.describe Payment, type: :model do
         let!(:recent) { create(:payment, created_at: 2.days.ago) }
         let!(:old) { create(:payment, created_at: 2.months.ago) }
 
-        it "defaults to the past month, excluding older payments" do
+        it "returns all payments when no dates are given" do
           result = Payment.search_by_params({})
-          expect(result).to include(recent)
-          expect(result).not_to include(old)
+          expect(result).to include(recent, old)
         end
 
         it "honors an explicit start date" do
-          result = Payment.search_by_params({ start_date: 3.months.ago.to_date.to_s })
-          expect(result).to include(recent, old)
+          result = Payment.search_by_params({ start_date: 1.month.ago.to_date.to_s })
+          expect(result).to include(recent)
+          expect(result).not_to include(old)
         end
 
         it "honors an explicit end date" do
@@ -264,16 +264,14 @@ RSpec.describe Payment, type: :model do
           expect(result).not_to include(recent)
         end
 
-        it "falls back to the default start date when blank" do
+        it "returns all payments when the dates are blank" do
           result = Payment.search_by_params({ start_date: "", end_date: "" })
-          expect(result).to include(recent)
-          expect(result).not_to include(old)
+          expect(result).to include(recent, old)
         end
 
         it "ignores an unparseable date" do
           result = Payment.search_by_params({ start_date: "not-a-date" })
-          expect(result).to include(recent)
-          expect(result).not_to include(old)
+          expect(result).to include(recent, old)
         end
       end
     end
