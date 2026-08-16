@@ -17,15 +17,18 @@ class ProfessionalLicense < ApplicationRecord
   # different kinds is allowed; only a duplicate (kind, number) pair is rejected.
   validates :number, uniqueness: { scope: [ :person_id, :kind ] }, allow_nil: true
 
-  scope :for_person, ->(person_id) { where(person_id: person_id) }
   scope :of_kind, ->(kind) { where(kind: kind) }
   scope :expired, -> { where.not(expires_on: nil).where("expires_on < ?", Date.current) }
   scope :not_expired, -> { where("expires_on IS NULL OR expires_on >= ?", Date.current) }
 
-  # Drives the admin index filters (registrant, kind, expiry status).
+  # Drives the admin index filters (registrant, kind, expiry status). The
+  # registrant filter is a free-text search over the holder's name (incl. legal
+  # first name) and email, reusing Person's remote-search columns.
   def self.search_by_params(params)
     results = all
-    results = results.for_person(params[:person_id]) if params[:person_id].present?
+    if params[:person_query].present?
+      results = results.where(person: Person.remote_search(params[:person_query]).reorder(nil))
+    end
     results = results.of_kind(params[:kind]) if params[:kind].present?
     results = results.expired if params[:expired] == "yes"
     results = results.not_expired if params[:expired] == "no"

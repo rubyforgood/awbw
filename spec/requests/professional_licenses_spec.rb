@@ -33,6 +33,28 @@ RSpec.describe "ProfessionalLicenses", type: :request do
       expect(response.body).not_to include("999")
     end
 
+    it "filters by registrant name" do
+      holder = create(:person, first_name: "Zephyrina", last_name: "Aldercott")
+      create(:professional_license, person: holder, number: "444")
+
+      get professional_licenses_path(person_query: "Zephyrina"),
+        headers: { "Turbo-Frame" => "professional_licenses_results" }
+
+      expect(response.body).to include("444")
+      expect(response.body).not_to include("555")
+    end
+
+    it "filters by registrant email" do
+      holder = create(:person, email: "unique-holder@example.com")
+      create(:professional_license, person: holder, number: "333")
+
+      get professional_licenses_path(person_query: "unique-holder@example.com"),
+        headers: { "Turbo-Frame" => "professional_licenses_results" }
+
+      expect(response.body).to include("333")
+      expect(response.body).not_to include("555")
+    end
+
     it "filters by expiry status" do
       license.update!(expires_on: 1.year.ago.to_date)
       current = create(:professional_license, number: "222", expires_on: 1.year.from_now.to_date)
