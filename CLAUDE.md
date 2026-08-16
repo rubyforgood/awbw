@@ -318,6 +318,11 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 
 ## PRs
 
+- **"Prefix" (without other context) means the PR title prefix.** When the user
+  refers to "a prefix" and it doesn't fit whatever you're currently working on
+  (e.g. "remove the JM prefix"), they mean a leading tag on the **pull request
+  title** (like `JM: …`, often auto-added). Act on the PR title via `gh pr edit
+  --title`, not on code.
 - **Always create PRs as drafts** — every PR starts in draft (`gh pr create --draft`), no exceptions. Never open a PR ready for review, and never promote it. Only the user runs `gh pr ready`, manually and intentionally, when they decide the work is ready.
 - **Push to a draft PR early** — create the draft PR as soon as work begins, rather than keeping changes in a local branch. Push on every commit.
   - **In a new Conductor workspace, do this immediately** — as the first step of any task, make an initial commit on the workspace branch and open the draft PR right away (before the work is done), then keep pushing on every commit as you go. Don't wait until there's a finished change to show.
