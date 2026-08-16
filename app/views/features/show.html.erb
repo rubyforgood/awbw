@@ -49,9 +49,9 @@
             <i class="fa-solid fa-book"></i> Full guide
           <% end %>
         <% end %>
-        <% if @feature.pr_url.present? %>
+        <% if @feature.pr_url.present? && allowed_to?(:create?, Feature) %>
           <%= link_to @feature.pr_url, target: "_blank", rel: "noopener noreferrer",
-                      class: "btn btn-secondary-outline" do %>
+                      class: "admin-only bg-blue-100 btn btn-secondary-outline" do %>
             <i class="fa-solid fa-code-pull-request"></i> View the pull request
           <% end %>
         <% end %>

@@ -27,6 +27,74 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "File-upload questions on forms"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-08-16
+  action_path: "/forms"
+  pr_number: 2136
+  summary: >-
+    Forms can include a file-upload question, so a registrant can attach a document
+    as part of their answer.
+
+- name: "Add and edit professional licenses"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-16
+  action_path: "/professional_licenses"
+  pr_number: 2218
+  summary: >-
+    The professional-licenses index gains new/edit flows, richer filtering, and deep
+    links to a license's CE hours.
+
+- name: "Person history and activity filter"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-16
+  action_path: "/people"
+  pr_number: 2207
+  summary: >-
+    A person's profile shows a history card, and the portal activity log can be
+    filtered down to a single person.
+
+- name: "Planned-giving flag on grants"
+  area: scholarships
+  display_status: admin_facing
+  released_on: 2026-08-16
+  action_path: "/grants"
+  pr_number: 2203
+  summary: >-
+    Mark a grant as planned giving so it stands apart from other funding.
+
+- name: "Story image carousel"
+  area: stories
+  display_status: public_facing
+  released_on: 2026-08-16
+  action_path: "/stories"
+  pr_number: 2221
+  summary: >-
+    Story pages show their images as a hero-first carousel.
+
+- name: "Email when a story idea becomes a story"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-08-16
+  action_path: "/story_ideas"
+  pr_number: 2213
+  summary: >-
+    When a story idea is promoted to a full story, the submitter is emailed and
+    admins get an FYI.
+
+- name: "Payments default to a recent period"
+  area: payments
+  display_status: admin_facing
+  released_on: 2026-08-16
+  action_path: "/payments"
+  pr_number: 2216
+  summary: >-
+    The payments index opens to a recent time period by default, so it loads the most
+    relevant records first.
+
 - name: "Sign-in and sign-out attendance tracking"
   area: events
   display_status: admin_facing

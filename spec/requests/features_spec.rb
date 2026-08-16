@@ -121,6 +121,24 @@ RSpec.describe "/features", type: :request do
         expect(response.body).to include("Admin-only feature")
       end
     end
+
+    context "the pull-request link" do
+      let!(:with_pr) do
+        create(:feature, name: "Has a PR", display_status: "user_facing", published: true, pr_number: 2170)
+      end
+
+      it "is shown to an admin" do
+        sign_in admin
+        get feature_path(with_pr)
+        expect(response.body).to include("View the pull request")
+      end
+
+      it "is hidden from a regular user" do
+        sign_in regular_user
+        get feature_path(with_pr)
+        expect(response.body).not_to include("View the pull request")
+      end
+    end
   end
 
   describe "POST /features" do
