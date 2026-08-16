@@ -71,14 +71,14 @@
       </div>
 
       <div class="md:col-span-2">
-        <label for="start_date" class="<%= label_class %>">Start date</label>
+        <label for="start_date" class="<%= label_class %>">Created from</label>
 
         <%= date_field_tag "start_date", params[:start_date].presence || Payment.default_start_date.to_s,
           class: field_class %>
       </div>
 
       <div class="md:col-span-2">
-        <label for="end_date" class="<%= label_class %>">End date</label>
+        <label for="end_date" class="<%= label_class %>">Created to</label>
 
         <%= date_field_tag "end_date", params[:end_date].presence || Date.current.to_s,
           class: field_class %>
