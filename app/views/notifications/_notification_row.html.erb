@@ -9,6 +9,9 @@
     of an editable communication. ---- %>
 <% admin = local_assigns.fetch(:admin, true) %>
 <% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
+<%# Hide the leading date when the caller already shows it (e.g. a timeline
+    row with its own Time column). %>
+<% show_date = local_assigns.fetch(:show_date, true) %>
 <% body_admin_only = notification.channel != "autoemail" %>
 <% show_body = admin || !body_admin_only %>
 <% subject = notification.email_subject.presence || notification.kind.to_s.humanize %>
@@ -21,7 +24,9 @@
     new tab so unsaved edits in the surrounding record form aren't lost. %>
 <% row = capture do %>
   <div class="flex items-baseline gap-x-2">
-    <span class="shrink-0 whitespace-nowrap text-xs text-gray-400"><%= notification.created_at.strftime("%-m/%-d/%Y") %></span>
+    <% if show_date %>
+      <span class="shrink-0 whitespace-nowrap text-xs text-gray-400"><%= notification.created_at.strftime("%-m/%-d/%Y") %></span>
+    <% end %>
     <%# Fixed, snug width (~"Umberto User") + truncate so the channel icons line up
         regardless of name length, without a wide gap before the icon. %>
     <span class="w-[5.5rem] shrink-0 truncate text-xs font-medium text-gray-500" title="<%= decorated.from_title.presence || from_name %>"><%= from_name %></span>

@@ -245,15 +245,22 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).to include(edit_person_path(person))
       end
 
-      it "surfaces the person's communications (notifications) on the activities page" do
+      it "interleaves the person's communications and activity events in one timeline" do
         person = create(:person)
-        create(:notification, recipient_email: person.communications_email, email_subject: "Comms row marker xyz")
+        create(:notification, recipient_email: person.communications_email,
+                              email_subject: "Comms row marker xyz", created_at: 1.day.ago)
+        create(:ahoy_event, name: "update.person", visit: visit_for_admin,
+                            resource_type: "Person", resource_id: person.id, time: 2.days.ago,
+                            properties: { "resource_type" => "Person", "resource_id" => person.id, "resource_title" => "activity_row_marker" })
 
         get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Communications")
+        # Both streams render in the same activities table (no separate panel).
         expect(response.body).to include("Comms row marker xyz")
+        expect(response.body).to include("activity_row_marker")
+        # Newer communication sorts above the older activity event.
+        expect(response.body.index("Comms row marker xyz")).to be < response.body.index("activity_row_marker")
       end
 
       it "surfaces the person's attendance time entries on the activities page" do

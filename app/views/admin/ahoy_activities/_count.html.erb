@@ -1,4 +1,5 @@
 <%# Rendered in the page header and replaced via turbo_stream from the results
-    view when the frame loads, so the total reflects the active filters. @events
-    is nil on the initial full-page render (the frame fills it in moments later). %>
-<span id="activities_count" class="text-sm leading-none text-gray-500"><%= @events&.total_entries %> total</span>
+    view when the frame loads, so the total reflects the active filters.
+    @total_count is nil on the initial full-page render (the frame fills it in
+    moments later). Counts the merged timeline for a person, events otherwise. %>
+<span id="activities_count" class="text-sm leading-none text-gray-500"><%= @total_count %> total</span>

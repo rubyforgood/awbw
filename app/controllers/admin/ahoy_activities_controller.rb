@@ -84,12 +84,6 @@ module Admin
       # associated record (see Analytics::PersonActivityEvents).
       if @person
         scope = scope.where(id: Analytics::PersonActivityEvents.new(@person).relation.select(:id))
-        # Notifications aren't ahoy-tracked, so surface the person's
-        # communications straight from the notifications table.
-        email = @person.communications_email
-        @person_communications = email.present? ?
-          Notification.email(email).includes(:noticeable, sender: :person).order(created_at: :desc).limit(10) :
-          Notification.none
 
         # Attendance sign-ins happen on a login-free public callout (no Current),
         # so they aren't ahoy-tracked either — read the entries directly.
@@ -99,9 +93,19 @@ module Admin
           .order(signed_in_at: :desc)
           .limit(15)
           .decorate
-      end
 
-      @events = scope.paginate(page: page, per_page: per_page)
+        # Notifications aren't ahoy-tracked, so merge the person's communications
+        # into the activity events for one time-ordered timeline (paginated in Ruby).
+        entries = Analytics::PersonTimeline.new(
+          events: scope.to_a,
+          communications: person_communications.to_a
+        ).entries
+        @timeline = entries.paginate(page: page, per_page: per_page)
+        @total_count = @timeline.total_entries
+      else
+        @events = scope.paginate(page: page, per_page: per_page)
+        @total_count = @events.total_entries
+      end
 
       render :activity_results
     end
@@ -164,6 +168,17 @@ module Admin
     end
 
     private
+
+    # The person's communications, scoped to the same time window as the events
+    # so both streams in the merged timeline honour the active time filter.
+    def person_communications
+      email = @person.communications_email
+      return Notification.none if email.blank?
+
+      scope = Notification.email(email).includes(:noticeable, sender: :person).order(created_at: :desc)
+      scope = scope.where(created_at: time_range) if time_range.present?
+      scope
+    end
 
     def prepare_chart_data
       events = scoped_events
