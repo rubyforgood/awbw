@@ -1,12 +1,9 @@
 class FeaturePolicy < ApplicationPolicy
-  # The page is for signed-in users; creating/editing/deleting stays admin-only
-  # via the inherited `manage?` default rule.
+  # Anyone signed in can view; the inherited `manage?` rule keeps create/edit/destroy admin-only.
   def index?
     authenticated?
   end
 
-  # Admin-facing features are visible to super-admins only. Everyone signed in
-  # can see published public-/user-facing features.
   def show?
     return false unless authenticated?
 

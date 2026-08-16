@@ -19,7 +19,6 @@ class FeatureDecorator < ApplicationDecorator
 
   GITHUB_REPO = "rubyforgood/awbw".freeze
 
-  # Link to the GitHub PR the feature shipped in, or nil when unknown.
   def pr_url
     return if pr_number.blank?
 
@@ -55,17 +54,14 @@ class FeatureDecorator < ApplicationDecorator
     status_meta[:icon]
   end
 
-  # e.g. "Aug 9, 2026" — plain, friendly, no ordinal.
   def released_label
     released_on&.strftime("%b %-d, %Y")
   end
 
-  # Area badge (icon + label), tinted with the area's theme colour.
   def area_badge
     badge(area_icon, area_label, area_meta[:color])
   end
 
-  # Audience badge (icon + label), tinted with the audience's colour.
   def status_badge
     badge(status_icon, status_label, status_meta[:color])
   end

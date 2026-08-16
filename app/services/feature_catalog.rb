@@ -1,26 +1,19 @@
 require "yaml"
 
-# Imports the checked-in feature seed (config/features.yml) into the database
-# that backs the "Features & tips" page (/features). The page itself is
-# admin-editable in-app; this is the starter content plus a safe way to pull in
-# newly-shipped features (and fill in details) an AI/dev added to the YAML.
-#
-# `import!` (the "Sync latest updates" button):
-#   - creates any seed feature not already in the database (matched by name),
-#   - keeps CATALOG_FIELDS (the classification the catalog owns — area, audience,
-#     links, date, PR) in step with the seed on existing records, and
-#   - fills in blank CONTENT_FIELDS (the admin-owned write-up — summary, tips,
-#     guide link, rich description) without ever overwriting what an admin wrote.
-# So a seed fix to a feature's audience/area/link propagates on the next sync,
-# while an admin's screenshots and prose are left alone. See CLAUDE.md.
+# Syncs the checked-in feature seed (config/features.yml) into the DB behind the
+# "Features & tips" page. `import!` (the "Sync latest updates" button) creates
+# missing features and, on existing ones, re-syncs CATALOG_FIELDS from the seed
+# while only filling BLANK CONTENT_FIELDS — so a seed fix to a feature's
+# classification propagates, but an admin's prose/screenshots are never
+# overwritten. See CLAUDE.md.
 class FeatureCatalog
   DATA_PATH = Rails.root.join("config/features.yml")
 
-  # Catalog-owned classification — always re-synced from the seed so corrections
-  # (e.g. a wrong display_status) reach existing records.
+  # Catalog-owned classification — always re-synced so seed corrections reach
+  # existing records.
   CATALOG_FIELDS = %i[ area display_status released_on action_path pr_number ].freeze
 
-  # Admin-owned content — only filled in when blank, never overwritten.
+  # Admin-owned content — only filled when blank, never overwritten.
   CONTENT_FIELDS = %i[ summary pro_tips external_url rhino_description ].freeze
 
   Result = Struct.new(:created, :updated) do
@@ -50,8 +43,6 @@ class FeatureCatalog
     Result.new(created, updated)
   end
 
-  # Raw seed entries (array of hashes). Public so specs can assert the seed is
-  # well-formed without touching the database.
   def entries
     YAML.safe_load_file(@path, permitted_classes: [ Date ]) || []
   end
@@ -74,8 +65,6 @@ class FeatureCatalog
     }
   end
 
-  # What a sync should change on an existing record: re-align catalog-owned
-  # classification with the seed, and fill in any blank admin-owned content.
   def sync_changes(feature, attributes)
     changes = {}
 

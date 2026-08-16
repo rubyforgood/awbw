@@ -59,9 +59,6 @@ class FeaturesController < ApplicationController
     redirect_to features_path, notice: "Feature was successfully deleted.", status: :see_other
   end
 
-  # Admin-only "Sync latest updates" button: add any newly-shipped features from
-  # config/features.yml and fill in blank fields on existing ones (never
-  # overwrites details an admin has already filled in).
   def import
     authorize! Feature, to: :create?
     result = FeatureCatalog.new.import!
@@ -79,7 +76,6 @@ class FeaturesController < ApplicationController
 
   private
 
-  # Server-side search/filter/sort for the index's Turbo frame.
   def filtered_features(scope)
     scope = scope.where(area: params[:area]) if params[:area].present?
     scope = scope.where(display_status: params[:display_status]) if params[:display_status].present?
