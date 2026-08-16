@@ -9,12 +9,30 @@
   <ul class="columns-1 sm:columns-2 md:columns-3 gap-x-6">
     <li class="break-inside-avoid mb-2"><%= index_button notifications, params: { email: email }, label: "#{t("communications.title")} (universal)" %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.event_registrations, params: { registrant_id: person.id } %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button ContinuingEducationRegistration.for_registrant(person.id), params: { person_id: person.id }, label: "CE registrations" %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.form_submissions, params: { person_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.grants, params: { funder_id: person.id, funder_type: "Person" }, label: "Grants (as funder)" %></li>
+    <% if Membership.enabled? %>
+      <li class="break-inside-avoid mb-2"><%= index_button person.memberships, path: person_memberships_path(person) %></li>
+    <% end %>
     <li class="break-inside-avoid mb-2"><%= index_button Payment.where(person_id: person.id), params: { person_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.scholarships, params: { recipient_id: person.id } %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button person.topic_subscriptions, params: { person_id: person.id }, label: "Subscriptions" %></li>
+    <li class="break-inside-avoid mb-2"><%= index_button person.topic_subscriptions, params: { person_id: person.id }, label: "Topic subscriptions" %></li>
     <li class="break-inside-avoid mb-2"><%= index_button(person.user&.workshop_logs || WorkshopLog.none, path: workshop_logs_person_path(person)) %></li>
+    <%# Aggregate Ahoy history (person + user + all associated data). Placed last
+        so the column flow lands it in the otherwise-empty bottom-right cell. %>
+    <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+      <% history_count = Analytics::PersonActivityEvents.new(person).count %>
+      <li class="break-inside-avoid mb-2">
+        <%= link_to admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff]),
+                    data: { turbo_prefetch: false },
+                    class: "group flex items-center gap-3 w-full px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors duration-200 shadow-sm" do %>
+          <span class="text-gray-500 w-5 text-center"><i class="fa-solid fa-clock-rotate-left"></i></span>
+          <span class="font-medium text-gray-700 truncate">History</span>
+          <span class="ml-auto inline-flex items-center justify-center min-w-[2.25rem] px-2 py-0.5 text-sm font-semibold rounded-full bg-gray-50 text-gray-700 border border-gray-200"><%= history_count.zero? ? "None" : number_with_delimiter(history_count) %></span>
+        <% end %>
+      </li>
+    <% end %>
   </ul>
 </div>
 

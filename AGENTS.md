@@ -192,6 +192,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `Analytics::LifecycleBuffer` — Thread-safe event buffer for batch tracking
 - `Analytics::EventBuilder` — Constructs analytics event payloads
 - `Analytics::AhoyTracker` — Coordinates ahoy event tracking
+- `Analytics::PersonActivityEvents` — Aggregates Ahoy events for a person, their user, and associated data (powers the person edit History card + `person_id` filter on the Ahoy activities index)
 
 ### Business Logic
 
