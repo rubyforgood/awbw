@@ -263,6 +263,45 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body.index("Comms row marker xyz")).to be < response.body.index("activity_row_marker")
       end
 
+      it "activity name search matches communication subjects" do
+        person = create(:person)
+        create(:notification, recipient_email: person.communications_email, email_subject: "Keep this subject")
+        create(:notification, recipient_email: person.communications_email, email_subject: "Drop other subject")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time",
+                                  audience: %w[visitors users staff], event_name: "Keep this" },
+            headers: frame_headers
+
+        expect(response.body).to include("Keep this subject")
+        expect(response.body).not_to include("Drop other subject")
+      end
+
+      it "props search matches communication subject and body" do
+        person = create(:person)
+        create(:notification, recipient_email: person.communications_email,
+                              email_subject: "Subject one", email_body_text: "needle in the body")
+        create(:notification, recipient_email: person.communications_email,
+                              email_subject: "unrelated", email_body_text: "nothing here")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time",
+                                  audience: %w[visitors users staff], props: "needle" },
+            headers: frame_headers
+
+        expect(response.body).to include("Subject one")
+        expect(response.body).not_to include("unrelated")
+      end
+
+      it "does not exclude communications when an event-only filter (visit_id) is set" do
+        person = create(:person)
+        create(:notification, recipient_email: person.communications_email, email_subject: "Still visible comm")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time",
+                                  audience: %w[visitors users staff], visit_id: visit_for_admin.id },
+            headers: frame_headers
+
+        expect(response.body).to include("Still visible comm")
+      end
+
       it "surfaces the person's attendance time entries on the activities page" do
         person = create(:person)
         event = create(:event, title: "Attendance marker event")

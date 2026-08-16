@@ -169,14 +169,31 @@ module Admin
 
     private
 
-    # The person's communications, scoped to the same time window as the events
-    # so both streams in the merged timeline honour the active time filter.
+    # The person's communications for the merged timeline. Only the filters that
+    # make sense for a message narrow them: the person/user scope, the date
+    # window, the activity-name search (matched against the subject), and the
+    # props search (matched against subject + body). Event-only filters (visit,
+    # resource, prefixes) don't exclude communications.
     def person_communications
       email = @person.communications_email
       return Notification.none if email.blank?
 
       scope = Notification.email(email).includes(:noticeable, sender: :person).order(created_at: :desc)
       scope = scope.where(created_at: time_range) if time_range.present?
+
+      if params[:event_name].present?
+        term = Notification.sanitize_sql_like(params[:event_name])
+        scope = scope.where("notifications.email_subject LIKE ?", "%#{term}%")
+      end
+
+      if params[:props].present?
+        term = Notification.sanitize_sql_like(params[:props])
+        scope = scope.where(
+          "notifications.email_subject LIKE :term OR notifications.email_body_text LIKE :term",
+          term: "%#{term}%"
+        )
+      end
+
       scope
     end
 
