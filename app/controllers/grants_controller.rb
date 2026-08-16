@@ -100,6 +100,12 @@ class GrantsController < ApplicationController
     scope = scope.where(funder_type: params[:funder_type]) if Grant::FUNDER_TYPES.include?(params[:funder_type])
     scope = scope.where(funder_id: params[:funder_id]) if params[:funder_id].present?
 
+    scope = case params[:planned_giving]
+    when "yes" then scope.where(planned_giving: true)
+    when "no" then scope.where(planned_giving: false)
+    else scope
+    end
+
     # Sector/category filters back the "View all grants" deep link from the
     # taggings browse page (see TaggingsHelper#tagged_index_path).
     scope = scope.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?

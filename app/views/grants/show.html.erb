@@ -18,9 +18,7 @@
       <div>
         <div class="flex items-center gap-2 flex-wrap">
           <h1 class="text-2xl font-semibold text-gray-900"><%= grant.name %></h1>
-          <% if @grant.planned_giving? %>
-            <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">Legacy scholarship</span>
-          <% end %>
+          <%= grant.legacy_scholarship_badge %>
         </div>
         <p class="text-gray-600 mt-1"><%= grant_funder_badge(grant) %></p>
       </div>

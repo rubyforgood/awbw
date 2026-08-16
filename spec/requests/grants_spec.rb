@@ -81,6 +81,19 @@ RSpec.describe "/grants", type: :request do
         expect(response.body).not_to include("Org grant")
       end
 
+      it "filters by legacy scholarship (planned giving)" do
+        legacy = create(:grant, :planned_giving, name: "Legacy fund")
+        ordinary = create(:grant, name: "Ordinary fund")
+
+        get grants_url(planned_giving: "yes"), headers: frame_headers
+        expect(response.body).to include("Legacy fund")
+        expect(response.body).not_to include("Ordinary fund")
+
+        get grants_url(planned_giving: "no"), headers: frame_headers
+        expect(response.body).to include("Ordinary fund")
+        expect(response.body).not_to include("Legacy fund")
+      end
+
       it "filters by grant name" do
         create(:grant, name: "Healing Arts Fund")
         create(:grant, name: "Music Therapy Grant")

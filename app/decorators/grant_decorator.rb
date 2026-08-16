@@ -33,6 +33,16 @@ class GrantDecorator < ApplicationDecorator
     object.remaining_cents <= 0
   end
 
+  # Amber pill flagging a grant as a Legacy scholarship (funded through planned
+  # giving). Renders nothing for ordinary grants, so callers can inline it.
+  def legacy_scholarship_badge
+    return unless object.planned_giving?
+
+    h.tag.span("Legacy scholarship",
+               class: "inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800",
+               title: "Funded through planned giving")
+  end
+
   # Whole-number percentage of the grant awarded in scholarships, clamped to
   # 0–100, for rendering the allocation progress bar on the index.
   def allocation_percentage
