@@ -25,6 +25,69 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Sign-in and sign-out attendance tracking"
+  area: events
+  display_status: admin_facing
+  released_on: 2026-08-15
+  action_path: "/events/1/attendance"
+  pr_number: 2075
+  summary: >-
+    Track each registrant's sign-in and sign-out times per day of an event, with a
+    per-day attendance report totaling the minutes — used for continuing-education
+    hours.
+  pro_tips:
+    - "Registrants can record their own times on their CE ticket; staff can adjust them on the report."
+
+- name: "Browse CE registrations and licenses"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-15
+  action_path: "/continuing_education_registrations"
+  pr_number: 2208
+  summary: >-
+    New admin index pages to browse every continuing-education registration and
+    every professional license on file.
+
+- name: "Search payments by Stripe id, metadata, and amount"
+  area: payments
+  display_status: admin_facing
+  released_on: 2026-08-15
+  action_path: "/payments"
+  pr_number: 2210
+  summary: >-
+    The payments list now searches by Stripe charge id and metadata, and filters by
+    an amount range.
+
+- name: "Tag grants with sectors and categories"
+  area: scholarships
+  display_status: admin_facing
+  released_on: 2026-08-14
+  action_path: "/grants"
+  pr_number: 2199
+  summary: >-
+    Grants can be tagged with sectors and categories, like other records, so they're
+    easier to group and find.
+
+- name: "Richer communications log with delivery flags"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-08-13
+  action_path: "/communications"
+  pr_number: 2177
+  summary: >-
+    The communications log now marks each message's direction and audience, flags
+    bulk sends, and highlights undelivered emails with warning styling.
+
+- name: "Filter bulk-email recipients by topic subscription"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-08-13
+  action_path: "/events/1/preview_reminder"
+  pr_number: 2179
+  summary: >-
+    When picking who gets a bulk email, filter the recipients by the topics people
+    have subscribed to.
+
 - name: "Payment due date on the ticket"
   area: registration
   display_status: public_facing
