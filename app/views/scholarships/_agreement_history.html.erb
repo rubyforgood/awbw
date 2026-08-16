@@ -1,8 +1,5 @@
-<%# Collapsible timeline of the recipient/admin accept ↔ decline back-and-forth,
-    newest first. Built from the scholarship's agreement_responses (the audit log
-    behind the denormalized status). Native <details> so no JS is needed.
-    `admin: true` gives it the sky "admin only" styling for the registrant-facing
-    callout page (where it renders only for admins). %>
+<%# Newest-first timeline of agreement responses. `admin: true` adds the sky
+    "admin only" styling for the registrant-facing callout page. %>
 <% admin = local_assigns.fetch(:admin, false) %>
 <% responses = scholarship.agreement_responses.to_a %>
 <% if responses.any? %>

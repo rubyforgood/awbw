@@ -59,9 +59,7 @@
              event: (@allocatable.event if @allocatable.respond_to?(:event)),
              person: @scholarship.recipient %>
 
-  <%# The recipient declined. This lives outside the edit form (a button_to renders
-      its own form, which can't nest) and is the one explicit path back to active:
-      re-offering sets the award to pending and re-funds it. %>
+  <%# Outside the edit form: a button_to renders its own form, which can't nest. %>
   <% if @scholarship.agreement_declined? %>
     <% declined_response = @scholarship.latest_agreement_response %>
     <div class="mb-6 flex flex-wrap items-start justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">

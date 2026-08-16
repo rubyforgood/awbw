@@ -46,9 +46,7 @@
         <% end %>
       </div>
 
-      <%# What the registrant still owes with this scholarship applied — event cost
-          minus every allocation (this scholarship, payments, discounts). Only shown
-          for a paid event; remaining_cost already nets out the scholarship. %>
+      <%# What the registrant still owes with this scholarship applied. %>
       <% if @event.cost_cents.to_i.positive? && !@scholarship.agreement_declined? %>
         <% owed = @event_registration.remaining_cost %>
         <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
@@ -60,8 +58,6 @@
         </div>
       <% end %>
 
-      <%# Scholarship agreement — shown above the details so accepting comes first.
-          A single Agree button signs it; afterwards we confirm with the date. %>
       <% latest_response = @scholarship.latest_agreement_response %>
       <div class="border-t border-gray-100 pt-5">
         <% if @scholarship.agreement_signed? %>
@@ -77,8 +73,7 @@
           <p class="mt-2 text-sm text-gray-600">Thank you for letting us know. If you'd like to reconsider, please contact us.</p>
         <% else %>
           <p class="text-sm text-gray-600">Agree to complete your scholarship tasks to accept this award.</p>
-          <%# Native disclosure so the reason box only appears when declining — no JS.
-              When it's open, :has() hides Agree so the decline form stands alone. %>
+          <%# Native <details>; while it's open :has() hides Agree so the decline form stands alone. %>
           <div class="group mt-3 flex flex-wrap items-center gap-3">
             <%= form_with url: registration_scholarship_agreement_path(@event_registration.slug), method: :post, class: "group-has-[[open]]:hidden" do %>
               <button type="submit" name="agreement" value="yes" class="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700">
@@ -116,8 +111,7 @@
         </div>
       <% end %>
 
-      <%# Admin-only agreement history, rendered with admin styling on this
-          registrant-facing page — registrants never see it. %>
+      <%# Admin-only agreement history (registrants never see it). %>
       <% if allowed_to?(:edit?, @scholarship) && @scholarship.agreement_responses.exists? %>
         <div class="border-t border-gray-100 pt-5">
           <%= render "scholarships/agreement_history", scholarship: @scholarship, admin: true %>

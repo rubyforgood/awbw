@@ -108,9 +108,7 @@ class ScholarshipsController < ApplicationController
     end
   end
 
-  # Re-offer a declined award: back to pending and re-fund the allocation, so the
-  # recipient can respond again. Explicit admin action (editing the amount alone no
-  # longer reactivates a decline).
+  # Re-offer a declined award: back to pending, allocation re-funded.
   def reoffer
     authorize! @scholarship, to: :update?
     @scholarship.reoffer_agreement!(by: "admin")

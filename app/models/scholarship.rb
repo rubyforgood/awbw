@@ -17,20 +17,15 @@ class Scholarship < ApplicationRecord
   validate :allocation_must_be_valid
   validate :within_grant_budget, if: -> { grant && !agreement_declined? }
 
-  # The allocation carries the award financially: zero while declined, else the
-  # amount. Re-synced on any amount or status change so every allocation-based
-  # total (balances, dashboards, grant budgets) stays correct.
+  # Allocation is zero while declined, else the amount — keeps allocation-based totals correct.
   after_update :sync_allocation_amount, if: -> { saved_change_to_amount_cents? || saved_change_to_agreement_response_status? }
-  # Every status transition appends a history row (the audit trail of the
-  # accept ↔ decline back-and-forth).
   after_update :log_agreement_response, if: -> { saved_change_to_agreement_response_status? }
   after_create_commit :flag_event_registration_scholarship_requested
 
   scope :completed, -> { where(tasks_completed: true) }
   scope :agreement_signed, -> { where(agreement_response_status: "accepted") }
   scope :agreement_declined, -> { where(agreement_response_status: "declined") }
-  # Declined scholarships are excluded from every total — the recipient turned the
-  # award down, so it no longer counts toward amounts, counts, or budgets.
+  # Declined awards drop out of every total.
   scope :not_declined, -> { where.not(agreement_response_status: "declined") }
 
   # Funding split (the app-wide convention, mirrored by EventDashboard and
@@ -38,8 +33,7 @@ class Scholarship < ApplicationRecord
   # the org itself; org-subsidized = no grant, or a grant AWBW funded itself.
   # Callers rendering both sides can pass an already-loaded self_funded set to
   # avoid re-running Grant.self_funded_ids (an Organization.awbw + pluck) per scope.
-  # The funding split excludes declined awards — a declined scholarship funds
-  # nothing, so it counts as neither externally funded nor org-subsidized.
+  # Declined awards are excluded (a decline funds nothing).
   scope :externally_funded, ->(self_funded = Grant.self_funded_ids) { not_declined.where.not(grant_id: [ nil, *self_funded ]) }
   scope :org_subsidized, ->(self_funded = Grant.self_funded_ids) { not_declined.where(grant_id: [ nil, *self_funded ]) }
 
@@ -66,10 +60,8 @@ class Scholarship < ApplicationRecord
     EventRegistration.where(id: registration_ids).distinct.pluck(:event_id)
   end
 
-  # Agreement state is a single tri-state column (pending → accepted → declined),
-  # so the states are mutually exclusive by construction. `agreement_signed`
-  # reads/writes as a virtual boolean so the admin form checkbox and strong
-  # params keep working (checking it accepts, unchecking returns to pending).
+  # `agreement_signed` reads/writes as a virtual boolean for the admin checkbox +
+  # strong params: checking accepts, unchecking returns to pending.
   def agreement_pending? = agreement_response_status == "pending"
   def agreement_signed? = agreement_response_status == "accepted"
   def agreement_declined? = agreement_response_status == "declined"
@@ -84,8 +76,7 @@ class Scholarship < ApplicationRecord
     end
   end
 
-  # The recipient (or an admin) accepting the award. Idempotent — a repeat accept
-  # is a no-op, so it doesn't append a duplicate history row.
+  # Idempotent — a repeat accept is a no-op, so it logs no duplicate history row.
   def accept_agreement!(by: "recipient")
     return if agreement_signed?
 
@@ -93,17 +84,13 @@ class Scholarship < ApplicationRecord
     save!
   end
 
-  # The recipient declining, with their reason. Recording it (via after_update)
-  # zeroes the allocation so the award stops counting in every total and appends
-  # a history row; the row is kept for history.
   def decline_agreement!(reason, by: "recipient")
     assign_agreement_response("declined", reason:, by:)
     save!
   end
 
-  # Admin re-offering a declined award: back to pending (the recipient decides
-  # again) and the allocation is re-funded to the current amount. Explicit action —
-  # editing the amount alone no longer reactivates a decline.
+  # Admin re-offering a declined award: back to pending, allocation re-funded.
+  # Editing the amount alone no longer reactivates a decline.
   def reoffer_agreement!(by: "admin")
     return if agreement_pending?
 
@@ -111,22 +98,17 @@ class Scholarship < ApplicationRecord
     save!
   end
 
-  # The event registration this scholarship is allocated against (nil for a
-  # grant-funded scholarship with no registration).
   def event_registration
     registration = allocation&.allocatable
     registration if registration.is_a?(EventRegistration)
   end
 
-  # The event this scholarship was awarded at, via its allocation's registration
-  # (nil for a grant-funded scholarship with no event registration).
   def event
     event_registration&.event
   end
 
-  # The current agreement response — the source for the responded-at date and
-  # decline reason (which aren't stored on the scholarship; only the status is).
-  # Nil while pending with no response yet.
+  # Source for the responded-at date and decline reason (not stored on the
+  # scholarship). Nil while pending with no response yet.
   def latest_agreement_response
     agreement_responses.loaded? ? agreement_responses.max_by(&:responded_at) : agreement_responses.chronological.last
   end
@@ -178,9 +160,8 @@ class Scholarship < ApplicationRecord
     end
   end
 
-  # Assign the new agreement state in memory (persisted by the caller's save).
-  # The reason + responder are stashed for the history row the after_update
-  # callback writes — they live on the response, not on the scholarship.
+  # Set the status in memory; stash reason + responder for the history row the
+  # after_update callback writes (they live on the response, not the scholarship).
   def assign_agreement_response(status, reason: nil, by: "admin")
     self.agreement_response_status = status
     @agreement_response_reason = (status == "declined" ? reason.presence : nil)

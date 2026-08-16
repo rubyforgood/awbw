@@ -54,9 +54,7 @@ module Events
       @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
     end
 
-    # Records the recipient agreeing, from their scholarship page, to complete the
-    # scholarship's tasks. The Agree button submits agreement=yes, which records an
-    # "accepted" response via the model.
+    # The Agree button (agreement=yes) records an "accepted" response.
     def sign_agreement
       scholarship = @event_registration.scholarships.first
       unless scholarship
@@ -72,9 +70,8 @@ module Events
       end
     end
 
-    # Records the recipient declining the scholarship, from their scholarship page,
-    # with an optional reason. Stamps the decline (which drops the award from all
-    # totals); the team sees it on the scholarship. Re-submitting is a no-op.
+    # Record the recipient's decline (drops the award from all totals). A repeat
+    # decline is a no-op.
     def decline_agreement
       scholarship = @event_registration.scholarships.first
       unless scholarship

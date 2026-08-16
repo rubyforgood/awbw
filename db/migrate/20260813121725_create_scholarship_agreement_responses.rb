@@ -1,8 +1,6 @@
 class CreateScholarshipAgreementResponses < ActiveRecord::Migration[8.1]
-  # Append-only log of each agreement transition (accept ↔ decline ↔ re-offer).
-  # The scholarship's agreement_response_status (added next) is the denormalized
-  # cache of the latest row here; responded_at + reason live here, not on the
-  # scholarship.
+  # Append-only log of each agreement transition; scholarships.agreement_response_status
+  # (added next) caches the latest row's status.
   def up
     create_table :scholarship_agreement_responses do |t|
       t.references :scholarship, null: false, foreign_key: true

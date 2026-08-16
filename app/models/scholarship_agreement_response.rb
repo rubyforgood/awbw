@@ -1,8 +1,6 @@
 class ScholarshipAgreementResponse < ApplicationRecord
-  # One row per agreement transition, so the back-and-forth between a recipient
-  # and the team (accept ↔ decline, and admin re-offers) is a first-class,
-  # queryable history. The scholarship's agreement_response_status is the
-  # denormalized cache of the latest row here.
+  # One row per agreement transition (accept ↔ decline ↔ re-offer); the
+  # scholarship's agreement_response_status caches the latest row's status.
   STATUSES = %w[pending accepted declined].freeze
   RESPONDERS = %w[recipient admin system].freeze
 
