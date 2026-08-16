@@ -4,7 +4,10 @@
     rather than their formatted text. %>
 <tr class="group hover:bg-green-50/60 transition-colors duration-150">
   <td class="px-4 py-3.5 align-middle" data-sort-value="<%= grant.object.name.to_s.downcase %>">
-    <%= link_to grant.name, grant_path(grant), class: "inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-900 shadow-sm transition-colors hover:border-gray-400 hover:bg-gray-50", data: { turbo_frame: "_top" } %>
+    <div class="flex flex-wrap items-center gap-2">
+      <%= link_to grant.name, grant_path(grant), class: "inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-900 shadow-sm transition-colors hover:border-gray-400 hover:bg-gray-50", data: { turbo_frame: "_top" } %>
+      <%= grant.legacy_scholarship_badge %>
+    </div>
   </td>
   <td class="px-4 py-3.5 align-middle text-sm text-gray-700" data-sort-value="<%= grant.object.funder_name.to_s.downcase %>"><%= grant_funder_badge(grant) %></td>
   <td class="px-4 py-3.5 align-middle text-sm font-medium text-gray-900 text-right tabular-nums" data-sort-value="<%= grant.object.amount_cents.to_i %>"><%= grant.amount %></td>

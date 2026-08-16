@@ -49,6 +49,12 @@ RSpec.describe Grant, type: :model do
     end
   end
 
+  describe "planned_giving" do
+    it "defaults to false" do
+      expect(Grant.new.planned_giving).to be(false)
+    end
+  end
+
   describe "validations" do
     it { is_expected.to validate_presence_of(:name) }
     it { is_expected.to validate_numericality_of(:amount_cents).is_greater_than_or_equal_to(0) }

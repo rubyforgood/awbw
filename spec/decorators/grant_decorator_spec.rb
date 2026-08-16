@@ -132,4 +132,15 @@ RSpec.describe GrantDecorator, type: :decorator do
       expect(grant.decorate).not_to be_fully_allocated
     end
   end
+
+  describe "#legacy_scholarship_badge" do
+    it "renders a Legacy scholarship pill for planned-giving grants" do
+      badge = create(:grant, :planned_giving).decorate.legacy_scholarship_badge
+      expect(badge).to include("Legacy scholarship")
+    end
+
+    it "renders nothing for ordinary grants" do
+      expect(create(:grant).decorate.legacy_scholarship_badge).to be_nil
+    end
+  end
 end

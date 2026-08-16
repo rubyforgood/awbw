@@ -81,6 +81,19 @@ RSpec.describe "/grants", type: :request do
         expect(response.body).not_to include("Org grant")
       end
 
+      it "filters by legacy scholarship (planned giving)" do
+        legacy = create(:grant, :planned_giving, name: "Legacy fund")
+        ordinary = create(:grant, name: "Ordinary fund")
+
+        get grants_url(planned_giving: "yes"), headers: frame_headers
+        expect(response.body).to include("Legacy fund")
+        expect(response.body).not_to include("Ordinary fund")
+
+        get grants_url(planned_giving: "no"), headers: frame_headers
+        expect(response.body).to include("Ordinary fund")
+        expect(response.body).not_to include("Legacy fund")
+      end
+
       it "filters by grant name" do
         create(:grant, name: "Healing Arts Fund")
         create(:grant, name: "Music Therapy Grant")
@@ -225,6 +238,12 @@ RSpec.describe "/grants", type: :request do
           }.to change(Grant, :count).by(1)
 
           expect(Grant.last.primary_asset.file).to be_attached
+        end
+
+        it "flags the grant as planned giving when checked" do
+          post grants_url, params: { grant: valid_attributes.merge(planned_giving: "1") }
+
+          expect(Grant.last).to be_planned_giving
         end
 
         it "attaches the selected sectors and categories" do
