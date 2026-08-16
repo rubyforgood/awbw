@@ -106,6 +106,36 @@ RSpec.describe "ProfessionalLicenses", type: :request do
 
       expect(response).to have_http_status(:unprocessable_entity)
     end
+
+    it "renders the edit license form" do
+      get edit_professional_license_path(license)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Edit license")
+      expect(response.body).to include(person.full_name)
+    end
+
+    it "updates the license fields" do
+      patch professional_license_path(license), params: {
+        professional_license: { number: "556", kind: "LCSW", issuing_state: "NY" }
+      }
+
+      expect(response).to redirect_to(professional_licenses_path)
+      license.reload
+      expect(license.number).to eq("556")
+      expect(license.kind).to eq("LCSW")
+      expect(license.issuing_state).to eq("NY")
+      expect(license.person).to eq(person)
+    end
+
+    it "does not let the registrant be reassigned on update" do
+      other = create(:person)
+
+      patch professional_license_path(license), params: {
+        professional_license: { person_id: other.id, number: "556" }
+      }
+
+      expect(license.reload.person).to eq(person)
+    end
   end
 
   it "forbids non-admins" do
@@ -128,5 +158,14 @@ RSpec.describe "ProfessionalLicenses", type: :request do
       }
     end.not_to change(ProfessionalLicense, :count)
     expect(response).not_to have_http_status(:ok)
+  end
+
+  it "forbids non-admins from editing another person's license" do
+    sign_in create(:user)
+    get edit_professional_license_path(license)
+    expect(response).not_to have_http_status(:ok)
+
+    patch professional_license_path(license), params: { professional_license: { number: "000" } }
+    expect(license.reload.number).to eq("555")
   end
 end

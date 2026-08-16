@@ -284,4 +284,45 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce_reg.payment_status_label).to eq("Paid")
     end
   end
+
+  describe ".search_by_params" do
+    let(:person) { create(:person) }
+    let(:license) { create(:professional_license, person: person) }
+
+    def ce_reg(license:, certificate_sent_at: nil)
+      registration = create(:event_registration, registrant: license.person)
+      create(:continuing_education_registration,
+        event_registration: registration,
+        professional_license: license,
+        certificate_sent_at: certificate_sent_at)
+    end
+
+    it "filters to a single license" do
+      mine = ce_reg(license: license)
+      other = ce_reg(license: create(:professional_license))
+
+      results = ContinuingEducationRegistration.search_by_params(professional_license_id: license.id)
+
+      expect(results).to include(mine)
+      expect(results).not_to include(other)
+    end
+
+    it "filters by issued-on date range" do
+      in_range = ce_reg(license: license, certificate_sent_at: Date.new(2026, 6, 15).noon)
+      before_range = ce_reg(license: license, certificate_sent_at: Date.new(2025, 12, 31).noon)
+
+      results = ContinuingEducationRegistration.search_by_params(issued_from: "2026-01-01", issued_to: "2026-12-31")
+
+      expect(results).to include(in_range)
+      expect(results).not_to include(before_range)
+    end
+
+    it "ignores an unparseable date" do
+      reg = ce_reg(license: license, certificate_sent_at: Time.current)
+
+      results = ContinuingEducationRegistration.search_by_params(issued_from: "not-a-date")
+
+      expect(results).to include(reg)
+    end
+  end
 end

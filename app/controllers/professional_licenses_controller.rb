@@ -29,9 +29,32 @@ class ProfessionalLicensesController < ApplicationController
     end
   end
 
+  def edit
+    @professional_license = ProfessionalLicense.find(params[:id])
+    authorize! @professional_license
+  end
+
+  def update
+    @professional_license = ProfessionalLicense.find(params[:id])
+    authorize! @professional_license
+    @professional_license.updated_by = current_user
+
+    if @professional_license.update(license_edit_params)
+      redirect_to professional_licenses_path, notice: "License updated for #{@professional_license.person.full_name}."
+    else
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def professional_license_params
     params.require(:professional_license).permit(:person_id, :number, :kind, :issuing_state, :expires_on)
+  end
+
+  # The registrant is fixed once a license exists — edits change the license
+  # fields only, never who it belongs to.
+  def license_edit_params
+    params.require(:professional_license).permit(:number, :kind, :issuing_state, :expires_on)
   end
 end

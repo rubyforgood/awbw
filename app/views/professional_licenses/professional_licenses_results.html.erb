@@ -36,14 +36,10 @@
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm">
                   <% type_number = [ license.kind.presence, license.number.presence ].compact.join(" ").presence || "License (details pending)" %>
-                  <% if license.person %>
-                    <%= link_to edit_person_path(license.person), title: "Edit license", data: { turbo_frame: "_top" },
-                          class: "inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100 px-2 py-1 text-gray-700 transition-colors" do %>
-                      <span><%= type_number %></span>
-                      <i class="fa-solid fa-pen text-[0.65rem] text-gray-400"></i>
-                    <% end %>
-                  <% else %>
-                    <span class="text-gray-700"><%= type_number %></span>
+                  <%= link_to edit_professional_license_path(license), title: "Edit license", data: { turbo_frame: "_top" },
+                        class: "inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100 px-2 py-1 text-gray-700 transition-colors" do %>
+                    <span><%= type_number %></span>
+                    <i class="fa-solid fa-pen text-[0.65rem] text-gray-400"></i>
                   <% end %>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700"><%= license.issuing_state.presence || "—" %></td>
@@ -51,8 +47,26 @@
                 <td class="px-4 py-3 whitespace-nowrap text-sm">
                   <%= render "shared/badge", label: status.label, classes: status.classes, icon: status.icon %>
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-right text-sm text-gray-700 tabular-nums"><%= decorated.ce_hours_issued_this_year %></td>
-                <td class="px-4 py-3 whitespace-nowrap text-right text-sm text-gray-700 tabular-nums"><%= decorated.ce_hours_issued_all_years %></td>
+                <td class="px-4 py-3 whitespace-nowrap text-right text-sm text-gray-700 tabular-nums">
+                  <% this_year = decorated.ce_hours_issued_this_year %>
+                  <% if this_year.positive? %>
+                    <%= link_to this_year,
+                          continuing_education_registrations_path(professional_license_id: license.id, certificate: "issued", issued_from: Date.current.beginning_of_year, issued_to: Date.current.end_of_year),
+                          class: "text-primary hover:text-primary-dark hover:underline", data: { turbo_frame: "_top" } %>
+                  <% else %>
+                    <%= this_year %>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-right text-sm text-gray-700 tabular-nums">
+                  <% all_years = decorated.ce_hours_issued_all_years %>
+                  <% if all_years.positive? %>
+                    <%= link_to all_years,
+                          continuing_education_registrations_path(professional_license_id: license.id, certificate: "issued"),
+                          class: "text-primary hover:text-primary-dark hover:underline", data: { turbo_frame: "_top" } %>
+                  <% else %>
+                    <%= all_years %>
+                  <% end %>
+                </td>
               </tr>
             <% end %>
           </tbody>
