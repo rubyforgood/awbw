@@ -71,6 +71,11 @@ RSpec.describe "/features", type: :request do
         expect(response.body).to include("Draft feature")
       end
 
+      it "card links break out of the results frame (so Details opens the show page)" do
+        get features_path, headers: frame_headers
+        expect(response.body).to include('data-turbo-frame="_top"')
+      end
+
       it "filters by a search query across name/summary" do
         get features_path, params: { query: "Admin-only" }, headers: frame_headers
         expect(response.body).to include("Admin-only feature")
