@@ -60,18 +60,6 @@ class FeatureDecorator < ApplicationDecorator
     released_on&.strftime("%b %-d, %Y")
   end
 
-  # ISO date (yyyy-mm-dd) for the client-side date-range filter and sort. Because
-  # it's zero-padded, lexical string comparison in JS orders chronologically.
-  def released_iso
-    released_on&.iso8601
-  end
-
-  # Lowercased haystack the page's search box matches against — name, summary,
-  # pro tips, area, and audience label.
-  def search_text
-    [ name, summary, *pro_tips_list, area_label, status_label ].join(" ").downcase
-  end
-
   # Area badge (icon + label), tinted with the area's theme colour.
   def area_badge
     badge(area_icon, area_label, area_meta[:color])

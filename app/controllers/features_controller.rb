@@ -3,12 +3,19 @@ class FeaturesController < ApplicationController
 
   def index
     authorize! Feature
-    @features = authorized_scope(Feature.all).by_release.decorate
-    # Only offer filter options the viewer can actually see something under.
-    present_areas = @features.map(&:area).uniq
-    present_statuses = @features.map(&:display_status).uniq
-    @areas = Feature::AREAS.select { |area| present_areas.include?(area[:key]) }
-    @statuses = Feature::DISPLAY_STATUSES.slice(*present_statuses)
+    scope = authorized_scope(Feature.all)
+    @total = scope.count
+
+    if turbo_frame_request?
+      @features = filtered_features(scope).decorate
+      render :features_results
+    else
+      # Only offer filter options the viewer can actually see something under.
+      present_areas = scope.distinct.pluck(:area)
+      present_statuses = scope.distinct.pluck(:display_status)
+      @areas = Feature::AREAS.select { |area| present_areas.include?(area[:key]) }
+      @statuses = Feature::DISPLAY_STATUSES.slice(*present_statuses)
+    end
   end
 
   def show
@@ -71,6 +78,23 @@ class FeaturesController < ApplicationController
   end
 
   private
+
+  # Server-side search/filter/sort for the index's Turbo frame.
+  def filtered_features(scope)
+    scope = scope.where(area: params[:area]) if params[:area].present?
+    scope = scope.where(display_status: params[:display_status]) if params[:display_status].present?
+
+    if params[:query].present?
+      q = "%#{Feature.sanitize_sql_like(params[:query].strip)}%"
+      scope = scope.where("features.name LIKE :q OR features.summary LIKE :q OR features.pro_tips LIKE :q", q: q)
+    end
+
+    scope = scope.where(released_on: params[:released_from]..) if params[:released_from].present?
+    scope = scope.where(released_on: ..params[:released_to]) if params[:released_to].present?
+
+    direction = params[:direction] == "asc" ? :asc : :desc
+    scope.order(released_on: direction, name: :asc)
+  end
 
   def set_feature
     @feature = Feature.find(params[:id])

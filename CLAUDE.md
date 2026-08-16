@@ -216,8 +216,8 @@ it needs a `page_bg_class` and register it:**
 Filterable index pages load their rows lazily in a Turbo frame so changing a
 filter swaps just the results, not the whole page (grants, people, users,
 organizations, stories, community_news, video_recordings, monthly_reports,
-bookmarks, payments, resources, workshops, notifications, allocations all follow
-this). Match the existing pattern:
+bookmarks, payments, resources, workshops, notifications, allocations, features all
+follow this). Match the existing pattern:
 
 - `index.html.erb` renders the header, the filter/search form, and a skeleton
   inside `<%= turbo_frame_tag :<resource>_results, src: result_src, data: { turbo: "temporary" } %>`.

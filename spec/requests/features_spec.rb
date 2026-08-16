@@ -8,7 +8,13 @@ RSpec.describe "/features", type: :request do
   let!(:admin_facing) { create(:feature, name: "Admin-only feature", display_status: "admin_facing", published: true) }
   let!(:draft) { create(:feature, name: "Draft feature", display_status: "user_facing", published: false) }
 
-  describe "GET /features" do
+  # The list loads lazily in a Turbo frame; the full page renders the shell + form,
+  # and the frame request renders the filtered cards.
+  def frame_headers
+    { "Turbo-Frame" => "features_results" }
+  end
+
+  describe "GET /features (page shell)" do
     it "redirects a logged-out visitor to sign in" do
       get features_path
       expect(response).to redirect_to(new_user_session_path)
@@ -17,12 +23,11 @@ RSpec.describe "/features", type: :request do
     context "as a regular user" do
       before { sign_in regular_user }
 
-      it "shows published, non-admin-facing features only" do
+      it "renders the page with the search form" do
         get features_path
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Facilitator feature")
-        expect(response.body).not_to include("Admin-only feature")
-        expect(response.body).not_to include("Draft feature")
+        expect(response.body).to include("Features &amp; tips")
+        expect(response.body).to include('name="query"')
       end
 
       it "does not show admin actions" do
@@ -35,14 +40,47 @@ RSpec.describe "/features", type: :request do
     context "as an admin" do
       before { sign_in admin }
 
-      it "shows every feature and the admin actions" do
+      it "shows the admin actions" do
         get features_path
+        expect(response.body).to include("Sync latest updates")
+        expect(response.body).to include("New feature")
+      end
+    end
+  end
+
+  describe "GET /features (results frame)" do
+    context "as a regular user" do
+      before { sign_in regular_user }
+
+      it "lists published, non-admin-facing features only" do
+        get features_path, headers: frame_headers
         expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Facilitator feature")
+        expect(response.body).not_to include("Admin-only feature")
+        expect(response.body).not_to include("Draft feature")
+      end
+    end
+
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "lists every feature" do
+        get features_path, headers: frame_headers
         expect(response.body).to include("Facilitator feature")
         expect(response.body).to include("Admin-only feature")
         expect(response.body).to include("Draft feature")
-        expect(response.body).to include("Sync latest updates")
-        expect(response.body).to include("New feature")
+      end
+
+      it "filters by a search query across name/summary" do
+        get features_path, params: { query: "Admin-only" }, headers: frame_headers
+        expect(response.body).to include("Admin-only feature")
+        expect(response.body).not_to include("Facilitator feature")
+      end
+
+      it "filters by audience" do
+        get features_path, params: { display_status: "admin_facing" }, headers: frame_headers
+        expect(response.body).to include("Admin-only feature")
+        expect(response.body).not_to include("Facilitator feature")
       end
     end
   end

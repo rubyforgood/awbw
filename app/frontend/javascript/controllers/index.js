@@ -84,9 +84,6 @@ application.register("dropdown", DropdownController)
 import ExpandAllController from "./expand_all_controller"
 application.register("expand-all", ExpandAllController)
 
-import FeatureListController from "./feature_list_controller"
-application.register("feature-list", FeatureListController)
-
 import FilePreviewController from "./file_preview_controller"
 application.register("file-preview", FilePreviewController)
 

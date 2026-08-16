@@ -52,18 +52,8 @@ RSpec.describe FeatureDecorator do
     end
   end
 
-  it "formats the release date and an ISO date for the JS filter" do
+  it "formats the release date" do
     expect(decorated.released_label).to eq("Aug 9, 2026")
-    expect(decorated.released_iso).to eq("2026-08-09")
-  end
-
-  it "builds a lowercased search haystack from name, summary, tips, area, and audience" do
-    text = decorated.search_text
-    expect(text).to include("roster slider")
-    expect(text).to include("mark certificates")
-    expect(text).to include("first tip")
-    expect(text).to include("registration & tickets")
-    expect(text).to include("admin-facing")
   end
 
   it "falls back to a neutral area for an unknown key" do

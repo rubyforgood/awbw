@@ -1,8 +1,6 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
 
-<div class="w-full max-w-7xl mx-auto bg-gray-50 border border-gray-200 rounded-xl shadow p-6"
-     data-controller="feature-list">
-
+<div class="w-full max-w-7xl mx-auto bg-gray-50 border border-gray-200 rounded-xl shadow p-6">
   <!-- Header -->
   <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
     <div class="pr-6">
@@ -27,104 +25,10 @@
     <% end %>
   </div>
 
-  <!-- Filters -->
-  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      <div class="sm:col-span-2">
-        <label for="feature-search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-        <div class="relative">
-          <input type="search" id="feature-search" placeholder="Search features and tips…"
-                 data-feature-list-target="search"
-                 data-action="input->feature-list#search"
-                 class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-10
-                        focus:ring-blue-500 focus:border-blue-500">
-          <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-            <i class="fa fa-search"></i>
-          </span>
-        </div>
-      </div>
+  <%= render "search_boxes" %>
 
-      <div>
-        <label for="feature-area" class="block text-sm font-medium text-gray-700 mb-1">Area</label>
-        <select id="feature-area" data-feature-list-target="area" data-action="change->feature-list#filterArea"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-          <option value="all">All areas</option>
-          <% @areas.each do |area| %>
-            <option value="<%= area[:key] %>"><%= area[:label] %></option>
-          <% end %>
-        </select>
-      </div>
-
-      <div>
-        <label for="feature-status" class="block text-sm font-medium text-gray-700 mb-1">Audience</label>
-        <select id="feature-status" data-feature-list-target="status" data-action="change->feature-list#filterStatus"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-          <option value="all">All audiences</option>
-          <% @statuses.each do |key, meta| %>
-            <option value="<%= key %>"><%= meta[:label] %></option>
-          <% end %>
-        </select>
-      </div>
-
-      <div>
-        <label for="feature-from" class="block text-sm font-medium text-gray-700 mb-1">Released from</label>
-        <input type="date" id="feature-from"
-               data-feature-list-target="from" data-action="change->feature-list#setFrom"
-               class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-      </div>
-
-      <div>
-        <label for="feature-to" class="block text-sm font-medium text-gray-700 mb-1">Released to</label>
-        <input type="date" id="feature-to"
-               data-feature-list-target="to" data-action="change->feature-list#setTo"
-               class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-      </div>
-
-      <div>
-        <label for="feature-order" class="block text-sm font-medium text-gray-700 mb-1">Sort by date</label>
-        <select id="feature-order" data-feature-list-target="order" data-action="change->feature-list#setOrder"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-          <option value="newest">Newest first</option>
-          <option value="oldest">Oldest first</option>
-        </select>
-      </div>
-
-      <div class="flex items-end">
-        <button type="button" data-action="feature-list#clear" class="btn btn-utility">
-          Clear filters
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Count -->
-  <p class="text-sm text-gray-500 mb-3">
-    Showing <span data-feature-list-target="count"><%= @features.size %></span> of <%= @features.size %>
-    <%= "feature".pluralize(@features.size) %>
-  </p>
-
-  <!-- List -->
-  <div class="grid grid-cols-1 gap-4" data-feature-list-target="list">
-    <%= render partial: "feature", collection: @features, as: :feature %>
-  </div>
-
-  <!-- Empty states -->
-  <% if @features.empty? %>
-    <div class="bg-white border border-dashed border-gray-300 rounded-xl p-10 text-center">
-      <i class="fa-solid fa-star text-3xl text-gray-300"></i>
-      <p class="text-gray-500 mt-3">No features yet.</p>
-      <% if allowed_to?(:create?, Feature) %>
-        <p class="text-gray-400 text-sm mt-1">Add one, or import the starter set from the seed file.</p>
-      <% end %>
-    </div>
+  <% result_src = features_path + "?" + request.query_string %>
+  <%= turbo_frame_tag :features_results, src: result_src, data: { turbo: "temporary" } do %>
+    <%= render "results_skeleton" %>
   <% end %>
-
-  <div data-feature-list-target="empty"
-       class="hidden bg-white border border-dashed border-gray-300 rounded-xl p-10 text-center">
-    <i class="fa-solid fa-magnifying-glass text-3xl text-gray-300"></i>
-    <p class="text-gray-500 mt-3">No features match your filters.</p>
-    <button type="button" data-action="feature-list#clear" class="text-primary text-sm font-medium hover:underline mt-1">
-      Clear filters
-    </button>
-  </div>
 </div>

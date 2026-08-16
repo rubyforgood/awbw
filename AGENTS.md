@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (78) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (77) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -292,7 +292,7 @@ All inherit from `ApplicationDecorator` which provides:
 - `display_image` — selects primary/gallery/downloadable asset intelligently
 - `link_target` — polymorphic path generation
 
-Key decorators: WorkshopDecorator, StoryDecorator, ResourceDecorator, PersonDecorator, OrganizationDecorator, UserDecorator, EventDecorator, ReportDecorator, GrantDecorator, ScholarshipDecorator (derives the scholarship index's program/location/training/status columns), CommentDecorator (source chip label/link/theme + author + timestamp for the aggregated person-comments feed), FeatureDecorator (area/audience badges, release-date labels, and the search haystack for the Features & tips page).
+Key decorators: WorkshopDecorator, StoryDecorator, ResourceDecorator, PersonDecorator, OrganizationDecorator, UserDecorator, EventDecorator, ReportDecorator, GrantDecorator, ScholarshipDecorator (derives the scholarship index's program/location/training/status columns), CommentDecorator (source chip label/link/theme + author + timestamp for the aggregated person-comments feed), FeatureDecorator (area/audience badges, release-date labels, and the "Check out this feature"/PR links for the Features & tips page).
 
 ## Policies (ActionPolicy)
 
@@ -355,7 +355,6 @@ end
 - `dropdown` — Dropdown menus with keyboard/click-outside handling
 - `edit_toggle` — Inline view/edit toggle for the comments and communications boxes (configurable view/edit CSS classes)
 - `event_staff_bio` — Loads a selected person's read-only profile bio (with edit link) alongside the editable event-specific bio on the staff form
-- `feature_list` — Client-side search + area/audience dropdown filters + release-date range + newest/oldest sort over the Features & tips cards (no server round-trip; cards carry `data-area`/`data-status`/`data-date`/`data-text`)
 - `file_preview` — File upload preview
 - `conditional_fields` — Shows/hides fields based on a source `<select>` (via `data-show-when` value match, or `data-show-when-attr` reading a `data-*` flag on the selected option — e.g. the subscription form's event field appears only for event-oriented topics)
 - `grant_details` — Swaps a grant's eligibility criteria + tasks when the grant picker changes
