@@ -54,11 +54,12 @@
           <p class="text-xs font-semibold text-amber-800 uppercase tracking-wide mb-1">
             <i class="fa-solid fa-lightbulb"></i> <%= "Pro tip".pluralize(feature.pro_tips_list.size) %>
           </p>
-          <ul class="list-disc list-inside space-y-0.5 text-sm text-amber-900">
+          <%# Card shows only the first two lines of tips; the full list is on the detail page. %>
+          <div class="text-sm text-amber-900 line-clamp-2">
             <% feature.pro_tips_list.each do |tip| %>
-              <li><%= tip %></li>
+              <p><span class="text-amber-500">•</span> <%= tip %></p>
             <% end %>
-          </ul>
+          </div>
         </div>
       <% end %>
     </div>
