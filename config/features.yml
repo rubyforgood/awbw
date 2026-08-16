@@ -27,6 +27,16 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Edit an affiliation's details and comments"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-16
+  pr_number: 2235
+  summary: >-
+    Each affiliation row on an organization or person edit page has a gear that opens
+    a full editor — reassign the person or organization, adjust the title and dates,
+    and leave comments on the affiliation.
+
 - name: "File-upload questions on forms"
   area: content
   display_status: admin_facing
