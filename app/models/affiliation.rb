@@ -21,6 +21,9 @@ class Affiliation < ApplicationRecord
   # have this link.
   belongs_to :event_registration, optional: true, inverse_of: :affiliations
 
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
+
   # Validations
   validates_presence_of :organization_id
   validate :organization_address_belongs_to_organization
@@ -75,8 +78,10 @@ class Affiliation < ApplicationRecord
   }
 
   before_validation :skip_if_duplicate
+  # Runs before validation so a reassigned org drops its stale organization_address_id
+  # before organization_address_belongs_to_organization would reject it.
+  before_validation :clear_org_scoped_links_on_org_change, on: :update
   before_save :set_inactive_from_dates
-  before_update :clear_event_registration_on_org_change
   after_save :sync_organization_status_with_affiliations
   after_save :sync_organization_affiliation_dates
   after_destroy :sync_organization_status_with_affiliations
@@ -136,12 +141,16 @@ class Affiliation < ApplicationRecord
     throw(:abort) if scope.exists?
   end
 
-  # event_registration_id records the registration that created this affiliation for
-  # its original org. If an admin moves the affiliation to a different org, that link
-  # no longer applies, so clear it — a row with no link counts as manually created,
-  # which reconciliation leaves alone.
-  def clear_event_registration_on_org_change
-    self.event_registration_id = nil if organization_id_changed?
+  # When an admin moves the affiliation to a different org (only possible from the
+  # standalone edit form), the links scoped to the old org no longer apply:
+  # event_registration_id (a row with no link counts as manually created, which
+  # reconciliation leaves alone) and organization_address_id (an address of the old
+  # org would fail organization_address_belongs_to_organization).
+  def clear_org_scoped_links_on_org_change
+    return unless organization_id_changed?
+
+    self.event_registration_id = nil
+    self.organization_address_id = nil
   end
 
   def set_inactive_from_dates

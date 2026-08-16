@@ -19,6 +19,7 @@ class CommentDecorator < ApplicationDecorator
     when TopicSubscription then h.edit_topic_subscription_path(commentable)
     when Story then h.edit_story_path(commentable)
     when StoryIdea then h.edit_story_idea_path(commentable)
+    when Affiliation then h.edit_affiliation_path(commentable)
     end
   end
 
@@ -34,6 +35,7 @@ class CommentDecorator < ApplicationDecorator
     when TopicSubscription then :topic_subscriptions
     when Story then :stories
     when StoryIdea then :story_ideas
+    when Affiliation then :organizations
     else :comments
     end
   end

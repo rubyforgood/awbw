@@ -15,7 +15,17 @@
     <span class="absolute inset-y-0 left-0 w-1 rounded-l-lg"
           style="background-color: <%= facilitator ? '#a855f7' : '#d1d5db' %>"
           data-inactive-toggle-target="accentBar"></span>
-    <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-start rounded-lg border p-3 <%= expired ? 'bg-gray-100 border-gray-300 opacity-60' : active_bg %>"
+    <% if f.object.persisted? %>
+      <%# Escape to the full affiliation editor: comments + reassign person/org. %>
+      <%= link_to edit_affiliation_path(f.object,
+                    return_to: person_side ? "organization" : "person",
+                    origin_id: person_side ? f.object.organization_id : f.object.person_id),
+                  class: "absolute top-2 right-2 z-10 text-gray-300 hover:text-gray-500",
+                  title: "Edit affiliation, add comments, or reassign" do %>
+        <i class="fa-solid fa-gear"></i>
+      <% end %>
+    <% end %>
+    <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-start rounded-lg border p-3 scroll-mt-24 <%= expired ? 'bg-gray-100 border-gray-300 opacity-60' : active_bg %>"
          <% if f.object.persisted? %>id="<%= dom_id(f.object) %>"<% end %>
          data-inactive-toggle-target="row">
       <div style="width: 280px; min-width: 280px; flex-shrink: 0;" data-inactive-toggle-target="profileButton">

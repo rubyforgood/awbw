@@ -1,0 +1,77 @@
+require "rails_helper"
+
+RSpec.describe "/affiliations", type: :request do
+  let(:admin) { create(:user, :admin) }
+  let(:regular_user) { create(:user) }
+  let(:organization) { create(:organization) }
+  let(:person) { create(:person) }
+  let!(:affiliation) do
+    create(:affiliation, organization: organization, person: person, title: "Facilitator")
+  end
+
+  describe "GET /affiliations/:id/edit" do
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "renders the edit form" do
+        get edit_affiliation_path(affiliation)
+        expect(response).to be_successful
+      end
+    end
+
+    context "as a non-admin" do
+      before { sign_in regular_user }
+
+      it "redirects to root" do
+        get edit_affiliation_path(affiliation)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  describe "PATCH /affiliations/:id" do
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "updates attributes and returns to the origin org edit page, scrolled to the row" do
+        patch affiliation_path(affiliation, return_to: "organization", origin_id: organization.id),
+              params: { affiliation: { title: "Lead facilitator" } }
+
+        expect(affiliation.reload.title).to eq("Lead facilitator")
+        expect(response).to redirect_to(edit_organization_path(organization, anchor: "affiliation_#{affiliation.id}"))
+      end
+
+      it "reassigns the person and returns to the origin person edit page" do
+        other_person = create(:person)
+
+        patch affiliation_path(affiliation, return_to: "person", origin_id: person.id),
+              params: { affiliation: { person_id: other_person.id } }
+
+        expect(affiliation.reload.person_id).to eq(other_person.id)
+        expect(response).to redirect_to(edit_person_path(person, anchor: "affiliation_#{affiliation.id}"))
+      end
+
+      it "adds a comment authored by the current user" do
+        expect {
+          patch affiliation_path(affiliation, return_to: "organization", origin_id: organization.id),
+                params: { affiliation: { comments_attributes: [ { body: "Left a note" } ] } }
+        }.to change { affiliation.comments.count }.by(1)
+
+        comment = affiliation.comments.first
+        expect(comment.body).to eq("Left a note")
+        expect(comment.created_by).to eq(admin)
+      end
+    end
+
+    context "as a non-admin" do
+      before { sign_in regular_user }
+
+      it "does not update and redirects to root" do
+        patch affiliation_path(affiliation), params: { affiliation: { title: "Changed" } }
+
+        expect(affiliation.reload.title).to eq("Facilitator")
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+end

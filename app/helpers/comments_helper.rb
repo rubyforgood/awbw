@@ -13,6 +13,7 @@ module CommentsHelper
     when TopicSubscription then "Subscription · #{record.topic_label}"
     when Story then "Story · #{record.title}"
     when StoryIdea then "Story idea · #{record.title.presence || "##{record.id}"}"
+    when Affiliation then "Affiliation · #{record.person&.full_name} @ #{record.organization&.name}"
     else record.class.name.underscore.humanize
     end
   end
