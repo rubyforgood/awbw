@@ -48,6 +48,31 @@ RSpec.describe FormField do
         field = build(:form_field, form: form, answer_type: :free_form_input_one_line, required: true)
         expect(field).to be_valid
       end
+
+      it "allows a required file-upload field" do
+        field = build(:form_field, form: form, answer_type: :file_upload, required: true)
+        expect(field).to be_valid
+      end
+    end
+
+    describe "file-upload answer type" do
+      let(:form) { create(:form) }
+      let(:field) { build(:form_field, :file_upload, form: form) }
+
+      it "is a valid answer type" do
+        expect(field).to be_valid
+        expect(field.answer_type).to eq("file_upload")
+      end
+
+      it "collects input but is neither selectable nor free-form text" do
+        expect(field.collects_input?).to be(true)
+        expect(field.selectable?).to be(false)
+        expect(field.free_form_text?).to be(false)
+      end
+
+      it "labels the type in sentence case" do
+        expect(field.answer_type_label).to eq("File upload")
+      end
     end
 
     describe "field_identifier uniqueness" do
@@ -94,7 +119,7 @@ RSpec.describe FormField do
     it { should define_enum_for(:status).with_values([ :inactive, :active ]) }
     it { should define_enum_for(:answer_type).with_values([ :free_form_input_one_line, :free_form_input_paragraph,
                                                            :single_select_radio, :no_user_input, :multi_select_checkbox,
-                                                           :group_header, :single_select_dropdown ]) }
+                                                           :group_header, :single_select_dropdown, :file_upload ]) }
     it { should define_enum_for(:input_type).with_values([ :text_alphanumeric, :number_integer, :number_decimal, :date ]) }
   end
 

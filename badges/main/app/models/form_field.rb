@@ -118,7 +118,8 @@ class FormField < ApplicationRecord
     :no_user_input,
     :multi_select_checkbox,
     :group_header,
-    :single_select_dropdown
+    :single_select_dropdown,
+    :file_upload
   ]
 
   enum :input_type, [
@@ -148,6 +149,7 @@ class FormField < ApplicationRecord
     "single_select_radio" => "Single select radio",
     "single_select_dropdown" => "Single select dropdown",
     "multi_select_checkbox" => "Multiple select checkbox",
+    "file_upload" => "File upload",
     "no_user_input" => "Informational-only"
   }.freeze
 

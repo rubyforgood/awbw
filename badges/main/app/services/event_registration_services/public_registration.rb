@@ -511,15 +511,40 @@ module EventRegistrationServices
         next unless field
         next if field.group_header? || field.field_identifier == "confirm_email"
 
-        text = if raw_value.is_a?(Array)
-          raw_value.reject(&:blank?).join(", ")
-        else
-          raw_value.to_s
-        end
-
-        record = submission.form_answers.find_or_initialize_by(form_field: field)
-        record.update!(submitted_answer: text, question_name_when_answered: field.name)
+        persist_answer(submission, field, raw_value)
       end
+    end
+
+    # Save one field's answer. File-upload fields attach their blob to the
+    # answer's Asset; everything else stores the (comma-joined) text.
+    def persist_answer(submission, field, raw_value)
+      record = submission.form_answers.find_or_initialize_by(form_field: field)
+      record.question_name_when_answered = field.name
+
+      if field.file_upload?
+        attach_uploaded_file(record, raw_value)
+      else
+        record.update!(submitted_answer: answer_text(raw_value))
+      end
+    end
+
+    def answer_text(raw_value)
+      raw_value.is_a?(Array) ? raw_value.reject(&:blank?).join(", ") : raw_value.to_s
+    end
+
+    # Attach the uploaded blob (a direct-upload signed id, or an uploaded file)
+    # to the answer's Asset. The answer row is saved first so the polymorphic
+    # owner id resolves; submitted_answer keeps the filename so text-only views,
+    # exports, and notifications still read. Asset enforces the content type on
+    # save, rolling back the whole submission on an unaccepted file.
+    def attach_uploaded_file(record, raw_value)
+      record.update!(submitted_answer: "")
+      return if raw_value.blank?
+
+      asset = record.asset || record.build_asset
+      asset.file.attach(raw_value)
+      asset.save!
+      record.update!(submitted_answer: asset.file.filename.to_s)
     end
 
     # Persist the answers to the separate scholarship form (when one is asked and a
@@ -539,14 +564,7 @@ module EventRegistrationServices
         next unless field
         next if field.group_header?
 
-        text = if raw_value.is_a?(Array)
-          raw_value.reject(&:blank?).join(", ")
-        else
-          raw_value.to_s
-        end
-
-        record = submission.form_answers.find_or_initialize_by(form_field: field)
-        record.update!(submitted_answer: text, question_name_when_answered: field.name)
+        persist_answer(submission, field, raw_value)
       end
 
       OtherResponses::CaptureFromSubmission.call(submission)
@@ -566,14 +584,7 @@ module EventRegistrationServices
         next unless field
         next if field.group_header?
 
-        text = if raw_value.is_a?(Array)
-          raw_value.reject(&:blank?).join(", ")
-        else
-          raw_value.to_s
-        end
-
-        record = submission.form_answers.find_or_initialize_by(form_field: field)
-        record.update!(submitted_answer: text, question_name_when_answered: field.name)
+        persist_answer(submission, field, raw_value)
       end
     end
 
