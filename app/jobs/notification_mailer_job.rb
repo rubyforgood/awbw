@@ -7,6 +7,8 @@ class NotificationMailerJob < ApplicationJob
     mailer_map = {
       "idea_submitted"       => ->(n) { NotificationMailer.idea_submitted(n) },
       "idea_submitted_fyi"   => ->(n) { NotificationMailer.idea_submitted_fyi(n) },
+      "story_promoted"       => ->(n) { NotificationMailer.story_promoted(n) },
+      "story_promoted_fyi"   => ->(n) { NotificationMailer.story_promoted_fyi(n) },
       "report_submitted_fyi" => ->(n) { NotificationMailer.report_submitted_fyi(n) },
       "workshop_log_submitted"     => ->(n) { NotificationMailer.workshop_log_submitted(n) },
       "workshop_log_submitted_fyi" => ->(n) { NotificationMailer.workshop_log_submitted_fyi(n) },

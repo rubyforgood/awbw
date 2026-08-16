@@ -274,6 +274,53 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
   end
 
+  describe "#story_promoted" do
+    let(:submitter) { create(:user, email: "submitter@example.com") }
+    let(:story_idea) { create(:story_idea, created_by: submitter) }
+    let(:story) { create(:story, :published, story_idea: story_idea, title: "A Healing Story") }
+    let(:notification) do
+      create(:notification, kind: "story_promoted", noticeable: story,
+             recipient_role: "person", recipient_email: submitter.email)
+    end
+
+    it "renders without raising" do
+      expect { described_class.story_promoted(notification).deliver_now }.not_to raise_error
+    end
+
+    it "sends to the idea's submitter" do
+      expect(described_class.story_promoted(notification).to).to eq([ submitter.email ])
+    end
+
+    it "names the story and greets the submitter" do
+      body = described_class.story_promoted(notification).body.encoded
+      expect(body).to include("A Healing Story")
+      expect(body).to include(submitter.full_name)
+    end
+  end
+
+  describe "#story_promoted_fyi" do
+    let(:submitter) { create(:user) }
+    let(:story_idea) { create(:story_idea, created_by: submitter) }
+    let(:story) { create(:story, story_idea: story_idea, title: "A Healing Story") }
+    let(:notification) do
+      create(:notification, kind: "story_promoted_fyi", noticeable: story,
+             recipient_role: "admin",
+             recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))
+    end
+
+    it "renders without raising" do
+      expect { described_class.story_promoted_fyi(notification).deliver_now }.not_to raise_error
+    end
+
+    it "goes to the admin mailbox" do
+      expect(described_class.story_promoted_fyi(notification).to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+    end
+
+    it "names the story in the subject" do
+      expect(described_class.story_promoted_fyi(notification).subject).to include("A Healing Story")
+    end
+  end
+
   describe "#reset_password_fyi" do
     let(:user) { create(:user, email: "user@example.com") }
     let(:notification) { create(:notification, kind: "reset_password_fyi", noticeable: user) }
