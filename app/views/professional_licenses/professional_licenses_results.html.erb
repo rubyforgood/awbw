@@ -15,7 +15,6 @@
               <th class="px-4 py-3 align-bottom text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registrant</th>
               <th class="px-4 py-3 align-bottom text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"><%= sort_link.call("kind", "Type") %> / <%= sort_link.call("number", "Number") %></th>
               <th class="px-4 py-3 align-bottom text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
-              <th class="px-4 py-3 align-bottom text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expires</th>
               <th class="px-4 py-3 align-bottom text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th class="px-4 py-3 align-bottom text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">CE hours issued<br>(this year)</th>
               <th class="px-4 py-3 align-bottom text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">CE hours issued<br>(all years)</th>
@@ -43,7 +42,6 @@
                   <% end %>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700"><%= license.issuing_state.presence || "—" %></td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700"><%= license.expires_on&.to_fs(:long) || "—" %></td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm">
                   <%= render "shared/badge", label: status.label, classes: status.classes, icon: status.icon %>
                 </td>

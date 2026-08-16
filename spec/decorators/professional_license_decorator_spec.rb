@@ -1,6 +1,23 @@
 require "rails_helper"
 
 RSpec.describe ProfessionalLicenseDecorator do
+  describe "#expiry_badge" do
+    it "reads as no expiration date when none is on file" do
+      badge = build(:professional_license, expires_on: nil).decorate.expiry_badge
+      expect(badge.label).to eq("No expiration date")
+    end
+
+    it "reads as active with the future expiry month" do
+      badge = build(:professional_license, expires_on: Date.new(2099, 4, 10)).decorate.expiry_badge
+      expect(badge.label).to eq("Active (until Apr 2099)")
+    end
+
+    it "reads as expired with the past expiry month" do
+      badge = build(:professional_license, expires_on: Date.new(2024, 4, 10)).decorate.expiry_badge
+      expect(badge.label).to eq("Expired (Apr 2024)")
+    end
+  end
+
   describe "CE hours issued" do
     let(:person) { create(:person) }
     let(:license) { create(:professional_license, person: person) }
