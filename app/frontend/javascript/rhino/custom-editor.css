@@ -41,7 +41,50 @@ custom-rhino-editor table .column-resize-handle {
   top: 0;
   width: 4px;
 }
-custom-rhino-editor table p {
+/* WYSIWYG: trix.css zeroes block margins inside .trix-content, so the editor jams
+   blocks together while the rendered `prose` page spaces them. Restore prose's
+   spacing (values mirror @tailwindcss/typography's em defaults). */
+custom-rhino-editor .trix-content > :first-child {
+  margin-top: 0;
+}
+custom-rhino-editor .trix-content > :last-child {
+  margin-bottom: 0;
+}
+custom-rhino-editor .trix-content p,
+custom-rhino-editor .trix-content ul,
+custom-rhino-editor .trix-content ol {
+  margin: 1.25em 0;
+}
+custom-rhino-editor .trix-content li {
+  margin: 0.5em 0;
+}
+/* The editor wraps each list item's text in a <p>; the rendered page doesn't.
+   Zero it so the <li> margin (not the paragraph rule) controls list spacing. */
+custom-rhino-editor .trix-content li > p {
+  margin: 0;
+}
+custom-rhino-editor .trix-content blockquote {
+  margin: 1.6em 0;
+}
+custom-rhino-editor .trix-content h1 {
+  margin: 0 0 0.889em;
+}
+custom-rhino-editor .trix-content h2 {
+  margin: 2em 0 1em;
+}
+custom-rhino-editor .trix-content h3 {
+  margin: 1.6em 0 0.6em;
+}
+custom-rhino-editor .trix-content h4 {
+  margin: 1.5em 0 0.5em;
+}
+custom-rhino-editor .trix-content figure {
+  margin: 2em 0;
+}
+custom-rhino-editor .trix-content hr {
+  margin: 3em 0;
+}
+custom-rhino-editor .trix-content table p {
   margin: 0;
 }
 custom-rhino-editor a {
