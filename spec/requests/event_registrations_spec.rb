@@ -719,6 +719,19 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(existing.reload.transferred_from_registration).to eq(source)
         end
 
+        it "copies the source registration's linked organizations onto the new reg" do
+          org = create(:organization)
+          source.event_registration_organizations.create!(organization: org)
+
+          post process_transfer_event_registration_path(source),
+               params: { destination_event_id: destination_event.id }
+
+          incoming = EventRegistration.find_by(registrant: source.registrant, event: destination_event)
+          expect(incoming.organizations).to include(org)
+          # Org context is copied, not moved — the source keeps its own link.
+          expect(source.reload.organizations).to include(org)
+        end
+
         it "collapses a double transfer, pointing the new reg at the original and dropping the middle" do
           original = create(:event_registration, status: "transferred_out")
           middle = create(:event_registration, registrant: original.registrant,

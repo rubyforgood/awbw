@@ -251,6 +251,12 @@ class EventRegistrationsController < ApplicationController
 
     saved = ActiveRecord::Base.transaction do
       next false unless destination.save
+      # Carry the transferring reg's org links onto the destination so the new reg
+      # shares the same linked organizations — copied, not moved, so the source
+      # keeps its own. Read before the middle reg is dropped below. (#1944)
+      @event_registration.organizations.each do |organization|
+        destination.event_registration_organizations.find_or_create_by!(organization: organization)
+      end
       # Split/relocate CE before dropping a collapsing middle reg, so its record
       # moves forward instead of being cascade-destroyed with the reg. (#1944)
       EventRegistrationServices::TransferContinuingEducation.new(
