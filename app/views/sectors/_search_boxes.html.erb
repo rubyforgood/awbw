@@ -8,35 +8,35 @@
     <!-- Name Search -->
     <div>
       <%= f.label :sector_name, "Name contains",
-                  class: "search-label" %>
+                  class: search_label_class %>
 
       <%= f.text_field :sector_name,
                        value: params[:sector_name],
-                       class: "search-field",
+                       class: search_field_class,
                        oninput: "this.form.requestSubmit()" %>
     </div>
 
     <!-- Published -->
     <div>
       <%= f.label :published, "Published",
-                  class: "search-label" %>
+                  class: search_label_class %>
 
       <%= f.select :published,
                    options_for_select([["All", ""], ["Published", "true"], ["Unpublished", "false"]], params[:published]),
                    {},
-                   class: "search-field search-select-placeholder",
+                   class: search_field_class(extra: "search-select-placeholder"),
                    onchange: "this.form.requestSubmit()" %>
     </div>
 
     <!-- Taggings -->
     <div>
       <%= f.label :has_taggings, "Taggings",
-                  class: "search-label" %>
+                  class: search_label_class %>
 
       <%= f.select :has_taggings,
                    options_for_select([["All", ""], ["With taggings", "with"], ["Without taggings", "without"]], params[:has_taggings]),
                    {},
-                   class: "search-field search-select-placeholder",
+                   class: search_field_class(extra: "search-select-placeholder"),
                    onchange: "this.form.requestSubmit()" %>
     </div>
 

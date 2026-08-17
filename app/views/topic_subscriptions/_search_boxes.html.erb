@@ -1,5 +1,5 @@
-<% field_class = "search-field bg-white" %>
-<% label_class = "search-label" %>
+<% field_class = search_field_class(extra: "bg-white") %>
+<% label_class = search_label_class %>
 <div class="mb-6 p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
   <%= form_with url: topic_subscriptions_path, method: :get,
         data: { controller: "collection", turbo_frame: "topic_subscriptions_results" },

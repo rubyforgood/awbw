@@ -16,8 +16,8 @@
                                 survive the GET filter submit (e.g. mode: "invite")
       topic_subscription_types – topic subscription lists to offer as a filter
                                 (picker only; omitted elsewhere) %>
-<% field_class = "search-field" %>
-<% label_class = "search-label" %>
+<% field_class = search_field_class %>
+<% label_class = search_label_class %>
 <% include_readiness = local_assigns.fetch(:include_readiness, false) %>
 <% status_filter_hidden = local_assigns.fetch(:status_filter_hidden, false) %>
 <% has_cost = @event.cost_cents.to_i > 0 %>

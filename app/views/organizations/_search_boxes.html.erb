@@ -4,32 +4,32 @@
     autocomplete: "off",
     class: "flex flex-wrap items-end gap-3" do %>
     <div>
-      <%= label_tag :query, "Name", class: "search-label" %>
+      <%= label_tag :query, "Name", class: search_label_class %>
       <%= text_field_tag :query, params[:query],
-                         class: "search-field w-64" %>
+                         class: search_field_class(extra: "w-64") %>
     </div>
     <div>
-      <%= label_tag :windows_type_name, "Windows audience", class: "search-label" %>
+      <%= label_tag :windows_type_name, "Windows audience", class: search_label_class %>
       <%= select_tag :windows_type_name,
                      options_for_select(WindowsType::TYPES.map { |wt| [wt, wt] },
                                         params[:windows_type_name]),
                      include_blank: "All types",
-                     class: "search-field w-40 search-select-placeholder" %>
+                     class: search_field_class(extra: "w-40 search-select-placeholder") %>
     </div>
     <div>
-      <%= label_tag :address, "Address", class: "search-label" %>
+      <%= label_tag :address, "Address", class: search_label_class %>
       <%= text_field_tag :address, params[:address],
-                         class: "search-field w-64" %>
+                         class: search_field_class(extra: "w-64") %>
     </div>
 
     <% if allowed_to?(:manage?, Organization) %>
       <div class="admin-only bg-blue-100">
-        <%= label_tag :status, "Status", class: "search-label" %>
+        <%= label_tag :status, "Status", class: search_label_class %>
         <%= select_tag :organization_status_id,
                        options_for_select(@organization_statuses.map { |ps| [ps.name, ps.id] },
                                           params[:organization_status_id].to_s),
                        include_blank: "All statuses",
-                       class: "search-field w-40 search-select-placeholder" %>
+                       class: search_field_class(extra: "w-40 search-select-placeholder") %>
       </div>
     <% end %>
 

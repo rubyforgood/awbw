@@ -14,7 +14,7 @@
                      its first option is a real value rather than a neutral
                      placeholder — see collection#clearAndSubmit. %>
 <div class="<%= local_assigns.fetch(:wrapper_class, "w-full md:w-44") %>">
-  <%= label_tag param, label, class: "search-label" %>
+  <%= label_tag param, label, class: search_label_class %>
   <%= select_tag param,
                  options_for_select(options, selected),
                  include_blank: blank,

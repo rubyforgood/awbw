@@ -8,30 +8,30 @@
     <!-- Category Type -->
     <div>
       <%= f.label :category_type_id, "Category Type",
-                  class: "search-label" %>
+                  class: search_label_class %>
 
       <%= f.select :category_type_id,
                    options_from_collection_for_select(@category_types, :id, :name, params[:category_type_id]),
                    { include_blank: "All types" },
-                   class: "search-field search-select-placeholder",
+                   class: search_field_class(extra: "search-select-placeholder"),
                    onchange: "this.form.requestSubmit()" %>
     </div>
 
     <!-- Name Search -->
     <div>
       <%= f.label :category_name, "Name contains",
-                  class: "search-label" %>
+                  class: search_label_class %>
 
       <%= f.text_field :category_name,
                        value: params[:category_name],
                        placeholder: "e.g. Art, Music…",
-                       class: "search-field",
+                       class: search_field_class,
                        oninput: "this.form.requestSubmit()" %>
     </div>
 
     <!-- PUBLISHED -->
     <div class="min-w-[150px] p-2 rounded-md">
-      <label for="published" class="search-label">
+      <label for="published" class="<%= search_label_class %>">
         Published
       </label>
       <%= select_tag :published,
@@ -39,7 +39,7 @@
                        [["All", ""], ["Published", "true"], ["Unpublished", "false"]],
                        params[:published]
                      ),
-                     class: "search-field search-select-placeholder",
+                     class: search_field_class(extra: "search-select-placeholder"),
                      onchange: "this.form.requestSubmit()" %>
     </div>
 

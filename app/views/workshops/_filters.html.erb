@@ -12,7 +12,7 @@
       <%= text_field_tag field,
                          params[field],
                          placeholder: placeholder,
-                         class: "search-field bg-white pr-10" %>
+                         class: search_field_class(extra: "bg-white pr-10") %>
       <%= render "shared/search_submit" %>
     </div>
   <% end %>

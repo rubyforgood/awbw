@@ -108,32 +108,13 @@
   }
 }
 
-/* Shared filter/search-bar styling — restyle every filter bar here. In the
-   components layer so markup utility overrides (w-64, bg-white, pr-10) win. */
-@layer components {
-  .search-field {
-    @apply w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm;
-    @apply focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none;
-  }
-
-  .search-field::placeholder {
-    @apply text-sm text-gray-400;
-  }
-
-  .search-label {
-    @apply block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1;
-  }
-
-  /* Grey the "All" prompt like a placeholder; text-sm/6 keeps the input's
-     line-height so the select stays the same height. */
-  .search-select-placeholder:has(option:first-child:checked) {
-    @apply text-sm/6 text-gray-400;
-  }
-
-  /* Magnifier submit; pair with a `.search-field pr-10` input in a relative wrapper. */
-  .search-submit {
-    @apply absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600;
-  }
+/* Filter/search-bar field and label styling lives in shared partials +
+   SearchFormHelper#search_field_class (default Tailwind, no @apply). Only this
+   placeholder rule stays here — its :has() selector isn't expressible as a utility. */
+.search-select-placeholder:has(option:first-child:checked) {
+  color: rgb(156 163 175);   /* gray-400 */
+  font-size: 0.875rem;       /* text-sm */
+  line-height: 1.5rem;       /* text-sm/6: keeps the select the height of a text input */
 }
 
 /* Optional fields get a subtle gray background */

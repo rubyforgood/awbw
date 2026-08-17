@@ -5,10 +5,10 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-end">
     <!-- Search -->
     <div>
-      <%= label_tag :search, "Search", class: "search-label" %>
+      <%= label_tag :search, "Search", class: search_label_class %>
       <div class="relative">
         <%= text_field_tag :search, params[:search],
-                           class: "search-field pr-10",
+                           class: search_field_class(extra: "pr-10"),
                            placeholder: "Name, email, or phone" %>
         <%= render "shared/search_submit" %>
       </div>
@@ -16,24 +16,24 @@
 
     <!-- Access -->
     <div>
-      <%= label_tag :access, "Access", class: "search-label" %>
+      <%= label_tag :access, "Access", class: search_label_class %>
       <%= select_tag :access,
                      options_for_select([["All", ""],
                                          ["Has access", "true"],
                                          ["No access", "false"]],
                                         params[:access]),
-                     class: "search-field search-select-placeholder" %>
+                     class: search_field_class(extra: "search-select-placeholder") %>
     </div>
 
     <!-- Admin -->
     <div>
-      <%= label_tag :super_user, "Permission level", class: "search-label" %>
+      <%= label_tag :super_user, "Permission level", class: search_label_class %>
       <%= select_tag :super_user,
                      options_for_select([["All users", ""],
                                          ["Admins", true],
                                          ["Regular users", false]],
                                         params[:super_user]),
-                     class: "search-field search-select-placeholder" %>
+                     class: search_field_class(extra: "search-select-placeholder") %>
     </div>
 
     <!-- Clear filters -->

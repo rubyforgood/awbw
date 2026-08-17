@@ -2,9 +2,9 @@
     forms. Submits the form on change (blur/Enter), matching the auto-submitting
     selects beside it. %>
 <div class="w-full sm:w-56">
-  <label class="search-label" for="search">Event search</label>
+  <label class="<%= search_label_class %>" for="search">Event search</label>
   <%= text_field_tag :search, params[:search],
         placeholder: "Abbreviation or name",
-        class: "search-field bg-white",
+        class: search_field_class(extra: "bg-white"),
         onchange: "this.form.requestSubmit()" %>
 </div>

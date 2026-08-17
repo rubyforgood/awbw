@@ -8,27 +8,27 @@
   <div class="flex flex-wrap md:flex-nowrap items-end gap-6">
     <!-- TITLE -->
     <div class="min-w-[150px] pb-2">
-      <label for="title" class="search-label">
+      <label for="title" class="<%= search_label_class %>">
         Title contains
       </label>
 
       <%= f.text_field :title,
                        value: params[:title],
                        placeholder: "e.g. Art, Music…",
-                       class: "search-field bg-white",
+                       class: search_field_class(extra: "bg-white"),
                        oninput: "this.form.requestSubmit()" %>
     </div>
 
     <!-- KEYWORDS -->
     <div class="flex-1 min-w-[200px] pb-2">
-      <label for="query" class="search-label">
+      <label for="query" class="<%= search_label_class %>">
         Keywords
       </label>
 
       <div class="relative">
         <%= f.text_field :query,
                          value: params[:query],
-                         class: "search-field bg-white pr-10" %>
+                         class: search_field_class(extra: "bg-white pr-10") %>
 
         <%= render "shared/search_submit" %>
       </div>
@@ -36,13 +36,13 @@
 
     <!-- YEAR -->
     <div class="w-24 pb-2">
-      <label for="year" class="search-label">
+      <label for="year" class="<%= search_label_class %>">
         Year
       </label>
 
       <%= f.text_field :year,
                        placeholder: "e.g. 2025",
-                       class: "search-field bg-white",
+                       class: search_field_class(extra: "bg-white"),
                        oninput: "this.form.requestSubmit()" %>
     </div>
 
@@ -52,25 +52,25 @@
                  model_class: Story,
                  admin: allowed_to?(:manage?, Story),
                  authenticated: user_signed_in?,
-                 label_class: "search-label",
+                 label_class: search_label_class,
                  button_text: "All" %>
     </div>
 
     <!-- ORGANIZATION -->
     <div class="min-w-[200px] pb-2">
-      <label for="organization_id" class="search-label">
+      <label for="organization_id" class="<%= search_label_class %>">
         Organization
       </label>
       <%= f.select :organization_id,
                    options_from_collection_for_select(@organizations, :id, :name, params[:organization_id]),
                    { include_blank: "All organizations" },
-                   class: "search-field bg-white search-select-placeholder",
+                   class: search_field_class(extra: "bg-white search-select-placeholder"),
                    onchange: "this.form.requestSubmit()" %>
     </div>
 
     <!-- CLEAR FILTERS -->
     <div class="min-w-[120px] pb-3">
-      <label class="search-label">&nbsp;</label>
+      <label class="<%= search_label_class %>">&nbsp;</label>
       <%= render "shared/search_clear", url: stories_path %>
     </div>
   </div>

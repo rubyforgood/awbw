@@ -18,14 +18,14 @@
       <div class="flex items-center gap-3">
         <div class="relative flex-1 max-w-sm">
           <%= text_field_tag :search, params[:search],
-                             class: "search-field pr-10",
+                             class: search_field_class(extra: "pr-10"),
                              placeholder: "Search events..." %>
           <%= render "shared/search_submit" %>
         </div>
         <%= select_tag :by_user_id,
                        options_for_select(by_user_options, params[:by_user_id]),
                        include_blank: "By: All users",
-                       class: "search-field search-select-placeholder" %>
+                       class: search_field_class(extra: "search-select-placeholder") %>
         <% if params[:search].present? || params[:by_user_id].present? %>
           <%= render "shared/search_clear", url: user_path(user, section: "account_activity") %>
         <% end %>

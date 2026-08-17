@@ -9,23 +9,23 @@
     <div class="flex flex-wrap gap-4 items-end">
       <div class="flex-1 min-w-[200px]">
         <%= f.label :search, "Title or body contains",
-                    class: "search-label" %>
+                    class: search_label_class %>
 
         <%= f.text_field :search,
                          value: params[:search],
                          placeholder: "e.g. Profile, Workshop search…",
-                         class: "search-field bg-white" %>
+                         class: search_field_class(extra: "bg-white") %>
       </div>
 
       <% if @video_type != "instructional" %>
         <div class="flex-0 min-w-[180px]">
-          <label for="video_type" class="search-label">
+          <label for="video_type" class="<%= search_label_class %>">
             Video type
           </label>
 
           <select id="video_type"
                   name="video_type"
-                  class="search-field bg-white search-select-placeholder">
+                  class="<%= search_field_class(extra: "bg-white search-select-placeholder") %>">
             <option value="all" <%= "selected" if @video_type == "all" %>>All videos</option>
             <option value="instructional" <%= "selected" if @video_type == "instructional" %>>Instructional videos</option>
             <option value="other" <%= "selected" if @video_type == "other" %>>Other videos</option>
@@ -47,7 +47,7 @@
     <div class="flex flex-col sm:flex-row gap-4">
       <%# Categories dropdown %>
       <div class="w-full">
-        <label class="search-label" for="categories">Categories</label>
+        <label class="<%= search_label_class %>" for="categories">Categories</label>
 
         <%= select_tag "categories",
                        options_for_select(
@@ -62,7 +62,7 @@
 
       <%# Sectors dropdown %>
       <div class="w-full">
-        <label class="search-label" for="sectors">Sectors</label>
+        <label class="<%= search_label_class %>" for="sectors">Sectors</label>
 
         <%= select_tag "sectors",
                        options_from_collection_for_select(@sectors, :id, :name, Array(params[:sectors]).map(&:to_i)),

@@ -1,8 +1,8 @@
 <%# Filters — field/label/button styling modeled on the allocations search. %>
 <% default_btn = "text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-800 shadow-sm" %>
 <% selected_btn = "text-white bg-blue-600 border-blue-600 hover:bg-blue-700 hover:text-white shadow-md ring-2 ring-blue-300" %>
-<% field_class = "search-field" %>
-<% label_class = "search-label" %>
+<% field_class = search_field_class %>
+<% label_class = search_label_class %>
 <% placeholder_select_class = "#{field_class} search-select-placeholder" %>
 <% ce_event_ids = ContinuingEducationRegistration.joins(:event_registration).distinct.pluck(Arel.sql("event_registrations.event_id")) %>
 <% ce_events = Event.where(id: ce_event_ids).order(start_date: :desc) %>

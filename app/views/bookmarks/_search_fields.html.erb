@@ -2,10 +2,10 @@
 <div class="grid grid-cols-1 md:grid-cols-<%= show_created_by ? 4 : 3 %> gap-4 items-end mb-6">
   <!-- Keyword -->
   <div>
-    <%= label_tag :keyword, "Keyword", class: "search-label" %>
+    <%= label_tag :keyword, "Keyword", class: search_label_class %>
     <div class="relative">
       <%= text_field_tag :keyword, params[:keyword],
-                         class: "search-field" %>
+                         class: search_field_class %>
       <div class="absolute inset-y-0 right-0 flex items-center pr-3">
         <i class="fa fa-search text-gray-500"></i>
       </div>
@@ -15,38 +15,38 @@
   <!-- Created by (admins who can view bookmark index, or when user_id param is present) -->
   <% if show_created_by %>
     <div>
-      <%= label_tag :user_id, "Created by", class: "search-label" %>
+      <%= label_tag :user_id, "Created by", class: search_label_class %>
       <div data-controller="searchable-select" data-searchable-select-mode-value="person">
         <%= select_tag :user_id,
                        options_from_collection_for_select(@users, :id, :full_name_with_email, params[:user_id].to_i),
                        include_blank: "All users",
                        data: { searchable_select_target: "select" },
-                       class: "search-field" %>
+                       class: search_field_class %>
       </div>
     </div>
   <% end %>
 
   <!-- Bookmark Type Dropdown -->
   <div>
-    <%= label_tag :bookmarkable_type, "Bookmark type", class: "search-label" %>
+    <%= label_tag :bookmarkable_type, "Bookmark type", class: search_label_class %>
     <div class="relative">
       <%= select_tag :bookmarkable_type,
                      options_for_select(@bookmarkable_types,
                                         params[:bookmarkable_type]),
                      include_blank: "All types",
-                     class: "search-field search-select-placeholder" %>
+                     class: search_field_class(extra: "search-select-placeholder") %>
     </div>
   </div>
 
   <!-- Windows Type Dropdown -->
   <div>
-    <%= label_tag :windows_type, "Windows audience", class: "search-label" %>
+    <%= label_tag :windows_type, "Windows audience", class: search_label_class %>
     <div class="relative">
       <%= select_tag :windows_type,
                      options_for_select(@windows_types_array,
                                         params[:windows_type]),
                      include_blank: true,
-                     class: "search-field search-select-placeholder" %>
+                     class: search_field_class(extra: "search-select-placeholder") %>
     </div>
   </div>
 </div>

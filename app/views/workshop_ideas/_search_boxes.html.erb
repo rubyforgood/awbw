@@ -9,7 +9,7 @@
       <%= text_field_tag :title,
                          params[:title],
                          placeholder: "Title",
-                         class: "search-field pr-10" %>
+                         class: search_field_class(extra: "pr-10") %>
       <%= render "shared/search_submit" %>
     </div>
     <div data-controller="searchable-select" data-searchable-select-mode-value="person">
@@ -17,7 +17,7 @@
                      options_from_collection_for_select(@users, :id, :full_name_with_email, params[:created_by_id].to_i),
                      include_blank: "Author",
                      data: { searchable_select_target: "select", action: "change->searchable-select#submit" },
-                     class: "search-field" %>
+                     class: search_field_class %>
     </div>
     <!-- Clear filters -->
     <div class="flex sm:justify-end items-end">

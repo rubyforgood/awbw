@@ -5,7 +5,7 @@
     collection controller; the drill-in params (chips) ride as hidden fields and are
     surfaced/cleared by the chip row. Reads the @attendee_* ivars set by
     EventsController#attendees. %>
-<% field_class = "search-field" %>
+<% field_class = search_field_class %>
 <%# Open the drawer on load when any collapsed filter already carries a value, so an
     active filter is never hidden behind the toggle. %>
 <% collapsed_keys = %i[event_id event_year sector program_status affiliation_status payment_method scholarship funder_name ce_status account_status topic_subscription city state county comment_status comment] %>
@@ -28,7 +28,7 @@
 
 <% primary = capture do %>
   <div class="w-full md:flex-1 md:min-w-[14rem]">
-    <%= label_tag :contact_info, "Name, email, or phone", class: "search-label" %>
+    <%= label_tag :contact_info, "Name, email, or phone", class: search_label_class %>
     <div class="relative">
       <%= text_field_tag :contact_info, params[:contact_info], class: "#{field_class} pr-10" %>
       <%= render "shared/search_submit" %>
