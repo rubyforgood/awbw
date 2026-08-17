@@ -348,6 +348,49 @@ RSpec.describe User do
     end
   end
 
+  describe ".activity_search" do
+    let!(:target) do
+      create(:user, :with_person, email: "rudy-login@example.com").tap do |u|
+        u.person.update!(
+          first_name: "Rudy", last_name: "Hernandez",
+          legal_first_name: "Rudolfo",
+          email: "rudy@example.com", email_2: "rudy.alt@example.com"
+        )
+      end
+    end
+    let!(:other) { create(:user, :with_person, email: "someone-else@example.com") }
+
+    it "returns none for a blank query" do
+      expect(User.activity_search("")).to eq(User.none)
+    end
+
+    it "matches on person last name" do
+      expect(User.activity_search("Hernandez")).to include(target)
+      expect(User.activity_search("Hernandez")).not_to include(other)
+    end
+
+    it "matches on legal first name" do
+      expect(User.activity_search("Rudolfo")).to include(target)
+    end
+
+    it "matches on the person's primary and secondary email" do
+      expect(User.activity_search("rudy@example.com")).to include(target)
+      expect(User.activity_search("rudy.alt@example.com")).to include(target)
+    end
+
+    it "matches on the user's login email" do
+      expect(User.activity_search("rudy-login@example.com")).to include(target)
+    end
+
+    it "matches on the full name" do
+      expect(User.activity_search("Rudy Hernandez")).to include(target)
+    end
+
+    it "matches on the legal first name with last name" do
+      expect(User.activity_search("Rudolfo Hernandez")).to include(target)
+    end
+  end
+
   describe "#track_password_changed" do
     let(:user) { create(:user, password: "original_password") }
 
