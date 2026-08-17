@@ -17,6 +17,11 @@ module PersonHelper
       hover_bg = "hover:bg-purple-200"
       text = DomainTheme.text_class_for(:people)
       border = "border-purple-300"
+    elsif tint == :facilitator_inactive
+      bg = "bg-purple-50"
+      hover_bg = "hover:bg-purple-100"
+      text = DomainTheme.text_class_for(:people)
+      border = "border-purple-200"
     elsif tint == :muted
       bg = "bg-white"
       hover_bg = "hover:bg-gray-50"

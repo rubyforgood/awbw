@@ -11,11 +11,16 @@
       shown title) tints the row purple while the server-rendered pill stays neutral. %>
   <% displayed_title = f.object.title.presence || "Facilitator" %>
   <% facilitator = displayed_title.strip == "Facilitator" %>
-  <%# Active rows are tinted (never white) so active reads clearly against grey
-      inactive rows: purple for facilitators, else a super-light tint of the
-      counterpart's theme (person = sky, organization = emerald). %>
-  <% active_tint = person_side ? "bg-sky-50 border-sky-200" : "bg-emerald-50 border-emerald-200" %>
+  <%# Active non-facilitator rows use a very light grey (near white) so they read
+      as active but stay distinct from the darker grey of inactive rows;
+      facilitators keep their light purple. %>
+  <% active_tint = "bg-gray-50 border-gray-200" %>
   <% active_bg = facilitator ? "bg-purple-50 border-purple-200" : active_tint %>
+  <%# Inactive facilitator rows stay light purple (matching the pill/title) rather
+      than going grey like inactive non-facilitator rows. %>
+  <% inactive_bg = facilitator ? "bg-purple-50 border-purple-200 opacity-60" : "bg-gray-100 border-gray-300 opacity-60" %>
+  <% row_bg = expired ? inactive_bg : active_bg %>
+  <% pill_tint = facilitator ? (expired ? :facilitator_inactive : :facilitator) : :muted %>
   <%# Field fills echo the person button: an empty field is transparent (the card
       tint shows through), a filled field takes the pill colour for the row's state
       (grey inactive, purple facilitator, else white). The "Facilitator" title keeps
@@ -50,7 +55,7 @@
         <i class="fa-solid fa-gear"></i>
       <% end %>
     <% end %>
-    <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-start xl:grid xl:grid-cols-[280px_150px_150px_150px_120px_auto] rounded-lg border px-3 py-2 scroll-mt-24 <%= expired ? 'bg-gray-100 border-gray-300 opacity-60' : active_bg %>"
+    <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-start xl:grid xl:grid-cols-[280px_150px_150px_150px_120px_auto] rounded-lg border px-3 py-2 scroll-mt-24 <%= row_bg %>"
          <% if f.object.persisted? %>id="<%= dom_id(f.object) %>"<% end %>
          data-inactive-toggle-target="row">
       <div class="w-full sm:w-[280px] xl:w-auto min-w-0">
@@ -58,9 +63,9 @@
           <label class="block text-sm font-medium text-gray-700 mb-1 xl:hidden"><%= label %></label>
           <% if person_side %>
             <% show_email = record.profile_show_email? || allowed_to?(:manage?, Person) %>
-            <%= person_profile_button(record, truncate_at: 25, subtitle: (record.preferred_email if show_email), compact: true, inactive: expired, tint: facilitator ? :facilitator : :muted) %>
+            <%= person_profile_button(record, truncate_at: 25, subtitle: (record.preferred_email if show_email), compact: true, inactive: expired && !facilitator, tint: pill_tint) %>
           <% else %>
-            <%= organization_profile_button(record, truncate_at: 25, compact: true, inactive: expired, tint: facilitator ? :facilitator : :muted) %>
+            <%= organization_profile_button(record, truncate_at: 25, compact: true, inactive: expired && !facilitator, tint: pill_tint) %>
           <% end %>
           <%= f.hidden_field(person_side ? :person_id : :organization_id) %>
         <% else %>

@@ -88,17 +88,19 @@ export default class extends Controller {
   // Single source of truth for the row tint: gray when expired, light purple for
   // an active facilitator, else the counterpart-theme active tint (sky/emerald).
   updateRowBackground() {
-    const activeTint = (this.activeTintValue || "bg-white border-gray-200").split(" ");
+    const activeTint = (this.activeTintValue || "bg-gray-50 border-gray-200").split(" ");
     this.rowTarget.classList.remove(
       "bg-gray-100", "border-gray-300", "opacity-60",
       "bg-purple-50", "border-purple-200",
-      "bg-sky-50", "border-sky-200",
-      "bg-emerald-50", "border-emerald-200",
-      "bg-white", "border-gray-200"
+      "bg-gray-50", "border-gray-200"
     );
 
     if (this.isPast()) {
-      this.rowTarget.classList.add("bg-gray-100", "border-gray-300", "opacity-60");
+      if (this.isFacilitator()) {
+        this.rowTarget.classList.add("bg-purple-50", "border-purple-200", "opacity-60");
+      } else {
+        this.rowTarget.classList.add("bg-gray-100", "border-gray-300", "opacity-60");
+      }
     } else if (this.isFacilitator()) {
       this.rowTarget.classList.add("bg-purple-50", "border-purple-200");
     } else {
