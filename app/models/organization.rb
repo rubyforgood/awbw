@@ -36,18 +36,16 @@ class Organization < ApplicationRecord
   # List pages must preload people with exactly this, or each row re-queries.
   PEOPLE_TAGGINGS = [ { sectorable_items: :sector }, { categorizable_items: { category: :category_type } } ].freeze
 
-  # The organization classifications offered by the org form and the registration
-  # form's "Organization Type" question, in display order. "Other" is the generic
-  # catch-all; any stored value not in this list (e.g. a legacy label like the
-  # pre-rename "Other (please specify below)") is folded into it for display so an
-  # unmatched select can't silently save as the first option.
+  # Org classifications offered by the org form and the registration form's
+  # "Organization Type" question, in display order. Any stored value not listed
+  # (e.g. the legacy "Other (please specify below)") folds into "Other" for display
+  # so an unmatched select can't silently save as the first option.
   AGENCY_TYPE_OTHER = "Other"
   AGENCY_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", AGENCY_TYPE_OTHER ].freeze
 
-  # The organization that runs this app. A grant it self-funds is the org funding
-  # itself, so reports count it as subsidy (unfunded), not external funding.
-  # Identified by name via ORGANIZATION_NAME — the only marker available today.
-  # Not memoized: the record can be created mid-process (seeds, tests).
+  # The organization that runs this app. A grant it self-funds counts as subsidy
+  # (unfunded), not external funding, in reports. Not memoized: the record can be
+  # created mid-process (seeds, tests).
   def self.awbw
     find_by(name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))
   end
@@ -109,10 +107,9 @@ class Organization < ApplicationRecord
     end
     scope.distinct
   end
-  # Program-status filter, keyed purely off facilitator affiliations (the legacy
-  # organization_status plays no part — see ADR-0001 D3): an active facilitator
-  # affiliation => active, facilitator affiliations but none active => formerly
-  # active, none at all => never active.
+  # Program-status filter, off facilitator affiliations only (not the legacy
+  # organization_status — see ADR-0001 D3): active facilitator => active, only
+  # ended => formerly active, none => never active.
   scope :program_status, ->(bucket) {
     fac_ids = Affiliation.facilitators.select(:organization_id)
     active_fac_ids = Affiliation.facilitators.active.select(:organization_id)
@@ -179,11 +176,9 @@ class Organization < ApplicationRecord
   # FacilitatorProgramStatus returns, and the attendees index filters on.
   FACILITATOR_PROGRAM_STATUSES = FacilitatorProgramStatus::STATUSES
 
-  # This organization's program status (New / Ongoing / Reinstate) as of a date —
-  # the event's start date, or the start of the current year when there's no event
-  # in view. Returns a FacilitatorProgramStatus, which carries the verdict plus the
-  # anchor date, the affiliation month behind it and the facilitator history, so
-  # every display can explain itself. See ADR-0001 D4.
+  # This org's program status (New / Ongoing / Reinstate) as of a date — the
+  # event's start date, or the start of the current year when no event is in view.
+  # Returns a FacilitatorProgramStatus (verdict + reasoning). See ADR-0001 D4.
   def facilitator_program_status(as_of: nil)
     FacilitatorProgramStatus.for(self, as_of: as_of)
   end
@@ -226,16 +221,10 @@ class Organization < ApplicationRecord
     [ first_active.city, first_active.state ].compact_blank.join(", ").presence
   end
 
-  # Status of this organization as an AWBW "program," relative to a scholarship
-  # recipient — the New/Ongoing/Reinstate column on the scholarship index:
-  #   * "Reinstate" — the org has facilitator affiliations but none are currently
-  #     active (it is returning after a lapse);
-  #   * "Ongoing"   — the org has facilitator affiliations beyond this recipient
-  #     (an established program);
-  #   * "New"       — no prior facilitator affiliations (this recipient is the
-  #     program's first).
-  # Heuristic based on affiliations (computed in memory to reuse a preloaded
-  # association); confirm the exact business rule with the team.
+  # This org's program status relative to a scholarship recipient (the
+  # New/Ongoing/Reinstate column on the scholarship index): Reinstate = lapsed,
+  # Ongoing = has facilitators beyond this recipient, New = none prior. In-memory
+  # facilitator-affiliation heuristic, to reuse a preloaded association.
   def program_status(recipient = nil)
     facilitators = affiliations.select(&:facilitator?)
     return "New" if facilitators.empty?

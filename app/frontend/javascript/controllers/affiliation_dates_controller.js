@@ -4,14 +4,13 @@ export default class extends Controller {
   static targets = ["affiliatedSince", "facilitatorSince", "affiliationsContainer", "programStatus"]
   // Two live formats. The person form shows a single Mon YYYY – Mon YYYY range for
   // both figures. The org form (mergedPeriods) shows merged periods mirroring the
-  // AffiliationPeriods service, so the live value matches the server render:
-  // "Affiliated since" at year precision, "Art program since" at month precision.
-  // affiliatedSinceFallback is the org's own start_date (already formatted), shown
-  // when no affiliation carries a start date.
+  // AffiliationPeriods service so the live value matches the server render (see
+  // periodsLabel). affiliatedSinceFallback is the org's own start_date, shown when
+  // no affiliation carries a start date.
   //
-  // Program status (org edit form): derived live from the visible Facilitator rows
-  // alone, mirroring OrganizationDecorator#organization_status_bucket. statusBuckets
-  // holds each bucket's label + pill classes (from DomainTheme).
+  // Program status (org edit form): derived live from the visible Facilitator rows,
+  // mirroring OrganizationDecorator#organization_status_bucket. statusBuckets holds
+  // each bucket's label + pill classes (from DomainTheme).
   static values = {
     mergedPeriods: Boolean,
     affiliatedSinceFallback: String,
@@ -142,16 +141,11 @@ export default class extends Controller {
     return `${months[date.getUTCMonth()]} ${date.getUTCFullYear()}`
   }
 
-  // Merged-period label for the org form, mirroring the AffiliationPeriods service:
-  // overlapping/touching intervals collapse into one period (a nil end is ongoing
-  // and swallows later intervals), a real gap starts a new one.
-  //
-  // precision "year": a single ongoing period keeps month precision when it began
-  // this year, any multi-period list is year-only. precision "month": every period
-  // carries its month ("Aug 2015 – Jun 2018, Feb 2024").
-  //
-  // Returns null when no affiliation carries a start date, so the caller can fall
-  // back to the org's start_date.
+  // Merged-period label for the org form, mirroring the AffiliationPeriods service
+  // (see it for the merge rules). precision "year": a lone ongoing period keeps
+  // month precision when it began this year, multi-period lists are year-only.
+  // precision "month": every period carries its month. Returns null when no
+  // affiliation has a start date, so the caller falls back to the org's start_date.
   periodsLabel(affiliations, today, precision) {
     const intervals = affiliations
       .filter(a => a.startDate)

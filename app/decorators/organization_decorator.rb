@@ -47,11 +47,9 @@ class OrganizationDecorator < ApplicationDecorator
                   class: "inline-flex shrink-0 items-center justify-center w-5 h-5 rounded-full border text-xs font-semibold #{self.class.program_status_classes(status)}")
   end
 
-  # The org form's type dropdown offers Organization::AGENCY_TYPES. A record may
-  # still hold a value that is no longer offered (e.g. the pre-rename legacy label
-  # "Other (please specify below)"); rendered as-is the select finds no match and
-  # an untouched save would silently reclassify the org as the first option. Fold
-  # any unrecognized non-blank value into the catch-all "Other". Blank stays blank.
+  # The stored agency_type, folding any value no longer offered (e.g. the legacy
+  # "Other (please specify below)") into "Other" so the select can't silently
+  # reclassify the org — see AGENCY_TYPES. Blank stays blank.
   def agency_type_option
     return object.agency_type if object.agency_type.blank?
     return object.agency_type if Organization::AGENCY_TYPES.include?(object.agency_type)
