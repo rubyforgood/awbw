@@ -420,6 +420,31 @@ module ApplicationHelper
     label.presence || "##{record.id}"
   end
 
+  # A pill button for any noticeable record — same shape as the person/event
+  # profile buttons (bordered, rounded, themed by the record's domain) but with
+  # no avatar or icon: a small type label plus the record's name, linking to it.
+  # Falls back to a non-clickable span when the record has no routable path.
+  def record_button(record, compact: true)
+    key = record.model_name.plural.to_sym
+    padding = compact ? "px-2 py-1" : "px-4 py-2"
+    name_size = compact ? "text-xs" : "text-sm"
+
+    inner = content_tag(:span, noticeable_type_label(record), class: "shrink-0 text-2xs text-gray-400 uppercase") +
+            content_tag(:span, noticeable_label(record), class: "truncate font-semibold #{name_size} #{DomainTheme.text_class_for(key)}")
+    body = content_tag(:div, inner, class: "flex min-w-0 items-center gap-1.5 leading-none text-left")
+
+    classes = "group relative flex w-fit max-w-md items-center gap-2 #{padding} " \
+              "rounded-lg border #{DomainTheme.border_class_for(key)} #{DomainTheme.bg_class_for(key, intensity: 50)} " \
+              "#{DomainTheme.bg_class_for(key, intensity: 50, hover: true)} font-medium shadow-sm leading-none transition-colors duration-200"
+
+    path = routable_path(record)
+    return content_tag(:span, body, class: classes, title: noticeable_label(record)) unless path
+
+    link_to path, class: classes, title: noticeable_label(record) do
+      body
+    end
+  end
+
   # Event title with its month and year appended (e.g. "AWBW Facilitator
   # Training (August 2026)") so a registration reads as which occurrence it's for.
   def event_title_with_month_year(event)

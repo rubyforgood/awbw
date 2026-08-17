@@ -85,6 +85,18 @@ class NotificationDecorator < ApplicationDecorator
     contact_person if incoming?
   end
 
+  # The Person to render as a profile button on each side of the detail page:
+  # the contact on their side, the staff sender (resolved to their person) on the
+  # other. nil for the AWBW Portal — or a sender with no linked person — which
+  # fall back to plain text.
+  def from_button_person
+    incoming? ? contact_person : sender&.person
+  end
+
+  def to_button_person
+    incoming? ? sender&.person : contact_person
+  end
+
   # The contact's email for each side, mirroring to_person/from_person — always
   # recipient_email, on whichever side the contact sits. nil on the staff/portal
   # side, which is a person's name (or "AWBW Portal"), not an address.
