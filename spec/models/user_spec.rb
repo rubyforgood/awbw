@@ -385,6 +385,10 @@ RSpec.describe User do
     it "matches on the full name" do
       expect(User.activity_search("Rudy Hernandez")).to include(target)
     end
+
+    it "matches on the legal first name with last name" do
+      expect(User.activity_search("Rudolfo Hernandez")).to include(target)
+    end
   end
 
   describe "#track_password_changed" do

@@ -131,6 +131,7 @@ class User < ApplicationRecord
       "people.first_name LIKE :p OR people.last_name LIKE :p OR people.legal_first_name LIKE :p OR " \
       "people.email LIKE :p OR people.email_2 LIKE :p OR " \
       "CONCAT(people.first_name, ' ', people.last_name) LIKE :p OR " \
+      "CONCAT(people.legal_first_name, ' ', people.last_name) LIKE :p OR " \
       "CONCAT(users.first_name, ' ', users.last_name) LIKE :p",
       p: pattern
     )
