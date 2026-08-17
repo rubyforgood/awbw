@@ -212,9 +212,9 @@ RSpec.describe NotificationDecorator, type: :decorator do
       expect(html).to include("Incoming")
     end
 
-    it "shows a grey FYI pill for an admin-directed communication" do
+    it "shows a teal FYI pill for an admin-directed communication" do
       html = build_stubbed(:notification, recipient_role: "admin").decorate.flag_badges
-      expect(html).to include("bg-gray-100")
+      expect(html).to include("bg-teal-100")
       expect(html).to include("FYI")
     end
 
