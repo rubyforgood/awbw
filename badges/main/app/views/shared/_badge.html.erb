@@ -17,7 +17,7 @@
   <%= link_to href, class: "#{pill} transition hover:opacity-80 hover:shadow-sm", title: local_assigns[:title], target: local_assigns[:target], rel: local_assigns[:rel], data: local_assigns.fetch(:data, { turbo_frame: "_top" }) do %>
     <%= icon_html %><% if icon %><i class="<%= icon %>"></i><% end %>
     <span><%= label %></span>
-    <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
+    <i class="fa-solid fa-arrow-up-right-from-square text-2xs opacity-70"></i>
   <% end %>
 <% else %>
   <%= content_tag :span, class: pill, title: local_assigns[:title] do %><%= icon_html %><% if icon %><i class="<%= icon %>"></i><% end %><%= label %><% end %>

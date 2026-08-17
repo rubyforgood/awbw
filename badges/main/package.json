@@ -1,8 +1,13 @@
 {
   "name": "awbw",
+  "scripts": {
+    "format:classes": "rustywind --write app/views app/frontend/javascript",
+    "lint:classes": "rustywind --check-formatted app/views app/frontend/javascript"
+  },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
     "rollup-plugin-visualizer": "^6.0.5",
+    "rustywind": "^0.27.0",
     "vite": "^5.4.20",
     "vite-plugin-ruby": "^5.1.1"
   },

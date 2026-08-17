@@ -45,7 +45,7 @@
                   class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline #{view_all_marker}",
                   target: "_blank", rel: "noopener" do %>
         View all
-        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+        <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
       <% end %>
     <% end %>
   </div>
@@ -89,7 +89,7 @@
               render_options: { locals: { record: record, mark_admin_only: mark_admin_only } },
               data: { association_insertion_node: "##{list_id}", association_insertion_method: "append" },
               class: admin_button_class do %>
-          <i class="fa-solid fa-plus text-[0.6rem]"></i>
+          <i class="fa-solid fa-plus text-2xs"></i>
           <%= t("communications.add") %>
         <% end %>
 
@@ -97,7 +97,7 @@
           <button type="button"
                   class="<%= admin_button_class %>"
                   data-action="edit-toggle#toggle">
-            <i class="fa-solid fa-pen text-[0.6rem]"></i>
+            <i class="fa-solid fa-pen text-2xs"></i>
             <span data-edit-toggle-target="editLabel"><%= t("communications.edit") %></span>
             <span data-edit-toggle-target="viewLabel" class="hidden"><%= t("communications.done_editing") %></span>
           </button>

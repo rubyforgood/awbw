@@ -4,9 +4,9 @@
   <% if organization.linked_in_url.present? %>
     <%= link_to organization.linked_in_url, target: "_blank", rel: "noopener noreferrer",
                 class: "group inline-flex items-center justify-center w-6 h-6
-                         rounded-md bg-gray-100 hover:bg-[#0A66C2]
+                         rounded-md bg-gray-100 hover:bg-linkedin
                          transition-colors duration-200" do %>
-      <i class="fab fa-linkedin-in text-gray-600 group-hover:text-white text-sm inline-block"></i>
+      <i class="fab fa-linkedin-in inline-block text-sm text-gray-600 group-hover:text-white"></i>
     <% end %>
   <% end %>
 
@@ -14,34 +14,34 @@
     <%= link_to organization.instagram_url, target: "_blank", rel: "noopener noreferrer",
                 class: "group inline-flex items-center justify-center w-6 h-6
                          rounded-md bg-gray-100 hover:bg-gradient-to-tr
-                         hover:from-[#F58529] hover:via-[#DD2A7B] hover:to-[#8134AF]
+                         hover:from-instagram-start hover:via-instagram-mid hover:to-instagram-end
                          transition-all duration-300" do %>
-      <i class="fab fa-instagram text-gray-600 group-hover:text-white text-sm inline-block"></i>
+      <i class="fab fa-instagram inline-block text-sm text-gray-600 group-hover:text-white"></i>
     <% end %>
   <% end %>
 
   <% if organization.facebook_url.present? %>
     <%= link_to organization.facebook_url, target: "_blank", rel: "noopener noreferrer",
                 class: "group inline-flex items-center justify-center w-6 h-6
-                         rounded-md bg-gray-100 hover:bg-[#1877F2]
+                         rounded-md bg-gray-100 hover:bg-facebook
                          transition-colors duration-200" do %>
-      <i class="fab fa-facebook-f text-gray-600 group-hover:text-white text-sm inline-block"></i>
+      <i class="fab fa-facebook-f inline-block text-sm text-gray-600 group-hover:text-white"></i>
     <% end %>
   <% end %>
 
   <% if organization.twitter_url.present? %>
     <%= link_to organization.twitter_url, target: "_blank", rel: "noopener noreferrer",
                 class: "group inline-flex items-center justify-center w-6 h-6
-                         rounded-md bg-gray-100 hover:bg-[#1DA1F2]
+                         rounded-md bg-gray-100 hover:bg-twitter
                          transition-colors duration-200" do %>
-      <i class="fab fa-twitter text-gray-600 group-hover:text-white text-sm inline-block"></i>
+      <i class="fab fa-twitter inline-block text-sm text-gray-600 group-hover:text-white"></i>
     <% end %>
   <% end %>
 
   <% if organization.youtube_url.present? %>
     <%= link_to organization.youtube_url, target: "_blank", rel: "noopener noreferrer",
                 class: "group inline-flex items-center justify-center w-6 h-6
-                         rounded-md bg-gray-100 hover:bg-[#FF0000]
+                         rounded-md bg-gray-100 hover:bg-youtube
                          text-gray-600 hover:text-white
                          transition-colors duration-200" do %>
       <i class="fa-brands fa-youtube text-sm transition-colors duration-200"></i>

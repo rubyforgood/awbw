@@ -104,7 +104,7 @@
           data: { conditional_fields_target: "source", action: "change->conditional-fields#toggle" } %>
       </div>
       <button type="button" class="<%= pencil_class %>" data-action="edit-toggle#toggle" aria-label="Change topic">
-        <i class="fa-solid fa-pen text-[0.6rem]"></i>
+        <i class="fa-solid fa-pen text-2xs"></i>
       </button>
     </div>
   </div>
@@ -124,7 +124,7 @@
           class: field_class %>
       </div>
       <button type="button" class="<%= pencil_class %>" data-action="edit-toggle#toggle" aria-label="Change event">
-        <i class="fa-solid fa-pen text-[0.6rem]"></i>
+        <i class="fa-solid fa-pen text-2xs"></i>
       </button>
     </div>
     <p class="mt-1 text-xs text-gray-500">Choose a specific upcoming event, or “All upcoming events”.</p>
@@ -148,7 +148,7 @@
                     class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
                     target: "_blank", rel: "noopener" do %>
           View all
-          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+          <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
         <% end %>
       <% end %>
     </div>
@@ -167,14 +167,14 @@
               partial: "comments/comment_fields",
               data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
               class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
-          <i class="fa-solid fa-plus text-[0.6rem]"></i>
+          <i class="fa-solid fa-plus text-2xs"></i>
           Add comment
         <% end %>
 
         <button type="button"
                 class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
                 data-action="edit-toggle#toggle">
-          <i class="fa-solid fa-pen text-[0.6rem]"></i>
+          <i class="fa-solid fa-pen text-2xs"></i>
           <span data-edit-toggle-target="editLabel">Edit comments</span>
           <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
         </button>

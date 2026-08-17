@@ -89,7 +89,7 @@
         toggles `hidden`). Defaults open when published, closed otherwise; render
         the matching initial state to avoid a flash before the controller connects.
         `mt-5` keeps the preview card clear of the controls above it. %>
-    <div class="<%= "hidden" unless f.object.published? %> space-y-3 mt-5 cursor-auto select-auto" data-expandable-card-target="body">
+    <div class="<%= "hidden" unless f.object.published? %> mt-5 cursor-auto space-y-3 select-auto" data-expandable-card-target="body">
       <% if f.object.staff? %>
         <div class="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
           <i class="fa-solid fa-circle-info mt-0.5 shrink-0" aria-hidden="true"></i>
@@ -122,9 +122,9 @@
         identity (title + presentation) on the left, its page content on the right.
       %>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div class="min-w-0">
-          <div class="flex-1 min-w-0 space-y-3">
+          <div class="min-w-0 flex-1 space-y-3">
             <div class="space-y-3">
               <div><%= f.label :title, "Title", class: "block text-xs font-medium text-gray-600 mb-0.5" %><%= f.text_field :title, required: true,
                       class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %></div>
@@ -154,7 +154,7 @@
         <div class="space-y-4">
           <details class="group">
             <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
-              <i class="fa-solid fa-chevron-right text-[10px] text-gray-400 transition-transform group-open:rotate-90"></i>
+              <i class="fa-solid fa-chevron-right text-2xs text-gray-400 transition-transform group-open:rotate-90"></i>
               Type, color, and icon
             </summary>
 
@@ -202,7 +202,7 @@
           <% unless f.object.payment? %>
             <details class="group" <%= "open" if f.object.display_from.present? || f.object.payment_access_gated? %>>
               <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
-                <i class="fa-solid fa-chevron-right text-[10px] text-gray-400 transition-transform group-open:rotate-90"></i>
+                <i class="fa-solid fa-chevron-right text-2xs text-gray-400 transition-transform group-open:rotate-90"></i>
                 Visibility
               </summary>
 
@@ -229,7 +229,7 @@
         <%# RIGHT COLUMN: linked resources. Opened on load only when resources are saved. %>
         <details class="group" <%= "open" if f.object.registration_ticket_callout_resources.any? %>>
           <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
-            <i class="fa-solid fa-chevron-right text-[10px] text-gray-400 transition-transform group-open:rotate-90"></i>
+            <i class="fa-solid fa-chevron-right text-2xs text-gray-400 transition-transform group-open:rotate-90"></i>
             Linked resources
           </summary>
 
@@ -240,13 +240,13 @@
               <%# Column headers — mirror the row's flex + 3-col grid (plus a spacer
                   for the remove button) so they line up. Hidden on mobile, where the
                   fields stack to one column. %>
-              <div class="hidden sm:flex items-center gap-2 mt-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-                <div class="flex-1 min-w-0 grid grid-cols-3 gap-2">
+              <div class="text-2xs mt-2 hidden items-center gap-2 font-semibold tracking-wide text-gray-400 uppercase sm:flex">
+                <div class="grid min-w-0 flex-1 grid-cols-3 gap-2">
                   <span>Resource</span>
                   <span>Card subtitle</span>
                   <span>Page content</span>
                 </div>
-                <span class="shrink-0 w-3" aria-hidden="true"></span>
+                <span class="w-3 shrink-0" aria-hidden="true"></span>
               </div>
 
               <%= f.fields_for :registration_ticket_callout_resources do |rf| %>

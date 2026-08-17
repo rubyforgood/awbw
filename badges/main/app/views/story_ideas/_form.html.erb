@@ -21,14 +21,14 @@
 
     <% if allowed_to?(:manage?, StoryIdea) || @user %>
       <% if promoted_to_story %>
-        <div class="flex items-center space-x-2 mb-4">
+        <div class="mb-4 flex items-center space-x-2">
           <label class="text-gray-700"> Promoted to Story </label>
           <% f.object.stories.each do |story| %>
             <%= link_to story.title, story_path(story), class: "btn btn-secondary-outline" %>
           <% end %>
         </div>
       <% elsif allowed_to?(:manage?, StoryIdea) && f.object.persisted? %>
-        <div class="admin-only bg-blue-100 p-3 mb-4">
+        <div class="admin-only mb-4 bg-blue-100 p-3">
           <%= link_to "Promote to Story", new_story_path(story_idea_id: @story_idea.id),
                       class: "btn btn-secondary-outline ms-2" %>
         </div>
@@ -45,8 +45,8 @@
       }
     %>
     <!-- </div> -->
-    <div class="flex flex-col md:flex-row md:space-x-4 mt-6">
-      <div class="flex-1 mb-4 md:mb-0">
+    <div class="mt-6 flex flex-col md:flex-row md:space-x-4">
+      <div class="mb-4 flex-1 md:mb-0">
         <%= f.input :windows_type_id,
                     collection: @windows_types, label_method: :short_name, value_method: :id,
                     disabled: promoted_to_story,
@@ -59,7 +59,7 @@
                       onchange: select_caret_onchange
                     } %>
       </div>
-      <div class="flex-1 mb-4 md:mb-0">
+      <div class="mb-4 flex-1 md:mb-0">
         <%= f.input :workshop_id,
           collection: f.object.workshop.present? ? [[ f.object.workshop.remote_search_label[:label], f.object.workshop.id]] : [],
           include_blank: true,
@@ -348,7 +348,7 @@
                           class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
                           target: "_blank", rel: "noopener" do %>
                 View all
-                <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+                <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
               <% end %>
             <% end %>
           </div>
@@ -367,16 +367,16 @@
                     partial: "comments/comment_fields",
                     data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
                     class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
-                <i class="fa-solid fa-plus text-[0.6rem]"></i>
+                <i class="fa-solid fa-plus text-2xs"></i>
                 Add comment
               <% end %>
 
               <button
                 type="button"
-                class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
+                class="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
                 data-action="edit-toggle#toggle"
               >
-                <i class="fa-solid fa-pen text-[0.6rem]"></i>
+                <i class="fa-solid fa-pen text-2xs"></i>
                 <span data-edit-toggle-target="editLabel">Edit comments</span>
                 <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
               </button>

@@ -6,7 +6,7 @@
   <% position = submitted_position.to_s.strip %>
   <% is_submitted_org = submitted_org_name.to_s.strip.present? && org.name.to_s.strip.casecmp?(submitted_org_name.to_s.strip) %>
   <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
-    <span class="text-[0.65rem] font-semibold uppercase tracking-wide text-gray-400">Affiliations:</span>
+    <span class="text-2xs font-semibold uppercase tracking-wide text-gray-400">Affiliations:</span>
     <% affiliations.each do |a| %>
       <% a_active = active.call(a) %>
       <% color = a_active && !local_assigns[:neutral] ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200" %>
