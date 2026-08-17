@@ -1,16 +1,17 @@
 import { Controller } from "@hotwired/stimulus";
 
-// Live row tint for the affiliation editor: reflects facilitator-ness (title) and
-// active/expired state (end date) as you edit, before saving. The person/org pill
-// and field chrome are static neutral styles now, so only the row background and
-// the left accent bar need updating here.
+// Live styling for the affiliation editor row: reflects facilitator-ness (title)
+// and active/expired state (end date) as you edit, before saving. Drives the row
+// tint, the left accent bar, the "Facilitator" title purple, and the field fills
+// (transparent when empty, the pill colour when filled).
 export default class extends Controller {
-  static targets = ["endDate", "title", "row", "accentBar"]
+  static targets = ["endDate", "title", "row", "accentBar", "valueField"]
   static values = { activeTint: String }
 
   connect() {
     if (this.hasEndDateTarget) this.apply();
     if (this.hasTitleTarget) this.updateBorder();
+    this.paintFields();
   }
 
   toggle() {
@@ -26,31 +27,63 @@ export default class extends Controller {
     }
     this.styleTitle();
     this.updateRowBackground();
-  }
-
-  // Purple "Facilitator" tint on the title input, matching the server-rendered
-  // state and toggled live as the title/end date change. Inactive facilitator
-  // rows use a lighter, softer purple; shape/size are untouched.
-  styleTitle() {
-    if (!this.hasTitleTarget) return;
-    const facilitator = this.isFacilitator();
-    const active = facilitator && !this.isPast();
-    const inactive = facilitator && this.isPast();
-    const t = this.titleTarget;
-    t.classList.toggle("bg-purple-100!", active);
-    t.classList.toggle("text-purple-700!", active);
-    t.classList.toggle("font-semibold", active);
-    t.classList.toggle("border-purple-300!", active);
-    t.classList.toggle("bg-purple-50!", inactive);
-    t.classList.toggle("text-purple-400!", inactive);
-    t.classList.toggle("border-purple-200!", inactive);
-    t.classList.toggle("border-gray-300!", !facilitator);
+    this.paintFields();
   }
 
   apply() {
     if (!this.hasEndDateTarget) return;
     this.updateRowBackground();
     this.styleTitle();
+    this.paintFields();
+  }
+
+  // The "Facilitator" title keeps its own darker purple (lighter when inactive);
+  // any other title fills like the rest of the fields. Shape/size are untouched.
+  styleTitle() {
+    if (!this.hasTitleTarget) return;
+    const t = this.titleTarget;
+    const facilitator = this.isFacilitator();
+    const past = this.isPast();
+    t.classList.remove(
+      "bg-transparent!", "bg-gray-100!", "bg-white!", "bg-purple-100!", "bg-purple-50!",
+      "text-purple-700!", "text-purple-400!", "font-semibold",
+      "border-purple-300!", "border-purple-200!", "border-gray-300!"
+    );
+    if (facilitator && !past) {
+      t.classList.add("bg-purple-100!", "text-purple-700!", "font-semibold", "border-purple-300!");
+    } else if (facilitator && past) {
+      t.classList.add("bg-purple-50!", "text-purple-400!", "border-purple-200!");
+    } else {
+      t.classList.add(this.fieldBg(t), "border-gray-300!");
+    }
+  }
+
+  // Repaint the date/address fields: empty -> transparent (card tint shows
+  // through), filled -> the pill colour for the row's current state.
+  paintFields() {
+    this.valueFieldTargets.forEach((el) => {
+      el.classList.remove("bg-transparent!", "bg-gray-100!", "bg-white!", "bg-purple-100!");
+      el.classList.add(this.fieldBg(el));
+    });
+  }
+
+  fieldBg(el) {
+    return this.fieldHasValue(el) ? this.pillColorClass() : "bg-transparent!";
+  }
+
+  // Mirrors the person/org pill: grey when expired, purple for a facilitator,
+  // else white.
+  pillColorClass() {
+    if (this.isPast()) return "bg-gray-100!";
+    if (this.isFacilitator()) return "bg-purple-100!";
+    return "bg-white!";
+  }
+
+  fieldHasValue(el) {
+    if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") return el.value.trim() !== "";
+    // Address button: filled when its org-address hidden input holds a value.
+    const hidden = el.parentElement.querySelector("input[type='hidden']");
+    return Boolean(hidden && hidden.value);
   }
 
   // Single source of truth for the row tint: gray when expired, light purple for

@@ -16,11 +16,14 @@
       counterpart's theme (person = sky, organization = emerald). %>
   <% active_tint = person_side ? "bg-sky-50 border-sky-200" : "bg-emerald-50 border-emerald-200" %>
   <% active_bg = facilitator ? "bg-purple-50 border-purple-200" : active_tint %>
-  <%# The "Facilitator" title is tinted purple; inactive rows use a lighter, softer
-      purple so it recedes to match the dimmed person button. Kept in sync live by
-      inactive-toggle#styleTitle. %>
+  <%# Field fills echo the person button: an empty field is transparent (the card
+      tint shows through), a filled field takes the pill colour for the row's state
+      (grey inactive, purple facilitator, else white). The "Facilitator" title keeps
+      its own darker purple. Kept in sync live by inactive-toggle. %>
+  <% pill_color = expired ? "bg-gray-100!" : (facilitator ? "bg-purple-100!" : "bg-white!") %>
+  <% field_bg = ->(present) { present ? pill_color : "bg-transparent!" } %>
   <% title_class = if !facilitator
-       "border-gray-300!"
+       "#{field_bg.call(displayed_title.present?)} border-gray-300!"
      elsif expired
        "bg-purple-50! text-purple-400! border-purple-200!"
      else
@@ -100,9 +103,9 @@
                     input_html: {
                       type: "date",
                       value: (f.object.start_date || (Date.current unless f.object.persisted?))&.strftime("%Y-%m-%d"),
-                      class: "w-full rounded-md border-gray-300! focus:ring-blue-500 focus:border-blue-500 text-sm",
+                      class: "w-full rounded-md border-gray-300! focus:ring-blue-500 focus:border-blue-500 text-sm #{field_bg.call(f.object.start_date.present? || !f.object.persisted?)}",
                       style: "height: 42px;",
-                      data: { action: "change->affiliation-dates#recalculate" }
+                      data: { inactive_toggle_target: "valueField", action: "change->affiliation-dates#recalculate change->inactive-toggle#paintFields" }
                     } %>
       </div>
 
@@ -115,10 +118,10 @@
                     input_html: {
                       type: "date",
                       value: f.object.end_date&.strftime("%Y-%m-%d"),
-                      class: "w-full rounded-md border-gray-300! focus:ring-blue-500 focus:border-blue-500 text-sm",
+                      class: "w-full rounded-md border-gray-300! focus:ring-blue-500 focus:border-blue-500 text-sm #{field_bg.call(f.object.end_date.present?)}",
                       style: "height: 42px;",
                       data: {
-                        inactive_toggle_target: "endDate",
+                        inactive_toggle_target: "endDate valueField",
                         action: "change->inactive-toggle#toggle change->affiliation-dates#recalculate"
                       }
                     } %>
@@ -127,7 +130,7 @@
       <%# Address sits left of Primary at every width; on mobile the two share the
           final row (each flex-1 → 50%), at sm+ they take their column widths. %>
       <div class="flex-1 sm:flex-none sm:w-[120px] xl:w-auto min-w-0">
-        <%= render "affiliations/address_picker", f: f, hide_label: true %>
+        <%= render "affiliations/address_picker", f: f, hide_label: true, bg_class: field_bg.call(f.object.organization_address_id.present?) %>
       </div>
 
       <div class="flex-1 sm:flex-none sm:w-auto min-w-0">

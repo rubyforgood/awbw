@@ -10,18 +10,20 @@
 <% options = org ? org.addresses.each_with_index.map { |address, i| [ i + 1, address ] } : [] %>
 <% selected_id = f.object.organization_address_id %>
 <% selected = options.find { |_number, address| address.id == selected_id } %>
+<% inline = local_assigns.fetch(:hide_label, false) %>
 <% if options.any? %>
   <div class="w-full min-w-0" data-controller="address-select">
-    <label class="block text-sm font-medium text-gray-700 mb-1 <%= "xl:hidden" if local_assigns.fetch(:hide_label, false) %>">Address</label>
+    <label class="block text-sm font-medium text-gray-700 mb-1 <%= "xl:hidden" if inline %>">Address</label>
     <div class="relative">
       <button type="button"
-              class="flex h-[42px] w-full items-center justify-between gap-1 rounded-md border border-gray-300 bg-gray-100 px-2 text-sm text-gray-800 focus:border-blue-500 focus:ring-blue-500"
+              class="flex h-[42px] w-full items-center justify-between gap-1 rounded-md border border-gray-300 <%= local_assigns.fetch(:bg_class, "bg-gray-100") %> px-2 text-sm text-gray-800 focus:border-blue-500 focus:ring-blue-500"
               data-address-select-target="button"
+              <%= "data-inactive-toggle-target=valueField".html_safe if inline %>
               data-action="address-select#toggle">
         <span data-address-select-target="label" class="min-w-0 flex-1 truncate text-left"><%= selected ? "#{selected.first} — #{selected.last.name}" : "—" %></span>
         <i class="fa-solid fa-chevron-down text-xs text-gray-400 shrink-0"></i>
       </button>
-      <%= f.hidden_field :organization_address_id, data: { address_select_target: "input" } %>
+      <%= f.hidden_field :organization_address_id, data: { address_select_target: "input", **(inline ? { action: "change->inactive-toggle#paintFields" } : {}) } %>
       <div class="hidden absolute z-20 mt-1 max-h-60 w-96 overflow-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg"
            data-address-select-target="panel">
         <button type="button"

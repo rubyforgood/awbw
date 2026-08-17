@@ -42,6 +42,7 @@ export default class extends Controller {
     const option = event.currentTarget;
     this.inputTarget.value = option.dataset.value;
     this.labelTarget.textContent = option.dataset.label;
+    this.inputTarget.dispatchEvent(new Event("change", { bubbles: true }));
     this.close();
   }
 
