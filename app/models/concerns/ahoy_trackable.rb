@@ -265,7 +265,11 @@ module AhoyTrackable
   def track_lifecycle_event(action, extra_properties = {})
     return unless Current.user || Current.source
     return if self.class.name.start_with?("Ahoy::")
-    return if self.class.name.in?(%w[Notification ActiveStorage::Attachment ActiveStorage::Blob])
+    return if self.class.name.in?(%w[ActiveStorage::Attachment ActiveStorage::Blob])
+    # A Notification is already a durable, timestamped log, so a create/update event
+    # per email sent would be redundant noise. A destroy is the exception — we do want
+    # destroy.notification so a removed communication isn't silently lost.
+    return if self.class.name == "Notification" && action != "destroy"
 
     # prevent nested tracking loops
     return if Thread.current[:_ahoy_tracking]

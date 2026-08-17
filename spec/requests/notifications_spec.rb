@@ -97,6 +97,16 @@ RSpec.describe "Notifications", type: :request do
       expect(response.body).to include('id="notifications_results"')
     end
 
+    it "tracks a page view of the communications list (staff usage)" do
+      expect(Analytics::AhoyTracker).to receive(:track_event).with(anything, "view.notifications", { page: "index" })
+      get notifications_path
+    end
+
+    it "does not track a page view on the lazy turbo-frame request" do
+      expect(Analytics::AhoyTracker).not_to receive(:track_event).with(anything, "view.notifications", anything)
+      get notifications_path, headers: turbo_headers
+    end
+
     it "links a form submission noticeable to its show page" do
       submission = create(:form_submission)
       create(:notification, noticeable: submission, recipient_email: "bulk-payer@example.com")
@@ -268,6 +278,18 @@ RSpec.describe "Notifications", type: :request do
         expect(response.body).to match(/<input[^>]*name="notification\[responded\]"[^>]*value="1"/)
       end
 
+      it "renders the responded checkbox for an incoming communication" do
+        incoming = create(:notification, :incoming, kind: "reset_password_fyi")
+        get notification_path(incoming)
+
+        expect(response.body).to match(/<input[^>]*name="notification\[responded\]"[^>]*value="1"/)
+      end
+
+      it "tracks the view so staff usage of communications is measurable" do
+        expect(Analytics::AhoyTracker).to receive(:track).with(anything, :view, fyi)
+        get notification_path(fyi)
+      end
+
       it "does not render the responded checkbox for contact_us (auto-confirmation)" do
         get notification_path(user_confirm)
 
@@ -352,6 +374,19 @@ RSpec.describe "Notifications", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(contact_notification.reload.responded).to be(false)
+      end
+
+      it "tracks a responded change as an ahoy event" do
+        expect(Analytics::AhoyTracker).to receive(:track_event)
+          .with(anything, "update.notification.responded", hash_including(resource_id: contact_notification.id, responded: true))
+
+        patch notification_path(contact_notification), params: { notification: { responded: "1" } }
+      end
+
+      it "does not track when the update leaves responded unchanged" do
+        expect(Analytics::AhoyTracker).not_to receive(:track_event)
+
+        patch notification_path(contact_notification), params: { notification: { channel: "email" } }
       end
     end
 

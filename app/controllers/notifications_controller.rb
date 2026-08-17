@@ -1,4 +1,6 @@
 class NotificationsController < ApplicationController
+  include AhoyTracking
+
   before_action :set_notification, only: [ :show, :update, :resend ]
 
   def index
@@ -13,6 +15,7 @@ class NotificationsController < ApplicationController
 
       render :notifications_results
     else
+      track_view("notifications", { page: "index" })
       render :index
     end
   end
@@ -49,11 +52,14 @@ class NotificationsController < ApplicationController
 
   def show
     authorize! @notification
+    track_view @notification
   end
 
   def update
     authorize! @notification
+    responded_was = @notification.responded?
     @notification.update!(notification_params)
+    track_responded_change(responded_was)
     head :ok
   end
 
@@ -92,6 +98,16 @@ class NotificationsController < ApplicationController
   end
 
   private
+
+  def track_responded_change(previous)
+    return if @notification.responded? == previous
+
+    track_event("update.notification.responded", {
+      resource_type: "Notification",
+      resource_id: @notification.id,
+      responded: @notification.responded?
+    })
+  end
 
   def set_notification
     @notification = Notification.find(params[:id])

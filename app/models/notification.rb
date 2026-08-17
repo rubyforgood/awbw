@@ -164,10 +164,11 @@ class Notification < ApplicationRecord
   scope :subject_line, ->(subject) { where("notifications.email_subject LIKE ?", "%#{subject}%") }
   scope :email_topic, ->(topic) { where("notifications.email_subject LIKE ?", "%#{topic}%") }
   scope :responded_status, ->(status) {
+    needs_response = where(kind: "contact_us_fyi").or(where(direction: "incoming"))
     case status.to_s
-    when "yes" then where(kind: "contact_us_fyi", responded: true)
-    when "no"  then where(kind: "contact_us_fyi", responded: false)
-    when "na"  then where.not(kind: "contact_us_fyi")
+    when "yes" then needs_response.where(responded: true)
+    when "no"  then needs_response.where(responded: false)
+    when "na"  then where.not(kind: "contact_us_fyi").where.not(direction: "incoming")
     else all
     end
   }
@@ -193,7 +194,7 @@ class Notification < ApplicationRecord
   end
 
   def requires_response?
-    kind == "contact_us_fyi"
+    kind == "contact_us_fyi" || incoming?
   end
 
   def delivered?

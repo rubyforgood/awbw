@@ -4,10 +4,10 @@ RSpec.describe Notification do
   describe "Ahoy lifecycle tracking" do
     after { Current.reset }
 
-    # Notifications are intentionally excluded from AhoyTrackable — they're
-    # already a durable, timestamped log, so ahoy events would be redundant.
+    # Notifications are excluded from create/update tracking — they're already a
+    # durable, timestamped log, so an event per email sent would be redundant.
     # The activities page surfaces them from the notifications table instead.
-    it "does not emit ahoy lifecycle events, even in a user context" do
+    it "does not emit create lifecycle events, even in a user context" do
       allow(Analytics::LifecycleBuffer).to receive(:push)
       noticeable = create(:user)
       Current.user = create(:user)
@@ -16,6 +16,18 @@ RSpec.describe Notification do
 
       expect(Analytics::LifecycleBuffer).not_to have_received(:push)
         .with(hash_including(name: "create.notification"))
+    end
+
+    # Deletes are the exception — a removed communication should not vanish silently.
+    it "emits a destroy lifecycle event when a communication is deleted" do
+      allow(Analytics::LifecycleBuffer).to receive(:push)
+      Current.user = create(:user)
+      notification = create(:notification)
+
+      notification.destroy
+
+      expect(Analytics::LifecycleBuffer).to have_received(:push)
+        .with(hash_including(name: "destroy.notification"))
     end
   end
 
@@ -131,26 +143,29 @@ RSpec.describe Notification do
   end
 
   describe ".responded_status" do
-    let!(:fyi_responded)     { create(:notification, kind: "contact_us_fyi", responded: true) }
-    let!(:fyi_not_responded) { create(:notification, kind: "contact_us_fyi", responded: false) }
-    let!(:contact_us)        { create(:notification, kind: "contact_us") }
-    let!(:other)             { create(:notification, kind: "reset_password_fyi") }
+    let!(:fyi_responded)          { create(:notification, kind: "contact_us_fyi", responded: true) }
+    let!(:fyi_not_responded)      { create(:notification, kind: "contact_us_fyi", responded: false) }
+    let!(:incoming_responded)     { create(:notification, :incoming, responded: true) }
+    let!(:incoming_not_responded) { create(:notification, :incoming, responded: false) }
+    let!(:contact_us)             { create(:notification, kind: "contact_us") }
+    let!(:other)                  { create(:notification, kind: "reset_password_fyi") }
 
-    it "returns only responded contact_us_fyi notifications for 'yes'" do
-      expect(Notification.responded_status("yes")).to contain_exactly(fyi_responded)
+    it "returns responded contact_us_fyi and incoming notifications for 'yes'" do
+      expect(Notification.responded_status("yes")).to contain_exactly(fyi_responded, incoming_responded)
     end
 
-    it "returns only unresponded contact_us_fyi notifications for 'no'" do
-      expect(Notification.responded_status("no")).to contain_exactly(fyi_not_responded)
+    it "returns unresponded contact_us_fyi and incoming notifications for 'no'" do
+      expect(Notification.responded_status("no")).to contain_exactly(fyi_not_responded, incoming_not_responded)
     end
 
-    it "returns notifications other than contact_us_fyi for 'na'" do
+    it "returns notifications that are neither contact_us_fyi nor incoming for 'na'" do
       expect(Notification.responded_status("na")).to contain_exactly(contact_us, other)
     end
 
     it "returns all notifications for blank/unknown values" do
-      expect(Notification.responded_status("")).to contain_exactly(fyi_responded, fyi_not_responded, contact_us, other)
-      expect(Notification.responded_status("bogus")).to contain_exactly(fyi_responded, fyi_not_responded, contact_us, other)
+      all = [ fyi_responded, fyi_not_responded, incoming_responded, incoming_not_responded, contact_us, other ]
+      expect(Notification.responded_status("")).to contain_exactly(*all)
+      expect(Notification.responded_status("bogus")).to contain_exactly(*all)
     end
   end
 
@@ -165,6 +180,10 @@ RSpec.describe Notification do
 
     it "returns false for other kinds" do
       expect(build(:notification, kind: "reset_password_fyi").requires_response?).to be false
+    end
+
+    it "returns true for an incoming communication regardless of kind" do
+      expect(build(:notification, :incoming, kind: "reset_password_fyi").requires_response?).to be true
     end
   end
 
