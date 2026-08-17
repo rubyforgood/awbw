@@ -34,9 +34,9 @@
           <label class="block text-sm font-medium text-gray-700 mb-1 xl:hidden"><%= label %></label>
           <% if person_side %>
             <% show_email = record.profile_show_email? || allowed_to?(:manage?, Person) %>
-            <%= person_profile_button(record, truncate_at: 25, subtitle: (record.preferred_email if show_email), compact: true, transparent: !facilitator) %>
+            <%= person_profile_button(record, truncate_at: 25, subtitle: (record.preferred_email if show_email), compact: true, muted: !facilitator && !expired) %>
           <% else %>
-            <%= organization_profile_button(record, truncate_at: 25, compact: true, transparent: !facilitator) %>
+            <%= organization_profile_button(record, truncate_at: 25, compact: true, muted: !facilitator && !expired) %>
           <% end %>
           <%= f.hidden_field(person_side ? :person_id : :organization_id) %>
         <% else %>
@@ -67,7 +67,7 @@
                       rows: 1,
                       value: f.object&.title || "Facilitator",
                       style: "height: 42px; min-height: 42px;",
-                      class: "text-sm resize-none",
+                      class: "text-sm resize-none border-gray-300!",
                       data: {
                         inactive_toggle_target: "title",
                         action: "affiliation-dates#recalculate inactive-toggle#updateBorder"
@@ -84,7 +84,7 @@
                     input_html: {
                       type: "date",
                       value: (f.object.start_date || (Date.current unless f.object.persisted?))&.strftime("%Y-%m-%d"),
-                      class: "w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm",
+                      class: "w-full rounded-md border-gray-300! focus:ring-blue-500 focus:border-blue-500 text-sm",
                       style: "height: 42px;",
                       data: { action: "change->affiliation-dates#recalculate" }
                     } %>
@@ -99,7 +99,7 @@
                     input_html: {
                       type: "date",
                       value: f.object.end_date&.strftime("%Y-%m-%d"),
-                      class: "w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm",
+                      class: "w-full rounded-md border-gray-300! focus:ring-blue-500 focus:border-blue-500 text-sm",
                       style: "height: 42px;",
                       data: {
                         inactive_toggle_target: "endDate",
