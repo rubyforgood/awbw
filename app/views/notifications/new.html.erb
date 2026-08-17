@@ -39,18 +39,18 @@
 
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
-            <span class="mb-1 block text-sm font-medium text-gray-700">Direction</span>
-            <%= render "notifications/direction_toggle", f: f,
-                       source_data: { conditional_fields_target: "source", action: "change->conditional-fields#toggle" } %>
-          </div>
-
-          <div>
             <%= f.input :channel,
                         collection: Notification::MANUAL_CHANNELS.map { |c| [ c.titleize, c ] },
                         selected: @notification.channel.presence || "email",
                         include_blank: false,
                         label: "Channel",
                         input_html: { class: "w-full bg-white rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
+          </div>
+
+          <div>
+            <span class="mb-1 block text-sm font-medium text-gray-700">Direction</span>
+            <%= render "notifications/direction_toggle", f: f,
+                       source_data: { conditional_fields_target: "source", action: "change->conditional-fields#toggle" } %>
           </div>
         </div>
 
