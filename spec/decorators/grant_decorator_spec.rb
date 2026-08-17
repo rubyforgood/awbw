@@ -143,4 +143,15 @@ RSpec.describe GrantDecorator, type: :decorator do
       expect(create(:grant).decorate.legacy_scholarship_badge).to be_nil
     end
   end
+
+  describe "#in_memoriam_badge" do
+    it "renders an In memoriam pill for in-memoriam grants" do
+      badge = create(:grant, :in_memoriam).decorate.in_memoriam_badge
+      expect(badge).to include("In memoriam")
+    end
+
+    it "renders nothing for grants not given in memoriam" do
+      expect(create(:grant, :planned_giving).decorate.in_memoriam_badge).to be_nil
+    end
+  end
 end

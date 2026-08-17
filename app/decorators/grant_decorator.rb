@@ -43,6 +43,17 @@ class GrantDecorator < ApplicationDecorator
                title: "Funded through planned giving")
   end
 
+  # Rose pill flagging a legacy scholarship given in memory of a loved one — a
+  # Healing HeARTs Legacy Circle: In Memoriam gift. Renders alongside the legacy
+  # scholarship badge; nothing for ordinary grants.
+  def in_memoriam_badge
+    return unless object.in_memoriam?
+
+    h.tag.span("In memoriam",
+               class: "inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-medium text-rose-800",
+               title: "Given in memory of a loved one")
+  end
+
   # Whole-number percentage of the grant awarded in scholarships, clamped to
   # 0–100, for rendering the allocation progress bar on the index.
   def allocation_percentage
