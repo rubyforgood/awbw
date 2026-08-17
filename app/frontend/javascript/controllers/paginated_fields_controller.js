@@ -8,6 +8,28 @@ export default class extends Controller {
     this.currentPage = 1;
     this.render();
     this.ready = true;
+    this.revealHashTarget();
+  }
+
+  // When the page loads with a #fragment matching a row inside this controller
+  // (e.g. returning from the affiliation editor to its row), jump to the page
+  // holding that row — otherwise it's hidden on a later page — and scroll to it.
+  revealHashTarget() {
+    const hash = window.location.hash;
+    if (hash.length < 2) return;
+
+    const id = hash.slice(1);
+    const items = this.visibleItems;
+    const index = items.findIndex(
+      (el) => el.id === id || el.querySelector(`#${CSS.escape(id)}`)
+    );
+    if (index === -1) return;
+
+    this.currentPage = Math.floor(index / this.perPageValue) + 1;
+    this.render();
+
+    const target = document.getElementById(id) || items[index];
+    requestAnimationFrame(() => target.scrollIntoView({ block: "center" }));
   }
 
   get visibleItems() {

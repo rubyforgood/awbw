@@ -115,6 +115,18 @@
   @apply bg-gray-100;
 }
 
+/* Inactive (ended) affiliation rows strike through their field values. A native
+   date input's value only strikes via its inner pseudo-element (WebKit). */
+.aff-ended input,
+.aff-ended textarea,
+.aff-ended [data-address-select-target="button"],
+.aff-ended a .truncate {
+  text-decoration: line-through;
+}
+.aff-ended input::-webkit-datetime-edit {
+  text-decoration: line-through;
+}
+
 /* Tom Select "flat" variant: the wrapper inherits the field's bordered box,
    so the inner control is transparent and borderless — no box-within-a-box.
    Used for optional searchable-selects (e.g. the event location) so the field

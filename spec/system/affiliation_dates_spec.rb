@@ -25,10 +25,10 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     )
   end
 
-  def set_textarea_input(textarea, value)
+  def set_text_input(input, value)
     page.execute_script(
       "arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('input', { bubbles: true }))",
-      textarea, value
+      input, value
     )
   end
 
@@ -52,7 +52,7 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
 
     # Find the Facilitator affiliation's start_date input specifically
     facilitator_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
-      f.find("textarea[name*='title']").value.include?("Facilitator")
+      f.find("input[name*='title']").value.include?("Facilitator")
     }
     start_input = facilitator_row.find("input[name*='start_date']")
     set_date_input(start_input, "2019-07-01")
@@ -69,9 +69,9 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     # Renaming the only exact "Facilitator" to a variant drops it — facilitator
     # matching is exact and case-sensitive, so "Lead Facilitator" no longer counts.
     facilitator_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
-      f.find("textarea[name*='title']").value.strip == "Facilitator"
+      f.find("input[name*='title']").value.strip == "Facilitator"
     }
-    set_textarea_input(facilitator_row.find("textarea[name*='title']"), "Lead Facilitator")
+    set_text_input(facilitator_row.find("input[name*='title']"), "Lead Facilitator")
 
     expect(facilitator).to have_text("—", wait: 5)
   end
@@ -109,18 +109,15 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     expect(affiliated).not_to have_text("Dec 2024")
   end
 
-  it "removes an affiliation and recalculates" do
-    visit_and_wait edit_person_path(person, admin: true)
+  it "removes an affiliation via the editor and recalculates" do
+    # Persisted affiliations are now deleted from the affiliation editor (reached
+    # via the row's gear); removing the Facilitator (Mar 2020) leaves Volunteer (Jun 2022).
+    facilitator = person.affiliations.find_by!(title: "Facilitator")
+    visit edit_affiliation_path(facilitator, return_to: "person", origin_id: person.id)
 
-    affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
-    expect(affiliated).to have_text("Mar 2020")
+    accept_confirm { click_button "Delete" }
 
-    # Remove the Facilitator affiliation (start Mar 2020), leaving Volunteer (start Jun 2022)
-    facilitator_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
-      f.find("textarea[name*='title']").value.include?("Facilitator")
-    }
-    facilitator_row.find("a", text: "Remove").click
-
+    affiliated = find("[data-affiliation-dates-target='affiliatedSince']", wait: 10)
     expect(affiliated).to have_text("Jun 2022", wait: 5)
   end
 end
