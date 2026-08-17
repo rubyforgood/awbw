@@ -9,7 +9,7 @@ class Story < ApplicationRecord
   belongs_to :windows_type
   belongs_to :organization, optional: true
   # Display this person via `.name` (honors their display_name_preference) — a
-  # spotlight is not an author credit, so it ignores contributions_anonymous.
+  # spotlight is not an author credit, so it ignores anonymous_contributions.
   # Don't route the spotlighted name through author_credit / effective_author_credit_preference.
   belongs_to :spotlighted_facilitator, class_name: "Person",
              foreign_key: "spotlighted_facilitator_id", optional: true

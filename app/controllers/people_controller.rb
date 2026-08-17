@@ -2,6 +2,10 @@ class PeopleController < ApplicationController
   include AhoyTracking, TagAssignable
   before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments ]
 
+  # The profile's "Submitted content" sections — private to the person and admins,
+  # not part of the public profile even after profile viewing opens up.
+  PRIVATE_SECTIONS = %w[ workshop_ideas story_ideas workshop_variation_ideas workshop_logs ].freeze
+
   def index
     authorize!
 
@@ -47,6 +51,11 @@ class PeopleController < ApplicationController
     if turbo_frame_request?
       per_page = params[:section] == "stories" ? 8 : 9
       section = params[:section]
+
+      # Re-authorize the private sections on the narrow owner/admin rule, so a
+      # crafted ?section= frame request can't reach them once show? is widened
+      # to let non-owners view the public profile.
+      authorize! @person, to: :own_record? if PRIVATE_SECTIONS.include?(section)
 
       case section
       when "workshops"

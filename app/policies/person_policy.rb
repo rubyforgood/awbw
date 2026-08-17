@@ -9,6 +9,13 @@ class PersonPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  # Admin, or the profile's own person. The narrow rule for owner-only content
+  # (submitted ideas, workshop logs) — kept separate from `show?` so opening
+  # `show?` up to public profile viewing later can't expose it.
+  def own_record?
+    admin? || owner?
+  end
+
   def workshop_logs?
     admin? || owner?
   end

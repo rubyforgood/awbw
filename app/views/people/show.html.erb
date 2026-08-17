@@ -28,7 +28,7 @@
           <i class="fa-solid fa-arrow-left text-xs"></i> Bulk payments
         <% end %>
       <% end %>
-      <% unless @person.user %>
+      <% if @person.user.nil? && allowed_to?(:create?, User) %>
         <div class="admin-only bg-blue-100 p-2">
           No user!
           <%= link_to "Create user",
@@ -282,7 +282,7 @@
       <%= render "people/my_membership", membership: @membership, autopay: @membership_autopay %>
     <% end %>
     <!-- SUBMITTED SECTION -->
-    <% if allowed_to?(:show?, @person) %>
+    <% if allowed_to?(:own_record?, @person) %>
       <div class="user-only <%= DomainTheme.bg_class_for(:user_only) %>
             border <%= DomainTheme.border_class_for(:user_only) %> rounded-lg shadow-sm"
            data-controller="expandable-card"
