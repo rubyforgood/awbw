@@ -6,7 +6,7 @@ import { Controller } from "@hotwired/stimulus";
 // (transparent when empty, the pill colour when filled).
 export default class extends Controller {
   static targets = ["endDate", "title", "row", "accentBar", "valueField"]
-  static values = { activeTint: String }
+  static values = { activeTint: String, expired: Boolean }
 
   connect() {
     if (this.hasEndDateTarget) this.apply();
@@ -62,7 +62,7 @@ export default class extends Controller {
   // through), filled -> the pill colour for the row's current state.
   paintFields() {
     this.valueFieldTargets.forEach((el) => {
-      el.classList.remove("bg-transparent!", "bg-gray-100!", "bg-white!", "bg-purple-100!");
+      el.classList.remove("bg-transparent!", "bg-gray-100!", "bg-white!", "bg-purple-100!", "bg-purple-50!");
       el.classList.add(this.fieldBg(el));
     });
   }
@@ -71,12 +71,11 @@ export default class extends Controller {
     return this.fieldHasValue(el) ? this.pillColorClass() : "bg-transparent!";
   }
 
-  // Mirrors the person/org pill: grey when expired, purple for a facilitator,
-  // else white.
+  // The fill for a filled field: facilitator rows take purple (lighter when
+  // inactive to match the title), other rows take white (active) / grey (inactive).
   pillColorClass() {
-    if (this.isPast()) return "bg-gray-100!";
-    if (this.isFacilitator()) return "bg-purple-100!";
-    return "bg-white!";
+    if (this.isFacilitator()) return this.isPast() ? "bg-purple-50!" : "bg-purple-100!";
+    return this.isPast() ? "bg-gray-100!" : "bg-white!";
   }
 
   fieldHasValue(el) {
@@ -107,10 +106,12 @@ export default class extends Controller {
     }
   }
 
+  // With an end date, compute from it (live); without one, the JS can't see the
+  // server's inactive flag, so trust the server-rendered `expired` value.
   isPast() {
-    if (!this.hasEndDateTarget) return false;
-    const value = this.endDateTarget.value;
-    return value && new Date(value) < new Date(new Date().toDateString());
+    const value = this.hasEndDateTarget ? this.endDateTarget.value : "";
+    if (value) return new Date(value) < new Date(new Date().toDateString());
+    return this.expiredValue;
   }
 
   // Mirror Affiliation#facilitator? — an exact, case-sensitive match on
