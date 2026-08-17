@@ -117,7 +117,8 @@ This codebase (Rails 8.1)
 
 ### STI Models
 
-- **Asset** (inheritance column: `type`): PrimaryAsset, GalleryAsset, RichTextAsset, DownloadableAsset, ThumbnailAsset
+- **Asset** (inheritance column: `type`): PrimaryAsset, GalleryAsset, RichTextAsset, DownloadableAsset, ThumbnailAsset, FormUploadAsset
+  - The `type` column defaults to `"PrimaryAsset"`, which narrows `ACCEPTED_CONTENT_TYPES` to five image types — always name the type when building an Asset, or documents will fail validation. `FormUploadAsset` backs a respondent's file-upload form answer and takes Asset's full accepted-type list.
 - **Report**: MonthlyReport
 
 ### Polymorphic Associations

@@ -14,6 +14,11 @@ class Asset < ApplicationRecord
     "application/vnd.oasis.opendocument.text" # Word document .odt
   ].freeze
 
+  # Ceiling on a single upload. Uploads now reach us from the public event
+  # registration form, so this is the backstop against one enormous file
+  # filling storage — generous enough for a photo or a scanned document.
+  MAX_FILE_SIZE = 25.megabytes
+
 
   # Form selection
   TYPES = %w[
@@ -61,6 +66,10 @@ class Asset < ApplicationRecord
     self::ACCEPTED_CONTENT_TYPES.map { |ct| CONTENT_TYPE_LABELS[ct] || ct }.join(", ")
   end
 
+  def self.max_file_size_label
+    ActiveSupport::NumberHelper.number_to_human_size(MAX_FILE_SIZE)
+  end
+
   belongs_to :owner, polymorphic: true, optional: true, touch: true
   belongs_to :report, optional: true
 
@@ -75,6 +84,7 @@ class Asset < ApplicationRecord
       saver: { quality: 80 }
   end
   validate :file_type
+  validate :file_size
 
   private
 
@@ -86,5 +96,12 @@ class Asset < ApplicationRecord
     unless allowed_types.include?(file.content_type)
       errors.add(:file, "type not accepted")
     end
+  end
+
+  def file_size
+    return unless file.attached?
+    return if file.byte_size.to_i <= MAX_FILE_SIZE
+
+    errors.add(:file, "is too large (maximum #{self.class.max_file_size_label})")
   end
 end
