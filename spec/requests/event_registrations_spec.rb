@@ -876,6 +876,62 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(middle_ce.reload.event_registration).to eq(final)
           expect(EventRegistration.exists?(middle.id)).to be(false)
         end
+
+        it "re-points a completed transfer, unlinking the old destination" do
+          first_dest = create(:event, published: true, title: "First Dest")
+          second_dest = create(:event, published: true, title: "Second Dest")
+          old_destination = create(:event_registration, registrant: source.registrant,
+            event: first_dest, transferred_from_registration: source)
+
+          post process_transfer_event_registration_path(source),
+               params: { destination_event_id: second_dest.id }
+
+          expect(old_destination.reload.transferred_from_registration).to be_nil
+          new_destination = EventRegistration.find_by(registrant: source.registrant, event: second_dest)
+          expect(new_destination.transferred_from_registration).to eq(source)
+        end
+      end
+
+      describe "GET /event_registrations/:id/transfer (manage hub)" do
+        it "offers change-destination and undo controls" do
+          get transfer_event_registration_path(source)
+
+          expect(response.body).to include("Manage transfer")
+          expect(response.body).to include("Record the destination event")
+          expect(response.body).to include(revert_transfer_event_registration_path(source))
+        end
+
+        it "frames it as change + undo once a destination is recorded" do
+          destination_event = create(:event, published: true)
+          create(:event_registration, registrant: source.registrant, event: destination_event,
+            transferred_from_registration: source)
+
+          get transfer_event_registration_path(source)
+
+          expect(response.body).to include("Change the destination event")
+          expect(response.body).to include("Undo transfer")
+        end
+      end
+
+      describe "PATCH /event_registrations/:id/revert_transfer" do
+        it "undoes a pending transfer, restoring the status" do
+          patch revert_transfer_event_registration_path(source)
+
+          expect(source.reload.status).to eq("registered")
+          expect(response).to redirect_to(edit_event_registration_path(source))
+        end
+
+        it "undoes a completed transfer, unlinking the destination and restoring the source" do
+          destination_event = create(:event, published: true)
+          destination = create(:event_registration, registrant: source.registrant,
+            event: destination_event, transferred_from_registration: source)
+
+          patch revert_transfer_event_registration_path(source)
+
+          expect(source.reload.status).to eq("registered")
+          expect(EventRegistration.exists?(destination.id)).to be(true)
+          expect(destination.reload.transferred_from_registration).to be_nil
+        end
       end
     end
 

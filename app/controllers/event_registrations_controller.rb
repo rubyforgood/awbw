@@ -2,7 +2,7 @@ class EventRegistrationsController < ApplicationController
   require "csv"
 
   # show redirects to slug URL; kept for backwards compatibility
-  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding, :toggle_certificate_issued, :update_attendance, :transfer, :process_transfer ]
+  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding, :toggle_certificate_issued, :update_attendance, :transfer, :process_transfer, :revert_transfer ]
 
   def index
     authorize!
@@ -250,6 +250,16 @@ class EventRegistrationsController < ApplicationController
     end
 
     saved = ActiveRecord::Base.transaction do
+      # Re-pointing a completed transfer to a different event: unlink the previously
+      # recorded destination (it becomes a standalone reg) and re-merge its CE back
+      # to the source before re-splitting to the newly chosen event. (#1944)
+      previous = @event_registration.transferred_to_registration
+      if previous && previous.event_id != destination_event.id
+        EventRegistrationServices::TransferContinuingEducation.new(
+          transferred_out: @event_registration, destination: previous
+        ).revert
+        previous.update!(transferred_from_registration: nil)
+      end
       next false unless destination.save
       # Carry the transferring reg's org links onto the destination so the new reg
       # shares the same linked organizations — copied, not moved, so the source
@@ -279,6 +289,22 @@ class EventRegistrationsController < ApplicationController
   rescue ActiveRecord::RecordNotFound
     redirect_to transfer_event_registration_path(@event_registration, return_to: params[:return_to].presence),
       alert: "Select a destination event to transfer to.", status: :see_other
+  end
+
+  # Undo a transfer-out: restore the reg to its pre-transfer status, and (when a
+  # destination was already recorded) unlink that destination and re-merge its CE
+  # back to the source. (#1944)
+  def revert_transfer
+    authorize! @event_registration, to: :transfer?
+    unless EventRegistrationServices::RevertTransfer.call(registration: @event_registration)
+      redirect_to edit_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+        alert: "This registration isn't transferred out.", status: :see_other
+      return
+    end
+
+    redirect_to edit_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+      notice: "Transfer undone — #{@event_registration.registrant.full_name} is back to #{@event_registration.attendance_status_label.downcase} on #{@event_registration.event.title}.",
+      status: :see_other
   end
 
   def confirm

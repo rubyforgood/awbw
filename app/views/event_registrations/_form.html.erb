@@ -112,6 +112,8 @@
                   <i class="fa-solid fa-right-from-bracket"></i>
                   Transferred to
                   <%= link_to destination.event.title, edit_event_registration_path(destination, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>
+                  ·
+                  <%= link_to "Manage transfer", transfer_event_registration_path(f.object, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>
                 </p>
               <% else %>
                 <p class="mt-1.5 text-xs text-purple-700">

@@ -29,6 +29,18 @@ module EventRegistrationServices
       end
     end
 
+    # Inverse of a split: fold each destination live record back into the source
+    # stub it was split from (matched by license), restoring the source's single
+    # record with its hours, full cost, and every payment. Destination records with
+    # no matching stub (independently created there) are left untouched. Must run
+    # while the destination is still linked, before RevertTransfer unlinks it. (#1944)
+    def revert
+      ContinuingEducationRegistration.where(event_registration_id: @transferred_out.id).each do |stub|
+        dest_ce = destination_ce_for(stub.professional_license_id)
+        merge_into(stub, dest_ce) if dest_ce
+      end
+    end
+
     private
 
     # Collapse / back-to-origin: the reg being dropped already holds the live

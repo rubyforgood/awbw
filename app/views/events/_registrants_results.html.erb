@@ -505,7 +505,7 @@
                   <% end %>
                 </td>
 
-                <td class="px-4 py-2 text-center text-sm text-nowrap" data-column-toggle-col="attendance" data-sort-value="<%= registration.status %>"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
+                <td class="px-4 py-2 text-center text-sm text-nowrap" data-column-toggle-col="attendance" data-sort-value="<%= registration.status %>"><%= render "event_registrations/attendance_status_badge", registration: registration, return_to: "registrants" %></td>
                 <td class="hidden px-4 py-2 text-center text-sm text-nowrap text-gray-600" data-column-toggle-col="date" data-sort-value="<%= registration.created_at.to_i %>" title="<%= registration.created_at.strftime("%B %-d, %Y at %l:%M %P") %>"><%= registration.created_at.strftime("%b %-d, %Y") %></td>
                 <% readiness = @readiness[registration.id] %>
                 <td class="px-4 py-2 text-center text-sm" data-sort-value="<%= readiness.status_sort_key %>">
