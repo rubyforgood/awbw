@@ -22,8 +22,8 @@
   </td>
   <td class="px-4 py-2 text-sm text-gray-600 whitespace-nowrap"><%= scholarship.training_label %></td>
   <%# Declined awards don't count toward totals, so the amount is struck through. %>
-  <td class="px-4 py-2 whitespace-nowrap text-sm text-right tabular-nums <%= scholarship.agreement_declined? ? "text-gray-400 line-through" : "text-gray-900" %>"><%= scholarship.amount %></td>
-  <td class="px-4 py-2 whitespace-nowrap text-sm text-center">
+  <td class="px-4 py-2 text-right text-sm whitespace-nowrap tabular-nums <%= scholarship.agreement_declined? ? "text-gray-400 line-through" : "text-gray-900" %>"><%= scholarship.amount %></td>
+  <td class="px-4 py-2 text-center text-sm whitespace-nowrap">
     <% if scholarship.tasks_completed? %>
       <%= render "shared/badge",
                  label: "Yes",
