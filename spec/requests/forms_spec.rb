@@ -29,6 +29,14 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include("Event form")
       end
 
+      it "shows both the public link and event-form chips when a form is both" do
+        form = create(:form, :standalone, name: "Dual Form", slug: "dual", published: true)
+        EventForm.create!(form: form, event: create(:event), role: "registration")
+        get forms_path
+        expect(response.body).to include("/f/dual")
+        expect(response.body).to include("Event form")
+      end
+
       it "marks a standalone form with no events and no public link as not published" do
         create(:form, :standalone, name: "Orphan Form")
         get forms_path

@@ -23,7 +23,7 @@
           <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
           <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Fields</th>
           <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Events</th>
-          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Public link</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Availability</th>
           <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Submissions</th>
           <th class="px-4 py-2"></th>
         </tr>
@@ -40,22 +40,25 @@
                 0
               <% end %>
             </td>
-            <%# "Public link" is only about the public /f/:slug endpoint. A form
-                still works via its events whether or not it's published, so an
-                event-connected form reads as "Event form", never "Not published". %>
+            <%# A form can be both a public link and an event form — the two are
+                independent, so show a chip for each that applies. %>
             <td class="px-4 py-2 text-sm text-gray-600">
-              <% if form.publicly_fillable? %>
-                <%= link_to public_form_path(form.slug), target: "_blank", rel: "noopener",
-                            class: "inline-flex items-center gap-1.5 rounded-md bg-green-50 px-2 py-0.5 text-green-700 font-medium hover:bg-green-100" do %>
-                  <i class="fa-solid fa-link text-xs"></i>/f/<%= form.slug %>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <% if form.publicly_fillable? %>
+                  <%= link_to public_form_path(form.slug), target: "_blank", rel: "noopener",
+                              class: "inline-flex items-center gap-1.5 rounded-md bg-green-50 px-2 py-0.5 text-green-700 font-medium hover:bg-green-100" do %>
+                    <i class="fa-solid fa-link text-xs"></i>/f/<%= form.slug %>
+                  <% end %>
                 <% end %>
-              <% elsif form.events.size.positive? %>
-                <span class="inline-flex items-center gap-1.5 rounded-md bg-purple-50 px-2 py-0.5 text-xs text-purple-700">
-                  <i class="fa-solid fa-calendar-day"></i>Event form
-                </span>
-              <% else %>
-                <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-500">Not published</span>
-              <% end %>
+                <% if form.events.size.positive? %>
+                  <span class="inline-flex items-center gap-1.5 rounded-md bg-purple-50 px-2 py-0.5 text-xs text-purple-700">
+                    <i class="fa-solid fa-calendar-day"></i>Event form
+                  </span>
+                <% end %>
+                <% unless form.publicly_fillable? || form.events.size.positive? %>
+                  <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-500">Not published</span>
+                <% end %>
+              </div>
             </td>
             <td class="px-4 py-2 text-sm text-gray-600">
               <% submissions_count = form.form_submissions.size %>
