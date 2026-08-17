@@ -9,6 +9,9 @@ const FILE_TYPE_ICONS = {
 
 export default class extends Controller {
     static targets = ["input", "preview", "placeholder", "filename"]
+    // 0 means no client-side limit; the server validates either way. Setting it
+    // stops an oversized file from being direct-uploaded before rejection.
+    static values = { maxSize: { type: Number, default: 0 } }
 
     connect() {
         this.handleUploadError = this.onUploadError.bind(this)
@@ -28,6 +31,13 @@ export default class extends Controller {
 
         this.clearError()
 
+        if (this.maxSizeValue > 0 && file.size > this.maxSizeValue) {
+            // Clearing the input keeps Active Storage from uploading it on submit
+            event.target.value = ""
+            this.showError(`That file is ${this.megabytes(file.size)} MB — the maximum is ${this.megabytes(this.maxSizeValue)} MB.`)
+            return
+        }
+
         // Update filename
         if (this.hasFilenameTarget) {
             this.filenameTarget.textContent = file.name
@@ -38,6 +48,10 @@ export default class extends Controller {
         } else {
             this.showFileIcon(file.type)
         }
+    }
+
+    megabytes(bytes) {
+        return Math.round((bytes / (1024 * 1024)) * 10) / 10
     }
 
     // Ensure a placeholder div exists (server may not render one when a persisted file exists)

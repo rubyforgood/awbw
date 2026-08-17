@@ -22,9 +22,21 @@ class FormAnswer < ApplicationRecord
   end
 
   # The attached upload, when this answer is a file-upload answer with a file on
-  # file. nil for text answers or an unanswered file question.
+  # file. nil for text answers or an unanswered file question. The attachment is
+  # authoritative for a file answer — submitted_answer only caches its name (see
+  # #sync_uploaded_filename!).
   def uploaded_file
     file = asset&.file
     file if file&.attached?
+  end
+
+  # Refresh the cached filename from the attachment. Every writer of a file
+  # answer's submitted_answer should go through here so the two can't drift —
+  # they did once, when a blank file param cleared the name off an answer whose
+  # file was still attached, and the presence checks that read submitted_answer
+  # (ScholarshipApplication#answered?, the scholarship card) then read the
+  # question as unanswered.
+  def sync_uploaded_filename!
+    update!(submitted_answer: uploaded_file&.filename.to_s)
   end
 end

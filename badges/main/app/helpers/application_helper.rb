@@ -263,6 +263,16 @@ module ApplicationHelper
     end
   end
 
+  # Resolves the signed blob id a file-upload field carries back when its form is
+  # re-rendered after a validation error, so the form can show what is already
+  # uploaded rather than making the registrant pick the file again. nil when the
+  # value is missing or isn't a live signed id.
+  def retained_upload_blob(signed_id)
+    return if signed_id.blank?
+
+    ActiveStorage::Blob.find_signed(signed_id.to_s)
+  end
+
   # True when a dropdown field carries an "Other" option that the public form
   # strips (dropdowns have no free-text input). Checks the field's effective
   # options — dynamic sources (sectors/categories) as well as author-managed
