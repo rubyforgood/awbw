@@ -151,7 +151,10 @@ class EventRegistration < ApplicationRecord
   scope :registrant_name, ->(registrant_name) { joins(:registrant).where(
     "LOWER(REPLACE(CONCAT(people.first_name, people.last_name), ' ', '')) LIKE :name
     OR LOWER(REPLACE(CONCAT(people.last_name, people.first_name), ' ', '')) LIKE :name
+    OR LOWER(REPLACE(CONCAT(people.legal_first_name, people.last_name), ' ', '')) LIKE :name
+    OR LOWER(REPLACE(CONCAT(people.last_name, people.legal_first_name), ' ', '')) LIKE :name
     OR LOWER(REPLACE(people.first_name, ' ', '')) LIKE :name
+    OR LOWER(REPLACE(people.legal_first_name, ' ', '')) LIKE :name
     OR LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name", name: "%#{registrant_name}%") }
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
   scope :active, -> { where(status: ACTIVE_STATUSES) }
@@ -466,8 +469,10 @@ class EventRegistration < ApplicationRecord
       .left_joins(registrant: { affiliations: { organization: :addresses } })
       .where(
         "LOWER(people.first_name) LIKE :term
+        OR LOWER(people.legal_first_name) LIKE :term
         OR LOWER(people.last_name) LIKE :term
         OR LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :term
+        OR LOWER(CONCAT(people.legal_first_name, ' ', people.last_name)) LIKE :term
         OR LOWER(users.email) LIKE :term
         OR LOWER(people.email) LIKE :term
         OR LOWER(contact_methods.value) LIKE :term

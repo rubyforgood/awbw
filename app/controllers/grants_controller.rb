@@ -124,7 +124,7 @@ class GrantsController < ApplicationController
   def filter_by_funder_name(scope, query)
     like = "%#{Grant.sanitize_sql_like(query)}%"
     org_ids = Organization.where("name LIKE ?", like).pluck(:id)
-    person_ids = Person.where("first_name LIKE :q OR last_name LIKE :q OR CONCAT(first_name, ' ', last_name) LIKE :q", q: like).pluck(:id)
+    person_ids = Person.where("first_name LIKE :q OR legal_first_name LIKE :q OR last_name LIKE :q OR CONCAT(first_name, ' ', last_name) LIKE :q OR CONCAT(legal_first_name, ' ', last_name) LIKE :q", q: like).pluck(:id)
     scope.where(funder_type: "Organization", funder_id: org_ids)
          .or(scope.where(funder_type: "Person", funder_id: person_ids))
   end

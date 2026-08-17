@@ -62,6 +62,32 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe ".registrant_name" do
+    it "matches a registrant by their legal first name and last name" do
+      match = create(:event_registration,
+        registrant: create(:person, first_name: "Bob", legal_first_name: "Robert", last_name: "Smith"))
+      other = create(:event_registration,
+        registrant: create(:person, first_name: "Jane", last_name: "Doe"))
+
+      results = EventRegistration.registrant_name("robertsmith")
+      expect(results).to include(match)
+      expect(results).not_to include(other)
+    end
+  end
+
+  describe ".keyword" do
+    it "matches a registrant by their legal first name and last name" do
+      match = create(:event_registration,
+        registrant: create(:person, first_name: "Bob", legal_first_name: "Robert", last_name: "Smith"))
+      other = create(:event_registration,
+        registrant: create(:person, first_name: "Jane", last_name: "Doe"))
+
+      results = EventRegistration.keyword("robert smith")
+      expect(results).to include(match)
+      expect(results).not_to include(other)
+    end
+  end
+
   describe "#sync_attendance_status_to_days!" do
     # A two-day event: start and end one day apart → day_count == 2.
     let(:event) { create(:event, start_date: 12.days.from_now, end_date: 13.days.from_now) }
