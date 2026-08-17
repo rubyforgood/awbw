@@ -16,9 +16,7 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
-  # Staff heads-up that a registrant submitted a post-event survey. Takes the
-  # FormSubmission directly (no Notification record) and goes to the default system
-  # address.
+  # Takes the FormSubmission directly (not a Notification record, unlike the others).
   def survey_submitted_fyi(form_submission)
     @form_submission = form_submission
     @person = form_submission.person

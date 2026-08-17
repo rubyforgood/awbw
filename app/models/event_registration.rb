@@ -742,10 +742,8 @@ class EventRegistration < ApplicationRecord
     status == "attended"
   end
 
-  # The post-event (scholarship recipients) survey is "in" once this timestamp is
-  # set — by the registrant submitting it or an admin toggling it. Mirrors the
-  # Certifiable certificate_sent_at pattern so the roster's readiness reads a plain
-  # column with no extra query.
+  # Set by the registrant submitting or an admin toggling. Mirrors certificate_sent_at
+  # so the roster's readiness reads a plain column with no extra query.
   def post_survey_completed?
     post_survey_completed_at.present?
   end

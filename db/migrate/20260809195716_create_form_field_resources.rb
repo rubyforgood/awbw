@@ -1,8 +1,6 @@
 class CreateFormFieldResources < ActiveRecord::Migration[8.1]
-  # Direct FormField -> Resource link. A form field with associated resources is a
-  # "per-resource" question that renders one input per resource (the post-event survey
-  # clarity question, one input per training topic/handout). Integer FKs match the
-  # integer PKs on form_fields and resources.
+  # Drives per-resource questions (see FormFieldResource). Integer FKs match the
+  # integer PKs on form_fields and resources (MySQL requires the exact type).
   def up
     return if table_exists?(:form_field_resources)
     create_table :form_field_resources do |t|

@@ -52,9 +52,8 @@ class EventRegistrationReadiness
     :ready
   end
 
-  # A scholarship recipient who has finished the other post-event work but still owes
-  # the (now-live) post-event survey. Sits between "ready" and "certificate pending":
-  # the survey is the one thing keeping them from the certificate queue.
+  # A recipient who's done the other post-event work but still owes the live survey —
+  # sits between "ready" and "certificate pending".
   def survey_pending?
     survey_outstanding? && completion_work_issues.empty?
   end
@@ -128,9 +127,8 @@ class EventRegistrationReadiness
     completion_work_issues + survey_issues + certificate_issues
   end
 
-  # The post-event (scholarship recipients) survey, when a recipient still owes a
-  # live one. Gates certifiable?/completed? so the certificate can't close out until
-  # the survey is in.
+  # Gates certifiable?/completed? so a recipient's certificate can't close out until
+  # their survey is in.
   def survey_issues
     @survey_issues ||= survey_outstanding? ? [ "Post-event survey outstanding" ] : []
   end
@@ -193,9 +191,8 @@ class EventRegistrationReadiness
     registration.scholarship? && !registration.scholarship_tasks_met?
   end
 
-  # Only scholarship recipients owe the post-event survey, and only once it's live
-  # (published + past drip). Reads a plain column plus the event's memoized survey
-  # callout, so it adds no per-row query on the roster.
+  # Recipients only, once the survey is live. Reads a plain column + the event's
+  # memoized callout, so no per-row roster query.
   def survey_outstanding?
     registration.scholarship? &&
       registration.event.post_event_survey_open? &&

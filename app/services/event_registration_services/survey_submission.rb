@@ -1,16 +1,10 @@
 module EventRegistrationServices
-  # Records a post-event survey delivered inline on a registrant's ticket. Persists a
-  # role-tagged FormSubmission with:
-  #   - static answers (one per ordinary field), and
-  #   - dynamic "clarity" answers (a per-resource question fans out to one answer per
-  #     linked resource, its full rendered sentence snapshotted in
-  #     question_name_when_answered with a nil form_field).
-  # Two fields also write through to the Person profile (anonymity + name display);
-  # #profile_changes reports what actually changed so the caller can Ahoy-track it.
-  # Stamps post_survey_completed_at for a scholarship recipient's recipients survey.
-  #
-  # Idempotent on re-submit (edit): find-or-initialize keeps one answer per field, and
-  # per (nil field, snapshotted question) for the dynamic ones.
+  # Records a survey as a role-tagged FormSubmission: static answers plus dynamic
+  # "clarity" answers (a per-resource field fans out to one nil-form_field answer per
+  # resource, its sentence snapshotted in question_name_when_answered). The anonymity
+  # and name-display questions also write through to the Person (#profile_changes
+  # reports real changes for Ahoy). Stamps post_survey_completed_at for a recipient's
+  # recipients survey. Idempotent on re-submit.
   class SurveySubmission
     attr_reader :submission, :profile_changes
 
@@ -56,8 +50,8 @@ module EventRegistrationServices
       end
     end
 
-    # Each per-resource field fans out: one answer per linked resource, keyed by the
-    # snapshotted sentence so re-submits update in place (form_field stays nil).
+    # One answer per linked resource, keyed by the snapshotted sentence so re-submits
+    # update in place (form_field stays nil).
     def save_clarity_answers
       @clarity_params.each do |field_id, per_resource|
         field = @form.form_fields.find_by(id: field_id)
@@ -72,8 +66,7 @@ module EventRegistrationServices
       end
     end
 
-    # Route the two identified questions to the Person profile, recording only the
-    # values that actually change so the caller can Ahoy-track a real edit.
+    # Write the two identified questions to the Person, recording only real changes.
     def sync_profile(person)
       apply_profile_change(person, :anonymous_contributions,
         Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS.invert[value_for("anonymous_contributions")])

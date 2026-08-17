@@ -1,9 +1,7 @@
 class FormFieldResource < ApplicationRecord
-  # Ordered join between a form field and the resources it fans out over. A field
-  # with any of these is a "per-resource" question: on the survey page it renders
-  # one input per linked resource (e.g. the post-event survey clarity question,
-  # asked once per training topic/handout). The field owns the prompt wording and
-  # answer options; each resource just supplies the item the prompt is asked about.
+  # Ordered FormField→Resource join. A field with any of these is a "per-resource"
+  # question: the survey page renders one input per linked resource (the clarity
+  # question, asked once per training topic). The field owns the prompt + options.
   belongs_to :form_field
   belongs_to :resource
 

@@ -186,15 +186,13 @@ class BuiltinCallouts
     value.respond_to?(:call) ? value.call(@event) : value
   end
 
-  # Whether a definition applies to this event. `seed_if` gates cards that only make
-  # sense for some events (e.g. the Day 2 survey on multi-day trainings).
+  # `seed_if` gates cards that only apply to some events (e.g. Day 2 survey on multi-day trainings).
   def applicable?(definition)
     definition[:seed_if].nil? || definition[:seed_if].call(@event)
   end
 
-  # A post-event day-N survey opens 30 minutes before that day's end time. Day N's
-  # date is the start date plus (N - 1) days; the time-of-day comes from the event's
-  # end_date (used as the daily end time for every day). Nil when dates are unset.
+  # Opens 30 min before day N's end time — day N's date (start + N-1 days) at the
+  # event end_date's time-of-day (the daily end time). Nil when dates are unset.
   def survey_drip(event, day)
     return unless event.start_date && event.end_date
     target = event.start_date.to_date + (day - 1)
@@ -313,7 +311,6 @@ class BuiltinCallouts
         color_class: "indigo",
         hidden: ->(_event) { true },
         form: ->(_event) { Form.standalone.find_by(name: "Day 1 Survey") },
-        # Opens 30 min before day 1's end time; admins can edit per event.
         display_from: ->(event) { survey_drip(event, 1) }
       },
       {

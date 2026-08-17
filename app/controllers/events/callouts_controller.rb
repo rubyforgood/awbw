@@ -342,18 +342,14 @@ module Events
                   notice: "Thanks! Your responses have been submitted."
     end
 
-    # Maps each survey built-in to the FormSubmission role it records under. The
-    # scholarship recipients survey is the one that gates readiness, tagged
-    # "post_event_survey".
+    # builtin_key => the FormSubmission role. The recipients survey is tagged
+    # "post_event_survey" — the one that gates readiness.
     SURVEY_ROLES = {
       "day_1_survey" => "day_1_survey",
       "day_2_survey" => "day_2_survey",
       "scholarship_recipients_survey" => "post_event_survey"
     }.freeze
 
-    # The inline survey page for a survey callout: renders the drip notice before
-    # the drip date, the form to fill, or the submitted answers (read-only) with an
-    # edit affordance.
     def survey
       @callout = survey_callout
       return redirect_to registration_ticket_path(@event_registration.slug) unless @callout
@@ -455,8 +451,7 @@ module Events
       "Signed out for #{entry.attendance_date.strftime("%a, %b %-d")} at #{time}."
     end
 
-    # The published survey callout named by :builtin_key, once it actually carries a
-    # form. Nil (→ back to the ticket) for anything else.
+    # The published survey callout for :builtin_key once it carries a form; nil otherwise.
     def survey_callout
       callout = @event.registration_ticket_callouts.find_by(builtin_key: params[:builtin_key])
       return unless callout && callout.form && !callout.hidden? && SURVEY_ROLES.key?(callout.builtin_key)
@@ -476,8 +471,7 @@ module Events
       params.dig(:survey, :clarity)&.to_unsafe_h || {}
     end
 
-    # One Ahoy event per profile field the survey actually changed (anonymity / name
-    # display), so the change is auditable.
+    # One Ahoy event per profile field the survey actually changed.
     def track_survey_profile_changes(changes)
       changes.each do |attribute, (from, to)|
         ahoy.track("profile.#{attribute}", person_id: @event_registration.registrant_id, from: from, to: to)

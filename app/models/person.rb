@@ -356,9 +356,8 @@ class Person < ApplicationRecord
     sectors.pluck(:name)
   end
 
-  # anonymous_contributions boolean => the survey consent answer label. "Keep
-  # anonymous" is the true branch; naming their profile is false. (The name-format
-  # labels live in DISPLAY_NAME_PREFERENCE_LABELS above.)
+  # anonymous_contributions boolean => survey consent answer label (true = keep anonymous).
+  # Name-format labels live in DISPLAY_NAME_PREFERENCE_LABELS above.
   ANONYMOUS_CONTRIBUTIONS_OPTIONS = {
     false => "Display all my content with my profile name",
     true => "Keep all my content anonymous"

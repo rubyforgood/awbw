@@ -323,8 +323,7 @@ class EventRegistrationsController < ApplicationController
       status: :see_other
   end
 
-  # Admin toggle for whether the post-event (scholarship recipients) survey is in.
-  # Independent of the certificate: clears/sets only its own timestamp.
+  # Admin toggle for the post-event survey — independent of the certificate toggle; clears/sets only its own timestamp.
   def toggle_post_survey
     authorize! @event_registration, to: :update?
     if @event_registration.post_survey_completed?
