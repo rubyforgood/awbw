@@ -42,7 +42,7 @@
           <div class="flex flex-wrap lg:flex-nowrap gap-4">
 
             <!-- Activity Name -->
-            <div class="flex-1 min-w-0">
+            <div class="flex-[2] min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
                 Activity name
               </label>
@@ -52,21 +52,10 @@
                                  class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
             </div>
 
-            <!-- Visit ID -->
-            <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-600 mb-1">
-                Visit ID
-              </label>
-              <%= number_field_tag :visit_id,
-                                   params[:visit_id],
-                                   placeholder: "e.g. 42",
-                                   class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
-            </div>
-
             <!-- Props -->
             <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
-                Props
+                Properties
               </label>
               <%= text_field_tag :props,
                                  params[:props],
@@ -122,6 +111,17 @@
               <%= date_field_tag :to,
                                  params[:to],
                                  class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm" %>
+            </div>
+
+            <!-- Visit ID -->
+            <div class="flex-none w-24">
+              <label class="block text-sm font-medium text-gray-600 mb-1">
+                Visit ID
+              </label>
+              <%= number_field_tag :visit_id,
+                                   params[:visit_id],
+                                   placeholder: "e.g. 42",
+                                   class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
             </div>
 
           </div>
