@@ -11,11 +11,12 @@ RSpec.describe "users/sections/_account_activity", type: :view do
   end
 
   # The card shows resource-based history (auth + user-record events about this
-  # user), unbounded by time and audience. "See all user activity" must land on
-  # the same full history — so it uses the person-scoped path with all_time and
-  # every audience, matching the person edit "History" card. Passing a bare
-  # user_id (actor FK) with the past-month + visitors/users defaults silently
-  # drops staff users and older events, returning zero for a super_user.
+  # user), with no time limit and every audience included. "See all user
+  # activity" must land on that same full history — so it links with
+  # time_period=all_time and all three audiences, matching the person edit
+  # "History" card. A bare user_id (actor FK) instead inherits the index's
+  # past-month + visitors/users defaults, which drop staff and older events —
+  # returning zero for a super_user.
   context "when the user has a person" do
     let(:user) { create(:user, :with_person) }
 
@@ -36,7 +37,7 @@ RSpec.describe "users/sections/_account_activity", type: :view do
   context "when the user has no person" do
     let(:user) { create(:user, person: nil) }
 
-    it "falls back to the user filter, still unbounded and across all audiences" do
+    it "falls back to the user filter, still with all_time and all audiences" do
       render_partial(user)
 
       expect(rendered).to have_link(
