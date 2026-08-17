@@ -57,6 +57,24 @@ RSpec.describe EventRegistrationReadiness do
       expect(readiness.event_ready_issues).to include("Payment due")
     end
 
+    it "flags a transfer-out whose destination hasn't been recorded yet" do
+      pay(registration, 1000)
+      link_org(registration)
+      registration.update!(status: "transferred_out")
+
+      expect(readiness.event_ready_issues).to include("Transfer out has no destination recorded")
+      expect(readiness.event_ready?).to be(false)
+    end
+
+    it "clears the transfer flag once the destination is recorded" do
+      pay(registration, 1000)
+      link_org(registration)
+      registration.update!(status: "transferred_out")
+      create(:event_registration, registrant: registration.registrant, transferred_from_registration: registration)
+
+      expect(readiness.event_ready_issues).not_to include("Transfer out has no destination recorded")
+    end
+
     context "organization" do
       let(:organization) { create(:organization, name: "Helping Hands") }
 
@@ -279,6 +297,13 @@ RSpec.describe EventRegistrationReadiness do
       pay(registration, 1000)
 
       expect(readiness.event_ready_reason).to eq("Org validation")
+    end
+
+    it "prioritizes an incomplete transfer over other pre-event reasons" do
+      # Unpaid + no org would normally read "Payment due"; the incomplete transfer wins.
+      registration.update!(status: "transferred_out")
+
+      expect(readiness.event_ready_reason).to eq("Transfer incomplete")
     end
   end
 

@@ -94,6 +94,7 @@ class EventRegistrationReadiness
   # A decline outranks the payment gap it creates: zeroing the allocation is what
   # reopens the balance, so the admin's next step is answering the decline.
   EVENT_READY_CHECKS = [
+    [ :transfer_incomplete?, "Transfer incomplete", "Transfer out has no destination recorded" ],
     [ :scholarship_declined?, "Award declined", "Scholarship declined — respond to the decline" ],
     [ :payment_due?, "Payment due", "Payment due" ],
     [ :organization_missing?, "Org validation", "No organization linked" ],
@@ -139,6 +140,14 @@ class EventRegistrationReadiness
 
   def failed_event_ready_checks
     @failed_event_ready_checks ||= EVENT_READY_CHECKS.select { |predicate, _, _| send(predicate) }
+  end
+
+  # A reg marked transferred-out but with no destination recorded yet is an
+  # unfinished admin task — the top pre-event issue. This is the one check that
+  # reads the reverse transfer link (not roster-preloaded), so it can query for a
+  # transferred-out row; active rows short-circuit on the status and never touch it.
+  def transfer_incomplete?
+    registration.transfer_destination_pending?
   end
 
   def payment_due?
