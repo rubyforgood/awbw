@@ -20,6 +20,17 @@ class AffiliationsController < ApplicationController
 
   def destroy
     authorize! @affiliation, to: :destroy?
+
+    if params[:return_to].present?
+      if @affiliation.destroy
+        redirect_to affiliation_return_path(anchor: "affiliations"),
+                    notice: "Affiliation was removed.", status: :see_other
+      else
+        redirect_to edit_affiliation_path(@affiliation), alert: "Unable to remove affiliation."
+      end
+      return
+    end
+
     affiliation = Affiliation.find(params[:id])
     person = affiliation.person
     destroyed = affiliation.destroy
@@ -58,9 +69,9 @@ class AffiliationsController < ApplicationController
     )
   end
 
-  # Return to whichever edit page the gear was clicked from, scrolled to the row.
-  def affiliation_return_path
-    anchor = helpers.dom_id(@affiliation)
+  # Return to whichever edit page the gear was clicked from, scrolled to the row
+  # (or the affiliations section after a delete removes the row).
+  def affiliation_return_path(anchor: helpers.dom_id(@affiliation))
     case params[:return_to]
     when "person"
       edit_person_path(params[:origin_id], anchor: anchor)

@@ -1,5 +1,11 @@
 module OrganizationHelper
-  def organization_profile_button(organization, truncate_at: nil, subtitle: nil, label: nil, data: {}, inactive: false)
+  def organization_profile_button(organization, truncate_at: nil, subtitle: nil, label: nil, data: {}, inactive: false, compact: false)
+    # Compact mode shrinks the control to roughly a text input's height, for use
+    # inline beside form fields (e.g. the affiliation editor rows).
+    padding = compact ? "px-3 py-1" : "px-4 py-2"
+    avatar_size = compact ? "w-8 h-8" : "w-10 h-10"
+    initial_text_size = compact ? "text-sm" : "text-lg"
+
     if inactive
       bg = "bg-gray-100"
       hover_bg = "hover:bg-gray-200"
@@ -18,7 +24,7 @@ module OrganizationHelper
             data: { turbo_prefetch: false }.merge(data),
             title: hover_title,
             class: "group relative flex items-center gap-2
-                    w-full px-4 py-2
+                    w-full #{padding}
                     border #{border} #{bg} #{hover_bg} rounded-lg
                     transition-colors duration-200
                     font-medium shadow-sm leading-none
@@ -26,11 +32,11 @@ module OrganizationHelper
       # --- Logo ---
       logo = if organization.respond_to?(:logo) && organization.logo.attached?
         image_tag organization.logo,
-                  class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm flex-shrink-0"
+                  class: "#{avatar_size} rounded-full object-cover border border-gray-300 shadow-sm flex-shrink-0"
       else
         content_tag(:span, organization.name.first.upcase,
-                    class: "w-10 h-10 rounded-full flex items-center justify-center
-                            bg-emerald-200 text-emerald-700 font-bold text-lg
+                    class: "#{avatar_size} rounded-full flex items-center justify-center
+                            bg-emerald-200 text-emerald-700 font-bold #{initial_text_size}
                             border border-emerald-300 shadow-sm flex-shrink-0")
       end
 

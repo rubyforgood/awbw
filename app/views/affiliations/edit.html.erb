@@ -119,15 +119,21 @@
       </div>
     </section>
 
-    <div class="flex items-center gap-3 border-t border-gray-200 pt-6 mt-6">
-      <div class="ml-auto flex items-center gap-3">
-        <% if back_path %>
-          <%= link_to "Cancel", back_path, class: "btn btn-secondary-outline" %>
-        <% end %>
-        <button type="submit" class="btn btn-primary">Save changes</button>
-      </div>
-    </div>
   <% end %>
+
+  <div class="flex items-center gap-3 border-t border-gray-200 pt-6 mt-6">
+    <%= button_to "Delete",
+          affiliation_path(@affiliation, return_to: params[:return_to].presence, origin_id: params[:origin_id].presence),
+          method: :delete,
+          form: { data: { turbo_confirm: "Remove this affiliation?" } },
+          class: "btn btn-danger-outline" %>
+    <div class="ml-auto flex items-center gap-3">
+      <% if back_path %>
+        <%= link_to "Cancel", back_path, class: "btn btn-secondary-outline" %>
+      <% end %>
+      <button type="submit" form="affiliation_form" class="btn btn-primary">Save changes</button>
+    </div>
+  </div>
 
   <%= render "shared/audit_info", resource: @affiliation %>
 </div>

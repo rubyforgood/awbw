@@ -74,4 +74,30 @@ RSpec.describe "/affiliations", type: :request do
       end
     end
   end
+
+  describe "DELETE /affiliations/:id" do
+    context "as an admin returning from the editor" do
+      before { sign_in admin }
+
+      it "destroys the affiliation and returns to the origin edit page" do
+        expect {
+          delete affiliation_path(affiliation, return_to: "organization", origin_id: organization.id)
+        }.to change(Affiliation, :count).by(-1)
+
+        expect(response).to redirect_to(edit_organization_path(organization, anchor: "affiliations"))
+      end
+    end
+
+    context "as a non-admin" do
+      before { sign_in regular_user }
+
+      it "does not destroy and redirects to root" do
+        expect {
+          delete affiliation_path(affiliation, return_to: "organization", origin_id: organization.id)
+        }.not_to change(Affiliation, :count)
+
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
 end
