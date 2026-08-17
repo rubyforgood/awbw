@@ -218,6 +218,15 @@ class EventRegistrationsController < ApplicationController
     authorize! @event_registration, to: :transfer?
     destination_event = Event.find(params[:destination_event_id])
 
+    # Enforce the same-format rule server-side, not just in the picker: an event
+    # only transfers to another of its own format (on-demand ↔ on-demand). (#1944)
+    unless transfer_destination_events.exists?(destination_event.id)
+      redirect_to transfer_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+        alert: "You can only transfer to another #{@event_registration.event.on_demand? ? "on-demand" : "scheduled"} event.",
+        status: :see_other
+      return
+    end
+
     # The registrant may already be registered for the destination event, which
     # would collide with the (registrant, event) uniqueness rule — link that
     # record as the transfer target instead of creating a duplicate.

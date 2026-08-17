@@ -770,6 +770,20 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response).to redirect_to(transfer_event_registration_path(source))
         end
 
+        it "rejects a destination of the wrong format, even when posted directly" do
+          # source's event is scheduled (on_demand: false); an on-demand destination
+          # is off-format and blocked at the endpoint, not just hidden in the picker.
+          off_format = create(:event, published: true, on_demand: true)
+
+          expect {
+            post process_transfer_event_registration_path(source),
+                 params: { destination_event_id: off_format.id }
+          }.not_to change(EventRegistration, :count)
+
+          expect(response).to redirect_to(transfer_event_registration_path(source))
+          expect(flash[:alert]).to include("scheduled event")
+        end
+
         it "certifies the source reg's CE hours at the destination reg" do
           ce = create(:continuing_education_registration, event_registration: source,
                 professional_license: create(:professional_license, person: source.registrant))
