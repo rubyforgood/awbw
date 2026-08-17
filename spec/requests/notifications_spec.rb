@@ -388,6 +388,33 @@ RSpec.describe "Notifications", type: :request do
 
         patch notification_path(contact_notification), params: { notification: { channel: "email" } }
       end
+
+      context "editing the body of an incoming communication" do
+        let(:incoming) { create(:notification, :incoming, kind: "manual_log", channel: "phone", email_subject: "They called", email_body_text: "Original note") }
+
+        it "tracks a body change as an ahoy event" do
+          expect(Analytics::AhoyTracker).to receive(:track_event)
+            .with(anything, "update.notification.body", hash_including(resource_id: incoming.id))
+
+          patch notification_path(incoming), params: { notification: { email_body_text: "Updated note" } }
+        end
+
+        it "does not track when the body is unchanged" do
+          expect(Analytics::AhoyTracker).not_to receive(:track_event)
+            .with(anything, "update.notification.body", anything)
+
+          patch notification_path(incoming), params: { notification: { email_body_text: "Original note" } }
+        end
+      end
+
+      it "does not track a body change on an outgoing communication" do
+        outgoing = create(:notification, email_body_text: "Original")
+
+        expect(Analytics::AhoyTracker).not_to receive(:track_event)
+          .with(anything, "update.notification.body", anything)
+
+        patch notification_path(outgoing), params: { notification: { email_body_text: "Changed" } }
+      end
     end
 
     context "as a regular user" do

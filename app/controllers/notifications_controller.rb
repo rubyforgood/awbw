@@ -58,8 +58,10 @@ class NotificationsController < ApplicationController
   def update
     authorize! @notification
     responded_was = @notification.responded?
+    body_was = @notification.email_body_text
     @notification.update!(notification_params)
     track_responded_change(responded_was)
+    track_incoming_body_change(body_was)
     head :ok
   end
 
@@ -106,6 +108,19 @@ class NotificationsController < ApplicationController
       resource_type: "Notification",
       resource_id: @notification.id,
       responded: @notification.responded?
+    })
+  end
+
+  # An incoming communication is logged by hand, so an edit to its body is a real
+  # content change worth surfacing — unlike outgoing/system messages, whose body
+  # is generated, not authored.
+  def track_incoming_body_change(previous)
+    return unless @notification.incoming?
+    return if @notification.email_body_text == previous
+
+    track_event("update.notification.body", {
+      resource_type: "Notification",
+      resource_id: @notification.id
     })
   end
 
