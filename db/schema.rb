@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_15_114533) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_17_070050) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -838,6 +838,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_114533) do
     t.integer "notification_type"
     t.integer "parent_notification_id"
     t.string "recipient_email", null: false
+    t.string "recipient_name"
     t.string "recipient_role", null: false
     t.boolean "responded", default: false, null: false
     t.integer "root_notification_id"

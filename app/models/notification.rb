@@ -148,6 +148,10 @@ class Notification < ApplicationRecord
   before_validation :force_manual_log_channel, if: :manual_log?
   # A contact_us_fyi is always something a person sent us — stamp it incoming.
   before_validation :mark_incoming, on: :create, if: -> { kind == "contact_us_fyi" }
+  # Snapshot the contact person's name from recipient_email so it survives even
+  # if the Person record is later nullified or deleted. Only fills a blank value,
+  # so a caller-supplied name (and resends carrying the stored value) is kept.
+  before_create :cache_recipient_name
 
   def manual_log?
     kind == "manual_log"
@@ -295,5 +299,12 @@ class Notification < ApplicationRecord
 
   def mark_incoming
     self.direction = "incoming"
+  end
+
+  def cache_recipient_name
+    return if recipient_name.present? || recipient_email.blank?
+
+    person = Person.where(email: recipient_email).or(Person.where(email_2: recipient_email)).first
+    self.recipient_name = person&.name
   end
 end

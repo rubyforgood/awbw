@@ -135,6 +135,31 @@ RSpec.describe Notification do
     end
   end
 
+  describe "recipient_name caching" do
+    it "snapshots the contact person's name from recipient_email on create" do
+      person = create(:person, first_name: "Casey", last_name: "Contact", email: "casey@example.com")
+      notification = create(:notification, recipient_email: person.email)
+      expect(notification.recipient_name).to eq(person.name)
+    end
+
+    it "resolves a person by their secondary email" do
+      person = create(:person, first_name: "Casey", last_name: "Contact", email_2: "casey2@example.com")
+      notification = create(:notification, recipient_email: "casey2@example.com")
+      expect(notification.recipient_name).to eq(person.name)
+    end
+
+    it "leaves recipient_name blank when no person matches" do
+      notification = create(:notification, recipient_email: "unknown@example.com")
+      expect(notification.recipient_name).to be_nil
+    end
+
+    it "does not overwrite a caller-supplied recipient_name" do
+      create(:person, first_name: "Casey", last_name: "Contact", email: "casey@example.com")
+      notification = create(:notification, recipient_email: "casey@example.com", recipient_name: "Custom Name")
+      expect(notification.recipient_name).to eq("Custom Name")
+    end
+  end
+
   describe "KINDS" do
     it "includes account_email_change_requested" do
       expect(Notification::KINDS).to include("account_email_change_requested")

@@ -42,9 +42,10 @@ class NotificationDecorator < ApplicationDecorator
     end
   end
 
-  # Name of the person when we know them, otherwise the raw email.
+  # Name of the person when we know them, then the cached snapshot taken at send
+  # time (survives a deleted/nullified Person), otherwise the raw email.
   def contact_name
-    contact_person&.name.presence || recipient_email
+    contact_person&.name.presence || recipient_name.presence || recipient_email
   end
 
   # Email to reveal on hover — only when we're showing a resolved name (nil when
