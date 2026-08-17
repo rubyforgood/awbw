@@ -64,9 +64,9 @@
             <%= link_to noticeable_label(notification.noticeable),
                         record_path,
                         data: { turbo_frame: "_top" },
-                        class: "font-medium text-blue-600 hover:underline" %>
+                        class: "font-medium text-gray-800 underline decoration-gray-300 underline-offset-2 hover:text-gray-900 hover:decoration-gray-500" %>
           <% else %>
-            <span class="font-medium text-gray-700"><%= noticeable_label(notification.noticeable) %></span>
+            <span class="font-medium text-gray-800"><%= noticeable_label(notification.noticeable) %></span>
           <% end %>
         <% else %>
           <span class="text-gray-400">—</span>
