@@ -146,6 +146,8 @@ class Notification < ApplicationRecord
   # communication. Fall back to a manual channel so one is never autoemail (the
   # channel column defaults to "autoemail", so this also covers a blank choice).
   before_validation :force_manual_log_channel, if: :manual_log?
+  # A contact_us_fyi is always something a person sent us — stamp it incoming.
+  before_validation :mark_incoming, on: :create, if: -> { kind == "contact_us_fyi" }
 
   def manual_log?
     kind == "manual_log"
@@ -163,12 +165,14 @@ class Notification < ApplicationRecord
   scope :record_type, ->(record_type) { where(noticeable_type: record_type.to_s.camelize.titleize.gsub(" ", "")) }
   scope :subject_line, ->(subject) { where("notifications.email_subject LIKE ?", "%#{subject}%") }
   scope :email_topic, ->(topic) { where("notifications.email_subject LIKE ?", "%#{topic}%") }
+  # contact_us_fyi is included explicitly for historical rows predating #mark_incoming.
+  scope :requires_response, -> { where(direction: "incoming").or(where(kind: "contact_us_fyi")) }
+  scope :no_response_needed, -> { where.not(direction: "incoming").where.not(kind: "contact_us_fyi") }
   scope :responded_status, ->(status) {
-    needs_response = where(kind: "contact_us_fyi").or(where(direction: "incoming"))
     case status.to_s
-    when "yes" then needs_response.where(responded: true)
-    when "no"  then needs_response.where(responded: false)
-    when "na"  then where.not(kind: "contact_us_fyi").where.not(direction: "incoming")
+    when "yes" then requires_response.where(responded: true)
+    when "no"  then requires_response.where(responded: false)
+    when "na"  then no_response_needed
     else all
     end
   }
@@ -194,7 +198,7 @@ class Notification < ApplicationRecord
   end
 
   def requires_response?
-    kind == "contact_us_fyi" || incoming?
+    incoming? || kind == "contact_us_fyi"
   end
 
   def delivered?
@@ -287,5 +291,9 @@ class Notification < ApplicationRecord
 
   def classify_manual_channel_as_manual_log
     self.kind = "manual_log"
+  end
+
+  def mark_incoming
+    self.direction = "incoming"
   end
 end

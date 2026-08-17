@@ -225,6 +225,11 @@ RSpec.describe "Notifications", type: :request do
         expect(Notification.last).to be_incoming
       end
 
+      it "records the responded flag on an incoming communication" do
+        post notifications_path, params: valid_params.deep_merge(notification: { direction: "incoming", responded: "1" })
+        expect(Notification.last).to be_responded
+      end
+
       it "re-renders with an error when no person is selected" do
         expect {
           post notifications_path, params: valid_params.except(:person_id)
@@ -338,6 +343,25 @@ RSpec.describe "Notifications", type: :request do
 
         expect(from_row(response.body)).to have_text("kim@example.com")
         expect(to_row(response.body)).to have_text("Dana Sender")
+      end
+
+      it "renders a profile-button link to a known contact on the To side" do
+        contact = create(:person, email: "kim@example.com")
+        sent = create(:notification, kind: "event_registration_reminder", recipient_email: "kim@example.com")
+
+        get notification_path(sent)
+
+        expect(to_row(response.body)).to have_link(href: person_path(contact))
+      end
+
+      it "renders the noticeable as a record button linking to the record" do
+        person = create(:person)
+        about = create(:notification, noticeable: person)
+
+        get notification_path(about)
+
+        noticeable_row = Capybara.string(response.body).find(:xpath, "//dt[normalize-space()='Noticeable']/following-sibling::dd[1]")
+        expect(noticeable_row).to have_link(href: person_path(person))
       end
     end
 

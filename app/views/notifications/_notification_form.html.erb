@@ -22,7 +22,7 @@
 <% sender_color = label_colors[(sender_user&.id || 0) % label_colors.length] %>
 <% sender_first = sender_user&.person&.first_name || sender_user&.name.to_s.split.first %>
 <% select_class = "min-w-0 flex-1 truncate bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
-<div data-controller="field-required" data-action="input->field-required#update">
+<div data-controller="field-required conditional-fields" data-action="input->field-required#update">
   <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
     <div class="space-y-2 sm:w-56 sm:shrink-0">
       <label class="flex items-center gap-2">
@@ -38,8 +38,13 @@
       <%= f.hidden_field :sender_id, value: sender_user&.id %>
       <div class="flex items-center gap-2">
         <span class="w-20 shrink-0 text-sm font-medium text-gray-700">Direction</span>
-        <%= render "notifications/direction_toggle", f: f, compact: true %>
+        <%= render "notifications/direction_toggle", f: f, compact: true,
+                   source_data: { conditional_fields_target: "source", action: "change->conditional-fields#toggle" } %>
       </div>
+      <label class="flex items-center gap-2" data-conditional-fields-target="field" data-show-when="incoming" hidden>
+        <%= f.check_box :responded, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
+        <span class="text-sm text-gray-700">Already responded</span>
+      </label>
     </div>
     <%# Subject marked required (shows the asterisk) — a blank subject is dropped
         on save. field-required only enforces it once the row is in use, so an

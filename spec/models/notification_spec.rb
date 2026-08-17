@@ -203,6 +203,10 @@ RSpec.describe Notification do
       expect(build(:notification, kind: "contact_us_fyi").requires_response?).to be true
     end
 
+    it "returns false for an outgoing manual log" do
+      expect(build(:notification, kind: "manual_log").requires_response?).to be false
+    end
+
     it "returns false for contact_us kind (auto-confirmation to submitter)" do
       expect(build(:notification, kind: "contact_us").requires_response?).to be false
     end
@@ -213,6 +217,16 @@ RSpec.describe Notification do
 
     it "returns true for an incoming communication regardless of kind" do
       expect(build(:notification, :incoming, kind: "reset_password_fyi").requires_response?).to be true
+    end
+  end
+
+  describe "contact_us_fyi direction" do
+    it "is marked incoming when created" do
+      expect(create(:notification, kind: "contact_us_fyi").direction).to eq("incoming")
+    end
+
+    it "forces incoming even when built as outgoing" do
+      expect(create(:notification, kind: "contact_us_fyi", direction: "outgoing").direction).to eq("incoming")
     end
   end
 

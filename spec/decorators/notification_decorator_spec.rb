@@ -149,6 +149,35 @@ RSpec.describe NotificationDecorator, type: :decorator do
     end
   end
 
+  describe "#from_button_person / #to_button_person" do
+    it "resolves the staff sender's person on the opposite side of an outgoing communication" do
+      person = create(:person)
+      sender = create(:user, person: person)
+      contact = create(:person, email: "kim@example.com")
+      decorated = create(:notification, sender: sender, recipient_email: "kim@example.com").decorate
+
+      expect(decorated.from_button_person).to eq(person)
+      expect(decorated.to_button_person).to eq(contact)
+    end
+
+    it "flips the sides for an incoming communication" do
+      person = create(:person)
+      sender = create(:user, person: person)
+      contact = create(:person, email: "kim@example.com")
+      decorated = create(:notification, :incoming, sender: sender, recipient_email: "kim@example.com").decorate
+
+      expect(decorated.from_button_person).to eq(contact)
+      expect(decorated.to_button_person).to eq(person)
+    end
+
+    it "has no person for the AWBW Portal side (no sender)" do
+      decorated = build_stubbed(:notification, sender: nil, recipient_email: "stranger@example.com").decorate
+
+      expect(decorated.from_button_person).to be_nil
+      expect(decorated.to_button_person).to be_nil
+    end
+  end
+
   describe "#to_value / #from_value" do
     it "links the resolved contact to their profile" do
       person = create(:person, email: "kim@example.com")
@@ -212,9 +241,9 @@ RSpec.describe NotificationDecorator, type: :decorator do
       expect(html).to include("Incoming")
     end
 
-    it "shows a grey FYI pill for an admin-directed communication" do
+    it "shows a teal FYI pill for an admin-directed communication" do
       html = build_stubbed(:notification, recipient_role: "admin").decorate.flag_badges
-      expect(html).to include("bg-gray-100")
+      expect(html).to include("bg-teal-100")
       expect(html).to include("FYI")
     end
 
