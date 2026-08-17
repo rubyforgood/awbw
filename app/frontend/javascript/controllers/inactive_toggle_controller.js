@@ -24,24 +24,33 @@ export default class extends Controller {
       this.accentBarTarget.classList.toggle("bg-purple-500", facilitator);
       this.accentBarTarget.classList.toggle("bg-gray-300", !facilitator);
     }
-    this.styleTitle(facilitator);
+    this.styleTitle();
     this.updateRowBackground();
   }
 
   // Purple "Facilitator" tint on the title input, matching the server-rendered
-  // state and toggled live as the title changes. Shape/size are untouched.
-  styleTitle(facilitator) {
+  // state and toggled live as the title/end date change. Inactive facilitator
+  // rows use a lighter, softer purple; shape/size are untouched.
+  styleTitle() {
+    if (!this.hasTitleTarget) return;
+    const facilitator = this.isFacilitator();
+    const active = facilitator && !this.isPast();
+    const inactive = facilitator && this.isPast();
     const t = this.titleTarget;
-    t.classList.toggle("bg-purple-100!", facilitator);
-    t.classList.toggle("text-purple-700!", facilitator);
-    t.classList.toggle("font-semibold", facilitator);
-    t.classList.toggle("border-purple-300!", facilitator);
+    t.classList.toggle("bg-purple-100!", active);
+    t.classList.toggle("text-purple-700!", active);
+    t.classList.toggle("font-semibold", active);
+    t.classList.toggle("border-purple-300!", active);
+    t.classList.toggle("bg-purple-50!", inactive);
+    t.classList.toggle("text-purple-400!", inactive);
+    t.classList.toggle("border-purple-200!", inactive);
     t.classList.toggle("border-gray-300!", !facilitator);
   }
 
   apply() {
     if (!this.hasEndDateTarget) return;
     this.updateRowBackground();
+    this.styleTitle();
   }
 
   // Single source of truth for the row tint: gray when expired, light purple for

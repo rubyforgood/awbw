@@ -12,6 +12,16 @@
       counterpart's theme (person = sky, organization = emerald). %>
   <% active_tint = person_side ? "bg-sky-50 border-sky-200" : "bg-emerald-50 border-emerald-200" %>
   <% active_bg = facilitator ? "bg-purple-50 border-purple-200" : active_tint %>
+  <%# The "Facilitator" title is tinted purple; inactive rows use a lighter, softer
+      purple so it recedes to match the dimmed person button. Kept in sync live by
+      inactive-toggle#styleTitle. %>
+  <% title_class = if !facilitator
+       "border-gray-300!"
+     elsif expired
+       "bg-purple-50! text-purple-400! border-purple-200!"
+     else
+       "bg-purple-100! text-purple-700! font-semibold border-purple-300!"
+     end %>
   <% record = person_side ? f.object.person : f.object.organization %>
   <% label = person_side ? "Person" : "Organization" %>
   <div data-controller="inactive-toggle" data-inactive-toggle-active-tint-value="<%= active_tint %>" class="relative mb-2">
@@ -69,7 +79,7 @@
                     input_html: {
                       value: f.object&.title || "Facilitator",
                       style: "height: 42px;",
-                      class: "text-sm #{facilitator ? 'bg-purple-100! text-purple-700! font-semibold border-purple-300!' : 'border-gray-300!'}",
+                      class: "text-sm #{title_class}",
                       data: {
                         inactive_toggle_target: "title",
                         action: "affiliation-dates#recalculate inactive-toggle#updateBorder"
