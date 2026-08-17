@@ -157,4 +157,40 @@ RSpec.describe FormSubmission do
       end
     end
   end
+
+  describe "#persist_answer" do
+    let(:submission) { create(:form_submission) }
+
+    it "stores a text answer with the field's name" do
+      field = create(:form_field, form: submission.form, name: "Message")
+      submission.persist_answer(field, "Hello there")
+
+      answer = submission.form_answers.find_by(form_field: field)
+      expect(answer.submitted_answer).to eq("Hello there")
+      expect(answer.question_name_when_answered).to eq("Message")
+    end
+
+    it "comma-joins a multi-value answer, dropping blanks" do
+      field = create(:form_field, form: submission.form, answer_type: :multi_select_checkbox)
+      submission.persist_answer(field, [ "A", "", "B" ])
+
+      expect(submission.form_answers.find_by(form_field: field).submitted_answer).to eq("A, B")
+    end
+
+    it "updates the existing answer rather than duplicating it" do
+      field = create(:form_field, form: submission.form)
+      submission.persist_answer(field, "first")
+      submission.persist_answer(field, "second")
+
+      expect(submission.form_answers.where(form_field: field).count).to eq(1)
+      expect(submission.form_answers.find_by(form_field: field).submitted_answer).to eq("second")
+    end
+
+    it "raises UnreadableUpload for a forged file-upload signed id" do
+      field = create(:form_field, :file_upload, form: submission.form)
+
+      expect { submission.persist_answer(field, "forged-signed-id") }
+        .to raise_error(FormSubmission::UnreadableUpload)
+    end
+  end
 end
