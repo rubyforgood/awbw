@@ -1546,6 +1546,9 @@ if facilitator_training && registration_form
   # Demo 10: a registrant with more than one registration-form submission, each
   # naming a different org we don't have — exercises the per-submission "View
   # submission #N" links and one "Create and link" row per distinct submitted org.
+  # Each submission also carries a fake Stripe (ExternalProcessorPayment) so the
+  # payments index has Stripe rows to exercise its payment-method filter and
+  # metadata / charge-id search.
   if agency_field
     demo_multi = Person.create!(
       email: "orgchip.demo.10@seed.example.com",
@@ -1555,9 +1558,28 @@ if facilitator_training && registration_form
     EventRegistration.find_or_create_by!(event: facilitator_training, registrant: demo_multi) do |reg|
       reg.status = "registered"
     end
+    card_amount_cents = facilitator_training.cost_cents.to_i
+    card_amount_cents = 15_000 if card_amount_cents <= 0
     [ "Greenfield Survivor Services", "Harbor Light Counseling" ].each do |org_name|
       submission = FormSubmission.create!(person: demo_multi, form: registration_form, event: facilitator_training, role: "registration")
       submission.form_answers.create!(form_field: agency_field, submitted_answer: org_name, question_name_when_answered: agency_field.name)
+
+      stripe_payment = ExternalProcessorPayment.new(
+        person: demo_multi,
+        form_submission: submission,
+        amount_cents: card_amount_cents,
+        amount_cents_remaining: card_amount_cents,
+        currency: "usd",
+        external_origin: false,
+        stripe_charge_id: "ch_seed_reg_#{submission.id}",
+        metadata: {
+          "form_submission_id" => submission.id,
+          "event_id" => facilitator_training.id,
+          "organization_name" => org_name
+        }
+      )
+      stripe_payment.skip_pay_charge_validation = true
+      stripe_payment.save!
     end
   end
 

@@ -243,30 +243,35 @@ RSpec.describe Payment, type: :model do
         end
       end
 
-      describe "time period" do
+      describe "date range" do
         let!(:recent) { create(:payment, created_at: 2.days.ago) }
         let!(:old) { create(:payment, created_at: 2.months.ago) }
 
-        it "defaults to the past month, excluding older payments" do
+        it "returns all payments when no dates are given" do
           result = Payment.search_by_params({})
+          expect(result).to include(recent, old)
+        end
+
+        it "honors an explicit start date" do
+          result = Payment.search_by_params({ start_date: 1.month.ago.to_date.to_s })
           expect(result).to include(recent)
           expect(result).not_to include(old)
         end
 
-        it "honors an explicit period window" do
-          result = Payment.search_by_params({ period: "past_year" })
+        it "honors an explicit end date" do
+          result = Payment.search_by_params({ start_date: 3.months.ago.to_date.to_s, end_date: 1.month.ago.to_date.to_s })
+          expect(result).to include(old)
+          expect(result).not_to include(recent)
+        end
+
+        it "returns all payments when the dates are blank" do
+          result = Payment.search_by_params({ start_date: "", end_date: "" })
           expect(result).to include(recent, old)
         end
 
-        it "returns the full history for all_time" do
-          result = Payment.search_by_params({ period: "all_time" })
+        it "ignores an unparseable date" do
+          result = Payment.search_by_params({ start_date: "not-a-date" })
           expect(result).to include(recent, old)
-        end
-
-        it "falls back to the default when period is blank" do
-          result = Payment.search_by_params({ period: "" })
-          expect(result).to include(recent)
-          expect(result).not_to include(old)
         end
       end
     end

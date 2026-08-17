@@ -2,15 +2,6 @@ class Payment < ApplicationRecord
   has_paper_trail
   PAYER_TYPES = %w[Person Organization].freeze
 
-  PERIOD_OPTIONS = {
-    "Past day" => "past_day",
-    "Past week" => "past_week",
-    "Past month" => "past_month",
-    "Past year" => "past_year",
-    "All time" => "all_time"
-  }.freeze
-  DEFAULT_PERIOD = "past_month".freeze
-
   has_many :allocations, as: :source
   has_many :refunds, as: :refundable
   belongs_to :person, optional: true
@@ -43,14 +34,11 @@ class Payment < ApplicationRecord
     when "no" then where("amount_cents_remaining = 0")
     end
   }
-  scope :in_period, ->(period) {
-    window = case period
-    when "past_day" then 1.day.ago
-    when "past_week" then 1.week.ago
-    when "past_month" then 1.month.ago
-    when "past_year" then 1.year.ago
-    end
-    where(created_at: window..) if window
+  scope :created_between, ->(start_date, end_date) {
+    scope = all
+    scope = scope.where(created_at: start_date.beginning_of_day..) if start_date
+    scope = scope.where(created_at: ..end_date.end_of_day) if end_date
+    scope
   }
 
   def self.search_by_params(params)
@@ -63,8 +51,15 @@ class Payment < ApplicationRecord
     results = results.matching_search(params[:search]) if params[:search].present?
     results = results.where("amount_cents >= ?", (params[:amount_min].to_d * 100).to_i) if params[:amount_min].present?
     results = results.where("amount_cents <= ?", (params[:amount_max].to_d * 100).to_i) if params[:amount_max].present?
-    results = results.in_period(params[:period].presence || DEFAULT_PERIOD)
+    results = results.created_between(parse_date(params[:start_date]), parse_date(params[:end_date]))
     results
+  end
+
+  def self.parse_date(value)
+    return if value.blank?
+    Date.parse(value)
+  rescue ArgumentError, TypeError
+    nil
   end
 
   # Free-text search across the JSON metadata blob and the Stripe charge id.

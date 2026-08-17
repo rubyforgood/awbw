@@ -17,7 +17,7 @@
       collection_selected_class: selected_btn
     }, autocomplete: "off" do %>
     <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-      <div class="md:col-span-3">
+      <div class="md:col-span-2">
         <label for="person_id" class="<%= label_class %>">Person</label>
 
         <%= select_tag "person_id",
@@ -31,7 +31,7 @@
           prompt: "Search for a person" %>
       </div>
 
-      <div class="md:col-span-3">
+      <div class="md:col-span-2">
         <label for="organization_id" class="<%= label_class %>">Organization</label>
 
         <%= select_tag "organization_id",
@@ -62,6 +62,29 @@
       </div>
 
       <div class="md:col-span-2">
+        <label for="payer_type" class="<%= label_class %>">Payer type</label>
+
+        <%= select_tag "payer_type",
+          options_for_select(["Person", "Organization"], params[:payer_type]),
+          include_blank: "All",
+          class: placeholder_select_class %>
+      </div>
+
+      <div class="md:col-span-2">
+        <label for="start_date" class="<%= label_class %>">Created from</label>
+
+        <%= date_field_tag "start_date", params[:start_date],
+          class: field_class %>
+      </div>
+
+      <div class="md:col-span-2">
+        <label for="end_date" class="<%= label_class %>">Created to</label>
+
+        <%= date_field_tag "end_date", params[:end_date],
+          class: field_class %>
+      </div>
+
+      <div class="md:col-span-2">
         <label for="amount_min" class="<%= label_class %>">Min amount ($)</label>
 
         <%= number_field_tag "amount_min", params[:amount_min], min: 0, step: "0.01",
@@ -77,32 +100,19 @@
           class: field_class %>
       </div>
 
-      <div class="md:col-span-3">
-        <label for="has_remaining" class="<%= label_class %>">Amount remaining</label>
+      <div class="md:col-span-2">
+        <label for="has_remaining" class="<%= label_class %>">Has unallocated</label>
 
         <%= select_tag "has_remaining",
           options_for_select({ "All" => "all", "Yes" => "yes", "No" => "no" }, params[:has_remaining] || "all"),
           class: placeholder_select_class %>
       </div>
 
-      <div class="md:col-span-3">
-        <label for="payer_type" class="<%= label_class %>">Payer type</label>
+      <div class="md:col-span-2 flex flex-col">
+        <span class="<%= label_class %>" aria-hidden="true">&nbsp;</span>
 
-        <%= select_tag "payer_type",
-          options_for_select(["Person", "Organization"], params[:payer_type]),
-          include_blank: "All",
-          class: placeholder_select_class %>
+        <%= link_to "Clear filters", payments_path, class: "btn btn-utility-outline flex-1 w-full justify-center", data: { action: "collection#clearAndSubmit" } %>
       </div>
-
-      <div class="md:col-span-2">
-        <label for="period" class="<%= label_class %>">Time period</label>
-
-        <%= select_tag "period",
-          options_for_select(Payment::PERIOD_OPTIONS, params[:period].presence || Payment::DEFAULT_PERIOD),
-          class: field_class %>
-      </div>
-
-      <div class="md:col-span-12 flex gap-2 justify-end"><%= link_to "Clear filters", payments_path, class: "btn btn-utility-outline", data: { action: "collection#clearAndSubmit" } %></div>
     </div>
   <% end %>
 </div>
