@@ -14,7 +14,7 @@
     <label class="block text-sm font-medium text-gray-700 mb-1 <%= "xl:hidden" if local_assigns.fetch(:hide_label, false) %>">Address</label>
     <div class="relative">
       <button type="button"
-              class="flex h-[42px] w-full sm:w-14 items-center justify-between gap-1 rounded-md border border-gray-300 bg-gray-100 px-2 text-sm text-gray-800 focus:border-blue-500 focus:ring-blue-500"
+              class="flex h-[42px] w-full items-center justify-between gap-1 rounded-md border border-gray-300 bg-gray-100 px-2 text-sm text-gray-800 focus:border-blue-500 focus:ring-blue-500"
               data-address-select-target="button"
               data-action="address-select#toggle">
         <span data-address-select-target="label"><%= selected&.first || "—" %></span>
