@@ -193,27 +193,27 @@ RSpec.describe EventRegistrationReadiness do
     end
   end
 
-  describe "CE certificate across a transfer" do
+  describe "CE certificate (two-record model, #1944)" do
     let(:source) { create(:event_registration, event: create(:event, ce_hours_offered: 6, cost_cents: 0), status: "transferred_out") }
-    let(:intended) do
+    let(:destination) do
       create(:event_registration, event: create(:event, ce_hours_offered: 6, cost_cents: 0),
         registrant: source.registrant, status: "attended", transferred_from_registration: source)
     end
     let!(:ce) do
-      create(:continuing_education_registration, event_registration: source, cost_cents: 0,
-        professional_license: create(:professional_license, person: source.registrant))
+      create(:continuing_education_registration, event_registration: destination, cost_cents: 0,
+        professional_license: create(:professional_license, person: source.registrant), skip_event_defaults: true)
     end
 
-    it "flags the intended event's roster with the certified CE still pending" do
-      expect(described_class.new(intended).completion_issues).to include("CE certificate not sent")
+    it "flags the destination reg's roster with its own CE certificate still pending" do
+      expect(described_class.new(destination).completion_issues).to include("CE certificate not sent")
     end
 
-    it "clears once the certified CE has been issued" do
+    it "clears once the destination reg's CE has been issued" do
       ce.mark_certificate_sent!
-      expect(described_class.new(intended).completion_issues).not_to include("CE certificate not sent")
+      expect(described_class.new(destination).completion_issues).not_to include("CE certificate not sent")
     end
 
-    it "does not flag the certified CE on the source (transferred-out) registration" do
+    it "does not flag CE on the source reg, which holds no CE record of its own here" do
       expect(described_class.new(source).certificate_issues).not_to include("CE certificate not sent")
     end
   end

@@ -187,7 +187,10 @@
       <% transferred_in = f.object.transferred_in? %>
       <%# The org card widens to absorb a column for each of the other two cards that's hidden. %>
       <% show_scholarship = !transferred_in && (f.object.event&.scholarship_eligible? || f.object.scholarships.any?) %>
-      <% show_ce = !transferred_in && f.object.event&.ce_eligible? %>
+      <%# CE now lives on the transfer-in reg itself (its own record, carried by the
+          transfer), so its card shows here even for a transfer-in — payment/scholarship
+          stay on the source and appear in the read-only summary below. (#1944) %>
+      <% show_ce = f.object.event&.ce_eligible? %>
       <% org_span = 1 + (show_scholarship ? 0 : 1) + (show_ce ? 0 : 1) %>
       <% org_span_class = { 1 => "sm:col-span-1", 2 => "sm:col-span-2", 3 => "sm:col-span-3" }.fetch(org_span) %>
       <% active_orgs = f.object.registrant.affiliations.select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }.map(&:organization).compact.uniq.sort_by(&:name) %>

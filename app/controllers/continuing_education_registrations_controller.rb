@@ -21,6 +21,8 @@ class ContinuingEducationRegistrationsController < ApplicationController
 
   def new
     authorize!
+    return if redirect_transferred_in_ce
+
     @ce_registration = @event_registration.continuing_education_registrations.build(
       professional_license: @event_registration.registrant.professional_licenses.first,
       hours: @event_registration.event.ce_hours_offered,
@@ -30,6 +32,7 @@ class ContinuingEducationRegistrationsController < ApplicationController
 
   def create
     authorize!
+    return if redirect_transferred_in_ce
 
     @ce_registration = @event_registration.continuing_education_registrations.build(professional_license: license_for_create)
 
@@ -95,6 +98,19 @@ class ContinuingEducationRegistrationsController < ApplicationController
     redirect_to root_path, alert: "Registration not found.", status: :see_other unless @event_registration
   end
 
+  # A transferred-in reg's CE record is created by the transfer itself (carried
+  # from the source), so admins don't add one manually — send them to the source,
+  # where any additional CE belongs. The transfer's system-created record is exempt
+  # (it's built by the service, not this controller). (#1944)
+  def redirect_transferred_in_ce
+    return false unless @event_registration.transferred_in?
+
+    redirect_to edit_event_registration_path(@event_registration.transferred_from_registration),
+      alert: "This registrant transferred in from another event — manage their CE on the original registration.",
+      status: :see_other
+    true
+  end
+
   def license_for_create
     @event_registration.registrant.professional_licenses.first ||
       @event_registration.registrant.professional_licenses.build
@@ -107,8 +123,12 @@ class ContinuingEducationRegistrationsController < ApplicationController
                                    expires_on: params.dig(:continuing_education_registration, :license_expires_on),
                                    license_id: params.dig(:continuing_education_registration, :professional_license_id))
     ce_registration.hours = params.dig(:continuing_education_registration, :hours)
-    cost = params.dig(:continuing_education_registration, :cost_dollars)
-    ce_registration.cost_cents = (cost.to_d * 100).round if cost.present?
+    # A transfer-created record's cost is snapshotted from the source's outstanding
+    # balance and admin-locked, so ignore any submitted cost for it. (#1944)
+    unless ce_registration.transfer_created?
+      cost = params.dig(:continuing_education_registration, :cost_dollars)
+      ce_registration.cost_cents = (cost.to_d * 100).round if cost.present?
+    end
 
     comments = params.fetch(:continuing_education_registration, {})
       .permit(comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ])[:comments_attributes]

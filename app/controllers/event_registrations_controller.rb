@@ -251,6 +251,11 @@ class EventRegistrationsController < ApplicationController
 
     saved = ActiveRecord::Base.transaction do
       next false unless destination.save
+      # Split/relocate CE before dropping a collapsing middle reg, so its record
+      # moves forward instead of being cascade-destroyed with the reg. (#1944)
+      EventRegistrationServices::TransferContinuingEducation.new(
+        transferred_out: @event_registration, destination: destination
+      ).call
       @event_registration.destroy! if @event_registration.transferred_in?
       true
     end

@@ -11,7 +11,16 @@
   </div>
 
   <div class="flex flex-1 flex-col gap-3 p-4">
-    <% unless ce_registration %>
+    <% if ce_registration.nil? && event_registration.transferred_in? %>
+      <%# A transfer-in reg's CE is created by the transfer; if the source had none,
+          there's nothing here and admins add CE on the original reg. (#1944) %>
+      <p class="mt-auto text-xs text-gray-500">
+        No CE transferred in.
+        <%= link_to "Manage on the original registration",
+                    edit_event_registration_path(event_registration.transferred_from_registration, return_to: "registrants"),
+                    class: "font-medium text-teal-700 underline", target: "_blank", rel: "noopener" %>
+      </p>
+    <% elsif ce_registration.nil? %>
       <%# Open the full new form (license/hours/cost) in a new tab and return here. %>
       <div class="mt-auto border-t border-gray-100 pt-3">
         <%= link_to new_continuing_education_registration_path(allocatable_sgid: event_registration.to_sgid.to_s, return_to: "registration"),
@@ -46,14 +55,28 @@
           <% end %>
         </p>
 
-        <%# After a transfer, the hours are certified at the destination event
-            while this record + its payment stay here (issue #1944). %>
-        <% if ce_registration.certified_elsewhere? %>
-          <% certified_at = ce_registration.certified_at_registration %>
+        <%# Two-record CE after a transfer (issue #1944): the source keeps a paid,
+            zero-hours stub whose hours moved to the destination reg's live record;
+            the destination's record carries the hours with a cost snapshotted from
+            the source's outstanding balance and links back to the paid original. %>
+        <% if ce_registration.transfer_created? %>
+          <% origin = ce_registration.origin_ce_registration %>
+          <p class="text-xs text-teal-700">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            Transferred from
+            <%= link_to event_registration.transferred_from_registration.event.title,
+                        edit_event_registration_path(event_registration.transferred_from_registration, return_to: "registrants"),
+                        class: "font-medium underline", target: "_blank", rel: "noopener" %>
+            <% if origin %>·
+              <%= link_to "paid on original", edit_continuing_education_registration_path(origin, return_to: "registration"),
+                          class: "font-medium underline", target: "_blank", rel: "noopener" %>
+            <% end %>
+          </p>
+        <% elsif (moved_to = event_registration.transferred_to_registration) %>
           <p class="text-xs text-teal-700">
             <i class="fa-solid fa-award"></i>
-            Hours certified at
-            <%= link_to certified_at.event.title, edit_event_registration_path(certified_at, return_to: "registrants"),
+            Hours moved to
+            <%= link_to moved_to.event.title, edit_event_registration_path(moved_to, return_to: "registrants"),
                         class: "font-medium underline", target: "_blank", rel: "noopener" %>
           </p>
         <% end %>

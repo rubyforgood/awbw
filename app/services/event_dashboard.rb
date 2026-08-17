@@ -669,7 +669,7 @@ class EventDashboard
   # roster's CE column: its icon links to editing this record when present.
   def ce_registration_by_registrant
     @ce_registration_by_registrant ||= ce_registrations.each_with_object({}) do |ce_registration, map|
-      registrant_id = registrant_id_by_registration[ce_registration.event_registration_id]
+      registrant_id = ce_registrant_id_by_registration[ce_registration.event_registration_id]
       map[registrant_id] ||= ce_registration if registrant_id
     end
   end
@@ -1203,13 +1203,30 @@ class EventDashboard
     @allocated_by_registration ||= registration_allocations.group(:allocatable_id).sum(:amount)
   end
 
-  # Active continuing-education registrations for this event: those tied to an
-  # active event registration. The basis for every CE money figure and for the
-  # CE registrant counts / pie.
+  # CE money/counts follow the CE record, not the registration billing basis: they
+  # count every CE record on a registration of this event that wasn't cancelled or
+  # a no-show — including a transferred-out reg's paid stub (counted here, where it
+  # was paid) and a transferred-in reg's own carried record (counted at the event it
+  # now credits). (#1944)
+  def ce_basis_registration_ids
+    @ce_basis_registration_ids ||= event.event_registrations.where.not(status: %w[ cancelled no_show ]).pluck(:id)
+  end
+
+  # Continuing-education registrations counted for this event — the basis for every
+  # CE money figure and for the CE registrant counts / pie.
   def ce_registrations
     @ce_registrations ||= ContinuingEducationRegistration
-      .where(event_registration_id: billable_registration_ids)
+      .where(event_registration_id: ce_basis_registration_ids)
       .to_a
+  end
+
+  # Registrant (Person) id per registration in the CE basis. Distinct from
+  # #registrant_id_by_registration (active regs only) because CE also counts a
+  # transferred-out reg's stub, whose reg is inactive. (#1944)
+  def ce_registrant_id_by_registration
+    @ce_registrant_id_by_registration ||= event.event_registrations
+      .where(id: ce_registrations.map(&:event_registration_id).uniq)
+      .pluck(:id, :registrant_id).to_h
   end
 
   def ce_allocations
@@ -1243,7 +1260,7 @@ class EventDashboard
   def ce_unpaid_registrant_ids
     @ce_unpaid_registrant_ids ||= ce_registrations
       .select { |ce_registration| ce_due_cents(ce_registration).positive? }
-      .filter_map { |ce_registration| registrant_id_by_registration[ce_registration.event_registration_id] }
+      .filter_map { |ce_registration| ce_registrant_id_by_registration[ce_registration.event_registration_id] }
       .uniq
   end
 
@@ -1257,7 +1274,7 @@ class EventDashboard
   # { Person id => cents } hash, dropping zeros.
   def ce_cents_by_registrant
     ce_registrations.each_with_object(Hash.new(0)) do |ce_registration, map|
-      registrant_id = registrant_id_by_registration[ce_registration.event_registration_id]
+      registrant_id = ce_registrant_id_by_registration[ce_registration.event_registration_id]
       next unless registrant_id
       cents = yield(ce_registration)
       map[registrant_id] += cents if cents.positive?

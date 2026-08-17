@@ -193,12 +193,11 @@ class EventRegistrationReadiness
     registration.continuing_education_registrations
   end
 
-  # The CE this registration is responsible for CERTIFYING — its own plus any
-  # transferred in to be certified here (a transferred-out reg certifies none).
-  # Certificate checks use this so certification follows the person to the
-  # intended event. (issue #1944)
+  # The CE this registration certifies — its own records. After a transfer the
+  # hours ride on the destination reg's own record, so each reg certifies exactly
+  # what it holds. (issue #1944)
   def certifiable_ce
-    registration.certifiable_ce_registrations
+    registration.continuing_education_registrations
   end
 
   # CE is paid once every CE registration is paid in full. A requested-but-not-yet

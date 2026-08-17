@@ -212,28 +212,32 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
-  describe "CE certification across a transfer" do
-    let(:home_event) { create(:event, ce_hours_offered: 6, start_date: 3.days.ago, end_date: 1.day.ago) }
-    let(:intended_event) { create(:event, ce_hours_offered: 6, start_date: 3.days.ago, end_date: 1.day.ago) }
+  describe "CE certification (two-record model, #1944)" do
+    let(:origin_event) { create(:event, ce_hours_offered: 6, start_date: 3.days.ago, end_date: 1.day.ago) }
+    let(:dest_event) { create(:event, ce_hours_offered: 6, start_date: 3.days.ago, end_date: 1.day.ago) }
     let(:person) { create(:person) }
-    let!(:source) { create(:event_registration, event: home_event, registrant: person, status: "transferred_out") }
-    let!(:intended) { create(:event_registration, event: intended_event, registrant: person, status: "attended", transferred_from_registration: source) }
-    let!(:ce) do
-      create(:continuing_education_registration, event_registration: source,
-        professional_license: create(:professional_license, person: person))
+    let(:license) { create(:professional_license, person: person) }
+    let!(:source) { create(:event_registration, event: origin_event, registrant: person, status: "transferred_out") }
+    let!(:destination) { create(:event_registration, event: dest_event, registrant: person, status: "attended", transferred_from_registration: source) }
+
+    it "certifies each registration's own CE records" do
+      dest_ce = destination.continuing_education_registrations.create!(
+        professional_license: license, hours: 6, cost_cents: 0, skip_event_defaults: true)
+
+      destination.mark_certificate_issued!(true)
+      expect(dest_ce.reload.certificate_sent?).to be(true)
+      expect(destination.reload.certificate_issued?).to be(true)
     end
 
-    it "lets the intended event issue the CE certificate for hours earned there" do
-      expect(intended.certifiable_ce_registrations).to eq([ ce ])
-      intended.mark_certificate_issued!(true)
-      expect(ce.reload.certificate_sent?).to be(true)
-      expect(intended.reload.certificate_issued?).to be(true)
-    end
+    it "does not reach across the transfer link to the other reg's CE" do
+      source_stub = source.continuing_education_registrations.create!(
+        professional_license: license, hours: 0, cost_cents: 0, skip_event_defaults: true)
+      dest_ce = destination.continuing_education_registrations.create!(
+        professional_license: license, hours: 6, cost_cents: 0, skip_event_defaults: true)
 
-    it "does not issue the transferred-out hours from the source registration" do
-      expect(source.certifiable_ce_registrations).to be_empty
-      source.mark_certificate_issued!(true)
-      expect(ce.reload.certificate_sent?).to be(false)
+      destination.mark_certificate_issued!(true)
+      expect(dest_ce.reload.certificate_sent?).to be(true)
+      expect(source_stub.reload.certificate_sent?).to be(false)
     end
   end
 

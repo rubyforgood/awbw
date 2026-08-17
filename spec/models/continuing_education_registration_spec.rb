@@ -158,34 +158,45 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce_reg.certificate_sent?).to be(true)
     end
 
-    describe "certified at a different event (transfer)" do
-      let(:home_event) { create(:event, ce_hours_offered: 6, start_date: 3.days.ago, end_date: 1.day.ago) }
-      let(:intended_event) { create(:event, ce_hours_offered: 6, start_date: 10.days.from_now, end_date: 12.days.from_now) }
-      let(:home_reg) { create(:event_registration, event: home_event, status: "transferred_out") }
-      let(:ce_reg) do
-        create(:continuing_education_registration, event_registration: home_reg, cost_cents: 0,
-          professional_license: create(:professional_license, person: home_reg.registrant))
+    describe "transfer creates a second record (two-record model, #1944)" do
+      let(:origin_event) { create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 10_000, start_date: 3.days.ago, end_date: 1.day.ago) }
+      let(:origin_reg) { create(:event_registration, event: origin_event, status: "attended") }
+      let(:license) { create(:professional_license, person: origin_reg.registrant) }
+
+      it "carries hours/cost from the source without re-defaulting from the event" do
+        dest_reg = create(:event_registration, event: create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 10_000),
+          registrant: origin_reg.registrant, transferred_from_registration: origin_reg)
+        ce = dest_reg.continuing_education_registrations.create!(
+          professional_license: license, hours: 6, cost_cents: 0, skip_event_defaults: true)
+
+        expect(ce.hours).to eq(6)
+        expect(ce.cost_cents).to eq(0)   # the event's $100 default is skipped
+        expect(ce).to be_transfer_created
       end
 
-      it "defaults certified_at_registration to the home reg when not transferred" do
-        solo = create(:event_registration, event: home_event, status: "attended")
-        ce = create(:continuing_education_registration, event_registration: solo, cost_cents: 0,
-          professional_license: create(:professional_license, person: solo.registrant))
-        expect(ce.certified_at_registration).to eq(solo)
-      end
+      it "certifies against its own (destination) event, not the source" do
+        future = create(:event, ce_hours_offered: 6, start_date: 10.days.from_now, end_date: 12.days.from_now)
+        dest_reg = create(:event_registration, event: future, registrant: origin_reg.registrant,
+          status: "attended", transferred_from_registration: origin_reg)
+        ce = dest_reg.continuing_education_registrations.create!(
+          professional_license: license, hours: 6, cost_cents: 0, skip_event_defaults: true)
 
-      it "certifies against the destination (intended) event, not the home event" do
-        # Same person transfers on to the intended event (derives home_reg.transferred_to).
-        intended_reg = create(:event_registration, event: intended_event, registrant: home_reg.registrant,
-          status: "attended", transferred_from_registration: home_reg)
-
-        expect(ce_reg.reload.certified_at_registration).to eq(intended_reg)
-        # Home event already ended, but hours are certified at the intended event,
+        # Origin already ended, but the hours are earned at the destination event,
         # which hasn't happened yet → not certifiable until that event ends.
-        expect(ce_reg.certificate_available?).to be(false)
+        expect(ce.certificate_available?).to be(false)
+        future.update!(start_date: 3.days.ago, end_date: 1.day.ago)
+        expect(ce.reload.certificate_available?).to be(true)
+      end
 
-        intended_event.update!(start_date: 3.days.ago, end_date: 1.day.ago)
-        expect(ce_reg.reload.certificate_available?).to be(true)
+      it "links a transfer-created record back to the paid original for the same license" do
+        origin_ce = origin_reg.continuing_education_registrations.create!(
+          professional_license: license, hours: 0, cost_cents: 10_000, skip_event_defaults: true)
+        dest_reg = create(:event_registration, event: create(:event, ce_hours_offered: 6),
+          registrant: origin_reg.registrant, transferred_from_registration: origin_reg)
+        ce = dest_reg.continuing_education_registrations.create!(
+          professional_license: license, hours: 6, cost_cents: 0, skip_event_defaults: true)
+
+        expect(ce.origin_ce_registration).to eq(origin_ce)
       end
     end
   end

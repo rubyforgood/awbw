@@ -506,18 +506,32 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("Record where they transferred to")
       end
 
-      it "notes on the source CE card where the hours are certified after a transfer" do
+      it "notes on the source CE card that the hours moved to the destination after a transfer" do
         source_event = create(:event, ce_hours_offered: 6)
         source = create(:event_registration, event: source_event, status: "transferred_out")
         intended = create(:event, title: "Intended Training")
         create(:event_registration, event: intended, registrant: source.registrant, transferred_from_registration: source)
         create(:continuing_education_registration, event_registration: source,
-               professional_license: create(:professional_license, person: source.registrant))
+               professional_license: create(:professional_license, person: source.registrant), skip_event_defaults: true)
 
         get edit_event_registration_path(source)
 
-        expect(response.body).to include("Hours certified at")
+        expect(response.body).to include("Hours moved to")
         expect(response.body).to include("Intended Training")
+      end
+
+      it "shows the transferred-in reg's own CE card noting it transferred from the original" do
+        source_event = create(:event, title: "Origin Training", ce_hours_offered: 6)
+        source = create(:event_registration, event: source_event, status: "transferred_out")
+        incoming = create(:event_registration, event: create(:event, ce_hours_offered: 6),
+          registrant: source.registrant, transferred_from_registration: source)
+        incoming.continuing_education_registrations.create!(hours: 6, cost_cents: 0, skip_event_defaults: true,
+          professional_license: create(:professional_license, person: source.registrant))
+
+        get edit_event_registration_path(incoming)
+
+        expect(response.body).to include("Transferred from")
+        expect(response.body).to include("Origin Training")
       end
 
       it "shows the source event on a transferred-in registration" do
@@ -784,18 +798,47 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(flash[:alert]).to include("scheduled event")
         end
 
-        it "certifies the source reg's CE hours at the destination reg" do
+        it "splits the source reg's CE into a paid stub and a live record on the destination" do
+          license = create(:professional_license, person: source.registrant)
           ce = create(:continuing_education_registration, event_registration: source,
-                professional_license: create(:professional_license, person: source.registrant))
+                professional_license: license, hours: 6, cost_cents: 10_000, skip_event_defaults: true)
+          create(:allocation, source: create(:payment, type: "CashPayment", amount_cents: 4_000, amount_cents_remaining: nil),
+                 allocatable: ce, amount: 4_000)
 
           post process_transfer_event_registration_path(source),
                params: { destination_event_id: destination_event.id }
 
           incoming = EventRegistration.find_by(registrant: source.registrant, event: destination_event)
-          # Derived from the transfer link — no re-pointing needed.
-          expect(ce.reload.certified_at_registration).to eq(incoming)
-          expect(incoming.certifiable_ce_registrations).to include(ce)
-          expect(source.reload.certifiable_ce_registrations).to be_empty
+
+          # Source keeps a paid, zero-hours stub (cost = the $40 already paid there).
+          ce.reload
+          expect(ce.hours).to eq(0)
+          expect(ce.cost_cents).to eq(4_000)
+          expect(ce.remaining_cost).to eq(0)
+
+          # Destination gets a live record: the full hours and the $60 balance left.
+          dest_ce = incoming.continuing_education_registrations.sole
+          expect(dest_ce.hours).to eq(6)
+          expect(dest_ce.cost_cents).to eq(6_000)
+          expect(dest_ce.professional_license).to eq(license)
+          expect(dest_ce).to be_transfer_created
+        end
+
+        it "moves the middle reg's CE forward, not destroying it, when collapsing a double transfer" do
+          original = create(:event_registration, status: "transferred_out")
+          license = create(:professional_license, person: original.registrant)
+          middle = create(:event_registration, registrant: original.registrant,
+            status: "transferred_out", transferred_from_registration: original)
+          middle_ce = create(:continuing_education_registration, event_registration: middle,
+            professional_license: license, hours: 6, cost_cents: 6_000, skip_event_defaults: true)
+
+          post process_transfer_event_registration_path(middle),
+               params: { destination_event_id: destination_event.id }
+
+          final = EventRegistration.find_by(registrant: middle.registrant, event: destination_event)
+          expect(ContinuingEducationRegistration.exists?(middle_ce.id)).to be(true)
+          expect(middle_ce.reload.event_registration).to eq(final)
+          expect(EventRegistration.exists?(middle.id)).to be(false)
         end
       end
     end

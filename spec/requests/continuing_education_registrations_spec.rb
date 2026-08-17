@@ -12,6 +12,43 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
   describe "as an admin" do
     before { sign_in admin }
 
+    describe "a transferred-in registration (two-record CE model, #1944)" do
+      let(:source) { create(:event_registration, event: event) }
+      let(:transferred_in) do
+        create(:event_registration, event: create(:event, ce_hours_offered: 6),
+          registrant: source.registrant, transferred_from_registration: source)
+      end
+
+      it "blocks the manual new form, redirecting to the source registration" do
+        get new_continuing_education_registration_path(allocatable_sgid: transferred_in.to_sgid.to_s)
+
+        expect(response).to redirect_to(edit_event_registration_path(source))
+      end
+
+      it "blocks manual create, redirecting to the source registration" do
+        expect {
+          post continuing_education_registrations_path,
+               params: { allocatable_sgid: transferred_in.to_sgid.to_s,
+                         continuing_education_registration: { hours: "6", cost_dollars: "50",
+                           license_kind: "LCSW", license_number: "123" } }
+        }.not_to change(ContinuingEducationRegistration, :count)
+
+        expect(response).to redirect_to(edit_event_registration_path(source))
+      end
+
+      it "ignores a submitted cost when updating a transfer-created record (cost is locked)" do
+        license = create(:professional_license, person: source.registrant)
+        ce = transferred_in.continuing_education_registrations.create!(
+          professional_license: license, hours: 6, cost_cents: 6_000, skip_event_defaults: true)
+
+        patch continuing_education_registration_path(ce),
+              params: { continuing_education_registration: { hours: "6", cost_dollars: "999",
+                        license_kind: license.kind, license_number: license.number } }
+
+        expect(ce.reload.cost_cents).to eq(6_000)
+      end
+    end
+
     it "renders the index shell with the CE sign-ins menu" do
       ce_registration
       get continuing_education_registrations_path

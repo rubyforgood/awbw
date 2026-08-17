@@ -32,12 +32,6 @@ class EventRegistration < ApplicationRecord
   belongs_to :transferred_from_registration, class_name: "EventRegistration", optional: true
   has_one :transferred_to_registration, class_name: "EventRegistration",
     foreign_key: :transferred_from_registration_id, inverse_of: :transferred_from_registration, dependent: :nullify
-  # CE registrations completed/certified at THIS event because their home
-  # registration transferred in here — the source reg's CE. Record + payment stay
-  # on the source; only certification follows the person. (issue #1944)
-  has_many :certified_ce_registrations, through: :transferred_from_registration,
-    source: :continuing_education_registrations
-
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
   # Staff correct/add attendance times on the CE edit form; a row with no sign-in
@@ -874,38 +868,29 @@ class EventRegistration < ApplicationRecord
     continuing_education_registrations.all? { |c| c.professional_license&.number_known? }
   end
 
-  # The CE records this registration is responsible for certifying — its own,
-  # plus any that transferred in to be certified here. A transferred-out reg
-  # certifies none (its hours moved to the destination event, which certifies
-  # them). Distinct from continuing_education_registrations, the home set that
-  # owns the payment. (issue #1944)
-  def certifiable_ce_registrations
-    return [] if transferred_out?
-    (continuing_education_registrations.to_a + certified_ce_registrations.to_a).uniq
-  end
-
   # True when CE is registered and every CE registration's certificate has been
-  # issued (sent) — the terminal state of the CE lifecycle. Based on the CE this
-  # reg certifies (earned here), not the home set.
+  # issued (sent) — the terminal state of the CE lifecycle. Each reg certifies its
+  # own CE records now; after a transfer the hours ride on the destination reg's
+  # own record, so there's no cross-reg set to consult. (#1944)
   def ce_certificate_issued?
-    return false unless certifiable_ce_registrations.any?
+    return false unless continuing_education_registrations.any?
 
-    certifiable_ce_registrations.all? { |c| c.certificate_sent_at.present? }
+    continuing_education_registrations.all? { |c| c.certificate_sent_at.present? }
   end
 
   # The registration's completion certificate, as shown by the registrants-roster
-  # toggle. For a registration that earns CE here that's the CE certificate
-  # (certificate_sent_at on its earned CE registrations, so it stays in sync with
-  # the CE edit page); otherwise the registration's own certificate_sent_at.
+  # toggle. For a registration that has CE that's the CE certificate
+  # (certificate_sent_at on its CE registrations, so it stays in sync with the CE
+  # edit page); otherwise the registration's own certificate_sent_at.
   def certificate_issued?
-    certifiable_ce_registrations.any? ? ce_certificate_issued? : certificate_sent?
+    continuing_education_registrations.any? ? ce_certificate_issued? : certificate_sent?
   end
 
   def mark_certificate_issued!(issued)
     at = issued ? Time.current : nil
-    certifiable = certifiable_ce_registrations
-    if certifiable.any?
-      certifiable.each { |c| c.update!(certificate_sent_at: at) }
+    ce = continuing_education_registrations
+    if ce.any?
+      ce.each { |c| c.update!(certificate_sent_at: at) }
     else
       update!(certificate_sent_at: at)
     end

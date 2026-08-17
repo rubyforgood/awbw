@@ -1,8 +1,9 @@
 <%# ---- Transferred-in financials (issue #1944) — a read-only summary of the
-    scholarship / CE / payment records that live on the SOURCE registration this
-    person transferred in from. Styled distinctly (teal) so it never reads like a
-    normal registration's editable cards, and every figure links back to the
-    matching section on the source reg. ---- %>
+    scholarship / payment records that live on the SOURCE registration this person
+    transferred in from. (CE is carried onto this reg's own record — see its card
+    above — so it isn't summarized here.) Styled distinctly (teal) so it never
+    reads like a normal registration's editable cards, and every figure links back
+    to the matching section on the source reg. ---- %>
 <% source = event_registration.transferred_from_registration %>
 <% source_link = ->(anchor) { edit_event_registration_path(source, anchor: anchor) } %>
 <% source_cost_cents = source.event.cost_cents.to_i %>
@@ -16,7 +17,7 @@
     <div class="min-w-0">
       <h2 class="text-sm font-semibold text-teal-900">Financials on the original registration</h2>
       <p class="text-xs text-teal-700">
-        This registrant transferred in — scholarship, CE, and payments stay on their
+        This registrant transferred in — their scholarship and payments stay on their
         registration for <span class="font-medium"><%= source.event.title %></span> and aren't billed to this event.
       </p>
     </div>
@@ -28,7 +29,7 @@
     <% end %>
   </div>
 
-  <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-3">
+  <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
     <%# ---- Payment ---- %>
     <div class="flex flex-col rounded-lg border border-teal-200 bg-white p-3">
       <div class="mb-2 flex items-center gap-2">
@@ -79,38 +80,6 @@
         <%= link_to "View scholarship record", edit_scholarship_path(source_scholarship, return_to: "registrants"),
                     class: "mt-1 inline-flex items-center gap-1 text-xs font-medium text-teal-700 hover:underline",
                     target: "_blank", rel: "noopener" %>
-      <% else %>
-        <p class="text-sm text-gray-500">None.</p>
-      <% end %>
-    </div>
-
-    <%# ---- Continuing education ---- %>
-    <div class="flex flex-col rounded-lg border border-teal-200 bg-white p-3">
-      <div class="mb-2 flex items-center gap-2">
-        <i class="fa-solid fa-certificate text-teal-600"></i>
-        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Continuing education</span>
-        <% if source.ce_registered? %>
-          <%= link_to source_link.call("ce-card"),
-                      class: "ml-auto text-xs font-medium text-teal-700 hover:underline",
-                      target: "_blank", rel: "noopener" do %>
-            View <i class="fa-solid fa-arrow-up-right-from-square text-[0.55rem]"></i>
-          <% end %>
-        <% end %>
-      </div>
-      <% if source.ce_registered? %>
-        <%# Hours are earned/certified HERE (this event); the CE record + payment
-            stay on the original registration. %>
-        <span class="mb-1 inline-flex w-fit items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-[0.65rem] font-medium text-teal-700">
-          <i class="fa-solid fa-award"></i> Hours earned at this event
-        </span>
-        <p class="text-sm text-gray-900"><%= source.ce_status_label %></p>
-        <p class="mt-1 text-xs text-gray-500">
-          <%= plain_number(source.ce_hours_total) || "0" %> hrs
-          <% if source.ce_amount_due_cents.positive? %>· <span class="text-amber-700"><%= dollars_from_cents(source.ce_amount_due_cents) %> due</span><% end %>
-        </p>
-        <% if source.ce_license_numbers.any? %>
-          <p class="mt-1 text-xs text-gray-500">License: <span class="font-medium text-gray-700"><%= source.ce_license_numbers.join(", ") %></span></p>
-        <% end %>
       <% else %>
         <p class="text-sm text-gray-500">None.</p>
       <% end %>

@@ -782,6 +782,45 @@ RSpec.describe EventDashboard do
     end
   end
 
+  describe "continuing-education fees across a transfer (#1944)" do
+    let(:origin_event) { create(:event, cost_cents: 0, ce_hours_offered: 6, ce_hours_cost_cents: 10_000) }
+    let(:dest_event) { create(:event, cost_cents: 0, ce_hours_offered: 6) }
+    let(:person) { create(:person) }
+    let(:license) { create(:professional_license, person: person) }
+    let(:origin_dashboard) { described_class.new(origin_event) }
+    let(:dest_dashboard) { described_class.new(dest_event) }
+
+    let!(:source) { create(:event_registration, event: origin_event, registrant: person, status: "transferred_out") }
+    let!(:destination) do
+      create(:event_registration, event: dest_event, registrant: person, status: "registered",
+        transferred_from_registration: source)
+    end
+
+    before do
+      # $40 was paid at the origin before transferring — a paid, zero-hours stub stays there.
+      stub = create(:continuing_education_registration, event_registration: source,
+        professional_license: license, hours: 0, cost_cents: 4_000, skip_event_defaults: true)
+      create(:allocation, source: create(:payment, type: "CashPayment", amount_cents: 4_000, amount_cents_remaining: nil),
+        allocatable: stub, amount: 4_000)
+      # The $60 balance carried forward to the destination, still owed.
+      create(:continuing_education_registration, event_registration: destination,
+        professional_license: license, hours: 6, cost_cents: 6_000, skip_event_defaults: true)
+    end
+
+    it "counts the paid stub at the original event, even though the reg transferred out" do
+      expect(origin_dashboard.cont_ed_paid_cents).to eq(4_000)
+      expect(origin_dashboard.cont_ed_outstanding_cents).to eq(0)
+      expect(origin_dashboard.ce_registrant_count).to eq(1)
+    end
+
+    it "counts the carried balance at the destination event" do
+      expect(dest_dashboard.cont_ed_paid_cents).to eq(0)
+      expect(dest_dashboard.cont_ed_outstanding_cents).to eq(6_000)
+      expect(dest_dashboard.cont_ed_unpaid_count).to eq(1)
+      expect(dest_dashboard.ce_registrant_count).to eq(1)
+    end
+  end
+
   # All scholarships are fully allocated regardless of tasks_completed, so the
   # grand total never exceeds the full-price total.
   context "with a scholarship" do
