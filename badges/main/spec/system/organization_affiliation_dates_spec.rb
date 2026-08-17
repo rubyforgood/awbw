@@ -53,18 +53,15 @@ RSpec.describe "Organization affiliation dates auto-update", type: :system do
     end
   end
 
-  it "removes an affiliation and recalculates" do
-    visit_and_wait edit_organization_path(organization, admin: true)
+  it "removes an affiliation via the editor and recalculates" do
+    # Persisted affiliations are now deleted from the affiliation editor (reached
+    # via the row's gear); removing the Facilitator (May 2019) leaves Volunteer (Sep 2021).
+    facilitator = organization.affiliations.find_by!(title: "Facilitator")
+    visit edit_affiliation_path(facilitator, return_to: "organization", origin_id: organization.id)
 
-    affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
-    expect(affiliated).to have_text("May 2019")
+    accept_confirm { click_button "Delete" }
 
-    # Remove the Facilitator affiliation (start May 2019), leaving Volunteer (start Sep 2021)
-    facilitator_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
-      f.find("textarea[name*='title']").value.include?("Facilitator")
-    }
-    facilitator_row.find("a", text: "Remove").click
-
+    affiliated = find("[data-affiliation-dates-target='affiliatedSince']", wait: 10)
     expect(affiliated).to have_text("Sep 2021", wait: 5)
   end
 end

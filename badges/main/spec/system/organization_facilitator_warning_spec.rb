@@ -28,7 +28,7 @@ RSpec.describe "Facilitator affiliation change warning", type: :system do
 
   def row_for(title)
     all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
-      f.find("textarea[name*='title']").value.include?(title)
+      f.find("input[name*='title']").value.include?(title)
     }
   end
 
@@ -60,16 +60,15 @@ RSpec.describe "Facilitator affiliation change warning", type: :system do
     expect(organization.affiliations.facilitators.first.reload.start_date).to eq(Date.new(2019, 5, 1))
   end
 
-  it "warns when a facilitator affiliation is removed" do
-    visit_and_wait edit_organization_path(organization, admin: true)
-
-    row_for("Facilitator").find("a", text: "Remove").click
+  it "warns when a facilitator affiliation is removed from the editor" do
+    facilitator = organization.affiliations.facilitators.first
+    visit edit_affiliation_path(facilitator, return_to: "organization", origin_id: organization.id)
 
     accept_confirm(/status with AWBW/) do
-      find("[type='submit']").click
+      click_button "Delete"
     end
 
-    expect(page).to have_current_path(organization_path(organization), wait: 10)
+    expect(page).to have_css("[data-affiliation-dates-ready]", wait: 10)
     expect(organization.affiliations.facilitators).to be_empty
   end
 

@@ -21,6 +21,9 @@ class Affiliation < ApplicationRecord
   # have this link.
   belongs_to :event_registration, optional: true, inverse_of: :affiliations
 
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
+
   # Validations
   validates_presence_of :organization_id
   validate :organization_address_belongs_to_organization
@@ -75,8 +78,10 @@ class Affiliation < ApplicationRecord
   }
 
   before_validation :skip_if_duplicate
+  # Runs before validation so a reassigned org drops its stale organization_address_id
+  # before organization_address_belongs_to_organization would reject it.
+  before_validation :reset_org_scoped_links_on_org_change, on: :update
   before_save :set_inactive_from_dates
-  before_update :clear_event_registration_on_org_change
   after_save :sync_organization_status_with_affiliations
   after_save :sync_organization_affiliation_dates
   after_destroy :sync_organization_status_with_affiliations
@@ -136,12 +141,25 @@ class Affiliation < ApplicationRecord
     throw(:abort) if scope.exists?
   end
 
-  # event_registration_id records the registration that created this affiliation for
-  # its original org. If an admin moves the affiliation to a different org, that link
-  # no longer applies, so clear it — a row with no link counts as manually created,
-  # which reconciliation leaves alone.
-  def clear_event_registration_on_org_change
-    self.event_registration_id = nil if organization_id_changed?
+  # When an admin moves the affiliation to a different org (only possible from the
+  # standalone edit form), the links scoped to the old org no longer apply:
+  #  - event_registration_id is cleared (a row with no link counts as manually
+  #    created, which reconciliation leaves alone). The registration's own org
+  #    link is separate and is updated in its org-linking step.
+  #  - organization_address_id is re-pointed at the new org: an old-org address
+  #    would fail organization_address_belongs_to_organization. If the new org has
+  #    exactly one address we adopt it; otherwise it's left blank for an admin to
+  #    set after saving.
+  def reset_org_scoped_links_on_org_change
+    return unless organization_id_changed?
+
+    self.event_registration_id = nil
+    self.organization_address_id = sole_address_id_for_new_organization
+  end
+
+  def sole_address_id_for_new_organization
+    addresses = Organization.find_by(id: organization_id)&.addresses
+    addresses.first.id if addresses&.one?
   end
 
   def set_inactive_from_dates

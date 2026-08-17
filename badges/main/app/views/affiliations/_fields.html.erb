@@ -6,32 +6,63 @@
 <% manage_subject = person_side ? Organization : Person %>
 <% if allowed_to?(:manage?, manage_subject) %>
   <% expired = f.object.inactive? || (f.object.end_date.present? && f.object.end_date < Date.current) %>
-  <% facilitator = f.object.facilitator? %>
-  <% active_bg = facilitator ? "bg-purple-100 border-purple-300" : "bg-white border-gray-200" %>
+  <%# A blank title displays (and saves) as the "Facilitator" default, so treat it
+      as a facilitator for the row styling too — otherwise the JS (which reads the
+      shown title) tints the row purple while the server-rendered pill stays neutral. %>
+  <% displayed_title = f.object.title.presence || "Facilitator" %>
+  <% facilitator = displayed_title.strip == "Facilitator" %>
+  <%# Four states by colour: role is the hue (facilitator = purple, else blue) and
+      status is the saturation (active = full, inactive = super-light). Kept in sync
+      live by inactive-toggle. %>
+  <% accent = facilitator ? (expired ? "bg-purple-300" : "bg-purple-500") : (expired ? "bg-blue-300" : "bg-blue-500") %>
+  <% row_bg = facilitator ? "bg-purple-50 border-purple-200" : "bg-blue-50 border-blue-200" %>
+  <% fill_color = if facilitator
+       expired ? "bg-purple-50!" : "bg-purple-100!"
+     else
+       expired ? "bg-blue-50!" : "bg-blue-100!"
+     end %>
+  <% field_bg = ->(present) { present ? fill_color : "bg-transparent!" } %>
+  <% pill_tint = facilitator ? (expired ? :facilitator_light : :facilitator) : (expired ? :nonfac_light : :nonfac) %>
+  <% title_class = if facilitator
+       expired ? "bg-purple-50! text-purple-500! border-purple-200!" : "bg-purple-100! text-purple-700! font-semibold border-purple-300!"
+     else
+       expired ? "bg-blue-50! text-blue-500! border-blue-200!" : "bg-blue-100! text-blue-700! font-semibold border-blue-300!"
+     end %>
   <% record = person_side ? f.object.person : f.object.organization %>
   <% label = person_side ? "Person" : "Organization" %>
-  <div data-controller="inactive-toggle" class="relative mb-4">
-    <%# Left accent rendered outside the row so it keeps full color even when an expired row is dimmed by opacity-60. %>
-    <span class="absolute inset-y-0 left-0 w-1 rounded-l-lg"
-          style="background-color: <%= facilitator ? '#a855f7' : '#d1d5db' %>"
+  <div data-controller="inactive-toggle" data-inactive-toggle-expired-value="<%= expired %>" class="relative mb-2">
+    <%# Left accent rendered outside the row so it keeps full color regardless of the row's border. %>
+    <span class="absolute inset-y-0 left-0 w-1 rounded-l-lg <%= accent %>"
           data-inactive-toggle-target="accentBar"></span>
-    <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-start rounded-lg border p-3 <%= expired ? 'bg-gray-100 border-gray-300 opacity-60' : active_bg %>"
+    <% if f.object.persisted? %>
+      <%# Escape to the full affiliation editor: comments + reassign person/org. %>
+      <%= link_to edit_affiliation_path(f.object,
+                    return_to: person_side ? "organization" : "person",
+                    origin_id: person_side ? f.object.organization_id : f.object.person_id),
+                  target: "_blank", rel: "noopener",
+                  class: "absolute top-1/2 right-2 z-10 -translate-y-1/2 text-gray-300 hover:text-gray-500",
+                  title: "Edit affiliation, add comments, or reassign (opens in a new tab)" do %>
+        <i class="fa-solid fa-gear"></i>
+      <% end %>
+    <% end %>
+    <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-start xl:grid xl:grid-cols-[280px_150px_150px_150px_120px_auto] rounded-lg border px-3 py-2 scroll-mt-24 <%= row_bg %> <%= 'aff-ended' if expired %>"
          <% if f.object.persisted? %>id="<%= dom_id(f.object) %>"<% end %>
          data-inactive-toggle-target="row">
-      <div style="width: 280px; min-width: 280px; flex-shrink: 0;" data-inactive-toggle-target="profileButton">
+      <div class="w-full sm:w-[280px] xl:w-auto min-w-0">
         <% if f.object.persisted? && record.present? %>
-          <label class="block text-sm font-medium text-gray-700 mb-1"><%= label %></label>
+          <label class="block text-sm font-medium text-gray-700 mb-1 xl:hidden"><%= label %></label>
           <% if person_side %>
             <% show_email = record.profile_show_email? || allowed_to?(:manage?, Person) %>
-            <%= person_profile_button(record, truncate_at: 25, subtitle: (record.preferred_email if show_email)) %>
+            <%= person_profile_button(record, truncate_at: 25, subtitle: (record.preferred_email if show_email), compact: true, inactive: expired && !facilitator, tint: pill_tint) %>
           <% else %>
-            <%= organization_profile_button(record, truncate_at: 25) %>
+            <%= organization_profile_button(record, truncate_at: 25, compact: true, inactive: expired && !facilitator, tint: pill_tint) %>
           <% end %>
           <%= f.hidden_field(person_side ? :person_id : :organization_id) %>
         <% else %>
           <%= f.input person_side ? :person_id : :organization_id,
             include_blank: true,
             required: true,
+            wrapper_html: { class: "mb-0!" },
             input_html: {
               data: {
                 controller: "remote-select",
@@ -39,20 +70,22 @@
               }
             },
             error: "#{label} can't be blank",
-            prompt: "Type to search #{person_side ? 'people' : 'organizations'}…",
+            prompt: "Search #{person_side ? 'people' : 'organizations'}…",
             label: label,
-            label_html: { class: "block text-sm font-medium text-gray-700 mb-1 " } %>
+            label_html: { class: "block text-sm font-medium text-gray-700 mb-1 xl:hidden" } %>
         <% end %>
       </div>
 
-      <div class="w-full sm:w-auto" style="width: 150px; min-width: 150px;">
+      <div class="w-full sm:w-[150px] xl:w-auto min-w-0">
         <%= f.input :title,
-                    as: :text,
-                    label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
+                    as: :string,
+                    wrapper_html: { class: "mb-0!" },
+                    label_html: { class: "block text-sm font-medium text-gray-700 mb-1 xl:hidden" },
+                    placeholder: "Title",
                     input_html: {
-                      rows: 1,
-                      value: f.object&.title || "Facilitator",
-                      style: "height: 42px; min-height: 42px;",
+                      value: displayed_title,
+                      style: "height: 42px;",
+                      class: "text-sm #{title_class}",
                       data: {
                         inactive_toggle_target: "title",
                         action: "affiliation-dates#recalculate inactive-toggle#updateBorder"
@@ -60,49 +93,70 @@
                     } %>
       </div>
 
-      <%= render "affiliations/address_picker", f: f %>
-
-      <div class="w-full sm:w-auto">
+      <div class="w-full sm:w-[150px] xl:w-auto min-w-0">
         <%= f.input :start_date,
                     as: :string,
                     label: "Start",
-                    label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
+                    wrapper_html: { class: "mb-0!" },
+                    label_html: { class: "block text-sm font-medium text-gray-700 mb-1 xl:hidden" },
                     input_html: {
                       type: "date",
                       value: (f.object.start_date || (Date.current unless f.object.persisted?))&.strftime("%Y-%m-%d"),
-                      class: "rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm",
-                      data: { action: "change->affiliation-dates#recalculate" }
+                      class: "w-full rounded-md border-gray-300! focus:ring-blue-500 focus:border-blue-500 text-sm #{field_bg.call(f.object.start_date.present? || !f.object.persisted?)}",
+                      style: "height: 42px;",
+                      data: { inactive_toggle_target: "valueField", action: "change->affiliation-dates#recalculate change->inactive-toggle#paintFields" }
                     } %>
       </div>
 
-      <div class="w-full sm:w-auto">
+      <div class="w-full sm:w-[150px] xl:w-auto min-w-0">
         <%= f.input :end_date,
                     as: :string,
                     label: "End",
-                    label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
+                    wrapper_html: { class: "mb-0!" },
+                    label_html: { class: "block text-sm font-medium text-gray-700 mb-1 xl:hidden" },
                     input_html: {
                       type: "date",
                       value: f.object.end_date&.strftime("%Y-%m-%d"),
-                      class: "rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm",
+                      class: "w-full rounded-md border-gray-300! focus:ring-blue-500 focus:border-blue-500 text-sm #{field_bg.call(f.object.end_date.present?)}",
+                      style: "height: 42px;",
                       data: {
-                        inactive_toggle_target: "endDate",
+                        inactive_toggle_target: "endDate valueField",
                         action: "change->inactive-toggle#toggle change->affiliation-dates#recalculate"
                       }
                     } %>
       </div>
 
-      <div class="w-full sm:w-auto pb-3">
-        <label class="block whitespace-nowrap text-sm font-medium text-gray-700 mb-1">Primary org<br>contact</label>
-        <%= f.check_box :primary_contact,
-                        checked: f.object.primary_contact?,
-                        class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" %>
+      <%# Address sits left of Primary at every width; on mobile the two share the
+          final row (each flex-1 → 50%), at sm+ they take their column widths. %>
+      <div class="flex-1 sm:flex-none sm:w-[120px] xl:w-auto min-w-0">
+        <%= render "affiliations/address_picker", f: f, hide_label: true, bg_class: field_bg.call(f.object.organization_address_id.present?) %>
       </div>
 
-      <div class="w-full sm:w-auto sm:ml-auto sm:self-end sm:pb-3">
-        <%= link_to_remove_association "Remove",
-                                       f,
-                                       class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap admin-only bg-blue-100 rounded px-2 py-1" %>
+      <div class="flex-1 sm:flex-none sm:w-auto min-w-0">
+        <div class="mb-1 xl:hidden"><%= render "affiliations/primary_contact_label" %></div>
+        <div class="flex h-[42px] items-center gap-2">
+          <%= render "affiliations/primary_contact_toggle", f: f %>
+          <% affiliation_comments = f.object.comments.to_a %>
+          <% if affiliation_comments.any? %>
+            <span class="group relative inline-flex items-center">
+              <i class="fa-solid fa-comment text-sm cursor-help <%= facilitator ? 'text-purple-500' : 'text-blue-500' %>"></i>
+              <span class="hidden group-hover:block absolute right-0 top-full z-50 mt-1 w-64 whitespace-normal rounded-lg bg-white p-3 text-left text-xs text-gray-700 shadow-lg ring-1 ring-gray-200">
+                <span class="block font-semibold text-gray-900"><%= pluralize(affiliation_comments.size, "comment") %></span>
+                <span class="mt-1 block text-gray-600"><%= truncate(affiliation_comments.first.body.to_s, length: 140) %></span>
+              </span>
+            </span>
+          <% end %>
+        </div>
       </div>
+
+      <% unless f.object.persisted? %>
+        <%# Persisted rows are removed via the gear's affiliation editor (Delete). %>
+        <div class="w-full xl:col-span-full xl:text-right">
+          <%= link_to_remove_association "Remove",
+                                         f,
+                                         class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap admin-only bg-blue-100 rounded px-2 py-1" %>
+        </div>
+      <% end %>
     </div>
   </div>
 <% else %>

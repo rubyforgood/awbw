@@ -270,7 +270,7 @@ Rails.application.routes.draw do
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
-  resources :affiliations, only: :destroy
+  resources :affiliations, only: [ :edit, :update, :destroy ]
   resources :quotes
 
   resources :monthly_reports, only: [ :index, :show ], constraints: { id: /\d+/ }

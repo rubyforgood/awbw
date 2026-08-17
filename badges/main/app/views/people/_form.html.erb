@@ -313,6 +313,9 @@
       </div>
       <% if allowed_to?(:manage?, Person) %>
         <div class="p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10" data-affiliation-dates-target="affiliationsContainer">
+          <% if f.object.affiliations.present? %>
+            <%= render "affiliations/header", label: "Organization" %>
+          <% end %>
           <%= f.fields_for :affiliations do |affiliation_form| %>
             <div data-paginated-fields-target="item">
               <%= render "affiliation_fields",
@@ -321,7 +324,7 @@
           <% end %>
           <div data-paginated-fields-target="nav"></div>
 
-          <div class="mt-6 p-3"><%= link_to_add_association "➕ Add Affiliation",
+          <div class="mt-2"><%= link_to_add_association "➕ Add Affiliation",
                                         f,
                                         :affiliations,
                                         class: "admin-only bg-blue-100 btn btn-secondary-outline" %></div>

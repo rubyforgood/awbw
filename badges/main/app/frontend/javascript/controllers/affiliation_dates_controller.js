@@ -28,7 +28,7 @@ export default class extends Controller {
     if (!this.hasAffiliationsContainerTarget) return
     const fields = this.affiliationsContainerTarget.querySelectorAll(".nested-fields")
     fields.forEach(field => {
-      const inputs = field.querySelectorAll("input[name*='start_date'], input[name*='end_date'], textarea[name*='title']")
+      const inputs = field.querySelectorAll("input[name*='start_date'], input[name*='end_date'], input[name*='title']")
       inputs.forEach(input => {
         input.addEventListener("change", this.boundRecalculate)
         input.addEventListener("input", this.boundRecalculate)
@@ -89,7 +89,7 @@ export default class extends Controller {
       .map(field => ({
         startDate: field.querySelector("input[name*='start_date']")?.value || "",
         endDate: field.querySelector("input[name*='end_date']")?.value || "",
-        title: field.querySelector("textarea[name*='title']")?.value || ""
+        title: field.querySelector("input[name*='title']")?.value || ""
       }))
   }
 
