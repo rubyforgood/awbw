@@ -34,9 +34,9 @@
           <label class="block text-sm font-medium text-gray-700 mb-1 xl:hidden"><%= label %></label>
           <% if person_side %>
             <% show_email = record.profile_show_email? || allowed_to?(:manage?, Person) %>
-            <%= person_profile_button(record, truncate_at: 25, subtitle: (record.preferred_email if show_email), compact: true) %>
+            <%= person_profile_button(record, truncate_at: 25, subtitle: (record.preferred_email if show_email), compact: true, transparent: !facilitator) %>
           <% else %>
-            <%= organization_profile_button(record, truncate_at: 25, compact: true) %>
+            <%= organization_profile_button(record, truncate_at: 25, compact: true, transparent: !facilitator) %>
           <% end %>
           <%= f.hidden_field(person_side ? :person_id : :organization_id) %>
         <% else %>

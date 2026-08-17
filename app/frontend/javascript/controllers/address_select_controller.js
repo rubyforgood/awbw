@@ -1,10 +1,10 @@
 import { Controller } from "@hotwired/stimulus";
 
-// Compact numbered address picker for the affiliation editor row. The trigger
-// button shows only the selected address's number (or a dash); the panel lists
-// each address with its full one-line text. Selecting an option writes the
-// address id into a hidden field so it saves as the affiliation's
-// organization_address_id.
+// Numbered address picker for the affiliation editor row. The trigger button
+// shows the selected address's number and name (truncated to the column width,
+// or a dash when none); the panel lists each address with its full one-line
+// text. Selecting an option writes the address id into a hidden field so it
+// saves as the affiliation's organization_address_id.
 //
 // Connects to data-controller="address-select"
 export default class extends Controller {
@@ -41,7 +41,7 @@ export default class extends Controller {
   select(event) {
     const option = event.currentTarget;
     this.inputTarget.value = option.dataset.value;
-    this.labelTarget.textContent = option.dataset.number;
+    this.labelTarget.textContent = option.dataset.label;
     this.close();
   }
 

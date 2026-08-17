@@ -1,5 +1,5 @@
 module OrganizationHelper
-  def organization_profile_button(organization, truncate_at: nil, subtitle: nil, label: nil, data: {}, inactive: false, compact: false)
+  def organization_profile_button(organization, truncate_at: nil, subtitle: nil, label: nil, data: {}, inactive: false, transparent: false, compact: false)
     # Compact mode shrinks the control to roughly a text input's height, for use
     # inline beside form fields (e.g. the affiliation editor rows).
     padding = compact ? "px-3 py-1" : "px-4 py-2"
@@ -11,12 +11,18 @@ module OrganizationHelper
       hover_bg = "hover:bg-gray-200"
       text = "text-gray-400"
       border = "border-gray-300"
+    elsif transparent
+      bg = "bg-transparent"
+      hover_bg = "hover:bg-gray-100"
+      text = DomainTheme.text_class_for(:organizations)
+      border = "border-transparent"
     else
       bg = DomainTheme.bg_class_for(:organizations, intensity: 100)
       hover_bg = DomainTheme.bg_class_for(:organizations, intensity: 100, hover: true)
       text = DomainTheme.text_class_for(:organizations)
       border = DomainTheme.border_class_for(:organizations)
     end
+    shadow = transparent ? "shadow-none" : "shadow-sm"
 
     hover_title = [ organization.name, subtitle ].compact_blank.join(" — ")
 
@@ -27,7 +33,7 @@ module OrganizationHelper
                     w-full #{padding}
                     border #{border} #{bg} #{hover_bg} rounded-lg
                     transition-colors duration-200
-                    font-medium shadow-sm leading-none
+                    font-medium #{shadow} leading-none
                     overflow-hidden" do
       # --- Logo ---
       logo = if organization.respond_to?(:logo) && organization.logo.attached?

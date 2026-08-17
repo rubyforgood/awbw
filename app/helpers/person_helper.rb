@@ -1,5 +1,5 @@
 module PersonHelper
-  def person_profile_button(person, truncate_at: nil, subtitle: nil, display_name: nil, data: {}, inactive: false, path_params: {}, width_class: "w-full", compact: false)
+  def person_profile_button(person, truncate_at: nil, subtitle: nil, display_name: nil, data: {}, inactive: false, transparent: false, path_params: {}, width_class: "w-full", compact: false)
     # Compact mode shrinks the whole control (padding, avatar, type) for dense
     # tables like the registrants roster where horizontal space is at a premium.
     padding = compact ? "px-2 py-1" : "px-4 py-2"
@@ -12,12 +12,18 @@ module PersonHelper
       hover_bg = "hover:bg-gray-200"
       text = "text-gray-400"
       border = "border-gray-300"
+    elsif transparent
+      bg = "bg-transparent"
+      hover_bg = "hover:bg-gray-100"
+      text = DomainTheme.text_class_for(:people)
+      border = "border-transparent"
     else
       bg = DomainTheme.bg_class_for(:people, intensity: 100)
       hover_bg = DomainTheme.bg_class_for(:people, intensity: 100, hover: true)
       text = DomainTheme.text_class_for(:people)
       border = DomainTheme.border_class_for(:people)
     end
+    shadow = transparent ? "shadow-none" : "shadow-sm"
 
     full_name = display_name || person.try(:name) || person.to_s
     hover_title = [ full_name, subtitle ].compact_blank.join(" — ")
@@ -35,7 +41,7 @@ module PersonHelper
                     #{width_class} #{padding}
                     border #{border} #{bg} #{hover_bg} rounded-lg
                     transition-colors duration-200
-                    font-medium shadow-sm leading-none
+                    font-medium #{shadow} leading-none
                     overflow-hidden" do
       person = person.decorate
 
