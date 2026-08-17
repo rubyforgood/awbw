@@ -172,11 +172,11 @@ module Admin
     # The person's communications for the merged timeline. Only the filters that
     # make sense for a message narrow them: the person/user scope, the date
     # window, the activity-name search (matched against the subject), and the
-    # props search (matched against subject + body). Event-only filters (visit,
-    # resource, prefixes) don't exclude communications.
+    # props search (matched against subject + body). A visit_id filter excludes
+    # communications entirely — they have no visit to prove membership in one.
     def person_communications
       email = @person.communications_email
-      return Notification.none if email.blank?
+      return Notification.none if email.blank? || params[:visit_id].present?
 
       scope = Notification.email(email).includes(:noticeable, sender: :person).order(created_at: :desc)
       scope = scope.where(created_at: time_range) if time_range.present?

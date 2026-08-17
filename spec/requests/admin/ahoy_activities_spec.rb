@@ -291,15 +291,15 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).not_to include("unrelated")
       end
 
-      it "does not exclude communications when an event-only filter (visit_id) is set" do
+      it "excludes communications when a visit_id filter is set (no visit to prove)" do
         person = create(:person)
-        create(:notification, recipient_email: person.communications_email, email_subject: "Still visible comm")
+        create(:notification, recipient_email: person.communications_email, email_subject: "Hidden by visit filter")
 
         get index_path, params: { person_id: person.id, time_period: "all_time",
                                   audience: %w[visitors users staff], visit_id: visit_for_admin.id },
             headers: frame_headers
 
-        expect(response.body).to include("Still visible comm")
+        expect(response.body).not_to include("Hidden by visit filter")
       end
 
       it "surfaces the person's attendance time entries on the activities page" do
