@@ -35,17 +35,14 @@ class Form < ApplicationRecord
     owner_id.nil? && owner_type.nil?
   end
 
-  # True when the form can be filled out at its public pretty URL: a standalone,
-  # published form with a slug. The public controller and policy both gate on this.
+  # Gates the public /f/:slug endpoint (controller + FormPolicy#public_show?).
   def publicly_fillable?
     standalone? && published? && slug.present?
   end
 
   private
 
-  # Store the slug in URL-safe form so an admin can type "Volunteer Interest" and
-  # get "volunteer-interest". A blank slug stays nil (not "") so the uniqueness
-  # index tolerates the many forms that have none.
+  # Blank stays nil (not "") so the unique index tolerates the many forms with none.
   def normalize_slug
     self.slug = slug.presence&.parameterize
   end

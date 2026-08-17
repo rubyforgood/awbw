@@ -1,8 +1,6 @@
 # Public, account-free pretty-URL endpoint for a standalone, published form
-# (/f/:slug). Renders the form, records a submission via PublicFormSubmission,
-# and shows a thank-you page. Reuses the public-registration field partials, so
-# submitted answers arrive under the shared `public_registration[form_fields]`
-# param namespace.
+# (/f/:slug). Reuses the public-registration field partials, so answers arrive
+# under the shared `public_registration[form_fields]` param namespace.
 class PublicFormsController < ApplicationController
   skip_before_action :authenticate_user!, only: %i[show create thank_you]
   before_action :set_form
@@ -15,7 +13,7 @@ class PublicFormsController < ApplicationController
   def create
     authorize! @form, to: :public_show?
 
-    # Honeypot: a bot filling the hidden field is silently bounced back.
+    # Honeypot — a bot that fills the hidden field is silently bounced.
     if params.dig(:public_registration, :website_url).present?
       redirect_to public_form_path(@form.slug)
       return
@@ -48,8 +46,7 @@ class PublicFormsController < ApplicationController
 
   private
 
-  # Scope the lookup itself to publicly-fillable forms so a draft, an event form,
-  # or an unknown slug 404s before the policy even runs.
+  # Scoped so a draft, an event form, or an unknown slug 404s.
   def set_form
     @form = Form.standalone.published.find_by!(slug: params[:slug])
   end
@@ -58,10 +55,8 @@ class PublicFormsController < ApplicationController
     @form.form_fields.reorder(position: :asc)
   end
 
-  # A file input can't be repopulated, so a form re-rendered after a validation
-  # error carries the already-uploaded blob's signed id in retained_uploads. An
-  # untouched file input still posts a blank value, so fall back to the retained
-  # id wherever the field itself came back empty.
+  # A file input can't be repopulated, so on re-render after an error fall back to
+  # the already-uploaded blob's signed id (carried in retained_uploads).
   def merge_retained_uploads(form_params)
     retained = params.dig(:public_registration, :retained_uploads)&.to_unsafe_h || {}
     return form_params if retained.blank?

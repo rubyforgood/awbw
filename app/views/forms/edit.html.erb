@@ -101,8 +101,7 @@
     </div>
 
     <% if @form.standalone? %>
-      <%# Public pretty-URL settings — only a standalone (event-less) form can be
-          published for public filling; event forms are reached through their event. %>
+      <%# Only a standalone form can be published publicly; event forms use their event. %>
       <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div class="flex items-center gap-2.5 border-b border-purple-300 bg-purple-100 px-6 py-3">
           <i class="fa-solid fa-link text-purple-700"></i>

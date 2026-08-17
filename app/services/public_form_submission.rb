@@ -1,23 +1,16 @@
 # Records a submission to a standalone, published form filled out at its public
-# pretty URL (see PublicFormsController). Unlike event registration, there is no
-# event, role, or account: the respondent is identified purely from the name and
-# email answers on the form, find-or-created as a Person, and their answers are
-# stored as a role: "public" FormSubmission.
-#
-# The answer persistence (including the hardened file-upload path) is shared with
-# event registration via FormAnswerPersistence.
+# pretty URL (see PublicFormsController). Unlike event registration there is no
+# event, role, or account — the respondent is find-or-created as a Person from
+# the form's name/email answers. Answer persistence is shared with registration
+# via FormAnswerPersistence.
 class PublicFormSubmission
   include FormAnswerPersistence
 
   Result = Struct.new(:success?, :form_submission, :person, :errors, keyword_init: true)
 
-  # The role stored on submissions captured through the public standalone-form
-  # endpoint, distinguishing them from registration/scholarship/etc. submissions.
   ROLE = "public".freeze
 
-  # Field identifiers the form must carry to identify the respondent. A Person
-  # requires a first and last name, so a public form without these can't record a
-  # submission — the respondent gets a friendly error rather than a 500.
+  # Shown when the form lacks the name/email questions needed to build a Person.
   IDENTITY_MISSING_MESSAGE =
     "This form can't accept submissions yet — it needs a name and email question. Please contact us.".freeze
 
@@ -28,7 +21,6 @@ class PublicFormSubmission
   def initialize(form:, form_params:)
     @form = form
     @form_params = form_params || {}
-    @errors = []
   end
 
   def call
@@ -60,10 +52,8 @@ class PublicFormSubmission
     @form_params[field.id.to_s]
   end
 
-  # Identify the respondent from the form's name/email answers. Reuses an existing
-  # Person on an email + last-name match (both stable identifiers) so a returning
-  # respondent isn't duplicated; creates one otherwise. Returns nil when there's
-  # no email or no name to build a Person from — a first/last name are required.
+  # Reuses an existing Person on an email + last-name match so a returning
+  # respondent isn't duplicated; nil when the form didn't collect name + email.
   def find_or_create_person
     first_name = field_value("first_name")&.strip
     last_name = field_value("last_name")&.strip
@@ -85,9 +75,7 @@ class PublicFormSubmission
       .first
   end
 
-  # Consent is opt-in and recorded once. An affirmative answer stamps the time and
-  # the source when none is on file; a respondent who already consented is left
-  # untouched, and consent is never cleared from here.
+  # Opt-in, recorded once — never re-stamped or cleared from here.
   def record_mailing_list_consent(person)
     return if person.mailing_list_consent_at.present?
     return unless Array(field_value("communication_consent")).any? { |value| value.to_s.strip.present? }
