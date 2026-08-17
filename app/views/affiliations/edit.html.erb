@@ -51,20 +51,20 @@
               } %>
       </div>
 
-      <div class="flex flex-wrap gap-4">
-        <div class="grow min-w-[150px]">
+      <div class="flex flex-wrap items-start gap-4">
+        <div class="flex-1 min-w-[200px]">
           <%= f.input :title,
                 label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
                 hint: "\"Facilitator\" means they're running an Art Program." %>
         </div>
-        <div>
+        <div class="w-40">
           <%= f.input :start_date,
                 as: :string,
                 label: "Start",
                 label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
                 input_html: { type: "date", value: @affiliation.start_date&.strftime("%Y-%m-%d") } %>
         </div>
-        <div>
+        <div class="w-40">
           <%= f.input :end_date,
                 as: :string,
                 label: "End",
