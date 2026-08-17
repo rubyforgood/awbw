@@ -10,8 +10,8 @@
 <% selected_id = f.object.organization_address_id %>
 <% selected = options.find { |_number, address| address.id == selected_id } %>
 <% if options.any? %>
-  <div class="min-w-0" data-controller="address-select">
-    <label class="block text-sm font-medium text-gray-700 mb-1 <%= "sm:hidden" if local_assigns.fetch(:hide_label, false) %>">Address</label>
+  <div class="w-full sm:w-16 xl:w-auto min-w-0" data-controller="address-select">
+    <label class="block text-sm font-medium text-gray-700 mb-1 <%= "xl:hidden" if local_assigns.fetch(:hide_label, false) %>">Address</label>
     <div class="relative">
       <button type="button"
               class="flex h-[42px] w-14 items-center justify-between gap-1 rounded-md border border-gray-300 bg-gray-100 px-2 text-sm text-gray-800 focus:border-blue-500 focus:ring-blue-500"
@@ -21,7 +21,7 @@
         <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
       </button>
       <%= f.hidden_field :organization_address_id, data: { address_select_target: "input" } %>
-      <div class="hidden absolute z-20 mt-1 max-h-60 w-72 overflow-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg"
+      <div class="hidden absolute z-20 mt-1 max-h-60 w-96 overflow-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg"
            data-address-select-target="panel">
         <button type="button"
                 class="flex w-full items-start gap-2 px-3 py-1.5 text-left text-sm text-gray-500 hover:bg-gray-100"
@@ -44,5 +44,5 @@
 <% else %>
   <%# No addresses to pick from: hold the column's width so the Start/End/etc.
       fields stay vertically aligned with rows that do have an address picker. %>
-  <div class="hidden sm:block sm:w-16"></div>
+  <div class="hidden sm:block sm:w-16 xl:w-auto"></div>
 <% end %>
