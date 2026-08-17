@@ -139,7 +139,11 @@ class NotificationDecorator < ApplicationDecorator
   end
 
   def title
-    "Re #{noticeable_type} ##{noticeable_id}"
+    return "Re #{noticeable_type} ##{noticeable_id}" if noticeable_type.present?
+
+    # The subject record was deleted (nullified) — fall back to the recipient so
+    # an orphaned communication still reads as a real message, not "Re  #".
+    "Re #{object.recipient_email}"
   end
 
   def detail(length: nil)

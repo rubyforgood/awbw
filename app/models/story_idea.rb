@@ -25,7 +25,7 @@ class StoryIdea < ApplicationRecord
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
-  has_many :notifications, as: :noticeable, dependent: :destroy
+  has_many :notifications, as: :noticeable, dependent: :nullify
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :stories
 

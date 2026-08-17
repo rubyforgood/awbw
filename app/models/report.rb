@@ -6,7 +6,7 @@ class Report < ApplicationRecord
   belongs_to :workshop, optional: true
   has_one :form, as: :owner
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
-  has_many :notifications, as: :noticeable, dependent: :destroy, autosave: false
+  has_many :notifications, as: :noticeable, dependent: :nullify, autosave: false
   has_many :quotable_item_quotes, as: :quotable, dependent: :nullify, inverse_of: :quotable
   has_many :report_form_field_answers,
            foreign_key: :report_id, inverse_of: :report,

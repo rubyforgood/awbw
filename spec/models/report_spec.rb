@@ -13,7 +13,7 @@ RSpec.describe Report do
     it { should have_many(:report_form_field_answers).dependent(:destroy) }
     it { should have_many(:quotable_item_quotes).dependent(:nullify) }
     it { should have_many(:quotes).through(:all_quotable_item_quotes).dependent(:nullify) }
-    it { should have_many(:notifications).dependent(:destroy) }
+    it { should have_many(:notifications).dependent(:nullify) }
     it { should have_many(:sectorable_items).dependent(:destroy) }
     it { should have_many(:sectors).through(:sectorable_items).dependent(:destroy) }
     it { should have_many(:media_files).dependent(:destroy) }
