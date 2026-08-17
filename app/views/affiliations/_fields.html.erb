@@ -18,23 +18,25 @@
   <% active_bg = facilitator ? "bg-purple-50 border-purple-200" : active_tint %>
   <%# Inactive facilitator rows stay light purple (matching the pill/title) rather
       than going grey like inactive non-facilitator rows. %>
-  <% inactive_bg = facilitator ? "bg-purple-50 border-purple-200 opacity-60" : "bg-gray-100 border-gray-300 opacity-60" %>
+  <% inactive_bg = facilitator ? "bg-purple-50 border-purple-200 opacity-80" : "bg-gray-100 border-gray-300 opacity-80" %>
   <% row_bg = expired ? inactive_bg : active_bg %>
-  <% pill_tint = facilitator ? (expired ? :facilitator_inactive : :facilitator) : :muted %>
+  <% pill_tint = facilitator ? :facilitator : :muted %>
   <%# Field fills echo the person button: an empty field is transparent (the card
       tint shows through), a filled field takes the pill colour for the row's state
       (grey inactive, purple facilitator, else white). The "Facilitator" title keeps
       its own darker purple. Kept in sync live by inactive-toggle. %>
-  <% fill_color = if expired
-       facilitator ? "bg-purple-50!" : "bg-gray-100!"
+  <% fill_color = if facilitator
+       "bg-purple-100!"
+     elsif expired
+       "bg-gray-100!"
      else
-       facilitator ? "bg-purple-100!" : "bg-white!"
+       "bg-white!"
      end %>
   <% field_bg = ->(present) { present ? fill_color : "bg-transparent!" } %>
   <% title_class = if !facilitator
        "#{field_bg.call(displayed_title.present?)} border-gray-300!"
      elsif expired
-       "bg-purple-50! text-purple-400! border-purple-200!"
+       "bg-purple-100! text-purple-500! border-purple-300!"
      else
        "bg-purple-100! text-purple-700! font-semibold border-purple-300!"
      end %>

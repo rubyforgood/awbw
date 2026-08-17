@@ -45,14 +45,14 @@ export default class extends Controller {
     const facilitator = this.isFacilitator();
     const past = this.isPast();
     t.classList.remove(
-      "bg-transparent!", "bg-gray-100!", "bg-white!", "bg-purple-100!", "bg-purple-50!",
-      "text-purple-700!", "text-purple-400!", "font-semibold",
-      "border-purple-300!", "border-purple-200!", "border-gray-300!"
+      "bg-transparent!", "bg-gray-100!", "bg-white!", "bg-purple-100!",
+      "text-purple-700!", "text-purple-500!", "font-semibold",
+      "border-purple-300!", "border-gray-300!"
     );
     if (facilitator && !past) {
       t.classList.add("bg-purple-100!", "text-purple-700!", "font-semibold", "border-purple-300!");
     } else if (facilitator && past) {
-      t.classList.add("bg-purple-50!", "text-purple-400!", "border-purple-200!");
+      t.classList.add("bg-purple-100!", "text-purple-500!", "border-purple-300!");
     } else {
       t.classList.add(this.fieldBg(t), "border-gray-300!");
     }
@@ -62,7 +62,7 @@ export default class extends Controller {
   // through), filled -> the pill colour for the row's current state.
   paintFields() {
     this.valueFieldTargets.forEach((el) => {
-      el.classList.remove("bg-transparent!", "bg-gray-100!", "bg-white!", "bg-purple-100!", "bg-purple-50!");
+      el.classList.remove("bg-transparent!", "bg-gray-100!", "bg-white!", "bg-purple-100!");
       el.classList.add(this.fieldBg(el));
     });
   }
@@ -74,7 +74,7 @@ export default class extends Controller {
   // The fill for a filled field: facilitator rows take purple (lighter when
   // inactive to match the title), other rows take white (active) / grey (inactive).
   pillColorClass() {
-    if (this.isFacilitator()) return this.isPast() ? "bg-purple-50!" : "bg-purple-100!";
+    if (this.isFacilitator()) return "bg-purple-100!";
     return this.isPast() ? "bg-gray-100!" : "bg-white!";
   }
 
@@ -90,16 +90,16 @@ export default class extends Controller {
   updateRowBackground() {
     const activeTint = (this.activeTintValue || "bg-gray-50 border-gray-200").split(" ");
     this.rowTarget.classList.remove(
-      "bg-gray-100", "border-gray-300", "opacity-60",
+      "bg-gray-100", "border-gray-300", "opacity-80",
       "bg-purple-50", "border-purple-200",
       "bg-gray-50", "border-gray-200"
     );
 
     if (this.isPast()) {
       if (this.isFacilitator()) {
-        this.rowTarget.classList.add("bg-purple-50", "border-purple-200", "opacity-60");
+        this.rowTarget.classList.add("bg-purple-50", "border-purple-200", "opacity-80");
       } else {
-        this.rowTarget.classList.add("bg-gray-100", "border-gray-300", "opacity-60");
+        this.rowTarget.classList.add("bg-gray-100", "border-gray-300", "opacity-80");
       }
     } else if (this.isFacilitator()) {
       this.rowTarget.classList.add("bg-purple-50", "border-purple-200");
