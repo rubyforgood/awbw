@@ -16,7 +16,6 @@ export default class extends Controller {
       if (
         type === "checkbox" ||
         type === "radio" ||
-        type === "date" ||
         type === "select-one" ||
         type === "select-multiple" ||
         type === "date"
