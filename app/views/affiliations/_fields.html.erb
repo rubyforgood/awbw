@@ -26,7 +26,7 @@
         <i class="fa-solid fa-gear"></i>
       <% end %>
     <% end %>
-    <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-start rounded-lg border px-3 py-2 scroll-mt-24 <%= expired ? 'bg-gray-100 border-gray-300 opacity-60' : active_bg %>"
+    <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-start rounded-lg border px-3 pt-2 scroll-mt-24 <%= expired ? 'bg-gray-100 border-gray-300 opacity-60' : active_bg %>"
          <% if f.object.persisted? %>id="<%= dom_id(f.object) %>"<% end %>
          data-inactive-toggle-target="row">
       <div style="width: 280px; min-width: 280px; flex-shrink: 0;" data-inactive-toggle-target="profileButton">
