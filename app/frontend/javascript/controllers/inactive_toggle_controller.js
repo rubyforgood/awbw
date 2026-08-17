@@ -18,12 +18,24 @@ export default class extends Controller {
 
   updateBorder() {
     if (!this.hasTitleTarget) return;
+    const facilitator = this.isFacilitator();
     if (this.hasAccentBarTarget) {
-      const facilitator = this.isFacilitator();
       this.accentBarTarget.classList.toggle("bg-purple-500", facilitator);
       this.accentBarTarget.classList.toggle("bg-gray-300", !facilitator);
     }
+    this.styleTitle(facilitator);
     this.updateRowBackground();
+  }
+
+  // Purple "Facilitator" tint on the title input, matching the server-rendered
+  // state and toggled live as the title changes. Shape/size are untouched.
+  styleTitle(facilitator) {
+    const t = this.titleTarget;
+    t.classList.toggle("bg-purple-100!", facilitator);
+    t.classList.toggle("text-purple-700!", facilitator);
+    t.classList.toggle("font-semibold", facilitator);
+    t.classList.toggle("border-purple-300!", facilitator);
+    t.classList.toggle("border-gray-300!", !facilitator);
   }
 
   apply() {
@@ -36,14 +48,14 @@ export default class extends Controller {
   updateRowBackground() {
     this.rowTarget.classList.remove(
       "bg-gray-100", "border-gray-300", "opacity-60",
-      "bg-purple-100", "border-purple-300",
+      "bg-purple-50", "border-purple-200",
       "bg-white", "border-gray-200"
     );
 
     if (this.isPast()) {
       this.rowTarget.classList.add("bg-gray-100", "border-gray-300", "opacity-60");
     } else if (this.isFacilitator()) {
-      this.rowTarget.classList.add("bg-purple-100", "border-purple-300");
+      this.rowTarget.classList.add("bg-purple-50", "border-purple-200");
     } else {
       this.rowTarget.classList.add("bg-white", "border-gray-200");
     }

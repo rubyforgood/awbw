@@ -7,7 +7,7 @@
 <% if allowed_to?(:manage?, manage_subject) %>
   <% expired = f.object.inactive? || (f.object.end_date.present? && f.object.end_date < Date.current) %>
   <% facilitator = f.object.facilitator? %>
-  <% active_bg = facilitator ? "bg-purple-100 border-purple-300" : "bg-white border-gray-200" %>
+  <% active_bg = facilitator ? "bg-purple-50 border-purple-200" : "bg-white border-gray-200" %>
   <% record = person_side ? f.object.person : f.object.organization %>
   <% label = person_side ? "Person" : "Organization" %>
   <div data-controller="inactive-toggle" class="relative mb-2">
@@ -20,7 +20,7 @@
                     return_to: person_side ? "organization" : "person",
                     origin_id: person_side ? f.object.organization_id : f.object.person_id),
                   target: "_blank", rel: "noopener",
-                  class: "absolute top-2 right-2 z-10 text-gray-300 hover:text-gray-500",
+                  class: "absolute top-1/2 right-2 z-10 -translate-y-1/2 text-gray-300 hover:text-gray-500",
                   title: "Edit affiliation, add comments, or reassign (opens in a new tab)" do %>
         <i class="fa-solid fa-gear"></i>
       <% end %>
@@ -65,7 +65,7 @@
                     input_html: {
                       value: f.object&.title || "Facilitator",
                       style: "height: 42px;",
-                      class: "text-sm border-gray-300!",
+                      class: "text-sm #{facilitator ? 'bg-purple-100! text-purple-700! font-semibold border-purple-300!' : 'border-gray-300!'}",
                       data: {
                         inactive_toggle_target: "title",
                         action: "affiliation-dates#recalculate inactive-toggle#updateBorder"

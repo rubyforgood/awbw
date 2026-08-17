@@ -12,10 +12,10 @@ module OrganizationHelper
       text = "text-gray-400"
       border = "border-gray-300"
     elsif tint == :facilitator
-      bg = "bg-purple-50"
-      hover_bg = "hover:bg-purple-100"
+      bg = "bg-purple-100"
+      hover_bg = "hover:bg-purple-200"
       text = DomainTheme.text_class_for(:organizations)
-      border = "border-purple-200"
+      border = "border-purple-300"
     elsif tint == :muted
       bg = "bg-white"
       hover_bg = "hover:bg-gray-50"
