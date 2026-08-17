@@ -11,27 +11,28 @@
       shown title) tints the row purple while the server-rendered pill stays neutral. %>
   <% displayed_title = f.object.title.presence || "Facilitator" %>
   <% facilitator = displayed_title.strip == "Facilitator" %>
-  <%# Colour carries role only (facilitator = purple, else neutral) for both active
-      and inactive rows. Inactive is a *structural* cue instead: a dashed border and
-      a struck-through end date (.date-ended), kept in sync live by inactive-toggle. %>
-  <% row_bg = if facilitator
-       "bg-purple-50 #{expired ? 'border-purple-300 border-dashed' : 'border-purple-200'}"
+  <%# Four states by colour: role is the hue (facilitator = purple, else blue) and
+      status is the saturation (active = full, inactive = super-light). Kept in sync
+      live by inactive-toggle. %>
+  <% accent = facilitator ? (expired ? "bg-purple-300" : "bg-purple-500") : (expired ? "bg-blue-300" : "bg-blue-500") %>
+  <% row_bg = facilitator ? "bg-purple-50 border-purple-200" : "bg-blue-50 border-blue-200" %>
+  <% fill_color = if facilitator
+       expired ? "bg-purple-50!" : "bg-purple-100!"
      else
-       "bg-gray-50 #{expired ? 'border-gray-300 border-dashed' : 'border-gray-200'}"
+       expired ? "bg-blue-50!" : "bg-blue-100!"
      end %>
-  <% pill_tint = facilitator ? :facilitator : :muted %>
-  <%# Field fills echo the person button: empty fields are transparent (the row tint
-      shows through), filled fields take the role colour (purple for facilitators,
-      else white). The "Facilitator" title keeps its darker purple. %>
-  <% fill_color = facilitator ? "bg-purple-100!" : "bg-white!" %>
   <% field_bg = ->(present) { present ? fill_color : "bg-transparent!" } %>
-  <% title_class = facilitator ? "bg-purple-100! text-purple-700! font-semibold border-purple-300!" : "#{field_bg.call(displayed_title.present?)} border-gray-300!" %>
-  <% ended_date = f.object.end_date.present? && f.object.end_date < Date.current %>
+  <% pill_tint = facilitator ? (expired ? :facilitator_light : :facilitator) : (expired ? :nonfac_light : :nonfac) %>
+  <% title_class = if facilitator
+       expired ? "bg-purple-50! text-purple-500! border-purple-200!" : "bg-purple-100! text-purple-700! font-semibold border-purple-300!"
+     else
+       expired ? "bg-blue-50! text-blue-500! border-blue-200!" : "bg-blue-100! text-blue-700! font-semibold border-blue-300!"
+     end %>
   <% record = person_side ? f.object.person : f.object.organization %>
   <% label = person_side ? "Person" : "Organization" %>
   <div data-controller="inactive-toggle" data-inactive-toggle-expired-value="<%= expired %>" class="relative mb-2">
     <%# Left accent rendered outside the row so it keeps full color regardless of the row's border. %>
-    <span class="absolute inset-y-0 left-0 w-1 rounded-l-lg <%= facilitator ? 'bg-purple-500' : 'bg-gray-300' %>"
+    <span class="absolute inset-y-0 left-0 w-1 rounded-l-lg <%= accent %>"
           data-inactive-toggle-target="accentBar"></span>
     <% if f.object.persisted? %>
       <%# Escape to the full affiliation editor: comments + reassign person/org. %>
@@ -44,7 +45,7 @@
         <i class="fa-solid fa-gear"></i>
       <% end %>
     <% end %>
-    <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-start xl:grid xl:grid-cols-[280px_150px_150px_150px_120px_auto] rounded-lg border px-3 py-2 scroll-mt-24 <%= row_bg %>"
+    <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-start xl:grid xl:grid-cols-[280px_150px_150px_150px_120px_auto] rounded-lg border px-3 py-2 scroll-mt-24 <%= row_bg %> <%= 'aff-ended' if expired %>"
          <% if f.object.persisted? %>id="<%= dom_id(f.object) %>"<% end %>
          data-inactive-toggle-target="row">
       <div class="w-full sm:w-[280px] xl:w-auto min-w-0">
@@ -116,7 +117,7 @@
                     input_html: {
                       type: "date",
                       value: f.object.end_date&.strftime("%Y-%m-%d"),
-                      class: "w-full rounded-md border-gray-300! focus:ring-blue-500 focus:border-blue-500 text-sm #{field_bg.call(f.object.end_date.present?)} #{'date-ended' if ended_date}",
+                      class: "w-full rounded-md border-gray-300! focus:ring-blue-500 focus:border-blue-500 text-sm #{field_bg.call(f.object.end_date.present?)}",
                       style: "height: 42px;",
                       data: {
                         inactive_toggle_target: "endDate valueField",

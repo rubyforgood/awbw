@@ -115,11 +115,15 @@
   @apply bg-gray-100;
 }
 
-/* Struck-through end date on an ended (inactive) affiliation row. The value of a
-   native date input can only be styled via its inner pseudo-element (WebKit). */
-.date-ended::-webkit-datetime-edit {
+/* Inactive (ended) affiliation rows strike through their field values. A native
+   date input's value only strikes via its inner pseudo-element (WebKit). */
+.aff-ended input,
+.aff-ended textarea,
+.aff-ended [data-address-select-target="button"] {
   text-decoration: line-through;
-  color: #9ca3af;
+}
+.aff-ended input::-webkit-datetime-edit {
+  text-decoration: line-through;
 }
 
 /* Tom Select "flat" variant: the wrapper inherits the field's bordered box,
