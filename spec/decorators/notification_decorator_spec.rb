@@ -13,6 +13,20 @@ RSpec.describe NotificationDecorator, type: :decorator do
     end
   end
 
+  describe "#title" do
+    it "references the subject record when one is linked" do
+      notification = build_stubbed(:notification, noticeable_type: "Person", noticeable_id: 42)
+
+      expect(notification.decorate.title).to eq("Re Person #42")
+    end
+
+    it "falls back to the recipient when the subject record was deleted (nullified)" do
+      notification = build_stubbed(:notification, noticeable: nil, recipient_email: "kim@example.com")
+
+      expect(notification.decorate.title).to eq("Re kim@example.com")
+    end
+  end
+
   describe "#row_class" do
     it "tints the row amber for an email stuck pending past the grace period" do
       notification = build_stubbed(:notification, delivered_at: nil, error_at: nil, created_at: 2.hours.ago)

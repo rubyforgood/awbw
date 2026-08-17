@@ -31,7 +31,7 @@ class WorkshopVariation < ApplicationRecord
   belongs_to :author, class_name: "Person", optional: true
   belongs_to :workshop_variation_idea, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
-  has_many :notifications, as: :noticeable, dependent: :destroy
+  has_many :notifications, as: :noticeable, dependent: :nullify
 
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },

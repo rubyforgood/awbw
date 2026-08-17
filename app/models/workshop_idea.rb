@@ -8,7 +8,7 @@ class WorkshopIdea < ApplicationRecord
   belongs_to :windows_type
 
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
-  has_many :notifications, as: :noticeable, dependent: :destroy
+  has_many :notifications, as: :noticeable, dependent: :nullify
   has_many :workshops
   has_many :workshop_series_children, # When this workshop is the parent in a series
            -> { order(:position) },

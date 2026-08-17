@@ -38,6 +38,27 @@ RSpec.describe Notification do
     it { should have_many(:child_notifications).class_name('Notification').with_foreign_key(:parent_notification_id) }
   end
 
+  describe "when its subject record is deleted" do
+    # notifications are the durable record of what we sent — deleting the person
+    # or registration a message was about must not destroy that history, so the
+    # link is nullified and the communication survives as an orphaned record.
+    it "is nullified, not destroyed, when the person is deleted" do
+      person = create(:person)
+      notification = create(:notification, noticeable: person)
+
+      expect { person.destroy }.not_to change(Notification, :count)
+      expect(notification.reload.noticeable).to be_nil
+    end
+
+    it "is nullified, not destroyed, when the event registration is deleted" do
+      registration = create(:event_registration)
+      notification = create(:notification, noticeable: registration)
+
+      expect { registration.destroy }.not_to change(Notification, :count)
+      expect(notification.reload.noticeable).to be_nil
+    end
+  end
+
   describe "manual log channel" do
     def build_notification(**attrs)
       build(:notification, recipient_role: "person", recipient_email: "x@example.com", notification_type: 0, **attrs)
