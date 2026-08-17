@@ -80,7 +80,7 @@ class Affiliation < ApplicationRecord
   before_validation :skip_if_duplicate
   # Runs before validation so a reassigned org drops its stale organization_address_id
   # before organization_address_belongs_to_organization would reject it.
-  before_validation :clear_org_scoped_links_on_org_change, on: :update
+  before_validation :reset_org_scoped_links_on_org_change, on: :update
   before_save :set_inactive_from_dates
   after_save :sync_organization_status_with_affiliations
   after_save :sync_organization_affiliation_dates
@@ -143,14 +143,23 @@ class Affiliation < ApplicationRecord
 
   # When an admin moves the affiliation to a different org (only possible from the
   # standalone edit form), the links scoped to the old org no longer apply:
-  # event_registration_id (a row with no link counts as manually created, which
-  # reconciliation leaves alone) and organization_address_id (an address of the old
-  # org would fail organization_address_belongs_to_organization).
-  def clear_org_scoped_links_on_org_change
+  #  - event_registration_id is cleared (a row with no link counts as manually
+  #    created, which reconciliation leaves alone). The registration's own org
+  #    link is separate and is updated in its org-linking step.
+  #  - organization_address_id is re-pointed at the new org: an old-org address
+  #    would fail organization_address_belongs_to_organization. If the new org has
+  #    exactly one address we adopt it; otherwise it's left blank for an admin to
+  #    set after saving.
+  def reset_org_scoped_links_on_org_change
     return unless organization_id_changed?
 
     self.event_registration_id = nil
-    self.organization_address_id = nil
+    self.organization_address_id = sole_address_id_for_new_organization
+  end
+
+  def sole_address_id_for_new_organization
+    addresses = Organization.find_by(id: organization_id)&.addresses
+    addresses.first.id if addresses&.one?
   end
 
   def set_inactive_from_dates

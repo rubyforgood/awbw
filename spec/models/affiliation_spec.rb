@@ -26,15 +26,34 @@ RSpec.describe Affiliation, type: :model do
   describe "reassigning the organization" do
     let(:old_org) { create(:organization) }
     let(:new_org) { create(:organization) }
-    let(:address) { create(:address, addressable: old_org) }
+    let(:old_address) { create(:address, addressable: old_org) }
 
-    it "clears the org-scoped address so the row survives validation" do
-      affiliation = create(:affiliation, organization: old_org, organization_address: address)
+    it "drops the stale address when the new org has several addresses" do
+      create_list(:address, 2, addressable: new_org)
+      affiliation = create(:affiliation, organization: old_org, organization_address: old_address)
 
       affiliation.update!(organization: new_org)
 
       expect(affiliation.reload.organization_id).to eq(new_org.id)
       expect(affiliation.organization_address_id).to be_nil
+    end
+
+    it "adopts the sole address of the new org" do
+      new_address = create(:address, addressable: new_org)
+      affiliation = create(:affiliation, organization: old_org, organization_address: old_address)
+
+      affiliation.update!(organization: new_org)
+
+      expect(affiliation.reload.organization_address_id).to eq(new_address.id)
+    end
+
+    it "clears the event registration link" do
+      registration = create(:event_registration)
+      affiliation = create(:affiliation, organization: old_org, event_registration: registration)
+
+      affiliation.update!(organization: new_org)
+
+      expect(affiliation.reload.event_registration_id).to be_nil
     end
   end
 end

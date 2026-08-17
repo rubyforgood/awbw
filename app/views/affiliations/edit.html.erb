@@ -45,11 +45,30 @@
               include_blank: false,
               label: "Organization",
               label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
-              hint: "Reassigning clears the linked address.",
               input_html: {
                 data: { controller: "remote-select", remote_select_model_value: "organization" }
               } %>
       </div>
+
+      <% if @affiliation.event_registration.present? %>
+        <% er = @affiliation.event_registration %>
+        <div class="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <p class="font-medium"><i class="fa-solid fa-link mr-1"></i>Linked to a registration</p>
+          <p class="mt-1">
+            This affiliation came from
+            <%= link_to (er.registrant&.full_name.presence || "a registration"),
+                  edit_event_registration_path(er), class: "underline font-medium", target: "_blank", rel: "noopener" %><%= " — #{er.event.title}" if er.event %>.
+            Reassigning the organization here unlinks that registration from this affiliation; update the organization in the
+            <%= link_to "registration's organization-linking step",
+                  link_organization_event_registration_path(er), class: "underline font-medium", target: "_blank", rel: "noopener" %> as well.
+          </p>
+        </div>
+      <% end %>
+
+      <p class="text-xs text-amber-700">
+        <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+        Reassigning the organization <%= "disconnects the current address (#{@affiliation.organization_address.name}) and " if @affiliation.organization_address.present? %>links the new organization's address automatically only if it has exactly one — otherwise set the address after saving.
+      </p>
 
       <div class="flex flex-wrap items-start gap-4">
         <div class="flex-1 min-w-[200px]">

@@ -17,6 +17,16 @@ RSpec.describe "/affiliations", type: :request do
         get edit_affiliation_path(affiliation)
         expect(response).to be_successful
       end
+
+      it "surfaces a linked registration with the org-linking warning" do
+        registration = create(:event_registration)
+        affiliation.update_column(:event_registration_id, registration.id)
+
+        get edit_affiliation_path(affiliation)
+
+        expect(response.body).to include("Linked to a registration")
+        expect(response.body).to include(link_organization_event_registration_path(registration))
+      end
     end
 
     context "as a non-admin" do
