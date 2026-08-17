@@ -117,6 +117,16 @@ RSpec.describe "/grants", type: :request do
         expect(response.body).not_to include("Other grant")
       end
 
+      it "filters by a funder's legal first name" do
+        create(:grant, name: "Legal-funded",
+          funder: create(:person, first_name: "Bob", legal_first_name: "Robert", last_name: "Funder"))
+        create(:grant, name: "Other grant", funder: create(:organization, name: "Unrelated Inc"))
+
+        get grants_url(funder_name: "robert funder"), headers: frame_headers
+        expect(response.body).to include("Legal-funded")
+        expect(response.body).not_to include("Other grant")
+      end
+
       it "filters by task completion" do
         all_done = create(:grant, name: "All done")
         create(:scholarship, grant: all_done, tasks_completed: true)
