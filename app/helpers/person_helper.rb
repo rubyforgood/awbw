@@ -13,8 +13,8 @@ module PersonHelper
       text = "text-gray-400"
       border = "border-gray-300"
     elsif muted
-      bg = "bg-gray-100"
-      hover_bg = "hover:bg-gray-200"
+      bg = "bg-white"
+      hover_bg = "hover:bg-gray-50"
       text = DomainTheme.text_class_for(:people)
       border = "border-gray-300"
     else

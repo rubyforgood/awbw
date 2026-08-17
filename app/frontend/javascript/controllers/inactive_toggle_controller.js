@@ -1,31 +1,13 @@
 import { Controller } from "@hotwired/stimulus";
 
-// Active themed classes used by person (sky) and organization (emerald) profile buttons
-const ACTIVE_CLASSES = [
-  "bg-sky-50", "bg-sky-100", "bg-sky-200", "hover:bg-sky-100", "hover:bg-sky-200",
-  "text-sky-700", "text-sky-800", "border-sky-200", "border-sky-300",
-  "bg-emerald-50", "bg-emerald-100", "bg-emerald-200", "hover:bg-emerald-100", "hover:bg-emerald-200",
-  "text-emerald-700", "text-emerald-800", "border-emerald-200", "border-emerald-300"
-];
-const GRAY_CLASSES = ["bg-gray-100", "hover:bg-gray-200", "text-gray-400", "border-gray-300"];
-
-function grayOut(el) {
-  ACTIVE_CLASSES.forEach((cls) => el.classList.remove(cls));
-  GRAY_CLASSES.forEach((cls) => el.classList.add(cls));
-}
-
+// Live row tint for the affiliation editor: reflects facilitator-ness (title) and
+// active/expired state (end date) as you edit, before saving. The person/org pill
+// and field chrome are static neutral styles now, so only the row background and
+// the left accent bar need updating here.
 export default class extends Controller {
-  static targets = ["endDate", "title", "row", "profileButton", "accentBar"]
+  static targets = ["endDate", "title", "row", "accentBar"]
 
   connect() {
-    // Save original classes for profile buttons and their styled children
-    this._savedClasses = [];
-    this.profileButtonTargets.forEach((btn) => {
-      btn.querySelectorAll("a.group, a.group span").forEach((el) => {
-        this._savedClasses.push({ el, className: el.className });
-      });
-    });
-
     if (this.hasEndDateTarget) this.apply();
     if (this.hasTitleTarget) this.updateBorder();
   }
@@ -37,24 +19,16 @@ export default class extends Controller {
   updateBorder() {
     if (!this.hasTitleTarget) return;
     if (this.hasAccentBarTarget) {
-      this.accentBarTarget.style.backgroundColor = this.isFacilitator() ? "#a855f7" : "#d1d5db";
+      const facilitator = this.isFacilitator();
+      this.accentBarTarget.classList.toggle("bg-purple-500", facilitator);
+      this.accentBarTarget.classList.toggle("bg-gray-300", !facilitator);
     }
     this.updateRowBackground();
   }
 
   apply() {
     if (!this.hasEndDateTarget) return;
-    const isPast = this.isPast();
-
     this.updateRowBackground();
-
-    if (isPast) {
-      this.profileButtonTargets.forEach((btn) => {
-        btn.querySelectorAll("a.group, a.group span").forEach((el) => grayOut(el));
-      });
-    } else {
-      this._savedClasses.forEach(({ el, className }) => { el.className = className; });
-    }
   }
 
   // Single source of truth for the row tint: gray when expired, light purple for
