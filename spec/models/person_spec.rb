@@ -430,6 +430,14 @@ RSpec.describe Person, type: :model do
       expect(results).not_to include(person_bob)
     end
 
+    it 'filters by contact_info matching legal first name' do
+      person_carol = create(:person, first_name: 'Carol', legal_first_name: 'Caroline', last_name: 'White')
+
+      results = Person.search_by_params(contact_info: 'Caroline')
+      expect(results).to include(person_carol)
+      expect(results).not_to include(person_alice, person_bob)
+    end
+
     it 'filters by contact_info matching email' do
       results = Person.search_by_params(contact_info: 'bob@example')
       expect(results).to include(person_bob)

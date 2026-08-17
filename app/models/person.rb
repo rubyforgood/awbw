@@ -112,7 +112,7 @@ class Person < ApplicationRecord
   # Search Cop
   include SearchCop
   search_scope :search do
-    attributes :first_name, :last_name, :email, :email_2
+    attributes :first_name, :legal_first_name, :last_name, :email, :email_2
 
     scope { left_joins(:user, :contact_methods, :addresses) }
     attributes user_first_name: "user.first_name"
@@ -126,7 +126,7 @@ class Person < ApplicationRecord
     attributes address_zip:    "addresses.zip_code"
     attributes address_phone:  "addresses.phone"
 
-    attributes all: [ :first_name, :last_name, :email, :email_2,
+    attributes all: [ :first_name, :legal_first_name, :last_name, :email, :email_2,
                       "user.first_name", "user.last_name", "user.email", "user.phone",
                       "contact_methods.value",
                       "addresses.street_address", "addresses.city", "addresses.state",
