@@ -20,8 +20,9 @@
       <%= link_to edit_affiliation_path(f.object,
                     return_to: person_side ? "organization" : "person",
                     origin_id: person_side ? f.object.organization_id : f.object.person_id),
+                  target: "_blank", rel: "noopener",
                   class: "absolute top-2 right-2 z-10 text-gray-300 hover:text-gray-500",
-                  title: "Edit affiliation, add comments, or reassign" do %>
+                  title: "Edit affiliation, add comments, or reassign (opens in a new tab)" do %>
         <i class="fa-solid fa-gear"></i>
       <% end %>
     <% end %>
