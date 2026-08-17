@@ -628,11 +628,11 @@ RSpec.describe ApplicationHelper, type: :helper do
   end
 
   describe "#index_button" do
-    it "renders 'None' instead of a zero count" do
+    it "renders no count badge for a zero count" do
       html = helper.index_button(Story.all)
 
       expect(Story.count).to eq(0)
-      expect(html).to include("None")
+      expect(html).not_to include("None")
       expect(html).not_to include(">0<")
     end
 

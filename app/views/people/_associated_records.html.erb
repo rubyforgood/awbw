@@ -19,17 +19,27 @@
     <li class="break-inside-avoid mb-2"><%= index_button person.scholarships, params: { recipient_id: person.id } %></li>
     <li class="break-inside-avoid mb-2"><%= index_button person.topic_subscriptions, params: { person_id: person.id }, label: "Topic subscriptions" %></li>
     <li class="break-inside-avoid mb-2"><%= index_button(person.user&.workshop_logs || WorkshopLog.none, path: workshop_logs_person_path(person)) %></li>
+    <% if person.user %>
+      <li class="break-inside-avoid mb-2">
+        <%= link_to user_path(person.user),
+                    data: { turbo_prefetch: false },
+                    class: "group flex items-center gap-3 w-full px-3 py-2 rounded-lg admin-only bg-blue-50 hover:bg-blue-100 border border-gray-200 transition-colors duration-200 shadow-sm" do %>
+          <span class="text-gray-500 w-5 text-center"><i class="fa-solid fa-user"></i></span>
+          <span class="font-medium text-gray-700 truncate">User</span>
+          <span class="ml-auto inline-flex items-center justify-center min-w-[2.25rem] px-2 py-0.5 text-sm font-semibold rounded-full bg-white text-gray-700 border border-gray-200"><%= number_with_delimiter(User.where(person_id: person.id).count) %></span>
+        <% end %>
+      </li>
+    <% end %>
     <%# Aggregate Ahoy history (person + user + all associated data). Placed last
         so the column flow lands it in the otherwise-empty bottom-right cell. %>
     <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-      <% history_count = Analytics::PersonActivityEvents.new(person).count %>
       <li class="break-inside-avoid mb-2">
         <%= link_to admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff]),
                     data: { turbo_prefetch: false },
-                    class: "group flex items-center gap-3 w-full px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors duration-200 shadow-sm" do %>
+                    class: "group flex items-center gap-3 w-full px-3 py-2 rounded-lg admin-only bg-blue-50 hover:bg-blue-100 border border-gray-200 transition-colors duration-200 shadow-sm" do %>
           <span class="text-gray-500 w-5 text-center"><i class="fa-solid fa-clock-rotate-left"></i></span>
           <span class="font-medium text-gray-700 truncate">History</span>
-          <span class="ml-auto inline-flex items-center justify-center min-w-[2.25rem] px-2 py-0.5 text-sm font-semibold rounded-full bg-gray-50 text-gray-700 border border-gray-200"><%= history_count.zero? ? "None" : number_with_delimiter(history_count) %></span>
+          <span class="ml-auto inline-flex items-center justify-center min-w-[2.25rem] px-2 py-0.5 text-sm font-semibold rounded-full bg-white text-gray-700 border border-gray-200"><i class="fa-solid fa-magnifying-glass text-xs"></i></span>
         <% end %>
       </li>
     <% end %>
