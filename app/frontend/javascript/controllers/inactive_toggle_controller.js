@@ -1,17 +1,16 @@
 import { Controller } from "@hotwired/stimulus";
 
-// Live styling for the affiliation editor row: reflects facilitator-ness (title)
-// and active/expired state (end date) as you edit, before saving. Drives the row
-// tint, the left accent bar, the "Facilitator" title purple, and the field fills
-// (transparent when empty, the pill colour when filled).
+// Live styling for the affiliation editor row as you edit, before saving. Colour
+// carries role only (facilitator = purple, else neutral); inactive is a structural
+// cue — a dashed row border and a struck-through end date — so active vs inactive
+// never competes with the role colour.
 export default class extends Controller {
   static targets = ["endDate", "title", "row", "accentBar", "valueField"]
-  static values = { activeTint: String, expired: Boolean }
+  static values = { expired: Boolean }
 
   connect() {
-    if (this.hasEndDateTarget) this.apply();
     if (this.hasTitleTarget) this.updateBorder();
-    this.paintFields();
+    else this.apply();
   }
 
   toggle() {
@@ -25,57 +24,43 @@ export default class extends Controller {
       this.accentBarTarget.classList.toggle("bg-purple-500", facilitator);
       this.accentBarTarget.classList.toggle("bg-gray-300", !facilitator);
     }
-    this.styleTitle();
-    this.updateRowBackground();
-    this.paintFields();
+    this.apply();
   }
 
   apply() {
-    if (!this.hasEndDateTarget) return;
     this.updateRowBackground();
     this.styleTitle();
     this.paintFields();
+    this.styleEndDate();
   }
 
-  // The "Facilitator" title keeps its own darker purple (lighter when inactive);
-  // any other title fills like the rest of the fields. Shape/size are untouched.
+  // Facilitator title keeps its darker purple; any other title fills like the rest.
   styleTitle() {
     if (!this.hasTitleTarget) return;
     const t = this.titleTarget;
-    const facilitator = this.isFacilitator();
-    const past = this.isPast();
     t.classList.remove(
-      "bg-transparent!", "bg-gray-100!", "bg-white!", "bg-purple-100!",
-      "text-purple-700!", "text-purple-500!", "font-semibold",
-      "border-purple-300!", "border-gray-300!"
+      "bg-transparent!", "bg-white!", "bg-purple-100!",
+      "text-purple-700!", "font-semibold", "border-purple-300!", "border-gray-300!"
     );
-    if (facilitator && !past) {
+    if (this.isFacilitator()) {
       t.classList.add("bg-purple-100!", "text-purple-700!", "font-semibold", "border-purple-300!");
-    } else if (facilitator && past) {
-      t.classList.add("bg-purple-100!", "text-purple-500!", "border-purple-300!");
     } else {
       t.classList.add(this.fieldBg(t), "border-gray-300!");
     }
   }
 
-  // Repaint the date/address fields: empty -> transparent (card tint shows
-  // through), filled -> the pill colour for the row's current state.
+  // Empty fields are transparent (row tint shows through); filled fields take the
+  // role colour (purple for facilitators, else white).
   paintFields() {
     this.valueFieldTargets.forEach((el) => {
-      el.classList.remove("bg-transparent!", "bg-gray-100!", "bg-white!", "bg-purple-100!");
+      el.classList.remove("bg-transparent!", "bg-white!", "bg-purple-100!");
       el.classList.add(this.fieldBg(el));
     });
   }
 
   fieldBg(el) {
-    return this.fieldHasValue(el) ? this.pillColorClass() : "bg-transparent!";
-  }
-
-  // The fill for a filled field: facilitator rows take purple (lighter when
-  // inactive to match the title), other rows take white (active) / grey (inactive).
-  pillColorClass() {
-    if (this.isFacilitator()) return "bg-purple-100!";
-    return this.isPast() ? "bg-gray-100!" : "bg-white!";
+    if (!this.fieldHasValue(el)) return "bg-transparent!";
+    return this.isFacilitator() ? "bg-purple-100!" : "bg-white!";
   }
 
   fieldHasValue(el) {
@@ -85,27 +70,28 @@ export default class extends Controller {
     return Boolean(hidden && hidden.value);
   }
 
-  // Single source of truth for the row tint: gray when expired, light purple for
-  // an active facilitator, else the counterpart-theme active tint (sky/emerald).
+  // Role colour for the row + a dashed border when inactive.
   updateRowBackground() {
-    const activeTint = (this.activeTintValue || "bg-gray-50 border-gray-200").split(" ");
+    const facilitator = this.isFacilitator();
+    const past = this.isPast();
     this.rowTarget.classList.remove(
-      "bg-gray-100", "border-gray-300", "opacity-80",
-      "bg-purple-50", "border-purple-200",
-      "bg-gray-50", "border-gray-200"
+      "bg-purple-50", "bg-gray-50",
+      "border-purple-200", "border-purple-300", "border-gray-200", "border-gray-300",
+      "border-dashed"
     );
-
-    if (this.isPast()) {
-      if (this.isFacilitator()) {
-        this.rowTarget.classList.add("bg-purple-50", "border-purple-200", "opacity-80");
-      } else {
-        this.rowTarget.classList.add("bg-gray-100", "border-gray-300", "opacity-80");
-      }
-    } else if (this.isFacilitator()) {
-      this.rowTarget.classList.add("bg-purple-50", "border-purple-200");
+    this.rowTarget.classList.add(facilitator ? "bg-purple-50" : "bg-gray-50");
+    if (past) {
+      this.rowTarget.classList.add(facilitator ? "border-purple-300" : "border-gray-300", "border-dashed");
     } else {
-      this.rowTarget.classList.add(...activeTint);
+      this.rowTarget.classList.add(facilitator ? "border-purple-200" : "border-gray-200");
     }
+  }
+
+  // Strike the end date when it marks the row ended.
+  styleEndDate() {
+    if (!this.hasEndDateTarget) return;
+    const ended = Boolean(this.endDateTarget.value) && this.isPast();
+    this.endDateTarget.classList.toggle("date-ended", ended);
   }
 
   // With an end date, compute from it (live); without one, the JS can't see the
@@ -117,7 +103,7 @@ export default class extends Controller {
   }
 
   // Mirror Affiliation#facilitator? — an exact, case-sensitive match on
-  // "Facilitator" (trimmed), so the live row tint matches what the server will render.
+  // "Facilitator" (trimmed), so the live styling matches what the server renders.
   isFacilitator() {
     return this.hasTitleTarget && this.titleTarget.value.trim() === "Facilitator";
   }

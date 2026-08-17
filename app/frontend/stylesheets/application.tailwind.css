@@ -115,6 +115,13 @@
   @apply bg-gray-100;
 }
 
+/* Struck-through end date on an ended (inactive) affiliation row. The value of a
+   native date input can only be styled via its inner pseudo-element (WebKit). */
+.date-ended::-webkit-datetime-edit {
+  text-decoration: line-through;
+  color: #9ca3af;
+}
+
 /* Tom Select "flat" variant: the wrapper inherits the field's bordered box,
    so the inner control is transparent and borderless — no box-within-a-box.
    Used for optional searchable-selects (e.g. the event location) so the field

@@ -11,39 +11,26 @@
       shown title) tints the row purple while the server-rendered pill stays neutral. %>
   <% displayed_title = f.object.title.presence || "Facilitator" %>
   <% facilitator = displayed_title.strip == "Facilitator" %>
-  <%# Active non-facilitator rows use a very light grey (near white) so they read
-      as active but stay distinct from the darker grey of inactive rows;
-      facilitators keep their light purple. %>
-  <% active_tint = "bg-gray-50 border-gray-200" %>
-  <% active_bg = facilitator ? "bg-purple-50 border-purple-200" : active_tint %>
-  <%# Inactive facilitator rows stay light purple (matching the pill/title) rather
-      than going grey like inactive non-facilitator rows. %>
-  <% inactive_bg = facilitator ? "bg-purple-50 border-purple-200 opacity-80" : "bg-gray-100 border-gray-300 opacity-80" %>
-  <% row_bg = expired ? inactive_bg : active_bg %>
+  <%# Colour carries role only (facilitator = purple, else neutral) for both active
+      and inactive rows. Inactive is a *structural* cue instead: a dashed border and
+      a struck-through end date (.date-ended), kept in sync live by inactive-toggle. %>
+  <% row_bg = if facilitator
+       "bg-purple-50 #{expired ? 'border-purple-300 border-dashed' : 'border-purple-200'}"
+     else
+       "bg-gray-50 #{expired ? 'border-gray-300 border-dashed' : 'border-gray-200'}"
+     end %>
   <% pill_tint = facilitator ? :facilitator : :muted %>
-  <%# Field fills echo the person button: an empty field is transparent (the card
-      tint shows through), a filled field takes the pill colour for the row's state
-      (grey inactive, purple facilitator, else white). The "Facilitator" title keeps
-      its own darker purple. Kept in sync live by inactive-toggle. %>
-  <% fill_color = if facilitator
-       "bg-purple-100!"
-     elsif expired
-       "bg-gray-100!"
-     else
-       "bg-white!"
-     end %>
+  <%# Field fills echo the person button: empty fields are transparent (the row tint
+      shows through), filled fields take the role colour (purple for facilitators,
+      else white). The "Facilitator" title keeps its darker purple. %>
+  <% fill_color = facilitator ? "bg-purple-100!" : "bg-white!" %>
   <% field_bg = ->(present) { present ? fill_color : "bg-transparent!" } %>
-  <% title_class = if !facilitator
-       "#{field_bg.call(displayed_title.present?)} border-gray-300!"
-     elsif expired
-       "bg-purple-100! text-purple-500! border-purple-300!"
-     else
-       "bg-purple-100! text-purple-700! font-semibold border-purple-300!"
-     end %>
+  <% title_class = facilitator ? "bg-purple-100! text-purple-700! font-semibold border-purple-300!" : "#{field_bg.call(displayed_title.present?)} border-gray-300!" %>
+  <% ended_date = f.object.end_date.present? && f.object.end_date < Date.current %>
   <% record = person_side ? f.object.person : f.object.organization %>
   <% label = person_side ? "Person" : "Organization" %>
-  <div data-controller="inactive-toggle" data-inactive-toggle-active-tint-value="<%= active_tint %>" data-inactive-toggle-expired-value="<%= expired %>" class="relative mb-2">
-    <%# Left accent rendered outside the row so it keeps full color even when an expired row is dimmed by opacity-60. %>
+  <div data-controller="inactive-toggle" data-inactive-toggle-expired-value="<%= expired %>" class="relative mb-2">
+    <%# Left accent rendered outside the row so it keeps full color regardless of the row's border. %>
     <span class="absolute inset-y-0 left-0 w-1 rounded-l-lg <%= facilitator ? 'bg-purple-500' : 'bg-gray-300' %>"
           data-inactive-toggle-target="accentBar"></span>
     <% if f.object.persisted? %>
@@ -129,7 +116,7 @@
                     input_html: {
                       type: "date",
                       value: f.object.end_date&.strftime("%Y-%m-%d"),
-                      class: "w-full rounded-md border-gray-300! focus:ring-blue-500 focus:border-blue-500 text-sm #{field_bg.call(f.object.end_date.present?)}",
+                      class: "w-full rounded-md border-gray-300! focus:ring-blue-500 focus:border-blue-500 text-sm #{field_bg.call(f.object.end_date.present?)} #{'date-ended' if ended_date}",
                       style: "height: 42px;",
                       data: {
                         inactive_toggle_target: "endDate valueField",
