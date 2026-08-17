@@ -45,6 +45,7 @@
               include_blank: false,
               label: "Organization",
               label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
+              hint: "Changing the organization affects this org's Art Program status.",
               input_html: {
                 data: { controller: "remote-select", remote_select_model_value: "organization" }
               } %>
@@ -65,16 +66,19 @@
         </div>
       <% end %>
 
-      <p class="text-xs text-amber-700">
-        <i class="fa-solid fa-triangle-exclamation mr-1"></i>
-        Reassigning the organization <%= "disconnects the current address (#{@affiliation.organization_address.name}) and " if @affiliation.organization_address.present? %>links the new organization's address automatically only if it has exactly one — otherwise set the address after saving.
-      </p>
+      <div>
+        <%= render "affiliations/address_picker", f: f %>
+        <p class="mt-1 text-xs text-amber-700">
+          <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+          Reassigning the organization links the new organization's address automatically only if it has exactly one — otherwise set the address after saving.
+        </p>
+      </div>
 
       <div class="flex flex-wrap items-start gap-4">
         <div class="flex-1 min-w-[200px]">
           <%= f.input :title,
                 label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
-                hint: "\"Facilitator\" means they're running an Art Program." %>
+                hint: "\"Facilitator\" = AWBW Art Program Facilitator." %>
         </div>
         <div class="w-40">
           <%= f.input :start_date,

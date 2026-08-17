@@ -64,7 +64,7 @@ class AffiliationsController < ApplicationController
 
   def affiliation_params
     params.require(:affiliation).permit(
-      :person_id, :organization_id, :title, :start_date, :end_date, :primary_contact,
+      :person_id, :organization_id, :title, :start_date, :end_date, :primary_contact, :organization_address_id,
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ]
     )
   end

@@ -313,6 +313,9 @@
       </div>
       <% if allowed_to?(:manage?, Person) %>
         <div class="p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10" data-affiliation-dates-target="affiliationsContainer">
+          <% if f.object.affiliations.present? %>
+            <%= render "affiliations/header", label: "Organization" %>
+          <% end %>
           <%= f.fields_for :affiliations do |affiliation_form| %>
             <div data-paginated-fields-target="item">
               <%= render "affiliation_fields",

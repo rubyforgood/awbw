@@ -1,0 +1,13 @@
+<%# Column headers for the affiliation editor rows (desktop only). Card rows hide
+    their per-field labels at sm+ and rely on this row; on mobile each field keeps
+    its own label and this header is hidden. The grid template and px must match
+    the sm:grid row in affiliations/_fields so the labels sit over their columns.
+    The transparent border mirrors the card's border so content left-edges align. %>
+<div class="hidden sm:grid sm:grid-cols-[280px_150px_64px_150px_150px_auto] sm:gap-x-4 border border-transparent px-3 mb-1">
+  <span class="text-sm font-medium text-gray-700"><%= label %></span>
+  <span class="text-sm font-medium text-gray-700">Title</span>
+  <span class="text-sm font-medium text-gray-700">Address</span>
+  <span class="text-sm font-medium text-gray-700">Start</span>
+  <span class="text-sm font-medium text-gray-700">End</span>
+  <span class="text-sm font-medium text-gray-700">Primary contact</span>
+</div>
