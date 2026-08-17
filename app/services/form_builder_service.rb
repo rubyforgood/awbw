@@ -88,7 +88,7 @@ class FormBuilderService
     ],
     recipient_survey: %w[impact insights more_valuable facilitate_likelihood anything_else],
     content_sharing_preferences: %w[anonymous_contributions display_name_preference],
-    bulk_payment: %w[payer_first_name payer_last_name payer_email payer_phone payer_organization number_of_attendees payment_method bulk_payment_attendees]
+    bulk_payment: %w[first_name last_name primary_email phone organization_name number_of_attendees payment_method bulk_payment_attendees]
   }.freeze
 
   # Header questions created by each section's builder method
