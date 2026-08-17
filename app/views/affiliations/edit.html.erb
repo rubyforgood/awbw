@@ -121,11 +121,14 @@
 
   <% end %>
 
+  <% delete_confirm = @affiliation.facilitator? ?
+       "Removing this facilitator affiliation affects the organization's status with AWBW, which is calculated from facilitator affiliations and their start and end dates. Remove it?" :
+       "Remove this affiliation?" %>
   <div class="flex items-center gap-3 border-t border-gray-200 pt-6 mt-6">
     <%= button_to "Delete",
           affiliation_path(@affiliation, return_to: params[:return_to].presence, origin_id: params[:origin_id].presence),
           method: :delete,
-          form: { data: { turbo_confirm: "Remove this affiliation?" } },
+          form: { data: { turbo_confirm: delete_confirm } },
           class: "btn btn-danger-outline" %>
     <div class="ml-auto flex items-center gap-3">
       <% if back_path %>
