@@ -6,6 +6,7 @@ import { Controller } from "@hotwired/stimulus";
 // the left accent bar need updating here.
 export default class extends Controller {
   static targets = ["endDate", "title", "row", "accentBar"]
+  static values = { activeTint: String }
 
   connect() {
     if (this.hasEndDateTarget) this.apply();
@@ -44,11 +45,14 @@ export default class extends Controller {
   }
 
   // Single source of truth for the row tint: gray when expired, light purple for
-  // an active facilitator, white otherwise.
+  // an active facilitator, else the counterpart-theme active tint (sky/emerald).
   updateRowBackground() {
+    const activeTint = (this.activeTintValue || "bg-white border-gray-200").split(" ");
     this.rowTarget.classList.remove(
       "bg-gray-100", "border-gray-300", "opacity-60",
       "bg-purple-50", "border-purple-200",
+      "bg-sky-50", "border-sky-200",
+      "bg-emerald-50", "border-emerald-200",
       "bg-white", "border-gray-200"
     );
 
@@ -57,7 +61,7 @@ export default class extends Controller {
     } else if (this.isFacilitator()) {
       this.rowTarget.classList.add("bg-purple-50", "border-purple-200");
     } else {
-      this.rowTarget.classList.add("bg-white", "border-gray-200");
+      this.rowTarget.classList.add(...activeTint);
     }
   }
 

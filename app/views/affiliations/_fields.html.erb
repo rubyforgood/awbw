@@ -7,10 +7,14 @@
 <% if allowed_to?(:manage?, manage_subject) %>
   <% expired = f.object.inactive? || (f.object.end_date.present? && f.object.end_date < Date.current) %>
   <% facilitator = f.object.facilitator? %>
-  <% active_bg = facilitator ? "bg-purple-50 border-purple-200" : "bg-white border-gray-200" %>
+  <%# Active rows are tinted (never white) so active reads clearly against grey
+      inactive rows: purple for facilitators, else a super-light tint of the
+      counterpart's theme (person = sky, organization = emerald). %>
+  <% active_tint = person_side ? "bg-sky-50 border-sky-200" : "bg-emerald-50 border-emerald-200" %>
+  <% active_bg = facilitator ? "bg-purple-50 border-purple-200" : active_tint %>
   <% record = person_side ? f.object.person : f.object.organization %>
   <% label = person_side ? "Person" : "Organization" %>
-  <div data-controller="inactive-toggle" class="relative mb-2">
+  <div data-controller="inactive-toggle" data-inactive-toggle-active-tint-value="<%= active_tint %>" class="relative mb-2">
     <%# Left accent rendered outside the row so it keeps full color even when an expired row is dimmed by opacity-60. %>
     <span class="absolute inset-y-0 left-0 w-1 rounded-l-lg <%= facilitator ? 'bg-purple-500' : 'bg-gray-300' %>"
           data-inactive-toggle-target="accentBar"></span>
