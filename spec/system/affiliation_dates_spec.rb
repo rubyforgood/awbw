@@ -25,10 +25,10 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     )
   end
 
-  def set_textarea_input(textarea, value)
+  def set_text_input(input, value)
     page.execute_script(
       "arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('input', { bubbles: true }))",
-      textarea, value
+      input, value
     )
   end
 
@@ -52,7 +52,7 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
 
     # Find the Facilitator affiliation's start_date input specifically
     facilitator_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
-      f.find("textarea[name*='title']").value.include?("Facilitator")
+      f.find("input[name*='title']").value.include?("Facilitator")
     }
     start_input = facilitator_row.find("input[name*='start_date']")
     set_date_input(start_input, "2019-07-01")
@@ -69,9 +69,9 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     # Renaming the only exact "Facilitator" to a variant drops it — facilitator
     # matching is exact and case-sensitive, so "Lead Facilitator" no longer counts.
     facilitator_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
-      f.find("textarea[name*='title']").value.strip == "Facilitator"
+      f.find("input[name*='title']").value.strip == "Facilitator"
     }
-    set_textarea_input(facilitator_row.find("textarea[name*='title']"), "Lead Facilitator")
+    set_text_input(facilitator_row.find("input[name*='title']"), "Lead Facilitator")
 
     expect(facilitator).to have_text("—", wait: 5)
   end

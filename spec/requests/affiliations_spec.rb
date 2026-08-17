@@ -71,6 +71,15 @@ RSpec.describe "/affiliations", type: :request do
         expect(comment.body).to eq("Left a note")
         expect(comment.created_by).to eq(admin)
       end
+
+      it "assigns the organization address through the editor" do
+        address = create(:address, addressable: organization)
+
+        patch affiliation_path(affiliation, return_to: "organization", origin_id: organization.id),
+              params: { affiliation: { organization_address_id: address.id } }
+
+        expect(affiliation.reload.organization_address_id).to eq(address.id)
+      end
     end
 
     context "as a non-admin" do

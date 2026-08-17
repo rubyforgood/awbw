@@ -28,7 +28,7 @@ RSpec.describe "Facilitator affiliation change warning", type: :system do
 
   def row_for(title)
     all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
-      f.find("textarea[name*='title']").value.include?(title)
+      f.find("input[name*='title']").value.include?(title)
     }
   end
 
