@@ -34,6 +34,16 @@ RSpec.describe "Person notifications", type: :request do
       expect(person.notifications.order(:created_at).last).to be_incoming
     end
 
+    it "records the responded flag on an incoming communication" do
+      patch person_path(person), params: {
+        person: {
+          notifications_attributes: { "0" => { channel: "phone", email_subject: "They called, we replied", direction: "incoming", responded: "1" } }
+        }
+      }
+
+      expect(person.notifications.order(:created_at).last).to be_responded
+    end
+
     it "ignores a blank notification with no note" do
       expect {
         patch person_path(person), params: {
