@@ -291,6 +291,23 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).not_to include("unrelated")
       end
 
+      it "filters communications by resource on their noticeable record" do
+        person = create(:person)
+        registration = create(:event_registration, registrant: person)
+        create(:notification, recipient_email: person.communications_email,
+                              noticeable: registration, email_subject: "Registration comm marker")
+        create(:notification, recipient_email: person.communications_email,
+                              noticeable: person.user, email_subject: "User comm marker")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time",
+                                  audience: %w[visitors users staff],
+                                  resource_type: "EventRegistration", resource_id: registration.id },
+            headers: frame_headers
+
+        expect(response.body).to include("Registration comm marker")
+        expect(response.body).not_to include("User comm marker")
+      end
+
       it "excludes communications when a visit_id filter is set (no visit to prove)" do
         person = create(:person)
         create(:notification, recipient_email: person.communications_email, email_subject: "Hidden by visit filter")
