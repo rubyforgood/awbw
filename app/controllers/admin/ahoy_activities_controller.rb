@@ -171,17 +171,23 @@ module Admin
 
     # The person's communications for the merged timeline. Only the filters that
     # make sense for a message narrow them: the person/user scope, the date
-    # window, the activity-name search (matched against the subject), the props
-    # search (matched against subject + body), and the resource filter (matched
-    # against the noticeable record the communication is about). A visit_id
-    # filter excludes communications entirely — they have no visit to prove
-    # membership in one.
+    # window, the activity-name and prefixes searches (both matched against the
+    # subject), the props search (matched against subject + body), and the
+    # resource filter (matched against the noticeable record the communication is
+    # about). A visit_id filter excludes communications entirely — they have no
+    # visit to prove membership in one.
     def person_communications
       email = @person.communications_email
       return Notification.none if email.blank? || params[:visit_id].present?
 
       scope = Notification.email(email).includes(:noticeable, sender: :person).order(created_at: :desc)
       scope = scope.where(created_at: time_range) if time_range.present?
+
+      if params[:prefixes].present?
+        prefixes = params[:prefixes].split("--").map(&:strip).reject(&:blank?)
+        clause = prefixes.map { "notifications.email_subject LIKE ?" }.join(" OR ")
+        scope = scope.where(clause, *prefixes.map { |p| "%#{Notification.sanitize_sql_like(p)}%" })
+      end
 
       if params[:event_name].present?
         term = Notification.sanitize_sql_like(params[:event_name])

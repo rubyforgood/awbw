@@ -291,6 +291,19 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).not_to include("unrelated")
       end
 
+      it "prefixes search matches communication subjects" do
+        person = create(:person)
+        create(:notification, recipient_email: person.communications_email, email_subject: "Create your account")
+        create(:notification, recipient_email: person.communications_email, email_subject: "Password reset request")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time",
+                                  audience: %w[visitors users staff], prefixes: "create" },
+            headers: frame_headers
+
+        expect(response.body).to include("Create your account")
+        expect(response.body).not_to include("Password reset request")
+      end
+
       it "filters communications by resource on their noticeable record" do
         person = create(:person)
         registration = create(:event_registration, registrant: person)
