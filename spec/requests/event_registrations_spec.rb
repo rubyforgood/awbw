@@ -691,6 +691,29 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).to include("<option value=\"#{another_on_demand.id}\"")
           expect(response.body).not_to include("<option value=\"#{scheduled.id}\"")
         end
+
+        it "spells out what happens to the data, without a chain-collapse warning" do
+          get transfer_event_registration_path(source)
+
+          expect(response.body).to include("What recording this transfer will do")
+          expect(response.body).to include("the new event won't charge them again")
+          expect(response.body).to include("Their linked organizations are copied")
+          expect(response.body).not_to include("was already transferred in from")
+        end
+
+        it "warns that the middle registration is removed when transferring a transfer-in" do
+          origin_event = create(:event, title: "First Event")
+          origin = create(:event_registration, event: origin_event, status: "transferred_out")
+          middle = create(:event_registration, registrant: origin.registrant, event: event,
+            status: "transferred_out", transferred_from_registration: origin)
+
+          get transfer_event_registration_path(middle)
+
+          expect(response.body).to include("was already transferred in from First Event")
+          expect(response.body).to include("Remove this in-between registration")
+          # Money/records trace back to the true origin, not the middle event.
+          expect(response.body).to include("straight back to First Event")
+        end
       end
 
       describe "POST /event_registrations/:id/process_transfer" do
