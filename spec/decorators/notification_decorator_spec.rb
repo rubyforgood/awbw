@@ -124,9 +124,9 @@ RSpec.describe NotificationDecorator, type: :decorator do
     end
 
     it "falls back to the cached recipient_name when the person is gone" do
-      decorated = build_stubbed(:notification, recipient_email: "gone@example.com", recipient_name: "Departed Person").decorate
+      decorated = build_stubbed(:notification, recipient_email: "gone@example.com", recipient_name: "Deleted Person").decorate
 
-      expect(decorated.to_name).to eq("Departed Person")
+      expect(decorated.to_name).to eq("Deleted Person")
     end
   end
 
