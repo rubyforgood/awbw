@@ -121,6 +121,22 @@ class User < ApplicationRecord
     { id: id, label: full_name_with_email }
   end
 
+  # Not limited to has_access (unlike remote_search) — the activity log spans deactivated and historical accounts.
+  def self.activity_search(query)
+    return none if query.blank?
+
+    pattern = "%#{sanitize_sql_like(query.to_s.strip)}%"
+    left_joins(:person).where(
+      "users.email LIKE :p OR users.first_name LIKE :p OR users.last_name LIKE :p OR " \
+      "people.first_name LIKE :p OR people.last_name LIKE :p OR people.legal_first_name LIKE :p OR " \
+      "people.email LIKE :p OR people.email_2 LIKE :p OR " \
+      "CONCAT(people.first_name, ' ', people.last_name) LIKE :p OR " \
+      "CONCAT(people.legal_first_name, ' ', people.last_name) LIKE :p OR " \
+      "CONCAT(users.first_name, ' ', users.last_name) LIKE :p",
+      p: pattern
+    )
+  end
+
   def active_for_authentication?
     super && !inactive?
   end

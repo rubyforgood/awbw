@@ -21,7 +21,7 @@
   user_ids = params[:user_id].to_s.split("--").reject(&:blank?)
   filtered_users = user_ids.any? ? User.where(id: user_ids) : User.none
 
-  any_filters = time_label || audience_labels.any? || params[:visit_id].present? || params[:props].present? || @person.present? || filtered_users.exists?
+  any_filters = time_label || audience_labels.any? || params[:visit_id].present? || params[:props].present? || params[:user_search].present? || @person.present? || filtered_users.exists?
 %>
 <div class="flex flex-wrap items-center gap-2">
   <h3 class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Filters applied</h3>
@@ -43,6 +43,11 @@
   <% if params[:props].present? %>
     <span class="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 font-medium text-purple-800">
       Properties: <%= params[:props] %>
+    </span>
+  <% end %>
+  <% if params[:user_search].present? %>
+    <span class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 font-medium text-green-800">
+      User: <%= params[:user_search] %>
     </span>
   <% end %>
   <% if @person.present? %>

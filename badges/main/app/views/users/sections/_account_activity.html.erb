@@ -2,8 +2,10 @@
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
     <div class="flex items-center justify-between mb-3">
       <h4 class="text-sm font-semibold uppercase text-gray-700">Account activity</h4>
+      <%# all_time + every audience (like the person "History" card) so staff and older events aren't dropped by the index defaults. %>
+      <% history_scope = user.person_id ? { person_id: user.person_id } : { user_id: user.id } %>
       <%= link_to "See all user activity",
-                  admin_activities_events_path(user_id: user.id),
+                  admin_activities_events_path(**history_scope, time_period: "all_time", audience: %w[visitors users staff]),
                   class: "text-xs text-gray-500 hover:text-blue-600",
                   data: { turbo_frame: "_top" } %>
     </div>
