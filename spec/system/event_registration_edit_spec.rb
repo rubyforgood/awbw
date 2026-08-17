@@ -300,6 +300,28 @@ RSpec.describe "Event registration edit page", type: :system do
       expect(notification).to be_present
       expect(notification.channel).to eq("email")
     end
+
+    it "reveals and saves the responded flag once a logged communication is incoming" do
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      within("section", text: "Registration communications") do
+        click_on "Add communication"
+        expect(page).to have_field("Subject")
+        fill_in "Subject", with: "They emailed us"
+
+        expect(page).not_to have_field("Already responded")
+        find("label", text: "Incoming").click
+        check "Already responded"
+      end
+
+      click_on "Save changes"
+      expect(page).to have_text("successfully updated")
+
+      notification = registration.notifications.find_by(email_subject: "They emailed us")
+      expect(notification).to be_incoming
+      expect(notification).to be_responded
+    end
   end
 
   describe "comments box" do

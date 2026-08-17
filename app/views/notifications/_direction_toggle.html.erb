@@ -8,10 +8,10 @@
 <% compact = local_assigns.fetch(:compact, false) %>
 <% source_data = local_assigns.fetch(:source_data, {}) %>
 <div class="flex items-center gap-2">
-  <label class="relative inline-flex items-center cursor-pointer select-none"
+  <label class="relative inline-flex cursor-pointer items-center select-none"
          title="On = incoming: the person sent this to us, rather than us sending it to them">
     <%= f.check_box :direction, { class: "peer sr-only", "aria-label": "Incoming — sent by the person", data: source_data }, "incoming", "outgoing" %>
-    <span class="relative inline-block w-9 h-5 rounded-full bg-gray-300 transition-colors peer-checked:bg-sky-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-4"></span>
+    <span class="relative inline-block h-5 w-9 rounded-full bg-gray-300 transition-colors peer-checked:bg-sky-600 after:absolute after:top-0.5 after:left-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:after:translate-x-4"></span>
     <span class="ml-2 text-sm text-gray-600 peer-checked:text-sky-700">Incoming</span>
   </label>
   <% unless compact %>
