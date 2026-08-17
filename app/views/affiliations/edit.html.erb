@@ -39,16 +39,41 @@
                 data: { controller: "remote-select", remote_select_model_value: "person" }
               } %>
 
-        <%= f.input :organization_id,
-              collection: @affiliation.organization ? [ [ @affiliation.organization.name, @affiliation.organization.id ] ] : [],
-              selected: @affiliation.organization_id,
-              include_blank: false,
-              label: "Organization",
-              label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
-              hint: "Changing the organization affects this org's Art Program status.",
-              input_html: {
-                data: { controller: "remote-select", remote_select_model_value: "organization" }
-              } %>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Primary organization contact</label>
+          <div class="flex h-[42px] items-center">
+            <%= f.check_box :primary_contact,
+                  checked: @affiliation.primary_contact?,
+                  class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" %>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <%= f.input :organization_id,
+                collection: @affiliation.organization ? [ [ @affiliation.organization.name, @affiliation.organization.id ] ] : [],
+                selected: @affiliation.organization_id,
+                include_blank: false,
+                label: "Organization",
+                label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
+                wrapper_html: { class: "mb-0" },
+                input_html: {
+                  data: { controller: "remote-select", remote_select_model_value: "organization" }
+                } %>
+          <p class="mt-1 text-xs text-amber-700">
+            <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+            Changing the organization affects this org's Art Program status.
+          </p>
+        </div>
+
+        <div>
+          <%= render "affiliations/address_picker", f: f %>
+          <p class="mt-1 text-xs text-amber-700">
+            <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+            Reassigning the organization links the new organization's address automatically only if it has exactly one — otherwise set the address after saving.
+          </p>
+        </div>
       </div>
 
       <% if @affiliation.event_registration.present? %>
@@ -65,14 +90,6 @@
           </p>
         </div>
       <% end %>
-
-      <div>
-        <%= render "affiliations/address_picker", f: f %>
-        <p class="mt-1 text-xs text-amber-700">
-          <i class="fa-solid fa-triangle-exclamation mr-1"></i>
-          Reassigning the organization links the new organization's address automatically only if it has exactly one — otherwise set the address after saving.
-        </p>
-      </div>
 
       <div class="flex flex-wrap items-start gap-4">
         <div class="flex-1 min-w-[200px]">
@@ -95,13 +112,6 @@
                 input_html: { type: "date", value: @affiliation.end_date&.strftime("%Y-%m-%d") } %>
         </div>
       </div>
-
-      <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
-        <%= f.check_box :primary_contact,
-              checked: @affiliation.primary_contact?,
-              class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" %>
-        Primary organization contact
-      </label>
     </div>
 
     <%# ---- Comments (saved with the affiliation, like the other forms) ---- %>
