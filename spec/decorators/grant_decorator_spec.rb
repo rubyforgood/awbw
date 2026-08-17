@@ -134,9 +134,9 @@ RSpec.describe GrantDecorator, type: :decorator do
   end
 
   describe "#legacy_scholarship_badge" do
-    it "renders a Legacy Circle scholarship pill for planned-giving grants" do
+    it "renders a Legacy chip for planned-giving grants" do
       badge = create(:grant, :planned_giving).decorate.legacy_scholarship_badge
-      expect(badge).to include("Legacy Circle scholarship")
+      expect(badge).to include("Legacy")
     end
 
     it "renders nothing for ordinary grants" do
@@ -145,9 +145,9 @@ RSpec.describe GrantDecorator, type: :decorator do
   end
 
   describe "#in_memoriam_badge" do
-    it "renders an In memoriam pill for in-memoriam grants" do
+    it "renders a Memoriam chip for in-memoriam grants" do
       badge = create(:grant, :in_memoriam).decorate.in_memoriam_badge
-      expect(badge).to include("In memoriam")
+      expect(badge).to include("Memoriam")
     end
 
     it "renders nothing for grants not given in memoriam" do

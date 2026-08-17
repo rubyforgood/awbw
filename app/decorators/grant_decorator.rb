@@ -38,9 +38,9 @@ class GrantDecorator < ApplicationDecorator
   def legacy_scholarship_badge
     return unless object.planned_giving?
 
-    h.tag.span("Legacy Circle scholarship",
-               class: "inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800",
-               title: "Funded through planned giving")
+    h.tag.span("Legacy",
+               class: "inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800",
+               title: "Legacy Circle scholarship — funded through planned giving")
   end
 
   # Rose pill flagging a legacy scholarship given in memory of a loved one — a
@@ -49,9 +49,9 @@ class GrantDecorator < ApplicationDecorator
   def in_memoriam_badge
     return unless object.in_memoriam?
 
-    h.tag.span("In memoriam",
-               class: "inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-medium text-rose-800",
-               title: "Given in memory of a loved one")
+    h.tag.span("Memoriam",
+               class: "inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-800",
+               title: "Legacy Circle in memoriam — given in memory of a loved one")
   end
 
   # Whole-number percentage of the grant awarded in scholarships, clamped to
