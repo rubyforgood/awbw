@@ -543,19 +543,22 @@ module EventRegistrationServices
 
     # Attach the uploaded blob (a direct-upload signed id, or an uploaded file)
     # to the answer's Asset. The answer row is saved first so the polymorphic
-    # owner id resolves; submitted_answer keeps the filename so text-only views,
-    # exports, and notifications still read. Asset enforces the content type and
-    # size on save, rolling back the whole submission on a rejected file.
+    # owner id resolves; submitted_answer then caches the filename so text-only
+    # views, exports, and notifications still read. Asset enforces the content
+    # type and size on save, rolling back the whole submission on a rejected file.
     def attach_uploaded_file(record, raw_value)
       # An untouched file input still posts a blank value, so blank means "no new
       # upload" — keep the file, and its filename, the answer already has.
-      record.update!(submitted_answer: record.uploaded_file&.filename.to_s)
+      record.sync_uploaded_filename!
       return if raw_value.blank?
 
-      asset = record.asset || record.build_asset
+      # Named explicitly: assets.type defaults to "PrimaryAsset", which accepts
+      # only images, so a bare build_asset would reject every document type the
+      # upload field offers.
+      asset = record.asset || record.build_asset(type: FormUploadAsset.name)
       asset.file.attach(upload_attachable(raw_value))
       asset.save!
-      record.update!(submitted_answer: asset.file.filename.to_s)
+      record.sync_uploaded_filename!
     end
 
     # A direct upload arrives as a signed blob id. Handing the raw string to

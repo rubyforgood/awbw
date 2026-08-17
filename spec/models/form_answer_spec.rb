@@ -27,6 +27,30 @@ RSpec.describe FormAnswer do
     end
   end
 
+  describe "#sync_uploaded_filename!" do
+    let(:form) { create(:form) }
+    let(:submission) { create(:form_submission, form: form) }
+    let(:answer) { create(:form_answer, form_submission: submission, submitted_answer: "stale.png") }
+
+    it "caches the attached file's name" do
+      answer.build_asset.tap do |asset|
+        asset.file.attach(io: File.open(Rails.root.join("spec/fixtures/files/sample.png")),
+                          filename: "sample.png", content_type: "image/png")
+        asset.save!
+      end
+
+      answer.sync_uploaded_filename!
+
+      expect(answer.submitted_answer).to eq("sample.png")
+    end
+
+    it "clears the cache when there is no attachment" do
+      answer.sync_uploaded_filename!
+
+      expect(answer.submitted_answer).to eq("")
+    end
+  end
+
   describe "#name" do
     let(:form) { create(:form) }
     let(:form_field) { create(:form_field, form: form, name: "First Name") }
