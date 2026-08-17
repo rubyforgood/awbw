@@ -119,7 +119,8 @@
    date input's value only strikes via its inner pseudo-element (WebKit). */
 .aff-ended input,
 .aff-ended textarea,
-.aff-ended [data-address-select-target="button"] {
+.aff-ended [data-address-select-target="button"],
+.aff-ended a .truncate {
   text-decoration: line-through;
 }
 .aff-ended input::-webkit-datetime-edit {
