@@ -57,6 +57,14 @@ RSpec.describe Notification do
       expect { registration.destroy }.not_to change(Notification, :count)
       expect(notification.reload.noticeable).to be_nil
     end
+
+    it "is nullified, not destroyed, when the subject user account is deleted" do
+      user = create(:user)
+      notification = create(:notification, noticeable: user)
+
+      expect { user.destroy }.not_to change(Notification, :count)
+      expect(notification.reload.noticeable).to be_nil
+    end
   end
 
   describe "manual log channel" do
