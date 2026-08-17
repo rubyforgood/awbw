@@ -3,7 +3,12 @@
     to and the path that clears the filter. %>
 <% if record %>
   <div class="mb-4 flex items-center gap-2 text-sm text-gray-600">
-    <span>Filtered to <span class="font-medium text-gray-900"><%= record.try(:name) || record.try(:full_name) %></span></span>
-    <%= link_to "Clear", clear_path, class: "text-blue-600 hover:underline" %>
+    <span>Filtered to</span>
+    <span class="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
+      <%= record.try(:name) || record.try(:full_name) %>
+      <%= link_to clear_path, class: "text-blue-400 hover:text-blue-700", aria: { label: "Clear filter" } do %>
+        <i class="fa-solid fa-xmark"></i>
+      <% end %>
+    </span>
   </div>
 <% end %>
