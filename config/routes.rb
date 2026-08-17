@@ -75,6 +75,10 @@ Rails.application.routes.draw do
     end
   end
   resources :community_news
+  # Public pretty-URL for a standalone, published form — fillable with no account.
+  get "f/:slug", to: "public_forms#show", as: :public_form
+  post "f/:slug", to: "public_forms#create"
+  get "f/:slug/thank-you", to: "public_forms#thank_you", as: :thank_you_public_form
   get "bulk_payment/:slug", to: "events/bulk_payment_form_submissions#ticket", as: :bulk_payment_ticket
   post "bulk_payment/:slug/resend_confirmation", to: "events/bulk_payment_form_submissions#resend_confirmation", as: :bulk_payment_resend_confirmation
   get "registration/:slug", to: "events/registrations#show", as: :registration_ticket

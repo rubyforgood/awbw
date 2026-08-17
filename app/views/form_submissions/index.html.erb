@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<div class="form-submissions-index max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:forms) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="form-submissions-index mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:forms) %> rounded-xl border border-gray-200 p-6 shadow">
   <div class="w-full">
     <% if @person %>
       <div class="mb-4">
@@ -10,58 +10,46 @@
       </div>
     <% end %>
 
-    <div class="flex items-start gap-4 mb-6">
-      <span class="hidden sm:flex h-12 w-12 shrink-0 items-center justify-center rounded-xl <%= DomainTheme.bg_class_for(:forms) %> <%= DomainTheme.text_class_for(:forms, intensity: 700) %> border <%= DomainTheme.border_class_for(:forms, intensity: 200) %> shadow-sm">
+    <div class="mb-6 flex items-start gap-4">
+      <span class="hidden h-12 w-12 shrink-0 items-center justify-center rounded-xl sm:flex <%= DomainTheme.bg_class_for(:forms) %> <%= DomainTheme.text_class_for(:forms, intensity: 700) %> border <%= DomainTheme.border_class_for(:forms, intensity: 200) %> shadow-sm">
         <i class="fa-solid fa-file-signature text-xl" aria-hidden="true"></i>
       </span>
       <div>
-        <h2 class="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-          Form submissions
-          <span class="inline-flex items-center rounded-full <%= DomainTheme.bg_class_for(:forms) %> <%= DomainTheme.text_class_for(:forms, intensity: 700) %> border <%= DomainTheme.border_class_for(:forms, intensity: 200) %> px-2.5 py-0.5 text-sm font-semibold"><%= @form_submissions.size %></span>
-        </h2>
-        <p class="text-gray-600 mt-1">
+        <h2 class="text-2xl font-semibold text-gray-900">Form submissions</h2>
+        <p class="mt-1 text-gray-600">
           <% if @person %>
             Forms submitted by <span class="font-medium text-gray-900"><%= @person.name %></span>.
           <% else %>
-            Forms submitted across the site.
+            Forms submitted across the site — registrations, scholarships, and public forms.
           <% end %>
         </p>
       </div>
     </div>
 
-    <% if @form_submissions.any? %>
-      <div class="overflow-x-auto bg-white rounded-xl border border-gray-200 shadow-sm">
-        <table class="w-full border-collapse">
-          <thead>
-            <tr class="border-b border-gray-200 bg-gray-50 text-left text-sm text-gray-600">
-              <th class="px-4 py-3">Form</th>
-              <th class="px-4 py-3">Role</th>
-              <th class="px-4 py-3">Event</th>
-              <% unless @person %><th class="px-4 py-3">Person</th><% end %>
-              <th class="px-4 py-3">Submitted</th>
-              <th class="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @form_submissions.each do |submission| %>
-              <tr class="border-b border-gray-100 last:border-0 text-sm text-gray-800">
-                <td class="px-4 py-3 font-medium"><%= submission.form&.display_name %></td>
-                <td class="px-4 py-3"><%= submission.role&.humanize %></td>
-                <td class="px-4 py-3"><%= submission.resolved_event&.name %></td>
-                <% unless @person %><td class="px-4 py-3"><%= submission.person&.name %></td><% end %>
-                <td class="px-4 py-3 whitespace-nowrap"><%= submission.created_at.to_fs(:long) %></td>
-                <td class="px-4 py-3 text-right">
-                  <%= link_to "View", form_submission_path(submission, return_to: "form_submissions", person_id: submission.person_id), class: "text-blue-600 hover:underline" %>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
+    <%# Filter by form. Auto-submits into the results frame on change. %>
+    <%= form_with url: form_submissions_path, method: :get, data: { controller: "collection", turbo_frame: "form_submissions_results" } do |f| %>
+      <% if @person %><%= hidden_field_tag :person_id, @person.id %><% end %>
+      <div class="mb-6 flex flex-wrap items-end gap-3">
+        <div>
+          <label class="mb-1 block text-sm font-medium text-gray-700">Form</label>
+          <%= f.select :form_id,
+                options_from_collection_for_select(@forms, :id, :display_name, params[:form_id].to_i),
+                { include_blank: "All forms" },
+                class: "rounded border-gray-300 shadow-sm px-3 py-2 text-sm min-w-64" %>
+        </div>
+        <% if params[:form_id].present? %>
+          <%= link_to "Clear", form_submissions_path(person_id: @person&.id),
+                      data: { turbo_frame: "form_submissions_results" },
+                      class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-2" %>
+        <% end %>
       </div>
-    <% else %>
-      <div class="bg-white rounded-xl border border-dashed border-gray-300 py-12 text-center">
-        <i class="fa-solid fa-file-signature text-3xl text-gray-300" aria-hidden="true"></i>
-        <p class="mt-3 text-gray-500">No form submissions found.</p>
+    <% end %>
+
+    <% result_src = form_submissions_path(request.query_parameters) %>
+    <%= turbo_frame_tag :form_submissions_results, src: result_src, data: { turbo: "temporary" } do %>
+      <div class="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-400 shadow-sm">
+        <i class="fa-solid fa-spinner fa-spin text-2xl" aria-hidden="true"></i>
+        <p class="mt-2 text-sm">Loading submissions…</p>
       </div>
     <% end %>
   </div>

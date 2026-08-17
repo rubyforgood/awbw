@@ -67,4 +67,54 @@ RSpec.describe Form do
       end
     end
   end
+
+  describe 'slug + publishing' do
+    it 'normalizes a slug to url-safe form' do
+      form = create(:form, slug: 'Volunteer Interest!')
+      expect(form.slug).to eq('volunteer-interest')
+    end
+
+    it 'stores a blank slug as nil so the uniqueness index tolerates many' do
+      form = create(:form, slug: '')
+      expect(form.slug).to be_nil
+    end
+
+    it 'rejects a duplicate slug' do
+      create(:form, slug: 'apply')
+      dup = build(:form, slug: 'apply')
+      expect(dup).not_to be_valid
+    end
+
+    it 'requires a slug to publish' do
+      form = build(:form, published: true, slug: nil)
+      expect(form).not_to be_valid
+      expect(form.errors[:slug]).to include('is required to publish a form')
+    end
+
+    describe '#publicly_fillable?' do
+      it 'is true for a standalone, published, slugged form' do
+        form = create(:form, slug: 'apply', published: true)
+        expect(form).to be_publicly_fillable
+      end
+
+      it 'is false when not published' do
+        form = create(:form, slug: 'apply', published: false)
+        expect(form).not_to be_publicly_fillable
+      end
+
+      it 'is false when owned by an event/other record' do
+        form = create(:form, :with_owner, slug: 'apply')
+        form.update_column(:published, true)
+        expect(form).not_to be_publicly_fillable
+      end
+    end
+
+    describe '.published scope' do
+      it 'returns only published forms' do
+        published = create(:form, slug: 'a', published: true)
+        create(:form, slug: 'b', published: false)
+        expect(Form.published).to contain_exactly(published)
+      end
+    end
+  end
 end

@@ -1,0 +1,63 @@
+<% content_for(:page_bg_class, "public") %>
+
+<div class="max-w-3xl mx-auto px-4 pb-12 pt-6">
+  <% if allowed_to?(:edit?, @form) %>
+    <div class="flex flex-wrap items-center justify-end gap-1 pb-2">
+      <%= link_to "Edit form", edit_form_path(@form), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1 admin-only bg-blue-100" %>
+    </div>
+  <% end %>
+
+  <%# ---- HEADER ---- %>
+  <div class="text-center mb-8">
+    <%= image_tag("logo-with-tagline.png", alt: "A Window Between Worlds — art transforming trauma", class: "mx-auto mb-6 block h-12 w-auto") %>
+  </div>
+
+  <%# ---- FORM CARD ---- %>
+  <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
+    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
+      <h1 class="text-xl font-semibold tracking-wide leading-tight"><%= @form.display_name %></h1>
+      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
+    </div>
+
+    <div class="px-6 sm:px-8 py-7">
+      <%= render "forms/header", form: @form %>
+
+      <% if flash[:alert] %>
+        <div role="alert" class="scroll-mt-24 flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 mb-6" data-controller="form-errors">
+          <i class="fa-solid fa-circle-exclamation mt-0.5 text-red-500"></i>
+          <span><%= flash[:alert] %></span>
+        </div>
+      <% end %>
+
+      <%= form_with url: public_form_path(@form.slug), method: :post, local: true, class: "space-y-2", data: { turbo: false } do %>
+        <%# Honeypot %>
+        <div class="hidden" aria-hidden="true">
+          <input type="text" name="public_registration[website_url]" tabindex="-1" autocomplete="off">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
+          <% @form_fields.each do |field| %>
+            <% if field.group_header? %>
+              <%= render "events/public_registrations/group_header", field: field %>
+            <% else %>
+              <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
+              <div class="<%= field.grid_span_class %>">
+                <%= render "events/public_registrations/form_field", field: field, value: submitted_value %>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+
+        <div class="pt-7">
+          <%= button_tag type: "submit",
+                class: "w-full inline-flex items-center justify-center gap-2.5 rounded-xl bg-blue-900 px-6 py-3.5 text-white font-semibold text-lg shadow-lg shadow-blue-900/20 transition hover:bg-blue-800 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer" do %>
+            <i class="fa-regular fa-circle-check"></i>Submit
+          <% end %>
+          <p class="mt-3 flex items-center justify-center gap-1.5 text-xs text-gray-400">
+            <i class="fa-solid fa-lock"></i>Your information is kept private. Fields marked <span class="text-red-500 font-medium">*</span> are required.
+          </p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
