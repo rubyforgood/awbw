@@ -1657,6 +1657,23 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("Inactiva")
       end
 
+      it "warns on a transferred-out registration whose destination isn't recorded yet" do
+        create(:event_registration, event: event, status: "transferred_out")
+
+        get registrants_event_path(event, params: { attendance_status: "transferred_out" })
+
+        expect(response.body).to include("Transfer incomplete — no destination event recorded yet")
+      end
+
+      it "drops the warning once the transfer destination is recorded" do
+        source = create(:event_registration, event: event, status: "transferred_out")
+        create(:event_registration, registrant: source.registrant, transferred_from_registration: source)
+
+        get registrants_event_path(event, params: { attendance_status: "transferred_out" })
+
+        expect(response.body).not_to include("Transfer incomplete — no destination event recorded yet")
+      end
+
       it "shows the active registrant count in the page heading" do
         get registrants_event_path(event)
 

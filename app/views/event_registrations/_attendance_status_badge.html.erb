@@ -21,4 +21,11 @@
       In
     </span>
   <% end %>
+  <%# A transferred-out reg with no destination recorded yet is an unfinished
+      transfer — flag it so the admin knows to go back and complete it. %>
+  <% if registration.transfer_destination_pending? %>
+    <span class="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-amber-700" title="Transfer incomplete — no destination event recorded yet">
+      <i class="fas fa-triangle-exclamation text-[0.65rem]"></i>
+    </span>
+  <% end %>
 </div>
