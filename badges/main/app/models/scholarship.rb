@@ -3,7 +3,7 @@ class Scholarship < ApplicationRecord
   belongs_to :grant, optional: true
   has_one :allocation, as: :source, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
-  has_many :notifications, as: :noticeable, dependent: :destroy
+  has_many :notifications, as: :noticeable, dependent: :nullify
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }

@@ -59,7 +59,7 @@ RSpec.describe User do
     it { should have_many(:user_form_form_fields).through(:user_forms).dependent(:destroy) }
     # Custom scope/select for colleagues might interfere
     # it { should have_many(:colleagues).through(:organizations).source(:organization_users) }
-    it { should have_many(:notifications) } # As :noticeable
+    it { should have_many(:notifications).dependent(:nullify) } # As :noticeable
 
     # Nested Attributes
     it { should accept_nested_attributes_for(:user_forms) }

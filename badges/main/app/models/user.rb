@@ -35,7 +35,7 @@ class User < ApplicationRecord
   has_many :bookmarks, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :event_registrations, through: :person
-  has_many :notifications, as: :noticeable
+  has_many :notifications, as: :noticeable, dependent: :nullify
 
   has_many :reports, foreign_key: :created_by_id, inverse_of: :created_by
   has_many :resources, foreign_key: :created_by_id, inverse_of: :created_by
