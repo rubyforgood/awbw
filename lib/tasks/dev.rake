@@ -24,6 +24,7 @@ namespace :db do
       membership
       bulk_payments
       legacy_form_identifiers
+      public_forms
     ]
 
     desc "Generate representative sample data for development"
@@ -127,6 +128,11 @@ namespace :db do
     desc "Seed registration forms using legacy professional-field identifiers (dev only)"
     task legacy_form_identifiers: :environment do
       load Rails.root.join("db/seeds/dev/legacy_form_identifiers.rb")
+    end
+
+    desc "Seed standalone public forms with submissions and answers (dev only)"
+    task public_forms: :environment do
+      load Rails.root.join("db/seeds/dev/public_forms.rb")
     end
   end
 end
