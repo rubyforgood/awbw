@@ -17,7 +17,8 @@ export default class extends Controller {
         type === "checkbox" ||
         type === "radio" ||
         type === "select-one" ||
-        type === "select-multiple"
+        type === "select-multiple" ||
+        type === "date"
       ) {
         this.submitForm();
       }

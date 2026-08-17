@@ -2,7 +2,8 @@
 <div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
 
       <div class="flex flex-wrap items-center gap-y-2 mb-2">
-        <%# Scoped to a person (from their edit page's History card) — return there, not to Admin. %>
+        <%# Scoped to a person (from their edit page's History card, or the filter) —
+            return to that person, not the generic Admin default. %>
         <% if @person %>
           <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700" do %>
             <i class="fas fa-arrow-left"></i>
@@ -19,48 +20,38 @@
         </div>
       </div>
 
-      <!-- Page Header -->
       <div class="flex items-baseline gap-3 mb-6 leading-none">
         <h1 class="text-2xl font-semibold text-gray-900 leading-none">Activities</h1>
-        <span class="text-sm text-gray-500 leading-none"><%= @events.count %> total</span>
+        <%= render "count" %>
       </div>
 
       <div class="mb-6 text-sm min-h-10">
         <%= render "admin/shared/active_filters_subheader" %>
       </div>
 
-      <!-- Filters -->
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
-        <%= form_with url: request.path, method: :get, local: true do %>
+        <%# Selects submit on change and the text boxes debounce-submit as you type,
+            all into the activity_results frame — the filter form stays put (and
+            focused) while just the rows swap. %>
+        <%= form_with url: request.path, method: :get,
+              data: { controller: "collection", turbo_frame: "activity_results" },
+              autocomplete: "off" do %>
 
           <div class="flex flex-wrap lg:flex-nowrap gap-4">
 
-            <!-- Activity Name -->
-            <div class="flex-1 min-w-0">
+            <div class="flex-[2] min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
                 Activity name
               </label>
               <%= text_field_tag :event_name,
                                  params[:event_name],
-                                 placeholder: "e.g. Viewed Workshop",
+                                 placeholder: "e.g. view workshop, account-auth",
                                  class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
             </div>
 
-            <!-- Visit ID -->
             <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
-                Visit ID
-              </label>
-              <%= number_field_tag :visit_id,
-                                   params[:visit_id],
-                                   placeholder: "e.g. 42",
-                                   class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
-            </div>
-
-            <!-- Props -->
-            <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-600 mb-1">
-                Props
+                Properties
               </label>
               <%= text_field_tag :props,
                                  params[:props],
@@ -68,28 +59,21 @@
                                  class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
             </div>
 
-            <!-- User Filter -->
             <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
-                User
+                Person
               </label>
-              <%= select_tag :user_id,
-                             options_from_collection_for_select(
-                               User.where(id: Ahoy::Visit.select(:user_id).distinct).order(:first_name, :last_name),
-                               :id,
-                               :full_name,
-                               params[:user_id]
-                             ),
-                             include_blank: "All Users",
+              <%= select_tag :person_id,
+                             @person ? options_for_select([ [ @person.name, @person.id ] ], @person.id) : nil,
+                             include_blank: "All people",
+                             data: { controller: "remote-select", remote_select_model_value: "person" },
                              class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
             </div>
 
-            <!-- Audience -->
             <div class="flex-1 min-w-0">
               <%= render "admin/shared/audience_dropdown", auto_submit: false, stacked: true %>
             </div>
 
-            <!-- Time Period -->
             <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
                 Time Period
@@ -102,7 +86,6 @@
                              class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
             </div>
 
-            <!-- Date From -->
             <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
                 From
@@ -112,7 +95,6 @@
                                  class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm" %>
             </div>
 
-            <!-- Date To -->
             <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
                 To
@@ -122,12 +104,21 @@
                                  class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm" %>
             </div>
 
+            <div class="flex-none w-24">
+              <label class="block text-sm font-medium text-gray-600 mb-1">
+                Visit ID
+              </label>
+              <%= number_field_tag :visit_id,
+                                   params[:visit_id],
+                                   placeholder: "e.g. 42",
+                                   class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+            </div>
+
           </div>
 
-          <!-- Quick Ranges -->
           <div class="flex items-center gap-3 mt-6 text-sm">
             <span class="text-gray-500">Quick:</span>
-            <% safe_params = params.slice(:event_name, :visit_id, :props, :user_id, :from, :to).to_unsafe_h %>
+            <% safe_params = params.slice(:event_name, :visit_id, :props, :person_id, :from, :to).to_unsafe_h %>
             <%= link_to "24h",
                         url_for(safe_params.merge(from: 1.day.ago.to_date)),
                         class: "text-indigo-600 hover:underline" %>
@@ -139,160 +130,18 @@
             <%= link_to "30d",
                         url_for(safe_params.merge(from: 30.days.ago.to_date)),
                         class: "text-indigo-600 hover:underline" %>
-          </div>
 
-          <div class="mt-6">
-            <%= submit_tag "Filter",
-                           class: "bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition" %>
+            <%= link_to "Clear filters", request.path,
+                        class: "ml-auto text-gray-500 hover:text-gray-700",
+                        data: { action: "collection#clearAndSubmit" } %>
           </div>
 
         <% end %>
       </div>
 
-      <%# Person-scoped view: notifications aren't ahoy events, so list the
-          person's communications here from the notifications table. %>
-      <% if @person && @person_communications.present? %>
-        <section class="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>">
-              <i class="fa-solid fa-bell"></i>
-            </span>
-            <h2 class="text-sm font-semibold text-gray-700">Communications</h2>
-            <%= link_to "View all",
-                        notifications_path(email: @person.communications_email, return_to_type: "Person", return_to_id: @person.id),
-                        class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
-                        target: "_blank", rel: "noopener" %>
-          </div>
-          <div class="space-y-2 p-4">
-            <% @person_communications.each do |notification| %>
-              <%= render "notifications/notification_row", notification: notification, admin: true %>
-            <% end %>
-          </div>
-        </section>
+      <%# Results load in a turbo frame so the filter form (outside the frame) can
+          swap just the rows — keeping the search inputs focused as you type. %>
+      <%= turbo_frame_tag :activity_results, src: admin_activities_events_path(request.query_parameters), data: { turbo: "temporary" } do %>
+        <%= render "results_skeleton" %>
       <% end %>
-
-      <%# Attendance sign-ins aren't ahoy-tracked (login-free public callout), so
-          list the entries directly, newest first. %>
-      <% if @person && @person_time_entries.present? %>
-        <section class="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
-              <i class="fa-solid fa-clock"></i>
-            </span>
-            <h2 class="text-sm font-semibold text-gray-700">Attendance time entries</h2>
-          </div>
-          <table class="w-full text-sm">
-            <thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-              <tr>
-                <th class="px-4 py-2 text-left">Event</th>
-                <th class="px-4 py-2 text-left">Date</th>
-                <th class="px-4 py-2 text-left">In</th>
-                <th class="px-4 py-2 text-left">Out</th>
-                <th class="px-4 py-2 text-left">Duration</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <% @person_time_entries.each do |entry| %>
-                <tr>
-                  <td class="px-4 py-2 text-gray-900"><%= entry.event_registration.event.title %></td>
-                  <td class="px-4 py-2 text-gray-500"><%= entry.attendance_date&.strftime("%b %-d, %Y") %></td>
-                  <td class="px-4 py-2 text-gray-500"><%= entry.signed_in_label %></td>
-                  <td class="px-4 py-2 text-gray-500"><%= entry.signed_out_label %></td>
-                  <td class="px-4 py-2 text-gray-500"><%= entry.duration_label %></td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </section>
-      <% end %>
-
-      <!-- Activities Table -->
-      <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-x-auto">
-        <table class="responsive-table min-w-full divide-y divide-gray-200 text-sm">
-          <thead class="bg-gray-50 text-gray-600 uppercase tracking-wider text-xs">
-          <tr>
-            <th class="px-4 py-3 text-left rounded-tl-xl">Time</th>
-            <th class="px-4 py-3 text-left">Activity</th>
-            <th class="px-4 py-3 text-left">Resource</th>
-            <th class="px-4 py-3 text-left">User</th>
-            <th class="px-4 py-3 text-left">Visit ID</th>
-            <th class="px-4 py-3 text-left rounded-tr-xl">Properties</th>
-          </tr>
-          </thead>
-
-          <tbody class="divide-y divide-gray-100">
-          <% @events.each do |event| %>
-            <tr class="hover:bg-gray-50 transition">
-              <td data-label="Time" class="px-4 py-3 whitespace-nowrap text-gray-500">
-                <%= event.time.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
-              </td>
-
-              <td data-label="Activity" class="px-4 py-3 font-medium text-gray-900">
-                <%= event.name %>
-              </td>
-
-              <td data-label="Resource" class="px-4 py-3 text-gray-500">
-                <%= event.properties["resource_title"].presence || "—" %>
-              </td>
-
-              <td data-label="User" class="px-4 py-3 text-gray-600">
-                <% if event.user %>
-                  <%= link_to event.user.full_name,
-                              user_path(event.user),
-                              class: "text-indigo-600 hover:underline" %>
-                <% else %>
-                  <span class="text-gray-400 italic">Guest</span>
-                <% end %>
-              </td>
-
-              <td data-label="Visit ID" class="px-4 py-3 text-gray-500">
-                <%= event.visit_id %>
-              </td>
-
-              <td data-label="Properties" class="px-4 py-3 text-gray-500 relative group">
-                <% if event.properties.present? && event.properties.any? %>
-                  <%= link_to admin_activities_event_path(event),
-                              class: "cursor-default text-indigo-600 text-xs font-medium bg-indigo-50 px-2 py-0.5 rounded hover:bg-indigo-100" do %>
-                    <%= event.properties.size %> <%= "prop".pluralize(event.properties.size) %>
-                  <% end %>
-                  <%
-                    props = event.properties.dup
-                    display_props = []
-                    # Combine polymorphic _type/_id pairs
-                    props.keys.select { |k| k.end_with?("_type") }.each do |type_key|
-                      prefix = type_key.chomp("_type")
-                      id_key = "#{prefix}_id"
-                      if props.key?(id_key)
-                        display_props << [prefix, "#{props[type_key]}.find(#{props[id_key]})"]
-                        props.delete(type_key)
-                        props.delete(id_key)
-                      end
-                    end
-                    # Show resource_title first, then remaining props
-                    if props.key?("resource_title")
-                      display_props.unshift(["resource_title", props.delete("resource_title")])
-                    end
-                    props.each do |key, value|
-                      display_props << [key, value.is_a?(Hash) ? value.to_json : value]
-                    end
-                  %>
-                  <div class="hidden group-hover:block absolute z-50 right-0 top-full bg-gray-900 text-gray-100 text-xs rounded-lg shadow-lg px-3 py-3 max-h-64 overflow-y-auto" style="width: 400px;">
-                    <% display_props.each do |key, value| %>
-                      <div class="py-1"><span class="text-indigo-300 font-semibold"><%= key %>:</span> <%= value.nil? ? "nil" : value.to_s.delete('"') %></div>
-                    <% end %>
-                  </div>
-                <% else %>
-                  <span class="text-gray-300 italic">none</span>
-                <% end %>
-              </td>
-            </tr>
-          <% end %>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      <div class="flex justify-center mt-8">
-        <%= tailwind_paginate @events %>
-      </div>
 </div>
