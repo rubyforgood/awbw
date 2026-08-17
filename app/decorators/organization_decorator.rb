@@ -93,20 +93,16 @@ class OrganizationDecorator < ApplicationDecorator
     affiliations.maximum(:end_date)
   end
 
-  # "Affiliated since" display: affiliation history as merged year-based periods
-  # (see AffiliationPeriods), falling back to the org's own start_date, then to a
-  # blank string. Pass a preloaded affiliations collection on list pages to avoid
-  # an N+1.
+  # "Affiliated since": affiliation history as merged year-based periods (see
+  # AffiliationPeriods), falling back to the org's start_date, then blank. Pass
+  # preloaded affiliations on list pages to avoid an N+1.
   def affiliated_since_display(affiliations = object.affiliations)
     AffiliationPeriods.label(affiliations) || object.start_date&.strftime("%b %Y") || ""
   end
 
-  # "Art program since" display: the org's facilitator-affiliation history as
-  # merged periods (see AffiliationPeriods), at month precision — when a program
-  # started or lapsed is the whole point of the figure. One value for every
-  # surface that shows it (index chip, profile, edit form), so they can't drift.
-  # Blank when the org has never facilitated. Pass a preloaded affiliations
-  # collection on list pages.
+  # "Art program since": facilitator-affiliation history as merged periods (see
+  # AffiliationPeriods) at month precision — the exact start/lapse month is the
+  # point. Blank when the org has never facilitated.
   def program_since_display(affiliations = object.affiliations)
     AffiliationPeriods.label(affiliations.select(&:facilitator?), precision: :month) || ""
   end
