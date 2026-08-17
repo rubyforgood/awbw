@@ -43,6 +43,19 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).not_to include(form_submission_path(theirs))
       end
 
+      it "breaks the View link out of the results frame" do
+        create(:form_submission)
+        get form_submissions_path, headers: frame_headers
+        expect(response.body).to include('data-turbo-frame="_top"')
+      end
+
+      it "shows a Forms eyebrow anchored to the form when arriving from the forms index" do
+        form = create(:form, name: "Volunteer interest")
+        get form_submissions_path(form_id: form.id, return_to: "forms")
+
+        expect(response.body).to include(CGI.escapeHTML(forms_path(anchor: "form_#{form.id}")))
+      end
+
       it "each View link carries a return_to back to the person's index" do
         person = create(:person)
         submission = create(:form_submission, person: person)

@@ -14,6 +14,32 @@ RSpec.describe "Forms", type: :request do
         expect(response).to have_http_status(:success)
         expect(response.body).to include("My Form")
       end
+
+      it "shows the public link for a published form" do
+        create(:form, :standalone, name: "Volunteer", slug: "volunteer", published: true)
+        get forms_path
+        expect(response.body).to include(public_form_path("volunteer"))
+        expect(response.body).to include("/f/volunteer")
+      end
+
+      it "marks an event-connected unpublished form as an event form, not 'Not published'" do
+        form = create(:form, :standalone, name: "Reg Form")
+        EventForm.create!(form: form, event: create(:event), role: "registration")
+        get forms_path
+        expect(response.body).to include("Event form")
+      end
+
+      it "marks a standalone form with no events and no public link as not published" do
+        create(:form, :standalone, name: "Orphan Form")
+        get forms_path
+        expect(response.body).to include("Not published")
+      end
+
+      it "has no Delete link" do
+        form = create(:form, :standalone, name: "My Form")
+        get forms_path
+        expect(response.body).not_to include(">Delete<")
+      end
     end
 
     context "as regular user" do

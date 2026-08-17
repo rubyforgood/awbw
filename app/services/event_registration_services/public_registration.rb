@@ -1,7 +1,5 @@
 module EventRegistrationServices
   class PublicRegistration
-    include FormAnswerPersistence
-
     Result = Struct.new(:success?, :event_registration, :form_submission, :errors, keyword_init: true)
 
     # Well-known field_identifier of the "magic" CE question seeded onto the
@@ -129,7 +127,7 @@ module EventRegistrationServices
 
         Result.new(success?: true, event_registration: event_registration, form_submission: submission, errors: [])
       end
-    rescue UnreadableUpload => e
+    rescue FormSubmission::UnreadableUpload => e
       Result.new(success?: false, event_registration: nil, errors: [ e.message ])
     rescue ActiveRecord::ValueTooLong => e
       Result.new(success?: false, event_registration: nil, errors: [ too_long_message(e) ])
@@ -515,7 +513,7 @@ module EventRegistrationServices
         next unless field
         next if field.group_header? || field.field_identifier == "confirm_email"
 
-        persist_answer(submission, field, raw_value)
+        submission.persist_answer(field, raw_value)
       end
     end
 
@@ -536,7 +534,7 @@ module EventRegistrationServices
         next unless field
         next if field.group_header?
 
-        persist_answer(submission, field, raw_value)
+        submission.persist_answer(field, raw_value)
       end
 
       OtherResponses::CaptureFromSubmission.call(submission)
@@ -556,7 +554,7 @@ module EventRegistrationServices
         next unless field
         next if field.group_header?
 
-        persist_answer(submission, field, raw_value)
+        submission.persist_answer(field, raw_value)
       end
     end
 

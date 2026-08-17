@@ -1,11 +1,8 @@
 # Records a submission to a standalone, published form filled out at its public
 # pretty URL (see PublicFormsController). Unlike event registration there is no
 # event, role, or account — the respondent is find-or-created as a Person from
-# the form's name/email answers. Answer persistence is shared with registration
-# via FormAnswerPersistence.
+# the form's name/email answers. Answers persist via FormSubmission#persist_answer.
 class PublicFormSubmission
-  include FormAnswerPersistence
-
   Result = Struct.new(:success?, :form_submission, :person, :errors, keyword_init: true)
 
   ROLE = "public".freeze
@@ -35,7 +32,7 @@ class PublicFormSubmission
 
       Result.new(success?: true, form_submission: submission, person: person, errors: [])
     end
-  rescue FormAnswerPersistence::UnreadableUpload => e
+  rescue FormSubmission::UnreadableUpload => e
     Result.new(success?: false, errors: [ e.message ])
   rescue ActiveRecord::ValueTooLong
     Result.new(success?: false, errors: [ "One of your answers is too long. Please shorten it and try again." ])
@@ -92,7 +89,7 @@ class PublicFormSubmission
       next unless field
       next if field.group_header? || field.field_identifier == "confirm_email"
 
-      persist_answer(submission, field, raw_value)
+      submission.persist_answer(field, raw_value)
     end
   end
 end

@@ -30,7 +30,7 @@
       </thead>
       <tbody class="divide-y divide-gray-200">
         <% @forms.each do |form| %>
-          <tr class="hover:bg-gray-50">
+          <tr id="form_<%= form.id %>" class="scroll-mt-24 hover:bg-gray-50">
             <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= form.display_name %></td>
             <td class="px-4 py-2 text-sm text-gray-600"><%= form.form_fields.size %></td>
             <td class="px-4 py-2 text-sm text-gray-600">
@@ -40,22 +40,27 @@
                 0
               <% end %>
             </td>
+            <%# "Public link" is only about the public /f/:slug endpoint. A form
+                still works via its events whether or not it's published, so an
+                event-connected form reads as "Event form", never "Not published". %>
             <td class="px-4 py-2 text-sm text-gray-600">
               <% if form.publicly_fillable? %>
                 <%= link_to public_form_path(form.slug), target: "_blank", rel: "noopener",
                             class: "inline-flex items-center gap-1.5 rounded-md bg-green-50 px-2 py-0.5 text-green-700 font-medium hover:bg-green-100" do %>
                   <i class="fa-solid fa-link text-xs"></i>/f/<%= form.slug %>
                 <% end %>
-              <% elsif form.standalone? %>
-                <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-500">Not published</span>
+              <% elsif form.events.size.positive? %>
+                <span class="inline-flex items-center gap-1.5 rounded-md bg-purple-50 px-2 py-0.5 text-xs text-purple-700">
+                  <i class="fa-solid fa-calendar-day"></i>Event form
+                </span>
               <% else %>
-                <span class="text-gray-300">—</span>
+                <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-500">Not published</span>
               <% end %>
             </td>
             <td class="px-4 py-2 text-sm text-gray-600">
               <% submissions_count = form.form_submissions.size %>
               <% if submissions_count.positive? %>
-                <%= link_to submissions_count, form_submissions_path(form_id: form.id),
+                <%= link_to submissions_count, form_submissions_path(form_id: form.id, return_to: "forms"),
                             class: "inline-flex items-center rounded-md bg-purple-50 px-2 py-0.5 text-purple-700 font-medium hover:bg-purple-100" %>
               <% else %>
                 0
@@ -64,10 +69,6 @@
             <td class="space-x-3 px-4 py-2 text-right text-sm">
               <%= link_to "View", form_path(form), class: "text-purple-600 hover:text-purple-800 underline" %>
               <%= link_to "Edit", edit_form_path(form), class: "text-purple-600 hover:text-purple-800 underline" %>
-              <% if allowed_to?(:destroy?, form) && form.event_forms.none? %>
-                <%= link_to "Delete", form_path(form), class: "text-red-600 hover:text-red-800 underline",
-                            data: { turbo_method: :delete, turbo_confirm: "Delete \"#{form.display_name}\"?" } %>
-              <% end %>
             </td>
           </tr>
         <% end %>
