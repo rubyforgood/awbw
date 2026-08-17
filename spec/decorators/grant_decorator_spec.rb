@@ -154,4 +154,18 @@ RSpec.describe GrantDecorator, type: :decorator do
       expect(create(:grant, :planned_giving).decorate.in_memoriam_badge).to be_nil
     end
   end
+
+  describe "#funds_allocation_deadline_compact" do
+    it "shows abbreviated month and day, with the full date on hover" do
+      grant = build(:grant, funds_allocation_deadline: Date.new(2026, 8, 17))
+      html = grant.decorate.funds_allocation_deadline_compact
+      expect(html).to include("Aug 17")
+      expect(html).to include('title="August 17, 2026"')
+    end
+
+    it "renders a dash when there is no deadline" do
+      grant = build(:grant, funds_allocation_deadline: nil)
+      expect(grant.decorate.funds_allocation_deadline_compact).to eq("—")
+    end
+  end
 end

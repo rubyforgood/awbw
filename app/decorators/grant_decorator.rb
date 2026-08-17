@@ -25,6 +25,16 @@ class GrantDecorator < ApplicationDecorator
     object.funds_allocation_deadline&.strftime("%B %-d, %Y") || "—"
   end
 
+  # Compact deadline for the index — abbreviated month and day (e.g. "Aug 17"),
+  # with the full date (year included) on hover. Dropping the year from the cell
+  # keeps the column narrow so the grant-name column gets more width.
+  def funds_allocation_deadline_compact
+    date = object.funds_allocation_deadline
+    return "—" unless date
+
+    h.tag.span(date.strftime("%b %-d"), title: date.strftime("%B %-d, %Y"), class: "cursor-help")
+  end
+
   def funds_received_on
     object.funds_received_on&.strftime("%B %-d, %Y") || "—"
   end
