@@ -29,5 +29,19 @@ RSpec.describe "People affiliation address picker", type: :request do
       expect(response.body).to include("[INACTIVE]")
       expect(response.body).to include("123 Sesame Street")
     end
+
+    it "shows a comment indicator with the latest comment for an affiliation that has comments" do
+      person = create(:person)
+      organization = create(:organization)
+      affiliation = create(:affiliation, person: person, organization: organization)
+      create(:comment, commentable: affiliation, body: "Older note", created_at: 2.days.ago)
+      create(:comment, commentable: affiliation, body: "Reviewed the paperwork", created_at: 1.hour.ago)
+
+      get edit_person_path(person)
+
+      expect(response.body).to include("fa-comment")
+      expect(response.body).to include("2 comments")
+      expect(response.body).to include("Reviewed the paperwork")
+    end
   end
 end

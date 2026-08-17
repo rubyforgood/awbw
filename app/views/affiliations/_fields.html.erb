@@ -134,7 +134,19 @@
 
       <div class="flex-1 sm:flex-none sm:w-auto min-w-0">
         <div class="mb-1 xl:hidden"><%= render "affiliations/primary_contact_label" %></div>
-        <%= render "affiliations/primary_contact_toggle", f: f %>
+        <div class="flex h-[42px] items-center gap-2">
+          <%= render "affiliations/primary_contact_toggle", f: f %>
+          <% affiliation_comments = f.object.comments.to_a %>
+          <% if affiliation_comments.any? %>
+            <span class="group relative inline-flex items-center">
+              <i class="fa-solid fa-comment text-sm cursor-help <%= facilitator ? 'text-purple-500' : 'text-blue-500' %>"></i>
+              <span class="hidden group-hover:block absolute right-0 top-full z-50 mt-1 w-64 whitespace-normal rounded-lg bg-white p-3 text-left text-xs text-gray-700 shadow-lg ring-1 ring-gray-200">
+                <span class="block font-semibold text-gray-900"><%= pluralize(affiliation_comments.size, "comment") %></span>
+                <span class="mt-1 block text-gray-600"><%= truncate(affiliation_comments.first.body.to_s, length: 140) %></span>
+              </span>
+            </span>
+          <% end %>
+        </div>
       </div>
 
       <% unless f.object.persisted? %>
