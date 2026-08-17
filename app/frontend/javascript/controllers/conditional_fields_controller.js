@@ -1,7 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Shows/hides fields based on a source <select>. A field appears when its
-// data-show-when matches the select's value, or — for option-driven conditions —
+// Shows/hides fields based on a source control (a <select>, or a checkbox that
+// reports its value when on and "" when off). A field appears when its
+// data-show-when matches the source's value, or — for option-driven conditions —
 // when its data-show-when-attr names a data-* flag that is "true" on the selected
 // option (e.g. data-show-when-attr="eventSelector" reads the option's
 // data-event-selector).
@@ -13,12 +14,14 @@ export default class extends Controller {
   }
 
   toggle() {
-    const selected = this.sourceTarget.selectedOptions[0]
+    const source = this.sourceTarget
+    const value = source.type === "checkbox" ? (source.checked ? source.value : "") : source.value
+    const selected = source.selectedOptions?.[0]
     this.fieldTargets.forEach(el => {
       const attr = el.dataset.showWhenAttr
       el.hidden = attr
         ? selected?.dataset[attr] !== "true"
-        : el.dataset.showWhen !== this.sourceTarget.value
+        : el.dataset.showWhen !== value
     })
   }
 }

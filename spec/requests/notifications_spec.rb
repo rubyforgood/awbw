@@ -225,6 +225,11 @@ RSpec.describe "Notifications", type: :request do
         expect(Notification.last).to be_incoming
       end
 
+      it "records the responded flag on an incoming communication" do
+        post notifications_path, params: valid_params.deep_merge(notification: { direction: "incoming", responded: "1" })
+        expect(Notification.last).to be_responded
+      end
+
       it "re-renders with an error when no person is selected" do
         expect {
           post notifications_path, params: valid_params.except(:person_id)

@@ -15,7 +15,7 @@
     <%= simple_form_for @notification, url: notifications_path do |f| %>
       <%= render "shared/errors", resource: @notification if @notification.errors.any? %>
 
-      <div class="space-y-5">
+      <div class="space-y-5" data-controller="conditional-fields">
         <div>
           <% person_label = @person&.remote_search_label %>
           <label for="person_id" class="block text-sm font-medium text-gray-700 mb-1">Person</label>
@@ -46,7 +46,16 @@
 
         <div>
           <span class="block text-sm font-medium text-gray-700 mb-1">Direction</span>
-          <%= render "notifications/direction_toggle", f: f %>
+          <%= render "notifications/direction_toggle", f: f,
+                     source_data: { conditional_fields_target: "source", action: "change->conditional-fields#toggle" } %>
+        </div>
+
+        <div data-conditional-fields-target="field" data-show-when="incoming" hidden>
+          <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+            <%= f.check_box :responded, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
+            Already responded
+          </label>
+          <p class="mt-1 text-xs text-gray-500">Check if you've already replied to this incoming message.</p>
         </div>
 
         <div>
