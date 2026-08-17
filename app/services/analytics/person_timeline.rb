@@ -1,9 +1,7 @@
 module Analytics
-  # Interleaves a person's Ahoy activity events and their communications
-  # (Notification records) into one timestamp-ordered timeline so the admin
-  # person-scoped activities page can show them together instead of in separate
-  # panels. Notifications aren't ahoy-tracked, so the two streams are merged in
-  # Ruby; person history is bounded and this is an admin-only view.
+  # Merges a person's Ahoy events and communications into one timestamp-ordered
+  # timeline. They live in separate tables, so the merge happens in Ruby — fine
+  # for a bounded, admin-only person history.
   class PersonTimeline
     Entry = Data.define(:kind, :record, :occurred_at) do
       def communication? = kind == :communication

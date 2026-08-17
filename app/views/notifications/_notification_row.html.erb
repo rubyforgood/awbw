@@ -9,8 +9,7 @@
     of an editable communication. ---- %>
 <% admin = local_assigns.fetch(:admin, true) %>
 <% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
-<%# Hide the leading date when the caller already shows it (e.g. a timeline
-    row with its own Time column). %>
+<%# Callers with their own date column pass show_date: false. %>
 <% show_date = local_assigns.fetch(:show_date, true) %>
 <% body_admin_only = notification.channel != "autoemail" %>
 <% show_body = admin || !body_admin_only %>

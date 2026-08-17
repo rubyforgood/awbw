@@ -110,10 +110,8 @@ class Notification < ApplicationRecord
   # sent by the person themselves and is being logged after the fact.
   DIRECTIONS = %w[outgoing incoming].freeze
 
-  # Communications appear on the admin activity timeline alongside ahoy events,
-  # so they carry a synthetic "verb.noun" activity name in the same shape as an
-  # event name — letting the activity-name and prefixes filters match them the
-  # same way. The prefix is always "communication"; the action encodes direction.
+  # Synthetic activity name matching an ahoy event's "verb.noun" shape, so a
+  # communication filters and displays like an event on the admin timeline.
   COMMUNICATION_TIMELINE_PREFIX = "communication".freeze
   TIMELINE_NAMES_BY_DIRECTION = {
     "outgoing" => "communication.sent",
@@ -165,7 +163,6 @@ class Notification < ApplicationRecord
     direction == "incoming"
   end
 
-  # Synthetic activity name for the admin timeline (see TIMELINE_NAMES_BY_DIRECTION).
   def timeline_activity_name
     TIMELINE_NAMES_BY_DIRECTION.fetch(direction)
   end

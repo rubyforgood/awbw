@@ -1,9 +1,5 @@
-<%# One communication (Notification) as a table row in the person-scoped
-    timeline, interleaved with activity rows. A tinted background and bell icon
-    mark it as a communication; the Activity column shows its synthetic
-    "communication.sent"/".received" name (matching how event rows show their
-    name), and the message spans the remaining columns. The Time column carries
-    the timestamp, so the reused notification row drops its own leading date. %>
+<%# The Time column carries the timestamp, so the reused notification row drops
+    its own leading date (show_date: false). %>
 <tr class="<%= DomainTheme.bg_class_for(:notifications, intensity: 50) %> transition">
   <td data-label="Time" class="px-4 py-3 whitespace-nowrap align-top text-gray-500">
     <%= notification.created_at.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>

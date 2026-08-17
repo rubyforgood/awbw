@@ -1,6 +1,3 @@
-<%# One Ahoy activity event as a table row (Time / Activity / Resource / User /
-    Visit ID / Properties). Shared by the global activities table and the
-    person-scoped timeline, where it interleaves with communication rows. %>
 <tr class="hover:bg-gray-50 transition">
   <td data-label="Time" class="px-4 py-3 whitespace-nowrap text-gray-500">
     <%= event.time.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>

@@ -94,8 +94,7 @@ module Admin
           .limit(15)
           .decorate
 
-        # Notifications aren't ahoy-tracked, so merge the person's communications
-        # into the activity events for one time-ordered timeline (paginated in Ruby).
+        # Notifications aren't ahoy-tracked, so fold them in as their own stream.
         entries = Analytics::PersonTimeline.new(
           events: scope.to_a,
           communications: person_communications.to_a
@@ -169,14 +168,7 @@ module Admin
 
     private
 
-    # The person's communications for the merged timeline. Only the filters that
-    # make sense for a message narrow them: the person/user scope, the date
-    # window, the activity-name and prefixes filters (matched against each
-    # communication's synthetic "communication.sent"/".received" name), the props
-    # search (matched against subject + body), and the resource filter (matched
-    # against the noticeable record the communication is about). A visit_id
-    # filter excludes communications entirely — they have no visit to prove
-    # membership in one.
+    # A visit_id filter excludes communications — they have no visit to belong to.
     def person_communications
       email = @person.communications_email
       return Notification.none if email.blank? || params[:visit_id].present?
@@ -200,9 +192,8 @@ module Admin
       scope
     end
 
-    # Match the activity-name search against a communication's synthetic name,
-    # tokenized the same way as event names — so "communication" keeps both
-    # directions, "received" keeps only incoming, and an unrelated term keeps none.
+    # Tokenize like the event-name search, then keep the directions whose synthetic
+    # name matches every token (so "received" keeps only incoming, none keeps none).
     def filter_communications_by_activity_name(scope)
       return scope if params[:event_name].blank?
 
@@ -213,8 +204,6 @@ module Admin
       scope.where(direction: directions)
     end
 
-    # Communications share the single "communication" prefix, so the prefixes
-    # filter keeps them only when that prefix is among the selected ones.
     def filter_communications_by_prefixes(scope)
       return scope if params[:prefixes].blank?
 
