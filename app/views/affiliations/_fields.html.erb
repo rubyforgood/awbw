@@ -43,6 +43,7 @@
           <%= f.input person_side ? :person_id : :organization_id,
             include_blank: true,
             required: true,
+            wrapper_html: { class: "mb-0" },
             input_html: {
               data: {
                 controller: "remote-select",
@@ -59,6 +60,7 @@
       <div class="w-full sm:w-auto" style="width: 150px; min-width: 150px;">
         <%= f.input :title,
                     as: :text,
+                    wrapper_html: { class: "mb-0" },
                     label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
                     input_html: {
                       rows: 1,
@@ -78,6 +80,7 @@
         <%= f.input :start_date,
                     as: :string,
                     label: "Start",
+                    wrapper_html: { class: "mb-0" },
                     label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
                     input_html: {
                       type: "date",
@@ -92,6 +95,7 @@
         <%= f.input :end_date,
                     as: :string,
                     label: "End",
+                    wrapper_html: { class: "mb-0" },
                     label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
                     input_html: {
                       type: "date",
