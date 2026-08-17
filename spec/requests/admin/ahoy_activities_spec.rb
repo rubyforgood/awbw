@@ -259,21 +259,24 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         # Both streams render in the same activities table (no separate panel).
         expect(response.body).to include("Comms row marker xyz")
         expect(response.body).to include("activity_row_marker")
+        # The communication row carries its synthetic activity name.
+        expect(response.body).to include("communication.sent")
         # Newer communication sorts above the older activity event.
         expect(response.body.index("Comms row marker xyz")).to be < response.body.index("activity_row_marker")
       end
 
-      it "activity name search matches communication subjects" do
+      it "activity name search matches the communication's synthetic name (direction-aware)" do
         person = create(:person)
-        create(:notification, recipient_email: person.communications_email, email_subject: "Keep this subject")
-        create(:notification, recipient_email: person.communications_email, email_subject: "Drop other subject")
+        create(:notification, :incoming, recipient_email: person.communications_email, email_subject: "Incoming note")
+        create(:notification, recipient_email: person.communications_email, email_subject: "Outgoing note")
 
         get index_path, params: { person_id: person.id, time_period: "all_time",
-                                  audience: %w[visitors users staff], event_name: "Keep this" },
+                                  audience: %w[visitors users staff], event_name: "communication received" },
             headers: frame_headers
 
-        expect(response.body).to include("Keep this subject")
-        expect(response.body).not_to include("Drop other subject")
+        # "received" matches only the incoming communication (communication.received).
+        expect(response.body).to include("Incoming note")
+        expect(response.body).not_to include("Outgoing note")
       end
 
       it "props search matches communication subject and body" do
@@ -291,17 +294,19 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).not_to include("unrelated")
       end
 
-      it "prefixes search matches communication subjects" do
+      it "prefixes filter includes communications only via the communication prefix" do
         person = create(:person)
-        create(:notification, recipient_email: person.communications_email, email_subject: "Create your account")
-        create(:notification, recipient_email: person.communications_email, email_subject: "Password reset request")
+        create(:notification, recipient_email: person.communications_email, email_subject: "Comm marker")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time",
+                                  audience: %w[visitors users staff], prefixes: "communication" },
+            headers: frame_headers
+        expect(response.body).to include("Comm marker")
 
         get index_path, params: { person_id: person.id, time_period: "all_time",
                                   audience: %w[visitors users staff], prefixes: "create" },
             headers: frame_headers
-
-        expect(response.body).to include("Create your account")
-        expect(response.body).not_to include("Password reset request")
+        expect(response.body).not_to include("Comm marker")
       end
 
       it "filters communications by resource on their noticeable record" do

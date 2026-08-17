@@ -171,28 +171,20 @@ module Admin
 
     # The person's communications for the merged timeline. Only the filters that
     # make sense for a message narrow them: the person/user scope, the date
-    # window, the activity-name and prefixes searches (both matched against the
-    # subject), the props search (matched against subject + body), and the
-    # resource filter (matched against the noticeable record the communication is
-    # about). A visit_id filter excludes communications entirely — they have no
-    # visit to prove membership in one.
+    # window, the activity-name and prefixes filters (matched against each
+    # communication's synthetic "communication.sent"/".received" name), the props
+    # search (matched against subject + body), and the resource filter (matched
+    # against the noticeable record the communication is about). A visit_id
+    # filter excludes communications entirely — they have no visit to prove
+    # membership in one.
     def person_communications
       email = @person.communications_email
       return Notification.none if email.blank? || params[:visit_id].present?
 
       scope = Notification.email(email).includes(:noticeable, sender: :person).order(created_at: :desc)
       scope = scope.where(created_at: time_range) if time_range.present?
-
-      if params[:prefixes].present?
-        prefixes = params[:prefixes].split("--").map(&:strip).reject(&:blank?)
-        clause = prefixes.map { "notifications.email_subject LIKE ?" }.join(" OR ")
-        scope = scope.where(clause, *prefixes.map { |p| "%#{Notification.sanitize_sql_like(p)}%" })
-      end
-
-      if params[:event_name].present?
-        term = Notification.sanitize_sql_like(params[:event_name])
-        scope = scope.where("notifications.email_subject LIKE ?", "%#{term}%")
-      end
+      scope = filter_communications_by_activity_name(scope)
+      scope = filter_communications_by_prefixes(scope)
 
       if params[:props].present?
         term = Notification.sanitize_sql_like(params[:props])
@@ -206,6 +198,30 @@ module Admin
       scope = scope.where(noticeable_id: params[:resource_id]) if params[:resource_id].present?
 
       scope
+    end
+
+    # Match the activity-name search against a communication's synthetic name,
+    # tokenized the same way as event names — so "communication" keeps both
+    # directions, "received" keeps only incoming, and an unrelated term keeps none.
+    def filter_communications_by_activity_name(scope)
+      return scope if params[:event_name].blank?
+
+      tokens = params[:event_name].split(/[^a-z0-9]+/i).reject(&:blank?).map(&:downcase)
+      directions = Notification::TIMELINE_NAMES_BY_DIRECTION.select do |_direction, name|
+        tokens.all? { |token| name.include?(token) }
+      end.keys
+      scope.where(direction: directions)
+    end
+
+    # Communications share the single "communication" prefix, so the prefixes
+    # filter keeps them only when that prefix is among the selected ones.
+    def filter_communications_by_prefixes(scope)
+      return scope if params[:prefixes].blank?
+
+      prefixes = params[:prefixes].split("--").map(&:strip)
+      return scope if prefixes.include?(Notification::COMMUNICATION_TIMELINE_PREFIX)
+
+      scope.none
     end
 
     def prepare_chart_data

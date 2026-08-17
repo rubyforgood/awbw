@@ -1,20 +1,18 @@
 <%# One communication (Notification) as a table row in the person-scoped
     timeline, interleaved with activity rows. A tinted background and bell icon
-    mark it as a communication rather than a tracked activity. The Time column
-    carries the timestamp (matching activity rows), so the reused notification
-    row drops its own leading date. %>
+    mark it as a communication; the Activity column shows its synthetic
+    "communication.sent"/".received" name (matching how event rows show their
+    name), and the message spans the remaining columns. The Time column carries
+    the timestamp, so the reused notification row drops its own leading date. %>
 <tr class="<%= DomainTheme.bg_class_for(:notifications, intensity: 50) %> transition">
   <td data-label="Time" class="px-4 py-3 whitespace-nowrap align-top text-gray-500">
     <%= notification.created_at.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
   </td>
-  <td data-label="Communication" colspan="5" class="px-4 py-3">
-    <div class="flex items-baseline gap-2">
-      <span class="shrink-0 <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>">
-        <i class="fa-solid fa-bell"></i>
-      </span>
-      <div class="min-w-0 flex-1">
-        <%= render "notifications/notification_row", notification: notification, admin: true, show_date: false %>
-      </div>
-    </div>
+  <td data-label="Activity" class="px-4 py-3 whitespace-nowrap align-top font-medium text-gray-900">
+    <i class="fa-solid fa-bell mr-1 <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>"></i>
+    <%= notification.timeline_activity_name %>
+  </td>
+  <td data-label="Communication" colspan="4" class="px-4 py-3">
+    <%= render "notifications/notification_row", notification: notification, admin: true, show_date: false %>
   </td>
 </tr>
