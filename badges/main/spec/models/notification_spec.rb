@@ -544,4 +544,11 @@ RSpec.describe Notification do
       end
     end
   end
+
+  describe "#timeline_activity_name" do
+    it "encodes direction as a synthetic event name" do
+      expect(build(:notification).timeline_activity_name).to eq("communication.sent")
+      expect(build(:notification, :incoming).timeline_activity_name).to eq("communication.received")
+    end
+  end
 end

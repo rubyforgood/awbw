@@ -88,12 +88,6 @@ module Admin
       # associated record (see Analytics::PersonActivityEvents).
       if @person
         scope = scope.where(id: Analytics::PersonActivityEvents.new(@person).relation.select(:id))
-        # Notifications aren't ahoy-tracked, so surface the person's
-        # communications straight from the notifications table.
-        email = @person.communications_email
-        @person_communications = email.present? ?
-          Notification.email(email).includes(:noticeable, sender: :person).order(created_at: :desc).limit(10) :
-          Notification.none
 
         # Attendance sign-ins happen on a login-free public callout (no Current),
         # so they aren't ahoy-tracked either — read the entries directly.
@@ -103,9 +97,18 @@ module Admin
           .order(signed_in_at: :desc)
           .limit(15)
           .decorate
-      end
 
-      @events = scope.paginate(page: page, per_page: per_page)
+        # Notifications aren't ahoy-tracked, so fold them in as their own stream.
+        entries = Analytics::PersonTimeline.new(
+          events: scope.to_a,
+          communications: person_communications.to_a
+        ).entries
+        @timeline = entries.paginate(page: page, per_page: per_page)
+        @total_count = @timeline.total_entries
+      else
+        @events = scope.paginate(page: page, per_page: per_page)
+        @total_count = @events.total_entries
+      end
 
       render :activity_results
     end
@@ -172,6 +175,51 @@ module Admin
     end
 
     private
+
+    # A visit_id filter excludes communications — they have no visit to belong to.
+    def person_communications
+      email = @person.communications_email
+      return Notification.none if email.blank? || params[:visit_id].present?
+
+      scope = Notification.email(email).includes(:noticeable, sender: :person).order(created_at: :desc)
+      scope = scope.where(created_at: time_range) if time_range.present?
+      scope = filter_communications_by_activity_name(scope)
+      scope = filter_communications_by_prefixes(scope)
+
+      if params[:props].present?
+        term = Notification.sanitize_sql_like(params[:props])
+        scope = scope.where(
+          "notifications.email_subject LIKE :term OR notifications.email_body_text LIKE :term",
+          term: "%#{term}%"
+        )
+      end
+
+      scope = scope.where(noticeable_type: params[:resource_type]) if params[:resource_type].present?
+      scope = scope.where(noticeable_id: params[:resource_id]) if params[:resource_id].present?
+
+      scope
+    end
+
+    # Tokenize like the event-name search, then keep the directions whose synthetic
+    # name matches every token (so "received" keeps only incoming, none keeps none).
+    def filter_communications_by_activity_name(scope)
+      return scope if params[:event_name].blank?
+
+      tokens = params[:event_name].split(/[^a-z0-9]+/i).reject(&:blank?).map(&:downcase)
+      directions = Notification::TIMELINE_NAMES_BY_DIRECTION.select do |_direction, name|
+        tokens.all? { |token| name.include?(token) }
+      end.keys
+      scope.where(direction: directions)
+    end
+
+    def filter_communications_by_prefixes(scope)
+      return scope if params[:prefixes].blank?
+
+      prefixes = params[:prefixes].split("--").map(&:strip)
+      return scope if prefixes.include?(Notification::COMMUNICATION_TIMELINE_PREFIX)
+
+      scope.none
+    end
 
     def prepare_chart_data
       events = scoped_events
