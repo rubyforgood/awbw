@@ -716,10 +716,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_115845) do
     t.string "name"
     t.integer "owner_id"
     t.string "owner_type"
+    t.boolean "published", default: false, null: false
     t.string "role"
     t.json "sections"
+    t.string "slug"
     t.datetime "updated_at", precision: nil, null: false
     t.index ["form_builder_id"], name: "index_forms_on_form_builder_id"
+    t.index ["slug"], name: "index_forms_on_slug", unique: true
   end
 
   create_table "grants", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
