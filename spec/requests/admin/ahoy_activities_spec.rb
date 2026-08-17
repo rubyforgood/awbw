@@ -37,6 +37,10 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
   let(:visits_path) { admin_activities_visits_path }   # GET /admin/activities/visits
   let(:charts_path) { admin_activities_charts_path }   # GET /admin/activities/charts
 
+  # The events index lazy-loads its rows in a turbo frame, so row/section
+  # assertions must issue the frame request (Turbo-Frame header) the browser sends.
+  let(:frame_headers) { { "Turbo-Frame" => "activity_results" } }
+
   # ============================================================
   # AS A GUEST
   # ============================================================
@@ -133,7 +137,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       end
 
       it "filters by prefixes=auth" do
-        get index_path, params: { prefixes: "auth" }
+        get index_path, params: { prefixes: "auth" }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("auth.login")
@@ -141,7 +145,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       end
 
       it "filters by visit_id" do
-        get index_path, params: { visit_id: visit_for_user.id }
+        get index_path, params: { visit_id: visit_for_user.id }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("create.bookmark")
@@ -152,7 +156,8 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
             params: {
               from: 3.days.ago.to_date.to_s,
               to: 1.day.ago.to_date.to_s
-            }
+            },
+            headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("create.bookmark")
@@ -160,7 +165,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       end
 
       it "filters by event name" do
-        get index_path, params: { event_name: "auth.login", time_period: "all_time" }
+        get index_path, params: { event_name: "auth.login", time_period: "all_time" }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("auth.login")
@@ -168,11 +173,23 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       end
 
       it "filters by partial event name" do
-        get index_path, params: { event_name: "bookmark", time_period: "all_time" }
+        get index_path, params: { event_name: "bookmark", time_period: "all_time" }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("create.bookmark")
         expect(response.body).not_to include("auth.login")
+      end
+
+      it "filters by hyphen-separated tokens in any order (account-auth)" do
+        create(:ahoy_event, name: "auth.account_deactivated", user: nil,
+                            visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),
+                            time: 1.day.ago, properties: {})
+
+        get index_path, params: { event_name: "account-auth", time_period: "all_time" }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("auth.account_deactivated")
+        expect(response.body).not_to include("create.bookmark")
       end
 
       it "filters by person_id to the person, their user, and associated data" do
@@ -193,13 +210,21 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
                             resource_type: "Person", resource_id: unrelated_person.id, time: 1.day.ago,
                             properties: { "resource_type" => "Person", "resource_id" => unrelated_person.id, "resource_title" => "unrelated_history_row" })
 
-        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("person_history_row")
         expect(response.body).to include("user_history_row")
         expect(response.body).to include("payment_history_row")
         expect(response.body).not_to include("unrelated_history_row")
+      end
+
+      it "surfaces a user chip in the applied filters when user_id is set" do
+        get index_path, params: { user_id: user.id, time_period: "all_time" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("User: #{user.full_name}")
+        expect(response.body).to include(user_path(user))
       end
 
       it "surfaces a person chip in the applied filters when person_id is set" do
@@ -224,7 +249,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         person = create(:person)
         create(:notification, recipient_email: person.communications_email, email_subject: "Comms row marker xyz")
 
-        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Communications")
@@ -237,7 +262,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         registration = create(:event_registration, registrant: person, event: event)
         create(:event_attendance_time_entry, event_registration: registration)
 
-        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Attendance time entries")

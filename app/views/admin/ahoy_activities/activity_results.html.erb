@@ -1,0 +1,152 @@
+<%# Frame response for the activity_results turbo frame: the index controller
+    renders this (instead of the full index) on turbo_frame_request?. %>
+<%= turbo_frame_tag :activity_results do %>
+  <%= turbo_stream.replace "activities_count", partial: "count" %>
+
+  <%# Person-scoped view: notifications aren't ahoy events, so list the
+      person's communications here from the notifications table. %>
+  <% if @person && @person_communications.present? %>
+    <section class="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>">
+          <i class="fa-solid fa-bell"></i>
+        </span>
+        <h2 class="text-sm font-semibold text-gray-700">Communications</h2>
+        <%= link_to "View all",
+                    notifications_path(email: @person.communications_email, return_to_type: "Person", return_to_id: @person.id),
+                    class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
+                    target: "_blank", rel: "noopener" %>
+      </div>
+      <div class="space-y-2 p-4">
+        <% @person_communications.each do |notification| %>
+          <%= render "notifications/notification_row", notification: notification, admin: true %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <%# Attendance sign-ins aren't ahoy-tracked (login-free public callout), so
+      list the entries directly, newest first. %>
+  <% if @person && @person_time_entries.present? %>
+    <section class="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
+          <i class="fa-solid fa-clock"></i>
+        </span>
+        <h2 class="text-sm font-semibold text-gray-700">Attendance time entries</h2>
+      </div>
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+          <tr>
+            <th class="px-4 py-2 text-left">Event</th>
+            <th class="px-4 py-2 text-left">Date</th>
+            <th class="px-4 py-2 text-left">In</th>
+            <th class="px-4 py-2 text-left">Out</th>
+            <th class="px-4 py-2 text-left">Duration</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% @person_time_entries.each do |entry| %>
+            <tr>
+              <td class="px-4 py-2 text-gray-900"><%= entry.event_registration.event.title %></td>
+              <td class="px-4 py-2 text-gray-500"><%= entry.attendance_date&.strftime("%b %-d, %Y") %></td>
+              <td class="px-4 py-2 text-gray-500"><%= entry.signed_in_label %></td>
+              <td class="px-4 py-2 text-gray-500"><%= entry.signed_out_label %></td>
+              <td class="px-4 py-2 text-gray-500"><%= entry.duration_label %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </section>
+  <% end %>
+
+  <!-- Activities Table -->
+  <div class="blur-on-submit bg-white border border-gray-200 rounded-xl shadow-sm overflow-x-auto">
+    <table class="responsive-table min-w-full divide-y divide-gray-200 text-sm">
+      <thead class="bg-gray-50 text-gray-600 uppercase tracking-wider text-xs">
+      <tr>
+        <th class="px-4 py-3 text-left rounded-tl-xl">Time</th>
+        <th class="px-4 py-3 text-left">Activity</th>
+        <th class="px-4 py-3 text-left">Resource</th>
+        <th class="px-4 py-3 text-left">User</th>
+        <th class="px-4 py-3 text-left">Visit ID</th>
+        <th class="px-4 py-3 text-left rounded-tr-xl">Properties</th>
+      </tr>
+      </thead>
+
+      <tbody class="divide-y divide-gray-100">
+      <% @events.each do |event| %>
+        <tr class="hover:bg-gray-50 transition">
+          <td data-label="Time" class="px-4 py-3 whitespace-nowrap text-gray-500">
+            <%= event.time.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
+          </td>
+
+          <td data-label="Activity" class="px-4 py-3 font-medium text-gray-900">
+            <%= event.name %>
+          </td>
+
+          <td data-label="Resource" class="px-4 py-3 text-gray-500">
+            <%= event.properties["resource_title"].presence || "—" %>
+          </td>
+
+          <td data-label="User" class="px-4 py-3 text-gray-600">
+            <% if event.user %>
+              <%= link_to event.user.full_name,
+                          user_path(event.user),
+                          class: "text-indigo-600 hover:underline" %>
+            <% else %>
+              <span class="text-gray-400 italic">Guest</span>
+            <% end %>
+          </td>
+
+          <td data-label="Visit ID" class="px-4 py-3 text-gray-500">
+            <%= event.visit_id %>
+          </td>
+
+          <td data-label="Properties" class="px-4 py-3 text-gray-500 relative group">
+            <% if event.properties.present? && event.properties.any? %>
+              <%= link_to admin_activities_event_path(event),
+                          class: "cursor-default text-indigo-600 text-xs font-medium bg-indigo-50 px-2 py-0.5 rounded hover:bg-indigo-100" do %>
+                <%= event.properties.size %> <%= "prop".pluralize(event.properties.size) %>
+              <% end %>
+              <%
+                props = event.properties.dup
+                display_props = []
+                # Combine polymorphic _type/_id pairs
+                props.keys.select { |k| k.end_with?("_type") }.each do |type_key|
+                  prefix = type_key.chomp("_type")
+                  id_key = "#{prefix}_id"
+                  if props.key?(id_key)
+                    display_props << [prefix, "#{props[type_key]}.find(#{props[id_key]})"]
+                    props.delete(type_key)
+                    props.delete(id_key)
+                  end
+                end
+                # Show resource_title first, then remaining props
+                if props.key?("resource_title")
+                  display_props.unshift(["resource_title", props.delete("resource_title")])
+                end
+                props.each do |key, value|
+                  display_props << [key, value.is_a?(Hash) ? value.to_json : value]
+                end
+              %>
+              <div class="hidden group-hover:block absolute z-50 right-0 top-full bg-gray-900 text-gray-100 text-xs rounded-lg shadow-lg px-3 py-3 max-h-64 overflow-y-auto" style="width: 400px;">
+                <% display_props.each do |key, value| %>
+                  <div class="py-1"><span class="text-indigo-300 font-semibold"><%= key %>:</span> <%= value.nil? ? "nil" : value.to_s.delete('"') %></div>
+                <% end %>
+              </div>
+            <% else %>
+              <span class="text-gray-300 italic">none</span>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="flex justify-center mt-8">
+    <%= tailwind_paginate @events %>
+  </div>
+<% end %>

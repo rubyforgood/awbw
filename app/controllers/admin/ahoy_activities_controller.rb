@@ -5,6 +5,12 @@ module Admin
     def index
       authorize! :ahoy_activity, to: :index?
 
+      @person = Person.find_by(id: params[:person_id]) if params[:person_id].present?
+
+      # The full page renders only the header, filters, and an empty results frame;
+      # the frame's src request (turbo_frame_request?) loads the filtered rows.
+      return render :index unless turbo_frame_request?
+
       @users = params[:user_id].present? ? User.where(id: params[:user_id].to_s.split("--")) : nil
 
       page = params[:page].presence&.to_i || 1
@@ -23,9 +29,13 @@ module Admin
                             *prefixes.map { |p| "#{p}.%" })
       end
 
-      # Filter by event name
+      # Filter by event name. Split on any non-alphanumeric run so hyphens (and
+      # commas, dots, spaces) are interchangeable separators and each token must
+      # match — e.g. "account-auth" finds "auth.account_deactivated".
       if params[:event_name].present?
-        scope = scope.where("ahoy_events.name LIKE ?", "%#{Ahoy::Event.sanitize_sql_like(params[:event_name])}%")
+        params[:event_name].split(/[^a-z0-9]+/i).reject(&:blank?).each do |token|
+          scope = scope.where("ahoy_events.name LIKE ?", "%#{Ahoy::Event.sanitize_sql_like(token)}%")
+        end
       end
 
       # Filter by user (if viewing specific user activity)
@@ -72,30 +82,28 @@ module Admin
 
       # Filter to a person's full history: the person, their user, and every
       # associated record (see Analytics::PersonActivityEvents).
-      if params[:person_id].present?
-        person = Person.find_by(id: params[:person_id])
-        if person
-          @person = person
-          scope = scope.where(id: Analytics::PersonActivityEvents.new(person).relation.select(:id))
-          # Notifications aren't ahoy-tracked, so surface the person's
-          # communications straight from the notifications table.
-          email = person.communications_email
-          @person_communications = email.present? ?
-            Notification.email(email).includes(:noticeable, sender: :person).order(created_at: :desc).limit(10) :
-            Notification.none
+      if @person
+        scope = scope.where(id: Analytics::PersonActivityEvents.new(@person).relation.select(:id))
+        # Notifications aren't ahoy-tracked, so surface the person's
+        # communications straight from the notifications table.
+        email = @person.communications_email
+        @person_communications = email.present? ?
+          Notification.email(email).includes(:noticeable, sender: :person).order(created_at: :desc).limit(10) :
+          Notification.none
 
-          # Attendance sign-ins happen on a login-free public callout (no Current),
-          # so they aren't ahoy-tracked either — read the entries directly.
-          @person_time_entries = EventAttendanceTimeEntry
-            .where(event_registration_id: person.event_registrations.select(:id))
-            .includes(event_registration: :event)
-            .order(signed_in_at: :desc)
-            .limit(15)
-            .decorate
-        end
+        # Attendance sign-ins happen on a login-free public callout (no Current),
+        # so they aren't ahoy-tracked either — read the entries directly.
+        @person_time_entries = EventAttendanceTimeEntry
+          .where(event_registration_id: @person.event_registrations.select(:id))
+          .includes(event_registration: :event)
+          .order(signed_in_at: :desc)
+          .limit(15)
+          .decorate
       end
 
       @events = scope.paginate(page: page, per_page: per_page)
+
+      render :activity_results
     end
 
     def show
