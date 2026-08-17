@@ -108,9 +108,9 @@
   }
 }
 
-/* Filter/search-bar field and label styling lives in shared partials +
-   SearchFormHelper#search_field_class (default Tailwind, no @apply). Only this
-   placeholder rule stays here — its :has() selector isn't expressible as a utility. */
+/* Grey a filter <select>'s "All"/blank first option like a placeholder while it
+   is the current selection. Raw CSS because the :has() selector has no Tailwind
+   utility equivalent. */
 .search-select-placeholder:has(option:first-child:checked) {
   color: rgb(156 163 175);   /* gray-400 */
   font-size: 0.875rem;       /* text-sm */
