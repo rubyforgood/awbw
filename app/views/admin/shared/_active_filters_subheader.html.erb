@@ -17,27 +17,31 @@
   audience_values = Array(params[:audience]).reject(&:blank?).presence || default_audiences
   audience_labels = audience_values.filter_map { |v| audience_labels_map[v] }
 
-  any_filters = time_label || audience_labels.any? || params[:visit_id].present? || params[:props].present? || @person.present?
+  # user_id supports multiple ids joined by "--" (see AhoyActivitiesController).
+  user_ids = params[:user_id].to_s.split("--").reject(&:blank?)
+  filtered_users = user_ids.any? ? User.where(id: user_ids) : User.none
+
+  any_filters = time_label || audience_labels.any? || params[:visit_id].present? || params[:props].present? || @person.present? || filtered_users.exists?
 %>
 <div class="flex flex-wrap items-center gap-2">
-  <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Filters applied</h3>
+  <h3 class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Filters applied</h3>
   <% if time_label %>
-    <span class="inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 font-medium">
+    <span class="inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 font-medium text-indigo-800">
       <%= time_label %>
     </span>
   <% end %>
   <% audience_labels.each do |label| %>
-    <span class="inline-flex items-center px-3 py-1 rounded-full bg-pink-100 text-pink-800 font-medium">
+    <span class="inline-flex items-center rounded-full bg-pink-100 px-3 py-1 font-medium text-pink-800">
       <%= label %>
     </span>
   <% end %>
   <% if params[:visit_id].present? %>
-    <span class="inline-flex items-center px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 font-medium">
+    <span class="inline-flex items-center rounded-full bg-yellow-100 px-3 py-1 font-medium text-yellow-800">
       Visit: <%= params[:visit_id] %>
     </span>
   <% end %>
   <% if params[:props].present? %>
-    <span class="inline-flex items-center px-3 py-1 rounded-full bg-purple-100 text-purple-800 font-medium">
+    <span class="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 font-medium text-purple-800">
       Props: <%= params[:props] %>
     </span>
   <% end %>
@@ -45,6 +49,12 @@
     <%= link_to person_path(@person),
                 class: "inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 font-medium hover:bg-blue-200" do %>
       Person: <%= @person.name %>
+    <% end %>
+  <% end %>
+  <% filtered_users.each do |user| %>
+    <%= link_to user_path(user),
+                class: "inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 font-medium hover:bg-green-200" do %>
+      User: <%= user.full_name %>
     <% end %>
   <% end %>
   <% unless any_filters %>

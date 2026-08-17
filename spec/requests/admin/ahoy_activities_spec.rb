@@ -219,6 +219,14 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).not_to include("unrelated_history_row")
       end
 
+      it "surfaces a user chip in the applied filters when user_id is set" do
+        get index_path, params: { user_id: user.id, time_period: "all_time" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("User: #{user.full_name}")
+        expect(response.body).to include(user_path(user))
+      end
+
       it "surfaces a person chip in the applied filters when person_id is set" do
         person = create(:person, first_name: "Ada", last_name: "Lovelace")
 
