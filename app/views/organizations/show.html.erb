@@ -131,43 +131,46 @@
             <p class="text-gray-500 italic">No active affiliations.</p>
           <% end %>
         </div>
-                <!-- Sectors -->
-        <% if @organization.profile_show_sectors? %>
-          <div class="md:col-span-2 p-3">
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
-
-            <% sectors = @organization.all_sectors.sort_by { |s| s&.name.to_s } %>
-
-            <% if sectors.any? %>
-              <div class="flex flex-wrap gap-2">
-                <% sectors.first(3).each do |sector| %>
-                  <%= render "sectors/tagging_label",
-                             sector: sector,
-                             display_leader: true %>
-                <% end %>
-
-                <% if sectors.length > 3 %>
-                  <span class="text-gray-500 px-2">...</span>
-                <% end %>
-              </div>
-            <% else %>
-              <p class="text-gray-500 italic">None selected.</p>
-            <% end %>
-
-            <div class="mt-4">
-              <%= link_to "Explore sector data",
-                          populations_served_organization_path(@organization),
-                          class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-            </div>
-          </div>
-        <% end %>
-        <!-- Age groups served (deduped across the org and its affiliated people) -->
+        <!-- Sectors + Age groups served (two columns on desktop; stack on narrow viewports) -->
+        <% show_sectors = @organization.profile_show_sectors? %>
+        <% sectors = show_sectors ? @organization.all_sectors.sort_by { |s| s&.name.to_s } : [] %>
         <% primary_age_groups = @organization.profile_show_age_ranges? ? @organization.all_primary_age_groups : [] %>
         <% additional_age_groups = @organization.profile_show_age_ranges? ? @organization.all_additional_age_groups : [] %>
-        <% if primary_age_groups.any? || additional_age_groups.any? %>
+        <% show_age = primary_age_groups.any? || additional_age_groups.any? %>
+        <% if show_sectors || show_age %>
           <div class="md:col-span-2 p-3">
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">Age groups served</h2>
-            <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups %>
+            <div class="flex flex-col sm:flex-row gap-4 items-start">
+              <% if show_sectors %>
+                <div class="flex-1 min-w-0">
+                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
+                  <% if sectors.any? %>
+                    <div class="flex flex-wrap gap-2">
+                      <% sectors.first(3).each do |sector| %>
+                        <%= render "sectors/tagging_label",
+                                   sector: sector,
+                                   display_leader: true %>
+                      <% end %>
+                      <% if sectors.length > 3 %>
+                        <span class="text-gray-500 px-2">...</span>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <p class="text-gray-500 italic">None selected.</p>
+                  <% end %>
+                  <div class="mt-4">
+                    <%= link_to "Explore sector data",
+                                populations_served_organization_path(@organization),
+                                class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+                  </div>
+                </div>
+              <% end %>
+              <% if show_age %>
+                <div class="flex-1 min-w-0">
+                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Age groups served</h2>
+                  <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups %>
+                </div>
+              <% end %>
+            </div>
           </div>
         <% end %>
       </div>
