@@ -75,7 +75,11 @@
                     } %>
       </div>
 
-      <%= render "affiliations/address_picker", f: f, hide_label: true %>
+      <%# On mobile Address and Primary drop to a shared final row (order-1/order-2,
+          each flex-1 → 50%); at sm+ they return to their in-line column widths. %>
+      <div class="flex-1 order-1 sm:flex-none sm:w-16 sm:order-none xl:w-auto min-w-0">
+        <%= render "affiliations/address_picker", f: f, hide_label: true %>
+      </div>
 
       <div class="w-full sm:w-[150px] xl:w-auto min-w-0">
         <%= f.input :start_date,
@@ -110,8 +114,8 @@
                     } %>
       </div>
 
-      <div class="w-full sm:w-auto min-w-0">
-        <label class="block whitespace-nowrap text-sm font-medium text-gray-700 mb-1 xl:hidden">Primary contact</label>
+      <div class="flex-1 order-2 sm:flex-none sm:w-auto sm:order-none min-w-0">
+        <div class="mb-1 xl:hidden"><%= render "affiliations/primary_contact_label" %></div>
         <div class="flex h-[42px] items-center">
           <%= f.check_box :primary_contact,
                           checked: f.object.primary_contact?,
