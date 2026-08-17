@@ -114,11 +114,7 @@
 
       <div class="flex-1 sm:flex-none sm:w-auto min-w-0">
         <div class="mb-1 xl:hidden"><%= render "affiliations/primary_contact_label" %></div>
-        <div class="flex h-[42px] w-[42px] items-center justify-center rounded-md border border-gray-300 bg-gray-100">
-          <%= f.check_box :primary_contact,
-                          checked: f.object.primary_contact?,
-                          class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" %>
-        </div>
+        <%= render "affiliations/primary_contact_toggle", f: f %>
       </div>
 
       <% unless f.object.persisted? %>

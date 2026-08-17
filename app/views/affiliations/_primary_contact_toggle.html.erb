@@ -1,0 +1,8 @@
+<%# Primary-contact on/off slider (purple when on) bound to the affiliation's
+    primary_contact checkbox. The sr-only checkbox is the peer; the track is its
+    sibling span and the knob is the track's ::after. Mirrors the app's toggle
+    pattern (e.g. event_registrations/_certificate_issued_toggle). %>
+<label class="flex h-[42px] items-center cursor-pointer select-none">
+  <%= f.check_box :primary_contact, checked: f.object.primary_contact?, class: "peer sr-only" %>
+  <span class="relative inline-block w-9 h-5 rounded-full bg-gray-300 transition-colors peer-checked:bg-purple-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-4"></span>
+</label>
