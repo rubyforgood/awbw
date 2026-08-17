@@ -110,6 +110,14 @@ class Notification < ApplicationRecord
   # sent by the person themselves and is being logged after the fact.
   DIRECTIONS = %w[outgoing incoming].freeze
 
+  # Synthetic activity name matching an ahoy event's "verb.noun" shape, so a
+  # communication filters and displays like an event on the admin timeline.
+  COMMUNICATION_TIMELINE_PREFIX = "communication".freeze
+  TIMELINE_NAMES_BY_DIRECTION = {
+    "outgoing" => "communication.sent",
+    "incoming" => "communication.received"
+  }.freeze
+
   # Scopes
   scope :delivered, -> { where.not(delivered_at: nil) }
   scope :undelivered, -> { where(delivered_at: nil) }
@@ -155,6 +163,10 @@ class Notification < ApplicationRecord
 
   def incoming?
     direction == "incoming"
+  end
+
+  def timeline_activity_name
+    TIMELINE_NAMES_BY_DIRECTION.fetch(direction)
   end
 
   # Scopes
