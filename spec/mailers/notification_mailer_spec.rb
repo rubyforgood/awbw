@@ -371,4 +371,42 @@ RSpec.describe NotificationMailer, type: :mailer do
       end
     end
   end
+
+  describe "form submission emails" do
+    let(:form) { create(:form, name: "Volunteer interest") }
+    let(:person) { create(:person, first_name: "Dana", last_name: "Volunteer", email: "dana@example.com") }
+    let(:submission) do
+      s = FormSubmission.create!(form: form, person: person, role: "public")
+      field = create(:form_field, form: form, name: "Why volunteer?")
+      s.persist_answer(field, "I care about the mission.")
+      s
+    end
+
+    describe "#form_submission_confirmation" do
+      let(:notification) do
+        create(:notification, kind: "form_submission_confirmation", noticeable: submission,
+               recipient_role: "person", recipient_email: person.email)
+      end
+      let(:mail) { described_class.form_submission_confirmation(notification) }
+
+      it "thanks the submitter and names the form" do
+        expect(mail.to).to include("dana@example.com")
+        expect(mail.subject).to include("Volunteer interest")
+        expect(mail.body.encoded).to include("Dana")
+      end
+    end
+
+    describe "#form_submission_confirmation_fyi" do
+      let(:notification) do
+        create(:notification, kind: "form_submission_confirmation_fyi", noticeable: submission)
+      end
+      let(:mail) { described_class.form_submission_confirmation_fyi(notification) }
+
+      it "names the submitter and lists their answers" do
+        expect(mail.subject).to include("New form submission")
+        expect(mail.subject).to include("Dana Volunteer")
+        expect(mail.body.encoded).to include("I care about the mission.")
+      end
+    end
+  end
 end

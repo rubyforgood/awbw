@@ -50,6 +50,16 @@ RSpec.describe PublicFormSubmission do
     expect(FormSubmission.count).to eq(0)
   end
 
+  it "sends a confirmation to the submitter and an FYI to admin" do
+    expect { described_class.call(form: form, form_params: params_for) }
+      .to change { Notification.where(kind: "form_submission_confirmation").count }.by(1)
+      .and change { Notification.where(kind: "form_submission_confirmation_fyi").count }.by(1)
+
+    confirmation = Notification.find_by(kind: "form_submission_confirmation")
+    expect(confirmation.recipient_email).to eq("sam@example.com")
+    expect(confirmation.recipient_role).to eq("person")
+  end
+
   it "records mailing-list consent once when the consent question is answered" do
     consent_field = create(:form_field, form: form, name: "Email me updates",
                            answer_type: :multi_select_checkbox, field_identifier: "communication_consent")

@@ -29,6 +29,7 @@ class PublicFormSubmission
 
       submission = FormSubmission.create!(person: person, form: @form, role: ROLE)
       save_form_answers(submission)
+      send_notifications(submission)
 
       Result.new(success?: true, form_submission: submission, person: person, errors: [])
     end
@@ -91,5 +92,25 @@ class PublicFormSubmission
 
       submission.persist_answer(field, raw_value)
     end
+  end
+
+  # A confirmation to the submitter and an FYI to the AWBW team, mirroring the
+  # event-registration flow.
+  def send_notifications(submission)
+    NotificationServices::CreateNotification.call(
+      noticeable: submission,
+      kind: :form_submission_confirmation,
+      recipient_role: :person,
+      recipient_email: submission.person.preferred_email,
+      notification_type: 0
+    )
+
+    NotificationServices::CreateNotification.call(
+      noticeable: submission,
+      kind: :form_submission_confirmation_fyi,
+      recipient_role: :admin,
+      recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      notification_type: 0
+    )
   end
 end
