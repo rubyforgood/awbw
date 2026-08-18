@@ -82,11 +82,11 @@ class GrantDecorator < ApplicationDecorator
   # completed/total. .size / Enumerable count use the preloaded association
   # (index eager-loads :scholarships) so these add no per-row queries.
   def scholarships_count
-    object.scholarships.size
+    object.scholarships.reject(&:agreement_declined?).size
   end
 
   def completed_scholarships_count
-    object.scholarships.count(&:tasks_completed?)
+    object.scholarships.reject(&:agreement_declined?).count(&:tasks_completed?)
   end
 
   # Where the index "Scholarships" count links. When every event-funded

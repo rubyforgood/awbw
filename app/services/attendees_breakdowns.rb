@@ -325,6 +325,7 @@ class AttendeesBreakdowns
 
   def scholarship_recipient_ids
     @scholarship_recipient_ids ||= Scholarship
+      .not_declined
       .joins(:allocation)
       .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: registration_ids })
       .distinct

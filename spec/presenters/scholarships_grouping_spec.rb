@@ -27,6 +27,20 @@ RSpec.describe ScholarshipsGrouping do
       expect(names.last).to eq("Unfunded")
     end
 
+    it "lists a declined award but leaves it out of the counts and totals" do
+      grant = create(:grant, amount_cents: 1_000_000)
+      create(:scholarship, grant: grant, amount_cents: 100_000)
+      create(:scholarship, grant: grant, amount_cents: 50_000).decline_agreement!("Timing no longer works")
+
+      grouping = described_class.new(Scholarship.all)
+      grant_group = grouping.funder_groups.first.grant_groups.first
+
+      expect(grant_group.scholarships.size).to eq(2)
+      expect(grant_group.count).to eq(1)
+      expect(grant_group.total_cents).to eq(100_000)
+      expect(grouping.total_count).to eq(1)
+    end
+
     it "orders recipients within a grant by name" do
       grant = create(:grant, amount_cents: 1_000_000)
       create(:scholarship, grant: grant, recipient: create(:person, first_name: "Zoe", last_name: "Z"))

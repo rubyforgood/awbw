@@ -1,13 +1,13 @@
 class ScholarshipsController < ApplicationController
-  before_action :set_scholarship, only: [ :show, :edit, :update, :destroy, :toggle_tasks ]
+  before_action :set_scholarship, only: [ :show, :edit, :update, :destroy, :toggle_tasks, :reoffer ]
   before_action :set_grant, only: [ :new, :create ]
 
   def index
     authorize! Scholarship
     set_report_filter_state
-    scholarships = filtered_scholarships
-    @funder_groups = ScholarshipsGrouping.new(scholarships).funder_groups
-    @scholarships_count = scholarships.size
+    grouping = ScholarshipsGrouping.new(filtered_scholarships)
+    @funder_groups = grouping.funder_groups
+    @scholarships_count = grouping.total_count
     @scholarship_report = EventScholarshipReport.new(report_training_events, featured_year: @selected_year, funder: @filter_funder)
   end
 
@@ -106,6 +106,17 @@ class ScholarshipsController < ApplicationController
       format.turbo_stream
       format.html { redirect_back fallback_location: recipients_fallback_path, notice: "Scholarship updated." }
     end
+  end
+
+  # Re-offer a declined award: back to pending, allocation re-funded.
+  def reoffer
+    authorize! @scholarship, to: :update?
+    @scholarship.reoffer_agreement!(by: "admin")
+    redirect_to edit_scholarship_path(@scholarship, return_to: params[:return_to].presence, participant: params[:participant].presence),
+                notice: "Scholarship re-offered — awaiting the recipient's response."
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to edit_scholarship_path(@scholarship, return_to: params[:return_to].presence, participant: params[:participant].presence),
+                alert: e.record.errors.full_messages.to_sentence.presence || "Couldn't re-offer this scholarship."
   end
 
   private

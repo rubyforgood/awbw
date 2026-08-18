@@ -127,6 +127,7 @@ class EventScholarshipFigures
   def scholarship_rows_by_registration
     @scholarship_rows_by_registration ||= begin
       scope = Scholarship
+        .not_declined
         .joins(:allocation)
         .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: registration_ids })
       scope = scope.where(grant_id: funder_grant_ids) if @funder

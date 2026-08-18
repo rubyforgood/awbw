@@ -51,17 +51,7 @@
             the organizations card's "Connect organization" link. %>
         <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3">
           <%# Agreement first, then tasks — the recipient agrees before completing tasks. %>
-          <% if scholarship.agreement_signed? %>
-            <%= render "shared/badge",
-                       label: "Agreement signed",
-                       classes: "#{DomainTheme.bg_class_for(:scholarships, intensity: 50)} #{DomainTheme.text_class_for(:scholarships, intensity: 700)} #{DomainTheme.border_class_for(:scholarships, intensity: 200)}",
-                       icon: "fa-solid fa-file-signature" %>
-          <% else %>
-            <%= render "shared/badge",
-                       label: "Agreement pending",
-                       classes: "bg-amber-50 text-amber-700 border-amber-200",
-                       icon: "fa-solid fa-file-signature" %>
-          <% end %>
+          <%= scholarship.decorate.agreement_status_badge(all_states: true, prefix: true, icon_size: nil) %>
           <% if scholarship.tasks_completed? %>
             <%= render "shared/badge",
                        label: "Tasks completed",

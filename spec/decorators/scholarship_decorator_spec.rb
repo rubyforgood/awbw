@@ -14,6 +14,33 @@ RSpec.describe ScholarshipDecorator, type: :decorator do
     expect(create(:scholarship, recipient: recipient, agreement_signed: true).decorate.agreement_signed?).to be(true)
   end
 
+  describe "agreement status pill" do
+    it "labels and colours each of the three states" do
+      scholarship = create(:scholarship, recipient: recipient)
+      expect(scholarship.decorate).to have_attributes(agreement_status_label: "Pending", agreement_status_classes: a_string_including("amber"))
+
+      scholarship.update!(agreement_signed: true)
+      expect(scholarship.decorate).to have_attributes(agreement_status_label: "Signed", agreement_status_classes: a_string_including("fuchsia"))
+
+      scholarship.decline_agreement!("Timing no longer works")
+      expect(scholarship.decorate).to have_attributes(agreement_status_label: "Declined", agreement_status_classes: a_string_including("red"))
+    end
+
+    it "renders the badge only for a declined award by default" do
+      scholarship = create(:scholarship, recipient: recipient)
+      expect(scholarship.decorate.agreement_status_badge).to be_nil
+
+      scholarship.decline_agreement!("Timing no longer works")
+      expect(scholarship.decorate.agreement_status_badge).to include("Declined", "fa-circle-xmark")
+    end
+
+    it "renders every state, prefixed, when asked" do
+      scholarship = create(:scholarship, recipient: recipient)
+
+      expect(scholarship.decorate.agreement_status_badge(all_states: true, prefix: true)).to include("Agreement pending")
+    end
+  end
+
   describe "program columns derived from the recipient's facilitator affiliation" do
     let(:org) { create(:organization, name: "Prevail") }
 

@@ -85,6 +85,22 @@ RSpec.describe EventRegistrationReadiness do
         expect(readiness.event_ready_issues).not_to include("Scholarship tasks incomplete")
         expect(readiness.event_ready_issues).not_to include("Scholarship not created")
       end
+
+      it "flags a declined award as the next step, ahead of the payment gap it opened" do
+        award_scholarship(registration, tasks_completed: false, amount: 1000)
+        registration.scholarships.first.decline_agreement!("Timing no longer works")
+
+        expect(readiness.event_ready?).to be(false)
+        expect(readiness.event_ready_issues).to include("Scholarship declined — respond to the decline")
+        expect(readiness.event_ready_reason).to eq("Award declined")
+      end
+
+      it "stops flagging incomplete tasks on a declined award" do
+        award_scholarship(registration, tasks_completed: false, amount: 1000)
+        registration.scholarships.first.decline_agreement!("Timing no longer works")
+
+        expect(readiness.event_ready_issues).not_to include("Scholarship tasks incomplete")
+      end
     end
 
     context "continuing education" do

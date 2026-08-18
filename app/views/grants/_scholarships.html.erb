@@ -27,8 +27,10 @@
             <tr class="hover:bg-gray-50">
               <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                 <%= scholarship.recipient&.full_name || "Unknown recipient" %>
+                <%= scholarship.decorate.agreement_status_badge %>
               </td>
-              <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+              <%# Declined awards don't draw down the grant, so the amount is struck through. %>
+              <td class="px-4 py-2 whitespace-nowrap text-sm text-right <%= scholarship.agreement_declined? ? "text-gray-400 line-through" : "text-gray-900" %>">
                 <%= dollars_from_cents(scholarship.amount_cents) %>
               </td>
               <td class="px-4 py-2 whitespace-nowrap text-sm text-center">

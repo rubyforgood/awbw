@@ -55,7 +55,7 @@ class Grant < ApplicationRecord
   # funds scopes so they stay flat WHERE clauses — no GROUP BY/HAVING, which would
   # break will_paginate's total_entries count on the paginated index.
   ALLOCATED_CENTS_SUBQUERY =
-    "COALESCE((SELECT SUM(scholarships.amount_cents) FROM scholarships WHERE scholarships.grant_id = grants.id), 0)".freeze
+    "COALESCE((SELECT SUM(scholarships.amount_cents) FROM scholarships WHERE scholarships.grant_id = grants.id AND scholarships.agreement_response_status <> 'declined'), 0)".freeze
 
   # Grants that still have unallocated funds (grant amount exceeds the sum of
   # scholarships drawn against them).
@@ -71,11 +71,11 @@ class Grant < ApplicationRecord
   # exclude grant-less scholarships (grant_id IS NULL) — a stray NULL in the
   # NOT IN set below would otherwise make all_tasks_completed match nothing.
   scope :tasks_outstanding, -> {
-    where(id: Scholarship.where(tasks_completed: false).where.not(grant_id: nil).select(:grant_id))
+    where(id: Scholarship.not_declined.where(tasks_completed: false).where.not(grant_id: nil).select(:grant_id))
   }
   scope :all_tasks_completed, -> {
-    where(id: Scholarship.where.not(grant_id: nil).select(:grant_id))
-      .where.not(id: Scholarship.where(tasks_completed: false).where.not(grant_id: nil).select(:grant_id))
+    where(id: Scholarship.not_declined.where.not(grant_id: nil).select(:grant_id))
+      .where.not(id: Scholarship.not_declined.where(tasks_completed: false).where.not(grant_id: nil).select(:grant_id))
   }
 
   # Grants offered in a scholarship's "Funded by grant" picker: every grant with
@@ -126,9 +126,9 @@ class Grant < ApplicationRecord
   # association in memory when present (the index eager-loads :scholarships) to
   # avoid a per-row SQL SUM; otherwise issues a single aggregate query.
   def scholarships_total_cents
-    return scholarships.sum { |s| s.amount_cents.to_i } if scholarships.loaded?
+    return scholarships.reject(&:agreement_declined?).sum { |s| s.amount_cents.to_i } if scholarships.loaded?
 
-    scholarships.sum(:amount_cents)
+    scholarships.not_declined.sum(:amount_cents)
   end
 
   def remaining_cents

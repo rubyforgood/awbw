@@ -182,6 +182,27 @@ RSpec.describe "Scholarships", type: :request do
     end
   end
 
+  describe "re-offering a declined scholarship" do
+    before { scholarship.reload.decline_agreement!("Timing no longer works") }
+
+    it "shows the declined banner with a Re-offer button on the edit page" do
+      get edit_scholarship_path(scholarship)
+
+      expect(response.body).to include("Declined by recipient")
+      expect(response.body).to match(%r{action="#{Regexp.escape(reoffer_scholarship_path(scholarship))}"})
+    end
+
+    it "POST reoffer returns the award to pending and re-funds the allocation" do
+      expect(allocation.reload.amount).to eq(0)
+
+      post reoffer_scholarship_path(scholarship)
+
+      expect(response).to redirect_to(edit_scholarship_path(scholarship))
+      expect(scholarship.reload.agreement_pending?).to be(true)
+      expect(allocation.reload.amount).to eq(5_000)
+    end
+  end
+
   describe "POST /scholarships from the registration Add link" do
     it "returns to the event registration edit page on create (symmetric with View)" do
       expect {

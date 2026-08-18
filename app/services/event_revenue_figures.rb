@@ -222,6 +222,7 @@ class EventRevenueFigures
   # recipient id feeds the scholarship drilldowns; #build reads only the first two.
   def scholarship_rows_by_registration
     @scholarship_rows_by_registration ||= Scholarship
+      .not_declined
       .joins(:allocation)
       .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: registration_ids })
       .pluck(Arel.sql("allocations.allocatable_id"), :grant_id, :amount_cents, :recipient_id)

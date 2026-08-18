@@ -135,7 +135,9 @@
       <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= scholarship ? scholarship.amount_cents : -1 %>">
         <% if scholarship %>
           <%= link_to edit_scholarship_path(scholarship, return_to: "onboarding"), class: "hover:underline", data: { turbo_frame: "_top" } do %>
-            <% if scholarship.amount_cents.to_i.positive? %>
+            <% if scholarship.agreement_declined? %>
+              <%= scholarship.decorate.agreement_status_badge %>
+            <% elsif scholarship.amount_cents.to_i.positive? %>
               <span class="font-medium text-gray-800"><%= dollars_from_cents(scholarship.amount_cents) %></span>
             <% else %>
               <%= render "shared/badge", label: "TBD", classes: "bg-gray-50 text-gray-500 border-gray-200" %>

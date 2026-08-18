@@ -48,21 +48,21 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/models/` | ActiveRecord models | ~80 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~66 files |
-| `app/jobs/` | SolidQueue background jobs | 5 files |
-| `app/models/concerns/` | Shared model modules | 16 concerns |
+| `app/models/` | ActiveRecord models | ~90 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~69 files |
+| `app/jobs/` | SolidQueue background jobs | 6 files |
+| `app/models/concerns/` | Shared model modules | 17 concerns |
 
 ### Presentation
 
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/controllers/` | Rails controllers (admin/, events/, home/) | ~91 files |
-| `app/views/` | ERB templates | ~745 files |
-| `app/decorators/` | Draper decorators for view logic | ~40 files |
-| `app/policies/` | ActionPolicy authorization rules | ~55 files |
+| `app/views/` | ERB templates | ~824 files |
+| `app/decorators/` | Draper decorators for view logic | ~50 files |
+| `app/policies/` | ActionPolicy authorization rules | ~63 files |
 | `app/presenters/` | Presentation objects | 6 files |
-| `app/helpers/` | View helpers | ~31 files |
+| `app/helpers/` | View helpers | ~36 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
@@ -106,7 +106,8 @@ This codebase (Rails 8.1)
 | `OtherResponse` | A free-text "Other" typed on a form question, captured at submission time (registration, scholarship, bulk payment). Polymorphic `owner`: a **sector** "Other" is owned by the `Person` (promotable into a `Sector`, shown on their profile/edit chip); an **organization_type** "Other" is owned by the `Organization` (stored now, not promotable until `OrganizationType` is a model). `generic` questions aren't captured — that stays searchable in the form answers. `field_identifier` records the question; `kind` is derived. Curated at `/other_responses` (grouped by kind/question): `promote` (sectors only), `keep`, `dismiss`. `dismissed` hides the chip from the profile but stays in the review queue (still promotable later); only `promoted` leaves the queue. Admins deep-link there from a person's chip. |
 | `Organization` | Groups with affiliations, addresses, logos via ActiveStorage |
 | `Grant` | Funds (polymorphic `funder`: Organization or Person) with eligibility criteria, tasks, deadlines; parent of `Scholarship`. Scholarship totals cannot exceed the grant amount |
-| `Scholarship` | Award to a `Person`; optionally drawn from a `Grant`, syncs to event registration `Allocation` |
+| `Scholarship` | Award to a `Person`; optionally drawn from a `Grant`, syncs to event registration `Allocation`. Tri-state `agreement_response_status` (pending/accepted/declined) drives the agreement; declined awards zero their allocation and drop out of all totals |
+| `ScholarshipAgreementResponse` | Append-only history of a scholarship's accept ↔ decline back-and-forth (status, reason, responder, amount at the time); the scholarship's `agreement_response_status` is the denormalized latest row, and `responded_at`/reason are read from the latest response, not stored on the scholarship |
 | `ProfessionalLicense` | A license a `Person` holds (`number`, `kind`, `issuing_state`, `expires_on`); a null `number` is a placeholder. `find_or_create_for` keeps one license per (person, number) |
 | `ContinuingEducationRegistration` | A registrant's CE for one event against one `ProfessionalLicense`; billable `allocatable` (`Registerable`) with stored `hours` + `cost_cents` (default from the event). Payment is computed (no stored status); the certificate is delivered via `certificate_sent_at` and gated by its own `certificate_available?` |
 | `TopicSubscription` | A `Person`'s standing subscription to a `TopicSubscriptionType`, optionally narrowed to a specific `interested_event` (null = the topic broadly). State is timestamp-driven (`unsubscribed_at IS NULL` = active — `active?`/`unsubscribe!`/`resubscribe` — non-bang, since reviving can collide with a newer active row, no status column); `subscribed_at` + `source` mirror the `mailing_list_consent_*` provenance pattern. Distinct from the `mailing_list_consent_*` flag (consent = "you may email me"; subscription = "what I want to hear about") and from an `EventRegistration` (an actual enrollment). One active subscription per (person, type, event) |

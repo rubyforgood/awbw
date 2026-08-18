@@ -91,7 +91,10 @@ class EventRegistrationReadiness
   # Each pre-event check, in priority order: [ predicate, two-word reason (shown
   # under a "Not ready" badge), full description (tooltip) ]. One table keeps the
   # short and long forms in sync.
+  # A decline outranks the payment gap it creates: zeroing the allocation is what
+  # reopens the balance, so the admin's next step is answering the decline.
   EVENT_READY_CHECKS = [
+    [ :scholarship_declined?, "Award declined", "Scholarship declined — respond to the decline" ],
     [ :payment_due?, "Payment due", "Payment due" ],
     [ :organization_missing?, "Org validation", "No organization linked" ],
     [ :scholarship_uncreated?, "No scholarship", "Scholarship not created" ],
@@ -147,6 +150,10 @@ class EventRegistrationReadiness
   # Once any org is linked, they've made the call, so it's resolved.
   def organization_missing?
     registration.organizations.empty?
+  end
+
+  def scholarship_declined?
+    registration.scholarship_declined?
   end
 
   def scholarship_uncreated?

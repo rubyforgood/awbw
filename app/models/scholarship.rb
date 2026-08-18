@@ -4,28 +4,40 @@ class Scholarship < ApplicationRecord
   has_one :allocation, as: :source, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :nullify
+  has_many :agreement_responses, -> { chronological }, class_name: "ScholarshipAgreementResponse", dependent: :destroy
+
+  AGREEMENT_RESPONSE_STATUSES = %w[pending accepted declined].freeze
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
 
   validates :amount_cents, numericality: { greater_than_or_equal_to: 0 }
+  validates :agreement_response_status, inclusion: { in: AGREEMENT_RESPONSE_STATUSES }
   validate :recipient_must_match_allocation_registrant
   validate :allocation_must_be_valid
-  validate :within_grant_budget, if: :grant
+  validate :within_grant_budget, if: -> { grant && !agreement_declined? }
 
-  after_update :sync_allocation_amount, if: -> { saved_change_to_amount_cents? }
+  # Allocation is zero while declined, else the amount — keeps allocation-based totals correct.
+  after_update :sync_allocation_amount, if: -> { saved_change_to_amount_cents? || saved_change_to_agreement_response_status? }
+  after_update :log_agreement_response, if: -> { saved_change_to_agreement_response_status? }
+  # An award can be created with the agreement toggle already on, which the update callback never sees.
+  after_create :log_agreement_response, unless: :agreement_pending?
   after_create_commit :flag_event_registration_scholarship_requested
 
   scope :completed, -> { where(tasks_completed: true) }
-  scope :agreement_signed, -> { where.not(agreement_signed_at: nil) }
+  scope :agreement_signed, -> { where(agreement_response_status: "accepted") }
+  scope :agreement_declined, -> { where(agreement_response_status: "declined") }
+  # Declined awards drop out of every total.
+  scope :not_declined, -> { where.not(agreement_response_status: "declined") }
 
   # Funding split (the app-wide convention, mirrored by EventDashboard and
   # EventRevenueFigures): externally funded = backed by a grant whose funder isn't
   # the org itself; org-subsidized = no grant, or a grant AWBW funded itself.
   # Callers rendering both sides can pass an already-loaded self_funded set to
   # avoid re-running Grant.self_funded_ids (an Organization.awbw + pluck) per scope.
-  scope :externally_funded, ->(self_funded = Grant.self_funded_ids) { where.not(grant_id: [ nil, *self_funded ]) }
-  scope :org_subsidized, ->(self_funded = Grant.self_funded_ids) { where(grant_id: [ nil, *self_funded ]) }
+  # Declined awards are excluded (a decline funds nothing).
+  scope :externally_funded, ->(self_funded = Grant.self_funded_ids) { not_declined.where.not(grant_id: [ nil, *self_funded ]) }
+  scope :org_subsidized, ->(self_funded = Grant.self_funded_ids) { not_declined.where(grant_id: [ nil, *self_funded ]) }
 
   # Scholarships from grants a given funder (Person/Organization) gave — the
   # "funder" filter. A blank funder matches nothing.
@@ -50,16 +62,48 @@ class Scholarship < ApplicationRecord
     EventRegistration.where(id: registration_ids).distinct.pluck(:event_id)
   end
 
-  # The agreement is signed when a signed-at timestamp is present — a single
-  # source of truth. `agreement_signed` reads/writes as a virtual boolean so the
-  # admin form checkbox and strong params keep working, stamping or clearing the
-  # timestamp accordingly (and preserving an existing time across re-saves).
-  def agreement_signed? = agreement_signed_at.present?
+  # `agreement_signed` reads/writes as a virtual boolean for the admin checkbox +
+  # strong params: checking accepts, unchecking returns to pending.
+  def agreement_pending? = agreement_response_status == "pending"
+  def agreement_signed? = agreement_response_status == "accepted"
+  def agreement_declined? = agreement_response_status == "declined"
   alias_method :agreement_signed, :agreement_signed?
 
   def agreement_signed=(value)
     signed = ActiveModel::Type::Boolean.new.cast(value)
-    self.agreement_signed_at = signed ? (agreement_signed_at || Time.current) : nil
+    if signed
+      assign_agreement_response("accepted") unless agreement_signed?
+    elsif agreement_signed?
+      assign_agreement_response("pending")
+    end
+  end
+
+  # Idempotent — a repeat accept is a no-op, so it logs no duplicate history row.
+  def accept_agreement!(by: "recipient")
+    return if agreement_signed?
+
+    assign_agreement_response("accepted", by:)
+    save!
+  end
+
+  def decline_agreement!(reason, by: "recipient")
+    assign_agreement_response("declined", reason:, by:)
+    save!
+  end
+
+  # Admin re-offering a declined award: back to pending, allocation re-funded.
+  # Editing the amount alone no longer reactivates a decline.
+  def reoffer_agreement!(by: "admin")
+    return if agreement_pending?
+
+    assign_agreement_response("pending", by:)
+    save!
+  end
+
+  # Source for the responded-at date and decline reason (not stored on the
+  # scholarship). Nil while pending with no response yet.
+  def latest_agreement_response
+    agreement_responses.loaded? ? agreement_responses.max_by(&:responded_at) : agreement_responses.chronological.last
   end
 
   def amount_dollars
@@ -81,7 +125,7 @@ class Scholarship < ApplicationRecord
   def within_grant_budget
     return unless amount_cents
 
-    others_total = grant.scholarships.where.not(id: id).sum(:amount_cents)
+    others_total = grant.scholarships.not_declined.where.not(id: id).sum(:amount_cents)
     if others_total + amount_cents > grant.amount_cents
       errors.add(:amount_cents, "would exceed the grant's available funds")
     end
@@ -109,10 +153,31 @@ class Scholarship < ApplicationRecord
     end
   end
 
+  # Set the status in memory; stash reason + responder for the history row the
+  # after_update callback writes (they live on the response, not the scholarship).
+  def assign_agreement_response(status, reason: nil, by: "admin")
+    self.agreement_response_status = status
+    @agreement_response_reason = (status == "declined" ? reason.presence : nil)
+    @agreement_response_by = by
+  end
+
   def sync_allocation_amount
     return unless allocation
 
-    allocation.update!(amount: amount_cents.to_i)
+    desired = agreement_declined? ? 0 : amount_cents.to_i
+    allocation.update!(amount: desired) unless allocation.amount == desired
+  end
+
+  def log_agreement_response
+    agreement_responses.create!(
+      status: agreement_response_status,
+      reason: @agreement_response_reason,
+      responded_at: Time.current,
+      responder: @agreement_response_by.presence || "admin",
+      amount_cents: amount_cents
+    )
+    @agreement_response_reason = nil
+    @agreement_response_by = nil
   end
 
   # When a scholarship is awarded against an event registration, the registration
