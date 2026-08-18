@@ -62,7 +62,7 @@ This codebase (Rails 8.1)
 | `app/decorators/` | Draper decorators for view logic | ~50 files |
 | `app/policies/` | ActionPolicy authorization rules | ~63 files |
 | `app/presenters/` | Presentation objects | 6 files |
-| `app/helpers/` | View helpers | ~37 files |
+| `app/helpers/` | View helpers | ~31 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
@@ -137,7 +137,7 @@ This codebase (Rails 8.1)
 |---|---|
 | `AgeGroupTaggable` | Splits AgeRange category taggings into primary/additional via `categorizable_items.is_primary` (Person, Organization) |
 | `AhoyTrackable` | Event tracking integration |
-| `AuthorCreditable` | Author attribution. Credits are formatted by the credited **person's profile** (`Person#display_name_preference`), not by the record. The record's `author_credit_preference` is the consent snapshot taken at create time and is human-editable only on the author credit divergences page — it no longer drives display, except `"anonymous"`, which is always honored while set (either the profile or the record can make a credit anonymous, and neither strips the other's flag — only an admin clearing the record's snapshot on that page does) |
+| `AuthorCreditable` | Author attribution. Credits are formatted by the credited **person's profile** (`Person#display_name_preference`), not by the record. The record's `author_credit_preference` is the consent snapshot taken at create time and is human-editable only on the author credit divergences page. Anonymity is a one-way latch: the profile or the record can set it, neither can strip it from the other |
 | `Featureable` | `featured`, `publicly_featured` scopes |
 | `Mentioner` | ActionText @mention extraction and grouping |
 | `NameFilterable` | Name-based filtering |
@@ -222,7 +222,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `WorkshopSearchService` — Complex filtering, sorting, pagination with ActionPolicy
 - `WorkshopFromIdeaService` — Converts WorkshopIdea to Workshop with asset migration
 - `WorkshopVariationFromIdeaService` — Variation creation from ideas
-- `AuthorCreditDivergenceQuery` — Backs the admin author credit divergences page. Returns four sections: `preference` (stored snapshot no longer matches the profile, grouped by person), `legacy` (credited by a free-text column — `workshops.full_name`, `resources.legacy_author_name`), `creator` (no `author_id`, so the credit falls back to the creating user's person — idea models excluded, since that's their only credit path), and `unattributed` (nothing to credit, renders `missing_author_label`). The last three all resolve by assigning an `author_id`, the only credit path that follows a profile and links to it. `MODEL_NAMES` doubles as the allowlist for the `type` param (never constantize a raw param)
+- `AuthorCreditDivergenceQuery` — Backs the admin author credit divergences page. Four sections: `preference` (snapshot no longer matches the profile, grouped by person), `legacy` (credited by a free-text column, one group per column), `creator` (no `author_id`, so the credit falls back to the creating user's person — idea models excluded), and `unattributed` (nothing to credit). The last three resolve by assigning an `author_id`. `MODEL_NAMES` doubles as the allowlist for the `type` param — never constantize a raw param
 - `TaggingSearchService` — Search and filter tagging data
 - `PersonFromUserService` — Create Person from User account
 - `PersonCommentAggregator` — Unifies every comment connected to a person (their profile, event registrations, scholarships, CE registrations, topic subscriptions, and user account) into one newest-first `Comment` relation for the aggregated `/people/:id/all_comments` page
