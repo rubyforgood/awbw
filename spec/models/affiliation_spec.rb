@@ -358,6 +358,13 @@ RSpec.describe Affiliation, type: :model do
       op.update!(title: "New Title")
       expect(op.reload.inactive).to be true
     end
+
+    it 'keeps an explicitly set flag the dates would not derive' do
+      op.update!(start_date: Date.current, end_date: Date.current, inactive: true)
+
+      expect(op.reload.inactive).to be true
+      expect(op).not_to be_active
+    end
   end
 
   describe "reassigning the organization" do
