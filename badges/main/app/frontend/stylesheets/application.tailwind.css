@@ -108,6 +108,15 @@
   }
 }
 
+/* Grey a filter <select>'s "All"/blank first option like a placeholder while it
+   is the current selection. Raw CSS because the :has() selector has no Tailwind
+   utility equivalent. */
+.search-select-placeholder:has(option:first-child:checked) {
+  color: rgb(156 163 175);   /* gray-400 */
+  font-size: 0.875rem;       /* text-sm */
+  line-height: 1.5rem;       /* text-sm/6: keeps the select the height of a text input */
+}
+
 /* Optional fields get a subtle gray background */
 .optional input,
 .optional select,

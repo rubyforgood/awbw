@@ -9,25 +9,23 @@
     <div class="flex flex-wrap gap-4 items-end">
       <div class="flex-1 min-w-[200px]">
         <%= f.label :search, "Title or body contains",
-                    class: "text-sm font-medium text-gray-500 mb-1" %>
+                    class: search_label_class %>
 
         <%= f.text_field :search,
                          value: params[:search],
                          placeholder: "e.g. Profile, Workshop search…",
-                         class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
-                                   focus:ring-blue-500 focus:border-blue-500" %>
+                         class: search_field_class(extra: "bg-white") %>
       </div>
 
       <% if @video_type != "instructional" %>
         <div class="flex-0 min-w-[180px]">
-          <label for="video_type" class="text-sm font-medium text-gray-500 mb-1">
+          <label for="video_type" class="<%= search_label_class %>">
             Video type
           </label>
 
           <select id="video_type"
                   name="video_type"
-                  class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2
-                         focus:ring-blue-500 focus:border-blue-500">
+                  class="<%= search_field_class(extra: "bg-white search-select-placeholder") %>">
             <option value="all" <%= "selected" if @video_type == "all" %>>All videos</option>
             <option value="instructional" <%= "selected" if @video_type == "instructional" %>>Instructional videos</option>
             <option value="other" <%= "selected" if @video_type == "other" %>>Other videos</option>
@@ -41,16 +39,15 @@
                    admin: allowed_to?(:manage?, VideoRecording),
                    authenticated: user_signed_in?,
                    button_text: "All" %></div>
-      <div><%= link_to "Clear filters",
-                  video_recordings_path(video_type: @video_type),
-                  class: "btn btn-utility-outline whitespace-nowrap",
-                  data: { action: "searchable-checkbox#clear collection#clearAndSubmit" } %></div>
+      <div><%= render "shared/search_clear",
+                  url: video_recordings_path(video_type: @video_type),
+                  action: "searchable-checkbox#clear collection#clearAndSubmit" %></div>
     </div>
 
     <div class="flex flex-col sm:flex-row gap-4">
       <%# Categories dropdown %>
       <div class="w-full">
-        <label class="text-sm font-medium text-gray-500 mb-1 block" for="categories">Categories</label>
+        <label class="<%= search_label_class %>" for="categories">Categories</label>
 
         <%= select_tag "categories",
                        options_for_select(
@@ -65,7 +62,7 @@
 
       <%# Sectors dropdown %>
       <div class="w-full">
-        <label class="text-sm font-medium text-gray-500 mb-1 block" for="sectors">Sectors</label>
+        <label class="<%= search_label_class %>" for="sectors">Sectors</label>
 
         <%= select_tag "sectors",
                        options_from_collection_for_select(@sectors, :id, :name, Array(params[:sectors]).map(&:to_i)),

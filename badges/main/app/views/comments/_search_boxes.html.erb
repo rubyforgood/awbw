@@ -14,43 +14,43 @@
   </div>
   <div class="flex flex-wrap items-end gap-3">
     <div class="grow min-w-[150px]">
-      <label for="query" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">Keyword</label>
+      <label for="query" class="<%= search_label_class %>">Keyword</label>
       <div class="relative">
         <%= f.text_field :query, value: params[:query],
                          placeholder: "Body or topic…",
-                         class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-blue-500 focus:border-blue-500",
+                         class: search_field_class(extra: "bg-white pr-10"),
                          oninput: "this.form.requestSubmit()" %>
-        <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"><i class="fa fa-search"></i></button>
+        <%= render "shared/search_submit" %>
       </div>
     </div>
 
     <div class="grow min-w-[150px]">
-      <label for="author_id" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">Author</label>
+      <label for="author_id" class="<%= search_label_class %>">Author</label>
       <%= select_tag :author_id,
                      options_for_select(User.where(id: params[:author_id]).map { |user| [ user.full_name_with_email, user.id ] }, params[:author_id]),
                      include_blank: true, prompt: "Search staff by name",
-                     class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                     class: search_field_class(extra: "bg-white"),
                      data: { controller: "remote-select", remote_select_model_value: "user" } %>
     </div>
 
     <div class="w-36">
-      <label for="source" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">Type</label>
+      <label for="source" class="<%= search_label_class %>">Type</label>
       <%= f.select :source, options_for_select(source_options, params[:source]), {},
-                   class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                   class: search_field_class(extra: "bg-white search-select-placeholder"),
                    onchange: "this.form.requestSubmit()" %>
     </div>
 
     <div class="w-36">
-      <label for="from" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">From</label>
+      <label for="from" class="<%= search_label_class %>">From</label>
       <%= f.date_field :from, value: params[:from],
-                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                       class: search_field_class(extra: "bg-white"),
                        onchange: "this.form.requestSubmit()" %>
     </div>
 
     <div class="w-36">
-      <label for="to" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">To</label>
+      <label for="to" class="<%= search_label_class %>">To</label>
       <%= f.date_field :to, value: params[:to],
-                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                       class: search_field_class(extra: "bg-white"),
                        onchange: "this.form.requestSubmit()" %>
     </div>
 
@@ -63,7 +63,7 @@
     </div>
 
     <div class="pb-1">
-      <%= link_to "Clear", clear_path, class: "btn btn-utility", data: { action: "collection#clearAndSubmit" } %>
+      <%= render "shared/search_clear", url: clear_path %>
     </div>
   </div>
 
@@ -71,22 +71,22 @@
     <div class="flex flex-wrap items-end gap-4">
       <% if show_person %>
         <div class="min-w-[200px]">
-          <label for="person_id" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">Person</label>
+          <label for="person_id" class="<%= search_label_class %>">Person</label>
           <%= select_tag :person_id,
                          options_for_select(Person.where(id: params[:person_id]).map { |person| [ person.full_name, person.id ] }, params[:person_id]),
                          include_blank: true, prompt: "Search for a person",
-                         class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                         class: search_field_class(extra: "bg-white"),
                          data: { controller: "remote-select", remote_select_model_value: "person" } %>
         </div>
       <% end %>
 
       <% if show_event %>
         <div class="min-w-[200px]">
-          <label for="event_id" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">Event</label>
+          <label for="event_id" class="<%= search_label_class %>">Event</label>
           <%= select_tag :event_id,
                          options_for_select(Event.where(id: params[:event_id]).map { |event| [ event.title, event.id ] }, params[:event_id]),
                          include_blank: true, prompt: "Search for an event",
-                         class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                         class: search_field_class(extra: "bg-white"),
                          data: { controller: "remote-select", remote_select_model_value: "event" } %>
         </div>
       <% end %>

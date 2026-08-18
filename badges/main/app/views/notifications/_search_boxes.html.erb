@@ -8,18 +8,17 @@
                 class: "flex items-end gap-3" do |f| %>
     <div class="flex-[2]">
       <%= f.label :email, "Email contains",
-                  class: "block text-sm font-medium text-gray-500 mb-1" %>
+                  class: search_label_class %>
 
       <%= f.text_field :email,
                        value: params[:email],
-                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
-                                 focus:ring-blue-500 focus:border-blue-500",
+                       class: search_field_class(extra: "bg-white"),
                        oninput: "this.form.requestSubmit()" %>
     </div>
 
     <div>
       <%= f.label :record_type, "Record type",
-                  class: "block text-sm font-medium text-gray-500 mb-1" %>
+                  class: search_label_class %>
 
       <%= f.select :record_type,
                    options_for_select(
@@ -27,49 +26,45 @@
                      params[:record_type]
                    ),
                    { include_blank: "All" },
-                   class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
-                             focus:ring-blue-500 focus:border-blue-500" %>
+                   class: search_field_class(extra: "bg-white search-select-placeholder") %>
     </div>
 
     <%# Fixed, narrow width so the long topic labels don't balloon the closed
         control; the native option list still expands to the full text. %>
     <div class="w-32">
       <%= f.label :email_topic, "Email topic",
-                  class: "block text-sm font-medium text-gray-500 mb-1" %>
+                  class: search_label_class %>
 
       <%= f.select :email_topic,
                    options_for_select(Notification::EMAIL_TOPICS.map(&:first), params[:email_topic]),
                    { include_blank: "All" },
-                   class: "w-full truncate bg-white border border-gray-300 rounded-lg px-3 py-2
-                             focus:ring-blue-500 focus:border-blue-500" %>
+                   class: search_field_class(extra: "truncate bg-white search-select-placeholder") %>
     </div>
 
     <div class="flex-1">
       <%= f.label :subject_line, "Subject contains",
-                  class: "block text-sm font-medium text-gray-500 mb-1" %>
+                  class: search_label_class %>
 
       <%= f.text_field :subject_line,
                        value: params[:subject_line],
-                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
-                                 focus:ring-blue-500 focus:border-blue-500",
+                       class: search_field_class(extra: "bg-white"),
                        oninput: "this.form.requestSubmit()" %>
     </div>
 
     <div>
       <%= f.label :responded_status, "Responded",
-                  class: "block text-sm font-medium text-gray-500 mb-1" %>
+                  class: search_label_class %>
 
       <%= f.select :responded_status,
                    options_for_select([ [ "Yes", "yes" ], [ "No", "no" ], [ "N/A", "na" ] ], params[:responded_status]),
                    { include_blank: "All" },
-                   class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
-                             focus:ring-blue-500 focus:border-blue-500" %>
+                   class: search_field_class(extra: "bg-white search-select-placeholder") %>
     </div>
 
     <!-- Clear -->
     <div>
       <span class="block text-sm mb-1">&nbsp;</span>
-      <%= link_to "Clear filters", notifications_path, class: "btn btn-utility-outline whitespace-nowrap", data: { action: "collection#clearAndSubmit" } %>
+      <%= render "shared/search_clear", url: notifications_path %>
     </div>
   <% end %>
 </div>

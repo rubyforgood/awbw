@@ -6,6 +6,6 @@
       field_class  – Tailwind classes for the <input>
       wrapper_class – optional wrapper width (defaults to the roster's w-48) %>
 <div class="<%= local_assigns.fetch(:wrapper_class, "w-full md:w-48") %>">
-  <%= label_tag param, label, class: "block text-sm font-medium text-gray-700 mb-1" %>
+  <%= label_tag param, label, class: search_label_class %>
   <%= text_field_tag param, params[param], class: field_class, placeholder: placeholder %>
 </div>
