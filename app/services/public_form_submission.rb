@@ -29,6 +29,7 @@ class PublicFormSubmission
 
       submission = FormSubmission.create!(person: person, form: @form, role: ROLE)
       save_form_answers(submission)
+      OtherResponses::CaptureFromSubmission.call(submission)
       send_notifications(submission)
 
       Result.new(success?: true, form_submission: submission, person: person, errors: [])

@@ -56,6 +56,18 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include(CGI.escapeHTML(forms_path(anchor: "form_#{form.id}")))
       end
 
+      it "each View link carries the form filter so the trip back keeps it" do
+        form = create(:form, name: "Volunteer interest")
+        submission = create(:form_submission, form: form)
+
+        get form_submissions_path(form_id: form.id), headers: frame_headers
+
+        expect(response.body).to include(
+          CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions",
+                                              person_id: submission.person_id, form_id: form.id))
+        )
+      end
+
       it "each View link carries a return_to back to the person's index" do
         person = create(:person)
         submission = create(:form_submission, person: person)
@@ -99,6 +111,14 @@ RSpec.describe "FormSubmissions", type: :request do
 
         expect(response.body).to include(form_submissions_path(person_id: submission.person_id))
         expect(response.body).to include("Back to form submissions")
+      end
+
+      it "carries the form filter back when arriving from the form-filtered index" do
+        get form_submission_path(submission, return_to: "form_submissions", form_id: submission.form_id)
+
+        expect(response.body).to include(
+          CGI.escapeHTML(form_submissions_path(form_id: submission.form_id))
+        )
       end
 
       it "resolves the sector/age-group ids stored behind the professional fields to names" do

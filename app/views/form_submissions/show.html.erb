@@ -2,7 +2,7 @@
 <div class="max-w-2xl mx-auto px-4 pt-4">
   <div class="flex flex-wrap items-center gap-2">
     <% if params[:return_to] == "form_submissions" %>
-      <%= link_to form_submissions_path(person_id: params[:person_id].presence), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+      <%= link_to form_submissions_path(person_id: params[:person_id].presence, form_id: params[:form_id].presence), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Back to form submissions
       <% end %>
     <% elsif event && params[:return_to] == "bulk_payments" %>

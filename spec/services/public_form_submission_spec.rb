@@ -70,4 +70,16 @@ RSpec.describe PublicFormSubmission do
     expect(result.person.mailing_list_consent_at).to be_present
     expect(result.person.mailing_list_consent_source).to include(form.display_name)
   end
+
+  it "captures a sector 'Other' answer as an OtherResponse, like the other submission paths" do
+    sector_field = create(:form_field, form: form, name: "Who do you serve?",
+                          answer_type: :multi_select_checkbox, field_identifier: "additional_sectors")
+    params = params_for.merge(sector_field.id.to_s => [ "Other: Equine therapy" ])
+
+    result = described_class.call(form: form, form_params: params)
+
+    response = result.person.other_responses.sole
+    expect([ response.field_identifier, response.text, response.kind ])
+      .to eq([ "additional_sectors", "Equine therapy", "sector" ])
+  end
 end
