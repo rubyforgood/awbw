@@ -1,5 +1,5 @@
-<% field_class = "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
-<% label_class = "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+<% field_class = search_field_class(extra: "bg-white") %>
+<% label_class = search_label_class %>
 <div class="mb-6 p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
   <%= form_with url: topic_subscriptions_path, method: :get,
         data: { controller: "collection", turbo_frame: "topic_subscriptions_results" },
@@ -24,20 +24,20 @@
         <%= f.select :topic_subscription_type_id,
               options_from_collection_for_select(TopicSubscriptionType.active.ordered, :id, :name, params[:topic_subscription_type_id]),
               { include_blank: "All topics" },
-              class: field_class, onchange: "this.form.requestSubmit()" %>
+              class: "#{field_class} search-select-placeholder", onchange: "this.form.requestSubmit()" %>
       </div>
       <div class="min-w-[150px]">
         <%= f.label :comment_status, "Comments", class: label_class %>
         <%= f.select :comment_status,
               options_for_select([ [ "All", "" ], [ "Has comments", "present" ], [ "Flagged", "flagged" ], [ "None", "none" ] ], params[:comment_status]),
-              {}, class: field_class, onchange: "this.form.requestSubmit()" %>
+              {}, class: "#{field_class} search-select-placeholder", onchange: "this.form.requestSubmit()" %>
       </div>
       <%# Active/unsubscribed lives in the segmented toggle above the results;
           carry the current selection so filtering here doesn't reset it. %>
       <%= hidden_field_tag :status, params[:status], id: nil if params[:status].present? %>
       <div>
         <label class="<%= label_class %>">&nbsp;</label>
-        <%= link_to "Clear filters", topic_subscriptions_path, class: "btn btn-utility", data: { action: "collection#clearAndSubmit" } %>
+        <%= render "shared/search_clear", url: topic_subscriptions_path %>
       </div>
     </div>
   <% end %>
