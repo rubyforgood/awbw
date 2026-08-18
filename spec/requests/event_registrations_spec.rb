@@ -589,6 +589,41 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).not_to include("Registration payments and allocations")
         expect(response.body).not_to include("name=\"event_registration[scholarship_requested]\"")
       end
+
+      it "still offers the editable scholarship card when the source had no scholarship (#1944)" do
+        source = create(:event_registration, event: create(:event, cost_cents: 10_000), status: "transferred_out")
+        incoming = create(:event_registration, event: create(:event, cost_cents: 10_000),
+          registrant: source.registrant, transferred_from_registration: source)
+
+        get edit_event_registration_path(incoming)
+
+        # Source had no scholarship, so an admin can award one on this registration.
+        expect(response.body).to include("name=\"event_registration[scholarship_requested]\"")
+      end
+
+      it "summarizes the source's CE payment on a transferred-in reg (#1944)" do
+        source = create(:event_registration, event: create(:event, ce_hours_offered: 6), status: "transferred_out")
+        ce = create(:continuing_education_registration, event_registration: source, cost_cents: 8_800,
+          professional_license: create(:professional_license, person: source.registrant), skip_event_defaults: true)
+        create(:allocation, source: create(:payment, person: source.registrant, amount_cents: 8_800, amount_cents_remaining: 8_800),
+          allocatable: ce, amount: 8_800)
+        incoming = create(:event_registration, event: new_event, transferred_from_registration: source)
+
+        get edit_event_registration_path(incoming)
+
+        expect(response.body).to include("CE payment")
+        expect(response.body).to include("$88")
+      end
+
+      it "notes no CE payment on a transferred-in reg whose source had no CE (#1944)" do
+        source = create(:event_registration, event: event, status: "transferred_out")
+        incoming = create(:event_registration, event: new_event, transferred_from_registration: source)
+
+        get edit_event_registration_path(incoming)
+
+        expect(response.body).to include("CE payment")
+        expect(response.body).to include("No CE")
+      end
     end
 
     describe "PATCH /event_registrations/:id" do

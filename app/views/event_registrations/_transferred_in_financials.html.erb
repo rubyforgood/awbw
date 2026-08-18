@@ -1,9 +1,10 @@
 <%# ---- Transferred-in financials (issue #1944) — a read-only summary of the
-    scholarship / payment records that live on the SOURCE registration this person
-    transferred in from. (CE is carried onto this reg's own record — see its card
-    above — so it isn't summarized here.) Styled distinctly (teal) so it never
-    reads like a normal registration's editable cards, and every figure links back
-    to the matching section on the source reg. ---- %>
+    payment / scholarship / CE-payment records that live on the SOURCE registration
+    this person transferred in from. (CE hours are carried onto this reg's own
+    record — see its card above; the CE payment stays on the source and is
+    summarized here.) Styled distinctly (teal) so it never reads like a normal
+    registration's editable cards, and every figure links back to the matching
+    section on the source reg. ---- %>
 <% source = event_registration.transferred_from_registration %>
 <% source_link = ->(anchor) { edit_event_registration_path(source, anchor: anchor) } %>
 <% source_cost_cents = source.event.cost_cents.to_i %>
@@ -29,12 +30,12 @@
     <% end %>
   </div>
 
-  <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
+  <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-3">
     <%# ---- Payment ---- %>
     <div class="flex flex-col rounded-lg border border-teal-200 bg-white p-3">
       <div class="mb-2 flex items-center gap-2">
         <i class="fa-solid fa-dollar-sign text-teal-600"></i>
-        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Payment</span>
+        <span class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Payment</span>
         <%= link_to source_link.call("allocations-card"),
                     class: "ml-auto text-xs font-medium text-teal-700 hover:underline",
                     target: "_blank", rel: "noopener" do %>
@@ -43,9 +44,9 @@
       </div>
       <% if source_cost_cents > 0 %>
         <dl class="space-y-1 text-sm">
-          <div class="flex justify-between"><dt class="text-gray-500">Cost</dt><dd class="tabular-nums text-gray-900"><%= dollars_from_cents(source_cost_cents) %></dd></div>
-          <div class="flex justify-between"><dt class="text-gray-500">Allocated</dt><dd class="tabular-nums text-gray-900"><%= dollars_from_cents(source_paid_cents) %></dd></div>
-          <div class="flex justify-between"><dt class="text-gray-500">Due</dt><dd class="tabular-nums font-semibold <%= source_due_cents.positive? ? "text-amber-700" : "text-gray-500" %>"><%= dollars_from_cents(source_due_cents) %></dd></div>
+          <div class="flex justify-between"><dt class="text-gray-500">Cost</dt><dd class="text-gray-900 tabular-nums"><%= dollars_from_cents(source_cost_cents) %></dd></div>
+          <div class="flex justify-between"><dt class="text-gray-500">Allocated</dt><dd class="text-gray-900 tabular-nums"><%= dollars_from_cents(source_paid_cents) %></dd></div>
+          <div class="flex justify-between"><dt class="text-gray-500">Due</dt><dd class="font-semibold tabular-nums <%= source_due_cents.positive? ? "text-amber-700" : "text-gray-500" %>"><%= dollars_from_cents(source_due_cents) %></dd></div>
         </dl>
       <% else %>
         <p class="text-sm text-gray-500">Free event — no payment.</p>
@@ -56,7 +57,7 @@
     <div class="flex flex-col rounded-lg border border-teal-200 bg-white p-3">
       <div class="mb-2 flex items-center gap-2">
         <i class="fa-solid fa-graduation-cap text-teal-600"></i>
-        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Scholarship</span>
+        <span class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Scholarship</span>
         <% if source.scholarship? %>
           <%= link_to source_link.call("scholarship-card"),
                       class: "ml-auto text-xs font-medium text-teal-700 hover:underline",
@@ -72,7 +73,7 @@
         <span class="mb-1 inline-flex w-fit items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-[0.65rem] font-medium text-teal-700">
           <i class="fa-solid fa-graduation-cap"></i> Scholarship recipient
         </span>
-        <p class="text-sm font-semibold tabular-nums text-gray-900"><%= dollars_from_cents(source_scholarship.amount_cents) %></p>
+        <p class="text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(source_scholarship.amount_cents) %></p>
         <p class="mt-1 text-xs text-gray-500">
           <%= source_scholarship.agreement_signed? ? "Agreement signed" : "Agreement pending" %> ·
           <%= source_scholarship.tasks_completed? ? "Tasks complete" : "Tasks outstanding" %>
@@ -82,6 +83,33 @@
                     target: "_blank", rel: "noopener" %>
       <% else %>
         <p class="text-sm text-gray-500">None.</p>
+      <% end %>
+    </div>
+
+    <%# ---- CE payment — the CE hours moved to this reg's own card, but the payment
+        stayed on the source, so it's summarized here. ---- %>
+    <div class="flex flex-col rounded-lg border border-teal-200 bg-white p-3">
+      <div class="mb-2 flex items-center gap-2">
+        <i class="fa-solid fa-certificate text-teal-600"></i>
+        <span class="text-xs font-semibold tracking-wide text-gray-500 uppercase">CE payment</span>
+        <% if source.ce_registered? %>
+          <%= link_to source_link.call("ce-card"),
+                      class: "ml-auto text-xs font-medium text-teal-700 hover:underline",
+                      target: "_blank", rel: "noopener" do %>
+            View <i class="fa-solid fa-arrow-up-right-from-square text-[0.55rem]"></i>
+          <% end %>
+        <% end %>
+      </div>
+      <% if !source.ce_registered? %>
+        <p class="text-sm text-gray-500">No CE.</p>
+      <% elsif source.ce_amount_paid_cents.to_i.zero? %>
+        <p class="text-sm text-gray-500">No CE payments.</p>
+      <% else %>
+        <dl class="space-y-1 text-sm">
+          <div class="flex justify-between"><dt class="text-gray-500">Cost</dt><dd class="text-gray-900 tabular-nums"><%= dollars_from_cents(source.ce_amount_owed_cents) %></dd></div>
+          <div class="flex justify-between"><dt class="text-gray-500">Paid</dt><dd class="text-gray-900 tabular-nums"><%= dollars_from_cents(source.ce_amount_paid_cents) %></dd></div>
+          <div class="flex justify-between"><dt class="text-gray-500">Due</dt><dd class="font-semibold tabular-nums <%= source.ce_amount_due_cents.positive? ? "text-amber-700" : "text-gray-500" %>"><%= dollars_from_cents(source.ce_amount_due_cents) %></dd></div>
+        </dl>
       <% end %>
     </div>
   </div>

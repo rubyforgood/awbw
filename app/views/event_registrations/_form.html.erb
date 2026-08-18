@@ -213,12 +213,15 @@
       </div>
       <% end %>
 
-      <%# A transferred-in registration's scholarship/CE/payments live on the
-          source registration, so it shows a read-only summary of those instead
-          of its own editable cards (issue #1944). %>
+      <%# A transferred-in registration's payments live on the source registration
+          (a read-only summary shows below). Its scholarship stays on the source too,
+          but when the source had none we still show the editable card so an admin can
+          award one on this registration — a scholarship decided now belongs here, the
+          same way a CE decided now does (issue #1944). %>
       <% transferred_in = f.object.transferred_in? %>
+      <% source_has_scholarship = transferred_in && f.object.transferred_from_registration&.scholarship? %>
       <%# The org card widens to absorb a column for each of the other two cards that's hidden. %>
-      <% show_scholarship = !transferred_in && (f.object.event&.scholarship_eligible? || f.object.scholarships.any?) %>
+      <% show_scholarship = !source_has_scholarship && (f.object.event&.scholarship_eligible? || f.object.scholarships.any?) %>
       <%# CE now lives on the transfer-in reg itself (its own record, carried by the
           transfer), so its card shows here even for a transfer-in — payment/scholarship
           stay on the source and appear in the read-only summary below. (#1944) %>
