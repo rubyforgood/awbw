@@ -142,12 +142,22 @@ program-status chip — this is what stops attendance-only events from reading
 The classification anchors on the event's actual `start_date` (not the 1st of its
 month, not "today"), so revisiting a past event always reports what was true then.
 
-**With no event in view** — the cross-event attendees roster — there is no event
-date to anchor on, so the status reads as of **January 1 of the current year**:
-where each program stands this reporting year. `FacilitatorProgramStatus` applies
-that fallback itself and flags `year_anchored?`, and those views carry a caveat
-saying so. Any column showing a status names its anchor: "Program status (TOS205)"
-in event context, with a hover giving the exact date.
+**With no event in view** — the cross-event attendees roster and its breakdowns —
+there is no event date to anchor on, so the status reads as of **January 1 of the
+current year**: where each program stands this reporting year.
+`FacilitatorProgramStatus` applies that fallback itself and flags `year_anchored?`,
+and those views carry a caveat saying so. Any column showing a status names its
+anchor: "Program status (TOS205)" in event context, with a hover giving the exact
+date.
+
+**The fallback is for surfaces that genuinely span events, not for every
+cross-event class.** `AttendeesBreakdowns` backs both the cross-event attendees
+index *and* one event's scholarship-recipients charts, so it takes an `as_of:`: the
+recipients frame passes that event's `start_date` and reports the same verdicts its
+dashboard does, while the index leaves it nil and gets the year anchor. A
+single-event surface reaching for the year fallback is a bug — it makes the same
+org read two ways at the same event, and the column's own note then describes a
+basis the numbers don't have.
 
 ### D8 — Registration mints the facilitator affiliation, dated to the training
 

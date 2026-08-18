@@ -1,10 +1,6 @@
-<%# Program-status report card: one row per facilitator training with the
-    organizations represented there split into New / Ongoing / Reinstated as of that
-    training's start date, a subtotal per year, and an all-time total. Below the
-    table, the distinct-organization view of the same period — each org counted
-    once, at the earliest training it appeared at — because the row totals count an
-    org once per training it attended. Pass `report:` (an EventProgramStatusReport)
-    and `all_time:`. Emerald-branded, matching the organizations domain colour. %>
+<%# One row per facilitator training, subtotalled by year, then the same period
+    counted once per organization — because the rows count an org once per training
+    it attended. Pass `report:` (an EventProgramStatusReport) and `all_time:`. %>
 <% years = report.years %>
 <% multi_year = years.size > 1 %>
 <section id="program-status-report" class="rounded-xl border border-emerald-300 bg-white overflow-hidden">
@@ -71,10 +67,8 @@
     </table>
   </div>
 
-  <%# The rows above count an organization once per training it attended. This is
-      the same period counted once per organization, at the earliest training it
-      appeared at — the figure to report when "how many programs" means distinct
-      programs rather than program-events. %>
+  <%# The figure to report when "how many programs" means distinct programs rather
+      than program-events. %>
   <div class="border-t border-emerald-200 bg-emerald-50 px-4 py-3">
     <p class="text-xs font-semibold text-emerald-900 mb-2">
       Distinct organizations

@@ -90,10 +90,8 @@ class PersonDecorator < ApplicationDecorator
     @affiliated_since_date ||= affiliations.filter_map(&:start_date).min
   end
 
-  # The person form's two live-updating date figures. Both render a single
-  # "Mon YYYY – Mon YYYY" span, prefixed with a ✗ once the range has closed —
-  # the server-rendered twin of affiliation_dates_controller#updateDisplay, which
-  # replaces this content as the affiliation rows are edited.
+  # The server-rendered twin of affiliation_dates_controller#updateDisplay, which
+  # replaces this content as the person form's affiliation rows are edited.
   def affiliated_since_range
     date_range_display(affiliated_since_date, affiliation_end_date, ended_title: "No active affiliations")
   end

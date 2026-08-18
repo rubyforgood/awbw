@@ -100,18 +100,16 @@ module EventsHelper
       anchor: params[:return_anchor].presence)
   end
 
-  # Header for any "Program status" column. A program status is only meaningful
-  # relative to a date, so the header names the event it was judged at — "Program
-  # status (TOS205)" — and the caveat below covers the case where there is none.
+  # A program status is only meaningful relative to a date, so the header names the
+  # event it was judged at — "Program status (TOS205)".
   def program_status_column_label(event = nil)
     return "Program status" if event.blank?
 
     "Program status (#{event.decorate.compact_label})"
   end
 
-  # The hover note for a Program status column: which date the verdicts were
-  # judged on. Cross-event lists have no event date to anchor on, so they read as
-  # of the start of the current year (see FacilitatorProgramStatus).
+  # Which date the column's verdicts were judged on. Must match how the data was
+  # actually anchored — see ADR-0001 D7.
   def program_status_column_note(event = nil)
     return "New / Ongoing / Reinstate as of #{event.start_date.strftime('%b %-d, %Y')}, this event's start date." if event&.start_date
 

@@ -1,12 +1,11 @@
 module EventParticipationHelper
-  # Anchor on both organization pages' "Program status" block, so returning from
-  # the participation report lands on the chips the user clicked.
+  # On both org pages' "Program status" block, so returning from the participation
+  # report lands on the chips the user clicked.
   PROGRAM_STATUS_ANCHOR = "program-status".freeze
 
-  # Eyebrow back-link for the participation report as [label, path]. The report is
-  # reachable from the reports hub, an event dashboard, and the program-status
-  # chips on an organization's profile or edit form; each origin passes return_to
-  # (plus the id the path needs) so the user goes back where they came from.
+  # [label, path] for the participation report's eyebrow. Reachable from the
+  # reports hub, an event dashboard, and an org's program-status chips, so each
+  # origin passes return_to plus the id its path needs.
   def participation_return_link
     organization_id = params[:return_organization_id]
 

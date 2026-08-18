@@ -27,6 +27,51 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Program status report for annual reporting"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-08-18
+  action_path: "/events/program_statuses"
+  pr_number: 1993
+  summary: >-
+    A cross-event report counting how many organizations were New, Ongoing or
+    Reinstated at each facilitator training, with year totals for annual reporting.
+  pro_tips:
+    - The table counts an organization once per training it attended; the
+      distinct-organization table below counts each one once for the period.
+    - Filter by year or event type, then read the year total row.
+
+- name: "One program status, explained on hover"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-18
+  action_path: "/organizations"
+  pr_number: 1993
+  summary: >-
+    New / Ongoing / Reinstated now means the same thing everywhere and is judged on
+    the event's own date, so the dashboard, roster, onboarding matrix and
+    organization pages always agree. Hover any badge to see why it says what it says.
+  pro_tips:
+    - The hover names the date the status was judged on and the facilitator periods
+      behind it.
+    - An organization's overall status comes from its facilitator affiliations, not
+      the old status field — the edit form flags where the two disagree.
+
+- name: "Sector, age group and program-status filters on the organization index"
+  area: people
+  display_status: user_facing
+  released_on: 2026-08-18
+  action_path: "/organizations"
+  pr_number: 1993
+  summary: >-
+    The organization list gains Sectors and Age group columns and an "Art program
+    since" chip, filterable by sector, age group and program status.
+  pro_tips:
+    - Sector and age group match the organization's own tags plus its affiliated
+      people's primary tags.
+    - The "Art program since" chip shows each stretch of facilitating separately,
+      so a lapse and a return read as two periods.
+
 - name: "Edit an affiliation's details and comments"
   area: people
   display_status: admin_facing

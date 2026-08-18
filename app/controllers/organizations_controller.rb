@@ -10,7 +10,7 @@ class OrganizationsController < ApplicationController
       base_scope = authorized_scope(Organization.includes(
         :organization_status, :sectors, :sectorable_items, :addresses, :affiliations,
         { categorizable_items: { category: :category_type } },
-        # Feeds the sector and age-group roll-ups per row — see Organization#affiliated_people.
+        # Feeds the per-row sector and age-group roll-ups.
         { people: Organization::PEOPLE_TAGGINGS },
         logo_attachment: :blob
       ))
@@ -19,8 +19,6 @@ class OrganizationsController < ApplicationController
       @active_people_count = Affiliation.active.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
       @organizations = filtered.paginate(page: params[:page], per_page: per_page)
       org_ids = @organizations.map(&:id)
-      # Merged-period "Program since" label per org (facilitator affiliations),
-      # from the preloaded affiliations.
       @program_since_display = @organizations.to_h { |org| [ org.id, org.decorate.program_since_display ] }
       @active_people_counts = Affiliation.active
                                                 .where(organization_id: org_ids)
@@ -49,9 +47,8 @@ class OrganizationsController < ApplicationController
 
     track_view(@organization)
 
-    # Events for the admin-only "Program status" block — facilitator-training
-    # events only, since program status is meaningless for others (see ADR-0001).
-    # authorized_scope applies EventPolicy visibility, matching #index.
+    # The admin-only "Program status" block. Trainings only — program status is
+    # meaningless for other events (ADR-0001 D6).
     @organization_events = authorized_scope(
       Event.where(id: @organization.event_registrations.active.select(:event_id))
            .where(facilitator_training: true)
@@ -189,10 +186,8 @@ class OrganizationsController < ApplicationController
       @organization.affiliations.proxy_association.target.replace(sorted)
     end
 
-    # Facilitator-training events the org is represented at, newest first — drives
-    # the per-event "Program status by event" chips in the Affiliations section
-    # (program status is only meaningful for these — see ADR-0001). authorized_scope
-    # applies EventPolicy visibility, matching #index.
+    # Drives the edit form's per-event program-status chips. Trainings only —
+    # program status is meaningless for other events (ADR-0001 D6).
     @organization_events = if @organization.persisted?
       authorized_scope(
         Event.where(id: @organization.event_registrations.active.select(:event_id))

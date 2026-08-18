@@ -20,9 +20,8 @@
 
           <tbody class="divide-y divide-gray-100">
           <% @organizations.each do |organization| %>
-            <%# The status bucket is in the key because it turns on facilitator-affiliation
-                activity, which never touches the org row; rollup_cache_version covers the
-                sector/age cells, which aggregate across affiliated people. %>
+            <%# The status bucket turns on facilitator activity and rollup_cache_version on
+                affiliated people's tags — neither touches the organizations row. %>
             <% cache [organization, organization.rollup_cache_version, @program_since_display[organization.id], organization.decorate.organization_status_bucket, organization.organization_status_id, @active_people_counts[organization.id], current_user.super_user?] do %>
             <% published = organization.published? %>
             <tr class="hover:bg-gray-50 transition <%= "admin-only bg-blue-100" unless published %>">

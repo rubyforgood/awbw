@@ -8,9 +8,8 @@ class OrganizationDecorator < ApplicationDecorator
     reinstated: :program_reinstated
   }.freeze
 
-  # Normalize a FacilitatorProgramStatus, the :new/:ongoing/:reinstated symbol, or
-  # the "New"/"Ongoing"/"Reinstate" string (Organization#program_status) to the
-  # canonical symbol; nil when blank or unrecognized.
+  # Normalize a FacilitatorProgramStatus, a :new/:ongoing/:reinstated symbol, or a
+  # "New"/"Ongoing"/"Reinstate" string to the canonical symbol; nil if unrecognized.
   def self.program_status_key(status)
     status = status.status if status.respond_to?(:status)
     return if status.blank?
@@ -40,8 +39,8 @@ class OrganizationDecorator < ApplicationDecorator
     key = self.class.program_status_key(status)
     return unless key
 
-    # A FacilitatorProgramStatus explains its own verdict (anchor date, what made
-    # the program active); anything else can only name it.
+    # A FacilitatorProgramStatus explains its own verdict; anything else can only
+    # name it.
     h.content_tag(:span, key.to_s.first.upcase,
                   title: status.respond_to?(:explanation) ? status.explanation : key.to_s.titleize,
                   class: "inline-flex shrink-0 items-center justify-center w-5 h-5 rounded-full border text-xs font-semibold #{self.class.program_status_classes(status)}")
@@ -91,16 +90,14 @@ class OrganizationDecorator < ApplicationDecorator
     affiliations.maximum(:end_date)
   end
 
-  # "Affiliated since": affiliation history as merged year-based periods (see
-  # AffiliationPeriods), falling back to the org's start_date, then blank. Pass
+  # "Affiliated since", falling back to the org's start_date, then blank. Pass
   # preloaded affiliations on list pages to avoid an N+1.
   def affiliated_since_display(affiliations = object.affiliations)
     AffiliationPeriods.label(affiliations) || object.start_date&.strftime("%b %Y") || ""
   end
 
-  # "Art program since": facilitator-affiliation history as merged periods (see
-  # AffiliationPeriods) at month precision — the exact start/lapse month is the
-  # point. Blank when the org has never facilitated.
+  # "Art program since" — facilitators only, at month precision, since the exact
+  # start/lapse month is the point. Blank when the org has never facilitated.
   def program_since_display(affiliations = object.affiliations)
     AffiliationPeriods.label(affiliations.select(&:facilitator?), precision: :month) || ""
   end
@@ -112,10 +109,8 @@ class OrganizationDecorator < ApplicationDecorator
     active: :org_active, formerly_active: :org_formerly_active, never_active: :org_never_active
   }.freeze
 
-  # The org's program-status bucket (:active / :formerly_active / :never_active),
-  # derived purely from facilitator affiliations: an active one => :active, only
-  # ended ones => :formerly_active, none at all => :never_active. The stored
-  # organization_status never feeds into this (see ADR-0001 D3).
+  # Derived purely from facilitator affiliations; the stored organization_status
+  # never feeds into this (ADR-0001 D3).
   def organization_status_bucket
     facilitators = object.affiliations.select(&:facilitator?)
     return :never_active if facilitators.none?
@@ -123,16 +118,12 @@ class OrganizationDecorator < ApplicationDecorator
     facilitators.any?(&:active?) ? :active : :formerly_active
   end
 
-  # The bucket the stored (legacy) OrganizationStatus would imply. Not used to
-  # decide the org's status — only to flag on the edit form where the legacy
-  # column disagrees with the affiliations.
+  # Only used to flag where the legacy column disagrees with the affiliations.
   def stored_status_bucket
     OrganizationStatus.program_bucket(object.organization_status&.name)
   end
 
-  # True when the legacy OrganizationStatus column contradicts what the org's
-  # facilitator affiliations say — e.g. a stored "Active" on an org that has never
-  # had a facilitator affiliation. Surfaced as a warning on the edit form.
+  # E.g. a stored "Active" on an org that never had a facilitator affiliation.
   def legacy_status_mismatch?
     organization_status_bucket != stored_status_bucket
   end
@@ -141,8 +132,6 @@ class OrganizationDecorator < ApplicationDecorator
     ORG_STATUS_BUCKET_LABELS.fetch(organization_status_bucket)
   end
 
-  # Pill classes for a given program-status bucket, built from the DomainTheme
-  # swatch so the colours stay consistent with the rest of the app.
   def self.status_classes_for_bucket(bucket)
     theme_key = ORG_STATUS_BUCKET_THEMES.fetch(bucket)
     [
@@ -152,40 +141,33 @@ class OrganizationDecorator < ApplicationDecorator
     ].join(" ")
   end
 
-  # Every bucket's label + pill classes, so the edit form's Stimulus controller
-  # can re-render the status chip live as facilitator rows change without
-  # hard-coding any theme classes in JS.
+  # Lets the edit form's Stimulus controller re-render the chip live without
+  # hard-coding theme classes in JS.
   def self.status_bucket_styles
     ORG_STATUS_BUCKET_LABELS.each_key.to_h do |bucket|
       [ bucket, { label: ORG_STATUS_BUCKET_LABELS.fetch(bucket), classes: status_classes_for_bucket(bucket) } ]
     end
   end
 
-  # Pill classes for the org-wide status chip, keyed off the program-status bucket.
   def organization_status_classes
     self.class.status_classes_for_bucket(organization_status_bucket)
   end
 
-  # Rendered org-wide status chip (Active / Formerly active / Never active).
   def organization_status_chip(data: {})
     h.content_tag(:span, organization_status_label,
                   data: data,
                   class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{organization_status_classes}")
   end
 
-  # Index "Program since" chip for admins: the facilitator-period years coloured
-  # by the org's status (green Active / orange Formerly active / gray Never
-  # active), falling back to the status label when there are no facilitator years.
+  # Facilitator years, coloured by the org's status; falls back to the status
+  # label when there are no facilitator years to show.
   def program_since_chip(years = program_since_display)
     h.content_tag(:span, years.presence || organization_status_label,
                   class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{organization_status_classes}")
   end
 
-
-  # This org's program status as it stood on a given date, as a
-  # FacilitatorProgramStatus (verdict + anchor + reasoning for the hover). Reads
-  # the already-loaded affiliations, so a profile classifies many events without
-  # an N+1. `date` may be a datetime (event.start_date is one).
+  # Reads the already-loaded affiliations, so a profile classifies many events
+  # without an N+1. `date` may be a datetime (event.start_date is one).
   def facilitator_status_as_of(date)
     object.facilitator_program_status(as_of: date&.to_date)
   end

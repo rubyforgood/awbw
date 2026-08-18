@@ -507,9 +507,8 @@ class EventDashboard
     end
   end
 
-  # FacilitatorProgramStatus per represented organization, keyed by organization
-  # id — the classification behind program_status_counts, carrying the anchor date
-  # and reasoning each display hovers to explain.
+  # The classification behind program_status_counts, carrying the anchor date and
+  # reasoning each display hovers to explain.
   def program_status_by_organization
     @program_status_by_organization ||= organizations.to_h { |organization| [ organization.id, program_status_for(organization) ] }
   end
@@ -1016,14 +1015,10 @@ class EventDashboard
       end
   end
 
-  # Facilitator status for one represented organization, as the org stood at the
-  # time of the event (#reference_date) — the shared rule, so this breakdown, the
-  # onboarding matrix, the org profile chips and the annual report all say the
-  # same thing about this org at this event (see FacilitatorProgramStatus).
+  # The event's own start date, not #reference_date's today-fallback: an undated
+  # event has no anchor, and the annual report reads it year-anchored too — the
+  # two must not diverge.
   def program_status_for(organization)
-    # The event's own start date, not #reference_date's today-fallback: an undated
-    # event has no anchor, and FacilitatorProgramStatus's year fallback is what the
-    # annual report uses for the same event — the two must not diverge.
     organization.facilitator_program_status(as_of: event.start_date&.to_date)
   end
 

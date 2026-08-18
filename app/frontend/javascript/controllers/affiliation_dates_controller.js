@@ -2,15 +2,10 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["affiliatedSince", "facilitatorSince", "affiliationsContainer", "programStatus"]
-  // Two live formats. The person form shows a single Mon YYYY – Mon YYYY range for
-  // both figures. The org form (mergedPeriods) shows merged periods mirroring the
-  // AffiliationPeriods service so the live value matches the server render (see
-  // periodsLabel). affiliatedSinceFallback is the org's own start_date, shown when
-  // no affiliation carries a start date.
-  //
-  // Program status (org edit form): derived live from the visible Facilitator rows,
-  // mirroring OrganizationDecorator#organization_status_bucket. statusBuckets holds
-  // each bucket's label + pill classes (from DomainTheme).
+  // The person form shows a single Mon YYYY – Mon YYYY range; the org form
+  // (mergedPeriods) mirrors the AffiliationPeriods service so the live value
+  // matches the server render. affiliatedSinceFallback is the org's own start_date,
+  // and statusBuckets each bucket's label + pill classes from DomainTheme.
   static values = {
     mergedPeriods: Boolean,
     affiliatedSinceFallback: String,
@@ -55,8 +50,6 @@ export default class extends Controller {
     const now = new Date()
     const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
 
-    // Affiliated since — the org form shows merged year-based periods, the person
-    // form a single Mon YYYY range. Both live-update from the visible rows.
     if (this.hasAffiliatedSinceTarget) {
       if (this.mergedPeriodsValue) {
         const label = this.periodsLabel(affiliations, today, "year") || this.affiliatedSinceFallbackValue
@@ -75,9 +68,8 @@ export default class extends Controller {
       }
     }
 
-    // Facilitator rows drive "Art program since". Mirror Affiliation#facilitator?:
-    // an exact, case-sensitive match on "Facilitator" (trimmed), so the live figure
-    // matches the server render.
+    // Mirrors Affiliation#facilitator?: exact, case-sensitive, trimmed — so the
+    // live figure matches the server render.
     const facilitatorAffiliations = affiliations.filter(a =>
       a.title.trim() === "Facilitator"
     )
@@ -100,8 +92,7 @@ export default class extends Controller {
       }
     }
 
-    // Program status — active when any Facilitator row is still active, formerly
-    // active when they've all ended, never active when there are none.
+    // Mirrors OrganizationDecorator#organization_status_bucket.
     if (this.hasProgramStatusTarget) {
       let bucket
       if (facilitatorAffiliations.length === 0) {
@@ -141,10 +132,7 @@ export default class extends Controller {
     return `${months[date.getUTCMonth()]} ${date.getUTCFullYear()}`
   }
 
-  // Merged-period label for the org form, mirroring the AffiliationPeriods service
-  // (see it for the merge rules). precision "year": a lone ongoing period keeps
-  // month precision when it began this year, multi-period lists are year-only.
-  // precision "month": every period carries its month. Returns null when no
+  // The JS twin of AffiliationPeriods — keep the two in step. Null when no
   // affiliation has a start date, so the caller falls back to the org's start_date.
   periodsLabel(affiliations, today, precision) {
     const intervals = affiliations

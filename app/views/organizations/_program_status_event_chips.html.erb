@@ -1,9 +1,6 @@
-<%# Per-event program status (New / Ongoing / Reinstate as of each event's start
-    date). Rendered on both the org profile and the org edit form, so return_to
-    names which of the two the participation report should send the user back to —
-    the chips open in a new tab, where the back button is no help. Each chip hovers
-    to explain the verdict: the anchor date, what made the program active, and the
-    facilitator periods behind it (FacilitatorProgramStatus#explanation). %>
+<%# Per-event program status, on both the org profile and the edit form. The chips
+    open in a new tab, where the back button is no help, so return_to names which of
+    the two the participation report should return to. %>
 <% decorated = organization.decorate %>
 <% events.each do |event| %>
   <% status = decorated.facilitator_status_as_of(event.start_date) %>

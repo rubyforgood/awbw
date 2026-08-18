@@ -1,34 +1,12 @@
-# The single rule for "was this organization a New / Ongoing / Reinstate art
-# program on a given date?" Every surface that shows that word — the org profile
-# and edit chips, the onboarding matrix, the event dashboard breakdown, the
-# registrant rosters, the annual program-status report — goes through here, so
-# they can't disagree (see ADR-0001 D4/D5).
-#
-# The rule, judged purely on the org's Facilitator affiliations (exactly
-# "Facilitator", trimmed and case-sensitive) as of an anchor date:
-#
-#   * :new        — no facilitator affiliation STARTED BEFORE the anchor. Strictly
-#                   before: an affiliation starting ON the anchor is the one the
-#                   event itself minted (AffiliationServices::CreateFromRegistration
-#                   dates it to the training date), so a first-time org still reads
-#                   New at its own first training.
-#   * :ongoing    — an earlier facilitator affiliation is still active on the anchor
-#                   (no end date, or it ends on/after it).
-#   * :reinstated — earlier facilitator affiliation(s) existed but all had ended
-#                   before the anchor — a lapse, now returning.
-#
-# No affiliation is ever excluded. The question is per-EVENT ("at this event, was
-# the org new/ongoing/reinstate?"), not per-registrant.
-#
-# ANCHOR: the event's start date. With no event in view (a cross-event roster),
-# pass nothing and the anchor falls back to January 1 of the current year, so the
-# figure reads as "where this program stands this reporting year"; `year_anchored?`
-# is true then, for the caveat those views show.
+# The one rule for an organization's New / Ongoing / Reinstated program status,
+# judged on its Facilitator affiliations as of an anchor date. Every surface that
+# shows the word goes through here, so they can't disagree. See ADR-0001 D4–D7 for
+# the rule, the strict-`<` boundary and the anchor.
 class FacilitatorProgramStatus
   STATUSES = %i[ new ongoing reinstated ].freeze
 
-  # Classify an organization. Reads the already-loaded affiliations when the
-  # caller preloaded them, so a page can classify many orgs without an N+1.
+  # Reads the already-loaded affiliations, so a page can classify many orgs
+  # without an N+1.
   def self.for(organization, as_of: nil)
     new(organization.affiliations, as_of: as_of)
   end
@@ -41,8 +19,7 @@ class FacilitatorProgramStatus
     @facilitators = affiliations.select { |affiliation| affiliation.facilitator? && affiliation.start_date }
   end
 
-  # True when no date was given and the anchor fell back to the start of the
-  # current year — the views that show one add a caveat saying so.
+  # Views that show a year-anchored figure add a caveat saying so.
   def year_anchored? = @year_anchored
 
   def status
@@ -57,31 +34,25 @@ class FacilitatorProgramStatus
 
   def label = status.to_s.titleize
 
-  # The month the program was (or last was) active, which is what makes the
-  # status what it is: for :ongoing the most recent start still running on the
-  # anchor, for :reinstated the most recent start of the lapsed history. Nil for
-  # :new — there is nothing before the anchor.
+  # For :ongoing the most recent start still running on the anchor; for
+  # :reinstated the most recent start of the lapsed history. Nil for :new.
   def active_since
     @active_since ||= (active_on_anchor.presence || earlier).filter_map(&:start_date).max
   end
 
-  # When a :reinstated program's history ran out — the latest end date among the
-  # earlier affiliations. Nil for the other statuses.
+  # When a :reinstated program's history ran out. Nil for the other statuses.
   def lapsed_on
     return nil unless status == :reinstated
 
     @lapsed_on ||= earlier.filter_map(&:end_date).max
   end
 
-  # The whole facilitator history as merged month-precision periods (e.g.
-  # "Aug 2015 – Jun 2018, Feb 2024") — "the relevant years" behind the verdict.
+  # The facilitator history behind the verdict, e.g. "Aug 2015 – Jun 2018, Feb 2024".
   def periods_label
     @periods_label ||= AffiliationPeriods.label(@facilitators, today: as_of, precision: :month)
   end
 
-  # Plain-language hover text: what the verdict is, what date it was judged on,
-  # what made it that, and the facilitator history behind it. One string so every
-  # display site explains the figure the same way.
+  # Hover text, so every display site explains the figure the same way.
   def explanation
     [ anchor_sentence, reason_sentence, periods_sentence ].compact.join(" ")
   end
@@ -111,8 +82,8 @@ class FacilitatorProgramStatus
 
   def month(date) = date&.strftime("%b %Y")
 
-  # Only affiliations that began before the anchor can say anything about what the
-  # org was when it arrived.
+  # Strictly before: an affiliation starting ON the anchor is the one this event
+  # minted (ADR-0001 D8), so a first-time org still reads New at its own training.
   def earlier
     @earlier ||= @facilitators.select { |affiliation| affiliation.start_date < as_of }
   end

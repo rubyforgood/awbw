@@ -12,8 +12,7 @@
       row_paths:     optional hash of { label => path }. When a row's label has a
                      path, the whole row links to it (the filtered registrant list).
       note:          optional hover text on an info icon beside the title, for a
-                     figure that needs its basis spelled out (e.g. the date a
-                     program status was judged on). %>
+                     figure whose basis needs spelling out. %>
 <% chart = local_assigns.fetch(:chart, nil) %>
 <% empty_message = local_assigns.fetch(:empty_message, nil) %>
 <%# map_color: optional base hex for the choropleth ramp (e.g. the addresses color). %>

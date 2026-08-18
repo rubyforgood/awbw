@@ -75,9 +75,8 @@ class EventsController < ApplicationController
     @report = EventScholarshipReport.new(events, featured_year: selected_year, funder: @filter_funder)
   end
 
-  # Cross-event program-status report: how many organizations were New / Ongoing /
-  # Reinstate at each facilitator training, by year — the annual-reporting figures.
-  # Sibling of the revenue, participation and scholarship reports.
+  # Organizations by program status at each facilitator training, by year — the
+  # annual-reporting figures. Sibling of the other cross-event reports.
   def program_statuses
     events, selected_year = filtered_report_events(Event.facilitator_trainings)
     @report = EventProgramStatusReport.new(events, featured_year: selected_year)
@@ -954,10 +953,8 @@ class EventsController < ApplicationController
       .transform_values { |pairs| pairs.map(&:first) }
   end
 
-  # Person ids whose linked training org has the given facilitator program status
-  # (new / ongoing / reinstated). Anchored the same way the index's own column is —
-  # this list spans events, so both read as of the start of the current year (see
-  # FacilitatorProgramStatus) rather than the filter and the column disagreeing.
+  # Anchored the same way the index's own column is: this list spans events, so
+  # both read as of the start of the current year rather than disagreeing.
   def person_program_status_ids(status)
     status_sym = status.to_sym
     org_ids = Organization

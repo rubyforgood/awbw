@@ -428,12 +428,10 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
-  # Filters by the registrant's organization-LINKING status (not the org's own
-  # OrganizationStatus): "linked" = at least one organization linked; "unlinked" =
-  # no organization linked (whether or not an agency name was submitted); "pending"
-  # = the registrant submitted an agency name on the event's registration form but
-  # nothing is linked yet (mirrors the Pending chip on the roster). Needs the event
-  # to resolve its registration form's agency_name field.
+  # The registrant's organization-LINKING status, not the org's own
+  # OrganizationStatus: "linked" = at least one org linked; "unlinked" = none;
+  # "pending" = an agency name was submitted but nothing is linked yet (the Pending
+  # chip on the roster). Needs the event to resolve its agency_name field.
   scope :organization_linking_status, ->(value, event) {
     linked = EventRegistrationOrganization.select(:event_registration_id)
     case value
@@ -914,12 +912,10 @@ class EventRegistration < ApplicationRecord
     true
   end
 
-  # Program status(es) for the organizations linked to THIS registration, as of the
-  # training date (see FacilitatorProgramStatus — the same verdict the dashboard,
-  # the org profile and the annual report show for this event). Returns the status
-  # objects so a badge can explain itself on hover. Deduped by verdict, so two
-  # linked orgs at the same status show one badge; unlike the registrant-wide
-  # rollup, affiliations to other organizations are ignored.
+  # The organizations linked to THIS registration, as of the training date — the
+  # same verdict the dashboard, the org profile and the annual report show. Deduped
+  # by verdict, and unlike the registrant-wide rollup it ignores affiliations to
+  # other organizations.
   def program_statuses
     reference_date = event&.start_date&.to_date
     organizations.map { |organization| organization.facilitator_program_status(as_of: reference_date) }

@@ -32,7 +32,6 @@ class Organization < ApplicationRecord
       saver: { quality: 80 }
   end
 
-  # The affiliated-people nest every org-level roll-up reads (see #affiliated_people).
   # List pages must preload people with exactly this, or each row re-queries.
   PEOPLE_TAGGINGS = [ { sectorable_items: :sector }, { categorizable_items: { category: :category_type } } ].freeze
 
@@ -107,9 +106,8 @@ class Organization < ApplicationRecord
     end
     scope.distinct
   end
-  # Program-status filter, off facilitator affiliations only (not the legacy
-  # organization_status — see ADR-0001 D3): active facilitator => active, only
-  # ended => formerly active, none => never active.
+  # Off facilitator affiliations only, never the legacy organization_status, so the
+  # filter and the status chip can't disagree (ADR-0001 D3).
   scope :program_status, ->(bucket) {
     fac_ids = Affiliation.facilitators.select(:organization_id)
     active_fac_ids = Affiliation.facilitators.active.select(:organization_id)
@@ -122,9 +120,8 @@ class Organization < ApplicationRecord
     end
   }
 
-  # Index filters that match a sector / age group tagged directly on the org (any),
-  # OR as an affiliated person's PRIMARY tag — mirroring the aggregate the
-  # index/profile columns show.
+  # Matches a tag on the org itself OR an affiliated person's PRIMARY tag —
+  # mirroring the aggregate the index/profile columns show.
   scope :sector_name_including_people, ->(name) {
     next all if name.blank?
     term = name.to_s.downcase
@@ -172,18 +169,16 @@ class Organization < ApplicationRecord
     direct.or(legacy).distinct
   end
 
-  # Facilitator program statuses in display order — the values
-  # FacilitatorProgramStatus returns, and the attendees index filters on.
+  # Display order, and what the attendees index filters on.
   FACILITATOR_PROGRAM_STATUSES = FacilitatorProgramStatus::STATUSES
 
-  # This org's program status (New / Ongoing / Reinstate) as of a date — the
-  # event's start date, or the start of the current year when no event is in view.
-  # Returns a FacilitatorProgramStatus (verdict + reasoning). See ADR-0001 D4.
+  # A FacilitatorProgramStatus (verdict + reasoning) as of a date; nil `as_of`
+  # anchors on the start of the current year. See ADR-0001 D4.
   def facilitator_program_status(as_of: nil)
     FacilitatorProgramStatus.for(self, as_of: as_of)
   end
 
-  # The bare :new / :ongoing / :reinstated symbol, for counting and filtering.
+  # The bare symbol, for counting and filtering.
   def facilitator_status_on(reference_date = nil)
     facilitator_program_status(as_of: reference_date).status
   end
@@ -253,8 +248,8 @@ class Organization < ApplicationRecord
 
   def published? # needed for my_bookmarks
     return true if organization_status&.name == "Active"
-    # Affiliation#active? is the in-memory twin of the `active` scope, so a list
-    # page that preloaded affiliations doesn't query once per row.
+    # #active? is the in-memory twin of the `active` scope, so a list page that
+    # preloaded affiliations doesn't query once per row.
     return affiliations.any?(&:active?) if affiliations.loaded?
 
     affiliations.active.exists?
@@ -268,8 +263,7 @@ class Organization < ApplicationRecord
     sectors
  end
 
-  # Only affiliated people's PRIMARY sector (a person has at most one) — their
-  # non-primary sectors don't roll up to the org.
+  # Only affiliated people's PRIMARY sector; their others don't roll up to the org.
   def affiliated_sectors
     affiliated_people.flat_map { |person| person.sectorable_items.filter_map { |item| item.sector if item.is_primary? } }
   end
@@ -285,17 +279,14 @@ class Organization < ApplicationRecord
     collect_age_groups(:primary_age_groups)
   end
 
-  # Additional age groups are the org's OWN only — affiliated people contribute
-  # just their primary age groups (via all_primary_age_groups), not additional.
+  # The org's OWN only — affiliated people contribute just their primary age groups.
   def all_additional_age_groups
     additional_age_groups - all_primary_age_groups
   end
 
-  # Cache version for the roll-up cells on list pages (#all_sectors and the age
-  # groups), which aggregate across affiliated people: retagging a person or
-  # adding an affiliation leaves the organizations row untouched, so `[organization]`
-  # alone caches those cells stale. Count + latest timestamp over the contributing
-  # taggings, read from the already-preloaded associations so it costs no queries.
+  # The roll-up cells aggregate across affiliated people, so retagging a person or
+  # adding an affiliation leaves the organizations row untouched and `[organization]`
+  # alone caches them stale. Reads preloaded associations, so it costs no queries.
   def rollup_cache_version
     records = affiliations.to_a + sectorable_items.to_a + categorizable_items.to_a +
       affiliated_people.flat_map { |person| person.sectorable_items.to_a + person.categorizable_items.to_a }
@@ -323,11 +314,8 @@ class Organization < ApplicationRecord
     ([ self ] + affiliated_people).flat_map { |record| record.public_send(kind) }.uniq
   end
 
-  # The affiliated people behind every org-level roll-up (sectors and age groups),
-  # with the taggings those roll-ups read. Memoized, and reused as-is when the
-  # caller has already preloaded them — list pages preload `people` with the
-  # PEOPLE_TAGGINGS nest (see OrganizationsController#index) so a 25-row page
-  # doesn't re-query per org. Preloading a bare `:people` would defeat that.
+  # Reused as-is when already preloaded — list pages preload `people` with the
+  # PEOPLE_TAGGINGS nest, and a bare `:people` would defeat that.
   def affiliated_people
     @affiliated_people ||= people.loaded? ? people.to_a : people.includes(PEOPLE_TAGGINGS).to_a
   end

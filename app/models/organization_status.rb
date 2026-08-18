@@ -1,10 +1,9 @@
 class OrganizationStatus < ApplicationRecord
   ORGANIZATION_STATUSES = [ "Active", "Inactive", "Pending", "Reinstate", "Suspended", "Unknown" ]
 
-  # The stored values are legacy: nothing derives an organization's program status
-  # from them any more (see ADR-0001 D3). This mapping survives only so the edit
-  # form can flag where the stored value contradicts the facilitator affiliations.
-  # Anything unmapped — including a missing status — reads as :never_active.
+  # Legacy: nothing derives program status from these any more (ADR-0001 D3). The
+  # mapping survives only so the edit form can flag where the stored value
+  # contradicts the affiliations. Anything unmapped reads as :never_active.
   PROGRAM_STATUS_BUCKETS = {
     "Active" => :active,
     "Reinstate" => :active,

@@ -16,8 +16,7 @@
       registrants: - override the rows shown, for a page that filters its own table
         from a breakdown drill-in. Defaults to every registrant the roster holds.
       program_status_event: - the event the Program status column was judged at, so
-        the header can name it ("Program status (TOS205)"). Omit on a cross-event
-        list: the header then says the statuses read as of the start of the year. %>
+        the header can name it. Omit on a cross-event list. %>
 <% program_status_event = local_assigns[:program_status_event] %>
 <% show_event_column = local_assigns.fetch(:show_event_column, false) %>
 <% show_affiliation_status = local_assigns.fetch(:show_affiliation_status, false) %>
@@ -59,7 +58,6 @@
                   <% if i.positive? %><span class="text-gray-300" aria-hidden="true">/</span><% end %>
                   <%= render "shared/sortable_header", label: part[:label], index: col[:index], key: part[:key] %>
                 <% end %>
-                <%# Says which date the column's verdicts were judged on. %>
                 <% if col[:note] %>
                   <i class="fa-solid fa-circle-info text-gray-400 text-[0.65rem]" title="<%= col[:note] %>"></i>
                 <% end %>
