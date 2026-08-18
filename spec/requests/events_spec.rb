@@ -3694,6 +3694,17 @@ RSpec.describe "Events", type: :request do
 
           expect(response).to redirect_to(recipients_event_path(event))
         end
+
+        it "warns and does not feature a transferred-out registration (#1944)" do
+          registration = event.event_registrations.find_by(registrant: applicant)
+          registration.update!(status: "transferred_out")
+
+          post feature_recipient_shoutout_event_path(event), params: { registration_id: registration.id }
+
+          expect(registration.reload.shoutout).to be(false)
+          expect(response).to redirect_to(recipients_event_path(event))
+          expect(flash[:alert]).to match(/transferred out|locked/i)
+        end
       end
     end
 

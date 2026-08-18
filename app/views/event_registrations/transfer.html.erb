@@ -59,11 +59,15 @@
             <p class="text-xs font-semibold text-gray-800">
               <i class="fa-solid fa-right-from-bracket text-gray-400"></i> This registration
             </p>
-            <p class="mb-2 truncate text-2xs text-gray-500" title="<%= source.event.title %>"><%= source.event.title %></p>
+            <p class="mb-2 truncate text-2xs text-gray-500" title="<%= source.event.title %>">
+              <%= source.event.title %><% if source.event.decorate.month_year %> <span class="text-gray-400">&middot;</span> <%= source.event.decorate.month_year %><% end %>
+            </p>
             <ul class="list-disc space-y-1 pl-4 text-xs text-gray-600">
-              <li>Kept as a record — marked "Transferred out," not deleted.</li>
-              <li>Keeps its payments and scholarship — the new event won't charge them again.</li>
-              <li>Keeps the CE hours already paid for.</li>
+              <li>Marked "Transferred out" (not deleted)</li>
+              <li>Payments stay here (registration and ce payments)</li>
+              <li>CE hours move to the new registration</li>
+              <li>Scholarship stays here</li>
+              <li>Attendance is NOT counted here</li>
             </ul>
           </div>
           <div class="rounded-md border border-gray-200 bg-white p-3">
@@ -72,9 +76,10 @@
             </p>
             <p class="mb-2 text-2xs text-gray-500">the event you pick</p>
             <ul class="list-disc space-y-1 pl-4 text-xs text-gray-600">
-              <li>Created fresh — track their attendance here from now on.</li>
-              <li>Gets a copy of the linked organizations.</li>
-              <li>Gets the remaining CE hours, balance, and certificate.</li>
+              <li>Created fresh — track attendance here</li>
+              <li>Gets a copy of the linked organizations</li>
+              <li>Shown as a scholarship recipient, if relevant</li>
+              <li>Gets the remaining CE hours, balance, and certificate</li>
             </ul>
           </div>
         </div>
@@ -111,7 +116,7 @@
 
         <div class="flex items-center gap-3">
           <%= link_to "Back to registrants", roster_path, class: "btn btn-secondary-outline" %>
-          <%= submit_tag(pending ? "Record transfer" : "Change destination", class: "btn btn-primary ml-auto") %>
+          <%= submit_tag(pending ? "Perform transfer" : "Change destination", class: "btn btn-primary ml-auto") %>
         </div>
       <% end %>
     </section>

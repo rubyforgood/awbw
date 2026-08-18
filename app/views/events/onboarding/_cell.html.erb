@@ -7,8 +7,10 @@
       <%= text_field_tag :value, registration.fee_note,
             placeholder: "—",
             onchange: "this.form.requestSubmit()",
+            disabled: registration.editing_locked?,
+            title: ("Transferred out — locked" if registration.editing_locked?),
             "aria-label": "Fee note",
-            class: "w-28 rounded border border-transparent hover:border-gray-300 focus:border-blue-400 focus:ring focus:ring-blue-200 focus:outline-none px-1.5 py-0.5 text-xs text-gray-700" %>
+            class: "w-28 rounded border border-transparent hover:border-gray-300 focus:border-blue-400 focus:ring focus:ring-blue-200 focus:outline-none px-1.5 py-0.5 text-xs text-gray-700 disabled:cursor-not-allowed disabled:opacity-50" %>
     <% end %>
   <% else %>
     <% is_step = EventRegistration::CHECKLIST_STEPS.key?(field) %>
@@ -20,9 +22,10 @@
       <%= hidden_field_tag :value, "0" %>
       <%= check_box_tag :value, "1", checked,
             onchange: "this.form.requestSubmit()",
-            title: tooltip,
+            disabled: registration.editing_locked?,
+            title: (registration.editing_locked? ? "Transferred out — locked" : tooltip),
             "aria-label": EventRegistration::CHECKLIST_STEPS[field] || field.humanize,
-            class: "h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-200 cursor-pointer" %>
+            class: "h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-200 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50" %>
     <% end %>
   <% end %>
 </span>

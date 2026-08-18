@@ -3,6 +3,10 @@ class EventRegistrationsController < ApplicationController
 
   # show redirects to slug URL; kept for backwards compatibility
   before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding, :toggle_certificate_issued, :update_attendance, :transfer, :process_transfer, :revert_transfer ]
+  # A transferred-out reg is locked (issue #1944): its inline write endpoints are
+  # blocked with a warning rather than silently ignored. The full-form `update` is
+  # handled separately (it keeps comments/communications editable).
+  before_action :block_locked_registration, only: [ :update_onboarding, :toggle_certificate_issued, :update_attendance ]
 
   def index
     authorize!
@@ -85,6 +89,7 @@ class EventRegistrationsController < ApplicationController
 
   def update
     authorize! @event_registration
+    warn_if_locked_fields_submitted
     @event_registration.assign_attributes(event_registration_update_params)
     @event_registration.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
     @event_registration.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
@@ -393,6 +398,7 @@ class EventRegistrationsController < ApplicationController
   def select_organization
     @event_registration = EventRegistration.find(params[:id])
     authorize! @event_registration, to: :select_organization?
+    return deny_locked_org_edit if @event_registration.editing_locked?
     @person = @event_registration.registrant
     organization = Organization.find(params[:organization_id])
 
@@ -404,6 +410,7 @@ class EventRegistrationsController < ApplicationController
   def create_organization
     @event_registration = EventRegistration.find(params[:id])
     authorize! @event_registration, to: :create_organization?
+    return deny_locked_org_edit if @event_registration.editing_locked?
     @person = @event_registration.registrant
     # Build the org from a name the registrant actually typed on the form, so the
     # button can't be used to create an arbitrary org — it only resolves a pending
@@ -432,6 +439,7 @@ class EventRegistrationsController < ApplicationController
   def unlink_organization
     @event_registration = EventRegistration.find(params[:id])
     authorize! @event_registration, to: :unlink_organization?
+    return deny_locked_org_edit if @event_registration.editing_locked?
     organization = Organization.find(params[:organization_id])
 
     # Intentional UX choice: "Unlink" only removes the org from this registration and
@@ -544,11 +552,43 @@ class EventRegistrationsController < ApplicationController
   end
 
   def event_registration_update_params
+    return locked_editable_params if @event_registration.editing_locked?
     if allowed_to?(:manage?, with: EventRegistrationPolicy)
       event_registration_params
     else
       params.require(:event_registration).permit(:status)
     end
+  end
+
+  # A transferred-out reg keeps only comments and communications editable (#1944).
+  LOCKED_EDITABLE_KEYS = %w[ comments_attributes notifications_attributes ].freeze
+
+  def locked_editable_params
+    params.fetch(:event_registration, {}).permit(
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ]
+    )
+  end
+
+  # Warn rather than silently swallow: if a locked reg's form somehow submits fields
+  # beyond comments/communications, tell the admin they were ignored.
+  def warn_if_locked_fields_submitted
+    return unless @event_registration.editing_locked?
+    ignored = params.fetch(:event_registration, {}).keys.map(&:to_s) - LOCKED_EDITABLE_KEYS
+    return if ignored.empty?
+    flash[:alert] = "This registration was transferred out and is locked — only comments and communications were saved. Undo the transfer to edit anything else."
+  end
+
+  def block_locked_registration
+    return unless @event_registration.editing_locked?
+    redirect_to(request.referer.presence || edit_event_registration_path(@event_registration),
+      alert: "#{@event_registration.registrant&.full_name} was transferred out — this registration is locked. Undo the transfer to make changes.",
+      status: :see_other)
+  end
+
+  def deny_locked_org_edit
+    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+      alert: "This registration was transferred out and is locked. Undo the transfer to change linked organizations."
   end
 
   def csv_export(registrations)

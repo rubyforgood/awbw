@@ -11,16 +11,11 @@
   </div>
 
   <div class="flex flex-1 flex-col gap-3 p-4">
-    <% if ce_registration.nil? && event_registration.transferred_in? %>
-      <%# A transfer-in reg's CE is created by the transfer; if the source had none,
-          there's nothing here and admins add CE on the original reg. (#1944) %>
-      <p class="mt-auto text-xs text-gray-500">
-        No CE transferred in.
-        <%= link_to "Manage on the original registration",
-                    edit_event_registration_path(event_registration.transferred_from_registration, return_to: "registrants"),
-                    class: "font-medium text-teal-700 underline", target: "_blank", rel: "noopener" %>
-      </p>
-    <% elsif ce_registration.nil? %>
+    <% if ce_registration.nil? %>
+      <%# No CE record — offer the normal create. A transfer-in reg with no CE means
+          the source had none, so it's being decided now and attaches to THIS reg;
+          when the source did have CE, the transfer carries a record here and this
+          card shows it (with a link back to the original) in the branch below. (#1944) %>
       <%# Open the full new form (license/hours/cost) in a new tab and return here. %>
       <div class="mt-auto border-t border-gray-100 pt-3">
         <%= link_to new_continuing_education_registration_path(allocatable_sgid: event_registration.to_sgid.to_s, return_to: "registration"),

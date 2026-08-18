@@ -364,7 +364,11 @@ class EventsController < ApplicationController
     authorize! @event, to: :recipients?
     registration = @event.event_registrations.active.find_by(id: params[:registration_id])
     unless registration
-      redirect_to recipients_event_path(@event), alert: "Choose a recipient to feature." and return
+      # A transferred-out reg is inactive, so it never matches above — give an
+      # accurate "locked" warning instead of the generic prompt. (#1944)
+      locked = @event.event_registrations.find_by(id: params[:registration_id])&.editing_locked?
+      message = locked ? "That registrant was transferred out — their registration is locked. Undo the transfer to feature them." : "Choose a recipient to feature."
+      redirect_to recipients_event_path(@event), alert: message and return
     end
 
     authorize! registration, to: :update?

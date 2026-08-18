@@ -534,6 +534,17 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("Origin Training")
       end
 
+      it "offers the normal Add CE control on a transferred-in reg whose source had no CE (#1944)" do
+        source = create(:event_registration, event: create(:event, ce_hours_offered: 6), status: "transferred_out")
+        incoming = create(:event_registration, event: create(:event, ce_hours_offered: 6),
+          registrant: source.registrant, transferred_from_registration: source)
+
+        get edit_event_registration_path(incoming)
+
+        expect(response.body).to include("Add CE registration")
+        expect(response.body).not_to include("No CE transferred in")
+      end
+
       it "shows the source event on a transferred-in registration" do
         source = create(:event_registration, event: event, status: "transferred_out")
         incoming = create(:event_registration, event: new_event, transferred_from_registration: source)
@@ -675,6 +686,73 @@ RSpec.describe "EventRegistrations", type: :request do
       end
     end
 
+    describe "a transferred-out registration is locked (#1944)" do
+      let(:locked) { create(:event_registration, event: event, status: "transferred_out") }
+
+      describe "PATCH /event_registrations/:id (the full edit form)" do
+        it "ignores locked fields but still saves comments, and warns" do
+          patch event_registration_path(locked), params: { event_registration: {
+            status: "attended",
+            shoutout: "1",
+            scholarship_requested: "1",
+            intends_to_pay: "1",
+            comments_attributes: { "0" => { topic: "note", body: "A new comment" } }
+          } }
+
+          locked.reload
+          expect(locked.status).to eq("transferred_out")
+          expect(locked).not_to be_shoutout
+          expect(locked).not_to be_scholarship_requested
+          expect(locked).not_to be_intends_to_pay
+          expect(locked.comments.map(&:body)).to include("A new comment")
+          expect(flash[:alert]).to match(/transferred out/i)
+        end
+
+        it "saves comments cleanly with no warning when only comments change" do
+          patch event_registration_path(locked), params: { event_registration: {
+            comments_attributes: { "0" => { topic: "note", body: "Just a comment" } }
+          } }
+
+          expect(locked.reload.comments.map(&:body)).to include("Just a comment")
+          expect(flash[:alert]).to be_blank
+        end
+      end
+
+      it "blocks update_onboarding with a warning" do
+        patch update_onboarding_event_registration_path(locked),
+              params: { field: "completed_day_1", value: "1" }
+
+        expect(locked.reload.completed_day_1).to be_falsey
+        expect(flash[:alert]).to match(/locked/i)
+      end
+
+      it "blocks toggle_certificate_issued with a warning" do
+        patch toggle_certificate_issued_event_registration_path(locked), params: { value: "1" }
+
+        expect(locked.reload.certificate_issued?).to be(false)
+        expect(flash[:alert]).to match(/locked/i)
+      end
+
+      it "blocks unlinking an organization with a warning" do
+        org = create(:organization)
+        locked.event_registration_organizations.create!(organization: org)
+
+        delete unlink_organization_event_registration_path(locked), params: { organization_id: org.id }
+
+        expect(locked.reload.organizations).to include(org)
+        expect(flash[:alert]).to match(/locked/i)
+      end
+
+      it "shows the lock banner and wraps locked sections in a disabled fieldset" do
+        get edit_event_registration_path(locked)
+
+        expect(response.body).to include("transferred out and is locked")
+        expect(response.body).to match(/<fieldset[^>]*disabled/)
+        # Comments stays editable (outside any locked fieldset).
+        expect(response.body).to include("Add comment")
+      end
+    end
+
     describe "transfer flow" do
       let!(:source) { create(:event_registration, event: event, status: "transferred_out") }
 
@@ -709,7 +787,7 @@ RSpec.describe "EventRegistrations", type: :request do
           get transfer_event_registration_path(source)
 
           expect(response.body).to include("What recording this transfer will do")
-          expect(response.body).to include("the new event won't charge them again")
+          expect(response.body).to include("Payments stay here")
           expect(response.body).to include("copy of the linked organizations")
           expect(response.body).not_to include("was already transferred in from")
         end

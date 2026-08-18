@@ -90,6 +90,12 @@ RSpec.describe EventRegistration, type: :model do
       expect(incoming).not_to be_transfer_destination_pending
     end
 
+    it "locks editing only once transferred out" do
+      expect(source).to be_editing_locked
+      expect(incoming).not_to be_editing_locked
+      expect(create(:event_registration, status: "registered")).not_to be_editing_locked
+    end
+
     it "records the prior status when a reg is transferred out, so it can be restored" do
       reg = create(:event_registration, status: "attended")
       expect { reg.update!(status: "transferred_out") }

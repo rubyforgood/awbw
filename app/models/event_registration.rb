@@ -609,6 +609,14 @@ class EventRegistration < ApplicationRecord
     transferred_out? && transferred_to_registration.nil?
   end
 
+  # A transferred-out reg is frozen: its status, attendance, financials, orgs, and
+  # shout-out are historical and shouldn't be edited here — only comments and
+  # communications stay open. Undo happens through the Manage-transfer flow, not by
+  # editing fields. Enforced server-side (params + guards) and surfaced in the UI. (#1944)
+  def editing_locked?
+    transferred_out?
+  end
+
   # Safe to delete only when removing the record would not orphan financial data
   # or erase history. Allocations tie the registration to a financial source of
   # any kind (payments, scholarships, and others) and have no dependent: :destroy,

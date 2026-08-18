@@ -190,6 +190,14 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(response.body).to include("Add CE registration")
     end
 
+    it "shows a caution banner when the registration was transferred out (#1944)" do
+      registration.update!(status: "transferred_out")
+
+      get new_continuing_education_registration_path(allocatable_sgid: registration.to_sgid.to_s)
+
+      expect(response.body).to include("transferred-out registration")
+    end
+
     it "creates a CE registration with license, hours, and cost, and sets the flag" do
       registration
 
