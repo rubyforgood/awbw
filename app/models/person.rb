@@ -228,9 +228,16 @@ class Person < ApplicationRecord
     end
   end
 
-  # Drives the people index, the profile header, and every author credit.
+  # Drives the people index and the profile header. Author credits pass an explicit
+  # preference (the record's own, which outranks the profile) through `name_for`.
   def name
-    case display_name_preference
+    name_for(display_name_preference)
+  end
+
+  # Formats the name by a given preference rather than the profile's, so a record
+  # that stored its own credit preference can win over the profile.
+  def name_for(preference)
+    case preference
     when "first_name_last_initial"
       initial = last_name&.first
       initial.present? ? "#{first_name} #{initial}." : first_name.to_s

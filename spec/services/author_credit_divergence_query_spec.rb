@@ -30,12 +30,14 @@ RSpec.describe AuthorCreditDivergenceQuery do
       expect(groups.first.records).to include(story)
     end
 
-    it "finds records credited through the creating user's person, not just author_id" do
+    it "never puts an idea in the preference section — it credits generically, so nothing to reconcile" do
       person.update!(display_name_preference: "first_name_only")
       idea = create(:story_idea, created_by: author_user, author_credit_preference: nil)
       person.update!(display_name_preference: "full_name")
 
-      expect(described_class.new.call.preference.first.records).to include(idea)
+      records = described_class.new.call.preference.flat_map(&:records)
+      expect(records).not_to include(idea)
+      expect(described_class.new(type: "StoryIdea").call.preference).to be_empty
     end
 
     it "ignores records with no stored snapshot" do

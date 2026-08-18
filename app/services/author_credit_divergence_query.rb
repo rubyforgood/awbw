@@ -2,7 +2,7 @@
 #
 #   preference   — snapshot no longer matches the profile
 #   legacy       — credited by a free-text name column, no person at all
-#   creator      — author_id blank, so the credit falls back to the creator
+#   creator      — author_id blank, credited generically, creator suggested to assign
 #   unattributed — nothing to credit at all
 #
 # Comparisons run in Ruby because they walk the author fallback chain.
@@ -75,8 +75,8 @@ class AuthorCreditDivergenceQuery
     @models ||= type ? [ self.class.model_for(type) ].compact : MODEL_NAMES.map(&:constantize)
   end
 
-  # The idea models have no author_id, so crediting through the creator is correct
-  # for them, not something to resolve.
+  # The idea models have no author_id, so they credit generically — there's no
+  # author to reconcile, so they're left out of every section.
   def authorable_models
     models.select { |model| model.column_names.include?("author_id") }
   end

@@ -22,8 +22,8 @@ RSpec.describe "workshops/_show_associations", type: :view do
       allow(view).to receive(:allowed_to?).and_return(false)
     end
 
-    it "credits the spotlight through the author's profile, not the raw association" do
-      author.update!(display_name_preference: "first_name_last_initial")
+    it "credits the spotlight by its stored preference, formatted from the author" do
+      spotlight.update!(author_credit_preference: "first_name_last_initial")
       render partial: "workshops/show_associations", locals: { workshop: workshop.decorate }
 
       expect(rendered).to include("Rosalind F.")

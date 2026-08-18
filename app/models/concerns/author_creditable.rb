@@ -1,8 +1,9 @@
 module AuthorCreditable
   extend ActiveSupport::Concern
 
-  # Credits render from the credited person's profile. This column is the consent
-  # snapshot and no longer drives display, except "anonymous", which is always honored.
+  # A record's stored preference is the submitter's consent snapshot. When set it
+  # wins for display (honoring what they chose at submission); otherwise the credited
+  # person's current profile decides. "anonymous" (either side) is always honored.
   AUTHOR_CREDIT_PREFERENCES = %w[full_name first_name_last_initial first_name_only last_name_only anonymous].freeze
 
   ANONYMOUS = "anonymous"
@@ -56,8 +57,9 @@ module AuthorCreditable
     person = primary_author_person
     return credit_for(person) if person
     return legacy_author_name_text if legacy_author_name_text.present?
-    creator = self.class.credits_creator? ? created_by&.person : nil
-    creator ? credit_for(creator) : missing_author_label
+    # Whoever entered a record didn't claim authorship, so an unattributed record
+    # falls to the generic label rather than crediting its creator.
+    missing_author_label
   end
 
   # Only an explicit author links — a creator fallback never declared authorship.
@@ -71,13 +73,10 @@ module AuthorCreditable
     person.anonymous_contributions? || author_credit_preference == ANONYMOUS
   end
 
-  # A legacy name follows nobody's profile, and neither does a record that never
-  # named an author, so neither has a governing person.
+  # Only an explicit author has a governing profile. A legacy name follows nobody's,
+  # and an unattributed record credits nobody, so neither has a governing person.
   def credit_governing_person
-    person = primary_author_person
-    return person if person
-    return nil if legacy_author_name_text.present?
-    self.class.credits_creator? ? created_by&.person : nil
+    primary_author_person
   end
 
   # Snapshot no longer agrees with the governing profile.
@@ -105,17 +104,13 @@ module AuthorCreditable
 
   private def credit_for(person)
     return missing_author_label if credit_anonymous?(person)
-    person.name.presence || missing_author_label
+    # The record's own preference wins over the person's profile; fall back to the
+    # profile when the record didn't store one.
+    preference = author_credit_preference.presence || person.display_name_preference
+    person.name_for(preference).presence || missing_author_label
   end
 
   class_methods do
-    # Whoever entered a record didn't claim it, so a model that can name an author
-    # credits only that author. The idea models have no author_id at all, so their
-    # creator is the only credit they can carry.
-    def credits_creator?
-      !column_names.include?("author_id")
-    end
-
     # Fully-qualified legacy name columns, e.g. "resources.legacy_author_name".
     def legacy_author_name_columns
       []
@@ -129,12 +124,16 @@ module AuthorCreditable
 
       clauses = credited_person_aliases.map { |a| credited_person_match_sql(a) }
       clauses += legacy_author_name_columns.map { |col| legacy_author_name_match_sql(col) }
+      return none if clauses.empty?
+
       joins(credited_person_join_sql).where(clauses.join(" OR "), name: "%#{sanitized}%")
     end
 
     # Orders by the credited author's name, matching `author_person` precedence:
     # explicit author, then any legacy sources, then the creating user's person.
     def order_by_author(direction)
+      return all if credited_person_aliases.empty? && legacy_author_name_columns.empty?
+
       ascending = direction.to_s.casecmp("asc").zero?
       # By first name then last name, matching the credit displayed by default
       # ("First Last"), so the ordering follows the visible column.
@@ -144,17 +143,14 @@ module AuthorCreditable
 
     private
 
-    # The one person a credit can name — author XOR creator, never both, so search
-    # and sort can't reach a person the credit never displays.
+    # Only an explicit author is ever credited, so search and sort reach that person
+    # alone — and nobody at all on the idea models, which have no author_id.
     def credited_person_aliases
-      credits_creator? ? [ "credited_creator" ] : [ "credited_author" ]
+      column_names.include?("author_id") ? [ "credited_author" ] : []
     end
 
     def credited_person_join_sql
-      return [
-        "LEFT OUTER JOIN users credited_creator_user ON credited_creator_user.id = #{table_name}.created_by_id",
-        "LEFT OUTER JOIN people credited_creator ON credited_creator.id = credited_creator_user.person_id"
-      ] if credits_creator?
+      return [] if credited_person_aliases.empty?
 
       [ "LEFT OUTER JOIN people credited_author ON credited_author.id = #{table_name}.author_id" ]
     end
@@ -176,7 +172,8 @@ module AuthorCreditable
     def credited_person_match_sql(sql_alias)
       first = "#{sql_alias}.first_name"
       last = "#{sql_alias}.last_name"
-      preference = "COALESCE(#{sql_alias}.display_name_preference, 'full_name')"
+      # The record's own preference wins over the profile, matching `credit_for`.
+      preference = "COALESCE(#{table_name}.author_credit_preference, #{sql_alias}.display_name_preference, 'full_name')"
 
       by_preference = {
         "full_name" => [ "CONCAT(#{first}, #{last})", "CONCAT(#{last}, #{first})", first, last ],
