@@ -181,6 +181,17 @@
                 </label>
               <% end %>
             </div>
+            <%# The days carried over from the training they transferred in from. %>
+            <% if f.object.transferred_in? %>
+              <% prior = f.object.transferred_from_registration %>
+              <% prior_days = (1..prior.event.day_count).select { |d| prior["completed_day_#{d}"] } %>
+              <% if prior_days.any? %>
+                <p class="mt-1 text-2xs text-teal-700">
+                  <i class="fa-solid fa-right-to-bracket"></i>
+                  <%= "Day".pluralize(prior_days.size) %> <%= prior_days.to_sentence %> completed in prior training.
+                </p>
+              <% end %>
+            <% end %>
           </div>
         </div>
       </div>

@@ -545,6 +545,17 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include(transfer_event_registration_path(source))
       end
 
+      it "notes which days were completed in the prior training" do
+        prior_event = create(:event, start_date: 3.days.ago, end_date: 3.days.ago)
+        source = create(:event_registration, event: prior_event, status: "transferred_out", completed_day_1: true)
+        incoming = create(:event_registration, event: new_event, registrant: source.registrant,
+          transferred_from_registration: source)
+
+        get edit_event_registration_path(incoming)
+
+        expect(response.body).to include("Day 1 completed in prior training")
+      end
+
       it "shows a source-financials summary (not editable cards) for a transferred-in reg" do
         paid_event = create(:event, cost_cents: 10_000)
         source = create(:event_registration, event: paid_event, status: "transferred_out")
@@ -755,6 +766,20 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(incoming.organizations).to include(org)
           # Org context is copied, not moved — the source keeps its own link.
           expect(source.reload.organizations).to include(org)
+        end
+
+        it "copies the registrant's progress fields (days, payment method, buddy, feature/shout-out) forward" do
+          source.update!(completed_day_1: true, expected_payment_method: "Check",
+            someone_else_will_pay: true, shoutout: true)
+
+          post process_transfer_event_registration_path(source),
+               params: { destination_event_id: destination_event.id }
+
+          incoming = EventRegistration.find_by(registrant: source.registrant, event: destination_event)
+          expect(incoming).to have_attributes(
+            completed_day_1: true, expected_payment_method: "Check",
+            someone_else_will_pay: true, shoutout: true
+          )
         end
 
         it "collapses a double transfer, pointing the new reg at the original and dropping the middle" do

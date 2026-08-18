@@ -247,6 +247,16 @@ class EventRegistrationsController < ApplicationController
       destination.status_before_transfer = nil
     else
       destination.transferred_from_registration = source
+      # Copy the registrant's progress/profile state forward so the new reg reflects
+      # where they left off (money & CE resolve separately). Days attended, expected
+      # payment method, buddy-pay, and the recipients-page feature/shout-out flag. (#1944)
+      copied = {
+        expected_payment_method: @event_registration.expected_payment_method,
+        someone_else_will_pay: @event_registration.someone_else_will_pay,
+        shoutout: @event_registration.shoutout
+      }
+      EventRegistration::DAY_FIELDS.each { |field| copied[field] = @event_registration[field] }
+      destination.assign_attributes(copied)
     end
 
     saved = ActiveRecord::Base.transaction do
