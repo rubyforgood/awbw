@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe AffiliationServices::ReconcileFacilitatorAffiliation do
+RSpec.describe AffiliationServices::ReconcilePerson do
   let(:person) { create(:person) }
   let(:organization) { create(:organization) }
 
@@ -22,12 +22,16 @@ RSpec.describe AffiliationServices::ReconcileFacilitatorAffiliation do
            event_registration: registration)
   end
 
+  def reconcile(registration, **options)
+    described_class.call(person: person, organization: organization, event: registration.event, **options)
+  end
+
   describe "deactivation" do
     it "same-days the owned facilitator affiliation when the person never attended" do
       reg = training_registration(status: "no_show")
       affiliation = owned_facilitator(registration: reg)
 
-      described_class.call(person: person, organization: organization)
+      reconcile(reg)
       affiliation.reload
 
       expect(affiliation.end_date).to eq(affiliation.start_date)
@@ -40,31 +44,53 @@ RSpec.describe AffiliationServices::ReconcileFacilitatorAffiliation do
         reg = training_registration(status: status)
         affiliation = owned_facilitator(registration: reg)
 
-        described_class.call(person: person, organization: organization)
+        reconcile(reg)
 
         expect(affiliation.reload).not_to be_active
       end
+    end
+
+    it "deactivates on the day a one-day training ends, when the affiliation starts that same day" do
+      event = create(:event, facilitator_training: true, start_date: 3.hours.ago,
+                     end_date: 1.hour.ago, registration_close_date: 4.hours.ago)
+      reg = create(:event_registration, registrant: person, event: event, status: "no_show")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+      affiliation = owned_facilitator(registration: reg, start_date: Date.current)
+
+      reconcile(reg)
+
+      expect(affiliation.reload).not_to be_active
     end
 
     it "leaves an assumptive affiliation alone while its training is still upcoming" do
       reg = training_registration(status: "registered", ended: false)
       affiliation = owned_facilitator(registration: reg, start_date: Date.current)
 
-      described_class.call(person: person, organization: organization)
+      reconcile(reg)
 
       expect(affiliation.reload).to be_active
       expect(affiliation.end_date).to be_nil
     end
 
     it "leaves an unowned (hand-created) facilitator affiliation untouched" do
-      training_registration(status: "no_show")
+      reg = training_registration(status: "no_show")
       hand_created = create(:affiliation, person: person, organization: organization,
                             title: "Facilitator", start_date: 1.month.ago.to_date)
 
-      described_class.call(person: person, organization: organization)
+      reconcile(reg)
 
       expect(hand_created.reload).to be_active
       expect(hand_created.end_date).to be_nil
+    end
+
+    it "reconciles a hand-created affiliation when the caller opts in" do
+      reg = training_registration(status: "no_show")
+      hand_created = create(:affiliation, person: person, organization: organization,
+                            title: "Facilitator", start_date: 1.month.ago.to_date)
+
+      reconcile(reg, include_unowned: true)
+
+      expect(hand_created.reload).not_to be_active
     end
   end
 
@@ -73,7 +99,7 @@ RSpec.describe AffiliationServices::ReconcileFacilitatorAffiliation do
       reg = training_registration(status: "attended")
       affiliation = owned_facilitator(registration: reg)
 
-      described_class.call(person: person, organization: organization)
+      reconcile(reg)
 
       expect(affiliation.reload).to be_active
       expect(affiliation.end_date).to be_nil
@@ -84,7 +110,7 @@ RSpec.describe AffiliationServices::ReconcileFacilitatorAffiliation do
       affiliation = owned_facilitator(registration: no_show)
       training_registration(status: "attended")
 
-      described_class.call(person: person, organization: organization)
+      reconcile(no_show)
 
       expect(affiliation.reload).to be_active
     end
@@ -95,10 +121,27 @@ RSpec.describe AffiliationServices::ReconcileFacilitatorAffiliation do
       affiliation.update!(end_date: affiliation.start_date)
       expect(affiliation.reload).not_to be_active
 
-      described_class.call(person: person, organization: organization)
+      reconcile(reg)
 
       expect(affiliation.reload).to be_active
       expect(affiliation.end_date).to be_nil
+    end
+  end
+
+  describe "creating" do
+    it "creates the missing facilitator affiliation for an attendee" do
+      reg = training_registration(status: "attended")
+
+      expect { described_class.call(person: person, organization: organization, event: reg.event, registration: reg) }
+        .to change { person.affiliations.facilitators.where(organization: organization).count }.by(1)
+    end
+
+    it "proposes nothing when the caller passes no registration to own the new row" do
+      reg = training_registration(status: "attended")
+
+      plan = described_class.new(person: person, organization: organization, event: reg.event).plan
+
+      expect(plan).to be_empty
     end
   end
 
@@ -107,9 +150,9 @@ RSpec.describe AffiliationServices::ReconcileFacilitatorAffiliation do
       reg = training_registration(status: "no_show")
       affiliation = owned_facilitator(registration: reg)
 
-      described_class.call(person: person, organization: organization)
+      reconcile(reg)
       first = affiliation.reload.end_date
-      described_class.call(person: person, organization: organization)
+      reconcile(reg)
 
       expect(affiliation.reload.end_date).to eq(first)
     end
@@ -120,18 +163,45 @@ RSpec.describe AffiliationServices::ReconcileFacilitatorAffiliation do
       reg = training_registration(status: "no_show")
       affiliation = owned_facilitator(registration: reg)
 
-      plan = described_class.new(person: person, organization: organization).plan
+      plan = described_class.new(person: person, organization: organization, event: reg.event).plan
 
-      expect(plan).to eq(:deactivate)
+      expect(plan.map(&:action)).to eq([ :deactivate ])
       expect(affiliation.reload).to be_active
     end
 
-    it "reports :noop when there is no owned facilitator affiliation" do
-      training_registration(status: "no_show")
+    it "reports the reason a row needs no action" do
+      reg = training_registration(status: "attended")
+      owned_facilitator(registration: reg)
 
-      plan = described_class.new(person: person, organization: organization).plan
+      plan = described_class.new(person: person, organization: organization, event: reg.event).plan
 
-      expect(plan).to eq(:noop)
+      expect(plan.map(&:action)).to eq([ :noop ])
+      expect(plan.first.reason).to eq(described_class::ACTIVE_ATTENDED)
+      expect(plan.first).not_to be_actionable
+    end
+
+    it "plans nothing when there is no owned facilitator affiliation" do
+      reg = training_registration(status: "no_show")
+
+      plan = described_class.new(person: person, organization: organization, event: reg.event).plan
+
+      expect(plan).to be_empty
+    end
+  end
+
+  describe "a non-training event" do
+    it "deletes only the facilitator affiliation auto-created off that event" do
+      event = create(:event, :ended, facilitator_training: false)
+      reg = create(:event_registration, registrant: person, event: event, status: "attended")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+      off_this_event = owned_facilitator(registration: reg)
+      hand_created = create(:affiliation, person: person, organization: organization,
+                            title: "Facilitator", start_date: 2.years.ago.to_date)
+
+      reconcile(reg)
+
+      expect(Affiliation.exists?(off_this_event.id)).to be(false)
+      expect(hand_created.reload).to be_active
     end
   end
 end

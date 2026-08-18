@@ -2,7 +2,7 @@
 <span class="pointer-events-none absolute right-0 top-full z-20 mt-1 hidden w-64 rounded-md bg-gray-900 px-3 py-2 text-xs font-normal text-white shadow-lg group-hover:block">
   <% case kind %>
   <% when :deactivate %>
-    Ends this facilitator affiliation as of today (sets its end date to its start date) so it no longer counts as active. The record is kept and reactivates if the person is later marked attended.
+    Ends this facilitator affiliation — its end date is set to its own start date and it's marked inactive — so it no longer counts as active. The record is kept and reactivates if the person is later marked attended.
   <% when :delete %>
     <p class="mb-1">Permanently deletes <strong>this</strong> facilitator affiliation. Everything else stays as-is:</p>
     <ul class="list-disc space-y-0.5 pl-4">

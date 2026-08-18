@@ -1,18 +1,9 @@
 module AffiliationServices
   # Event-level orchestration for the "Reconcile affiliations" bulk action. Walks
-  # the event's registrants and, for each facilitator affiliation tied to an org
-  # they linked, works out what should happen to it (job affiliations are never
-  # touched). Produces one row per affiliation so each is individually actionable.
-  #
-  # Actions:
-  #   :create      — facilitator training, none exists yet but one should (pre-event
-  #                  for anyone, post-event only for attendees).
-  #   :deactivate  — facilitator training, owned, its (ended) training wasn't
-  #                  completed. The admin may delete it instead of same-daying it.
-  #   :reactivate  — facilitator training, owned, same-dayed earlier, now attended.
-  #   :delete      — NOT a facilitator training: an owned affiliation auto-created
-  #                  off this event that shouldn't exist.
-  #   :noop        — nothing to do; the row carries a `reason`.
+  # the event's registrants and, for each organization they linked, asks
+  # `ReconcilePerson` what should happen to their facilitator affiliations there —
+  # that class holds every rule; this one turns its decisions into reviewable,
+  # individually-selectable rows. Job affiliations are never touched.
   #
   # `actionable_person_groups` groups the actionable rows by person (with their
   # attendance registration and other-org facilitator affiliations for context);
@@ -48,8 +39,8 @@ module AffiliationServices
 
     def reason_rank(reason)
       case reason
-      when "Active — attended" then 8
-      when "Didn't attend — no affiliation created" then 9
+      when ReconcilePerson::ACTIVE_ATTENDED then 8
+      when ReconcilePerson::NOT_ATTENDED then 9
       else 0
       end
     end
@@ -95,94 +86,42 @@ module AffiliationServices
     def all_rows
       @all_rows ||= registrations_by_person.flat_map do |person, registrations|
         registration = registrations.first
-        linked_organizations(registrations).flat_map { |organization| rows_for(person, registration, organization) }
-      end
-    end
-
-    def rows_for(person, registration, organization)
-      facilitators = person.affiliations.facilitators
-        .where(organization:)
-        .includes(event_registration: :event)
-        .to_a
-
-      unless @event.facilitator_training?
-        # A non-training event confers no facilitation, so it only removes
-        # facilitator affiliations that were auto-created off it.
-        return facilitators.filter_map do |affiliation|
-          next unless affiliation.event_registration&.event_id == @event.id
-
-          Row.new(person:, registration:, organization:, affiliation:, action: :delete, reason: nil, key: "aff:#{affiliation.id}")
+        linked_organizations(registrations).flat_map do |organization|
+          reconciler(person, registration, organization).plan.map do |decision|
+            row_for(person, registration, organization, decision)
+          end
         end
       end
-
-      attended = completed_training?(person, organization)
-      rows = facilitators.map { |affiliation| affiliation_row(person, registration, organization, affiliation, attended) }
-      rows << create_row(person, registration, organization, attended) if facilitators.empty?
-      rows.compact
     end
 
-    def affiliation_row(person, registration, organization, affiliation, attended)
-      action, reason = classify_affiliation(affiliation, attended)
-      Row.new(person:, registration:, organization:, affiliation:, action:, reason:, key: "aff:#{affiliation.id}")
+    def row_for(person, registration, organization, decision)
+      Row.new(person:, registration:, organization:, affiliation: decision.affiliation,
+              action: decision.action, reason: decision.reason,
+              key: row_key(person, organization, decision))
     end
 
-    # Reconciles EVERY facilitator affiliation for the org — hand-entered ones
-    # included, not just app-created rows. Deactivation only applies once the
-    # governing training has ended (a hand-entered row has no source training, so
-    # it's gated on this event ending) — so a pre-event run never deactivates.
-    def classify_affiliation(affiliation, attended)
-      if attended
-        affiliation.active? ? [ :noop, "Active — attended" ] : [ :reactivate, nil ]
-      elsif affiliation.active? && deactivation_ready?(affiliation)
-        [ :deactivate, nil ]
-      elsif affiliation.active?
-        [ :noop, "Training hasn't ended yet" ]
-      else
-        [ :noop, "Already deactivated — didn't attend" ]
-      end
-    end
+    # Stable per-row identity for the outcome map: the affiliation itself when there
+    # is one, else the (person, org) pair the row would create an affiliation for.
+    def row_key(person, organization, decision)
+      return "aff:#{decision.affiliation.id}" if decision.affiliation
 
-    def deactivation_ready?(affiliation)
-      affiliation.event_registration_id ? source_ended?(affiliation) : @event.ended?
-    end
-
-    def create_row(person, registration, organization, attended)
-      if !@event.ended? || attended
-        Row.new(person:, registration:, organization:, affiliation: nil, action: :create, reason: nil,
-                key: "create:#{person.id}:#{organization.id}")
-      else
-        Row.new(person:, registration:, organization:, affiliation: nil, action: :noop,
-                reason: "Didn't attend — no affiliation created", key: "none:#{person.id}:#{organization.id}")
-      end
+      "#{decision.action == :create ? 'create' : 'none'}:#{person.id}:#{organization.id}"
     end
 
     def perform_outcome(row, choice)
-      case choice
-      when "create"
-        AffiliationServices::CreateFromRegistration.call(
-          person: row.person, organization: row.organization, facilitator_training: true,
-          training_date: @event.start_date, event_registration: row.registration
-        )
-      when "delete"
-        row.affiliation.destroy!
-      when "deactivate"
-        # Same-day it: end_date = the affiliation's own start_date (start_date itself
-        # is never changed), which the model turns into inactive.
-        row.affiliation.update!(end_date: row.affiliation.start_date || Date.current)
-      when "reactivate"
-        row.affiliation.update!(end_date: nil)
-      else
-        return false # "keep" or unknown
-      end
-      true
+      action = ACTION_FOR_CHOICE[choice]
+      return false unless action
+
+      reconciler(row.person, row.registration, row.organization).perform(action, affiliation: row.affiliation)
     end
 
-    def completed_training?(person, organization)
-      ReconcileFacilitatorAffiliation.new(person:, organization:).completed_training?
-    end
-
-    def source_ended?(affiliation)
-      affiliation.event_registration&.event&.ended?
+    # One reconciler per (person, org) — reused for both planning and applying so the
+    # attendance lookup behind each decision runs once.
+    def reconciler(person, registration, organization)
+      @reconcilers ||= {}
+      @reconcilers[[ person.id, organization.id ]] ||= ReconcilePerson.new(
+        person:, organization:, event: @event, registration:, include_unowned: true
+      )
     end
 
     def other_facilitators(person)
