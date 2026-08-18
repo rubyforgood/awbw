@@ -40,8 +40,9 @@
                 0
               <% end %>
             </td>
-            <%# A form can be both a public link and an event form — the two are
-                independent, so show a chip for each that applies. %>
+            <%# A public link and an event form are mutually exclusive — an
+                event-connected form is never offered publicly — so at most one
+                chip applies. %>
             <td class="px-4 py-2 text-sm text-gray-600">
               <div class="flex flex-wrap items-center gap-1.5">
                 <% if form.publicly_fillable? %>
