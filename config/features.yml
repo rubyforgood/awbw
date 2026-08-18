@@ -51,7 +51,6 @@
   pro_tips:
     - "Ask an admin to change these for you — profile editing is admin-only for now."
     - "Anonymous content still appears on your own profile and to admins, so you can find it; it's hidden from everyone else."
-    - "Submissions made anonymously before this change stay that way until an admin reconciles them, even if you turn the setting off."
 
 - name: "Reconcile author credits"
   area: reporting
