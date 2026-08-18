@@ -40,7 +40,8 @@
 <% state_data = data.state_counts.sort_by { |_, count| -count } %>
 <% country_data = data.country_counts.sort_by { |_, count| -count } %>
 <% school_district_data = data.school_district_counts.sort_by { |_, count| -count } %>
-<% program_status_rows = [ [ "New", data.program_status_counts[:new], "#22c55e" ],
+<%# Slice colours track DomainTheme's program_new/ongoing/reinstated hues. %>
+<% program_status_rows = [ [ "New", data.program_status_counts[:new], "#6366f1" ],
                            [ "Ongoing", data.program_status_counts[:ongoing], "#3b82f6" ],
                            [ "Reinstated", data.program_status_counts[:reinstated], "#a855f7" ] ].select { |_, count, _| count.positive? } %>
 <% program_status_data = program_status_rows.map { |label, count, _| [ label, count ] } %>

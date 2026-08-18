@@ -13,10 +13,14 @@ class AttendeesBreakdowns
   # registrations: the registration scope those breakdowns draw from — attended
   # registrations by default, or any active ones when a caller (e.g. the recipients
   # charts) wants a single event's people regardless of attendance.
-  def initialize(people, events: Event.all, registrations: EventRegistration.attended)
+  # as_of: the date program status is judged on. A caller scoped to one event passes
+  # that event's start date so its verdicts match the event's own dashboard; the
+  # cross-event index leaves it nil, anchoring on the start of the current year.
+  def initialize(people, events: Event.all, registrations: EventRegistration.attended, as_of: nil)
     @people = people
     @events = events
     @registrations = registrations
+    @as_of = as_of
   end
 
   def registrant_count
@@ -293,13 +297,13 @@ class AttendeesBreakdowns
       .pluck(:organization_id, Arel.sql("event_registrations.registrant_id"))
   end
 
-  # Cross-event, so there is no event date to anchor on: each org reads as of the
-  # start of the current year (see FacilitatorProgramStatus), which is what the
-  # breakdown card's note and the index's own column say. Symbols here — these
-  # feed counts and drill-in buckets, not a badge.
+  # Judged on #as_of — the event's start date when the caller is scoped to one,
+  # otherwise nil, which FacilitatorProgramStatus anchors on the start of the
+  # current year. Either way it matches what the breakdown card's note says.
+  # Symbols here — these feed counts and drill-in buckets, not a badge.
   def program_status_by_organization
     @program_status_by_organization ||= organizations.to_h do |organization|
-      [ organization.id, organization.facilitator_status_on ]
+      [ organization.id, organization.facilitator_status_on(@as_of) ]
     end
   end
 

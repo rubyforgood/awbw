@@ -349,7 +349,8 @@ class EventsController < ApplicationController
       recipients = Person.where(id: @dashboard.scholarship_applicant_ids)
       @breakdowns = AttendeesBreakdowns.new(recipients,
         events: Event.where(id: @event.id),
-        registrations: EventRegistration.active)
+        registrations: EventRegistration.active,
+        as_of: @event.start_date&.to_date)
       return render :recipients_charts
     end
 

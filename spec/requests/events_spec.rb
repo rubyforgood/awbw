@@ -3225,6 +3225,25 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Richmond, CA")
       end
 
+      # These charts cover one event, so program status has to be judged on that
+      # event's start date — the same verdict its dashboard shows, and what the
+      # card's note claims. The affiliation here starts after Jan 1 but before the
+      # training, so the cross-event start-of-year fallback would read it as New.
+      it "anchors the program-status breakdown on the event's start date" do
+        org = create(:organization, name: "Anchored Org")
+        create(:affiliation, organization: org, person: create(:person),
+                             title: "Facilitator", start_date: 2.weeks.from_now.to_date)
+        registration = EventRegistration.find_by!(registrant: applicant, event: event)
+        create(:event_registration_organization, event_registration: registration, organization: org)
+
+        get recipients_event_path(event), headers: { "Turbo-Frame" => "recipients_charts" }
+
+        card = Capybara.string(response.body).find("#organization-program-status", visible: :all)
+        expect(card).to have_text(:all, "Ongoing")
+        expect(card).to have_no_text(:all, "New")
+        expect(card).to have_css("i[title*='#{event.start_date.strftime('%b %-d, %Y')}']", visible: :all)
+      end
+
       it "renders the collapsible card controls and an expand/collapse-all button" do
         get recipients_event_path(event)
 
