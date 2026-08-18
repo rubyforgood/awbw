@@ -36,17 +36,15 @@
     <%= form_with url: form_submissions_path, method: :get, data: { controller: "collection", turbo_frame: "form_submissions_results" } do |f| %>
       <% if @person %><%= hidden_field_tag :person_id, @person.id %><% end %>
       <div class="mb-6 flex flex-wrap items-end gap-3">
-        <div>
-          <label class="mb-1 block text-sm font-medium text-gray-700">Form</label>
+        <div class="min-w-64">
+          <%= f.label :form_id, "Form", class: search_label_class %>
           <%= f.select :form_id,
                 options_from_collection_for_select(@forms, :id, :display_name, params[:form_id].to_i),
                 { include_blank: "All forms" },
-                class: "rounded border-gray-300 shadow-sm px-3 py-2 text-sm min-w-64" %>
+                class: search_field_class(extra: "search-select-placeholder") %>
         </div>
         <% if params[:form_id].present? %>
-          <%= link_to "Clear", form_submissions_path(person_id: @person&.id),
-                      data: { turbo_frame: "form_submissions_results" },
-                      class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-2" %>
+          <%= render "shared/search_clear", url: form_submissions_path(person_id: @person&.id) %>
         <% end %>
       </div>
     <% end %>
