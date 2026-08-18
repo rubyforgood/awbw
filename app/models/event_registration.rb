@@ -622,9 +622,16 @@ class EventRegistration < ApplicationRecord
     scholarship_requested? ? "event scholarship registration" : "event registration"
   end
 
+  # A declined award carries no tasks, so it can't hold the certificate or the
+  # readiness checklist open.
   def scholarship_tasks_met?
-    return true if scholarships.empty?
-    scholarships.all?(&:tasks_completed?)
+    live = scholarships.reject(&:agreement_declined?)
+    return true if live.empty?
+    live.all?(&:tasks_completed?)
+  end
+
+  def scholarship_declined?
+    scholarships.any?(&:agreement_declined?)
   end
 
   # Display-only: a scholarship is only *shown* as awarded once the recipient has
