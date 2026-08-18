@@ -50,6 +50,16 @@ RSpec.describe AttendeesBreakdowns do
     expect(breakdowns.ce_registrant_ids).to eq([ person.id ])
   end
 
+  it "leaves a declined award out of the recipient counts (matching EventDashboard)" do
+    scholarship = create(:scholarship, recipient: person, amount_cents: 1_000)
+    create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
+    scholarship.reload.decline_agreement!("Timing no longer works")
+
+    expect(breakdowns.scholarship_recipient_count).to eq(0)
+    expect(breakdowns.scholarship_registrant_ids).to be_empty
+    expect(breakdowns.registrant_city_breakdown.rows.sum(&:scholarship_count)).to eq(0)
+  end
+
   it "classifies program status without a per-org affiliations query" do
     people = 3.times.map do
       registrant = create(:person)
