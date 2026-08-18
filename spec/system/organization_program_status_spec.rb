@@ -41,12 +41,14 @@ RSpec.describe "Organization program status live update", type: :system do
     expect(status_chip).to have_text("Formerly active", wait: 5)
   end
 
-  it "drops to Never active when the only facilitator row is removed" do
+  it "drops to Never active when the only facilitator row is retitled to a non-facilitator" do
     visit_and_wait edit_organization_path(organization)
     expect(status_chip).to have_text("Active")
 
-    row = find("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields")
-    row.find("a", text: "Remove").click
+    # Persisted rows can't be removed inline (that's the gear's affiliation editor),
+    # so retitle the sole facilitator: the live chip counts zero facilitators.
+    title_input = find("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields input[name*='title']")
+    title_input.set("Volunteer")
 
     expect(status_chip).to have_text("Never active", wait: 5)
   end
