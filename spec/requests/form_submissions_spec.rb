@@ -56,6 +56,26 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include(CGI.escapeHTML(forms_path(anchor: "form_#{form.id}")))
       end
 
+      it "keeps the forms origin on the filter form so changing the filter doesn't lose it" do
+        form = create(:form, name: "Volunteer interest")
+        get form_submissions_path(form_id: form.id, return_to: "forms")
+
+        expect(response.body).to include('name="return_to"')
+        expect(response.body).to include('value="forms"')
+      end
+
+      it "each View link carries the origin so the Forms eyebrow survives the round trip" do
+        form = create(:form, name: "Volunteer interest")
+        submission = create(:form_submission, form: form)
+
+        get form_submissions_path(form_id: form.id, return_to: "forms"), headers: frame_headers
+
+        expect(response.body).to include(
+          CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions", origin: "forms",
+                                              person_id: submission.person_id, form_id: form.id))
+        )
+      end
+
       it "each View link carries the form filter so the trip back keeps it" do
         form = create(:form, name: "Volunteer interest")
         submission = create(:form_submission, form: form)
@@ -118,6 +138,15 @@ RSpec.describe "FormSubmissions", type: :request do
 
         expect(response.body).to include(
           CGI.escapeHTML(form_submissions_path(form_id: submission.form_id))
+        )
+      end
+
+      it "hands the index back its own origin so the Forms eyebrow is restored" do
+        get form_submission_path(submission, return_to: "form_submissions", origin: "forms",
+                                 form_id: submission.form_id)
+
+        expect(response.body).to include(
+          CGI.escapeHTML(form_submissions_path(form_id: submission.form_id, return_to: "forms"))
         )
       end
 

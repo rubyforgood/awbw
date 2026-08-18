@@ -35,6 +35,8 @@
     <%# Filter by form. Auto-submits into the results frame on change. %>
     <%= form_with url: form_submissions_path, method: :get, data: { controller: "collection", turbo_frame: "form_submissions_results" } do |f| %>
       <% if @person %><%= hidden_field_tag :person_id, @person.id %><% end %>
+      <%# Carried so a filter change keeps the eyebrow, and the View links keep their origin. %>
+      <% if params[:return_to].present? %><%= hidden_field_tag :return_to, params[:return_to] %><% end %>
       <div class="mb-6 flex flex-wrap items-end gap-3">
         <div class="min-w-64">
           <%= f.label :form_id, "Form", class: search_label_class %>
@@ -44,7 +46,7 @@
                 class: search_field_class(extra: "search-select-placeholder") %>
         </div>
         <% if params[:form_id].present? %>
-          <%= render "shared/search_clear", url: form_submissions_path(person_id: @person&.id) %>
+          <%= render "shared/search_clear", url: form_submissions_path(person_id: @person&.id, return_to: params[:return_to].presence) %>
         <% end %>
       </div>
     <% end %>

@@ -40,7 +40,8 @@
               <% unless @person %><td class="px-4 py-3"><%= submission.person&.name %></td><% end %>
               <td class="px-4 py-3 whitespace-nowrap"><%= submission.created_at.to_fs(:long) %></td>
               <td class="px-4 py-3 text-right">
-                <%= link_to "View", form_submission_path(submission, return_to: "form_submissions", person_id: submission.person_id, form_id: @form&.id), data: { turbo_frame: "_top" }, class: "text-blue-600 hover:underline" %>
+                <%# origin: where this index itself was reached from, so the detail page can hand it back and the eyebrow survives the round trip. %>
+                <%= link_to "View", form_submission_path(submission, return_to: "form_submissions", origin: params[:return_to].presence, person_id: submission.person_id, form_id: @form&.id), data: { turbo_frame: "_top" }, class: "text-blue-600 hover:underline" %>
               </td>
             </tr>
           <% end %>
