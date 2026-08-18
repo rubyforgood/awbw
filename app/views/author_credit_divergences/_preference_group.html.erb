@@ -18,7 +18,7 @@
       <tr>
         <th class="px-4 py-2 font-medium">Content</th>
         <th class="px-4 py-2 font-medium">Type</th>
-        <th class="px-4 py-2 font-medium">Renders as</th>
+        <th class="px-4 py-2 font-medium">Credit display</th>
         <th class="px-4 py-2 font-medium">Stored consent</th>
       </tr>
     </thead>
@@ -69,25 +69,24 @@
 
       <span class="pb-3 text-gray-400" aria-hidden="true">&rarr;</span>
 
-      <div>
+      <div class="pb-2">
         <%= label_tag "person_display_name_preference_#{person.id}", "Set profile to",
                       class: "block text-xs font-medium text-gray-700" %>
-        <%= select_tag "person[display_name_preference]",
-                       options_for_select(Person::DISPLAY_NAME_PREFERENCE_LABELS.invert.to_a,
-                                          suggested_display_name_preference(group)),
-                       id: "person_display_name_preference_#{person.id}",
-                       class: "mt-1 rounded-md border-gray-300 text-sm" %>
-      </div>
-
-      <div class="pb-2">
-        <label class="flex items-center gap-2 text-sm text-gray-700">
-          <%= hidden_field_tag "person[anonymous_contributions]", "0", id: nil %>
-          <%= check_box_tag "person[anonymous_contributions]", "1",
-                            group.suggested_preference == AuthorCreditable::ANONYMOUS || person.anonymous_contributions?,
-                            id: "person_anonymous_contributions_#{person.id}",
-                            class: "rounded border-gray-300" %>
-          Anonymous contributions
-        </label>
+        <div class="mt-1 flex flex-wrap items-center gap-4">
+          <%= select_tag "person[display_name_preference]",
+                         options_for_select(Person::DISPLAY_NAME_PREFERENCE_LABELS.invert.to_a,
+                                            suggested_display_name_preference(group)),
+                         id: "person_display_name_preference_#{person.id}",
+                         class: "rounded-md border-gray-300 text-sm" %>
+          <label class="flex items-center gap-2 text-sm text-gray-700">
+            <%= hidden_field_tag "person[anonymous_contributions]", "0", id: nil %>
+            <%= check_box_tag "person[anonymous_contributions]", "1",
+                              group.suggested_preference == AuthorCreditable::ANONYMOUS || person.anonymous_contributions?,
+                              id: "person_anonymous_contributions_#{person.id}",
+                              class: "rounded border-gray-300" %>
+            Anonymous contributions
+          </label>
+        </div>
         <p class="mt-0.5 text-xs text-gray-500">Hides your name on content, but not People/Profile</p>
       </div>
 

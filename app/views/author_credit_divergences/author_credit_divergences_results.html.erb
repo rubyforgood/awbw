@@ -72,9 +72,9 @@
     <section id="section-legacy" class="mb-10 scroll-mt-4">
       <h2 class="text-lg font-semibold text-gray-900 mb-1">2. Credited by a legacy name, not a person</h2>
       <p class="text-sm text-gray-600 mb-4">
-        Pre-person records whose credit comes from a free-text column
-        (<code>workshops.full_name</code>, <code>resources.legacy_author_name</code>). The name shown
-        obeys nobody's profile and links nowhere. Crediting a real person replaces it.
+        Credited by a free-text name (<code>workshops.full_name</code>,
+        <code>resources.legacy_author_name</code>) that follows no profile and links nowhere.
+        Credit a real person to replace it.
       </p>
 
       <%= render partial: "legacy_group", collection: @result.legacy, as: :group %>
@@ -90,11 +90,9 @@
     <section id="section-creator" class="mb-10 scroll-mt-4">
       <h2 class="text-lg font-semibold text-gray-900 mb-1">3. No author named, but someone entered it</h2>
       <p class="text-sm text-gray-600 mb-4">
-        These have no <code>author_id</code>, so they credit the generic
-        &ldquo;AWBW Staff&rdquo; &mdash; entering a record isn't claiming it. The person who
-        created it is the most likely author, so they're grouped and suggested here, but confirm it
-        rather than assume it. Idea records are excluded &mdash; they have no <code>author_id</code>
-        at all, so they credit generically with no author to assign.
+        No <code>author_id</code>, so they credit the generic &ldquo;AWBW Staff&rdquo; &mdash; entering
+        a record isn't claiming it. Grouped under whoever created them, the likeliest author to assign
+        (but confirm it). Idea records are excluded: they never name an author.
       </p>
 
       <% if @result.creator.empty? %>
@@ -114,7 +112,7 @@
               </div>
               <%= render "unlinked_table",
                     rows: assignable_rows(group.records, suggested_author: group.person),
-                    name_header: "Renders as" %>
+                    name_header: "Credit display" %>
             </div>
           <% end %>
         </div>
@@ -134,7 +132,7 @@
               message: "Nothing unattributed. Every record has someone to credit.",
               cleanup: "Ask your developers to remove the generic placeholder names, since no record falls back to one any more." %>
       <% else %>
-        <%= render "unlinked_table", rows: assignable_rows(@result.unattributed), name_header: "Renders as" %>
+        <%= render "unlinked_table", rows: assignable_rows(@result.unattributed), name_header: "Credit display" %>
       <% end %>
     </section>
   <% end %>

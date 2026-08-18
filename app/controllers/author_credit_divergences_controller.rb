@@ -6,9 +6,7 @@ class AuthorCreditDivergencesController < ApplicationController
   def index
     return unless turbo_frame_request?
 
-    @result = AuthorCreditDivergenceQuery.new(**filters.symbolize_keys).call
-    @reconciled_people = Person.where.not(author_credit_reconciled_at: nil)
-                               .order(author_credit_reconciled_at: :desc)
+    load_divergences
     render :author_credit_divergences_results
   end
 
@@ -69,11 +67,17 @@ class AuthorCreditDivergencesController < ApplicationController
   private
 
   # Re-render the frame over Turbo so a save doesn't flip the whole page.
+  def load_divergences
+    @result = AuthorCreditDivergenceQuery.new(**filters.symbolize_keys).call
+    @reconciled_people = Person.where.not(author_credit_reconciled_at: nil)
+                               .order(author_credit_reconciled_at: :desc)
+  end
+
   def render_divergence_change(message, type)
     respond_to do |format|
       format.turbo_stream do
         flash.now[type] = message
-        @result = AuthorCreditDivergenceQuery.new(**filters.symbolize_keys).call
+        load_divergences
         render :divergence_change
       end
       format.html { redirect_to author_credit_divergences_path(filters), flash: { type => message } }
