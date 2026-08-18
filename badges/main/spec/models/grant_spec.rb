@@ -55,6 +55,12 @@ RSpec.describe Grant, type: :model do
     end
   end
 
+  describe "in_memoriam" do
+    it "defaults to false" do
+      expect(Grant.new.in_memoriam).to be(false)
+    end
+  end
+
   describe "validations" do
     it { is_expected.to validate_presence_of(:name) }
     it { is_expected.to validate_numericality_of(:amount_cents).is_greater_than_or_equal_to(0) }

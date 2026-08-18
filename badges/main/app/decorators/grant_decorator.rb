@@ -25,6 +25,16 @@ class GrantDecorator < ApplicationDecorator
     object.funds_allocation_deadline&.strftime("%B %-d, %Y") || "—"
   end
 
+  # Compact deadline for the index — abbreviated month and day (e.g. "Aug 17"),
+  # with the full date (year included) on hover. Dropping the year from the cell
+  # keeps the column narrow so the grant-name column gets more width.
+  def funds_allocation_deadline_compact
+    date = object.funds_allocation_deadline
+    return "—" unless date
+
+    h.tag.span(date.strftime("%b %-d"), title: date.strftime("%B %-d, %Y"), class: "cursor-help")
+  end
+
   def funds_received_on
     object.funds_received_on&.strftime("%B %-d, %Y") || "—"
   end
@@ -33,14 +43,25 @@ class GrantDecorator < ApplicationDecorator
     object.remaining_cents <= 0
   end
 
-  # Amber pill flagging a grant as a Legacy scholarship (funded through planned
+  # Amber pill flagging a grant as a Legacy Circle scholarship (funded through planned
   # giving). Renders nothing for ordinary grants, so callers can inline it.
   def legacy_scholarship_badge
     return unless object.planned_giving?
 
-    h.tag.span("Legacy scholarship",
-               class: "inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800",
-               title: "Funded through planned giving")
+    h.tag.span("Legacy",
+               class: "inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800",
+               title: "Legacy Circle scholarship — funded through planned giving")
+  end
+
+  # Rose pill flagging a legacy scholarship given in memory of a loved one — a
+  # Healing HeARTs Legacy Circle: In Memoriam gift. Renders alongside the legacy
+  # scholarship badge; nothing for ordinary grants.
+  def in_memoriam_badge
+    return unless object.in_memoriam?
+
+    h.tag.span("Memoriam",
+               class: "inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-800",
+               title: "Legacy Circle in memoriam — given in memory of a loved one")
   end
 
   # Whole-number percentage of the grant awarded in scholarships, clamped to

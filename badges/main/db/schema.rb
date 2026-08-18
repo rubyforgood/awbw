@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_15_114533) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_17_115845) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -732,6 +732,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_114533) do
     t.string "funder_type", null: false
     t.date "funds_allocation_deadline"
     t.date "funds_received_on"
+    t.boolean "in_memoriam", default: false, null: false
     t.string "name", null: false
     t.boolean "planned_giving", default: false, null: false
     t.text "tasks"
