@@ -19,6 +19,7 @@ class Form < ApplicationRecord
 
   scope :standalone, -> { where(owner_id: nil, owner_type: nil) }
   scope :published, -> { where(published: true) }
+  scope :not_event_connected, -> { where.missing(:event_forms) }
 
   before_validation :normalize_slug
 
@@ -26,6 +27,7 @@ class Form < ApplicationRecord
   validates :slug, format: { with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/,
     message: "may only contain lowercase letters, numbers, and hyphens" }, allow_blank: true
   validate :published_form_has_slug
+  validate :event_form_not_published
 
   def display_name
     name.presence || (owner ? "#{owner.try(:name)} Form" : "New Form")
@@ -35,9 +37,14 @@ class Form < ApplicationRecord
     owner_id.nil? && owner_type.nil?
   end
 
-  # Gates the public /f/:slug endpoint (controller + FormPolicy#public_show?).
+  def event_connected?
+    event_forms.exists?
+  end
+
+  # Gates the public /f/:slug endpoint (controller + FormPolicy#public_show?). An
+  # event-connected form stays tied to its event and is never offered publicly.
   def publicly_fillable?
-    standalone? && published? && slug.present?
+    standalone? && !event_connected? && published? && slug.present?
   end
 
   private
@@ -55,5 +62,11 @@ class Form < ApplicationRecord
     return unless published? && slug.blank?
 
     errors.add(:slug, "is required to publish a form")
+  end
+
+  def event_form_not_published
+    return unless published? && event_connected?
+
+    errors.add(:published, "can't be enabled for a form connected to an event")
   end
 end

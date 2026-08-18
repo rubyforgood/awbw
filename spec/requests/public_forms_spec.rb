@@ -41,6 +41,12 @@ RSpec.describe "PublicForms", type: :request do
       expect(response).to have_http_status(:not_found)
     end
 
+    it "404s a form connected to an event even if published" do
+      EventForm.create!(form: form, event: create(:event), role: "registration")
+      get public_form_path(form.slug)
+      expect(response).to have_http_status(:not_found)
+    end
+
     it "404s an unknown slug" do
       get public_form_path("nope")
       expect(response).to have_http_status(:not_found)
