@@ -76,14 +76,17 @@
                        class: "mt-1 rounded-md border-gray-300 text-sm" %>
       </div>
 
-      <label class="flex items-center gap-2 text-sm text-gray-700 pb-2">
-        <%= hidden_field_tag "person[anonymous_contributions]", "0", id: nil %>
-        <%= check_box_tag "person[anonymous_contributions]", "1",
-                          group.suggested_preference == AuthorCreditable::ANONYMOUS || person.anonymous_contributions?,
-                          id: "person_anonymous_contributions_#{person.id}",
-                          class: "rounded border-gray-300" %>
-        Anonymous contributions
-      </label>
+      <div class="pb-2">
+        <label class="flex items-center gap-2 text-sm text-gray-700">
+          <%= hidden_field_tag "person[anonymous_contributions]", "0", id: nil %>
+          <%= check_box_tag "person[anonymous_contributions]", "1",
+                            group.suggested_preference == AuthorCreditable::ANONYMOUS || person.anonymous_contributions?,
+                            id: "person_anonymous_contributions_#{person.id}",
+                            class: "rounded border-gray-300" %>
+          Anonymous contributions
+        </label>
+        <p class="mt-0.5 text-xs text-gray-500">Hides your name on content, but not People/Profile</p>
+      </div>
 
       <%= submit_tag "Apply to profile",
                      class: "rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 cursor-pointer" %>
