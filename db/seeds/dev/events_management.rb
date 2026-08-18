@@ -306,7 +306,12 @@ end
 # and carries the free-form qualifiers (hint_dates / hint_times / hint_registration_cost)
 # so the seeded data demonstrates those grey parentheticals on its registration
 # page. force-set on re-seed, mirroring the date/cost refresh above.
+# rhino_description is the event show page's rich content, captured to an HTML file
+# so re-seeding reproduces it deterministically (instead of the create-only random
+# Faker). Its images are RemoteImage references to portal.awbw.org — no local blobs.
+flagship_description_html = File.read(Rails.root.join("db/seeds/dev/files/awbw_facilitator_training_description.html"))
 Event.find_by(title: "AWBW Facilitator Training")&.update!(
+  rhino_description: flagship_description_html,
   videoconference_url: "https://awbw-org.zoom.us/j/88285411273",
   videoconference_label: "Zoom",
   videoconference_passcode: "awbwmarch",
