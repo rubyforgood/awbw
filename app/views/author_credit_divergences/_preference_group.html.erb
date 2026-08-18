@@ -2,15 +2,9 @@
 <% highlighted = params[:highlight].to_s == person.id.to_s %>
 <div id="<%= dom_id(person, :divergence) %>" class="rounded-lg border shadow-sm scroll-mt-4 transition-colors duration-150 <%= highlighted ? "border-yellow-400 bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "border-gray-200 bg-white" %>">
   <div class="border-b border-gray-200 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
-    <div>
-      <%= link_to person.full_name, person_path(person),
-                  target: "_blank", rel: "noopener", title: "Opens in a new tab",
-                  class: "font-semibold text-gray-900 hover:underline" %>
-      <span class="text-sm text-gray-500">
-        &mdash; profile currently credits as
-        <strong><%= AuthorCreditable::ADMIN_FORM_OPTIONS.key(person.effective_author_credit_preference) %></strong>
-      </span>
-    </div>
+    <%= link_to person.full_name, person_path(person),
+                target: "_blank", rel: "noopener", title: "Opens in a new tab",
+                class: "font-semibold text-gray-900 hover:underline" %>
     <% if person.author_credit_reconciled_at.present? %>
       <%= render "shared/badge",
             label: "Reconciled #{person.author_credit_reconciled_at.strftime('%b %-d, %Y')}",
@@ -66,6 +60,17 @@
       <%= hidden_field_tag :id, person.id, id: nil %>
       <%= render "filter_fields" %>
 
+      <%# Read-only current state on the left, so the row reads current → new. Only
+          the fields to its right are applied. %>
+      <div class="pb-2">
+        <span class="block text-xs font-medium text-gray-500">Currently credits as</span>
+        <span class="mt-1 block text-sm font-medium text-gray-800">
+          <%= AuthorCreditable::ADMIN_FORM_OPTIONS.key(person.effective_author_credit_preference) %>
+        </span>
+      </div>
+
+      <span class="pb-3 text-gray-400" aria-hidden="true">&rarr;</span>
+
       <div>
         <%= label_tag "person_display_name_preference_#{person.id}", "Set profile to",
                       class: "block text-xs font-medium text-gray-700" %>
@@ -74,6 +79,7 @@
                                           suggested_display_name_preference(group)),
                        id: "person_display_name_preference_#{person.id}",
                        class: "mt-1 rounded-md border-gray-300 text-sm" %>
+        <p class="mt-0.5 text-xs text-gray-500">Suggested: <strong><%= AuthorCreditable::ADMIN_FORM_OPTIONS.key(group.suggested_preference) %></strong></p>
       </div>
 
       <div class="pb-2">
@@ -90,9 +96,6 @@
 
       <%= submit_tag "Apply to profile",
                      class: "rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 cursor-pointer" %>
-      <span class="basis-full text-xs text-gray-500">
-        Suggested: <strong><%= AuthorCreditable::ADMIN_FORM_OPTIONS.key(group.suggested_preference) %></strong>
-      </span>
     <% end %>
   </div>
 </div>
