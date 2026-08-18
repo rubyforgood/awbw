@@ -22,7 +22,7 @@
         This <strong>deletes</strong> those. Job affiliations are left untouched.
       </p>
     <% end %>
-    <p>Every facilitator affiliation for a linked organization is reconciled against attendance — including hand-entered ones. Review each row and uncheck any you want to leave as-is.</p>
+    <p>Every facilitator affiliation for a linked organization is reconciled against attendance — including hand-entered ones. Review each row and pick an outcome: the suggested action is preselected, and every row also has a leave-as-is option.</p>
     <% if @event.affiliations_reconciled_at %>
       <p class="text-gray-500">Last reconciled <%= @event.affiliations_reconciled_at.to_fs(:long) %>.</p>
     <% end %>

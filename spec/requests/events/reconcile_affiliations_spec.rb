@@ -86,6 +86,17 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
   end
 
   describe "toggling attendance from the reconcile page" do
+    it "opts the attendance form out of Turbo, so the redirect runs and the row's actions re-render" do
+      person, _affiliation = registrant_with_affiliation(status: "no_show")
+      registration = person.event_registrations.first
+
+      get reconcile_affiliations_event_path(event)
+
+      form = Nokogiri::HTML(response.body).at_css("form[action*='/event_registrations/#{registration.id}']")
+      expect(form["data-turbo"]).to eq("false")
+      expect(form["action"]).to include("return_to=reconcile_affiliations")
+    end
+
     it "stays on the reconcile page with a flash instead of leaving for the roster" do
       person, _affiliation = registrant_with_affiliation(status: "no_show")
       registration = person.event_registrations.first
@@ -128,6 +139,20 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       expect(response).to redirect_to(registrants_event_path(event))
       expect(affiliation.reload).not_to be_active
       expect(event.reload.affiliations_reconciled_at).to be_present
+    end
+
+    it "deactivates a no-show whose one-day training started and ended today" do
+      same_day = create(:event, facilitator_training: true, start_date: 3.hours.ago,
+                        end_date: 1.hour.ago, registration_close_date: 4.hours.ago)
+      person = create(:person)
+      reg = create(:event_registration, event: same_day, registrant: person, status: "no_show")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+      affiliation = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+                           start_date: Date.current, event_registration: reg)
+
+      post perform_reconcile_affiliations_event_path(same_day), params: { outcome: { "aff:#{affiliation.id}" => "deactivate" } }
+
+      expect(affiliation.reload).not_to be_active
     end
 
     it "spares a row set to keep" do
