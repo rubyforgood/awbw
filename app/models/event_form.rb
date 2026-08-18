@@ -11,4 +11,14 @@ class EventForm < ApplicationRecord
   scope :scholarship, -> { where(role: "scholarship") }
   scope :bulk_payment, -> { where(role: "bulk_payment") }
   scope :continuing_education, -> { where(role: "continuing_education") }
+
+  after_create :unpublish_public_form
+
+  private
+
+  # An event-connected form is never offered at a public link, so linking a
+  # published standalone form to an event retires its public form.
+  def unpublish_public_form
+    form.update_column(:published, false) if form.published?
+  end
 end

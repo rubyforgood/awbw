@@ -29,11 +29,11 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include("Event form")
       end
 
-      it "shows both the public link and event-form chips when a form is both" do
+      it "shows only the event-form chip, not a public link, when a published form is connected to an event" do
         form = create(:form, :standalone, name: "Dual Form", slug: "dual", published: true)
         EventForm.create!(form: form, event: create(:event), role: "registration")
         get forms_path
-        expect(response.body).to include("/f/dual")
+        expect(response.body).not_to include("/f/dual")
         expect(response.body).to include("Event form")
       end
 
@@ -296,6 +296,20 @@ RSpec.describe "Forms", type: :request do
 
       expect(response.body).to include('data-controller="expand-all"')
       expect(response.body).to include("Expand all")
+    end
+
+    it "offers the public-link section for a standalone form with no events" do
+      form = create(:form, :standalone)
+      get edit_form_path(form)
+      expect(response.body).to include("Publish this form at a public link")
+    end
+
+    it "hides the public-link section for a form connected to an event" do
+      form = create(:form, :standalone, slug: "reg")
+      create(:event_form, form: form, event: create(:event))
+      get edit_form_path(form)
+      expect(response.body).not_to include("Publish this form at a public link")
+      expect(response.body).to include("filled out through their event")
     end
 
     it "renders the form header section with a textarea for HTML" do

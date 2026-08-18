@@ -101,7 +101,17 @@
     </div>
 
     <% if @form.standalone? %>
-      <%# Only a standalone form can be published publicly; event forms use their event. %>
+      <%# Only a standalone form with no event connection can be published publicly;
+          an event-connected form stays tied to its event. %>
+      <% if @form.event_connected? %>
+        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div class="flex items-center gap-2.5 border-b border-purple-300 bg-purple-100 px-6 py-3">
+            <i class="fa-solid fa-link text-purple-700"></i>
+            <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Public form</h2>
+          </div>
+          <p class="p-6 text-sm text-gray-600">This form is connected to an event, so it can't be published at a public link — event-connected forms are filled out through their event.</p>
+        </div>
+      <% else %>
       <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div class="flex items-center gap-2.5 border-b border-purple-300 bg-purple-100 px-6 py-3">
           <i class="fa-solid fa-link text-purple-700"></i>
@@ -112,7 +122,7 @@
             <%= f.check_box :published, class: "rounded border-gray-300 text-purple-600" %>
             <span class="text-sm text-gray-800">Publish this form at a public link (anyone can fill it out, no account needed)</span>
           </label>
-          <p class="text-xs text-gray-500">Only affects the public link below — this form keeps working in event registration whether or not it's published.</p>
+          <p class="text-xs text-gray-500">Publishes the form at the public link below. A form connected to an event can't be published — event forms are filled out through their event.</p>
 
           <div>
             <label class="mb-1 block text-sm font-medium text-gray-700">Public link address</label>
@@ -134,6 +144,7 @@
           <% end %>
         </div>
       </div>
+      <% end %>
     <% end %>
 
     <%# Optional HTML intro rendered under the title on the form's public pages %>

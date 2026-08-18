@@ -46,9 +46,9 @@ class PublicFormsController < ApplicationController
 
   private
 
-  # Scoped so a draft, an event form, or an unknown slug 404s.
+  # Scoped so a draft, an event-connected form, or an unknown slug 404s.
   def set_form
-    @form = Form.standalone.published.find_by!(slug: params[:slug])
+    @form = Form.standalone.published.not_event_connected.find_by!(slug: params[:slug])
   end
 
   def ordered_fields

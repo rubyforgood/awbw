@@ -32,6 +32,15 @@ RSpec.describe EventForm, type: :model do
     end
   end
 
+  describe "linking a published form to an event" do
+    it "retires the form's public link" do
+      form = create(:form, slug: "apply", published: true)
+      create(:event_form, form: form)
+      expect(form.reload.published?).to be(false)
+      expect(form).not_to be_publicly_fillable
+    end
+  end
+
   describe "scopes" do
     let!(:registration) { create(:event_form, role: "registration") }
     let!(:scholarship) { create(:event_form, role: "scholarship") }

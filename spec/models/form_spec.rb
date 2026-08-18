@@ -119,6 +119,21 @@ RSpec.describe Form do
         form.update_column(:published, true)
         expect(form).not_to be_publicly_fillable
       end
+
+      it 'is false when connected to an event' do
+        form = create(:form, slug: 'apply', published: true)
+        create(:event_form, form: form)
+        expect(form.reload).not_to be_publicly_fillable
+      end
+    end
+
+    it 'rejects publishing a form connected to an event' do
+      form = create(:form, slug: 'apply')
+      create(:event_form, form: form)
+      form.published = true
+
+      expect(form).not_to be_valid
+      expect(form.errors[:published]).to include("can't be enabled for a form connected to an event")
     end
 
     describe '.published scope' do
