@@ -5,9 +5,7 @@
 <tr class="relative hover:bg-fuchsia-50">
   <td class="px-4 py-2 whitespace-nowrap text-sm">
     <%= link_to scholarship.recipient_name, edit_scholarship_path(scholarship), class: "font-medium text-blue-700 hover:text-blue-900 hover:underline after:absolute after:inset-0 after:content-['']" %>
-    <% if scholarship.agreement_declined? %>
-      <%= render "shared/badge", label: "Declined", classes: "bg-red-50 text-red-700 border-red-200", icon: "fa-solid fa-circle-xmark text-xs" %>
-    <% end %>
+    <%= scholarship.agreement_status_badge %>
   </td>
   <td class="px-4 py-2 text-sm text-gray-900"><%= scholarship.program_name %></td>
   <td class="px-4 py-2 text-sm text-gray-600 whitespace-nowrap"><%= scholarship.program_location %></td>

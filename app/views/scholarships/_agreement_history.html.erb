@@ -3,7 +3,7 @@
 <% admin = local_assigns.fetch(:admin, false) %>
 <% responses = scholarship.agreement_responses.to_a %>
 <% if responses.any? %>
-  <% status_classes = { "accepted" => "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200", "declined" => "bg-red-50 text-red-700 border-red-200", "pending" => "bg-amber-50 text-amber-700 border-amber-200" } %>
+  <% status_classes = ScholarshipDecorator::AGREEMENT_STATUS_CLASSES %>
   <details class="mt-6 overflow-hidden rounded-xl border shadow-sm <%= admin ? "border-sky-200 bg-sky-50" : "border-gray-200 bg-white" %>">
     <summary class="flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-700 [&::-webkit-details-marker]:hidden">
       <i class="fa-solid fa-clock-rotate-left text-gray-400"></i>
