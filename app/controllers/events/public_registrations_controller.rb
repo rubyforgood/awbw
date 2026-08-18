@@ -23,7 +23,7 @@ module Events
     def create
       authorize! :public_registration, to: :create?
 
-      if params[:public_registration][:website_url].present?
+      if Honeypot.tripped?(params, :public_registration)
         redirect_to new_event_public_registration_path(@event)
         return
       end

@@ -13,8 +13,8 @@ class PublicFormsController < ApplicationController
   def create
     authorize! @form, to: :public_show?
 
-    # Honeypot — a bot that fills the hidden field is silently bounced.
-    if params.dig(:public_registration, :website_url).present?
+    # A bot that fills the hidden field is silently bounced.
+    if Honeypot.tripped?(params, :public_registration)
       redirect_to public_form_path(@form.slug)
       return
     end

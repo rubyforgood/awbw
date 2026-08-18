@@ -29,7 +29,7 @@ class ContactUsController < ApplicationController
     from = "story_share" if params[:from] == "story_share"
     return_to = params[:return_to].presence
 
-    if params[:contact_us][:website_url].present?
+    if Honeypot.tripped?(params, :contact_us)
       redirect_to contact_us_path(from: from, return_to: return_to)
       return
     end

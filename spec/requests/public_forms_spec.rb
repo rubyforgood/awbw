@@ -70,7 +70,7 @@ RSpec.describe "PublicForms", type: :request do
     end
 
     it "silently bounces a honeypot-tripping bot without recording anything" do
-      params = submission_params.deep_merge(public_registration: { website_url: "http://spam.example" })
+      params = submission_params.deep_merge(public_registration: { Honeypot::FIELD_NAME => "http://spam.example" })
 
       expect { post public_form_path(form.slug), params: params }
         .not_to change(FormSubmission, :count)

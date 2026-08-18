@@ -190,11 +190,7 @@
                 <input type="hidden" name="contact_us[from]" value="<%= @user.email %>">
                 <input type="hidden" name="contact_us[organization]" value="<%= @user.person&.primary_organization&.name || '' %>">
               <% end %>
-              <!-- Honeypot -->
-              <div class="absolute top-0 left-0 -z-10 h-0 w-0 opacity-0" aria-hidden="true">
-                <label for="website_url">Website</label>
-                <input type="text" name="contact_us[website_url]" id="website_url" tabindex="-1" autocomplete="off">
-              </div>
+              <%= render "shared/honeypot", scope: "contact_us" %>
               <!-- Subject -->
               <% if @from_story_share %>
                 <!-- Preset picker posts straight through as the subject -->
