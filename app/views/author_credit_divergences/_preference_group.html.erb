@@ -58,7 +58,7 @@
       <%# Read-only current state on the left, so the row reads current → new. Only
           the fields to its right are applied. %>
       <div class="pb-2 whitespace-nowrap sm:min-w-[11rem]">
-        <span class="block text-xs font-medium text-gray-500">Currently credits as</span>
+        <span class="block text-xs font-medium text-gray-500">Current Display name preference</span>
         <span class="mt-1 block text-sm font-medium text-gray-800">
           <%= Person::DISPLAY_NAME_PREFERENCE_LABELS[person.display_name_preference.presence || "full_name"] %>
         </span>
