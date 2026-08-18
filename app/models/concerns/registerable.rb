@@ -42,6 +42,13 @@ module Registerable
     [ cost_cents.to_i - allocations_sum, 0 ].max
   end
 
+  # What would still be owed if one source's allocation were taken away — e.g. a
+  # scholarship the recipient hasn't accepted yet, which is already allocated.
+  def remaining_cost_without(source)
+    withdrawn = allocations.to_a.select { |a| a.source == source }.sum(&:amount)
+    [ cost_cents.to_i - (allocations_sum - withdrawn), 0 ].max
+  end
+
   # A free (or zero-cost) registration is paid by definition.
   def paid_in_full?
     return true if cost_cents.to_i <= 0

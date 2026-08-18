@@ -46,14 +46,21 @@
         <% end %>
       </div>
 
-      <%# What the registrant still owes with this scholarship applied. %>
+      <%# What the registrant owes. The award is allocated before it's accepted, so
+          while the agreement is pending this frames the balance as the choice the
+          buttons below are asking for rather than asserting the accepted one. %>
       <% if @event.cost_cents.to_i.positive? && !@scholarship.agreement_declined? %>
         <% owed = @event_registration.remaining_cost %>
-        <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
+        <% undecided = !@scholarship.agreement_signed? %>
+        <% owed_if_declined = undecided ? @event_registration.remaining_cost_without(@scholarship) : owed %>
+        <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-700">
           <% if owed.zero? %>
-            <p class="text-sm text-gray-700">With this scholarship applied, your <%= dollars_from_cents(@event.cost_cents) %> registration is fully covered — you'll owe <strong>nothing</strong>.</p>
+            <p><% if undecided %>Accept and your<% else %>Your<% end %> <%= dollars_from_cents(@event.cost_cents) %> registration is fully covered — you'll owe <strong>nothing</strong>.</p>
           <% else %>
-            <p class="text-sm text-gray-700">With this scholarship applied, you'll owe <strong><%= dollars_from_cents(owed) %></strong> toward the <%= dollars_from_cents(@event.cost_cents) %> registration cost.</p>
+            <p><% if undecided %>Accept and you'll<% else %>You'll<% end %> owe <strong><%= dollars_from_cents(owed) %></strong> of the <%= dollars_from_cents(@event.cost_cents) %> registration cost.</p>
+          <% end %>
+          <% if owed_if_declined > owed %>
+            <p class="mt-1">Decline and <strong><%= dollars_from_cents(owed_if_declined) %></strong> is due.</p>
           <% end %>
         </div>
       <% end %>

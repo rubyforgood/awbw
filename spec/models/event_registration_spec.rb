@@ -763,6 +763,37 @@ RSpec.describe EventRegistration, type: :model do
       create(:allocation, source: scholarship, allocatable: reg, amount: 1099)
       expect(reg.scholarship_tasks_met?).to be true
     end
+
+    it "ignores a declined award, which carries no tasks" do
+      reg = create(:event_registration)
+      scholarship = create(:scholarship, recipient: reg.registrant, tasks_completed: false, amount_cents: 1099)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 1099)
+      scholarship.reload.decline_agreement!("Timing no longer works")
+
+      expect(reg.reload.scholarship_tasks_met?).to be true
+      expect(reg.scholarship_declined?).to be true
+    end
+  end
+
+  describe "#remaining_cost_without" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:reg) { create(:event_registration, event: event) }
+    let(:scholarship) { create(:scholarship, recipient: reg.registrant, amount_cents: 5_000) }
+
+    before { create(:allocation, source: scholarship, allocatable: reg, amount: 5_000) }
+
+    it "adds the source's allocation back onto the balance" do
+      expect(reg.reload.remaining_cost).to eq(5_000)
+      expect(reg.remaining_cost_without(scholarship)).to eq(10_000)
+    end
+
+    it "leaves the other allocations in place" do
+      create(:allocation, source: create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000),
+                          allocatable: reg, amount: 5_000)
+
+      expect(reg.reload.remaining_cost).to eq(0)
+      expect(reg.remaining_cost_without(scholarship)).to eq(5_000)
+    end
   end
 
   describe "#scholarship_awarded?" do

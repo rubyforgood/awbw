@@ -570,12 +570,33 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(response.body).not_to include("Pending agreement")
       end
 
-      it "shows the amount still owed after this scholarship (event cost minus allocations)" do
+      it "frames the balance as the accept/decline choice while unsigned" do
         get registration_scholarship_path(registration.slug)
 
-        # $100 event cost − $50 scholarship allocation = $50 still owed.
-        expect(response.body).to include("you'll owe")
+        # $100 event cost − $50 scholarship allocation = $50 owed if accepted,
+        # the full $100 if declined.
+        expect(response.body).to include("Accept and you'll owe")
         expect(response.body).to include("$50")
+        expect(response.body).to match(/Decline and\s*<strong>\$100<\/strong> is due/)
+      end
+
+      it "states the balance plainly once the agreement is signed" do
+        scholarship.update!(agreement_signed: true)
+        get registration_scholarship_path(registration.slug)
+
+        expect(response.body).to match(/You'll owe\s*<strong>\$50<\/strong>/)
+        expect(response.body).not_to include("Accept and you'll owe")
+        expect(response.body).not_to include("Decline and")
+      end
+
+      it "prices the decline off this award alone, not the whole registration" do
+        create(:allocation, source: create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000),
+                            allocatable: registration, amount: 5_000)
+        get registration_scholarship_path(registration.slug)
+
+        # The $50 already paid stays paid, so declining leaves $50 due, not $100.
+        expect(response.body).to include("registration is fully covered")
+        expect(response.body).to match(/Decline and\s*<strong>\$50<\/strong> is due/)
       end
 
       it "offers a Decline option with a reason box while unsigned" do
