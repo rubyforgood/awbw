@@ -20,6 +20,8 @@ class Scholarship < ApplicationRecord
   # Allocation is zero while declined, else the amount — keeps allocation-based totals correct.
   after_update :sync_allocation_amount, if: -> { saved_change_to_amount_cents? || saved_change_to_agreement_response_status? }
   after_update :log_agreement_response, if: -> { saved_change_to_agreement_response_status? }
+  # An award can be created with the agreement toggle already on, which the update callback never sees.
+  after_create :log_agreement_response, unless: :agreement_pending?
   after_create_commit :flag_event_registration_scholarship_requested
 
   scope :completed, -> { where(tasks_completed: true) }

@@ -140,6 +140,18 @@ RSpec.describe Scholarship, type: :model do
 
       expect { scholarship.accept_agreement! }.not_to change { scholarship.agreement_responses.count }
     end
+
+    it "logs a response when the award is created already signed (the admin form's toggle)" do
+      scholarship = create(:scholarship, agreement_signed: true)
+
+      expect(scholarship.agreement_responses.count).to eq(1)
+      expect(scholarship.latest_agreement_response).to have_attributes(status: "accepted")
+      expect(scholarship.latest_agreement_response.responded_at).to be_present
+    end
+
+    it "logs nothing when the award is created pending" do
+      expect(create(:scholarship).agreement_responses.count).to eq(0)
+    end
   end
 
   describe "declining" do
