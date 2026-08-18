@@ -932,6 +932,37 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(EventRegistration.exists?(destination.id)).to be(true)
           expect(destination.reload.transferred_from_registration).to be_nil
         end
+
+        it "undoes a collapsed chain, re-merging the relocated CE back onto the origin" do
+          person = create(:person)
+          license = create(:professional_license, person: person)
+          origin = create(:event, cost_cents: 10_000)
+          mid = create(:event, published: true, cost_cents: 10_000)
+          final = create(:event, published: true, cost_cents: 10_000)
+
+          a = create(:event_registration, registrant: person, event: origin, status: "attended")
+          create(:continuing_education_registration, event_registration: a,
+            professional_license: license, hours: 6, cost_cents: 10_000)
+          a.update!(status: "transferred_out")
+
+          # A → B (splits CE), then B → C which collapses to A → C, dropping B.
+          post process_transfer_event_registration_path(a), params: { destination_event_id: mid.id }
+          b = EventRegistration.find_by(registrant: person, event: mid)
+          b.update!(status: "transferred_out")
+          post process_transfer_event_registration_path(b), params: { destination_event_id: final.id }
+          c = EventRegistration.find_by(registrant: person, event: final)
+          expect(EventRegistration.exists?(b.id)).to be(false)
+          expect(c.transferred_from_registration).to eq(a)
+
+          patch revert_transfer_event_registration_path(a)
+
+          a.reload
+          expect(a.status).to eq("attended")
+          expect(c.reload.transferred_from_registration).to be_nil
+          # The 6 relocated hours land back on the origin, with nothing left on C.
+          expect(a.continuing_education_registrations.sum(:hours)).to eq(6)
+          expect(ContinuingEducationRegistration.where(event_registration_id: c.id).sum(:hours)).to eq(0)
+        end
       end
     end
 
