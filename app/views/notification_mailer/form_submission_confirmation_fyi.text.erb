@@ -1,0 +1,11 @@
+New form submission
+
+<%= @person.full_name %> (<%= @person.preferred_email %>)
+<%= @form.display_name %> · submitted on <%= @submission.created_at
+                 .in_time_zone("Pacific Time (US & Canada)")
+                 .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+<% @answers.each do |answer| %><% next if answer.submitted_answer.blank? %><%= answer.question_name_when_answered.presence || answer.form_field&.name %>: <%= answer.submitted_answer %>
+<% end %>
+View submission: <%= form_submission_url(@submission) %>
+View profile: <%= person_url(@person) %>

@@ -1,0 +1,21 @@
+<% content_for(:page_bg_class, "public") %>
+
+<div class="mx-auto max-w-2xl px-4 pt-10 pb-16">
+  <div class="mb-8 text-center">
+    <%= image_tag("logo-with-tagline.png", alt: "A Window Between Worlds — art transforming trauma", class: "mx-auto mb-6 block h-12 w-auto") %>
+  </div>
+
+  <div class="overflow-hidden rounded-2xl bg-white px-6 py-12 text-center shadow-xl ring-1 ring-black/5 sm:px-10">
+    <span class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600">
+      <i class="fa-solid fa-circle-check text-3xl" aria-hidden="true"></i>
+    </span>
+    <h1 class="mb-2 text-2xl font-bold text-gray-900">Thank you!</h1>
+    <p class="text-gray-600">
+      Your response to <span class="font-semibold text-gray-900"><%= @form.display_name %></span> has been submitted.
+    </p>
+    <div class="mt-8">
+      <%= link_to "Submit another response", public_form_path(@form.slug),
+                  class: "inline-flex items-center gap-2 rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+    </div>
+  </div>
+</div>

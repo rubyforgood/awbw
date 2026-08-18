@@ -1,11 +1,11 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:forms) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex items-start justify-between mb-6">
+<div class="mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:forms) %> rounded-xl border border-gray-200 p-6 shadow">
+  <div class="mb-6 flex items-start justify-between">
     <div class="pr-6">
-      <h1 class="text-2xl font-semibold mb-2">Forms</h1>
-      <p class="text-gray-600 max-w-2xl">Reusable forms for event registrations and other submissions</p>
+      <h1 class="mb-2 text-2xl font-semibold">Forms</h1>
+      <p class="max-w-2xl text-gray-600">Reusable forms for event registrations and other submissions</p>
     </div>
-    <div class="text-right text-end">
+    <div class="text-end text-right">
       <% if allowed_to?(:new?, Form) %>
         <div class="admin-only bg-blue-100">
           <%= link_to "New form",
@@ -16,20 +16,21 @@
     </div>
   </div>
 
-  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+  <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
     <table class="w-full border-collapse">
       <thead class="bg-gray-100">
         <tr>
           <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
           <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Fields</th>
           <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Events</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Availability</th>
           <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Submissions</th>
           <th class="px-4 py-2"></th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200">
         <% @forms.each do |form| %>
-          <tr class="hover:bg-gray-50">
+          <tr id="form_<%= form.id %>" class="scroll-mt-24 hover:bg-gray-50">
             <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= form.display_name %></td>
             <td class="px-4 py-2 text-sm text-gray-600"><%= form.form_fields.size %></td>
             <td class="px-4 py-2 text-sm text-gray-600">
@@ -39,14 +40,38 @@
                 0
               <% end %>
             </td>
-            <td class="px-4 py-2 text-sm text-gray-600"><%= form.form_submissions.size %></td>
-            <td class="px-4 py-2 text-right text-sm space-x-3">
+            <%# A form can be both a public link and an event form — the two are
+                independent, so show a chip for each that applies. %>
+            <td class="px-4 py-2 text-sm text-gray-600">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <% if form.publicly_fillable? %>
+                  <%= link_to public_form_path(form.slug), target: "_blank", rel: "noopener",
+                              class: "inline-flex items-center gap-1.5 rounded-md bg-green-50 px-2 py-0.5 text-green-700 font-medium hover:bg-green-100" do %>
+                    <i class="fa-solid fa-link text-xs"></i>/f/<%= form.slug %>
+                  <% end %>
+                <% end %>
+                <% if form.events.size.positive? %>
+                  <span class="inline-flex items-center gap-1.5 rounded-md bg-purple-50 px-2 py-0.5 text-xs text-purple-700">
+                    <i class="fa-solid fa-calendar-day"></i>Event form
+                  </span>
+                <% end %>
+                <% unless form.publicly_fillable? || form.events.size.positive? %>
+                  <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-500">Not published</span>
+                <% end %>
+              </div>
+            </td>
+            <td class="px-4 py-2 text-sm text-gray-600">
+              <% submissions_count = form.form_submissions.size %>
+              <% if submissions_count.positive? %>
+                <%= link_to submissions_count, form_submissions_path(form_id: form.id, return_to: "forms"),
+                            class: "inline-flex items-center rounded-md bg-purple-50 px-2 py-0.5 text-purple-700 font-medium hover:bg-purple-100" %>
+              <% else %>
+                0
+              <% end %>
+            </td>
+            <td class="space-x-3 px-4 py-2 text-right text-sm">
               <%= link_to "View", form_path(form), class: "text-purple-600 hover:text-purple-800 underline" %>
               <%= link_to "Edit", edit_form_path(form), class: "text-purple-600 hover:text-purple-800 underline" %>
-              <% if allowed_to?(:destroy?, form) && form.event_forms.none? %>
-                <%= link_to "Delete", form_path(form), class: "text-red-600 hover:text-red-800 underline",
-                            data: { turbo_method: :delete, turbo_confirm: "Delete \"#{form.display_name}\"?" } %>
-              <% end %>
             </td>
           </tr>
         <% end %>
