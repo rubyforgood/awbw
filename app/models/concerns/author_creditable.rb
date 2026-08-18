@@ -52,13 +52,12 @@ module AuthorCreditable
   end
 
   def author_credit
-    # Outranks every source, including a legacy name no profile can suppress.
-    return missing_author_label if author_credit_preference == ANONYMOUS
     person = primary_author_person
+    # credit_for suppresses an anonymous author to the facilitator label.
     return credit_for(person) if person
-    return legacy_author_name_text if legacy_author_name_text.present?
-    # Whoever entered a record didn't claim authorship, so an unattributed record
-    # falls to the generic label rather than crediting its creator.
+    # Anonymous suppresses a legacy name too; with no person behind it, nothing is left.
+    return legacy_author_name_text if legacy_author_name_text.present? && author_credit_preference != ANONYMOUS
+    # No author at all, so it reads as the org's own content.
     missing_author_label
   end
 
@@ -86,11 +85,15 @@ module AuthorCreditable
     person.present? && author_credit_preference != person.effective_author_credit_preference
   end
 
-  # Shown when there's no credited person or legacy name. The portal is behind a
-  # login, so this names the org's facilitators rather than hiding behind
-  # "Anonymous", which would read as a deliberate privacy choice.
-  def missing_author_label
+  # A named author who opted out of the credit — still a facilitator's content,
+  # just shown without their name rather than hiding behind "Anonymous".
+  def anonymous_author_label
     "AWBW Facilitator"
+  end
+
+  # No author at all, so the content reads as the org's own.
+  def missing_author_label
+    "AWBW Staff"
   end
 
   def snapshot_author_credit_preference
@@ -103,11 +106,11 @@ module AuthorCreditable
   end
 
   private def credit_for(person)
-    return missing_author_label if credit_anonymous?(person)
+    return anonymous_author_label if credit_anonymous?(person)
     # The record's own preference wins over the person's profile; fall back to the
     # profile when the record didn't store one.
     preference = author_credit_preference.presence || person.display_name_preference
-    person.name_for(preference).presence || missing_author_label
+    person.name_for(preference).presence || anonymous_author_label
   end
 
   class_methods do

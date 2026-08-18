@@ -91,17 +91,17 @@ RSpec.shared_examples "author_creditable" do |factory:|
       end
 
       context "when the author is removed" do
-        it "falls back to AWBW Facilitator rather than crediting the creator" do
+        it "falls back to AWBW Staff rather than crediting the creator" do
           record.update!(author: nil, author_credit_preference: nil)
-          expect(record.missing_author_label).to eq("AWBW Facilitator")
-          expect(record.author_credit).to eq("AWBW Facilitator")
+          expect(record.missing_author_label).to eq("AWBW Staff")
+          expect(record.author_credit).to eq("AWBW Staff")
         end
       end
     else
       context "on an idea record, which names no author" do
         it "always credits the generic label, never the creator" do
           person.update!(display_name_preference: "full_name")
-          expect(record.author_credit).to eq("AWBW Facilitator")
+          expect(record.author_credit).to eq("AWBW Staff")
         end
 
         it "does not link the credit to a profile" do

@@ -19,11 +19,11 @@ RSpec.describe CommunityNews, type: :model do
   end
 
   describe "#missing_author_label" do
-    it "credits unattributed community news to AWBW Facilitator" do
+    it "credits unattributed community news to AWBW Staff" do
       news = create(:community_news, author: nil,
                                      created_by: create(:user, person: nil))
-      expect(news.missing_author_label).to eq("AWBW Facilitator")
-      expect(news.author_credit).to eq("AWBW Facilitator")
+      expect(news.missing_author_label).to eq("AWBW Staff")
+      expect(news.author_credit).to eq("AWBW Staff")
     end
   end
 

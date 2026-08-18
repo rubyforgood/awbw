@@ -10,7 +10,7 @@ RSpec.describe WorkshopIdea, type: :model do
       creator = create(:user, :with_person)
       idea = create(:workshop_idea, created_by: creator)
 
-      expect(idea.author_credit).to eq("AWBW Facilitator")
+      expect(idea.author_credit).to eq("AWBW Staff")
       expect(WorkshopIdea.by_credited_person_name(creator.person.first_name)).to be_empty
     end
   end

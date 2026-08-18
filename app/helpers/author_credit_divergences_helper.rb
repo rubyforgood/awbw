@@ -18,7 +18,7 @@ module AuthorCreditDivergencesHelper
 
   # New tab rather than an eyebrow: 8 destinations, none carrying a return_to today.
   def divergence_record_link(record)
-    link_to divergence_record_title(record), polymorphic_path(record),
+    link_to divergence_record_title(record), edit_polymorphic_path(record),
             target: "_blank", rel: "noopener",
             title: "Opens in a new tab",
             class: "text-blue-700 hover:underline"

@@ -121,8 +121,8 @@ class AuthorCreditDivergenceQuery
   def legacy_candidates
     authorable_models.flat_map do |model|
       next [] if model.legacy_author_name_columns.empty?
-      sorted(scoped(model).where(author_id: nil).select { |record| record.legacy_author_name_text.present? })
-    end
+      scoped(model).where(author_id: nil).select { |record| record.legacy_author_name_text.present? }
+    end.sort_by { |record| [ record.class.name, record.legacy_author_name_text.to_s.downcase ] }
   end
 
   # Guess who each free-text name means, in one query for the page, not one per row.

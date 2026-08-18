@@ -116,7 +116,7 @@ RSpec.describe Workshop do
 
     it "credits the org rather than the person who entered it" do
       workshop = create(:workshop, created_by: creator, author: nil)
-      expect(workshop.author_credit).to eq("AWBW Facilitator")
+      expect(workshop.author_credit).to eq("AWBW Staff")
     end
 
     it "is not findable by the creator's name" do
@@ -147,7 +147,7 @@ RSpec.describe Workshop do
     it "is suppressed rather than exposing the legacy name" do
       workshop = create(:workshop, created_by: creator, author: nil, full_name: "Jane Legacy",
                                    author_credit_preference: "anonymous")
-      expect(workshop.author_credit).to eq("AWBW Facilitator")
+      expect(workshop.author_credit).to eq("AWBW Staff")
     end
 
     it "takes no consent snapshot, since the creator's profile doesn't format it" do

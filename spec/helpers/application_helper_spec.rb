@@ -48,7 +48,7 @@ RSpec.describe ApplicationHelper, type: :helper do
       allow(workshop).to receive(:created_by).and_return(creator)
 
       result = helper.credited_author_link(workshop)
-      expect(result).to eq("AWBW Facilitator")
+      expect(result).to eq("AWBW Staff")
       expect(result).not_to include("<a")
     end
   end

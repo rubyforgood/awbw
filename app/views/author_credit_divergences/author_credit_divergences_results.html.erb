@@ -91,7 +91,7 @@
       <h2 class="text-lg font-semibold text-gray-900 mb-1">3. No author named, but someone entered it</h2>
       <p class="text-sm text-gray-600 mb-4">
         These have no <code>author_id</code>, so they credit the generic
-        &ldquo;AWBW Facilitator&rdquo; &mdash; entering a record isn't claiming it. The person who
+        &ldquo;AWBW Staff&rdquo; &mdash; entering a record isn't claiming it. The person who
         created it is the most likely author, so they're grouped and suggested here, but confirm it
         rather than assume it. Idea records are excluded &mdash; they have no <code>author_id</code>
         at all, so they credit generically with no author to assign.
@@ -114,8 +114,7 @@
               </div>
               <%= render "unlinked_table",
                     rows: assignable_rows(group.records, suggested_author: group.person),
-                    name_header: "Renders as",
-                    suggestion_note: "Suggested: the person who created the record." %>
+                    name_header: "Renders as" %>
             </div>
           <% end %>
         </div>
@@ -127,7 +126,7 @@
       <h2 class="text-lg font-semibold text-gray-900 mb-1">4. No author at all</h2>
       <p class="text-sm text-gray-600 mb-4">
         No author, no legacy name, and no person behind the creating account, so these fall back to the
-        generic &ldquo;AWBW Facilitator&rdquo; credit.
+        generic &ldquo;AWBW Staff&rdquo; credit.
       </p>
 
       <% if @result.unattributed.empty? %>
@@ -138,5 +137,26 @@
         <%= render "unlinked_table", rows: assignable_rows(@result.unattributed), name_header: "Renders as" %>
       <% end %>
     </section>
+  <% end %>
+
+  <%# Collapsed by default: everyone already reconciled, so they're off the worklist
+      above but still reviewable here. %>
+  <% if @reconciled_people.present? %>
+    <details class="mt-8 overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <summary class="cursor-pointer list-none px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
+        <i class="fa-solid fa-chevron-right mr-1 text-xs text-gray-400"></i>
+        Reconciled &mdash; <%= pluralize(@reconciled_people.size, "person") %>
+      </summary>
+      <ul class="divide-y divide-gray-100 border-t border-gray-200">
+        <% @reconciled_people.each do |person| %>
+          <li class="flex flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm">
+            <%= link_to person.full_name,
+                  author_credit_divergences_path(person_id: person.id, include_reconciled: "1", highlight: person.id, anchor: dom_id(person, :divergence)),
+                  class: "text-blue-700 hover:underline" %>
+            <span class="text-xs text-gray-500">Reconciled <%= person.author_credit_reconciled_at.strftime("%b %-d, %Y") %></span>
+          </li>
+        <% end %>
+      </ul>
+    </details>
   <% end %>
 <% end %>

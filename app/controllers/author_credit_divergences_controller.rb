@@ -7,6 +7,8 @@ class AuthorCreditDivergencesController < ApplicationController
     return unless turbo_frame_request?
 
     @result = AuthorCreditDivergenceQuery.new(**filters.symbolize_keys).call
+    @reconciled_people = Person.where.not(author_credit_reconciled_at: nil)
+                               .order(author_credit_reconciled_at: :desc)
     render :author_credit_divergences_results
   end
 

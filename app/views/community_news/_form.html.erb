@@ -51,7 +51,7 @@
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
     <%# Optional on the model, so the form has to allow no author — the credit then
-        falls to the creator's person, or to "AWBW Facilitator" when there isn't one. %>
+        falls to "AWBW Staff" when there's no author. %>
     <%= f.input :author_id,
                 as: :select,
                 label: "Author",
