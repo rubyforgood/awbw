@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~80 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~57 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~66 files |
 | `app/jobs/` | SolidQueue background jobs | 5 files |
 | `app/models/concerns/` | Shared model modules | 16 concerns |
 
@@ -57,7 +57,7 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/controllers/` | Rails controllers (admin/, events/, home/) | ~78 files |
+| `app/controllers/` | Rails controllers (admin/, events/, home/) | ~91 files |
 | `app/views/` | ERB templates | ~745 files |
 | `app/decorators/` | Draper decorators for view logic | ~40 files |
 | `app/policies/` | ActionPolicy authorization rules | ~55 files |
@@ -154,7 +154,7 @@ This codebase (Rails 8.1)
 
 ### Namespaces
 
-- **Root level** (~58 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
+- **Root level** (~69 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
 - **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController
 - **`events/`**: Registrations sub-resource (create/destroy + slug-based show at `/registration/:slug`)
 - **Devise overrides**: Registrations, Confirmations, Passwords
