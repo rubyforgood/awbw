@@ -39,10 +39,11 @@ class OrganizationsController < ApplicationController
     authorize! @organization
 
     if turbo_frame_request? && params[:section] == "events"
-      events = Event.where(id: @organization.event_registrations.active.select(:event_id))
-                    .includes(:primary_asset)
-                    .order(start_date: :desc)
-                    .paginate(page: params[:page], per_page: 9)
+      events = authorized_scope(
+        Event.where(id: @organization.event_registrations.active.select(:event_id))
+             .includes(:primary_asset)
+             .order(start_date: :desc)
+      ).paginate(page: params[:page], per_page: 9)
       return render partial: "organizations/sections/events", locals: { organization: @organization, events: events }
     end
 
