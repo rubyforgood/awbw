@@ -306,10 +306,15 @@ end
 # and carries the free-form qualifiers (hint_dates / hint_times / hint_registration_cost)
 # so the seeded data demonstrates those grey parentheticals on its registration
 # page. force-set on re-seed, mirroring the date/cost refresh above.
+# rhino_description is the event show page's rich content, captured to an HTML file
+# so re-seeding reproduces it deterministically (instead of the create-only random
+# Faker). Its images are RemoteImage references to portal.awbw.org — no local blobs.
+flagship_description_html = File.read(Rails.root.join("db/seeds/dev/files/awbw_facilitator_training_description.html"))
 Event.find_by(title: "AWBW Facilitator Training")&.update!(
-  videoconference_url: "https://awbw-org.zoom.us/j/88285411273",
+  rhino_description: flagship_description_html,
+  videoconference_url: "https://example.zoom.us/j/99912345678",
   videoconference_label: "Zoom",
-  videoconference_passcode: "awbwmarch",
+  videoconference_passcode: "demopass",
   autoshow_registration_details: true,
   hint_dates: "must attend both days",
   hint_times: "both days",
@@ -650,8 +655,8 @@ component_callouts = {
     description: <<~HTML.strip
       <p>Join us on Zoom for both training days. You'll find the join link in this ticket's videoconference section.</p>
       <ul>
-        <li><strong>Meeting ID:</strong> 882 8541 1273</li>
-        <li><strong>Passcode:</strong> awbwmarch</li>
+        <li><strong>Meeting ID:</strong> 999 1234 5678</li>
+        <li><strong>Passcode:</strong> demopass</li>
       </ul>
       <p>Please update Zoom to the latest version beforehand to avoid delays getting in.</p>
     HTML
