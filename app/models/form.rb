@@ -42,9 +42,13 @@ class Form < ApplicationRecord
 
   private
 
-  # Blank stays nil (not "") so the unique index tolerates the many forms with none.
+  # Blank stays nil (never ""), so the unique index tolerates the many forms with
+  # none. Input that parameterizes away to nothing ("!!!") is left intact for the
+  # format validation to reject rather than silently blanked.
   def normalize_slug
-    self.slug = slug.presence&.parameterize
+    return if slug.nil?
+
+    self.slug = slug.parameterize.presence || slug.presence
   end
 
   def published_form_has_slug

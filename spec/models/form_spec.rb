@@ -79,6 +79,18 @@ RSpec.describe Form do
       expect(form.slug).to be_nil
     end
 
+    it 'stores a whitespace-only slug as nil' do
+      form = create(:form, slug: '   ')
+      expect(form.slug).to be_nil
+    end
+
+    it 'rejects a slug with no url-safe characters rather than blanking it' do
+      form = build(:form, slug: '!!!')
+
+      expect(form).not_to be_valid
+      expect(form.errors[:slug]).to include('may only contain lowercase letters, numbers, and hyphens')
+    end
+
     it 'rejects a duplicate slug' do
       create(:form, slug: 'apply')
       dup = build(:form, slug: 'apply')
