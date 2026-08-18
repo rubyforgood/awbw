@@ -3,9 +3,9 @@
 <% person = current_user&.person %>
 <div class="rounded-md bg-gray-50 border border-gray-200 p-3 mb-4 text-sm text-gray-700">
   <% if person %>
-    You'll be credited as <strong><%= person.anonymous_contributions? ? "AWBW Facilitator" : person.name %></strong>.
+    You'll be credited as <strong><%= person.anonymous_contributions? ? AuthorCreditable::ANONYMOUS_AUTHOR_LABEL : person.name %></strong>.
   <% else %>
-    You'll be credited as <strong>AWBW Staff</strong>.
+    You'll be credited as <strong><%= AuthorCreditable::MISSING_AUTHOR_LABEL %></strong>.
   <% end %>
   <p class="text-gray-500 mt-1">
     This comes from your profile and applies to everything you share.

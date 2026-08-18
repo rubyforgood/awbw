@@ -8,6 +8,11 @@ module AuthorCreditable
 
   ANONYMOUS = "anonymous"
 
+  # Read through `anonymous_author_label` / `missing_author_label` from a record, so a
+  # model can override; reference the constants directly only where no record is in hand.
+  ANONYMOUS_AUTHOR_LABEL = "AWBW Facilitator".freeze
+  MISSING_AUTHOR_LABEL = "AWBW Staff".freeze
+
   ADMIN_FORM_OPTIONS = {
     "Full name" => "full_name",
     "First name, last initial" => "first_name_last_initial",
@@ -88,12 +93,12 @@ module AuthorCreditable
   # A named author who opted out of the credit — still a facilitator's content,
   # just shown without their name rather than hiding behind "Anonymous".
   def anonymous_author_label
-    "AWBW Facilitator"
+    ANONYMOUS_AUTHOR_LABEL
   end
 
   # No author at all, so the content reads as the org's own.
   def missing_author_label
-    "AWBW Staff"
+    MISSING_AUTHOR_LABEL
   end
 
   def snapshot_author_credit_preference
