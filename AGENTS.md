@@ -48,21 +48,21 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/models/` | ActiveRecord models | ~80 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~66 files |
-| `app/jobs/` | SolidQueue background jobs | 5 files |
-| `app/models/concerns/` | Shared model modules | 16 concerns |
+| `app/models/` | ActiveRecord models | ~90 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~69 files |
+| `app/jobs/` | SolidQueue background jobs | 6 files |
+| `app/models/concerns/` | Shared model modules | 17 concerns |
 
 ### Presentation
 
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/controllers/` | Rails controllers (admin/, events/, home/) | ~91 files |
-| `app/views/` | ERB templates | ~745 files |
-| `app/decorators/` | Draper decorators for view logic | ~40 files |
-| `app/policies/` | ActionPolicy authorization rules | ~55 files |
+| `app/views/` | ERB templates | ~824 files |
+| `app/decorators/` | Draper decorators for view logic | ~50 files |
+| `app/policies/` | ActionPolicy authorization rules | ~63 files |
 | `app/presenters/` | Presentation objects | 6 files |
-| `app/helpers/` | View helpers | ~35 files |
+| `app/helpers/` | View helpers | ~36 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
