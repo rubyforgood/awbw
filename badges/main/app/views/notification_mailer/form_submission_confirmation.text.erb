@@ -1,0 +1,13 @@
+We received your response
+
+Hello <%= @person.name %>,
+
+Thank you for your response to <%= @form.display_name %>. We have received it and will be in touch if any follow-up is needed.
+
+Form: <%= @form.display_name %>
+Submitted on <%= @submission.created_at
+                            .in_time_zone("Pacific Time (US & Canada)")
+                            .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+--
+This is an automated confirmation from AWBW.

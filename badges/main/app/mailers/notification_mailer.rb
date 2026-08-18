@@ -167,6 +167,28 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
+  def form_submission_confirmation(notification)
+    @submission = notification.noticeable
+    @form = @submission.form
+    @person = @submission.person
+
+    mail(
+      to: notification.recipient_email,
+      subject: "#{SUBJECT_PREFIX} We received your response to #{@form.display_name}"
+    )
+  end
+
+  def form_submission_confirmation_fyi(notification)
+    @submission = notification.noticeable
+    @form = @submission.form
+    @person = @submission.person
+    @answers = @submission.form_answers.includes(:form_field)
+
+    mail(
+      subject: "#{FYI_PREFIX} New form submission: #{@form.display_name} by #{@person.full_name}"
+    )
+  end
+
   private
 
   def extract_attachments(noticeable)

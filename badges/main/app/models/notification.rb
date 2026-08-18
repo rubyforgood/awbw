@@ -38,6 +38,9 @@ class Notification < ApplicationRecord
     workshop_log_submitted
     workshop_log_submitted_fyi
 
+    form_submission_confirmation
+    form_submission_confirmation_fyi
+
     manual_log
   ].freeze
 
@@ -84,7 +87,9 @@ class Notification < ApplicationRecord
     [ "Admin FYI: story promoted", "Story idea promoted" ],
     [ "Admin FYI: password reset", "[FYI] New password reset" ],
     [ "Admin FYI: workshop log submission", "New WorkshopLog submission" ],
+    [ "Admin FYI: form submission", "[FYI] New form submission" ],
     [ "Admin FYI: contact form submission", "contact form submission" ],
+    [ "Form: submission confirmation", "We received your response" ],
     [ "Contact: form confirmation", "We received your message" ],
     [ "Event registration cancelled", "Event registration cancelled" ],
     [ "Event scholarship registration cancelled", "Event scholarship registration cancelled" ],

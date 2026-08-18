@@ -8,25 +8,91 @@ RSpec.describe "FormSubmissions", type: :request do
     context "as an admin" do
       before { sign_in admin }
 
+      # The rows load lazily inside the results Turbo frame.
+      let(:frame_headers) { { "Turbo-Frame" => "form_submissions_results" } }
+
+      it "renders the filterable index shell" do
+        get form_submissions_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Form submissions")
+      end
+
       it "lists a person's submissions and links each to its detail page" do
         person = create(:person, first_name: "Priya", last_name: "Patel")
         other = create(:person)
         mine = create(:form_submission, person: person)
         theirs = create(:form_submission, person: other)
 
-        get form_submissions_path(person_id: person.id)
+        get form_submissions_path(person_id: person.id), headers: frame_headers
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Priya Patel")
         expect(response.body).to include(form_submission_path(mine))
         expect(response.body).not_to include(form_submission_path(theirs))
+      end
+
+      it "filters by form" do
+        wanted = create(:form, name: "Volunteer interest")
+        other = create(:form, name: "Something else")
+        mine = create(:form_submission, form: wanted)
+        theirs = create(:form_submission, form: other)
+
+        get form_submissions_path(form_id: wanted.id), headers: frame_headers
+
+        expect(response.body).to include(form_submission_path(mine))
+        expect(response.body).not_to include(form_submission_path(theirs))
+      end
+
+      it "breaks the View link out of the results frame" do
+        create(:form_submission)
+        get form_submissions_path, headers: frame_headers
+        expect(response.body).to include('data-turbo-frame="_top"')
+      end
+
+      it "shows a Forms eyebrow anchored to the form when arriving from the forms index" do
+        form = create(:form, name: "Volunteer interest")
+        get form_submissions_path(form_id: form.id, return_to: "forms")
+
+        expect(response.body).to include(CGI.escapeHTML(forms_path(anchor: "form_#{form.id}")))
+      end
+
+      it "keeps the forms origin on the filter form so changing the filter doesn't lose it" do
+        form = create(:form, name: "Volunteer interest")
+        get form_submissions_path(form_id: form.id, return_to: "forms")
+
+        expect(response.body).to include('name="return_to"')
+        expect(response.body).to include('value="forms"')
+      end
+
+      it "each View link carries the origin so the Forms eyebrow survives the round trip" do
+        form = create(:form, name: "Volunteer interest")
+        submission = create(:form_submission, form: form)
+
+        get form_submissions_path(form_id: form.id, return_to: "forms"), headers: frame_headers
+
+        expect(response.body).to include(
+          CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions", origin: "forms",
+                                              person_id: submission.person_id, form_id: form.id))
+        )
+      end
+
+      it "each View link carries the form filter so the trip back keeps it" do
+        form = create(:form, name: "Volunteer interest")
+        submission = create(:form_submission, form: form)
+
+        get form_submissions_path(form_id: form.id), headers: frame_headers
+
+        expect(response.body).to include(
+          CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions",
+                                              person_id: submission.person_id, form_id: form.id))
+        )
       end
 
       it "each View link carries a return_to back to the person's index" do
         person = create(:person)
         submission = create(:form_submission, person: person)
 
-        get form_submissions_path(person_id: person.id)
+        get form_submissions_path(person_id: person.id), headers: frame_headers
 
         expect(response.body).to include(
           CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions", person_id: person.id))
@@ -65,6 +131,23 @@ RSpec.describe "FormSubmissions", type: :request do
 
         expect(response.body).to include(form_submissions_path(person_id: submission.person_id))
         expect(response.body).to include("Back to form submissions")
+      end
+
+      it "carries the form filter back when arriving from the form-filtered index" do
+        get form_submission_path(submission, return_to: "form_submissions", form_id: submission.form_id)
+
+        expect(response.body).to include(
+          CGI.escapeHTML(form_submissions_path(form_id: submission.form_id))
+        )
+      end
+
+      it "hands the index back its own origin so the Forms eyebrow is restored" do
+        get form_submission_path(submission, return_to: "form_submissions", origin: "forms",
+                                 form_id: submission.form_id)
+
+        expect(response.body).to include(
+          CGI.escapeHTML(form_submissions_path(form_id: submission.form_id, return_to: "forms"))
+        )
       end
 
       it "resolves the sector/age-group ids stored behind the professional fields to names" do

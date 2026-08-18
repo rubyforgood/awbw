@@ -252,6 +252,10 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/events/callouts/staff.html.erb"            => "public",
     "app/views/registration_ticket_callouts/show.html.erb" => "public",
 
+    # ─── public standalone form (pretty URL, no account) ───
+    "app/views/public_forms/show.html.erb"               => "public",
+    "app/views/public_forms/thank_you.html.erb"          => "public",
+
     # ─── bulk payment views ───
     "app/views/events/bulk_payment_form_submissions/new.html.erb"  => "public",
     "app/views/events/bulk_payment_form_submissions/show.html.erb" => "public",

@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~80 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~57 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~66 files |
 | `app/jobs/` | SolidQueue background jobs | 5 files |
 | `app/models/concerns/` | Shared model modules | 16 concerns |
 
@@ -57,7 +57,7 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/controllers/` | Rails controllers (admin/, events/, home/) | ~78 files |
+| `app/controllers/` | Rails controllers (admin/, events/, home/) | ~91 files |
 | `app/views/` | ERB templates | ~745 files |
 | `app/decorators/` | Draper decorators for view logic | ~40 files |
 | `app/policies/` | ActionPolicy authorization rules | ~55 files |
@@ -154,7 +154,7 @@ This codebase (Rails 8.1)
 
 ### Namespaces
 
-- **Root level** (~58 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
+- **Root level** (~69 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
 - **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController
 - **`events/`**: Registrations sub-resource (create/destroy + slug-based show at `/registration/:slug`)
 - **Devise overrides**: Registrations, Confirmations, Passwords
@@ -259,6 +259,7 @@ action, or `authorize! :workshop, to: :summary?`).
 
 ### Forms
 
+- `PublicFormSubmission` — Records a submission to a **standalone, published** `Form` filled out at its public pretty URL (`/f/:slug`, `PublicFormsController`). No event, role, or account: the respondent is find-or-created as a `Person` from the form's name/email answers (email + last-name match reuses an existing person), consent recorded once, answers stored as a `role: "public"` `FormSubmission` via `FormSubmission#persist_answer`, then `OtherResponses::CaptureFromSubmission` like every other submission path. Returns a `Result` (`success?`, `form_submission`, `person`, `errors`)
 - `SmartFormFields` — Catalog of the `field_identifier`s that carry backend behavior and what each does when a submission arrives with it, grouped by the record they write to (person identity, profile, mailing address, phone, organization, tagging, payment, consent, CE, bulk payment), plus `ANSWER_ONLY_IDENTIFIERS` for the library questions that only store an answer. Powers the admin-only **Smart form settings** page (`FormsController#smart_form_settings`, linked from both form editors), which answers what the editor's "Field identifier" box actually does. `spec/services/smart_form_fields_spec.rb` fails when the app grows an identifier the page doesn't document — it diffs the catalog against `FormBuilderService::SECTION_FIELD_IDENTIFIERS`, the `FormField`/`OtherResponse` identifier constants, and every `field_value("…")` read in `PublicRegistration`, so **add new identifiers to the catalog when you wire one up**
 
 ### Organizations

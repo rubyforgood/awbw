@@ -151,13 +151,13 @@
     {
       "warning_type": "Mass Assignment",
       "warning_code": 105,
-      "fingerprint": "a750b09d4d42ef567df595f7a9035933dc1178c533bf8ae8f8986ae8e837c6b8",
+      "fingerprint": "a46122ae2994612e9507c0c854c6d8f66039324246131f28ee068a69d9ce4024",
       "check_name": "PermitAttributes",
       "message": "Potentially dangerous key allowed for mass assignment",
       "file": "app/controllers/forms_controller.rb",
-      "line": 138,
+      "line": 150,
       "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
-      "code": "params.require(:form).permit(:name, :role, :header, :hide_answered_person_questions, :hide_answered_form_questions, :form_fields_attributes => ([:id, :name, :answer_type, :required, :subtitle, :hint_text, :field_identifier, :section, :position, :visibility, :one_time, :width, :min_words, :max_characters, :_destroy, { :form_field_answer_options_attributes => ([:id, :option_name, :_destroy]) }]))",
+      "code": "params.require(:form).permit(:name, :role, :header, :hide_answered_person_questions, :hide_answered_form_questions, :slug, :published, :form_fields_attributes => ([:id, :name, :answer_type, :required, :subtitle, :hint_text, :field_identifier, :section, :position, :visibility, :one_time, :width, :min_words, :max_characters, :_destroy, { :form_field_answer_options_attributes => ([:id, :option_name, :_destroy]) }]))",
       "render_path": null,
       "location": {
         "type": "method",
@@ -169,7 +169,7 @@
       "cwe_id": [
         915
       ],
-      "note": "admin only"
+      "note": "Admin only — FormsController inherits manage? (super-admin) from ApplicationPolicy, so role/slug/published are only mass-assignable by admins editing a form. (:published added for the public standalone-form endpoint.)"
     },
     {
       "warning_type": "Mass Assignment",
