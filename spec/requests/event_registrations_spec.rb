@@ -541,6 +541,8 @@ RSpec.describe "EventRegistrations", type: :request do
         get edit_event_registration_path(incoming)
 
         expect(response.body).to include("Transferred in from")
+        # A "Manage transfer" link points at the source's manage-transfer hub.
+        expect(response.body).to include(transfer_event_registration_path(source))
       end
 
       it "shows a source-financials summary (not editable cards) for a transferred-in reg" do
@@ -697,7 +699,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(response.body).to include("What recording this transfer will do")
           expect(response.body).to include("the new event won't charge them again")
-          expect(response.body).to include("Linked organizations are copied")
+          expect(response.body).to include("copy of the linked organizations")
           expect(response.body).not_to include("was already transferred in from")
         end
 

@@ -5,9 +5,6 @@
   pending = destination.nil?
   chained = source.transferred_in?
   origin_reg = source.transferred_from_registration
-  # Where money/records already live — the source normally, or the true origin
-  # when this reg was itself transferred in.
-  records_event = (origin_reg || source).event
   restore_status = source.status_before_transfer.presence || "registered"
   restore_label = EventRegistration.new(status: restore_status).attendance_status_label.downcase
   roster_path = registrants_event_path(source.event)
@@ -57,13 +54,30 @@
           being transferred is itself a transfer-in. (#1944) %>
       <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
         <p class="mb-2 text-xs font-semibold text-gray-700">What recording this transfer will do:</p>
-        <ul class="list-disc space-y-1.5 pl-5 text-xs text-gray-600">
-          <li><span class="font-medium text-gray-800"><%= source.registrant.first_name %> keeps their <%= source.event.title %> registration</span> — marked "Transferred out," not deleted.</li>
-          <li><span class="font-medium text-gray-800">A new registration is created</span> for the event you pick.</li>
-          <li><span class="font-medium text-gray-800">Payments and scholarships stay with <%= records_event.title %></span> — the new event won't charge them again.</li>
-          <li><span class="font-medium text-gray-800">Linked organizations are copied</span> to the new registration.</li>
-          <li><span class="font-medium text-gray-800">CE hours move to the new event</span> — what's already paid stays counted at <%= records_event.title %>.</li>
-        </ul>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div class="rounded-md border border-gray-200 bg-white p-3">
+            <p class="text-xs font-semibold text-gray-800">
+              <i class="fa-solid fa-right-from-bracket text-gray-400"></i> This registration
+            </p>
+            <p class="mb-2 truncate text-2xs text-gray-500" title="<%= source.event.title %>"><%= source.event.title %></p>
+            <ul class="list-disc space-y-1 pl-4 text-xs text-gray-600">
+              <li>Kept as a record — marked "Transferred out," not deleted.</li>
+              <li>Keeps its payments and scholarship — the new event won't charge them again.</li>
+              <li>Keeps the CE hours already paid for.</li>
+            </ul>
+          </div>
+          <div class="rounded-md border border-gray-200 bg-white p-3">
+            <p class="text-xs font-semibold text-gray-800">
+              <i class="fa-solid fa-right-to-bracket text-gray-400"></i> New registration
+            </p>
+            <p class="mb-2 text-2xs text-gray-500">the event you pick</p>
+            <ul class="list-disc space-y-1 pl-4 text-xs text-gray-600">
+              <li>Created fresh — track their attendance here from now on.</li>
+              <li>Gets a copy of the linked organizations.</li>
+              <li>Gets the remaining CE hours, balance, and certificate.</li>
+            </ul>
+          </div>
+        </div>
 
         <% if chained %>
           <div class="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3">
