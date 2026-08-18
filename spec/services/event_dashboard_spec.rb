@@ -193,6 +193,19 @@ RSpec.describe EventDashboard do
       end
     end
 
+    describe "shout-outs" do
+      it "includes only active registrations, excluding transferred-out and other inactive ones" do
+        featured = create(:person, first_name: "Feat", shoutout_text: "Their story")
+        create(:event_registration, event: event, registrant: featured, status: "attended", shoutout: true)
+        withdrawn = create(:person, first_name: "Withd", shoutout_text: "Left")
+        create(:event_registration, event: event, registrant: withdrawn, status: "transferred_out", shoutout: true)
+
+        names = dashboard.shoutouts.map { |s| s.recipient.first_name }
+        expect(names).to include("Feat")
+        expect(names).not_to include("Withd")
+      end
+    end
+
     describe "organizations" do
       it "combines snapshot orgs and active affiliation orgs, deduped" do
         expect(dashboard.organizations).to contain_exactly(org_a, org_b, org_c)
