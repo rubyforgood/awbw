@@ -25,5 +25,10 @@ FactoryBot.define do
     trait :planned_giving do
       planned_giving { true }
     end
+
+    trait :in_memoriam do
+      planned_giving { true }
+      in_memoriam { true }
+    end
   end
 end

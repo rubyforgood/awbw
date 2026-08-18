@@ -256,6 +256,12 @@ RSpec.describe "/grants", type: :request do
           expect(Grant.last).to be_planned_giving
         end
 
+        it "flags the grant as in memoriam when checked" do
+          post grants_url, params: { grant: valid_attributes.merge(planned_giving: "1", in_memoriam: "1") }
+
+          expect(Grant.last).to be_in_memoriam
+        end
+
         it "attaches the selected sectors and categories" do
           sector = create(:sector, :published)
           category = create(:category, :published)
