@@ -47,14 +47,19 @@
             <%= [address.locality, [address.city, address.state].compact_blank.join(", "), address.district].compact_blank.join(" · ") %>
           </p>
         <% end %>
-        <% org_earliest_affiliation = @organization.affiliations.minimum(:start_date) %>
-        <% org_affiliated_since = org_earliest_affiliation || @organization.start_date %>
-        <% org_show_aff_ended = @organization.affiliations.any? && !@organization.affiliations.active.exists? %>
-        <% org_show_end_date = org_show_aff_ended ? @organization.affiliations.maximum(:end_date) : @organization.end_date %>
-        <% if org_affiliated_since.present? %>
+        <% org_decorated = @organization.decorate %>
+        <% affiliated_since = org_decorated.affiliated_since_display %>
+        <% if affiliated_since.present? %>
           <p class="text-gray-500 text-sm mt-1">
             Affiliated since
-            <span class="font-medium"><%= org_affiliated_since.strftime("%b %Y") %><%= " – #{org_show_end_date.strftime('%b %Y')}" if org_show_end_date.present? %></span>
+            <span class="font-medium"><%= affiliated_since %></span>
+          </p>
+        <% end %>
+        <% program_since = org_decorated.program_since_display %>
+        <% if program_since.present? %>
+          <p class="text-gray-500 text-sm mt-1">
+            Art program since
+            <span class="font-medium"><%= program_since %></span>
           </p>
         <% end %>
         <!-- Contact info -->
@@ -104,6 +109,16 @@
         <% end %>
       </div>
     </div>
+    <% if allowed_to?(:manage?, @organization) %>
+      <div id="program-status" class="admin-only bg-blue-100 rounded-lg p-3 mb-6 scroll-mt-20">
+        <p class="text-xs font-semibold text-gray-600 mb-2">Program status</p>
+        <div class="flex flex-wrap items-center gap-2">
+          <%= org_decorated.organization_status_chip %>
+          <%= render "organizations/program_status_event_chips",
+                     organization: @organization, events: @organization_events, return_to: "organization" %>
+        </div>
+      </div>
+    <% end %>
     <hr class="my-8 border-gray-200">
     <!-- Info grid -->
     <div class="grid grid-cols-1 md:grid-cols-5 gap-8">

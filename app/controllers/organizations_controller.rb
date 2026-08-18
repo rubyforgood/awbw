@@ -8,8 +8,10 @@ class OrganizationsController < ApplicationController
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
       base_scope = authorized_scope(Organization.includes(
-        :windows_type, :organization_status, :sectors, :addresses,
+        :organization_status, :sectors, :sectorable_items, :addresses, :affiliations,
         { categorizable_items: { category: :category_type } },
+        # Feeds the per-row sector and age-group roll-ups.
+        { people: Organization::PEOPLE_TAGGINGS },
         logo_attachment: :blob
       ))
       filtered = base_scope.search_by_params(params).order(:name)
@@ -17,15 +19,12 @@ class OrganizationsController < ApplicationController
       @active_people_count = Affiliation.active.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
       @organizations = filtered.paginate(page: params[:page], per_page: per_page)
       org_ids = @organizations.map(&:id)
-      @affiliated_since = Affiliation.where(organization_id: org_ids)
-                                            .group(:organization_id)
-                                            .minimum(:start_date)
+      @program_since_display = @organizations.to_h { |org| [ org.id, org.decorate.program_since_display ] }
       @active_people_counts = Affiliation.active
                                                 .where(organization_id: org_ids)
                                                 .group(:organization_id)
                                                 .distinct
                                                 .count(:person_id)
-      @program_statuses = Organization.program_statuses_by_id(org_ids)
 
       render :organizations_results
     else
@@ -38,14 +37,23 @@ class OrganizationsController < ApplicationController
     authorize! @organization
 
     if turbo_frame_request? && params[:section] == "events"
-      events = Event.where(id: @organization.event_registrations.active.select(:event_id))
-                    .includes(:primary_asset)
-                    .order(start_date: :desc)
-                    .paginate(page: params[:page], per_page: 9)
+      events = authorized_scope(
+        Event.where(id: @organization.event_registrations.active.select(:event_id))
+             .includes(:primary_asset)
+             .order(start_date: :desc)
+      ).paginate(page: params[:page], per_page: 9)
       return render partial: "organizations/sections/events", locals: { organization: @organization, events: events }
     end
 
     track_view(@organization)
+
+    # The admin-only "Program status" block. Trainings only — program status is
+    # meaningless for other events (ADR-0001 D6).
+    @organization_events = authorized_scope(
+      Event.where(id: @organization.event_registrations.active.select(:event_id))
+           .where(facilitator_training: true)
+           .order(start_date: :desc)
+    )
 
     workshop_logs = WorkshopLog.where(organization_id: @organization.id)
     @month_year_options = workshop_logs.group("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m')")
@@ -178,6 +186,18 @@ class OrganizationsController < ApplicationController
       @organization.affiliations.proxy_association.target.replace(sorted)
     end
 
+    # Drives the edit form's per-event program-status chips. Trainings only —
+    # program status is meaningless for other events (ADR-0001 D6).
+    @organization_events = if @organization.persisted?
+      authorized_scope(
+        Event.where(id: @organization.event_registrations.active.select(:event_id))
+             .where(facilitator_training: true)
+             .order(start_date: :desc)
+      )
+    else
+      Event.none
+    end
+
     @org_categories_grouped = Category
       .includes(:category_type)
       .published
@@ -188,7 +208,12 @@ class OrganizationsController < ApplicationController
   end
 
   def set_index_variables
-    @organization_statuses = OrganizationStatus.all
+    @sector_options = Sector.published.order(:name).pluck(:name)
+    @age_group_options = Category.joins(:category_type)
+                                 .where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE })
+                                 .published
+                                 .order(:position, :name)
+                                 .pluck(:name)
   end
 
   def populations_served

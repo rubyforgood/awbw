@@ -32,18 +32,19 @@ class Organization < ApplicationRecord
       saver: { quality: 80 }
   end
 
-  # The organization classifications offered by the org form and the registration
-  # form's "Organization Type" question, in display order. "Other" is the generic
-  # catch-all; any stored value not in this list (e.g. a legacy label like the
-  # pre-rename "Other (please specify below)") is folded into it for display so an
-  # unmatched select can't silently save as the first option.
+  # List pages must preload people with exactly this, or each row re-queries.
+  PEOPLE_TAGGINGS = [ { sectorable_items: :sector }, { categorizable_items: { category: :category_type } } ].freeze
+
+  # Org classifications offered by the org form and the registration form's
+  # "Organization Type" question, in display order. Any stored value not listed
+  # (e.g. the legacy "Other (please specify below)") folds into "Other" for display
+  # so an unmatched select can't silently save as the first option.
   AGENCY_TYPE_OTHER = "Other"
   AGENCY_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", AGENCY_TYPE_OTHER ].freeze
 
-  # The organization that runs this app. A grant it self-funds is the org funding
-  # itself, so reports count it as subsidy (unfunded), not external funding.
-  # Identified by name via ORGANIZATION_NAME — the only marker available today.
-  # Not memoized: the record can be created mid-process (seeds, tests).
+  # The organization that runs this app. A grant it self-funds counts as subsidy
+  # (unfunded), not external funding, in reports. Not memoized: the record can be
+  # created mid-process (seeds, tests).
   def self.awbw
     find_by(name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))
   end
@@ -105,6 +106,47 @@ class Organization < ApplicationRecord
     end
     scope.distinct
   end
+  # Off facilitator affiliations only, never the legacy organization_status, so the
+  # filter and the status chip can't disagree (ADR-0001 D3).
+  scope :program_status, ->(bucket) {
+    fac_ids = Affiliation.facilitators.select(:organization_id)
+    active_fac_ids = Affiliation.facilitators.active.select(:organization_id)
+    case bucket.to_s
+    when "active"            then where(id: active_fac_ids)
+    when "formerly_active"   then where(id: fac_ids).where.not(id: active_fac_ids)
+    when "never_active"      then where.not(id: fac_ids)
+    when "formerly_or_never" then where.not(id: active_fac_ids)
+    else all
+    end
+  }
+
+  # Matches a tag on the org itself OR an affiliated person's PRIMARY tag —
+  # mirroring the aggregate the index/profile columns show.
+  scope :sector_name_including_people, ->(name) {
+    next all if name.blank?
+    term = name.to_s.downcase
+    direct = joins(:sectors).where("LOWER(sectors.name) = ?", term).select(:id)
+    via_people = joins(people: { sectorable_items: :sector })
+                   .where(sectorable_items: { is_primary: true })
+                   .where("LOWER(sectors.name) = ?", term)
+                   .select(Arel.sql("organizations.id"))
+    where(id: direct).or(where(id: via_people))
+  }
+
+  scope :age_group_name_including_people, ->(name) {
+    next all if name.blank?
+    age_category_ids = Category.joins(:category_type)
+                               .where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE })
+                               .where("LOWER(categories.name) = ?", name.to_s.downcase)
+                               .select(:id)
+    direct = joins(:categories).where(categories: { id: age_category_ids }).select(:id)
+    via_people = joins(people: { categorizable_items: :category })
+                   .where(categorizable_items: { is_primary: true })
+                   .where(categories: { id: age_category_ids })
+                   .select(Arel.sql("organizations.id"))
+    where(id: direct).or(where(id: via_people))
+  }
+
   scope :organization_ids, ->(organization_ids) { where(id: organization_ids.to_s.split("-").map(&:to_i)) }
   scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
   scope :published, -> { active }
@@ -112,12 +154,11 @@ class Organization < ApplicationRecord
   def self.search_by_params(params)
     organizations = is_a?(ActiveRecord::Relation) ? self : all
     organizations = organizations.search(params[:query]) if params[:query].present?
-    organizations = organizations.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
-    organizations = organizations.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
+    organizations = organizations.sector_name_including_people(params[:sector_name]) if params[:sector_name].present?
+    organizations = organizations.age_group_name_including_people(params[:age_group_name]) if params[:age_group_name].present?
     organizations = organizations.address(params[:address]) if params[:address].present?
-    organizations = organizations.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?
-    organizations = organizations.where(organization_status_id: params[:organization_status_id]) if params[:organization_status_id].present?
+    organizations = organizations.program_status(params[:program_status]) if params[:program_status].present?
     organizations
   end
 
@@ -128,45 +169,18 @@ class Organization < ApplicationRecord
     direct.or(legacy).distinct
   end
 
-  # Facilitator program statuses in display order — the values #facilitator_status
-  # and #facilitator_status_on return, and the attendees index filters on.
-  FACILITATOR_PROGRAM_STATUSES = %i[ new ongoing reinstated ].freeze
+  # Display order, and what the attendees index filters on.
+  FACILITATOR_PROGRAM_STATUSES = FacilitatorProgramStatus::STATUSES
 
-  # Classifies this organization as a facilitator program relative to a reference
-  # ("current") facilitator affiliation — typically a registrant's affiliation
-  # captured through the event registration form:
-  #   :new        — the reference is the organization's first facilitator
-  #                 affiliation (none started before it)
-  #   :ongoing    — the organization already had a facilitator affiliation that
-  #                 was still active when the reference one started
-  #   :reinstated — the organization had facilitator affiliation(s) before, but
-  #                 they all ended before the reference one started (a lapse)
-  def facilitator_status(current_affiliation)
-    facilitator_status_on(current_affiliation.start_date, excluding_affiliation_id: current_affiliation.id)
+  # A FacilitatorProgramStatus (verdict + reasoning) as of a date; nil `as_of`
+  # anchors on the start of the current year. See ADR-0001 D4.
+  def facilitator_program_status(as_of: nil)
+    FacilitatorProgramStatus.for(self, as_of: as_of)
   end
 
-  # Classifies this organization relative to a reference DATE rather than a
-  # reference affiliation — used when a registrant has no facilitator affiliation
-  # yet (admins create those manually), so we ask "if they got one today, would
-  # this org be new/ongoing/reinstated?":
-  #   :new        — the org has no facilitator affiliation starting before the date
-  #   :ongoing    — an earlier facilitator affiliation is still active on the date
-  #   :reinstated — earlier facilitator affiliation(s) existed but all ended first
-  def facilitator_status_on(reference_date, excluding_affiliation_id: nil)
-    reference_start = reference_date || Date.current
-
-    # Filter the (often preloaded) affiliations in Ruby rather than firing a query
-    # per org — the event dashboard classifies every represented org this way.
-    earlier = affiliations.select do |affiliation|
-      affiliation.facilitator? &&
-        affiliation.start_date && affiliation.start_date < reference_start &&
-        affiliation.id != excluding_affiliation_id
-    end
-
-    return :new if earlier.empty?
-
-    active_overlap = earlier.any? { |affiliation| affiliation.end_date.nil? || affiliation.end_date >= reference_start }
-    active_overlap ? :ongoing : :reinstated
+  # The bare symbol, for counting and filtering.
+  def facilitator_status_on(reference_date = nil)
+    facilitator_program_status(as_of: reference_date).status
   end
 
   # Methods
@@ -202,16 +216,10 @@ class Organization < ApplicationRecord
     [ first_active.city, first_active.state ].compact_blank.join(", ").presence
   end
 
-  # Status of this organization as an AWBW "program," relative to a scholarship
-  # recipient — the New/Ongoing/Reinstate column on the scholarship index:
-  #   * "Reinstate" — the org has facilitator affiliations but none are currently
-  #     active (it is returning after a lapse);
-  #   * "Ongoing"   — the org has facilitator affiliations beyond this recipient
-  #     (an established program);
-  #   * "New"       — no prior facilitator affiliations (this recipient is the
-  #     program's first).
-  # Heuristic based on affiliations (computed in memory to reuse a preloaded
-  # association); confirm the exact business rule with the team.
+  # This org's program status relative to a scholarship recipient (the
+  # New/Ongoing/Reinstate column on the scholarship index): Reinstate = lapsed,
+  # Ongoing = has facilitators beyond this recipient, New = none prior. In-memory
+  # facilitator-affiliation heuristic, to reuse a preloaded association.
   def program_status(recipient = nil)
     facilitators = affiliations.select(&:facilitator?)
     return "New" if facilitators.empty?
@@ -219,21 +227,6 @@ class Organization < ApplicationRecord
 
     prior = recipient ? facilitators.reject { |a| a.person_id == recipient.id } : facilitators
     prior.any? ? "Ongoing" : "New"
-  end
-
-  # Bulk program status (:new / :ongoing / :reinstated) for the given org ids,
-  # keyed by id — the recipient-less form of #program_status, computed with
-  # aggregate queries so list pages avoid loading each org's affiliations. An org
-  # with no facilitator affiliations is :new; with facilitators but none
-  # currently active it is :reinstated; otherwise :ongoing.
-  def self.program_statuses_by_id(org_ids)
-    facilitator_scope = Affiliation.facilitators.where(organization_id: org_ids)
-    with_facilitators = facilitator_scope.distinct.pluck(:organization_id).to_set
-    with_active = facilitator_scope.active.distinct.pluck(:organization_id).to_set
-    org_ids.index_with do |id|
-      next :new if with_facilitators.exclude?(id)
-      with_active.include?(id) ? :ongoing : :reinstated
-    end
   end
 
   def type_name
@@ -255,6 +248,10 @@ class Organization < ApplicationRecord
 
   def published? # needed for my_bookmarks
     return true if organization_status&.name == "Active"
+    # #active? is the in-memory twin of the `active` scope, so a list page that
+    # preloaded affiliations doesn't query once per row.
+    return affiliations.any?(&:active?) if affiliations.loaded?
+
     affiliations.active.exists?
   end
 
@@ -266,12 +263,9 @@ class Organization < ApplicationRecord
     sectors
  end
 
+  # Only affiliated people's PRIMARY sector; their others don't roll up to the org.
   def affiliated_sectors
-    users
-      .includes(person: :sectors)
-      .map(&:person)
-      .compact
-      .flat_map(&:sectors)
+    affiliated_people.flat_map { |person| person.sectorable_items.filter_map { |item| item.sector if item.is_primary? } }
   end
 
   def all_sectors
@@ -285,8 +279,18 @@ class Organization < ApplicationRecord
     collect_age_groups(:primary_age_groups)
   end
 
+  # The org's OWN only — affiliated people contribute just their primary age groups.
   def all_additional_age_groups
-    collect_age_groups(:additional_age_groups) - all_primary_age_groups
+    additional_age_groups - all_primary_age_groups
+  end
+
+  # The roll-up cells aggregate across affiliated people, so retagging a person or
+  # adding an affiliation leaves the organizations row untouched and `[organization]`
+  # alone caches them stale. Reads preloaded associations, so it costs no queries.
+  def rollup_cache_version
+    records = affiliations.to_a + sectorable_items.to_a + categorizable_items.to_a +
+      affiliated_people.flat_map { |person| person.sectorable_items.to_a + person.categorizable_items.to_a }
+    [ records.size, records.filter_map(&:updated_at).max ]
   end
 
   remote_searchable_by :name
@@ -305,16 +309,15 @@ class Organization < ApplicationRecord
 
   private
 
-  # Union of the org's own age groups and its affiliated people's, deduped. The
-  # affiliated people (with their taggings) are loaded once and memoized so the
-  # several aggregation calls a page render makes don't re-query.
+  # Union of the org's own age groups and its affiliated people's, deduped.
   def collect_age_groups(kind)
-    ([ self ] + affiliated_people_with_age_data).flat_map { |record| record.public_send(kind) }.uniq
+    ([ self ] + affiliated_people).flat_map { |record| record.public_send(kind) }.uniq
   end
 
-  def affiliated_people_with_age_data
-    @affiliated_people_with_age_data ||=
-      people.includes(categorizable_items: { category: :category_type }).to_a
+  # Reused as-is when already preloaded — list pages preload `people` with the
+  # PEOPLE_TAGGINGS nest, and a bare `:people` would defeat that.
+  def affiliated_people
+    @affiliated_people ||= people.loaded? ? people.to_a : people.includes(PEOPLE_TAGGINGS).to_a
   end
 
   def affiliation_dates_locked

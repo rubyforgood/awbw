@@ -40,7 +40,8 @@
 <% state_data = data.state_counts.sort_by { |_, count| -count } %>
 <% country_data = data.country_counts.sort_by { |_, count| -count } %>
 <% school_district_data = data.school_district_counts.sort_by { |_, count| -count } %>
-<% program_status_rows = [ [ "New", data.program_status_counts[:new], "#22c55e" ],
+<%# Slice colours track DomainTheme's program_new/ongoing/reinstated hues. %>
+<% program_status_rows = [ [ "New", data.program_status_counts[:new], "#6366f1" ],
                            [ "Ongoing", data.program_status_counts[:ongoing], "#3b82f6" ],
                            [ "Reinstated", data.program_status_counts[:reinstated], "#a855f7" ] ].select { |_, count, _| count.positive? } %>
 <% program_status_data = program_status_rows.map { |label, count, _| [ label, count ] } %>
@@ -167,7 +168,9 @@
   <%# Col 3: org/program status → all organizations (2× tall) → all cities %>
   <div class="flex flex-col gap-6 lg:grid lg:grid-rows-subgrid lg:row-span-4">
     <% if program_status_data.any? %>
-      <%= render "breakdown_card", title: "Organization/program status", data: program_status_data, chart: :pie, palette: program_status_palette, row_paths: program_status_paths %>
+      <%= render "breakdown_card", title: "Organization/program status", data: program_status_data, chart: :pie,
+                 palette: program_status_palette, row_paths: program_status_paths,
+                 note: program_status_column_note(local_assigns[:event]) %>
     <% end %>
     <% if org_rows.any? %>
       <%= render "events/organizations_breakdown", org_rows: org_rows, extra_class: "lg:row-span-2" %>

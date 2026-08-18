@@ -38,24 +38,6 @@ RSpec.describe "/organizations", type: :request do
       expect(response).to be_successful
     end
 
-    it "shows single-letter program status badges per organization" do
-      create(:organization, name: "Brand New Org", organization_status: organization_status)
-
-      ongoing_org = create(:organization, name: "Ongoing Org", organization_status: organization_status)
-      create(:affiliation, organization: ongoing_org, person: create(:person), title: "Facilitator")
-
-      reinstate_org = create(:organization, name: "Reinstate Org", organization_status: organization_status)
-      create(:affiliation, organization: reinstate_org, person: create(:person), title: "Facilitator", end_date: 1.year.ago.to_date)
-
-      get organizations_url, headers: { "Turbo-Frame" => "organizations_results" }
-
-      expect(response).to be_successful
-      page = Capybara.string(response.body)
-      expect(page).to have_css("span[title='New']", text: "N")
-      expect(page).to have_css("span[title='Ongoing']", text: "O")
-      expect(page).to have_css("span[title='Reinstated']", text: "R")
-    end
-
     it "renders the results frame with deduped age groups from affiliated people" do
       organization = Organization.create!(valid_attributes)
       age_type = create(:category_type, name: "AgeRange", published: true)
@@ -121,8 +103,8 @@ RSpec.describe "/organizations", type: :request do
       affiliated_sector_2 = create(:sector, name: "Affiliated Sector 2")
       person_1 = create(:person)
       person_2 = create(:person)
-      create(:sectorable_item, sector: affiliated_sector_1, sectorable: person_1)
-      create(:sectorable_item, sector: affiliated_sector_2, sectorable: person_2)
+      create(:sectorable_item, sector: affiliated_sector_1, sectorable: person_1, is_primary: true)
+      create(:sectorable_item, sector: affiliated_sector_2, sectorable: person_2, is_primary: true)
 
       org = create(:organization, organization_status: organization_status)
       create(:sectorable_item, sector: create(:sector, name: "Direct Sector 1"), sectorable: org)
@@ -193,15 +175,35 @@ RSpec.describe "/organizations", type: :request do
       expect(response.body).to include("Monthly reports")
     end
 
-    it "shows the program status in the affiliations section" do
+    it "renders affiliated-since as merged year-based periods (server-side)" do
       organization = Organization.create!(valid_attributes)
-      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator")
+      create(:affiliation, organization: organization, person: create(:person),
+                           start_date: Date.new(2010, 1, 1), end_date: Date.new(2012, 6, 1))
+      create(:affiliation, organization: organization, person: create(:person),
+                           start_date: Date.new(2013, 1, 1), end_date: Date.new(2015, 6, 1))
 
       get edit_organization_url(organization)
 
-      page = Capybara.string(response.body)
-      expect(page).to have_content("Program status")
-      expect(page).to have_css("span[title='Ongoing']", text: "O")
+      expect(response.body).to include("2010-2012, 2013-2015")
+    end
+
+    it "renders per-event program-status chips only for facilitator-training events" do
+      organization = Organization.create!(valid_attributes)
+      create(:affiliation, organization: organization, person: create(:person),
+                           title: "Facilitator", start_date: Date.new(2020, 1, 1))
+      training = create(:event, title: "Qwultz Training", facilitator_training: true,
+                                start_date: Date.new(2026, 8, 1))
+      non_training = create(:event, title: "Zibberpicnic Social", facilitator_training: false,
+                                    start_date: Date.new(2026, 8, 2))
+      [ training, non_training ].each do |event|
+        registration = create(:event_registration, registrant: create(:person), event: event, status: "registered")
+        registration.event_registration_organizations.create!(organization: organization)
+      end
+
+      get edit_organization_url(organization)
+
+      expect(response.body).to include("Qwultz Training")
+      expect(response.body).not_to include("Zibberpicnic Social")
     end
   end
 
