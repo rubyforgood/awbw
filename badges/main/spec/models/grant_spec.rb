@@ -191,6 +191,23 @@ RSpec.describe Grant, type: :model do
       expect(grant.remaining_cents).to eq(60_000)
       expect(grant.remaining_dollars).to eq(600)
     end
+
+    it "excludes declined scholarships from the total and frees their funds" do
+      create(:scholarship, grant:, amount_cents: 30_000)
+      declined = create(:scholarship, grant:, amount_cents: 20_000)
+      declined.decline_agreement!("Not this year")
+
+      expect(grant.scholarships_total_cents).to eq(30_000)
+      expect(grant.remaining_cents).to eq(70_000)
+    end
+
+    it "excludes declined scholarships from the preloaded (in-memory) total too" do
+      create(:scholarship, grant:, amount_cents: 30_000)
+      create(:scholarship, grant:, amount_cents: 20_000).decline_agreement!("out")
+      preloaded = Grant.includes(:scholarships).find(grant.id)
+
+      expect(preloaded.scholarships_total_cents).to eq(30_000)
+    end
   end
 
   describe ".with_funds_remaining" do

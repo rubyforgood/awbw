@@ -108,37 +108,151 @@ RSpec.describe Scholarship, type: :model do
     end
   end
 
-  describe "agreement_signed (virtual, backed by agreement_signed_at)" do
-    it "infers the flag from the timestamp" do
+  describe "agreement response status (pending → accepted → declined)" do
+    it "starts pending" do
       scholarship = create(:scholarship)
+      expect(scholarship.agreement_pending?).to be(true)
       expect(scholarship.agreement_signed?).to be(false)
-
-      scholarship.update!(agreement_signed_at: Time.current)
-      expect(scholarship.agreement_signed?).to be(true)
+      expect(scholarship.agreement_declined?).to be(false)
     end
 
-    it "stamps the time when the agreement is first signed" do
+    it "accepts via the virtual agreement_signed setter and stamps the time" do
       scholarship = create(:scholarship)
-      expect(scholarship.agreement_signed_at).to be_nil
 
       scholarship.update!(agreement_signed: true)
-      expect(scholarship.agreement_signed_at).to be_present
+
+      expect(scholarship.agreement_signed?).to be(true)
+      expect(scholarship.latest_agreement_response.responded_at).to be_present
     end
 
-    it "clears the time when the agreement is unsigned" do
+    it "returns to pending when unsigned" do
       scholarship = create(:scholarship, agreement_signed: true)
-      expect(scholarship.agreement_signed_at).to be_present
 
       scholarship.update!(agreement_signed: false)
-      expect(scholarship.agreement_signed_at).to be_nil
+
+      expect(scholarship.agreement_signed?).to be(false)
+      expect(scholarship.agreement_pending?).to be(true)
     end
 
-    it "preserves the original time when re-saved while still signed" do
-      scholarship = create(:scholarship, agreement_signed: true)
-      original = scholarship.agreement_signed_at
-      scholarship.update!(amount_cents: 2_000)
+    it "#accept_agreement! is idempotent (no duplicate history row)" do
+      scholarship = create(:scholarship)
+      scholarship.accept_agreement!
 
-      expect(scholarship.reload.agreement_signed_at).to be_within(1.second).of(original)
+      expect { scholarship.accept_agreement! }.not_to change { scholarship.agreement_responses.count }
+    end
+
+    it "logs a response when the award is created already signed (the admin form's toggle)" do
+      scholarship = create(:scholarship, agreement_signed: true)
+
+      expect(scholarship.agreement_responses.count).to eq(1)
+      expect(scholarship.latest_agreement_response).to have_attributes(status: "accepted")
+      expect(scholarship.latest_agreement_response.responded_at).to be_present
+    end
+
+    it "logs nothing when the award is created pending" do
+      expect(create(:scholarship).agreement_responses.count).to eq(0)
+    end
+  end
+
+  describe "declining" do
+    it "#decline_agreement! records the status, time, and reason" do
+      scholarship = create(:scholarship)
+
+      scholarship.decline_agreement!("Timing no longer works")
+
+      expect(scholarship.agreement_declined?).to be(true)
+      expect(scholarship.latest_agreement_response.responded_at).to be_present
+      expect(scholarship.latest_agreement_response.reason).to eq("Timing no longer works")
+    end
+
+    it "#decline_agreement! clears any prior signed state (mutually exclusive)" do
+      scholarship = create(:scholarship, agreement_signed: true)
+
+      scholarship.decline_agreement!("Changed my mind")
+
+      expect(scholarship.agreement_signed?).to be(false)
+      expect(scholarship.agreement_declined?).to be(true)
+    end
+
+    it "#decline_agreement! stores nil for a blank reason" do
+      scholarship = create(:scholarship)
+
+      scholarship.decline_agreement!("")
+
+      expect(scholarship.latest_agreement_response.reason).to be_nil
+    end
+
+    it "stays declined (allocation still zero) when only the amount is edited" do
+      event = create(:event, cost_cents: 10_000)
+      registration = create(:event_registration, event:)
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 5_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 5_000)
+      scholarship.reload
+      scholarship.decline_agreement!("No longer available")
+
+      scholarship.update!(amount_cents: 6_000)
+
+      # Editing the amount no longer reactivates a decline — that's the explicit
+      # Re-offer action now.
+      expect(scholarship.reload.agreement_declined?).to be(true)
+      expect(scholarship.allocation.reload.amount).to eq(0)
+    end
+
+    it "#reoffer_agreement! returns a declined award to pending and re-funds it" do
+      event = create(:event, cost_cents: 10_000)
+      registration = create(:event_registration, event:)
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 5_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 5_000)
+      scholarship.reload
+      scholarship.decline_agreement!("No longer available")
+      scholarship.update!(amount_cents: 6_000) # adjust terms first, still declined
+
+      scholarship.reoffer_agreement!
+
+      expect(scholarship.agreement_pending?).to be(true)
+      expect(scholarship.allocation.reload.amount).to eq(6_000)
+      expect(scholarship.latest_agreement_response).to have_attributes(status: "pending", responder: "admin")
+    end
+
+    it "excludes declined scholarships from the .not_declined scope" do
+      active = create(:scholarship)
+      declined = create(:scholarship)
+      declined.decline_agreement!("out")
+
+      expect(Scholarship.not_declined).to include(active)
+      expect(Scholarship.not_declined).not_to include(declined)
+    end
+
+    it "accepting a declined award reinstates it and re-funds the allocation" do
+      event = create(:event, cost_cents: 10_000)
+      registration = create(:event_registration, event:)
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 5_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 5_000)
+      scholarship.reload
+      scholarship.decline_agreement!("no")
+      expect(scholarship.allocation.reload.amount).to eq(0)
+
+      # The admin "Agreement signed" toggle routes through agreement_signed=.
+      scholarship.update!(agreement_signed: true)
+
+      expect(scholarship.agreement_signed?).to be(true)
+      expect(scholarship.agreement_declined?).to be(false)
+      expect(scholarship.allocation.reload.amount).to eq(5_000)
+    end
+  end
+
+  describe "agreement response history" do
+    it "appends a row on each transition, capturing status, reason, responder, and amount" do
+      scholarship = create(:scholarship, amount_cents: 5_000)
+
+      scholarship.decline_agreement!("Not this year", by: "recipient")
+      scholarship.reoffer_agreement!(by: "admin")
+      scholarship.accept_agreement!(by: "recipient")
+
+      history = scholarship.agreement_responses.chronological
+      expect(history.map(&:status)).to eq(%w[declined pending accepted])
+      expect(history.first).to have_attributes(reason: "Not this year", responder: "recipient", amount_cents: 5_000)
+      expect(history.last).to have_attributes(status: "accepted", responder: "recipient")
     end
   end
 

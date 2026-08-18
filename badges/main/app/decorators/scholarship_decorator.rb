@@ -56,4 +56,43 @@ class ScholarshipDecorator < ApplicationDecorator
   def agreement_signed?
     object.agreement_signed?
   end
+
+  def agreement_declined?
+    object.agreement_declined?
+  end
+
+  AGREEMENT_STATUS_LABELS = {
+    "declined" => "Declined",
+    "accepted" => "Signed",
+    "pending" => "Pending"
+  }.freeze
+
+  AGREEMENT_STATUS_CLASSES = {
+    "declined" => "bg-red-50 text-red-700 border-red-200",
+    "accepted" => "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200",
+    "pending" => "bg-amber-50 text-amber-700 border-amber-200"
+  }.freeze
+
+  AGREEMENT_STATUS_ICONS = {
+    "declined" => "fa-solid fa-circle-xmark",
+    "accepted" => "fa-solid fa-file-signature",
+    "pending" => "fa-solid fa-file-signature"
+  }.freeze
+
+  def agreement_status_label = AGREEMENT_STATUS_LABELS.fetch(object.agreement_response_status)
+  def agreement_status_classes = AGREEMENT_STATUS_CLASSES.fetch(object.agreement_response_status)
+  def agreement_status_icon = AGREEMENT_STATUS_ICONS.fetch(object.agreement_response_status)
+
+  # The agreement-status pill every surface that lists a scholarship renders, so
+  # the three states read the same everywhere: Declined (red), Signed (fuchsia),
+  # Pending (amber). Compact surfaces only need to flag the exception, so
+  # pending/signed render nothing unless `all_states:`. `prefix:` reads it as
+  # "Agreement declined" where the pill sits next to a tasks pill.
+  def agreement_status_badge(all_states: false, prefix: false, icon_size: "text-xs")
+    return unless all_states || object.agreement_declined?
+
+    label = prefix ? "Agreement #{agreement_status_label.downcase}" : agreement_status_label
+    h.render "shared/badge", label: label, classes: agreement_status_classes,
+             icon: [ agreement_status_icon, icon_size ].compact_blank.join(" ")
+  end
 end

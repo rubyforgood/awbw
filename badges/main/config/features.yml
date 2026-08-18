@@ -27,6 +27,49 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Decline a scholarship award"
+  area: scholarships
+  display_status: public_facing
+  released_on: 2026-08-18
+  action_path: "/scholarships"
+  pr_number: 2178
+  summary: >-
+    A recipient can decline their award from their scholarship page, with a reason.
+    A declined award drops out of every total and frees the grant funds back up, and
+    staff can re-offer it.
+  pro_tips:
+    - "The whole accept/decline back-and-forth is kept as an admin-only agreement history on the award."
+    - "To re-offer at new terms, change the amount and save first, then click Re-offer."
+  description: |
+    <p>The recipient's scholarship page spells out what each choice costs them, so
+    they are deciding against a real number rather than a promise. Example: a $100
+    registration with a $50 award.</p>
+    <table>
+      <thead>
+        <tr><th>State</th><th>Copy</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Pending, balance left</td>
+          <td>"Accept and you'll owe $50 of the $100 registration cost." + "Decline and $100 is due."</td>
+        </tr>
+        <tr>
+          <td>Pending, no balance left</td>
+          <td>"Accept and your $100 registration is fully covered — you'll owe nothing." + "Decline and $50 is due."</td>
+        </tr>
+        <tr>
+          <td>Signed, balance left</td>
+          <td>"You'll owe $50 of the $100 registration cost."</td>
+        </tr>
+        <tr>
+          <td>Signed, no balance left</td>
+          <td>"Your $100 registration is fully covered — you'll owe nothing."</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The decline figure is priced off that award alone, so anything already paid
+    stays paid. A declined award hides the box entirely.</p>
+
 - name: "Program status report for annual reporting"
   area: reporting
   display_status: admin_facing

@@ -54,9 +54,7 @@ module Events
       @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
     end
 
-    # Records the recipient agreeing, from their scholarship page, to complete the
-    # scholarship's tasks. The Agree button submits agreement=yes, which stamps
-    # agreement_signed_at via the model.
+    # The Agree button (agreement=yes) records an "accepted" response.
     def sign_agreement
       scholarship = @event_registration.scholarships.first
       unless scholarship
@@ -65,11 +63,30 @@ module Events
       end
 
       if params[:agreement] == "yes"
-        scholarship.update!(agreement_signed: true) unless scholarship.agreement_signed?
+        scholarship.accept_agreement!(by: "recipient")
         redirect_to registration_scholarship_path(@event_registration.slug), notice: "Thanks — your agreement has been recorded."
       else
         redirect_to registration_scholarship_path(@event_registration.slug), alert: "Something went wrong recording your agreement. Please try again."
       end
+    end
+
+    # Record the recipient's decline (drops the award from all totals). A repeat
+    # decline is a no-op.
+    def decline_agreement
+      scholarship = @event_registration.scholarships.first
+      unless scholarship
+        redirect_to registration_scholarship_path(@event_registration.slug)
+        return
+      end
+
+      if scholarship.agreement_declined?
+        redirect_to registration_scholarship_path(@event_registration.slug), notice: "You've already declined this scholarship. Contact us if you'd like to reconsider."
+        return
+      end
+
+      scholarship.decline_agreement!(params[:decline_reason].to_s.strip)
+
+      redirect_to registration_scholarship_path(@event_registration.slug), notice: "Thanks for letting us know — the team will follow up with you."
     end
 
     # CE hours status: hours, amount owed, and license number. The heading and the

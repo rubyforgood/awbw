@@ -2883,6 +2883,17 @@ RSpec.describe "Events", type: :request do
           expect(response.body).to include("#{recipients_event_path(owned_event)}#participant-#{registration.slug}")
         end
 
+        it "badges a declined award on the roster instead of dropping the recipient" do
+          scholarship = create(:scholarship, recipient: person)
+          create(:allocation, source: scholarship, allocatable: registration)
+          scholarship.reload.decline_agreement!("Timing no longer works")
+
+          get roster_event_path(owned_event)
+
+          expect(response.body).to include("fa-graduation-cap")
+          expect(response.body).to include("Declined")
+        end
+
         it "does not show a recipients link for registrants without a scholarship" do
           get roster_event_path(owned_event)
 
@@ -3210,6 +3221,18 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Sexual Assault")
         expect(response.body).to include("How will this help the people you serve?")
         expect(response.body).to include("It will let me reach more survivors.")
+      end
+
+      it "keeps a declined award on the recipient's card, struck through and badged" do
+        registration = EventRegistration.find_by!(registrant: applicant, event: event)
+        scholarship = create(:scholarship, recipient: applicant, amount_cents: 1000)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
+        scholarship.reload.decline_agreement!("Timing no longer works")
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include("Declined")
+        expect(response.body).to match(/line-through[^>]*>\s*<i[^>]*sack-dollar[^>]*><\/i>\s*\$10\b/)
       end
 
       it "shows a recipient city breakdown, grouped by the registration-linked org, in the lazy charts frame" do

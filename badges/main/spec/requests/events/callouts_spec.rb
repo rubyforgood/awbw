@@ -569,6 +569,70 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(response.body).to include("Agreement signed")
         expect(response.body).not_to include("Pending agreement")
       end
+
+      it "frames the balance as the accept/decline choice while unsigned" do
+        get registration_scholarship_path(registration.slug)
+
+        # $100 event cost − $50 scholarship allocation = $50 owed if accepted,
+        # the full $100 if declined.
+        expect(response.body).to include("Accept and you'll owe")
+        expect(response.body).to include("$50")
+        expect(response.body).to match(/Decline and\s*<strong>\$100<\/strong> is due/)
+      end
+
+      it "states the balance plainly once the agreement is signed" do
+        scholarship.update!(agreement_signed: true)
+        get registration_scholarship_path(registration.slug)
+
+        expect(response.body).to match(/You'll owe\s*<strong>\$50<\/strong>/)
+        expect(response.body).not_to include("Accept and you'll owe")
+        expect(response.body).not_to include("Decline and")
+      end
+
+      it "prices the decline off this award alone, not the whole registration" do
+        create(:allocation, source: create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000),
+                            allocatable: registration, amount: 5_000)
+        get registration_scholarship_path(registration.slug)
+
+        # The $50 already paid stays paid, so declining leaves $50 due, not $100.
+        expect(response.body).to include("registration is fully covered")
+        expect(response.body).to match(/Decline and\s*<strong>\$50<\/strong> is due/)
+      end
+
+      it "offers a Decline option with a reason box while unsigned" do
+        get registration_scholarship_path(registration.slug)
+
+        expect(response.body).to include("Decline")
+        expect(response.body).to match(/name="decline_reason"/)
+      end
+
+      it "shows the declined state instead of the buttons once declined" do
+        scholarship.decline_agreement!("Timing no longer works")
+        get registration_scholarship_path(registration.slug)
+
+        expect(response.body).to include("You declined this scholarship")
+        expect(response.body).not_to match(/name="agreement" value="yes"/)
+      end
+
+      it "hides the agreement history from a registrant (public view)" do
+        scholarship.decline_agreement!("Timing no longer works")
+        get registration_scholarship_path(registration.slug)
+
+        expect(response.body).not_to include("Agreement history")
+      end
+
+      context "when an admin is viewing" do
+        let(:admin) { create(:user, :with_person, super_user: true) }
+        before { sign_in admin }
+
+        it "shows the admin-only agreement history once there are responses" do
+          scholarship.decline_agreement!("Timing no longer works")
+          get registration_scholarship_path(registration.slug)
+
+          expect(response.body).to include("Agreement history")
+          expect(response.body).to include("Admin only")
+        end
+      end
     end
 
     describe "POST /registration/:slug/scholarship/agreement" do
@@ -579,7 +643,7 @@ RSpec.describe "Events::Callouts", type: :request do
 
         expect(response).to redirect_to(registration_scholarship_path(registration.slug))
         expect(scholarship.reload.agreement_signed?).to be(true)
-        expect(scholarship.agreement_signed_at).to be_present
+        expect(scholarship.latest_agreement_response.responded_at).to be_present
       end
 
       it "does not sign the agreement without an affirmative submission" do
@@ -593,6 +657,47 @@ RSpec.describe "Events::Callouts", type: :request do
         other = create(:event_registration, event: event, scholarship_requested: true)
 
         post registration_scholarship_agreement_path(other.slug), params: { agreement: "yes" }
+
+        expect(response).to redirect_to(registration_scholarship_path(other.slug))
+      end
+    end
+
+    describe "POST /registration/:slug/scholarship/decline" do
+      it "records the decline with the reason and clears any signed state" do
+        scholarship.update!(agreement_signed: true)
+
+        post registration_scholarship_decline_path(registration.slug), params: { decline_reason: "Timing no longer works" }
+
+        expect(response).to redirect_to(registration_scholarship_path(registration.slug))
+        scholarship.reload
+        expect(scholarship.agreement_declined?).to be(true)
+        expect(scholarship.latest_agreement_response.reason).to eq("Timing no longer works")
+        expect(scholarship.agreement_signed?).to be(false)
+      end
+
+      it "zeroes the scholarship allocation so it stops counting toward the balance" do
+        expect(registration.reload.remaining_cost).to eq(5_000)
+
+        post registration_scholarship_decline_path(registration.slug), params: { decline_reason: "No thanks" }
+
+        expect(allocation.reload.amount).to eq(0)
+        expect(registration.reload.remaining_cost).to eq(10_000)
+      end
+
+      it "is a no-op when already declined (no duplicate response row)" do
+        scholarship.decline_agreement!("first")
+
+        expect {
+          post registration_scholarship_decline_path(registration.slug), params: { decline_reason: "second" }
+        }.not_to change { scholarship.agreement_responses.count }
+
+        expect(response).to redirect_to(registration_scholarship_path(registration.slug))
+      end
+
+      it "redirects to the scholarship page when there is no awarded scholarship" do
+        other = create(:event_registration, event: event, scholarship_requested: true)
+
+        post registration_scholarship_decline_path(other.slug), params: { decline_reason: "n/a" }
 
         expect(response).to redirect_to(registration_scholarship_path(other.slug))
       end

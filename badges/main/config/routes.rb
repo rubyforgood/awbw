@@ -86,6 +86,7 @@ Rails.application.routes.draw do
   get "registration/:slug/receipt", to: "events/registrations#receipt", as: :registration_receipt
   get "registration/:slug/scholarship", to: "events/callouts#scholarship", as: :registration_scholarship
   post "registration/:slug/scholarship/agreement", to: "events/callouts#sign_agreement", as: :registration_scholarship_agreement
+  post "registration/:slug/scholarship/decline", to: "events/callouts#decline_agreement", as: :registration_scholarship_decline
   get "registration/:slug/faq", to: "events/callouts#faq", as: :registration_faq
   get "registration/:slug/payment", to: "events/callouts#payment", as: :registration_payment
   get "registration/:slug/certificate", to: "events/callouts#certificate", as: :registration_certificate
@@ -148,7 +149,10 @@ Rails.application.routes.draw do
   resources :form_submissions, only: [ :index, :show ]
   resources :grants
   resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
-    member { patch :toggle_tasks }
+    member do
+      patch :toggle_tasks
+      post :reoffer
+    end
     resources :comments, only: [ :create, :update ]
   end
   resources :continuing_education_registrations, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
