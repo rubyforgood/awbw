@@ -4,12 +4,11 @@
               class: "bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4" do |f| %>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
     <div class="sm:col-span-2">
-      <label for="query" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+      <label for="query" class="<%= search_label_class %>">Search</label>
       <div class="relative">
         <%= f.search_field :query, value: params[:query], placeholder: "Search features and tips…",
               oninput: "this.form.requestSubmit()",
-              class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-10
-                      focus:ring-blue-500 focus:border-blue-500" %>
+              class: search_field_class(extra: "pr-10") %>
         <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
           <i class="fa fa-search"></i>
         </span>
@@ -17,41 +16,41 @@
     </div>
 
     <div>
-      <label for="area" class="block text-sm font-medium text-gray-700 mb-1">Area</label>
+      <label for="area" class="<%= search_label_class %>">Area</label>
       <%= f.select :area,
             options_for_select([ [ "All areas", "" ] ] + @areas.map { |a| [ a[:label], a[:key] ] }, params[:area]),
             {},
-            class: "w-full px-3 py-2 border border-gray-300 rounded-lg" %>
+            class: search_field_class %>
     </div>
 
     <div>
-      <label for="display_status" class="block text-sm font-medium text-gray-700 mb-1">Audience</label>
+      <label for="display_status" class="<%= search_label_class %>">Audience</label>
       <%= f.select :display_status,
             options_for_select([ [ "All audiences", "" ] ] + @statuses.map { |key, meta| [ meta[:label], key ] }, params[:display_status]),
             {},
-            class: "w-full px-3 py-2 border border-gray-300 rounded-lg" %>
+            class: search_field_class %>
     </div>
 
     <div>
-      <label for="released_from" class="block text-sm font-medium text-gray-700 mb-1">Released from</label>
+      <label for="released_from" class="<%= search_label_class %>">Released from</label>
       <%= f.date_field :released_from, value: params[:released_from],
             onchange: "this.form.requestSubmit()",
-            class: "w-full px-3 py-2 border border-gray-300 rounded-lg" %>
+            class: search_field_class %>
     </div>
 
     <div>
-      <label for="released_to" class="block text-sm font-medium text-gray-700 mb-1">Released to</label>
+      <label for="released_to" class="<%= search_label_class %>">Released to</label>
       <%= f.date_field :released_to, value: params[:released_to],
             onchange: "this.form.requestSubmit()",
-            class: "w-full px-3 py-2 border border-gray-300 rounded-lg" %>
+            class: search_field_class %>
     </div>
 
     <div>
-      <label for="direction" class="block text-sm font-medium text-gray-700 mb-1">Sort by date</label>
+      <label for="direction" class="<%= search_label_class %>">Sort by date</label>
       <%= f.select :direction,
             options_for_select([ [ "Newest first", "desc" ], [ "Oldest first", "asc" ] ], params[:direction].presence || "desc"),
             {},
-            class: "w-full px-3 py-2 border border-gray-300 rounded-lg" %>
+            class: search_field_class %>
     </div>
 
     <div class="flex items-end">
