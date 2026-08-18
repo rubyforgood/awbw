@@ -1,15 +1,8 @@
 module AffiliationServices
-  # Event-level orchestration for the "Reconcile affiliations" bulk action. Walks
-  # the event's registrants and, for each organization they linked, asks
-  # `ReconcilePerson` what should happen to their facilitator affiliations there —
-  # that class holds every rule; this one turns its decisions into reviewable,
-  # individually-selectable rows. Job affiliations are never touched.
-  #
-  # `actionable_person_groups` groups the actionable rows by person (with their
-  # attendance registration and other-org facilitator affiliations for context);
-  # `skipped_reason_sections` groups the no-action rows by reason. `apply` performs
-  # the kept actionable rows and stamps the event. Every facilitator affiliation for
-  # a linked org is reconciled — hand-entered rows included, not just app-created ones.
+  # Event-level orchestration for the "Reconcile affiliations" bulk action: asks
+  # `ReconcilePerson` about each registrant's linked orgs and turns its decisions
+  # into individually-selectable rows. Every rule lives there; keys, grouping and
+  # the timestamp live here. Job affiliations are never touched.
   class ReconcileEvent
     Row = Struct.new(:person, :registration, :organization, :affiliation, :action, :reason, :key, keyword_init: true) do
       def actionable?
@@ -21,17 +14,16 @@ module AffiliationServices
       @event = event
     end
 
-    # Actionable rows grouped by person: [{ person:, registration:, rows:,
-    # other_facilitators: }]. `other_facilitators` are the person's active
-    # facilitator affiliations with orgs they did NOT link on this event.
+    # `other_facilitators` are the person's active facilitator affiliations with orgs
+    # they did NOT link on this event.
     def actionable_person_groups
       all_rows.select(&:actionable?).group_by(&:person).map do |person, rows|
         { person:, registration: rows.first.registration, rows:, other_facilitators: other_facilitators(person) }
       end
     end
 
-    # No-action rows grouped by reason: [[reason, [rows]]]. "Active — attended" sorts
-    # second-to-last and the trivial "no affiliation" bucket last; the rest alphabetical.
+    # "Active — attended" sorts second-to-last and the trivial "no affiliation" bucket
+    # last; the rest alphabetical.
     def skipped_reason_sections
       grouped = all_rows.reject(&:actionable?).group_by(&:reason)
       grouped.keys.sort_by { |reason| [ reason_rank(reason), reason ] }.map { |reason| [ reason, grouped[reason] ] }
@@ -51,12 +43,10 @@ module AffiliationServices
 
     Change = Struct.new(:person, :organization, :affiliation, :action, keyword_init: true)
 
-    # Each row's outcome is one radio choice keyed by row.key: the action itself
-    # (deactivate/delete/reactivate/create) or "keep" (do nothing).
+    # One radio choice per row: the action itself, or "keep".
     ACTION_FOR_CHOICE = { "deactivate" => :deactivate, "delete" => :delete, "reactivate" => :reactivate, "create" => :create }.freeze
 
-    # The concrete changes the given `outcome` map will make, for the confirmation
-    # screen. `outcome` is `{ row.key => choice }`.
+    # What the `{ row.key => choice }` map will change, for the confirmation screen.
     def planned_changes(outcome:)
       outcome = outcome.to_h
 

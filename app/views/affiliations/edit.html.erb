@@ -180,6 +180,13 @@
                   } %>
           </div>
         </div>
+        <div class="w-40 self-center">
+          <%= f.input :inactive,
+                as: :boolean,
+                label: "Inactive",
+                hint: "Overrides the dates — tick to end an affiliation the dates still call active.",
+                input_html: { class: "mr-2 rounded focus:ring-blue-500 text-blue-600" } %>
+        </div>
       </div>
     </div>
 

@@ -24,8 +24,7 @@ class AffiliationDecorator < ApplicationDecorator
     "Dates not recorded"
   end
 
-  # Compact "started – ended" range for the affiliation, e.g. "Oct 13, 2026 – present".
-  # Reads "no start date" when unset so a blank date isn't silently omitted.
+  # e.g. "Oct 13, 2026 – present"
   def date_range
     start = start_date ? start_date.strftime("%b %-d, %Y") : "no start date"
     finish = end_date ? end_date.strftime("%b %-d, %Y") : "present"

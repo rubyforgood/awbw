@@ -1,9 +1,8 @@
 <% deco = registration.decorate %>
 <% badge_return_to = local_assigns.fetch(:return_to, nil) %>
 <div id="<%= dom_id(registration, :attendance_status) %>" class="inline-flex items-center gap-1.5 scroll-mt-24">
-  <%# Without a `return_to` the update answers with a turbo_stream that swaps just this
-      badge. A page whose surrounding content depends on the status (the reconcile
-      actions) passes one and opts out of Turbo, so it gets the redirect and re-renders. %>
+  <%# No return_to: the update answers with a turbo_stream that swaps just this badge.
+      With one: opt out of Turbo so the redirect runs and the whole page re-renders. %>
   <%= form_with model: registration, url: event_registration_path(registration, return_to: badge_return_to),
         method: :patch, data: { turbo_frame: "_top", turbo: (false if badge_return_to) } do |f| %>
     <div class="relative inline-flex items-center gap-1.5 rounded-full border px-5 py-0.5 text-xs font-medium <%= deco.attendance_status_classes %>">

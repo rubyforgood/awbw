@@ -186,9 +186,7 @@ class Event < ApplicationRecord
     end_date < Time.current
   end
 
-  # A registrant's status changed after affiliations were last reconciled, so the
-  # reconciliation may be out of date and worth re-running. False when never
-  # reconciled (nothing to be stale against).
+  # A registrant changed since the last reconciliation, so it's worth re-running.
   def affiliations_reconciliation_stale?
     return false unless affiliations_reconciled_at
 

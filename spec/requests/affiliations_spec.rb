@@ -133,6 +133,15 @@ RSpec.describe "/affiliations", type: :request do
 
         expect(affiliation.reload.filemaker_code).to eq("FM-123")
       end
+
+      it "ends an affiliation whose dates still read as active" do
+        affiliation.update!(start_date: Date.current, end_date: nil, inactive: false)
+
+        patch affiliation_path(affiliation, return_to: "organization", origin_id: organization.id),
+              params: { affiliation: { inactive: "1" } }
+
+        expect(affiliation.reload).not_to be_active
+      end
     end
 
     context "as a non-admin" do

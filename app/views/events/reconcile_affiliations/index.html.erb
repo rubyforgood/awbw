@@ -60,9 +60,8 @@
       </span>
     </div>
 
-    <%# Standalone form (turbo:false so the POST renders the confirm page). The cards
-        live OUTSIDE it — the attendance chip renders its own form and nesting forms is
-        invalid — so the radios and submit join this form via the HTML form= attribute. %>
+    <%# The cards sit outside this form — the attendance chip renders its own and forms
+        can't nest — so the radios join it via the HTML form= attribute. %>
     <%= form_with url: reconcile_affiliations_event_path(@event), method: :post, id: "reconcile_form", data: { turbo: false } do %><% end %>
 
     <div class="space-y-4">
@@ -94,7 +93,6 @@
                 <% else %>
                   <span class="flex-1 min-w-0 text-sm text-gray-800"><%= row.organization.name %></span>
                 <% end %>
-                <%# One radio per outcome (native mutual exclusion — no JS). has-[:checked] colors the chosen button. %>
                 <div class="flex shrink-0 items-center gap-2">
                   <% outcome_options[row.action].each do |value, label, color| %>
                     <label class="<%= button_base %> <%= color_class[color] %>">

@@ -193,9 +193,8 @@ class Affiliation < ApplicationRecord
     addresses.first.id if addresses&.one?
   end
 
-  # Derives `inactive` from the dates, unless this save sets it explicitly — an
-  # admin's tick, or a same-day deactivation whose end_date (today, or the future
-  # start of an upcoming affiliation) the date rule alone would still call active.
+  # An explicit assignment wins: the date rule alone still reads a row ending today
+  # or later as active.
   def set_inactive_from_dates
     return if inactive_changed?
     return unless end_date_changed? || start_date_changed?

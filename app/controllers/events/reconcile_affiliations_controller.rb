@@ -1,10 +1,6 @@
 module Events
-  # The "Reconcile affiliations" bulk action: a preview-and-confirm page that
-  # brings each registrant's owned facilitator affiliation in line with reality.
-  # For a facilitator training it creates missing affiliations, same-days
-  # non-completers, and reactivates late attendees; for a non-training event it
-  # removes facilitator affiliations that were auto-created off it. The admin can
-  # opt individual rows out (and, for same-day rows, delete instead) before applying.
+  # The "Reconcile affiliations" bulk action: index (edit) → confirm (preview, no
+  # writes) → create (perform). `AffiliationServices::ReconcilePerson` holds the rules.
   class ReconcileAffiliationsController < ApplicationController
     include AhoyTracking
     before_action :set_event
@@ -22,7 +18,6 @@ module Events
       @event = @event.decorate
     end
 
-    # Step 2: show exactly what "Perform changes" will do (no writes yet).
     def confirm
       authorize! @event, to: :reconcile_affiliations?
 
@@ -46,8 +41,8 @@ module Events
       @event = Event.find(params[:id])
     end
 
-    # `outcome` is a { row.key => choice } map with dynamic keys, read as a plain
-    # string hash (never mass-assigned); the service only acts on known choices.
+    # Dynamic keys, so read as a plain string hash (never mass-assigned); the service
+    # only acts on known choices.
     def outcome_params
       raw = params[:outcome]
       return {} unless raw.respond_to?(:each_pair)

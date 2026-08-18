@@ -1,31 +1,15 @@
 module AffiliationServices
-  # Decides what should happen to one person's facilitator affiliations with one
-  # organization, in the context of one event. This is the single classifier —
-  # `ReconcileEvent` iterates it across an event's registrants, and it can be
-  # called on its own for a single person (e.g. after an attendance change).
+  # The single classifier for one person's facilitator affiliations with one
+  # organization, in the context of one event. `ReconcileEvent` iterates it across
+  # an event's registrants; it also stands alone for a single person.
   #
   # A person is a facilitator of an org iff they have at least one `attended`
-  # registration to that org from a facilitator-training event. The decision spans
-  # ALL their training registrations for the org, so no-showing one training but
-  # attending another keeps them active.
+  # registration to that org from a facilitator training — across ALL their
+  # training registrations, so no-showing one but attending another keeps them
+  # active.
   #
-  # Actions:
-  #   :create      — facilitator training, none exists yet but one should (pre-event
-  #                  for anyone, post-event only for attendees).
-  #   :deactivate  — facilitator training, its (ended) training wasn't completed.
-  #                  Same-days the row: `end_date := start_date` plus an explicit
-  #                  `inactive: true`, since the model's date rule alone still reads
-  #                  a row ending today or later as active. Preserves `start_date`
-  #                  and is reversible.
-  #   :reactivate  — facilitator training, same-dayed earlier, now attended.
-  #   :delete      — NOT a facilitator training: an affiliation auto-created off
-  #                  this event that shouldn't exist.
-  #   :noop        — nothing to do; the decision carries a `reason`.
-  #
-  # `include_unowned:` is the auto-vs-manual gate. False (the default) touches only
-  # rows the registration flow minted (`event_registration_id` present), leaving
-  # hand-created / historical rows alone. The bulk page passes true — an admin
-  # reviewing every row is expected to reconcile hand-entered ones too.
+  # `include_unowned: false` (the default) touches only rows the registration flow
+  # minted, leaving hand-created ones alone; the bulk page passes true.
   class ReconcilePerson
     Decision = Struct.new(:affiliation, :action, :reason, keyword_init: true) do
       def actionable?
@@ -50,14 +34,13 @@ module AffiliationServices
       @include_unowned = include_unowned
     end
 
-    # One Decision per facilitator affiliation in scope, plus a create/no-create
-    # decision when the person has none. No writes.
+    # One Decision per affiliation in scope, plus a create/no-create decision when
+    # the person has none. No writes.
     def plan
       @plan ||= @event.facilitator_training? ? training_plan : non_training_plan
     end
 
-    # Perform one planned action. Returns whether anything changed, so callers can
-    # count real changes rather than attempted ones.
+    # Returns whether anything changed, so callers can count real changes.
     def perform(action, affiliation: nil)
       return false if affiliation.nil? && action != :create
 
@@ -71,7 +54,6 @@ module AffiliationServices
       true
     end
 
-    # Apply every actionable decision. Returns the actions taken.
     def call
       plan.select(&:actionable?).filter_map do |decision|
         decision.action if perform(decision.action, affiliation: decision.affiliation)
@@ -80,8 +62,6 @@ module AffiliationServices
 
     private
 
-    # Whether the person has any `attended` registration to this org from a
-    # facilitator-training event — i.e. actually became a facilitator there.
     def completed_training?
       return @completed_training if defined?(@completed_training)
 
@@ -92,9 +72,8 @@ module AffiliationServices
         .exists?
     end
 
-    # A non-training event confers no facilitation, so it only removes facilitator
-    # affiliations that were auto-created off this event. Rows minted elsewhere —
-    # and hand-entered ones, which carry no link — are none of its business.
+    # A non-training event confers no facilitation, so it only removes what was
+    # auto-created off it.
     def non_training_plan
       facilitator_affiliations.filter_map do |affiliation|
         next unless affiliation.event_registration&.event_id == @event.id
@@ -123,8 +102,8 @@ module AffiliationServices
       end
     end
 
-    # Deactivation waits for the governing training to end, so a pre-event run never
-    # deactivates. A hand-entered row has no source training, so it waits on this event.
+    # Waits for the governing training to end, so a pre-event run never deactivates.
+    # A hand-entered row has no source training, so it waits on this event.
     def deactivation_ready?(affiliation)
       affiliation.event_registration_id ? affiliation.event_registration&.event&.ended? : @event.ended?
     end
