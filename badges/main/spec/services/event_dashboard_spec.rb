@@ -847,25 +847,31 @@ RSpec.describe EventDashboard do
     let(:cancelled_facilitator) { create(:person) }
 
     before do
+      # Each registrant's own facilitator affiliation is dated to the training
+      # itself, the way AffiliationServices::CreateFromRegistration mints it. It
+      # is NOT excluded from the classification (ADR-0001 D5) — it simply doesn't
+      # count as prior history, because "before" is strict.
+      training_date = event.start_date.to_date
+
       # New program: the registrant's affiliation is the org's first facilitator.
       create(:affiliation, organization: new_org, person: new_facilitator,
-             title: "Facilitator", start_date: Date.new(2026, 1, 1))
+             title: "Facilitator", start_date: training_date)
 
       # Ongoing program: a facilitator was already active before this registrant.
       create(:affiliation, organization: ongoing_org,
              title: "Facilitator", start_date: Date.new(2023, 1, 1), end_date: nil)
       create(:affiliation, organization: ongoing_org, person: ongoing_facilitator,
-             title: "Facilitator", start_date: Date.new(2026, 1, 1))
+             title: "Facilitator", start_date: training_date)
 
       # Reinstated program: a prior facilitator ended before this registrant's.
       create(:affiliation, organization: reinstated_org,
              title: "Facilitator", start_date: Date.new(2020, 1, 1), end_date: Date.new(2021, 1, 1))
       create(:affiliation, organization: reinstated_org, person: reinstated_facilitator,
-             title: "Facilitator", start_date: Date.new(2026, 1, 1))
+             title: "Facilitator", start_date: training_date)
 
       # Cancelled registrant's program must be ignored.
       create(:affiliation, organization: new_org, person: cancelled_facilitator,
-             title: "Facilitator", start_date: Date.new(2026, 2, 1))
+             title: "Facilitator", start_date: training_date + 1.day)
 
       create(:event_registration, event: event, registrant: new_facilitator, status: "registered")
       create(:event_registration, event: event, registrant: ongoing_facilitator, status: "registered")
@@ -880,10 +886,18 @@ RSpec.describe EventDashboard do
     it "maps each registrant to their organization's program status" do
       statuses = dashboard.program_statuses_by_registrant
 
-      expect(statuses[new_facilitator.id]).to eq([ :new ])
-      expect(statuses[ongoing_facilitator.id]).to eq([ :ongoing ])
-      expect(statuses[reinstated_facilitator.id]).to eq([ :reinstated ])
+      expect(statuses[new_facilitator.id].map(&:status)).to eq([ :new ])
+      expect(statuses[ongoing_facilitator.id].map(&:status)).to eq([ :ongoing ])
+      expect(statuses[reinstated_facilitator.id].map(&:status)).to eq([ :reinstated ])
       expect(statuses).not_to have_key(cancelled_facilitator.id)
+    end
+
+    it "anchors every verdict on the event's start date, for the hover to explain" do
+      status = dashboard.program_statuses_by_registrant[ongoing_facilitator.id].first
+
+      expect(status.as_of).to eq(event.start_date.to_date)
+      expect(status).not_to be_year_anchored
+      expect(status.explanation).to include("Ongoing as of", "event start date", "Jan 2023")
     end
 
     it "groups registrant ids by program status, for the breakdown drill-in" do
@@ -938,7 +952,7 @@ RSpec.describe EventDashboard do
       end
 
       it "classifies the org as ongoing, not new" do
-        expect(dashboard.program_statuses_by_registrant[person.id]).to eq([ :ongoing ])
+        expect(dashboard.program_statuses_by_registrant[person.id].map(&:status)).to eq([ :ongoing ])
       end
     end
 
@@ -950,7 +964,7 @@ RSpec.describe EventDashboard do
       end
 
       it "classifies the org as reinstated" do
-        expect(dashboard.program_statuses_by_registrant[person.id]).to eq([ :reinstated ])
+        expect(dashboard.program_statuses_by_registrant[person.id].map(&:status)).to eq([ :reinstated ])
       end
     end
   end
@@ -973,7 +987,9 @@ RSpec.describe EventDashboard do
     end
 
     it "still counts the program as it was at the time of the event" do
-      expect(dashboard.program_status_counts).to eq(new: 1, ongoing: 0, reinstated: 0)
+      # Ongoing, not reinstated: the affiliation began a year before the event and
+      # was still running on the event date, even though it has since ended.
+      expect(dashboard.program_status_counts).to eq(new: 0, ongoing: 1, reinstated: 0)
     end
 
     it "keeps the program in the organization count" do

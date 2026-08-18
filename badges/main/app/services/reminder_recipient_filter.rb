@@ -71,7 +71,7 @@ class ReminderRecipientFilter
     scope = scope.ce_status(@params[:ce_status]) if @params[:ce_status].present?
     scope = scope.scholarship_status(@params[:scholarship]) if @params[:scholarship].present?
     scope = scope.comment_status(@params[:comment_status]) if @params[:comment_status].present?
-    scope = scope.organization_status(@params[:org_status], @event) if @params[:org_status].present?
+    scope = scope.organization_linking_status(@params[:org_status], @event) if @params[:org_status].present?
     scope = scope.account_status(@params[:account_status]) if @params[:account_status].present?
     scope = scope.submission_status(@params[:submission_status], @event) if @params[:submission_status].present?
     scope = scope.registrant_state(@params[:state]) if @params[:state].present?

@@ -1,22 +1,5 @@
 <%= turbo_frame_tag "organization_events_section" do %>
   <% if events.any? %>
-    <% if allowed_to?(:manage?, Organization) %>
-      <% decorated_org = organization.decorate %>
-      <div class="admin-only bg-blue-100 rounded-lg p-3 mb-6">
-        <p class="text-xs font-semibold text-gray-600 mb-2">Program status by event</p>
-        <div class="flex flex-wrap gap-2">
-          <% events.each do |event| %>
-            <% status = decorated_org.facilitator_status_as_of(event.start_date) %>
-            <%= render "shared/badge",
-                  label: "#{status.to_s.titleize} · #{event.decorate.compact_label.truncate(24)}",
-                  classes: OrganizationDecorator.program_status_classes(status),
-                  href: event_path(event),
-                  title: event.title %>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
-
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 blur-on-submit">
       <% events.each do |event| %>
         <% decorated = event.decorate %>

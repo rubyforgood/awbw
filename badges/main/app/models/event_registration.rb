@@ -428,12 +428,11 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
-  # "linked" = at least one organization linked; "unlinked" = no organization
-  # linked (whether or not an agency name was submitted); "pending" = the
-  # registrant submitted an agency name on the event's registration form but
-  # nothing is linked yet (mirrors the Pending chip on the roster). Needs the
-  # event to resolve its registration form's agency_name field.
-  scope :organization_status, ->(value, event) {
+  # The registrant's organization-LINKING status, not the org's own
+  # OrganizationStatus: "linked" = at least one org linked; "unlinked" = none;
+  # "pending" = an agency name was submitted but nothing is linked yet (the Pending
+  # chip on the roster). Needs the event to resolve its agency_name field.
+  scope :organization_linking_status, ->(value, event) {
     linked = EventRegistrationOrganization.select(:event_registration_id)
     case value
     when "linked" then where(id: linked)
@@ -913,20 +912,14 @@ class EventRegistration < ApplicationRecord
     true
   end
 
-  # Program status(es) for THIS registration only: classify each organization
-  # linked to the registration as of the training date, excluding the registrant's
-  # own facilitator affiliation to that org so the status reflects whether the *org*
-  # was already a facilitator program when they joined. Using the actual training
-  # date (not the 1st of its month) means a facilitator affiliation started earlier
-  # that same month still counts toward the org's activity. Distinct, so one linked
-  # org shows one badge — unlike the registrant-wide rollup, this ignores
-  # affiliations to other organizations.
+  # The organizations linked to THIS registration, as of the training date — the
+  # same verdict the dashboard, the org profile and the annual report show. Deduped
+  # by verdict, and unlike the registrant-wide rollup it ignores affiliations to
+  # other organizations.
   def program_statuses
-    reference_date = event&.start_date&.to_date || Date.current
-    organizations.filter_map do |organization|
-      own = registrant.affiliations.find { |affiliation| affiliation.organization_id == organization.id && affiliation.facilitator? }
-      organization.facilitator_status_on(reference_date, excluding_affiliation_id: own&.id)
-    end.uniq
+    reference_date = event&.start_date&.to_date
+    organizations.map { |organization| organization.facilitator_program_status(as_of: reference_date) }
+                 .uniq(&:status)
   end
 
   remote_searchable_by :registrant,

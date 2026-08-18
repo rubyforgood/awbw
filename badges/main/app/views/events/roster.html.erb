@@ -135,7 +135,7 @@
         </div>
       <% end %>
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <%= render "events/registrant_roster", roster: @dashboard, registrants: @roster_registrants, row_return_to: "roster", show_attendance_status: true %>
+        <%= render "events/registrant_roster", roster: @dashboard, registrants: @roster_registrants, row_return_to: "roster", show_attendance_status: true, program_status_event: @event %>
       </div>
     </div>
 

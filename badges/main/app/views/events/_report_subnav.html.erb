@@ -11,7 +11,8 @@
     keeps the same population in scope. Each destination reads what it knows and
     ignores the rest. The current page renders as a non-link underlined tab, matching
     events/_subnav.
-    Locals: current (one of :details, :attendees, :scholarships, :signins). %>
+    Locals: current (one of :details, :attendees, :scholarships, :program_statuses,
+    :signins). %>
 <% carried = report_subnav_params %>
 <%# The report pages narrow by time_period; the attendees index has no such
     vocabulary — it narrows by the event's calendar year — so the period is
@@ -29,6 +30,7 @@
        { key: :details, label: "Details", path: participation_events_path(carried) },
        { key: :attendees, label: "Attendees", path: attendees_events_path(attendee_filters) },
        { key: :scholarships, label: "Scholarships", path: scholarships_events_path(carried) },
+       { key: :program_statuses, label: "Program status", path: program_statuses_events_path(carried) },
        { key: :signins, label: "Sign-ins", path: signins_events_path(carried) }
      ] %>
   <% tabs.each do |tab| %>

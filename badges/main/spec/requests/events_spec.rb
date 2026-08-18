@@ -405,6 +405,16 @@ RSpec.describe "Events", type: :request do
           expect(nav).to have_no_link("Scholarships")
         end
 
+        it "renders on the program-status report with Program status current" do
+          sign_in admin
+          get program_statuses_events_path
+
+          nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
+          expect(nav).to have_link("Details")
+          expect(nav).to have_link("Scholarships")
+          expect(nav).to have_no_link("Program status")
+        end
+
         # Breakdowns is a panel on the attendees index, not a page, so it has no tab.
         it "has no Breakdowns tab" do
           sign_in admin
@@ -508,6 +518,34 @@ RSpec.describe "Events", type: :request do
           CGI.escapeHTML(reports_events_path(return_to: "events", event_type: "trainings", event_id: training_2026.id, period: "all_time"))
         )
         expect(response.body).to match(/<input[^>]*name="return_to"[^>]*value="events"/)
+      end
+
+      it "returns to the organization profile when arriving from its program-status chips" do
+        organization = create(:organization)
+        sign_in admin
+        get participation_events_path(event_id: training_2026.id, return_organization_id: organization.id, return_to: "organization")
+
+        expect(response.body).to include("← Organization")
+        expect(response.body).to include(CGI.escapeHTML(organization_path(organization, anchor: "program-status")))
+        # The origin has to survive a filter change, or the eyebrow reverts.
+        expect(response.body).to match(/<input[^>]*name="return_organization_id"[^>]*value="#{organization.id}"/)
+      end
+
+      it "returns to the organization edit form when arriving from its program-status chips" do
+        organization = create(:organization)
+        sign_in admin
+        get participation_events_path(event_id: training_2026.id, return_organization_id: organization.id, return_to: "organization_edit")
+
+        expect(response.body).to include("← Organization")
+        expect(response.body).to include(CGI.escapeHTML(edit_organization_path(organization, anchor: "program-status")))
+      end
+
+      it "falls back to the reports eyebrow when the organization origin has no id" do
+        sign_in admin
+        get participation_events_path(return_to: "organization")
+
+        expect(response.body).to include("← Reports")
+        expect(response.body).not_to include("← Organization")
       end
     end
 
@@ -2516,12 +2554,14 @@ RSpec.describe "Events", type: :request do
         expect(page).to have_link(href: registrants_event_path(event, ce_status: "registered"), visible: :all)
       end
 
-      it "shows a program status badge next to each organization" do
+      it "shows a program status badge next to each organization, hovering to explain it" do
         get dashboard_event_path(event)
 
         # The org list lives inside a collapsed <details>, so match hidden nodes too.
         page = Capybara.string(response.body)
-        expect(page).to have_css("span[title='New']", text: "N", visible: :all)
+        badge = page.all("span", text: "N", visible: :all).find { |node| node[:title]&.start_with?("New as of") }
+        expect(badge).to be_present
+        expect(badge[:title]).to include("event start date")
       end
 
       it "renders the payments section with totals for a paid event" do
@@ -3183,6 +3223,25 @@ RSpec.describe "Events", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("All cities")
         expect(response.body).to include("Richmond, CA")
+      end
+
+      # These charts cover one event, so program status has to be judged on that
+      # event's start date — the same verdict its dashboard shows, and what the
+      # card's note claims. The affiliation here starts after Jan 1 but before the
+      # training, so the cross-event start-of-year fallback would read it as New.
+      it "anchors the program-status breakdown on the event's start date" do
+        org = create(:organization, name: "Anchored Org")
+        create(:affiliation, organization: org, person: create(:person),
+                             title: "Facilitator", start_date: 2.weeks.from_now.to_date)
+        registration = EventRegistration.find_by!(registrant: applicant, event: event)
+        create(:event_registration_organization, event_registration: registration, organization: org)
+
+        get recipients_event_path(event), headers: { "Turbo-Frame" => "recipients_charts" }
+
+        card = Capybara.string(response.body).find("#organization-program-status", visible: :all)
+        expect(card).to have_text(:all, "Ongoing")
+        expect(card).to have_no_text(:all, "New")
+        expect(card).to have_css("i[title*='#{event.start_date.strftime('%b %-d, %Y')}']", visible: :all)
       end
 
       it "renders the collapsible card controls and an expand/collapse-all button" do

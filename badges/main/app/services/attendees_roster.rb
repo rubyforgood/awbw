@@ -115,12 +115,10 @@ class AttendeesRoster
     end
   end
 
-  # Distinct program statuses (:new / :ongoing / :reinstated) of each person's
-  # affiliated organizations, as they stand today. Cross-event, so reported as of
-  # the current date rather than any single event.
+  # Distinct program statuses of each person's affiliated organizations.
   def program_statuses_by_registrant
     @program_statuses_by_registrant ||= organization_ids_by_registrant.transform_values do |organization_ids|
-      organization_ids.filter_map { |organization_id| program_status_by_organization[organization_id] }.uniq
+      organization_ids.filter_map { |organization_id| program_status_by_organization[organization_id] }.uniq(&:status)
     end
   end
 
@@ -209,9 +207,11 @@ class AttendeesRoster
     affiliation.status_on
   end
 
+  # No event to anchor on (the index spans them), so the status falls back to the
+  # start of the current year and flags itself `year_anchored?` for the caveat.
   def program_status_by_organization
     @program_status_by_organization ||= organizations.to_h do |organization|
-      [ organization.id, organization.facilitator_status_on(Date.current) ]
+      [ organization.id, organization.facilitator_program_status ]
     end
   end
 end
