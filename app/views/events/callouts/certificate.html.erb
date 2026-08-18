@@ -119,7 +119,6 @@
   </div>
 <% else %>
   <%= render layout: "events/callouts/callout_page", locals: { title: "Certificate of completion" } do %>
-    <%= render "event_registrations/transfer_notice", event_registration: @event_registration %>
     <%# Not yet unlocked: show each condition and which are met, like the videoconference page. %>
     <% ended = @event.end_date&.past? %>
     <% attended = @event_registration.attended? %>

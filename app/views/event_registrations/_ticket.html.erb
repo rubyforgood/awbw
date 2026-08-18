@@ -78,7 +78,7 @@
         </div>
       <% end %>
 
-      <% if event_registration.event.cost_cents.to_i > 0 && event_registration.status != "cancelled" && event_registration.remaining_cost > 0 && @checkout_payment_status != "paid" %>
+      <% if event_registration.event.cost_cents.to_i > 0 && event_registration.status != "cancelled" && event_registration.remaining_cost > 0 && @checkout_payment_status != "paid" && !event_registration.transferred_out? %>
         <div class="text-center mt-2 space-y-3">
           <% if event_registration.intends_to_pay? %>
             <div>
