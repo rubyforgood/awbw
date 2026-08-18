@@ -58,11 +58,11 @@
       <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
         <p class="mb-2 text-xs font-semibold text-gray-700">What recording this transfer will do:</p>
         <ul class="list-disc space-y-1.5 pl-5 text-xs text-gray-600">
-          <li><span class="font-medium text-gray-800"><%= source.registrant.first_name %> keeps their <%= source.event.title %> registration</span> as a record — it's marked "Transferred out," not deleted.</li>
-          <li>A <span class="font-medium text-gray-800">new registration is created for the event you pick</span>, where you'll track their attendance from here on.</li>
-          <li><span class="font-medium text-gray-800">Their payments and any scholarship stay with <%= records_event.title %></span> — the new event won't charge them again. Invoices and receipts still show the original cost.</li>
-          <li><span class="font-medium text-gray-800">Their linked organizations are copied</span> to the new registration.</li>
-          <li><span class="font-medium text-gray-800">Continuing-education hours move with them:</span> what they already paid stays counted at <%= records_event.title %>, and the remaining hours, balance, and their certificate move to the new event.</li>
+          <li><span class="font-medium text-gray-800"><%= source.registrant.first_name %> keeps their <%= source.event.title %> registration</span> — marked "Transferred out," not deleted.</li>
+          <li><span class="font-medium text-gray-800">A new registration is created</span> for the event you pick.</li>
+          <li><span class="font-medium text-gray-800">Payments and scholarships stay with <%= records_event.title %></span> — the new event won't charge them again.</li>
+          <li><span class="font-medium text-gray-800">Linked organizations are copied</span> to the new registration.</li>
+          <li><span class="font-medium text-gray-800">CE hours move to the new event</span> — what's already paid stays counted at <%= records_event.title %>.</li>
         </ul>
 
         <% if chained %>

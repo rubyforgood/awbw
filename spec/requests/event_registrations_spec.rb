@@ -697,7 +697,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(response.body).to include("What recording this transfer will do")
           expect(response.body).to include("the new event won't charge them again")
-          expect(response.body).to include("Their linked organizations are copied")
+          expect(response.body).to include("Linked organizations are copied")
           expect(response.body).not_to include("was already transferred in from")
         end
 
