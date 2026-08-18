@@ -1,6 +1,9 @@
 module RhinoEditorHelper
   # custom rhino editor with stimulus controller attached to edit raw source html
-  def rhino_editor(form, base_attribute_name, label: nil, hint: nil)
+  # centered / full_width_images make the editor wrap its content in the same prose
+  # classes the show page uses for this field, so editing previews match the published
+  # page (WYSIWYG). Pass whatever the destination view applies (see events/show).
+  def rhino_editor(form, base_attribute_name, label: nil, hint: nil, centered: false, full_width_images: false)
     object = Draper.undecorate(form.object)
     rhino_attr = :"rhino_#{base_attribute_name}"
     field_id = form.field_id(rhino_attr)
@@ -75,7 +78,13 @@ module RhinoEditorHelper
       }
     )
 
-    content_tag(:div, data: { controller: "rhino-source" }, class: "mb-4 prose max-w-none bg-white prose-strong:text-inherit prose-em:text-inherit") do
+    wrapper_class = [
+      "mb-4 prose max-w-none bg-white prose-strong:text-inherit prose-em:text-inherit",
+      ("rhino-centered" if centered),
+      ("prose-img:max-w-full prose-img:w-full" if full_width_images)
+    ].compact.join(" ")
+
+    content_tag(:div, data: { controller: "rhino-source" }, class: wrapper_class) do
       safe_join([
         label_tag,
         editor,

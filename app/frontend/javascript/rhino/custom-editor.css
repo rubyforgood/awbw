@@ -96,9 +96,18 @@ custom-rhino-editor a:hover {
   color: #1e40af; /* Tailwind blue-800 */
 }
 
-/* Dashed border for grid cells that have hasBorder=false (editor only) */
+/* Dashed border for grid cells that have hasBorder=false (editor only). Keep the
+   outline so the grid structure stays visible/editable, but strip the padding and
+   inner block spacing so the cell doesn't balloon — it previews at the size the
+   published page renders. */
 custom-rhino-editor .grid-cell-editor[hasborder="false"] {
-  border: 2px dashed #ced4da; }
+  border: 2px dashed #ced4da;
+  padding: 0;
+}
+custom-rhino-editor .grid-cell-editor[hasborder="false"] > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
 
 custom-rhino-editor span.mention {
   border: 1px solid #000;

@@ -549,14 +549,14 @@
         <%= f.input :autoshow_title, as: :boolean, label: "Show title on event show page" %>
 
         <div class="form-group <%= 'has-error' if f.object.errors[:rhino_header].present? %>">
-          <%= rhino_editor(f, :header, label: "Header content") %>
+          <%= rhino_editor(f, :header, label: "Header content", centered: true, full_width_images: true) %>
 
           <% if f.object.errors[:rhino_header].present? %>
             <div class="text-danger mt-1 text-sm">Field <%= f.object.errors[:rhino_header].first %></div>
           <% end %>
         </div>
 
-        <div class="form-group mt-12"><%= rhino_editor(f, :description, label: "Description") %></div>
+        <div class="form-group mt-12"><%= rhino_editor(f, :description, label: "Description", full_width_images: true) %></div>
       </div>
     </div>
 
