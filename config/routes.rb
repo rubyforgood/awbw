@@ -139,6 +139,7 @@ Rails.application.routes.draw do
       get :smart_form_settings
     end
     member do
+      post :copy
       patch :reorder_field
       put :reorder_fields
       get :edit_sections
