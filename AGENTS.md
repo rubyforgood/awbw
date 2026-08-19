@@ -121,6 +121,8 @@ This codebase (Rails 8.1)
 - **Asset** (inheritance column: `type`): PrimaryAsset, GalleryAsset, RichTextAsset, DownloadableAsset, ThumbnailAsset, FormUploadAsset
   - The `type` column defaults to `"PrimaryAsset"`, which narrows `ACCEPTED_CONTENT_TYPES` to five image types — always name the type when building an Asset, or documents will fail validation. `FormUploadAsset` backs a respondent's file-upload form answer and takes Asset's full accepted-type list.
 - **Report**: MonthlyReport
+- **Affiliation** (inheritance column: `type`, nullable, no default): FacilitatorAffiliation, JobAffiliation
+  - The type is *derived from the title* — `set_type_from_title` (a `before_validation`) sets `FacilitatorAffiliation` when the title is exactly `"Facilitator"` (trimmed, case-sensitive), else `JobAffiliation` (the default). Title is the single source of truth, so a retitle re-types the row; never write `title` via `update_all`/`update_columns` (skips the callback). The column has **no default** on purpose — a default subclass name would make `Affiliation.new` build that subclass and then break `reload` after the callback re-types. `#facilitator?` and the `.facilitators` scope read the `type` column. Both subtypes share `Affiliation`'s routes/param-key/`dom_id` (`self.model_name`) and authorize through the one `AffiliationPolicy` (`self.policy_class`).
 
 ### Polymorphic Associations
 
