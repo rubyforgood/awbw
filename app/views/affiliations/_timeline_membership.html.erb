@@ -1,0 +1,10 @@
+<%# The "What" cell for one paid membership period. %>
+<div class="flex flex-wrap items-baseline gap-x-2">
+  <span class="text-gray-800">
+    <%= invoice.start_date.strftime("%b %-d, %Y") %> – <%= invoice.end_date.strftime("%b %-d, %Y") %>
+  </span>
+  <span class="text-xs text-gray-500"><%= dollars_from_cents(invoice.cost_cents) %></span>
+  <% if invoice.membership.cancelled? %>
+    <span class="rounded-full border border-gray-300 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-gray-600">Cancelled</span>
+  <% end %>
+</div>

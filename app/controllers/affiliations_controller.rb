@@ -4,6 +4,7 @@ class AffiliationsController < ApplicationController
 
   def edit
     authorize! @affiliation
+    @timeline = Analytics::AffiliationTimeline.new(@affiliation)
   end
 
   def update
@@ -15,6 +16,7 @@ class AffiliationsController < ApplicationController
     if @affiliation.save
       redirect_to affiliation_return_path, notice: "Affiliation was successfully updated.", status: :see_other
     else
+      @timeline = Analytics::AffiliationTimeline.new(@affiliation)
       render :edit, status: :unprocessable_content
     end
   end

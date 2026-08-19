@@ -1,0 +1,94 @@
+<%# Locals: timeline (Analytics::AffiliationTimeline), affiliation. Admin-only —
+    the raw Ahoy records behind the edit entries are reachable from "Full log".
+
+    One grid for the whole list so the four columns line up across every entry
+    kind: each <li> is `contents`, so its cells become grid items directly. The
+    row rule lives on the cells rather than the <li> for the same reason. %>
+<% return unless allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+<% cell = "border-t border-gray-100 py-2.5" %>
+<% badge = { "create" => [ "Created", "bg-blue-50 text-blue-700" ],
+             "update" => [ "Update", "bg-gray-100 text-gray-700" ],
+             training: [ "Training", "bg-purple-50 text-purple-700" ],
+             membership: [ "Membership", "bg-amber-50 text-amber-800" ],
+             provenance: [ "Created", "bg-emerald-50 text-emerald-800" ] } %>
+
+<section class="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+  <details open data-controller="toggle-details">
+    <summary class="flex cursor-pointer select-none items-center gap-3 border-b border-gray-100 px-4 py-3 hover:bg-gray-50">
+      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+      </span>
+      <div class="min-w-0">
+        <h2 class="text-sm font-semibold text-gray-700">
+          History <span class="font-normal text-gray-400">(<%= timeline.entries.size %>)</span>
+        </h2>
+        <p class="text-xs text-gray-400">Edits to this affiliation, this person's facilitator trainings, and their membership periods.</p>
+      </div>
+      <%= link_to admin_activities_events_path(resource_type: "Affiliation", resource_id: affiliation.id),
+            class: "ml-auto shrink-0 text-xs text-indigo-600 hover:underline",
+            title: "Open the full activity log for this affiliation" do %>
+        Full log <i class="fa-solid fa-chart-line ml-0.5"></i>
+      <% end %>
+    </summary>
+
+    <% if timeline.any? %>
+      <ol class="grid grid-cols-[max-content_1fr_max-content_max-content] items-baseline gap-x-4 px-4 pb-3 text-sm">
+        <li class="contents text-xs font-medium tracking-wide text-gray-400 uppercase">
+          <span class="pt-3">Change</span><span class="pt-3">What</span><span class="pt-3">When</span><span class="pt-3">By</span>
+        </li>
+        <% timeline.entries.each do |entry| %>
+          <% label, badge_class = badge[entry.change? ? entry.record.action : entry.kind] %>
+          <li class="contents">
+            <span class="<%= cell %>">
+              <span class="rounded px-1.5 py-0.5 text-xs font-medium whitespace-nowrap <%= badge_class %>"><%= label %></span>
+            </span>
+
+            <div class="<%= cell %> min-w-0">
+              <% if entry.change? %>
+                <%= render "affiliations/timeline_change", change: entry.record %>
+              <% elsif entry.training? %>
+                <%= render "affiliations/timeline_training", registration: entry.record,
+                      linked_here: entry.linked_here, minted: entry.minted %>
+              <% elsif entry.provenance? %>
+                <%= render "affiliations/timeline_provenance", registration: entry.record %>
+              <% else %>
+                <%= render "affiliations/timeline_membership", invoice: entry.record %>
+              <% end %>
+            </div>
+
+            <%# Zone-converted, matching EventDecorator#date_range — the same event must
+                not read one date here and another on its own page. %>
+            <span class="<%= cell %> whitespace-nowrap text-gray-500">
+              <% when_at = entry.occurred_at&.in_time_zone %>
+              <%= when_at&.strftime("%b %-d, %Y") %>
+              <% if entry.change? %>
+                <span class="block text-xs text-gray-400"><%= when_at&.strftime("%-l:%M %p") %></span>
+              <% end %>
+            </span>
+
+            <span class="<%= cell %> whitespace-nowrap">
+              <% author = entry.change? ? entry.record.user : nil %>
+              <% if author&.person %>
+                <%= link_to author.full_name, person_path(author.person), class: "text-indigo-600 hover:underline" %>
+              <% elsif author %>
+                <span class="text-gray-600"><%= author.full_name %></span>
+              <% else %>
+                <span class="text-gray-300">—</span>
+              <% end %>
+            </span>
+          </li>
+        <% end %>
+      </ol>
+    <% else %>
+      <p class="px-4 py-6 text-center text-sm text-gray-500">
+        Nothing recorded yet — edits made from here on will show up, alongside any facilitator training this person registers for.
+      </p>
+    <% end %>
+
+    <% unless timeline.trainings? %>
+      <p class="border-t border-gray-100 px-4 py-2 text-xs text-gray-400">
+        This person has no facilitator-training registrations on record.
+      </p>
+    <% end %>
+  </details>
+</section>

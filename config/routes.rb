@@ -246,6 +246,7 @@ Rails.application.routes.draw do
       get :bio
       get :all_comments
       post :send_form_link
+      get :affiliation_history
     end
     resources :comments, only: [ :create, :update ]
     resources :memberships, only: [ :index, :new, :create ]

@@ -1,0 +1,19 @@
+<%# The "What" cell for a recorded edit: one line per changed field. %>
+<% if change.changes.any? %>
+  <% change.changes.each do |field| %>
+    <div class="flex flex-wrap items-baseline gap-x-2">
+      <span class="font-medium text-gray-700"><%= field.label %></span>
+      <span class="text-gray-400 line-through decoration-gray-300"><%= field.before %></span>
+      <i class="fa-solid fa-arrow-right text-2xs text-gray-300"></i>
+      <span class="font-medium text-gray-900"><%= field.after %></span>
+    </div>
+  <% end %>
+<% else %>
+  <span class="text-gray-500">Affiliation <%= change.action == "create" ? "created" : "saved" %></span>
+<% end %>
+<% if change.association_summary %>
+  <p class="text-xs text-gray-500"><%= change.association_summary.upcase_first %></p>
+<% end %>
+<% if change.source %>
+  <p class="text-xs text-gray-400">via <%= change.source %></p>
+<% end %>

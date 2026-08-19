@@ -1,0 +1,26 @@
+<%# The "What" cell for one of this person's facilitator trainings. %>
+<% deco = registration.decorate %>
+<div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+  <span class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap <%= deco.attendance_status_classes %>">
+    <i class="fas <%= deco.attendance_status_icon %>"></i>
+    <%= registration.attendance_status_label %>
+  </span>
+  <% if registration.event %>
+    <%= link_to registration.event.title, event_path(registration.event),
+          target: "_blank", rel: "noopener", class: "font-medium text-gray-800 hover:underline hover:text-blue-700" %>
+    <span class="text-xs whitespace-nowrap text-gray-500"><%= registration.event.start_date&.in_time_zone&.strftime("%b %Y") %></span>
+  <% end %>
+  <% if minted %>
+    <span class="rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-emerald-800">
+      <i class="fa-solid fa-seedling mr-0.5"></i>Created this affiliation
+    </span>
+  <% end %>
+</div>
+<p class="text-xs text-gray-500">
+  <% if linked_here %>
+    Linked to this organization — a training that can confer facilitator status here.
+  <% else %>
+    <% others = registration.organizations.map(&:name) %>
+    <%= others.any? ? "Linked to #{others.to_sentence}, not this organization." : "No organization linked to this registration." %>
+  <% end %>
+</p>

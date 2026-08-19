@@ -20,6 +20,10 @@ class PersonPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def affiliation_history?
+    admin?
+  end
+
   def own_membership?
     owner? && Membership.enabled?
   end

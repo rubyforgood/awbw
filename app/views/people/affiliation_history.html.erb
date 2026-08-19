@@ -1,0 +1,45 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% affiliated_org_ids = @timeline.affiliated_organization_ids %>
+
+<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:organizations) %> rounded-xl border border-gray-200 p-4 shadow sm:p-6">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+    <%= link_to edit_person_path(@person, anchor: "affiliations"), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i>
+      <%= @person.full_name %>
+    <% end %>
+    <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <h1 class="mb-1 text-2xl font-semibold tracking-tight text-gray-900">Affiliation history</h1>
+  <p class="mb-6 text-sm text-gray-500">
+    <%= @person.full_name %>'s affiliations, facilitator trainings, and membership periods over time.
+  </p>
+
+  <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+    <% if @timeline.any? %>
+      <ol class="divide-y divide-gray-100">
+        <% @timeline.entries.each do |entry| %>
+          <li class="px-4 py-3 text-sm">
+            <% if entry.affiliation? %>
+              <%= render "affiliations/timeline_affiliation", affiliation: entry.record %>
+            <% elsif entry.training? %>
+              <%= render "affiliations/timeline_person_training", registration: entry.record, affiliated_org_ids: affiliated_org_ids %>
+            <% else %>
+              <%= render "affiliations/timeline_membership", invoice: entry.record %>
+            <% end %>
+          </li>
+        <% end %>
+      </ol>
+    <% else %>
+      <p class="px-4 py-6 text-center text-sm text-gray-500">
+        No affiliations, facilitator trainings, or membership periods on record for this person yet.
+      </p>
+    <% end %>
+
+    <% unless @timeline.trainings? %>
+      <p class="border-t border-gray-100 px-4 py-2 text-xs text-gray-400">
+        This person has no facilitator-training registrations on record.
+      </p>
+    <% end %>
+  </section>
+</div>

@@ -1,6 +1,6 @@
 class PeopleController < ApplicationController
   include AhoyTracking, TagAssignable
-  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments send_form_link ]
+  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments send_form_link affiliation_history ]
 
   # The profile's "Submitted content" sections — private to the person and admins,
   # not part of the public profile even after profile viewing opens up.
@@ -108,6 +108,16 @@ class PeopleController < ApplicationController
   # hang off them (registrations, scholarships, CE registrations, user account) —
   # in one newest-first feed you can add to and edit in place. Staff-only, since
   # comments are internal notes (CommentPolicy#manage? = admin).
+  # A person's affiliation history — their affiliations, facilitator trainings,
+  # and membership periods in one newest-first timeline. Reached from the gear on
+  # the affiliations section of the edit form; admin-only, like that section.
+  def affiliation_history
+    authorize! @person
+    @person = @person.decorate
+    @timeline = Analytics::PersonAffiliationTimeline.new(@person)
+    track_view("person_affiliation_history", { person_id: @person.id })
+  end
+
   def all_comments
     authorize! @person, to: :manage?, with: CommentPolicy
     @person = @person.decorate

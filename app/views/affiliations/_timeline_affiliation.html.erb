@@ -1,0 +1,21 @@
+<% deco = affiliation.decorate %>
+<% facilitator = affiliation.facilitator? %>
+<div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+  <span class="rounded px-1.5 py-0.5 text-xs font-medium <%= facilitator ? "bg-purple-50 text-purple-700" : "bg-blue-50 text-blue-700" %>">
+    <%= affiliation.title.presence || "Facilitator" %>
+  </span>
+  <span class="text-gray-500"><%= deco.period_label %></span>
+  <% if affiliation.organization %>
+    <%= link_to affiliation.organization.name, organization_path(affiliation.organization),
+          class: "font-medium text-gray-800 hover:underline hover:text-blue-700" %>
+  <% end %>
+  <% unless affiliation.active? %>
+    <span class="rounded-full border border-gray-300 px-2 py-0.5 text-xs font-medium text-gray-600">Ended</span>
+  <% end %>
+  <%= link_to edit_affiliation_path(affiliation, return_to: "person", origin_id: affiliation.person_id),
+        target: "_blank", rel: "noopener",
+        class: "ml-auto shrink-0 text-gray-300 hover:text-gray-500",
+        title: "Edit this affiliation (opens in a new tab)" do %>
+    <i class="fa-solid fa-gear text-xs"></i>
+  <% end %>
+</div>

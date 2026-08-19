@@ -1,0 +1,27 @@
+<%# Locals: registration, affiliated_org_ids (Set of org ids the person is
+    affiliated with). The person-page counterpart to _timeline_training: it flags
+    a training against every organization the person belongs to, not one. %>
+<% deco = registration.decorate %>
+<div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+  <span class="rounded bg-purple-50 px-1.5 py-0.5 text-xs font-medium text-purple-700">Training</span>
+  <span class="text-gray-500"><%= registration.event&.start_date&.to_date&.strftime("%b %Y") %></span>
+  <% if registration.event %>
+    <%= link_to registration.event.title, event_path(registration.event),
+          target: "_blank", rel: "noopener", class: "font-medium text-gray-800 hover:underline hover:text-blue-700" %>
+  <% end %>
+  <span class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium <%= deco.attendance_status_classes %>">
+    <i class="fas <%= deco.attendance_status_icon %>"></i>
+    <%= registration.attendance_status_label %>
+  </span>
+</div>
+<p class="mt-1 text-xs text-gray-500">
+  <% orgs = registration.organizations.to_a %>
+  <% linked = orgs.select { |org| affiliated_org_ids.include?(org.id) } %>
+  <% if linked.any? %>
+    Can confer facilitator status at <%= linked.map(&:name).to_sentence %> — an organization this person is affiliated with.
+  <% elsif orgs.any? %>
+    Linked to <%= orgs.map(&:name).to_sentence %>, not an organization this person is affiliated with.
+  <% else %>
+    No organization linked to this registration.
+  <% end %>
+</p>

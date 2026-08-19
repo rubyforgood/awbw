@@ -255,8 +255,18 @@
   <% person = f.object.respond_to?(:object) ? f.object.object : f.object %>
   <% decorated = person.decorate %>
   <div id="affiliations" class="form-group scroll-mt-4 space-y-4">
-    <div class="mb-2 font-semibold text-gray-700">
-      Affiliations<span class="text-sm font-normal text-gray-500"> (only editable by admins)</span>
+    <div class="mb-2 flex items-center justify-between gap-2">
+      <div class="font-semibold text-gray-700">
+        Affiliations<span class="text-sm font-normal text-gray-500"> (only editable by admins)</span>
+      </div>
+      <% if person.persisted? %>
+        <%= link_to affiliation_history_person_path(person), target: "_blank", rel: "noopener",
+              class: "shrink-0 text-gray-400 hover:text-gray-600",
+              title: "Affiliation history — trainings and membership over time (opens in a new tab)" do %>
+          <i class="fa-solid fa-gear"></i>
+          <span class="sr-only">Affiliation history</span>
+        <% end %>
+      <% end %>
     </div>
 
     <div class="admin-only mb-4 rounded-lg border border-gray-200 bg-blue-50 p-4 shadow-sm">
