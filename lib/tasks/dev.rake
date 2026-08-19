@@ -23,6 +23,7 @@ namespace :db do
       payments
       scholarships
       membership
+      affiliation_history
       bulk_payments
       legacy_form_identifiers
       public_forms
@@ -125,6 +126,11 @@ namespace :db do
     desc "Seed memberships and invoices covering every status (dev only)"
     task membership: :environment do
       load Rails.root.join("db/seeds/dev/membership.rb")
+    end
+
+    desc "Seed several years of trainings, memberships, comments and affiliation edits for one person (dev only)"
+    task affiliation_history: :environment do
+      load Rails.root.join("db/seeds/dev/affiliation_history.rb")
     end
 
     desc "Seed bulk payment demo submissions, payments, and allocations (dev only)"
