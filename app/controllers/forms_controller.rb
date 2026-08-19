@@ -1,5 +1,5 @@
 class FormsController < ApplicationController
-  before_action :set_form, only: %i[show edit update destroy reorder_field reorder_fields edit_sections update_sections]
+  before_action :set_form, only: %i[show edit update destroy copy reorder_field reorder_fields edit_sections update_sections]
   before_action :set_dashboard_event, only: %i[show edit edit_sections update update_sections]
 
   def index
@@ -76,6 +76,13 @@ class FormsController < ApplicationController
 
     @form.destroy!
     redirect_to forms_path, notice: "Form deleted."
+  end
+
+  def copy
+    authorize! @form
+
+    copy = FormCopyService.new(@form).call
+    redirect_to edit_form_path(copy), notice: "Form copied. Now editing \"#{copy.display_name}\"."
   end
 
   def edit_sections
