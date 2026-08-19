@@ -103,7 +103,7 @@
     <% end %>
 
     <div class="flex my-6 gap-4">
-      <%= render "shared/author_credit_status", record: f.object %>
+      <%= render "shared/author_credit_status", f: f %>
       <%= f.input :youtube_url,
                   as: :text,
                   label: "YouTube link <span class='text-normal text-sm text-gray-400'>(optional)</span>".html_safe,

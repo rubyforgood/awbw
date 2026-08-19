@@ -63,6 +63,7 @@
                                       remote_select_model_value: "person" } } %>
     <%= render "shared/author_credit_note", record: f.object %>
 
+    <%= render "shared/author_credit_field", f: f %>
     <%= render "shared/author_credit_warning", record: f.object %>
   </div>
   <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>

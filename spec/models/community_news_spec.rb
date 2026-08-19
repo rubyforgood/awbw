@@ -115,7 +115,7 @@ RSpec.describe CommunityNews, type: :model do
       end
 
       it 'stops matching the last name when only the first name is credited' do
-        community_news_with_person.update!(author_credit_preference: 'first_name_only')
+        person.update!(display_name_preference: 'first_name_only')
         expect(CommunityNews.search_by_params(query: 'John')).to include(community_news_with_person)
         expect(CommunityNews.search_by_params(query: 'Doe')).to be_empty
       end

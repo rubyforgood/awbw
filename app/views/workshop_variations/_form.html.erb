@@ -90,6 +90,7 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
+          <%= render "shared/author_credit_field", f: f %>
           <%= render "shared/author_credit_warning", record: f.object %>
 
           <% if allowed_to?(:manage?, WorkshopVariation) %>

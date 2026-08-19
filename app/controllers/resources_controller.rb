@@ -180,7 +180,7 @@ class ResourcesController < ApplicationController
     params.require(:resource).permit(
       :rhino_body, :kind, :male, :female, :title, :featured, :published, :publicly_visible, :publicly_featured,
       :hidden_from_search,
-      :agency, :author_id, :filemaker_code, :windows_type_id, :position,
+      :agency, :author_id, :author_credit_preference, :filemaker_code, :windows_type_id, :position,
       primary_asset_attributes: [ :id, :file, :_destroy ],
       downloadable_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],

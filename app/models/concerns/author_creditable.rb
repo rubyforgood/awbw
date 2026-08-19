@@ -1,9 +1,10 @@
 module AuthorCreditable
   extend ActiveSupport::Concern
 
-  # A record's stored preference is the submitter's consent snapshot. When set it
-  # wins for display (honoring what they chose at submission); otherwise the credited
-  # person's current profile decides. "anonymous" (either side) is always honored.
+  # The credited person's profile decides how a credit renders. A record's stored
+  # preference is the submitter's request, recorded at submission and surfaced on the
+  # author credit divergences page for an admin to apply to the profile — it does not
+  # drive display on its own. "anonymous" (either side) is always honored.
   AUTHOR_CREDIT_PREFERENCES = %w[full_name first_name_last_initial first_name_only last_name_only anonymous].freeze
 
   ANONYMOUS = "anonymous"
@@ -12,6 +13,16 @@ module AuthorCreditable
   # model can override; reference the constants directly only where no record is in hand.
   ANONYMOUS_AUTHOR_LABEL = "AWBW Facilitator".freeze
   MISSING_AUTHOR_LABEL = "AWBW Staff".freeze
+
+  # Submitter-facing wording. Blank is the default and means "follow my profile" —
+  # anything else is a request an admin applies to the profile on the divergences page.
+  SUBMITTER_FORM_OPTIONS = {
+    "My full name" => "full_name",
+    "My first name and last initial" => "first_name_last_initial",
+    "My first name only" => "first_name_only",
+    "My last name only" => "last_name_only",
+    "Don't credit me by name" => "anonymous"
+  }.freeze
 
   ADMIN_FORM_OPTIONS = {
     "Full name" => "full_name",
@@ -112,10 +123,7 @@ module AuthorCreditable
 
   private def credit_for(person)
     return anonymous_author_label if credit_anonymous?(person)
-    # The record's own preference wins over the person's profile; fall back to the
-    # profile when the record didn't store one.
-    preference = author_credit_preference.presence || person.display_name_preference
-    person.name_for(preference).presence || anonymous_author_label
+    person.name.presence || anonymous_author_label
   end
 
   class_methods do
@@ -180,8 +188,7 @@ module AuthorCreditable
     def credited_person_match_sql(sql_alias)
       first = "#{sql_alias}.first_name"
       last = "#{sql_alias}.last_name"
-      # The record's own preference wins over the profile, matching `credit_for`.
-      preference = "COALESCE(#{table_name}.author_credit_preference, #{sql_alias}.display_name_preference, 'full_name')"
+      preference = "COALESCE(#{sql_alias}.display_name_preference, 'full_name')"
 
       by_preference = {
         "full_name" => [ "CONCAT(#{first}, #{last})", "CONCAT(#{last}, #{first})", first, last ],

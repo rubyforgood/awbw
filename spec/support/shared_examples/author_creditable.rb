@@ -47,17 +47,19 @@ RSpec.shared_examples "author_creditable" do |factory:|
         end
       end
 
-      context "with its own stored preference, which wins over the profile" do
-        it "formats by the record's preference, not the profile's" do
+      context "with its own stored preference, which the profile still outranks" do
+        # The stored value is the submitter's request, recorded for an admin to apply
+        # to the profile — it doesn't change what renders on its own.
+        it "still formats by the profile" do
           person.update!(display_name_preference: "full_name")
           record.update!(author_credit_preference: "first_name_only")
-          expect(record.author_credit).to eq(person.first_name)
+          expect(record.author_credit).to eq(person.full_name)
         end
 
-        it "keeps its preference after the profile changes, and reports the divergence" do
+        it "reports the divergence so an admin can resolve it" do
           record.update!(author_credit_preference: "last_name_only")
           person.update!(display_name_preference: "full_name")
-          expect(record.author_credit).to eq(person.last_name)
+          expect(record.author_credit).to eq(person.full_name)
           expect(record.author_credit_diverged?).to be(true)
         end
       end
@@ -194,23 +196,29 @@ RSpec.shared_examples "author_creditable" do |factory:|
         expect(model.by_credited_person_name("Zephyrine")).not_to include(record)
       end
 
-      it "honors the record's own first_name_only preference over the profile" do
-        record.update!(author_credit_preference: "first_name_only")
+      it "does not match the last name when the profile shows the first name only" do
+        person.update!(display_name_preference: "first_name_only")
         expect(model.by_credited_person_name("Zephyrine")).to include(record)
         expect(model.by_credited_person_name("Quixotel")).not_to include(record)
       end
 
-      it "honors the record's own last_name_only preference over the profile" do
-        record.update!(author_credit_preference: "last_name_only")
+      it "does not match the first name when the profile shows the last name only" do
+        person.update!(display_name_preference: "last_name_only")
         expect(model.by_credited_person_name("Quixotel")).to include(record)
         expect(model.by_credited_person_name("Zephyrine")).not_to include(record)
       end
 
       it "matches only the initial for first_name_last_initial" do
-        record.update!(author_credit_preference: "first_name_last_initial")
+        person.update!(display_name_preference: "first_name_last_initial")
         expect(model.by_credited_person_name("Zephyrine")).to include(record)
         expect(model.by_credited_person_name("ZephyrineQ")).to include(record)
         expect(model.by_credited_person_name("Quixotel")).not_to include(record)
+      end
+
+      # The stored request doesn't gate search either — only the profile does.
+      it "still matches the full name when the record asked for first_name_only" do
+        record.update!(author_credit_preference: "first_name_only")
+        expect(model.by_credited_person_name("Quixotel")).to include(record)
       end
     else
       it "matches nobody, since an idea names no author" do
