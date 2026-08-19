@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { isFacilitatorTitle } from "../lib/affiliation"
 
 export default class extends Controller {
   static targets = ["facilitatorSince", "affiliatedNote", "affiliatedNoteText", "memberSinceFlag", "affiliationsContainer", "programStatus"]
@@ -51,11 +52,7 @@ export default class extends Controller {
     const now = new Date()
     const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
 
-    // Mirrors Affiliation#facilitator?: exact, case-sensitive, trimmed — so the
-    // live figure matches the server render.
-    const facilitatorAffiliations = affiliations.filter(a =>
-      a.title.trim() === "Facilitator"
-    )
+    const facilitatorAffiliations = affiliations.filter(a => isFacilitatorTitle(a.title))
     const facStartDates = facilitatorAffiliations.map(a => a.startDate).filter(Boolean)
     const facilitatorSince = facStartDates.length
       ? new Date(Math.min(...facStartDates.map(d => new Date(d))))

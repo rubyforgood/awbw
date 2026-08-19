@@ -118,26 +118,43 @@ RSpec.describe Affiliation, type: :model do
     end
   end
 
-  describe '#facilitator?' do
+  describe '#facilitator? (synced from title on validation)' do
+    # #facilitator? reads the denormalized column, which sync_facilitator_from_title
+    # sets in before_validation — so validate before reading it.
+    def facilitator_flag(title)
+      build(:affiliation, title: title).tap(&:validate).facilitator?
+    end
+
     it 'is true for the exact title "Facilitator"' do
-      expect(build(:affiliation, title: "Facilitator").facilitator?).to be true
+      expect(facilitator_flag("Facilitator")).to be true
     end
 
     it 'ignores surrounding whitespace' do
-      expect(build(:affiliation, title: "  Facilitator ").facilitator?).to be true
+      expect(facilitator_flag("  Facilitator ")).to be true
     end
 
     it 'is false for title variants like "Lead Facilitator"' do
-      expect(build(:affiliation, title: "Lead Facilitator").facilitator?).to be false
+      expect(facilitator_flag("Lead Facilitator")).to be false
     end
 
     it 'is case-sensitive' do
-      expect(build(:affiliation, title: "facilitator").facilitator?).to be false
-      expect(build(:affiliation, title: "FACILITATOR").facilitator?).to be false
+      expect(facilitator_flag("facilitator")).to be false
+      expect(facilitator_flag("FACILITATOR")).to be false
     end
 
     it 'is false when the title is blank' do
-      expect(build(:affiliation, title: nil).facilitator?).to be false
+      expect(facilitator_flag(nil)).to be false
+    end
+
+    it 'flips the column when a row is retitled to or from "Facilitator"' do
+      affiliation = create(:affiliation, title: "Facilitator")
+      expect(affiliation.facilitator?).to be true
+
+      affiliation.update!(title: "Lead Facilitator")
+      expect(affiliation.reload.facilitator?).to be false
+
+      affiliation.update!(title: "Facilitator")
+      expect(affiliation.reload.facilitator?).to be true
     end
   end
 
@@ -149,6 +166,17 @@ RSpec.describe Affiliation, type: :model do
 
     it 'includes only the exact, case-sensitive title "Facilitator" (whitespace-trimmed)' do
       expect(described_class.facilitators).to contain_exactly(exact, whitespace)
+    end
+
+    it 'returns exactly the rows whose title matches the rule (column ↔ scope agree)' do
+      expected = described_class.all.select { |a| a.title.to_s.strip == "Facilitator" }.map(&:id).sort
+      expect(described_class.facilitators.ids.sort).to eq(expected)
+    end
+
+    it 'keeps the persisted facilitator column in step with the title rule' do
+      described_class.find_each do |affiliation|
+        expect(affiliation.facilitator).to eq(affiliation.title.to_s.strip == "Facilitator")
+      end
     end
   end
 

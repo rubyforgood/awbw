@@ -49,11 +49,10 @@ class Affiliation < ApplicationRecord
       .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", date)
   }
 
-  # Only the exact, case-sensitive title "Facilitator" counts — variants like
-  # "Lead Facilitator" or "facilitator" are deliberately excluded. BINARY forces
-  # a case-sensitive comparison under MySQL's default case-insensitive collation;
-  # TRIM mirrors the in-memory #facilitator? strip so stray whitespace still matches.
-  scope :facilitators, -> { where("BINARY TRIM(title) = ?", "Facilitator") }
+  # Reads the denormalized `facilitator` flag, which #sync_facilitator_from_title
+  # keeps in lock-step with the title rule (exactly "Facilitator", trimmed,
+  # case-sensitive). An executable agreement spec locks the column to that rule.
+  scope :facilitators, -> { where(facilitator: true) }
 
   # Affiliations whose #status_on(date) equals the given status, expressed in SQL
   # so it composes as a subquery (e.g. person-id narrowing). Kept in lock-step with
@@ -78,6 +77,7 @@ class Affiliation < ApplicationRecord
     end
   }
 
+  before_validation :sync_facilitator_from_title
   before_validation :skip_if_duplicate
   # Runs before validation so a reassigned org drops its stale organization_address_id
   # before organization_address_belongs_to_organization would reject it.
@@ -89,13 +89,11 @@ class Affiliation < ApplicationRecord
   after_destroy :sync_organization_affiliation_dates
 
   # Methods
-  # A facilitator affiliation is one whose title is *exactly* "Facilitator"
-  # (trimmed, case-sensitive). Variants like "Lead Facilitator" or "facilitator"
-  # are deliberately excluded. Mirrors the .facilitators scope so in-memory and
-  # SQL checks agree.
-  def facilitator?
-    title.to_s.strip == "Facilitator"
-  end
+  # `facilitator?` is the boolean column's auto-generated reader. A facilitator
+  # affiliation is one whose title is *exactly* "Facilitator" (trimmed,
+  # case-sensitive); #sync_facilitator_from_title keeps the column in step with
+  # that rule on every save, so #facilitator? and the .facilitators scope agree.
+  # Variants like "Lead Facilitator" or "facilitator" are deliberately excluded.
 
   # Current: not flagged inactive and not past its end date. Mirrors the `active`
   # scope so already-loaded affiliations can be filtered in Ruby without another
@@ -167,6 +165,14 @@ class Affiliation < ApplicationRecord
     return unless end_date_changed? || start_date_changed?
 
     self.inactive = end_date.present? && end_date < Date.current
+  end
+
+  # Keep the denormalized flag in step with the title rule (exactly "Facilitator",
+  # trimmed, case-sensitive) on every save, so the .facilitators scope and
+  # #facilitator? agree. Invariant: never write `title` via update_columns /
+  # update_all — that skips this callback and lets the flag drift.
+  def sync_facilitator_from_title
+    self.facilitator = title.to_s.strip == FACILITATOR_TITLE
   end
 
   def sync_organization_affiliation_dates

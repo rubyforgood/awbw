@@ -108,6 +108,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_200730) do
     t.datetime "created_at", precision: nil, null: false
     t.date "end_date"
     t.bigint "event_registration_id"
+    t.boolean "facilitator", default: false, null: false
     t.string "filemaker_code"
     t.boolean "inactive", default: false, null: false
     t.bigint "organization_address_id"
