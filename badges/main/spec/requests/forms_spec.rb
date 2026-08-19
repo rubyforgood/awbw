@@ -684,6 +684,34 @@ RSpec.describe "Forms", type: :request do
     end
   end
 
+  describe "POST /forms/:id/copy" do
+    context "as admin" do
+      before { sign_in admin }
+
+      it "creates a full copy named \"COPY of [name]\" and redirects to its editor" do
+        form = create(:form, :standalone, name: "Volunteer")
+        create(:form_field, form: form, name: "First name")
+
+        expect { post copy_form_path(form) }.to change(Form, :count).by(1)
+
+        copy = Form.find_by(name: "COPY of Volunteer")
+        expect(copy.name).to eq("COPY of Volunteer")
+        expect(copy.form_fields.map(&:name)).to eq([ "First name" ])
+        expect(response).to redirect_to(edit_form_path(copy))
+      end
+    end
+
+    context "as a non-admin" do
+      before { sign_in user }
+
+      it "denies access and copies nothing" do
+        form = create(:form, :standalone)
+        expect { post copy_form_path(form) }.not_to change(Form, :count)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
   describe "GET /forms/:id" do
     before { sign_in admin }
 
