@@ -27,10 +27,13 @@ RSpec.describe "where the affiliation editor sends you back to", type: :request 
     expect(response).to redirect_to(edit_person_path(person, anchor: "affiliations"))
   end
 
+  # A month back, not a day: the controller sets the zone per user, so an end date
+  # of "yesterday" computed in UTC can still be today in the viewer's zone and read
+  # as active.
   it "anchors to the section when the save is what makes it inactive" do
     aff = create(:affiliation, person: person, organization: org, start_date: 1.year.ago.to_date)
     patch affiliation_path(aff, return_to: "person", origin_id: person.id),
-          params: { affiliation: { end_date: 1.day.ago.to_date.to_s } }
+          params: { affiliation: { end_date: 1.month.ago.to_date.to_s } }
     expect(response).to redirect_to(edit_person_path(person, anchor: "affiliations"))
   end
 end

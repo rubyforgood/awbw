@@ -156,7 +156,7 @@ RSpec.describe "/affiliations", type: :request do
         affiliation.update!(start_date: 1.year.ago.to_date, end_date: nil, inactive: false)
 
         patch affiliation_path(affiliation, return_to: "organization", origin_id: organization.id),
-              params: { affiliation: { end_date: 1.day.ago.to_date.to_s } }
+              params: { affiliation: { end_date: 1.month.ago.to_date.to_s } }
 
         expect(affiliation.reload).not_to be_active
       end
