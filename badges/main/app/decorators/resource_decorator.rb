@@ -12,10 +12,6 @@ class ResourceDecorator < ApplicationDecorator
     kind == "Scholarship" ? "Scholar-ship" : (kind.present? ? kind.titleize : "Resource")
   end
 
-  def truncated_author
-    h.truncate author_credit, length: 20
-  end
-
   def truncated_title
     h.truncate title, length: 25
   end
@@ -34,10 +30,6 @@ class ResourceDecorator < ApplicationDecorator
 
   def breadcrumbs
     "#{type_link} >> #{title}".html_safe
-  end
-
-  def author_full_name
-    author_credit
   end
 
   def display_date

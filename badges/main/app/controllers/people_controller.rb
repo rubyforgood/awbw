@@ -2,6 +2,10 @@ class PeopleController < ApplicationController
   include AhoyTracking, TagAssignable
   before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments ]
 
+  # The profile's "Submitted content" sections — private to the person and admins,
+  # not part of the public profile even after profile viewing opens up.
+  PRIVATE_SECTIONS = %w[ workshop_ideas story_ideas workshop_variation_ideas workshop_logs ].freeze
+
   def index
     authorize!
 
@@ -48,28 +52,34 @@ class PeopleController < ApplicationController
       per_page = params[:section] == "stories" ? 8 : 9
       section = params[:section]
 
+      # Re-authorize the private sections on the narrow owner/admin rule, so a
+      # crafted ?section= frame request can't reach them once show? is widened
+      # to let non-owners view the public profile.
+      authorize! @person, to: :own_record? if PRIVATE_SECTIONS.include?(section)
+
       case section
       when "workshops"
         # Credit the person for workshops they authored — not ones their user
         # merely created (created_by is a pure audit trail).
-        @workshops = @person.workshops_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        @workshops = visible_authored_content(@person.workshops_as_author).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshops", locals: { person: @person, workshops: @workshops }
       when "workshop_variations"
         # Credit the person for variations they authored — not ones their user
         # merely entered (created_by is a pure audit trail).
-        @workshop_variations = @person.workshop_variations_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        @workshop_variations = visible_authored_content(@person.workshop_variations_as_author).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshop_variations", locals: { person: @person, workshop_variations: @workshop_variations }
       when "stories"
         # Credit the person for stories they authored or were spotlighted in —
         # not ones their user merely entered (created_by is a pure audit trail).
-        story_ids = @person.stories_as_author.pluck(:id) +
+        # The spotlight is a separate credit from authorship, so anonymity doesn't apply.
+        story_ids = visible_authored_content(@person.stories_as_author).pluck(:id) +
           @person.stories_as_spotlighted_facilitator.pluck(:id)
         @stories = Story.where(id: story_ids).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/stories", locals: { person: @person, stories: @stories }
       when "resources"
         # Credit the person for resources they authored — not ones their user
         # merely entered (created_by is a pure audit trail).
-        @resources = @person.resources_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        @resources = visible_authored_content(@person.resources_as_author).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/resources", locals: { person: @person, resources: @resources }
       when "events"
         @event_registrations = @person.event_registrations.active.includes(:event).order("events.start_date DESC").references(:events).paginate(page: params[:page], per_page: per_page)
@@ -297,6 +307,13 @@ class PeopleController < ApplicationController
 
   private
 
+  # Showing anonymous content to anyone but the person and admins would tie an
+  # "Anonymous" credit back to a name.
+  def visible_authored_content(scope)
+    return scope if allowed_to?(:manage?, Person) || current_user&.person_id == @person.id
+    return scope.none if @person.anonymous_contributions?
+    scope.credited_openly
+  end
 
   def set_person
     @person = Person.find(params[:id])
@@ -527,7 +544,6 @@ class PeopleController < ApplicationController
       :display_name_preference,
       :anonymous_contributions,
       :pronouns,
-      :profile_show_name_preference,
       :profile_is_searchable,
       :profile_show_pronouns,
       :profile_show_credentials,

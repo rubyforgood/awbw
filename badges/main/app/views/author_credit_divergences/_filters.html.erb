@@ -1,0 +1,45 @@
+<div class="rounded-lg border border-gray-200 bg-white shadow-sm p-4 mb-6">
+  <%# The collection controller auto-submits, so there's no Filter button. %>
+  <%= form_with url: author_credit_divergences_path, method: :get,
+                data: { controller: "collection", turbo_frame: "author_credit_divergences_results" },
+                html: { autocomplete: "off" },
+                class: "flex flex-wrap items-end gap-6" do |f| %>
+    <div class="min-w-[150px] pb-2">
+      <%= f.label :type, "Content type", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <%= f.select :type,
+                   options_for_select(AuthorCreditDivergenceQuery::MODEL_NAMES.map { |name| [ name.underscore.humanize, name ] }, params[:type]),
+                   { include_blank: "All types" },
+                   class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                   onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="min-w-[150px] pb-2">
+      <%= f.label :preference, "Stored preference", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <%= f.select :preference,
+                   options_for_select(AuthorCreditable::ADMIN_FORM_OPTIONS.to_a, params[:preference]),
+                   { include_blank: "Any preference" },
+                   class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                   onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="min-w-[200px] pb-2">
+      <%= f.label :person_id, "Person", class: "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" %>
+      <%= select_tag :person_id,
+                     options_for_select(Person.where(id: params[:person_id]).map { |person| [ person.full_name, person.id ] }, params[:person_id]),
+                     include_blank: true, prompt: "Search for a person",
+                     class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                     data: { controller: "remote-select", remote_select_model_value: "person" } %>
+    </div>
+
+    <label class="flex items-center gap-2 text-sm text-gray-600 pb-4">
+      <%= check_box_tag :include_reconciled, "1", params[:include_reconciled].present?,
+                        class: "rounded border-gray-300" %>
+      Include already reconciled
+    </label>
+
+    <div class="min-w-[120px] pb-3">
+      <%= link_to "Clear filters", author_credit_divergences_path,
+                  data: { action: "collection#clearAndSubmit" }, class: "btn btn-utility" %>
+    </div>
+  <% end %>
+</div>

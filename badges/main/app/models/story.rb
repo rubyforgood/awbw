@@ -8,6 +8,9 @@ class Story < ApplicationRecord
   belongs_to :updated_by, class_name: "User"
   belongs_to :windows_type
   belongs_to :organization, optional: true
+  # Display this person via `.name` (honors their display_name_preference) — a
+  # spotlight is not an author credit, so it ignores anonymous_contributions.
+  # Don't route the spotlighted name through author_credit / effective_author_credit_preference.
   belongs_to :spotlighted_facilitator, class_name: "Person",
              foreign_key: "spotlighted_facilitator_id", optional: true
   belongs_to :author, class_name: "Person", optional: true
@@ -53,10 +56,13 @@ class Story < ApplicationRecord
   search_scope :search do
     attributes all: [ :title, :published ]
     attributes :title, :published
-    attributes person_first: "people.first_name", person_last: "people.last_name"
     options :all, type: :text, default: true, default_operator: :or
 
-    scope { join_rich_texts.left_joins(created_by: :person) }
+    # Author names are deliberately not indexed here. `by_credited_person_name` is
+    # the only person-name search path, because it honors the credit preference —
+    # indexing people.first_name/last_name would let a full-text query surface a
+    # credit that renders "Anonymous".
+    scope { join_rich_texts }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
     options :action_text_body, type: :text, default: true, default_operator: :or
   end
@@ -125,11 +131,6 @@ class Story < ApplicationRecord
   # so the shared notifications/_communications partial works across records.
   def communications_email
     author_person&.preferred_email
-  end
-
-  # Unattributed stories are credited to the facilitator who shared them.
-  def missing_author_label
-    "AWBW Facilitator"
   end
 
   def organization_name

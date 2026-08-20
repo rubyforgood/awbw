@@ -76,6 +76,7 @@ module AdminCardsHelper
   def additional_data_cards
     [
       custom_card("Allocations", allocations_path, icon: "📤", color: :sky, intensity: 100),
+      custom_card("Author credit divergences", author_credit_divergences_path, icon: "✍️", color: :sky, intensity: 100),
       disabled_card("Bulk payments", icon: "💳"),
       custom_card("Event registrations", event_registrations_path, icon: "🎟️", color: :sky, intensity: 100),
       custom_card("Features & tips", features_path, icon: "⭐", color: :sky, intensity: 100),

@@ -62,10 +62,7 @@
         </div>
         <div>
           <span class="font-semibold text-gray-700">Author credit:</span>
-          <%= @workshop_variation_idea.author_credit_preference&.humanize || "—" %>
-          <% if @workshop_variation_idea.author_credit_preference.present? %>
-            <span class="text-gray-500">(<%= @workshop_variation_idea.author_credit %>)</span>
-          <% end %>
+          <%= credited_author_link(@workshop_variation_idea) %>
         </div>
         <div>
           <span class="font-semibold text-gray-700">Permission given:</span>

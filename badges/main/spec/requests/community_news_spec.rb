@@ -56,17 +56,19 @@ RSpec.describe "/community_news", type: :request do
       expect(response).to be_successful
     end
 
-    it "sorts by the credited person, falling back to the creator when no author" do
+    it "sorts by the credited author, not by whoever entered the record" do
       aaron = create(:person, first_name: "Aaron", last_name: "Adams")
-      late_creator = create(:user, :with_person)
-      late_creator.person.update!(first_name: "Zeke", last_name: "Zimmer")
+      zeke = create(:person, first_name: "Zeke", last_name: "Zimmer")
+      early_creator = create(:user, :with_person)
+      early_creator.person.update!(first_name: "Aaron", last_name: "Aardvark")
 
-      CommunityNews.create!(valid_attributes.merge(title: "Has Author", author: aaron))
-      CommunityNews.create!(valid_attributes.merge(title: "No Author", author: nil, created_by: late_creator))
+      CommunityNews.create!(valid_attributes.merge(title: "Adams Authored", author: aaron))
+      # Entered by an even earlier-sorting person, who must not influence the order.
+      CommunityNews.create!(valid_attributes.merge(title: "Zimmer Authored", author: zeke,
+                                                   created_by: early_creator))
 
       get community_news_index_url(sort: "author", direction: "asc"), headers: { "Turbo-Frame" => "community_news_results" }
-      # Aaron Adams (explicit author) sorts before Zeke Zimmer (creator fallback).
-      expect(response.body.index("Has Author")).to be < response.body.index("No Author")
+      expect(response.body.index("Adams Authored")).to be < response.body.index("Zimmer Authored")
     end
 
     it "filters by organization_id on lazy turbo-frame request" do

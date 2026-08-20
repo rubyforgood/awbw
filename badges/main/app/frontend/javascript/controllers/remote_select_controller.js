@@ -80,7 +80,7 @@ export default class extends Controller {
         z-index: 1;
       }
       .remote-select-container .ts-control {
-        padding-left: 1.5rem !important;  /* Make room for the search icon */
+        padding-left: 2rem !important;  /* Clear the search icon so it never overlaps the placeholder or value */
       }
       .ts-control {
         border: none !important;

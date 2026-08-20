@@ -541,7 +541,7 @@ variations.each do |var_data|
     position: var_data[:position],
     published: [ true, true, false ].sample,
     windows_type_id: windows_type_id,
-    author_credit_preference: "anonymous"
+    author_credit_preference: "anonymous" # a real anonymity latch, kept per-item
   )
   variation.save!
 end

@@ -4,7 +4,6 @@ FactoryBot.define do
     association :windows_type
     sequence(:name) { |n| "Variation #{n}" }
     rhino_body { "<p>Variation details using CKEditor</p>" }
-    author_credit_preference { "full_name" }
     sequence(:position) { |n| n }
     published { false }
 

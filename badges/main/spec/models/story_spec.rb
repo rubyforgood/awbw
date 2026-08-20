@@ -171,10 +171,10 @@ RSpec.describe Story, type: :model do
         expect(results).not_to include(published_story)
       end
 
-      it "finds stories by the creating user's person name" do
+      it "does not find stories by the name of whoever entered them" do
         created_story = create(:story, :published, title: 'Creator Only', created_by: creator)
         results = Story.search_by_params(query: 'Zephyrina')
-        expect(results).to include(created_story)
+        expect(results).not_to include(created_story)
       end
     end
   end

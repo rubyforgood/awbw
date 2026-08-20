@@ -13,6 +13,32 @@ RSpec.describe "workshops/_show_associations", type: :view do
     assign(:mentionees, {})
   end
 
+  describe "facilitator spotlights" do
+    let(:author) { create(:person, first_name: "Rosalind", last_name: "Franklin") }
+    let(:spotlight) { create(:resource, kind: "LeaderSpotlight", published: true, author: author) }
+
+    before do
+      assign(:leader_spotlights, [ spotlight ])
+      allow(view).to receive(:allowed_to?).and_return(false)
+    end
+
+    it "credits the spotlight by the author's profile preference" do
+      author.update!(display_name_preference: "first_name_last_initial")
+      render partial: "workshops/show_associations", locals: { workshop: workshop.decorate }
+
+      expect(rendered).to include("Rosalind F.")
+      expect(rendered).not_to include("Rosalind Franklin")
+    end
+
+    it "renders the generic credit when the author's profile suppresses credits" do
+      author.update!(anonymous_contributions: true)
+      render partial: "workshops/show_associations", locals: { workshop: workshop.decorate }
+
+      expect(rendered).to include("AWBW Facilitator")
+      expect(rendered).not_to include("Rosalind")
+    end
+  end
+
   context "when user can manage WorkshopVariation" do
     before do
       allow(view).to receive(:allowed_to?).and_return(false)

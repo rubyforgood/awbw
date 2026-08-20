@@ -111,6 +111,94 @@ RSpec.describe Workshop do
     end
   end
 
+  describe "#author_credit with no author named" do
+    let(:creator) { create(:user, :with_person) }
+
+    it "credits the org rather than the person who entered it" do
+      workshop = create(:workshop, created_by: creator, author: nil)
+      expect(workshop.author_credit).to eq("AWBW Staff")
+    end
+
+    it "is not findable by the creator's name" do
+      creator.person.update!(first_name: "Marguerite", last_name: "Enterer")
+      create(:workshop, created_by: creator, author: nil)
+
+      expect(Workshop.by_credited_person_name("Marguerite")).to be_empty
+    end
+
+    it "is not findable by the creator when a different person is the author" do
+      creator.person.update!(first_name: "Marguerite", last_name: "Enterer")
+      author = create(:person, first_name: "Rosalind", last_name: "Franklin")
+      create(:workshop, created_by: creator, author: author)
+
+      expect(Workshop.by_credited_person_name("Marguerite")).to be_empty
+      expect(Workshop.by_credited_person_name("Rosalind")).not_to be_empty
+    end
+  end
+
+  describe "#author_credit with a legacy free-text name" do
+    let(:creator) { create(:user, :with_person) }
+
+    it "uses the legacy name when no author is credited" do
+      workshop = create(:workshop, created_by: creator, author: nil, full_name: "Jane Legacy")
+      expect(workshop.author_credit).to eq("Jane Legacy")
+    end
+
+    it "is suppressed rather than exposing the legacy name" do
+      workshop = create(:workshop, created_by: creator, author: nil, full_name: "Jane Legacy",
+                                   author_credit_preference: "anonymous")
+      expect(workshop.author_credit).to eq("AWBW Staff")
+    end
+
+    it "takes no consent snapshot, since the creator's profile doesn't format it" do
+      creator.person.update!(display_name_preference: "first_name_only")
+      workshop = create(:workshop, created_by: creator, author: nil, full_name: "Jane Legacy")
+
+      expect(workshop.reload.author_credit_preference).to be_nil
+    end
+
+    it "is not findable by the creator's name, which the credit never shows" do
+      creator.person.update!(first_name: "Marguerite", last_name: "Enterer")
+      create(:workshop, created_by: creator, author: nil, full_name: "Jane Legacy")
+
+      expect(Workshop.by_credited_person_name("Marguerite")).to be_empty
+      expect(Workshop.by_credited_person_name("JaneLegacy")).not_to be_empty
+    end
+
+    it "has no governing person, so the creator's profile can't be said to have drifted" do
+      creator.person.update!(display_name_preference: "first_name_only")
+      workshop = create(:workshop, created_by: creator, author: nil, full_name: "Jane Legacy",
+                                   author_credit_preference: "full_name")
+
+      expect(workshop.credit_governing_person).to be_nil
+      expect(workshop.author_credit_diverged?).to be(false)
+    end
+
+    # A person author outranks the legacy column for display, so the person's profile
+    # governs and the stale column must not be searchable behind an anonymous credit.
+    context "when a person author outranks it" do
+      let(:anonymous_author) do
+        create(:person, first_name: "Anon", last_name: "Person", anonymous_contributions: true)
+      end
+
+      it "is not findable by the legacy name when the snapshot is blank" do
+        workshop = create(:workshop, author: anonymous_author, full_name: "Jane Legacy")
+        workshop.update_column(:author_credit_preference, nil)
+
+        expect(workshop.reload.author_credit).to eq(AuthorCreditable::ANONYMOUS_AUTHOR_LABEL)
+        expect(Workshop.by_credited_person_name("JaneLegacy")).to be_empty
+      end
+
+      it "is not findable by the legacy name when the snapshot predates the profile going anonymous" do
+        workshop = create(:workshop, author: anonymous_author, full_name: "Jane Legacy")
+        workshop.update_column(:author_credit_preference, "full_name")
+
+        expect(workshop.reload.author_credit).to eq(AuthorCreditable::ANONYMOUS_AUTHOR_LABEL)
+        expect(Workshop.by_credited_person_name("JaneLegacy")).to be_empty
+      end
+    end
+  end
+
   describe "#remote_search_label" do
     it "returns title with windows type short_name" do
       record = create(:workshop, title: "Art Therapy", windows_type: create(:windows_type, :children))

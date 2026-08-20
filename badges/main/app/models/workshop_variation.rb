@@ -57,11 +57,6 @@ class WorkshopVariation < ApplicationRecord
     rhino_body.to_plain_text
   end
 
-  # Unattributed workshop variations are credited to the generic facilitator.
-  def missing_author_label
-    "AWBW Facilitator"
-  end
-
   def title
     name
   end
