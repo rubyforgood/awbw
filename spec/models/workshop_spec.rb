@@ -185,7 +185,7 @@ RSpec.describe Workshop do
         workshop = create(:workshop, author: anonymous_author, full_name: "Jane Legacy")
         workshop.update_column(:author_credit_preference, nil)
 
-        expect(workshop.reload.author_credit).to eq(AuthorCreditable::FACILITATOR_AUTHOR_LABEL)
+        expect(workshop.reload.author_credit).to eq(AuthorCreditable::ORG_AUTHOR_LABEL)
         expect(Workshop.by_credited_person_name("JaneLegacy")).to be_empty
       end
 
@@ -193,7 +193,7 @@ RSpec.describe Workshop do
         workshop = create(:workshop, author: anonymous_author, full_name: "Jane Legacy")
         workshop.update_column(:author_credit_preference, "full_name")
 
-        expect(workshop.reload.author_credit).to eq(AuthorCreditable::FACILITATOR_AUTHOR_LABEL)
+        expect(workshop.reload.author_credit).to eq(AuthorCreditable::ORG_AUTHOR_LABEL)
         expect(Workshop.by_credited_person_name("JaneLegacy")).to be_empty
       end
     end

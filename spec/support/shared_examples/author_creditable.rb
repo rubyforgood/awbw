@@ -74,7 +74,7 @@ RSpec.shared_examples "author_creditable" do |factory:, org_credited:|
         # "Anonymous", which would read as being about the reader's access.
         it "returns the generic label regardless of the name format" do
           person.update!(display_name_preference: "full_name")
-          expect(record.author_credit).to eq("AWBW Facilitator")
+          expect(record.author_credit).to eq(org_label)
         end
 
         it "does not link the credit to a profile" do
@@ -87,7 +87,7 @@ RSpec.shared_examples "author_creditable" do |factory:, org_credited:|
 
         it "stays suppressed even though the profile says otherwise" do
           person.update!(display_name_preference: "full_name", anonymous_contributions: false)
-          expect(record.author_credit).to eq("AWBW Facilitator")
+          expect(record.author_credit).to eq(org_label)
         end
 
         it "does not link the credit to a profile" do

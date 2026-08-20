@@ -1,6 +1,5 @@
 class StoryIdea < ApplicationRecord
   include AuthorCreditable
-  credits_to_org
   include SearchCop
   search_scope :search do
     attributes :title, :body

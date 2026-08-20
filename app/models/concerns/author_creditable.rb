@@ -9,13 +9,12 @@ module AuthorCreditable
 
   ANONYMOUS = "anonymous"
 
-  # The generic credit AWBW puts on content with no named person behind it. Content
-  # AWBW produces itself — news, workshops, resources, and the idea submissions that
-  # seed them — reads as "AWBW Staff"; facilitator-submitted content that simply lacks
-  # a named author reads as "AWBW Facilitator". A named author who opts out is always a
-  # facilitator, so the anonymous label is the facilitator label regardless of model.
-  # Read through `anonymous_author_label` / `missing_author_label` from a record where
-  # one is in hand — a model's `missing_author_label` varies (see `credits_to_org`).
+  # The generic credit AWBW puts on content with no named credit. Content AWBW produces
+  # itself — news, workshops, resources — reads as "AWBW Staff"; everything else,
+  # including facilitator submissions and the idea forms, reads as "AWBW Facilitator".
+  # Both the unattributed and the opted-out (anonymous) cases fall to this same per-model
+  # label. Read it through `anonymous_author_label` / `missing_author_label` from a
+  # record where one is in hand — the label varies by model (see `credits_to_org`).
   FACILITATOR_AUTHOR_LABEL = "AWBW Facilitator".freeze
   ORG_AUTHOR_LABEL = "AWBW Staff".freeze
 
@@ -111,10 +110,11 @@ module AuthorCreditable
     person.present? && author_credit_preference != person.effective_author_credit_preference
   end
 
-  # A named author who opted out of the credit — still a facilitator's content,
-  # just shown without their name rather than hiding behind "Anonymous".
+  # A named author who opted out of the credit — shown without their name rather than
+  # hiding behind "Anonymous". Reads as the same generic label an unattributed record
+  # would: "AWBW Staff" for org-produced content, otherwise "AWBW Facilitator".
   def anonymous_author_label
-    FACILITATOR_AUTHOR_LABEL
+    self.class.unattributed_author_label
   end
 
   # No author at all, so the content reads as the org's own — "AWBW Staff" for
