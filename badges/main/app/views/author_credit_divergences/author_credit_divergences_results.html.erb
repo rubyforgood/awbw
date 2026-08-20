@@ -90,7 +90,7 @@
     <section id="section-creator" class="mb-10 scroll-mt-4">
       <h2 class="text-lg font-semibold text-gray-900 mb-1">3. No author named, but someone entered it</h2>
       <p class="text-sm text-gray-600 mb-4">
-        No <code>author_id</code>, so they credit the generic &ldquo;<%= AuthorCreditable::MISSING_AUTHOR_LABEL %>&rdquo; &mdash; entering
+        No <code>author_id</code>, so they credit a generic AWBW label &mdash; entering
         a record isn't claiming it. Grouped under whoever created them, the likeliest author to assign
         (but confirm it). Idea records are excluded: they never name an author.
       </p>
@@ -123,8 +123,8 @@
     <section id="section-unattributed" class="scroll-mt-4">
       <h2 class="text-lg font-semibold text-gray-900 mb-1">4. No author at all</h2>
       <p class="text-sm text-gray-600 mb-4">
-        No author, no legacy name, and no person behind the creating account, so these fall back to the
-        generic &ldquo;<%= AuthorCreditable::MISSING_AUTHOR_LABEL %>&rdquo; credit.
+        No author, no legacy name, and no person behind the creating account, so these fall back to a
+        generic AWBW credit.
       </p>
 
       <% if @result.unattributed.empty? %>

@@ -494,7 +494,7 @@ RSpec.describe WorkshopSearchService, type: :service do
         end
 
         it "does not find a workshop whose legacy name is suppressed as anonymous" do
-          expect(workshop_legacy_anonymous.author_credit).to eq(AuthorCreditable::MISSING_AUTHOR_LABEL)
+          expect(workshop_legacy_anonymous.author_credit).to eq(AuthorCreditable::ORG_AUTHOR_LABEL)
 
           service = WorkshopSearchService.new({ query: "Bartholomew Snazzlepants" }, user: user).call
           expect(service.workshops).not_to include(workshop_legacy_anonymous)

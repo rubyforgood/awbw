@@ -28,7 +28,7 @@ RSpec.describe ApplicationHelper, type: :helper do
       workshop = create(:workshop, author_credit_preference: "anonymous")
       allow(workshop).to receive(:author).and_return(person)
 
-      expect(helper.credited_author_link(workshop)).to eq("AWBW Facilitator")
+      expect(helper.credited_author_link(workshop)).to eq("AWBW Staff")
     end
 
     it "renders a legacy free-text author as plain text with no link" do

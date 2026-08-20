@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe StoryIdea, type: :model do
-  it_behaves_like "author_creditable", factory: :story_idea
+  it_behaves_like "author_creditable", factory: :story_idea, org_credited: false
 
   describe "#workshop_title" do
     it "returns workshop title when only workshop is present" do

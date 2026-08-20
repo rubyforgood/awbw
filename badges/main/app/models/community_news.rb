@@ -1,5 +1,6 @@
 class CommunityNews < ApplicationRecord
   include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable, AuthorCreditable
+  credits_to_org
 
   has_rich_text :rhino_body
 

@@ -88,7 +88,7 @@ RSpec.describe Workshop do
     end
   end
 
-  it_behaves_like "author_creditable", factory: :workshop
+  it_behaves_like "author_creditable", factory: :workshop, org_credited: true
 
   describe "#author_person" do
     let(:creator) { create(:user, :with_person) }
@@ -185,7 +185,7 @@ RSpec.describe Workshop do
         workshop = create(:workshop, author: anonymous_author, full_name: "Jane Legacy")
         workshop.update_column(:author_credit_preference, nil)
 
-        expect(workshop.reload.author_credit).to eq(AuthorCreditable::ANONYMOUS_AUTHOR_LABEL)
+        expect(workshop.reload.author_credit).to eq(AuthorCreditable::ORG_AUTHOR_LABEL)
         expect(Workshop.by_credited_person_name("JaneLegacy")).to be_empty
       end
 
@@ -193,7 +193,7 @@ RSpec.describe Workshop do
         workshop = create(:workshop, author: anonymous_author, full_name: "Jane Legacy")
         workshop.update_column(:author_credit_preference, "full_name")
 
-        expect(workshop.reload.author_credit).to eq(AuthorCreditable::ANONYMOUS_AUTHOR_LABEL)
+        expect(workshop.reload.author_credit).to eq(AuthorCreditable::ORG_AUTHOR_LABEL)
         expect(Workshop.by_credited_person_name("JaneLegacy")).to be_empty
       end
     end
