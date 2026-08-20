@@ -73,11 +73,16 @@ class WorkshopIdea < ApplicationRecord
 
   # Scopes
   scope :title, ->(title) { where("workshop_ideas.title like ?", "%#{ title }%") }
-  # Goes through by_credited_person_name so the filter honors the credit preference —
-  # matching users.first_name/last_name/email directly would surface ideas whose
-  # credit renders "Anonymous".
+  # An idea credits nobody — `author_credit` is always the generic label — so there is
+  # no credit for this filter to leak. It matches the submitter the pages actually show
+  # (`created_by.name`, i.e. the person), falling back to the account email.
   scope :author_name, ->(author_name) {
-    where(id: by_credited_person_name(author_name).select("workshop_ideas.id"))
+    needle = "%#{author_name.to_s.strip.downcase}%"
+    joins("INNER JOIN users ON users.id = workshop_ideas.created_by_id")
+      .joins("LEFT OUTER JOIN people ON people.id = users.person_id")
+      .where("LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :needle " \
+             "OR LOWER(people.first_name) LIKE :needle OR LOWER(people.last_name) LIKE :needle " \
+             "OR LOWER(users.email) LIKE :needle", needle: needle)
   }
 
   def self.search(params)

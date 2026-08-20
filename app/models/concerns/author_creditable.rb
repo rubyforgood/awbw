@@ -162,13 +162,17 @@ module AuthorCreditable
     # Only an explicit author is ever credited, so search and sort reach that person
     # alone — and nobody at all on the idea models, which have no author_id.
     def credited_person_aliases
-      column_names.include?("author_id") ? [ "credited_author" ] : []
+      explicit_author? ? [ "credited_author" ] : []
     end
 
     def credited_person_join_sql
       return [] if credited_person_aliases.empty?
 
       [ "LEFT OUTER JOIN people credited_author ON credited_author.id = #{table_name}.author_id" ]
+    end
+
+    def explicit_author?
+      column_names.include?("author_id")
     end
 
     # Arel keeps interpolated SQL out of the ORDER BY. Same precedence as
@@ -202,9 +206,15 @@ module AuthorCreditable
       "(#{sql_alias}.anonymous_contributions = FALSE AND #{not_anonymous_sql} AND (#{by_preference.join(' OR ')}))"
     end
 
-    # No person behind a legacy name, so only the record's own anonymity applies.
+    # A legacy name only displays when no person author outranks it, so it's only
+    # searchable then — otherwise the person's profile governs the credit, and the
+    # stale column would surface a name that profile hides.
     def legacy_author_name_match_sql(column)
-      "(#{not_anonymous_sql} AND #{name_like(column)})"
+      "(#{no_person_author_sql} AND #{not_anonymous_sql} AND #{name_like(column)})"
+    end
+
+    def no_person_author_sql
+      explicit_author? ? "#{table_name}.author_id IS NULL" : "TRUE"
     end
 
     def not_anonymous_sql

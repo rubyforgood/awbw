@@ -75,6 +75,24 @@ RSpec.describe Resource do
       results = Resource.search(random_string)
       expect(results).to contain_exactly(resource1)
     end
+
+    describe "the legacy author name" do
+      let(:creator) { create(:user) }
+
+      it "still finds a resource credited by its legacy name" do
+        resource = create(:resource, created_by: creator, author: nil, legacy_author_name: "Jane Legacy")
+
+        expect(Resource.search_by_params(query: "Jane Legacy")).to include(resource)
+      end
+
+      it "does not find a resource whose legacy name is suppressed as anonymous" do
+        resource = create(:resource, created_by: creator, author: nil, legacy_author_name: "Jane Legacy",
+                                     author_credit_preference: "anonymous")
+
+        expect(resource.author_credit).to eq(AuthorCreditable::MISSING_AUTHOR_LABEL)
+        expect(Resource.search_by_params(query: "Jane Legacy")).not_to include(resource)
+      end
+    end
   end
 
   describe 'scopes' do

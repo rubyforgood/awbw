@@ -173,6 +173,30 @@ RSpec.describe Workshop do
       expect(workshop.credit_governing_person).to be_nil
       expect(workshop.author_credit_diverged?).to be(false)
     end
+
+    # A person author outranks the legacy column for display, so the person's profile
+    # governs and the stale column must not be searchable behind an anonymous credit.
+    context "when a person author outranks it" do
+      let(:anonymous_author) do
+        create(:person, first_name: "Anon", last_name: "Person", anonymous_contributions: true)
+      end
+
+      it "is not findable by the legacy name when the snapshot is blank" do
+        workshop = create(:workshop, author: anonymous_author, full_name: "Jane Legacy")
+        workshop.update_column(:author_credit_preference, nil)
+
+        expect(workshop.reload.author_credit).to eq(AuthorCreditable::ANONYMOUS_AUTHOR_LABEL)
+        expect(Workshop.by_credited_person_name("JaneLegacy")).to be_empty
+      end
+
+      it "is not findable by the legacy name when the snapshot predates the profile going anonymous" do
+        workshop = create(:workshop, author: anonymous_author, full_name: "Jane Legacy")
+        workshop.update_column(:author_credit_preference, "full_name")
+
+        expect(workshop.reload.author_credit).to eq(AuthorCreditable::ANONYMOUS_AUTHOR_LABEL)
+        expect(Workshop.by_credited_person_name("JaneLegacy")).to be_empty
+      end
+    end
   end
 
   describe "#remote_search_label" do

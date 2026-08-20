@@ -68,9 +68,9 @@ class CommunityNews < ApplicationRecord
       community_news = self.search(conditions)
     end
 
-    # SearchCop's free-text query covers title + body + the explicit author. Also
-    # match the credited author/legacy author/creator by name, OR-ed in via id
-    # subqueries so the extra person joins stay isolated from SearchCop's joins.
+    # SearchCop's free-text query covers title + body only. Match the credited author
+    # by name separately, OR-ed in via id subqueries so the extra person joins stay
+    # isolated from SearchCop's joins.
     if params[:query].present?
       community_news = self.where(id: community_news.select("community_news.id"))
                            .or(self.where(id: by_credited_person_name(params[:query]).select("community_news.id")))

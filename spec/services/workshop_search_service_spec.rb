@@ -476,6 +476,30 @@ RSpec.describe WorkshopSearchService, type: :service do
           expect(service.workshops).not_to include(workshop_no_match)
         end
       end
+
+      # The free-text query has to honor the credit preference the same way the
+      # author_name filter does, or an anonymous credit is findable by real name.
+      context "through the free-text query" do
+        let!(:workshop_legacy) do
+          create(:workshop, :published, title: "Legacy Credit", full_name: "Bartholomew Snazzlepants")
+        end
+        let!(:workshop_legacy_anonymous) do
+          create(:workshop, :published, title: "Hidden Credit", full_name: "Bartholomew Snazzlepants",
+                                        author_credit_preference: "anonymous")
+        end
+
+        it "still finds a workshop credited by its legacy name" do
+          service = WorkshopSearchService.new({ query: "Bartholomew Snazzlepants" }, user: user).call
+          expect(service.workshops).to include(workshop_legacy)
+        end
+
+        it "does not find a workshop whose legacy name is suppressed as anonymous" do
+          expect(workshop_legacy_anonymous.author_credit).to eq(AuthorCreditable::MISSING_AUTHOR_LABEL)
+
+          service = WorkshopSearchService.new({ query: "Bartholomew Snazzlepants" }, user: user).call
+          expect(service.workshops).not_to include(workshop_legacy_anonymous)
+        end
+      end
     end
   end
 end

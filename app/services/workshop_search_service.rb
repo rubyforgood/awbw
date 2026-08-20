@@ -139,8 +139,10 @@ class WorkshopSearchService
     )
     return if spaced.blank?
 
-    # Match against spaced variant (punctuation → space) and spaceless variant (punctuation + spaces removed)
-    fields = %w[workshops.title workshops.full_name action_text_rich_texts.plain_text_body]
+    # Match against spaced variant (punctuation → space) and spaceless variant (punctuation + spaces removed).
+    # The legacy `full_name` is excluded — matching it raw would surface a workshop
+    # whose credit renders anonymous, so it comes back via search_by_author_name.
+    fields = %w[workshops.title action_text_rich_texts.plain_text_body]
     conditions = fields.flat_map do |field|
       [
         "#{self.class.strip_punctuation_sql_spaced(field)} LIKE :spaced",
@@ -148,11 +150,16 @@ class WorkshopSearchService
       ]
     end.join(" OR ")
 
-    @workshops = @workshops
+    by_text = @workshops
       .joins("LEFT JOIN action_text_rich_texts ON action_text_rich_texts.record_id = workshops.id " \
              "AND action_text_rich_texts.record_type = 'Workshop'")
       .where(conditions, spaced: "%#{spaced}%", spaceless: "%#{spaceless}%")
-      .distinct
+      .select("workshops.id")
+
+    # Isolated in an id subquery so the person joins don't collide with the text joins.
+    by_person = search_by_author_name(@workshops, params[:query]).select("workshops.id")
+
+    @workshops = @workshops.where(id: by_text).or(@workshops.where(id: by_person)).distinct
   end
 
   # --- Search methods ---
