@@ -146,7 +146,7 @@ class CommunityNewsController < ApplicationController
       :title, :rhino_body, :published, :featured, :publicly_visible, :publicly_featured,
       :reference_url, :youtube_url,
       :organization_id,
-      :author_id, :created_by_id, :updated_by_id, :author_credit_preference,
+      :author_id, :author_credit_preference, :created_by_id, :updated_by_id,
       category_ids: [],
       sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],
