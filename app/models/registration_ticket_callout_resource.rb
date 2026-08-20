@@ -13,6 +13,7 @@ class RegistrationTicketCalloutResource < ApplicationRecord
   positioned on: :registration_ticket_callout_id
 
   validates :resource_id, uniqueness: { scope: :registration_ticket_callout_id }
+  validates :subtitle, length: { maximum: 255 }
   validates :position, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
 
   scope :ordered, -> { order(:position, :id) }

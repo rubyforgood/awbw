@@ -4,6 +4,9 @@ class WorkshopSeriesMembership < ApplicationRecord
 
   # Validations
   validates :position, presence: true, numericality: { only_integer: true, greater_than: 0 }
+  validates :series_description, length: { maximum: 255 }
+  validates :series_description_spanish, length: { maximum: 255 }
+  validates :theme_name, length: { maximum: 255 }
 
   def series_description_for(spanish: false, length: nil, parent_workshop: false)
     description =

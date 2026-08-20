@@ -26,6 +26,7 @@ class Affiliation < ApplicationRecord
 
   # Validations
   validates_presence_of :organization_id
+  validates :title, length: { maximum: 255 }
   validate :organization_address_belongs_to_organization
 
   # Not flagged inactive and not past its end date. Includes affiliations whose

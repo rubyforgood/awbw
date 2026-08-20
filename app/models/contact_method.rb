@@ -10,6 +10,6 @@ class ContactMethod < ApplicationRecord
     whatsapp: "whatsapp"
   }
 
-  validates :value, presence: true
+  validates :value, presence: true, length: { maximum: 255 }
   validates :kind, presence: true
 end

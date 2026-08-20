@@ -60,6 +60,16 @@ class Event < ApplicationRecord
   validates_presence_of :title, :start_date, :end_date
   validates_inclusion_of :published, in: [ true, false ]
   validates_numericality_of :cost_cents, greater_than_or_equal_to: 0, allow_nil: true
+  validates :title, length: { maximum: 255 }
+  validates :abbreviation, length: { maximum: 255 }
+  validates :pre_title, length: { maximum: 255 }
+  validates :pre_date_text, length: { maximum: 255 }
+  validates :videoconference_url, length: { maximum: 255 }
+  validates :videoconference_label, length: { maximum: 255 }
+  validates :videoconference_passcode, length: { maximum: 255 }
+  validates :hint_dates, length: { maximum: 255 }
+  validates :hint_times, length: { maximum: 255 }
+  validates :hint_registration_cost, length: { maximum: 255 }
   validate :registration_form_required_when_publicly_registerable, on: :update
   validate :staff_members_are_unique, on: :update
 
