@@ -18,6 +18,16 @@ RSpec.describe "/affiliations", type: :request do
         expect(response).to be_successful
       end
 
+      it "credits the creator from a lifecycle event recorded under the base class name" do
+        author = create(:person).user
+        create(:ahoy_event, name: "create.affiliation", resource_type: "Affiliation",
+                            resource_id: affiliation.id, user: author, time: 1.day.ago)
+
+        get edit_affiliation_path(affiliation)
+
+        expect(response.body).to include(author.full_name)
+      end
+
       it "surfaces a linked registration with the org-linking warning" do
         registration = create(:event_registration)
         affiliation.update_column(:event_registration_id, registration.id)

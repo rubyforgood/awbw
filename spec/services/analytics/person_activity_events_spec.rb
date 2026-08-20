@@ -44,6 +44,15 @@ RSpec.describe Analytics::PersonActivityEvents do
       expect(described_class.new(person).relation).to include(target)
     end
 
+    it "includes affiliation events under every STI class name Ahoy may have recorded" do
+      affiliation = create(:affiliation, person: person, title: "Facilitator")
+      pre_split = event(resource_type: "Affiliation", resource_id: affiliation.id, name: "create.affiliation")
+      facilitator = event(resource_type: "FacilitatorAffiliation", resource_id: affiliation.id, name: "update.affiliation")
+      job = event(resource_type: "JobAffiliation", resource_id: affiliation.id, name: "update.affiliation")
+
+      expect(described_class.new(person).relation).to include(pre_split, facilitator, job)
+    end
+
     it "includes events about the person's continuing education registrations" do
       registration = create(:event_registration, registrant: person)
       ce = create(:continuing_education_registration, event_registration: registration)

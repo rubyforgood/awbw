@@ -28,12 +28,13 @@ module Analytics
       end
     end
 
-    # resource_type => ids (arrays or id-only subqueries). Mirrors the records in
-    # people/_associated_records plus the person's own nested records.
+    # resource_type => ids (arrays or id-only subqueries). A key may be a list of
+    # type names when one model records events under several (STI). Mirrors the
+    # records in people/_associated_records plus the person's own nested records.
     def resource_ids_by_type
       map = {
         "Person" => [ @person.id ],
-        "Affiliation" => @person.affiliations.select(:id),
+        Affiliation.event_resource_types => @person.affiliations.select(:id),
         "ProfessionalLicense" => @person.professional_licenses.select(:id),
         "Membership" => @person.memberships.select(:id),
         "Address" => @person.addresses.select(:id),

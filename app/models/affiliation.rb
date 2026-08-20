@@ -96,6 +96,15 @@ class Affiliation < ApplicationRecord
     @_affiliation_model_name ||= ActiveModel::Name.new(Affiliation)
   end
 
+  # Ahoy stamps resource_type from the saving instance's class, which is the base
+  # class for a freshly built row and the subtype once it's loaded back — plus
+  # "Affiliation" on everything recorded before the STI split. Readers must match
+  # all three (Analytics::PersonActivityEvents, shared/_audit_info). Listed lazily
+  # so the subclasses aren't autoloaded while this class body is still evaluating.
+  def self.event_resource_types
+    [ Affiliation, FacilitatorAffiliation, JobAffiliation ].map(&:name)
+  end
+
   # Methods
   # Reads the type column, not #is_a?, so it holds on a base-built instance whose
   # type was just assigned by #set_type_from_title but not yet reloaded.
