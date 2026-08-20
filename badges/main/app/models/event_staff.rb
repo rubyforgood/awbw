@@ -3,6 +3,7 @@ class EventStaff < ApplicationRecord
   belongs_to :person
 
   validates :person_id, uniqueness: { scope: :event_id }
+  validates :title, length: { maximum: 255 }
 
   normalizes :bio, with: ->(value) { value&.strip.presence }
 

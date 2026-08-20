@@ -6,6 +6,7 @@ class Faq < ApplicationRecord
 
   # Validations
   validates_presence_of :question, :answer
+  validates :question, length: { maximum: 255 }
 
   # Scopes
   # See Publishable

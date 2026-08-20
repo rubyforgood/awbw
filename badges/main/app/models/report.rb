@@ -47,6 +47,8 @@ class Report < ApplicationRecord
     application/vnd.openxmlformats-officedocument.wordprocessingml.document application/vnd.ms-excel
     application/vnd.openxmlformats-officedocument.spreadsheetml.sheet]
   validates :form_file, content_type: FORM_FILE_CONTENT_TYPES
+  validates :other_description, length: { maximum: 255 }
+  validates :workshop_name, length: { maximum: 255 }
 
   before_save :set_has_attachment # TODO verify set_has_attachment works as expected once this feature is enabled in the UI
   after_create :set_windows_type

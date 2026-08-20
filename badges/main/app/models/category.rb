@@ -17,7 +17,7 @@ class Category < ApplicationRecord
   scope :story_share_featured, -> { where.not(story_share_position: nil).order(:story_share_position) }
 
   # Validations
-  validates :name, presence: true, uniqueness: { case_sensitive: false }
+  validates :name, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
   validates :position, numericality: {
     only_integer: true,
     greater_than: 0,
