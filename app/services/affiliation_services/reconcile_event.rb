@@ -44,7 +44,7 @@ module AffiliationServices
     Change = Struct.new(:person, :organization, :affiliation, :action, keyword_init: true)
 
     # One radio choice per row: the action itself, or "keep".
-    ACTION_FOR_CHOICE = { "deactivate" => :deactivate, "delete" => :delete, "reactivate" => :reactivate, "create" => :create }.freeze
+    ACTION_FOR_CHOICE = { "deactivate" => :deactivate, "delete" => :delete, "create" => :create }.freeze
 
     # What the `{ row.key => choice }` map will change, for the confirmation screen.
     def planned_changes(outcome:)

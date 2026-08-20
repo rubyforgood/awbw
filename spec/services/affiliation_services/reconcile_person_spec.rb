@@ -13,12 +13,14 @@ RSpec.describe AffiliationServices::ReconcilePerson do
   end
 
   # A "Facilitator" affiliation for (person, organization) owned by `registration`.
-  def owned_facilitator(registration:, start_date: 1.month.ago.to_date)
+  # Defaults to the training's own date, which is what the registration flow sets
+  # (ADR-0001 D8) and what makes it "the row this training minted" (ADR-0002 D6).
+  def owned_facilitator(registration:, start_date: nil)
     create(:affiliation,
            person: person,
            organization: organization,
            title: "Facilitator",
-           start_date: start_date,
+           start_date: start_date || registration.event.start_date.to_date,
            event_registration: registration)
   end
 
@@ -92,6 +94,72 @@ RSpec.describe AffiliationServices::ReconcilePerson do
 
       expect(hand_created.reload).not_to be_active
     end
+
+    it "ends an older affiliation at the training, keeping the years it really facilitated" do
+      reg = training_registration(status: "no_show")
+      started_on = 2.years.ago.to_date
+      hand_created = create(:affiliation, person: person, organization: organization,
+                            title: "Facilitator", start_date: started_on)
+
+      reconcile(reg, include_unowned: true)
+
+      expect(hand_created.reload.end_date).to eq(reg.event.start_date.to_date)
+      expect(hand_created.start_date).to eq(started_on)
+    end
+
+    it "same-days an older affiliation that starts after the training rather than ending it before it began" do
+      reg = training_registration(status: "no_show")
+      later = create(:affiliation, person: person, organization: organization,
+                     title: "Facilitator", start_date: Date.current)
+
+      reconcile(reg, include_unowned: true)
+
+      expect(later.reload.end_date).to eq(later.start_date)
+    end
+  end
+
+  describe "the comment reconciliation leaves behind" do
+    it "records why a row was ended, and who did it" do
+      user = create(:user, :admin)
+      Current.user = user
+      reg = training_registration(status: "no_show")
+      affiliation = owned_facilitator(registration: reg)
+
+      reconcile(reg)
+
+      comment = affiliation.reload.comments.last
+      expect(comment.topic).to eq(described_class::COMMENT_TOPIC)
+      expect(comment.body).to include("marked inactive by reconciliation")
+      expect(comment.body).to include(reg.event.title)
+      expect(comment.created_by).to eq(user)
+    ensure
+      Current.user = nil
+    end
+
+    it "records why a returning facilitator's new row appeared" do
+      create(:affiliation, person: person, organization: organization, title: "Facilitator",
+             start_date: Date.new(2023, 1, 1), end_date: Date.new(2024, 1, 1))
+      reg = training_registration(status: "attended")
+
+      described_class.call(person: person, organization: organization, event: reg.event,
+                           registration: reg, include_unowned: true)
+
+      fresh = person.affiliations.facilitators.active.where(organization: organization).last
+      expect(fresh.comments.last.body).to include("Created by reconciliation")
+    end
+
+    it "distinguishes a row it ended from one an admin ended" do
+      reg = training_registration(status: "no_show")
+      admin_ended = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+                           start_date: 3.years.ago.to_date, end_date: 2.years.ago.to_date)
+
+      plan = described_class.new(person: person, organization: organization, event: reg.event,
+                                 registration: reg, include_unowned: true).plan
+
+      expect(plan.map(&:reason)).to include(described_class::ALREADY_ENDED)
+      expect(plan.map(&:reason)).not_to include(described_class::ALREADY_DEACTIVATED)
+      expect(admin_ended.reload.end_date).to eq(2.years.ago.to_date)
+    end
   end
 
   describe "keeping / activating" do
@@ -115,16 +183,41 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       expect(affiliation.reload).to be_active
     end
 
-    it "reactivates a previously same-day'd affiliation once the person is marked attended" do
+    it "records a return as a NEW affiliation, leaving the ended one ended" do
       reg = training_registration(status: "attended")
-      affiliation = owned_facilitator(registration: reg, start_date: 1.month.ago.to_date)
-      affiliation.update!(end_date: affiliation.start_date)
-      expect(affiliation.reload).not_to be_active
+      ended = owned_facilitator(registration: reg, start_date: 1.month.ago.to_date)
+      ended.update!(end_date: ended.start_date)
+      expect(ended.reload).not_to be_active
 
-      reconcile(reg)
+      expect { described_class.call(person: person, organization: organization, event: reg.event, registration: reg) }
+        .to change { person.affiliations.facilitators.where(organization: organization).count }.by(1)
 
-      expect(affiliation.reload).to be_active
-      expect(affiliation.end_date).to be_nil
+      expect(ended.reload.end_date).to eq(ended.start_date)
+      expect(person.affiliations.facilitators.active.where(organization: organization).count).to eq(1)
+    end
+
+    it "keeps the lapse visible instead of swallowing it into one unbroken stretch" do
+      lapsed = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+                      start_date: Date.new(2023, 1, 1), end_date: Date.new(2024, 1, 1))
+      reg = training_registration(status: "attended")
+
+      described_class.call(person: person, organization: organization, event: reg.event,
+                           registration: reg, include_unowned: true)
+
+      expect(lapsed.reload.end_date).to eq(Date.new(2024, 1, 1))
+      expect(organization.reload.facilitator_status_on(Date.new(2025, 1, 1))).to eq(:reinstated)
+    end
+
+    it "plans no action on a lapsed row, explaining why" do
+      create(:affiliation, person: person, organization: organization, title: "Facilitator",
+             start_date: Date.new(2023, 1, 1), end_date: Date.new(2024, 1, 1))
+      reg = training_registration(status: "attended")
+
+      plan = described_class.new(person: person, organization: organization, event: reg.event,
+                                 registration: reg, include_unowned: true).plan
+
+      expect(plan.map(&:action)).to contain_exactly(:noop, :create)
+      expect(plan.map(&:reason)).to include(described_class::LAPSED)
     end
   end
 

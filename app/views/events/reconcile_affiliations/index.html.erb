@@ -13,8 +13,14 @@
       <p>
         This step brings facilitator affiliations in line with who registered and attended. Before the training it
         <strong>creates</strong> any missing facilitator affiliations for linked organizations. After the training it
-        <strong>same-days</strong> the affiliation of anyone who didn't attend, and reactivates anyone later marked
-        attended. Job affiliations are never touched.
+        <strong>ends</strong> the affiliation of anyone who didn't attend and marks it inactive. Someone later marked
+        attended gets a <strong>new</strong> affiliation dated to this training rather than having the old one reopened,
+        so a lapse stays visible. Job affiliations are never touched.
+      </p>
+      <p>
+        Ending never erases history: an affiliation this training created is same-dayed, while an older one ends on this
+        training's date, so the period the person really facilitated — and this organization's program status at every
+        earlier training — stays as it was.
       </p>
     <% else %>
       <p>
@@ -33,7 +39,11 @@
 
   <% unless @has_rows %>
     <div class="rounded-lg border border-gray-200 bg-white p-6 text-center text-gray-500">
-      No registrants have linked an organization, so there's nothing to reconcile.
+      <% if @event.facilitator_training? %>
+        No registrants have linked an organization, so there's nothing to reconcile.
+      <% else %>
+        No facilitator affiliations were created from this event, so there's nothing to remove.
+      <% end %>
     </div>
   <% end %>
 
@@ -47,7 +57,6 @@
        } %>
     <% outcome_options = {
          create: [ [ "create", "Will be created", :blue ], [ "keep", "Skip", :gray ] ],
-         reactivate: [ [ "reactivate", "Will be reactivated", :green ], [ "keep", "Leave inactive", :gray ] ],
          deactivate: [ [ "keep", "Keep active", :green ], [ "delete", "Delete affiliation", :red ], [ "deactivate", "Deactivate affiliation", :red ] ],
          delete: [ [ "delete", "Will be deleted", :red ], [ "keep", "Keep", :gray ] ]
        } %>

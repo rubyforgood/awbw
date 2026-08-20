@@ -1,7 +1,12 @@
-<span class="pointer-events-none absolute right-0 top-full z-20 mt-1 hidden w-64 rounded-md bg-gray-900 px-3 py-2 text-xs font-normal text-white shadow-lg group-hover:block">
+<span class="pointer-events-none absolute top-full right-0 z-20 mt-1 hidden w-64 rounded-md bg-gray-900 px-3 py-2 text-xs font-normal text-white shadow-lg group-hover:block">
   <% case kind %>
   <% when :deactivate %>
-    Ends this facilitator affiliation — its end date is set to its own start date and it's marked inactive — so it no longer counts as active. The record is kept and reactivates if the person is later marked attended.
+    <p class="mb-1">Ends this facilitator affiliation and marks it inactive, so it no longer counts as active. The record is kept — if the person is later marked attended, the return is recorded as a new affiliation rather than by reopening this one.</p>
+    <p class="mb-1">The end date depends on where the affiliation came from:</p>
+    <ul class="list-disc space-y-0.5 pl-4">
+      <li>Created by <strong>this</strong> training — set to its own start date, since the person never became a facilitator</li>
+      <li>Any <strong>older</strong> affiliation — set to this training's date, so the years they did facilitate stay on the record</li>
+    </ul>
   <% when :delete %>
     <p class="mb-1">Permanently deletes <strong>this</strong> facilitator affiliation. Everything else stays as-is:</p>
     <ul class="list-disc space-y-0.5 pl-4">
@@ -10,8 +15,6 @@
     </ul>
   <% when :create %>
     Creates the facilitator affiliation for this organization.
-  <% when :reactivate %>
-    Clears the end date so this facilitator affiliation counts as active again.
   <% when :keep %>
     Leaves this facilitator affiliation exactly as it is — no change.
   <% end %>

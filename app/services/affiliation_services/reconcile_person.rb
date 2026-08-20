@@ -20,6 +20,11 @@ module AffiliationServices
     ACTIVE_ATTENDED = "Active — attended".freeze
     TRAINING_PENDING = "Training hasn't ended yet".freeze
     ALREADY_DEACTIVATED = "Already deactivated — didn't attend".freeze
+    ALREADY_ENDED = "Already ended — not by reconciliation".freeze
+    LAPSED = "Ended — a return is recorded as a new affiliation".freeze
+    # Topic on the comment reconciliation leaves behind, so a row can say why it
+    # ended without a dedicated column (ADR-0002 D6b).
+    COMMENT_TOPIC = "Reconciliation".freeze
     NOT_ATTENDED = "Didn't attend — no affiliation created".freeze
 
     def self.call(person:, organization:, event:, registration: nil, include_unowned: false)
@@ -45,10 +50,9 @@ module AffiliationServices
       return false if affiliation.nil? && action != :create
 
       case action
-      when :create then create_affiliation
+      when :create then create_and_note
       when :delete then affiliation.destroy!
-      when :deactivate then affiliation.update!(end_date: affiliation.start_date || Date.current, inactive: true)
-      when :reactivate then affiliation.update!(end_date: nil, inactive: false)
+      when :deactivate then deactivate(affiliation)
       else return false
       end
       true
@@ -72,11 +76,50 @@ module AffiliationServices
         .exists?
     end
 
+    def deactivate(affiliation)
+      ends_on = deactivation_end_date(affiliation)
+      affiliation.update!(end_date: ends_on, inactive: true)
+      note(affiliation, "Ended #{ends_on.strftime('%b %-d, %Y')} and marked inactive by reconciliation " \
+                        "for #{@event.title} — no attended facilitator training for #{@organization.name} on record.")
+    end
+
+    def create_and_note
+      created = @person.affiliations.facilitators.where(organization: @organization).pluck(:id)
+      create_affiliation
+      fresh = @person.affiliations.facilitators.where(organization: @organization).where.not(id: created)
+      fresh.each { |affiliation| note(affiliation, "Created by reconciliation for #{@event.title}.") }
+    end
+
+    # Why a row changed, on the affiliation's own comments rather than a dedicated
+    # column — the edit page and its history already surface them (ADR-0002 D6b).
+    def note(affiliation, body)
+      affiliation.comments.create!(topic: COMMENT_TOPIC, body: body,
+                                   created_by: Current.user, updated_by: Current.user)
+    end
+
+    def ended_by_reconciliation?(affiliation)
+      affiliation.comments.any? { |comment| comment.topic == COMMENT_TOPIC }
+    end
+
+    def minted_here?(affiliation)
+      affiliation.event_registration&.event_id == @event.id
+    end
+
+    # Where a deactivation ends the row (ADR-0002 D6). The row this training minted
+    # is an assumption that never came true, so it collapses to nothing. Any older
+    # row records facilitation that really happened: it ends at this training, so
+    # the years before it survive and anchored program status doesn't move.
+    def deactivation_end_date(affiliation)
+      return affiliation.start_date if minted_here?(affiliation) && affiliation.start_date
+
+      [ @event.start_date&.to_date || Date.current, affiliation.start_date ].compact.max
+    end
+
     # A non-training event confers no facilitation, so it only removes what was
     # auto-created off it.
     def non_training_plan
       facilitator_affiliations.filter_map do |affiliation|
-        next unless affiliation.event_registration&.event_id == @event.id
+        next unless minted_here?(affiliation)
 
         Decision.new(affiliation:, action: :delete)
       end
@@ -84,17 +127,28 @@ module AffiliationServices
 
     def training_plan
       decisions = reconcilable_affiliations.map { |affiliation| classify(affiliation) }
-      decisions << creation_decision if facilitator_affiliations.empty? && @registration
+      decisions << creation_decision if needs_affiliation?
       decisions
+    end
+
+    # Someone with no active facilitator affiliation needs one when they have never
+    # had one, or when they completed a training here and are returning after a
+    # lapse — the return is a NEW row, never a resurrected one (ADR-0002 D6a).
+    def needs_affiliation?
+      return false unless @registration
+      return false if facilitator_affiliations.any?(&:active?)
+
+      facilitator_affiliations.empty? || completed_training?
     end
 
     def classify(affiliation)
       if completed_training?
         return Decision.new(affiliation:, action: :noop, reason: ACTIVE_ATTENDED) if affiliation.active?
 
-        Decision.new(affiliation:, action: :reactivate)
+        Decision.new(affiliation:, action: :noop, reason: LAPSED)
       elsif !affiliation.active?
-        Decision.new(affiliation:, action: :noop, reason: ALREADY_DEACTIVATED)
+        reason = ended_by_reconciliation?(affiliation) ? ALREADY_DEACTIVATED : ALREADY_ENDED
+        Decision.new(affiliation:, action: :noop, reason:)
       elsif deactivation_ready?(affiliation)
         Decision.new(affiliation:, action: :deactivate)
       else
@@ -130,7 +184,7 @@ module AffiliationServices
     def facilitator_affiliations
       @facilitator_affiliations ||= @person.affiliations.facilitators
         .where(organization: @organization)
-        .includes(event_registration: :event)
+        .includes(:comments, event_registration: :event)
         .to_a
     end
   end
