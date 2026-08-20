@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_20_010750) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_20_144446) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -621,7 +621,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_010750) do
     t.text "pro_tips"
     t.boolean "published", default: true, null: false
     t.date "released_on", null: false
-    t.string "summary", null: false
+    t.text "summary", null: false
     t.datetime "updated_at", null: false
     t.index ["area"], name: "index_features_on_area"
     t.index ["display_status"], name: "index_features_on_display_status"
