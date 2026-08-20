@@ -8,4 +8,8 @@ class FmAllocation < ApplicationRecord
     "FundingRecID" => "fm_funding",
     "ProjectID" => "fm_projects",
   }.freeze
+
+  HAS_MANY = {
+    "fm_participants" => { via: "AllocRecID", label: "Participants" },
+  }.freeze
 end

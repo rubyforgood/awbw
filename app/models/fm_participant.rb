@@ -10,6 +10,7 @@ class FmParticipant < ApplicationRecord
     "ProjectID" => "fm_projects",
     "AllocRecID" => "fm_allocations",
     "PaymentID" => "fm_payments",
+    "HostID" => "fm_rolodexes",
   }.freeze
 
   HAS_MANY = {

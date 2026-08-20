@@ -59,7 +59,7 @@ Full columns (182): FirstName, LastName, zcCategory, DateEntered, SourceOfName, 
 ### 2. prj_ORG__Organization (7,191 rows)
 Organizations/agencies.
 
-Key columns: `OrgID`, `OrgName`, `OrgType`, `Classification`, `Status`, `Website`, `ParentID` (hierarchical), `Mission`, `MainID`
+Key columns: `OrgID`, `OrgName`, `OrgType`, `Classification`, `Status`, `Website`, `ParentID` (hierarchical — links to parent org; child orgs have `ParentID` set to their parent's `OrgID`), `Mission`, `MainID`
 
 Full columns (42): OrgID, OrgName, OrgType, Comments, zgOrgID, zgSubmissionID, zcConstant, zcCategory, Description, Facilities, zgMarkedRecords, zcMarked, zcCountMarked, zsRecordCount, zsMarkedRecords, FundingPriorities, Interests, Meetings, Newsletter, Classification, CreatedBy, CreationDate, ModificationDateTime, ModifiedBy, zgOrgName, zgTempID, zcFlagged, zaChangeLog, MainID, zgRole, zgYear, Keywords, Website, zcCountContacts, Status, zcProjectCount, Hierarchy, ParentID, zcChildRecordIDs, Mission, OutreachStatus, OutreachDate, zgNoteID, zcNotesInfo, zgActive
 

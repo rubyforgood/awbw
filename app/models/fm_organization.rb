@@ -15,7 +15,7 @@ class FmOrganization < ApplicationRecord
     "fm_payments" => { via: "OrgID", label: "Payments" },
     "fm_participants" => { via: "OrgID", label: "Participants" },
     "fm_notes" => { via: "OrgID", label: "Notes" },
-    "fm_workshop_logs" => { via: "AgencyID", label: "Workshop Logs" },
     "fm_projects" => { via: "OrgID", label: "Projects" },
+    "fm_organizations" => { via: "ParentID", label: "Organizations" },
   }.freeze
 end

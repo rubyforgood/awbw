@@ -9,4 +9,9 @@ class FmPayment < ApplicationRecord
     "OrgID" => "fm_organizations",
     "ProjectID" => "fm_projects",
   }.freeze
+
+  HAS_MANY = {
+    "fm_activities" => { via: "LinkID", label: "Activities" },
+    "fm_participants" => { via: "PaymentID", label: "Participants" },
+  }.freeze
 end

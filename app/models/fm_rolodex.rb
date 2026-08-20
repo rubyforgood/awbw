@@ -21,5 +21,7 @@ class FmRolodex < ApplicationRecord
     "fm_personnels" => { via: "PersonID", label: "Personnel" },
     "fm_workshop_logs" => { via: "LeaderID", label: "Workshop Logs" },
     "fm_participants" => { via: :fm_id, label: "Participations" },
+    "fm_funding" => { via: "FunderID", label: "Funding" },
+    "fm_program_sponsorships" => { via: "FunderID", label: "Program Sponsorships" },
   }.freeze
 end

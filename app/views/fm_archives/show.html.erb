@@ -34,16 +34,18 @@
         <h2 class="text-lg font-semibold mb-4">Related Records</h2>
         <% @backlinks.each do |label, info| %>
           <div class="py-3 border-b border-gray-200 last:border-0">
-            <h3 class="text-sm font-medium text-gray-500 mb-2"><%= label %></h3>
+            <h3 class="text-sm font-medium text-gray-500 mb-2"><%= label %> (<%= info[:records].total_entries %>)</h3>
             <div class="flex flex-wrap gap-1">
-              <% info[:ids].each do |id| %>
-                <%= link_to id, fm_archive_path(id, table: info[:table].sub("fm_", "")),
+              <% info[:records].each do |record| %>
+                <%= link_to record.fm_id, fm_archive_path(record.fm_id, table: info[:table].sub("fm_", "")),
                       class: "text-xs font-mono text-primary hover:underline bg-gray-50 px-2 py-1 rounded" %>
               <% end %>
-              <% if info[:ids].size == 50 %>
-                <span class="text-xs text-gray-400 px-2 py-1">&hellip;and more</span>
-              <% end %>
             </div>
+            <% if info[:records].total_pages > 1 %>
+              <div class="mt-3">
+                <%= tailwind_paginate info[:records], { renderer: FmArchivePaginationRenderer, param_name: info[:page_param], params: { id: @record.fm_id, table: @selected } } %>
+              </div>
+            <% end %>
           </div>
         <% end %>
       </div>

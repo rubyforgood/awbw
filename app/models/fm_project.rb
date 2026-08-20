@@ -10,7 +10,6 @@ class FmProject < ApplicationRecord
   }.freeze
 
   HAS_MANY = {
-    "fm_events" => { via: "LinkID", label: "Events" },
     "fm_services" => { via: "ProjectID", label: "Services" },
     "fm_personnels" => { via: "ProjectID", label: "Personnel" },
     "fm_payments" => { via: "ProjectID", label: "Payments" },
@@ -20,5 +19,6 @@ class FmProject < ApplicationRecord
     "fm_expenditures" => { via: "ProjectID", label: "Expenditures" },
     "fm_allocations" => { via: "ProjectID", label: "Allocations" },
     "fm_program_sponsorships" => { via: "ProgramID", label: "Program Sponsorships" },
+    "fm_projects" => { via: "MergerWithID", label: "Merged Into" },
   }.freeze
 end

@@ -35,8 +35,8 @@ class FmArchivesController < ApplicationController
   def show
     authorize! :fm_archive, to: :show?
 
-    table = params[:table]
-    if table.present? && (config = TABLES[table])
+    @selected = params[:table]
+    if @selected.present? && (config = TABLES[@selected])
       @record = config[:model].find_by(fm_id: params[:id].to_s.strip)
     else
       @record = TABLES.values.map { |c| c[:model] }.filter_map { |m| m.find_by(fm_id: params[:id].to_s.strip) }.first
@@ -59,12 +59,19 @@ class FmArchivesController < ApplicationController
     @record.class::HAS_MANY.each do |table, config|
       model = TABLES.values.find { |c| c[:model].table_name == table }&.dig(:model)
       next unless model
-      ids = if config[:via] == :fm_id
-              model.where(fm_id: @record.fm_id).limit(50).pluck(:fm_id)
-            else
-              model.find_by_data(config[:via], @record.fm_id).limit(50).pluck(:fm_id)
-            end
-      @backlinks[config[:label]] = { table: table, ids: ids } if ids.any?
+      scope = if config[:via] == :fm_id
+                model.where(fm_id: @record.fm_id)
+              else
+                model.find_by_data(config[:via], @record.fm_id)
+              end
+      page_param = "#{table}_page"
+      paginated = scope.order(:fm_id).paginate(page: params[page_param], per_page: 50)
+      next unless paginated.any?
+      @backlinks[config[:label]] = {
+        table: table,
+        records: paginated,
+        page_param: page_param,
+      }
     end
   end
 end
