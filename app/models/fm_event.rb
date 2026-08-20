@@ -7,4 +7,9 @@ class FmEvent < ApplicationRecord
   FM_LINKS = {
     "LinkID" => "fm_projects",
   }.freeze
+
+  HAS_MANY = {
+    "fm_participants" => { via: "EventID", label: "Participants" },
+    "fm_notes" => { via: "EventID", label: "Notes" },
+  }.freeze
 end

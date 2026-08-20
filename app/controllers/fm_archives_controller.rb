@@ -46,5 +46,25 @@ class FmArchivesController < ApplicationController
       redirect_to fm_archives_path, alert: "No record found with ID '#{params[:id].to_s.strip}'"
       return
     end
+
+    load_backlinks
+  end
+
+  private
+
+  def load_backlinks
+    @backlinks = {}
+    return unless @record.class.const_defined?(:HAS_MANY)
+
+    @record.class::HAS_MANY.each do |table, config|
+      model = TABLES.values.find { |c| c[:model].table_name == table }&.dig(:model)
+      next unless model
+      ids = if config[:via] == :fm_id
+              model.where(fm_id: @record.fm_id).limit(50).pluck(:fm_id)
+            else
+              model.find_by_data(config[:via], @record.fm_id).limit(50).pluck(:fm_id)
+            end
+      @backlinks[config[:label]] = { table: table, ids: ids } if ids.any?
+    end
   end
 end

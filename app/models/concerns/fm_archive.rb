@@ -11,6 +11,10 @@ module FmArchive
     def find_by_fm_id(id)
       find_by(fm_id: id)
     end
+
+    def find_by_data(column, value)
+      where(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(data, '$.#{column}')) = :value"), value: value)
+    end
   end
 
   private

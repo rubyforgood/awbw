@@ -11,4 +11,8 @@ class FmParticipant < ApplicationRecord
     "AllocRecID" => "fm_allocations",
     "PaymentID" => "fm_payments",
   }.freeze
+
+  HAS_MANY = {
+    "fm_rolodexes" => { via: :fm_id, label: "Rolodex" },
+  }.freeze
 end
