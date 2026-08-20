@@ -271,7 +271,11 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/event_registrations/transfer.html.erb"    => "admin-only bg-blue-100",
     "app/views/event_registrations/link_organization.html.erb" => "admin-only bg-blue-100",
     "app/views/users/confirm_email_change.html.erb"      => "admin-only bg-blue-100",
-    "app/views/users/confirm_email_manual.html.erb"      => "admin-only bg-blue-100"
+    "app/views/users/confirm_email_manual.html.erb"      => "admin-only bg-blue-100",
+
+    # ─── FileMaker archive viewer (FmArchivePolicy: admin-only) ───
+    "app/views/fm_archives/index.html.erb"               => "admin-only bg-blue-100",
+    "app/views/fm_archives/show.html.erb"                => "admin-only bg-blue-100"
   }.freeze
 
   EXPECTED_MAPPINGS.each do |view_path, expected_bg_class|
