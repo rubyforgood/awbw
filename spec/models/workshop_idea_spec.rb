@@ -3,8 +3,8 @@ require 'rails_helper'
 RSpec.describe WorkshopIdea, type: :model do
   it_behaves_like "author_creditable", factory: :workshop_idea, org_credited: false
 
-  # No author_id column, and the creator never claims authorship, so an idea always
-  # falls to the generic label rather than crediting whoever entered it.
+  # With no author set the creator never claims authorship, so the idea falls to the
+  # generic label rather than crediting whoever entered it.
   describe "#author_credit" do
     it "credits the generic label, not the creating user's person" do
       creator = create(:user, :with_person)
@@ -15,8 +15,8 @@ RSpec.describe WorkshopIdea, type: :model do
     end
   end
 
-  # Crediting nobody leaves `by_credited_person_name` empty for this model, so the
-  # admin filter has to reach the submitter directly or it matches nothing at all.
+  # An idea usually names no author, so `by_credited_person_name` can't reach the
+  # submitter — the admin filter matches the submitting account directly instead.
   describe ".author_name" do
     let(:creator) { create(:user, :with_person) }
 

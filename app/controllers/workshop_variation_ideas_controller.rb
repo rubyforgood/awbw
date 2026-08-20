@@ -42,6 +42,9 @@ class WorkshopVariationIdeasController < ApplicationController
 
   def create
     @workshop_variation_idea = WorkshopVariationIdea.new(workshop_variation_idea_params)
+    # Credit the submitting account's person as the author, so the idea lists on
+    # their profile by authorship like every other content type.
+    @workshop_variation_idea.author ||= @workshop_variation_idea.created_by&.person
     authorize! @workshop_variation_idea
 
     if @workshop_variation_idea.save

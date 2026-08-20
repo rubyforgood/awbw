@@ -1,6 +1,7 @@
 class WorkshopIdea < ApplicationRecord
   include AuthorCreditable
 
+  belongs_to :author, class_name: "Person", inverse_of: :workshop_ideas_as_author, optional: true
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :windows_type

@@ -75,8 +75,8 @@ class AuthorCreditDivergenceQuery
     @models ||= type ? [ self.class.model_for(type) ].compact : MODEL_NAMES.map(&:constantize)
   end
 
-  # The idea models have no author_id, so they credit generically — there's no
-  # author to reconcile, so they're left out of every section.
+  # Every content model now names an author, so all of them can be reconciled —
+  # kept as a guard in case a future model joins without an author_id column.
   def authorable_models
     models.select { |model| model.column_names.include?("author_id") }
   end
