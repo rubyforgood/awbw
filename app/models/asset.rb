@@ -17,7 +17,7 @@ class Asset < ApplicationRecord
   # Ceiling on a single upload. Uploads now reach us from the public event
   # registration form, so this is the backstop against one enormous file
   # filling storage — generous enough for a photo or a scanned document.
-  MAX_FILE_SIZE = 35.megabytes
+  MAX_FILE_SIZE = 40.megabytes
 
 
   # Form selection

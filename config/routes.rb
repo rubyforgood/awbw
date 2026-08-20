@@ -55,6 +55,8 @@ Rails.application.routes.draw do
     post "activities/counts/print",  to: "analytics#print", as: "analytics_print"
   end
 
+  resources :fm_archives, only: [ :index, :show ]
+
   resources :comments, only: [ :index ]
 
   resources :banners
