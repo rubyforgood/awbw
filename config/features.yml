@@ -80,6 +80,7 @@
   pro_tips:
     - "The suggested person on legacy rows is a name match — confirm it before saving, since two people can share a name."
     - "Clearing a single item's stored preference hands it back to the person's profile, which is the end state we want."
+
 - name: "Decline a scholarship award"
   area: scholarships
   display_status: public_facing
