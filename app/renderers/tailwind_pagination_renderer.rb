@@ -24,8 +24,8 @@ class TailwindPaginationRenderer < WillPaginate::ActionView::LinkRenderer
   def url(page)
     @template.url_for(
       @template.params.to_unsafe_h
-               .merge(@options[:param_name] => page)
-               .except(:controller, :action)
+               .merge(page: page)               # set new page
+               .except(:controller, :action)    # avoid controller/action pollution
     )
   end
 
