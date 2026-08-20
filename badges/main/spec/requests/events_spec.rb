@@ -3258,6 +3258,9 @@ RSpec.describe "Events", type: :request do
                              title: "Facilitator", start_date: 2.weeks.from_now.to_date)
         registration = EventRegistration.find_by!(registrant: applicant, event: event)
         create(:event_registration_organization, event_registration: registration, organization: org)
+        # Anchor the start time at noon so the event's calendar date is the same in
+        # the request's viewer time zone and the assertion below, whatever the clock.
+        event.update!(start_date: event.start_date.change(hour: 12))
 
         get recipients_event_path(event), headers: { "Turbo-Frame" => "recipients_charts" }
 
