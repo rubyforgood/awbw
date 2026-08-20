@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe WorkshopIdea, type: :model do
-  it_behaves_like "author_creditable", factory: :workshop_idea
+  it_behaves_like "author_creditable", factory: :workshop_idea, org_credited: true
 
   # No author_id column, and the creator never claims authorship, so an idea always
   # falls to the generic label rather than crediting whoever entered it.
