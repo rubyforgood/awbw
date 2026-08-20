@@ -21,7 +21,7 @@ class FmArchivesController < ApplicationController
   }
 
   def index
-    authorize! :fm_archive, to: :index?
+    authorize! :fm_archive
 
     @tables = TABLES
     @selected = params[:table]
@@ -33,7 +33,7 @@ class FmArchivesController < ApplicationController
   end
 
   def show
-    authorize! :fm_archive, to: :show?
+    authorize! :fm_archive
 
     @selected = params[:table]
     if @selected.present? && (config = TABLES[@selected])
