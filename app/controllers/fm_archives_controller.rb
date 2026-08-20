@@ -23,29 +23,24 @@ class FmArchivesController < ApplicationController
   def index
     authorize! :fm_archive, to: :index?
 
-    if params[:id].present?
-      @record = TABLES.values.map { |c| c[:model] }.filter_map { |m| m.find_by(fm_id: params[:id].to_s.strip) }.first
-
-      if @record
-        render :show
-      else
-        redirect_to fm_archives_path, alert: "No record found with ID '#{params[:id].to_s.strip}'"
-      end
-      return
-    end
-
     @tables = TABLES
     @selected = params[:table]
 
     if @selected && (config = TABLES[@selected])
       @model = config[:model]
-      @records = @model.order(:fm_id).paginate(page: params[:page], per_page: 50)
+      @records = @model.order(fm_id: :desc).paginate(page: params[:page], per_page: 50)
     end
   end
+
   def show
     authorize! :fm_archive, to: :show?
 
-    @record = TABLES.values.map { |c| c[:model] }.filter_map { |m| m.find_by(fm_id: params[:id].to_s.strip) }.first
+    table = params[:table]
+    if table.present? && (config = TABLES[table])
+      @record = config[:model].find_by(fm_id: params[:id].to_s.strip)
+    else
+      @record = TABLES.values.map { |c| c[:model] }.filter_map { |m| m.find_by(fm_id: params[:id].to_s.strip) }.first
+    end
 
     unless @record
       redirect_to fm_archives_path, alert: "No record found with ID '#{params[:id].to_s.strip}'"

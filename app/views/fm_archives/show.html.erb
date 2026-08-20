@@ -1,17 +1,12 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="border border-gray-200 rounded-xl shadow p-6">
   <div class="space-y-6">
-    <%= form_tag fm_archives_path, method: :get, class: "flex gap-2 items-end" do %>
-      <%= text_field_tag :id, nil, placeholder: "FM ID", class: "border border-gray-300 rounded-lg px-3 py-2 text-sm" %>
-      <%= submit_tag "Go", class: "btn btn-primary" %>
-      <%= link_to "Back to list", fm_archives_path(table: @record.class.table_name.sub("fm_", "")), class: "btn btn-primary-outline" %>
-    <% end %>
-
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-semibold text-gray-900"><%= @record.class.name %></h1>
         <p class="text-sm text-gray-500">FM ID: <%= @record.fm_id %> &middot; Key: <%= @record.fm_key_name %></p>
       </div>
+      <%= link_to "Back to list", fm_archives_path(table: @record.class.table_name.sub("fm_", "")), class: "btn btn-primary-outline" %>
     </div>
 
     <div class="rounded-xl bg-white p-6">
@@ -19,7 +14,13 @@
         <% @record.data.each do |key, value| %>
           <div class="py-3 grid grid-cols-3 gap-4">
             <dt class="text-sm font-medium text-gray-500"><%= key %></dt>
-            <dd class="text-sm text-gray-900 col-span-2 break-words"><%= value %></dd>
+            <dd class="text-sm text-gray-900 col-span-2 break-words">
+              <% if @record.class::FM_LINKS.key?(key) && value.present? %>
+                <%= link_to value, fm_archive_path(value, table: @record.class::FM_LINKS[key]&.sub("fm_", "")), class: "text-primary hover:underline" %>
+              <% else %>
+                <%= value %>
+              <% end %>
+            </dd>
           </div>
         <% end %>
       </dl>
