@@ -193,6 +193,19 @@ RSpec.describe EventDashboard do
       end
     end
 
+    describe "shout-outs" do
+      it "includes only active registrations, excluding transferred-out and other inactive ones" do
+        featured = create(:person, first_name: "Feat", shoutout_text: "Their story")
+        create(:event_registration, event: event, registrant: featured, status: "attended", shoutout: true)
+        withdrawn = create(:person, first_name: "Withd", shoutout_text: "Left")
+        create(:event_registration, event: event, registrant: withdrawn, status: "transferred_out", shoutout: true)
+
+        names = dashboard.shoutouts.map { |s| s.recipient.first_name }
+        expect(names).to include("Feat")
+        expect(names).not_to include("Withd")
+      end
+    end
+
     describe "organizations" do
       it "combines snapshot orgs and active affiliation orgs, deduped" do
         expect(dashboard.organizations).to contain_exactly(org_a, org_b, org_c)
@@ -782,6 +795,45 @@ RSpec.describe EventDashboard do
     end
   end
 
+  describe "continuing-education fees across a transfer (#1944)" do
+    let(:origin_event) { create(:event, cost_cents: 0, ce_hours_offered: 6, ce_hours_cost_cents: 10_000) }
+    let(:dest_event) { create(:event, cost_cents: 0, ce_hours_offered: 6) }
+    let(:person) { create(:person) }
+    let(:license) { create(:professional_license, person: person) }
+    let(:origin_dashboard) { described_class.new(origin_event) }
+    let(:dest_dashboard) { described_class.new(dest_event) }
+
+    let!(:source) { create(:event_registration, event: origin_event, registrant: person, status: "transferred_out") }
+    let!(:destination) do
+      create(:event_registration, event: dest_event, registrant: person, status: "registered",
+        transferred_from_registration: source)
+    end
+
+    before do
+      # $40 was paid at the origin before transferring — a paid, zero-hours stub stays there.
+      stub = create(:continuing_education_registration, event_registration: source,
+        professional_license: license, hours: 0, cost_cents: 4_000, skip_event_defaults: true)
+      create(:allocation, source: create(:payment, type: "CashPayment", amount_cents: 4_000, amount_cents_remaining: nil),
+        allocatable: stub, amount: 4_000)
+      # The $60 balance carried forward to the destination, still owed.
+      create(:continuing_education_registration, event_registration: destination,
+        professional_license: license, hours: 6, cost_cents: 6_000, skip_event_defaults: true)
+    end
+
+    it "counts the paid stub at the original event, even though the reg transferred out" do
+      expect(origin_dashboard.cont_ed_paid_cents).to eq(4_000)
+      expect(origin_dashboard.cont_ed_outstanding_cents).to eq(0)
+      expect(origin_dashboard.ce_registrant_count).to eq(1)
+    end
+
+    it "counts the carried balance at the destination event" do
+      expect(dest_dashboard.cont_ed_paid_cents).to eq(0)
+      expect(dest_dashboard.cont_ed_outstanding_cents).to eq(6_000)
+      expect(dest_dashboard.cont_ed_unpaid_count).to eq(1)
+      expect(dest_dashboard.ce_registrant_count).to eq(1)
+    end
+  end
+
   # All scholarships are fully allocated regardless of tasks_completed, so the
   # grand total never exceeds the full-price total.
   context "with a scholarship" do
@@ -1100,7 +1152,10 @@ RSpec.describe EventDashboard do
         create(:event_registration, event: event, registrant: create(:person, first_name: "Ba"), status: "incomplete_attendance")
         create(:event_registration, event: event, registrant: create(:person, first_name: "Ca"), status: "no_show")
         create(:event_registration, event: event, registrant: create(:person, first_name: "Da"), status: "registered")
-        create(:event_registration, event: event, registrant: create(:person, first_name: "Ea"), status: "transferred_in")
+        # "Ea" transferred in from another event: an incoming registration keeps
+        # its own real status (registered here), identified by the back-link.
+        source = create(:event_registration, status: "transferred_out")
+        create(:event_registration, event: event, registrant: create(:person, first_name: "Ea"), status: "registered", transferred_from_registration: source)
         create(:event_registration, event: event, registrant: create(:person, first_name: "Fa"), status: "cancelled")
       end
 
@@ -1108,8 +1163,7 @@ RSpec.describe EventDashboard do
         expect(dashboard.attendance_count_for("attended")).to eq(2)
         expect(dashboard.attendance_count_for("incomplete_attendance")).to eq(1)
         expect(dashboard.attendance_count_for("no_show")).to eq(1)
-        expect(dashboard.attendance_count_for("registered")).to eq(1)
-        expect(dashboard.attendance_count_for("transferred_in")).to eq(1)
+        expect(dashboard.attendance_count_for("registered")).to eq(2)
         expect(dashboard.attendance_count_for("cancelled")).to eq(1)
         expect(dashboard.attendance_count_for("transferred_out")).to eq(0)
       end
@@ -1117,8 +1171,8 @@ RSpec.describe EventDashboard do
       it "rates full attendance over every registrant (active + no-shows, excluding cancellations)" do
         expect(dashboard.attendance_recorded?).to be(true)
         expect(dashboard.attendance_outcome_count).to eq(4)
-        # 5 active registrants (attended ×2, incomplete, registered, transferred_in)
-        # + 1 no-show; the cancellation is excluded.
+        # 5 active registrants (attended ×2, incomplete, registered ×2 incl. the
+        # transferred-in one) + 1 no-show; the cancellation is excluded.
         expect(dashboard.expected_attendee_count).to eq(6)
         expect(dashboard.attendance_rate).to eq(2.0 / 6)
       end
@@ -1126,8 +1180,14 @@ RSpec.describe EventDashboard do
       it "lists the registrants behind each status" do
         expect(dashboard.attendance_registrants("attended").map(&:first_name)).to eq(%w[ Aa Ab ])
         expect(dashboard.attendance_registrants("no_show").map(&:first_name)).to eq(%w[ Ca ])
-        expect(dashboard.attendance_registrants("registered", "transferred_in").map(&:first_name)).to eq(%w[ Da Ea ])
+        expect(dashboard.attendance_registrants("registered").map(&:first_name)).to eq(%w[ Da Ea ])
         expect(dashboard.attendance_registrants("cancelled").map(&:first_name)).to eq(%w[ Fa ])
+      end
+
+      it "counts and lists transferred-in registrations via the FK, not a status" do
+        # "Ea" is the sole incoming registration (registered here, back-linked).
+        expect(dashboard.transferred_in_count).to eq(1)
+        expect(dashboard.transferred_in_registrants.map(&:first_name)).to eq(%w[ Ea ])
       end
     end
 
@@ -1226,6 +1286,75 @@ RSpec.describe EventDashboard do
       # Orgs' affiliations are preloaded (one query) plus the batched
       # registrant-affiliation lookup — a small constant, not one-per-org.
       expect(affiliation_queries).to be <= 3
+    end
+  end
+
+  describe "transferred-in scholarship recognition" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:source_event) { create(:event, cost_cents: 10_000) }
+    let(:recipient) { create(:person, first_name: "Trans", last_name: "Ferred") }
+    let(:source) { create(:event_registration, event: source_event, registrant: recipient, status: "transferred_out") }
+    let!(:incoming) { create(:event_registration, event: event, registrant: recipient, status: "registered", transferred_from_registration: source) }
+    let!(:scholarship) do
+      s = create(:scholarship, recipient: recipient, amount_cents: 4_000)
+      create(:allocation, source: s, allocatable: source, amount: 4_000)
+      s
+    end
+
+    it "recognizes the transferred-in registrant as a scholarship recipient (the hat)" do
+      expect(dashboard.scholarship_by_recipient[recipient.id]).to eq(scholarship)
+      expect(dashboard.scholarship_recipient_count).to eq(1)
+      expect(dashboard.scholarship_applicants).to include(recipient)
+    end
+
+    it "does not attribute the scholarship dollars to this event (they stay on the source)" do
+      expect(dashboard.scholarship_total_cents).to eq(0)
+      expect(dashboard.funded_scholarship_cents).to eq(0)
+      expect(dashboard.unfunded_scholarship_cents).to eq(0)
+    end
+  end
+
+  describe "transferred-in registrations and financial totals" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:paid_person) { create(:person) }
+    let!(:paid_reg) do
+      reg = create(:event_registration, event: event, registrant: paid_person, status: "registered")
+      create(:allocation, source: create(:payment, amount_cents: 10_000, amount_cents_remaining: 10_000),
+                          allocatable: reg, amount: 10_000)
+      reg
+    end
+    # A transferred-in registrant whose money lives on the source (another event).
+    let(:source) { create(:event_registration, status: "transferred_out") }
+    let!(:incoming) do
+      create(:event_registration, event: event, registrant: create(:person),
+        status: "registered", transferred_from_registration: source)
+    end
+
+    it "counts the transferred-in registrant in the headcount" do
+      expect(dashboard.registrant_count).to eq(2)
+    end
+
+    it "excludes a transferred-out registration from this event's attendee count" do
+      create(:event_registration, event: event, status: "transferred_out")
+
+      # Only paid_reg + the transferred-in incoming reg count; the transferred-out
+      # one withdrew and isn't an attendee here.
+      expect(dashboard.registrant_count).to eq(2)
+      expect(dashboard.expected_attendee_count).to eq(2)
+      expect(dashboard.attendance_registrants("attended", "registered")).not_to include(
+        an_object_having_attributes(id: EventRegistration.find_by(event: event, status: "transferred_out").registrant_id)
+      )
+    end
+
+    it "excludes the transferred-in registrant from every financial total" do
+      # Only the fully-paid registrant is billable here; the transferred-in one
+      # owes nothing to this event (its balance is on the source registration).
+      expect(dashboard.total_cents).to eq(10_000)
+      expect(dashboard.outstanding_cents).to eq(0)
+      expect(dashboard.received_cents).to eq(10_000)
+      expect(dashboard.paid_count).to eq(1)
+      expect(dashboard.unpaid_count).to eq(0)
+      expect(dashboard.unpaid_registrants).to be_empty
     end
   end
 end

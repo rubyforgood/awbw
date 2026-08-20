@@ -10,5 +10,6 @@
    end %>
 <%= render "events/invoices/actions", back_path: back_path, back_label: back_label %>
 <div class="px-4 sm:px-8 py-6 print:p-0">
+  <div class="print:hidden"><%= render "event_registrations/transfer_notice", event_registration: @event_registration %></div>
   <%= render "events/invoices/invoice", invoice: @invoice %>
 </div>

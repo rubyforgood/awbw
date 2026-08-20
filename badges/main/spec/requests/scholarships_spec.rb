@@ -225,6 +225,29 @@ RSpec.describe "Scholarships", type: :request do
     end
   end
 
+  describe "blocking scholarship creation on a transferred-in registration" do
+    let(:source) { create(:event_registration, event: event) }
+    let(:transferred_in) do
+      create(:event_registration, event: create(:event, cost_cents: 5000),
+        registrant: source.registrant, transferred_from_registration: source)
+    end
+
+    it "redirects the new form to the source registration, where the scholarship belongs" do
+      get new_scholarship_path(allocatable_sgid: transferred_in.to_sgid.to_s, return_to: "registration")
+
+      expect(response).to redirect_to(edit_event_registration_path(source))
+    end
+
+    it "creates nothing and redirects the POST to the source registration" do
+      expect {
+        post scholarships_path(allocatable_sgid: transferred_in.to_sgid.to_s, return_to: "registration"),
+             params: { scholarship: { amount_dollars: "40" } }
+      }.not_to change(Scholarship, :count)
+
+      expect(response).to redirect_to(edit_event_registration_path(source))
+    end
+  end
+
   describe "back link follows the page the user came from" do
     it "links the new page back to the registrants roster (anchored to the row) when return_to=registrants" do
       get new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants")

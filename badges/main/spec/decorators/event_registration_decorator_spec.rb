@@ -75,7 +75,8 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
     end
 
     it "is deletable (no reason) when transferred in with no allocations" do
-      reg = create(:event_registration, status: "transferred_in")
+      source = create(:event_registration, status: "transferred_out")
+      reg = create(:event_registration, status: "registered", transferred_from_registration: source)
       expect(reg.decorate.deletion_blocked_reason).to be_nil
     end
 

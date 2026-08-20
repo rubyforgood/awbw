@@ -2,7 +2,11 @@ class EventRegistrationsController < ApplicationController
   require "csv"
 
   # show redirects to slug URL; kept for backwards compatibility
-  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding, :toggle_certificate_issued, :update_attendance ]
+  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding, :toggle_certificate_issued, :update_attendance, :transfer, :process_transfer, :revert_transfer ]
+  # A transferred-out reg is locked (issue #1944): its inline write endpoints are
+  # blocked with a warning rather than silently ignored. The full-form `update` is
+  # handled separately (it keeps comments/communications editable).
+  before_action :block_locked_registration, only: [ :update_onboarding, :toggle_certificate_issued, :update_attendance ]
 
   def index
     authorize!
@@ -85,6 +89,7 @@ class EventRegistrationsController < ApplicationController
 
   def update
     authorize! @event_registration
+    warn_if_locked_fields_submitted
     @event_registration.assign_attributes(event_registration_update_params)
     @event_registration.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
     @event_registration.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
@@ -94,6 +99,16 @@ class EventRegistrationsController < ApplicationController
     @event_registration.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
 
     if @event_registration.save
+      # Marking transferred out — from the edit-form save OR the inline roster/
+      # onboarding status chip (Turbo) — with no destination yet sends the admin
+      # to the transfer screen to create/link the incoming registration. Handled
+      # before respond_to so both the HTML and Turbo paths redirect (issue #1944).
+      if @event_registration.saved_change_to_status? &&
+         @event_registration.transfer_destination_pending? &&
+         allowed_to?(:transfer?, @event_registration)
+        return redirect_to transfer_event_registration_path(@event_registration, return_to: params[:return_to]), status: :see_other
+      end
+
       notice = "Registration was successfully updated."
       respond_to do |format|
         format.turbo_stream
@@ -195,6 +210,118 @@ class EventRegistrationsController < ApplicationController
     redirect_to attendance_report_path(date, reopen: true), status: :see_other
   end
 
+  # Follow-up screen shown after a registration is marked "transferred out":
+  # pick the destination event so the incoming registration is created/linked
+  # and the transfer trail is preserved (issue #1944).
+  def transfer
+    authorize! @event_registration, to: :transfer?
+    @return_to = params[:return_to]
+    @events = transfer_destination_events
+  end
+
+  def process_transfer
+    authorize! @event_registration, to: :transfer?
+    destination_event = Event.find(params[:destination_event_id])
+
+    # Enforce the same-format rule server-side, not just in the picker: an event
+    # only transfers to another of its own format (on-demand ↔ on-demand). (#1944)
+    unless transfer_destination_events.exists?(destination_event.id)
+      redirect_to transfer_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+        alert: "You can only transfer to another #{@event_registration.event.on_demand? ? "on-demand" : "scheduled"} event.",
+        status: :see_other
+      return
+    end
+
+    # The registrant may already be registered for the destination event, which
+    # would collide with the (registrant, event) uniqueness rule — link that
+    # record as the transfer target instead of creating a duplicate.
+    destination = EventRegistration.find_or_initialize_by(
+      registrant_id: @event_registration.registrant_id,
+      event_id: destination_event.id
+    )
+    # Collapse a double transfer (A→B→C) to two live regs: when the reg being
+    # transferred out is itself a transfer-in, its predecessor is the real origin,
+    # so the new reg points straight there and the middle stop is dropped. (#1944)
+    source = @event_registration.transferred_from_registration || @event_registration
+
+    if destination == source
+      # Transferring back to the origin event undoes the whole chain: restore the
+      # origin to the status it held before it was transferred out, instead of
+      # linking it to itself.
+      destination.status = destination.status_before_transfer.presence || "registered"
+      destination.status_before_transfer = nil
+    else
+      destination.transferred_from_registration = source
+      # Copy the registrant's progress/profile state forward so the new reg reflects
+      # where they left off (money & CE resolve separately). Days attended, expected
+      # payment method, buddy-pay, and the recipients-page feature/shout-out flag. (#1944)
+      copied = {
+        expected_payment_method: @event_registration.expected_payment_method,
+        someone_else_will_pay: @event_registration.someone_else_will_pay,
+        shoutout: @event_registration.shoutout
+      }
+      EventRegistration::DAY_FIELDS.each { |field| copied[field] = @event_registration[field] }
+      destination.assign_attributes(copied)
+    end
+
+    saved = ActiveRecord::Base.transaction do
+      # Re-pointing a completed transfer to a different event: unlink the previously
+      # recorded destination (it becomes a standalone reg) and re-merge its CE back
+      # to the source before re-splitting to the newly chosen event. (#1944)
+      previous = @event_registration.transferred_to_registration
+      if previous && previous.event_id != destination_event.id
+        EventRegistrationServices::TransferContinuingEducation.new(
+          transferred_out: @event_registration, destination: previous
+        ).revert
+        previous.update!(transferred_from_registration: nil)
+      end
+      next false unless destination.save
+      # Carry the transferring reg's org links onto the destination so the new reg
+      # shares the same linked organizations — copied, not moved, so the source
+      # keeps its own. Read before the middle reg is dropped below. (#1944)
+      @event_registration.organizations.each do |organization|
+        destination.event_registration_organizations.find_or_create_by!(organization: organization)
+      end
+      # Split/relocate CE before dropping a collapsing middle reg, so its record
+      # moves forward instead of being cascade-destroyed with the reg. (#1944)
+      EventRegistrationServices::TransferContinuingEducation.new(
+        transferred_out: @event_registration, destination: destination
+      ).call
+      @event_registration.destroy! if @event_registration.transferred_in?
+      true
+    end
+
+    if saved
+      redirect_to edit_event_registration_path(destination, return_to: params[:return_to].presence),
+        notice: "Transfer recorded — #{source.registrant.full_name} is now registered for #{destination_event.title}.",
+        status: :see_other
+    else
+      @return_to = params[:return_to]
+      @events = transfer_destination_events
+      flash.now[:alert] = destination.errors.full_messages.to_sentence
+      render :transfer, status: :unprocessable_content
+    end
+  rescue ActiveRecord::RecordNotFound
+    redirect_to transfer_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+      alert: "Select a destination event to transfer to.", status: :see_other
+  end
+
+  # Undo a transfer-out: restore the reg to its pre-transfer status, and (when a
+  # destination was already recorded) unlink that destination and re-merge its CE
+  # back to the source. (#1944)
+  def revert_transfer
+    authorize! @event_registration, to: :transfer?
+    unless EventRegistrationServices::RevertTransfer.call(registration: @event_registration)
+      redirect_to edit_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+        alert: "This registration isn't transferred out.", status: :see_other
+      return
+    end
+
+    redirect_to edit_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+      notice: "Transfer undone — #{@event_registration.registrant.full_name} is back to #{@event_registration.attendance_status_label.downcase} on #{@event_registration.event.title}.",
+      status: :see_other
+  end
+
   def confirm
     @event_registration = EventRegistration.includes(registrant: :user, event: :location).find(params[:id])
     authorize! @event_registration, to: :confirm?
@@ -271,6 +398,7 @@ class EventRegistrationsController < ApplicationController
   def select_organization
     @event_registration = EventRegistration.find(params[:id])
     authorize! @event_registration, to: :select_organization?
+    return deny_locked_org_edit if @event_registration.editing_locked?
     @person = @event_registration.registrant
     organization = Organization.find(params[:organization_id])
 
@@ -282,6 +410,7 @@ class EventRegistrationsController < ApplicationController
   def create_organization
     @event_registration = EventRegistration.find(params[:id])
     authorize! @event_registration, to: :create_organization?
+    return deny_locked_org_edit if @event_registration.editing_locked?
     @person = @event_registration.registrant
     # Build the org from a name the registrant actually typed on the form, so the
     # button can't be used to create an arbitrary org — it only resolves a pending
@@ -310,6 +439,7 @@ class EventRegistrationsController < ApplicationController
   def unlink_organization
     @event_registration = EventRegistration.find(params[:id])
     authorize! @event_registration, to: :unlink_organization?
+    return deny_locked_org_edit if @event_registration.editing_locked?
     organization = Organization.find(params[:organization_id])
 
     # Intentional UX choice: "Unlink" only removes the org from this registration and
@@ -382,6 +512,16 @@ class EventRegistrationsController < ApplicationController
       edit: (cell if reopen), anchor: cell)
   end
 
+  # Events a registrant can be transferred into: published events of the same
+  # format as the one they're leaving — an on-demand event only transfers to
+  # another on-demand event, and a scheduled (non-on-demand) event only to
+  # another scheduled event — excluding the source event, most recent first.
+  def transfer_destination_events
+    Event.where(published: true, on_demand: @event_registration.event.on_demand)
+         .where.not(id: @event_registration.event_id)
+         .order(start_date: :desc)
+  end
+
   # Creates the audited completion row for a checklist step (recording who/when),
   # or removes it — so an unchecked step leaves no trace.
   def toggle_checklist_step(step, completed)
@@ -412,11 +552,43 @@ class EventRegistrationsController < ApplicationController
   end
 
   def event_registration_update_params
+    return locked_editable_params if @event_registration.editing_locked?
     if allowed_to?(:manage?, with: EventRegistrationPolicy)
       event_registration_params
     else
       params.require(:event_registration).permit(:status)
     end
+  end
+
+  # A transferred-out reg keeps only comments and communications editable (#1944).
+  LOCKED_EDITABLE_KEYS = %w[ comments_attributes notifications_attributes ].freeze
+
+  def locked_editable_params
+    params.fetch(:event_registration, {}).permit(
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ]
+    )
+  end
+
+  # Warn rather than silently swallow: if a locked reg's form somehow submits fields
+  # beyond comments/communications, tell the admin they were ignored.
+  def warn_if_locked_fields_submitted
+    return unless @event_registration.editing_locked?
+    ignored = params.fetch(:event_registration, {}).keys.map(&:to_s) - LOCKED_EDITABLE_KEYS
+    return if ignored.empty?
+    flash[:alert] = "This registration was transferred out and is locked — only comments and communications were saved. Undo the transfer to edit anything else."
+  end
+
+  def block_locked_registration
+    return unless @event_registration.editing_locked?
+    redirect_to(request.referer.presence || edit_event_registration_path(@event_registration),
+      alert: "#{@event_registration.registrant&.full_name} was transferred out — this registration is locked. Undo the transfer to make changes.",
+      status: :see_other)
+  end
+
+  def deny_locked_org_edit
+    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+      alert: "This registration was transferred out and is locked. Undo the transfer to change linked organizations."
   end
 
   def csv_export(registrations)
@@ -433,7 +605,7 @@ class EventRegistrationsController < ApplicationController
           r&.preferred_email.to_s,
           r&.phone_number.to_s,
           e&.title.to_s,
-          er.attendance_status_label,
+          er.attendance_status_report_label,
           er.scholarships.any? ? "Yes" : "No",
           er.scholarships.any?(&:tasks_completed?) ? "Yes" : "No",
           cost_required ? er.payment_status_label : "",

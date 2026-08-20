@@ -1,6 +1,7 @@
 <% preview = local_assigns.fetch(:preview, false) %>
 <% show_all = local_assigns.fetch(:show_all, false) %>
 <div class="max-w-3xl mx-auto pb-12 pt-6 px-4">
+  <%= render "event_registrations/transfer_notice", event_registration: event_registration %>
   <!-- Ticket Container -->
   <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
     <!-- Ticket Header -->
@@ -71,13 +72,13 @@
       </div>
 
       <!-- Live "Join on …" link, shown only near event time (date/cost/venue now sit under the title) -->
-      <% if event_registration.event.autoshow_videoconference_link && event_registration.event.videoconference_url.present? && event_registration.joinable? %>
+      <% if event_registration.event.autoshow_videoconference_link && event_registration.event.videoconference_url.present? && event_registration.joinable? && !event_registration.transferred_out? %>
         <div class="text-center">
           <%= render "events/videoconference_link", event: event_registration.event.decorate, joinable: event_registration.joinable? %>
         </div>
       <% end %>
 
-      <% if event_registration.event.cost_cents.to_i > 0 && event_registration.status != "cancelled" && event_registration.remaining_cost > 0 && @checkout_payment_status != "paid" %>
+      <% if event_registration.event.cost_cents.to_i > 0 && event_registration.status != "cancelled" && event_registration.remaining_cost > 0 && @checkout_payment_status != "paid" && !event_registration.transferred_out? %>
         <div class="text-center mt-2 space-y-3">
           <% if event_registration.intends_to_pay? %>
             <div>
@@ -126,6 +127,10 @@
           real-ticket render doesn't issue a second query for the same rows. %>
       <% callouts = preview && show_all ? event_registration.event.registration_ticket_callouts : event_registration.event.registration_ticket_callouts.select(&:published?) %>
       <% callouts.each do |callout| %>
+        <%# A transferred-out registrant withdrew from this event: keep their financial/
+            credit records (payment, scholarship, CE, certificate), hide participation
+            material (videoconference, staff, handouts, FAQ, custom callouts). (#1944) %>
+        <% next if event_registration.transferred_out? && !callout.financial_record? %>
         <% next if callout.payment_access_gated && !payment_access && !(preview && show_all) %>
         <% if callout.behavioral_builtin? %>
           <% card = builtin_cards.card_for(callout) %>

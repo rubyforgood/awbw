@@ -157,6 +157,48 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       ce_reg.mark_certificate_sent!
       expect(ce_reg.certificate_sent?).to be(true)
     end
+
+    describe "transfer creates a second record (two-record model, #1944)" do
+      let(:origin_event) { create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 10_000, start_date: 3.days.ago, end_date: 1.day.ago) }
+      let(:origin_reg) { create(:event_registration, event: origin_event, status: "attended") }
+      let(:license) { create(:professional_license, person: origin_reg.registrant) }
+
+      it "carries hours/cost from the source without re-defaulting from the event" do
+        dest_reg = create(:event_registration, event: create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 10_000),
+          registrant: origin_reg.registrant, transferred_from_registration: origin_reg)
+        ce = dest_reg.continuing_education_registrations.create!(
+          professional_license: license, hours: 6, cost_cents: 0, skip_event_defaults: true)
+
+        expect(ce.hours).to eq(6)
+        expect(ce.cost_cents).to eq(0)   # the event's $100 default is skipped
+        expect(ce).to be_transfer_created
+      end
+
+      it "certifies against its own (destination) event, not the source" do
+        future = create(:event, ce_hours_offered: 6, start_date: 10.days.from_now, end_date: 12.days.from_now)
+        dest_reg = create(:event_registration, event: future, registrant: origin_reg.registrant,
+          status: "attended", transferred_from_registration: origin_reg)
+        ce = dest_reg.continuing_education_registrations.create!(
+          professional_license: license, hours: 6, cost_cents: 0, skip_event_defaults: true)
+
+        # Origin already ended, but the hours are earned at the destination event,
+        # which hasn't happened yet → not certifiable until that event ends.
+        expect(ce.certificate_available?).to be(false)
+        future.update!(start_date: 3.days.ago, end_date: 1.day.ago)
+        expect(ce.reload.certificate_available?).to be(true)
+      end
+
+      it "links a transfer-created record back to the paid original for the same license" do
+        origin_ce = origin_reg.continuing_education_registrations.create!(
+          professional_license: license, hours: 0, cost_cents: 10_000, skip_event_defaults: true)
+        dest_reg = create(:event_registration, event: create(:event, ce_hours_offered: 6),
+          registrant: origin_reg.registrant, transferred_from_registration: origin_reg)
+        ce = dest_reg.continuing_education_registrations.create!(
+          professional_license: license, hours: 6, cost_cents: 0, skip_event_defaults: true)
+
+        expect(ce.origin_ce_registration).to eq(origin_ce)
+      end
+    end
   end
 
   # Payment interface comes from Registerable, driven by the CE record's own

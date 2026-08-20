@@ -1,5 +1,6 @@
 <% deco = registration.decorate %>
-<div id="<%= dom_id(registration, :attendance_status) %>">
+<% badge_return_to = local_assigns.fetch(:return_to, nil) %>
+<div id="<%= dom_id(registration, :attendance_status) %>" class="inline-flex items-center gap-1.5">
   <%= form_with model: registration, url: event_registration_path(registration), method: :patch, data: { turbo_frame: "_top" } do |f| %>
     <div class="relative inline-flex items-center gap-1.5 rounded-full border px-5 py-0.5 text-xs font-medium <%= deco.attendance_status_classes %>">
       <i class="fas <%= deco.attendance_status_icon %>"></i>
@@ -12,5 +13,25 @@
       <span><%= registration.attendance_status_label %></span>
       <i class="fas fa-chevron-down text-2xs"></i>
     </div>
+  <% end %>
+  <%# Transferred in is a relationship, not a status, so it rides alongside the
+      registration's own attendance status rather than replacing it. %>
+  <% if registration.transferred_in? %>
+    <span class="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-[0.65rem] font-medium text-teal-700" title="Transferred in from another event">
+      <i class="fas fa-right-to-bracket"></i>
+      In
+    </span>
+  <% end %>
+  <%# A transferred-out reg links to the manage-transfer screen — amber with a
+      warning when no destination is recorded yet, purple once one is. %>
+  <% if registration.transferred_out? %>
+    <% pending = registration.transfer_destination_pending? %>
+    <%= link_to transfer_event_registration_path(registration, return_to: badge_return_to),
+          class: "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[0.65rem] font-medium #{pending ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100" : "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"}",
+          title: pending ? "Transfer incomplete — no destination event recorded yet — click to manage" : "Manage this transfer",
+          data: { turbo_frame: "_top" } do %>
+      <i class="fas <%= pending ? "fa-triangle-exclamation" : "fa-right-from-bracket" %> text-[0.6rem]"></i>
+      Manage
+    <% end %>
   <% end %>
 </div>

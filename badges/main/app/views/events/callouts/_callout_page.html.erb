@@ -41,6 +41,13 @@
     </div>
 
     <div class="px-6 sm:px-8 py-7">
+      <%# Transfer banner (issue #1944) — one place covers every callout page that
+          uses this wrapper, so a transferred in/out registrant is re-oriented to
+          the paired registration wherever they land. Guarded: the generic
+          custom-callout page renders this wrapper with no @event_registration. %>
+      <% if @event_registration %>
+        <%= render "event_registrations/transfer_notice", event_registration: @event_registration %>
+      <% end %>
       <%# Optional admin action at the top-right of the body, above the callout
           page text (e.g. the staff page's "Edit staff" link). %>
       <% body_action = local_assigns[:body_action] %>

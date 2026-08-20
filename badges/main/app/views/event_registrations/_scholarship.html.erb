@@ -1,7 +1,7 @@
 <%# ---- Scholarship — "Requested" is a plain flag saved with the form; it does
     not create or destroy an award. Awarding is a deliberate action via
     "Add scholarship". ---- %>
-<section class="flex min-h-[12rem] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+<section id="scholarship-card" class="flex min-h-[12rem] scroll-mt-20 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:scholarships, scholarship.present? || event_registration.scholarship_requested) %>">
       <i class="fa-solid fa-graduation-cap"></i>

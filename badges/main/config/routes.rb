@@ -109,6 +109,9 @@ Rails.application.routes.draw do
     member do
       get :confirm
       post :process_confirm
+      get :transfer
+      post :process_transfer
+      patch :revert_transfer
       get :link_organization
       post :select_organization
       post :create_organization

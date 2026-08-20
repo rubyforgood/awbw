@@ -1620,3 +1620,25 @@
       when you're ready.
     - Event links and past submissions stay with the original; the copy is a fresh
       form.
+
+- name: "Transfer a registration to another event"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-18
+  action_path: "/events/1/roster"
+  pr_number: 2044
+  summary: >-
+    Move a registrant from one event to another of the same format without losing
+    whether they attended. The transfer is tracked as a link between the two
+    registrations, so the roster and dashboard show who transferred in or out and
+    admins can edit or undo the move.
+  pro_tips:
+    - An incoming registration keeps its payment, scholarship, and CE on the
+      original registration — the edit form shows a read-only summary that links
+      back to the source instead of its own billing cards.
+    - Reporting totals stay on the original event; the new event still counts the
+      person in headcount and attendance but leaves them out of its financial
+      totals.
+    - Transferring someone a second time collapses the chain — the new
+      registration points straight at the original source and the middle stop is
+      removed.

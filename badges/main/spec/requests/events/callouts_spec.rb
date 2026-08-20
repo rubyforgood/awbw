@@ -114,6 +114,30 @@ RSpec.describe "Events::Callouts", type: :request do
     end
   end
 
+  describe "transfer banner across callout pages (#1944)" do
+    let(:destination) { create(:event_registration, event: create(:event), registrant: registration.registrant) }
+
+    before do
+      registration.update!(status: "transferred_out")
+      destination.update!(transferred_from_registration: registration)
+    end
+
+    it "shows the transfer banner and new-reg link on a page that had no explicit render (handouts)" do
+      create(:registration_ticket_callout, event:, builtin_key: "handouts", hidden: false)
+
+      get registration_handouts_path(registration.slug)
+
+      expect(response.body).to include("You transferred out")
+      expect(response.body).to include(registration_ticket_path(destination.slug))
+    end
+
+    it "shows the banner exactly once on the payment page (no duplication after consolidating into the wrapper)" do
+      get registration_payment_path(registration.slug)
+
+      expect(response.body.scan("You transferred out").size).to eq(1)
+    end
+  end
+
   describe "callout page header" do
     let(:event) { create(:event, title: "Windows workshop", start_date: Date.new(2020, 1, 12), end_date: Date.new(2099, 12, 12)) }
 
