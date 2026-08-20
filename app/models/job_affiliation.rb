@@ -1,5 +1,4 @@
-# STI subclass for a person's role/job at an organization (any title other than
-# exactly "Facilitator"). This is the default affiliation type; Affiliation
-# assigns it from the title in a before_validation. See Affiliation#set_type_from_title.
+# STI subtype for a person's role/job at an org (any non-"Facilitator" title), the
+# default. Affiliation#set_type_from_title assigns this type from the title.
 class JobAffiliation < Affiliation
 end

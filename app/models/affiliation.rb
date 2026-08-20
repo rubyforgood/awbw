@@ -49,9 +49,6 @@ class Affiliation < ApplicationRecord
       .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", date)
   }
 
-  # STI: facilitator affiliations are the FacilitatorAffiliation subtype, which
-  # #set_type_from_title assigns whenever the title is exactly "Facilitator"
-  # (trimmed, case-sensitive). An executable agreement spec locks type to that rule.
   scope :facilitators, -> { where(type: FacilitatorAffiliation.name) }
 
   # Affiliations whose #status_on(date) equals the given status, expressed in SQL
@@ -88,25 +85,20 @@ class Affiliation < ApplicationRecord
   after_destroy :sync_organization_status_with_affiliations
   after_destroy :sync_organization_affiliation_dates
 
-  # Both STI subtypes authorize through the one AffiliationPolicy — ActionPolicy's
-  # class-policy_class resolver picks this up before it would fail to infer a
-  # FacilitatorAffiliationPolicy / JobAffiliationPolicy.
+  # Both STI subtypes authorize through the one AffiliationPolicy.
   def self.policy_class
     AffiliationPolicy
   end
 
-  # STI subtypes share Affiliation's routes, form param key, and dom_ids — the app
-  # treats them uniformly as "affiliation" (AffiliationsController#params.require(:affiliation),
-  # dom_id anchors like affiliation_123, affiliation_path). Without this, url_for /
-  # dom_id would derive facilitator_affiliation_* and break those.
+  # Both subtypes share Affiliation's routes, param key, and dom_ids — without this,
+  # url_for/dom_id would derive facilitator_affiliation_* and break the controller.
   def self.model_name
     @_affiliation_model_name ||= ActiveModel::Name.new(Affiliation)
   end
 
   # Methods
-  # True for the FacilitatorAffiliation subtype. Reads the STI type column rather
-  # than #is_a? so it's correct even on a base-built instance whose type was just
-  # assigned by #set_type_from_title but not yet reloaded into its subclass.
+  # Reads the type column, not #is_a?, so it holds on a base-built instance whose
+  # type was just assigned by #set_type_from_title but not yet reloaded.
   def facilitator?
     type == FacilitatorAffiliation.name
   end
@@ -183,11 +175,8 @@ class Affiliation < ApplicationRecord
     self.inactive = end_date.present? && end_date < Date.current
   end
 
-  # The title is the single source of truth for the STI subtype: exactly
-  # "Facilitator" (trimmed, case-sensitive) is a FacilitatorAffiliation, anything
-  # else (including blank) is a JobAffiliation, the default. Runs on every save so
-  # a retitle re-types the row. Invariant: never write `title` via update_columns /
-  # update_all — that skips this callback and lets type drift from the title.
+  # Title is the source of truth for the subtype, re-derived on every save. Never
+  # write `title` via update_columns/update_all — that skips this and drifts the type.
   def set_type_from_title
     self.type = title.to_s.strip == FACILITATOR_TITLE ? FacilitatorAffiliation.name : JobAffiliation.name
   end
