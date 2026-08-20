@@ -61,6 +61,16 @@ RSpec.describe EventRevenueFigures do
     expect(figures.ce_outstanding_cents).to eq(dashboard.cont_ed_outstanding_cents)
   end
 
+  it "excludes a transferred-in registration (its money is on the source event)" do
+    source = create(:event_registration, status: "transferred_out")
+    create(:event_registration, event: event, registrant: create(:person),
+      status: "registered", transferred_from_registration: source)
+
+    # The transferred-in reg owes the full 10_000 here but must not be counted;
+    # outstanding stays at reg1's 4_000, unchanged by the transfer-in.
+    expect(figures.registration_outstanding_cents).to eq(4_000)
+  end
+
   it "counts a comped CE fee as a discount" do
     ce = create(:continuing_education_registration, event_registration: reg2, cost_cents: 5_000)
     create(:allocation, source: create(:discount, amount_cents: 5_000), allocatable: ce, amount: 5_000)

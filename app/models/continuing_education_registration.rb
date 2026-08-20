@@ -30,6 +30,11 @@ class ContinuingEducationRegistration < ApplicationRecord
   # value is nil, e.g. a blank expiry on a placeholder license).
   attr_accessor :license_kind, :license_number, :license_issuing_state, :license_expires_on
 
+  # Set when the transfer flow creates the destination record with a deliberately
+  # snapshotted hours/cost (including a $0 cost), so #default_from_event doesn't
+  # overwrite them with the event's offering. (#1944)
+  attr_accessor :skip_event_defaults
+
   before_validation :default_from_event, on: :create
 
   validates :hours, numericality: { greater_than_or_equal_to: 0 }
@@ -77,9 +82,30 @@ class ContinuingEducationRegistration < ApplicationRecord
   # sign-ins/early sign-outs. You can't certify hours the sign-in sheet doesn't support.
   ATTENDANCE_COVERAGE_THRESHOLD = 0.9
 
+  # This record was created by a transfer — it lives on a transferred-in reg,
+  # carrying the hours forward from the source event with a cost snapshotted from
+  # the source's outstanding balance. Its cost is admin-locked (payments received
+  # here settle that balance); certification happens at this event. (#1944)
+  def transfer_created?
+    event_registration&.transferred_in? || false
+  end
+
+  # The source reg's CE record this one was split from — the paid $0-hours "stub"
+  # left at the original event, matched by license. Drives the "paid on original →"
+  # link on a transfer-created record's card. Nil when the source has none. (#1944)
+  def origin_ce_registration
+    return unless transfer_created?
+
+    event_registration.transferred_from_registration
+      &.continuing_education_registrations
+      &.find { |c| c.professional_license_id == professional_license_id }
+  end
+
   # CE certificate eligibility — its own rule (not shared): the event grants CE,
   # the registrant attended, the training has ended, the CE balance is paid, and
   # (when attendance was tracked) the logged time approximately covers the hours.
+  # Everything is judged at this record's own event/registration — after a transfer
+  # the hours ride on the destination reg's own record, so there's nothing to walk.
   def certificate_available?
     event = event_registration&.event
     return false unless event&.ce_eligible?
@@ -157,8 +183,11 @@ class ContinuingEducationRegistration < ApplicationRecord
   private
 
   # Snapshot the hours offered and total cost from the event when they aren't set
-  # explicitly.
+  # explicitly. Skipped for a transfer-created record, whose hours/cost are
+  # deliberately carried over from the source (a $0 cost is intentional there).
   def default_from_event
+    return if skip_event_defaults
+
     event = event_registration&.event
     self.hours = event.ce_hours_offered if event&.ce_hours_offered && (hours.blank? || hours.zero?)
     self.cost_cents = event.ce_hours_cost_cents if event&.ce_hours_cost_cents && (cost_cents.blank? || cost_cents.zero?)

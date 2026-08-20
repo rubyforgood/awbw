@@ -114,6 +114,30 @@ RSpec.describe "Events::Callouts", type: :request do
     end
   end
 
+  describe "transfer banner across callout pages (#1944)" do
+    let(:destination) { create(:event_registration, event: create(:event), registrant: registration.registrant) }
+
+    before do
+      registration.update!(status: "transferred_out")
+      destination.update!(transferred_from_registration: registration)
+    end
+
+    it "shows the transfer banner and new-reg link on a page that had no explicit render (handouts)" do
+      create(:registration_ticket_callout, event:, builtin_key: "handouts", hidden: false)
+
+      get registration_handouts_path(registration.slug)
+
+      expect(response.body).to include("You transferred out")
+      expect(response.body).to include(registration_ticket_path(destination.slug))
+    end
+
+    it "shows the banner exactly once on the payment page (no duplication after consolidating into the wrapper)" do
+      get registration_payment_path(registration.slug)
+
+      expect(response.body.scan("You transferred out").size).to eq(1)
+    end
+  end
+
   describe "callout page header" do
     let(:event) { create(:event, title: "Windows workshop", start_date: Date.new(2020, 1, 12), end_date: Date.new(2099, 12, 12)) }
 
@@ -181,6 +205,20 @@ RSpec.describe "Events::Callouts", type: :request do
       staffer.update!(profile_show_age_ranges: false)
       get registration_staff_path(registration.slug)
       expect(response.body).not_to include("Youth")
+    end
+
+    it "shows a staff member's license credentials, gated by their profile toggle" do
+      staffer = create(:person)
+      create(:professional_license, person: staffer, kind: "LMFT", number: "44556")
+      create(:registration_ticket_callout, event:, builtin_key: "staff", hidden: false)
+      create(:event_staff, event:, person: staffer)
+
+      get registration_staff_path(registration.slug)
+      expect(response.body).to include("LMFT")
+
+      staffer.update!(profile_show_credentials: false)
+      get registration_staff_path(registration.slug)
+      expect(response.body).not_to include("LMFT")
     end
 
     it "shows an admin-only Edit staff button to admins" do

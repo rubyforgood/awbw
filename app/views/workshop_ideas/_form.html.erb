@@ -86,19 +86,14 @@
                                         class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500
                                           focus:border-blue-500 sm:text-sm" } %>
             </div>
-            <div>
-              <%= f.input :author_credit_preference,
-                          as: :select,
-                          collection: AuthorCreditable::IDEA_FORM_OPTIONS,
-                          include_blank: "Select a preference",
-                          selected: f.object.author_credit_preference,
-                          label: "Author credit preference",
-                          hint: "Controls how the author's name is displayed" %>
-            </div>
           </div>
         </div>
       </div>
     <% end %>
+
+    <%# Outside the admin block: this is how a submitter learns they'll be credited,
+        so it can't be behind the manage check like the staff fields above. %>
+    <%= render "shared/author_credit_status", f: f %>
 
     <%= render "shared/form_dropdown", field: :body, label: "Body", hidden: false,
                padding: "mb-4 border border-gray-300 rounded-md" do %>

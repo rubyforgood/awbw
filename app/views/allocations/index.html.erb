@@ -88,6 +88,8 @@
                  person: @allocatable.registrant %>
     <% end %>
 
+    <%= render "event_registrations/transferred_out_caution", registration: (@allocatable.is_a?(EventRegistration) ? @allocatable : (@allocatable.event_registration if @allocatable.respond_to?(:event_registration))) %>
+
     <% if @allocatable.is_a?(Registerable) %>
       <p class="mb-6 text-center text-sm font-medium tabular-nums <%= @allocatable.paid_in_full? ? "text-green-700" : "text-amber-700" %>">
         <%= @allocatable.paid_in_full? ? "Paid in full" : "#{dollars_from_cents(@allocatable.remaining_cost)} due" %>

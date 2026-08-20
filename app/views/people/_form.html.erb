@@ -459,10 +459,13 @@
     </div>
   </div>
 
-  <div class="profile-preferences-section">
+  <div id="profile-preferences" class="profile-preferences-section scroll-mt-4">
     <div class="mb-2 block font-medium text-gray-700">
       Profile display preferences
     </div>
+    <p class="mb-3 text-sm text-gray-500">
+      Updating these preferences applies to how you show up sitewide: stories, workshop variations, the people index, and more.
+    </p>
 
     <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
       <div class="px-3 pb-3">
@@ -474,17 +477,13 @@
 
           <%= f.input :display_name_preference,
                     as: :select,
-                    collection: [
-                      ["First and Last Name", "full_name"],
-                      ["First Name and Last Initial", "first_name_last_initial"],
-                      ["First Name Only", "first_name_only"],
-                      ["Last Name Only", "last_name_only"]
-                    ],
+                    collection: Person::DISPLAY_NAME_PREFERENCE_LABELS.invert.to_a,
+                    hint: "Sitewide (People/Profile, Stories, Workshop Variations, etc)",
                     selected: f.object.display_name_preference || "full_name" %>
 
           <%= f.input :anonymous_contributions,
                     label: "Contribute anonymously",
-                    hint: "Hide your name on stories credited to you" %>
+                    hint: "Hides your name on content, but not People/Profile" %>
 
           <%= f.input :profile_show_credentials, label: "Show credentials" %>
 

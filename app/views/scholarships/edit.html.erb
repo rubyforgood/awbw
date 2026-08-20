@@ -82,6 +82,8 @@
     </div>
   <% end %>
 
+  <%= render "event_registrations/transferred_out_caution", registration: (@allocatable if @allocatable.is_a?(EventRegistration)) %>
+
   <%# turbo: false matches the other cocoon/nested-attributes admin forms (registration,
       workshops). A plain full-page submit avoids the Turbo + nested-fields double/stale
       resubmission that surfaced as a save committing yet the request returning 422. %>

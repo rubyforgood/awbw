@@ -15,8 +15,8 @@ class VideoRecording < ApplicationRecord
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
   has_many :assets, as: :owner, dependent: :destroy
 
-  validates :title, presence: true, uniqueness: { case_sensitive: false }
-  validates :youtube_url, presence: true
+  validates :title, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
+  validates :youtube_url, presence: true, length: { maximum: 255 }
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true

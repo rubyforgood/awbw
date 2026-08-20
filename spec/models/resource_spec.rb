@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Resource do
   it_behaves_like "featureable", factory: :resource
-  it_behaves_like "author_creditable", factory: :resource
+  it_behaves_like "author_creditable", factory: :resource, org_credited: true
 
   it { should have_many(:reports) } # As owner
 
@@ -35,6 +35,21 @@ RSpec.describe Resource do
     end
   end
 
+  describe "#author_credit with a legacy free-text name" do
+    let(:creator) { create(:user, :with_person) }
+
+    it "uses the legacy name when no author is credited" do
+      resource = create(:resource, created_by: creator, author: nil, legacy_author_name: "Jane Legacy")
+      expect(resource.author_credit).to eq("Jane Legacy")
+    end
+
+    it "is suppressed rather than exposing the legacy name" do
+      resource = create(:resource, created_by: creator, author: nil, legacy_author_name: "Jane Legacy",
+                                   author_credit_preference: "anonymous")
+      expect(resource.author_credit).to eq("AWBW Staff")
+    end
+  end
+
   describe 'validations' do
     # Requires associations for create
     it { should validate_presence_of(:title) }
@@ -59,6 +74,24 @@ RSpec.describe Resource do
 
       results = Resource.search(random_string)
       expect(results).to contain_exactly(resource1)
+    end
+
+    describe "the legacy author name" do
+      let(:creator) { create(:user) }
+
+      it "still finds a resource credited by its legacy name" do
+        resource = create(:resource, created_by: creator, author: nil, legacy_author_name: "Jane Legacy")
+
+        expect(Resource.search_by_params(query: "Jane Legacy")).to include(resource)
+      end
+
+      it "does not find a resource whose legacy name is suppressed as anonymous" do
+        resource = create(:resource, created_by: creator, author: nil, legacy_author_name: "Jane Legacy",
+                                     author_credit_preference: "anonymous")
+
+        expect(resource.author_credit).to eq(AuthorCreditable::ORG_AUTHOR_LABEL)
+        expect(Resource.search_by_params(query: "Jane Legacy")).not_to include(resource)
+      end
     end
   end
 

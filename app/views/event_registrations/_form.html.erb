@@ -4,6 +4,21 @@
 
   <div data-controller="org-toggle" data-org-toggle-remote-select-outlet="#org-search" class="space-y-6">
     <% if f.object.persisted? %>
+      <% locked = f.object.editing_locked? %>
+      <% if locked %>
+        <%# ---- Transferred-out lock (issue #1944): everything but comments and
+            communications is frozen; undo runs through Manage transfer. ---- %>
+        <div class="flex items-start gap-3 rounded-xl border border-purple-200 bg-purple-50 p-4 text-sm text-purple-900">
+          <i class="fa-solid fa-lock mt-0.5 shrink-0 text-purple-600"></i>
+          <div>
+            <p class="font-semibold">This registration was transferred out and is locked.</p>
+            <p class="mt-0.5 text-purple-800">
+              Only comments and communications can be edited here. To change anything else,
+              <%= link_to "manage the transfer", transfer_event_registration_path(f.object, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>.
+            </p>
+          </div>
+        </div>
+      <% end %>
       <%# ---- Registrant + registration status — one compact card. The person on
           the left (registration date and submission links beneath); the status
           dropdown on the right, saved with the form (an "Unsaved" hint shows
@@ -17,7 +32,6 @@
            "incomplete_attendance" => "text-amber-600",
            "cancelled"             => "text-gray-500",
            "no_show"               => "text-red-600",
-           "transferred_in"        => "text-teal-600",
            "transferred_out"       => "text-purple-600"
          } %>
       <% status_icons = {
@@ -26,13 +40,13 @@
            "incomplete_attendance" => "fa-clock",
            "cancelled"             => "fa-ban",
            "no_show"               => "fa-circle-xmark",
-           "transferred_in"        => "fa-right-to-bracket",
            "transferred_out"       => "fa-right-from-bracket"
          } %>
       <% current_icon_color = status_icon_colors[f.object.status] || "text-gray-500" %>
       <% current_icon = status_icons[f.object.status] || "fa-question" %>
       <%# The attendance-status controller spans the whole card so the per-day
           checkmarks in the meta strip below can drive the status select above. %>
+      <%= locked_fieldset(locked) do %>
       <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
            data-controller="attendance-status"
            data-attendance-status-colors-value="<%= status_icon_colors.to_json %>"
@@ -63,7 +77,7 @@
                end %>
             <% account_box = capture do %>
               <i class="fa-solid <%= account_icon %> <%= account_icon_color %> text-base"></i>
-              <span class="text-2xs font-medium leading-tight text-gray-700">User account</span>
+              <span class="text-2xs leading-tight font-medium text-gray-700">User account</span>
             <% end %>
             <% if allowed_to?(:show?, account) %>
               <%= link_to user_path(account), class: "#{box_base} #{account_border}", title: "User account: #{account_status}", data: { turbo_frame: "_top" } do %>
@@ -72,15 +86,15 @@
             <% else %>
               <div class="<%= box_base %> <%= account_border %>" title="User account: <%= account_status %>"><%= account_box %></div>
             <% end %>
-          <% elsif allowed_to?(:new?, User) %>
+          <% elsif allowed_to?(:new?, User) && !locked %>
             <%= link_to new_user_path(person_id: f.object.registrant_id, event_registration_id: f.object.id), class: "#{box_base} border-gray-300 text-gray-600", title: "Create a user account", data: { turbo_frame: "_top" } do %>
               <i class="fa-solid fa-user-plus text-base"></i>
-              <span class="text-2xs font-medium leading-tight">Create user</span>
+              <span class="text-2xs leading-tight font-medium">Create user</span>
             <% end %>
           <% else %>
             <div class="<%= box_base %> border-gray-300 text-gray-500" title="No user account">
               <i class="fa-solid fa-user-slash text-base"></i>
-              <span class="text-2xs font-medium leading-tight">No account</span>
+              <span class="text-2xs leading-tight font-medium">No account</span>
             </div>
           <% end %>
 
@@ -88,7 +102,7 @@
             <div class="mb-1 flex items-center justify-between gap-2">
               <span class="text-xs font-medium text-gray-400">Registration status</span>
               <span data-attendance-status-target="dirty"
-                    class="hidden items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-2xs font-medium text-amber-700"
+                    class="text-2xs hidden items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 font-medium text-amber-700"
                     title="Save the form to apply this change">
                 <i class="fa-solid fa-pen text-3xs"></i>
                 Unsaved
@@ -96,7 +110,7 @@
             </div>
 
             <div class="relative">
-              <i data-attendance-status-target="icon" class="fas <%= current_icon %> <%= current_icon_color %> pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm"></i>
+              <i data-attendance-status-target="icon" class="fas <%= current_icon %> <%= current_icon_color %> pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm"></i>
               <%= f.select :status,
                     EventRegistration::ATTENDANCE_STATUSES.map { |s| [ EventRegistration.new(status: s).attendance_status_label, s ] },
                     { selected: f.object.status },
@@ -104,6 +118,34 @@
                     data: { "attendance-status-target": "select", action: "attendance-status#update" },
                     "aria-label": "Registration status" %>
             </div>
+
+            <%# ---- Transfer trail (issue #1944) — link the paired registration so
+                the historical in/out relationship stays visible from either end. ---- %>
+            <% if f.object.transferred_out? %>
+              <% destination = f.object.transferred_to_registration %>
+              <% if destination %>
+                <p class="mt-1.5 text-xs text-purple-700">
+                  <i class="fa-solid fa-right-from-bracket"></i>
+                  Transferred to
+                  <%= link_to destination.event.title, edit_event_registration_path(destination, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>
+                  ·
+                  <%= link_to "Manage transfer", transfer_event_registration_path(f.object, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>
+                </p>
+              <% else %>
+                <p class="mt-1.5 text-xs text-purple-700">
+                  <i class="fa-solid fa-circle-exclamation"></i>
+                  <%= link_to "Record where they transferred to", transfer_event_registration_path(f.object, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>
+                </p>
+              <% end %>
+            <% elsif f.object.transferred_in? %>
+              <p class="mt-1.5 text-xs text-teal-700">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                Transferred in from
+                <%= link_to f.object.transferred_from_registration.event.title, edit_event_registration_path(f.object.transferred_from_registration, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>
+                ·
+                <%= link_to "Manage transfer", transfer_event_registration_path(f.object.transferred_from_registration, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>
+              </p>
+            <% end %>
           </div>
         </div>
 
@@ -146,7 +188,7 @@
             <span class="text-gray-400">Days attended</span>
             <div class="flex flex-wrap items-center justify-end gap-1.5">
               <% (1..f.object.event.day_count).each do |day| %>
-                <label class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-medium cursor-pointer transition-colors border-gray-200 text-gray-500 has-[:checked]:border-green-300 has-[:checked]:bg-green-50 has-[:checked]:text-green-700">
+                <label class="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-gray-200 px-2.5 py-0.5 font-medium text-gray-500 transition-colors has-[:checked]:border-green-300 has-[:checked]:bg-green-50 has-[:checked]:text-green-700">
                   <%= f.check_box "completed_day_#{day}",
                         "aria-label": "Day #{day}",
                         data: { "attendance-status-target": "day", action: "attendance-status#deriveFromDays" },
@@ -155,18 +197,41 @@
                 </label>
               <% end %>
             </div>
+            <%# The days carried over from the training they transferred in from. %>
+            <% if f.object.transferred_in? %>
+              <% prior = f.object.transferred_from_registration %>
+              <% prior_days = (1..prior.event.day_count).select { |d| prior["completed_day_#{d}"] } %>
+              <% if prior_days.any? %>
+                <p class="text-2xs mt-1 text-teal-700">
+                  <i class="fa-solid fa-right-to-bracket"></i>
+                  <%= "Day".pluralize(prior_days.size) %> <%= prior_days.to_sentence %> completed in prior training.
+                </p>
+              <% end %>
+            <% end %>
           </div>
         </div>
       </div>
+      <% end %>
 
+      <%# A transferred-in registration's payments live on the source registration
+          (a read-only summary shows below). Its scholarship stays on the source too,
+          but when the source had none we still show the editable card so an admin can
+          award one on this registration — a scholarship decided now belongs here, the
+          same way a CE decided now does (issue #1944). %>
+      <% transferred_in = f.object.transferred_in? %>
+      <% source_has_scholarship = transferred_in && f.object.transferred_from_registration&.scholarship? %>
       <%# The org card widens to absorb a column for each of the other two cards that's hidden. %>
-      <% show_scholarship = f.object.event&.scholarship_eligible? || f.object.scholarships.any? %>
+      <% show_scholarship = !source_has_scholarship && (f.object.event&.scholarship_eligible? || f.object.scholarships.any?) %>
+      <%# CE now lives on the transfer-in reg itself (its own record, carried by the
+          transfer), so its card shows here even for a transfer-in — payment/scholarship
+          stay on the source and appear in the read-only summary below. (#1944) %>
       <% show_ce = f.object.event&.ce_eligible? %>
       <% org_span = 1 + (show_scholarship ? 0 : 1) + (show_ce ? 0 : 1) %>
       <% org_span_class = { 1 => "sm:col-span-1", 2 => "sm:col-span-2", 3 => "sm:col-span-3" }.fetch(org_span) %>
       <% active_orgs = f.object.registrant.affiliations.select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }.map(&:organization).compact.uniq.sort_by(&:name) %>
       <% connected_org_ids = f.object.organizations.map(&:id) %>
       <% addable_orgs = active_orgs.reject { |org| connected_org_ids.include?(org.id) } %>
+      <%= locked_fieldset(locked) do %>
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
         <section class="flex min-h-[12rem] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm <%= org_span_class %>">
           <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
@@ -190,7 +255,7 @@
                 <% org_name_classes = "inline-flex min-w-0 items-center break-words rounded-md text-xs font-medium border px-3 py-0.5 transition bg-red-50 border-red-200 text-red-500 line-through peer-checked:bg-gray-50 peer-checked:border-gray-200 peer-checked:text-gray-500 peer-checked:no-underline peer-checked:hover:bg-emerald-200 peer-checked:hover:text-emerald-800 peer-checked:hover:border-emerald-300 peer-checked:hover:shadow-sm" %>
                 <% remove_classes = "inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs leading-none cursor-pointer transition-colors bg-red-100 border-red-300 text-red-600 peer-checked:bg-gray-50 peer-checked:border-gray-200 peer-checked:text-gray-400" %>
                 <% f.object.organizations.sort_by(&:name).each do |org| %>
-                  <span class="inline-flex min-w-0 max-w-full items-start gap-1">
+                  <span class="inline-flex max-w-full min-w-0 items-start gap-1">
                     <input type="checkbox" id="org_chip_<%= org.id %>" name="event_registration[organization_ids][]" value="<%= org.id %>" checked class="peer sr-only">
                     <%# Warn before leaving to the profile if the form has unsaved edits. %>
                     <%= link_to org.name, organization_path(org), title: org.name, class: org_name_classes, data: { turbo_frame: "_top", action: "dirty-form#confirmCancel" } %>
@@ -209,7 +274,7 @@
                 type="button"
                 data-org-toggle-target="addButton"
                 data-action="org-toggle#showAddForm"
-                class="inline-flex items-center gap-1.5 self-start rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer">
+                class="inline-flex cursor-pointer items-center gap-1.5 self-start rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700">
                 <i class="fa-solid fa-plus text-2xs"></i>
                 Connect organization
               </button>
@@ -218,10 +283,10 @@
             <%# Pending-chip template cloned by org_toggle_controller when adding. Kept in
                 the markup (not a JS string) so Tailwind always compiles the amber variants. %>
             <template data-org-toggle-target="template">
-              <span class="inline-flex min-w-0 max-w-full items-start gap-1">
+              <span class="inline-flex max-w-full min-w-0 items-start gap-1">
                 <input type="checkbox" name="event_registration[organization_ids][]" value="" checked class="peer sr-only">
-                <a href="#" data-org-toggle-name title="Pending — saved when you save the form" data-turbo-frame="_top" data-action="dirty-form#confirmCancel" class="inline-flex min-w-0 items-center break-words rounded-md border px-3 py-0.5 text-xs font-medium transition bg-red-50 border-red-200 text-red-500 line-through peer-checked:bg-amber-50 peer-checked:border-amber-200 peer-checked:text-amber-800 peer-checked:no-underline peer-checked:hover:bg-amber-100 peer-checked:hover:border-amber-300 peer-checked:hover:shadow-sm"></a>
-                <label data-org-toggle-remove title="Remove from this registration" class="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs leading-none cursor-pointer transition-colors bg-red-100 border-red-300 text-red-600 peer-checked:bg-amber-50 peer-checked:border-amber-200 peer-checked:text-amber-500">&times;</label>
+                <a href="#" data-org-toggle-name title="Pending — saved when you save the form" data-turbo-frame="_top" data-action="dirty-form#confirmCancel" class="inline-flex min-w-0 items-center rounded-md border border-red-200 bg-red-50 px-3 py-0.5 text-xs font-medium break-words text-red-500 line-through transition peer-checked:border-amber-200 peer-checked:bg-amber-50 peer-checked:text-amber-800 peer-checked:no-underline peer-checked:hover:border-amber-300 peer-checked:hover:bg-amber-100 peer-checked:hover:shadow-sm"></a>
+                <label data-org-toggle-remove title="Remove from this registration" class="inline-flex cursor-pointer items-center justify-center rounded-full border border-red-300 bg-red-100 px-2 py-0.5 text-xs leading-none text-red-600 transition-colors peer-checked:border-amber-200 peer-checked:bg-amber-50 peer-checked:text-amber-500">&times;</label>
               </span>
             </template>
 
@@ -253,22 +318,27 @@
         <% end %>
       </div>
 
-      <% if f.object.payment_unresolved? %>
-        <div class="mt-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-          <i class="fa-solid fa-circle-exclamation"></i>
-          Automated payment creation error for Stripe checkout
-        </div>
-      <% elsif f.object.checkout_session_id.present? && f.object.payment_unresolved.nil? %>
-        <div class="mt-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-          <i class="fa-solid fa-clock"></i>
-          Automated payment/allocation creation may still be in progress
-          <% if @checkout_payment_status.present? %>
-            - Stripe checkout status:
-            <strong><%= @checkout_payment_status %></strong>
-          <% end %>
-        </div>
+      <% if transferred_in %>
+        <%= render "transferred_in_financials", event_registration: f.object %>
+      <% else %>
+        <% if f.object.payment_unresolved? %>
+          <div class="mt-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            Automated payment creation error for Stripe checkout
+          </div>
+        <% elsif f.object.checkout_session_id.present? && f.object.payment_unresolved.nil? %>
+          <div class="mt-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            <i class="fa-solid fa-clock"></i>
+            Automated payment/allocation creation may still be in progress
+            <% if @checkout_payment_status.present? %>
+              - Stripe checkout status:
+              <strong><%= @checkout_payment_status %></strong>
+            <% end %>
+          </div>
+        <% end %>
+        <%= render "payment_history", event_registration: f.object %>
       <% end %>
-      <%= render "payment_history", event_registration: f.object %>
+      <% end %>
 
       <% if allowed_to?(:index?, with: NotificationPolicy) %>
         <%= render "notifications/communications", f: f,
@@ -276,7 +346,7 @@
       <% end %>
 
       <%# ---- Comments ---- %>
-      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm scroll-mt-24" id="comments-section" data-controller="edit-toggle">
+      <section class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="edit-toggle">
         <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
           <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:comments, f.object.comments.any?) %>">
             <i class="fa-solid fa-message"></i>
@@ -312,7 +382,7 @@
 
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
+              class="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
               data-action="edit-toggle#toggle"
             >
               <i class="fa-solid fa-pen text-2xs"></i>
@@ -327,6 +397,7 @@
           shout-out block and edits the text shown there. The text lives on the
           registrant's profile (Person#shoutout_text); editing it here updates
           their profile via nested attributes. ---- %>
+      <%= locked_fieldset(locked) do %>
       <section id="shout-out" class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
           <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:scholarships, f.object.shoutout? || f.object.registrant.shoutout_text.present?) %>">
@@ -364,6 +435,7 @@
           </div>
         </div>
       </section>
+      <% end %>
     <% else %>
       <%# ---- New registration: pick the event and registrant ---- %>
       <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">

@@ -17,9 +17,15 @@ class Address < ApplicationRecord
   has_many :affiliations, foreign_key: :organization_address_id, dependent: :nullify, inverse_of: :organization_address
 
   validates :locality, presence: true
-  validates :city, presence: true
+  validates :city, presence: true, length: { maximum: 255 }
   validates :state, presence: true
   validates :address_type, inclusion: { in: CONTACT_TYPES }
+  validates :street_address, length: { maximum: 255 }
+  validates :zip_code, length: { maximum: 255 }
+  validates :district, length: { maximum: 255 }
+  validates :county, length: { maximum: 255 }
+  validates :country, length: { maximum: 255 }
+  validates :phone, length: { maximum: 255 }
 
   scope :active, -> { where(inactive: false) }
 

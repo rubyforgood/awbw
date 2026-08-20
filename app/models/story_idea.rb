@@ -1,7 +1,5 @@
 class StoryIdea < ApplicationRecord
   include AuthorCreditable
-  # Public submission: the submitter must choose how they're credited.
-  require_author_credit_preference
   include SearchCop
   search_scope :search do
     attributes :title, :body
@@ -46,6 +44,8 @@ class StoryIdea < ApplicationRecord
   validates :windows_type_id, presence: true
   validates :permission_given, presence: true
   validates :rhino_body, presence: true
+  validates :external_workshop_title, length: { maximum: 255 }
+  validates :youtube_url, length: { maximum: 255 }
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank

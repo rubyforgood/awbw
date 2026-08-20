@@ -1,0 +1,9 @@
+<%# Re-render the results frame and flash in place, so saving a divergence fix
+    doesn't reload the whole page. Shared by update_item and update_person. %>
+<%= turbo_stream.replace "author_credit_divergences_results" do %>
+  <%= render template: "author_credit_divergences/author_credit_divergences_results", formats: :html %>
+<% end %>
+
+<%= turbo_stream.replace "flash_now" do %>
+  <%= render "shared/flash_messages" %>
+<% end %>

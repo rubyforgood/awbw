@@ -1,7 +1,5 @@
 class WorkshopVariationIdea < ApplicationRecord
   include AuthorCreditable
-  # Public submission: the submitter must choose how they're credited.
-  require_author_credit_preference
   include SearchCop
   search_scope :search do
     attributes :name, :body
@@ -33,7 +31,8 @@ class WorkshopVariationIdea < ApplicationRecord
   has_many :assets, as: :owner, dependent: :destroy
 
   # Validations
-  validates :name, presence: true, uniqueness: { scope: :workshop_id, case_sensitive: false }
+  validates :name, presence: true, uniqueness: { scope: :workshop_id, case_sensitive: false }, length: { maximum: 255 }
+  validates :youtube_url, length: { maximum: 255 }
   validates :created_by_id, presence: true
   validates :updated_by_id, presence: true
   validates :organization_id, presence: true

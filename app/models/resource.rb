@@ -1,5 +1,6 @@
 class Resource < ApplicationRecord
   include AuthorCreditable, Featureable, Publishable, RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  credits_to_org
   remote_searchable_by :title
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
@@ -54,7 +55,7 @@ class Resource < ApplicationRecord
   attribute :hidden_from_search, :boolean, default: false
 
   # Validations
-  validates :title, presence: true, uniqueness: { case_sensitive: false }
+  validates :title, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
   validates :kind, presence: true
 
   # Nested attributes
@@ -71,7 +72,10 @@ class Resource < ApplicationRecord
 
   include SearchCop
   search_scope :search do
-    attributes all: [ :title, :legacy_author_name ]
+    # The legacy author name is deliberately not indexed here. Author-name search —
+    # person or legacy column — goes through `by_credited_person_name`, which is the
+    # only path that honors the credit preference.
+    attributes all: [ :title ]
     options :all, type: :text, default: true, default_operator: :or
 
     scope { join_rich_texts }
@@ -87,11 +91,6 @@ class Resource < ApplicationRecord
 
   def legacy_author_name_text
     legacy_author_name
-  end
-
-  # Unattributed resources are credited to the organization's staff.
-  def missing_author_label
-    "AWBW Staff"
   end
 
   # Scopes
@@ -119,8 +118,8 @@ class Resource < ApplicationRecord
   def self.search_by_params(params)
     resources = is_a?(ActiveRecord::Relation) ? self : all
     if params[:query].present?
-      # SearchCop covers title + legacy author name + body; OR in the credited
-      # author/creator person name via id subqueries (isolated person joins).
+      # SearchCop covers title + body; OR in the credited author name — person and
+      # legacy column both — via id subqueries (isolated person joins).
       by_text = resources.search(params[:query]).select("resources.id")
       by_person = resources.by_credited_person_name(params[:query]).select("resources.id")
       resources = resources.where(id: by_text).or(resources.where(id: by_person))

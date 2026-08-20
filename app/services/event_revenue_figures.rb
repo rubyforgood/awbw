@@ -186,10 +186,13 @@ class EventRevenueFigures
 
   # [ event_id, registration_id, registrant_id ] for every active registration in
   # the report — the basis for both the per-event grouping and the drilldowns'
-  # registrant lookup, loaded in one query.
+  # registrant lookup, loaded in one query. Transferred-in regs are excluded:
+  # their money lives on the source event, so counting them here would inflate the
+  # new event's totals (mirrors EventDashboard#billable_registration_ids). (#1944)
   def registration_rows
     @registration_rows ||= EventRegistration
       .active
+      .not_transferred_in
       .where(event_id: @events.map(&:id))
       .pluck(:event_id, :id, :registrant_id)
   end

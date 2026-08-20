@@ -42,9 +42,10 @@ class WorkshopVariation < ApplicationRecord
          as: :owner, class_name: "RichTextAsset", dependent: :destroy
   has_many :assets, as: :owner, dependent: :destroy
 
-  validates :name, presence: true, uniqueness: { scope: :workshop_id, case_sensitive: false }
+  validates :name, presence: true, uniqueness: { scope: :workshop_id, case_sensitive: false }, length: { maximum: 255 }
   validates :windows_type_id, presence: true
   validates :rhino_body, presence: true
+  validates :youtube_url, length: { maximum: 255 }
 
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
@@ -54,11 +55,6 @@ class WorkshopVariation < ApplicationRecord
 
   def description
     rhino_body.to_plain_text
-  end
-
-  # Unattributed workshop variations are credited to the generic facilitator.
-  def missing_author_label
-    "AWBW Facilitator"
   end
 
   def title

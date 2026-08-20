@@ -31,6 +31,16 @@ RSpec.describe BuiltinCalloutCards do
       expect(card_titles(registration)).not_to include("Payment")
     end
 
+    it "hides participation cards but keeps financial ones once transferred out" do
+      event.update!(videoconference_url: "https://example.zoom.us/j/1")
+      create(:event_staff, event:)
+      registration.update!(status: "transferred_out")
+
+      titles = card_titles(registration)
+      expect(titles).to include("Make your payment")
+      expect(titles).not_to include("Videoconference", "Meet the staff")
+    end
+
     it "never surfaces the row-driven Handouts or FAQ cards in the code fallback" do
       # These are admin-published now — there's no code fallback for them, even on
       # a facilitator training.

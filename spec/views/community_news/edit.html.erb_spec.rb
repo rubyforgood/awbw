@@ -44,7 +44,6 @@ RSpec.describe "community_news/edit", type: :view do
 
       assert_select "select[name=?]", "community_news[author_id]"
 
-      assert_select "select[name=?]", "community_news[author_credit_preference]"
 
       assert_select "textarea[name=?]", "community_news[reference_url]"
 

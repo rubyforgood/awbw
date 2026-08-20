@@ -1,0 +1,18 @@
+<%# Caution banner for pages that CAN still be edited but relate to a
+    transferred-out registration (scholarship, CE, allocations) — the admin is
+    warned so a deliberate edit is a considered one, not blocked. Renders nothing
+    unless the passed registration is transferred out. (issue #1944)
+    Caller passes `registration:` (an EventRegistration, or nil). %>
+<% if registration&.transferred_out? %>
+  <div class="mb-6 flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+    <i class="fa-solid fa-triangle-exclamation mt-0.5 shrink-0 text-amber-600"></i>
+    <div>
+      <p class="font-semibold">Heads up — this belongs to a transferred-out registration.</p>
+      <p class="mt-0.5 text-amber-800">
+        <%= registration.registrant&.full_name %> was transferred out of
+        <span class="font-medium"><%= registration.event&.title %></span>.
+        Their registration is locked elsewhere; edit this only if you know it needs to change.
+      </p>
+    </div>
+  </div>
+<% end %>

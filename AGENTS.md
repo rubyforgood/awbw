@@ -137,7 +137,7 @@ This codebase (Rails 8.1)
 |---|---|
 | `AgeGroupTaggable` | Splits AgeRange category taggings into primary/additional via `categorizable_items.is_primary` (Person, Organization) |
 | `AhoyTrackable` | Event tracking integration |
-| `AuthorCreditable` | Author attribution |
+| `AuthorCreditable` | Author attribution. Credits are formatted by the credited **person's profile** (`Person#display_name_preference`), not by the record. The record's `author_credit_preference` is the consent snapshot taken at create time and is human-editable only on the author credit divergences page. Anonymity is a one-way latch: the profile or the record can set it, neither can strip it from the other |
 | `Featureable` | `featured`, `publicly_featured` scopes |
 | `Mentioner` | ActionText @mention extraction and grouping |
 | `NameFilterable` | Name-based filtering |
@@ -222,6 +222,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `WorkshopSearchService` — Complex filtering, sorting, pagination with ActionPolicy
 - `WorkshopFromIdeaService` — Converts WorkshopIdea to Workshop with asset migration
 - `WorkshopVariationFromIdeaService` — Variation creation from ideas
+- `AuthorCreditDivergenceQuery` — Backs the admin author credit divergences page. Four sections: `preference` (snapshot no longer matches the profile, grouped by person), `legacy` (credited by a free-text column, one group per column), `creator` (no `author_id`, so the credit falls back to the creating user's person — idea models excluded), and `unattributed` (nothing to credit). The last three resolve by assigning an `author_id`. `MODEL_NAMES` doubles as the allowlist for the `type` param — never constantize a raw param
 - `TaggingSearchService` — Search and filter tagging data
 - `PersonFromUserService` — Create Person from User account
 - `PersonCommentAggregator` — Unifies every comment connected to a person (their profile, event registrations, scholarships, CE registrations, topic subscriptions, and user account) into one newest-first `Comment` relation for the aggregated `/people/:id/all_comments` page
@@ -242,6 +243,8 @@ action, or `authorize! :workshop, to: :summary?`).
 
 - `EventRegistrationServices::ProcessConfirmation` — Registration confirmation flow
 - `EventRegistrationServices::PublicRegistration` — Public registration handling
+- `EventRegistrationServices::TransferContinuingEducation` — Splits/relocates a registrant's CE when they transfer events (issue #1944): a simple forward transfer leaves a paid, zero-hours **stub** on the source (its payments count at the original event) and creates a **live** record on the destination carrying the hours and the outstanding balance; when the reg being transferred out is itself a transfer-in (a collapsing double transfer, or a transfer back to the origin) its live record is relocated forward — merging back into the origin's stub — instead of split again, so no third record appears. Runs inside the transfer transaction, after the destination is saved and before a collapsing middle reg is destroyed
+- `EventRegistrationServices::RevertTransfer` — Undoes a transfer-out (issue #1944): restores the reg to the status it held before the transfer (via `status_before_transfer`, or "registered"), and when a destination was already recorded, unlinks it (it becomes a normal standalone reg, nothing deleted) and re-merges its split CE back onto the source (`TransferContinuingEducation#revert`). Backs the "Manage transfer" hub's undo action
 - `EventRegistrationReadiness` — Computes a registration's lifecycle `status` (`:not_ready` → `:ready` → `:certificate_due` → `:completed`) from a pre-event "event ready" checklist, a post-event "completion work" checklist (attendance, scholarship tasks), and certificate delivery, returning the specific outstanding reasons. Reads payment/certificate state via `Registerable` (`paid_in_full?`, `certificate_sent?`) on both the registration and its `continuing_education_registrations`. Drives the registrants roster's single far-right Status badge column (with a short reason under "Not ready" and a cert-type note under "Certificate pending") and its matching filter
 - `ReminderRecipientFilter` — Decides which event registrations stay checked on the bulk reminder page given the admin's filters (matches in memory, returns matching ids)
 - `BuiltinCalloutCards` — Renders the live, per-registration ticket callout cards (payment, certificate, scholarship, CE hours, videoconference), overlaying dynamic status (badge, colour, visibility guard, destination) on each materialized built-in row via `#card_for`. Rendered through the same `_callout_card` partial as `RegistrationTicketCallout`s. Skips any card an event has materialized (see `BuiltinCallouts`) so the two paths never double-render, and `#cards` serves as the fallback for events not yet seeded; `.editor_cards` builds the editor's preview cards. Handouts and FAQ are pure content cards with no builder here — they render from their row. Public show pages live under `app/views/events/callouts/` (`Events::CalloutsController`, slug-authorized)

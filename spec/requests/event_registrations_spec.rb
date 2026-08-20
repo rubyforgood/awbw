@@ -185,6 +185,16 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(query_count.call).to eq(baseline)
       end
 
+      it "annotates the CSV Status column for a transferred-in registration" do
+        source = create(:event_registration, status: "transferred_out")
+        create(:event_registration, event: new_event, registrant: source.registrant, status: "attended", transferred_from_registration: source)
+
+        get event_registrations_path, params: { format: :csv }
+
+        status_cells = CSV.parse(response.body).drop(1).map { |row| row[5] }
+        expect(status_cells).to include("Attended (transferred in)")
+      end
+
       context "registration form icon" do
         let(:reg_form) { create(:form, :standalone, name: "Registration Form") }
         let(:person) { existing_registration.registrant }
@@ -487,6 +497,133 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("financial records")
         expect(response.body).to include("reverted payments still count")
       end
+
+      it "prompts to record the destination for a transferred-out registration" do
+        existing_registration.update!(status: "transferred_out")
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Record where they transferred to")
+      end
+
+      it "notes on the source CE card that the hours moved to the destination after a transfer" do
+        source_event = create(:event, ce_hours_offered: 6)
+        source = create(:event_registration, event: source_event, status: "transferred_out")
+        intended = create(:event, title: "Intended Training")
+        create(:event_registration, event: intended, registrant: source.registrant, transferred_from_registration: source)
+        create(:continuing_education_registration, event_registration: source,
+               professional_license: create(:professional_license, person: source.registrant), skip_event_defaults: true)
+
+        get edit_event_registration_path(source)
+
+        expect(response.body).to include("Hours moved to")
+        expect(response.body).to include("Intended Training")
+      end
+
+      it "shows the transferred-in reg's own CE card noting it transferred from the original" do
+        source_event = create(:event, title: "Origin Training", ce_hours_offered: 6)
+        source = create(:event_registration, event: source_event, status: "transferred_out")
+        incoming = create(:event_registration, event: create(:event, ce_hours_offered: 6),
+          registrant: source.registrant, transferred_from_registration: source)
+        incoming.continuing_education_registrations.create!(hours: 6, cost_cents: 0, skip_event_defaults: true,
+          professional_license: create(:professional_license, person: source.registrant))
+
+        get edit_event_registration_path(incoming)
+
+        expect(response.body).to include("Transferred from")
+        expect(response.body).to include("Origin Training")
+      end
+
+      it "offers the normal Add CE control on a transferred-in reg whose source had no CE (#1944)" do
+        source = create(:event_registration, event: create(:event, ce_hours_offered: 6), status: "transferred_out")
+        incoming = create(:event_registration, event: create(:event, ce_hours_offered: 6),
+          registrant: source.registrant, transferred_from_registration: source)
+
+        get edit_event_registration_path(incoming)
+
+        expect(response.body).to include("Add CE registration")
+        expect(response.body).not_to include("No CE transferred in")
+      end
+
+      it "shows the source event on a transferred-in registration" do
+        source = create(:event_registration, event: event, status: "transferred_out")
+        incoming = create(:event_registration, event: new_event, transferred_from_registration: source)
+
+        get edit_event_registration_path(incoming)
+
+        expect(response.body).to include("Transferred in from")
+        # A "Manage transfer" link points at the source's manage-transfer hub.
+        expect(response.body).to include(transfer_event_registration_path(source))
+      end
+
+      it "notes which days were completed in the prior training" do
+        prior_event = create(:event, start_date: 3.days.ago, end_date: 3.days.ago)
+        source = create(:event_registration, event: prior_event, status: "transferred_out", completed_day_1: true)
+        incoming = create(:event_registration, event: new_event, registrant: source.registrant,
+          transferred_from_registration: source)
+
+        get edit_event_registration_path(incoming)
+
+        expect(response.body).to include("Day 1 completed in prior training")
+      end
+
+      it "shows a source-financials summary (not editable cards) for a transferred-in reg" do
+        paid_event = create(:event, cost_cents: 10_000)
+        source = create(:event_registration, event: paid_event, status: "transferred_out")
+        create(:allocation, source: create(:payment, person: source.registrant, amount_cents: 4_000, amount_cents_remaining: 4_000),
+               allocatable: source, amount: 4_000)
+        scholarship = create(:scholarship, recipient: source.registrant, amount_cents: 6_000)
+        create(:allocation, source: scholarship, allocatable: source, amount: 6_000)
+        incoming = create(:event_registration, event: new_event, transferred_from_registration: source)
+
+        get edit_event_registration_path(incoming)
+
+        # The distinct read-only summary, linking back to the source reg's sections.
+        expect(response.body).to include("Financials on the original registration")
+        expect(response.body).to include("#{edit_event_registration_path(source)}#allocations-card")
+        expect(response.body).to include("#{edit_event_registration_path(source)}#scholarship-card")
+        # Designated a scholarship recipient, linking to the actual award record.
+        expect(response.body).to include("Scholarship recipient")
+        expect(response.body).to include(edit_scholarship_path(scholarship))
+        # NOT the incoming reg's own editable payment/scholarship cards.
+        expect(response.body).not_to include("Registration payments and allocations")
+        expect(response.body).not_to include("name=\"event_registration[scholarship_requested]\"")
+      end
+
+      it "still offers the editable scholarship card when the source had no scholarship (#1944)" do
+        source = create(:event_registration, event: create(:event, cost_cents: 10_000), status: "transferred_out")
+        incoming = create(:event_registration, event: create(:event, cost_cents: 10_000),
+          registrant: source.registrant, transferred_from_registration: source)
+
+        get edit_event_registration_path(incoming)
+
+        # Source had no scholarship, so an admin can award one on this registration.
+        expect(response.body).to include("name=\"event_registration[scholarship_requested]\"")
+      end
+
+      it "summarizes the source's CE payment on a transferred-in reg (#1944)" do
+        source = create(:event_registration, event: create(:event, ce_hours_offered: 6), status: "transferred_out")
+        ce = create(:continuing_education_registration, event_registration: source, cost_cents: 8_800,
+          professional_license: create(:professional_license, person: source.registrant), skip_event_defaults: true)
+        create(:allocation, source: create(:payment, person: source.registrant, amount_cents: 8_800, amount_cents_remaining: 8_800),
+          allocatable: ce, amount: 8_800)
+        incoming = create(:event_registration, event: new_event, transferred_from_registration: source)
+
+        get edit_event_registration_path(incoming)
+
+        expect(response.body).to include("CE payment")
+        expect(response.body).to include("$88")
+      end
+
+      it "notes no CE payment on a transferred-in reg whose source had no CE (#1944)" do
+        source = create(:event_registration, event: event, status: "transferred_out")
+        incoming = create(:event_registration, event: new_event, transferred_from_registration: source)
+
+        get edit_event_registration_path(incoming)
+
+        expect(response.body).to include("CE payment")
+        expect(response.body).to include("No CE")
+      end
     end
 
     describe "PATCH /event_registrations/:id" do
@@ -556,6 +693,416 @@ RSpec.describe "EventRegistrations", type: :request do
               params: { event_registration: { someone_else_will_pay: "1" } }
 
         expect(existing_registration.reload.someone_else_will_pay).to be(true)
+      end
+
+      it "redirects to the transfer screen when newly marked transferred out" do
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { status: "transferred_out" } }
+
+        expect(response).to redirect_to(transfer_event_registration_path(existing_registration, return_to: nil))
+      end
+
+      it "also redirects when the status is flipped via the inline (Turbo) badge" do
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { status: "transferred_out" } },
+              as: :turbo_stream
+
+        expect(response).to redirect_to(transfer_event_registration_path(existing_registration, return_to: nil))
+      end
+
+      it "does not redirect to the transfer screen once a destination is recorded" do
+        create(:event_registration, transferred_from_registration: existing_registration)
+        existing_registration.update!(status: "transferred_out")
+
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { fee_note: "Settled" } }
+
+        expect(response).not_to redirect_to(transfer_event_registration_path(existing_registration, return_to: nil))
+      end
+    end
+
+    describe "a transferred-out registration is locked (#1944)" do
+      let(:locked) { create(:event_registration, event: event, status: "transferred_out") }
+
+      describe "PATCH /event_registrations/:id (the full edit form)" do
+        it "ignores locked fields but still saves comments, and warns" do
+          patch event_registration_path(locked), params: { event_registration: {
+            status: "attended",
+            shoutout: "1",
+            scholarship_requested: "1",
+            intends_to_pay: "1",
+            comments_attributes: { "0" => { topic: "note", body: "A new comment" } }
+          } }
+
+          locked.reload
+          expect(locked.status).to eq("transferred_out")
+          expect(locked).not_to be_shoutout
+          expect(locked).not_to be_scholarship_requested
+          expect(locked).not_to be_intends_to_pay
+          expect(locked.comments.map(&:body)).to include("A new comment")
+          expect(flash[:alert]).to match(/transferred out/i)
+        end
+
+        it "saves comments cleanly with no warning when only comments change" do
+          patch event_registration_path(locked), params: { event_registration: {
+            comments_attributes: { "0" => { topic: "note", body: "Just a comment" } }
+          } }
+
+          expect(locked.reload.comments.map(&:body)).to include("Just a comment")
+          expect(flash[:alert]).to be_blank
+        end
+      end
+
+      it "blocks update_onboarding with a warning" do
+        patch update_onboarding_event_registration_path(locked),
+              params: { field: "completed_day_1", value: "1" }
+
+        expect(locked.reload.completed_day_1).to be_falsey
+        expect(flash[:alert]).to match(/locked/i)
+      end
+
+      it "blocks toggle_certificate_issued with a warning" do
+        patch toggle_certificate_issued_event_registration_path(locked), params: { value: "1" }
+
+        expect(locked.reload.certificate_issued?).to be(false)
+        expect(flash[:alert]).to match(/locked/i)
+      end
+
+      it "blocks unlinking an organization with a warning" do
+        org = create(:organization)
+        locked.event_registration_organizations.create!(organization: org)
+
+        delete unlink_organization_event_registration_path(locked), params: { organization_id: org.id }
+
+        expect(locked.reload.organizations).to include(org)
+        expect(flash[:alert]).to match(/locked/i)
+      end
+
+      it "shows the lock banner and wraps locked sections in a disabled fieldset" do
+        get edit_event_registration_path(locked)
+
+        expect(response.body).to include("transferred out and is locked")
+        expect(response.body).to match(/<fieldset[^>]*disabled/)
+        # Comments stays editable (outside any locked fieldset).
+        expect(response.body).to include("Add comment")
+      end
+    end
+
+    describe "transfer flow" do
+      let!(:source) { create(:event_registration, event: event, status: "transferred_out") }
+
+      describe "GET /event_registrations/:id/transfer" do
+        it "offers same-format events, excluding the source and the other format" do
+          # source's event defaults to on_demand: false (scheduled).
+          same_format = create(:event, title: "Destination Event", published: true, on_demand: false)
+          other_format = create(:event, title: "An On-Demand Event", published: true, on_demand: true)
+
+          get transfer_event_registration_path(source)
+
+          expect(response).to have_http_status(:success)
+          expect(response.body).to include("Destination Event")
+          # The source event and the opposite format aren't offered as destinations.
+          expect(response.body).not_to include("<option value=\"#{event.id}\"")
+          expect(response.body).not_to include("<option value=\"#{other_format.id}\"")
+        end
+
+        it "offers only other on-demand events when transferring out of one" do
+          on_demand = create(:event, title: "Source On-Demand", on_demand: true)
+          on_demand_source = create(:event_registration, event: on_demand, status: "transferred_out")
+          another_on_demand = create(:event, title: "Another On-Demand", published: true, on_demand: true)
+          scheduled = create(:event, title: "A Scheduled Event", published: true, on_demand: false)
+
+          get transfer_event_registration_path(on_demand_source)
+
+          expect(response.body).to include("<option value=\"#{another_on_demand.id}\"")
+          expect(response.body).not_to include("<option value=\"#{scheduled.id}\"")
+        end
+
+        it "spells out what happens to the data, without a chain-collapse warning" do
+          get transfer_event_registration_path(source)
+
+          expect(response.body).to include("What recording this transfer will do")
+          expect(response.body).to include("Payments stay here")
+          expect(response.body).to include("copy of the linked organizations")
+          expect(response.body).not_to include("was already transferred in from")
+        end
+
+        it "warns that the middle registration is removed when transferring a transfer-in" do
+          origin_event = create(:event, title: "First Event")
+          origin = create(:event_registration, event: origin_event, status: "transferred_out")
+          middle = create(:event_registration, registrant: origin.registrant, event: event,
+            status: "transferred_out", transferred_from_registration: origin)
+
+          get transfer_event_registration_path(middle)
+
+          expect(response.body).to include("was already transferred in from First Event")
+          expect(response.body).to include("Remove this in-between registration")
+          # Money/records trace back to the true origin, not the middle event.
+          expect(response.body).to include("straight back to First Event")
+        end
+      end
+
+      describe "POST /event_registrations/:id/process_transfer" do
+        let(:destination_event) { create(:event, published: true) }
+
+        it "creates the incoming registration linked back to the source" do
+          expect {
+            post process_transfer_event_registration_path(source),
+                 params: { destination_event_id: destination_event.id }
+          }.to change(EventRegistration, :count).by(1)
+
+          incoming = EventRegistration.find_by(registrant: source.registrant, event: destination_event)
+          expect(incoming.transferred_from_registration).to eq(source)
+          expect(incoming.status).to eq("registered")
+          expect(response).to redirect_to(edit_event_registration_path(incoming))
+        end
+
+        it "links an existing registration on the destination event instead of duplicating" do
+          existing = create(:event_registration, registrant: source.registrant, event: destination_event)
+
+          expect {
+            post process_transfer_event_registration_path(source),
+                 params: { destination_event_id: destination_event.id }
+          }.not_to change(EventRegistration, :count)
+
+          expect(existing.reload.transferred_from_registration).to eq(source)
+        end
+
+        it "copies the source registration's linked organizations onto the new reg" do
+          org = create(:organization)
+          source.event_registration_organizations.create!(organization: org)
+
+          post process_transfer_event_registration_path(source),
+               params: { destination_event_id: destination_event.id }
+
+          incoming = EventRegistration.find_by(registrant: source.registrant, event: destination_event)
+          expect(incoming.organizations).to include(org)
+          # Org context is copied, not moved — the source keeps its own link.
+          expect(source.reload.organizations).to include(org)
+        end
+
+        it "copies the registrant's progress fields (days, payment method, buddy, feature/shout-out) forward" do
+          source.update!(completed_day_1: true, expected_payment_method: "Check",
+            someone_else_will_pay: true, shoutout: true)
+
+          post process_transfer_event_registration_path(source),
+               params: { destination_event_id: destination_event.id }
+
+          incoming = EventRegistration.find_by(registrant: source.registrant, event: destination_event)
+          expect(incoming).to have_attributes(
+            completed_day_1: true, expected_payment_method: "Check",
+            someone_else_will_pay: true, shoutout: true
+          )
+        end
+
+        it "collapses a double transfer, pointing the new reg at the original and dropping the middle" do
+          original = create(:event_registration, status: "transferred_out")
+          middle = create(:event_registration, registrant: original.registrant,
+            status: "transferred_out", transferred_from_registration: original)
+
+          # One reg created, the middle destroyed — net zero.
+          expect {
+            post process_transfer_event_registration_path(middle),
+                 params: { destination_event_id: destination_event.id }
+          }.not_to change(EventRegistration, :count)
+
+          final = EventRegistration.find_by(registrant: middle.registrant, event: destination_event)
+          expect(final.transferred_from_registration).to eq(original)
+          expect(EventRegistration.exists?(middle.id)).to be(false)
+          expect(original.reload.transferred_to_registration).to eq(final)
+          expect(response).to redirect_to(edit_event_registration_path(final))
+        end
+
+        it "logs an Ahoy destroy lifecycle capturing the dropped middle registration's data" do
+          allow(Analytics::LifecycleBuffer).to receive(:push)
+          original = create(:event_registration, status: "transferred_out")
+          middle = create(:event_registration, registrant: original.registrant,
+            status: "transferred_out", transferred_from_registration: original)
+
+          post process_transfer_event_registration_path(middle),
+               params: { destination_event_id: destination_event.id }
+
+          expect(Analytics::LifecycleBuffer).to have_received(:push).with(
+            hash_including(
+              name: "destroy.event_registration",
+              properties: hash_including(
+                resource_id: middle.id,
+                attributes: hash_including("transferred_from_registration_id" => original.id)
+              )
+            )
+          )
+        end
+
+        it "restores the origin to its pre-transfer status and drops the middle when transferred back" do
+          origin_event = create(:event, published: true)
+          person = create(:person)
+          origin = create(:event_registration, registrant: person, event: origin_event, status: "attended")
+          origin.update!(status: "transferred_out")
+          middle = create(:event_registration, registrant: person,
+            status: "transferred_out", transferred_from_registration: origin)
+
+          expect {
+            post process_transfer_event_registration_path(middle),
+                 params: { destination_event_id: origin_event.id }
+          }.to change(EventRegistration, :count).by(-1)
+
+          expect(EventRegistration.exists?(middle.id)).to be(false)
+          origin.reload
+          expect(origin.status).to eq("attended")
+          expect(origin.transferred_from_registration).to be_nil
+          expect(origin.status_before_transfer).to be_nil
+          expect(response).to redirect_to(edit_event_registration_path(origin))
+        end
+
+        it "sends the admin back to pick an event when none was chosen" do
+          post process_transfer_event_registration_path(source)
+
+          expect(response).to redirect_to(transfer_event_registration_path(source))
+        end
+
+        it "rejects a destination of the wrong format, even when posted directly" do
+          # source's event is scheduled (on_demand: false); an on-demand destination
+          # is off-format and blocked at the endpoint, not just hidden in the picker.
+          off_format = create(:event, published: true, on_demand: true)
+
+          expect {
+            post process_transfer_event_registration_path(source),
+                 params: { destination_event_id: off_format.id }
+          }.not_to change(EventRegistration, :count)
+
+          expect(response).to redirect_to(transfer_event_registration_path(source))
+          expect(flash[:alert]).to include("scheduled event")
+        end
+
+        it "splits the source reg's CE into a paid stub and a live record on the destination" do
+          license = create(:professional_license, person: source.registrant)
+          ce = create(:continuing_education_registration, event_registration: source,
+                professional_license: license, hours: 6, cost_cents: 10_000, skip_event_defaults: true)
+          create(:allocation, source: create(:payment, type: "CashPayment", amount_cents: 4_000, amount_cents_remaining: nil),
+                 allocatable: ce, amount: 4_000)
+
+          post process_transfer_event_registration_path(source),
+               params: { destination_event_id: destination_event.id }
+
+          incoming = EventRegistration.find_by(registrant: source.registrant, event: destination_event)
+
+          # Source keeps a paid, zero-hours stub (cost = the $40 already paid there).
+          ce.reload
+          expect(ce.hours).to eq(0)
+          expect(ce.cost_cents).to eq(4_000)
+          expect(ce.remaining_cost).to eq(0)
+
+          # Destination gets a live record: the full hours and the $60 balance left.
+          dest_ce = incoming.continuing_education_registrations.sole
+          expect(dest_ce.hours).to eq(6)
+          expect(dest_ce.cost_cents).to eq(6_000)
+          expect(dest_ce.professional_license).to eq(license)
+          expect(dest_ce).to be_transfer_created
+        end
+
+        it "moves the middle reg's CE forward, not destroying it, when collapsing a double transfer" do
+          original = create(:event_registration, status: "transferred_out")
+          license = create(:professional_license, person: original.registrant)
+          middle = create(:event_registration, registrant: original.registrant,
+            status: "transferred_out", transferred_from_registration: original)
+          middle_ce = create(:continuing_education_registration, event_registration: middle,
+            professional_license: license, hours: 6, cost_cents: 6_000, skip_event_defaults: true)
+
+          post process_transfer_event_registration_path(middle),
+               params: { destination_event_id: destination_event.id }
+
+          final = EventRegistration.find_by(registrant: middle.registrant, event: destination_event)
+          expect(ContinuingEducationRegistration.exists?(middle_ce.id)).to be(true)
+          expect(middle_ce.reload.event_registration).to eq(final)
+          expect(EventRegistration.exists?(middle.id)).to be(false)
+        end
+
+        it "re-points a completed transfer, unlinking the old destination" do
+          first_dest = create(:event, published: true, title: "First Dest")
+          second_dest = create(:event, published: true, title: "Second Dest")
+          old_destination = create(:event_registration, registrant: source.registrant,
+            event: first_dest, transferred_from_registration: source)
+
+          post process_transfer_event_registration_path(source),
+               params: { destination_event_id: second_dest.id }
+
+          expect(old_destination.reload.transferred_from_registration).to be_nil
+          new_destination = EventRegistration.find_by(registrant: source.registrant, event: second_dest)
+          expect(new_destination.transferred_from_registration).to eq(source)
+        end
+      end
+
+      describe "GET /event_registrations/:id/transfer (manage hub)" do
+        it "offers change-destination and undo controls" do
+          get transfer_event_registration_path(source)
+
+          expect(response.body).to include("Manage transfer")
+          expect(response.body).to include("Record the destination event")
+          expect(response.body).to include(revert_transfer_event_registration_path(source))
+        end
+
+        it "frames it as change + undo once a destination is recorded" do
+          destination_event = create(:event, published: true)
+          create(:event_registration, registrant: source.registrant, event: destination_event,
+            transferred_from_registration: source)
+
+          get transfer_event_registration_path(source)
+
+          expect(response.body).to include("Change the destination event")
+          expect(response.body).to include("Undo transfer")
+        end
+      end
+
+      describe "PATCH /event_registrations/:id/revert_transfer" do
+        it "undoes a pending transfer, restoring the status" do
+          patch revert_transfer_event_registration_path(source)
+
+          expect(source.reload.status).to eq("registered")
+          expect(response).to redirect_to(edit_event_registration_path(source))
+        end
+
+        it "undoes a completed transfer, unlinking the destination and restoring the source" do
+          destination_event = create(:event, published: true)
+          destination = create(:event_registration, registrant: source.registrant,
+            event: destination_event, transferred_from_registration: source)
+
+          patch revert_transfer_event_registration_path(source)
+
+          expect(source.reload.status).to eq("registered")
+          expect(EventRegistration.exists?(destination.id)).to be(true)
+          expect(destination.reload.transferred_from_registration).to be_nil
+        end
+
+        it "undoes a collapsed chain, re-merging the relocated CE back onto the origin" do
+          person = create(:person)
+          license = create(:professional_license, person: person)
+          origin = create(:event, cost_cents: 10_000)
+          mid = create(:event, published: true, cost_cents: 10_000)
+          final = create(:event, published: true, cost_cents: 10_000)
+
+          a = create(:event_registration, registrant: person, event: origin, status: "attended")
+          create(:continuing_education_registration, event_registration: a,
+            professional_license: license, hours: 6, cost_cents: 10_000)
+          a.update!(status: "transferred_out")
+
+          # A → B (splits CE), then B → C which collapses to A → C, dropping B.
+          post process_transfer_event_registration_path(a), params: { destination_event_id: mid.id }
+          b = EventRegistration.find_by(registrant: person, event: mid)
+          b.update!(status: "transferred_out")
+          post process_transfer_event_registration_path(b), params: { destination_event_id: final.id }
+          c = EventRegistration.find_by(registrant: person, event: final)
+          expect(EventRegistration.exists?(b.id)).to be(false)
+          expect(c.transferred_from_registration).to eq(a)
+
+          patch revert_transfer_event_registration_path(a)
+
+          a.reload
+          expect(a.status).to eq("attended")
+          expect(c.reload.transferred_from_registration).to be_nil
+          # The 6 relocated hours land back on the origin, with nothing left on C.
+          expect(a.continuing_education_registrations.sum(:hours)).to eq(6)
+          expect(ContinuingEducationRegistration.where(event_registration_id: c.id).sum(:hours)).to eq(0)
+        end
       end
     end
 
@@ -1639,6 +2186,13 @@ RSpec.describe "EventRegistrations", type: :request do
     describe "GET /event_registrations/:id/confirm" do
       it "redirects to root (unauthorized)" do
         get confirm_event_registration_path(existing_registration)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    describe "GET /event_registrations/:id/transfer" do
+      it "redirects to root (admin only)" do
+        get transfer_event_registration_path(existing_registration)
         expect(response).to redirect_to(root_path)
       end
     end

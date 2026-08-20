@@ -53,9 +53,12 @@ class Organization < ApplicationRecord
   validates :logo,
             content_type: %w[image/png image/jpeg image/webp],
             size: { less_than: 5.megabytes }
-  validates :name, presence: true
+  validates :name, presence: true, length: { maximum: 255 }
   validates :organization_status_id, presence: true
-  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
+  validates :agency_type_other, length: { maximum: 255 }
+  validates :website_url, length: { maximum: 255 }
+  validates :mission_vision_values, length: { maximum: 255 }
   validate :affiliation_dates_locked, if: -> { affiliations.any? && !Current.user&.super_user? }
 
   # Nested attributes

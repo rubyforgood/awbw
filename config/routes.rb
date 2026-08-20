@@ -111,6 +111,9 @@ Rails.application.routes.draw do
     member do
       get :confirm
       post :process_confirm
+      get :transfer
+      post :process_transfer
+      patch :revert_transfer
       get :link_organization
       post :select_organization
       post :create_organization
@@ -218,6 +221,13 @@ Rails.application.routes.draw do
     resource :bulk_payment, only: [ :new, :create, :show ], controller: "events/bulk_payment_form_submissions"
     resource :invoice, only: [ :show ], module: :events
     get "form_submissions/:person_id", to: "events/form_submissions#show", as: :registrant_submissions
+  end
+  resources :author_credit_divergences, only: :index do
+    collection do
+      patch :update_person
+      patch :update_item
+      patch :assign_author
+    end
   end
   resources :people do
     collection do

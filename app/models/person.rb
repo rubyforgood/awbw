@@ -62,15 +62,37 @@ class Person < ApplicationRecord
             content_type: %w[image/png image/jpeg image/webp],
             size: { less_than: 5.megabytes },
             unless: -> { Rails.env.test? }
-  validates :first_name, presence: true
-  validates :last_name, presence: true
-  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
-  validates :email_2, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
+  validates :first_name, presence: true, length: { maximum: 255 }
+  validates :last_name, presence: true, length: { maximum: 255 }
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
+  validates :email_2, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
+  validates :legal_first_name, length: { maximum: 255 }
+  validates :pronouns, length: { maximum: 255 }
+  validates :best_time_to_call, length: { maximum: 255 }
+  validates :racial_ethnic_identity, length: { maximum: 255 }
+  validates :linked_in_url, length: { maximum: 255 }
+  validates :facebook_url, length: { maximum: 255 }
+  validates :instagram_url, length: { maximum: 255 }
+  validates :youtube_url, length: { maximum: 255 }
+  validates :twitter_url, length: { maximum: 255 }
   validate :unique_name_and_email_combination
 
   CONTACT_TYPES = [ "work", "personal" ].freeze
   validates :email_type, inclusion: { in: %w[work personal] }, allow_blank: true
   validates :email_2_type, inclusion: { in: %w[work personal] }, allow_blank: true
+
+  # Anonymity isn't one of these — it's the separate `anonymous_contributions` flag,
+  # since a person still has to be listed somehow on the people index.
+  DISPLAY_NAME_PREFERENCES = %w[full_name first_name_last_initial first_name_only last_name_only].freeze
+
+  DISPLAY_NAME_PREFERENCE_LABELS = {
+    "full_name" => "First and last name",
+    "first_name_last_initial" => "First name and last initial",
+    "first_name_only" => "First name only",
+    "last_name_only" => "Last name only"
+  }.freeze
+
+  validates :display_name_preference, inclusion: { in: DISPLAY_NAME_PREFERENCES }, allow_blank: true
   # Mirrors SectorsTaggable's single-primary rule for age ranges — the chip
   # editor's single-star JS is the first line of defense, this guards imports,
   # the console, and bad form posts. Person-only: organizations aggregate
@@ -206,19 +228,33 @@ class Person < ApplicationRecord
     end
   end
 
+  # Drives the people index and the profile header. Author credits pass an explicit
+  # preference (the record's own, which outranks the profile) through `name_for`.
   def name
-    case display_name_preference
-    when "full_name"
-      full_name
+    name_for(display_name_preference)
+  end
+
+  # Formats the name by a given preference rather than the profile's, so a record
+  # that stored its own credit preference can win over the profile.
+  def name_for(preference)
+    case preference
     when "first_name_last_initial"
-      "#{first_name} #{last_name.first}"
+      initial = last_name&.first
+      initial.present? ? "#{first_name} #{initial}." : first_name.to_s
     when "first_name_only"
       first_name
     when "last_name_only"
       last_name
-    else
+    else # full_name — the default, and the fallback for any unknown value
       full_name
     end
+  end
+
+  # Anonymity is a separate axis from the name format: it suppresses author credits
+  # without affecting how they're listed on the people index.
+  def effective_author_credit_preference
+    return "anonymous" if anonymous_contributions?
+    display_name_preference.presence || "full_name"
   end
 
   def full_name

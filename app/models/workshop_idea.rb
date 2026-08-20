@@ -1,7 +1,5 @@
 class WorkshopIdea < ApplicationRecord
   include AuthorCreditable
-  # Public submission: the submitter must choose how they're credited.
-  require_author_credit_preference
 
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
@@ -30,7 +28,7 @@ class WorkshopIdea < ApplicationRecord
 
   before_save :set_time_frame
 
-  validates :title, presence: true, uniqueness: { case_sensitive: false }
+  validates :title, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
@@ -75,9 +73,17 @@ class WorkshopIdea < ApplicationRecord
 
   # Scopes
   scope :title, ->(title) { where("workshop_ideas.title like ?", "%#{ title }%") }
-  scope :author_name, ->(author_name) { joins(:created_by).
-    where("users.first_name like ? or users.last_name like ? or users.email like ?",
-          "%#{author_name}%", "%#{author_name}%", "%#{author_name}%") }
+  # An idea credits nobody — `author_credit` is always the generic label — so there is
+  # no credit for this filter to leak. It matches the submitter the pages actually show
+  # (`created_by.name`, i.e. the person), falling back to the account email.
+  scope :author_name, ->(author_name) {
+    needle = "%#{author_name.to_s.strip.downcase}%"
+    joins("INNER JOIN users ON users.id = workshop_ideas.created_by_id")
+      .joins("LEFT OUTER JOIN people ON people.id = users.person_id")
+      .where("LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :needle " \
+             "OR LOWER(people.first_name) LIKE :needle OR LOWER(people.last_name) LIKE :needle " \
+             "OR LOWER(users.email) LIKE :needle", needle: needle)
+  }
 
   def self.search(params)
     results = is_a?(ActiveRecord::Relation) ? self : all

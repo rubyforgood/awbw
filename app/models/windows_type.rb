@@ -14,6 +14,6 @@ class WindowsType < ApplicationRecord
   has_many :categories, through: :categorizable_items
   has_many :category_types, through: :categories
 
-  validates :name, presence: true
+  validates :name, presence: true, length: { maximum: 255 }
   validates :short_name, presence: true
 end

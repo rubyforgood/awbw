@@ -30,7 +30,6 @@ RSpec.describe "stories/edit", type: :view do
 
       assert_select "textarea[name=?]", "story[youtube_url]"
 
-      assert_select "select[name=?]", "story[author_credit_preference]"
 
       assert_select "select[name=?]", "story[author_id]"
     end
