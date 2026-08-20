@@ -6,7 +6,6 @@ class FmParticipant < ApplicationRecord
 
   FM_LINKS = {
     "EventID" => "fm_events",
-    "PRecID" => "fm_rolodexes",
     "OrgID" => "fm_organizations",
     "ProjectID" => "fm_projects",
     "AllocRecID" => "fm_allocations",

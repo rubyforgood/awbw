@@ -6,6 +6,6 @@ class FmActivity < ApplicationRecord
 
   FM_LINKS = {
     "ID" => "fm_rolodexes",
-    "LinkID" => nil, # polymorphic — depends on Context
+    "LinkID" => "fm_payments",
   }.freeze
 end

@@ -5,7 +5,7 @@ class FmProgramSponsorship < ApplicationRecord
   FM_KEY_COLUMN = "RecordID"
 
   FM_LINKS = {
-    "FunderID" => nil, # ambiguous — could be fm_rolodexes or fm_organizations
+    "FunderID" => "fm_rolodexes",
     "FundingID" => "fm_funding",
     "ProgramID" => "fm_projects",
   }.freeze

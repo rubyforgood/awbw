@@ -8,6 +8,5 @@ class FmPayment < ApplicationRecord
     "RolodexID" => "fm_rolodexes",
     "OrgID" => "fm_organizations",
     "ProjectID" => "fm_projects",
-    "ParticRecID" => "fm_participants",
   }.freeze
 end

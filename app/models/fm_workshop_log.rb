@@ -7,6 +7,6 @@ class FmWorkshopLog < ApplicationRecord
   FM_LINKS = {
     "ProjectID" => "fm_projects",
     "LeaderID" => "fm_rolodexes",
-    "AgencyID" => "fm_organizations",
+    "AgencyID" => "fm_rolodexes",
   }.freeze
 end
