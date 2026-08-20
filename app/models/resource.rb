@@ -11,7 +11,7 @@ class Resource < ApplicationRecord
   end
 
   PUBLISHED_KINDS = [ "Handout", "Template", "Toolkit", "Form" ]
-  KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship" ]
+  KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship", "FM Archive" ]
 
   has_rich_text :rhino_body
 

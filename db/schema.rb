@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_17_115845) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_19_000001) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -626,6 +626,168 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_115845) do
     t.index ["area"], name: "index_features_on_area"
     t.index ["display_status"], name: "index_features_on_display_status"
     t.index ["released_on"], name: "index_features_on_released_on"
+  end
+
+  create_table "fm_activities", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "ActivityLogID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_activities_on_fm_id", unique: true
+  end
+
+  create_table "fm_addresses", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "AddrsID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_addresses_on_fm_id", unique: true
+  end
+
+  create_table "fm_allocations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "AllocRecID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_allocations_on_fm_id", unique: true
+  end
+
+  create_table "fm_events", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "EventID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_events_on_fm_id", unique: true
+  end
+
+  create_table "fm_expenditures", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "ExpendRecID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_expenditures_on_fm_id", unique: true
+  end
+
+  create_table "fm_funding", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "RecordID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_funding_on_fm_id", unique: true
+  end
+
+  create_table "fm_notes", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "NoteID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_notes_on_fm_id", unique: true
+  end
+
+  create_table "fm_organizations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "OrgID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_organizations_on_fm_id", unique: true
+  end
+
+  create_table "fm_participants", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "ParticipantID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_participants_on_fm_id", unique: true
+  end
+
+  create_table "fm_payments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "RecordID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_payments_on_fm_id", unique: true
+  end
+
+  create_table "fm_personnels", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "PrsnlRecID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_personnels_on_fm_id", unique: true
+  end
+
+  create_table "fm_phone_numbers", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "PhoneID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_phone_numbers_on_fm_id", unique: true
+  end
+
+  create_table "fm_postal_codes", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "Zipcode", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_postal_codes_on_fm_id", unique: true
+  end
+
+  create_table "fm_program_sponsorships", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "RecordID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_program_sponsorships_on_fm_id", unique: true
+  end
+
+  create_table "fm_projects", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "ProjectID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_projects_on_fm_id", unique: true
+  end
+
+  create_table "fm_rolodexes", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "ID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_rolodexes_on_fm_id", unique: true
+  end
+
+  create_table "fm_services", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "RecordID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_services_on_fm_id", unique: true
+  end
+
+  create_table "fm_workshop_logs", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", null: false
+    t.string "fm_id", null: false
+    t.string "fm_key_name", default: "RecordID", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fm_id"], name: "index_fm_workshop_logs_on_fm_id", unique: true
   end
 
   create_table "footers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|

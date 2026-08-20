@@ -17,7 +17,7 @@ class Asset < ApplicationRecord
   # Ceiling on a single upload. Uploads now reach us from the public event
   # registration form, so this is the backstop against one enormous file
   # filling storage — generous enough for a photo or a scanned document.
-  MAX_FILE_SIZE = 25.megabytes
+  MAX_FILE_SIZE = 35.megabytes
 
 
   # Form selection
@@ -55,7 +55,8 @@ class Asset < ApplicationRecord
     "application/pdf" => "PDF",
     "application/msword" => "DOC",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document" => "DOCX",
-    "application/vnd.oasis.opendocument.text" => "ODT"
+    "application/vnd.oasis.opendocument.text" => "ODT",
+    "text/csv" => "CSV"
   }.freeze
 
   def self.accept_attribute
