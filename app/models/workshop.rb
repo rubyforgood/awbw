@@ -123,6 +123,8 @@ class Workshop < ApplicationRecord
 
   # Validations
   validates_presence_of :title
+  validates :title, length: { maximum: 255 }
+  validates :full_name, length: { maximum: 255 }
   # validates_presence_of :month, :year, if: Proc.new { |workshop| workshop.legacy }
   validates :rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }
 

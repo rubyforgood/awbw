@@ -36,8 +36,11 @@ class Story < ApplicationRecord
   validates :windows_type_id, presence: true
   validates :created_by_id, presence: true
   validates :updated_by_id, presence: true
-  validates :title, presence: true, uniqueness: true
+  validates :title, presence: true, uniqueness: true, length: { maximum: 255 }
   validates :rhino_body, presence: true
+  validates :external_workshop_title, length: { maximum: 255 }
+  validates :website_url, length: { maximum: 255 }
+  validates :youtube_url, length: { maximum: 255 }
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank

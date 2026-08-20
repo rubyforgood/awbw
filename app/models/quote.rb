@@ -17,6 +17,8 @@ class Quote < ApplicationRecord
   has_many :sectors, through: :sectorable_items
 
   validates :quote, presence: true, unless: -> { quote.blank? }
+  validates :age, length: { maximum: 255 }
+  validates :speaker_name, length: { maximum: 255 }
 
   # Search Cop
   include SearchCop

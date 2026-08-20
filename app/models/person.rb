@@ -62,10 +62,19 @@ class Person < ApplicationRecord
             content_type: %w[image/png image/jpeg image/webp],
             size: { less_than: 5.megabytes },
             unless: -> { Rails.env.test? }
-  validates :first_name, presence: true
-  validates :last_name, presence: true
-  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
-  validates :email_2, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
+  validates :first_name, presence: true, length: { maximum: 255 }
+  validates :last_name, presence: true, length: { maximum: 255 }
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
+  validates :email_2, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
+  validates :legal_first_name, length: { maximum: 255 }
+  validates :pronouns, length: { maximum: 255 }
+  validates :best_time_to_call, length: { maximum: 255 }
+  validates :racial_ethnic_identity, length: { maximum: 255 }
+  validates :linked_in_url, length: { maximum: 255 }
+  validates :facebook_url, length: { maximum: 255 }
+  validates :instagram_url, length: { maximum: 255 }
+  validates :youtube_url, length: { maximum: 255 }
+  validates :twitter_url, length: { maximum: 255 }
   validate :unique_name_and_email_combination
 
   CONTACT_TYPES = [ "work", "personal" ].freeze

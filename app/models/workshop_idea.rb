@@ -30,7 +30,7 @@ class WorkshopIdea < ApplicationRecord
 
   before_save :set_time_frame
 
-  validates :title, presence: true, uniqueness: { case_sensitive: false }
+  validates :title, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true

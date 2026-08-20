@@ -65,7 +65,8 @@ class RegistrationTicketCallout < ApplicationRecord
   # after validations, so position must allow nil here.
   positioned on: :event_id
 
-  validates :title, presence: true
+  validates :title, presence: true, length: { maximum: 255 }
+  validates :subtitle, length: { maximum: 255 }
   validates :callout_type, inclusion: { in: CALLOUT_TYPES }
   validates :color_class, inclusion: { in: DomainTheme::SWATCH_COLORS.map(&:to_s) }, allow_blank: true
   validates :position, numericality: { only_integer: true, greater_than: 0, allow_nil: true }

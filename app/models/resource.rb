@@ -54,7 +54,7 @@ class Resource < ApplicationRecord
   attribute :hidden_from_search, :boolean, default: false
 
   # Validations
-  validates :title, presence: true, uniqueness: { case_sensitive: false }
+  validates :title, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
   validates :kind, presence: true
 
   # Nested attributes

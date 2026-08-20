@@ -29,6 +29,8 @@ class CommunityNews < ApplicationRecord
   # (created before author became a person) remain valid.
   validates :title, presence: true, length: { maximum: 150 }
   validates :rhino_body, presence: true
+  validates :reference_url, length: { maximum: 255 }
+  validates :youtube_url, length: { maximum: 255 }
 
   # Unattributed community news is credited to the organization's staff.
   def missing_author_label
