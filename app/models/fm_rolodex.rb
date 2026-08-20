@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 class FmRolodex < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "ID"
@@ -9,7 +7,7 @@ class FmRolodex < ApplicationRecord
     "PrimaryAddrsID" => "fm_addresses",
     "PrimaryPhoneID" => "fm_phone_numbers",
     "PrimaryContactID" => "fm_rolodexes",
-    "WorksiteAddrsID" => "fm_addresses",
+    "WorksiteAddrsID" => "fm_addresses"
   }.freeze
 
   HAS_MANY = {
@@ -22,6 +20,6 @@ class FmRolodex < ApplicationRecord
     "fm_workshop_logs" => { via: "LeaderID", label: "Workshop Logs" },
     "fm_participants" => { via: :fm_id, label: "Participations" },
     "fm_funding" => { via: "FunderID", label: "Funding" },
-    "fm_program_sponsorships" => { via: "FunderID", label: "Program Sponsorships" },
+    "fm_program_sponsorships" => { via: "FunderID", label: "Program Sponsorships" }
   }.freeze
 end

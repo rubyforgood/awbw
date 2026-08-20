@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 class FmWorkshopLog < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "RecordID"
@@ -7,6 +5,6 @@ class FmWorkshopLog < ApplicationRecord
   FM_LINKS = {
     "ProjectID" => "fm_projects",
     "LeaderID" => "fm_rolodexes",
-    "AgencyID" => "fm_rolodexes",
+    "AgencyID" => "fm_rolodexes"
   }.freeze
 end

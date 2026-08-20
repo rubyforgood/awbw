@@ -1,11 +1,9 @@
-# frozen_string_literal: true
-
 class FmOrganization < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "OrgID"
 
   FM_LINKS = {
-    "ParentID" => "fm_organizations",
+    "ParentID" => "fm_organizations"
   }.freeze
 
   HAS_MANY = {
@@ -16,6 +14,6 @@ class FmOrganization < ApplicationRecord
     "fm_participants" => { via: "OrgID", label: "Participants" },
     "fm_notes" => { via: "OrgID", label: "Notes" },
     "fm_projects" => { via: "OrgID", label: "Projects" },
-    "fm_organizations" => { via: "ParentID", label: "Organizations" },
+    "fm_organizations" => { via: "ParentID", label: "Organizations" }
   }.freeze
 end

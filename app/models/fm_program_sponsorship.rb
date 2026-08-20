@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 class FmProgramSponsorship < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "RecordID"
@@ -7,6 +5,6 @@ class FmProgramSponsorship < ApplicationRecord
   FM_LINKS = {
     "FunderID" => "fm_rolodexes",
     "FundingID" => "fm_funding",
-    "ProgramID" => "fm_projects",
+    "ProgramID" => "fm_projects"
   }.freeze
 end

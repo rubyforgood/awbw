@@ -373,28 +373,6 @@ The database is split across 13 `.fmp12` files. Core data tables are spread acro
 | `prj_NTS__Notes` | Activity.fmp12 | Notes | 616 |
 | `prj_PZC__CityState` | Resources.fmp12 | PostalCodes | 80,134 |
 
-### Export status
-
-| Table | Status |
-|---|---|
-| Rolodex | ✅ Exported |
-| Organizations | ✅ Exported |
-| Projects | ✅ Exported (May 11) |
-| Events | ✅ Exported (May 11) |
-| Personnel | ✅ Exported (May 11) |
-| Payments | ✅ Exported (May 11) |
-| Participants | ✅ Exported (May 11) |
-| Activity | ✅ Exported (May 11) |
-| Funding | ✅ Exported (May 11) |
-| Allocations | ✅ Exported (May 11) |
-| Workshops | ✅ Exported (May 11) |
-| Notes | ⏳ Re-exporting now |
-| Addresses | ❌ Not exported |
-| Phones | ❌ Not exported |
-| WorkshopLog | ❌ Not exported |
-| Expenditure | ❌ Not exported |
-| ProgramSponsorships | ❌ Not exported |
-| PostalCodes | ❌ Not exported |
 
 ---
 

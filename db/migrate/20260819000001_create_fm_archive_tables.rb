@@ -18,7 +18,7 @@ class CreateFmArchiveTables < ActiveRecord::Migration[8.1]
       fm_funding: "RecordID",
       fm_allocations: "AllocRecID",
       fm_program_sponsorships: "RecordID",
-      fm_postal_codes: "Zipcode",
+      fm_postal_codes: "Zipcode"
     }
 
     tables.each do |table_name, key_col|

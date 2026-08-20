@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 class FmParticipant < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "ParticipantID"
@@ -10,10 +8,10 @@ class FmParticipant < ApplicationRecord
     "ProjectID" => "fm_projects",
     "AllocRecID" => "fm_allocations",
     "PaymentID" => "fm_payments",
-    "HostID" => "fm_rolodexes",
+    "HostID" => "fm_rolodexes"
   }.freeze
 
   HAS_MANY = {
-    "fm_rolodexes" => { via: :fm_id, label: "Rolodex" },
+    "fm_rolodexes" => { via: :fm_id, label: "Rolodex" }
   }.freeze
 end
