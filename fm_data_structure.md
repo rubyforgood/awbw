@@ -395,3 +395,52 @@ The database is split across 13 `.fmp12` files. Core data tables are spread acro
 | Expenditure | ❌ Not exported |
 | ProgramSponsorships | ❌ Not exported |
 | PostalCodes | ❌ Not exported |
+
+---
+
+## Notes vs Inline Text Fields
+
+The Notes table (`prj_NTS__Notes`) is a **centralized, polymorphic notes log** — distinct from the inline text fields on other FM tables.
+
+### Notes table (fm_notes)
+
+- 616 standalone records in Activity.fmp12
+- `Context` field tells which table the note belongs to (Project, Organizations, Rolodex)
+- `LinkID` is the FK to that record (e.g., `P0234` for a project)
+- `ProjectID`, `OrgID`, `RolodexID` are redundant FK fields (often populated alongside LinkID)
+- Acts as an activity/history log — multiple notes can reference the same record
+
+| Context | Count | % |
+|---|---|---|
+| Project | 590 | 96% |
+| Organizations | 19 | 3% |
+| Rolodex | 7 | 1% |
+| Event | 0 | 0% |
+
+### Inline text fields on other tables
+
+These are simple text columns on the record itself, not separate records:
+
+| Table | Text Columns |
+|---|---|
+| Rolodex | Comments, EmailNotes, NameNote |
+| Organizations | Comments, Description |
+| Projects | Comments, Description, MessageText |
+| Events | Comments, Description, Notes |
+| Personnel | Notes |
+| Payments | Description, Note |
+| Participants | Comments, Notes |
+| WorkshopLogs | Notes |
+| Funding | Notes, Purpose, ReportDescription |
+| ProgramSponsorships | Notes, MessageText |
+| Addresses | Note |
+| PhoneNumbers | Note |
+| Expenditure | Description |
+| Activity | Comments, Message, Message2, MessageForFrom, Subject |
+
+### Key difference
+
+| Type | Purpose | Rails equivalent |
+|---|---|---|
+| **Notes table** | Cross-cutting activity log — multiple notes per record, polymorphic via Context+LinkID | `comments` table (polymorphic `commentable_type` + `commentable_id`) |
+| **Inline fields** | Simple text attribute on that specific record | Model's own text columns (e.g., `workshops.notes`, `events.description`) |
