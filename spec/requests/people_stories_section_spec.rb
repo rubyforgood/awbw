@@ -38,4 +38,24 @@ RSpec.describe "Person profile stories section", type: :request do
 
     expect(response.body).not_to include("Only Created Story")
   end
+
+  it "flags an anonymously-credited authored story" do
+    create(:story, :published, title: "Hush Story",
+                               author: person, author_credit_preference: "anonymous")
+
+    get_stories_section
+
+    expect(response.body).to include("Hush Story")
+    expect(response.body).to include("Credited as Anonymous")
+  end
+
+  it "never flags a spotlighted story, even when the person is anonymous" do
+    person.update!(anonymous_contributions: true)
+    create(:story, :published, title: "Spotlight Story", spotlighted_facilitator: person)
+
+    get_stories_section
+
+    expect(response.body).to include("Spotlight Story")
+    expect(response.body).not_to include("Credited as Anonymous")
+  end
 end

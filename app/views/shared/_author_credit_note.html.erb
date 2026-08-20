@@ -1,0 +1,25 @@
+<%# Sits under an author picker and says what the credit actually resolves to when
+    that isn't just the selected author: the person's profile suppresses credits, or
+    no author is set and a legacy free-text name is standing in. Locals: record. %>
+<% person = author_picker_person(record) %>
+<% if person&.anonymous_contributions? %>
+  <p class="mt-1 flex items-start gap-2 text-sm text-amber-700">
+    <i class="fa-solid fa-eye-slash mt-1"></i>
+    <span>
+      <%= person.full_name %>'s profile marks contributions anonymous, so this credit renders
+      &ldquo;<%= record.anonymous_author_label %>&rdquo; wherever it appears.
+      <%= link_to "Change it on their profile", edit_person_path(person, anchor: "profile-preferences"),
+                  target: "_blank", rel: "noopener", title: "Opens in a new tab",
+                  class: "underline hover:text-amber-900" %>
+    </span>
+  </p>
+<% elsif record.author.blank? && record.legacy_author_name_text.present? %>
+  <p class="mt-1 flex items-start gap-2 text-sm text-amber-700">
+    <i class="fa-solid fa-clock-rotate-left mt-1"></i>
+    <span>
+      No author is set, so this is credited to the legacy name
+      &ldquo;<%= record.legacy_author_name_text %>&rdquo;, which links nowhere and follows nobody's
+      profile. Pick a person to replace it.
+    </span>
+  </p>
+<% end %>

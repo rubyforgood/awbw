@@ -12,6 +12,14 @@ module ApplicationHelper
     end
   end
 
+  # The person an author picker should show. Only the record's own author counts —
+  # falling back to the creator would present a person nobody chose as the selected
+  # author, and saving the form would silently promote them over a legacy credit.
+  # New records still default to the current user, which is the documented behavior.
+  def author_picker_person(record)
+    record.author || (record.new_record? ? current_user&.person : nil)
+  end
+
   # Tags an admin may use in a form field name / group header that should
   # render (rather than escape) on the public form. Block + inline formatting,
   # links, line breaks, and font sizing/coloring (via <font> or inline style).

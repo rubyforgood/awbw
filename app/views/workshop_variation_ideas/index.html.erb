@@ -67,14 +67,7 @@
                   <% end %>
                 </td>
                 <td class="px-4 py-2 text-sm text-center">
-                  <% display_name = workshop_variation_idea.author_credit.presence || workshop_variation_idea.created_by&.name %>
-                  <% if workshop_variation_idea.created_by&.person %>
-                    <%= link_to display_name,
-                                person_path(workshop_variation_idea.created_by.person),
-                                class: "text-gray-500 hover:text-gray-700" %>
-                  <% elsif display_name %>
-                    <%= display_name %>
-                  <% end %>
+                  <%= credited_author_link(workshop_variation_idea, class: "text-gray-500 hover:text-gray-700") %>
                 </td>
                 <td class="px-4 py-2 text-sm text-center whitespace-nowrap">
                   <% promoted_variation = workshop_variation_idea.workshop_variations.first %>

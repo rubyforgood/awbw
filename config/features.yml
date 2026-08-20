@@ -27,6 +27,60 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Choose how you're credited on what you share"
+  area: people
+  display_status: user_facing
+  released_on: 2026-08-18
+  pr_number: 2093
+  summary: >-
+    Your profile decides how your name appears on every story, workshop, variation and
+    resource credited to you — one setting for all of them, instead of a question on each
+    submission.
+  description: >-
+    Your profile has two settings that control your name, and both apply to everything you
+    share. The display preference picks the format — full name, first name and last
+    initial, first name only, or last name only — and it applies everywhere at once: the
+    people index, your profile header, and every credit on your content. Change it and all
+    of them update together. "Contribute anonymously" is the second setting, and it's
+    all-or-nothing: either your contributions are credited to you, or they're all credited
+    to "AWBW Facilitator" instead. It hides your name from credits only — you stay listed
+    normally on the people index. It's for people who want to share their work without
+    their name attached to it. Search follows the same rules, so if your credit shows only
+    your first name, searching your last name won't surface your content, and anonymous
+    work isn't findable by your name at all.
+  pro_tips:
+    - "Ask an admin to change these for you — profile editing is admin-only for now."
+    - "Anonymous content still appears on your own profile and to admins, so you can find it; it's hidden from everyone else."
+
+- name: "Reconcile author credits"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-08-18
+  action_path: "/author_credit_divergences"
+  pr_number: 2093
+  summary: >-
+    An admin worklist of content whose credit doesn't resolve cleanly through someone's
+    profile, in four sections, each fixable in place.
+  description: >-
+    Credits come from the credited person's profile. This page lists everything that
+    doesn't, grouped so it can be worked top to bottom. Section one is content whose
+    stored record of what the submitter consented to has drifted from their profile —
+    apply one preference to the whole person, or correct a single item. Section two is
+    content credited by an old free-text name typed in before people had profiles, listed
+    per column so clearing one is a visible milestone. Section three is content with no
+    author named, credited generically, grouped under whoever entered it as the likeliest
+    author. Section four is content with nobody to credit at all. The last three are all
+    fixed the same way — pick a real person — because naming an author is the only credit
+    that follows their profile, links to it, and lists the content there. Filter by person,
+    content type, stored preference, or whether they've already been reconciled. When a
+    section is clear it says which now-unused code the developers can retire. Where we're
+    headed: anonymity is a single profile setting covering all of someone's contributions.
+    Per-item anonymity is a legacy state this page exists to drain, not a choice
+    facilitators make.
+  pro_tips:
+    - "The suggested person on legacy rows is a name match — confirm it before saving, since two people can share a name."
+    - "Clearing a single item's stored preference hands it back to the person's profile, which is the end state we want."
+
 - name: "Decline a scholarship award"
   area: scholarships
   display_status: public_facing

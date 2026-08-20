@@ -173,7 +173,10 @@ class Workshop < ApplicationRecord
   # Search Cop
   include SearchCop
   search_scope :search do
-    attributes all: [ :title, :full_name ] # no spanish alternatives
+    # The legacy `full_name` is deliberately not indexed here. Author-name search —
+    # person or legacy column — goes through `by_credited_person_name`, which is the
+    # only path that honors the credit preference.
+    attributes all: [ :title ] # no spanish alternatives
     options :all, type: :text, default: true, default_operator: :or
 
     attributes :title, type: :text
@@ -195,15 +198,6 @@ class Workshop < ApplicationRecord
 
   def legacy_author_name_text
     full_name
-  end
-
-  # With no credited person or legacy name, attribute to the generic facilitator.
-  def missing_author_label
-    "AWBW Facilitator"
-  end
-
-  def author_name
-    author_person&.full_name.presence || full_name.presence
   end
 
   def date

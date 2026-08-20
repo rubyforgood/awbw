@@ -1,0 +1,24 @@
+<%# Renders when the record's stored preference disagrees with the author's current
+    profile — unless the person's already been reconciled, in which case the divergence
+    is deliberate. Per-item wins, so the item keeps rendering by its stored preference. %>
+<% person = record.credit_governing_person if record.persisted? %>
+<% if record.persisted? && record.author_credit_diverged? && person&.author_credit_reconciled_at.blank? %>
+  <% stored = AuthorCreditable::ADMIN_FORM_OPTIONS.key(record.author_credit_preference) %>
+  <% profile = AuthorCreditable::ADMIN_FORM_OPTIONS.key(person.effective_author_credit_preference) %>
+
+  <% if record.author_credit_preference == AuthorCreditable::ANONYMOUS %>
+    <div class="rounded-md bg-gray-50 border border-gray-200 p-3 mb-4 text-sm text-gray-500">
+      <i class="fa-solid fa-circle-info mr-1"></i>
+      Submitted anonymously. This item stays anonymous regardless of the profile setting.
+      <%= link_to "Reconcile", author_credit_divergences_path(person_id: person.id, highlight: person.id, anchor: dom_id(person, :divergence)),
+                  class: "underline hover:text-gray-700" %>
+    </div>
+  <% else %>
+    <div class="rounded-md bg-amber-50 border border-amber-200 p-3 mb-4 text-sm text-amber-700 font-medium">
+      &#9888; Submitted as "<%= stored %>", but this profile is now set to "<%= profile %>".
+      This item still renders as "<%= stored %>" until reconciled.
+      <%= link_to "Reconcile", author_credit_divergences_path(person_id: person.id, highlight: person.id, anchor: dom_id(person, :divergence)),
+                  class: "underline hover:text-amber-900" %>
+    </div>
+  <% end %>
+<% end %>

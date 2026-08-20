@@ -217,6 +217,13 @@ Rails.application.routes.draw do
     resource :invoice, only: [ :show ], module: :events
     get "form_submissions/:person_id", to: "events/form_submissions#show", as: :registrant_submissions
   end
+  resources :author_credit_divergences, only: :index do
+    collection do
+      patch :update_person
+      patch :update_item
+      patch :assign_author
+    end
+  end
   resources :people do
     collection do
       get :check_duplicates
