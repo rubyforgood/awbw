@@ -255,3 +255,143 @@ The `PaymentID` (on Participants) and `ParticRecID` (on Payments) represent the 
 - The `_kf_sqlUser_ID` column on `prj_RDX__Rolodex` suggests a sync mechanism from FileMaker to SQL.
 - `zcConstantKey` = 1.0 appears on many tables as a FileMaker constant relationship key.
 - `zcRecordsFound` contains display strings like "Record 1 of 2 Found\r39608 Total" from FileMaker layout context.
+
+---
+
+## FileMaker File Structure
+
+The database is split across 13 `.fmp12` files. Core data tables are spread across 7 of them.
+
+### File → Table Mapping
+
+| File | Tables |
+|------|--------|
+| **Rolodex** | Rolodex, Organizations, Contacts, Groups, Addresses, Phones, EmailAddresses, PeopleToOrgs, AncillaryData, Relationships, UserInterface, Globals |
+| **Project** | Projects, Expenditure, Personnel, Service, WorkshopLog, VirtualList, UserInterface |
+| **Activity** | Activity, Notes, FormLetters, Signatories, DocumentSignatories, Invoices, LineItems, FormFields, FormList, FormSubmissions, UserInterface |
+| **ArtRegistry** | ArtRegistry, ArtPurchases, ExhibitedItems |
+| **Donations** | Donations, Campaigns, Solicitations, DonorDevelopers, Budget, Funding, FundReport, MatchDonations, ProgramSponsorships, UserInterface, Globals |
+| **Events** | Events |
+| **Funding** | Funding, Reporting, ProgramSponsorships, Allocations |
+| **Images** | Images |
+| **MainMenu** | MainMenu, USR_Users, UserSessions |
+| **Participation** | Participants, Committees, CommitteeMeetings, CommitteeMembers, Volunteers, GroupMemberInfo |
+| **Quotations** | Quotations, Images |
+| **Resources** | PostalCodes, Countries, TelAreaCodes, States, UserInterface, Globals |
+| **Workshops** | Workshops |
+
+### Core Tables by File (Export Plan)
+
+| FM File | Core Table | Table in File | Rows |
+|---------|-----------|---------------|------|
+| Rolodex | `prj_RDX__Rolodex` | Rolodex | 39,608 |
+| Rolodex | `prj_ORG__Organization` | Organizations | 7,191 |
+| Rolodex | `prj_org_ADR__Addresses` | Addresses | 28,398 |
+| Rolodex | `prj_org_PHN__Phones` | Phones | 33,915 |
+| Project | `PRJ__Projects` | Projects | 1,976 |
+| Project | `prj_SRV__Service` | Service | 69,590 |
+| Project | `WSL__WorkshopLog` | WorkshopLog | 10,859 |
+| Project | `prj_PRS__Personnel` | Personnel | 8,907 |
+| Project | `prj_EXP__Expenditure` | Expenditure | 5,314 |
+| Funding | `prj_FND__FundingviaTempID` | Funding | 1,391 |
+| Funding | `prj_ALC__Allocations` | Allocations | 3,099 |
+| Donations | `prj_PMT__Payment` | Donations | 27,146 |
+| Donations | `prj_PSP__ProgramSponsorships` | ProgramSponsorships | 608 |
+| Participation | `prj_PTC__Participants` | Participants | 68,497 |
+| Activity | `prj_NTS__Notes` | Notes | 616 |
+| Resources | `prj_PZC__CityState` | PostalCodes | 80,134 |
+
+**16 exports across 7 files.** Each file must be opened separately in FileMaker Pro to export.
+
+### Export Order
+
+1. Rolodex file (4 exports)
+2. Project file (5 exports)
+3. Funding file (2 exports)
+4. Donations file (2 exports)
+5. Participation file (1 export)
+6. Activity file (1 export)
+7. Resources file (1 export)
+
+---
+
+## Export Guide (FileMaker Pro to xlsx)
+
+### Step-by-step for each table
+
+1. **Open the `.fmp12` file** (local copy, double-click)
+2. **Go to the correct layout** via the layout dropdown in the toolbar
+3. **File > Export Records**
+4. **Save as type**: Excel Workbooks (.xlsx)
+5. **Browse to** `Desktop > fm_export`, type the filename (e.g., `Organizations.xlsx`)
+6. **"Specify Field Order for Export" dialog**:
+   - Change dropdown from **"Current Layout (LayoutName)"** to **"Current Table (TableName)"**
+   - **If the table isn't listed in the dropdown**, click the entry link — this opens the full list of available tables to choose from
+   - Press **Ctrl+A** to select all fields
+   - Click the arrow to move them all to the export order
+   - **UNCHECK** "Apply current layout's data formatting to exported data" — we want raw stored values
+7. **Click Export**
+
+### Critical settings
+
+| Setting | Value | Why |
+|---|---|---|
+| Field order source | **"Current Table (TableName)"** | Gets ALL fields from the base table, not just layout-visible ones |
+| Apply layout data formatting | **UNCHECKED** | Raw stored values, not formatted display values |
+| Format | **xlsx** | Includes header row (CSV does not) |
+
+### Common mistakes
+
+- **"Current Layout"** instead of **"Current Table"** → exports only visible/layout fields, may miss data
+- **Related table selected** (e.g., `prj_ORG__Organization::`) → exports portal/related data from another table, all nulls
+- **Layout formatting checked** → dates, numbers, and text get formatted for display, not raw values
+- **CSV format** → no header row, harder to work with
+- **Truncation warning** → normal for tables with long text fields (descriptions, notes). Excel has a ~32,767 character cell limit. Core data fields are unaffected — click OK and proceed.
+
+### Naming notes
+
+- **Donations = Payments**: The Donations.fmp12 file maps to `prj_PMT__Payment` in the schema and the `Payment` model in Rails. The layout may appear as "Donations" or "Payments" — either is correct.
+
+### Layout name mapping (local files)
+
+| Core Table | FM File | Layout Name | Expected Rows |
+|---|---|---|---|
+| `prj_RDX__Rolodex` | Rolodex.fmp12 | Rolodex | 39,608 |
+| `prj_ORG__Organization` | Rolodex.fmp12 | Organizations | 7,191 |
+| `prj_org_ADR__Addresses` | Rolodex.fmp12 | Addresses | 28,398 |
+| `prj_org_PHN__Phones` | Rolodex.fmp12 | Phone Numbers | 33,915 |
+| `PRJ__Projects` | Projects.fmp12 | Projects | 1,976 |
+| `prj_SRV__Service` | Projects.fmp12 | Service | 69,590 |
+| `WSL__WorkshopLog` | Projects.fmp12 | WorkshopLog | 10,859 |
+| `prj_PRS__Personnel` | Projects.fmp12 | Personnel | 8,907 |
+| `prj_EXP__Expenditure` | Projects.fmp12 | Expenditure | 5,314 |
+| `prj_FND__FundingviaTempID` | Funding.fmp12 | Funding | 1,391 |
+| `prj_ALC__Allocations` | Funding.fmp12 | Allocations (Menu > Allocations > alc_entry) | 3,099 |
+| `prj_PMT__Payment` | Donations.fmp12 | Donations (or Payments) | 27,146 |
+| `prj_PSP__ProgramSponsorships` | Donations.fmp12 | ProgramSponsorships | 608 |
+| `prj_PTC__Participants` | Participation.fmp12 | Participants | 68,497 |
+| `prj_NTS__Notes` | Activity.fmp12 | Notes | 616 |
+| `prj_PZC__CityState` | Resources.fmp12 | PostalCodes | 80,134 |
+
+### Export status
+
+| Table | Status |
+|---|---|
+| Rolodex | ✅ Exported |
+| Organizations | ✅ Exported |
+| Projects | ✅ Exported (May 11) |
+| Events | ✅ Exported (May 11) |
+| Personnel | ✅ Exported (May 11) |
+| Payments | ✅ Exported (May 11) |
+| Participants | ✅ Exported (May 11) |
+| Activity | ✅ Exported (May 11) |
+| Funding | ✅ Exported (May 11) |
+| Allocations | ✅ Exported (May 11) |
+| Workshops | ✅ Exported (May 11) |
+| Notes | ⏳ Re-exporting now |
+| Addresses | ❌ Not exported |
+| Phones | ❌ Not exported |
+| WorkshopLog | ❌ Not exported |
+| Expenditure | ❌ Not exported |
+| ProgramSponsorships | ❌ Not exported |
+| PostalCodes | ❌ Not exported |
