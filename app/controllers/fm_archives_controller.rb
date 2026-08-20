@@ -17,7 +17,7 @@ class FmArchivesController < ApplicationController
     "funding" => { model: FmFunding, label: "Funding" },
     "allocations" => { model: FmAllocation, label: "Allocations" },
     "program_sponsorships" => { model: FmProgramSponsorship, label: "Program Sponsorships" },
-    "postal_codes" => { model: FmPostalCode, label: "Postal Codes" },
+    "postal_codes" => { model: FmPostalCode, label: "Postal Codes" }
   }
 
   def index
@@ -60,17 +60,17 @@ class FmArchivesController < ApplicationController
       model = TABLES.values.find { |c| c[:model].table_name == table }&.dig(:model)
       next unless model
       scope = if config[:via] == :fm_id
-                model.where(fm_id: @record.fm_id)
-              else
-                model.find_by_data(config[:via], @record.fm_id)
-              end
+        model.where(fm_id: @record.fm_id)
+      else
+        model.find_by_data(config[:via], @record.fm_id)
+      end
       page_param = "#{table}_page"
       paginated = scope.order(:fm_id).paginate(page: params[page_param], per_page: 50)
       next unless paginated.any?
       @backlinks[config[:label]] = {
         table: table,
         records: paginated,
-        page_param: page_param,
+        page_param: page_param
       }
     end
   end

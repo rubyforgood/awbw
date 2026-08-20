@@ -25,7 +25,7 @@ namespace :fm do
       { model: FmFunding, csv: "Funding.csv", key: "RecordID" },
       { model: FmAllocation, csv: "Allocations.csv", key: "AllocRecID" },
       { model: FmProgramSponsorship, csv: "ProgramSponsorships.csv", key: "RecordID" },
-      { model: FmPostalCode, csv: "PostalCodes.csv", key: "Zipcode" },
+      { model: FmPostalCode, csv: "PostalCodes.csv", key: "Zipcode" }
     ]
 
     # Find all FM Archive resources
