@@ -71,7 +71,7 @@ module EventRegistrationServices
       apply_profile_change(person, :anonymous_contributions,
         Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS.invert[value_for("anonymous_contributions")])
       apply_profile_change(person, :display_name_preference,
-        Person::DISPLAY_NAME_PREFERENCES.invert[value_for("display_name_preference")])
+        Person::DISPLAY_NAME_PREFERENCE_LABELS.invert[value_for("display_name_preference")])
       person.save! if person.changed?
     end
 

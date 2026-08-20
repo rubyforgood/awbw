@@ -42,7 +42,7 @@ RSpec.describe EventRegistrationServices::SurveySubmission do
     {
       static_field.id.to_s => "It changed me",
       anon_field.id.to_s => Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS[true],
-      name_field.id.to_s => Person::DISPLAY_NAME_PREFERENCES["first_name_only"]
+      name_field.id.to_s => Person::DISPLAY_NAME_PREFERENCE_LABELS["first_name_only"]
     }
   end
   let(:clarity_params) do

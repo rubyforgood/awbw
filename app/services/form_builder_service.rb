@@ -819,7 +819,7 @@ class FormBuilderService
                          options: Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS.values)
     position = add_field(form, position, "Display my name as…", :single_select_radio,
                          key: "display_name_preference", group: "content_sharing",
-                         options: Person::DISPLAY_NAME_PREFERENCES.values)
+                         options: Person::DISPLAY_NAME_PREFERENCE_LABELS.values)
     position
   end
 
