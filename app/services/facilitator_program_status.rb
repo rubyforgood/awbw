@@ -25,7 +25,7 @@ class FacilitatorProgramStatus
   def status
     @status ||= if earlier.empty?
       :new
-    elsif active_on_anchor.any?
+    elsif active_by_date_on_anchor.any?
       :ongoing
     else
       :reinstated
@@ -37,7 +37,7 @@ class FacilitatorProgramStatus
   # For :ongoing the most recent start still running on the anchor; for
   # :reinstated the most recent start of the lapsed history. Nil for :new.
   def active_since
-    @active_since ||= (active_on_anchor.presence || earlier).filter_map(&:start_date).max
+    @active_since ||= (active_by_date_on_anchor.presence || earlier).filter_map(&:start_date).max
   end
 
   # When a :reinstated program's history ran out. Nil for the other statuses.
@@ -89,7 +89,7 @@ class FacilitatorProgramStatus
     @earlier ||= @facilitators.select { |affiliation| affiliation.start_date < as_of }
   end
 
-  def active_on_anchor
-    @active_on_anchor ||= earlier.select { |affiliation| affiliation.end_date.nil? || affiliation.end_date >= as_of }
+  def active_by_date_on_anchor
+    @active_by_date_on_anchor ||= earlier.select { |affiliation| affiliation.end_date.nil? || affiliation.end_date >= as_of }
   end
 end
