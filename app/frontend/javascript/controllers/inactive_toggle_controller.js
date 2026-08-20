@@ -7,16 +7,45 @@ import { isFacilitatorTitle } from "../lib/affiliation";
 // strike their fields (.aff-ended). A not-yet-started row (future start date, not
 // ended) additionally shows an "Upcoming" badge.
 export default class extends Controller {
-  static targets = ["endDate", "title", "row", "accentBar", "valueField", "startDate", "upcomingBadge", "inactiveBadge"]
+  static targets = ["endDate", "title", "row", "accentBar", "valueField", "startDate", "upcomingBadge", "inactiveBadge", "inactiveField", "suppliedField", "inactiveCheckbox"]
   static values = { expired: Boolean, today: String }
 
   connect() {
+    // A row flagged inactive whose dates still read as current is one where the
+    // flag is doing real work, so mark it authoritative up front — otherwise an
+    // unrelated date edit would let the server re-derive it away.
+    if (this.expiredValue && !this.endsOnOrBeforeToday()) this.markSupplied();
     if (this.hasTitleTarget) this.updateBorder();
     else this.apply();
   }
 
+  // Entering an end date of today or earlier ticks Inactive for you, so the flag
+  // travels with the form — the date rule alone compares strictly and would still
+  // call today "active". Clearing the date (or a future one) unticks it again.
+  //
+  // Only the end date drives this. Ticking the box by hand has to stick, which it
+  // would not if the checkbox's own action recomputed it from the dates.
+  endDateChanged() {
+    const ended = this.endsOnOrBeforeToday();
+    if (this.hasInactiveCheckboxTarget) this.inactiveCheckboxTarget.checked = ended;
+    if (this.hasInactiveFieldTarget) this.inactiveFieldTarget.value = ended ? "1" : "0";
+    this.markSupplied();
+    this.apply();
+  }
+
   toggle() {
     this.apply();
+  }
+
+  markSupplied() {
+    if (this.hasSuppliedFieldTarget) this.suppliedFieldTarget.value = "1";
+  }
+
+  endsOnOrBeforeToday() {
+    const value = this.hasEndDateTarget ? this.endDateTarget.value : "";
+    if (!value) return false;
+
+    return new Date(value) <= new Date(new Date().toDateString());
   }
 
   updateBorder() {
@@ -120,6 +149,12 @@ export default class extends Controller {
   // With an end date, compute from it (live); without one, the JS can't see the
   // server's inactive flag, so trust the server-rendered `expired` value.
   isPast() {
+    // The standalone editor has an explicit Inactive checkbox, and on that form it
+    // is the whole truth: ticked, or ended on/before today.
+    if (this.hasInactiveCheckboxTarget) {
+      return this.inactiveCheckboxTarget.checked || this.endsOnOrBeforeToday();
+    }
+
     const value = this.hasEndDateTarget ? this.endDateTarget.value : "";
     if (value) return value < this.todayISO();
     return this.expiredValue;

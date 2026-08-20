@@ -142,6 +142,24 @@ RSpec.describe "/affiliations", type: :request do
 
         expect(affiliation.reload).not_to be_active
       end
+
+      it "keeps the ended state when a later edit changes a date with the box still ticked" do
+        affiliation.update!(start_date: Date.current, end_date: nil, inactive: true)
+
+        patch affiliation_path(affiliation, return_to: "organization", origin_id: organization.id),
+              params: { affiliation: { start_date: 1.month.ago.to_date.to_s, inactive: "1" } }
+
+        expect(affiliation.reload).not_to be_active
+      end
+
+      it "still derives the flag from the dates when the form omits it" do
+        affiliation.update!(start_date: 1.year.ago.to_date, end_date: nil, inactive: false)
+
+        patch affiliation_path(affiliation, return_to: "organization", origin_id: organization.id),
+              params: { affiliation: { end_date: 1.day.ago.to_date.to_s } }
+
+        expect(affiliation.reload).not_to be_active
+      end
     end
 
     context "as a non-admin" do
