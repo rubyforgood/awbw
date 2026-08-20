@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_20_144446) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_20_155015) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1369,6 +1369,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_144446) do
 
   create_table "story_ideas", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "author_credit_preference"
+    t.bigint "author_id"
     t.text "body"
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
@@ -1381,6 +1382,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_144446) do
     t.integer "windows_type_id", null: false
     t.integer "workshop_id"
     t.string "youtube_url"
+    t.index ["author_id"], name: "index_story_ideas_on_author_id"
     t.index ["created_by_id"], name: "index_story_ideas_on_created_by_id"
     t.index ["organization_id"], name: "index_story_ideas_on_organization_id"
     t.index ["updated_by_id"], name: "index_story_ideas_on_updated_by_id"
@@ -1573,6 +1575,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_144446) do
     t.text "age_range"
     t.text "age_range_spanish"
     t.string "author_credit_preference"
+    t.bigint "author_id"
     t.text "closing"
     t.text "closing_spanish"
     t.datetime "created_at", null: false
@@ -1622,6 +1625,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_144446) do
     t.text "warm_up"
     t.text "warm_up_spanish"
     t.integer "windows_type_id", null: false
+    t.index ["author_id"], name: "index_workshop_ideas_on_author_id"
     t.index ["created_by_id"], name: "index_workshop_ideas_on_created_by_id"
     t.index ["updated_by_id"], name: "index_workshop_ideas_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_workshop_ideas_on_windows_type_id"
@@ -1678,6 +1682,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_144446) do
 
   create_table "workshop_variation_ideas", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "author_credit_preference"
+    t.bigint "author_id"
     t.text "body", size: :long
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
@@ -1689,6 +1694,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_144446) do
     t.integer "windows_type_id", null: false
     t.integer "workshop_id", null: false
     t.string "youtube_url"
+    t.index ["author_id"], name: "index_workshop_variation_ideas_on_author_id"
     t.index ["body"], name: "index_workshop_variation_ideas_on_body", type: :fulltext
     t.index ["created_by_id"], name: "index_workshop_variation_ideas_on_created_by_id"
     t.index ["name"], name: "index_workshop_variation_ideas_on_name"
@@ -1934,6 +1940,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_144446) do
   add_foreign_key "stories", "windows_types"
   add_foreign_key "stories", "workshops"
   add_foreign_key "story_ideas", "organizations"
+  add_foreign_key "story_ideas", "people", column: "author_id"
   add_foreign_key "story_ideas", "users", column: "created_by_id"
   add_foreign_key "story_ideas", "users", column: "updated_by_id"
   add_foreign_key "story_ideas", "windows_types"
@@ -1954,6 +1961,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_144446) do
   add_foreign_key "users", "users", column: "updated_by_id"
   add_foreign_key "workshop_age_ranges", "age_ranges"
   add_foreign_key "workshop_age_ranges", "workshops"
+  add_foreign_key "workshop_ideas", "people", column: "author_id"
   add_foreign_key "workshop_ideas", "users", column: "created_by_id"
   add_foreign_key "workshop_ideas", "users", column: "updated_by_id"
   add_foreign_key "workshop_ideas", "windows_types"
@@ -1966,6 +1974,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_144446) do
   add_foreign_key "workshop_series_memberships", "workshops", column: "workshop_child_id"
   add_foreign_key "workshop_series_memberships", "workshops", column: "workshop_parent_id"
   add_foreign_key "workshop_variation_ideas", "organizations"
+  add_foreign_key "workshop_variation_ideas", "people", column: "author_id"
   add_foreign_key "workshop_variation_ideas", "users", column: "created_by_id"
   add_foreign_key "workshop_variation_ideas", "users", column: "updated_by_id"
   add_foreign_key "workshop_variation_ideas", "windows_types"

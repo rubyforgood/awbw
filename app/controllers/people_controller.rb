@@ -85,16 +85,18 @@ class PeopleController < ApplicationController
         @event_registrations = @person.event_registrations.active.includes(:event).order("events.start_date DESC").references(:events).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/events", locals: { person: @person, event_registrations: @event_registrations }
       when "workshop_ideas"
-        @workshop_ideas = @person.user&.workshop_ideas_as_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        # Credit the person for ideas they authored — not ones their user merely
+        # entered (created_by is a pure audit trail).
+        @workshop_ideas = @person.workshop_ideas_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshop_ideas", locals: { person: @person, workshop_ideas: @workshop_ideas }
       when "story_ideas"
-        @story_ideas = @person.user&.story_ideas_as_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        @story_ideas = @person.story_ideas_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/story_ideas", locals: { person: @person, story_ideas: @story_ideas }
       when "workshop_logs"
         @workshop_logs = @person.user&.workshop_logs&.includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets)&.order(workshop_held_on: :desc, created_at: :desc) || WorkshopLog.none
         render partial: "people/sections/workshop_logs", locals: { person: @person, workshop_logs: @workshop_logs }
       when "workshop_variation_ideas"
-        @workshop_variation_ideas = @person.user&.workshop_variation_ideas_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        @workshop_variation_ideas = @person.workshop_variation_ideas_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshop_variation_ideas", locals: { person: @person, workshop_variation_ideas: @workshop_variation_ideas }
       when "affiliations"
         @affiliations = @person.affiliations.active.includes(organization: :logo_attachment).paginate(page: params[:page], per_page: per_page)

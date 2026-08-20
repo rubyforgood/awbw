@@ -39,6 +39,9 @@ class StoryIdeasController < ApplicationController
     @story_idea = StoryIdea.new(story_idea_params.except(:category_ids, :sector_ids))
     @story_idea.created_by = current_user
     @story_idea.updated_by = current_user
+    # Credit the submitter as the author, so the idea lists on their profile by
+    # authorship like every other content type. An admin can reassign it later.
+    @story_idea.author ||= current_user.person
     authorize! @story_idea
 
     success = false
