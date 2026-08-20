@@ -9,10 +9,14 @@ module AuthorCreditable
 
   ANONYMOUS = "anonymous"
 
-  # Read through `anonymous_author_label` / `missing_author_label` from a record, so a
-  # model can override; reference the constants directly only where no record is in hand.
-  ANONYMOUS_AUTHOR_LABEL = "AWBW Facilitator".freeze
-  MISSING_AUTHOR_LABEL = "AWBW Staff".freeze
+  # The generic credit AWBW puts on content with no named credit. Content AWBW produces
+  # itself — news, workshops, resources — reads as "AWBW Staff"; everything else,
+  # including facilitator submissions and the idea forms, reads as "AWBW Facilitator".
+  # Both the unattributed and the opted-out (anonymous) cases fall to this same per-model
+  # label. Read it through `anonymous_author_label` / `missing_author_label` from a
+  # record where one is in hand — the label varies by model (see `credits_to_org`).
+  FACILITATOR_AUTHOR_LABEL = "AWBW Facilitator".freeze
+  ORG_AUTHOR_LABEL = "AWBW Staff".freeze
 
   # Submitter-facing wording. Blank is the default and means "follow my profile" —
   # anything else is a request an admin applies to the profile on the divergences page.
@@ -33,6 +37,11 @@ module AuthorCreditable
   }.freeze
 
   included do
+    # Which generic label an unattributed record credits to. Facilitator-submitted
+    # content follows the facilitator label; org-produced models flip it to the org
+    # label with `credits_to_org`.
+    class_attribute :unattributed_author_label, instance_writer: false, default: FACILITATOR_AUTHOR_LABEL
+
     before_create :snapshot_author_credit_preference
     # Blank means "follow the profile"; nil keeps it off the divergence worklist.
     normalizes :author_credit_preference, with: ->(value) { value.presence }
@@ -101,15 +110,17 @@ module AuthorCreditable
     person.present? && author_credit_preference != person.effective_author_credit_preference
   end
 
-  # A named author who opted out of the credit — still a facilitator's content,
-  # just shown without their name rather than hiding behind "Anonymous".
+  # A named author who opted out of the credit — shown without their name rather than
+  # hiding behind "Anonymous". Reads as the same generic label an unattributed record
+  # would: "AWBW Staff" for org-produced content, otherwise "AWBW Facilitator".
   def anonymous_author_label
-    ANONYMOUS_AUTHOR_LABEL
+    self.class.unattributed_author_label
   end
 
-  # No author at all, so the content reads as the org's own.
+  # No author at all, so the content reads as the org's own — "AWBW Staff" for
+  # org-produced content, otherwise the facilitator label (see `credits_to_org`).
   def missing_author_label
-    MISSING_AUTHOR_LABEL
+    self.class.unattributed_author_label
   end
 
   def snapshot_author_credit_preference
@@ -127,6 +138,12 @@ module AuthorCreditable
   end
 
   class_methods do
+    # Content AWBW produces itself credits an unattributed record to "AWBW Staff"
+    # rather than the generic facilitator label.
+    def credits_to_org
+      self.unattributed_author_label = ORG_AUTHOR_LABEL
+    end
+
     # Fully-qualified legacy name columns, e.g. "resources.legacy_author_name".
     def legacy_author_name_columns
       []

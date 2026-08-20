@@ -34,7 +34,7 @@ RSpec.describe "workshops/_show_associations", type: :view do
       author.update!(anonymous_contributions: true)
       render partial: "workshops/show_associations", locals: { workshop: workshop.decorate }
 
-      expect(rendered).to include("AWBW Facilitator")
+      expect(rendered).to include("AWBW Staff")
       expect(rendered).not_to include("Rosalind")
     end
   end

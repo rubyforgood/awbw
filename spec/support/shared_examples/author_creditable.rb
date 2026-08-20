@@ -1,6 +1,9 @@
-RSpec.shared_examples "author_creditable" do |factory:|
+RSpec.shared_examples "author_creditable" do |factory:, org_credited:|
   model = factory.to_s.camelize.constantize
   names_author = model.column_names.include?("author_id")
+  # What an unattributed record credits to: "AWBW Staff" for org-produced content,
+  # otherwise the generic facilitator label.
+  org_label = org_credited ? "AWBW Staff" : "AWBW Facilitator"
 
   # Only a model with an author_id credits a person; the idea models (no author_id)
   # never credit whoever entered them, so they always fall to the generic label.
@@ -71,7 +74,7 @@ RSpec.shared_examples "author_creditable" do |factory:|
         # "Anonymous", which would read as being about the reader's access.
         it "returns the generic label regardless of the name format" do
           person.update!(display_name_preference: "full_name")
-          expect(record.author_credit).to eq("AWBW Facilitator")
+          expect(record.author_credit).to eq(org_label)
         end
 
         it "does not link the credit to a profile" do
@@ -84,7 +87,7 @@ RSpec.shared_examples "author_creditable" do |factory:|
 
         it "stays suppressed even though the profile says otherwise" do
           person.update!(display_name_preference: "full_name", anonymous_contributions: false)
-          expect(record.author_credit).to eq("AWBW Facilitator")
+          expect(record.author_credit).to eq(org_label)
         end
 
         it "does not link the credit to a profile" do
@@ -93,17 +96,17 @@ RSpec.shared_examples "author_creditable" do |factory:|
       end
 
       context "when the author is removed" do
-        it "falls back to AWBW Staff rather than crediting the creator" do
+        it "falls back to the generic label rather than crediting the creator" do
           record.update!(author: nil, author_credit_preference: nil)
-          expect(record.missing_author_label).to eq("AWBW Staff")
-          expect(record.author_credit).to eq("AWBW Staff")
+          expect(record.missing_author_label).to eq(org_label)
+          expect(record.author_credit).to eq(org_label)
         end
       end
     else
       context "on an idea record, which names no author" do
         it "always credits the generic label, never the creator" do
           person.update!(display_name_preference: "full_name")
-          expect(record.author_credit).to eq("AWBW Staff")
+          expect(record.author_credit).to eq(org_label)
         end
 
         it "does not link the credit to a profile" do

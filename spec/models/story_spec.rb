@@ -1,7 +1,15 @@
 require 'rails_helper'
 
 RSpec.describe Story, type: :model do
-  it_behaves_like "author_creditable", factory: :story
+  it_behaves_like "author_creditable", factory: :story, org_credited: false
+
+  describe "#missing_author_label" do
+    it "credits unattributed stories to AWBW Facilitator" do
+      story = create(:story, author: nil, created_by: create(:user, person: nil))
+      expect(story.missing_author_label).to eq("AWBW Facilitator")
+      expect(story.author_credit).to eq("AWBW Facilitator")
+    end
+  end
 
   describe "#author_person" do
     let(:creator) { create(:user, :with_person) }

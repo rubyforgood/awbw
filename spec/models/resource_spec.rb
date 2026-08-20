@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Resource do
   it_behaves_like "featureable", factory: :resource
-  it_behaves_like "author_creditable", factory: :resource
+  it_behaves_like "author_creditable", factory: :resource, org_credited: true
 
   it { should have_many(:reports) } # As owner
 
@@ -89,7 +89,7 @@ RSpec.describe Resource do
         resource = create(:resource, created_by: creator, author: nil, legacy_author_name: "Jane Legacy",
                                      author_credit_preference: "anonymous")
 
-        expect(resource.author_credit).to eq(AuthorCreditable::MISSING_AUTHOR_LABEL)
+        expect(resource.author_credit).to eq(AuthorCreditable::ORG_AUTHOR_LABEL)
         expect(Resource.search_by_params(query: "Jane Legacy")).not_to include(resource)
       end
     end

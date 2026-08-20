@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe CommunityNews, type: :model do
-  it_behaves_like "author_creditable", factory: :community_news
+  it_behaves_like "author_creditable", factory: :community_news, org_credited: true
 
   describe "#author_person" do
     let(:creator) { create(:user, :with_person) }

@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe WorkshopVariation do
-  it_behaves_like "author_creditable", factory: :workshop_variation
+  it_behaves_like "author_creditable", factory: :workshop_variation, org_credited: false
 
   describe "associations" do
     it { should belong_to(:workshop).optional }
@@ -9,6 +9,14 @@ RSpec.describe WorkshopVariation do
     it { should belong_to(:created_by).class_name("User").optional }
     it { should belong_to(:author).class_name("Person").optional }
     it { should belong_to(:workshop_variation_idea).optional }
+  end
+
+  describe "#missing_author_label" do
+    it "credits unattributed variations to AWBW Facilitator" do
+      variation = create(:workshop_variation, author: nil, created_by: create(:user, person: nil))
+      expect(variation.missing_author_label).to eq("AWBW Facilitator")
+      expect(variation.author_credit).to eq("AWBW Facilitator")
+    end
   end
 
   describe "#author_person" do
