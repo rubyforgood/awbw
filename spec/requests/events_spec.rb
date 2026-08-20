@@ -3751,6 +3751,18 @@ RSpec.describe "Events", type: :request do
         get staff_event_path(published_event)
         expect(response.body).not_to include("LMFT")
       end
+
+      it "joins a staff member's multiple license credentials comma-separated" do
+        staffer.update!(profile_show_credentials: true)
+        create(:professional_license, person: staffer, kind: "LMFT", number: "44556")
+        create(:professional_license, person: staffer, kind: "LCSW", number: "77889")
+        create(:event_staff, event: published_event, person: staffer)
+        credentials = staffer.reload.license_credentials
+        expect(credentials).to include(", ").and(include("LMFT")).and(include("LCSW"))
+        sign_in admin
+        get staff_event_path(published_event)
+        expect(response.body).to include(credentials)
+      end
     end
 
     describe "GET /staff/edit" do
