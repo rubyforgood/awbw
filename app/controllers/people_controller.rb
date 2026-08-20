@@ -545,6 +545,7 @@ class PeopleController < ApplicationController
       :bio, :shoutout_text, :notes,
       :display_name_preference,
       :anonymous_contributions,
+      :pronunciation,
       :pronouns,
       :profile_is_searchable,
       :profile_show_pronouns,

@@ -10,7 +10,7 @@ RSpec.describe "varchar(255) length validations" do
   LENGTH_LIMITED_COLUMNS = {
     Address => %i[city street_address zip_code district county country phone],
     ContactMethod => %i[value],
-    Person => %i[first_name last_name email email_2 legal_first_name pronouns
+    Person => %i[first_name last_name email email_2 legal_first_name pronouns pronunciation
                  best_time_to_call racial_ethnic_identity linked_in_url facebook_url
                  instagram_url youtube_url twitter_url],
     Event => %i[title abbreviation pre_title pre_date_text videoconference_url
