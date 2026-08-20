@@ -1,5 +1,6 @@
 <div class="bg-green-200 border-2 border-green-400 rounded-lg p-4 mb-4">
   <h3 class="text-lg font-medium mb-4">New <%= @payment.type.to_s.underscore.humanize(capitalize: false) %></h3>
+
   <%= simple_form_for @payment, as: :payment, url: payments_path do |f| %>
     <%= hidden_field_tag "payment[allocatable_sgid]", @allocatable&.to_sgid&.to_s || params[:allocatable_sgid] %>
     <%= f.input :type, as: :hidden, input_html: { value: @payment.type } %>
@@ -16,35 +17,38 @@
       <% end %>
     </div>
 
-    <div class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-3">
-      <%# Default to Organization; the model's auto_set_payer_type flips this to
-          Person on submit when only a person (no organization) is selected. %>
-      <%= f.input :payer_type, as: :select, collection: Payment::PAYER_TYPES, required: true, prompt: false,
-                  selected: f.object.payer_type.presence || "Organization",
-                  label: "Who is paying?",
-                  input_html: { class: "bg-white" } %>
-      <%= f.input :person_id,
-        collection: @payment.person.present? ? [[@payment.person.full_name, @payment.person.id]] : [],
-        include_blank: true,
+    <% payer_label_data = @payment.selected_payer&.compound_search_label %>
+    <% designation_label_data = @payment.selected_additional_designation&.compound_search_label %>
+
+    <div class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
+      <%= f.input :payer_sgid,
+        collection: payer_label_data ? [[payer_label_data[:label], payer_label_data[:id]]] : [],
+        selected: payer_label_data&.dig(:id),
+        required: true,
         input_html: {
+          class: "bg-white",
           data: {
             controller: "remote-select",
-            remote_select_model_value: "person"
+            remote_select_model_value: "person_or_organization"
           }
         },
-        prompt: "Search for a person",
-        label: "Person paying" %>
-      <%= f.input :organization_id,
-        collection: @payment.organization.present? ? [[@payment.organization.name, @payment.organization.id]] : [],
+        prompt: "Search people and organizations",
+        label: "Payer",
+        hint: "Whose account is the money coming from?" %>
+
+      <%= f.input :additional_designation_sgid,
+        collection: designation_label_data ? [[designation_label_data[:label], designation_label_data[:id]]] : [],
+        selected: designation_label_data&.dig(:id),
         include_blank: true,
         input_html: {
+          class: "bg-white",
           data: {
             controller: "remote-select",
-            remote_select_model_value: "organization"
+            remote_select_model_value: "person_or_organization"
           }
         },
-        prompt: "Search for an organization",
-        label: "Organization paying" %>
+        prompt: "Search people and organizations",
+        label: "Additional designation" %>
     </div>
 
     <div class="flex gap-2 mt-4">
@@ -52,6 +56,7 @@
         <i class="fa-solid fa-plus text-xs"></i>
         Create payment
       <% end %>
+
       <%= link_to "Cancel", allocations_path(allocatable_sgid: @allocatable&.to_sgid&.to_s || params[:allocatable_sgid]), class: "btn btn-secondary-outline" %>
     </div>
   <% end %>

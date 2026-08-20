@@ -48,21 +48,21 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/models/` | ActiveRecord models | ~75 files |
-| `app/services/` | Service objects for complex logic | ~24 files |
-| `app/jobs/` | SolidQueue background jobs | 3 files |
-| `app/models/concerns/` | Shared model modules | 14 concerns |
+| `app/models/` | ActiveRecord models | ~90 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~69 files |
+| `app/jobs/` | SolidQueue background jobs | 6 files |
+| `app/models/concerns/` | Shared model modules | 17 concerns |
 
 ### Presentation
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/controllers/` | Rails controllers (admin/, events/) | ~69 files |
-| `app/views/` | ERB templates | ~504 files |
-| `app/decorators/` | Draper decorators for view logic | ~37 files |
-| `app/policies/` | ActionPolicy authorization rules | ~49 files |
-| `app/presenters/` | Presentation objects | 1 file |
-| `app/helpers/` | View helpers | ~19 files |
+| `app/controllers/` | Rails controllers (admin/, events/, home/) | ~91 files |
+| `app/views/` | ERB templates | ~824 files |
+| `app/decorators/` | Draper decorators for view logic | ~50 files |
+| `app/policies/` | ActionPolicy authorization rules | ~63 files |
+| `app/presenters/` | Presentation objects | 6 files |
+| `app/helpers/` | View helpers | ~36 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (70) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (77) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -81,7 +81,7 @@ This codebase (Rails 8.1)
 |---|---|
 | `config/routes.rb` | All routes (single file) |
 | `config/database.yml` | MySQL via Trilogy adapter |
-| `config/initializers/` | ~28 initializer files |
+| `config/initializers/` | ~30 initializer files |
 | `.github/workflows/` | GitHub Actions CI |
 | `Procfile.dev` | Dev services: `vite` + `web` |
 | `ai/` | Shell script shortcuts for common dev tasks (see `ai/README.md`) |
@@ -96,26 +96,38 @@ This codebase (Rails 8.1)
 | `Workshop` | Core content: rich text fields, categories, sectors, bookmarks, variations |
 | `Event` | Events with registrations, featured/published states |
 | `EventStaff` | Join model connecting `Person` to `Event` as staff (title, `expected_to_attend`); drives the "Meet the staff" roster and "My events" |
+| `EventRegistrationChecklistCompletion` | Audited completion row for one manual onboarding step on an `EventRegistration` (`step` from `EventRegistration::CHECKLIST_STEPS`, `completed_by` User, `completed_at`); row-exists = done. Powers the event Onboarding tab's checkbox matrix |
+| `EventAttendanceTimeEntry` | One sign-in/sign-out pair for a registrant on a day of an event (`signed_in_at`, `signed_out_at` — nil while "open"/still signed in; `created_by`/`updated_by` stamped only on staff edits, nil for registrant self-service). Generic day-of-event timekeeping (many per day for breaks/lunch), currently surfaced only on the CE callout when CE is paid; `EventAttendanceReport` totals minutes per day. Sign-in window derives from `Event#attendance_sign_in_open?`, but the times stay editable outside it — by staff on the report and by the registrant on their own CE callout. An open entry occupies the rest of its day for the overlap guard |
+| `RegistrationTicketCallout` | Call-outs shown on an event's registration ticket (title, subtitle, HTML description, `callout_type` action/reference, icon/colour, `payment_access_gated` — only shown once the registrant has `payment_access_granted?`, draggable `position`, `hidden` draft/opt-out, `display_from` drip date, and `has_many :resources` through `RegistrationTicketCalloutResource`); each links to its own public detail page. A nil `builtin_key` is an admin-authored callout; a set `builtin_key` is a built-in card materialized by `BuiltinCallouts` (hidden instead of deleted, restorable to default) |
+| `RegistrationTicketCalloutResource` | Ordered join linking a `RegistrationTicketCallout` to the `Resource`s shown on its detail page |
 | `Story` | Editorial content with facilitators, primary/gallery assets |
 | `Resource` | Handouts, toolkits, templates with downloadable assets |
 | `Person` | Organization affiliates with contacts, addresses, sectors |
+| `OtherResponse` | A free-text "Other" typed on a form question, captured at submission time (registration, scholarship, bulk payment). Polymorphic `owner`: a **sector** "Other" is owned by the `Person` (promotable into a `Sector`, shown on their profile/edit chip); an **organization_type** "Other" is owned by the `Organization` (stored now, not promotable until `OrganizationType` is a model). `generic` questions aren't captured — that stays searchable in the form answers. `field_identifier` records the question; `kind` is derived. Curated at `/other_responses` (grouped by kind/question): `promote` (sectors only), `keep`, `dismiss`. `dismissed` hides the chip from the profile but stays in the review queue (still promotable later); only `promoted` leaves the queue. Admins deep-link there from a person's chip. |
 | `Organization` | Groups with affiliations, addresses, logos via ActiveStorage |
-| `Grant` | Donated funds (polymorphic `donor`: Organization or Person) with eligibility criteria, tasks, deadlines; parent of `Scholarship`. Scholarship totals cannot exceed the grant amount |
-| `Scholarship` | Award to a `Person`; optionally drawn from a `Grant`, syncs to event registration `Allocation` |
+| `Grant` | Funds (polymorphic `funder`: Organization or Person) with eligibility criteria, tasks, deadlines; parent of `Scholarship`. Scholarship totals cannot exceed the grant amount |
+| `Scholarship` | Award to a `Person`; optionally drawn from a `Grant`, syncs to event registration `Allocation`. Tri-state `agreement_response_status` (pending/accepted/declined) drives the agreement; declined awards zero their allocation and drop out of all totals |
+| `ScholarshipAgreementResponse` | Append-only history of a scholarship's accept ↔ decline back-and-forth (status, reason, responder, amount at the time); the scholarship's `agreement_response_status` is the denormalized latest row, and `responded_at`/reason are read from the latest response, not stored on the scholarship |
+| `ProfessionalLicense` | A license a `Person` holds (`number`, `kind`, `issuing_state`, `expires_on`); a null `number` is a placeholder. `find_or_create_for` keeps one license per (person, number) |
+| `ContinuingEducationRegistration` | A registrant's CE for one event against one `ProfessionalLicense`; billable `allocatable` (`Registerable`) with stored `hours` + `cost_cents` (default from the event). Payment is computed (no stored status); the certificate is delivered via `certificate_sent_at` and gated by its own `certificate_available?` |
+| `TopicSubscription` | A `Person`'s standing subscription to a `TopicSubscriptionType`, optionally narrowed to a specific `interested_event` (null = the topic broadly). State is timestamp-driven (`unsubscribed_at IS NULL` = active — `active?`/`unsubscribe!`/`resubscribe` — non-bang, since reviving can collide with a newer active row, no status column); `subscribed_at` + `source` mirror the `mailing_list_consent_*` provenance pattern. Distinct from the `mailing_list_consent_*` flag (consent = "you may email me"; subscription = "what I want to hear about") and from an `EventRegistration` (an actual enrollment). One active subscription per (person, type, event) |
+| `TopicSubscriptionType` | Admin-editable list of subscribable topics (`TopicSubscriptionTypesController` CRUD). Editable `name` + immutable derived `key` slug (stable for code lookups like `interested_in_more` → `INTERESTED_IN_MORE_KEY`); `archived_at` retires a topic without deleting it (`active`/`archived` scopes) since types in use can't be destroyed (`restrict_with_error`). Seeded (all envs) from `CANONICAL` — facilitator_trainings/news/resources |
 | `Report` | STI base class for MonthlyReport |
 | `WorkshopLog` | Standalone model for workshop log submissions (attendance, form fields) |
+| `Feature` | One shipped, user-facing capability shown on the login-gated **Features & tips** page (`/features`): `name`, `area` (`AREAS`/`AREA_KEYS`), `display_status` (public/user/admin-facing — a string+constant audience gate, `admin_facing` = super-admins only via `FeaturePolicy`), `summary`, `pro_tips` (newline text → `pro_tips_list`), rich `rhino_description` (Rhino WYSIWYG, screenshots), `external_url`, `action_path` (in-app "Check out this feature" link), `pr_number` (GitHub PR link), `released_on`, `published`. Admin-editable in-app; `config/features.yml` is the checked-in seed synced by `FeatureCatalog#import!`. Presentation on `FeatureDecorator` |
 
 ### STI Models
 
-- **Asset** (inheritance column: `type`): PrimaryAsset, GalleryAsset, RichTextAsset, DownloadableAsset, ThumbnailAsset
+- **Asset** (inheritance column: `type`): PrimaryAsset, GalleryAsset, RichTextAsset, DownloadableAsset, ThumbnailAsset, FormUploadAsset
+  - The `type` column defaults to `"PrimaryAsset"`, which narrows `ACCEPTED_CONTENT_TYPES` to five image types — always name the type when building an Asset, or documents will fail validation. `FormUploadAsset` backs a respondent's file-upload form answer and takes Asset's full accepted-type list.
 - **Report**: MonthlyReport
 
 ### Polymorphic Associations
 
 - **Bookmarks** (`bookmarkable`): Workshop, Event, Resource, etc.
-- **Grant donor** (`donor`): Organization, Person
+- **Grant funder** (`funder`): Organization, Person
 - **Assets** (`owner`): Workshop, Story, Resource, Report, etc.
-- **Comments** (`commentable`): User, Person, Organization, etc.
+- **Comments** (`commentable`): Person, User, EventRegistration, Scholarship, ContinuingEducationRegistration, TopicSubscription, Organization, Workshop
 - **Categorizable/Sectorable** items: Workshop, Story, Resource, etc.
 - **Forms** (`owner`): Resource, Report, etc.
 
@@ -123,6 +135,7 @@ This codebase (Rails 8.1)
 
 | Concern | Purpose |
 |---|---|
+| `AgeGroupTaggable` | Splits AgeRange category taggings into primary/additional via `categorizable_items.is_primary` (Person, Organization) |
 | `AhoyTrackable` | Event tracking integration |
 | `AuthorCreditable` | Author attribution |
 | `Featureable` | `featured`, `publicly_featured` scopes |
@@ -130,6 +143,7 @@ This codebase (Rails 8.1)
 | `NameFilterable` | Name-based filtering |
 | `Publishable` | `published`, `publicly_visible` scopes |
 | `PunctuationStrippable` | Strips punctuation from strings |
+| `Registerable` | Shared payment (`allocations_sum`/`paid?`/`remaining_cost`/…) + certificate (`certificate_sent?`, `mark_certificate_sent!`) interface for `EventRegistration` and `ContinuingEducationRegistration`; includers supply `cost_cents` + their own `certificate_available?` |
 | `RemoteSearchable` | AJAX remote search by column |
 | `RichTextSearchable` | Full-text search on ActionText rich_text fields |
 | `SectorsTaggable` | Enforces a single primary sector for sector-tagged owners |
@@ -141,7 +155,7 @@ This codebase (Rails 8.1)
 
 ### Namespaces
 
-- **Root level** (~51 controllers): Workshops, stories, resources, events, people, organizations, etc.
+- **Root level** (~69 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
 - **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController
 - **`events/`**: Registrations sub-resource (create/destroy + slug-based show at `/registration/:slug`)
 - **Devise overrides**: Registrations, Confirmations, Passwords
@@ -154,17 +168,24 @@ class ApplicationController < ActionController::Base
   verify_authorized                    # ActionPolicy enforcement
 
   # Common helpers:
-  # authorize! @record               — check policy
+  # authorize! @record               — check policy (rule inferred from the action name)
+  # authorize! @record, to: :other?  — only when checking a rule ≠ the current action
   # authorized_scope(Model.all)      — filtered relation
   # @record.decorate                 — Draper decorator
 end
 ```
+
+`authorize!` infers the rule from the controller action (`create` → `create?`, `update` →
+`update?`), so `authorize! @record` in the `update` action already checks `update?`. Pass `to:`
+only to check a *different* rule (e.g. `authorize! @scholarship, to: :update?` from a non-`update`
+action, or `authorize! :workshop, to: :summary?`).
 
 ### Controller Concerns
 
 - `AhoyTracking` — Event tracking integration
 - `Dedupable` — Data deduplication helpers
 - `ExternallyRedirectable` — External URL redirection
+- `StoryIdeaFormVariables` — Loads the shared story-idea form variables (StoryIdeasController + the portal's StorySharesController#share)
 - `TagAssignable` — Tag assignment helpers
 
 ## Services
@@ -174,25 +195,91 @@ end
 - `Analytics::LifecycleBuffer` — Thread-safe event buffer for batch tracking
 - `Analytics::EventBuilder` — Constructs analytics event payloads
 - `Analytics::AhoyTracker` — Coordinates ahoy event tracking
+- `Analytics::PersonActivityEvents` — Aggregates Ahoy events for a person, their user, and associated data (powers the person edit History card + `person_id` filter on the Ahoy activities index)
 
 ### Business Logic
 
-- `EventDashboard` — Aggregates per-event dashboard metrics (registrant/org/sector/state/county counts, scholarship totals, payment received/outstanding/total)
+- `AffiliationPeriods` — Merges an organization's affiliation date-intervals into periods, at year precision for "Affiliated since" (e.g. "2010-2012, 2026") or month precision for "Art program since" (e.g. "Aug 2015 – Jun 2018, Feb 2024"); rendered server-side on the org show/index/edit pages, with `affiliation_dates_controller.js` mirroring it only to live-update the edit form
+- `EventDashboard` — Aggregates per-event dashboard metrics (registrant/org/sector/state/county counts, scholarship totals, payment received/outstanding/total). One population per event — `EventRegistration.active` — so the money and the people figures always reconcile; "who completed the training" is an attendance figure over that population (`#attended_count`), never a narrower population
+- `EventRevenueReport` — Cross-event revenue report grouped by calendar year (money in vs org subsidy vs net, CE fees, chart series) for the CEO revenue page
+- `EventRevenueFigures` — Batch-loads the per-event money components `EventRevenueReport` rows are built from (registration payments/outstanding, funded/unfunded scholarships, discounts, CE paid/outstanding) in a fixed number of grouped queries; mirrors the `EventDashboard` definitions
+- `EventScholarshipFigures` — Batch-loads the per-event scholarship figures `EventScholarshipReport` columns are built from (funded/unfunded dollars + counts, attended count) in a fixed number of grouped queries; optional `funder:` narrows to a donor's grants. Mirrors the `EventDashboard` funded/unfunded split, replacing the one-dashboard-per-event it used to build
+- `FacilitatorProgramStatus` — The one rule for an organization's New / Ongoing / Reinstate program status as of a date (its facilitator affiliations, strict `<` on the anchor so the affiliation a training mints isn't prior history). Anchors on the event's start date, falling back to Jan 1 of the current year when no event is in view (`year_anchored?`). Carries the anchor, the month the program went active and its merged facilitator periods, so `#explanation` gives every badge its hover text. Reached via `Organization#facilitator_program_status(as_of:)`; see ADR-0001 D4/D5/D7
+- `EventProgramStatusReport` — Cross-event program-status report grouped by calendar year: how many organizations were New / Ongoing / Reinstate at each facilitator training, counted both as organization-trainings (summed rows) and as distinct organizations classified at their earliest training. Sibling of `EventRevenueReport`/`EventParticipationReport`/`EventScholarshipReport` (includes `ReportPeriods`); powers the `events#program_statuses` page and the reports-hub program-status card
+- `EventParticipationReport` — Cross-event participation report grouped by calendar year (unique people trained vs attended seats vs per-status outcome counts, chart series) for the events participation page; sibling of `EventRevenueReport`
+- `AttendeesRoster` — Cross-event counterpart to `EventDashboard`: builds the per-registrant lookup maps the shared `events/_registrant_roster` partial reads (sector/age/org/status/location/scholarship/CE plus the events-attended column) for a paginated page of people; backs the `events#attendees` index. Takes `events:` + `registrations:` — the index's current filter scopes, already narrowed by `EventPolicy`'s `:reportable` scope — so a person's columns show what's in scope rather than their whole history, and never an event the viewer can't see
+- `AttendeesBreakdowns` — Aggregate counterpart to `EventDashboard`'s breakdown methods: computes the chart datasets (sectors, age groups, locations, program status, life experiences, settings, organizations, scholarship/CE) over an arbitrary people set, profile-sourced, for the shared `events/_registrant_breakdowns` partial. Backs the `events#attendees` index charts (cross-event; `events:` / `registrations:` = the index's current filter scopes, already narrowed by `EventPolicy`'s `:reportable` scope) and the `events#recipients` charts frame (one event's scholarship recipients, `registrations:` = `EventRegistration.active` so it counts them regardless of attendance, `as_of:` = that event's start date so program status reads the same verdict its dashboard does). Also exposes `*_registrant_ids_by_*` maps mirroring `EventDashboard`'s, so a breakdown row can drill in by person id — they regroup rows already loaded for the counts, adding no queries
+- `AttendeesActiveFilters` — Human-readable, removable-chip descriptors for a page's "drill-in" filters (registrant_ids, organization, org city, age group / life experience / setting categories, country, school district, scholarship, CE, payment status, scholarship funding source, sector, state) — params that narrow a list without a field in a visible filter form. `CHIP_PARAMS` is the attendees index's set (omitting anything with its own control); pass `chip_params:` for a page with no filter form at all — `ROSTER_CHIP_PARAMS` for the per-event roster, `%w[ registrant_ids ]` for scholarship recipients
+- `ReportPeriods` — Shared module (included by `EventRevenueReport` and `EventParticipationReport`) resolving the reporting-hub period toggle (this year / last year / all time) to a metric scope + label for the summary cards
+- `EventScholarshipReport` — Cross-event scholarship report grouped by calendar year: scholarship dollars and award counts (funded vs unfunded, via `EventScholarshipFigures`) per facilitator training, plus an attended-trainee count split into "Live" (scheduled instructor-led) vs "On-demand" (`event.on_demand?`). Sibling of `EventRevenueReport`/`EventParticipationReport` (includes `ReportPeriods`); powers the `events#scholarships` report page and the reports-hub scholarship summary card
+- `EventAttendanceReport` — Per-event attendance sign-in/out report from `EventAttendanceTimeEntry`, grouped by day then reported line, with per-day and grand-total minutes; `ce_only:` scopes to CE registrants and surfaces license number + awarded hours. The reported unit is a `Row` (registration + optional `ContinuingEducationRegistration`), so a registrant claiming CE against two licences gets a line each, keyed by `Row#key` — which is what `attendance_cell_id` and the editor's `row` param use. The times behind two lines are shared, so the everyone-totals dedupe by registration while hours awarded sum per line. The in-portal CE hour sign-in sheet, linked from the participation report (`?ce=true`) at `attendance_event_path`
+- `EventsController#signins` — Cross-event sign-ins page (`signins_events_path`): one `EventAttendanceReport` totals table per event the shared report filters reach, each linking into that event's full `attendance_event_path`. CE columns switch on when *any* event in scope grants CE, so a mixed selection can't hide the licence numbers boards audit. Reached from `events/_report_subnav` (Details / Attendees / Scholarships / Sign-ins) — the shared tab bar on the participation, attendees, scholarship and sign-ins pages, which carries every set filter between them via `EventsHelper::REPORT_SUBNAV_PARAMS`
+- `RegistrantAttendanceSheet` — The registrant-facing counterpart to `EventAttendanceReport`: one registrant's training days, their decorated sessions on each, day/overall totals, and the state the CE callout's sign-in/out controls read (`signed_in?`, `open_entry`, `forgotten_entry`, `window_open?`). Built once per registration and rendered once per paid `ContinuingEducationRegistration` — the times are shared across licences (one person, one room, one set of hours), only the sheet's licence header differs
+- `EventAttendanceEntriesUpdate` — Applies a batch of submitted sign-in/out rows to one `EventRegistration`'s `event_attendance_time_entries` (add/correct/remove through nested attributes) and stamps `created_by`/`updated_by` with the editing admin — `editor: nil` for the registrant's own edits, which stay unattributed. Shared by the CE edit form (`ContinuingEducationRegistrationsController#update`, datetime rows across every day), the attendance report's inline per-day editor (`EventRegistrationsController#update_attendance`) and the registrant's own per-day editor (`Events::CalloutsController#update_ce_attendance`)
+- `AttendanceDayRows` — Parses one training day's submitted `attendance[entries][i][in|out|id|_destroy]` rows into attendance-entry attributes, binding each clock time to that day. Shared by the admin report's per-day editor and the registrant's own editor on the CE callout (both render `events/_attendance_day_form`); `.date_from` resolves the day param, nil when unparseable
+- `AttendanceTimeFormatter` — Renders an attendance time as a clock time ("9:02 AM") and a minutes count as "6h 51m", so the report, callout, decorator, and flash notices all read the same. `EventAttendanceHelper` is the view-side front door; decorators and other callers without a dependable view context call it directly (same split as `MoneyFormatter`/`dollars_from_cents`)
+- `ScholarshipApplication` — Gathers one person's scholarship-application answers for an event by field across all their submissions, so answers surface whether captured on a dedicated scholarship form, an embedded registration section, or the registration submission itself (used by the scholarship edit page and the public submission view)
 - `WorkshopSearchService` — Complex filtering, sorting, pagination with ActionPolicy
 - `WorkshopFromIdeaService` — Converts WorkshopIdea to Workshop with asset migration
 - `WorkshopVariationFromIdeaService` — Variation creation from ideas
 - `TaggingSearchService` — Search and filter tagging data
 - `PersonFromUserService` — Create Person from User account
+- `PersonCommentAggregator` — Unifies every comment connected to a person (their profile, event registrations, scholarships, CE registrations, topic subscriptions, and user account) into one newest-first `Comment` relation for the aggregated `/people/:id/all_comments` page
 - `BulkInviteService` — Bulk send welcome instructions and reset created_at for users
+- `PersonInviter` — Invites a single person to the portal: creates a user account if they have none, then sends the welcome/invite email attributed to the sender. Backs the bulk "Send Portal invite emails" flow on the reminders page (`?mode=invite`)
 - `FormBuilderService` — Builds configurable forms from composable sections with per-field visibility
 - `ModelDeduper` — Deduplication logic
 - `RichTextMigrator` — Rich text migration utility
+- `StoryImporter` — Imports stories from a WordPress Posts Export CSV. Every row becomes a Story (published per the WP Status); a non-AWBW author's story also gets a promoted StoryIdea. Resolves the author Person from the facilitator name (unresolvable names kept as a Comment), converts content via wpautop, translates Categories/Tags/User Categories/who_is_your_story_about into Sectors + Categories via `config/story_import_sector_mapping.yml`, resolves orgs via `config/story_import_organization_mapping.yml`, links grant-tagged stories through the author's Scholarship, enqueues a `StoryAssetImportJob` per story to download its "Image URL" images in the background, and returns a row-by-row preview for the dry-run interstitial
+- `AssetUrlImporter` — Downloads a remote file URL and attaches the bytes to ActiveStorage on the given owner as an Asset (open-uri → attach); the subclass's content-type validation still applies
+- `FeatureCatalog` — Syncs the checked-in feature seed (`config/features.yml`) into the `Feature` table behind the `/features` page (the "Sync latest updates" button). `#import!` (matched by `name`) creates missing features, re-aligns catalog-owned classification (`CATALOG_FIELDS` — area, display_status, released_on, action_path, pr_number, so seed corrections propagate), and fills blank admin content (`CONTENT_FIELDS` — summary, pro_tips, external_url, rhino_description) without overwriting it; returns a `Result` (`created`/`updated`)
 - `DisplayImagePresenter` — Image display logic
+- `ScholarshipsGrouping` (presenter) — Groups scholarships into the index's funder → grant → recipient hierarchy; grant-free awards collect under a trailing "Unfunded" group
+- `RegistrantCityBreakdown` (presenter) — Groups an event's registrants by the city of the org linked on their registration, counting registrants + scholarship recipients per city; drives the shared "Registrants by city" card inside `events/_registrant_breakdowns` on all three people-pages — per-event roster, cross-event attendees index, and scholarship recipients (fed plucked data by `EventDashboard` or `AttendeesBreakdowns`)
+- `AllocationLedgerLabel` (presenter) — Shared payment-method/label + check-number labelling for an allocation, used by the invoice and receipt ledgers so they can't drift
 
 ### Event Registrations
 
 - `EventRegistrationServices::ProcessConfirmation` — Registration confirmation flow
 - `EventRegistrationServices::PublicRegistration` — Public registration handling
+- `EventRegistrationReadiness` — Computes a registration's lifecycle `status` (`:not_ready` → `:ready` → `:certificate_due` → `:completed`) from a pre-event "event ready" checklist, a post-event "completion work" checklist (attendance, scholarship tasks), and certificate delivery, returning the specific outstanding reasons. Reads payment/certificate state via `Registerable` (`paid_in_full?`, `certificate_sent?`) on both the registration and its `continuing_education_registrations`. Drives the registrants roster's single far-right Status badge column (with a short reason under "Not ready" and a cert-type note under "Certificate pending") and its matching filter
+- `ReminderRecipientFilter` — Decides which event registrations stay checked on the bulk reminder page given the admin's filters (matches in memory, returns matching ids)
+- `BuiltinCalloutCards` — Renders the live, per-registration ticket callout cards (payment, certificate, scholarship, CE hours, videoconference), overlaying dynamic status (badge, colour, visibility guard, destination) on each materialized built-in row via `#card_for`. Rendered through the same `_callout_card` partial as `RegistrationTicketCallout`s. Skips any card an event has materialized (see `BuiltinCallouts`) so the two paths never double-render, and `#cards` serves as the fallback for events not yet seeded; `.editor_cards` builds the editor's preview cards. Handouts and FAQ are pure content cards with no builder here — they render from their row. Public show pages live under `app/views/events/callouts/` (`Events::CalloutsController`, slug-authorized)
+- `BuiltinCallouts` — Owns the built-in callout definitions and materializes them into `RegistrationTicketCallout` rows in canonical ticket order: `seed` persists (on create, and lazily on edit so older events heal with no backfill), `build` makes the same rows in memory for the new-event form (with `builtin_key` round-tripped through nested attributes), `reset`/`customized?` back the "Restore default" control. All eight seed **hidden** by default — admins publish the ones they want; there's no config-based auto-publish. Built-ins are edited in the **same** callout-fields row as custom callouts (pre-filled title/subtitle/colour/icon/callout-page-text/resources; hidden instead of deleted; "Restore default" shown only when `.customized?`). "Content" cards (Handouts, FAQ) render their own copy/resources on the generic callout page; "behavioral" cards render live status through `BuiltinCalloutCards#card_for`, which overlays the app's badge/visibility/destination on the row's editable presentation. Behavioral pages show the row's callout-page-text as an intro (`@builtin_intro`) and any linked resources below it. Videoconference drips a week before start via `display_from`. CE hours is edited like every other built-in — its title/text live entirely on the row (the legacy `event_details*`/`ce_hours_details*` event columns were dropped); the CE hours-offered/cost config still edits the event inline via `event_f` (`ce_config?`). The registrant CE page reads the row's title/description. Built-ins always seed and also materialize lazily on `edit`, so the editor shows the full set; the editor shows "Restore default" (or a static "Matches default") per row via `.customized?`. The visibility control is a `published` toggle (inverse of `hidden`)
+- `CalloutContent` — Parses admin-authored callout HTML into ordered segments so **every** callout content page renders the same way: plain rich text, with each standard `<details><summary>…</summary>…</details>` disclosure (the markup any HTML generator/LLM produces; `<toggle>` and a `title` attribute are accepted aliases; `<details open>` starts expanded) rebuilt into a styled collapsible card. `<details>`/`<summary>` are also on the `form_label_html` allowlist (`FORM_LABEL_TAGS`, plus the `open` attribute), so a disclosure is never stripped on save — the parser only upgrades its styling. Rendered through the shared `app/views/events/callouts/_rich_content.html.erb` partial (which wraps each disclosure in `_toggle.html.erb`), used by the CE hours, custom-callout, behavioural-card-intro, and FAQ pages. The FAQ page renders the editable `faq` callout `description` (each question a `<details>`); the default questions hydrate onto the row when it's materialized (from `BuiltinCallouts.faq_html`), so a blanked description shows blank with no render-time fallback. Content with no disclosure renders unchanged
+- `SampleTicketRegistration` — Builds the **unsaved, data-free** `EventRegistration` ("Sample Person") that the sample ticket and its admin-only callout-page previews render from; nothing is ever persisted, so the preview can't read from or write to a real registrant or leak into counts/revenue/rosters/reminders. `all_options:` mirrors the ticket's "Show all options" toggle (turns on scholarship/CE/W-9 so those cards and preview pages render). Shared by `EventsController#sample_ticket` and `Events::CalloutsController`'s sample mode (the `sample` param → admin-authed in-memory previews of the behavioral built-in pages, linked from the sample ticket via `EventHelper#sample_callout_path`)
+
+### Affiliations
+
+- `AffiliationServices::CreateFromRegistration` — On registration / org linking, creates a "job affiliation" with the typed title (when present) plus a standing "Facilitator" affiliation, in one transaction. Skips the facilitator one only when the person already has an active-or-pending affiliation titled exactly "Facilitator" with that org (a current one or one dated to a future training); an ended facilitator affiliation gets a fresh second one. Dedupe is by title + org + dates, so a job title like "Lead Facilitator" still gets its own Facilitator affiliation. Accepts an optional `organization_address:` and sets it on every affiliation it creates (the registrant's typed agency address, upserted onto the org); when an affiliation already exists and is skipped, it backfills that address onto the existing one only if it has none (an admin-set address is never overwritten)
+
+### Sectors
+
+- `SectorTagging` — `.apply(person:, organizations:, primary_ids:, additional_ids:)` tags a person's sectors (primary + additional) and mirrors them onto the given organizations as additional-only (orgs aggregate members' sectors and have no primary). Shared by registration (person's selections onto the org they registered with) and "Other" sector-response promotion (additional only). Promotion passes `OtherResponse#registration_organizations`, which derives the org from the response's `source_form_answer` → submission → the person's registration for that event — so it tags exactly the org registration would have, without storing one on the response
+
+### Other responses
+
+- `OtherResponses::CaptureFromSubmission` — Materializes a form submission's **person-owned** "Other" answers (sectors) as `OtherResponse` records; org-type "Other" is captured separately in `PublicRegistration#sync_agency_type` (owned by the org). Uses `OtherOption.texts`, which keys strictly on the `Other:` prefix, so named specify options and the CE `Yes: N` box are ignored; de-dupes per owner + question. Shared by the registration, scholarship, and bulk-payment submission paths
+
+### Forms
+
+- `PublicFormSubmission` — Records a submission to a **standalone, published** `Form` filled out at its public pretty URL (`/f/:slug`, `PublicFormsController`). No event, role, or account: the respondent is find-or-created as a `Person` from the form's name/email answers (email + last-name match reuses an existing person), consent recorded once, answers stored as a `role: "public"` `FormSubmission` via `FormSubmission#persist_answer`, then `OtherResponses::CaptureFromSubmission` like every other submission path. Returns a `Result` (`success?`, `form_submission`, `person`, `errors`)
+- `SmartFormFields` — Catalog of the `field_identifier`s that carry backend behavior and what each does when a submission arrives with it, grouped by the record they write to (person identity, profile, mailing address, phone, organization, tagging, payment, consent, CE, bulk payment), plus `ANSWER_ONLY_IDENTIFIERS` for the library questions that only store an answer. Powers the admin-only **Smart form settings** page (`FormsController#smart_form_settings`, linked from both form editors), which answers what the editor's "Field identifier" box actually does. `spec/services/smart_form_fields_spec.rb` fails when the app grows an identifier the page doesn't document — it diffs the catalog against `FormBuilderService::SECTION_FIELD_IDENTIFIERS`, the `FormField`/`OtherResponse` identifier constants, and every `field_value("…")` read in `PublicRegistration`, so **add new identifiers to the catalog when you wire one up**
+
+### Organizations
+
+- `OrganizationServices::AutofillChange` — One thing a registrant's answers wrote onto an org: `field`, human `label`, the `value` that landed in it, `change_type` (`"new"` filled a blank / `"update"` replaced something), `previous_value` on an update, and an optional `scope` naming which work address. `change_type` is derived from `previous_value` so the two can't disagree, but is written to the JSON anyway so the stored row reads on its own. Round-trips through the `form_autofill_changes` column; `#description` renders "Website" or "ZIP on the Austin work address" for a flash, while the linking page shows the value and what it displaced. `#key` is (field, scope), which is what makes a later submission's value replace an earlier one instead of stacking. Drops a stored entry with no `field` rather than raising — it's a display aid, not a ledger. **Not a substitute for the Ahoy audit trail**, which records every before/after on Organization and Address independently; this is the denormalized, registration-scoped copy the linking page can render without correlating events
+- `OrganizationServices::AddressMatcher` — Given a submitted city/state/street/ZIP, finds the org address it corresponds to so `UpsertAddress`/`ProfileDiff` update the right one instead of duplicating. Tries same city + state (preferring one whose street also matches, so an org with several offices in one city doesn't get the wrong one rewritten), then same city + street (unifies an address with a submission that merely adds the state/country we were missing), then — across cities — same street + same ZIP, which reunites an address whose city was respelled ("St. Louis" / "Saint Louis") without merging two offices that share a street name in different towns. Module function, used by both address services
+- `OrganizationServices::UpsertAddress` — Find-or-create an organization's "work" address from a registrant's submitted agency fields (street/city/state/zip/country), matching via `AddressMatcher`; updates the match, else adds a new address; never demotes the org's existing primary (a registrant's address becomes primary only when the org has none yet). `overwrite: true` (default, public flow) replaces the matching address's details; `overwrite: false` (admin org-linking) fills only its blank fields so a conflicting saved address is kept and flagged instead. City and state are always fill-only (never flipped, in either mode), so a cross-city ZIP match keeps the saved city and lets `ProfileDiff` flag the difference; that fill still earns its keep because a legacy row can hold `""` in either column, and the street + ZIP match is the one path that reaches such a row to repair it. Returns a `Result` (`address`, `created`, and `changes` — an `AutofillChange` per field actually written, carrying the value) so callers can report what was really saved. Every field is trimmed before it's stored, so a padded answer isn't later read back as a difference from itself. Tolerates optional answers: a skipped street/ZIP is stored blank (both are `NOT NULL` columns), and `address` is nil — nothing saved — when there's no city, or no state and no existing address to update, rather than failing the whole registration. Shared by `PublicRegistration` and the admin org-linking actions
+- `OrganizationServices::SyncProfile` — Populate an organization's structured profile columns (`website_url`, `agency_type`/`agency_type_other`) from a registrant's submitted answers, folding an "Other: <text>" type answer into the label + free text (and recording the free text as an `OtherResponse` for the curation queue). `overwrite: true` (default, public flow) replaces non-blank values latest-wins; `overwrite: false` (admin link/create-and-link) only fills columns that are currently blank. Returns a `Result` whose `changes` name only the columns whose value actually changed (read off `saved_changes`) and the value each ended up with, so re-submitting what's already on file isn't reported as a change. Shared by `PublicRegistration` and `EventRegistrationsController#{select,create}_organization`
+- `OrganizationServices::ProfileDiff` — Read-only comparison of a registrant's submitted type/website/address answers against an org's saved profile, returning `Discrepancy` structs where the submitted value differs from a value already on the org (so the fill-blanks sync leaves it unapplied). URL comparison ignores scheme/`www.`/trailing slash; type comparison parses "Other: <text>"; address is compared against the org's corresponding address (via `AddressMatcher`) on street/city/state/ZIP/country. Powers the org-linking flash warning and the linking page's persistent per-org discrepancy note
+
+Which submission's answers apply to which org is decided by `EventRegistrationsController#submission_entry_for`: the submission pinned on the link, else the one whose typed org name matches the org, else — only when there's exactly one submission and one linked org — that sole entry (which covers a registrant who named no org, and an admin resolving a typo'd "Acme Inc" to the saved "Acme Corporation"). An extra org an admin links by hand matches nothing, so another org's answers — profile, address, and job title alike — are never written onto it or reported against it; its affiliation is created untitled (just "Facilitator").
+
+Both flows record on `EventRegistrationOrganization` what the submission meant for the org, so the linking page can say it persistently after the flash is gone:
+
+- `form_autofill_changes` (`record_autofill`) — what the form actually wrote onto an org that already existed, as `OrganizationServices::AutofillChange` JSON: the `field`, a human `label`, the `value` that landed in it, and a `scope` naming the work address a field belongs to (an org keeps one per city, so "ZIP" alone wouldn't say which). Not the submitted answers, which stay on the form submission — only the answers that actually changed the org. Built by `SyncProfile#changes` and `UpsertAddress::Result#changes`; a newly created address reports as one change carrying the whole address rather than five. Merged newest-value-wins per (field, scope), so a corrected resubmission leaves the value the org ended up with rather than two that contradict each other. The flash shows `#description` only; the linking page shows the values too
+- `form_submission_id` (`record_form_submission`) — the submission whose answers describe this org, pinned when the link is made. The name and sole-org rules above are re-derived per request, so without the pin an org linked under a name the registrant didn't type (or renamed afterwards) would lose its answers, and its discrepancy note, the moment a second org was linked. Pinned whenever a submission describes the org — including an org the submission itself created, and including one where every answer conflicted so nothing was written (that org is precisely the one whose discrepancy note has to survive). Unlike `form_autofill_changes`, which a newly-created org deliberately doesn't get, there is no case where a submission writes to an org without pinning
 
 ### Notifications
 
@@ -211,7 +298,7 @@ All inherit from `ApplicationDecorator` which provides:
 - `display_image` — selects primary/gallery/downloadable asset intelligently
 - `link_target` — polymorphic path generation
 
-Key decorators: WorkshopDecorator, StoryDecorator, ResourceDecorator, PersonDecorator, OrganizationDecorator, UserDecorator, EventDecorator, ReportDecorator, GrantDecorator.
+Key decorators: WorkshopDecorator, StoryDecorator, ResourceDecorator, PersonDecorator, OrganizationDecorator, UserDecorator, EventDecorator, ReportDecorator, GrantDecorator, ScholarshipDecorator (derives the scholarship index's program/location/training/status columns), CommentDecorator (source chip label/link/theme + author + timestamp for the aggregated person-comments feed), FeatureDecorator (area/audience badges, release-date labels, and the "Check out this feature"/PR links for the Features & tips page).
 
 ## Policies (ActionPolicy)
 
@@ -256,23 +343,26 @@ end
 
 ### Stimulus Controllers
 
+- `address_select` — Compact numbered picker linking an affiliation to an org address
 - `affiliation_dates` — Recalculate affiliation date ranges
-- `affiliation_title_edit` — Inline-edit an affiliation title pill on the org-link editor
 - `anchor_highlight` — Highlight anchored elements
 - `asset_picker` — Asset selection UI
 - `autosave` — Auto-save form state
-- `carousel` — Swiper-based carousels
+- `carousel` — Swiper-based carousels (opt-in `Autoplay` via the options value)
+- `ce_license_picker` — Fill the CE license type/number/state/expiry fields from the picked license (or clear them for a new one)
 - `cocoon` — Nested form handling (cocoon gem)
 - `collection` — Filter form auto-submit with debounce
 - `column_toggle` — Toggle table column visibility
-- `comment_edit_toggle` — Inline comment editing mode
-- `comment_required` — Require a comment body once a topic or body is filled in
+- `panel_toggle` — Independent show/hide toggles pairing each button to the panel at its index (e.g. the training-attendees table/charts panels; revealing a hidden panel loads its lazy Turbo frame)
+- `chart_tooltip_footer` — Appends footer lines to a chartkick stacked tooltip (a summed Total and/or per-x pre-formatted lines), configuring the Chart.js callback that can't be passed through the ERB helper
 - `confirm_email` — Email confirmation UI
 - `dirty_form` — Unsaved changes detection
 - `dismiss` — Dismissable elements
 - `dropdown` — Dropdown menus with keyboard/click-outside handling
+- `edit_toggle` — Inline view/edit toggle for the comments and communications boxes (configurable view/edit CSS classes)
 - `event_staff_bio` — Loads a selected person's read-only profile bio (with edit link) alongside the editable event-specific bio on the staff form
 - `file_preview` — File upload preview
+- `conditional_fields` — Shows/hides fields based on a source `<select>` (via `data-show-when` value match, or `data-show-when-attr` reading a `data-*` flag on the selected option — e.g. the subscription form's event field appears only for event-oriented topics)
 - `grant_details` — Swaps a grant's eligibility criteria + tasks when the grant picker changes
 - `grant_select` — Tom Select grant picker showing each grant's remaining-of-total funds
 - `inactive_toggle` — Gray out expired affiliations
@@ -281,15 +371,18 @@ end
 - `paginated_fields` — Client-side pagination of nested fields
 - `password_toggle` — Show/hide password fields
 - `prefetch_lazy` — Prefetch lazy-loaded content
+- `primary_tag` — Shared single-primary star for the sector and age-range cocoon chip editors (clears other stars, highlights via configurable classes, no reorder)
 - `print_options` — Print options toggle for analytics
+- `reminder_preview` — Live-preview the reminder email as the admin composes it on the bulk-reminder page: custom message, subject, and the event-details box toggle (announced to screen readers)
 - `remote_select` — AJAX-powered select dropdown
 - `reveal_section` — Expand a collapsible section and scroll to it when loaded via matching URL hash
 - `rhino_source` — Rich text editor integration
 - `scholarship_preview` — Live-preview the scholarship's allocated amount as the edit form changes
+- `scroll_to_top` — Scrolls the window to the top on connect (used by the duplicate-person warning so it comes into view on create)
 - `searchable_checkbox` — TomSelect checkbox-style multi-select
 - `searchable_select` — Tom Select autocomplete
 - `share_url` — URL sharing/copying
-- `sortable` — Drag-drop sorting (SortableJS)
+- `sortable` — Drag-drop sorting (SortableJS); persists order via a per-row PUT (used by categories index and the registration ticket callouts editor)
 - `submit_once` — Disables a form's submit button after submit to block duplicate submissions; re-enables on Back/bfcache/Turbo restore
 - `tabs` — Tab panel navigation
 - `tag_link_loading` — Loading state for tag links
@@ -298,7 +391,7 @@ end
 - `timeframe` — Date range filtering
 - `toggle_lock` — Lock/unlock toggle UI
 - `toggle_user_icon` — User icon visibility toggle
-- `us_map_chart` — US states choropleth map (event Background states breakdown)
+- `us_map_chart` — US states choropleth map (event roster / attendees index states breakdown)
 
 ### JS Dependencies
 
@@ -315,9 +408,15 @@ end
 
 ### Tailwind Theme
 
-Custom colors defined in `app/frontend/stylesheets/application.tailwind.css`:
+Custom tokens defined in the `@theme` block of `app/frontend/stylesheets/application.tailwind.css`:
 - `--color-primary: #063b8d` (dark blue)
 - Standard semantic colors: secondary, danger, warning, info, success
+- Sub-`xs` font sizes for dense UI, a 2px-step scale below `text-xs` (12px): `text-2xs` (10px), `text-3xs` (8px), `text-4xs` (6px) — use these instead of arbitrary `text-[…px]` values
+- Social brand colors for share/follow button hovers: `linkedin`, `facebook`, `twitter`, `youtube`, and the Instagram gradient stops `instagram-start` / `instagram-mid` / `instagram-end`
+
+Tailwind class order is sorted with rustywind via `ai/tw-sort` (Prettier's Tailwind plugin can't parse ERB). Prefer named theme tokens and static class literals over arbitrary/interpolated classes.
+
+Tailwind only scans the paths listed in the `@source` directives at the top of that file (`views`, `javascript`, `helpers`, `decorators`). **A Tailwind class in a file outside those paths will not compile** — add an `@source` line before putting classes anywhere new.
 
 ## Testing
 
@@ -325,17 +424,17 @@ Custom colors defined in `app/frontend/stylesheets/application.tailwind.css`:
 
 | Directory | Count | Purpose |
 |---|---|---|
-| `spec/models/` | ~58 | Model unit tests |
-| `spec/views/` | ~73 | View template tests |
-| `spec/requests/` | ~47 | HTTP request/integration tests |
-| `spec/system/` | ~25 | End-to-end browser tests (Capybara) |
-| `spec/routing/` | ~13 | Route definition tests |
-| `spec/policies/` | ~9 | Authorization policy tests |
-| `spec/decorators/` | ~10 | Decorator tests |
-| `spec/services/` | ~12 | Service object tests |
+| `spec/models/` | ~71 | Model unit tests |
+| `spec/views/` | ~77 | View template tests |
+| `spec/requests/` | ~91 | HTTP request/integration tests |
+| `spec/system/` | ~20 | End-to-end browser tests (Capybara) |
+| `spec/routing/` | ~15 | Route definition tests |
+| `spec/policies/` | ~15 | Authorization policy tests |
+| `spec/decorators/` | ~15 | Decorator tests |
+| `spec/services/` | ~25 | Service object tests |
 | `spec/mailers/` | ~5 | Mailer tests |
-| `spec/helpers/` | ~1 | Helper tests |
-| `spec/factories/` | ~53 | FactoryBot factory definitions |
+| `spec/helpers/` | ~5 | Helper tests |
+| `spec/factories/` | ~67 | FactoryBot factory definitions |
 
 ### Configuration
 
@@ -408,8 +507,14 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (4 files):
+Located in `lib/tasks/` (9 files):
 - `dev.rake` — Development database seeding from XML/CSV
 - `rhino_migrator.rake` — Rich text editor migration
 - `attachment_report.rake` — Attachment reporting
 - `migrate_internal_id_to_filemaker_code.rake` — FileMaker code migration
+- `convert_age_ranges.rake` — Age range data conversion
+- `legacy_user_permissions_to_comments.rake` — Migrate legacy user permissions into comments
+- `migrate_sectors.rake` — Sector data migration
+- `import_stories.rake` — Imports stories from a WordPress Posts Export CSV (`StoryImporter`)
+- `migrate_workshop_logs.rake` — Workshop log migration
+- `migrate_sectors.rake` — Sector data migration

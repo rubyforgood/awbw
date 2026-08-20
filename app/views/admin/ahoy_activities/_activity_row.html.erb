@@ -1,0 +1,64 @@
+<tr class="hover:bg-gray-50 transition">
+  <td data-label="Time" class="px-4 py-3 whitespace-nowrap text-gray-500">
+    <%= event.time.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
+  </td>
+
+  <td data-label="Activity" class="px-4 py-3 font-medium text-gray-900">
+    <%= event.name %>
+  </td>
+
+  <td data-label="Resource" class="px-4 py-3 text-gray-500">
+    <%= event.properties["resource_title"].presence || "—" %>
+  </td>
+
+  <td data-label="User" class="px-4 py-3 text-gray-600">
+    <% if event.user %>
+      <%= link_to event.user.full_name,
+                  user_path(event.user),
+                  class: "text-indigo-600 hover:underline" %>
+    <% else %>
+      <span class="text-gray-400 italic">Guest</span>
+    <% end %>
+  </td>
+
+  <td data-label="Visit ID" class="px-4 py-3 text-gray-500">
+    <%= event.visit_id %>
+  </td>
+
+  <td data-label="Properties" class="px-4 py-3 text-gray-500 relative group">
+    <% if event.properties.present? && event.properties.any? %>
+      <%= link_to admin_activities_event_path(event),
+                  class: "cursor-default text-indigo-600 text-xs font-medium bg-indigo-50 px-2 py-0.5 rounded hover:bg-indigo-100" do %>
+        <%= event.properties.size %> <%= "prop".pluralize(event.properties.size) %>
+      <% end %>
+      <%
+        props = event.properties.dup
+        display_props = []
+        # Combine polymorphic _type/_id pairs
+        props.keys.select { |k| k.end_with?("_type") }.each do |type_key|
+          prefix = type_key.chomp("_type")
+          id_key = "#{prefix}_id"
+          if props.key?(id_key)
+            display_props << [prefix, "#{props[type_key]}.find(#{props[id_key]})"]
+            props.delete(type_key)
+            props.delete(id_key)
+          end
+        end
+        # Show resource_title first, then remaining props
+        if props.key?("resource_title")
+          display_props.unshift(["resource_title", props.delete("resource_title")])
+        end
+        props.each do |key, value|
+          display_props << [key, value.is_a?(Hash) ? value.to_json : value]
+        end
+      %>
+      <div class="hidden group-hover:block absolute z-50 right-0 top-full bg-gray-900 text-gray-100 text-xs rounded-lg shadow-lg px-3 py-3 max-h-64 overflow-y-auto" style="width: 400px;">
+        <% display_props.each do |key, value| %>
+          <div class="py-1"><span class="text-indigo-300 font-semibold"><%= key %>:</span> <%= value.nil? ? "nil" : value.to_s.delete('"') %></div>
+        <% end %>
+      </div>
+    <% else %>
+      <span class="text-gray-300 italic">none</span>
+    <% end %>
+  </td>
+</tr>

@@ -13,12 +13,16 @@ class ResourcePolicy < ApplicationPolicy
     admin?
   end
 
+  def search?
+    authenticated?
+  end
+
   def update?
     admin?
   end
 
   def download?
-    true
+    show?
   end
 
   def filter_published?
@@ -27,10 +31,7 @@ class ResourcePolicy < ApplicationPolicy
 
   relation_scope do |relation|
     next relation if admin?
-    if authenticated?
-      relation.published
-    else
-      relation.publicly_visible
-    end
+    visible = authenticated? ? relation.published : relation.publicly_visible
+    visible.searchable
   end
 end

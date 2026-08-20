@@ -36,6 +36,11 @@ class FormAnswerValidator
     return "can't be blank" if field.required && blank_answer?(value)
     return if value.blank?
 
+    # A file upload arrives as a signed blob id (or an uploaded file), not text —
+    # the word/character/format/inclusion checks below don't apply. Its content
+    # type is enforced by Asset when the file is attached during submission.
+    return if field.file_upload?
+
     if field.number_integer? && value.to_s !~ WHOLE_NUMBER_FORMAT
       "must be a whole number"
     elsif field.email_field? && value.to_s !~ EMAIL_FORMAT

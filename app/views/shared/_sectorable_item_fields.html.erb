@@ -3,9 +3,9 @@
 <% is_primary = f.object&.is_primary? %>
 
 <div class="nested-fields inline-flex items-center gap-2
-            rounded-md border <%= is_primary ? "border-lime-500 bg-lime-200" : "border-gray-300 bg-white" %>
+            rounded-md border border-lime-300 <%= is_primary ? "bg-lime-100" : "bg-lime-50" %>
             text-gray-700 px-3 py-1 text-sm font-medium transition"
-     data-primary-sector-target="chip">
+     data-primary-tag-target="chip">
   <% if f.object&.sector_id.present? %>
     <%= f.hidden_field :sector_id %>
     <span><%= f.object.sector&.name %></span>
@@ -22,10 +22,10 @@
                 } %>
   <% end %>
   <% if show_admin_flags && allowed_to?(:manage?, Person) %>
-    <label class="admin-only cursor-pointer leading-none" title="Mark as primary service area">
+    <label class="admin-only cursor-pointer leading-none" title="Mark as primary sector">
       <%= f.check_box :is_primary,
                       class: "peer sr-only",
-                      data: { primary_sector_target: "primary", action: "primary-sector#selectPrimary" } %>
+                      data: { primary_tag_target: "primary", action: "primary-tag#selectPrimary" } %>
       <i class="fa-solid fa-star text-base text-gray-300 peer-checked:text-amber-400 transition-colors" aria-hidden="true"></i>
       <span class="sr-only">Primary</span>
     </label>

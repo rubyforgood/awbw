@@ -37,4 +37,22 @@ RSpec.describe FormPolicy, type: :policy do
       it { is_expected.not_to be_allowed_to(:destroy?) }
     end
   end
+
+  describe "#public_show?" do
+    it "allows anyone (no account) for a publicly-fillable form" do
+      form = create(:form, slug: "apply", published: true)
+      expect(policy_for(record: form, user: nil)).to be_allowed_to(:public_show?)
+    end
+
+    it "denies an unpublished standalone form" do
+      form = create(:form, slug: "apply", published: false)
+      expect(policy_for(record: form, user: nil)).not_to be_allowed_to(:public_show?)
+    end
+
+    it "denies an event-owned form even when published" do
+      form = create(:form, :with_owner, slug: "apply")
+      form.update_column(:published, true)
+      expect(policy_for(record: form, user: nil)).not_to be_allowed_to(:public_show?)
+    end
+  end
 end

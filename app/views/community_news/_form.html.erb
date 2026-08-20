@@ -1,5 +1,4 @@
 <%= simple_form_for(@community_news, html: { class: "space-y-8" }) do |f| %>
-  <%= f.hidden_field :created_by_id, value: f.object.created_by_id || current_user&.id %>
   <%= f.hidden_field :updated_by_id, value: current_user&.id %>
 
   <%= render 'shared/errors', resource: @community_news if @community_news.errors.any? %>
@@ -9,11 +8,14 @@
     <%= f.input :title, as: :text, input_html: { rows: 1, class: "w-full" } %>
 
     <%# if allowed_to?(:manage?, @commenity_news) %>
-    <div class="admin-only bg-blue-100 grid grid-cols-2 items-center mt-6 md:mt-0 p-3">
-      <%= f.input :published, as: :boolean %>
-      <%= f.input :featured, as: :boolean, label: "Featured?" %>
-      <%= f.input :publicly_visible, as: :boolean, label: "Publicly visible?" %>
-      <%= f.input :publicly_featured, as: :boolean, label: "Publicly featured?" %>
+    <div class="admin-only bg-blue-100 rounded mt-6 md:mt-0 p-3">
+      <%= render "shared/visibility_info", flags: %i[published featured publicly_visible publicly_featured] %>
+      <div class="grid grid-cols-2 items-center">
+        <%= visibility_flag_input f, :published %>
+        <%= visibility_flag_input f, :featured %>
+        <%= visibility_flag_input f, :publicly_visible %>
+        <%= visibility_flag_input f, :publicly_featured %>
+      </div>
     </div>
 
     <%# end %>
@@ -50,12 +52,21 @@
 
     <%= f.input :author_id,
                 as: :select,
-                label: "Display author",
+                label: "Author",
                 required: true,
-                collection: @authors,
-                selected: f.object.author_id ||
-                  current_user&.id ||
-                  User.where("first_name like 'awbw%' or last_name like 'awbw%'").last&.id,
+                collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
+                selected: f.object.author_id || current_user&.person_id,
+                input_html: { required: true,
+                              class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
+                              data: { controller: "remote-select",
+                                      remote_select_model_value: "person" } } %>
+
+    <%= f.input :author_credit_preference,
+                as: :select,
+                label: "Author credit preference",
+                hint: "Controls how the author's name is displayed",
+                collection: AuthorCreditable::ADMIN_FORM_OPTIONS,
+                selected: f.object.author_credit_preference,
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
   </div>
   <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>

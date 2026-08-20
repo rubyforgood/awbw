@@ -1,7 +1,12 @@
 {
   "all": {
     "sourceCodeDir": "app/frontend",
-    "watchAdditionalPaths": []
+    "watchAdditionalPaths": [
+      "app/views/**/*",
+      "app/helpers/**/*.rb",
+      "app/decorators/**/*.rb",
+      "app/presenters/**/*.rb"
+    ]
   },
   "development": {
     "autoBuild": true,

@@ -1,0 +1,9 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="w-full max-w-3xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
+  <div class="flex flex-wrap justify-end gap-2 mb-4">
+    <%= link_to "Features & tips", features_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <%= link_to "View", feature_path(@feature), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+  </div>
+  <h1 class="text-2xl font-semibold text-gray-900 mb-6">Edit feature</h1>
+  <%= render "form", feature: @feature %>
+</div>

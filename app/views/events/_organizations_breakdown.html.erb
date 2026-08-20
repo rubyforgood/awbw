@@ -1,0 +1,48 @@
+<%# Organizations represented at the event, with distinct-registrant counts —
+    a specialized variant of _breakdown_card (chart: nil) that flags each
+    scholarship-recipient org with a grad-cap icon. A pure-CSS toggle (a `peer`
+    checkbox) swaps between the full list and a scholarship-orgs-only list: both
+    are rendered server-side and shown/hidden via `peer-checked:` — no JS. Sibling
+    order matters (checkbox before the tables) for the `peer-checked:` selector.
+    Local: org_rows — array of { name:, count:, scholarship_count:, path: },
+    pre-sorted by count desc. %>
+<% total = org_rows.sum { |row| row[:count] } %>
+<% scholarship_rows = org_rows.select { |row| row[:scholarship_count].positive? } %>
+<%# id/scroll-mt so registrants-page drill-downs from these rows can scroll back
+    to this card (its rows carry return_anchor "all-organizations"). %>
+<div id="all-organizations" class="scroll-mt-24 bg-white border border-gray-200 rounded-xl shadow-sm p-4 <%= local_assigns[:extra_class] %>">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-sm font-semibold text-gray-700">All organizations</h2>
+    <span class="text-xs text-gray-500"><%= org_rows.size %></span>
+  </div>
+
+  <% if scholarship_rows.any? %>
+    <% scholarship_pct = (scholarship_rows.size.to_f / org_rows.size * 100).round %>
+    <%# Slider toggle (matching the app's switch pattern) that filters the list to
+        scholarship orgs. The input must stay a direct sibling before the tables so
+        the pure-CSS peer-checked: swap works; both labels are siblings too, so the
+        track picks up peer-checked styling and either one toggles the input. %>
+    <input type="checkbox" id="org-scholarship-filter" class="sr-only peer">
+    <label for="org-scholarship-filter"
+           class="relative inline-block h-6 w-11 rounded-full bg-gray-200 align-middle transition-colors cursor-pointer after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></label>
+    <label for="org-scholarship-filter" class="ml-2 mb-3 inline-flex items-center gap-1 align-middle text-xs text-gray-600 cursor-pointer select-none">
+      <i class="fa-solid fa-graduation-cap <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>" aria-hidden="true"></i>
+      Only scholarship orgs (<%= scholarship_rows.size %> of <%= org_rows.size %> · <%= scholarship_pct %>%)
+    </label>
+  <% end %>
+
+  <%# Full list — hidden once the toggle is checked. %>
+  <table class="w-full text-sm peer-checked:hidden">
+    <tbody>
+      <%= render partial: "events/organization_row", collection: org_rows, as: :row, locals: { total: total } %>
+    </tbody>
+  </table>
+  <%# Scholarship-orgs-only list — revealed when the toggle is checked. %>
+  <% if scholarship_rows.any? %>
+    <table class="hidden w-full text-sm peer-checked:table">
+      <tbody>
+        <%= render partial: "events/organization_row", collection: scholarship_rows, as: :row, locals: { total: total } %>
+      </tbody>
+    </table>
+  <% end %>
+</div>

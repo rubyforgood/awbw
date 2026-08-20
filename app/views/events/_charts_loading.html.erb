@@ -1,0 +1,21 @@
+<%# Skeleton shown while a charts Turbo frame loads — mirrors the breakdown-card
+    grid (a pulsing title bar, chart area, and legend rows per card) so revealing
+    the real charts doesn't jump the layout. Shared by the roster, attendees, and
+    recipients charts frames. %>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 animate-pulse" role="status" aria-live="polite">
+  <span class="sr-only">Loading charts…</span>
+  <% 6.times do %>
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4">
+      <div class="flex items-center justify-between mb-4">
+        <div class="h-4 w-32 rounded bg-gray-200"></div>
+        <div class="h-3 w-6 rounded bg-gray-200"></div>
+      </div>
+      <div class="mx-auto h-40 w-40 rounded-full bg-gray-100"></div>
+      <div class="mt-4 space-y-2">
+        <div class="h-3 w-full rounded bg-gray-100"></div>
+        <div class="h-3 w-5/6 rounded bg-gray-100"></div>
+        <div class="h-3 w-2/3 rounded bg-gray-100"></div>
+      </div>
+    </div>
+  <% end %>
+</div>

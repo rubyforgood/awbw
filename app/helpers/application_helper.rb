@@ -1,10 +1,41 @@
 module ApplicationHelper
+  # Byline for an AuthorCreditable record. Links to the credited author's person
+  # profile when the credit resolves to a searchable person; otherwise renders
+  # plain text. The text always honors the credit preference (author_credit), so
+  # anonymous and legacy free-text credits never link to a profile.
+  def credited_author_link(record, **link_options)
+    person = record.author_credit_person
+    if person&.profile_is_searchable
+      link_to record.author_credit, person_path(person), **link_options
+    else
+      record.author_credit
+    end
+  end
+
   # Tags an admin may use in a form field name / group header that should
   # render (rather than escape) on the public form. Block + inline formatting,
   # links, line breaks, and font sizing/coloring (via <font> or inline style).
   # Anything outside this allowlist is stripped by `sanitize`.
-  FORM_LABEL_TAGS = %w[br a p span strong b em i u h1 h2 h3 h4 h5 h6 ul ol li font].freeze
-  FORM_LABEL_ATTRIBUTES = %w[href target rel style size color face].freeze
+  FORM_LABEL_TAGS = %w[br a p span strong b em i u h1 h2 h3 h4 h5 h6 ul ol li font details summary].freeze
+  FORM_LABEL_ATTRIBUTES = %w[href target rel style size color face open].freeze
+
+  # Tint a section-header icon (the rounded square in a card header) with its
+  # domain theme colour only when that section actually holds data, falling back
+  # to a muted grey otherwise. Lets the registration edit cards signal at a glance
+  # which sections are populated — purely server-rendered, no JS. Pass the domain
+  # key (see DomainTheme::COLORS) and a boolean for whether the section has data.
+  def section_icon_class(domain, active)
+    return "bg-gray-100 text-gray-400" unless active
+
+    "#{DomainTheme.bg_class_for(domain, intensity: 100)} #{DomainTheme.text_class_for(domain, intensity: 600)}"
+  end
+
+  # Shared pill/badge recipe. Pass the theme bg/text/border classes; padding varies
+  # (static pills use px-2.5, link pills px-5), so it's a param. Pairs with the
+  # shared/_badge partial.
+  def badge_classes(theme_classes, padding: "px-2 py-0.5")
+    "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border text-xs font-medium #{theme_classes} #{padding}"
+  end
 
   # Render a form field name / header with a safe subset of HTML allowed.
   # Uses Rails' SafeListSanitizer, which strips dangerous URL schemes
@@ -12,6 +43,57 @@ module ApplicationHelper
   # unsafe properties/values), so admin-authored markup can't inject XSS.
   def form_label_html(text)
     sanitize(text.to_s, tags: FORM_LABEL_TAGS, attributes: FORM_LABEL_ATTRIBUTES)
+  end
+
+  # Render an admin-authored custom message included in a reminder email with the
+  # same safe subset of HTML as form labels (bold, italics, links, lists, line
+  # breaks). Reuses form_label_html so the allowlist — and its XSS scrubbing —
+  # stays in one place. Available to mailer views via `helper ApplicationHelper`.
+  def reminder_message_html(text)
+    form_label_html(text)
+  end
+
+  # The day-relative phrase appended to the default reminder message: " today",
+  # " tomorrow", " in N days", or "" when the day count isn't known. Leads with a
+  # space so it can be concatenated directly after "...event". The day count is
+  # wrapped in <strong> (the message field renders sanitized HTML), so it lands
+  # bold in the email.
+  def reminder_days_phrase(days_until_event)
+    return "" unless days_until_event.is_a?(Integer)
+    case days_until_event
+    when 0 then " <strong>today</strong>"
+    when 1 then " <strong>tomorrow</strong>"
+    else " in <strong>#{days_until_event} days</strong>"
+    end
+  end
+
+  # Default text pre-filled into the editable reminder message on the bulk
+  # reminder page (admins can edit or clear it). The day count is resolved when
+  # the page renders — it's event-level, so the same for every recipient.
+  # Self-paced training gets its own copy: there's no meaningful day count, and
+  # its details box is hidden by default, so "the following event" would dangle
+  # with nothing under it. Naming the title inline keeps the email identifiable.
+  # Just "training", not "on-demand training" — these titles already say so
+  # ("On-Demand Training 2026"), and the pairing reads as a stutter.
+  def default_reminder_message(days_until_event, event: nil)
+    organization = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    opening = if event&.on_demand?
+      "This is a reminder that you're registered for the #{organization} training <strong>#{ERB::Util.html_escape(event.title)}</strong>."
+    else
+      "This is a reminder that you're registered for the following #{organization} event#{reminder_days_phrase(days_until_event)}."
+    end
+    # Any event with a deadline states it here, in copy the admin can reword — the
+    # email template has no standalone deadline block, so this is the only place
+    # it appears and it can't land twice.
+    deadline = event&.decorate&.completion_deadline_display
+    [ opening, ("Please complete it by <strong>#{deadline}</strong>." if deadline) ].compact.join(" ")
+  end
+
+  # Default subject line pre-filled into the editable subject field on the bulk
+  # reminder page (admins can edit it). Mirrors the mailer's fallback subject; the
+  # event date is event-level, resolved here in the app default time zone.
+  def default_reminder_subject(event)
+    event.decorate.default_reminder_subject
   end
 
   # Tokens an admin can drop into a form header; each is filled from the event the
@@ -174,11 +256,21 @@ module ApplicationHelper
   # values for these is mirrored by FormField#allowed_answer_values.
   def dynamic_form_field_options(field)
     case field.field_identifier
-    when *FormField::SERVICE_AREA_FIELD_IDENTIFIERS
-      field.service_area_sectors.map { |sector| [ sector.name, sector.id.to_s, sector.description ] }
+    when *FormField::SECTOR_FIELD_IDENTIFIERS
+      field.sector_options.map { |sector| [ sector.name, sector.id.to_s, sector.description ] }
     when *FormField::DYNAMIC_FIELD_CATEGORY_TYPES.keys
       field.dynamic_categories.map { |category| [ category.name, category.id.to_s, category.description ] }
     end
+  end
+
+  # Resolves the signed blob id a file-upload field carries back when its form is
+  # re-rendered after a validation error, so the form can show what is already
+  # uploaded rather than making the registrant pick the file again. nil when the
+  # value is missing or isn't a live signed id.
+  def retained_upload_blob(signed_id)
+    return if signed_id.blank?
+
+    ActiveStorage::Blob.find_signed(signed_id.to_s)
   end
 
   # True when a dropdown field carries an "Other" option that the public form
@@ -198,7 +290,7 @@ module ApplicationHelper
   # editor badge: a sentence-case label and a link to the filtered admin list
   # that manages those options. Returns nil for fields with stored options.
   def form_field_option_source(field)
-    if field.field_identifier.in?(FormField::SERVICE_AREA_FIELD_IDENTIFIERS)
+    if field.field_identifier.in?(FormField::SECTOR_FIELD_IDENTIFIERS)
       { label: "Sectors", path: sectors_path }
     elsif (type_name = FormField::DYNAMIC_FIELD_CATEGORY_TYPES[field.field_identifier])
       type = CategoryType.find_by(name: type_name)
@@ -218,7 +310,18 @@ module ApplicationHelper
     people:              "fa-user",
     organizations:       "fa-building",
     workshops:           "fa-chalkboard-user",
-    resources:           "fa-book"
+    workshop_variations: "fa-shapes",
+    resources:           "fa-book",
+    scholarships:        "fa-graduation-cap",
+    notifications:       "fa-bell",
+    grants:              "fa-hand-holding-dollar",
+    form_submissions:    "fa-file-signature",
+    payments:            "fa-money-check-dollar",
+    topic_subscriptions: "fa-envelope-open-text",
+    memberships:         "fa-id-card",
+    continuing_education_registrations: "fa-award",
+    workshop_ideas:          "fa-lightbulb",
+    workshop_variation_ideas: "fa-lightbulb"
   }.freeze
 
   # Themed card-style link to a filtered index. The collection drives the
@@ -252,11 +355,12 @@ module ApplicationHelper
 
       label_tag = content_tag(:span, label, class: "font-medium #{text} truncate")
 
-      count_tag = if hide_count
+      count = collection.count
+      count_tag = if hide_count || count.zero?
         "".html_safe
       else
         content_tag(:span,
-                    number_with_delimiter(collection.count),
+                    number_with_delimiter(count),
                     class: "ml-auto inline-flex items-center justify-center min-w-[2.25rem] px-2 py-0.5 text-sm font-semibold rounded-full bg-white #{text} border #{border}")
       end
 
@@ -306,7 +410,7 @@ module ApplicationHelper
   def noticeable_label(record)
     label = case record
     when EventRegistration
-      [ record.registrant&.name, record.event&.title ].compact_blank.join(" · ")
+      [ record.registrant&.name, event_title_with_month_year(record.event) ].compact_blank.join(" · ")
     when FormSubmission
       [ record.person&.name, record.form&.name ].compact_blank.join(" · ")
     else
@@ -314,6 +418,40 @@ module ApplicationHelper
     end
 
     label.presence || "##{record.id}"
+  end
+
+  # A pill button for any noticeable record — same shape as the person/event
+  # profile buttons (bordered, rounded, themed by the record's domain) but with
+  # no avatar or icon: a small type label plus the record's name, linking to it.
+  # Falls back to a non-clickable span when the record has no routable path.
+  def record_button(record, compact: true)
+    key = record.model_name.plural.to_sym
+    padding = compact ? "px-2 py-1" : "px-4 py-2"
+    name_size = compact ? "text-xs" : "text-sm"
+
+    inner = content_tag(:span, noticeable_type_label(record), class: "shrink-0 text-2xs text-gray-400 uppercase") +
+            content_tag(:span, noticeable_label(record), class: "truncate font-semibold #{name_size} #{DomainTheme.text_class_for(key)}")
+    body = content_tag(:div, inner, class: "flex min-w-0 items-center gap-1.5 leading-none text-left")
+
+    classes = "group relative flex w-fit max-w-md items-center gap-2 #{padding} " \
+              "rounded-lg border #{DomainTheme.border_class_for(key)} #{DomainTheme.bg_class_for(key, intensity: 50)} " \
+              "#{DomainTheme.bg_class_for(key, intensity: 50, hover: true)} font-medium shadow-sm leading-none transition-colors duration-200"
+
+    path = routable_path(record)
+    return content_tag(:span, body, class: classes, title: noticeable_label(record)) unless path
+
+    link_to path, class: classes, title: noticeable_label(record) do
+      body
+    end
+  end
+
+  # Event title with its month and year appended (e.g. "AWBW Facilitator
+  # Training (August 2026)") so a registration reads as which occurrence it's for.
+  def event_title_with_month_year(event)
+    return if event.blank?
+    return event.title if event.start_date.blank?
+
+    "#{event.title} (#{event.start_date.strftime('%B %Y')})"
   end
 
   def search_page(params)
@@ -410,9 +548,25 @@ module ApplicationHelper
   # Currency for an amount given in cents, dropping the cents when the amount is
   # a whole number of dollars: 150000 → "$1,500", 75050 → "$750.50".
   def dollars_from_cents(cents)
-    cents = cents.to_i
-    precision = (cents % 100).zero? ? 0 : 2
-    number_to_currency(cents / 100.0, precision: precision)
+    MoneyFormatter.dollars_from_cents(cents)
+  end
+
+  # Like dollars_from_cents but preserves a leading minus for negative amounts.
+  def signed_dollars_from_cents(cents)
+    MoneyFormatter.signed_dollars_from_cents(cents)
+  end
+
+  # A plain number without insignificant trailing zeros (e.g. CE hours): 6.0 → "6",
+  # 1.5 → "1.5". Nil for a blank input so callers can render their own placeholder.
+  def plain_number(number)
+    NumberFormatter.plain(number)
+  end
+
+  # Timezone hint phrased for whoever the form is about: second person when you're
+  # editing your own settings, third person ("User") when an admin edits someone else.
+  def timezone_visibility_hint(user)
+    subject = user == current_user ? "You" : "User"
+    "#{subject} will see times and dates in this timezone."
   end
 
   def navbar_bg_class

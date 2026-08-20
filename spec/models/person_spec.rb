@@ -1,6 +1,70 @@
 require "rails_helper"
 
 RSpec.describe Person, type: :model do
+  describe "#membership_current?" do
+    let(:person) { create(:person) }
+    let(:subscription) { create(:membership, person: person) }
+
+    def term(cost_cents:, start_date: Date.current, subscription: nil)
+      create(:membership_invoice,
+        membership: subscription || create(:membership, person: person),
+        cost_cents: cost_cents,
+        start_date: start_date,
+        end_date: start_date + 1.year - 1.day)
+    end
+
+    it "is false with no membership at all" do
+      expect(person).not_to be_membership_current
+    end
+
+    it "is true on a comped term" do
+      term(cost_cents: 0, subscription: subscription)
+      expect(person).to be_membership_current
+    end
+
+    it "is true on a paid term" do
+      paid = term(cost_cents: 2_500, subscription: subscription)
+      create(:allocation, source: create(:payment, amount_cents: 2_500), allocatable: paid, amount: 2_500)
+
+      expect(person).to be_membership_current
+    end
+
+    it "is true on an unpaid term still inside the grace window" do
+      term(cost_cents: 2_500, start_date: Date.current - 1, subscription: subscription)
+      expect(person).to be_membership_current
+    end
+
+    it "is false on an unpaid term past the grace window" do
+      term(cost_cents: 2_500,
+        start_date: Date.current - Membership::GRACE_PERIOD_DAYS - 1,
+        subscription: subscription)
+
+      expect(person).not_to be_membership_current
+    end
+
+    it "is false when the only comped term has expired" do
+      term(cost_cents: 0, start_date: Date.current - 2.years, subscription: subscription)
+      expect(person).not_to be_membership_current
+    end
+
+    it "is false when a comped term has not started yet" do
+      term(cost_cents: 0, start_date: Date.current + 1.day, subscription: subscription)
+      expect(person).not_to be_membership_current
+    end
+
+    it "still counts a term whose subscription was cancelled, until the term ends" do
+      term(cost_cents: 0, subscription: subscription)
+      subscription.update!(cancelled_at: Time.current)
+
+      expect(person.reload).to be_membership_current
+    end
+
+    it "answers for a past date too" do
+      term(cost_cents: 0, start_date: Date.current - 2.years, subscription: subscription)
+      expect(person.membership_current?(as_of: Date.current - 18.months)).to be(true)
+    end
+  end
+
   describe "associations" do
     it { should have_one(:user) }
     it { should belong_to(:created_by).class_name("User").optional(true) }
@@ -267,6 +331,43 @@ RSpec.describe Person, type: :model do
     end
   end
 
+  describe "#phone_number" do
+    let(:person) { create(:person) }
+
+    def add_phone(value, primary: false, inactive: false, kind: "phone")
+      ContactMethod.create!(contactable: person, kind: kind, value: value, primary: primary, inactive: inactive)
+    end
+
+    # The same answer whether the caller preloaded contact_methods or not — the
+    # loaded branch exists only to spare a query per row on rosters and exports.
+    def phone_numbers
+      [ person.reload.phone_number, Person.includes(:contact_methods).find(person.id).phone_number ]
+    end
+
+    it "returns nil with no phone on file" do
+      add_phone("nope", kind: "sms")
+      expect(phone_numbers).to all(be_nil)
+    end
+
+    it "prefers the primary phone over the others" do
+      add_phone("555-0001")
+      add_phone("555-0002", primary: true)
+      expect(phone_numbers).to all(eq("555-0002"))
+    end
+
+    it "falls back to the first phone when none is primary" do
+      add_phone("555-0001")
+      add_phone("555-0002")
+      expect(phone_numbers).to all(eq("555-0001"))
+    end
+
+    it "ignores inactive phones, including an inactive primary" do
+      add_phone("555-0001", primary: true, inactive: true)
+      add_phone("555-0002")
+      expect(phone_numbers).to all(eq("555-0002"))
+    end
+  end
+
   describe "#primary_organization" do
     let(:person) { create(:person) }
 
@@ -329,6 +430,14 @@ RSpec.describe Person, type: :model do
       expect(results).not_to include(person_bob)
     end
 
+    it 'filters by contact_info matching legal first name' do
+      person_carol = create(:person, first_name: 'Carol', legal_first_name: 'Caroline', last_name: 'White')
+
+      results = Person.search_by_params(contact_info: 'Caroline')
+      expect(results).to include(person_carol)
+      expect(results).not_to include(person_alice, person_bob)
+    end
+
     it 'filters by contact_info matching email' do
       results = Person.search_by_params(contact_info: 'bob@example')
       expect(results).to include(person_bob)
@@ -351,6 +460,32 @@ RSpec.describe Person, type: :model do
       expect {
         Person.with_active_affiliations.search_by_params(organization_name: 'Alpha').to_a
       }.not_to raise_error
+    end
+
+    context 'sector_leaders_only' do
+      let(:sector) { create(:sector) }
+
+      before do
+        person_alice.sectorable_items.create!(sector: sector, is_leader: true)
+        person_bob.sectorable_items.create!(sector: sector, is_leader: false)
+      end
+
+      it 'returns only people who lead a sector when truthy' do
+        results = Person.search_by_params(sector_leaders_only: '1')
+        expect(results).to include(person_alice)
+        expect(results).not_to include(person_bob)
+      end
+
+      it 'returns a person once even when they lead several sectors' do
+        person_alice.sectorable_items.create!(sector: create(:sector), is_leader: true)
+        results = Person.search_by_params(sector_leaders_only: '1')
+        expect(results.to_a.count(person_alice)).to eq(1)
+      end
+
+      it 'ignores the filter when unchecked' do
+        results = Person.search_by_params(sector_leaders_only: '0')
+        expect(results).to include(person_alice, person_bob)
+      end
     end
   end
 
@@ -394,35 +529,29 @@ RSpec.describe Person, type: :model do
       create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
     end
 
-    describe "#other_service_area_responses" do
-      it "returns free-text Other values from primary service area fields" do
-        answer("primary_service_area", "5, Other: Equine therapy")
-        answer("primary_service_area_single", "Other: Music therapy")
+    describe "#other_sector_responses" do
+      it "returns the person's visible sector OtherResponses" do
+        create(:other_response, owner: person, kind: "sector", text: "Equine therapy")
+        create(:other_response, :kept, owner: person, kind: "sector", text: "Music therapy")
 
-        expect(person.other_service_area_responses).to contain_exactly("Equine therapy", "Music therapy")
+        expect(person.other_sector_responses.map(&:text))
+          .to contain_exactly("Equine therapy", "Music therapy")
       end
 
-      it "ignores answers without an Other value" do
-        answer("primary_service_area", "5, 12")
+      it "omits dismissed and promoted responses" do
+        create(:other_response, :dismissed, owner: person, kind: "sector", text: "Hidden")
+        create(:other_response, :promoted, owner: person, kind: "sector", text: "Promoted")
 
-        expect(person.other_service_area_responses).to be_empty
-      end
-
-      it "does not pull from unrelated fields" do
-        answer("workshop_environments", "Other: School")
-
-        expect(person.other_service_area_responses).to be_empty
+        expect(person.other_sector_responses).to be_empty
       end
     end
 
     describe "#other_workshop_setting_responses" do
       it "returns free-text Other values from the category-backed fields" do
-        answer("workshop_environments", "3, Other: Equine center")
-        answer("client_life_experiences", "Other: Refugees")
-        answer("primary_age_group", "Other: Toddlers")
+        answer("primary_age_group", "3, Other: Toddlers")
 
         expect(person.other_workshop_setting_responses)
-          .to contain_exactly("Equine center", "Refugees", "Toddlers")
+          .to contain_exactly("Toddlers")
       end
 
       it "does not pull from the service area fields" do
@@ -430,6 +559,77 @@ RSpec.describe Person, type: :model do
 
         expect(person.other_workshop_setting_responses).to be_empty
       end
+    end
+  end
+
+  describe "#mailing_list_consented=" do
+    it "stamps consent and a source when granted with none on file" do
+      person = build(:person, mailing_list_consent_at: nil)
+
+      person.mailing_list_consented = "1"
+
+      expect(person.mailing_list_consent_at).to be_present
+      expect(person.mailing_list_consent_source).to eq("Admin update")
+    end
+
+    it "preserves the original timestamp and source when re-checked" do
+      original = 1.year.ago
+      person = build(:person, mailing_list_consent_at: original, mailing_list_consent_source: "Registration: X")
+
+      person.mailing_list_consented = "1"
+
+      expect(person.mailing_list_consent_at).to be_within(1.second).of(original)
+      expect(person.mailing_list_consent_source).to eq("Registration: X")
+    end
+
+    it "clears the timestamp and source when withdrawn" do
+      person = build(:person, mailing_list_consent_at: Time.current, mailing_list_consent_source: "Registration: X")
+
+      person.mailing_list_consented = "0"
+
+      expect(person.mailing_list_consent_at).to be_nil
+      expect(person.mailing_list_consent_source).to be_nil
+    end
+  end
+end
+
+RSpec.describe Person, "scholarship index helpers" do
+  let(:person) { create(:person) }
+
+  describe "#program_organization" do
+    it "returns the organization on the recipient's facilitator affiliation" do
+      org = create(:organization, name: "Prevail")
+      create(:affiliation, person: person, organization: org, title: "Facilitator")
+
+      expect(person.program_organization).to eq(org)
+    end
+
+    it "prefers an active facilitator affiliation over a lapsed one" do
+      lapsed_org = create(:organization, name: "Old Program")
+      active_org = create(:organization, name: "Current Program")
+      create(:affiliation, person: person, organization: lapsed_org, title: "Facilitator", end_date: 1.year.ago.to_date)
+      create(:affiliation, person: person, organization: active_org, title: "Facilitator")
+
+      expect(person.program_organization).to eq(active_org)
+    end
+
+    it "ignores non-facilitator affiliations" do
+      create(:affiliation, person: person, organization: create(:organization), title: "Board Member")
+
+      expect(person.program_organization).to be_nil
+    end
+  end
+
+  describe "#completed_facilitator_trainings" do
+    it "returns only attended facilitator-training events" do
+      training = create(:event, title: "TAC251", facilitator_training: true)
+      other_training = create(:event, title: "TAC252", facilitator_training: true)
+      non_training = create(:event, title: "Webinar", facilitator_training: false)
+      create(:event_registration, registrant: person, event: training, status: "attended")
+      create(:event_registration, registrant: person, event: other_training, status: "registered")
+      create(:event_registration, registrant: person, event: non_training, status: "attended")
+
+      expect(person.completed_facilitator_trainings).to contain_exactly(training)
     end
   end
 end

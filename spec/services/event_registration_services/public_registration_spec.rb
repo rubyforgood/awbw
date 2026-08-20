@@ -24,89 +24,807 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     }
   end
 
-  describe "primary service area tagging" do
-    let!(:primary_sector) { create(:sector, name: "Healthcare") }
-    let!(:other_sector) { create(:sector, name: "Education") }
+  describe "affiliation creation" do
+    # A facilitator affiliation is only minted off a facilitator-training event.
+    let(:event) { create(:event, :published, :publicly_visible, facilitator_training: true) }
+    let!(:organization) { create(:organization, name: "Helping Hands") }
 
-    it "tags the selected primary service area sectors as primary on the person" do
+    def register_with(position:)
+      params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
+        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands"
+      )
+      params[field_id(described_class::ORGANIZATION_POSITION_IDENTIFIER)] = position if position
+      described_class.call(event: event, registration_form: form, form_params: params)
+      Person.find_by(email: "sam@example.com")
+    end
+
+    it "creates a job affiliation and a facilitator affiliation from the typed position" do
+      person = register_with(position: "Counselor")
+
+      expect(person.affiliations.where(organization: organization).pluck(:title))
+        .to contain_exactly("Counselor", "Facilitator")
+    end
+
+    it "creates only a facilitator affiliation when no position was typed" do
+      person = register_with(position: nil)
+
+      expect(person.affiliations.where(organization: organization).pluck(:title))
+        .to contain_exactly("Facilitator")
+    end
+
+    # The facilitator affiliation is dated to the training, not to the day the form
+    # was submitted — the whole New/Ongoing/Reinstate rule leans on that, since an
+    # affiliation starting ON the training isn't prior history (ADR-0001 D8).
+    it "dates the facilitator affiliation to the event's start date" do
+      person = register_with(position: nil)
+
+      facilitator = person.affiliations.find_by(organization: organization, title: "Facilitator")
+      expect(facilitator.start_date).to eq(event.start_date.to_date)
+      expect(organization.reload.facilitator_status_on(event.start_date.to_date)).to eq(:new)
+    end
+
+    it "links the created affiliations to the agency address built from the form" do
+      params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
+        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands",
+        field_id(described_class::ORGANIZATION_POSITION_IDENTIFIER) => "Counselor",
+        field_id("agency_street") => "1 Main St",
+        field_id("agency_city") => "Austin",
+        field_id("agency_state") => "TX",
+        field_id("agency_zip") => "78701",
+        field_id("agency_country") => "USA"
+      )
+      described_class.call(event: event, registration_form: form, form_params: params)
+      person = Person.find_by(email: "sam@example.com")
+
+      address = organization.addresses.find_by(city: "Austin")
+      expect(address).to be_present
+      expect(address.country).to eq("USA")
+      linked = person.affiliations.where(organization: organization)
+      expect(linked.pluck(:title)).to contain_exactly("Counselor", "Facilitator")
+      expect(linked.map(&:organization_address)).to all(eq(address))
+    end
+
+    it "leaves the affiliations' organization address nil when no agency city was typed" do
+      person = register_with(position: "Counselor")
+
+      expect(person.affiliations.where(organization: organization).map(&:organization_address)).to all(be_nil)
+    end
+
+    it "creates only the job affiliation for a non-facilitator-training event" do
+      event.update!(facilitator_training: false)
+
+      person = register_with(position: "Counselor")
+
+      expect(person.affiliations.where(organization: organization).pluck(:title))
+        .to contain_exactly("Counselor")
+    end
+
+    it "links the created affiliations to the resulting registration" do
+      person = register_with(position: "Counselor")
+
+      registration = event.event_registrations.find_by(registrant: person)
+      expect(person.affiliations.where(organization: organization).map(&:event_registration))
+        .to all(eq(registration))
+    end
+  end
+
+  describe "registration organizations" do
+    let!(:organization) { create(:organization, name: "Helping Hands") }
+
+    def register_with_org(org_name)
+      params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
+        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => org_name
+      )
+      described_class.call(event: event, registration_form: form, form_params: params)
+      event.event_registrations.find_by!(registrant: Person.find_by(email: "sam@example.com"))
+    end
+
+    it "connects only the organization submitted through the form" do
+      registration = register_with_org("Helping Hands")
+
+      expect(registration.organizations).to contain_exactly(organization)
+    end
+
+    it "does not connect the registrant's other active affiliations" do
+      person = create(:person, email: "sam@example.com", last_name: "Rowe", first_name: "Sam")
+      other_org = create(:organization, name: "Unrelated Org")
+      create(:affiliation, person: person, organization: other_org)
+
+      registration = register_with_org("Helping Hands")
+
+      expect(registration.organizations).to contain_exactly(organization)
+    end
+
+    it "connects no organizations when none is submitted" do
+      params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com")
+      described_class.call(event: event, registration_form: form, form_params: params)
+      registration = event.event_registrations.find_by!(registrant: Person.find_by(email: "sam@example.com"))
+
+      expect(registration.organizations).to be_empty
+    end
+
+    it "adds the new org to the same registration when the registrant applies again" do
+      second_org = create(:organization, name: "Second Org")
+      first = register_with_org("Helping Hands")
+      second = register_with_org("Second Org")
+
+      expect(second).to eq(first)
+      expect(first.organizations).to contain_exactly(organization, second_org)
+    end
+  end
+
+  describe "racial/ethnic identity" do
+    it "stores the racial/ethnic identity on a new registrant" do
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
+        field_id("racial_ethnic_identity") => "Asian"
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(Person.find_by!(email: "ada@example.com").racial_ethnic_identity).to eq("Asian")
+    end
+
+    it "overwrites a racial/ethnic identity already on file with the latest answer" do
+      existing = create(:person, first_name: "Ada", last_name: "Lin",
+                                 email: "ada@example.com", racial_ethnic_identity: "Multi-racial")
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
+        field_id("racial_ethnic_identity") => "Asian"
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(existing.reload.racial_ethnic_identity).to eq("Asian")
+    end
+
+    it "leaves a racial/ethnic identity on file untouched when the answer is blank" do
+      existing = create(:person, first_name: "Ada", last_name: "Lin",
+                                 email: "ada@example.com", racial_ethnic_identity: "Multi-racial")
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
+        field_id("racial_ethnic_identity") => ""
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(existing.reload.racial_ethnic_identity).to eq("Multi-racial")
+    end
+  end
+
+  describe "expected payment method" do
+    it "records the chosen payment method on a new registration" do
+      params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
+        field_id("payment_method") => "Check"
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(EventRegistration.last.expected_payment_method).to eq("Check")
+    end
+
+    it "updates the expected payment method when an existing registrant re-registers" do
+      person = create(:person, first_name: "Pat", last_name: "Doe", email: "pat@example.com")
+      create(:event_registration, event: event, registrant: person, expected_payment_method: "Check")
+      params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
+        field_id("payment_method") => "Credit card (now)"
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(event.event_registrations.find_by(registrant: person).expected_payment_method).to eq("Credit card (now)")
+    end
+  end
+
+  describe "someone else will pay" do
+    it "flags the registration when the registrant answers someone else will pay" do
+      params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
+        field_id("someone_else_will_pay") => "Yes"
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(EventRegistration.last.someone_else_will_pay).to be(true)
+    end
+
+    it "leaves the flag off when the registrant answers they will pay themselves" do
+      params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
+        field_id("someone_else_will_pay") => "No"
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(EventRegistration.last.someone_else_will_pay).to be(false)
+    end
+
+    it "updates the flag when an existing registrant re-registers" do
+      person = create(:person, first_name: "Pat", last_name: "Doe", email: "pat@example.com")
+      create(:event_registration, event: event, registrant: person, someone_else_will_pay: false)
+      params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
+        field_id("someone_else_will_pay") => "Yes"
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(event.event_registrations.find_by(registrant: person).someone_else_will_pay).to be(true)
+    end
+
+    it "does not clobber an existing flag when the answer is blank" do
+      person = create(:person, first_name: "Pat", last_name: "Doe", email: "pat@example.com")
+      create(:event_registration, event: event, registrant: person, someone_else_will_pay: true)
+      params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
+        field_id("someone_else_will_pay") => ""
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(event.event_registrations.find_by(registrant: person).someone_else_will_pay).to be(true)
+    end
+  end
+
+  describe "mailing list consent" do
+    it "stamps the consent time and source when the registrant opts in" do
+      params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
+        field_id("communication_consent") => [ "Yes" ]
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+      person = Person.find_by!(email: "coco@example.com")
+
+      expect(person.mailing_list_consent_at).to be_present
+      expect(person.mailing_list_consent_source).to eq("#{event.start_date.to_date.iso8601} #{event.title} registration")
+    end
+
+    it "does not record consent when the box is left unchecked" do
+      params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
+        field_id("communication_consent") => [ "" ]
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(Person.find_by!(email: "coco@example.com").mailing_list_consent_at).to be_nil
+    end
+
+    it "never re-stamps or clears consent already on file" do
+      original = 1.year.ago
+      create(:person, first_name: "Coco", last_name: "Lee", email: "coco@example.com",
+                      mailing_list_consent_at: original, mailing_list_consent_source: "Earlier")
+      params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
+        field_id("communication_consent") => [ "Yes" ]
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+      person = Person.find_by!(email: "coco@example.com")
+
+      expect(person.mailing_list_consent_at).to be_within(1.second).of(original)
+      expect(person.mailing_list_consent_source).to eq("Earlier")
+    end
+  end
+
+  describe "structured contact and organization data" do
+    it "stores the mailing country on a new registrant's address" do
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
+        field_id("mailing_street") => "1 Main St",
+        field_id("mailing_city") => "Oakland",
+        field_id("mailing_state") => "CA",
+        field_id("mailing_zip") => "94601",
+        field_id("mailing_country") => "USA"
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+      person = Person.find_by!(email: "ada@example.com")
+
+      expect(person.addresses.find_by(primary: true).country).to eq("USA")
+    end
+
+    context "with a matched organization" do
+      let!(:organization) { create(:organization, name: "Helping Hands") }
+
+      def register_with_org(extra)
+        params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
+          field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands"
+        ).merge(extra)
+        described_class.call(event: event, registration_form: form, form_params: params)
+      end
+
+      it "fills website, agency type, and address country" do
+        register_with_org(
+          field_id("agency_website") => "helpinghands.org",
+          field_id("agency_type") => "501c3/nonprofit",
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV",
+          field_id("agency_zip") => "89501",
+          field_id("agency_country") => "USA"
+        )
+        organization.reload
+
+        expect(organization.agency_type).to eq("501c3/nonprofit")
+        expect(organization.website_url).to include("helpinghands.org")
+        expect(organization.addresses.find_by(primary: true).country).to eq("USA")
+      end
+
+      # find_organization only ever finds, so a registrant always changes an org
+      # that already existed — the admin linking page shows what they changed.
+      it "records what the registrant's answers filled on the registration's org link" do
+        result = register_with_org(
+          field_id("agency_website") => "helpinghands.org",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV"
+        )
+
+        link = result.event_registration.event_registration_organizations.find_by!(organization: organization)
+        expect(link.form_autofill_changes.map(&:description)).to contain_exactly("Website", "Work address in Reno")
+      end
+
+      # The admin linking page pairs answers to orgs by this pin. Without it the
+      # pairing falls back to matching the org's current name against what the
+      # registrant typed, which an admin renaming the org would silently break.
+      it "pins the submission the registrant's answers came from on the org link" do
+        result = register_with_org(field_id("agency_website") => "helpinghands.org")
+
+        link = result.event_registration.event_registration_organizations.find_by!(organization: organization)
+        expect(link.form_submission).to eq(result.form_submission)
+      end
+
+      it "overwrites an existing website with the latest answer" do
+        organization.update!(website_url: "https://existing.org")
+
+        register_with_org(field_id("agency_website") => "helpinghands.org")
+
+        expect(organization.reload.website_url).to include("helpinghands.org")
+      end
+
+      it "stores the org address as a work address" do
+        register_with_org(
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV",
+          field_id("agency_zip") => "89501"
+        )
+
+        expect(organization.addresses.last.address_type).to eq("work")
+      end
+
+      # street/ZIP are NOT NULL columns, so passing a skipped answer straight
+      # through used to blow up the whole registration.
+      it "stores the org address when the registrant skipped the street and ZIP" do
+        result = register_with_org(
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV"
+        )
+
+        expect(result).to be_success
+        expect(organization.addresses.find_by(city: "Reno")).to have_attributes(street_address: "", zip_code: "")
+      end
+
+      it "saves no org address when the registrant skipped the state, leaving the registration intact" do
+        result = register_with_org(
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno"
+        )
+
+        expect(result).to be_success
+        expect(organization.addresses.find_by(city: "Reno")).to be_nil
+      end
+
+      it "makes the first org address primary" do
+        register_with_org(
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV",
+          field_id("agency_zip") => "89501"
+        )
+
+        expect(organization.addresses.find_by(city: "Reno")).to be_primary
+      end
+
+      it "does not demote the org's existing primary when another registrant adds an address" do
+        existing = organization.addresses.create!(
+          street_address: "1 First St", city: "Tahoe", state: "CA", zip_code: "96150",
+          locality: "Unknown", address_type: "work", primary: true
+        )
+
+        register_with_org(
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV",
+          field_id("agency_zip") => "89501"
+        )
+
+        expect(existing.reload).to be_primary
+        expect(existing).not_to be_inactive
+        expect(organization.addresses.find_by(city: "Reno")).not_to be_primary
+      end
+    end
+  end
+
+  describe "organization type sync" do
+    let!(:organization) { create(:organization, name: "Helping Hands") }
+
+    def register_with_agency_type(value)
+      params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
+        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands",
+        field_id("agency_type") => value
+      )
+      described_class.call(event: event, registration_form: form, form_params: params)
+      organization.reload
+    end
+
+    it "folds an 'Other' answer into agency_type and the stripped free text into agency_type_other" do
+      register_with_agency_type("Other: Equine therapy")
+
+      expect(organization.agency_type).to eq("Other")
+      expect(organization.agency_type_other).to eq("Equine therapy")
+    end
+
+    it "stores the answer as 'Other: <text>' on the form submission, like other specify options" do
+      register_with_agency_type("Other: Equine therapy")
+
+      answer = FormAnswer.joins(:form_field)
+        .find_by(form_fields: { field_identifier: "agency_type" })
+      expect(answer.submitted_answer).to eq("Other: Equine therapy")
+    end
+
+    it "captures the org-type 'Other' as an OtherResponse owned by the organization" do
+      register_with_agency_type("Other: Equine therapy")
+
+      response = organization.other_responses.sole
+      expect([ response.text, response.kind, response.promotable? ])
+        .to eq([ "Equine therapy", "organization_type", false ])
+    end
+
+    it "does not capture an OtherResponse for a non-'Other' classification" do
+      register_with_agency_type("501c3/nonprofit")
+
+      expect(organization.other_responses).to be_empty
+    end
+
+    it "stores a non-'Other' classification with no agency_type_other" do
+      register_with_agency_type("501c3/nonprofit")
+
+      expect(organization.agency_type).to eq("501c3/nonprofit")
+      expect(organization.agency_type_other).to be_nil
+    end
+
+    it "overwrites a previously stored type with the latest registrant's answer" do
+      organization.update!(agency_type: "501c3/nonprofit", agency_type_other: nil)
+
+      register_with_agency_type("Other: Equine therapy")
+
+      expect(organization.agency_type).to eq("Other")
+      expect(organization.agency_type_other).to eq("Equine therapy")
+    end
+
+    it "clears a stale agency_type_other when the latest answer is no longer 'Other'" do
+      organization.update!(agency_type: "Other", agency_type_other: "Equine therapy")
+
+      register_with_agency_type("Government agency")
+
+      expect(organization.agency_type).to eq("Government agency")
+      expect(organization.agency_type_other).to be_nil
+    end
+  end
+
+  describe "matching an existing registrant by name" do
+    it "matches a person stored under a nickname when the registrant types their legal first name" do
+      existing = create(:person, first_name: "Bob", legal_first_name: "Robert",
+                                 last_name: "Smith", email: "bob@example.com")
+
+      params = base_form_params(first_name: "Robert", last_name: "Smith", email: "bob@example.com")
+
+      expect {
+        described_class.call(event: event, registration_form: form, form_params: params)
+      }.not_to change(Person, :count)
+
+      expect(EventRegistration.last.registrant).to eq(existing)
+    end
+
+    it "matches a person stored under a legal name when the registrant types their nickname" do
+      existing = create(:person, first_name: "Robert", legal_first_name: nil,
+                                 last_name: "Smith", email: "bob@example.com")
+
+      params = base_form_params(first_name: "Robert", last_name: "Smith", email: "bob@example.com").merge(
+        field_id("nickname") => "Bob"
+      )
+
+      expect {
+        described_class.call(event: event, registration_form: form, form_params: params)
+      }.not_to change(Person, :count)
+
+      expect(EventRegistration.last.registrant).to eq(existing)
+    end
+
+    it "still creates a new person when the email matches but it is a different name" do
+      create(:person, first_name: "Bob", last_name: "Smith", email: "shared@example.com")
+
+      params = base_form_params(first_name: "Dana", last_name: "Jones", email: "shared@example.com")
+
+      expect {
+        described_class.call(event: event, registration_form: form, form_params: params)
+      }.to change(Person, :count).by(1)
+    end
+  end
+
+  describe "an answer longer than its database column" do
+    # `city` (like the other mapped person/address columns) is a varchar(255).
+    # A longer answer must surface as a form error, not an ActiveRecord::ValueTooLong
+    # 500 that escapes the registration flow.
+    let(:params) do
+      base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
+        field_id("mailing_street") => "1 Main St",
+        field_id("mailing_city") => "a" * 256,
+        field_id("mailing_state") => "CA",
+        field_id("mailing_zip") => "90001"
+      )
+    end
+
+    it "returns a failed result instead of raising" do
+      result = nil
+      expect {
+        result = described_class.call(event: event, registration_form: form, form_params: params)
+      }.not_to raise_error
+
+      expect(result.success?).to be false
+      expect(result.errors.join).to match(/city.*too long/i)
+    end
+
+    it "does not create a registration" do
+      expect {
+        described_class.call(event: event, registration_form: form, form_params: params)
+      }.not_to change(EventRegistration, :count)
+    end
+  end
+
+  describe "sector tagging" do
+    let!(:primary_sector) { create(:sector, name: "Healthcare") }
+    let!(:additional_sector) { create(:sector, name: "Education") }
+
+    it "marks the dropdown answer primary and the checkbox answers additional" do
       result = described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
-          field_id("primary_service_area") => [ primary_sector.id.to_s ]
+          field_id("primary_sector_single") => primary_sector.id.to_s,
+          field_id("additional_sectors") => [ additional_sector.id.to_s ]
         )
       )
 
       expect(result.success?).to be true
       person = result.event_registration.registrant
-      primary_item = person.sectorable_items.find_by(sector: primary_sector)
-      expect(primary_item.is_primary).to be true
+      expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
+      expect(person.sectorable_items.find_by(sector: additional_sector).is_primary).to be false
     end
 
-    it "marks an existing additional sector as primary when later selected" do
+    it "promotes an existing additional sector when later named as primary" do
       person = create(:person, first_name: "Pat", last_name: "Lee", email: "pat@example.com")
       person.sectorable_items.create!(sector: primary_sector, is_primary: false)
 
       described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
-          field_id("primary_service_area") => [ primary_sector.id.to_s ]
+          field_id("primary_sector_single") => primary_sector.id.to_s
         )
       )
 
       expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
     end
+
+    it "demotes a prior primary that the registrant did not re-select as primary" do
+      person = create(:person, first_name: "Pat", last_name: "Lee", email: "pat@example.com")
+      person.sectorable_items.create!(sector: additional_sector, is_primary: true)
+
+      described_class.call(
+        event: event,
+        registration_form: form,
+        form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
+          field_id("primary_sector_single") => primary_sector.id.to_s
+        )
+      )
+
+      person.reload
+      expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
+      expect(person.sectorable_items.find_by(sector: additional_sector).is_primary).to be false
+    end
   end
 
-  describe "CE credit interest (magic question)" do
-    let!(:ce_field) do
+  describe "age group tagging" do
+    let(:age_type) { create(:category_type, name: "AgeRange", published: true) }
+    let!(:young) { create(:category, :published, category_type: age_type, name: "3-5") }
+    let!(:teen) { create(:category, :published, category_type: age_type, name: "13-17") }
+
+    it "tags primary and additional age groups on the registrant" do
+      result = described_class.call(
+        event: event,
+        registration_form: form,
+        form_params: base_form_params(first_name: "Al", last_name: "Ng", email: "al@example.com").merge(
+          field_id("primary_age_group") => [ young.id.to_s ],
+          field_id("additional_age_group") => [ teen.id.to_s ]
+        )
+      )
+
+      expect(result.success?).to be true
+      person = result.event_registration.registrant
+      expect(person.primary_age_groups).to contain_exactly(young)
+      expect(person.additional_age_groups).to contain_exactly(teen)
+    end
+  end
+
+  describe "CE credit interest (continuing_education form)" do
+    let!(:ce_form) do
+      f = FormBuilderService.new(
+        name: "Continuing Education Request",
+        sections: %i[continuing_education],
+        role: "continuing_education"
+      ).call
+      event.event_forms.create!(form: f, role: "continuing_education")
+      f
+    end
+
+    def ce_field_id(key)
+      ce_form.form_fields.find_by!(field_identifier: key).id.to_s
+    end
+
+    def register_with_ce(answer, license: nil, kind: nil, issuing_state: nil, expires_on: nil)
+      params = base_form_params(first_name: "Cy", last_name: "Reed", email: "cy@example.com")
+      ce_params = {}
+      ce_params[ce_field_id(described_class::CE_CREDIT_INTEREST_IDENTIFIER)] = answer unless answer.nil?
+      ce_params[ce_field_id(described_class::CE_LICENSE_NUMBER_IDENTIFIER)] = license if license
+      ce_params[ce_field_id(described_class::CE_LICENSE_KIND_IDENTIFIER)] = kind if kind
+      ce_params[ce_field_id(described_class::CE_LICENSE_ISSUING_STATE_IDENTIFIER)] = issuing_state if issuing_state
+      ce_params[ce_field_id(described_class::CE_LICENSE_EXPIRES_ON_IDENTIFIER)] = expires_on if expires_on
+      described_class.call(event: event, registration_form: form, form_params: params,
+                           continuing_education_form: ce_form, continuing_education_params: ce_params)
+    end
+
+    it "marks the CE interest question as required" do
+      field = ce_form.form_fields.find_by!(field_identifier: described_class::CE_CREDIT_INTEREST_IDENTIFIER)
+      expect(field.required).to be(true)
+    end
+
+    it "creates a CE registration when answered Yes" do
+      result = register_with_ce("Yes")
+      expect(result.event_registration.continuing_education_registrations.count).to eq(1)
+    end
+
+    it "creates no CE registration when answered No" do
+      result = register_with_ce("No")
+      expect(result.event_registration.continuing_education_registrations).to be_empty
+    end
+
+    it "creates no CE registration when unanswered" do
+      result = register_with_ce(nil)
+      expect(result.event_registration.continuing_education_registrations).to be_empty
+    end
+
+    it "creates a CE registration for an existing registration that answers Yes" do
+      person = create(:person, first_name: "Cy", last_name: "Reed", email: "cy@example.com")
+      existing = create(:event_registration, event: event, registrant: person)
+
+      result = register_with_ce("Yes")
+
+      expect(result.event_registration).to eq(existing)
+      expect(existing.reload.ce_registered?).to be(true)
+      expect(existing.continuing_education_registrations.count).to eq(1)
+    end
+
+    it "does not duplicate a CE registration when the existing one already has one" do
+      person = create(:person, first_name: "Cy", last_name: "Reed", email: "cy@example.com")
+      existing = create(:event_registration, event: event, registrant: person)
+      license = create(:professional_license, :placeholder, person: person)
+      create(:continuing_education_registration, event_registration: existing, professional_license: license)
+
+      register_with_ce("Yes")
+
+      expect(existing.reload.continuing_education_registrations.count).to eq(1)
+    end
+
+    it "records the typed license number on the CE registration's license" do
+      result = register_with_ce("Yes", license: "LMFT 555")
+      license = result.event_registration.continuing_education_registrations.first.professional_license
+      expect(license.number).to eq("LMFT 555")
+      expect(license.person).to eq(result.event_registration.registrant)
+    end
+
+    it "records the typed license type alongside the number" do
+      result = register_with_ce("Yes", license: "555", kind: "LCSW")
+      license = result.event_registration.continuing_education_registrations.first.professional_license
+      expect(license.kind).to eq("LCSW")
+      expect(license.number).to eq("555")
+    end
+
+    it "records the license issuing state and expiry when given" do
+      result = register_with_ce("Yes", license: "555", issuing_state: "CA", expires_on: "2027-05-31")
+      license = result.event_registration.continuing_education_registrations.first.professional_license
+      expect(license.issuing_state).to eq("CA")
+      expect(license.expires_on).to eq(Date.new(2027, 5, 31))
+    end
+
+    it "uses a placeholder license when no number is given" do
+      result = register_with_ce("Yes")
+      expect(result.event_registration.continuing_education_registrations.first.professional_license.number).to be_nil
+    end
+
+    it "takes the CE hours from the event" do
+      event.update!(ce_hours_offered: 6)
+      result = register_with_ce("Yes")
+      expect(result.event_registration.continuing_education_registrations.first.hours).to eq(6)
+    end
+
+    it "persists the CE answers as a continuing_education submission when answered Yes" do
+      register_with_ce("Yes", license: "LMFT 555")
+      submission = FormSubmission.find_by(role: "continuing_education", event: event)
+      expect(submission).to be_present
+      answers = submission.answers_by_identifier
+      expect(answers[described_class::CE_CREDIT_INTEREST_IDENTIFIER]).to eq("Yes")
+      expect(answers[described_class::CE_LICENSE_NUMBER_IDENTIFIER]).to eq("LMFT 555")
+    end
+
+    it "persists the CE interest answer even when answered No" do
+      register_with_ce("No")
+      submission = FormSubmission.find_by(role: "continuing_education", event: event)
+      expect(submission).to be_present
+      expect(submission.answers_by_identifier[described_class::CE_CREDIT_INTEREST_IDENTIFIER]).to eq("No")
+    end
+  end
+
+  describe "Additional forms (multi-select magic question)" do
+    let!(:additional_forms_field) do
       field = form.form_fields.create!(
-        name: "Might you be seeking continuing education (CE) hours for attending this training?",
-        answer_type: :single_select_radio,
+        name: "Do you need either of the following?",
+        answer_type: :multi_select_checkbox,
         status: :active,
         position: (form.form_fields.maximum(:position) || 0) + 1,
         required: false,
-        field_identifier: described_class::CE_CREDIT_INTEREST_IDENTIFIER,
-        section: "continuing_education",
+        field_identifier: described_class::ADDITIONAL_FORMS_IDENTIFIER,
+        section: "additional_forms",
         visibility: :always_ask
       )
-      %w[Yes No].each_with_index do |opt, idx|
+      [ described_class::ADDITIONAL_FORMS_INVOICE, described_class::ADDITIONAL_FORMS_W9 ].each_with_index do |opt, idx|
         ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
         field.form_field_answer_options.create!(answer_option: ao)
       end
       field
     end
 
-    def register_with_ce(answer)
-      params = base_form_params(first_name: "Cy", last_name: "Reed", email: "cy@example.com")
-      params = params.merge(ce_field.id.to_s => answer) unless answer.nil?
-      described_class.call(event: event, form: form, form_params: params)
+    def register_with_additional_forms(selections)
+      params = base_form_params(first_name: "Wendy", last_name: "Nein", email: "wendy@example.com")
+      params = params.merge(additional_forms_field.id.to_s => selections) unless selections.nil?
+      described_class.call(event: event, registration_form: form, form_params: params)
     end
 
-    it "toggles ce_credit_requested on when answered Yes" do
-      result = register_with_ce("Yes")
-      expect(result.event_registration.ce_credit_requested).to be true
+    it "sets both flags when both options are checked" do
+      registration = register_with_additional_forms([ "Invoice", "W-9" ]).event_registration
+      expect(registration.invoice_requested).to be true
+      expect(registration.w9_requested).to be true
     end
 
-    it "leaves ce_credit_requested off when answered No" do
-      result = register_with_ce("No")
-      expect(result.event_registration.ce_credit_requested).to be false
+    it "sets only w9_requested when only W-9 is checked" do
+      registration = register_with_additional_forms([ "W-9" ]).event_registration
+      expect(registration.w9_requested).to be true
+      expect(registration.invoice_requested).to be false
     end
 
-    it "leaves ce_credit_requested off when unanswered" do
-      result = register_with_ce(nil)
-      expect(result.event_registration.ce_credit_requested).to be false
+    it "sets only invoice_requested when only Invoice is checked" do
+      registration = register_with_additional_forms([ "Invoice" ]).event_registration
+      expect(registration.invoice_requested).to be true
+      expect(registration.w9_requested).to be false
     end
 
-    it "toggles ce_credit_requested on for an existing registration that answers Yes" do
-      person = create(:person, first_name: "Cy", last_name: "Reed", email: "cy@example.com")
-      existing = create(:event_registration, event: event, registrant: person, ce_credit_requested: false)
+    it "leaves both flags off when nothing is checked" do
+      registration = register_with_additional_forms(nil).event_registration
+      expect(registration.w9_requested).to be false
+      expect(registration.invoice_requested).to be false
+    end
 
-      result = register_with_ce("Yes")
+    it "turns the flags on for an existing registration that now checks the options" do
+      person = create(:person, first_name: "Wendy", last_name: "Nein", email: "wendy@example.com")
+      existing = create(:event_registration, event: event, registrant: person,
+                                              w9_requested: false, invoice_requested: false)
+
+      result = register_with_additional_forms([ "Invoice", "W-9" ])
 
       expect(result.event_registration).to eq(existing)
-      expect(existing.reload.ce_credit_requested).to be true
+      expect(existing.reload.w9_requested).to be true
+      expect(existing.reload.invoice_requested).to be true
     end
   end
 
@@ -119,7 +837,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     it "reactivates a cancelled registration" do
       result = described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Jane", last_name: "Doe", email: "jane@example.com")
       )
 
@@ -138,7 +856,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Jane", last_name: "Doe", email: "jane@example.com")
       )
     end
@@ -150,7 +868,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Jane", last_name: "Doe", email: "jane@example.com")
       )
     end
@@ -175,7 +893,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     it "stores the folded \"Other: <text>\" value from a radio field" do
       result = described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Jo", last_name: "Vo", email: "jo@example.com").merge(
           radio_field.id.to_s => "Other: a friend told me"
         )
@@ -196,7 +914,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       result = described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Mo", last_name: "Vo", email: "mo@example.com").merge(
           multi_field.id.to_s => [ "Healing", "Other: poetry therapy" ]
         )
@@ -204,6 +922,194 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       answer = result.form_submission.form_answers.find_by(form_field: multi_field)
       expect(answer.submitted_answer).to eq("Healing, Other: poetry therapy")
+    end
+  end
+
+  describe "separate scholarship form submission" do
+    let(:scholarship_form) do
+      f = create(:form, role: "scholarship")
+      event.event_forms.create!(form: f, role: "scholarship")
+      f
+    end
+    let!(:scholarship_field) do
+      create(:form_field, form: scholarship_form, answer_type: :free_form_input_paragraph,
+             name: "Describe your need", required: false)
+    end
+
+    it "persists the scholarship answers as a scholarship-role submission tied to the event" do
+      result = described_class.call(
+        event: event,
+        registration_form: form,
+        form_params: base_form_params(first_name: "Sky", last_name: "Need", email: "sky@example.com"),
+        scholarship_requested: true,
+        scholarship_form: scholarship_form,
+        scholarship_params: { scholarship_field.id.to_s => "Our training budget was cut this year." }
+      )
+
+      expect(result.success?).to be true
+      person = result.event_registration.registrant
+      submission = FormSubmission.find_by(person: person, form: scholarship_form, role: "scholarship")
+      expect(submission).to be_present
+      expect(submission.event).to eq(event)
+      expect(submission.form_answers.find_by(form_field: scholarship_field).submitted_answer)
+        .to eq("Our training budget was cut this year.")
+    end
+
+    it "does not create a scholarship submission when no scholarship was requested" do
+      result = described_class.call(
+        event: event,
+        registration_form: form,
+        form_params: base_form_params(first_name: "Plain", last_name: "Reg", email: "plain@example.com")
+      )
+
+      person = result.event_registration.registrant
+      expect(FormSubmission.where(person: person, role: "scholarship")).to be_empty
+    end
+  end
+
+  describe "file-upload answers" do
+    let!(:upload_field) do
+      form.form_fields.create!(name: "Photo of your creation", answer_type: :file_upload,
+                               status: :active, position: 999)
+    end
+
+    def signed_id_for(fixture, content_type)
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: File.open(Rails.root.join("spec/fixtures/files", fixture)),
+        filename: fixture, content_type: content_type
+      )
+      blob.signed_id
+    end
+
+    it "attaches the uploaded blob to the answer and stores its filename" do
+      params = base_form_params(first_name: "Pat", last_name: "Art", email: "pat@example.com").merge(
+        upload_field.id.to_s => signed_id_for("sample.png", "image/png")
+      )
+
+      result = described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(result.success?).to be true
+      answer = result.form_submission.form_answers.find_by(form_field: upload_field)
+      expect(answer.uploaded_file).to be_attached
+      expect(answer.uploaded_file.filename.to_s).to eq("sample.png")
+      expect(answer.submitted_answer).to eq("sample.png")
+    end
+
+    it "leaves the answer fileless when nothing was uploaded" do
+      params = base_form_params(first_name: "No", last_name: "File", email: "nofile@example.com").merge(
+        upload_field.id.to_s => ""
+      )
+
+      result = described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(result.success?).to be true
+      answer = result.form_submission.form_answers.find_by(form_field: upload_field)
+      expect(answer.uploaded_file).to be_nil
+      expect(answer.submitted_answer).to eq("")
+    end
+
+    # assets.type defaults to "PrimaryAsset", so an unqualified build_asset yields
+    # a PrimaryAsset — five image types, no documents — while the form advertises
+    # the full Asset list. Every document type it offers has to actually save.
+    it "accepts every content type the upload field advertises" do
+      expect(FormUploadAsset::ACCEPTED_CONTENT_TYPES).to include("application/pdf")
+
+      params = base_form_params(first_name: "Doc", last_name: "Upload", email: "doc@example.com").merge(
+        upload_field.id.to_s => signed_id_for("sample.pdf", "application/pdf")
+      )
+
+      result = described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(result.errors).to be_empty
+      answer = result.form_submission.form_answers.find_by(form_field: upload_field)
+      expect(answer.uploaded_file.filename.to_s).to eq("sample.pdf")
+      expect(answer.asset).to be_a(FormUploadAsset)
+    end
+
+    it "rejects a file whose content type Asset does not accept" do
+      params = base_form_params(first_name: "Bad", last_name: "Type", email: "bad@example.com").merge(
+        upload_field.id.to_s => signed_id_for("sample.txt", "text/plain")
+      )
+
+      result = described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(result.success?).to be false
+      expect(Person.find_by(email: "bad@example.com")).to be_nil
+    end
+
+    it "rejects a file larger than Asset's maximum" do
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: File.open(Rails.root.join("spec/fixtures/files/sample.png")),
+        filename: "huge.png", content_type: "image/png"
+      )
+      blob.update!(byte_size: Asset::MAX_FILE_SIZE + 1)
+      params = base_form_params(first_name: "Too", last_name: "Big", email: "big@example.com").merge(
+        upload_field.id.to_s => blob.signed_id
+      )
+
+      result = described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(result.success?).to be false
+      expect(Person.find_by(email: "big@example.com")).to be_nil
+    end
+
+    # A tampered/expired signed id used to reach ActiveStorage's find_signed!,
+    # whose InvalidSignature isn't in this service's rescue list — a 500 on a
+    # public endpoint.
+    it "returns a form error rather than raising when the value isn't a usable signed id" do
+      params = base_form_params(first_name: "Bad", last_name: "Id", email: "badid@example.com").merge(
+        upload_field.id.to_s => "not-a-signed-id"
+      )
+
+      result = described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(result.success?).to be false
+      expect(result.errors.join).to match(/uploaded file/i)
+      expect(Person.find_by(email: "badid@example.com")).to be_nil
+    end
+
+    # submitted_answer is only a cache of the attachment's name. Pinned across
+    # every transition so a second writer that skips FormAnswer#sync_uploaded_filename!
+    # fails here rather than silently desyncing the two.
+    it "keeps submitted_answer equal to the attached filename through upload, replace, and blank re-submit" do
+      params = base_form_params(first_name: "Sync", last_name: "Check", email: "sync@example.com")
+      in_sync = lambda do |result|
+        answer = result.form_submission.form_answers.find_by(form_field: upload_field)
+        expect(answer.submitted_answer).to eq(answer.uploaded_file&.filename.to_s)
+        answer
+      end
+
+      uploaded = in_sync.call(described_class.call(
+        event: event, registration_form: form,
+        form_params: params.merge(upload_field.id.to_s => signed_id_for("sample.png", "image/png"))
+      ))
+      expect(uploaded.submitted_answer).to eq("sample.png")
+
+      replaced = in_sync.call(described_class.call(
+        event: event, registration_form: form,
+        form_params: params.merge(upload_field.id.to_s => signed_id_for("sample.pdf", "application/pdf"))
+      ))
+      expect(replaced.submitted_answer).to eq("sample.pdf")
+
+      blanked = in_sync.call(described_class.call(
+        event: event, registration_form: form, form_params: params.merge(upload_field.id.to_s => "")
+      ))
+      expect(blanked.submitted_answer).to eq("sample.pdf")
+    end
+
+    it "keeps the file already on the answer when a re-submission leaves the field blank" do
+      params = base_form_params(first_name: "Re", last_name: "Sub", email: "resub@example.com").merge(
+        upload_field.id.to_s => signed_id_for("sample.png", "image/png")
+      )
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      result = described_class.call(event: event, registration_form: form,
+                                    form_params: params.merge(upload_field.id.to_s => ""))
+
+      expect(result.success?).to be true
+      answer = result.form_submission.form_answers.find_by(form_field: upload_field)
+      expect(answer.uploaded_file).to be_attached
+      expect(answer.submitted_answer).to eq("sample.png")
     end
   end
 end

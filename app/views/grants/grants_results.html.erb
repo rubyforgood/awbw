@@ -1,0 +1,5 @@
+<%# Frame response for the grants_results turbo frame: the index controller
+    renders this (instead of the full index) on turbo_frame_request?. %>
+<%= turbo_frame_tag :grants_results do %>
+  <%= render "results" %>
+<% end %>

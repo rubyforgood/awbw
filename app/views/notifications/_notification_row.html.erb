@@ -1,0 +1,56 @@
+<%# ---- Read-only display of one communication: channel icon + subject (always
+    visible), then the body. The body of a hand-noted communication (any channel
+    but "autoemail") is an internal staff note — admin-only, hidden from non-admins
+    (no inline text, nothing in the hover title). On a page non-admins can view,
+    pass mark_admin_only: true to give the body the `admin-only bg-blue-100` wash;
+    on admin-only pages it renders plainly. An automated ("autoemail") message is
+    the recipient's own email, so its body stays visible to everyone. Pass admin:
+    false for a non-admin viewer. Shared by the notifications box and the view mode
+    of an editable communication. ---- %>
+<% admin = local_assigns.fetch(:admin, true) %>
+<% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
+<%# Callers with their own date column pass show_date: false. %>
+<% show_date = local_assigns.fetch(:show_date, true) %>
+<% body_admin_only = notification.channel != "autoemail" %>
+<% show_body = admin || !body_admin_only %>
+<% subject = notification.email_subject.presence || notification.kind.to_s.humanize %>
+<% body = notification.email_body_text.to_s if show_body %>
+<%# The name shown is who the communication is *from* — the sender for outgoing,
+    the person themselves for incoming; hover reveals their email when on file. %>
+<% decorated = notification.decorate %>
+<% from_name = decorated.from_name %>
+<%# Admins can click through to the communication's detail page; it opens in a
+    new tab so unsaved edits in the surrounding record form aren't lost. %>
+<% row = capture do %>
+  <div class="flex items-baseline gap-x-2">
+    <% if show_date %>
+      <span class="shrink-0 whitespace-nowrap text-xs text-gray-400"><%= notification.created_at.strftime("%-m/%-d/%Y") %></span>
+    <% end %>
+    <%# Fixed, snug width (~"Umberto User") + truncate so the channel icons line up
+        regardless of name length, without a wide gap before the icon. %>
+    <span class="w-[5.5rem] shrink-0 truncate text-xs font-medium text-gray-500" title="<%= decorated.from_title.presence || from_name %>"><%= from_name %></span>
+    <span class="min-w-0 flex-1 truncate text-sm">
+      <%= decorated.channel_icon %>
+      <%# A regular outgoing message is the norm here — only the exceptions get a flag. %>
+      <%= decorated.flag_badges %>
+      <span class="font-semibold text-gray-900"><%= subject %></span>
+      <% if body.present? %>
+        <% if body_admin_only && mark_admin_only %>
+          <%# Internal staff note on a page non-admins can view — flag it admin-only. %>
+          <span class="admin-only bg-blue-100 rounded px-1 text-gray-700" title="<%= body %>"><%= body %></span>
+        <% elsif body_admin_only %>
+          <%# Internal staff note on an admin-only page — rendered plainly like a comment. %>
+          <span class="text-gray-900" title="<%= body %>"><%= body %></span>
+        <% else %>
+          <span class="text-gray-500" title="<%= body %>"><%= body %></span>
+        <% end %>
+      <% end %>
+    </span>
+  </div>
+<% end %>
+<% if admin %>
+  <%= link_to row, notification_path(notification), target: "_blank", rel: "noopener",
+              class: "block rounded px-1 -mx-1 hover:bg-gray-50" %>
+<% else %>
+  <%= row %>
+<% end %>

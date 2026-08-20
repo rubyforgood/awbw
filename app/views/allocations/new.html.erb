@@ -7,8 +7,8 @@
     <% if source.present? && source.is_a?(Payment) %>
       <div class="mb-4 p-4 bg-gray-50 rounded-lg">
         <p class="text-sm font-medium text-gray-700">From Payment</p>
-        <p class="text-lg text-gray-900">$<%= "%.2f" % source.amount_dollars %></p>
-        <p class="text-sm text-gray-500">Remaining: $<%= "%.2f" % source.remaining_dollars %></p>
+        <p class="text-lg text-gray-900"><%= dollars_from_cents(source.amount_cents) %></p>
+        <p class="text-sm text-gray-500">Remaining: <%= dollars_from_cents(source.amount_cents_remaining) %></p>
       </div>
     <% else %>
       <div class="mb-4 p-4 bg-red-50 rounded-lg">
@@ -41,7 +41,7 @@
     </div>
     <%= f.input :amount_dollars, label: "Amount ($)", input_html: { min: 0, step: 0.01, placeholder: "0.00", data: { controller: "currency-input", action: "currency-input#format" } } %>
     <div class="mt-6">
-      <%= f.button :submit, "Create Allocation", class: "btn btn-primary" %>
+      <%= f.button :submit, "Submit", class: "btn btn-primary" %>
       <% if source.present? %>
         <%= link_to "Cancel", payment_path(source), class: "btn btn-secondary-outline ml-2" %>
       <% else %>

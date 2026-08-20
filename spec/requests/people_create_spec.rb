@@ -101,4 +101,43 @@ RSpec.describe "POST /people", type: :request do
       expect(user.reload.time_zone).to eq("Eastern Time (US & Canada)")
     end
   end
+
+  describe "age group primary toggle" do
+    let(:age_type) { create(:category_type, name: "AgeRange", published: true) }
+    let!(:young) { create(:category, :published, category_type: age_type, name: "3-5") }
+    let!(:teen) { create(:category, :published, category_type: age_type, name: "13-17") }
+
+    it "splits checked age categories into primary and additional from the toggles" do
+      person = create(:person)
+
+      patch person_path(person), params: {
+        person: {
+          first_name: person.first_name,
+          category_ids: [ "", young.id.to_s, teen.id.to_s ],
+          primary_age_category_ids: [ "", young.id.to_s ]
+        }
+      }
+
+      person.reload
+      expect(person.primary_age_groups).to contain_exactly(young)
+      expect(person.additional_age_groups).to contain_exactly(teen)
+    end
+
+    it "clears the primary flag when no toggle is submitted" do
+      person = create(:person)
+      person.tag_age_groups(primary_ids: [ young.id ], additional_ids: [])
+
+      patch person_path(person), params: {
+        person: {
+          first_name: person.first_name,
+          category_ids: [ "", young.id.to_s ],
+          primary_age_category_ids: [ "" ]
+        }
+      }
+
+      person.reload
+      expect(person.primary_age_groups).to be_empty
+      expect(person.additional_age_groups).to contain_exactly(young)
+    end
+  end
 end

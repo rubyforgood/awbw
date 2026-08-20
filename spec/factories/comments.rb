@@ -21,5 +21,13 @@ FactoryBot.define do
     trait :for_workshop do
       association :commentable, factory: :workshop
     end
+
+    trait :for_scholarship do
+      association :commentable, factory: :scholarship
+    end
+
+    trait :for_continuing_education_registration do
+      association :commentable, factory: :continuing_education_registration
+    end
   end
 end

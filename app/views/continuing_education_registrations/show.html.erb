@@ -1,0 +1,89 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% ce = @ce_registration.decorate %>
+<% registration = @ce_registration.event_registration %>
+<% license = @ce_registration.professional_license %>
+<% payment = ce.payment_status_badge %>
+<% certificate = ce.certificate_badge %>
+
+<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:continuing_education) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+  <%# Top bar: back to the CE registrations index + Edit / Home. %>
+  <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+    <%= link_to continuing_education_registrations_path, class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> CE registrations
+    <% end %>
+    <div class="flex items-center gap-3">
+      <%= link_to "Edit", edit_continuing_education_registration_path(@ce_registration, return_to: "ce_index"), class: "text-sm text-gray-500 hover:text-gray-700" %>
+      <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+    </div>
+  </div>
+
+  <%= render "shared/event_page_header",
+             title: "CE registration",
+             icon: "fa-solid fa-certificate",
+             color: :continuing_education,
+             event: registration.event,
+             person: registration.registrant %>
+
+  <div class="space-y-6">
+    <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
+          <i class="fa-solid fa-id-card"></i>
+        </span>
+        <h2 class="text-sm font-semibold text-gray-700">Details</h2>
+      </div>
+
+      <dl class="grid grid-cols-1 gap-px bg-gray-100 sm:grid-cols-2">
+        <div class="bg-white px-4 py-3">
+          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">License</dt>
+          <dd class="mt-1 text-sm font-medium text-gray-900"><%= ce.license_label %></dd>
+        </div>
+        <div class="bg-white px-4 py-3">
+          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Issuing state</dt>
+          <dd class="mt-1 text-sm text-gray-900"><%= license&.issuing_state.presence || "—" %></dd>
+        </div>
+        <div class="bg-white px-4 py-3">
+          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">License expires</dt>
+          <dd class="mt-1 text-sm text-gray-900"><%= license&.expires_on&.to_fs(:long) || "—" %></dd>
+        </div>
+        <div class="bg-white px-4 py-3">
+          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Hours</dt>
+          <dd class="mt-1 text-sm text-gray-900 tabular-nums"><%= number_with_precision(@ce_registration.hours, precision: 1, strip_insignificant_zeros: true) %></dd>
+        </div>
+        <div class="bg-white px-4 py-3">
+          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Payment</dt>
+          <dd class="mt-1"><%= render "shared/badge", label: payment.label, classes: payment.classes, icon: payment.icon %></dd>
+        </div>
+        <div class="bg-white px-4 py-3">
+          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Certificate</dt>
+          <dd class="mt-1"><%= render "shared/badge", label: certificate.label, classes: certificate.classes, icon: certificate.icon %></dd>
+        </div>
+      </dl>
+    </section>
+
+    <%= render "payment_history", ce_registration: @ce_registration %>
+
+    <% if @ce_registration.comments.any? %>
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
+            <i class="fa-solid fa-comments"></i>
+          </span>
+          <h2 class="text-sm font-semibold text-gray-700">CE comments</h2>
+        </div>
+        <ul class="divide-y divide-gray-100">
+          <% @ce_registration.comments.each do |comment| %>
+            <li class="px-4 py-3">
+              <% if comment.topic.present? %>
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-400"><%= comment.topic %></p>
+              <% end %>
+              <p class="text-sm text-gray-700 whitespace-pre-line"><%= comment.body %></p>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+  </div>
+
+  <%= render "shared/audit_info", resource: @ce_registration %>
+</div>

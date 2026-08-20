@@ -93,6 +93,24 @@ RSpec.describe EventRegistrationServices::ProcessConfirmation do
         expect(user.reload.welcome_instructions_token).to be_present
       end
 
+      it "records the current user as the sender" do
+        user = person.user
+
+        described_class.call(
+          event_registration: registration,
+          person: person,
+          create_user: false,
+          send_invite: true,
+          send_confirmation_email: false,
+          send_admin_fyi: false,
+          current_user: admin
+        )
+
+        user.reload
+        expect(user.welcome_instructions_sent_by).to eq(admin)
+        expect(user.updated_by).to eq(admin)
+      end
+
       it "does nothing when person has no user" do
         person.user.destroy!
         person.reload
@@ -133,6 +151,24 @@ RSpec.describe EventRegistrationServices::ProcessConfirmation do
           send_admin_fyi: false,
           current_user: admin
         )
+      end
+
+      # Templated confirmations are automated even though an admin ticks the box —
+      # only hand-written sends (invites, bulk reminders, resends) name a person.
+      it "leaves the confirmation attributed to the portal, not the admin" do
+        described_class.call(
+          event_registration: registration,
+          person: person,
+          create_user: false,
+          send_invite: false,
+          send_confirmation_email: true,
+          send_admin_fyi: false,
+          current_user: admin
+        )
+
+        confirmation = Notification.where(kind: "event_registration_confirmation").last
+        expect(confirmation.sender).to be_nil
+        expect(confirmation.decorate.sender_name).to eq(NotificationDecorator::PORTAL_SENDER_NAME)
       end
     end
 

@@ -1,0 +1,46 @@
+<div class="rounded bg-white p-6">
+  <div class="overflow-x-auto">
+    <table class="min-w-full border border-gray-200 rounded divide-y divide-gray-200 animate-pulse">
+      <thead class="bg-gray-100">
+        <tr>
+          <% if allowed_to?(:manage?, Organization) %>
+            <th class="admin-only bg-blue-100 px-4 py-2 text-center text-sm font-semibold text-gray-700">Program</th>
+          <% end %>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Organization</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Designations</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Age group(s)</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Affiliated since</th>
+          <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">People</th>
+          <% if allowed_to?(:manage?, Organization) %>
+            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
+          <% end %>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-gray-100">
+        <% 8.times do %>
+          <tr>
+            <% if allowed_to?(:manage?, Organization) %>
+              <td class="admin-only bg-blue-100 px-4 py-3 text-center"><div class="h-4 w-6 bg-gray-200 rounded mx-auto"></div></td>
+            <% end %>
+            <td class="px-4 py-3"><div class="h-4 w-40 bg-gray-200 rounded"></div></td>
+            <td class="px-4 py-3"><div class="h-4 w-24 bg-gray-200 rounded"></div></td>
+            <td class="px-4 py-3"><div class="h-4 w-24 bg-gray-200 rounded"></div></td>
+            <td class="px-4 py-3"><div class="h-4 w-12 bg-gray-200 rounded"></div></td>
+            <td class="px-4 py-3 text-center"><div class="h-4 w-8 bg-gray-200 rounded mx-auto"></div></td>
+            <% if allowed_to?(:manage?, Organization) %>
+              <td class="px-4 py-3 text-center"><div class="h-4 w-12 bg-gray-200 rounded mx-auto"></div></td>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Pagination skeleton -->
+<div class="mt-6 flex justify-center space-x-2 animate-pulse">
+  <div class="h-8 w-10 bg-gray-200 rounded"></div>
+  <div class="h-8 w-10 bg-gray-200 rounded"></div>
+  <div class="h-8 w-10 bg-gray-200 rounded"></div>
+</div>

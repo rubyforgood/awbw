@@ -1,0 +1,64 @@
+<% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
+<%# Opt out of the layout's max-w-7xl cap to match the wider report pages. %>
+<% content_for(:full_width, true) %>
+<% title = @signins_ce ? "CE sign-ins" : "Sign-ins" %>
+<% content_for(:page_title, title) %>
+
+<div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8 py-6">
+  <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+      <%= link_to "← Reports", reports_events_path(report_to_hub_params), class: "text-sm text-gray-500 hover:text-gray-700" %>
+      <%= render "events/report_subnav", current: :signins %>
+    </div>
+
+    <%= render "events/report_header",
+          title: title,
+          icon: "fa-solid fa-clock",
+          theme: :event_registrations,
+          event: @filter_event,
+          event_label: signins_scope_label(@events, narrowed: @signins_narrowed),
+          subtitle: "Logged sign-in time per training, totalled by day." %>
+
+    <%# Same filter bar as the other cross-event reports, minus the time period —
+        this one lists whole events rather than rolling them up by year. %>
+    <%= form_with url: signins_events_path, method: :get, local: true,
+          class: "rounded-xl border border-gray-200 bg-white p-4 shadow-sm mb-8" do %>
+      <%= hidden_field_tag :return_to, params[:return_to] %>
+      <div class="flex flex-wrap items-end gap-4">
+        <%= render "event_type_filter" %>
+        <%= render "event_filter" %>
+        <%= render "event_search_filter" %>
+      </div>
+    <% end %>
+
+    <% if @reports.any? %>
+      <% @reports.each do |report| %>
+        <% event = report.event.decorate %>
+        <section class="mb-8">
+          <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+            <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">
+              <%= link_to event.compact_label, attendance_event_path(report.event, ce: ("true" if report.ce_only?), return_to: "signins"),
+                    title: report.event.title, class: "hover:text-gray-700 hover:underline" %>
+              <span class="ml-1 normal-case font-normal text-gray-400"><%= event.date_range %></span>
+            </h2>
+            <%= link_to "Open sign-ins →", attendance_event_path(report.event, ce: ("true" if report.ce_only?), return_to: "signins"),
+                  class: "text-xs font-medium text-teal-700 hover:underline" %>
+          </div>
+
+          <% if report.dates_truncated? %>
+            <p class="mb-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              <i class="fa-solid fa-triangle-exclamation mt-0.5 shrink-0"></i>
+              This training runs past <%= report.dates.last.strftime("%b %-d") %>; sign-in covers only the first <%= pluralize(report.dates.size, "day") %>.
+            </p>
+          <% end %>
+
+          <%= render "events/attendance_totals", report: report, return_to: "signins" %>
+        </section>
+      <% end %>
+    <% else %>
+      <div class="text-center py-12 text-gray-500">
+        <%= @signins_ce ? "No CE registrations on the events in scope yet." : "No sign-in time has been logged for the events in scope yet." %>
+      </div>
+    <% end %>
+  </div>
+</div>

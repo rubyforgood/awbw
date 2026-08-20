@@ -3,7 +3,7 @@
 # must never run in production, so they live here rather than in `db/seeds.rb`
 # (which seeds only the required base users: Umberto, Amy, Aisha, Orphaned).
 
-puts "Seeding dev user variations (invite/lock/confirmation states)…"
+puts "Creating dev user variations (invite/lock/confirmation states)…"
 
 # created_by/updated_by point at the base admin, seeded by `db:seed` first.
 admin = User.find_by!(email: "umberto.user@example.com")
@@ -179,6 +179,17 @@ unless invited_no_person.welcome_instructions_token.present?
     welcome_instructions_token: Devise.friendly_token,
     welcome_instructions_created_at: 10.days.ago,
     welcome_instructions_sent_at: 10.days.ago
+  )
+end
+
+# Base user Aisha with a primary email change awaiting confirmation. Set the
+# reconfirmation columns directly so no confirmation email is sent on reseed.
+aisha = User.find_by!(email: "aisha.user@example.com")
+unless aisha.unconfirmed_email.present?
+  aisha.update_columns(
+    unconfirmed_email: "aisha.new@example.com",
+    confirmation_token: Devise.friendly_token,
+    confirmation_sent_at: 1.day.ago
   )
 end
 

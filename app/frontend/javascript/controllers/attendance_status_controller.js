@@ -4,9 +4,30 @@ import { Controller } from "@hotwired/stimulus"
 // Swaps the colored icon inside the status select as the dropdown changes. The
 // select looks like an ordinary form field (not the roster's autosaving chip),
 // so an "Unsaved" hint is shown until the form is saved.
+//
+// The per-day attendance checkboxes drive the status the same way the Onboarding
+// matrix does: toggling a day rolls the status forward/back (registered →
+// incomplete_attendance → attended), but only while the status is an active one —
+// deliberate manual states (cancelled, no_show, transferred_out) are never
+// overridden. Mirrors EventRegistration#sync_attendance_status_to_days!.
 export default class extends Controller {
-  static targets = ["select", "icon", "dirty"]
-  static values = { colors: Object, icons: Object, initial: String }
+  static targets = ["select", "icon", "dirty", "day"]
+  static values = { colors: Object, icons: Object, initial: String, activeStatuses: Array, dayCount: Number }
+
+  // Recompute the status from how many day checkboxes are checked, then reflect it
+  // in the dropdown (which re-renders the icon and the unsaved hint via update()).
+  deriveFromDays() {
+    if (!this.activeStatusesValue.includes(this.selectTarget.value)) return
+
+    const checked = this.dayTargets.filter((day) => day.checked).length
+    let derived = "incomplete_attendance"
+    if (checked === 0) derived = "registered"
+    else if (checked >= this.dayCountValue) derived = "attended"
+
+    if (this.selectTarget.value === derived) return
+    this.selectTarget.value = derived
+    this.update()
+  }
 
   update() {
     const status = this.selectTarget.value

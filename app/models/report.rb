@@ -6,7 +6,7 @@ class Report < ApplicationRecord
   belongs_to :workshop, optional: true
   has_one :form, as: :owner
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
-  has_many :notifications, as: :noticeable, dependent: :destroy, autosave: false
+  has_many :notifications, as: :noticeable, dependent: :nullify, autosave: false
   has_many :quotable_item_quotes, as: :quotable, dependent: :nullify, inverse_of: :quotable
   has_many :report_form_field_answers,
            foreign_key: :report_id, inverse_of: :report,
@@ -160,7 +160,7 @@ class Report < ApplicationRecord
   private
 
   def set_has_attachment
-    self.has_attachment = image&.file&.attached? || form_file&.attached? ||
+    self.has_attachment = image.attached? || form_file&.attached? ||
       media_files.any? { |media_file| media_file.file.attached? }
   end
 

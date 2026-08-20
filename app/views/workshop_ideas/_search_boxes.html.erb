@@ -9,26 +9,19 @@
       <%= text_field_tag :title,
                          params[:title],
                          placeholder: "Title",
-                         class: "w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-blue-500 focus:border-blue-500" %>
-      <button
-        type="submit"
-        class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-      >
-        <i class="fa fa-search"></i>
-      </button>
+                         class: search_field_class(extra: "pr-10") %>
+      <%= render "shared/search_submit" %>
     </div>
     <div data-controller="searchable-select" data-searchable-select-mode-value="person">
       <%= select_tag :created_by_id,
                      options_from_collection_for_select(@users, :id, :full_name_with_email, params[:created_by_id].to_i),
                      include_blank: "Author",
                      data: { searchable_select_target: "select", action: "change->searchable-select#submit" },
-                     class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
+                     class: search_field_class %>
     </div>
     <!-- Clear filters -->
     <div class="flex sm:justify-end items-end">
-      <%= link_to 'Clear filters', workshop_ideas_path,
-                  class: "btn btn-utility",
-                  data: { action: "collection#clearAndSubmit" } %>
+      <%= render "shared/search_clear", url: workshop_ideas_path %>
     </div>
   </div>
 <% end %>

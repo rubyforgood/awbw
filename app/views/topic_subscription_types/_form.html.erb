@@ -1,0 +1,40 @@
+<% field_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+<% label_class = "block text-sm font-medium text-gray-700 mb-1" %>
+
+<%= form_with model: @topic_subscription_type, class: "space-y-5" do |f| %>
+  <% if @topic_subscription_type.errors.any? %>
+    <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      <ul class="list-disc list-inside space-y-1">
+        <% @topic_subscription_type.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :name, class: label_class %>
+    <%= f.text_field :name, class: field_class %>
+    <% if @topic_subscription_type.persisted? %>
+      <p class="mt-1 text-xs text-gray-500">Key <code><%= @topic_subscription_type.key %></code> stays fixed even if you rename the topic.</p>
+    <% end %>
+  </div>
+
+  <div>
+    <%= f.label :description, "Description (optional)", class: label_class %>
+    <%= f.text_area :description, rows: 3, class: field_class %>
+  </div>
+
+  <div class="flex items-start gap-2">
+    <%= f.check_box :event_selector, class: "mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
+    <div>
+      <%= f.label :event_selector, "Tied to events", class: "block text-sm font-medium text-gray-700" %>
+      <p class="text-xs text-gray-500">Lets a subscription narrow to a specific event. Leave off for topics with no event dimension (e.g. News).</p>
+    </div>
+  </div>
+
+  <div class="flex gap-2 justify-end">
+    <%= link_to "Cancel", topic_subscription_types_path, class: "btn btn-utility-outline" %>
+    <%= f.submit submit_label, class: "btn btn-primary" %>
+  </div>
+<% end %>

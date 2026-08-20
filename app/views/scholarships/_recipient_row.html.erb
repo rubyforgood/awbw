@@ -1,0 +1,34 @@
+<% scholarship = scholarship.decorate %>
+<%# The whole row links to the scholarship edit page with no JS: the row is the
+    positioned ancestor and the recipient link's stretched ::before covers it, so
+    a click anywhere in the row follows that one (screen-reader-friendly) link. %>
+<tr class="relative hover:bg-fuchsia-50">
+  <td class="px-4 py-2 whitespace-nowrap text-sm">
+    <%= link_to scholarship.recipient_name, edit_scholarship_path(scholarship), class: "font-medium text-blue-700 hover:text-blue-900 hover:underline after:absolute after:inset-0 after:content-['']" %>
+    <%= scholarship.agreement_status_badge %>
+  </td>
+  <td class="px-4 py-2 text-sm text-gray-900"><%= scholarship.program_name %></td>
+  <td class="px-4 py-2 text-sm text-gray-600 whitespace-nowrap"><%= scholarship.program_location %></td>
+  <td class="px-4 py-2 text-center text-sm">
+    <% if scholarship.program_status == "—" %>
+      <span class="text-gray-400">—</span>
+    <% else %>
+      <%= render "shared/badge",
+                 label: scholarship.program_status,
+                 classes: scholarship.program_status_classes %>
+    <% end %>
+  </td>
+  <td class="px-4 py-2 text-sm text-gray-600 whitespace-nowrap"><%= scholarship.training_label %></td>
+  <%# Declined awards don't count toward totals, so the amount is struck through. %>
+  <td class="px-4 py-2 text-right text-sm whitespace-nowrap tabular-nums <%= scholarship.agreement_declined? ? "text-gray-400 line-through" : "text-gray-900" %>"><%= scholarship.amount %></td>
+  <td class="px-4 py-2 text-center text-sm whitespace-nowrap">
+    <% if scholarship.tasks_completed? %>
+      <%= render "shared/badge",
+                 label: "Yes",
+                 classes: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200",
+                 icon: "fa-solid fa-graduation-cap text-xs" %>
+    <% else %>
+      <span class="text-gray-400">No</span>
+    <% end %>
+  </td>
+</tr>

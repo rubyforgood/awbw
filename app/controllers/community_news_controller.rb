@@ -5,16 +5,17 @@ class CommunityNewsController < ApplicationController
 
   def index
     authorize!
+    @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
-      base_scope = authorized_scope(CommunityNews.includes([ :bookmarks, :primary_asset,
-                                                             :author, :organization, author: :person ]))
+      base_scope = authorized_scope(CommunityNews.includes([ :bookmarks, :primary_asset, :author,
+                                                             :organization, { created_by: :person } ]))
       filtered = base_scope.search_by_params(params)
       @sort = %w[created_at title author organization].include?(params[:sort]) ? params[:sort] : "created_at"
       @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
       filtered = case @sort
       when "author"
-        filtered.left_joins(author: :person).reorder("people.last_name #{@sort_direction}, people.first_name #{@sort_direction}")
+        filtered.order_by_author(@sort_direction)
       when "organization"
         filtered.left_joins(:organization).reorder("organizations.name #{@sort_direction}")
       else
@@ -23,7 +24,7 @@ class CommunityNewsController < ApplicationController
       @community_news = filtered.paginate(page: params[:page], per_page: per_page).decorate
       @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
 
-      render :index_lazy
+      render :community_news_results
     else
       @organizations = authorized_scope(Organization.all, as: :affiliated).order(:name)
       render :index
@@ -60,6 +61,7 @@ class CommunityNewsController < ApplicationController
 
   def create
     @community_news = CommunityNews.new(community_news_params)
+    @community_news.created_by = current_user
     authorize! @community_news
 
     success = false
@@ -119,9 +121,6 @@ class CommunityNewsController < ApplicationController
   # Optional hooks for setting variables for forms or index
   def set_form_variables
     @organizations = authorized_scope(Organization.all).order(:name).pluck(:name, :id).sort_by(&:first)
-    @authors = authorized_scope(User.has_access.or(User.where(id: @community_news.author_id)))
-                   .includes(:person)
-                   .map { |u| [ u.full_name, u.id ] }.sort_by(&:first)
     @categories_grouped =
       Category
         .includes(:category_type)
@@ -147,7 +146,7 @@ class CommunityNewsController < ApplicationController
       :title, :rhino_body, :published, :featured, :publicly_visible, :publicly_featured,
       :reference_url, :youtube_url,
       :organization_id,
-      :author_id, :created_by_id, :updated_by_id,
+      :author_id, :author_credit_preference, :created_by_id, :updated_by_id,
       category_ids: [],
       sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],

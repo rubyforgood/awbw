@@ -56,6 +56,7 @@ class WorkshopFromIdeaService
       rhino_misc2_spanish: workshop_idea.rhino_misc2_spanish,
       rhino_extra_field_spanish: workshop_idea.rhino_extra_field_spanish,
       created_by: user,
+      author_id: workshop_idea.created_by&.person_id,
       workshop_idea_id: workshop_idea.id,
       month: workshop_idea.created_at.month,
       year: workshop_idea.created_at.year,

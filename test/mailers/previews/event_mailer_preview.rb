@@ -6,7 +6,20 @@ class EventMailerPreview < ActionMailer::Preview
 
   def event_registration_reminder
     event_registration = sample_event_registration
-    EventMailer.event_registration_reminder(event_registration, days_until_event: 1)
+    EventMailer.event_registration_reminder(
+      event_registration,
+      custom_message: "This is a reminder that you're registered for the following A Window Between Worlds event <strong>tomorrow</strong>.",
+      custom_subject: "A Window Between Worlds Portal: Reminder: see you tomorrow!"
+    )
+  end
+
+  def event_registration_reminder_fyi
+    event = Event.first || create_event
+    EventMailer.event_registration_reminder_fyi(
+      event,
+      [ "Alex Rivera <alex@example.org>", "Sam Lee <sam@example.org>" ],
+      custom_message: "This is a reminder that you're registered for the following A Window Between Worlds event <strong>tomorrow</strong>."
+    )
   end
 
   def event_registration_cancelled
@@ -28,14 +41,20 @@ class EventMailerPreview < ActionMailer::Preview
   end
 
   def sample_event_registration
-    # Try to reuse existing records to avoid duplication
+    # Try to reuse existing records to avoid duplication. Persist the registration
+    # so it has a slug and the confirmation email's "View ticket" link renders
+    # (the link is gated on a persisted registration).
     event = Event.first || create_event
     person = Person.first || create_person
 
-    EventRegistration.new(
-      event: event,
-      registrant: person
-    )
+    registration = EventRegistration.find_or_create_by!(event: event, registrant: person)
+    # Showcase the CE deadlines block (set in memory only, not persisted). The email
+    # gates on the event being CE-eligible, so give it offered hours + deadlines. Set
+    # on registration.event — the object the mailer decorates and reads.
+    registration.event.ce_hours_offered ||= 6
+    registration.event.ce_hours_request_deadline ||= 2.weeks.from_now.to_date
+    registration.event.ce_payment_due_deadline ||= 3.weeks.from_now.to_date
+    registration
   end
 
   def create_event

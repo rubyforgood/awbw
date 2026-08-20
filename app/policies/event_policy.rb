@@ -13,6 +13,34 @@ class EventPolicy < ApplicationPolicy
     admin?
   end
 
+  # The cross-event report suite (revenue, participation, scholarships, the
+  # reports hub, and the attendees index). Admins see the whole org; an event
+  # owner sees the same pages narrowed to their own events by the :reportable
+  # relation scope, so the unfiltered view needs no gate beyond "has events to
+  # report on" — the rows, not the page, carry the authorization.
+  def cross_event_reports?
+    admin? || owns_events?
+  end
+
+  # A single-event slice of those reports — reached from the per-event Reports and
+  # Roster tabs, which pass event_id — is visible to that event's owner too. The
+  # controller resolves event_id to the Event and authorizes against it here, so
+  # owner? has a real record to check.
+  def event_reports?
+    admin? || owner?
+  end
+
+  # Rows the report suite may show: every event for an admin, only their own for
+  # anyone else. Applied as a scope rather than trusting the event_id filter, so
+  # no combination of filter params (including an `event_id[]` array, which
+  # `find_by` collapses to one record while a raw `where` would not) can widen a
+  # report past what the viewer is allowed to see.
+  relation_scope(:reportable) do |relation|
+    next relation if admin?
+    next relation.none unless authenticated?
+    relation.where(created_by_id: user.id)
+  end
+
   def show?
     return true if admin?
 
@@ -59,11 +87,19 @@ class EventPolicy < ApplicationPolicy
     manage?
   end
 
-  def dashboard?
+  # The per-event roster (active registrants + demographics) is owner-visible like
+  # the rest of the event's management pages.
+  def roster?
+    manage?
+  end
+
+  # The per-event attendance (CE sign-in) report shows registrant PII, so it's
+  # gated like the dashboard — admins and the event's owner.
+  def attendance?
     admin? || owner?
   end
 
-  def background?
+  def dashboard?
     admin? || owner?
   end
 
@@ -80,6 +116,15 @@ class EventPolicy < ApplicationPolicy
   end
 
   def bulk_payments?
+    manage?
+  end
+
+  def invoice?
+    manage?
+  end
+
+  # Who can view a person's form submissions for this event
+  def form_submissions?
     manage?
   end
 
@@ -101,13 +146,22 @@ class EventPolicy < ApplicationPolicy
                   :created_by_id,
                   :location_id,
                   :title,
+                  :abbreviation,
                   :pre_title,
                   :videoconference_url,
                   :videoconference_label,
+                  :videoconference_passcode,
+                  :short_description,
                   :rhino_header,
                   :rhino_description,
-                  :event_details,
-                  :event_details_label,
+                  :ce_hours_offered,
+                  :ce_hours_cost,
+                  :ce_hours_request_deadline,
+                  :ce_payment_due_deadline_date,
+                  :ce_payment_due_deadline_time,
+                  :payment_due_deadline_date,
+                  :payment_due_deadline_time,
+                  :completion_deadline,
                   :autoshow_cost,
                   :autoshow_date,
                   :autoshow_location,
@@ -126,6 +180,8 @@ class EventPolicy < ApplicationPolicy
                   :hint_registration_cost,
                   :pre_title,
                   :pre_date_text,
+                  :facilitator_training,
+                  :on_demand,
                   :featured,
                   :start_date, :start_date_date, :start_date_time,
                   :end_date, :end_date_date, :end_date_time,
@@ -136,7 +192,10 @@ class EventPolicy < ApplicationPolicy
                   category_ids: [],
                   sector_ids: [],
                   primary_asset_attributes: [ :id, :file, :_destroy ],
-                  gallery_assets_attributes: [ :id, :file, :_destroy ]
+                  gallery_assets_attributes: [ :id, :file, :_destroy ],
+                  registration_ticket_callouts_attributes: [ :id, :builtin_key, :title, :subtitle, :description, :callout_type, :icon_class, :color_class, :display_from, :payment_access_gated, :published, :reset_to_default, :_destroy,
+                    { registration_ticket_callout_resources_attributes: [ :id, :resource_id, :subtitle, :page_content, :_destroy ] } ],
+                  event_staffs_attributes: [ :id, :person_id, :title, :expected_to_attend, :bio, :_destroy ]
         ]
 
     permitted.prepend(:ga4_snippet, :gtm_head_snippet, :gtm_body_snippet) if admin?
@@ -145,7 +204,6 @@ class EventPolicy < ApplicationPolicy
   end
 
   alias_rule :preview?, to: :edit?
-  alias_rule :details?, to: :show?
 
   private
 
@@ -155,17 +213,27 @@ class EventPolicy < ApplicationPolicy
     record.created_by == user
   end
 
+  # Whether there is anything for this user to report on at all — the gate on the
+  # unfiltered report pages, so a user who owns no events doesn't land on a suite
+  # of empty reports.
+  def owns_events?
+    authenticated? && Event.exists?(created_by_id: user.id)
+  end
+
   relation_scope do |relation|
     next relation if admin?
 
     if authenticated?
       relation
         .joins(
-          "LEFT OUTER JOIN event_registrations
-             ON event_registrations.event_id = events.id
-             AND event_registrations.status IN ('registered', 'attended', 'incomplete_attendance')
-           LEFT OUTER JOIN people
-             ON people.id = event_registrations.registrant_id"
+          ActiveRecord::Base.sanitize_sql_array([
+            "LEFT OUTER JOIN event_registrations
+               ON event_registrations.event_id = events.id
+               AND event_registrations.status IN (?)
+             LEFT OUTER JOIN people
+               ON people.id = event_registrations.registrant_id",
+            EventRegistration::ACTIVE_STATUSES
+          ])
         )
         .published
         .where(

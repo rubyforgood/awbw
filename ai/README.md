@@ -5,9 +5,12 @@ Quick-reference scripts for common development tasks. Designed for AI agents and
 | Command | What it does |
 |---|---|
 | `ai/recap` | Session recap: accomplishments + unresolved items (agent behavior; see below) |
-| `ai/test [args]` | Run RSpec tests (`ai/test spec/models/user_spec.rb:42`) |
+| `ai/review` | Code review: agent reviews the workspace diff, posts inline comments, and gives a Recap + Risks + Outstanding decisions summary (agent behavior; see below) |
+| `ai/test [args]` | Run RSpec, fast path — no Vite rebuild; runs the non-system suite plus only the system specs related to your diff, with a loud banner naming what it skipped (`ai/test spec/models/user_spec.rb:42` runs exactly that) |
+| `ai/test_extra [args]` | Full RSpec run: Vite test build + all the headless-Chrome system specs `ai/test` narrows |
 | `ai/lint` | Rubocop on all files |
 | `ai/lint --fix` | Auto-fix lint issues |
+| `ai/tw-sort` | Sort Tailwind utility-class order with rustywind. Defaults to files changed vs `origin/main` (gradual convergence); `--all` sorts the whole tree, `--check` verifies without writing (non-zero exit if any file is unsorted) |
 | `ai/server` | Start all dev services (web + vite) |
 | `ai/console` | Rails console |
 | `ai/routes -g pattern` | Search Rails routes |
@@ -17,7 +20,10 @@ Quick-reference scripts for common development tasks. Designed for AI agents and
 
 All scripts pass through extra arguments, so `ai/test --fail-fast` works as expected.
 
+**Full tests in a ship flow:** a bare "test" while iterating means `ai/test` (fast path), but when "test" rides along with commit / push / PR — e.g. **"commit push pr test"** — run the **full** suite with `ai/test_extra` (Vite build + all system specs) and only commit/push/PR once it's green.
+
 Only the commands listed above exist. "ai <name>" refers to one of these `ai/` scripts — not a slash-command skill. Two phrases are special:
 
 - **"ai security"** runs `ai/security` (the security scan above).
+- **"ai review"** (or `ai/review`, which just prints a trigger) tells the agent to run the `ai-review` skill (`.claude/skills/ai-review/SKILL.md`): review the current workspace diff against the review guidelines, post one concise inline comment per qualifying bug, then give a written **Recap + Risks + Outstanding decisions** summary (modeled on `ai recap`). It is never the `/audit` design skill or `ai/security`.
 - **"ai recap"** (or `ai/recap`, which just prints the trigger word) tells the agent to review the conversation and report two parts: **Recap** (what was accomplished) and **Unresolved** (dropped threads, unanswered questions, unfinished tasks, and disagreements from either side). The agent performs it directly per `CLAUDE.md`. It is never the `/audit` design/accessibility skill.

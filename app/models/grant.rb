@@ -1,24 +1,81 @@
 class Grant < ApplicationRecord
-  belongs_to :donor, polymorphic: true
+  include TagFilterable
+
+  belongs_to :funder, polymorphic: true, optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
 
   has_many :scholarships, dependent: :restrict_with_error
 
-  DONOR_TYPES = %w[Organization Person].freeze
+  has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
+  has_many :sectors, through: :sectorable_items
+  has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
+  has_many :categories, through: :categorizable_items
+  has_many :category_types, through: :categories
+
+  has_one :primary_asset, -> { where(type: "PrimaryAsset") },
+          as: :owner, class_name: "PrimaryAsset", dependent: :destroy
+  has_many :gallery_assets, -> { where(type: "GalleryAsset") },
+           as: :owner, class_name: "GalleryAsset", dependent: :destroy
+  has_many :assets, as: :owner, dependent: :destroy
+
+  accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :gallery_assets, reject_if: :all_blank, allow_destroy: true
+
+  # Grants have no publish lifecycle — they're admin-only and always visible to
+  # their audience. This no-op `published` scope satisfies the shared taggings
+  # machinery (the matrix heatmap, Sector/Category#has_published_taggings, and the
+  # tagged-index deep link), which calls `.published` on every TAGGABLE_META klass.
+  scope :published, ->(*) { all }
+
+  # Defer sector/category assignment on new records: the form submits sector_ids/
+  # category_ids, but the polymorphic join rows need the grant's id, so we stash
+  # them and attach after_create. Mirrors Workshop.
+  attr_accessor :pending_sector_ids, :pending_category_ids
+  after_create :assign_pending_associations
+
+  FUNDER_TYPES = %w[Organization Person].freeze
 
   validates :name, presence: true
   validates :amount_cents, numericality: { greater_than_or_equal_to: 0 }
-  validates :donor_type, inclusion: { in: DONOR_TYPES }
+  validates :funder_type, inclusion: { in: FUNDER_TYPES }, allow_nil: true
+  validate :funder_present
+  validate :amount_covers_scholarships_already_issued
 
-  scope :by_deadline, -> { order(Arel.sql("application_deadline IS NULL, application_deadline ASC")) }
+  scope :by_deadline, -> { order(Arel.sql("funds_allocation_deadline IS NULL, funds_allocation_deadline ASC")) }
 
-  # Grants that still have unallocated funds (donation amount exceeds the sum of
+  # Ids of grants the org (AWBW) funded itself — treated as org subsidy, not
+  # external funding, by the scholarship funding split. Empty when the AWBW org
+  # isn't on file, collapsing the split back to grant-present vs grant-absent.
+  def self.self_funded_ids
+    where(funder: Organization.awbw).ids
+  end
+
+  # Total scholarship draws against a grant, as a correlated subquery. Used by the
+  # funds scopes so they stay flat WHERE clauses — no GROUP BY/HAVING, which would
+  # break will_paginate's total_entries count on the paginated index.
+  ALLOCATED_CENTS_SUBQUERY =
+    "COALESCE((SELECT SUM(scholarships.amount_cents) FROM scholarships WHERE scholarships.grant_id = grants.id AND scholarships.agreement_response_status <> 'declined'), 0)".freeze
+
+  # Grants that still have unallocated funds (grant amount exceeds the sum of
   # scholarships drawn against them).
-  scope :with_funds_remaining, -> {
-    left_joins(:scholarships)
-      .group(:id)
-      .having("grants.amount_cents - COALESCE(SUM(scholarships.amount_cents), 0) > 0")
+  scope :with_funds_remaining, -> { where("grants.amount_cents > #{ALLOCATED_CENTS_SUBQUERY}") }
+
+  # Grants whose full amount has been issued as scholarships (nothing left to
+  # award) — the complement of with_funds_remaining.
+  scope :fully_issued, -> { where("grants.amount_cents <= #{ALLOCATED_CENTS_SUBQUERY}") }
+
+  # Task-completion filters keyed off the grant's scholarships. "Outstanding"
+  # means at least one scholarship still has incomplete tasks; "all completed"
+  # means the grant has scholarships and none are outstanding. The subqueries
+  # exclude grant-less scholarships (grant_id IS NULL) — a stray NULL in the
+  # NOT IN set below would otherwise make all_tasks_completed match nothing.
+  scope :tasks_outstanding, -> {
+    where(id: Scholarship.not_declined.where(tasks_completed: false).where.not(grant_id: nil).select(:grant_id))
+  }
+  scope :all_tasks_completed, -> {
+    where(id: Scholarship.not_declined.where.not(grant_id: nil).select(:grant_id))
+      .where.not(id: Scholarship.not_declined.where(tasks_completed: false).where.not(grant_id: nil).select(:grant_id))
   }
 
   # Grants offered in a scholarship's "Funded by grant" picker: every grant with
@@ -26,9 +83,9 @@ class Grant < ApplicationRecord
   # stays selectable even when fully allocated, since this scholarship is what
   # exhausted it and deselecting it should remain possible.
   def self.selectable_for(scholarship)
-    # Eager-load the polymorphic donor: the picker renders name_with_funder (→
-    # funder_name → donor) for every grant, which is an N+1 without this.
-    grants = with_funds_remaining.includes(:donor).by_deadline.to_a
+    # Eager-load the polymorphic funder: the picker renders name_with_funder (→
+    # funder_name → funder) for every grant, which is an N+1 without this.
+    grants = with_funds_remaining.includes(:funder).by_deadline.to_a
     connected = scholarship&.grant
     grants << connected if connected && grants.exclude?(connected)
     grants
@@ -43,19 +100,19 @@ class Grant < ApplicationRecord
     self.amount_cents = (value.to_d * 100).to_i if value.present?
   end
 
-  # Resolve the polymorphic donor from a signed global id, mirroring the
+  # Resolve the polymorphic funder from a signed global id, mirroring the
   # GlobalID pattern used for scholarship allocatables.
-  def donor_sgid
-    donor&.to_signed_global_id&.to_s
+  def funder_sgid
+    funder&.to_signed_global_id&.to_s
   end
 
-  def donor_sgid=(sgid)
-    self.donor = GlobalID::Locator.locate_signed(sgid) if sgid.present?
+  def funder_sgid=(sgid)
+    self.funder = GlobalID::Locator.locate_signed(sgid) if sgid.present?
   end
 
-  # The donor is the funder of any scholarships drawn from the grant.
+  # Human-readable name of the grant's funder (an Organization or Person).
   def funder_name
-    donor&.try(:full_name) || donor&.try(:name) || donor&.to_s
+    funder&.try(:full_name) || funder&.try(:name) || funder&.to_s
   end
 
   # Display label for dropdowns: the grant name with its funder in parens
@@ -69,9 +126,9 @@ class Grant < ApplicationRecord
   # association in memory when present (the index eager-loads :scholarships) to
   # avoid a per-row SQL SUM; otherwise issues a single aggregate query.
   def scholarships_total_cents
-    return scholarships.sum { |s| s.amount_cents.to_i } if scholarships.loaded?
+    return scholarships.reject(&:agreement_declined?).sum { |s| s.amount_cents.to_i } if scholarships.loaded?
 
-    scholarships.sum(:amount_cents)
+    scholarships.not_declined.sum(:amount_cents)
   end
 
   def remaining_cents
@@ -92,7 +149,50 @@ class Grant < ApplicationRecord
     text_to_list(tasks)
   end
 
+  # Defer association assignment until after save on new records (see
+  # pending_* accessors above); update existing records directly.
+  def sector_ids=(ids)
+    new_record? ? @pending_sector_ids = ids : super
+  end
+
+  def category_ids=(ids)
+    new_record? ? @pending_category_ids = ids : super
+  end
+
   private
+
+  # The funder is chosen through the virtual funder_sgid field, so attach the
+  # "no funder picked" error there — that's the input the form renders, so the
+  # error shows inline on the field, not just in the summary.
+  def funder_present
+    errors.add(:funder_sgid, "must be selected") if funder.blank?
+  end
+
+  def assign_pending_associations
+    return unless @pending_sector_ids || @pending_category_ids
+
+    if @pending_sector_ids
+      self.sectors = Sector.where(id: @pending_sector_ids)
+      @pending_sector_ids = nil
+    end
+
+    if @pending_category_ids
+      self.categories = Category.where(id: @pending_category_ids)
+      @pending_category_ids = nil
+    end
+  end
+
+  # A grant's amount can't be lowered below what has already been awarded against
+  # it — the scholarships are committed, so the grant must at least cover them.
+  # Mirrors Scholarship#within_grant_budget from the other side of the ledger.
+  def amount_covers_scholarships_already_issued
+    return unless amount_cents
+
+    issued = scholarships_total_cents
+    if amount_cents < issued
+      errors.add(:amount_cents, "can't be less than the #{MoneyFormatter.dollars_from_cents(issued)} already awarded in scholarships")
+    end
+  end
 
   def text_to_list(text)
     text.to_s.split("\n").map(&:strip).reject(&:blank?)

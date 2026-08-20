@@ -25,6 +25,7 @@ class Workshop < ApplicationRecord
 
   belongs_to :windows_type, optional: true
   belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :author, class_name: "Person", optional: true
   belongs_to :workshop_idea, optional: true
 
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -184,8 +185,23 @@ class Workshop < ApplicationRecord
     Sector.all.map { |sector| Hash[sector.name, sector.workshops] }.flatten
   end
 
+  # Legacy free-text author name (pre-person authors), still named `full_name`.
+  # Folded into credit display, credited-name search, and sort.
+  def self.legacy_author_name_columns
+    [ "workshops.full_name" ]
+  end
+
+  def legacy_author_name_text
+    full_name
+  end
+
+  # With no credited person or legacy name, attribute to the generic facilitator.
+  def missing_author_label
+    "AWBW Facilitator"
+  end
+
   def author_name
-    created_by&.name || full_name.presence
+    author_person&.full_name.presence || full_name.presence
   end
 
   def date

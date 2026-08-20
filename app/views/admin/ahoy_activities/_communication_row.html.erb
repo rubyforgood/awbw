@@ -1,0 +1,14 @@
+<%# The Time column carries the timestamp, so the reused notification row drops
+    its own leading date (show_date: false). %>
+<tr class="<%= DomainTheme.bg_class_for(:notifications, intensity: 50) %> transition">
+  <td data-label="Time" class="px-4 py-3 whitespace-nowrap align-top text-gray-500">
+    <%= notification.created_at.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
+  </td>
+  <td data-label="Activity" class="px-4 py-3 whitespace-nowrap align-top font-medium text-gray-900">
+    <i class="fa-solid fa-bell mr-1 <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>"></i>
+    <%= notification.timeline_activity_name %>
+  </td>
+  <td data-label="Communication" colspan="4" class="px-4 py-3">
+    <%= render "notifications/notification_row", notification: notification, admin: true, show_date: false %>
+  </td>
+</tr>

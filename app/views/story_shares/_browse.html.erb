@@ -1,0 +1,86 @@
+<div class="bg-gray-100 min-h-screen py-8">
+  <div class="max-w-6xl mx-auto px-6">
+
+    <div class="flex items-baseline justify-between mb-6">
+      <%# Sector/category names carry intentional casing ("LGBTQIA+",
+          "Self-Care/Personal Growth"); render as stored, never .titleize. %>
+      <h1 class="text-2xl font-bold text-gray-900"><%= browse_title(params) %></h1>
+      <p class="text-sm text-gray-500"><%= pluralize(@count_display, "story") %></p>
+    </div>
+
+    <% if @stories.any? %>
+      <%# Sector pages get one big lead hero; category / spotlight / additional /
+          search pages get an autoplay carousel (like the home page). %>
+      <% single_hero = params[:sector_names_all].present? %>
+
+      <% if single_hero %>
+        <% lead = @stories.first %>
+        <div class="rounded shadow-md overflow-hidden mb-12">
+          <%= link_to story_share_path(lead), class: "block" do %>
+            <%= render "story_image", story: lead, aspect: "aspect-[16/6]" %>
+            <div class="bg-gray-700 text-white p-4">
+              <h2 class="font-telefon text-lg font-semibold"><%= lead.title %></h2>
+              <p class="text-sm opacity-80">
+                <%= lead.organization_name %><%= " – #{lead.organization.state}" if lead.organization&.state.present? %>
+              </p>
+            </div>
+          <% end %>
+        </div>
+        <% grid_stories = @stories.drop(1).first(3) %>
+        <% row_stories = @stories.drop(4) %>
+      <% else %>
+        <% hero_stories = @stories.first(5) %>
+        <div data-controller="carousel"
+             class="relative swiper rounded-lg overflow-hidden shadow-lg mb-12"
+             data-carousel-options-value='{ "autoplay": { "delay": 5000, "pauseOnMouseEnter": true }, "slidesPerView": 1, "breakpoints": {} }'>
+          <div class="swiper-wrapper">
+            <% hero_stories.each do |story| %>
+              <div class="swiper-slide">
+                <%= link_to story_share_path(story), class: "block relative" do %>
+                  <%= render "story_image", story: story, aspect: "aspect-[16/6]" %>
+                  <div class="absolute bottom-0 left-0 right-0 bg-black/50 p-6 text-white">
+                    <h2 class="font-telefon text-2xl mb-1"><%= story.title %></h2>
+                    <p class="text-sm opacity-90">
+                      <%= story.organization_name %><%= " – #{story.organization.state}" if story.organization&.state.present? %>
+                    </p>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+          <button aria-label="Previous story" class="swiper-button-prev-custom absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg z-20">
+            <i class="fa-solid fa-chevron-left text-gray-800"></i>
+          </button>
+          <button aria-label="Next story" class="swiper-button-next-custom absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg z-20">
+            <i class="fa-solid fa-chevron-right text-gray-800"></i>
+          </button>
+        </div>
+        <% grid_stories = @stories.drop(5).first(3) %>
+        <% row_stories = @stories.drop(8) %>
+      <% end %>
+
+      <!-- 3-up featured grid -->
+      <% if grid_stories.any? %>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          <% grid_stories.each do |story| %>
+            <%= render "browse_card", story: story %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Remaining stories as rows -->
+      <div class="space-y-16">
+        <% row_stories.each do |story| %>
+          <%= render "browse_row", story: story %>
+        <% end %>
+      </div>
+
+      <div class="pagination mt-10"><%= tailwind_paginate @stories %></div>
+    <% else %>
+      <div class="text-center text-gray-600 py-20">
+        No stories found.
+      </div>
+    <% end %>
+
+  </div>
+</div>

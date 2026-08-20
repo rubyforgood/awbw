@@ -18,6 +18,7 @@ RSpec.describe StripeChargeSucceededProcessor do
       billing_details: nil,
       receipt_email: nil,
       customer: nil,
+      invoice: nil,
       to_hash: { "id" => stripe_charge_id, "amount" => 30_00 }
     )
   end

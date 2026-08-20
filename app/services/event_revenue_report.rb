@@ -1,0 +1,186 @@
+# Revenue report for nonprofit CEOs: how much real money came in, how much the
+# org subsidized from its own pocket, and the net — per event, grouped by
+# calendar year for an over-time view and annual-report figures.
+#
+# Money in   = registration payments collected + CE payments collected +
+#              grant-funded scholarships (grant money the org received).
+# Org subsidy = unfunded scholarships + discounts (cost the org absorbs).
+# Net         = money in - org subsidy.
+#
+# CE fees are billed per ContinuingEducationRegistration. CE cash collected
+# counts as fees (money in), CE cost still owed counts as outstanding, and a CE
+# discount is org subsidy like any other. Every component comes from
+# EventRevenueFigures, which loads them for all events at once and mirrors the
+# EventDashboard definitions so a row agrees with that event's dashboard.
+class EventRevenueReport
+  # Raw per-event component figures, with the bucket totals derived from them.
+  Row = Struct.new(
+    :event,
+    :registration_payments_cents,
+    :ce_paid_cents,
+    :ce_outstanding_cents,
+    :funded_scholarship_cents,
+    :unfunded_scholarship_cents,
+    :discount_cents,
+    :registration_outstanding_cents,
+    keyword_init: true
+  ) do
+    # Fees actually collected: registration payments plus CE cash collected.
+    def fees_cents
+      registration_payments_cents + ce_paid_cents
+    end
+
+    # Fees still owed: unpaid registration cost plus CE cost not yet collected.
+    def outstanding_cents
+      registration_outstanding_cents + ce_outstanding_cents
+    end
+
+    # Money that's in or counted toward revenue: collected fees plus grant-funded
+    # scholarships. Excludes outstanding (not yet paid) and org subsidy.
+    def money_in_cents
+      fees_cents + funded_scholarship_cents
+    end
+
+    def org_subsidy_cents
+      unfunded_scholarship_cents + discount_cents
+    end
+
+    # Net = collected fees + funded scholarships − org subsidy.
+    def net_cents
+      money_in_cents - org_subsidy_cents
+    end
+
+    # What the event nets once everything owed is collected (net plus outstanding).
+    def total_expected_cents
+      net_cents + outstanding_cents
+    end
+
+    def year
+      event.start_date&.year
+    end
+  end
+
+  # The figures that get summed — raw components plus derived buckets — so a year
+  # subtotal or the grand total is just a sum over rows.
+  SUMMABLE = %i[
+    registration_payments_cents ce_paid_cents ce_outstanding_cents funded_scholarship_cents
+    unfunded_scholarship_cents discount_cents registration_outstanding_cents
+    fees_cents outstanding_cents money_in_cents org_subsidy_cents net_cents total_expected_cents
+  ].freeze
+
+  module Summable
+    SUMMABLE.each do |attribute|
+      define_method(attribute) { rows.sum { |row| row.public_send(attribute) } }
+    end
+  end
+
+  # One calendar year of events, with its rows and summed subtotals.
+  YearGroup = Struct.new(:year, :rows, :in_progress, keyword_init: true) do
+    include Summable
+  end
+
+  include Summable
+  include ReportPeriods
+
+  def initialize(events, current_year: Date.current.year, featured_year: nil)
+    @events = events
+    @current_year = current_year
+    # nil means no specific year is featured (all-time): the headline aggregates
+    # every event rather than collapsing to the current year.
+    @featured_year_value = featured_year
+  end
+
+  def rows
+    @rows ||= @events.map { |event| build_row(event, figures_loader.for(event)) }
+  end
+
+  def any?
+    rows.any?
+  end
+
+  # The people (and their individual amounts) behind an event row's component
+  # figures, for the report's per-figure drilldowns. Computed lazily off the same
+  # loader, so pages that only read the totals never pay for it.
+  def breakdown_for(event)
+    figures_loader.breakdown_for(event)
+  end
+
+  # Calendar-year groups, newest first, each with a subtotal. Events without a
+  # start date fall under a nil year that sorts last.
+  def years
+    @years ||= rows
+      .group_by(&:year)
+      .map { |year, year_rows| YearGroup.new(year: year, rows: year_rows, in_progress: year == @current_year) }
+      .sort_by { |group| [ group.year ? 0 : 1, -(group.year || 0) ] }
+  end
+
+  # The group whose figures lead the KPI strip: the year navigated from (the event
+  # clicked), falling back to the most recent year present. When no year is
+  # featured (all-time), an aggregate of every event so the headline isn't
+  # year-scoped.
+  def featured_year
+    return all_events_group if @featured_year_value.nil?
+    years_by_value[@featured_year_value] || years.first
+  end
+
+  # A single group spanning every event, under a nil year so the headline reads
+  # "All events". Used as the all-time headline.
+  def all_events_group
+    @all_events_group ||= YearGroup.new(year: nil, rows: rows, in_progress: false)
+  end
+
+  # The most recent year-group strictly older than the featured one, for a
+  # year-over-year delta. Nil when there's nothing older to compare against.
+  def prior_year
+    return nil unless featured_year&.year
+    years.find { |group| group.year && group.year < featured_year.year }
+  end
+
+  # Stacked-column series by year, oldest to newest, in dollars — for the
+  # Chartkick trend chart. Fees + grant-funded scholarships make up money in;
+  # org subsidy stacks on top. Funded scholarships are broken out so grant-backed
+  # revenue is visible separately.
+  def chart_series
+    ascending = years.reject { |group| group.year.nil? }.reverse
+    {
+      "Fees" => :fees_cents,
+      "Funded scholarships" => :funded_scholarship_cents,
+      "Org subsidy" => :org_subsidy_cents
+    }.map do |name, attribute|
+      { name: name, data: ascending.map { |group| [ group.year.to_s, to_dollars(group.public_send(attribute)) ] } }
+    end
+  end
+
+  private
+
+  def figures_loader
+    @figures_loader ||= EventRevenueFigures.new(@events)
+  end
+
+  # A zeroed year group for a period with no events, so the summary card renders
+  # $0 rather than blank.
+  def empty_year_group(year)
+    YearGroup.new(year: year, rows: [], in_progress: false)
+  end
+
+  def years_by_value
+    @years_by_value ||= years.index_by(&:year)
+  end
+
+  def build_row(event, figures)
+    Row.new(
+      event: event,
+      registration_payments_cents: figures.registration_payments_cents,
+      ce_paid_cents: figures.ce_paid_cents,
+      ce_outstanding_cents: figures.ce_outstanding_cents,
+      funded_scholarship_cents: figures.funded_scholarship_cents,
+      unfunded_scholarship_cents: figures.unfunded_scholarship_cents,
+      discount_cents: figures.discount_cents,
+      registration_outstanding_cents: figures.registration_outstanding_cents
+    )
+  end
+
+  def to_dollars(cents)
+    (cents / 100.0).round(2)
+  end
+end

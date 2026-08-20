@@ -1,22 +1,26 @@
-<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
-  <%# Top bar: eyelash + sub-nav, matching the other event pages %>
+<% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
+<%# Opt out of the layout's max-w-7xl cap so this data-dense table can use more
+    of the screen; the wrapper restores the layout's gutters at a wider bound. %>
+<% content_for(:full_width, true) %>
+<div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8">
+<div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
+  <%# Top bar: eyebrow + sub-nav, matching the other event pages. %>
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
-    <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <% if params[:return_to] == "scholarships" %>
+      <%= link_to "← Events scholarships", scholarships_report_return_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <% else %>
+      <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <% end %>
     <%= render "events/subnav", event: @event, current: :registrants %>
   </div>
 
-  <%# Title row: heading + registrant action controls %>
-  <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-    <div>
-      <h1 class="text-2xl font-semibold text-gray-900">
-        Registrants (<%= @active_count %>)
-      </h1>
-      <p class="text-gray-600 mt-1">
-        <%= @event.title %><% if @event.start_date.present? %> &bull; <%= @event.date_range %><% end %>
-      </p>
-    </div>
-    <div class="flex flex-wrap items-center gap-1">
+  <%# Title block — matches the dashboard/scholarships report pages:
+      event eyebrow over a text-3xl heading with an icon and a count subtitle,
+      with the registrant action controls pinned top-right so they share the
+      title's vertical band. On mobile they sit in their own right-aligned row
+      above the centered title to avoid overlap. %>
+  <div class="relative mb-6">
+    <div class="flex flex-wrap items-center justify-end gap-1 mb-4 sm:mb-0 sm:absolute sm:right-0 sm:top-0">
       <% if allowed_to?(:edit?, @event) %>
         <%= render "form_actions_menu" %>
       <% end %>
@@ -25,9 +29,28 @@
         <%= link_to "Add registrant", new_event_registration_path(event_id: @event.id, return_to: "registrants"), class: "admin-only bg-blue-100 btn btn-primary-outline" %>
       <% end %>
     </div>
+
+    <div class="text-center">
+      <%= link_to @event.decorate.compact_label, edit_event_path(@event), title: @event.title, class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
+      <% if @event.start_date.present? %>
+        <p class="text-sm text-gray-500 mt-1"><%= @event.date_range %></p>
+      <% end %>
+      <h1 class="text-3xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-users <%= DomainTheme.text_class_for(:event_registrations, intensity: 800) %>"></i>
+        Manage registrations
+      </h1>
+      <p class="text-gray-500 mt-2"><%= pluralize(@active_count, "person") %></p>
+    </div>
   </div>
 
-  <%= render "registrants_search" %>
+  <%= render "events/registrant_filters",
+        url: registrants_event_path(@event),
+        frame: "registrants_results",
+        clear_url: registrants_event_path(@event),
+        text_fields: [ { param: :keyword, label: "Keyword", placeholder: "Name, email, phone, city, or organization", primary: true, search: true } ],
+        include_readiness: true,
+        status_filter_hidden: true %>
 
   <%= render "registrants_results" %>
+</div>
 </div>

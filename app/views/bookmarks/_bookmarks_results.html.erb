@@ -1,13 +1,7 @@
 <%= turbo_stream.replace("bookmarks_count", partial: "bookmarks_count") %>
 <%
   sort_base = params.permit(:keyword, :user_id, :bookmarkable_type, :windows_type, :number_of_items_per_page).to_h.symbolize_keys
-  sort_icon = ->(column) {
-    if @sort == column
-      @sort_direction == "asc" ? "fa-arrow-up" : "fa-arrow-down"
-    else
-      "fa-sort"
-    end
-  }
+  sort_link = sort_header_link(frame: "bookmarks_results", path: ->(p) { bookmarks_path(p) }, base: sort_base)
 %>
 <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= 'animate-fade blur-on-submit' if @bookmarks.any? %>">
   <table class="min-w-full divide-y divide-gray-200">
@@ -16,30 +10,9 @@
         <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">ID</th>
         <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">User</th>
         <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Type</th>
-        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">
-          <%= link_to bookmarks_path(sort_base.merge(sort: "title", direction: (@sort == "title" && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
-                      data: { turbo_frame: "bookmarks_results" },
-                      class: "inline-flex items-center gap-1 text-gray-700 hover:text-gray-900" do %>
-            Title
-            <i class="fa-solid <%= sort_icon.call("title") %> text-xs opacity-70"></i>
-          <% end %>
-        </th>
-        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">
-          <%= link_to bookmarks_path(sort_base.merge(sort: "created_at", direction: (@sort == "created_at" && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
-                      data: { turbo_frame: "bookmarks_results" },
-                      class: "inline-flex items-center gap-1 text-gray-700 hover:text-gray-900" do %>
-            Created At
-            <i class="fa-solid <%= sort_icon.call("created_at") %> text-xs opacity-70"></i>
-          <% end %>
-        </th>
-        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">
-          <%= link_to bookmarks_path(sort_base.merge(sort: "popularity", direction: (@sort == "popularity" && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
-                      data: { turbo_frame: "bookmarks_results" },
-                      class: "inline-flex items-center gap-1 text-gray-700 hover:text-gray-900" do %>
-            Bookmark count
-            <i class="fa-solid <%= sort_icon.call("popularity") %> text-xs opacity-70"></i>
-          <% end %>
-        </th>
+        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("title", "Title") %></th>
+        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("created_at", "Created At") %></th>
+        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("popularity", "Bookmark count") %></th>
       </tr>
     </thead>
 

@@ -1,7 +1,0 @@
-{
-  "scripts": {
-    "setup": "bin/conductor-setup",
-    "server": "bin/conductor-server",
-    "archive": "bin/conductor-archive"
-  }
-}

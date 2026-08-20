@@ -47,7 +47,7 @@ RSpec.describe "/stories", type: :request do
 
     describe "GET /index" do
       it "returns all stories" do
-        get stories_url, params: {}, headers: { "Turbo-Frame" => "story_results" }
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).to include(published_story.title)
         expect(response.body).to include(public_story.title)
         expect(response.body).to include(private_story.title)
@@ -61,13 +61,13 @@ RSpec.describe "/stories", type: :request do
           published: true
         ))
 
-        get stories_url(organization_id: organization.id), headers: { "Turbo-Frame" => "story_results" }
+        get stories_url(organization_id: organization.id), headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).to include(published_story.title)
         expect(response.body).not_to include(story_in_other_org.title)
       end
 
       it "shows the empty-state message when no stories match" do
-        get stories_url(title: "no-such-story-zzz"), headers: { "Turbo-Frame" => "story_results" }
+        get stories_url(title: "no-such-story-zzz"), headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).to include("No stories found")
       end
 
@@ -76,7 +76,7 @@ RSpec.describe "/stories", type: :request do
         title_only = Story.create!(base_attributes.merge(title: "Best Story Other", rhino_body: "something else", published: true))
         body_only = Story.create!(base_attributes.merge(title: "Unrelated Tale", rhino_body: "healing through art", published: true))
 
-        get stories_url(title: "Best Story", query: "healing"), headers: { "Turbo-Frame" => "story_results" }
+        get stories_url(title: "Best Story", query: "healing"), headers: { "Turbo-Frame" => "stories_results" }
 
         expect(response.body).to include(match.title)
         expect(response.body).not_to include(title_only.title)
@@ -84,7 +84,7 @@ RSpec.describe "/stories", type: :request do
       end
 
       describe "external link handling" do
-        let(:turbo_headers) { { "Turbo-Frame" => "story_results" } }
+        let(:turbo_headers) { { "Turbo-Frame" => "stories_results" } }
 
         let!(:external_story) do
           create(:story, :published, title: "External Story", website_url: "https://example.com/article")
@@ -117,7 +117,7 @@ RSpec.describe "/stories", type: :request do
       end
 
       describe "sorting" do
-        let(:turbo_headers) { { "Turbo-Frame" => "story_results" } }
+        let(:turbo_headers) { { "Turbo-Frame" => "stories_results" } }
 
         let(:org_alpha) { create(:organization, name: "Alpha Org") }
         let(:org_zulu) { create(:organization, name: "Zulu Org") }
@@ -196,6 +196,18 @@ RSpec.describe "/stories", type: :request do
           expect(titles_in_response).to eq([ "Alpha Story", "Zulu Story" ])
         end
 
+        it "sorts by the credited author, not the creator, when they differ" do
+          # Explicit authors invert the creators: story_a is created by Alice but
+          # authored by Zeke; story_z is created by Zara but authored by Aaron.
+          # The column shows the author, so the sort must key off it too — keying
+          # off the creator would put Alpha before Zulu.
+          story_a.update!(author: create(:person, first_name: "Zeke", last_name: "Zimmer"))
+          story_z.update!(author: create(:person, first_name: "Aaron", last_name: "Adams"))
+
+          get stories_url, params: { sort: "author", direction: "asc" }, headers: turbo_headers
+          expect(titles_in_response).to eq([ "Zulu Story", "Alpha Story" ])
+        end
+
         it "sorts by organization asc" do
           get stories_url, params: { sort: "organization", direction: "asc" }, headers: turbo_headers
           expect(titles_in_response).to eq([ "Alpha Story", "Zulu Story" ])
@@ -220,6 +232,16 @@ RSpec.describe "/stories", type: :request do
       end
     end
 
+    describe "GET /edit" do
+      it "renders the hover definitions panel with copy for each flag" do
+        get edit_story_url(private_story)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("group-hover:block")
+        expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:publicly_visible][:description])
+      end
+    end
+
     describe "POST /create" do
       it "creates a story" do
         expect {
@@ -227,6 +249,77 @@ RSpec.describe "/stories", type: :request do
         }.to change(Story, :count).by(1)
 
         expect(response).to redirect_to(story_url(Story.last))
+      end
+
+      it "records the current user as created_by regardless of submitted value" do
+        someone_else = create(:user)
+        post stories_url, params: { story: base_attributes.merge(created_by_id: someone_else.id) }
+
+        expect(Story.last.created_by).to eq(admin)
+      end
+
+      it "assigns the chosen person as author" do
+        facilitator = create(:person)
+        post stories_url, params: { story: base_attributes.merge(author_id: facilitator.id) }
+
+        expect(Story.last.author).to eq(facilitator)
+      end
+
+      context "when promoting a story idea into a story" do
+        let(:submitter) { create(:user, email: "submitter@example.com") }
+        let(:story_idea) { create(:story_idea, created_by: submitter) }
+
+        it "notifies the idea's submitter and an admin" do
+          expect {
+            post stories_url, params: { story: base_attributes.merge(story_idea_id: story_idea.id) }
+          }.to change(Notification, :count).by(2)
+
+          person_note = Notification.find_by(kind: "story_promoted")
+          expect(person_note.recipient_role).to eq("person")
+          expect(person_note.recipient_email).to eq(submitter.email)
+
+          admin_note = Notification.find_by(kind: "story_promoted_fyi")
+          expect(admin_note.recipient_role).to eq("admin")
+          expect(admin_note.recipient_email).to eq(ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))
+        end
+      end
+
+      it "does not send promotion emails when no story idea is linked" do
+        expect {
+          post stories_url, params: { story: base_attributes }
+        }.not_to change(Notification, :count)
+      end
+    end
+
+    describe "comments and communications on the edit page" do
+      it "renders the comments section" do
+        get edit_story_url(published_story)
+        expect(response.body).to include("Story comments")
+        expect(response.body).to include("Add comment")
+      end
+
+      it "saves a new comment with its topic, authored by the current user" do
+        expect {
+          patch story_url(published_story),
+                params: { story: { comments_attributes: { "0" => { topic: "Follow-up", body: "Emailed the facilitator" } } } }
+        }.to change { published_story.comments.count }.by(1)
+
+        comment = published_story.comments.order(:created_at).last
+        expect(comment.body).to eq("Emailed the facilitator")
+        expect(comment.topic).to eq("Follow-up")
+        expect(comment.created_by).to eq(admin)
+      end
+
+      it "logs a communication against the story" do
+        expect {
+          patch story_url(published_story),
+                params: { story: { notifications_attributes: { "0" => { email_subject: "Called the facilitator" } } } }
+        }.to change { published_story.notifications.count }.by(1)
+
+        note = published_story.notifications.last
+        expect(note.noticeable).to eq(published_story)
+        expect(note.email_subject).to eq("Called the facilitator")
+        expect(note.recipient_email).to eq(published_story.communications_email.presence || "n/a")
       end
     end
   end
@@ -239,7 +332,7 @@ RSpec.describe "/stories", type: :request do
 
     describe "GET /index" do
       it "only shows published stories" do
-        get stories_url, params: {}, headers: { "Turbo-Frame" => "story_results" }
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
 
         expect(response.body).to include(published_story.title)
         expect(response.body).to include(public_story.title)
@@ -248,7 +341,7 @@ RSpec.describe "/stories", type: :request do
 
       it "does not show Details button for external stories" do
         external_story = create(:story, :published, title: "External Story", website_url: "https://example.com")
-        get stories_url, params: {}, headers: { "Turbo-Frame" => "story_results" }
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).not_to include("Details")
         expect(response.body).to include('href="https://example.com"')
       end
@@ -280,7 +373,7 @@ RSpec.describe "/stories", type: :request do
   describe "as guest" do
     describe "GET /index" do
       it "only shows publicly_visible stories" do
-        get stories_url, params: {}, headers: { "Turbo-Frame" => "story_results" }
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
 
         expect(response.body).to include(public_story.title)
         expect(response.body).not_to include(published_story.title)
@@ -291,6 +384,17 @@ RSpec.describe "/stories", type: :request do
     describe "GET /show" do
       it "can view publicly visible story" do
         get story_url(public_story)
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "resolves a story by its slugged param" do
+        get story_url(public_story)
+        expect(public_story.to_param).to match(/\A\d+-/)
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "still resolves a story by its bare numeric id" do
+        get story_url(id: public_story.id)
         expect(response).to have_http_status(:ok)
       end
 

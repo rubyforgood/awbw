@@ -46,14 +46,8 @@
 
     <% result_src = video_recordings_path + "?" + request.query_string %>
 
-    <%= turbo_frame_tag "video_recordings_results", src: result_src  do %>
-      <div class="bg-white rounded-lg shadow-md p-6 mt-4 animate-pulse">
-        <div class="space-y-4">
-          <% 3.times do %>
-            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-          <% end %>
-        </div>
-      </div>
+    <%= turbo_frame_tag "video_recordings_results", src: result_src do %>
+      <%= render "results_skeleton" %>
     <% end %>
   </div>
 </div>

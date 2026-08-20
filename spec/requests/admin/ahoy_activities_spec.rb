@@ -37,6 +37,10 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
   let(:visits_path) { admin_activities_visits_path }   # GET /admin/activities/visits
   let(:charts_path) { admin_activities_charts_path }   # GET /admin/activities/charts
 
+  # The events index lazy-loads its rows in a turbo frame, so row/section
+  # assertions must issue the frame request (Turbo-Frame header) the browser sends.
+  let(:frame_headers) { { "Turbo-Frame" => "activity_results" } }
+
   # ============================================================
   # AS A GUEST
   # ============================================================
@@ -133,7 +137,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       end
 
       it "filters by prefixes=auth" do
-        get index_path, params: { prefixes: "auth" }
+        get index_path, params: { prefixes: "auth" }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("auth.login")
@@ -141,7 +145,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       end
 
       it "filters by visit_id" do
-        get index_path, params: { visit_id: visit_for_user.id }
+        get index_path, params: { visit_id: visit_for_user.id }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("create.bookmark")
@@ -152,7 +156,8 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
             params: {
               from: 3.days.ago.to_date.to_s,
               to: 1.day.ago.to_date.to_s
-            }
+            },
+            headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("create.bookmark")
@@ -160,7 +165,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       end
 
       it "filters by event name" do
-        get index_path, params: { event_name: "auth.login", time_period: "all_time" }
+        get index_path, params: { event_name: "auth.login", time_period: "all_time" }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("auth.login")
@@ -168,11 +173,205 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       end
 
       it "filters by partial event name" do
-        get index_path, params: { event_name: "bookmark", time_period: "all_time" }
+        get index_path, params: { event_name: "bookmark", time_period: "all_time" }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("create.bookmark")
         expect(response.body).not_to include("auth.login")
+      end
+
+      it "filters by hyphen-separated tokens in any order (account-auth)" do
+        create(:ahoy_event, name: "auth.account_deactivated", user: nil,
+                            visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),
+                            time: 1.day.ago, properties: {})
+
+        get index_path, params: { event_name: "account-auth", time_period: "all_time" }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("auth.account_deactivated")
+        expect(response.body).not_to include("create.bookmark")
+      end
+
+      it "filters events by free-text user search across person and user fields" do
+        rudy = create(:user, :with_person, email: "rudy-login@example.com")
+        rudy.person.update!(
+          first_name: "Rudy", last_name: "Hernandez",
+          legal_first_name: "Rudolfo",
+          email: "rudy@example.com", email_2: "rudy.alt@example.com"
+        )
+        rudy_visit = create(:ahoy_visit, user: rudy, started_at: 1.day.ago)
+        create(:ahoy_event, name: "view.workshop", user: rudy, visit: rudy_visit,
+               time: 1.day.ago, properties: { "resource_title" => "rudy_activity_marker" })
+
+        other = create(:user, :with_person)
+        other_visit = create(:ahoy_visit, user: other, started_at: 1.day.ago)
+        create(:ahoy_event, name: "view.workshop", user: other, visit: other_visit,
+               time: 1.day.ago, properties: { "resource_title" => "other_activity_marker" })
+
+        %w[Hernandez Rudolfo rudy.alt@example.com rudy-login@example.com].each do |term|
+          get index_path, params: { user_search: term, time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+          expect(response.body).to include("rudy_activity_marker"), "expected #{term.inspect} to match Rudy"
+          expect(response.body).not_to include("other_activity_marker")
+        end
+      end
+
+      it "filters by person_id to the person, their user, and associated data" do
+        person = create(:person)
+        payment = create(:payment, person: person)
+        unrelated_person = create(:person)
+
+        create(:ahoy_event, name: "update.person", visit: visit_for_admin,
+                            resource_type: "Person", resource_id: person.id, time: 1.day.ago,
+                            properties: { "resource_type" => "Person", "resource_id" => person.id, "resource_title" => "person_history_row" })
+        create(:ahoy_event, name: "update.user", visit: visit_for_admin,
+                            resource_type: "User", resource_id: person.user.id, time: 1.day.ago,
+                            properties: { "resource_type" => "User", "resource_id" => person.user.id, "resource_title" => "user_history_row" })
+        create(:ahoy_event, name: "create.payment", visit: visit_for_admin,
+                            resource_type: "Payment", resource_id: payment.id, time: 1.day.ago,
+                            properties: { "resource_type" => "Payment", "resource_id" => payment.id, "resource_title" => "payment_history_row" })
+        create(:ahoy_event, name: "update.person", visit: visit_for_admin,
+                            resource_type: "Person", resource_id: unrelated_person.id, time: 1.day.ago,
+                            properties: { "resource_type" => "Person", "resource_id" => unrelated_person.id, "resource_title" => "unrelated_history_row" })
+
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("person_history_row")
+        expect(response.body).to include("user_history_row")
+        expect(response.body).to include("payment_history_row")
+        expect(response.body).not_to include("unrelated_history_row")
+      end
+
+      it "surfaces a user chip in the applied filters when user_id is set" do
+        get index_path, params: { user_id: user.id, time_period: "all_time" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("User: #{user.full_name}")
+        expect(response.body).to include(user_path(user))
+      end
+
+      it "surfaces a person chip in the applied filters when person_id is set" do
+        person = create(:person, first_name: "Ada", last_name: "Lovelace")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Person: #{person.name}")
+      end
+
+      it "shows a back-to-person eyebrow (not Admin) when scoped to a person" do
+        person = create(:person, first_name: "Ada", last_name: "Lovelace")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(edit_person_path(person))
+      end
+
+      it "interleaves the person's communications and activity events in one timeline" do
+        person = create(:person)
+        create(:notification, recipient_email: person.communications_email,
+                              email_subject: "Comms row marker xyz", created_at: 1.day.ago)
+        create(:ahoy_event, name: "update.person", visit: visit_for_admin,
+                            resource_type: "Person", resource_id: person.id, time: 2.days.ago,
+                            properties: { "resource_type" => "Person", "resource_id" => person.id, "resource_title" => "activity_row_marker" })
+
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        # Both streams render in the same activities table (no separate panel).
+        expect(response.body).to include("Comms row marker xyz")
+        expect(response.body).to include("activity_row_marker")
+        # The communication row carries its synthetic activity name.
+        expect(response.body).to include("communication.sent")
+        # Newer communication sorts above the older activity event.
+        expect(response.body.index("Comms row marker xyz")).to be < response.body.index("activity_row_marker")
+      end
+
+      it "activity name search matches the communication's synthetic name (direction-aware)" do
+        person = create(:person)
+        create(:notification, :incoming, recipient_email: person.communications_email, email_subject: "Incoming note")
+        create(:notification, recipient_email: person.communications_email, email_subject: "Outgoing note")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time",
+                                  audience: %w[visitors users staff], event_name: "communication received" },
+            headers: frame_headers
+
+        # "received" matches only the incoming communication (communication.received).
+        expect(response.body).to include("Incoming note")
+        expect(response.body).not_to include("Outgoing note")
+      end
+
+      it "props search matches communication subject and body" do
+        person = create(:person)
+        create(:notification, recipient_email: person.communications_email,
+                              email_subject: "Subject one", email_body_text: "needle in the body")
+        create(:notification, recipient_email: person.communications_email,
+                              email_subject: "unrelated", email_body_text: "nothing here")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time",
+                                  audience: %w[visitors users staff], props: "needle" },
+            headers: frame_headers
+
+        expect(response.body).to include("Subject one")
+        expect(response.body).not_to include("unrelated")
+      end
+
+      it "prefixes filter includes communications only via the communication prefix" do
+        person = create(:person)
+        create(:notification, recipient_email: person.communications_email, email_subject: "Comm marker")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time",
+                                  audience: %w[visitors users staff], prefixes: "communication" },
+            headers: frame_headers
+        expect(response.body).to include("Comm marker")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time",
+                                  audience: %w[visitors users staff], prefixes: "create" },
+            headers: frame_headers
+        expect(response.body).not_to include("Comm marker")
+      end
+
+      it "filters communications by resource on their noticeable record" do
+        person = create(:person)
+        registration = create(:event_registration, registrant: person)
+        create(:notification, recipient_email: person.communications_email,
+                              noticeable: registration, email_subject: "Registration comm marker")
+        create(:notification, recipient_email: person.communications_email,
+                              noticeable: person.user, email_subject: "User comm marker")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time",
+                                  audience: %w[visitors users staff],
+                                  resource_type: "EventRegistration", resource_id: registration.id },
+            headers: frame_headers
+
+        expect(response.body).to include("Registration comm marker")
+        expect(response.body).not_to include("User comm marker")
+      end
+
+      it "excludes communications when a visit_id filter is set (no visit to prove)" do
+        person = create(:person)
+        create(:notification, recipient_email: person.communications_email, email_subject: "Hidden by visit filter")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time",
+                                  audience: %w[visitors users staff], visit_id: visit_for_admin.id },
+            headers: frame_headers
+
+        expect(response.body).not_to include("Hidden by visit filter")
+      end
+
+      it "surfaces the person's attendance time entries on the activities page" do
+        person = create(:person)
+        event = create(:event, title: "Attendance marker event")
+        registration = create(:event_registration, registrant: person, event: event)
+        create(:event_attendance_time_entry, event_registration: registration)
+
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Attendance time entries")
+        expect(response.body).to include("Attendance marker event")
       end
     end
 
@@ -194,6 +393,22 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include(visit_for_user.id.to_s)
+      end
+
+      it "filters visits by free-text user search" do
+        rudy = create(:user, :with_person)
+        rudy.person.update!(first_name: "Rudy", last_name: "Hernandez")
+        create(:ahoy_visit, user: rudy, started_at: 1.day.ago)
+
+        other = create(:user, :with_person)
+        other.person.update!(first_name: "Zoltan", last_name: "Nonmatch")
+        create(:ahoy_visit, user: other, started_at: 1.day.ago)
+
+        get visits_path, params: { user_search: "Hernandez", time_period: "all_time", audience: %w[visitors users staff] }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Rudy Hernandez")
+        expect(response.body).not_to include("Zoltan Nonmatch")
       end
 
       it "filters visits by from/to dates" do

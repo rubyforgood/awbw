@@ -14,7 +14,7 @@ RSpec.describe "community_news/show", type: :view do
       youtube_url: "Youtube Url",
       published: false,
       featured: false,
-      author: create(:user),
+      author: create(:person),
       reference_url: "Reference Url",
       organization: nil,
       windows_type: nil,

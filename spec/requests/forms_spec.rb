@@ -14,6 +14,40 @@ RSpec.describe "Forms", type: :request do
         expect(response).to have_http_status(:success)
         expect(response.body).to include("My Form")
       end
+
+      it "shows the public link for a published form" do
+        create(:form, :standalone, name: "Volunteer", slug: "volunteer", published: true)
+        get forms_path
+        expect(response.body).to include(public_form_path("volunteer"))
+        expect(response.body).to include("/f/volunteer")
+      end
+
+      it "marks an event-connected unpublished form as an event form, not 'Not published'" do
+        form = create(:form, :standalone, name: "Reg Form")
+        EventForm.create!(form: form, event: create(:event), role: "registration")
+        get forms_path
+        expect(response.body).to include("Event form")
+      end
+
+      it "shows only the event-form chip, not a public link, when a published form is connected to an event" do
+        form = create(:form, :standalone, name: "Dual Form", slug: "dual", published: true)
+        EventForm.create!(form: form, event: create(:event), role: "registration")
+        get forms_path
+        expect(response.body).not_to include("/f/dual")
+        expect(response.body).to include("Event form")
+      end
+
+      it "marks a standalone form with no events and no public link as not published" do
+        create(:form, :standalone, name: "Orphan Form")
+        get forms_path
+        expect(response.body).to include("Not published")
+      end
+
+      it "has no Delete link" do
+        form = create(:form, :standalone, name: "My Form")
+        get forms_path
+        expect(response.body).not_to include(">Delete<")
+      end
     end
 
     context "as regular user" do
@@ -21,6 +55,55 @@ RSpec.describe "Forms", type: :request do
 
       it "denies access" do
         get forms_path
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  describe "GET /forms/smart_form_settings" do
+    context "as admin" do
+      before { sign_in admin }
+
+      it "documents an identifier alongside what it does" do
+        get smart_form_settings_forms_path
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("Smart form settings")
+        expect(response.body).to include("agency_name")
+        expect(response.body).to include("Looked up against existing organizations by exact name")
+      end
+
+      it "lists the identifiers that only store an answer" do
+        get smart_form_settings_forms_path
+
+        expect(response.body).to include("referral_source")
+        expect(response.body).to include("Identifiers that do nothing extra")
+      end
+
+      # Reached from a form editor, so it has to offer a way back to that editor
+      # rather than dropping the admin on the generic forms list.
+      it "links back to the form it was opened from" do
+        form = create(:form, :standalone, name: "Reg form")
+
+        get smart_form_settings_forms_path(form_id: form.id)
+
+        expect(response.body).to include(edit_form_path(form))
+        expect(response.body).to include("Back to Reg form")
+      end
+
+      it "offers no back link when it was not opened from a form" do
+        get smart_form_settings_forms_path
+
+        expect(response.body).not_to include("Back to")
+      end
+    end
+
+    context "as regular user" do
+      before { sign_in user }
+
+      it "denies access" do
+        get smart_form_settings_forms_path
+
         expect(response).to redirect_to(root_path)
       end
     end
@@ -165,6 +248,33 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("+ Add option")
     end
 
+    it "shows payment-method options read-only (no editable inputs) without the admin override" do
+      form = FormBuilderService.new(name: "Test", sections: %i[payment]).call
+      payment_field = form.form_fields.find_by(field_identifier: "payment_method")
+      expect(payment_field).to be_present
+
+      get edit_form_path(form)
+
+      # The options are still shown...
+      FormBuilderService::PAYMENT_METHOD_OPTIONS.each do |option|
+        expect(response.body).to include(option)
+      end
+      # ...but not as editable inputs, and they can't be added/removed.
+      expect(response.body).not_to match(/payment_method.{0,600}\[option_name\]/m)
+      expect(response.body).not_to match(/payment_method.{0,600}\+ Add option/m)
+      # A note explains why they're locked.
+      expect(response.body).to include("tied to system logic")
+    end
+
+    it "renders payment-method options as editable inputs with ?admin=true" do
+      form = FormBuilderService.new(name: "Test", sections: %i[payment]).call
+
+      get edit_form_path(form, admin: "true")
+
+      expect(response.body).to include("[option_name]")
+      expect(response.body).to include("+ Add option")
+    end
+
     it "shows an option-source badge linking to the managed list for dynamic fields" do
       type = CategoryType.create!(name: "AgeRange", published: true)
       form = create(:form, :standalone)
@@ -186,6 +296,20 @@ RSpec.describe "Forms", type: :request do
 
       expect(response.body).to include('data-controller="expand-all"')
       expect(response.body).to include("Expand all")
+    end
+
+    it "offers the public-link section for a standalone form with no events" do
+      form = create(:form, :standalone)
+      get edit_form_path(form)
+      expect(response.body).to include("Publish this form at a public link")
+    end
+
+    it "hides the public-link section for a form connected to an event" do
+      form = create(:form, :standalone, slug: "reg")
+      create(:event_form, form: form, event: create(:event))
+      get edit_form_path(form)
+      expect(response.body).not_to include("Publish this form at a public link")
+      expect(response.body).to include("filled out through their event")
     end
 
     it "renders the form header section with a textarea for HTML" do
@@ -211,7 +335,7 @@ RSpec.describe "Forms", type: :request do
 
       get edit_form_path(form)
 
-      expect(response.body).to include("[hint_text]")
+      expect(response.body).to include("[subtitle]")
     end
 
     it "warns that the Other option is hidden on a dropdown field" do
@@ -228,12 +352,12 @@ RSpec.describe "Forms", type: :request do
     end
 
     it "warns when a dynamic (category-backed) dropdown sources an Other option" do
-      category_type = create(:category_type, name: "StoryPopulation")
-      create(:category, :published, category_type: category_type, name: "Veterans")
+      category_type = create(:category_type, name: "AgeRange")
+      create(:category, :published, category_type: category_type, name: "3-5")
       create(:category, :published, category_type: category_type, name: "Other")
       form = create(:form, :standalone)
       create(:form_field, form: form, answer_type: :single_select_dropdown,
-             field_identifier: "client_life_experiences", name: "Populations")
+             field_identifier: "primary_age_group", name: "Primary Age Group(s) Served")
 
       get edit_form_path(form)
 
@@ -315,12 +439,32 @@ RSpec.describe "Forms", type: :request do
 
     it "renders a section header's subtext under the heading" do
       form = create(:form, :standalone)
-      create(:form_field, form: form, answer_type: :group_header, name: "Contact info", hint_text: "Tell us how to reach you")
+      create(:form_field, form: form, answer_type: :group_header, name: "Contact info", subtitle: "Tell us how to reach you")
 
       get form_path(form)
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Tell us how to reach you")
+    end
+
+    it "renders a field's subtitle as sanitized HTML under the label" do
+      form = create(:form, :standalone)
+      create(:form_field, form: form, name: "Email", subtitle: %(We'll <strong>never</strong> share it))
+
+      get form_path(form)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("We'll <strong>never</strong> share it")
+    end
+
+    it "renders a field's hint text as sanitized HTML below the input" do
+      form = create(:form, :standalone)
+      create(:form_field, form: form, name: "Phone", hint_text: %(Include your <em>area code</em>))
+
+      get form_path(form)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Include your <em>area code</em>")
     end
 
     it "renders the form header HTML under the title" do
@@ -380,9 +524,29 @@ RSpec.describe "Forms", type: :request do
       form = create(:form, :standalone)
       header = create(:form_field, form: form, answer_type: :group_header, name: "Contact info")
       patch form_path(form), params: {
-        form: { form_fields_attributes: { "0" => { id: header.id, hint_text: "Tell us how to reach you" } } }
+        form: { form_fields_attributes: { "0" => { id: header.id, subtitle: "Tell us how to reach you" } } }
       }
-      expect(header.reload.hint_text).to eq("Tell us how to reach you")
+      expect(header.reload.subtitle).to eq("Tell us how to reach you")
+      expect(response).to redirect_to(edit_form_path(form))
+    end
+
+    it "saves the hint text for a field" do
+      form = create(:form, :standalone)
+      field = create(:form_field, form: form, name: "Phone")
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => { id: field.id, hint_text: "Include your area code" } } }
+      }
+      expect(field.reload.hint_text).to eq("Include your area code")
+      expect(response).to redirect_to(edit_form_path(form))
+    end
+
+    it "saves the field_identifier for a field" do
+      form = create(:form, :standalone)
+      field = create(:form_field, form: form, name: "Pick a payment method")
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => { id: field.id, field_identifier: "payment_method" } } }
+      }
+      expect(field.reload.field_identifier).to eq("payment_method")
       expect(response).to redirect_to(edit_form_path(form))
     end
 
@@ -394,6 +558,22 @@ RSpec.describe "Forms", type: :request do
       form.reload
       expect(form.hide_answered_person_questions).to be true
       expect(form.hide_answered_form_questions).to be true
+    end
+
+    it "appends a newly added field to the bottom of the list, not the top" do
+      form = create(:form, :standalone)
+      first = create(:form_field, form: form, name: "First", position: 1)
+      second = create(:form_field, form: form, name: "Second", position: 2)
+
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => { name: "Brand new", answer_type: "free_form_input_one_line" } } }
+      }
+      expect(response).to redirect_to(edit_form_path(form))
+
+      new_field = form.form_fields.find_by(name: "Brand new")
+      expect(new_field.position).to be > second.position
+      ordered = form.form_fields.reorder(position: :asc).pluck(:name)
+      expect(ordered).to eq([ first.name, second.name, "Brand new" ])
     end
 
     it "saves a long, multi-sentence question name" do
@@ -501,6 +681,34 @@ RSpec.describe "Forms", type: :request do
       form = create(:form, :standalone, name: "Doomed")
       expect { delete form_path(form) }.to change(Form, :count).by(-1)
       expect(response).to redirect_to(forms_path)
+    end
+  end
+
+  describe "POST /forms/:id/copy" do
+    context "as admin" do
+      before { sign_in admin }
+
+      it "creates a full copy named \"COPY of [name]\" and redirects to its editor" do
+        form = create(:form, :standalone, name: "Volunteer")
+        create(:form_field, form: form, name: "First name")
+
+        expect { post copy_form_path(form) }.to change(Form, :count).by(1)
+
+        copy = Form.find_by(name: "COPY of Volunteer")
+        expect(copy.name).to eq("COPY of Volunteer")
+        expect(copy.form_fields.map(&:name)).to eq([ "First name" ])
+        expect(response).to redirect_to(edit_form_path(copy))
+      end
+    end
+
+    context "as a non-admin" do
+      before { sign_in user }
+
+      it "denies access and copies nothing" do
+        form = create(:form, :standalone)
+        expect { post copy_form_path(form) }.not_to change(Form, :count)
+        expect(response).to redirect_to(root_path)
+      end
     end
   end
 

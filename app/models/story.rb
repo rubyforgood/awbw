@@ -10,11 +10,14 @@ class Story < ApplicationRecord
   belongs_to :organization, optional: true
   belongs_to :spotlighted_facilitator, class_name: "Person",
              foreign_key: "spotlighted_facilitator_id", optional: true
+  belongs_to :author, class_name: "Person", optional: true
   belongs_to :story_idea, optional: true
   belongs_to :workshop, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+  has_many :notifications, as: :noticeable, dependent: :nullify
 
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
@@ -39,6 +42,8 @@ class Story < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
+  accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
 
   # SearchCop
   include SearchCop
@@ -52,6 +57,9 @@ class Story < ApplicationRecord
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
     options :action_text_body, type: :text, default: true, default_operator: :or
   end
+
+  # Credited-author name search (explicit author + creator fallback) comes from
+  # AuthorCreditable#by_credited_person_name, OR-ed into full-text results below.
 
   # Scopes
   # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
@@ -67,7 +75,6 @@ class Story < ApplicationRecord
   def self.search_by_params(params)
     conditions = {}
     conditions[:title] = params[:title] if params[:title].present?
-    conditions[:query] = params[:query] if params[:query].present?
 
     # Use visibility checkbox filters when present; otherwise pass published to SearchCop
     if visibility_params_present?(params)
@@ -77,16 +84,49 @@ class Story < ApplicationRecord
       stories = self.search(conditions)
     end
 
+    # Keyword search matches the title, the rich-text body, and the credited
+    # author/creator name, OR-ed together via id subqueries so SearchCop's joins
+    # and the `people` joins stay isolated from each other. (A plain LIKE handles
+    # the title because SearchCop's default group pairs it with the boolean
+    # `published` column and won't match a title on its own.)
+    if params[:query].present?
+      query = params[:query]
+      stories = stories.where("stories.title LIKE ?", "%#{query}%")
+                       .or(stories.where(id: self.search(query).select("stories.id")))
+                       .or(stories.where(id: by_credited_person_name(query).select("stories.id")))
+    end
+
     stories = stories.by_year(params[:year]) if params[:year].present? && params[:year].match?(/\A\d{4}\z/)
     stories = stories.facilitator_spotlights(params[:facilitator_spotlights]) if params[:facilitator_spotlights].present?
     stories = stories.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     stories = stories.where(organization_id: params[:organization_id]) if params[:organization_id].present?
+    stories = stories.authored_by(params[:author_id])
     stories
+  end
+
+  # Shareable, readable URLs (story_path, polymorphic_path, etc.): the id followed
+  # by the title slugged with hyphens and bad URL characters stripped, e.g.
+  # "23-my-great-story". Rails resolves it back via `id.to_i`, so `/stories/23`
+  # and `/stories/23/edit` (which pass the bare id) keep working.
+  def to_param
+    return id&.to_s if title.blank?
+    "#{id}-#{title.parameterize}"
   end
 
   def name
     title
+  end
+
+  # Email the communications box matches notifications against. Uniform accessor
+  # so the shared notifications/_communications partial works across records.
+  def communications_email
+    author_person&.preferred_email
+  end
+
+  # Unattributed stories are credited to the facilitator who shared them.
+  def missing_author_label
+    "AWBW Facilitator"
   end
 
   def organization_name
@@ -103,6 +143,14 @@ class Story < ApplicationRecord
 
   def sector_names_all
     sectors.pluck(:name)
+  end
+
+  # StoryPopulation categories describe who a story is about (Children, Teens,
+  # Adults, …) — the portal's audience facet.
+  AUDIENCE_CATEGORY_TYPE = "StoryPopulation"
+
+  def audience_categories
+    categories.joins(:category_type).where(category_types: { name: AUDIENCE_CATEGORY_TYPE })
   end
 
   def attach_assets_from_idea!

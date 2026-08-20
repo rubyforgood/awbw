@@ -1,0 +1,30 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="max-w-3xl mx-auto <%= DomainTheme.bg_class_for(:stories) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="flex flex-wrap justify-end gap-2 mb-4">
+    <%= link_to "← Stories", stories_path,
+                class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+  </div>
+
+  <h1 class="text-3xl font-semibold text-gray-900 tracking-tight mb-3">
+    Import stories from CSV
+  </h1>
+  <p class="text-gray-600 mb-6">
+    Upload a WordPress Posts Export CSV. We'll create a story idea for every row and a
+    connected, published story for rows that were public on WordPress. You'll see a
+    preview of exactly what will be created before anything is saved.
+  </p>
+
+  <div class="bg-white rounded p-6">
+    <%= form_with url: story_import_path, method: :post, multipart: true do |f| %>
+      <div class="mb-4">
+        <%= f.label :file, "CSV file", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.file_field :file, accept: ".csv,text/csv",
+                         class: "block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer focus:outline-none p-2" %>
+      </div>
+      <div class="flex items-center gap-2">
+        <%= f.submit "Preview import", class: "btn btn-primary-outline bg-blue-100" %>
+        <%= link_to "Cancel", stories_path, class: "btn btn-secondary-outline" %>
+      </div>
+    <% end %>
+  </div>
+</div>

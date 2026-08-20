@@ -1,64 +1,47 @@
-<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
-  <%# Top bar: back link + actions %>
-  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
+<% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
+<%# Opt out of the layout's max-w-7xl cap to match the wider registrants page;
+    the wrapper restores the layout's gutters at a wider bound. %>
+<% content_for(:full_width, true) %>
+<div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8">
+<div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+  <%# Top bar: back link + sub-nav, matching the other event pages %>
+  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6 print:hidden">
     <%= link_to "← Events", events_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
     <%= render "events/subnav", event: @event, current: :dashboard %>
   </div>
+  <%# Title block with the action buttons pinned top-right so they share the
+      title's vertical band instead of stacking above it. Forms holds the public
+      form links, sample-ticket preview, and "Edit form settings"; it only shows
+      to editors. On mobile the buttons sit in their own right-aligned row above
+      the centered title to avoid overlapping it. %>
+  <div class="relative mb-8">
+    <div class="flex justify-end gap-3 mb-4 sm:mb-0 sm:absolute sm:right-0 sm:top-0 print:hidden">
+      <% if allowed_to?(:edit?, @event) %>
+        <%= render "form_actions_menu", sample_return_to: "dashboard" %>
+      <% end %>
+      <button onclick="window.print();" class="btn btn-utility-outline">
+        <i class="fa-solid fa-print"></i> Print
+      </button>
+    </div>
 
-  <%# Centered title block %>
-  <div class="text-center mb-8">
-    <%= link_to @event.title, edit_event_path(@event), class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
-    <% if @event.start_date.present? %>
-      <p class="text-sm text-gray-500 mt-1">
-        <%= @event.date_range %>
-      </p>
-    <% end %>
-    <h1 class="text-3xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-2">
-      <i class="fa-solid fa-chart-simple text-blue-600"></i>
-      Dashboard
-    </h1>
+    <div class="text-center">
+      <%= link_to @event.decorate.compact_label, edit_event_path(@event), title: @event.title, class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
+      <% if @event.start_date.present? %>
+        <p class="text-sm text-gray-500 mt-1">
+          <%= @event.date_range %>
+        </p>
+      <% end %>
+      <h1 class="text-3xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-chart-simple <%= DomainTheme.text_class_for(:events, intensity: 600) %>"></i>
+        Dashboard
+      </h1>
+    </div>
   </div>
 
-  <%# Quick links: registration forms and bulk payment. Each form link is gated by
-      its event setting — registration on an associated registration form, scholarship
-      on that form plus the "Enable scholarship application" checkbox (which is what
-      creates the scholarship event_form). The scholarship link points at the public
-      registration page, so it also needs the registration form or it dead-ends there.
-      Bulk payment is gated on the event having a bulk payment form.
-      Links open in a new tab. %>
-  <% link_base = "inline-flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm font-medium shadow-sm transition-colors" %>
-  <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8">
-    <% if @event.event_forms.registration.exists? %>
-      <%= link_to new_event_public_registration_path(@event, as_visitor: true), target: "_blank", rel: "noopener noreferrer",
-            class: "#{link_base} #{DomainTheme.border_class_for(:events, intensity: 200)} text-gray-700 hover:#{DomainTheme.border_class_for(:events, intensity: 300)} hover:bg-gray-50" do %>
-        <i class="fa-solid fa-clipboard-list <%= DomainTheme.text_class_for(:events, intensity: 600) %>"></i>
-        Public registration form
-        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400"></i>
-      <% end %>
-    <% end %>
-
-    <% if @event.event_forms.registration.exists? && @event.scholarship_form %>
-      <%= link_to new_event_public_registration_path(@event, scholarship_requested: true, as_visitor: true), target: "_blank", rel: "noopener noreferrer",
-            class: "#{link_base} #{DomainTheme.border_class_for(:scholarships, intensity: 200)} text-gray-700 hover:#{DomainTheme.border_class_for(:scholarships, intensity: 300)} hover:bg-gray-50" do %>
-        <i class="fa-solid fa-graduation-cap <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>"></i>
-        Scholarship form
-        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400"></i>
-      <% end %>
-    <% end %>
-
-    <% if @event.bulk_payment_form %>
-      <%= link_to new_event_bulk_payment_path(@event), target: "_blank", rel: "noopener noreferrer",
-            class: "#{link_base} #{DomainTheme.border_class_for(:payments, intensity: 200)} text-gray-700 hover:#{DomainTheme.border_class_for(:payments, intensity: 300)} hover:bg-gray-50" do %>
-        <i class="fa-solid fa-money-check-dollar <%= DomainTheme.text_class_for(:payments, intensity: 600) %>"></i>
-        Bulk payment form
-        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400"></i>
-      <% end %>
-    <% end %>
-  </div>
-
-  <%# Money cards (paid events only) — shown first %>
-  <% if @dashboard.free? %>
+  <%# Money cards — shown first. Hidden only when there's genuinely no money:
+      free registration AND no CE fees or scholarships (a free event can still
+      charge for CE). %>
+  <% if @dashboard.free? && @dashboard.cont_ed_total_cents.zero? && @dashboard.scholarship_total_cents.zero? %>
     <div class="bg-white rounded-xl border border-gray-200 p-4 text-center text-sm text-gray-500 mb-4">
       <i class="fa-solid fa-tag text-gray-400 mr-1"></i> Free event — no payments or scholarships
     </div>
@@ -74,7 +57,6 @@
       <%# Grand total — full-width headline read as an inline equation:
           $grand = $registration + $scholarships + $cont_ed. Left-aligned; the headline
           figure dominates while the addends stay muted, and the row wraps on mobile. %>
-      <% show_bulk_payments = @dashboard.unallocated_bulk_payment_cents.positive? %>
       <%# Each equation term is colorless at rest and reveals its domain color on
           hover — a tinted fill + darker border, matching the amber bulk-payments
           term's look but per-domain. border-transparent reserves the border so
@@ -95,39 +77,44 @@
               Each addend links to where its money is managed. %>
           <div class="lg:shrink-0 lg:pt-2">
             <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-              <%= link_to number_to_currency(@dashboard.grand_total_cents / 100.0), registrants_event_path(@event),
+              <%= link_to dollars_from_cents(@dashboard.grand_total_cents), revenue_events_path(return_to: "dashboard", event_id: @event.id),
                     class: "text-3xl sm:text-4xl font-bold #{DomainTheme.text_class_for(:event_dashboard, intensity: 700)} tabular-nums #{addend_class.call(:event_dashboard)}",
-                    title: "View all registrants" %>
+                    title: "View the event revenue report" %>
               <span class="text-2xl font-light text-gray-300 select-none">=</span>
-              <%= link_to registrants_event_path(@event), class: addend_class.call(:payments), title: "Manage registrants" do %>
-                <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:payments, intensity: 600) %> tabular-nums"><%= number_to_currency(@dashboard.registration_subtotal_cents / 100.0) %></p>
+              <%= link_to registrants_event_path(@event), class: addend_class.call(:payments), title: "Manage registrations" do %>
+                <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:payments, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.registration_subtotal_cents) %></p>
                 <p class="hidden lg:block text-xs text-gray-500">Registration fees</p>
               <% end %>
               <span class="text-2xl font-light text-gray-300 select-none">+</span>
               <%= link_to recipients_event_path(@event), class: addend_class.call(:scholarships), title: "View scholarships" do %>
-                <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %> tabular-nums"><%= number_to_currency(@dashboard.scholarship_total_cents / 100.0) %></p>
+                <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.scholarship_total_cents) %></p>
                 <p class="hidden lg:block text-xs text-gray-500">Scholarships</p>
               <% end %>
               <span class="text-2xl font-light text-gray-300 select-none">+</span>
-              <%= link_to registrants_event_path(@event), class: "#{addend_class.call(:continuing_education)} whitespace-nowrap", title: "Manage registrants" do %>
-                <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %> tabular-nums"><%= number_to_currency(@dashboard.cont_ed_total_cents / 100.0) %></p>
+              <%= link_to registrants_event_path(@event, ce_status: "registered"), class: "#{addend_class.call(:continuing_education)} whitespace-nowrap", title: "View registrants with continuing education" do %>
+                <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.cont_ed_total_cents) %></p>
                 <p class="hidden lg:block text-xs text-gray-500">CE fees</p>
               <% end %>
-              <% if show_bulk_payments %>
-                <span class="text-2xl font-light text-gray-300 select-none">+</span>
+              <span class="text-2xl font-light text-gray-300 select-none">+</span>
+              <% if @dashboard.unallocated_bulk_payment_cents.positive? %>
                 <%# Styled like the "Amount due" subcard on a registration: a little
                     amber-bordered card with a warning icon, since unallocated bulk
                     payment money still needs action. %>
                 <%= link_to bulk_payments_event_path(@event), class: "whitespace-nowrap leading-tight rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 hover:bg-amber-100 transition-colors", title: "Allocate bulk payments" do %>
                   <p class="flex items-center gap-1.5 text-lg sm:text-xl font-semibold text-amber-700 tabular-nums">
                     <i class="fa-solid fa-circle-exclamation"></i>
-                    <%= number_to_currency(@dashboard.unallocated_bulk_payment_cents / 100.0) %>
+                    <%= dollars_from_cents(@dashboard.unallocated_bulk_payment_cents) %>
                   </p>
                   <p class="hidden lg:block text-xs text-gray-500">Unallocated bulk payments</p>
                 <% end %>
+              <% else %>
+                <%= link_to bulk_payments_event_path(@event), class: addend_class.call(:bulk_payments), title: "View bulk payments" do %>
+                  <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:bulk_payments, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.unallocated_bulk_payment_cents) %></p>
+                  <p class="hidden lg:block text-xs text-gray-500">Bulk payments</p>
+                <% end %>
               <% end %>
             </div>
-            <p class="mt-1 text-xs text-gray-500 lg:hidden">Registration fees + scholarships + CE fees<%= " + unallocated bulk payments" if show_bulk_payments %></p>
+            <p class="mt-1 text-xs text-gray-500 lg:hidden">Registration fees + scholarships + CE fees + bulk payments</p>
           </div>
 
           <%# Cash view of the same money: what's collected (registration paid +
@@ -137,15 +124,15 @@
           <div class="lg:shrink-0 lg:border-l lg:border-gray-200 lg:pl-6 flex flex-col gap-1 text-xs text-gray-500">
             <span class="flex items-center justify-between gap-3">
               <span>Collected</span>
-              <span class="font-semibold text-gray-500 tabular-nums"><%= number_to_currency(@dashboard.collected_cents / 100.0) %></span>
+              <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.collected_cents) %></span>
             </span>
             <span class="flex items-center justify-between gap-3">
               <span>Due</span>
-              <span class="font-semibold text-gray-500 tabular-nums"><%= number_to_currency(@dashboard.due_cents / 100.0) %></span>
+              <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.due_cents) %></span>
             </span>
             <span class="flex items-center justify-between gap-3 mt-1 pt-1 border-t border-gray-200">
               <span class="font-bold text-gray-700">Monies</span>
-              <span class="font-bold text-gray-700 tabular-nums"><%= number_to_currency(@dashboard.monies_made_cents / 100.0) %></span>
+              <span class="font-bold text-gray-700 tabular-nums"><%= dollars_from_cents(@dashboard.monies_made_cents) %></span>
             </span>
           </div>
         </div>
@@ -155,26 +142,26 @@
           paid/completed + outstanding sub-rows that expand to the registrants behind the figure. %>
       <div class="flex flex-col md:flex-row md:flex-wrap md:items-stretch gap-3 md:gap-4">
         <%# Payments = Paid + Outstanding %>
-        <details class="flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:payments, intensity: 200) %> bg-white p-4 shadow-sm">
+        <details class="group/card flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:payments, intensity: 200) %> bg-white p-4 shadow-sm">
           <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:payments, intensity: 600) %> text-xs font-semibold uppercase tracking-wide">
                 <i class="fa-solid fa-sack-dollar"></i>
                 <span>Registration fees</span>
               </div>
-              <%= link_to registrants_event_path(@event),
-                    class: "inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:border-gray-300 hover:text-gray-800 transition-colors",
-                    title: "View all registrants" do %>
-                <i class="fa-solid fa-users text-gray-400"></i>
-                <%= pluralize(@dashboard.registrant_count, "registrant") %>
-              <% end %>
+              <%= render "shared/badge",
+                    href: registrants_event_path(@event),
+                    label: pluralize(@dashboard.registrant_count, "registrant"),
+                    classes: "bg-white text-gray-600 border-gray-200",
+                    icon: "fa-solid fa-users text-gray-400",
+                    title: "View all registrants" %>
             </div>
             <div class="mt-2 flex items-center justify-between gap-2">
               <p class="break-words">
-                <span class="text-2xl sm:text-3xl font-bold <%= DomainTheme.text_class_for(:payments, intensity: 700) %> tabular-nums"><%= number_to_currency(@dashboard.registration_subtotal_cents / 100.0) %></span>
+                <span class="text-2xl sm:text-3xl font-bold <%= DomainTheme.text_class_for(:payments, intensity: 700) %> tabular-nums"><%= dollars_from_cents(@dashboard.registration_subtotal_cents) %></span>
                 <span class="text-xs text-gray-500">including due</span>
               </p>
-              <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+              <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
             </div>
           </summary>
 
@@ -195,25 +182,25 @@
         </details>
 
         <%# Scholarships = Completed + Outstanding %>
-        <details class="flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> bg-white p-4 shadow-sm">
+        <details class="group/card flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> bg-white p-4 shadow-sm">
           <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %> text-xs font-semibold uppercase tracking-wide">
                 <i class="fa-solid fa-graduation-cap"></i>
                 <span>Scholarships</span>
               </div>
-              <%= link_to registrants_event_path(@event, scholarship: "yes"),
-                    class: "inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:border-gray-300 hover:text-gray-800 transition-colors",
-                    title: "View scholarship recipients" do %>
-                <i class="fa-solid fa-user-graduate text-gray-400"></i>
-                <%= pluralize(@dashboard.scholarship_recipient_count, "recipient") %>
-              <% end %>
+              <%= render "shared/badge",
+                    href: registrants_event_path(@event, scholarship: "yes"),
+                    label: pluralize(@dashboard.scholarship_recipient_count, "recipient"),
+                    classes: "bg-white text-gray-600 border-gray-200",
+                    icon: "fa-solid fa-user-graduate text-gray-400",
+                    title: "View scholarship recipients" %>
             </div>
             <div class="mt-2 flex items-center justify-between gap-2">
               <p class="break-words">
-                <span class="text-2xl sm:text-3xl font-bold <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %> tabular-nums"><%= number_to_currency(@dashboard.scholarship_total_cents / 100.0) %></span>
+                <span class="text-2xl sm:text-3xl font-bold <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %> tabular-nums"><%= dollars_from_cents(@dashboard.scholarship_total_cents) %></span>
               </p>
-              <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+              <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
             </div>
           </summary>
 
@@ -227,26 +214,26 @@
         </details>
 
         <%# Continuing education fees = Paid + Outstanding %>
-        <details class="flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:continuing_education, intensity: 200) %> bg-white p-4 shadow-sm">
+        <details class="group/card flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:continuing_education, intensity: 200) %> bg-white p-4 shadow-sm">
           <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %> text-xs font-semibold uppercase tracking-wide">
                 <i class="fa-solid fa-award"></i>
                 <span>CE fees</span>
               </div>
-              <%= link_to registrants_event_path(@event),
-                    class: "inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:border-gray-300 hover:text-gray-800 transition-colors",
-                    title: "View all registrants" do %>
-                <i class="fa-solid fa-users text-gray-400"></i>
-                <%= pluralize(@dashboard.registrant_count, "registrant") %>
-              <% end %>
+              <%= render "shared/badge",
+                    href: registrants_event_path(@event, ce_status: "registered"),
+                    label: pluralize(@dashboard.ce_registrant_count, "registrant"),
+                    classes: "bg-white text-gray-600 border-gray-200",
+                    icon: "fa-solid fa-users text-gray-400",
+                    title: "View registrants with continuing education" %>
             </div>
             <div class="mt-2 flex items-center justify-between gap-2">
               <p class="break-words">
-                <span class="text-2xl sm:text-3xl font-bold <%= DomainTheme.text_class_for(:continuing_education, intensity: 700) %> tabular-nums"><%= number_to_currency(@dashboard.cont_ed_total_cents / 100.0) %></span>
+                <span class="text-2xl sm:text-3xl font-bold <%= DomainTheme.text_class_for(:continuing_education, intensity: 700) %> tabular-nums"><%= dollars_from_cents(@dashboard.cont_ed_total_cents) %></span>
                 <span class="text-xs text-gray-500">including due</span>
               </p>
-              <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+              <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
             </div>
           </summary>
 
@@ -254,43 +241,67 @@
             <%= render "dashboard_money_row", label: "Paid", icon: "fa-money-bill-wave",
                   amount_cents: @dashboard.cont_ed_paid_cents,
                   count: @dashboard.cont_ed_paid_count, registrants: @dashboard.cont_ed_paid_registrants,
-                  filter_path: registrants_event_path(@event, registrant_ids: @dashboard.cont_ed_paid_registrants.map(&:id).join("-").presence || "0") %>
+                  amounts_by_registrant_id: @dashboard.cont_ed_paid_by_registrant,
+                  filter_path: registrants_event_path(@event, ce_status: "paid") %>
             <%= render "dashboard_money_row", label: "Due", icon: "fa-hourglass-half",
                   icon_color: @dashboard.cont_ed_unpaid_count.positive? ? "text-white" : "text-gray-400",
                   icon_bg: @dashboard.cont_ed_unpaid_count.positive? ? "bg-orange-500" : nil,
                   amount_cents: @dashboard.cont_ed_outstanding_cents,
                   count: @dashboard.cont_ed_unpaid_count, registrants: @dashboard.cont_ed_unpaid_registrants,
-                  filter_path: registrants_event_path(@event, registrant_ids: @dashboard.cont_ed_unpaid_registrants.map(&:id).join("-").presence || "0") %>
+                  amounts_by_registrant_id: @dashboard.cont_ed_due_by_registrant,
+                  filter_path: registrants_event_path(@event, ce_status: "requested") %>
           </div>
         </details>
       </div>
     </div>
   <% end %>
 
-  <%# Headcount cards — each expands to reveal its full list %>
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-    <details class="bg-white rounded-xl border <%= DomainTheme.border_class_for(:people, intensity: 200) %> p-4 shadow-sm">
+  <%# Headcount cards — each expands to reveal its full list. One row of five on
+      large screens (Organizations widest, States narrowest), wrapping to three
+      then two as the viewport narrows. The lg proportional widths are set by the
+      scoped rule below rather than an arbitrary Tailwind class
+      (lg:grid-cols-[minmax(0,4fr)_…]), which this project's Vite/Tailwind build
+      silently drops from the compiled CSS. %>
+  <style>
+    @media (min-width: 1024px) {
+      .event-headcount-cards { grid-template-columns: minmax(0, 4fr) minmax(0, 4fr) minmax(0, 5fr) minmax(0, 4fr) minmax(0, 3fr); }
+    }
+  </style>
+  <div class="event-headcount-cards grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:people, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
-          <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:people, intensity: 700) %>">
-            <i class="fa-solid fa-users text-xs <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i>
-            <span class="tabular-nums shrink-0">
-              <%= link_to @dashboard.registrant_count, registrants_event_path(@event, registrant_ids: @dashboard.registrants.map(&:id).join("-")), class: "hover:underline" %>
-            </span>
-            <span class="truncate">Registrants</span>
-          </h3>
-          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+          <%= render "headcount_header", color_key: :people, icon: "fa-users",
+                count: @dashboard.registrant_count, label: "Registrants",
+                path: registrants_event_path(@event, status_filter: "active") %>
+          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1">Active registrations<% if @dashboard.inactive_registration_count.positive? %> · <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.inactive_registrant_ids.join("-")), class: "inline-flex items-center gap-1 no-underline hover:underline hover:text-gray-700" do %><%= @dashboard.inactive_registration_count %> inactive <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i><% end %><% end %></p>
+        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: "#{@dashboard.registrant_count} active", path: registrants_event_path(@event, status_filter: "active") %><% if @dashboard.inactive_registration_count.positive? %> · <%= render "stat_link", label: "#{@dashboard.inactive_registration_count} inactive", path: registrants_event_path(@event, status_filter: "inactive") %><% end %></p>
+        <% if @dashboard.unlinked_registration_count.positive? %>
+          <%# Rectangular amber callout matching the "Unallocated bulk payments"
+              card in the grand-total equation: same rounded-lg border, amber-50
+              fill, and darker amber-700 circle-exclamation. %>
+          <div class="mt-1.5">
+            <%= link_to registrants_event_path(@event, org_status: "unlinked"),
+                  class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors",
+                  title: "Registrants with no organization linked" do %>
+              <i class="fa-solid fa-circle-exclamation"></i>
+              <%= @dashboard.unlinked_registration_count %> unlinked
+            <% end %>
+          </div>
+        <% end %>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.registrants.any? %>
           <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
             <% @dashboard.registrants.each do |registrant| %>
               <li>
-                <%= link_to registrant.name, registrants_event_path(@event, registrant_ids: registrant.id),
+                <%= link_to registrants_event_path(@event, registrant_ids: registrant.id),
                       title: [ registrant.name, *@dashboard.organization_names_by_registrant[registrant.id] ].join(" · "),
-                      class: "block truncate rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" %>
+                      class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
+                  <span class="truncate min-w-0 group-hover/rowlink:underline"><%= registrant.name %></span>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-2xs text-white shrink-0 group-hover/rowlink:text-gray-500"></i>
+                <% end %>
               </li>
             <% end %>
           </ul>
@@ -300,31 +311,69 @@
       </div>
     </details>
 
-    <details class="bg-white rounded-xl border <%= DomainTheme.border_class_for(:organizations, intensity: 200) %> p-4 shadow-sm">
+    <%# Attendance — attendance outcomes, styled like the sibling headcount cards %>
+    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:event_registrations, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
-          <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:organizations, intensity: 700) %>">
-            <i class="fa-solid fa-building text-xs <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>"></i>
-            <span class="tabular-nums shrink-0">
-              <%= link_to @dashboard.organization_count, registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids.join("-")), class: "hover:underline" %>
-            </span>
-            <span class="truncate">Organizations</span>
-          </h3>
-          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+          <%= render "headcount_header", color_key: :event_registrations, icon: "fa-user-check",
+                count: @dashboard.attended_count, label: "Attended",
+                path: registrants_event_path(@event, attendance_status: "attended") %>
+          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1">Via registrants</p>
+        <p class="text-xs text-gray-500 mt-1"><% if @dashboard.attendance_recorded? %><%= render "stat_link", label: "#{number_to_percentage(@dashboard.attendance_rate * 100, precision: 0)} of #{pluralize(@dashboard.expected_attendee_count, "registrant")}", path: registrants_event_path(@event, attendance_status: "attended") %><% else %>Not yet recorded<% end %></p>
+      </summary>
+
+      <div class="mt-3 pt-3 border-t border-gray-100 space-y-1">
+        <%# One row per attendance status. Icon/colour are presentation config;
+            labels come from EventRegistration::ATTENDANCE_STATUS_LABELS. %>
+        <% [
+             [ "attended", "fa-circle-check", "text-green-600" ],
+             [ "incomplete_attendance", "fa-circle-half-stroke", "text-amber-500" ],
+             [ "no_show", "fa-circle-xmark", "text-red-500" ],
+             [ "cancelled", "fa-ban", nil ],
+             [ "transferred_in", "fa-arrow-right-to-bracket", nil ],
+             [ "transferred_out", "fa-arrow-right-from-bracket", nil ],
+             [ "registered", "fa-hourglass-half", nil ]
+           ].each do |status, icon, active_color| %>
+          <% count = @dashboard.attendance_count_for(status) %>
+          <%= render "attendance_stat_row",
+                label: EventRegistration::ATTENDANCE_STATUS_LABELS.fetch(status),
+                icon: icon,
+                icon_color: (count.positive? && active_color) || "text-gray-400",
+                count: count,
+                registrants: @dashboard.attendance_registrants(status),
+                filter_path: registrants_event_path(@event, attendance_status: status) %>
+        <% end %>
+      </div>
+    </details>
+
+    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:organizations, intensity: 200) %> p-4 shadow-sm">
+      <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+        <div class="flex items-center justify-between gap-2">
+          <%= render "headcount_header", color_key: :organizations, icon: "fa-building",
+                count: @dashboard.organization_count, label: "Organizations",
+                path: registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids.join("-")) %>
+          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
+        </div>
+        <% program_counts = @dashboard.program_status_counts %>
+        <% program_status_ids = @dashboard.program_status_registrant_ids %>
+        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: "#{program_counts[:new]} new", path: registrants_event_path(@event, registrant_ids: program_status_ids[:new].join("-").presence || "0") %> · <%= render "stat_link", label: "#{program_counts[:ongoing]} ongoing", path: registrants_event_path(@event, registrant_ids: program_status_ids[:ongoing].join("-").presence || "0") %> · <%= render "stat_link", label: "#{program_counts[:reinstated]} reinstated", path: registrants_event_path(@event, registrant_ids: program_status_ids[:reinstated].join("-").presence || "0") %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.organizations.any? %>
           <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
             <% @dashboard.organizations.each do |organization| %>
-              <li class="flex items-center gap-1.5">
-                <%= link_to organization_path(organization), class: "#{DomainTheme.text_class_for(:organizations, intensity: 600)} hover:#{DomainTheme.text_class_for(:organizations, intensity: 800)} shrink-0", title: "View #{organization.name} profile" do %>
-                  <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                <% end %>
-                <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(organization.id, []).to_a.join("-")), class: "flex items-center justify-between gap-2 flex-1 min-w-0 rounded px-1 py-0.5 hover:bg-gray-50", title: "Registrants from #{organization.name}" do %>
-                  <span class="truncate min-w-0"><%= organization.name %></span>
+              <li class="group/rowlink flex items-center gap-1.5 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50">
+                <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(organization.id, []).to_a.join("-")), class: "flex items-center justify-between gap-2 flex-1 min-w-0", title: "Registrants from #{organization.name}" do %>
+                  <span class="flex items-center gap-1.5 min-w-0">
+                    <%= organization.decorate.program_status_badge(@dashboard.program_status_by_organization[organization.id]) %>
+                    <%= organization.decorate.high_profile_icon %>
+                    <span class="truncate min-w-0 group-hover/rowlink:underline"><%= organization.name %></span>
+                  </span>
                   <span class="text-xs text-gray-500 shrink-0"><%= @dashboard.organization_counts.fetch(organization.id, 0) %></span>
+                <% end %>
+                <%= link_to organization_path(organization), class: "shrink-0 flex h-7 items-center text-white group-hover/rowlink:text-gray-500", title: "View #{organization.name} profile" do %>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
                 <% end %>
               </li>
             <% end %>
@@ -335,28 +384,27 @@
       </div>
     </details>
 
-    <details class="bg-white rounded-xl border <%= DomainTheme.border_class_for(:sectors, intensity: 200) %> p-4 shadow-sm">
+    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:sectors, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
-          <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:sectors, intensity: 700) %>">
-            <i class="fa-solid fa-layer-group text-xs <%= DomainTheme.text_class_for(:sectors, intensity: 600) %>"></i>
-            <span class="tabular-nums shrink-0">
-              <%= link_to @dashboard.sectors.size, registrants_event_path(@event, registrant_ids: @dashboard.sector_registrant_ids.join("-")), class: "hover:underline" %>
-            </span>
-            <span class="truncate">Sectors</span>
-          </h3>
-          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+          <%= render "headcount_header", color_key: :sectors, icon: "fa-layer-group",
+                count: @dashboard.sectors.size, label: "Sectors",
+                path: registrants_event_path(@event, registrant_ids: @dashboard.sector_registrant_ids.join("-")) %>
+          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1">Via registrants</p>
+        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: "#{@dashboard.primary_sector_count} primary", path: registrants_event_path(@event, registrant_ids: @dashboard.primary_sector_registrant_ids.join("-").presence || "0") %> · <%= render "stat_link", label: "#{@dashboard.additional_sector_count} additional", path: registrants_event_path(@event, registrant_ids: @dashboard.additional_sector_registrant_ids.join("-").presence || "0") %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.sectors.any? %>
           <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
             <% @dashboard.sectors.each do |sector| %>
               <li>
-                <%= link_to registrants_event_path(@event, sector: sector.id), class: "flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50", title: sector.name do %>
-                  <span class="truncate min-w-0"><%= sector.name %></span>
-                  <span class="text-xs text-gray-500 shrink-0"><%= @dashboard.sector_counts.fetch(sector.id, 0) %></span>
+                <%= link_to registrants_event_path(@event, sector: sector.id), class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50", title: sector.name do %>
+                  <span class="truncate min-w-0 group-hover/rowlink:underline"><%= sector.name %></span>
+                  <span class="flex items-center gap-2 shrink-0">
+                    <span class="text-xs text-gray-500"><%= @dashboard.sector_counts.fetch(sector.id, 0) %></span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-2xs text-white group-hover/rowlink:text-gray-500"></i>
+                  </span>
                 <% end %>
               </li>
             <% end %>
@@ -367,28 +415,27 @@
       </div>
     </details>
 
-    <details class="bg-white rounded-xl border <%= DomainTheme.border_class_for(:addresses, intensity: 200) %> p-4 shadow-sm">
+    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:addresses, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
-          <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:addresses, intensity: 700) %>">
-            <i class="fa-solid fa-location-dot text-xs <%= DomainTheme.text_class_for(:addresses, intensity: 600) %>"></i>
-            <span class="tabular-nums shrink-0">
-              <%= link_to @dashboard.states.size, registrants_event_path(@event, registrant_ids: @dashboard.state_registrant_ids.join("-")), class: "hover:underline" %>
-            </span>
-            <span class="truncate">States</span>
-          </h3>
-          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+          <%= render "headcount_header", color_key: :addresses, icon: "fa-location-dot",
+                count: @dashboard.states.size, label: "States",
+                path: registrants_event_path(@event, registrant_ids: @dashboard.state_registrant_ids.join("-")) %>
+          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1">Via registrants</p>
+        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: pluralize(@dashboard.countries.size, "country"), path: registrants_event_path(@event, registrant_ids: @dashboard.country_registrant_ids.join("-").presence || "0") %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.states.any? %>
           <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
             <% @dashboard.states.each do |state| %>
               <li>
-                <%= link_to registrants_event_path(@event, state: state), class: "flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
-                  <span><%= state %></span>
-                  <span class="text-xs text-gray-500 shrink-0"><%= @dashboard.state_counts.fetch(state, 0) %></span>
+                <%= link_to registrants_event_path(@event, state: state), class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
+                  <span class="group-hover/rowlink:underline"><%= state %></span>
+                  <span class="flex items-center gap-2 shrink-0">
+                    <span class="text-xs text-gray-500"><%= @dashboard.state_counts.fetch(state, 0) %></span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-2xs text-white group-hover/rowlink:text-gray-500"></i>
+                  </span>
                 <% end %>
               </li>
             <% end %>
@@ -399,4 +446,5 @@
       </div>
     </details>
   </div>
+</div>
 </div>

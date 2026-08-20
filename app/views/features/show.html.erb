@@ -1,0 +1,89 @@
+<% content_for(:page_bg_class, "admin-or-authpublished") %>
+
+<div class="w-full max-w-3xl mx-auto">
+  <div class="mb-3">
+    <%= link_to features_path, class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <i class="fa-solid fa-arrow-left"></i> Features &amp; tips
+    <% end %>
+  </div>
+
+  <div class="bg-white border border-gray-200 rounded-xl shadow overflow-hidden">
+    <div class="bg-<%= @feature.area_color %>-100 border-b border-<%= @feature.area_color %>-300 px-6 py-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid <%= @feature.area_icon %> text-<%= @feature.area_color %>-700"></i>
+          <span class="text-sm font-semibold text-<%= @feature.area_color %>-900 uppercase tracking-wide">
+            <%= @feature.area_label %>
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <%= @feature.status_badge %>
+          <% unless @feature.published? %>
+            <span class="admin-only <%= badge_classes("bg-white/70 text-gray-700 border-gray-300") %>">
+              <i class="fa-solid fa-eye-slash"></i> Draft
+            </span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-6">
+      <div class="flex items-start justify-between gap-3">
+        <h1 class="text-2xl font-semibold text-gray-900"><%= @feature.name %></h1>
+        <span class="text-sm text-gray-500 whitespace-nowrap shrink-0 mt-1">
+          <i class="fa-regular fa-calendar"></i> <%= @feature.released_label %>
+        </span>
+      </div>
+
+      <p class="text-gray-600 mt-2"><%= @feature.summary %></p>
+
+      <div class="mt-4 flex flex-wrap gap-2">
+        <% if @feature.action_path.present? %>
+          <%= link_to @feature.resolved_action_url, class: "btn btn-primary" do %>
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Check out this feature
+          <% end %>
+        <% end %>
+        <% if @feature.external_url.present? %>
+          <%= link_to safe_url(@feature.external_url), target: "_blank", rel: "noopener noreferrer",
+                      class: "btn btn-secondary-outline" do %>
+            <i class="fa-solid fa-book"></i> Full guide
+          <% end %>
+        <% end %>
+        <% if @feature.pr_url.present? && allowed_to?(:create?, Feature) %>
+          <%= link_to @feature.pr_url, target: "_blank", rel: "noopener noreferrer",
+                      class: "admin-only bg-blue-100 btn btn-secondary-outline" do %>
+            <i class="fa-solid fa-code-pull-request"></i> View the pull request
+          <% end %>
+        <% end %>
+      </div>
+
+      <% if @feature.pro_tips_list.any? %>
+        <div class="mt-5 rounded-lg bg-amber-50 border border-amber-200 p-4">
+          <p class="text-sm font-semibold text-amber-800 uppercase tracking-wide mb-2">
+            <i class="fa-solid fa-lightbulb"></i> <%= "Pro tip".pluralize(@feature.pro_tips_list.size) %>
+          </p>
+          <ul class="list-disc list-inside space-y-1 text-amber-900">
+            <% @feature.pro_tips_list.each do |tip| %>
+              <li><%= tip %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <% if @feature.rhino_description.present? %>
+        <div class="prose max-w-none mt-6">
+          <%= @feature.rhino_description %>
+        </div>
+      <% end %>
+
+      <% if allowed_to?(:update?, @feature) %>
+        <div class="mt-8 pt-4 border-t border-gray-200 flex flex-wrap gap-2">
+          <%= link_to "Edit", edit_feature_path(@feature), class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+          <%= button_to "Delete", feature_path(@feature), method: :delete,
+                        class: "admin-only bg-blue-100 btn btn-danger-outline",
+                        form: { data: { turbo_confirm: "Delete this feature? This can't be undone." } } %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

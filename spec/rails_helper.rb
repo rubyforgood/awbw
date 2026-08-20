@@ -48,6 +48,18 @@ ActiveJob::Base.queue_adapter = :test
 RSpec.configure do |config|
   # Gives travel method for time helpers
   config.include ActiveSupport::Testing::TimeHelpers
+  # RSpec doesn't run minitest teardown, so travel_to never auto-reverts — freeze
+  # one example and the frozen clock leaks into later specs. Always reset after
+  # each example (no-op when time wasn't traveled).
+  config.after { travel_back }
+
+  # ActiveSupport::CurrentAttributes (Current.user/source) is only auto-reset by
+  # the executor around real requests/jobs. Controller/view/service specs set it
+  # in the test thread with no executor to clear it, so a stale Current leaks
+  # into later examples and silently changes model behavior that branches on it
+  # (Organization affiliation-lock validation, AhoyTrackable lifecycle tracking).
+  # Reset after every example, like travel_back above (no-op when nothing set it).
+  config.after { Current.reset }
 
   # Include pagination helper globally
   config.include PaginationHelpers

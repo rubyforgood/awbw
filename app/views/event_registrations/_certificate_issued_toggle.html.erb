@@ -1,0 +1,15 @@
+<%# Inline "certificate issued" slider toggle, targeted by id for turbo replacement.
+    The track is a direct sibling of the checkbox so peer-checked applies (it only
+    reaches later siblings, not their descendants); the knob is the track's ::after. %>
+<span id="<%= dom_id(registration, :certificate_issued) %>" class="inline-block">
+  <%= form_with url: toggle_certificate_issued_event_registration_path(registration), method: :patch, class: "inline" do %>
+    <%= hidden_field_tag :value, "0" %>
+    <label class="relative inline-flex items-center cursor-pointer select-none">
+      <%= check_box_tag :value, "1", registration.certificate_issued?,
+            onchange: "this.form.requestSubmit()",
+            "aria-label": "Certificate issued",
+            class: "peer sr-only" %>
+      <span class="relative inline-block w-9 h-5 rounded-full bg-gray-300 transition-colors peer-checked:bg-teal-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-4"></span>
+    </label>
+  <% end %>
+</span>

@@ -1,6 +1,6 @@
-<%# ---- Form submission — the recipient's scholarship-section answers from their
-    registration form, with a jump link to the full public submission (where the
-    complete application, if any, lives). ---- %>
+<%# ---- Form submission — the recipient's scholarship application answers (from
+    the event's dedicated scholarship form, or a "scholarship" section embedded in
+    the registration form), with a jump link to the full public submission. ---- %>
 <% submission_params = @allocatable.try(:slug).present? ? { reg: @allocatable.slug } : { person_id: @scholarship.recipient_id } %>
 <% answered = @scholarship_answers.to_a.any? { |_field, response| response&.submitted_answer.present? } %>
 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -14,7 +14,7 @@
                   class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
                   target: "_blank", rel: "noopener" do %>
         View full submission
-        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+        <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
       <% end %>
     <% end %>
   </div>
@@ -24,8 +24,8 @@
       <dl class="space-y-3">
         <% @scholarship_answers.each do |field, response| %>
           <div>
-            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400"><%= field.name %></dt>
-            <dd class="mt-0.5 text-sm text-gray-900 whitespace-pre-line"><%= display_response_text(field, response) %></dd>
+            <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase"><%= display_question_label(field, response) %></dt>
+            <dd class="mt-0.5 text-sm whitespace-pre-line text-gray-900"><%= render "shared/form_answer_value", field: field, response: response %></dd>
           </div>
         <% end %>
       </dl>

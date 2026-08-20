@@ -5,5 +5,13 @@ FactoryBot.define do
     notification_type { 0 }
     recipient_role { :admin }
     recipient_email { Faker::Internet.email }
+
+    trait :incoming do
+      direction { "incoming" }
+    end
+
+    trait :bulk do
+      bulk { true }
+    end
   end
 end

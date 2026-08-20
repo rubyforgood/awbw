@@ -1,10 +1,22 @@
 class FormsController < ApplicationController
-  before_action :set_form, only: %i[show edit update destroy reorder_field reorder_fields edit_sections update_sections]
+  before_action :set_form, only: %i[show edit update destroy copy reorder_field reorder_fields edit_sections update_sections]
   before_action :set_dashboard_event, only: %i[show edit edit_sections update update_sections]
 
   def index
     authorize!
     @forms = Form.standalone.order(:name)
+  end
+
+  # Reference page for the field identifiers that wire a question to backend
+  # behavior — the "what will this actually do?" behind the form editor's field
+  # identifier box. Reached from the form editors, so it carries the form and
+  # event it came from to build its own way back.
+  def smart_form_settings
+    authorize! :form, to: :smart_form_settings?
+    @groups = SmartFormFields.groups
+    @answer_only_identifiers = SmartFormFields::ANSWER_ONLY_IDENTIFIERS
+    @return_form = Form.find_by(id: params[:form_id])
+    @dashboard_event = Event.find_by(id: params[:event_id])
   end
 
   def show
@@ -64,6 +76,13 @@ class FormsController < ApplicationController
 
     @form.destroy!
     redirect_to forms_path, notice: "Form deleted."
+  end
+
+  def copy
+    authorize! @form
+
+    copy = FormCopyService.new(@form).call
+    redirect_to edit_form_path(copy), notice: "Form copied. Now editing \"#{copy.display_name}\"."
   end
 
   def edit_sections
@@ -135,9 +154,9 @@ class FormsController < ApplicationController
 
   def form_params
     params.require(:form).permit(
-      :name, :role, :header, :hide_answered_person_questions, :hide_answered_form_questions,
+      :name, :role, :header, :hide_answered_person_questions, :hide_answered_form_questions, :slug, :published,
       form_fields_attributes: [
-        :id, :name, :answer_type, :required, :hint_text,
+        :id, :name, :answer_type, :required, :subtitle, :hint_text,
         :field_identifier, :section, :position, :visibility, :one_time, :width, :min_words, :max_characters, :_destroy,
         form_field_answer_options_attributes: [ :id, :option_name, :_destroy ]
       ]

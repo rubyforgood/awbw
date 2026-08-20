@@ -8,6 +8,7 @@ class SectorPolicy < ApplicationPolicy
   def create?  = admin?
   def update?  = admin?
   def destroy? = record.persisted? && admin?
+  def search?  = admin?
 
   def tags_index?
     true

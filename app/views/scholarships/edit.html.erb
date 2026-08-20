@@ -3,9 +3,9 @@
 <% grant_nav = grant.present? && params[:return_to].in?(%w[ grant_show grant_edit ]) %>
 <% theme = (grant_nav || (@allocatable.blank? && grant.present?)) ? :grants : :scholarships %>
 
-<div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(theme) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+<div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(theme) %> rounded-xl border border-gray-200 p-4 shadow sm:p-6">
   <%# Top bar: back link + secondary links, matching the registration edit page %>
-  <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
     <% if grant_nav %>
       <%= link_to (params[:return_to] == "grant_edit" ? edit_grant_path(grant) : grant_path(grant)), class: "text-sm text-gray-500 hover:text-gray-700" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Grant
@@ -14,8 +14,16 @@
       <%= link_to edit_event_registration_path(@allocatable), class: "text-sm text-gray-500 hover:text-gray-700" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Registration
       <% end %>
+    <% elsif @allocatable.respond_to?(:event) && params[:return_to] == "recipients" %>
+      <%= link_to recipients_event_card_path(@allocatable.event, params[:participant]), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Recipients
+      <% end %>
+    <% elsif @allocatable.respond_to?(:event) && params[:return_to] == "onboarding" %>
+      <%= link_to onboarding_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Onboarding
+      <% end %>
     <% elsif @allocatable.respond_to?(:event) %>
-      <%= link_to registrants_event_path(@allocatable.event), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <%= link_to registrants_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm text-gray-500 hover:text-gray-700" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Registrants
       <% end %>
     <% elsif grant.present? %>
@@ -28,6 +36,17 @@
       <% end %>
     <% end %>
     <div class="flex items-center gap-3">
+      <% if @allocatable.respond_to?(:event) %>
+        <%# Admin jump to the registrant-facing scholarship callout (what the registrant
+            sees). Opens in a new tab so the edit context is kept; matches the sky
+            admin-link convention and the CE edit page's "Registrant's CE page". %>
+        <%= render "shared/badge",
+                   label: "Registrant's scholarship page",
+                   classes: "bg-sky-100 text-sky-700 border-sky-200",
+                   icon: "fa-solid fa-id-card text-2xs",
+                   href: registration_scholarship_path(@allocatable.slug, return_to: "scholarship"),
+                   target: "_blank", rel: "noopener" %>
+      <% end %>
       <%= link_to "View", scholarship_path(@scholarship), class: "text-sm text-gray-500 hover:text-gray-700" %>
       <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
     </div>
@@ -40,10 +59,33 @@
              event: (@allocatable.event if @allocatable.respond_to?(:event)),
              person: @scholarship.recipient %>
 
+  <%# Outside the edit form: a button_to renders its own form, which can't nest. %>
+  <% if @scholarship.agreement_declined? %>
+    <% declined_response = @scholarship.latest_agreement_response %>
+    <div class="mb-6 flex flex-wrap items-start justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+      <div class="flex items-start gap-2 text-sm text-red-700">
+        <i class="fa-solid fa-circle-xmark mt-0.5"></i>
+        <div>
+          <p class="font-medium">Declined by recipient<% if declined_response&.responded_at %> · <%= declined_response.responded_at.strftime("%B %-d, %Y") %><% end %></p>
+          <% if declined_response&.reason.present? %>
+            <p class="mt-0.5 text-red-600">“<%= declined_response.reason %>”</p>
+          <% end %>
+          <p class="mt-1 text-xs text-red-500">This award isn't counted in any totals while declined.</p>
+          <p class="text-xs text-red-500">To re-offer at new terms, change the amount and save first — then click Re-offer.</p>
+        </div>
+      </div>
+      <%= button_to reoffer_scholarship_path(@scholarship, return_to: params[:return_to].presence, participant: params[:participant].presence),
+                    class: "inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700",
+                    data: { turbo_confirm: "Re-offer this scholarship? It returns to pending and the award is re-funded until the recipient responds." } do %>
+        <i class="fa-solid fa-rotate-left"></i> Re-offer
+      <% end %>
+    </div>
+  <% end %>
+
   <%# turbo: false matches the other cocoon/nested-attributes admin forms (registration,
       workshops). A plain full-page submit avoids the Turbo + nested-fields double/stale
       resubmission that surfaced as a save committing yet the request returning 422. %>
-  <%= simple_form_for @scholarship, url: scholarship_path(@scholarship, return_to: params[:return_to].presence), html: { class: "space-y-6" }, data: { turbo: false, controller: "submit-once", "submit-once-submitting-text-value": "Saving…" } do |f| %>
+  <%= simple_form_for @scholarship, url: scholarship_path(@scholarship, return_to: params[:return_to].presence, participant: params[:participant].presence), html: { class: "space-y-6" }, data: { turbo: false, controller: "submit-once", "submit-once-submitting-text-value": "Saving…" } do |f| %>
     <%= render "form", f: f %>
   <% end %>
 
@@ -52,6 +94,8 @@
       <%= render "form_submission" %>
     </div>
   <% end %>
+
+  <%= render "agreement_history", scholarship: @scholarship %>
 
   <%= render "shared/audit_info", resource: @scholarship %>
 </div>

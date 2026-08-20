@@ -1,13 +1,13 @@
 import { application } from "./application"
 
+import AddressSelectController from "./address_select_controller"
+application.register("address-select", AddressSelectController)
+
 import AffiliationDatesController from "./affiliation_dates_controller"
 application.register("affiliation-dates", AffiliationDatesController)
 
 import AffiliationFacilitatorWarningController from "./affiliation_facilitator_warning_controller"
 application.register("affiliation-facilitator-warning", AffiliationFacilitatorWarningController)
-
-import AffiliationTitleEditController from "./affiliation_title_edit_controller"
-application.register("affiliation-title-edit", AffiliationTitleEditController)
 
 import AllocationRefController from "./allocation_ref_controller"
 application.register("allocation-ref", AllocationRefController)
@@ -27,8 +27,17 @@ application.register("asset-picker", AssetPickerController)
 import AutosaveController from "./autosave_controller"
 application.register("autosave", AutosaveController)
 
+import CalloutPreviewController from "./callout_preview_controller"
+application.register("callout-preview", CalloutPreviewController)
+
 import CarouselController from "./carousel_controller"
 application.register("carousel", CarouselController)
+
+import ChartTooltipFooterController from "./chart_tooltip_footer_controller"
+application.register("chart-tooltip-footer", ChartTooltipFooterController)
+
+import CeLicensePickerController from "./ce_license_picker_controller"
+application.register("ce-license-picker", CeLicensePickerController)
 
 import ChipSelectController from "./chip_select_controller"
 application.register("chip-select", ChipSelectController)
@@ -45,11 +54,11 @@ application.register("confirm-email", ConfirmEmailController)
 import ColumnToggleController from "./column_toggle_controller"
 application.register("column-toggle", ColumnToggleController)
 
-import CommentEditToggleController from "./comment_edit_toggle_controller"
-application.register("comment-edit-toggle", CommentEditToggleController)
+import EditToggleController from "./edit_toggle_controller"
+application.register("edit-toggle", EditToggleController)
 
-import CommentRequiredController from "./comment_required_controller"
-application.register("comment-required", CommentRequiredController)
+import FieldRequiredController from "./field_required_controller"
+application.register("field-required", FieldRequiredController)
 
 import DirtyFormController from "./dirty_form_controller"
 application.register("dirty-form", DirtyFormController)
@@ -81,6 +90,9 @@ application.register("file-preview", FilePreviewController)
 import FieldOptionsController from "./field_options_controller"
 application.register("field-options", FieldOptionsController)
 
+import FormErrorsController from "./form_errors_controller"
+application.register("form-errors", FormErrorsController)
+
 import FormFieldsSortableController from "./form_fields_sortable_controller"
 application.register("form-fields-sortable", FormFieldsSortableController)
 
@@ -93,6 +105,9 @@ application.register("grant-select", GrantSelectController)
 import InactiveToggleController from "./inactive_toggle_controller"
 application.register("inactive-toggle", InactiveToggleController)
 
+import NavigateSelectController from "./navigate_select_controller"
+application.register("navigate-select", NavigateSelectController)
+
 import OptimisticBookmarkController from "./optimistic_bookmark_controller"
 application.register("optimistic-bookmark", OptimisticBookmarkController)
 
@@ -104,6 +119,9 @@ application.register("org-toggle", OrgToggleController)
 
 import PaginatedFieldsController from "./paginated_fields_controller"
 application.register("paginated-fields", PaginatedFieldsController)
+
+import PanelToggleController from "./panel_toggle_controller"
+application.register("panel-toggle", PanelToggleController)
 
 import QuestionLibraryController from "./question_library_controller"
 application.register("question-library", QuestionLibraryController)
@@ -120,6 +138,9 @@ application.register("prefetch-lazy", PrefetchLazyController)
 import PrintOptionsController from "./print_options_controller"
 application.register("print-options", PrintOptionsController)
 
+import ReminderPreviewController from "./reminder_preview_controller"
+application.register("reminder-preview", ReminderPreviewController)
+
 import RevealSectionController from "./reveal_section_controller"
 application.register("reveal-section", RevealSectionController)
 
@@ -129,14 +150,8 @@ application.register("rhino-source", RhinoSourceController)
 import ScholarshipPreviewController from "./scholarship_preview_controller"
 application.register("scholarship-preview", ScholarshipPreviewController)
 
-import ScholarshipRequestedController from "./scholarship_requested_controller"
-application.register("scholarship-requested", ScholarshipRequestedController)
-
 import ScholarshipStatusToggleController from "./scholarship_status_toggle_controller"
 application.register("scholarship-status-toggle", ScholarshipStatusToggleController)
-
-import CeCreditRequestedController from "./ce_credit_requested_controller"
-application.register("ce-credit-requested", CeCreditRequestedController)
 
 import SearchBoxController from "./search_box_controller"
 application.register("search-box", SearchBoxController)
@@ -150,14 +165,17 @@ application.register("searchable-select", SearchableSelectController)
 import SectionFilterController from "./section_filter_controller"
 application.register("section-filter", SectionFilterController)
 
-import PrimarySectorController from "./primary_sector_controller"
-application.register("primary-sector", PrimarySectorController)
+import PrimaryTagController from "./primary_tag_controller"
+application.register("primary-tag", PrimaryTagController)
 
 import FormSectionToggleController from "./form_section_toggle_controller"
 application.register("form-section-toggle", FormSectionToggleController)
 
 import ShareUrlController from "./share_url_controller"
 application.register("share-url", ShareUrlController)
+
+import ScrollToTopController from "./scroll_to_top_controller"
+application.register("scroll-to-top", ScrollToTopController)
 
 import SortableController from "./sortable_controller"
 application.register("sortable", SortableController)

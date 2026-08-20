@@ -1,6 +1,39 @@
 require "rails_helper"
 
 RSpec.describe User do
+  describe "starting a membership on invite" do
+    let(:person) { create(:person) }
+    let(:user) { create(:user, person: person) }
+
+    def invite(record)
+      record.update!(welcome_instructions_sent_at: Time.current)
+    end
+
+    it "gives the person a subscription with a comped first year" do
+      expect { invite(user) }.to change(Membership, :count).by(1)
+
+      expect(person.memberships.sole.membership_invoices.sole.cost_cents).to eq(0)
+    end
+
+    it "does not create a second subscription when the invite is resent" do
+      invite(user)
+
+      expect { invite(user) }.not_to change(Membership, :count)
+    end
+
+    it "does nothing for a user with no person" do
+      user_without_person = create(:user, person: nil)
+
+      expect { invite(user_without_person) }.not_to change(Membership, :count)
+    end
+
+    it "does nothing on an unrelated update" do
+      user
+
+      expect { user.update!(sign_in_count: 3) }.not_to change(Membership, :count)
+    end
+  end
+
   # Use FactoryBot
   # let(:user) { build(:user) } # Keep build for simple validation tests
 
@@ -26,7 +59,7 @@ RSpec.describe User do
     it { should have_many(:user_form_form_fields).through(:user_forms).dependent(:destroy) }
     # Custom scope/select for colleagues might interfere
     # it { should have_many(:colleagues).through(:organizations).source(:organization_users) }
-    it { should have_many(:notifications) } # As :noticeable
+    it { should have_many(:notifications).dependent(:nullify) } # As :noticeable
 
     # Nested Attributes
     it { should accept_nested_attributes_for(:user_forms) }
@@ -118,6 +151,24 @@ RSpec.describe User do
         user = build(:user)
         expect(user.full_name).to eq(user.email)
       end
+    end
+  end
+
+  describe "#has_access?" do
+    it "is true for a confirmed, unlocked, active account" do
+      expect(build(:user, confirmed_at: Time.current, locked_at: nil, inactive: false).has_access?).to be(true)
+    end
+
+    it "is false when unconfirmed" do
+      expect(build(:user, confirmed_at: nil).has_access?).to be(false)
+    end
+
+    it "is false when locked" do
+      expect(build(:user, confirmed_at: Time.current, locked_at: Time.current).has_access?).to be(false)
+    end
+
+    it "is false when deactivated" do
+      expect(build(:user, confirmed_at: Time.current, inactive: true).has_access?).to be(false)
     end
   end
 
@@ -297,6 +348,49 @@ RSpec.describe User do
     end
   end
 
+  describe ".activity_search" do
+    let!(:target) do
+      create(:user, :with_person, email: "rudy-login@example.com").tap do |u|
+        u.person.update!(
+          first_name: "Rudy", last_name: "Hernandez",
+          legal_first_name: "Rudolfo",
+          email: "rudy@example.com", email_2: "rudy.alt@example.com"
+        )
+      end
+    end
+    let!(:other) { create(:user, :with_person, email: "someone-else@example.com") }
+
+    it "returns none for a blank query" do
+      expect(User.activity_search("")).to eq(User.none)
+    end
+
+    it "matches on person last name" do
+      expect(User.activity_search("Hernandez")).to include(target)
+      expect(User.activity_search("Hernandez")).not_to include(other)
+    end
+
+    it "matches on legal first name" do
+      expect(User.activity_search("Rudolfo")).to include(target)
+    end
+
+    it "matches on the person's primary and secondary email" do
+      expect(User.activity_search("rudy@example.com")).to include(target)
+      expect(User.activity_search("rudy.alt@example.com")).to include(target)
+    end
+
+    it "matches on the user's login email" do
+      expect(User.activity_search("rudy-login@example.com")).to include(target)
+    end
+
+    it "matches on the full name" do
+      expect(User.activity_search("Rudy Hernandez")).to include(target)
+    end
+
+    it "matches on the legal first name with last name" do
+      expect(User.activity_search("Rudolfo Hernandez")).to include(target)
+    end
+  end
+
   describe "#track_password_changed" do
     let(:user) { create(:user, password: "original_password") }
 
@@ -412,6 +506,53 @@ RSpec.describe User do
 
         expect(DeviseMailer).not_to have_received(:confirmation_instructions)
           .with(user, anything, hash_including(to: user.email))
+      end
+    end
+
+    context "when a sender is given" do
+      let(:user) { create(:user, confirmed_at: nil) }
+      let(:sender) { create(:user) }
+
+      before do
+        user
+        allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)
+      end
+
+      it "passes the sender id through the mailer opts for attribution" do
+        user.send_confirmation_instructions(sender: sender)
+
+        expect(DeviseMailer).to have_received(:confirmation_instructions)
+          .with(user, anything, hash_including(sender_id: sender.id))
+      end
+
+      it "omits the sender id when none is given" do
+        user.send_confirmation_instructions
+
+        expect(DeviseMailer).to have_received(:confirmation_instructions)
+          .with(user, anything, hash_excluding(:sender_id))
+      end
+    end
+
+    context "when part of a bulk invite send" do
+      let(:user) { create(:user, confirmed_at: nil) }
+
+      before do
+        user
+        allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)
+      end
+
+      it "passes bulk through the mailer opts so the logged communication is flagged" do
+        user.send_confirmation_instructions(bulk: true)
+
+        expect(DeviseMailer).to have_received(:confirmation_instructions)
+          .with(user, anything, hash_including(bulk: true))
+      end
+
+      it "omits bulk for a one-off invite" do
+        user.send_confirmation_instructions
+
+        expect(DeviseMailer).to have_received(:confirmation_instructions)
+          .with(user, anything, hash_excluding(:bulk))
       end
     end
   end

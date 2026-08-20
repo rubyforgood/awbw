@@ -1,4 +1,14 @@
 <% content_for(:page_bg_class, "admin-or-owner-or-authsearchable") %>
+<%# Returned from a registrant's profile link on the event registrants page. Shown
+    above the profile topper; needs event_id since the profile isn't event-scoped. %>
+<% if params[:return_to] == "registrants" && params[:event_id].present? %>
+  <% back_registration = @person.event_registrations.find_by(event_id: params[:event_id]) %>
+  <div class="mb-3">
+    <%= link_to(back_registration ? registrants_event_row_path(params[:event_id], back_registration.id) : registrants_event_path(params[:event_id]), class: "text-sm text-gray-500 hover:text-gray-700") do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to registrants
+    <% end %>
+  </div>
+<% end %>
 <div class="admin-or-owner <%#= DomainTheme.bg_class_for(:people) %> border border-gray-200 rounded-xl shadow overflow-hidden">
   <!-- Person header banner -->
   <div class="<%= DomainTheme.bg_class_for(:people, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:people, intensity: 300) %> px-8 py-3">
@@ -54,7 +64,7 @@
       </div>
       <div class="flex-1 text-center md:text-left">
         <h1 class="text-3xl font-bold text-gray-900">
-          <%= @person.name %>
+          <%= @person.name %><% if @person.profile_show_credentials? && @person.license_credentials.present? %><span class="font-normal">, <%= @person.license_credentials %></span><% end %>
           <% if @person.pronouns.present? && @person.profile_show_pronouns? %>
             <span class="text-gray-500 font-normal text-base italic">(<%= @person.pronouns %>)</span>
           <% end %>
@@ -85,6 +95,18 @@
                 📧 <!--email_off--><%= mail_to email, email, class: "text-blue-600 hover:underline" %><!--email_on-->
               </span>
             <% end %>
+            <% if @person.user&.unconfirmed_email.present? && allowed_to?(:show_email_change?, @person) %>
+              <% pending_label = capture do %>Email change to <strong class="font-semibold"><%= @person.user.unconfirmed_email %></strong> pending
+                <span class="inline-flex items-center gap-1 text-yellow-700 italic">
+                  <i class="fa-solid fa-eye-slash"></i>
+                  Private
+                </span><% end %>
+              <%= render "shared/badge",
+                    label: pending_label,
+                    classes: "bg-yellow-50 text-yellow-800 border-yellow-300",
+                    icon: "fa-solid fa-triangle-exclamation text-yellow-500",
+                    title: "Change to #{@person.user.unconfirmed_email} awaiting confirmation. Only the person and admins can see this; it is hidden from other profile visitors." %>
+            <% end %>
           <% end %>
           <% phone = @person.phone_number || @person.user&.phone %>
           <% if @person.profile_show_phone? && phone.present? %>
@@ -100,9 +122,7 @@
         <% if @person.badges.any? %>
           <div class="mt-3 flex flex-wrap justify-center md:justify-start gap-1.5">
             <% @person.badges.each do |badge| %>
-              <span class="px-2 py-0.5 border <%= badge[:bg] %> <%= badge[:text] %> <%= badge[:border] %> text-xs font-medium rounded-full">
-                <%= badge[:label] %>
-              </span>
+              <%= render "shared/badge", label: badge[:label], classes: "#{badge[:bg]} #{badge[:text]} #{badge[:border]}" %>
             <% end %>
           </div>
         <% end %>
@@ -122,29 +142,47 @@
               <% end %>
             </div>
           <% end %>
-          <!-- Sectors -->
-          <% if @person.profile_show_sectors? %>
-            <%# One combined list: the primary sector leads as a darker-green starred
-                chip, followed by the additional sectors alphabetically and any
-                free-text "Other" responses. %>
-            <% sectorable_items = @person.sectorable_items.includes(:sector).sort_by { |si| [ si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase ] } %>
-            <% other_service_areas = @person.other_service_area_responses %>
+          <!-- Sectors + Age ranges (two columns; age ranges is the thinner column) -->
+          <%# "Other" is never a real sector tag (captured as an OtherResponse), so a
+              stray legacy tagging is dropped from the displayed list. %>
+          <% sectorable_items = @person.sectorable_items.includes(:sector).reject { |si| si.sector&.name == Sector::OTHER_SECTOR_NAME }.sort_by { |si| [ si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase ] } %>
+          <% other_sectors = @person.other_sector_responses %>
+          <% show_sectors = @person.profile_show_sectors? %>
+          <% primary_age_groups = @person.primary_age_groups.to_a %>
+          <% additional_age_groups = @person.additional_age_groups.to_a %>
+          <% show_age = @person.profile_show_age_ranges? && (primary_age_groups.any? || additional_age_groups.any?) %>
+          <% if show_sectors || show_age %>
             <div class="md:col-span-2 p-3">
-              <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
-              <% if sectorable_items.any? || other_service_areas.any? %>
-                <div class="flex flex-wrap gap-2">
-                  <% sectorable_items.each do |si| %>
-                    <%= render "sectors/tagging_label",
-                                 sector: si.sector,
-                                 is_primary: si.is_primary?,
-                                 display_leader: true,
-                                 is_leader: si.is_leader %>
-                  <% end %>
-                  <%= render "people/other_responses", responses: other_service_areas %>
-                </div>
-              <% else %>
-                <p class="text-gray-500 italic">None selected.</p>
-              <% end %>
+              <div class="flex gap-4 items-start">
+                <% if show_sectors %>
+                  <%# One combined list: the primary sector leads as a darker-green
+                      starred chip, then additional sectors alphabetically and any
+                      free-text "Other" responses. %>
+                  <div class="flex-1 min-w-0">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
+                    <% if sectorable_items.any? || other_sectors.any? %>
+                      <div class="flex flex-wrap gap-2">
+                        <% sectorable_items.each do |si| %>
+                          <%= render "sectors/tagging_label",
+                                       sector: si.sector,
+                                       is_primary: si.is_primary?,
+                                       display_leader: true,
+                                       is_leader: si.is_leader %>
+                        <% end %>
+                        <%= render "people/other_sector_responses", responses: other_sectors, curatable: current_user&.super_user?, return_to: "person_show" %>
+                      </div>
+                    <% else %>
+                      <p class="text-gray-500 italic">None selected.</p>
+                    <% end %>
+                  </div>
+                <% end %>
+                <% if show_age %>
+                  <div class="w-32 flex-shrink-0">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-3">Age ranges</h2>
+                    <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups, compact: true %>
+                  </div>
+                <% end %>
+              </div>
             </div>
           <% end %>
         </div>
@@ -164,7 +202,8 @@
       <!-- AUTHORED SECTION -->
       <% if @person.profile_show_workshops? ||
               @person.profile_show_workshop_variations? ||
-              @person.profile_show_stories?  %>
+              @person.profile_show_stories? ||
+              @person.profile_show_resources?  %>
       <div class="person-only <%= DomainTheme.bg_class_for(:workshops) %> border <%= DomainTheme.border_class_for(:workshops) %> rounded-lg shadow-sm">
         <!-- Header -->
         <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3 border-b <%= DomainTheme.border_class_for(:workshops) %>">
@@ -201,6 +240,15 @@
               <% end %>
             </div>
           <% end %>
+          <!-- Resources authored -->
+          <% if @person.profile_show_resources? %>
+            <div class="p-3">
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Resources authored</h2>
+              <%= turbo_frame_tag "person_resources_section", src: person_path(@person, section: "resources"), loading: :lazy do %>
+                <p class="text-gray-500 italic">Loading resources...</p>
+              <% end %>
+            </div>
+          <% end %>
         </div>
       </div>
     <% end %>
@@ -213,11 +261,11 @@
             Participation history
           </h2>
         </div>
-        <!-- Events registered -->
+        <!-- Events attended -->
         <div class="section-content px-3 sm:px-4 py-4 sm:py-6 space-y-8 sm:space-y-10">
           <% if @person.profile_show_events_registered? %>
             <div class="p-3">
-              <h2 class="text-lg font-semibold text-gray-800 mb-3">Events registered</h2>
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Events attended</h2>
               <%= turbo_frame_tag "person_events_section", src: person_path(@person, section: "events"), loading: :lazy do %>
                 <p class="text-gray-500 italic">Loading events...</p>
               <% end %>
@@ -225,6 +273,13 @@
           <% end %>
         </div>
       </div>
+    <% end %>
+    <!-- MEMBERSHIP SECTION -->
+    <% if allowed_to?(:index?, MembershipInvoice) %>
+      <%= render "people/membership", person: @person, membership: @membership %>
+    <% end %>
+    <% if allowed_to?(:own_membership?, @person) %>
+      <%= render "people/my_membership", membership: @membership, autopay: @membership_autopay %>
     <% end %>
     <!-- SUBMITTED SECTION -->
     <% if allowed_to?(:show?, @person) %>

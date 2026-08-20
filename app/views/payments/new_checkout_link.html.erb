@@ -1,0 +1,61 @@
+<div class="max-w-lg mx-auto">
+  <div class="flex items-center gap-2 mb-6">
+    <%= link_to payments_path, class: "text-sm text-gray-500 hover:text-gray-700 inline-flex items-center gap-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Payments
+    <% end %>
+  </div>
+
+  <% if @checkout_url %>
+    <div class="bg-white border-2 border-blue-400 rounded-xl p-6 shadow-sm">
+      <h1 class="text-lg font-semibold text-gray-900 mb-1">Stripe Payment Link</h1>
+      <p class="text-sm text-gray-500 mb-4">Send this link to the payer to collect payment:</p>
+
+      <div class="flex items-center gap-2 mb-4">
+        <input type="text" value="<%= @checkout_url %>" readonly
+               class="flex-1 bg-gray-50 rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono"
+               onclick="this.select()" />
+        <button type="button"
+                onclick="navigator.clipboard.writeText('<%= j @checkout_url %>').then(() => { this.textContent = 'Copied!'; setTimeout(() => { this.textContent = 'Copy' }, 2000) })"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-gray-700 text-white px-3 py-2 text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap">
+          Copy
+        </button>
+      </div>
+
+      <div class="flex gap-2">
+        <%= link_to "Open in new tab", @checkout_url, target: "_blank",
+                    class: "btn btn-primary inline-flex items-center gap-1.5" %>
+        <%= link_to "Close", payments_path,
+                    class: "btn btn-secondary-outline" %>
+      </div>
+    </div>
+  <% else %>
+    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+      <h1 class="text-lg font-semibold text-gray-900 mb-1">Generate Stripe Checkout Link</h1>
+      <p class="text-sm text-gray-500 mb-4">Create a custom Stripe checkout link with a specified amount.</p>
+
+      <%= form_tag create_checkout_link_payments_path, data: { turbo: false } do %>
+        <div class="mb-6">
+          <%= label_tag :description, "Description", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <p class="text-xs text-gray-400 mb-1">Displays in checkout</p>
+          <%= text_field_tag :description, params[:description], placeholder: "e.g. AWBW Facilitator Training",
+               class: "bg-white w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" %>
+        </div>
+
+        <div class="mb-6">
+          <%= label_tag :amount_dollars, "Amount ($)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= number_field_tag :amount_dollars, nil,
+               step: "0.01", min: "0.01", placeholder: "0.00", required: true,
+               class: "bg-white w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" %>
+        </div>
+
+        <div class="flex gap-2">
+          <%= button_tag class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+            <i class="fa-solid fa-link text-xs"></i>
+            Generate Link
+          <% end %>
+          <%= link_to "Cancel", payments_path, class: "btn btn-secondary-outline" %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

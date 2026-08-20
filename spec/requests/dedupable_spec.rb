@@ -149,7 +149,7 @@ RSpec.describe "Dedupable concern", type: :request do
       end
     end
 
-    describe "POST dedupe_execute" do
+    describe "POST dedupe_perform" do
       let!(:keep) { create(:category, name: "Keeper", category_type: category_type, published: true) }
       let!(:delete_rec) { create(:category, name: "Duplicate", category_type: category_type, published: false) }
       let!(:workshop) { create(:workshop) }
@@ -159,7 +159,7 @@ RSpec.describe "Dedupable concern", type: :request do
         before { sign_in admin }
 
         it "merges and redirects with success notice" do
-          post dedupe_execute_categories_path, params: {
+          post dedupe_perform_categories_path, params: {
             category_to_delete_id: delete_rec.id,
             category_to_keep_id: keep.id
           }
@@ -171,7 +171,7 @@ RSpec.describe "Dedupable concern", type: :request do
 
         it "deletes the duplicate record" do
           expect {
-            post dedupe_execute_categories_path, params: {
+            post dedupe_perform_categories_path, params: {
               category_to_delete_id: delete_rec.id,
               category_to_keep_id: keep.id
             }
@@ -182,7 +182,7 @@ RSpec.describe "Dedupable concern", type: :request do
         end
 
         it "moves taggings to the keeper" do
-          post dedupe_execute_categories_path, params: {
+          post dedupe_perform_categories_path, params: {
             category_to_delete_id: delete_rec.id,
             category_to_keep_id: keep.id
           }
@@ -192,7 +192,7 @@ RSpec.describe "Dedupable concern", type: :request do
         end
 
         it "updates the keeper before merging when keep params provided" do
-          post dedupe_execute_categories_path, params: {
+          post dedupe_perform_categories_path, params: {
             category_to_delete_id: delete_rec.id,
             category_to_keep_id: keep.id,
             category_to_keep: { name: "Better Name" }
@@ -202,7 +202,7 @@ RSpec.describe "Dedupable concern", type: :request do
         end
 
         it "redirects to dedupe_index on error" do
-          post dedupe_execute_categories_path, params: {
+          post dedupe_perform_categories_path, params: {
             category_to_delete_id: 999_999,
             category_to_keep_id: keep.id
           }
@@ -218,7 +218,7 @@ RSpec.describe "Dedupable concern", type: :request do
 
         it "denies access and does not merge" do
           expect {
-            post dedupe_execute_categories_path, params: {
+            post dedupe_perform_categories_path, params: {
               category_to_delete_id: delete_rec.id,
               category_to_keep_id: keep.id
             }
@@ -282,7 +282,7 @@ RSpec.describe "Dedupable concern", type: :request do
       end
     end
 
-    describe "POST dedupe_execute" do
+    describe "POST dedupe_perform" do
       before { sign_in admin }
 
       let!(:keep) { create(:sector, name: "Keep Sector", published: true) }
@@ -292,7 +292,7 @@ RSpec.describe "Dedupable concern", type: :request do
 
       it "merges and redirects with success notice" do
         expect {
-          post dedupe_execute_sectors_path, params: {
+          post dedupe_perform_sectors_path, params: {
             sector_to_delete_id: delete_rec.id,
             sector_to_keep_id: keep.id
           }

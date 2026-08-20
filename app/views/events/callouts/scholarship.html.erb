@@ -1,0 +1,153 @@
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "Scholarship — #{@event.title}") %>
+
+<%# Reached from the admin scholarship edit page (return_to=scholarship): point the
+    eyebrow back there instead of the registrant's ticket. Gated on edit access so a
+    registrant who lands on this URL still gets the default ticket back. %>
+<% from_scholarship_edit = params[:return_to] == "scholarship" && @scholarship && allowed_to?(:edit?, @scholarship) %>
+<% eyebrow = from_scholarship_edit ? { back_path: edit_scholarship_path(@scholarship), back_label: "Back to scholarship" } : {} %>
+
+<%= render layout: "events/callouts/callout_page", locals: { title: "Scholarship", **eyebrow } do %>
+  <div class="space-y-6">
+    <% if @scholarship && allowed_to?(:edit?, @scholarship) %>
+      <%# Admin-only jump to the management surface for this scholarship. Hidden from
+          registrants; opens in a new tab so the registrant view is kept. %>
+      <div class="flex justify-end">
+        <%= render "events/callouts/admin_edit_link", path: edit_scholarship_path(@scholarship), label: "Edit scholarship" %>
+      </div>
+    <% end %>
+
+    <% if @scholarship %>
+      <% grant = @scholarship.grant %>
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <%# Shown as an offer until the recipient signs the agreement, then as
+              the confirmed award. The amount/allocation is unchanged either way. %>
+          <p class="text-xs font-medium uppercase tracking-wide text-gray-400"><%= @scholarship.agreement_signed? ? "Amount awarded" : "Amount offered" %></p>
+          <p class="mt-1 text-3xl font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@scholarship.amount_cents) %></p>
+        </div>
+        <%# Status chip: declined, else pending until the agreement is signed, then the tasks state. %>
+        <% if @scholarship.agreement_declined? %>
+          <span class="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-sm font-medium text-red-700">
+            <i class="fa-solid fa-circle-xmark"></i> Declined
+          </span>
+        <% elsif !@scholarship.agreement_signed? %>
+          <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">
+            <i class="fa-solid fa-file-signature"></i> Pending agreement
+          </span>
+        <% elsif @scholarship.tasks_completed? %>
+          <span class="inline-flex items-center gap-1 rounded-full border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> px-3 py-1 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
+            <i class="fa-solid fa-circle-check"></i> Tasks completed
+          </span>
+        <% else %>
+          <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">
+            <i class="fa-solid fa-clock"></i> Tasks outstanding
+          </span>
+        <% end %>
+      </div>
+
+      <%# What the registrant owes. The award is allocated before it's accepted, so
+          while the agreement is pending this frames the balance as the choice the
+          buttons below are asking for rather than asserting the accepted one. %>
+      <% if @event.cost_cents.to_i.positive? && !@scholarship.agreement_declined? %>
+        <% owed = @event_registration.remaining_cost %>
+        <% undecided = !@scholarship.agreement_signed? %>
+        <% owed_if_declined = undecided ? @event_registration.remaining_cost_without(@scholarship) : owed %>
+        <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+          <% if owed.zero? %>
+            <p><% if undecided %>Accept and your<% else %>Your<% end %> <%= dollars_from_cents(@event.cost_cents) %> registration is fully covered — you'll owe <strong>nothing</strong>.</p>
+          <% else %>
+            <p><% if undecided %>Accept and you'll<% else %>You'll<% end %> owe <strong><%= dollars_from_cents(owed) %></strong> of the <%= dollars_from_cents(@event.cost_cents) %> registration cost.</p>
+          <% end %>
+          <% if owed_if_declined > owed %>
+            <p class="mt-1">Decline and <strong><%= dollars_from_cents(owed_if_declined) %></strong> is due.</p>
+          <% end %>
+        </div>
+      <% end %>
+
+      <% latest_response = @scholarship.latest_agreement_response %>
+      <div class="border-t border-gray-100 pt-5">
+        <% if @scholarship.agreement_signed? %>
+          <p class="flex items-center gap-2 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
+            <i class="fa-solid fa-circle-check"></i>
+            Agreement signed<% if latest_response&.responded_at %> · <%= latest_response.responded_at.strftime("%B %-d, %Y") %><% end %>
+          </p>
+        <% elsif @scholarship.agreement_declined? %>
+          <p class="flex items-center gap-2 text-sm font-medium text-red-700">
+            <i class="fa-solid fa-circle-xmark"></i>
+            You declined this scholarship<% if latest_response&.responded_at %> · <%= latest_response.responded_at.strftime("%B %-d, %Y") %><% end %>
+          </p>
+          <p class="mt-2 text-sm text-gray-600">Thank you for letting us know. If you'd like to reconsider, please contact us.</p>
+        <% else %>
+          <p class="text-sm text-gray-600">Agree to complete your scholarship tasks to accept this award.</p>
+          <%# Native <details>; while it's open :has() hides Agree so the decline form stands alone. %>
+          <div class="group mt-3 flex flex-wrap items-center gap-3">
+            <%= form_with url: registration_scholarship_agreement_path(@event_registration.slug), method: :post, class: "group-has-[[open]]:hidden" do %>
+              <button type="submit" name="agreement" value="yes" class="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700">
+                <i class="fa-solid fa-check"></i> Agree
+              </button>
+            <% end %>
+
+            <details class="group/details">
+              <summary class="inline-flex cursor-pointer list-none items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 [&::-webkit-details-marker]:hidden">
+                <i class="fa-solid fa-xmark"></i> Decline
+              </summary>
+              <%= form_with url: registration_scholarship_decline_path(@event_registration.slug), method: :post, class: "mt-3 w-full max-w-md" do %>
+                <label for="decline_reason" class="block text-sm font-medium text-gray-700">Let us know why you're declining</label>
+                <textarea id="decline_reason" name="decline_reason" rows="3" required
+                          class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-red-400 focus:ring-red-400"
+                          placeholder="Your reason helps us follow up."></textarea>
+                <button type="submit" class="mt-3 inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700">
+                  <i class="fa-solid fa-paper-plane"></i> Decline scholarship
+                </button>
+              <% end %>
+            </details>
+          </div>
+        <% end %>
+      </div>
+
+      <% if grant %>
+        <div class="border-t border-gray-100 pt-5">
+          <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Funder</p>
+          <p class="mt-1 text-sm font-medium text-gray-900"><%= grant.funder_name %></p>
+          <p class="text-sm text-gray-500"><%= grant.name %></p>
+        </div>
+
+        <div class="border-t border-gray-100 pt-5">
+          <%= render "scholarships/grant_criteria_tasks", grant: %>
+        </div>
+      <% end %>
+
+      <%# Admin-only agreement history (registrants never see it). %>
+      <% if allowed_to?(:edit?, @scholarship) && @scholarship.agreement_responses.exists? %>
+        <div class="border-t border-gray-100 pt-5">
+          <%= render "scholarships/agreement_history", scholarship: @scholarship, admin: true %>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="flex items-start gap-3">
+        <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">
+          <i class="fa-solid fa-clock"></i>
+        </span>
+        <div>
+          <p class="text-sm font-semibold text-gray-900">Scholarship requested</p>
+          <p class="mt-1 text-sm text-gray-600">Your scholarship request is under review. We'll be in touch about next steps — check back here for your award details.</p>
+        </div>
+      </div>
+    <% end %>
+
+    <%# Jump to the registrant's full submission, where their scholarship
+        application answers are surfaced (inline for embedded-section forms, or
+        in a dedicated "Scholarship application" card for separate forms). %>
+    <% if @form_responses_available %>
+      <div class="border-t border-gray-100 pt-5">
+        <%= link_to event_public_registration_path(@event, reg: @event_registration.slug),
+                    class: "inline-flex items-center gap-1.5 text-sm font-medium #{DomainTheme.text_class_for(:scholarships, intensity: 700)} hover:underline" do %>
+          <i class="fa-solid fa-file-lines"></i>
+          Review your form responses
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

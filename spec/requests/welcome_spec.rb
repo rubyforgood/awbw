@@ -56,6 +56,23 @@ RSpec.describe "/users/welcome", type: :request do
         expect(user.welcome_instructions_sent_at).to be_nil
       end
 
+      it "credits the user themselves when no admin is signed in" do
+        user.update_columns(updated_by_id: create(:user, :admin).id)
+
+        patch user_welcome_update_url(user.welcome_instructions_token), params: valid_params
+
+        expect(user.reload.updated_by).to eq(user)
+      end
+
+      it "credits the acting admin when one is signed in" do
+        admin = create(:user, :admin)
+        sign_in admin
+
+        patch user_welcome_update_url(user.welcome_instructions_token), params: valid_params
+
+        expect(user.reload.updated_by).to eq(admin)
+      end
+
       it "signs in the user" do
         patch user_welcome_update_url(user.welcome_instructions_token), params: valid_params
         expect(request.env['warden'].user).to eq(user)

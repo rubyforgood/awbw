@@ -1,0 +1,131 @@
+<%# Filters for the cross-event attendees index, rendered through the shared
+    events/_filter_bar shell so it reads consistently with the registrants roster:
+    a minimal primary row (search + attendance outcome) with the rest collapsed in
+    the "More filters" drawer. Selects auto-submit into the results frame via the
+    collection controller; the drill-in params (chips) ride as hidden fields and are
+    surfaced/cleared by the chip row. Reads the @attendee_* ivars set by
+    EventsController#attendees. %>
+<% field_class = search_field_class %>
+<%# Open the drawer on load when any collapsed filter already carries a value, so an
+    active filter is never hidden behind the toggle. %>
+<% collapsed_keys = %i[event_id event_year sector program_status affiliation_status payment_method scholarship funder_name ce_status account_status topic_subscription city state county comment_status comment] %>
+<% more_active = collapsed_keys.any? { |k| params[k].present? } %>
+
+<%# Keep drill-in filters applied while the admin tweaks a visible select — the
+    auto-submit only sends this form's fields, so the drill-ins ride as hidden
+    inputs and are surfaced (and cleared) via the chip row below. `return_to` rides
+    along too: the results frame's own links (the charts frame and its breakdown
+    drill-ins) are built from the frame request's params, so dropping it here would
+    lose the origin the eyebrow points back to. %>
+<% hidden = capture do %>
+  <%= hidden_field_tag :return_to, params[:return_to] %>
+  <% AttendeesActiveFilters::CHIP_PARAMS.each do |param| %>
+    <%= hidden_field_tag param, params[param] if params[param].present? %>
+  <% end %>
+<% end %>
+
+<% chips = render "events/attendees_chips" %>
+
+<% primary = capture do %>
+  <div class="w-full md:flex-1 md:min-w-[14rem]">
+    <%= label_tag :contact_info, "Name, email, or phone", class: search_label_class %>
+    <div class="relative">
+      <%= text_field_tag :contact_info, params[:contact_info], class: "#{field_class} pr-10" %>
+      <%= render "shared/search_submit" %>
+    </div>
+  </div>
+
+  <%# Attendance and event type default to "attended" / "trainings" — the population
+      this page has always shown — so the neutral "All …" is the first option rather
+      than a blank placeholder. These two plus the search make up the primary row,
+      mirroring the registrants bar's search + attendance + payment status. They
+      clear back to that default population rather than to the "All …" they lead
+      with, since the default is what this page means by unfiltered. %>
+  <%= render "events/filter_select", param: :attendance_status, label: "Attendance",
+        options: [ [ "All outcomes", EventRegistration::FILTER_ALL ] ] + EventRegistration::ATTENDANCE_FILTER_OPTIONS,
+        selected: @attendance_status, blank: nil, clear_to: EventsController::DEFAULT_ATTENDANCE_STATUS,
+        field_class: field_class, wrapper_class: "w-full md:w-40" %>
+
+  <%= render "events/filter_select", param: :event_type, label: "Event type",
+        options: [ [ "All events", EventRegistration::FILTER_ALL ] ] + EventRegistration::EVENT_TYPE_FILTER_OPTIONS,
+        selected: @attendee_event_type, blank: nil, clear_to: EventsController::DEFAULT_ATTENDEE_EVENT_TYPE,
+        field_class: field_class, wrapper_class: "w-full md:w-52" %>
+<% end %>
+
+<% more = capture do %>
+  <%= render "events/filter_select", param: :event_id, label: "Event",
+        options: @attendee_event_options.map { |event| [ event.time_title, event.id ] },
+        selected: params[:event_id].to_i, blank: "All events", field_class: field_class, wrapper_class: "w-full md:w-52" %>
+
+  <%= render "events/filter_select", param: :event_year, label: "Year",
+        options: @attendee_years.map { |year| [ year.to_s, year ] },
+        selected: params[:event_year].presence&.to_i, blank: "All years", field_class: field_class, wrapper_class: "w-full md:w-32" %>
+
+  <%= render "events/filter_select", param: :sector, label: "Sector",
+        options: @attendee_sectors.map { |sector| [ sector.name, sector.id ] },
+        selected: params[:sector].to_i, blank: "All sectors", field_class: field_class %>
+
+  <%= render "events/filter_select", param: :program_status, label: "Program status",
+        options: Organization::FACILITATOR_PROGRAM_STATUSES.map { |status| [ status.to_s.titleize, status.to_s ] },
+        selected: params[:program_status], blank: "All program statuses", field_class: field_class %>
+
+  <%= render "events/filter_select", param: :affiliation_status, label: "Affiliation status",
+        options: Affiliation::FILTER_STATUSES,
+        selected: params[:affiliation_status], blank: "All statuses", field_class: field_class, wrapper_class: "w-full md:w-40" %>
+
+  <%# The registration-level filters shared with the registrants roster (see
+      EventsController::ATTENDEE_REGISTRATION_FILTERS), in the roster's own order so
+      the two bars read the same. Cross-event they match on any attended
+      registration, and none of them is gated on the event's cost or CE eligibility
+      the way the single-event roster gates them. Every param the index narrows on
+      needs a control here or a chip in AttendeesActiveFilters::CHIP_PARAMS —
+      otherwise it shrinks the list silently and is dropped on the next change. %>
+  <%= render "events/filter_select", param: :payment_method, label: "Payment method",
+        options: EventRegistrationDecorator.payment_method_filter_choices,
+        selected: params[:payment_method], blank: "Any payment method", field_class: field_class %>
+
+  <%= render "events/filter_select", param: :scholarship, label: "Scholarship",
+        options: EventRegistration::SCHOLARSHIP_STATUS_FILTER_OPTIONS,
+        selected: params[:scholarship], blank: "Any status", field_class: field_class %>
+
+  <%# Free-text on the funder behind a scholarship. Param :funder_name stays clear
+      of the awbw/external :funder funding-source drill-in. %>
+  <%= render "events/filter_text", param: :funder_name, label: "Funder",
+        placeholder: "Funder name", field_class: field_class %>
+
+  <%= render "events/filter_select", param: :ce_status, label: "CE status",
+        options: EventRegistration::CE_STATUS_FILTER_OPTIONS,
+        selected: params[:ce_status], blank: "Any CE status", field_class: field_class %>
+
+  <%= render "events/filter_select", param: :account_status, label: "User account",
+        options: EventRegistration::ACCOUNT_STATUS_FILTER_OPTIONS,
+        selected: params[:account_status], blank: "Any account status", field_class: field_class %>
+
+  <% if @attendee_topic_types.any? %>
+    <%= render "events/filter_select", param: :topic_subscription, label: "Topic subscription list",
+          options: @attendee_topic_types.map { |type| [ type.name, type.id ] },
+          selected: params[:topic_subscription], blank: "Any topic", field_class: field_class %>
+  <% end %>
+
+  <%= render "events/filter_text", param: :city, label: "City",
+        placeholder: "City name", field_class: field_class %>
+
+  <%= render "events/filter_select", param: :state, label: "State",
+        options: @attendee_states,
+        selected: params[:state], blank: "All states", field_class: field_class, wrapper_class: "w-full md:w-32" %>
+
+  <%= render "events/filter_select", param: :county, label: "County",
+        options: @attendee_counties.map { |state, county| [ "#{county} (#{state})", "#{state}::#{county}" ] },
+        selected: params[:county], blank: "All counties", field_class: field_class, wrapper_class: "w-full md:w-52" %>
+
+  <%= render "events/filter_select", param: :comment_status, label: "Comment status",
+        options: EventRegistration::COMMENT_STATUS_FILTER_OPTIONS,
+        selected: params[:comment_status], blank: "Any comments", field_class: field_class %>
+
+  <%= render "events/filter_text", param: :comment, label: "Comment text",
+        placeholder: "Topic or content", field_class: field_class %>
+<% end %>
+
+<%= render "events/filter_bar", url: attendees_events_path, frame: "attendees_results",
+      clear_url: attendees_events_path, more_active: more_active,
+      hidden: hidden, applied: chips, primary: primary, more: more %>

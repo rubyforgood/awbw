@@ -1,5 +1,7 @@
 class WorkshopVariationIdea < ApplicationRecord
   include AuthorCreditable
+  # Public submission: the submitter must choose how they're credited.
+  require_author_credit_preference
   include SearchCop
   search_scope :search do
     attributes :name, :body
@@ -8,6 +10,7 @@ class WorkshopVariationIdea < ApplicationRecord
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:query]) if params[:query].present?
+    results = results.created_by_person(params[:created_by_person_id]) if params[:created_by_person_id].present?
     results
   end
 
@@ -19,7 +22,7 @@ class WorkshopVariationIdea < ApplicationRecord
   belongs_to :organization, optional: true
   belongs_to :windows_type, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
-  has_many :notifications, as: :noticeable, dependent: :destroy
+  has_many :notifications, as: :noticeable, dependent: :nullify
   has_many :workshop_variations, dependent: :nullify
 
   # Asset associations
@@ -36,7 +39,6 @@ class WorkshopVariationIdea < ApplicationRecord
   validates :organization_id, presence: true
   validates :workshop_id, presence: true
   validates :windows_type_id, presence: true
-  validates :author_credit_preference, presence: true
   validates :permission_given, acceptance: true
   validates :rhino_body, presence: true
 

@@ -1,4 +1,18 @@
 module EventHelper
+  # The admin-only sample-ticket preview path for a behavioral built-in callout's
+  # per-registration page, keyed off its builtin_key. Returns nil for a callout
+  # with no previewable page, so the sample ticket leaves that card non-navigating.
+  def sample_callout_path(event, callout)
+    case callout.builtin_key
+    when "payment" then sample_payment_event_path(event)
+    when "certificate" then sample_certificate_event_path(event)
+    when "scholarship" then sample_scholarship_event_path(event)
+    when "ce_hours" then sample_ce_event_path(event)
+    when "videoconference" then sample_videoconference_event_path(event)
+    when "staff" then sample_staff_event_path(event)
+    end
+  end
+
   # The "please specify" placeholder for an option label, or nil when the option
   # does not reveal a free-text box. Canonical config lives on FormField (shared
   # with answer validation).
@@ -70,46 +84,63 @@ module EventHelper
     )
   end
 
-  def event_profile_button(event, truncate_at: nil, subtitle: nil, data: {}, path: nil)
-    bg = DomainTheme.bg_class_for(:events, intensity: 100)
-    hover_bg = DomainTheme.bg_class_for(:events, intensity: 100, hover: true)
+  # Registrants-roster filters the bulk-emails (reminder) recipient picker also
+  # understands, pulled from the current request so "Send bulk emails" carries
+  # the roster's active filters straight into the picker (pre-checking the
+  # matching recipients). Roster-only filters (keyword, funder, sector, readiness,
+  # status) have no reminder equivalent, so they're dropped.
+  def reminder_recipient_filters
+    ReminderRecipientFilter::SHARED_ROSTER_KEYS.each_with_object({}) do |key, forwarded|
+      forwarded[key] = params[key] if params[key].present?
+    end
+  end
+
+  def event_show_button(event, truncate_at: nil, subtitle: nil, data: {}, path: nil, compact: false, icon: "fa-calendar-days")
+    bg = DomainTheme.bg_class_for(:events, intensity: 50)
+    hover_bg = DomainTheme.bg_class_for(:events, intensity: 50, hover: true)
     text = DomainTheme.text_class_for(:events)
     border = DomainTheme.border_class_for(:events)
 
+    padding = compact ? "px-2 py-1" : "px-4 py-2"
+    name_size = compact ? "text-xs" : "text-sm"
+    icon_size = compact ? "text-sm" : "text-lg"
+
     link_to path || event_path(event),
             data: data,
-            style: "min-height: 3.5rem;",
             class: "group relative flex items-center gap-2
-                    w-full px-4 py-2
+                    w-full #{padding}
                     border #{border} #{bg} #{hover_bg} rounded-lg
                     transition-colors duration-200
                     font-medium shadow-sm leading-none
                     overflow-hidden" do
       event = event.decorate if event.respond_to?(:decorate)
 
+      icon_tag = content_tag(:i, "", class: "fa-solid #{icon} shrink-0 #{icon_size} #{DomainTheme.text_class_for(:events)}")
+
       display_name = truncate_at ? truncate(event.name.to_s, length: truncate_at) : event.name.to_s
 
-      name = content_tag(
-        :span,
-        display_name,
-        title: event.name.to_s,
-        class: "font-semibold #{text} truncate"
-      )
+      name = content_tag(:span, display_name, title: event.name.to_s, class: "font-semibold #{name_size} #{text} truncate")
 
-      subtitle_tag = if subtitle.present?
-        content_tag(:span, subtitle, class: "text-xs text-gray-500 font-normal truncate")
-      else
-        "".html_safe
+      # Title and date on one line, separated by a dot; the title truncates while
+      # the date stays whole.
+      parts = [ name ]
+      if subtitle.present?
+        parts << content_tag(:span, "·", class: "shrink-0 text-gray-400")
+        parts << content_tag(:span, subtitle, class: "shrink-0 #{name_size} text-gray-500 font-normal whitespace-nowrap")
       end
 
-      text_block = content_tag(
-        :div,
-        name + subtitle_tag,
-        class: "flex flex-col leading-tight text-left min-w-0"
-      )
+      text_block = content_tag(:div, safe_join(parts), class: "flex items-baseline gap-1.5 leading-none text-left min-w-0")
 
-      text_block
+      icon_tag + text_block
     end
+  end
+
+  # The question label to show next to a stored answer: the wording captured at
+  # submission time (so editing a question later doesn't rewrite history), falling
+  # back to the field's current name when there's no answer on file — e.g. a
+  # question added after this person submitted.
+  def display_question_label(field, response)
+    response&.question_name_when_answered.presence || field&.name
   end
 
   def display_response_text(field, response)
@@ -132,9 +163,9 @@ module EventHelper
             .join(", ").presence || submitted_answer
     }
     case field&.field_identifier
-    when "primary_service_area", "primary_service_area_single"
+    when *FormField::SECTOR_FIELD_IDENTIFIERS
       resolve.call(Sector)
-    when "workshop_environments", "client_life_experiences", "primary_age_group"
+    when "primary_age_group", "additional_age_group"
       resolve.call(Category)
     else
       submitted_answer

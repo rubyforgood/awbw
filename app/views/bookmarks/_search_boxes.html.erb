@@ -8,8 +8,6 @@
 
   <!-- Clear filters -->
   <div class="flex sm:justify-end items-end">
-    <%= link_to "Clear filters", url,
-                class: "btn btn-utility",
-                data: { action: "collection#clearAndSubmit" } %>
+    <%= render "shared/search_clear", url: url %>
   </div>
 <% end %>

@@ -14,7 +14,7 @@ RSpec.describe "organizations/index", type: :view do
   before(:each) do
     assign(:organizations, paginated([ organization1, organization2 ]))
     assign(:organization_statuses, [ organization_status1, organization_status2, organization_status3 ])
-    assign(:affiliated_since, {})
+    assign(:program_since_display, {})
     assign(:active_people_counts, {})
     assign(:active_people_count, 0)
     assign(:organizations_count, 2)
@@ -23,11 +23,11 @@ RSpec.describe "organizations/index", type: :view do
 
   it "renders the skeleton loader" do
     render
-    expect(rendered).to have_css("turbo-frame#organization_results")
+    expect(rendered).to have_css("turbo-frame#organizations_results")
   end
 
   it "renders a list of organizations" do
-    render template: "organizations/organization_results"
+    render template: "organizations/organizations_results"
     expect(rendered).to match(organization1.name)
     expect(rendered).to match(organization2.name)
   end

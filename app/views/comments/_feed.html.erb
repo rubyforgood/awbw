@@ -1,0 +1,19 @@
+<%# Shared list of aggregated comment rows + pagination, used by both the person
+    all_comments frame and the global comments index frame.
+    Locals: comments. Optional: person (edit-in-place context), pagination_params. %>
+<% person = local_assigns.fetch(:person, nil) %>
+<% pagination_params = local_assigns.fetch(:pagination_params, {}) %>
+<div id="aggregated_comments_list" class="space-y-3">
+  <% if comments.any? %>
+    <% comments.each do |comment| %>
+      <%= render "comments/aggregated_comment", comment: comment.decorate, person: person %>
+    <% end %>
+  <% else %>
+    <div id="aggregated_comments_empty" class="py-6 text-center text-sm text-gray-500">No comments found.</div>
+  <% end %>
+</div>
+<% if comments.total_pages > 1 %>
+  <div class="mt-4 flex justify-center">
+    <%= tailwind_paginate comments, params: pagination_params %>
+  </div>
+<% end %>

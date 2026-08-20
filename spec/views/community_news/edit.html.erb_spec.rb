@@ -10,7 +10,7 @@ RSpec.describe "community_news/edit", type: :view do
       youtube_url: "MyString",
       published: false,
       featured: false,
-      author: create(:user),
+      author: create(:person),
       reference_url: "MyString",
       organization: nil,
       windows_type: nil,
@@ -25,6 +25,7 @@ RSpec.describe "community_news/edit", type: :view do
     assign(:community_news, community_news)
     assign(:sectors, [])
     assign(:categories_grouped, [])
+    assign(:people, [ community_news.author ])
   end
 
   it "renders the edit community_news form" do
@@ -42,6 +43,8 @@ RSpec.describe "community_news/edit", type: :view do
       assert_select "input[name=?]", "community_news[featured]"
 
       assert_select "select[name=?]", "community_news[author_id]"
+
+      assert_select "select[name=?]", "community_news[author_credit_preference]"
 
       assert_select "textarea[name=?]", "community_news[reference_url]"
 

@@ -1,0 +1,16 @@
+<%# Scholarship summary: one card, one row per facilitator training (grouped by
+    year when several are in scope), with attended trainees and funded/unfunded/
+    total for award counts and dollars. A segmented toggle in the card header (see
+    _scholarships_report_toggle) swaps the layout via a `view` param — the default
+    split view (separate # and $ columns) or a combined view (count over dollars
+    in one cell). Pass `report:` (an EventScholarshipReport). Fuchsia-branded. %>
+<% if report.any? %>
+  <%= render "scholarships_report_table",
+        report: report,
+        combined: params[:view] == "combined",
+        all_time: @time_period.blank? || @time_period == "all_time" %>
+<% else %>
+  <div class="text-center py-8 text-gray-500">
+    No facilitator trainings yet — mark an event as a facilitator training to see it here.
+  </div>
+<% end %>

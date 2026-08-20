@@ -13,13 +13,18 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["body", "header"]
 
+  connect() {
+    // The server base order tie breaks every sort.
+    this.initialRows = Array.from(this.bodyTarget.rows)
+  }
+
   sort(event) {
     const header = event.currentTarget
     const index = Number(header.dataset.sortIndex)
     const key = header.dataset.sortKey
     const ascending = header.dataset.sortDirection !== "asc"
 
-    const rows = Array.from(this.bodyTarget.rows)
+    const rows = [ ...this.initialRows ]
     rows.sort((a, b) => this.compare(a, b, index, key) * (ascending ? 1 : -1))
     rows.forEach((row) => this.bodyTarget.appendChild(row))
 
@@ -45,8 +50,12 @@ export default class extends Controller {
   compare(rowA, rowB, index, key) {
     const a = this.cellValue(rowA, index, key)
     const b = this.cellValue(rowB, index, key)
-    const numA = parseFloat(a)
-    const numB = parseFloat(b)
+    // Strict Number(), not parseFloat(): parseFloat("2026-12-31") is 2026, which
+    // would collapse every date in a year to one value and leave date columns
+    // effectively unsorted. Number() rejects such strings (NaN) so ISO dates fall
+    // through to localeCompare, which orders them correctly since they're padded.
+    const numA = a === "" ? NaN : Number(a)
+    const numB = b === "" ? NaN : Number(b)
     if (!isNaN(numA) && !isNaN(numB)) return numA - numB
     return a.localeCompare(b)
   }

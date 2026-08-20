@@ -9,6 +9,11 @@ class StoryPolicy < ApplicationPolicy
     admin? || record.publicly_visible? || (authenticated? && record.published?)
   end
 
+  # Bulk import from a WordPress export CSV — admins only.
+  def import?
+    admin?
+  end
+
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
   #

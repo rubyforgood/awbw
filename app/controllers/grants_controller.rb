@@ -4,11 +4,28 @@ class GrantsController < ApplicationController
 
   def index
     authorize!
-    @grants = authorized_scope(Grant.all)
-                .includes(:donor, scholarships: { allocation: :allocatable })
-                .by_deadline
-                .page(params[:page])
-    track_index_intent(Grant, @grants, params)
+
+    # Scoped to a single funder when linked from a person/org edit page. Resolve
+    # the funder from a matching grant (avoids reflection on the type param) so the
+    # header banner can name it; filter_grants scopes the rows to the same funder.
+    if params[:funder_id].present? && Grant::FUNDER_TYPES.include?(params[:funder_type])
+      @funder = authorized_scope(Grant.all)
+                 .where(funder_id: params[:funder_id], funder_type: params[:funder_type])
+                 .first&.funder
+    end
+
+    # The full page renders only the header, filters, and an empty results frame;
+    # the frame's src request (turbo_frame_request?) loads the filtered rows.
+    if turbo_frame_request?
+      @grants = filter_grants(authorized_scope(Grant.all))
+                  .includes(:funder, scholarships: { allocation: :allocatable })
+                  .by_deadline
+                  .page(params[:page])
+      track_index_intent(Grant, @grants, params)
+      render :grants_results
+    else
+      render :index
+    end
   end
 
   def show
@@ -66,14 +83,51 @@ class GrantsController < ApplicationController
     end
   end
 
-  def set_form_variables
-    @donor_options = {
-      "Organizations" => Organization.order(:name).map { |o| [ o.name, o.to_signed_global_id.to_s ] },
-      "People" => Person.order(:last_name, :first_name).map { |p| [ p.full_name, p.to_signed_global_id.to_s ] }
-    }
+  private
+
+  # Narrow the index by the optional filter inputs. Each filter is a no-op when
+  # its param is blank or unrecognized, so combinations stack cleanly.
+  def filter_grants(scope)
+    scope = scope.where("grants.name LIKE ?", "%#{Grant.sanitize_sql_like(params[:name])}%") if params[:name].present?
+    scope = filter_by_funder_name(scope, params[:funder_name]) if params[:funder_name].present?
+
+    scope = case params[:funds]
+    when "available" then scope.with_funds_remaining
+    when "none" then scope.fully_issued
+    else scope
+    end
+
+    scope = scope.where(funder_type: params[:funder_type]) if Grant::FUNDER_TYPES.include?(params[:funder_type])
+    scope = scope.where(funder_id: params[:funder_id]) if params[:funder_id].present?
+
+    scope = case params[:planned_giving]
+    when "yes" then scope.where(planned_giving: true)
+    when "no" then scope.where(planned_giving: false)
+    else scope
+    end
+
+    # Sector/category filters back the "View all grants" deep link from the
+    # taggings browse page (see TaggingsHelper#tagged_index_path).
+    scope = scope.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    scope = scope.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
+
+    case params[:tasks]
+    when "completed" then scope.all_tasks_completed
+    when "outstanding" then scope.tasks_outstanding
+    else scope
+    end
   end
 
-  private
+  # Match grants whose polymorphic funder (Organization or Person) name contains
+  # the query. Resolve matching funder ids per type, then OR the two sides so the
+  # other active filters on `scope` apply to both.
+  def filter_by_funder_name(scope, query)
+    like = "%#{Grant.sanitize_sql_like(query)}%"
+    org_ids = Organization.where("name LIKE ?", like).pluck(:id)
+    person_ids = Person.where("first_name LIKE :q OR legal_first_name LIKE :q OR last_name LIKE :q OR CONCAT(first_name, ' ', last_name) LIKE :q OR CONCAT(legal_first_name, ' ', last_name) LIKE :q", q: like).pluck(:id)
+    scope.where(funder_type: "Organization", funder_id: org_ids)
+         .or(scope.where(funder_type: "Person", funder_id: person_ids))
+  end
 
   def set_grant
     @grant = Grant.find(params[:id])
@@ -86,10 +140,31 @@ class GrantsController < ApplicationController
                           .paginate(page: params[:page], per_page: 10)
   end
 
+  # Sector chips, grouped category checkboxes, and the image upload fields on the
+  # grant form.
+  def set_form_variables
+    @sectors = Sector.published.order(:name)
+    @categories_grouped =
+      Category
+        .includes(:category_type)
+        .published
+        .order(:position, :name)
+        .group_by(&:category_type)
+        .select { |type, _| type.nil? || (type.published? && !type.story_specific? && !type.profile_specific?) }
+        .sort_by { |type, _| type&.name.to_s.downcase }
+
+    @grant.build_primary_asset if @grant.primary_asset.blank?
+    @grant.gallery_assets.build
+  end
+
   def grant_params
     params.require(:grant).permit(
-      :name, :description, :amount_dollars, :amount_cents, :donor_sgid,
-      :application_deadline, :funds_received_on, :eligibility_criteria, :tasks
+      :name, :description, :amount_dollars, :amount_cents, :funder_sgid,
+      :funds_allocation_deadline, :funds_received_on, :eligibility_criteria, :tasks,
+      :planned_giving, :in_memoriam,
+      sector_ids: [], category_ids: [],
+      primary_asset_attributes: [ :id, :file, :_destroy ],
+      gallery_assets_attributes: [ :id, :file, :_destroy ]
     )
   end
 end

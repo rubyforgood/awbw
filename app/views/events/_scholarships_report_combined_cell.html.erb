@@ -1,0 +1,7 @@
+<%# A single combined scholarship cell: award count stacked over its dollars.
+    `count`, `cents`; `start:` draws the group's left divider; `emphasis:` bolds
+    the count for a training's Total column. %>
+<td class="px-3 py-2 border border-gray-200 text-right<%= " border-l-2 border-l-fuchsia-200" if start %>">
+  <div class="<%= emphasis ? "font-semibold text-gray-900" : "text-gray-900" %>"><%= count %></div>
+  <div class="text-xs text-gray-500"><%= dollars_from_cents(cents) %></div>
+</td>

@@ -1,0 +1,29 @@
+<div class="user-only bg-amber-100 border border-amber-200 rounded-lg shadow-sm">
+  <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3 border-b border-amber-200">
+    <h2 class="text-xl font-semibold text-gray-800">Annual membership</h2>
+    <span class="text-sm text-amber-700 italic">Only visible to you</span>
+  </div>
+
+  <div class="section-content px-3 sm:px-4 py-4">
+    <% if membership&.current_invoice %>
+      <ul class="mb-4">
+        <%= render "membership_invoices/invoice_row", invoice: membership.current_invoice %>
+      </ul>
+    <% end %>
+
+    <div class="px-3">
+      <% if autopay %>
+        <p class="text-sm text-gray-700">Your membership renews automatically on the card you have on file.</p>
+      <% else %>
+        <p class="mb-3 text-sm text-gray-700">
+          Set up your membership to renew automatically each year at
+          <%= dollars_from_cents(membership&.cost_cents || Membership::ANNUAL_COST_CENTS) %>.
+        </p>
+        <%# Turbo can't follow the cross-origin redirect to Stripe Checkout. %>
+        <%= button_to "Set up annual membership", membership_checkouts_path,
+                      class: "btn btn-primary",
+                      data: { turbo: false } %>
+      <% end %>
+    </div>
+  </div>
+</div>

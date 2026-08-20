@@ -1,6 +1,15 @@
 class ScholarshipsController < ApplicationController
-  before_action :set_scholarship, only: [ :show, :edit, :update, :destroy, :toggle_tasks ]
+  before_action :set_scholarship, only: [ :show, :edit, :update, :destroy, :toggle_tasks, :reoffer ]
   before_action :set_grant, only: [ :new, :create ]
+
+  def index
+    authorize! Scholarship
+    set_report_filter_state
+    grouping = ScholarshipsGrouping.new(filtered_scholarships)
+    @funder_groups = grouping.funder_groups
+    @scholarships_count = grouping.total_count
+    @scholarship_report = EventScholarshipReport.new(report_training_events, featured_year: @selected_year, funder: @filter_funder)
+  end
 
   def show
     @scholarship = Scholarship.find(params[:id])
@@ -20,6 +29,7 @@ class ScholarshipsController < ApplicationController
     @scholarship = Scholarship.new(recipient: @allocatable.registrant)
     @grants = Grant.selectable_for(@scholarship)
     authorize! @scholarship
+    load_scholarship_submission
   end
 
   def create
@@ -98,7 +108,82 @@ class ScholarshipsController < ApplicationController
     end
   end
 
+  # Re-offer a declined award: back to pending, allocation re-funded.
+  def reoffer
+    authorize! @scholarship, to: :update?
+    @scholarship.reoffer_agreement!(by: "admin")
+    redirect_to edit_scholarship_path(@scholarship, return_to: params[:return_to].presence, participant: params[:participant].presence),
+                notice: "Scholarship re-offered — awaiting the recipient's response."
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to edit_scholarship_path(@scholarship, return_to: params[:return_to].presence, participant: params[:participant].presence),
+                alert: e.record.errors.full_messages.to_sentence.presence || "Couldn't re-offer this scholarship."
+  end
+
   private
+
+  # Filter state for the shared report filter partials (time period, event,
+  # abbreviation, funder). The Event dropdown and year options list facilitator
+  # trainings, matching the events scholarship report.
+  def set_report_filter_state
+    @filter_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
+    @event_search = params[:search].presence
+    @filter_funder = GlobalID::Locator.locate_signed(params[:funder_sgid]) if params[:funder_sgid].present?
+    @filter_events = Event.facilitator_trainings.order(start_date: :desc)
+    @year_options = Event.facilitator_trainings
+      .where.not(start_date: nil)
+      .distinct
+      .pluck(Arel.sql("YEAR(start_date)"))
+      .sort
+      .reverse
+    @time_period = params[:time_period].presence || "all_time"
+    @selected_year = @time_period == "this_year" ? Date.current.year : Integer(@time_period, exception: false)
+  end
+
+  # The scholarship list, narrowed by recipient, funder, and the event-centric
+  # filters (which resolve to the events a scholarship was awarded at).
+  def filtered_scholarships
+    # Eager-load everything the grid derives so each row's funder, program,
+    # location, training, and status cells add no per-row queries.
+    scope = authorized_scope(Scholarship.all).includes(
+      { grant: :funder },
+      { recipient: [ { affiliations: { organization: :addresses } }, { event_registrations: :event } ] }
+    )
+    if params[:recipient_id].present?
+      scope = scope.where(recipient_id: params[:recipient_id])
+      @recipient = Person.find_by(id: params[:recipient_id])
+    end
+    scope = scope.from_funder(@filter_funder) if @filter_funder
+    event_ids = filter_event_ids
+    scope = scope.for_events(event_ids) if event_ids
+    scope
+  end
+
+  # Event ids matching the year / specific-event / search filters, or nil
+  # when none are active (so the list isn't restricted by event).
+  def filter_event_ids
+    return unless @selected_year || @filter_event || @event_search
+    scoped_events.select(:id)
+  end
+
+  # Facilitator trainings for the summary report at the top of the index, scoped
+  # by the same filters (year / event / search / funder), decorated.
+  def report_training_events
+    events = scoped_events(Event.facilitator_trainings)
+    events = events.where(id: Scholarship.from_funder(@filter_funder).event_ids) if @filter_funder
+    events.order(start_date: :desc).map(&:decorate)
+  end
+
+  # Applies the year / specific-event / search (abbreviation OR title) filters to
+  # an event scope.
+  def scoped_events(base = Event.all)
+    base = base.in_year(@selected_year) if @selected_year
+    base = base.where(id: @filter_event.id) if @filter_event
+    if @event_search
+      like = "%#{Event.sanitize_sql_like(@event_search)}%"
+      base = base.where("events.abbreviation LIKE :q OR events.title LIKE :q", q: like)
+    end
+    base
+  end
 
   def set_scholarship
     @scholarship = Scholarship.find(params[:id])
@@ -136,10 +221,18 @@ class ScholarshipsController < ApplicationController
 
     if @allocatable.respond_to?(:event)
       return edit_event_registration_path(@allocatable) if params[:return_to] == "registration"
+      return recipients_return_path(@allocatable.event) if params[:return_to] == "recipients"
+      return helpers.onboarding_event_row_path(@allocatable.event, @allocatable.id) if params[:return_to] == "onboarding"
       return registrants_event_path(@allocatable.event)
     end
 
     edit_scholarship_path(@scholarship)
+  end
+
+  # Return to the recipients roster, scrolling back to the participant card the
+  # Edit link was opened from (its slug rides along in the participant param).
+  def recipients_return_path(event)
+    helpers.recipients_event_card_path(event, params[:participant])
   end
 
   # After destroying, leave the scholarship entirely: back to the grant when that
@@ -148,29 +241,28 @@ class ScholarshipsController < ApplicationController
     return grant_return_path(grant) if grant_context?(grant)
 
     event = @allocatable.try(:event)
-    return registrants_event_path(event) if event
+    if event
+      return recipients_return_path(event) if params[:return_to] == "recipients"
+      return helpers.onboarding_event_row_path(event, @allocatable.id) if params[:return_to] == "onboarding" && @allocatable.respond_to?(:id)
+      return registrants_event_path(event)
+    end
     return grant_path(grant) if grant
 
     root_path
   end
 
-  # Pull the recipient's scholarship-section answers from the event's
-  # registration form submission, plus a link to the full public submission.
+  # Pull the recipient's scholarship-application answers — wherever they were
+  # captured (dedicated scholarship form, embedded registration section, or
+  # against the registration submission) — plus a link to the full submission.
   def load_scholarship_submission
     return unless @allocatable.respond_to?(:event)
 
     @event = @allocatable.event
-    form = @event&.registration_form
-    return unless form
+    return unless @event
 
-    @form_submission = form.form_submissions.find_by(person: @scholarship.recipient)
-    answers = @form_submission ? @form_submission.form_answers.index_by(&:form_field_id) : {}
-
-    @scholarship_answers = form.form_fields
-      .select { |field| field.section == "scholarship" || field.scholarship_only? }
-      .reject { |field| field.group_header? || field.no_user_input? }
-      .sort_by { |field| field.position.to_i }
-      .map { |field| [ field, answers[field.id] ] }
+    application = ScholarshipApplication.new(event: @event, person: @scholarship.recipient)
+    @form_submission = application.submission
+    @scholarship_answers = application.answer_pairs
   end
 
   def locate_allocatable
@@ -180,9 +272,9 @@ class ScholarshipsController < ApplicationController
 
   def scholarship_params
     params.require(:scholarship).permit(
-      :amount_dollars, :amount_cents, :tasks_completed, :grant_id, :recipient_id,
+      :amount_dollars, :amount_cents, :tasks_completed, :agreement_signed, :grant_id, :recipient_id,
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
-      notifications_attributes: [ :channel, :sender_id, :email_subject, :email_body_text, :noticeable_type, :noticeable_id ]
+      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ]
     )
   end
 

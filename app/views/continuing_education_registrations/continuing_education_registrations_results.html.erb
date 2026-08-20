@@ -1,0 +1,70 @@
+<%= turbo_frame_tag :continuing_education_registrations_results do %>
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit">
+    <% if @ce_registrations.any? %>
+      <% total = @ce_registrations.respond_to?(:total_entries) ? @ce_registrations.total_entries : @ce_registrations.size %>
+      <div class="flex flex-wrap items-center justify-between gap-2 px-6 py-4 border-b border-gray-100">
+        <p class="text-sm text-gray-500"><%= total %> CE registration<%= "s" if total != 1 %></p>
+        <p class="text-sm text-gray-500">
+          <%= number_with_precision(@ce_total_hours, precision: 1, strip_insignificant_zeros: true) %> hours
+          <span class="mx-1 text-gray-300">&middot;</span>
+          Total <span class="font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@ce_total_cost_cents) %></span>
+        </p>
+      </div>
+
+      <div class="overflow-x-auto animate-fade">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registrant</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">License</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Certificate</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% @ce_registrations.each do |ce| %>
+              <% ce = ce.decorate %>
+              <% registration = ce.event_registration %>
+              <% payment = ce.payment_status_badge %>
+              <% certificate = ce.certificate_badge %>
+              <tr class="hover:bg-gray-50 transition-colors duration-150">
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <%= link_to registration.registrant.full_name, continuing_education_registration_path(ce), class: "text-primary hover:text-primary-dark", data: { turbo_frame: "_top" } %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                  <%= registration.event.title %>
+                  <% if registration.event.start_date.present? %>
+                    <span class="block text-xs text-gray-400"><%= registration.event.decorate.times(display_day: true, display_date: true) %></span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700"><%= ce.license_label %></td>
+                <td class="px-4 py-3 whitespace-nowrap text-right text-sm text-gray-700 tabular-nums"><%= number_with_precision(ce.hours, precision: 1, strip_insignificant_zeros: true) %></td>
+                <td class="px-4 py-3 whitespace-nowrap text-right text-sm text-gray-900 tabular-nums"><%= dollars_from_cents(ce.cost_cents) %></td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                  <%= render "shared/badge", label: payment.label, classes: payment.classes, icon: payment.icon %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                  <%= render "shared/badge", label: certificate.label, classes: certificate.classes, icon: certificate.icon %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                  <%= link_to "Edit", edit_continuing_education_registration_path(ce, return_to: "ce_index"), class: "text-primary hover:text-primary-dark", data: { turbo_frame: "_top" } %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-gray-500 text-center py-8">There are no CE registrations that match your search. Please try again.</p>
+    <% end %>
+  </div>
+
+  <% if @ce_registrations.respond_to?(:total_pages) && @ce_registrations.total_pages > 1 %>
+    <div class="pagination flex justify-center mt-6"><%= tailwind_paginate @ce_registrations %></div>
+  <% end %>
+<% end %>

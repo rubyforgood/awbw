@@ -1,0 +1,28 @@
+<% content_for(:page_bg_class, "admin-or-auth") %>
+
+<div class="w-full max-w-7xl mx-auto bg-gray-50 border border-gray-200 rounded-xl shadow p-6">
+  <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
+    <div class="pr-6">
+      <h1 class="text-2xl font-semibold text-gray-900">Features &amp; tips</h1>
+      <p class="text-gray-600 mt-2 max-w-2xl">
+        Everything the portal can do, newest first. Search by name or tip, narrow by area,
+        audience, or date — then open a feature for the full walkthrough and pro tips.
+      </p>
+    </div>
+
+    <% if allowed_to?(:create?, Feature) %>
+      <div class="admin-only bg-blue-100 flex flex-wrap items-center justify-end gap-2 rounded-lg p-2">
+        <%= link_to new_feature_path, class: "btn btn-primary-outline" do %>
+          <i class="fa-solid fa-plus"></i> New feature
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <%= render "search_boxes" %>
+
+  <% result_src = features_path + "?" + request.query_string %>
+  <%= turbo_frame_tag :features_results, src: result_src, data: { turbo: "temporary" } do %>
+    <%= render "results_skeleton" %>
+  <% end %>
+</div>

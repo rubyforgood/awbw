@@ -8,6 +8,9 @@ class User < ApplicationRecord
 
   before_save :sync_locked_at_from_locked
 
+  after_commit :start_membership, on: [ :create, :update ],
+    if: :saved_change_to_welcome_instructions_sent_at?
+
   after_update :track_welcome_instructions
   after_update :track_welcome_completion, if: :welcome_token_cleared?
   after_update :track_login_event
@@ -27,11 +30,12 @@ class User < ApplicationRecord
   belongs_to :person, optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
+  belongs_to :welcome_instructions_sent_by, class_name: "User", optional: true
   belongs_to :favorite_event, class_name: "Event", optional: true
   has_many :bookmarks, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :event_registrations, through: :person
-  has_many :notifications, as: :noticeable
+  has_many :notifications, as: :noticeable, dependent: :nullify
 
   has_many :reports, foreign_key: :created_by_id, inverse_of: :created_by
   has_many :resources, foreign_key: :created_by_id, inverse_of: :created_by
@@ -117,8 +121,30 @@ class User < ApplicationRecord
     { id: id, label: full_name_with_email }
   end
 
+  # Not limited to has_access (unlike remote_search) — the activity log spans deactivated and historical accounts.
+  def self.activity_search(query)
+    return none if query.blank?
+
+    pattern = "%#{sanitize_sql_like(query.to_s.strip)}%"
+    left_joins(:person).where(
+      "users.email LIKE :p OR users.first_name LIKE :p OR users.last_name LIKE :p OR " \
+      "people.first_name LIKE :p OR people.last_name LIKE :p OR people.legal_first_name LIKE :p OR " \
+      "people.email LIKE :p OR people.email_2 LIKE :p OR " \
+      "CONCAT(people.first_name, ' ', people.last_name) LIKE :p OR " \
+      "CONCAT(people.legal_first_name, ' ', people.last_name) LIKE :p OR " \
+      "CONCAT(users.first_name, ' ', users.last_name) LIKE :p",
+      p: pattern
+    )
+  end
+
   def active_for_authentication?
     super && !inactive?
+  end
+
+  # Instance-level mirror of the `has_access` scope: the account can sign in —
+  # confirmed, not locked, not deactivated.
+  def has_access?
+    locked_at.nil? && !inactive? && confirmed_at.present?
   end
 
   def bookmark_for(record)
@@ -205,10 +231,19 @@ class User < ApplicationRecord
   # Devise's default checks `pending_reconfirmation?` but can still route to the
   # current email in some flows. This ensures the confirmation always targets the
   # unconfirmed (new) email address.
-  def send_confirmation_instructions
+  #
+  # The invite sender (the staff member who triggered it, when one did) rides
+  # through the mailer opts as a plain id — DeviseMailer reads it to attribute the
+  # notification it logs, since it has no request and no current_user. Passing an
+  # id rather than stashing it on the record keeps it intact if the confirmation
+  # is ever delivered async (the record round-trips through GlobalID; the opts don't).
+  def send_confirmation_instructions(sender: nil, bulk: false)
     generate_confirmation_token! unless @raw_confirmation_token
     target = unconfirmed_email.presence || email
-    send_devise_notification(:confirmation_instructions, @raw_confirmation_token, to: target)
+    opts = { to: target }
+    opts[:sender_id] = sender.id if sender
+    opts[:bulk] = true if bulk
+    send_devise_notification(:confirmation_instructions, @raw_confirmation_token, opts)
   end
 
   def set_welcome_instructions_token!
@@ -271,7 +306,7 @@ class User < ApplicationRecord
 
   def after_confirmation
     super
-    track_auth_event("auth.email_confirmed")
+    track_auth_event("auth.email_confirmed", { changes: { email: { after: email } } })
   end
 
   def after_lock
@@ -287,6 +322,10 @@ class User < ApplicationRecord
   def track_welcome_instructions
     return unless saved_change_to_welcome_instructions_sent_at?
     track_auth_event("auth.welcome_instructions_sent")
+  end
+
+  def start_membership
+    Membership::Start.call(person: person)
   end
 
   def track_account_deleted

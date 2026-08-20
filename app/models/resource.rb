@@ -1,5 +1,6 @@
 class Resource < ApplicationRecord
-  include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include AuthorCreditable, Featureable, Publishable, RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  remote_searchable_by :title
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
   include Mentionable
@@ -15,6 +16,7 @@ class Resource < ApplicationRecord
   has_rich_text :rhino_body
 
   belongs_to :created_by, class_name: "User"
+  belongs_to :author, class_name: "Person", optional: true
   belongs_to :workshop, optional: true
   belongs_to :windows_type, optional: true
   has_one :form, as: :owner
@@ -49,6 +51,7 @@ class Resource < ApplicationRecord
 
   # Default values
   attribute :published, :boolean, default: false
+  attribute :hidden_from_search, :boolean, default: false
 
   # Validations
   validates :title, presence: true, uniqueness: { case_sensitive: false }
@@ -68,12 +71,27 @@ class Resource < ApplicationRecord
 
   include SearchCop
   search_scope :search do
-    attributes all: [ :title, :author ]
+    attributes all: [ :title, :legacy_author_name ]
     options :all, type: :text, default: true, default_operator: :or
 
     scope { join_rich_texts }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
     options :action_text_body, type: :text, default: true, default_operator: :or
+  end
+
+  # Fold the legacy free-text author into credit display, credited-name search,
+  # and sort.
+  def self.legacy_author_name_columns
+    [ "resources.legacy_author_name" ]
+  end
+
+  def legacy_author_name_text
+    legacy_author_name
+  end
+
+  # Unattributed resources are credited to the organization's staff.
+  def missing_author_label
+    "AWBW Staff"
   end
 
   # Scopes
@@ -89,6 +107,9 @@ class Resource < ApplicationRecord
     result = value ? published_kinds.where(published: true) : where(published: false)
   end
   scope :recent, -> { published.by_created }
+  # Resources flagged hidden_from_search stay publicly accessible by direct link
+  # but are excluded from non-admin portal searches and listings.
+  scope :searchable, -> { where(hidden_from_search: false) }
   scope :sector_impact, -> { where(kind: "SectorImpact") }
   scope :scholarship, -> { where(kind: "Scholarship") }
   scope :story, -> { where(kind: [ "Story", "LeaderSpotlight" ]).order(created_at: :desc) }
@@ -97,12 +118,19 @@ class Resource < ApplicationRecord
 
   def self.search_by_params(params)
     resources = is_a?(ActiveRecord::Relation) ? self : all
-    resources = resources.search(params[:query]) if params[:query].present? # SearchCop incl title, author, body
+    if params[:query].present?
+      # SearchCop covers title + legacy author name + body; OR in the credited
+      # author/creator person name via id subqueries (isolated person joins).
+      by_text = resources.search(params[:query]).select("resources.id")
+      by_person = resources.by_credited_person_name(params[:query]).select("resources.id")
+      resources = resources.where(id: by_text).or(resources.where(id: by_person))
+    end
     resources = resources.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     resources = resources.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     resources = resources.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     resources = resources.title(params[:title]) if params[:title].present?
     resources = resources.kinds(params[:kinds]) if params[:kinds].present?
+    resources = resources.authored_by(params[:author_id])
     if visibility_params_present?(params)
       resources = apply_visibility_filters(resources, params)
     elsif params[:published].present?

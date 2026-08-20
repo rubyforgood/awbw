@@ -2,64 +2,57 @@
   <div class="flex flex-wrap items-end gap-4 mb-4">
     <!-- Month -->
     <div class="flex flex-col w-full sm:w-auto min-w-[10rem]">
-      <%= label_tag :month_and_year, "Month Submitted", class: "text-sm font-medium text-gray-700 mb-1" %>
+      <%= label_tag :month_and_year, "Month Submitted", class: search_label_class %>
       <%= select_tag :month_and_year,
                      options_for_select(@month_year_options, params[:month_and_year]),
                      include_blank: "All months",
-                     class: "rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none w-full",
+                     class: search_field_class(extra: "search-select-placeholder"),
                      onchange: "this.form.requestSubmit()" %>
     </div>
 
     <!-- Year -->
     <div class="flex flex-col w-full sm:w-auto min-w-[9rem]">
-      <%= label_tag :year, "Year", class: "text-sm font-medium text-gray-700 mb-1" %>
+      <%= label_tag :year, "Year", class: search_label_class %>
       <%= select_tag :year,
                      options_for_select(@year_options, params[:year]),
                      include_blank: "All years",
-                     class: "rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none w-full",
+                     class: search_field_class(extra: "search-select-placeholder"),
                      onchange: "this.form.requestSubmit()" %>
     </div>
 
     <!-- Workshop -->
     <div class="flex flex-col w-full sm:w-1/2 md:w-1/4 lg:w-1/5">
-      <%= label_tag :workshop_id, "Workshop", class: "text-sm font-medium text-gray-700 mb-1" %>
+      <%= label_tag :workshop_id, "Workshop", class: search_label_class %>
       <%= select_tag :workshop_id,
                      options_from_collection_for_select(@workshops, :id, :type_name, params[:workshop_id]),
                      include_blank: "All workshops",
-                     class: "rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none w-full",
+                     class: search_field_class(extra: "search-select-placeholder"),
                      onchange: "this.form.requestSubmit()" %>
     </div>
 
     <!-- Person -->
     <div class="flex flex-col w-full sm:w-1/2 md:w-1/4 lg:w-1/5" data-controller="searchable-select" data-searchable-select-mode-value="person">
-      <%= label_tag :created_by_id, "Person", class: "text-sm font-medium text-gray-700 mb-1" %>
+      <%= label_tag :created_by_id, "Person", class: search_label_class %>
       <%= select_tag :created_by_id,
                      options_from_collection_for_select(@users, :id, :full_name_with_email, params[:created_by_id]),
                      include_blank: "All people",
-                     class: "rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none w-full",
+                     class: search_field_class,
                      data: { searchable_select_target: "select", action: "change->searchable-select#submit" } %>
     </div>
 
     <!-- Organization -->
     <div class="flex flex-col w-full sm:w-2/3 md:w-1/3 lg:flex-1">
-      <%= label_tag :organization_id, "Organization", class: "text-sm font-medium text-gray-700 mb-1" %>
+      <%= label_tag :organization_id, "Organization", class: search_label_class %>
       <%= select_tag :organization_id,
                      options_from_collection_for_select(@organizations, :id, :name, params[:organization_id]),
                      include_blank: "All organizations",
-                     class: "rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none w-full",
+                     class: search_field_class(extra: "search-select-placeholder"),
                      onchange: "this.form.requestSubmit()" %>
     </div>
 
     <!-- Clear filters -->
     <div class="w-full md:w-auto">
-      <%= link_to "Clear filters", workshop_logs_path,
-                  class: "btn btn-utility-outline w-full md:w-auto",
-                  data: { action: "collection#clearAndSubmit" } %>
+      <%= render "shared/search_clear", url: workshop_logs_path %>
     </div>
   </div>
 <% end %>

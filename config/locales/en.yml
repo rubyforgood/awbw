@@ -31,13 +31,42 @@
 
 en:
   hello: "Hello world"
+  # Public-facing name for the notifications feature. Change these values to
+  # rename "Communications" everywhere it appears in the UI.
+  communications:
+    title: "Communications"
+    detail_title: "Communication"
+    back_link: "Communications"
+    empty: "No communications found."
+    add: "Add communication"
+    new: "New communication"
+    edit: "Edit communications"
+    done_editing: "Done editing"
+    resent: "Communication has been resent successfully."
+    registration_title: "Registration communications"
+    scholarship_title: "Scholarship communications"
+    story_title: "Story communications"
+    story_idea_title: "Story idea communications"
+    none_for_person: "No communications for this person yet."
+    none_for_registrant: "No communications for this registrant yet."
+    none_for_scholarship: "No communications for this scholarship yet."
+    none_for_story: "No communications for this story yet."
+    none_for_story_idea: "No communications for this story idea yet."
   activerecord:
     attributes:
+      grant:
+        funder_sgid: "Funder"
       workshop_variation:
         rhino_body: "Details"
       workshop_variation_idea:
         rhino_body: "Details"
     models:
+      topic_subscription:
+        one: "Subscription"
+        other: "Subscriptions"
+      topic_subscription_type:
+        one: "Subscription type"
+        other: "Subscription types"
       video_recording:
         one: "Video"
         other: "Videos"

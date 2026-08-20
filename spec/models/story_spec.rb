@@ -3,6 +3,27 @@ require 'rails_helper'
 RSpec.describe Story, type: :model do
   it_behaves_like "author_creditable", factory: :story
 
+  describe "#author_person" do
+    let(:creator) { create(:user, :with_person) }
+    let(:facilitator) { create(:person) }
+
+    it "returns the explicitly chosen author when present" do
+      story = create(:story, created_by: creator, author: facilitator)
+      expect(story.author_person).to eq(facilitator)
+    end
+
+    it "falls back to the creating user's person when no author is set" do
+      story = create(:story, created_by: creator, author: nil)
+      expect(story.author_person).to eq(creator.person)
+    end
+
+    it "credits the author over the creator via author_credit" do
+      story = create(:story, created_by: creator, author: facilitator,
+                             author_credit_preference: "full_name")
+      expect(story.author_credit).to eq(facilitator.full_name)
+    end
+  end
+
   describe "#attach_assets_from_idea!" do
     let(:idea) { create(:story_idea) }
     let(:story) { create(:story, story_idea: idea) }
@@ -137,6 +158,64 @@ RSpec.describe Story, type: :model do
       results = Story.search_by_params(organization_id: organization.id)
       expect(results).to include(org_story)
       expect(results).not_to include(published_story, draft_story, old_story)
+    end
+
+    context 'when the query matches a credited person name' do
+      let(:creator) { create(:user, person: create(:person, first_name: 'Zephyrina', last_name: 'Quackenbush')) }
+      let(:facilitator) { create(:person, first_name: 'Bartholomew', last_name: 'Snazzlepants') }
+      let!(:authored_story) { create(:story, :published, title: 'No Name Match', created_by: creator, author: facilitator) }
+
+      it 'finds stories by the explicit author name' do
+        results = Story.search_by_params(query: 'Bartholomew')
+        expect(results).to include(authored_story)
+        expect(results).not_to include(published_story)
+      end
+
+      it "finds stories by the creating user's person name" do
+        created_story = create(:story, :published, title: 'Creator Only', created_by: creator)
+        results = Story.search_by_params(query: 'Zephyrina')
+        expect(results).to include(created_story)
+      end
+    end
+  end
+
+  describe "#to_param" do
+    it "is the id followed by the title slugged with hyphens, stripping bad URL characters" do
+      story = create(:story, title: "My Great Story! #2 (2026)")
+      expect(story.to_param).to eq("#{story.id}-my-great-story-2-2026")
+    end
+
+    it "tracks the title when it changes" do
+      story = create(:story, title: "Original Title")
+      story.update!(title: "Brand New Title")
+      expect(story.to_param).to eq("#{story.id}-brand-new-title")
+    end
+
+    it "resolves back to the record via the leading id" do
+      story = create(:story, title: "Some Story")
+      expect(Story.find(story.to_param)).to eq(story)
+    end
+  end
+
+  describe "#audience_categories" do
+    it "returns only StoryPopulation categories" do
+      story = create(:story)
+      population = create(:category_type, name: "StoryPopulation")
+      other_type = create(:category_type, name: "ArtType")
+      teens = create(:category, name: "Teens", category_type: population)
+      clay = create(:category, name: "Clay", category_type: other_type)
+      story.categorizable_items.create!(category: teens)
+      story.categorizable_items.create!(category: clay)
+
+      expect(story.audience_categories).to contain_exactly(teens)
+    end
+  end
+
+  describe ".search_by_params keyword query" do
+    it "matches on the title" do
+      match = create(:story, title: "Watercolor journey")
+      create(:story, title: "Something else")
+      expect(Story.search_by_params(query: "Watercolor")).to contain_exactly(match)
     end
   end
 end

@@ -1,139 +1,169 @@
 module Events
   class BulkPaymentsController < ApplicationController
-    skip_before_action :authenticate_user!, only: [ :new, :create, :show ]
+    include AhoyTracking
     before_action :set_event
-    before_action :set_form, only: [ :new, :create ]
 
-    rescue_from ActionController::InvalidAuthenticityToken do
-      flash[:alert] = "Your session has expired. Please try submitting the form again."
-      redirect_to new_event_bulk_payment_path(@event)
-    end
+    def index
+      authorize! @event
+      track_view("events.bulk_payments", { event_id: @event.id })
 
-    def new
-      authorize! :bulk_payment, to: :new?
-
-      @form_fields = visible_form_fields
+      @event_registrations = @event.event_registrations.active.includes(:registrant)
+      @submissions = @event.form_submissions
+                           .where(role: "bulk_payment")
+                           .includes(:person, form_answers: :form_field, payment: :allocations)
+                           .order(created_at: :desc)
+      @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
       @event = @event.decorate
-
-      @attendee_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
     end
 
     def create
-      authorize! :bulk_payment, to: :create?
+      authorize! @event
+      @event_registrations = @event.event_registrations.active.includes(:registrant)
+      @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
 
-      @form_params = params.dig(:bulk_payment, :form_fields)&.to_unsafe_h || {}
+      submission = @event.form_submissions.find(params[:submission_id])
+      payment_type = params[:payment_type]
 
-      @field_errors = validate_required_fields
-      if @field_errors.any?
-        @form_fields = visible_form_fields
-        @event = @event.decorate
-        @attendee_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
-        render :new, status: :unprocessable_content
+      @event = @event.decorate
+
+      unless %w[CashPayment CheckPayment].include?(payment_type)
+        flash.now[:alert] = "Invalid payment type"
+        respond_to do |format|
+          format.turbo_stream
+          format.html { redirect_to bulk_payments_event_path(@event), alert: "Invalid payment type" }
+        end
         return
       end
 
-      result = EventRegistrationServices::BulkPayment.call(
-        event: @event,
-        form: @form,
-        form_params: @form_params,
-        person: current_user&.person
+      payment = submission.build_payment(
+        amount_cents: (params[:amount_dollars].to_d * 100).to_i,
+        currency: params[:currency].presence || "usd",
+        type: payment_type,
+        check_number: params[:check_number].presence,
+        memo: params[:memo].presence
       )
+      payment.payer_sgid = params[:payer_sgid]
+      payment.additional_designation_sgid = params[:additional_designation_sgid]
 
-      if result.success?
-        if @event.cost_cents.to_i > 0 && credit_card_payment?(@form_params)
-          checkout_session = create_stripe_checkout_session(result.form_submission)
-          redirect_to checkout_session.url, allow_other_host: true, status: :see_other
-        else
-          redirect_to event_bulk_payment_path(@event, submission_id: result.form_submission.id),
-                      notice: "Your bulk payment information has been submitted."
-        end
+      if payment.save
+        @payment = payment
+        @submission = submission.decorate
+        flash.now[:notice] = "Payment recorded"
       else
-        @form_fields = visible_form_fields
-        @event = @event.decorate
-        @attendee_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
-        flash.now[:alert] = result.errors.join(", ")
-        render :new, status: :unprocessable_content
+        flash.now[:alert] = payment.errors.full_messages.to_sentence
+      end
+
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to bulk_payments_event_path(@event), notice: flash.now[:alert] || "Payment recorded" }
       end
     end
 
-    def show
-      authorize! :bulk_payment, to: :show?
-
-      @submission = FormSubmission.find(params[:submission_id])
-      @payment = @submission.payment
+    def allocate
+      authorize! @event
       @event = @event.decorate
+      payment = Payment.find(params[:payment_id])
+      event_registration = EventRegistration.find_by(id: params[:event_registration_id])
+      unless event_registration
+        flash.now[:alert] = "Please select a registrant"
+        assign_allocation_card_data(payment)
+        respond_to do |format|
+          format.turbo_stream
+          format.html { redirect_to bulk_payments_event_path(@event), alert: "Please select a registrant" }
+        end
+        return
+      end
+      amount_cents = (params[:amount_dollars].to_d * 100).to_i
+
+      if amount_cents <= 0
+        flash.now[:alert] = "Amount must be greater than $0.00"
+      elsif amount_cents > (payment.amount_cents_remaining || 0)
+        flash.now[:alert] = "Amount exceeds remaining balance"
+      else
+        allocation = Allocation.new(source: payment, allocatable: event_registration, amount: amount_cents)
+        if allocation.save
+          flash.now[:notice] = "Allocation successful"
+        else
+          flash.now[:alert] = allocation.errors.full_messages.to_sentence
+        end
+      end
+
+      assign_allocation_card_data(payment)
+
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to bulk_payments_event_path(@event), notice: flash.now[:alert] || "Allocation successful" }
+      end
+    end
+
+    def link
+      authorize! @event
+      @event = @event.decorate
+
+      submission = @event.form_submissions.find(params[:submission_id])
+      event_registration = EventRegistration.find_by(id: params[:event_registration_id])
+
+      if event_registration
+        submission.link_registration!(event_registration.id)
+        flash.now[:notice] = "Linked #{event_registration.registrant.name}."
+      else
+        flash.now[:alert] = "Registration not found."
+      end
+
+      assign_bulk_payment_card_data(submission)
+
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to bulk_payments_event_path(@event), notice: flash.now[:notice] || flash.now[:alert] }
+      end
+    end
+
+    def unlink
+      authorize! @event
+      @event = @event.decorate
+
+      submission = @event.form_submissions.find(params[:submission_id])
+      event_registration = EventRegistration.find_by(id: params[:event_registration_id])
+
+      if event_registration
+        submission.unlink_registration!(event_registration.id)
+        flash.now[:notice] = "Unlinked #{event_registration.registrant.name}."
+      else
+        flash.now[:alert] = "Registration not found."
+      end
+
+      assign_bulk_payment_card_data(submission)
+
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to bulk_payments_event_path(@event), notice: flash.now[:notice] || flash.now[:alert] }
+      end
     end
 
     private
 
-    def visible_form_fields
-      scope = @form.form_fields.reorder(position: :asc)
-
-      if current_user
-        logged_out_only_ids = scope.where(visibility: :logged_out_only).ids
-        scope = scope.where.not(id: logged_out_only_ids) if logged_out_only_ids.any?
-      end
-
-      scope
-    end
-
     def set_event
-      @event = Event.find(params[:event_id])
+      @event = Event.find(params[:id])
     end
 
-    def set_form
-      @form = @event.bulk_payment_form
-      unless @form
-        redirect_to event_path(@event), alert: "Bulk payment form is not available for this event."
-      end
+    def assign_allocation_card_data(payment)
+      @payment = payment.reload
+      @submission = @payment.form_submission
+      @event_registrations = @event.event_registrations.active.includes(:registrant)
+      @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
     end
 
-    def validate_required_fields
-      # The nested attendees field is validated separately, so exclude it here.
-      fields = visible_form_fields.reject { |field| field.field_identifier == "bulk_payment_attendees" }
-      FormAnswerValidator.call(fields, @form_params)
+    def assign_bulk_payment_card_data(submission)
+      @submission = submission.reload.decorate
+      @event_registrations = @event.event_registrations.active.includes(:registrant)
+      @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
     end
 
-    def credit_card_payment?(form_params)
-      payment_method_field = @form.form_fields.find_by(field_identifier: "payment_method")
-      return false unless payment_method_field
-
-      form_params[payment_method_field.id.to_s]&.downcase == FormBuilderService::PAYMENT_METHOD_PAY_NOW.downcase
-    end
-
-    def create_stripe_checkout_session(submission)
-      person = submission.person
-      unit_amount = @event.cost_cents
-
-      attendees_field = @form.form_fields.find_by(field_identifier: "number_of_attendees")
-      qty = attendees_field ? @form_params[attendees_field.id.to_s].to_i : 1
-      qty = 1 if qty < 1
-
-      metadata = { form_submission_id: submission.id, event_id: @event.id }
-
-      attendees_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
-      if attendees_field
-        attendees_json = @form_params[attendees_field.id.to_s]
-        metadata[:attendees] = attendees_json if attendees_json.present?
-      end
-
-      person.set_payment_processor :stripe
-
-      person.payment_processor.checkout(
-        mode: "payment",
-        metadata: metadata,
-        payment_intent_data: { metadata: metadata, description: "Training Fee: #{@event.title}" },
-        line_items: [ {
-          price_data: {
-            currency: "usd",
-            product_data: { name: "Bulk Payment (#{qty} attendees): #{@event.title}" },
-            unit_amount: unit_amount
-          },
-          quantity: qty
-        } ],
-        success_url: event_bulk_payment_url(@event, submission_id: submission.id, checkout: "success"),
-        cancel_url: event_bulk_payment_url(@event, submission_id: submission.id, checkout: "cancelled")
-      )
+    def allocated_cents_by_registration(registrations)
+      Allocation
+        .where(allocatable_type: "EventRegistration", allocatable_id: registrations.ids)
+        .group(:allocatable_id)
+        .sum(:amount)
     end
   end
 end

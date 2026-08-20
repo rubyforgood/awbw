@@ -20,9 +20,9 @@
       <%= completed ? "Tasks completed" : "Tasks outstanding" %>
     <% end %>
   <% else %>
-    <span class="<%= pill_classes %>">
-      <i class="fa-solid <%= completed ? "fa-circle-check" : "fa-clock" %>"></i>
-      <%= completed ? "Tasks completed" : "Tasks outstanding" %>
-    </span>
+    <%= render "shared/badge",
+               label: completed ? "Tasks completed" : "Tasks outstanding",
+               classes: completed ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200",
+               icon: completed ? "fa-solid fa-circle-check" : "fa-solid fa-clock" %>
   <% end %>
 </span>

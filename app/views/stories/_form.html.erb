@@ -23,11 +23,14 @@
                                    value: f.object.title || @story_idea&.title } %></div>
 
     <%# if allowed_to?(:manage?, story) %>
-    <div class="admin-only bg-blue-100 rounded grid grid-cols-2 items-center mt-6 md:mt-0 p-3">
-      <%= f.input :published, as: :boolean %>
-      <%= f.input :featured, as: :boolean %>
-      <%= f.input :publicly_visible, as: :boolean %>
-      <%= f.input :publicly_featured, as: :boolean %>
+    <div class="admin-only bg-blue-100 rounded mt-6 md:mt-0 p-3">
+      <%= render "shared/visibility_info", flags: %i[published featured publicly_visible publicly_featured] %>
+      <div class="grid grid-cols-2 items-center">
+        <%= visibility_flag_input f, :published %>
+        <%= visibility_flag_input f, :featured %>
+        <%= visibility_flag_input f, :publicly_visible %>
+        <%= visibility_flag_input f, :publicly_featured %>
+      </div>
     </div>
 
     <%# end %>
@@ -100,7 +103,7 @@
   </div>
 
   <!-- Story-specific tags (sectors + story-specific categories) -->
-  <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6 mt-6">
+  <div class="my-6 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
     <h3 class="text-base font-semibold text-gray-800 mb-3">
       <%= Sector::STORY_DISPLAY_TEXT %>
       <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply)</span>
@@ -250,56 +253,39 @@
         <br>
         <div class="italic"><%= link_to story_idea.author_credit_preference, edit_story_idea_path(story_idea, anchor: "publish-preferences"), class: "hover:underline hover:text-blue-600" %></div>
       </div>
-
-      <% if f.object.persisted? %>
-        <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3 text-gray-500">
-          Last updated by:
-          <br>
-          <%= f.object.updated_by&.full_name %>
-          <br>
-          <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
-        </div>
-      <% end %>
-    </div>
-  <% elsif f.object.persisted? %>
-    <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3 text-gray-500">
-      Last updated by:
-      <br>
-      <%= f.object.updated_by&.full_name %>
-      <br>
-      <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
     </div>
   <% end %>
 
   <div class="flex flex-col md:flex-row md:space-x-4">
     <div class="flex-1 mb-4 md:mb-0">
-      <%= f.input :created_by_id,
-                  collection: @users.map { |u| [ u.full_name_with_email, u.id ] },
+      <% story_author_id = f.object.author_person&.id || current_user.person_id %>
+      <%= f.input :author_id,
+                  collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
                   prompt: "Select an author",
-                  label: (f.object.created_by&.person ? (
+                  selected: story_author_id,
+                  hint: "Defaults to the creator; change to credit someone else.",
+                  label: (f.object.author ? (
                     link_to "Story author",
-                            person_path(f.object.created_by.person),
+                            person_path(f.object.author),
                             class: "hover:underline") : "Story author").html_safe,
                   label_html: { class: "block font-medium mb-1 text-gray-700" },
                   input_html: {
-                    class: select_caret_class(blank: f.object.created_by_id.blank?),
-                    style: custom_caret_style,
-                    onchange: select_caret_onchange
+                    data: { controller: "remote-select",
+                            remote_select_model_value: "person" }
                   } %>
     </div>
 
     <div class="flex-1 mb-4 md:mb-0">
       <%= f.input :spotlighted_facilitator_id,
-                  collection: @people.map { |p| [ p.full_name_with_email, p.id ] },
+                  collection: f.object.spotlighted_facilitator.present? ? [[ f.object.spotlighted_facilitator.remote_search_label[:label], f.object.spotlighted_facilitator_id ]] : [],
                   prompt: "Select a facilitator",
                   label: (f.object.spotlighted_facilitator_id ? (link_to "Story spotlighted facilitator",
                                                                          person_path(f.object.spotlighted_facilitator_id),
                                                                          class: "hover:underline") : "Story spotlighted facilitator").html_safe,
                   label_html: { class: "block font-medium mb-1 text-gray-700" },
                   input_html: {
-                    class: select_caret_class(blank: f.object.spotlighted_facilitator_id.blank?),
-                    style: custom_caret_style,
-                    onchange: select_caret_onchange
+                    data: { controller: "remote-select",
+                            remote_select_model_value: "person" }
                   } %>
     </div>
 
@@ -386,6 +372,65 @@
   <% end %>
 
   <%= f.hidden_field :updated_by_id, value: current_user.id %>
+
+  <% if f.object.persisted? %>
+    <%# ---- Communications + comments — same boxes as the registration edit page,
+        shown once the story exists so there's a record to attach them to. ---- %>
+    <div class="space-y-6 mt-8">
+      <% if allowed_to?(:index?, with: NotificationPolicy) %>
+        <%= render "notifications/communications", f: f,
+              title_key: "communications.story_title", none_key: "communications.none_for_story" %>
+      <% end %>
+
+      <%# ---- Comments ---- %>
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="edit-toggle">
+        <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:comments, f.object.comments.any?) %>">
+            <i class="fa-solid fa-comments"></i>
+          </span>
+          <h2 class="text-sm font-semibold text-gray-700">Story comments</h2>
+          <% if f.object.author_person %>
+            <%= link_to all_comments_person_path(f.object.author_person),
+                        class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
+                        target: "_blank", rel: "noopener" do %>
+              View all
+              <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
+            <% end %>
+          <% end %>
+        </div>
+
+        <div class="space-y-4 p-4" data-controller="paginated-fields" data-paginated-fields-per-page-value="5">
+          <div id="comment-list" class="space-y-4">
+            <%= f.simple_fields_for :comments do |cf| %>
+              <%= render "comments/comment_fields", f: cf %>
+            <% end %>
+          </div>
+
+          <div data-paginated-fields-target="nav"></div>
+
+          <div class="flex items-center justify-between gap-2">
+            <%= link_to_add_association f, :comments,
+                  partial: "comments/comment_fields",
+                  data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
+                  class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
+              <i class="fa-solid fa-plus text-2xs"></i>
+              Add comment
+            <% end %>
+
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
+              data-action="edit-toggle#toggle"
+            >
+              <i class="fa-solid fa-pen text-2xs"></i>
+              <span data-edit-toggle-target="editLabel">Edit comments</span>
+              <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  <% end %>
 
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if allowed_to?(:destroy?, f.object) %>

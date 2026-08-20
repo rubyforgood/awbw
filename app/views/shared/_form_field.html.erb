@@ -3,13 +3,13 @@
   <div class="label-plus-comment">
     <%# Display-only field — never collects input, so no required marker. %>
     <label><%= field.name %></label>
-    <div class="custom-smaller"> <%= field.hint_text %> </div>
+    <div class="custom-smaller"> <%= field.subtitle %> </div>
   </div>
 
 <% when :group_header %>
   <div class="label-plus-comment">
     <label><%= field.name %> </label>
-    <div class="custom-smaller"><%= field.hint_text %></div>
+    <div class="custom-smaller"><%= field.subtitle %></div>
       <div class="custom-smaller">(No percentages please. Enter 1 instead of 1/2)</div>
   </div>
 
@@ -21,7 +21,7 @@
             <div class="label-plus-comment">
               <label><%= f.name %></label>
               <div class="custom-smaller">
-                <%= f.hint_text %>
+                <%= f.subtitle %>
               </div>
             </div>
 
@@ -45,7 +45,7 @@
   <div class="form-group <%= field.html_input_type %>-form-group">
     <div class="label-plus-comment">
       <label><%= field.name %> <%= "*" if field.required? %></label>
-      <div class="custom-smaller"> <%= field.hint_text %> </div>
+      <div class="custom-smaller"> <%= field.subtitle %> </div>
     </div>
 
     <input type="<%= field.html_input_type %>"
@@ -60,7 +60,7 @@
 
     <div class="label-plus-comment">
       <label><%= field.name %> <%= "*" if field.required? %></label>
-      <div class="custom-smaller"> <%= field.hint_text %> </div>
+      <div class="custom-smaller"> <%= field.subtitle %> </div>
     </div>
 
     <textarea name="log_fields[<%= field.id %>]" class="form-control" <%= 'required=required' if field.required %>
@@ -77,7 +77,7 @@
         <% end %>
         <%= field.name %> <%= "*" if field.required? %>
       </label>
-      <div class="custom-smaller"> <%= field.hint_text %> </div>
+      <div class="custom-smaller"> <%= field.subtitle %> </div>
     </div>
 
     <% field.answer_options.each do |answer_option| %>

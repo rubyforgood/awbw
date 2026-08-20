@@ -25,10 +25,10 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     )
   end
 
-  def set_textarea_input(textarea, value)
+  def set_text_input(input, value)
     page.execute_script(
       "arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('input', { bubbles: true }))",
-      textarea, value
+      input, value
     )
   end
 
@@ -52,7 +52,7 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
 
     # Find the Facilitator affiliation's start_date input specifically
     facilitator_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
-      f.find("textarea[name*='title']").value.include?("Facilitator")
+      f.find("input[name*='title']").value.include?("Facilitator")
     }
     start_input = facilitator_row.find("input[name*='start_date']")
     set_date_input(start_input, "2019-07-01")
@@ -66,11 +66,14 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     facilitator = find("[data-affiliation-dates-target='facilitatorSince']")
     expect(facilitator).to have_text("Mar 2020")
 
-    title_textareas = all("textarea[name*='affiliations_attributes'][name*='title']")
-    set_textarea_input(title_textareas.last, "Lead Facilitator")
+    # Renaming the only exact "Facilitator" to a variant drops it — facilitator
+    # matching is exact and case-sensitive, so "Lead Facilitator" no longer counts.
+    facilitator_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
+      f.find("input[name*='title']").value.strip == "Facilitator"
+    }
+    set_text_input(facilitator_row.find("input[name*='title']"), "Lead Facilitator")
 
-    # Both affiliations now have "Facilitator" in the title; earliest is still Mar 2020
-    expect(facilitator).to have_text("Mar 2020", wait: 5)
+    expect(facilitator).to have_text("—", wait: 5)
   end
 
   it "shows end date and icon when all affiliations are inactive" do
@@ -106,18 +109,60 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     expect(affiliated).not_to have_text("Dec 2024")
   end
 
-  it "removes an affiliation and recalculates" do
-    visit_and_wait edit_person_path(person, admin: true)
+  it "removes an affiliation via the editor and recalculates" do
+    # Persisted affiliations are now deleted from the affiliation editor (reached
+    # via the row's gear); removing the Facilitator (Mar 2020) leaves Volunteer (Jun 2022).
+    facilitator = person.affiliations.find_by!(title: "Facilitator")
+    visit edit_affiliation_path(facilitator, return_to: "person", origin_id: person.id)
 
-    affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
-    expect(affiliated).to have_text("Mar 2020")
+    accept_confirm { click_button "Delete" }
 
-    # Remove the Facilitator affiliation (start Mar 2020), leaving Volunteer (start Jun 2022)
-    facilitator_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
-      f.find("textarea[name*='title']").value.include?("Facilitator")
-    }
-    facilitator_row.find("a", text: "Remove").click
-
+    affiliated = find("[data-affiliation-dates-target='affiliatedSince']", wait: 10)
     expect(affiliated).to have_text("Jun 2022", wait: 5)
+  end
+
+  # The org form renders "Affiliated since" as merged, year-based periods
+  # (AffiliationPeriods) rather than a single range; it must live-update in that
+  # same format so the value doesn't jump on save.
+  context "on the organization form" do
+    let!(:org_person) { create(:person) }
+    let!(:merged_org) { create(:organization) }
+
+    before do
+      create(:affiliation, person: org_person, organization: merged_org,
+             title: "Facilitator", start_date: "2018-01-01", end_date: "2019-12-31")
+      create(:affiliation, person: org_person, organization: merged_org,
+             title: "Facilitator", start_date: "2022-01-01", end_date: nil)
+    end
+
+    it "live-updates the merged 'Affiliated since' periods" do
+      visit_and_wait edit_organization_path(merged_org)
+
+      affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
+      expect(affiliated).to have_text("2018-2019, 2022")
+
+      ongoing_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
+        f.find("input[name*='start_date']").value == "2022-01-01"
+      }
+      set_date_input(ongoing_row.find("input[name*='start_date']"), "2021-05-01")
+
+      expect(affiliated).to have_text("2018-2019, 2021", wait: 5)
+    end
+
+    # "Art program since" is the same merged-period value at month precision, so it
+    # has to live-update in that format too — not the old earliest→latest range.
+    it "live-updates 'Art program since' as month-precision periods" do
+      visit_and_wait edit_organization_path(merged_org)
+
+      program = find("[data-affiliation-dates-target='facilitatorSince']")
+      expect(program).to have_text("Jan 2018 – Dec 2019, Jan 2022")
+
+      ongoing_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
+        f.find("input[name*='start_date']").value == "2022-01-01"
+      }
+      set_date_input(ongoing_row.find("input[name*='start_date']"), "2021-05-01")
+
+      expect(program).to have_text("Jan 2018 – Dec 2019, May 2021", wait: 5)
+    end
   end
 end

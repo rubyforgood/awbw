@@ -27,6 +27,16 @@ If you notice the user repeatedly correcting the same pattern, suggest adding it
 | `.github/copilot-instructions.md` | Coding rules for Copilot (duplicated from CLAUDE.md — keep in sync) |
 | `ai/` | Shell script shortcuts for common dev tasks |
 
+## Agent skills
+
+### Issue tracker
+
+Issues live in this repo's GitHub Issues, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context — one `CONTEXT.md` + `docs/adr/` at the repo root (created lazily by `/domain-modeling`). See `docs/agents/domain.md`.
+
 ## Related Files
 
 When changing a model or controller, check whether these related files need updates:
@@ -40,6 +50,7 @@ When changing a model or controller, check whether these related files need upda
 | Decorator | Decorator spec |
 | Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
 | Add/remove model, concern, service, or gem | AGENTS.md |
+| Ship a user-facing feature | `config/features.yml` (the Features & tips seed — see below) |
 
 ## Code Style
 
@@ -47,13 +58,18 @@ When changing a model or controller, check whether these related files need upda
 - Prefer early returns and guard clauses
 - Avoid unnecessary and/or complex conditionals
 - Prefer constants and scopes over magic strings
+- Avoid Rails `enum` — prefer plain string columns constrained by a constant + `validates inclusion`
 - Use safe navigation (`&.`) where appropriate
 - Use `presence` over blank checks
 - Use `Arel.sql` for raw SQL in order clauses
 - Avoid `update_all` unless explicitly intended
 - Prefer service objects under app/services/
 - Prefer POROs over concerns when possible
+- **In service objects and POROs, read constructor arguments from instance variables (`@foo`) — don't add `private attr_reader`** for them. Reserve `attr_reader` for values the object deliberately exposes to callers (e.g. `BulkInviteService#results`).
+- **Prefer decorators (Draper, app/decorators/) over view helpers for model-specific presentation** — when display logic is "about a record" (labels, badges, formatted attributes, status pills), put it on that model's decorator and call `record.decorate.thing`. Reserve `app/helpers/` for generic, cross-model view utilities that aren't tied to one model. Decorators keep presentation testable and out of ERB.
 - Use `after_commit` instead of `after_save` for side effects
+- **Don't pass `to:` to `authorize!` when the rule matches the controller action** — ActionPolicy infers the rule from the action name (`create` → `create?`, `update` → `update?`), so `authorize! @record` in the `update` action already checks `update?`. Only pass `to:` when checking a *different* rule than the current action (e.g. `authorize! @scholarship, to: :update?` from a non-`update` action, or `authorize! :workshop, to: :summary?`).
+- **Default to no comment.** Most code should carry none — clear names and small methods explain themselves. Only add a comment for a genuinely non-obvious *why* or a gotcha that would trip up the next reader, and only when you can't make the code say it instead (a better name, a named constant, an extracted method). Never restate what the code already says, and don't comment a constant, scope, or step whose intent is clear from its name. When a comment truly earns its place, keep it to **one line**; let it run longer only when the logic is genuinely complex and the reasoning can't be inferred from the code plus domain knowledge.
 
 ## RuboCop (rubocop-rails-omakase)
 
@@ -108,6 +124,30 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - Avoid `.titleize` for user-facing labels — it produces title case
 - **Exception:** when a category type name prefixes a category name (e.g., "Age Range: 3-5"), use `.titleize` for the prefix
 
+## Currency display
+
+**Always display money with the `dollars_from_cents(cents)` helper** (`app/helpers/application_helper.rb`),
+which delegates to the **`MoneyFormatter`** PORO (`app/services/money_formatter.rb`).
+It takes an integer **cents** amount and renders `$1,500.50` when there are cents and `$1,500`
+(no trailing `.00`) when the amount is a whole number of dollars. The helper is display-only — keep
+storing and calculating in integer cents. For an abbreviated figure in tight UI (e.g. the grant
+picker), use `MoneyFormatter.compact_from_cents(cents)` (`$12.5k`, `$1.2m`) — also cents-based.
+
+- **Pass cents, not dollars.** Use the `*_cents` column/accessor (`amount_cents`,
+  `amount_cents_remaining`, `allocation.amount`, etc.), not `amount_dollars`. Don't prepend a literal
+  `$` — the helper includes it.
+- **Do NOT use** `number_to_currency`, `format("%.2f", …)`, or the naked `"%.2f" % x` operator to show
+  money. They always print `.00` and reintroduce the inconsistency this helper exists to remove.
+  (`number_to_currency` is fine only inside the helper definition itself.)
+- **In decorators**, call it via `h.dollars_from_cents(...)`; **in controllers**, via
+  `helpers.dollars_from_cents(...)`. In a **model** or other PORO (no view-helper access), call
+  `MoneyFormatter.dollars_from_cents(cents)` directly (e.g. validation messages) — don't fall back to
+  `format("%.2f", …)`, which reprints `.00`.
+- **Mirror the same rule in JavaScript** when a Stimulus controller renders a live money figure: drop
+  the cents for whole-dollar amounts, keep two decimals otherwise (see `formatDollars` in
+  `scholarship_preview_controller.js`). Keep the server-rendered initial value and the JS-updated value
+  formatted identically.
+
 ## HTML/ERB Formatting
 
 ### Tag Attributes
@@ -153,22 +193,101 @@ reachable from several origins, the eyebrow must adapt to whichever one the user
   `EventHelper#bulk_payments_return_path` centralizes the expand + anchor logic for the bulk
   payments flow).
 
+## Page background class (`page_bg_class`)
+
+Every page view sets `<% content_for(:page_bg_class, "...") %>` at the top — the layout
+(`app/views/layouts/application.html.erb`) renders it on the main content wrapper. The class
+string is a **semantic policy marker** matching the page's authorization level (e.g. `"public"`,
+`"admin-or-auth"`, `"admin-or-owner"`, `"admin-only bg-blue-100"`), not just a Tailwind class.
+
+**Whenever you add a new page (a new `*.html.erb` view rendered as a full page), check whether
+it needs a `page_bg_class` and register it:**
+
+- **Set `content_for(:page_bg_class, "...")`** at the top of the new view, choosing the marker
+  that matches the controller action's policy (compare against the relevant `*_policy.rb`).
+- **Add the view path → expected value to `EXPECTED_MAPPINGS`** in
+  `spec/views/page_bg_class_alignment_spec.rb`. A test asserts every view that sets
+  `page_bg_class` is listed there (and matches its policy), so the suite fails if you skip this.
+- **Match neighboring pages.** Use the same marker as sibling views with the same authorization
+  level rather than inventing a new value.
+
+## Lazy index/filter frames
+
+Filterable index pages load their rows lazily in a Turbo frame so changing a
+filter swaps just the results, not the whole page (grants, people, users,
+organizations, stories, community_news, video_recordings, monthly_reports,
+bookmarks, payments, resources, workshops, notifications, allocations, features all
+follow this). Match the existing pattern:
+
+- `index.html.erb` renders the header, the filter/search form, and a skeleton
+  inside `<%= turbo_frame_tag :<resource>_results, src: result_src, data: { turbo: "temporary" } %>`.
+- The controller `index` branches on `turbo_frame_request?`: the frame request
+  builds the filtered/paginated scope and renders the results view; otherwise it
+  renders the full `index`.
+- **Name the frame-response view after its Turbo frame tag id** — the
+  `turbo_frame_tag` id, the controller render target, and the view filename are
+  one shared `<resource>_results` token (e.g. `turbo_frame_tag :grants_results` ←
+  `render :grants_results` ← `app/views/grants/grants_results.html.erb`). This
+  keeps the view discoverable from the frame tag, and `_results` reflects that the
+  frame holds the filtered result set. **Never name it `index_lazy`** — that old
+  name has been removed.
+- **Never change a frame tag id to rename a view.** Turbo matches on the id, so
+  it must stay identical across `index.html.erb`, the results view, the filter
+  form's `data-turbo-frame`, request-spec `Turbo-Frame` headers, and
+  `turbo-frame#…` view-spec selectors. Only the filename and render target change.
+
+## Features & tips page (`/features`)
+
+The login-gated **Features & tips** page lists shipped, user-facing features
+(newest first, filterable by area/audience/date) so facilitators and admins can
+see what the portal does. It is **database-backed** (`Feature` model) and edited
+in-app by super-admins — the rich `description` uses the Rhino WYSIWYG (so pages
+can carry screenshots), and each feature can link an external process doc.
+
+**Keep it current as you ship.** When you add a user-facing feature, append an
+entry to `config/features.yml` (the checked-in **seed**):
+
+- Fields: `name`, `area` (a `Feature::AREA_KEYS` value), `display_status`
+  (`public_facing` / `user_facing` / `admin_facing`), `summary` (1–2 plain
+  sentences), `released_on` (ship date), plus optional `pro_tips` (list),
+  `description` (longer HTML/text), `external_url`, `action_path` (in-app path for
+  the detail page's "Check out this feature" link), and `pr_number` (adds a
+  GitHub PR link).
+- **Sentence case, plain language** — this page is read by facilitators, not devs.
+- `admin_facing` features are visible to super-admins only (`FeaturePolicy` gates
+  this in its relation scope, not just in the UI).
+
+An admin clicks **Sync latest updates** on `/features` (`FeatureCatalog#import!`,
+matched by `name`) to pull newly-shipped features from the seed, **re-align the
+catalog-owned classification** on existing records (`CATALOG_FIELDS` — area,
+`display_status`, `released_on`, `action_path`, `pr_number`, so a seed fix like a
+wrong audience propagates), **and fill in blank content** (`CONTENT_FIELDS` —
+`summary`, `pro_tips`, `external_url`, `description`) without ever overwriting what
+an admin wrote.
+
+- **New area?** Add it to `Feature::AREAS` (label + Font Awesome icon + a Tailwind
+  hue already safelisted in `application.tailwind.css`) and use its key in the
+  seed. Area/audience presentation (badges/labels) lives on `FeatureDecorator`.
+
 ## JavaScript
 
 - ES6+ syntax, ESM imports/exports, `const`/`let` (no `var`)
 - Use `const` for fixed values — not `SCREAMING_SNAKE_CASE` constants (e.g., `const styleId = "foo"` not `const STYLE_ID = "foo"`)
+- **Default to no new JavaScript.** Prefer a server-rendered (ERB/decorator/helper) or Turbo solution over adding a new Stimulus controller. Only reach for JS when the behavior genuinely can't be done server-side or with Turbo (e.g. it needs live client-side state, the browser's own time zone, or DOM the server can't produce). If a change seems to need JS, first ask whether rendering it on the server — even with a small trade-off — is acceptable, and flag that trade-off. When JS is truly required, reuse or generalize an existing controller before writing a new one.
 - **Strongly prefer Stimulus** for JavaScript behavior — do not write raw/inline JS or jQuery
 - **Always use Tailwind CSS** utility classes for styling — do not write custom CSS unless absolutely necessary
-- **Prefer Font Awesome (free)** icons over inline SVGs — use `icon("fa-solid fa-foo")` helper. Inline SVGs are acceptable when a specific icon design is preferred.
+- **Prefer static Tailwind classes over dynamically-constructed ones.** Tailwind's JIT scanner only generates classes it finds as complete literal strings in the source — a class built by interpolation (e.g. `bg-#{color}-500`, `text-${size}`, `class="w-#{n}"`) won't be generated and silently renders unstyled. Write the full class names out, and select between complete literals (e.g. a lookup hash mapping a value to a whole class string, or a ternary picking between two literal classes) rather than splicing fragments. Only build a class dynamically when the set of values is open-ended and can't be enumerated; in that case add the candidates to the Tailwind safelist.
+- **Prefer Font Awesome (free)** icons over inline SVGs — render them as markup: `<i class="fa-solid fa-foo"></i>`. Inline SVGs are acceptable when a specific icon design is preferred; the `icon("name")` helper (`app/helpers/icon_helper.rb`) inlines a local SVG from `app/frontend/icons/` by filename — it is not a Font Awesome helper.
 - Prefer Turbo for navigation and form submissions before reaching for Stimulus
 - Controller naming: `[name]_controller.js`
 - Keep controllers focused and small
+- **Before adding a new JS/Stimulus controller, check whether an existing one already covers the behavior or can be lightly adapted** — search `app/frontend/javascript/controllers/` for similar names/behavior (e.g. sorting, toggling, autocomplete). Prefer reusing it, or generalizing it with a new value/target/class so both callers share it, over creating a near-duplicate. Only add a new controller when the behavior is genuinely distinct. If a small change to an existing controller would make it reusable, do that (and re-verify its existing callers)
 
 ### Stimulus Conventions
 
 Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introduction) and reference docs. Key rules:
 
-**Targets over querySelector** — declare `static targets = [...]` and use `data-[controller]-target` attributes in views. Never use `this.element.querySelector` or `document.getElementById` to find elements that could be targets. Exception: elements outside the controller's scope (e.g., in a parent view).
+**Targets over querySelector** — declare `static targets = [...]` and use `data-[controller]-target` attributes in views. Never use `this.element.querySelector` or `document.getElementById` to find elements that could be targets. **This includes CSS-class lookups: don't select elements by a marker/hook class (`querySelectorAll(".foo-view")`), and don't pass CSS class names in as `Values` to query by — mark the elements as targets and iterate `this.fooTargets` instead.** When two target sets line up one-to-one (e.g. `viewTargets`/`editTargets`), pair them by DOM order. Exception: elements outside the controller's scope (e.g., in a parent view). (Part of the ongoing Stimulus-conventions audit, rubyforgood/awbw#1392.)
 
 **Values API for state** — use `static values = { name: Type }` for any state that persists or drives UI. Do not store state in instance variables when a value would work. Use `[name]ValueChanged()` callbacks for reactive updates instead of manual syncing.
 
@@ -186,8 +305,8 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 
 ## Migrations
 
-- Name migration files using **UTC timestamps** (e.g., `20260228143000`), not sequential numbers (e.g., `20260228000007`)
-- Multiple branches adding migrations on the same date will collide if they use sequential numbering
+- Name migration files using the **actual current UTC timestamp down to the second** — generate it (`date -u +%Y%m%d%H%M%S`), don't hand-write the number. The minutes and seconds (`…HHMMSS`) must be real, not zero-padded.
+- **Never use round, zero-trailing times** like `20260618030000` or sequential numbers like `20260228000007`. They collide when two branches add a migration the same day, because everyone gravitates to the same round number. Real second-level timestamps (e.g. `20260618034355`) effectively never collide. (This has bitten us: two PRs both shipped `20260618020000`.)
 - **Migrations must be reversible** — always use explicit `up`/`down` methods instead of `change` when the rollback isn't trivially invertible. Guard `down` operations with `if_exists: true`, `column_exists?`, `index_exists?`, and `foreign_key_exists?` so rollbacks are idempotent and recover from partial failures
 
 ## Git
@@ -199,16 +318,32 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 
 ## PRs
 
-- **Push to a draft PR early** — push commits and create a draft PR (`gh pr create --draft`) as soon as work begins, rather than keeping changes in a local branch. Push on every commit.
-- After completing work, **mark the PR ready** using `gh pr ready`
+- **"Prefix" / "add prefix X" refers to the PR title.** When the user mentions "a
+  prefix" or says "add prefix X" (e.g. `MAYBE:`, `JM:`) and it doesn't fit whatever
+  you're currently working on, they mean a leading tag on the **pull request title**
+  (often auto-added). For "add prefix X", prepend that literal string to the current
+  title, preserving the rest; for "remove the X prefix", strip it. Act via `gh pr
+  edit --title`, never on code or commit messages.
+- **Always create PRs as drafts** — every PR starts in draft (`gh pr create --draft`), no exceptions. Never open a PR ready for review, and never promote it. Only the user runs `gh pr ready`, manually and intentionally, when they decide the work is ready.
+- **Push to a draft PR early** — create the draft PR as soon as work begins, rather than keeping changes in a local branch. Push on every commit.
+  - **In a new Conductor workspace, do this immediately** — as the first step of any task, make an initial commit on the workspace branch and open the draft PR right away (before the work is done), then keep pushing on every commit as you go. Don't wait until there's a finished change to show.
+- **Never take a PR out of draft** — do not run `gh pr ready` or otherwise remove draft status, even after the work looks complete. Leave the PR in draft; the user promotes it manually and intentionally when they decide it's ready.
 - **Do not rename branches after creating a PR** — deleting the old remote branch auto-closes the PR on GitHub, and the head ref cannot be changed after creation
 - Use `docs/pull_request_template.md` for PR description structure
-- Use bullet points, not paragraphs, when filling out each section
+- **Remove the `Closes …` line when there's no ticket** — it's a template placeholder. Keep it (with a real issue link) only when the PR closes a tracked ticket; otherwise drop the line entirely rather than leaving the placeholder.
+- **Keep descriptions as short as possible** — a few terse bullets, not paragraphs. Cut anything a reviewer can see from the diff; only keep what explains *why*.
+  - **Bullets over prose, always.** Never write a paragraph where a bullet works. One idea per bullet; if a bullet needs a comma-spliced second clause, split it into two bullets instead.
+  - **Short sentences.** Aim for one clause per bullet. Drop filler ("this PR", "in order to", "as well as"), hedging, and restating the ticket. Prefer sentence fragments over full sentences when they're clear.
+  - **Group with headers** once the description covers more than one topic — a `##`/`###` header per section, bullets underneath — instead of a long undifferentiated list or run of paragraphs.
+- **Start the description with a review-depth tag** on its own single line, in the form `🤖 suggested review level: <N> <Name> <icon> <reason>`, followed by a blank line, then the rest of the description. The tag is the prefix, the level number, the level name, its icon, and a short reason — e.g. `🤖 suggested review level: 5 Inspect 🔬 substantive logic across 13 admin pages incl. filter behavior`. Always spell out the reason inline; never post the number/name/icon alone. The number is a 1–5 scale with three named levels (2 and 4 are unused in-betweens). The tag tells the reviewer how closely to look (depth of review, not how risky/good the change is):
+  - **1 Skim 👀** — view-only: markup/copy/styling, no logic or data changes
+  - **3 Read 📖** — light-logic: small, contained logic changes with low blast radius
+  - **5 Inspect 🔬** — big change: substantive logic, migrations that rename or transform data (backfills), or wide-reaching changes that warrant careful review
 - Description must explain why the change was made, not just what
 - Include screenshots for UI changes
 - **On every push**, update the PR title and content to reflect the current diff — preserve any existing images/screenshots in the description
 - **On every push**, update AI instruction files if the diff adds, removes, or renames anything tracked in AGENTS.md — specifically: Stimulus controllers, services, model/controller concerns, mailers, rake tasks, and directory file counts
-- **On every push**, add PR review comments on notable lines of code — decisions, trade-offs, non-obvious logic, or anything a reviewer should understand. Use `gh api` to post line comments on the diff
+- **Inline-comment only to flag what matters to the reviewer** — do NOT comment on every push, and don't annotate routine or self-explanatory changes. Add a `gh api` line comment on the diff only when a reviewer genuinely needs something flagged: a non-obvious decision or trade-off, a risky/surprising change, a load-bearing assumption, or something easy to miss. When nothing rises to that bar, post no inline comments
 - **Attribute every AI-authored GitHub comment** — `gh` posts as the authenticated user, so any comment you create (PR review comments, issue/PR comments, replies) MUST be prefixed to identify the AI agent that wrote it. Begin the comment body with `🤖 _From <agent>:_` (e.g. `🤖 _From Claude:_` or `🤖 _From Copilot:_`) followed by the content
 - **Keep GitHub comments short and to the point** — one or two sentences, stating the key insight directly. Skip preamble, restating the code, and hedging; if a comment needs more than a few lines, it usually belongs in the PR description instead
 
@@ -259,6 +394,26 @@ If there are unresolved items:
 
 After creating or submitting a pull request, automatically perform the session recap (Recap + Unresolved) using the format above.
 
+### On every completed task
+
+**Close every message that reports work as done with the same two parts** — Recap, then
+Unresolved with its count header — not just when the user asks for a recap or a PR is
+submitted. A prose summary doesn't say whether anything still needs the user's attention;
+the count header answers that in one line, before any detail. Mid-task progress notes are
+exempt; this is for the message that says the work is finished.
+
+## Response formatting
+
+**Structure the answer; don't hand back a wall of text.** Long replies are for scanning
+first and reading second.
+
+- **Lead with the direct answer** when the user asked a question, then the detail.
+- **Group under headers** (`##`/`###`) once a reply covers more than one topic.
+- **Use titled bullets** — a bold lead-in naming the thing, then the explanation — rather
+  than consecutive bare paragraphs.
+- **Nest detail under the point it belongs to** instead of running it inline.
+- Keep tables for genuinely tabular comparisons; keep prose short inside each bullet.
+
 ## Quick Commands
 
 See `ai/` directory for executable scripts:
@@ -266,9 +421,12 @@ See `ai/` directory for executable scripts:
 | Command | What it does |
 |---|---|
 | `ai/recap` | Session recap: accomplishments + unresolved items (see above) |
-| `ai/test [args]` | Run RSpec |
+| `ai/review` | Code review: agent reviews the workspace diff, posts inline comments, and gives a Recap + Risks + Outstanding decisions summary (runs the `ai-review` skill) |
+| `ai/test [args]` | Run RSpec, fast path: no Vite rebuild; runs only diff-related system specs (loud banner lists what it skipped) |
+| `ai/test_extra [args]` | Full RSpec run: Vite test build + all system specs |
 | `ai/lint` | Rubocop on all files |
 | `ai/lint --fix` | Auto-fix lint issues |
+| `ai/tw-sort` | Sort Tailwind class order (rustywind) on files changed vs main; `--all` for the whole tree, `--check` to verify without writing |
 | `ai/server` | Start dev services (web + vite) |
 | `ai/console` | Rails console |
 | `ai/routes -g pattern` | Search Rails routes |
@@ -276,4 +434,6 @@ See `ai/` directory for executable scripts:
 | `ai/seed` | Load the full dev sample dataset (`db:seed:dev`) into the workspace DB |
 | `ai/security` | Security scan: Brakeman + bundler-audit (mirrors CI) |
 
-> **"ai <name>" means the `ai/` script of that name** (e.g. "ai test" → `ai/test`, "ai security" → `ai/security`) — shell scripts in `ai/`, not slash-command skills. If a referenced `ai/<name>` script doesn't exist, ask what's intended rather than substituting a similarly named skill. (`ai/recap` is special — it triggers the agent **Session recap** behavior above, not a real script's output; never confuse it with the `/audit` design skill or the `ai/security` scan.)
+> **"ai <name>" means the `ai/` script of that name** (e.g. "ai test" → `ai/test`, "ai security" → `ai/security`) — shell scripts in `ai/`, not slash-command skills. If a referenced `ai/<name>` script doesn't exist, ask what's intended rather than substituting a similarly named skill. Two are special — they print a trigger word, and the agent does the work directly rather than producing script output: (1) **"ai recap"** triggers the **Session recap** behavior above; never confuse it with the `/audit` design skill or the `ai/security` scan. (2) **"ai review"** (`ai/review`) triggers the **`ai-review` skill** — review the current workspace diff, post one inline comment per qualifying bug, then give a Recap + Risks + Outstanding decisions summary; it is not the `/audit` skill or the `/code-review` / `/review` skills.
+
+> **Which test command to run.** Bare "test"/"run tests" while iterating → `ai/test` (fast path). But when "test" is part of a **ship** flow — e.g. the user says **"commit push pr test"** (or any combination of commit / push / PR alongside test) — run the **full** suite with **`ai/test_extra`** (Vite build + all system specs), not the fast path. Before pushing or opening/updating a PR, the full suite is what verifies the change; the fast path is only for the inner loop. In such a combined ask, run `ai/test_extra` and only proceed to commit/push/PR once it's green (or the user says otherwise).

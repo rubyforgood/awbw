@@ -55,6 +55,38 @@ class NotificationMailerPreview < ActionMailer::Preview
     NotificationMailer.bulk_payment_confirmation_fyi(notification)
   end
 
+  def form_submission_confirmation
+    submission = FormSubmission.where(role: "public").order(id: :desc).first ||
+      raise("Need a public FormSubmission to preview (run db:seed:public_forms)")
+
+    notification = find_valid_notification("form_submission_confirmation") ||
+      Notification.create!(
+        noticeable: submission,
+        notification_type: 0,
+        kind: "form_submission_confirmation",
+        recipient_role: "person",
+        recipient_email: submission.person.preferred_email
+      )
+
+    NotificationMailer.form_submission_confirmation(notification)
+  end
+
+  def form_submission_confirmation_fyi
+    submission = FormSubmission.where(role: "public").order(id: :desc).first ||
+      raise("Need a public FormSubmission to preview (run db:seed:public_forms)")
+
+    notification = find_valid_notification("form_submission_confirmation_fyi") ||
+      Notification.create!(
+        noticeable: submission,
+        notification_type: 0,
+        kind: "form_submission_confirmation_fyi",
+        recipient_role: "admin",
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+      )
+
+    NotificationMailer.form_submission_confirmation_fyi(notification)
+  end
+
   def idea_submitted
     noticeable = StoryIdea.first || WorkshopVariationIdea.first
     user = noticeable&.created_by || User.first
@@ -80,6 +112,33 @@ class NotificationMailerPreview < ActionMailer::Preview
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
       )
     NotificationMailer.idea_submitted_fyi(notification)
+  end
+
+  def story_promoted
+    story = Story.where.not(story_idea_id: nil).first || Story.first
+    user = story&.story_idea&.created_by || story&.created_by || User.first
+    notification = find_valid_notification("story_promoted") ||
+      Notification.create!(
+        noticeable: story,
+        notification_type: 0,
+        kind: "story_promoted",
+        recipient_role: "person",
+        recipient_email: user&.email || "preview@example.com"
+      )
+    NotificationMailer.story_promoted(notification)
+  end
+
+  def story_promoted_fyi
+    story = Story.where.not(story_idea_id: nil).first || Story.first
+    notification = find_valid_notification("story_promoted_fyi") ||
+      Notification.create!(
+        noticeable: story,
+        notification_type: 0,
+        kind: "story_promoted_fyi",
+        recipient_role: "admin",
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+      )
+    NotificationMailer.story_promoted_fyi(notification)
   end
 
   def report_submitted_fyi

@@ -25,6 +25,46 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
   end
 
+  describe "#event_registration_confirmation_fyi" do
+    let(:notification) { create(:notification, kind: "event_registration_confirmation_fyi", noticeable: event_registration) }
+
+    context "when a scholarship was not requested" do
+      let(:event_registration) { create(:event_registration, scholarship_requested: false) }
+
+      it "labels the subject as a plain event registration" do
+        subject = described_class.event_registration_confirmation_fyi(notification).subject
+        expect(subject).to include("New event registration by")
+        expect(subject).not_to include("scholarship")
+      end
+    end
+
+    context "when a scholarship was requested" do
+      let(:event_registration) { create(:event_registration, scholarship_requested: true) }
+
+      it "labels the subject as an event scholarship registration" do
+        subject = described_class.event_registration_confirmation_fyi(notification).subject
+        expect(subject).to include("New event scholarship registration by")
+      end
+    end
+
+    context "for a virtual event" do
+      let(:event) { create(:event, videoconference_url: "https://zoom.us/j/123", videoconference_label: "Zoom", videoconference_passcode: "secret123") }
+      let(:event_registration) { create(:event_registration, event: event) }
+
+      it "shows the platform label as plain text" do
+        body = described_class.event_registration_confirmation_fyi(notification).body.encoded
+        expect(body).to include("Zoom")
+      end
+
+      it "does not include the join link, meeting ID, or passcode" do
+        body = described_class.event_registration_confirmation_fyi(notification).body.encoded
+        expect(body).not_to include("https://zoom.us/j/123")
+        expect(body).not_to include("secret123")
+        expect(body).not_to include("Meeting ID")
+      end
+    end
+  end
+
   describe "#report_submitted_fyi" do
     let(:notification) { create(:notification, kind: :report_submitted_fyi) }
 
@@ -234,6 +274,53 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
   end
 
+  describe "#story_promoted" do
+    let(:submitter) { create(:user, email: "submitter@example.com") }
+    let(:story_idea) { create(:story_idea, created_by: submitter) }
+    let(:story) { create(:story, :published, story_idea: story_idea, title: "A Healing Story") }
+    let(:notification) do
+      create(:notification, kind: "story_promoted", noticeable: story,
+             recipient_role: "person", recipient_email: submitter.email)
+    end
+
+    it "renders without raising" do
+      expect { described_class.story_promoted(notification).deliver_now }.not_to raise_error
+    end
+
+    it "sends to the idea's submitter" do
+      expect(described_class.story_promoted(notification).to).to eq([ submitter.email ])
+    end
+
+    it "names the story and greets the submitter" do
+      body = described_class.story_promoted(notification).body.encoded
+      expect(body).to include("A Healing Story")
+      expect(body).to include(submitter.full_name)
+    end
+  end
+
+  describe "#story_promoted_fyi" do
+    let(:submitter) { create(:user) }
+    let(:story_idea) { create(:story_idea, created_by: submitter) }
+    let(:story) { create(:story, story_idea: story_idea, title: "A Healing Story") }
+    let(:notification) do
+      create(:notification, kind: "story_promoted_fyi", noticeable: story,
+             recipient_role: "admin",
+             recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))
+    end
+
+    it "renders without raising" do
+      expect { described_class.story_promoted_fyi(notification).deliver_now }.not_to raise_error
+    end
+
+    it "goes to the admin mailbox" do
+      expect(described_class.story_promoted_fyi(notification).to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+    end
+
+    it "names the story in the subject" do
+      expect(described_class.story_promoted_fyi(notification).subject).to include("A Healing Story")
+    end
+  end
+
   describe "#reset_password_fyi" do
     let(:user) { create(:user, email: "user@example.com") }
     let(:notification) { create(:notification, kind: "reset_password_fyi", noticeable: user) }
@@ -265,6 +352,61 @@ RSpec.describe NotificationMailer, type: :mailer do
       expect {
         mail.deliver_now
       }.to change { ActionMailer::Base.deliveries.count }.by(1)
+    end
+
+    context "when the user's person has an avatar attached" do
+      let(:user) { create(:user, :with_person, email: "user@example.com") }
+
+      before do
+        user.person.avatar.attach(
+          io: Rails.root.join("spec/fixtures/files/sample.png").open,
+          filename: "sample.png",
+          content_type: "image/png"
+        )
+      end
+
+      it "renders without touching the avatar" do
+        expect(mail.body.encoded).to match("requested a password reset")
+        expect(mail.body.encoded).not_to include("Avatar")
+      end
+    end
+  end
+
+  describe "form submission emails" do
+    let(:form) { create(:form, name: "Volunteer interest") }
+    let(:person) { create(:person, first_name: "Dana", last_name: "Volunteer", email: "dana@example.com") }
+    let(:submission) do
+      s = FormSubmission.create!(form: form, person: person, role: "public")
+      field = create(:form_field, form: form, name: "Why volunteer?")
+      s.persist_answer(field, "I care about the mission.")
+      s
+    end
+
+    describe "#form_submission_confirmation" do
+      let(:notification) do
+        create(:notification, kind: "form_submission_confirmation", noticeable: submission,
+               recipient_role: "person", recipient_email: person.email)
+      end
+      let(:mail) { described_class.form_submission_confirmation(notification) }
+
+      it "thanks the submitter and names the form" do
+        expect(mail.to).to include("dana@example.com")
+        expect(mail.subject).to include("Volunteer interest")
+        expect(mail.body.encoded).to include("Dana")
+      end
+    end
+
+    describe "#form_submission_confirmation_fyi" do
+      let(:notification) do
+        create(:notification, kind: "form_submission_confirmation_fyi", noticeable: submission)
+      end
+      let(:mail) { described_class.form_submission_confirmation_fyi(notification) }
+
+      it "names the submitter and lists their answers" do
+        expect(mail.subject).to include("New form submission")
+        expect(mail.subject).to include("Dana Volunteer")
+        expect(mail.body.encoded).to include("I care about the mission.")
+      end
     end
   end
 end

@@ -6,6 +6,7 @@ module Home
       authorize! :home
       @resources = authorized_scope(Resource.includes(primary_asset: { file_attachment: :blob }, downloadable_asset: { file_attachment: :blob }, gallery_assets: { file_attachment: :blob })
                            .published
+                           .searchable
                            .order(position: :asc, created_at: :desc), with: HomePolicy)
                            .decorate
 

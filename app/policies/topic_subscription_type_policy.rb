@@ -1,0 +1,2 @@
+class TopicSubscriptionTypePolicy < ApplicationPolicy
+end

@@ -2,12 +2,12 @@
     allocatable is an event registration, the whole block is a button to its
     admin page with a jump-link icon in the top-right corner. ---%>
 <div class="mb-4">
-  <span class="block font-medium mb-1 text-gray-700">Allocated to:</span>
+  <span class="mb-1 block font-medium text-gray-700">Allocated to:</span>
   <% if allocatable.is_a?(EventRegistration) %>
     <%= link_to edit_event_registration_path(allocatable),
                 class: "relative block rounded-lg border border-gray-300 bg-white px-3 py-2 pr-8 transition-colors hover:border-gray-400 hover:bg-gray-50",
                 data: { turbo_frame: "_top" } do %>
-      <i class="fa-solid fa-arrow-up-right-from-square absolute right-2 top-2 text-[0.6rem] text-gray-400"></i>
+      <i class="fa-solid fa-arrow-up-right-from-square text-2xs absolute top-2 right-2 text-gray-400"></i>
       <span class="block font-medium text-gray-800">Event registration for <%= allocatable.registrant&.full_name %></span>
       <span class="block text-sm text-gray-500"><%= allocatable.event.title %> &middot; <%= allocatable.event.decorate.times(display_day: true, display_date: true) %></span>
     <% end %>

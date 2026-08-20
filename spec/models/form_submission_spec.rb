@@ -9,6 +9,20 @@ RSpec.describe FormSubmission do
     it { should accept_nested_attributes_for(:form_answers) }
   end
 
+  describe "slug" do
+    it "generates a unique slug for bulk payment submissions" do
+      submission = create(:form_submission, role: "bulk_payment")
+
+      expect(submission.slug).to be_present
+    end
+
+    it "leaves the slug blank for other submission roles" do
+      submission = create(:form_submission, role: "registration")
+
+      expect(submission.slug).to be_nil
+    end
+  end
+
   describe "#answers_by_identifier" do
     it "maps submitted answers by their field identifier" do
       form = create(:form)
@@ -64,6 +78,119 @@ RSpec.describe FormSubmission do
       submission.form_answers.create!(form_field: field, submitted_answer: "3")
 
       expect(submission.bulk_payment_amount_cents(free_event)).to eq(0)
+    end
+  end
+
+  describe "linked registrations" do
+    let(:event) { create(:event) }
+    let(:form) { create(:form) }
+    let(:submission) { create(:form_submission, form: form, event: event) }
+    let!(:reg1) { create(:event_registration, event: event) }
+    let!(:reg2) { create(:event_registration, event: event) }
+
+    describe "#linked_registration_ids" do
+      it "returns an empty array when metadata is nil" do
+        expect(submission.linked_registration_ids).to eq([])
+      end
+
+      it "returns an empty array when metadata has no linked_registration_ids" do
+        submission.update!(metadata: { "other_key" => "value" })
+        expect(submission.linked_registration_ids).to eq([])
+      end
+
+      it "returns the stored ids" do
+        submission.update!(metadata: { "linked_registration_ids" => [ reg1.id, reg2.id ] })
+        expect(submission.linked_registration_ids).to contain_exactly(reg1.id, reg2.id)
+      end
+    end
+
+    describe "#link_registration!" do
+      it "adds a registration id to metadata" do
+        submission.link_registration!(reg1.id)
+
+        expect(submission.reload.linked_registration_ids).to eq([ reg1.id ])
+      end
+
+      it "does not duplicate an existing id" do
+        submission.link_registration!(reg1.id)
+        submission.link_registration!(reg1.id)
+
+        expect(submission.reload.linked_registration_ids).to eq([ reg1.id ])
+      end
+
+      it "preserves other metadata" do
+        submission.update!(metadata: { "other_key" => "value" })
+        submission.link_registration!(reg1.id)
+
+        expect(submission.reload.metadata["other_key"]).to eq("value")
+        expect(submission.linked_registration_ids).to eq([ reg1.id ])
+      end
+    end
+
+    describe "#unlink_registration!" do
+      it "removes a registration id from metadata" do
+        submission.link_registration!(reg1.id)
+        submission.link_registration!(reg2.id)
+        submission.unlink_registration!(reg1.id)
+
+        expect(submission.reload.linked_registration_ids).to eq([ reg2.id ])
+      end
+
+      it "is a no-op when the id is not linked" do
+        submission.link_registration!(reg1.id)
+        submission.unlink_registration!(reg2.id)
+
+        expect(submission.reload.linked_registration_ids).to eq([ reg1.id ])
+      end
+    end
+
+    describe "#linked_registrations" do
+      it "returns event registrations matching linked ids" do
+        submission.link_registration!(reg1.id)
+        submission.link_registration!(reg2.id)
+
+        expect(submission.linked_registrations).to contain_exactly(reg1, reg2)
+      end
+
+      it "returns empty relation when nothing is linked" do
+        expect(submission.linked_registrations).to be_empty
+      end
+    end
+  end
+
+  describe "#persist_answer" do
+    let(:submission) { create(:form_submission) }
+
+    it "stores a text answer with the field's name" do
+      field = create(:form_field, form: submission.form, name: "Message")
+      submission.persist_answer(field, "Hello there")
+
+      answer = submission.form_answers.find_by(form_field: field)
+      expect(answer.submitted_answer).to eq("Hello there")
+      expect(answer.question_name_when_answered).to eq("Message")
+    end
+
+    it "comma-joins a multi-value answer, dropping blanks" do
+      field = create(:form_field, form: submission.form, answer_type: :multi_select_checkbox)
+      submission.persist_answer(field, [ "A", "", "B" ])
+
+      expect(submission.form_answers.find_by(form_field: field).submitted_answer).to eq("A, B")
+    end
+
+    it "updates the existing answer rather than duplicating it" do
+      field = create(:form_field, form: submission.form)
+      submission.persist_answer(field, "first")
+      submission.persist_answer(field, "second")
+
+      expect(submission.form_answers.where(form_field: field).count).to eq(1)
+      expect(submission.form_answers.find_by(form_field: field).submitted_answer).to eq("second")
+    end
+
+    it "raises UnreadableUpload for a forged file-upload signed id" do
+      field = create(:form_field, :file_upload, form: submission.form)
+
+      expect { submission.persist_answer(field, "forged-signed-id") }
+        .to raise_error(FormSubmission::UnreadableUpload)
     end
   end
 end

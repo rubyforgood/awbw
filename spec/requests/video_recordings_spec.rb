@@ -67,6 +67,15 @@ RSpec.describe "/video_recordings", type: :request do
       get edit_video_recording_url(video_recording)
       expect(response).to be_successful
     end
+
+    it "renders the visibility flags plus the instructional and podcast checkboxes" do
+      video_recording = VideoRecording.create! valid_attributes
+      get edit_video_recording_url(video_recording)
+
+      expect(response.body).to include('name="video_recording[is_instructional]"')
+      expect(response.body).to include('name="video_recording[is_podcast]"')
+      expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:publicly_visible][:description])
+    end
   end
 
   describe "POST /create" do

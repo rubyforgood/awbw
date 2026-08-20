@@ -1,0 +1,286 @@
+<%#
+  One editable callout row, shared by custom callouts and every materialized
+  built-in. CE hours additionally shows the event's hours-offered/cost config
+  inline (via event_f); its text, like every other built-in, lives on the row.
+%>
+<% event_f = local_assigns[:event_f] %>
+
+<%# Clicking anywhere on the card chrome toggles collapse (cursor-pointer signals
+    it); `toggleFromRow` ignores clicks inside the expanded editor body, and the
+    chevron + Published cluster stops propagation so those keep their own clicks. %>
+<div
+  class="nested-fields registration-ticket-callout-fields flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-colors cursor-pointer select-none"
+  data-controller="callout-preview expandable-card"
+  data-action="click->expandable-card#toggleFromRow expandable-cards:expandAll@window->expandable-card#expand expandable-cards:collapseAll@window->expandable-card#collapse"
+  data-expandable-card-expanded-value="<%= f.object.published? %>"
+  data-callout-preview-themes-value="<%= DomainTheme.swatches.to_json %>"
+  data-callout-preview-defaults-value="<%= RegistrationTicketCallout::DEFAULT_COLORS.to_json %>"
+  <% if f.object.persisted? %>
+    data-sortable-id="<%= f.object.id %>"
+  <% end %>
+>
+  <% if f.object.persisted? %>
+    <div class="cursor-grab text-gray-400 hover:text-gray-600 pt-2 shrink-0" data-sortable-handle title="Drag to reorder"><i class="fa-solid fa-grip-vertical"></i></div>
+  <% else %>
+    <div class="pt-2 shrink-0 text-gray-200" title="Save the event to enable drag-reordering"><i class="fa-solid fa-grip-vertical"></i></div>
+  <% end %>
+
+  <div class="flex-1 min-w-0 relative">
+    <%# Round-trips the built-in identity so an unsaved (new-event) built-in row saves
+        as its built-in, not a custom callout; kept outside the collapsed content
+        so it submits even when the row is unpublished. %>
+    <% if f.object.builtin? %>
+      <%= f.hidden_field :builtin_key %>
+    <% end %>
+    <%#
+      Top-right controls, pinned to the card's corner: a chevron that
+      collapses/expands this callout's editor (via expandable-card) and, to its
+      right, the Published toggle. Collapse is independent of Published, so a
+      published callout can still be collapsed.
+    %>
+    <div class="absolute top-0 right-0 flex items-center gap-3"
+         data-action="click->expandable-card#stopPropagation">
+      <button type="button"
+              class="leading-none text-gray-400 hover:text-gray-600"
+              data-action="expandable-card#toggle"
+              aria-label="Collapse or expand callout details">
+        <i class="fa-solid fa-chevron-down text-xs transition-transform <%= "rotate-180" if f.object.published? %>" data-expandable-card-target="icon"></i>
+      </button>
+
+      <%# Toggling Published expands (checked) or collapses (unchecked) the editor;
+          the chevron can then override that state independently. %>
+      <label class="flex items-center gap-2 text-sm font-medium text-gray-600 cursor-pointer select-none">
+        Published
+        <%= f.check_box :published, class: "rounded border-gray-300 text-purple-600",
+              data: { action: "change->expandable-card#syncToCheckbox" } %>
+      </label>
+    </div>
+
+    <%#
+      Always-visible header row: identifies the callout even when its editor is
+      collapsed. Holds the built-in badge, title, and default-status text on the
+      left; `pr-32` reserves the top-right gutter so nothing runs under the
+      chevron + Published controls pinned there. Toggling is handled by the card
+      root (see above), so this row needs no click handler of its own.
+    %>
+
+    <div class="flex items-center gap-x-3 pr-32 text-sm">
+      <% if f.object.builtin? %>
+        <%= render "shared/badge",
+              label: "Built in",
+              classes: "bg-purple-100 text-purple-700 border-purple-200",
+              extra: "shrink-0" %>
+      <% end %>
+
+      <span class="text-gray-800 font-medium truncate max-w-xs" title="<%= f.object.title %>"><%= f.object.title %></span>
+
+      <%# Names the config the event is missing for this built-in (a cost, a
+          scholarship form, CE hours, a videoconference link) so admins know what
+          to change for it to reach the ticket. Shown regardless of published state. %>
+      <% if (config_hint = f.object.decorate.config_suppression_hint) %>
+        <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 shrink-0">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          Won't show unless you <%= config_hint %>
+        </span>
+      <% end %>
+    </div>
+
+    <%# Editable content — collapsed/expanded by the chevron above (expandable-card
+        toggles `hidden`). Defaults open when published, closed otherwise; render
+        the matching initial state to avoid a flash before the controller connects.
+        `mt-5` keeps the preview card clear of the controls above it. %>
+    <div class="<%= "hidden" unless f.object.published? %> mt-5 cursor-auto space-y-3 select-auto" data-expandable-card-target="body">
+      <% if f.object.staff? %>
+        <div class="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+          <i class="fa-solid fa-circle-info mt-0.5 shrink-0" aria-hidden="true"></i>
+          <span>This callout's page automatically lists the roster from the event's staff section — you don't need to add anyone here. The title, subtitle, and any page text you enter appear above that list.</span>
+        </div>
+      <% end %>
+
+      <%#
+        Live preview of how this callout appears on the ticket — the same card
+        registrants see (icon, title, subtitle, themed color). Seeded from the
+        record and repainted by the callout-preview controller as the admin edits
+        the title, subtitle, type, color, or icon. The badge and live status the
+        app supplies at render time aren't shown here.
+      %>
+      <% preview_theme = f.object.theme %>
+
+      <div class="flex items-center gap-3 rounded-xl border-2 <%= preview_theme[:border] %> <%= preview_theme[:bg] %> px-4 py-3" data-callout-preview-target="capper">
+        <i class="<%= f.object.display_icon_class %> <%= preview_theme[:icon] %> text-xl shrink-0" data-callout-preview-target="capperIcon" aria-hidden="true"></i>
+
+        <div class="flex-1 min-w-0 text-left">
+          <p class="font-semibold <%= preview_theme[:title] %>" data-callout-preview-target="capperTitle"><%= f.object.title %></p>
+          <p class="text-sm <%= preview_theme[:subtitle] %> <%= "hidden" if f.object.subtitle.blank? %>" data-callout-preview-target="capperSubtitle"><%= f.object.subtitle %></p>
+        </div>
+
+        <i class="fa-solid fa-arrow-right <%= preview_theme[:icon] %> shrink-0" data-callout-preview-target="capperArrow" aria-hidden="true"></i>
+      </div>
+
+      <%#
+        Two columns that collapse to one as the viewport narrows: the call-out's
+        identity (title + presentation) on the left, its page content on the right.
+      %>
+
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div class="min-w-0">
+          <div class="min-w-0 flex-1 space-y-3">
+            <div class="space-y-3">
+              <div><%= f.label :title, "Title", class: "block text-xs font-medium text-gray-600 mb-0.5" %><%= f.text_field :title, required: true,
+                      class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %></div>
+              <div><%= f.label :subtitle, "Subtitle", class: "block text-xs font-medium text-gray-600 mb-0.5" %><%= f.text_field :subtitle,
+                      class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %></div>
+            </div>
+          </div>
+        </div>
+
+        <%# RIGHT: the call-out's own page text %>
+        <div class="min-w-0 space-y-3">
+          <div>
+            <%= f.label :description, "Callout page text (only opens a page if this is filled out)", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+
+            <%= f.text_area :description, rows: 4, placeholder: "Accepts basic HTML. Wrap a part in <details><summary>Title</summary>…</details> for a collapsible section.",
+                  class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm font-mono" %>
+          </div>
+        </div>
+      </div>
+
+      <%#
+        Two columns, top-aligned. The left column stacks Type/color/icon and
+        Visibility so Visibility always sits directly beneath Type/color/icon,
+        independent of how tall the Linked resources column on the right grows.
+      %>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+        <div class="space-y-4">
+          <details class="group">
+            <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
+              <i class="fa-solid fa-chevron-right text-2xs text-gray-400 transition-transform group-open:rotate-90"></i>
+              Type, color, and icon
+            </summary>
+
+            <%# One row of three: type, color, icon. %>
+            <div class="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <%= f.label :callout_type, "Type", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+
+                <%= f.select :callout_type,
+                      RegistrationTicketCallout::CALLOUT_TYPES.map { |t| [ t.humanize, t ] },
+                      {},
+                      class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm",
+                      data: { callout_preview_target: "typeSelect", action: "callout-preview#update" } %>
+              </div>
+
+              <div>
+                <%= f.label :color_class, "Color", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+
+                <%= f.select :color_class,
+                      DomainTheme::SWATCH_COLORS.map { |c| [ c.to_s.humanize, c ] },
+                      { include_blank: "Default (by type)" },
+                      class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm",
+                      data: { callout_preview_target: "colorSelect", action: "callout-preview#update" } %>
+
+                <% if f.object.app_colored? %>
+                  <p class="text-xs text-gray-400 mt-0.5">This callout will be a different color when the registrant has action to take (e.g. amber if something's outstanding, orange if a balance is due).</p>
+                <% end %>
+              </div>
+
+              <div>
+                <%= f.label :icon_class, "Icon", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+
+                <%= f.text_field :icon_class,
+                      class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm font-mono",
+                      data: { callout_preview_target: "iconInput", action: "callout-preview#update" } %>
+              </div>
+            </div>
+          </details>
+
+          <%#
+            Visibility: the callout's show/hide rules — a drip date and the
+            payment gate. Opened on load when either is set. Hidden for the Payment
+            built-in, which the app shows/hides from live balance status.
+          %>
+          <% unless f.object.payment? %>
+            <details class="group" <%= "open" if f.object.display_from.present? || f.object.payment_access_gated? %>>
+              <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
+                <i class="fa-solid fa-chevron-right text-2xs text-gray-400 transition-transform group-open:rotate-90"></i>
+                Visibility
+              </summary>
+
+              <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                <div>
+                  <%= f.label :display_from, "Display date", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+
+                  <%= f.date_field :display_from,
+                        class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %>
+
+                  <p class="text-xs text-gray-500 mt-0.5">Drips onto the ticket on and after this date. Leave blank to show right away.</p>
+                </div>
+
+                <div>
+                  <%= f.label :payment_access_gated, "Payment-gated", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+
+                  <label class="flex items-center gap-2 text-sm text-gray-600"><%= f.check_box :payment_access_gated, class: "rounded border-gray-300 text-purple-600" %> Only show if paid or intends to pay</label>
+                </div>
+              </div>
+            </details>
+          <% end %>
+        </div>
+
+        <%# RIGHT COLUMN: linked resources. Opened on load only when resources are saved. %>
+        <details class="group" <%= "open" if f.object.registration_ticket_callout_resources.any? %>>
+          <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
+            <i class="fa-solid fa-chevron-right text-2xs text-gray-400 transition-transform group-open:rotate-90"></i>
+            Linked resources
+          </summary>
+
+          <div class="mt-1">
+            <p class="text-xs text-gray-500 mb-1">Optional. Each resource links to its own callout page. <strong>Subtitle</strong> shows on the callout card; <strong>page content</strong> shows under the resource title on its callout page.</p>
+
+            <div class="space-y-2">
+              <%# Column headers — mirror the row's flex + 3-col grid (plus a spacer
+                  for the remove button) so they line up. Hidden on mobile, where the
+                  fields stack to one column. %>
+              <div class="text-2xs mt-2 hidden items-center gap-2 font-semibold tracking-wide text-gray-400 uppercase sm:flex">
+                <div class="grid min-w-0 flex-1 grid-cols-3 gap-2">
+                  <span>Resource</span>
+                  <span>Card subtitle</span>
+                  <span>Page content</span>
+                </div>
+                <span class="w-3 shrink-0" aria-hidden="true"></span>
+              </div>
+
+              <%= f.fields_for :registration_ticket_callout_resources do |rf| %>
+                <%= render "events/registration_ticket_callout_resource_fields", f: rf %>
+              <% end %>
+
+              <%# Insert new rows at the end of the list (right before this link), not
+                  above the whole section — cocoon's default would prepend before the parent. %>
+              <%= link_to_add_association "➕ Add resource", f, :registration_ticket_callout_resources,
+                    partial: "events/registration_ticket_callout_resource_fields",
+                    data: { association_insertion_node: "this", association_insertion_method: "before" },
+                    class: "inline-block text-sm font-medium text-purple-600 hover:text-purple-800" %>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <%#
+        Bottom-right action: custom callouts can be deleted; built-ins can't, so
+        they show their default status (or a restore checkbox once customized) in
+        the same spot instead.
+      %>
+      <div class="flex items-center justify-end gap-x-6 text-sm">
+        <% if f.object.builtin? %>
+          <% if f.object.persisted? && BuiltinCallouts.customized?(f.object) %>
+            <label class="flex items-center gap-2 text-xs text-gray-500"><%= f.check_box :reset_to_default, class: "rounded border-gray-300 text-purple-600" %> Restore to default</label>
+          <% else %>
+            <span class="text-xs text-gray-300">Matches default</span>
+          <% end %>
+        <% else %>
+          <%= link_to_remove_association "Delete callout", f,
+                class: "text-sm text-gray-400 hover:text-red-600 underline" %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

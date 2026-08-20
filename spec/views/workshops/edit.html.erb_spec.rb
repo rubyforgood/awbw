@@ -9,6 +9,7 @@ RSpec.describe "workshops/edit", type: :view do
     assign(:workshop, workshop)
     assign(:potential_series_workshops, [])
     assign(:windows_types, [])
+    assign(:people, [])
     assign(:workshop_ideas, [])
     assign(:sectors, [])
     assign(:categories_grouped, [])
@@ -25,6 +26,11 @@ RSpec.describe "workshops/edit", type: :view do
 
     it "displays the edit form" do
       expect(rendered).to match(/Edit workshop/)
+    end
+
+    it "credits the author via a person picker, not a user picker" do
+      expect(rendered).to have_css("select[name='workshop[author_id]']")
+      expect(rendered).not_to have_css("select[name='workshop[created_by_id]']")
     end
 
     it "displays the View button" do

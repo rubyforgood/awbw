@@ -1,0 +1,49 @@
+<% content_for(:page_bg_class, "admin-only bg-white") %>
+<div class="mb-3">
+  <%= link_to person_path(@person), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+    <i class="fa-solid fa-arrow-left text-xs"></i> Back to <%= @person.full_name %>
+  <% end %>
+</div>
+
+<div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+  <div class="<%= DomainTheme.bg_class_for(:comments, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:comments) %> px-8 py-3">
+    <div class="flex items-center gap-2">
+      <i class="fa-solid fa-comments <%= DomainTheme.text_class_for(:comments, intensity: 700) %>"></i>
+      <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:comments, intensity: 900) %> uppercase tracking-wide">All comments</span>
+    </div>
+  </div>
+
+  <div class="p-4 sm:p-8 space-y-6">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+      <h1 class="text-2xl font-semibold text-gray-900"><%= @person.full_name %></h1>
+      <p class="text-sm text-gray-500">
+        <%= pluralize(@total_count, "comment") %><% if @flagged_count.positive? %> · <span class="font-medium text-orange-600"><%= @flagged_count %> flagged</span><% end %>
+      </p>
+    </div>
+
+    <%# Jump straight to another person's comments page. %>
+    <div class="flex items-center gap-2">
+      <label for="jump_person_id" class="text-xs font-semibold uppercase tracking-wide text-gray-500 whitespace-nowrap">Another person's comments</label>
+      <%= select_tag :jump_person_id, options_for_select([]),
+                     include_blank: true, prompt: "Search people…",
+                     class: "min-w-[240px] bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                     data: { controller: "remote-select navigate-select",
+                             remote_select_model_value: "person",
+                             remote_select_exclude_value: @person.id,
+                             navigate_select_url_template_value: all_comments_person_path("__ID__"),
+                             action: "change->navigate-select#navigate" } %>
+    </div>
+
+    <%= render "comments/composer", person: @person, comment: @new_comment, comment_targets: @comment_targets %>
+
+    <%= render "comments/search_boxes",
+               url: all_comments_person_path(@person),
+               clear_path: all_comments_person_path(@person),
+               frame: "person_comments_results" %>
+
+    <% result_src = all_comments_person_path(@person) + "?" + request.query_string %>
+    <%= turbo_frame_tag "person_comments_results", src: result_src, data: { turbo: "temporary" } do %>
+      <div class="py-6 text-center text-sm text-gray-400">Loading comments…</div>
+    <% end %>
+  </div>
+</div>

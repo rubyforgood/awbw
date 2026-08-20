@@ -1,12 +1,12 @@
 require "rails_helper"
 
 RSpec.describe GrantHelper, type: :helper do
-  describe "#grant_donor_badge" do
-    it "renders a person donor with the people-colored person icon and name" do
+  describe "#grant_funder_badge" do
+    it "renders a person funder with the people-colored person icon and name" do
       person = create(:person, first_name: "Bob", last_name: "Barker")
-      grant = create(:grant, donor: person)
+      grant = create(:grant, funder: person)
 
-      badge = helper.grant_donor_badge(grant)
+      badge = helper.grant_funder_badge(grant)
 
       expect(badge).to include("fa-user")
       expect(badge).to include(DomainTheme.text_class_for(:people))
@@ -14,11 +14,11 @@ RSpec.describe GrantHelper, type: :helper do
       expect(badge).not_to include("Person:")
     end
 
-    it "renders an organization donor with the organizations-colored building icon and name" do
+    it "renders an organization funder with the organizations-colored building icon and name" do
       organization = create(:organization, name: "Helping Hands")
-      grant = create(:grant, donor: organization)
+      grant = create(:grant, funder: organization)
 
-      badge = helper.grant_donor_badge(grant)
+      badge = helper.grant_funder_badge(grant)
 
       expect(badge).to include("fa-building")
       expect(badge).to include(DomainTheme.text_class_for(:organizations))

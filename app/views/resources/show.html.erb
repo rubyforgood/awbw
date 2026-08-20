@@ -28,9 +28,11 @@
         <div class="flex flex-col gap-1">
           <% unless @resource.toolkit_and_form? %>
             <div class="flex items-center text-gray-600 text-sm gap-2">
-              <span><%= @resource.author %></span>
+              <span>
+                <%= credited_author_link(@resource, class: "hover:underline") %>
+              </span>
               <% unless @resource.story? %>
-                <span class="<%= "border-l border-gray-400 pl-2" if @resource.author.present? %>">
+                <span class="border-l border-gray-400 pl-2">
                   <%= @resource.display_date %>
                 </span>
               <% end %>
@@ -47,7 +49,7 @@
         </div>
         <!-- Assets -->
         <div id="hero-image">
-          <%= render "assets/display_assets", resource: @resource, file: @resource.display_image, variant: :hero, link: true %>
+          <%= render "assets/resource_display", resource: @resource %>
         </div>
       </div>
       <!-- Mentions -->

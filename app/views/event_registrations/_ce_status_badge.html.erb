@@ -1,0 +1,10 @@
+<%# The canonical CE status badge. Locals:
+      registration   – the EventRegistration
+      href           – wrap the pill in a link to this path (optional)
+      simulate_paid  – preview the post-payment state (CE callout's ?admin=true)
+    Renders nothing when CE isn't in play; callers handle that case (e.g. the
+    registrants index shows a "Create" affordance instead). %>
+<% badge = registration.decorate.ce_status_badge(simulate_paid: local_assigns.fetch(:simulate_paid, false)) %>
+<% if badge %>
+  <%= render "shared/badge", label: badge.label, icon: badge.icon, classes: badge.classes, href: local_assigns[:href] %>
+<% end %>

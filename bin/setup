@@ -40,6 +40,32 @@ def db_client
   end
 end
 
+# Load MySQL's named time-zone tables into the server-global `mysql` schema.
+# Analytics queries convert to a named zone (e.g. America/Los_Angeles) via
+# CONVERT_TZ; a stock server (Homebrew mysql@8.0) ships these tables empty, so
+# those queries raise Groupdate::Error until they're populated. Idempotent and
+# non-fatal — skip quietly if already loaded or the tooling isn't available.
+def load_mysql_time_zones
+  return if ActiveRecord::Base.connection.select_value("SELECT COUNT(*) FROM mysql.time_zone_name").to_i.positive?
+
+  loader = %w[mariadb-tzinfo-to-sql mysql_tzinfo_to_sql].find do |bin|
+    system("command -v #{bin} > /dev/null", out: File::NULL)
+  end
+  zoneinfo = "/usr/share/zoneinfo"
+  unless loader && File.directory?(zoneinfo)
+    puts "  (skipped — #{loader ? zoneinfo : 'tzinfo-to-sql'} not available; run mysql_tzinfo_to_sql manually if analytics specs fail)"
+    return
+  end
+
+  config = ActiveRecord::Base.connection_db_config.configuration_hash
+  client = [ db_client, "-h", config[:host] || "127.0.0.1", "-P", (config[:port] || 3306).to_s, "-u", config[:username] || "root", "mysql" ].join(" ")
+  client << " -p#{config[:password]}" if config[:password]
+  system!("#{loader} #{zoneinfo} 2>/dev/null | #{client}")
+  puts "  ✓ Loaded MySQL time-zone tables"
+rescue => e
+  puts "  Warning: could not load MySQL time zones (#{e.message}); run mysql_tzinfo_to_sql manually if analytics specs fail"
+end
+
 # ------------------------------------------------------------------------------
 # Main setup sequence
 # ------------------------------------------------------------------------------
@@ -72,6 +98,9 @@ FileUtils.chdir APP_ROOT do
   system! "RAILS_ENV=test bin/rails db:drop"
   system! "RAILS_ENV=test bin/rails db:create"
   system! "RAILS_ENV=test bin/rails db:migrate"
+
+  puts "\n== Ensuring MySQL time-zone tables =="
+  load_mysql_time_zones
 
   puts "\n== Building Vite test assets =="
   system! "RAILS_ENV=test npx vite build --mode test"

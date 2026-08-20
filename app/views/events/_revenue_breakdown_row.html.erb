@@ -1,0 +1,44 @@
+<%#
+  One component figure in an event's revenue card, expandable to the people
+  behind it and each person's share. Reads as "[label] … [amount]"; the summary
+  toggles the contributor list, each row linking to that registrant in the manage
+  list. A zero row (no contributors) renders as a plain, non-expandable line.
+
+  Locals:
+    event:        the Event the figure belongs to (for the drill-in links)
+    label:        row label (e.g. "Registration payments")
+    cents:        the component subtotal, in integer cents
+    contributors: EventRevenueFigures::Contributor records behind the subtotal
+    value_class:  optional amount color class (defaults to neutral gray)
+%>
+<%
+  value_class = local_assigns.fetch(:value_class, "text-gray-800")
+%>
+<% if contributors.blank? %>
+  <div class="flex items-baseline justify-between gap-3">
+    <span class="text-gray-500"><%= label %></span>
+    <span class="tabular-nums <%= value_class %>"><%= dollars_from_cents(cents) %></span>
+  </div>
+<% else %>
+  <details class="group/rev">
+    <summary class="-mx-1 flex cursor-pointer list-none items-baseline justify-between gap-3 rounded px-1 py-0.5 select-none hover:bg-gray-100 [&::-webkit-details-marker]:hidden">
+      <span class="flex min-w-0 items-center gap-1.5 text-gray-500">
+        <i class="fa-solid fa-chevron-down text-2xs shrink-0 text-gray-300 transition-transform group-open/rev:rotate-180"></i>
+        <span class="min-w-0 truncate" title="<%= label %>"><%= label %></span>
+      </span>
+      <span class="tabular-nums <%= value_class %> shrink-0"><%= dollars_from_cents(cents) %></span>
+    </summary>
+    <ul class="my-1 ml-5 max-h-40 space-y-0.5 overflow-y-auto text-xs text-gray-700">
+      <% contributors.each do |contributor| %>
+        <li>
+          <%= link_to registrants_event_path(event, registrant_ids: contributor.person.id),
+                title: contributor.person.name,
+                class: "group/revlink flex items-baseline justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-100" do %>
+            <span class="min-w-0 truncate group-hover/revlink:underline"><%= contributor.person.name %></span>
+            <span class="shrink-0 text-gray-600 tabular-nums"><%= dollars_from_cents(contributor.cents) %></span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </details>
+<% end %>

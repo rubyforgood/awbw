@@ -5,12 +5,12 @@ RSpec.describe GrantDecorator, type: :decorator do
     let(:grant) { create(:grant, amount_cents: 100_000).decorate }
 
     it "formats the donation amount" do
-      expect(grant.amount).to eq("$1,000.00")
+      expect(grant.amount).to eq("$1,000")
     end
 
     it "formats the remaining balance" do
       create(:scholarship, grant: grant.object, amount_cents: 40_000)
-      expect(grant.remaining).to eq("$600.00")
+      expect(grant.remaining).to eq("$600")
     end
   end
 
@@ -130,6 +130,42 @@ RSpec.describe GrantDecorator, type: :decorator do
 
     it "is false while funds remain" do
       expect(grant.decorate).not_to be_fully_allocated
+    end
+  end
+
+  describe "#legacy_scholarship_badge" do
+    it "renders a Legacy chip for planned-giving grants" do
+      badge = create(:grant, :planned_giving).decorate.legacy_scholarship_badge
+      expect(badge).to include("Legacy")
+    end
+
+    it "renders nothing for ordinary grants" do
+      expect(create(:grant).decorate.legacy_scholarship_badge).to be_nil
+    end
+  end
+
+  describe "#in_memoriam_badge" do
+    it "renders a Memoriam chip for in-memoriam grants" do
+      badge = create(:grant, :in_memoriam).decorate.in_memoriam_badge
+      expect(badge).to include("Memoriam")
+    end
+
+    it "renders nothing for grants not given in memoriam" do
+      expect(create(:grant, :planned_giving).decorate.in_memoriam_badge).to be_nil
+    end
+  end
+
+  describe "#funds_allocation_deadline_compact" do
+    it "shows abbreviated month and day, with the full date on hover" do
+      grant = build(:grant, funds_allocation_deadline: Date.new(2026, 8, 17))
+      html = grant.decorate.funds_allocation_deadline_compact
+      expect(html).to include("Aug 17")
+      expect(html).to include('title="August 17, 2026"')
+    end
+
+    it "renders a dash when there is no deadline" do
+      grant = build(:grant, funds_allocation_deadline: nil)
+      expect(grant.decorate.funds_allocation_deadline_compact).to eq("—")
     end
   end
 end

@@ -85,7 +85,17 @@ class TaggingSearchService
                    .category_names_all(category_names_all)
                    .order(:position, :title)
                    .paginate(page: pages[:video_recordings] || 1, per_page: number_of_items_per_page)
-                   .decorate
+                   .decorate,
+
+      # Admin-only: authorized_scope resolves to none for non-admins, so grants
+      # only surface here for admins.
+      grants: authorized_scope(Grant.all)
+                .includes(:sectors, :categories)
+                .sector_names_all(sector_names_all)
+                .category_names_all(category_names_all)
+                .by_deadline
+                .paginate(page: pages[:grants] || 1, per_page: number_of_items_per_page)
+                .decorate
     }
   end
 

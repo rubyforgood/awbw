@@ -27,7 +27,9 @@
 
           <!-- Meta Data (exact screenshot style) -->
           <div class="text-sm text-gray-600 space-y-0.5 mb-6">
-            <p><strong>By:</strong> <%= @community_news.created_by.name %></p>
+            <p><strong>By:</strong>
+              <%= credited_author_link(@community_news) %>
+            </p>
             <p><strong>Organization Name:</strong> <%= @community_news.organization&.name %></p>
           </div>
 

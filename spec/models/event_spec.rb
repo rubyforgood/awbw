@@ -49,6 +49,52 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#date_title" do
+    it "labels the event by date and title, without the time or parens" do
+      event = build(:event, title: "Youth Creativity Day", start_date: Time.zone.local(2026, 9, 14, 14, 9))
+      expect(event.date_title).to eq("2026-09-14 — Youth Creativity Day")
+    end
+  end
+
+  describe ".in_year" do
+    it "matches events by the calendar year of their start date" do
+      in_year = create(:event, start_date: Time.zone.parse("2025-06-01 09:00"))
+      other_year = create(:event, start_date: Time.zone.parse("2024-06-01 09:00"))
+      expect(Event.in_year(2025)).to include(in_year)
+      expect(Event.in_year(2025)).not_to include(other_year)
+    end
+
+    it "includes a same-day start time on Dec 31 (not just midnight)" do
+      nye = create(:event, start_date: Time.zone.parse("2025-12-31 09:00"))
+      expect(Event.in_year(2025)).to include(nye)
+    end
+  end
+
+  describe ".live and .on_demand" do
+    it "partitions events by delivery format" do
+      live = create(:event, on_demand: false)
+      on_demand = create(:event, on_demand: true)
+      expect(Event.live).to include(live)
+      expect(Event.live).not_to include(on_demand)
+      expect(Event.on_demand).to include(on_demand)
+      expect(Event.on_demand).not_to include(live)
+    end
+  end
+
+  describe ".upcoming" do
+    it "includes an event starting today" do
+      # start_date is a date column, so comparing against a time-of-day would
+      # drop today's events at midnight.
+      today = create(:event, start_date: Date.current)
+      expect(Event.upcoming).to include(today)
+    end
+
+    it "excludes an event that already started" do
+      past = create(:event, start_date: 1.day.ago)
+      expect(Event.upcoming).not_to include(past)
+    end
+  end
+
   describe "#ended?" do
     it "returns true when end_date is in the past" do
       event = build(:event, end_date: 1.day.ago)
@@ -58,6 +104,28 @@ RSpec.describe Event, type: :model do
     it "returns false when end_date is in the future" do
       event = build(:event, end_date: 1.day.from_now)
       expect(event.ended?).to be false
+    end
+  end
+
+  describe "#shown_as_card?" do
+    it "is true for a published event that has not ended" do
+      event = build(:event, :published, end_date: 1.day.from_now)
+      expect(event.shown_as_card?).to be true
+    end
+
+    it "is true for a published event that ended within the last month" do
+      event = build(:event, :published, end_date: 1.week.ago)
+      expect(event.shown_as_card?).to be true
+    end
+
+    it "is false for an unpublished event" do
+      event = build(:event, :unpublished, end_date: 1.day.from_now)
+      expect(event.shown_as_card?).to be false
+    end
+
+    it "is false for a published event that ended more than a month ago" do
+      event = build(:event, :published, end_date: (1.month + 1.day).ago)
+      expect(event.shown_as_card?).to be false
     end
   end
 
@@ -85,6 +153,36 @@ RSpec.describe Event, type: :model do
     it "returns false more than 30 minutes after the end" do
       event = build(:event, start_date: 2.hours.ago, end_date: 31.minutes.ago)
       expect(event.videoconference_window_open?).to be false
+    end
+  end
+
+  describe "#videoconference_details_visible?" do
+    it "is visible when no videoconference callout has been materialized (nothing to gate on)" do
+      event = create(:event, start_date: 8.days.from_now, end_date: 8.days.from_now + 2.hours)
+      expect(event.videoconference_details_visible?).to be true
+    end
+
+    it "is gated while the materialized callout's drip date is still in the future" do
+      event = create(:event, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
+      create(:registration_ticket_callout, event:, builtin_key: "videoconference",
+        display_from: 2.days.from_now)
+
+      expect(event.videoconference_details_visible?).to be false
+    end
+
+    it "is visible once the materialized callout's drip date has passed" do
+      event = create(:event, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
+      create(:registration_ticket_callout, event:, builtin_key: "videoconference",
+        display_from: 1.day.ago)
+
+      expect(event.videoconference_details_visible?).to be true
+    end
+
+    it "is visible immediately when the callout's drip date has been cleared" do
+      event = create(:event, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
+      create(:registration_ticket_callout, event:, builtin_key: "videoconference", display_from: nil)
+
+      expect(event.videoconference_details_visible?).to be true
     end
   end
 
@@ -239,6 +337,23 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#registration_form_ids" do
+    it "returns only the ids of forms linked with the registration role" do
+      event = create(:event)
+      registration_form = create(:form, name: "Registration")
+      bulk_payment_form = create(:form, name: "Bulk payment")
+      create(:event_form, event: event, form: registration_form, role: "registration")
+      create(:event_form, event: event, form: bulk_payment_form, role: "bulk_payment")
+
+      expect(event.registration_form_ids).to contain_exactly(registration_form.id)
+    end
+
+    it "returns an empty array when no registration form is linked" do
+      event = create(:event)
+      expect(event.registration_form_ids).to eq([])
+    end
+  end
+
   describe "#one_click_for_signed_in?" do
     it "is true when no registration form is linked" do
       event = create(:event)
@@ -291,6 +406,186 @@ RSpec.describe Event, type: :model do
     it 'returns empty for non-matching query' do
       results = Event.search_by_params(query: 'nonexistent')
       expect(results).not_to include(art_event, music_event)
+    end
+  end
+
+  describe "#ce_hours_cost (dollars)" do
+    it "is nil when no cost is set" do
+      expect(build(:event, ce_hours_cost_cents: nil).ce_hours_cost).to be_nil
+    end
+
+    it "reads the stored cost back in dollars" do
+      expect(build(:event, ce_hours_cost_cents: 15_000).ce_hours_cost).to eq(150)
+    end
+
+    it "converts a dollar amount to cents on assignment" do
+      expect(build(:event, ce_hours_cost: 150).ce_hours_cost_cents).to eq(15_000)
+    end
+
+    it "clears the cents when assigned blank" do
+      expect(build(:event, ce_hours_cost: "").ce_hours_cost_cents).to be_nil
+    end
+  end
+
+  describe "#ce_eligible?" do
+    it "is true when the event offers a positive number of CE hours" do
+      expect(build(:event, ce_hours_offered: 6)).to be_ce_eligible
+    end
+
+    it "is false when no CE hours are offered" do
+      expect(build(:event, ce_hours_offered: nil)).not_to be_ce_eligible
+    end
+
+    it "is false when CE hours are zero" do
+      expect(build(:event, ce_hours_offered: 0)).not_to be_ce_eligible
+    end
+  end
+
+  describe "ce_payment_due_deadline date/time fields" do
+    it "merges the date and time inputs into the datetime column on save" do
+      event = create(:event,
+                     ce_payment_due_deadline_date: "2026-07-22",
+                     ce_payment_due_deadline_time: "09:00")
+      deadline = event.reload.ce_payment_due_deadline
+      expect(deadline.in_time_zone(Time.zone).strftime("%Y-%m-%d %H:%M")).to eq("2026-07-22 09:00")
+    end
+
+    it "exposes the stored deadline back through the virtual date/time readers" do
+      event = create(:event, ce_payment_due_deadline: Time.zone.local(2026, 7, 22, 9, 0))
+      expect(event.ce_payment_due_deadline_date).to eq("2026-07-22")
+      expect(event.ce_payment_due_deadline_time).to eq("09:00")
+    end
+
+    it "leaves the deadline nil when both inputs are blank" do
+      event = create(:event, ce_payment_due_deadline_date: "", ce_payment_due_deadline_time: "")
+      expect(event.reload.ce_payment_due_deadline).to be_nil
+    end
+  end
+
+  describe "#scholarship_eligible?" do
+    it "is true when the event has a cost" do
+      expect(build(:event, cost_cents: 1_000)).to be_scholarship_eligible
+    end
+
+    it "is true for a free event that offers a scholarship form" do
+      event = create(:event, cost_cents: 0)
+      create(:event_form, :scholarship, event: event)
+      expect(event).to be_scholarship_eligible
+    end
+
+    it "is false for a free event with no scholarship form" do
+      expect(create(:event, cost_cents: 0)).not_to be_scholarship_eligible
+    end
+
+    it "is false when the cost is unset and there is no scholarship form" do
+      expect(create(:event, cost_cents: nil)).not_to be_scholarship_eligible
+    end
+  end
+
+  describe "attendance sign-in window" do
+    # A two-day training running 9:00am–4:00pm each day.
+    let(:event) do
+      create(:event,
+        start_date: Time.zone.local(2026, 7, 23, 9, 0),
+        end_date: Time.zone.local(2026, 7, 24, 16, 0),
+        registration_close_date: Time.zone.local(2026, 7, 20, 9, 0))
+    end
+
+    describe "#event_dates" do
+      it "lists each consecutive calendar day, inclusive" do
+        expect(event.event_dates).to eq([ Date.new(2026, 7, 23), Date.new(2026, 7, 24) ])
+      end
+
+      it "is empty without a start date" do
+        expect(build(:event, start_date: nil).event_dates).to eq([])
+      end
+    end
+
+    describe "#event_dates_truncated?" do
+      it "is false when the event fits inside the day cap" do
+        expect(event.event_dates_truncated?).to be(false)
+      end
+
+      # day_count clamps to 5, so a longer training has days with no sign-in window,
+      # no report column and no sheet row. Both surfaces warn off this.
+      it "is true when the event runs past the last covered day" do
+        event.update!(end_date: Time.zone.local(2026, 7, 30, 16, 0))
+        expect(event.event_dates_truncated?).to be(true)
+      end
+    end
+
+    describe "#daily_start_at / #daily_end_at" do
+      it "applies the event's start/end time-of-day to each day" do
+        day2 = Date.new(2026, 7, 24)
+        expect(event.daily_start_at(day2)).to eq(Time.zone.local(2026, 7, 24, 9, 0))
+        expect(event.daily_end_at(day2)).to eq(Time.zone.local(2026, 7, 24, 16, 0))
+      end
+    end
+
+    describe "#attendance_sign_in_open?" do
+      it "opens 30 minutes before a day's start" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 8, 30))).to be(true)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 8, 29))).to be(false)
+      end
+
+      it "stays open through the day's end time" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 16, 0))).to be(true)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 16, 1))).to be(false)
+      end
+
+      it "applies the same window to every event day" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 24, 9, 0))).to be(true)
+      end
+
+      it "is closed overnight between event days" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 20, 0))).to be(false)
+      end
+
+      it "is closed on non-event days" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 25, 9, 0))).to be(false)
+      end
+    end
+
+    # The event form's End time is optional, so end_date can land at midnight. With
+    # no scheduled end to close the window against, the day stays open rather than
+    # the window never opening at all.
+    context "when the event has no end time" do
+      let(:event) do
+        create(:event,
+          start_date: Time.zone.local(2026, 7, 23, 9, 0),
+          end_date: Time.zone.local(2026, 7, 23),
+          registration_close_date: Time.zone.local(2026, 7, 20, 9, 0))
+      end
+
+      it "has no scheduled daily end" do
+        expect(event.daily_end_at(Date.new(2026, 7, 23))).to be_nil
+      end
+
+      it "keeps sign-in open for the rest of the event day" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 8, 30))).to be(true)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 20, 0))).to be(true)
+      end
+
+      it "still closes sign-in outside the event's days" do
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 22, 20, 0))).to be(false)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 24, 9, 0))).to be(false)
+      end
+    end
+
+    describe "#next_attendance_sign_in_opens_at" do
+      it "returns the first day's opening before the event" do
+        expect(event.next_attendance_sign_in_opens_at(Time.zone.local(2026, 7, 23, 7, 0)))
+          .to eq(Time.zone.local(2026, 7, 23, 8, 30))
+      end
+
+      it "skips to the next day's opening once the current window has opened" do
+        expect(event.next_attendance_sign_in_opens_at(Time.zone.local(2026, 7, 23, 10, 0)))
+          .to eq(Time.zone.local(2026, 7, 24, 8, 30))
+      end
+
+      it "is nil once the last day's window has opened" do
+        expect(event.next_attendance_sign_in_opens_at(Time.zone.local(2026, 7, 24, 12, 0))).to be_nil
+      end
     end
   end
 end

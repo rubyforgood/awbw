@@ -6,11 +6,12 @@ class StoriesController < ApplicationController
 
   def index
     authorize!
+    @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
       base_scope = authorized_scope(Story.includes(:windows_type, :organization, :workshop,
-                                                   :created_by, :bookmarks, :primary_asset,
-                                                   :story_idea))
+                                                   :author, :bookmarks, :primary_asset,
+                                                   :story_idea, created_by: :person))
       filtered = base_scope.search_by_params(params)
       sortable = %w[title updated_at created_at windows_type workshop author organization]
       @sort = sortable.include?(params[:sort]) ? params[:sort] : "created_at"
@@ -19,7 +20,7 @@ class StoriesController < ApplicationController
       @stories = filtered.paginate(page: params[:page], per_page: per_page).decorate
       @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
 
-      render :index_lazy
+      render :stories_results
     else
       @organizations = authorized_scope(Organization.all, as: :affiliated).order(:name)
       render :index
@@ -62,6 +63,7 @@ class StoriesController < ApplicationController
 
   def create
     @story = Story.new(story_params.except(:category_ids, :sector_ids))
+    @story.created_by = current_user
     authorize! @story
 
     success = false
@@ -74,6 +76,7 @@ class StoriesController < ApplicationController
         elsif params.dig(:library_asset, :new_assets).present?
           update_asset_owner(@story)
         end
+        notify_story_promoted if @story.story_idea.present?
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
@@ -95,7 +98,10 @@ class StoriesController < ApplicationController
     success = false
 
     Story.transaction do
-      if @story.update(story_params.except(:images, :category_ids, :sector_ids))
+      @story.assign_attributes(story_params.except(:images, :category_ids, :sector_ids))
+      attribute_comment_authorship
+      stamp_new_notification_recipients
+      if @story.save
         assign_associations(@story)
         if params[:promote_idea_assets] == "true"
           @story.attach_assets_from_idea!
@@ -130,8 +136,6 @@ class StoriesController < ApplicationController
     @story_ideas = authorized_scope(StoryIdea.includes(:created_by))
                             .references(:users)
                             .order(:created_at)
-    @people = Person.order(Arel.sql("LOWER(first_name), LOWER(last_name)"))
-    @users = User.has_access.includes(:person).left_joins(:person).order(Arel.sql("people.first_name IS NULL, LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email)"))
     @windows_types = WindowsType.all
     @workshops = authorized_scope(Workshop.all).includes(:windows_type).order(:title)
     @categories_grouped =
@@ -158,7 +162,43 @@ class StoriesController < ApplicationController
 
   private
 
+  # Stamp authorship on comments edited through the story form: author + editor
+  # on new ones, editor on existing ones whose body changed.
+  def attribute_comment_authorship
+    @story.comments.select(&:new_record?).each do |c|
+      c.created_by = current_user
+      c.updated_by = current_user
+    end
+    @story.comments.select { |c| c.persisted? && c.body_changed? }.each do |c|
+      c.updated_by = current_user
+    end
+  end
+
+  # Promoting a story idea into a story emails the idea's submitter and an admin FYI.
+  def notify_story_promoted
+    NotificationServices::CreateNotification.call(
+      noticeable: @story,
+      kind: :story_promoted,
+      recipient_role: :person,
+      recipient_email: @story.story_idea.created_by.email,
+      notification_type: 0)
+    NotificationServices::CreateNotification.call(
+      noticeable: @story,
+      kind: :story_promoted_fyi,
+      recipient_role: :admin,
+      recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      notification_type: 0)
+  end
+
+  # Inline-logged communications are addressed to the story's credited author.
+  def stamp_new_notification_recipients
+    recipient_email = @story.communications_email.presence || "n/a"
+    @story.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
+  end
+
   def set_story
+    # Accepts both the bare id ("23") and the slugged param ("23-my-great-story");
+    # ActiveRecord casts the leading id via `to_i`, so both resolve the same story.
     @story = Story.find(params[:id])
   end
 
@@ -174,8 +214,7 @@ class StoriesController < ApplicationController
       scope.left_joins(:workshop)
            .reorder(Workshop.arel_table[:title].public_send(dir))
     when "author"
-      scope.left_joins(created_by: :person)
-           .reorder(Person.arel_table[:first_name].public_send(dir))
+      scope.order_by_author(direction)
     when "organization"
       scope.left_joins(:organization)
            .reorder(Organization.arel_table[:name].public_send(dir))
@@ -189,11 +228,13 @@ class StoriesController < ApplicationController
     params.require(:story).permit(
       :title, :rhino_body, :featured, :published, :publicly_visible, :publicly_featured, :youtube_url, :website_url,
       :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
-      :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id, :author_credit_preference,
+      :author_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id, :author_credit_preference,
       category_ids: [],
       sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ],
     )
   end
 
@@ -206,6 +247,7 @@ class StoriesController < ApplicationController
       external_workshop_title: idea.external_workshop_title,
       windows_type_id: idea.windows_type_id,
       youtube_url: idea.youtube_url,
+      author_id: idea.created_by&.person_id,
       author_credit_preference: idea.author_credit_preference
     }
   end

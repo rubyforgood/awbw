@@ -1,0 +1,16 @@
+<% invoice = invoice.decorate %>
+<li class="bg-white border border-gray-200 rounded-lg px-3 py-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+  <div>
+    <span class="block text-sm font-medium text-gray-800"><%= invoice.period_range %></span>
+    <span class="block text-xs text-gray-500">
+      <%= invoice.cost %> billed<% unless invoice.comped? %> &middot; <%= invoice.paid %> paid<% end %>
+    </span>
+  </div>
+  <div class="flex items-center gap-2">
+    <%= render "membership_invoices/status_pill", invoice: invoice, linked: local_assigns.fetch(:linked, false) %>
+
+    <% if local_assigns.fetch(:editable, false) %>
+      <%= link_to "Edit", edit_membership_invoice_path(invoice.object), class: "btn btn-secondary-outline btn-sm" %>
+    <% end %>
+  </div>
+</li>

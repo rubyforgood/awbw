@@ -8,12 +8,6 @@ RSpec.describe "data:convert_age_ranges" do
 
   before do
     Rake::Task["data:convert_age_ranges"].reenable
-
-    # The has_many :comments association is added in a separate PR.
-    # Define it here so the rake task can run in isolation.
-    unless Workshop.reflect_on_association(:comments)
-      Workshop.has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
-    end
   end
 
   let!(:age_range_type) { create(:category_type, name: "AgeRange") }

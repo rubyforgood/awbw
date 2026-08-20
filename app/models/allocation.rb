@@ -1,4 +1,5 @@
 class Allocation < ApplicationRecord
+  has_paper_trail
   belongs_to :source, polymorphic: true
   belongs_to :allocatable, polymorphic: true
   belongs_to :reverted, class_name: "Allocation", optional: true
@@ -9,8 +10,26 @@ class Allocation < ApplicationRecord
   validates :allocatable_type, presence: true
   validates :allocatable_id, presence: true
 
+  COST_ERRORS = {
+    "EventRegistration" => {
+      no_cost: "Cannot allocate to a free event.",
+      fully_paid: "Event registration is already fully paid.",
+      too_much: "Cannot allocate more than remaining event cost."
+    },
+    "ContinuingEducationRegistration" => {
+      no_cost: "Cannot allocate to a CE registration with no cost.",
+      fully_paid: "CE registration is already fully paid.",
+      too_much: "Cannot allocate more than remaining CE cost."
+    },
+    "MembershipInvoice" => {
+      no_cost: "Cannot allocate to a membership invoice with no cost.",
+      fully_paid: "Membership invoice is already fully paid.",
+      too_much: "Cannot allocate more than the remaining membership balance."
+    }
+  }.freeze
+
   validate :reverted_requires_positive_amount, :negative_cannot_be_reverted
-  validate :validate_event_registration_cost, if: -> { allocatable_type == "EventRegistration" }
+  validate :within_allocatable_cost, if: -> { allocatable.is_a?(Registerable) }
 
   after_create :adjust_source_remaining
 
@@ -85,26 +104,25 @@ class Allocation < ApplicationRecord
 
   private
 
-  def validate_event_registration_cost
-    event_reg = allocatable
-    return unless event_reg.is_a?(EventRegistration)
+  def within_allocatable_cost
+    messages = COST_ERRORS.fetch(allocatable_type)
+    cost_cents = allocatable.cost_cents.to_i
 
-    cost_cents = event_reg.event.cost_cents
-    if cost_cents.blank?
-      errors.add(:base, "Cannot allocate to a free event.")
+    if cost_cents <= 0
+      errors.add(:base, messages[:no_cost])
       return
     end
 
-    other_total = event_reg.allocations_sum
+    return unless amount.to_i > 0
+
+    other_total = allocatable.allocations_sum
     other_total -= amount_was if persisted?
 
-    if amount.to_i > 0
-      if other_total >= cost_cents
-        errors.add(:base, "Event registration is already fully paid.")
-      elsif other_total + amount > cost_cents
-        remaining = cost_cents - other_total
-        errors.add(:base, "Cannot allocate more than remaining event cost. Remaining: $#{'%.2f' % (remaining / 100.0)}")
-      end
+    if other_total >= cost_cents
+      errors.add(:base, messages[:fully_paid])
+    elsif other_total + amount > cost_cents
+      remaining = cost_cents - other_total
+      errors.add(:base, "#{messages[:too_much]} Remaining: #{MoneyFormatter.dollars_from_cents(remaining)}")
     end
   end
 

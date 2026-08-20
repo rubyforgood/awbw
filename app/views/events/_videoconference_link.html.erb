@@ -8,6 +8,7 @@
     <% end %>
     <% if show_link %>
       <%= link_to "Join on #{event.videoconference_domain}", safe_url(event.videoconference_url), target: "_blank", rel: "noopener noreferrer", class: "underline" %>
+      <%= render "events/videoconference_connection", event: event %>
     <% end %>
   <% end %>
 <% end %>

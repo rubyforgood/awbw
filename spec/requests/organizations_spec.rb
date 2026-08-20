@@ -37,6 +37,20 @@ RSpec.describe "/organizations", type: :request do
       get organizations_url
       expect(response).to be_successful
     end
+
+    it "renders the results frame with deduped age groups from affiliated people" do
+      organization = Organization.create!(valid_attributes)
+      age_type = create(:category_type, name: "AgeRange", published: true)
+      teen = create(:category, :published, category_type: age_type, name: "13-17")
+      person = create(:person)
+      create(:affiliation, organization: organization, person: person)
+      person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+
+      get organizations_url, headers: { "Turbo-Frame" => "organizations_results" }
+
+      expect(response).to be_successful
+      expect(response.body).to include("13-17")
+    end
   end
 
   describe "GET /show" do
@@ -44,6 +58,22 @@ RSpec.describe "/organizations", type: :request do
       organization = Organization.create!(valid_attributes)
       get organization_url(organization)
       expect(response).to be_successful
+    end
+
+    it "shows age groups on the profile, gated by profile_show_age_ranges" do
+      organization = Organization.create!(valid_attributes)
+      age_type = create(:category_type, name: "AgeRange", published: true)
+      teen = create(:category, :published, category_type: age_type, name: "13-17")
+      person = create(:person)
+      create(:affiliation, organization: organization, person: person)
+      person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+
+      get organization_url(organization)
+      expect(response.body).to include("13-17")
+
+      organization.update!(profile_show_age_ranges: false)
+      get organization_url(organization)
+      expect(response.body).not_to include("13-17")
     end
 
     it "renders successfully with workshop logs" do
@@ -73,8 +103,8 @@ RSpec.describe "/organizations", type: :request do
       affiliated_sector_2 = create(:sector, name: "Affiliated Sector 2")
       person_1 = create(:person)
       person_2 = create(:person)
-      create(:sectorable_item, sector: affiliated_sector_1, sectorable: person_1)
-      create(:sectorable_item, sector: affiliated_sector_2, sectorable: person_2)
+      create(:sectorable_item, sector: affiliated_sector_1, sectorable: person_1, is_primary: true)
+      create(:sectorable_item, sector: affiliated_sector_2, sectorable: person_2, is_primary: true)
 
       org = create(:organization, organization_status: organization_status)
       create(:sectorable_item, sector: create(:sector, name: "Direct Sector 1"), sectorable: org)
@@ -144,6 +174,37 @@ RSpec.describe "/organizations", type: :request do
       get edit_organization_url(organization)
       expect(response.body).to include("Monthly reports")
     end
+
+    it "renders affiliated-since as merged year-based periods (server-side)" do
+      organization = Organization.create!(valid_attributes)
+      create(:affiliation, organization: organization, person: create(:person),
+                           start_date: Date.new(2010, 1, 1), end_date: Date.new(2012, 6, 1))
+      create(:affiliation, organization: organization, person: create(:person),
+                           start_date: Date.new(2013, 1, 1), end_date: Date.new(2015, 6, 1))
+
+      get edit_organization_url(organization)
+
+      expect(response.body).to include("2010-2012, 2013-2015")
+    end
+
+    it "renders per-event program-status chips only for facilitator-training events" do
+      organization = Organization.create!(valid_attributes)
+      create(:affiliation, organization: organization, person: create(:person),
+                           title: "Facilitator", start_date: Date.new(2020, 1, 1))
+      training = create(:event, title: "Qwultz Training", facilitator_training: true,
+                                start_date: Date.new(2026, 8, 1))
+      non_training = create(:event, title: "Zibberpicnic Social", facilitator_training: false,
+                                    start_date: Date.new(2026, 8, 2))
+      [ training, non_training ].each do |event|
+        registration = create(:event_registration, registrant: create(:person), event: event, status: "registered")
+        registration.event_registration_organizations.create!(organization: organization)
+      end
+
+      get edit_organization_url(organization)
+
+      expect(response.body).to include("Qwultz Training")
+      expect(response.body).not_to include("Zibberpicnic Social")
+    end
   end
 
   describe "POST /create" do
@@ -196,6 +257,12 @@ RSpec.describe "/organizations", type: :request do
         patch organization_url(organization), params: { organization: new_attributes }
         expect(response).to redirect_to(organization_url(organization))
       end
+
+      it "updates the high_profile flag" do
+        organization = Organization.create!(valid_attributes)
+        patch organization_url(organization), params: { organization: { high_profile: "1" } }
+        expect(organization.reload.high_profile).to be(true)
+      end
     end
 
     context "with invalid parameters" do
@@ -203,6 +270,25 @@ RSpec.describe "/organizations", type: :request do
         organization = Organization.create!(valid_attributes)
         patch organization_url(organization), params: { organization: invalid_attributes }
         expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
+
+    context "linking an affiliation to an organization address" do
+      it "saves the chosen organization_address_id on the affiliation" do
+        organization = Organization.create!(valid_attributes)
+        address = create(:address, addressable: organization)
+        person = create(:person)
+        affiliation = create(:affiliation, organization: organization, person: person)
+
+        patch organization_url(organization), params: {
+          organization: {
+            affiliations_attributes: {
+              "0" => { id: affiliation.id, person_id: person.id, organization_address_id: address.id }
+            }
+          }
+        }
+
+        expect(affiliation.reload.organization_address_id).to eq(address.id)
       end
     end
   end

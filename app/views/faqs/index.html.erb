@@ -10,7 +10,7 @@
         <p class="text-gray-600 mt-2">Find answers to common questions here. If you don't see what you need, please reach out to us at <%= mail_to ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"), class: "text-blue-600 hover:text-blue-800" %>.</p>
       </div>
 
-      <div class="text-right text-end">
+      <div class="text-right">
         <% if allowed_to?(:new?, Faq) %>
           <%= link_to "New FAQ",
                       new_faq_path,
@@ -28,7 +28,8 @@
         class="animate-fade"
         data-controller="sortable"
         data-sortable-url-value="<%= faq_path(id: ":id") %>"
-        data-testid="faq-list">
+        data-testid="faq-list"
+      >
         <% if @faqs.present? %>
           <%= render partial: "faq", collection: @faqs, as: :faq %>
           <div class="pagination flex justify-center mt-12"><%= tailwind_paginate @faqs %></div>

@@ -13,13 +13,13 @@ RSpec.describe "stories/index", type: :view do
   end
 
   it "renders a list of stories" do
-    render template: "stories/index_lazy"
+    render template: "stories/stories_results"
     expect(rendered).to include(story1.title, story2.title)
   end
 
   it "renders a friendly message when no stories exist" do
     assign(:stories, paginated([]))
-    render template: "stories/index_lazy"
+    render template: "stories/stories_results"
     expect(rendered).to match(/No stories found/)
   end
 end

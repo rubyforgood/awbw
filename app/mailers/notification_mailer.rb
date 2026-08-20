@@ -12,7 +12,7 @@ class NotificationMailer < ApplicationMailer
 
     # Send email to the admin
     mail(
-      subject: "#{FYI_PREFIX} New event registration by #{@person.full_name} to #{@event.title}"
+      subject: "#{FYI_PREFIX} New #{@event_registration.registration_subject_noun} by #{@person.full_name} to #{@event.title}"
     )
   end
 
@@ -23,7 +23,7 @@ class NotificationMailer < ApplicationMailer
     @notification_type = "Event registration cancellation"
 
     mail(
-      subject: "#{FYI_PREFIX} Event registration cancelled by #{@person.full_name} for #{@event.title}"
+      subject: "#{FYI_PREFIX} #{@event_registration.registration_subject_noun.capitalize} cancelled by #{@person.full_name} for #{@event.title}"
     )
   end
 
@@ -75,6 +75,27 @@ class NotificationMailer < ApplicationMailer
 
     mail(
       subject: "#{FYI_PREFIX} New #{@noticeable_klass} submission by #{@user.full_name}"
+    )
+  end
+
+  def story_promoted(notification)
+    @story = notification.noticeable.decorate
+    @story_idea = @story.story_idea
+    @user = @story_idea&.created_by || @story.created_by
+
+    mail(
+      to: notification.recipient_email,
+      subject: "#{SUBJECT_PREFIX} Your story idea is now a story"
+    )
+  end
+
+  def story_promoted_fyi(notification)
+    @story = notification.noticeable.decorate
+    @story_idea = @story.story_idea
+    @user = @story_idea&.created_by || @story.created_by
+
+    mail(
+      subject: "#{FYI_PREFIX} Story idea promoted to a story: #{@story.title}"
     )
   end
 
@@ -143,6 +164,28 @@ class NotificationMailer < ApplicationMailer
 
     mail(
       subject: "#{FYI_PREFIX} New WorkshopLog submission by #{@user.full_name}"
+    )
+  end
+
+  def form_submission_confirmation(notification)
+    @submission = notification.noticeable
+    @form = @submission.form
+    @person = @submission.person
+
+    mail(
+      to: notification.recipient_email,
+      subject: "#{SUBJECT_PREFIX} We received your response to #{@form.display_name}"
+    )
+  end
+
+  def form_submission_confirmation_fyi(notification)
+    @submission = notification.noticeable
+    @form = @submission.form
+    @person = @submission.person
+    @answers = @submission.form_answers.includes(:form_field)
+
+    mail(
+      subject: "#{FYI_PREFIX} New form submission: #{@form.display_name} by #{@person.full_name}"
     )
   end
 

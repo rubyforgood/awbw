@@ -5,8 +5,12 @@ class AffiliationPolicy < ApplicationPolicy
     record.persisted? && admin? # we don't allow users to edit their own
   end
 
+  def edit?
+    record.persisted? && admin?
+  end
+
   def update?
-    record.persisted? && admin? # we don't allow users to edit their own
+    edit?
   end
 
   # Scoping

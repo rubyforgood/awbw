@@ -2,7 +2,7 @@
 <div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:organizations) %> border border-gray-200 rounded-xl shadow p-6">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
-        <div id="organization_count">
+        <div id="organizations_count">
           <h1 class="text-2xl font-semibold text-gray-900">Organizations</h1>
         </div>
         <% if allowed_to?(:new?, Organization) %>
@@ -17,40 +17,7 @@
 
       <% result_src = organizations_path + "?" + request.query_string %>
 
-      <%= turbo_frame_tag :organization_results, src: result_src, data: {turbo: "temporary"} do %>
-        <div class="rounded bg-white p-6">
-          <div class="overflow-x-auto">
-            <table class="min-w-full border border-gray-200 rounded divide-y divide-gray-200 animate-pulse">
-              <thead class="bg-gray-100">
-              <tr>
-                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Organization</th>
-                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Designations</th>
-                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Affiliated since</th>
-                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">People</th>
-                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700"></th>
-              </tr>
-              </thead>
-
-              <tbody class="divide-y divide-gray-100">
-              <% 8.times do %>
-                <tr>
-                  <td class="px-4 py-3"><div class="h-4 w-40 bg-gray-200 rounded"></div></td>
-                  <td class="px-4 py-3"><div class="h-4 w-24 bg-gray-200 rounded"></div></td>
-                  <td class="px-4 py-3"><div class="h-4 w-12 bg-gray-200 rounded"></div></td>
-                  <td class="px-4 py-3 text-center"><div class="h-4 w-8 bg-gray-200 rounded mx-auto"></div></td>
-                  <td class="px-4 py-3 text-center"><div class="h-4 w-12 bg-gray-200 rounded mx-auto"></div></td>
-                </tr>
-              <% end %>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Pagination skeleton -->
-        <div class="mt-6 flex justify-center space-x-2 animate-pulse">
-          <div class="h-8 w-10 bg-gray-200 rounded"></div>
-          <div class="h-8 w-10 bg-gray-200 rounded"></div>
-          <div class="h-8 w-10 bg-gray-200 rounded"></div>
-        </div>
+      <%= turbo_frame_tag :organizations_results, src: result_src, data: {turbo: "temporary"} do %>
+        <%= render "results_skeleton" %>
       <% end %>
 </div>

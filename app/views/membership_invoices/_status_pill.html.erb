@@ -1,0 +1,9 @@
+<% badge = invoice.status_badge %>
+<% linked = local_assigns.fetch(:linked, false) %>
+
+<%= render "shared/badge",
+      label: badge.label,
+      icon: badge.icon,
+      classes: badge.classes,
+      title: ("Record or review payments for this membership invoice" if linked),
+      href: (allocations_path(allocatable_sgid: invoice.object.to_sgid.to_s) if linked) %>

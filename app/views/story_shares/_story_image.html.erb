@@ -1,0 +1,19 @@
+<%# Full-bleed story image with a sector chip and a play badge for video stories.
+    Locals: story; aspect (default "aspect-[4/3]"). %>
+<% aspect = local_assigns.fetch(:aspect, "aspect-[4/3]") %>
+<% sector = story.sectors.first %>
+<div class="relative <%= aspect %> overflow-hidden bg-gray-200">
+  <%= image_tag story.display_image, alt: story.title, loading: "lazy", class: "w-full h-full object-cover" %>
+  <% if sector %>
+    <div class="absolute top-3 left-3 <%= story_share_sector_chip_class(sector.name) %> text-white text-xs font-semibold uppercase px-3 py-1.5">
+      <%= sector.name %>
+    </div>
+  <% end %>
+  <% if story.youtube_url.present? %>
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <span class="flex items-center justify-center w-14 h-14 rounded-full bg-white/70">
+        <i class="fa-solid fa-play text-gray-800 text-lg ml-1"></i>
+      </span>
+    </div>
+  <% end %>
+</div>

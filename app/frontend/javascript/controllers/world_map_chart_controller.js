@@ -47,6 +47,12 @@ export default class extends Controller {
       return countsByName[name] ?? countsByName[aliasByAtlasName[name]] ?? 0
     }
 
+    // Adjust bc one over-represented country (e.g. US) left every other country near-white.
+    const values = countries.map(valueFor)
+    const highest = Math.max(0, ...values)
+    const secondHighest = Math.max(0, ...values.filter(v => v < highest))
+    const colorScaleMax = Math.max(1, Math.ceil((secondHighest || highest) * 1.4))
+
     this.chart = new Chart(this.canvasTarget, {
       type: "choropleth",
       data: {
@@ -73,6 +79,8 @@ export default class extends Controller {
           projection: { axis: "x", projection: "equalEarth" },
           color: {
             axis: "x",
+            min: 0,
+            max: colorScaleMax,
             quantize: 5,
             interpolate: rampTo(this.colorValue),
             legend: { position: "bottom-right", align: "bottom" }

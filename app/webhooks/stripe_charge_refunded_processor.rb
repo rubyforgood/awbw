@@ -7,7 +7,7 @@ class StripeChargeRefundedProcessor
     return unless external_payment
 
     charge = Stripe::Charge.retrieve(
-      { id: stripe_charge.id, expand: [ "refunds" ] },
+      { id: stripe_charge.id, expand: [ "refunds", "balance_transaction" ] },
       { stripe_account: event.try(:account) }.compact
     )
 
@@ -23,5 +23,7 @@ class StripeChargeRefundedProcessor
         stripe_refund_id: stripe_refund.id
       )
     end
+
+    external_payment.update!(metadata: (external_payment.metadata || {}).merge(stripe_charge: charge.to_hash))
   end
 end

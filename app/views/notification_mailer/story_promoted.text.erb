@@ -1,0 +1,18 @@
+Your story has been shared
+
+Hello <%= @user.full_name %>,
+
+Wonderful news — the story idea you shared with us has been developed into a story. Thank you for helping others see the healing power of art.
+
+<%= @story.title %>
+<% if @story.windows_type.present? %>
+(<%= @story.windows_type.short_name %>)
+<% end %>
+
+<% if @story.published? || @story.publicly_visible? %>
+View story:
+<%= polymorphic_url(@story) %>
+<% end %>
+
+--
+This is an automated message from AWBW.

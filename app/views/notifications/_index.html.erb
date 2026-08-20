@@ -13,15 +13,19 @@
 
   <tbody class="divide-y divide-gray-100">
   <% @notifications.each do |notification| %>
-    <tr class="hover:bg-gray-50">
+    <% n = notification.decorate %>
+    <tr class="<%= n.row_class %>">
+
       <!-- Sent -->
-      <td class="px-4 py-3 text-gray-700 whitespace-nowrap">
+      <td class="px-4 py-3 whitespace-nowrap text-gray-700">
         <% if notification.delivered_at.present? %>
           <%= time_ago_in_words(notification.delivered_at.in_time_zone("Pacific Time (US & Canada)")) %> ago
         <% elsif notification.failed? %>
-          <span class="text-red-600 font-medium" title="<%= notification.error_class %>: <%= notification.error_message %>">Failed</span>
+          <span class="font-medium text-red-600" title="<%= notification.error_class %>: <%= notification.error_message %>">Failed</span>
+        <% elsif notification.archived? %>
+          <span class="font-medium text-gray-400" title="Retired — old undelivered email, no longer tracked as pending">Archived</span>
         <% else %>
-          <span class="text-yellow-600 font-medium">Pending</span>
+          <span class="font-medium text-yellow-600">Pending</span>
         <% end %>
       </td>
 
@@ -30,29 +34,39 @@
       <%#= notification.kind.to_s.humanize %>
       <!--          </td>-->
 
-      <!-- People -->
+      <!-- People (To on top; From/To values flip for incoming — the person sent it.
+           A value links to the person's profile when the email is on file (name
+           shown, email on hover), otherwise a mailto for the raw email. The AWBW
+           Portal has no address, so it stays plain text.) -->
       <td class="px-4 py-3 text-gray-700">
-        <div><span class="text-xs uppercase text-gray-500">To:</span> <%= notification.recipient_email %></div>
-        <div class="text-[10px] text-gray-400"><span class="uppercase">From:</span> <%= notification.sender&.full_name.presence || "AWBW portal" %></div>
+        <div><span class="text-xs text-gray-500 uppercase">To:</span> <%= n.to_value %></div>
+        <div class="text-2xs text-gray-400">
+          <span class="uppercase">From:</span> <%= n.from_value %>
+        </div>
       </td>
 
       <!-- Subject -->
-      <td class="px-4 py-3 text-gray-900 font-medium">
+      <td class="px-4 py-3 font-medium text-gray-900">
         <%= notification.email_subject.presence || "—" %>
       </td>
 
-      <!-- Record -->
+      <!-- Record (with the audience chip to the right of the record type) -->
       <td class="px-4 py-3 text-gray-700">
+        <div class="flex items-center gap-1.5">
+          <% if notification.noticeable.present? %>
+            <span class="text-2xs text-gray-400 uppercase"><%= noticeable_type_label(notification.noticeable) %></span>
+          <% end %>
+          <%= n.flag_badges %>
+        </div>
         <% if notification.noticeable.present? %>
           <% record_path = routable_path(notification.noticeable) %>
-          <div class="text-[10px] uppercase text-gray-400"><%= noticeable_type_label(notification.noticeable) %></div>
           <% if record_path %>
             <%= link_to noticeable_label(notification.noticeable),
                         record_path,
                         data: { turbo_frame: "_top" },
-                        class: "font-medium text-blue-600 hover:underline" %>
+                        class: "font-medium text-gray-800 hover:text-gray-900 hover:underline" %>
           <% else %>
-            <span class="font-medium text-gray-700"><%= noticeable_label(notification.noticeable) %></span>
+            <span class="font-medium text-gray-800"><%= noticeable_label(notification.noticeable) %></span>
           <% end %>
         <% else %>
           <span class="text-gray-400">—</span>
@@ -71,7 +85,7 @@
                  name="notification[responded]"
                  value="1"
                  <%= "checked" if notification.responded? %>
-                 class="w-5 h-5 rounded border-gray-300 text-green-600 accent-green-600 focus:ring-green-500 cursor-pointer"
+                 class="h-5 w-5 cursor-pointer rounded border-gray-300 text-green-600 accent-green-600 focus:ring-green-500"
                  title="Responded to by staff">
         <% else %>
           <span class="text-gray-300">—</span>
@@ -91,7 +105,7 @@
   <% if @notifications.empty? %>
     <tr>
       <td colspan="6" class="px-4 py-6 text-center text-gray-500">
-        No notifications found.
+        <%= t("communications.empty") %>
       </td>
     </tr>
   <% end %>

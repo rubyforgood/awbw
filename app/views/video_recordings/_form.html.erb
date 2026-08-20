@@ -9,15 +9,16 @@
                                   value: f.object.title } %>
       </div>
       <div class="admin-only bg-blue-100 rounded p-3 mt-6 md:mt-0">
+        <%= render "shared/visibility_info", flags: %i[published featured publicly_visible publicly_featured] %>
         <div class="grid grid-cols-2 items-center gap-2 mb-3">
-          <%= f.input :published, as: :boolean %>
-          <%= f.input :featured, as: :boolean %>
-          <%= f.input :publicly_visible, as: :boolean %>
-          <%= f.input :publicly_featured, as: :boolean %>
+          <%= visibility_flag_input f, :published %>
+          <%= visibility_flag_input f, :featured %>
+          <%= visibility_flag_input f, :publicly_visible %>
+          <%= visibility_flag_input f, :publicly_featured %>
         </div>
         <div class="grid grid-cols-2 items-center gap-2">
-          <%= f.input :is_instructional, as: :boolean, label: "Instructional" %>
-          <%= f.input :is_podcast, as: :boolean, label: "Podcast" %>
+          <%= visibility_flag_input f, :is_instructional, label: "Instructional" %>
+          <%= visibility_flag_input f, :is_podcast, label: "Podcast" %>
         </div>
       </div>
     </div>

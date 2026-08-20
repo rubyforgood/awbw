@@ -1,6 +1,6 @@
 <% title ||= "Video Gallery" %>
 
-<section class="py-10 bg-teal-50">
+<section class="py-10 <%= DomainTheme.bg_class_for(:video_recordings) %>">
   <div class="max-w-6xl mx-auto px-4">
     <%= render "home/home_section_header",
                title: title,

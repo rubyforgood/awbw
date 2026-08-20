@@ -1,0 +1,27 @@
+Story idea promoted to a story
+==============================
+
+<%= @story.title %>
+<% if @story.windows_type.present? %>
+(<%= @story.windows_type.short_name %>)
+<% end %>
+
+<% if @user.present? %>
+Idea submitted by <%= @user.full_name %>
+<% end %>
+
+------------------------------------------------------------
+
+<% if @story.detail(length: nil).present? %>
+<%= @story.detail(length: nil) %>
+<% end %>
+
+------------------------------------------------------------
+
+View story:
+<%= polymorphic_url(@story) %>
+
+<% if @story_idea.present? %>
+View original idea:
+<%= polymorphic_url(@story_idea) %>
+<% end %>

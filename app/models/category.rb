@@ -1,10 +1,6 @@
 class Category < ApplicationRecord
-  include NameFilterable, Publishable
-
-  # The catch-all AgeRange category. Tagged wherever age ranges apply, but not
-  # offered on the registration form's "primary age group" question, where a
-  # respondent names the concrete age groups they serve.
-  MIXED_AGE_RANGE_NAME = "Mixed-age groups"
+  include NameFilterable, Publishable, RemoteSearchable
+  remote_searchable_by :name
 
   positioned on: :category_type_id
 
@@ -15,9 +11,10 @@ class Category < ApplicationRecord
   # Scopes
   # See NameFilterable, Publishable
   scope :age_ranges, -> { joins(:category_type).where(category_types: { name: "AgeRange" }) }
-  scope :excluding_mixed_age, -> { where.not(name: MIXED_AGE_RANGE_NAME) }
   scope :story_categories, -> { joins(:category_type).where(category_types: { name: "StoryCategory" }) }
   scope :ordered_by_position_and_name, -> { reorder(position: :asc, name: :asc) }
+  # Featured in the Story Share portal's audience nav, ordered by the admin-set position.
+  scope :story_share_featured, -> { where.not(story_share_position: nil).order(:story_share_position) }
 
   # Validations
   validates :name, presence: true, uniqueness: { case_sensitive: false }

@@ -49,30 +49,65 @@ RSpec.describe "Event registration show page", type: :system do
   end
 
   describe "payment due" do
-    it "shows the payment-due badge and pay button for an active registration with a balance" do
+    it "shows the payment card with the amount due and a pay button for an active registration with a balance" do
       sign_in(user)
       visit registration_ticket_path(registration.slug)
 
-      expect(page).to have_text("payment is due")
+      expect(page).to have_text("Make your payment")
+      expect(page).to have_text("due")
       expect(page).to have_button("Pay with Credit Card")
     end
   end
 
-  describe "before-you-attend call-out" do
-    it "links to the details page using the event's label when details are present" do
-      event.update!(event_details_label: "Art supplies", event_details: "<p>Bring scissors</p>")
+  describe "content call-out visibility" do
+    it "links to its callout page when published with content" do
+      callout = create(:registration_ticket_callout, event:,
+        title: "Art supplies & what to bring", description: "<p>Bring scissors</p>", hidden: false)
 
       sign_in(user)
       visit registration_ticket_path(registration.slug)
 
-      expect(page).to have_link("Art supplies", href: details_event_path(event, reg: registration.slug))
+      expect(page).to have_link("Art supplies & what to bring",
+        href: event_registration_ticket_callout_path(event, callout, reg: registration.slug))
     end
 
-    it "is hidden when no details are set" do
+    it "is hidden when the callout is not published" do
+      create(:registration_ticket_callout, event:,
+        title: "Art supplies & what to bring", description: "<p>Bring scissors</p>", hidden: true)
+
       sign_in(user)
       visit registration_ticket_path(registration.slug)
 
-      expect(page).to have_no_link(href: details_event_path(event, reg: registration.slug))
+      expect(page).to have_no_link("Art supplies & what to bring")
+    end
+  end
+
+  describe "registration ticket callouts" do
+    it "shows a call-out linking to the callout's detail page" do
+      callout = create(:registration_ticket_callout, event: event,
+        title: "Parking", subtitle: "Where to park", description: "<p>North lot</p>")
+
+      sign_in(user)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_link("Parking",
+        href: event_registration_ticket_callout_path(event, callout, reg: registration.slug))
+      expect(page).to have_text("Where to park")
+    end
+
+    it "hides a payment-gated callout until the registration is paid in full" do
+      gated_callout = create(:registration_ticket_callout, :payment_access_gated, event: event, title: "Your workbook")
+
+      sign_in(user)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_no_link("Your workbook")
+
+      create(:allocation, source: create(:payment), allocatable: registration, amount: event.cost_cents)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_link("Your workbook",
+        href: event_registration_ticket_callout_path(event, gated_callout, reg: registration.slug))
     end
   end
 
@@ -83,7 +118,7 @@ RSpec.describe "Event registration show page", type: :system do
         sections: %i[person_identifier person_contact_info person_background professional_info marketing scholarship payment consent]
       ).call.tap { |form| EventForm.create!(event: event, form: form, role: "registration") }
       form = event.registration_form
-      form.form_submissions.create!(person: user.person)
+      form.form_submissions.create!(person: user.person, event: event)
 
       sign_in(user)
       visit registration_ticket_path(registration.slug)

@@ -2,6 +2,8 @@ class ApplicationController < ActionController::Base
   before_action :authenticate_user! # ensures only logged-in users can access pages
   before_action :track_user_with_ahoy, unless: :devise_controller?
   before_action :set_current_user # for AhoyTrackable in models
+  before_action :set_honeybadger_context # so faults name the affected user
+  before_action :set_paper_trail_whodunnit
   before_action :preload_current_user_associations
 
   before_action do
@@ -26,6 +28,24 @@ class ApplicationController < ActionController::Base
   end
 
   private
+
+  # Dollar cell for a CSV export: the money helper's formatting when there's an
+  # amount, blank when there's nothing (so empty cells read cleanly).
+  def csv_dollars(cents)
+    cents.positive? ? helpers.dollars_from_cents(cents) : ""
+  end
+
+  # A failed save's errors as one flash-ready sentence. Errors on a nested association
+  # are copied onto the parent keyed "<association>.<attribute>", so their full message
+  # pastes the humanized association name in front ("Event attendance time entries
+  # Sign-out must be after…"). Phrase those the way the child model does instead: a
+  # whole-sentence message reads verbatim, and an attribute-level one keeps its subject
+  # ("Signed in at can't be blank") rather than arriving as a bare fragment.
+  def error_sentence(record)
+    record.errors.map { |error|
+      error.is_a?(ActiveModel::NestedError) ? error.inner_error.full_message : error.full_message
+    }.to_sentence
+  end
 
   def after_sign_out_path_for(resource_or_scope)
     if params[:reset_password].present? # needed for custom "log out and reset it" flow
@@ -66,10 +86,15 @@ class ApplicationController < ActionController::Base
                                                   .active
                                                   .includes(:organization)
                                                   .load
-    @current_user_staffs_events = current_user.person.event_staffs.exists?
   end
 
   def set_current_user
     Current.user = current_user if user_signed_in? # needed for Ahoy tracking in models
+  end
+
+  def set_honeybadger_context
+    return unless user_signed_in?
+
+    Honeybadger.context(user_id: current_user.id, user_email: current_user.email)
   end
 end

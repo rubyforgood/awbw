@@ -1,11 +1,11 @@
 module GrantHelper
-  # Renders a grant's funder (donor) as an icon + name: a person icon tinted
+  # Renders a grant's funder (funder) as an icon + name: a person icon tinted
   # in the people theme color, or a building icon tinted in the organizations
   # theme color.
-  def grant_donor_badge(grant)
-    return "" unless grant&.donor
+  def grant_funder_badge(grant)
+    return "" unless grant&.funder
 
-    person = grant.donor.is_a?(Person)
+    person = grant.funder.is_a?(Person)
     icon_name = person ? "fa-user" : "fa-building"
     color_key = person ? :people : :organizations
 

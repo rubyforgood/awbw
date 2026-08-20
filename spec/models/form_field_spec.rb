@@ -48,6 +48,54 @@ RSpec.describe FormField do
         field = build(:form_field, form: form, answer_type: :free_form_input_one_line, required: true)
         expect(field).to be_valid
       end
+
+      it "allows a required file-upload field" do
+        field = build(:form_field, form: form, answer_type: :file_upload, required: true)
+        expect(field).to be_valid
+      end
+    end
+
+    describe "file-upload answer type" do
+      let(:form) { create(:form) }
+      let(:field) { build(:form_field, :file_upload, form: form) }
+
+      it "is a valid answer type" do
+        expect(field).to be_valid
+        expect(field.answer_type).to eq("file_upload")
+      end
+
+      it "collects input but is neither selectable nor free-form text" do
+        expect(field.collects_input?).to be(true)
+        expect(field.selectable?).to be(false)
+        expect(field.free_form_text?).to be(false)
+      end
+
+      it "labels the type in sentence case" do
+        expect(field.answer_type_label).to eq("File upload")
+      end
+    end
+
+    describe "field_identifier uniqueness" do
+      let(:form) { create(:form) }
+
+      it "rejects a second field on the same form with the same identifier" do
+        create(:form_field, form: form, field_identifier: "payment_method")
+        duplicate = build(:form_field, form: form, field_identifier: "payment_method")
+        expect(duplicate).not_to be_valid
+        expect(duplicate.errors[:field_identifier]).to be_present
+      end
+
+      it "allows the same identifier on a different form" do
+        create(:form_field, form: form, field_identifier: "payment_method")
+        other = build(:form_field, form: create(:form), field_identifier: "payment_method")
+        expect(other).to be_valid
+      end
+
+      it "allows multiple fields on the same form with a blank identifier" do
+        create(:form_field, form: form, field_identifier: nil)
+        expect(build(:form_field, form: form, field_identifier: nil)).to be_valid
+        expect(build(:form_field, form: form, field_identifier: "")).to be_valid
+      end
     end
   end
 
@@ -71,7 +119,7 @@ RSpec.describe FormField do
     it { should define_enum_for(:status).with_values([ :inactive, :active ]) }
     it { should define_enum_for(:answer_type).with_values([ :free_form_input_one_line, :free_form_input_paragraph,
                                                            :single_select_radio, :no_user_input, :multi_select_checkbox,
-                                                           :group_header, :single_select_dropdown ]) }
+                                                           :group_header, :single_select_dropdown, :file_upload ]) }
     it { should define_enum_for(:input_type).with_values([ :text_alphanumeric, :number_integer, :number_decimal, :date ]) }
   end
 
@@ -151,6 +199,16 @@ RSpec.describe FormField do
     it "ignores surrounding and repeated whitespace when counting" do
       field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, min_words: 3)
       expect(field.min_words_error("  one\ntwo   three  ")).to be_nil
+    end
+
+    it "treats non-breaking and other Unicode spaces as word separators" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, min_words: 5)
+      # These spaces sneak in when answers are pasted from Word, Google Docs, or
+      # a web page. Ruby's \S is ASCII-only, so with every separator a Unicode
+      # space a genuine five-word answer counts as one and is wrongly rejected.
+      # Written as \u escapes since the characters are invisible in source.
+      pasted = "this\u00A0answer\u202Fhas\u3000plenty words"
+      expect(field.min_words_error(pasted)).to be_nil
     end
 
     it "returns an error when the value has too few words" do
@@ -359,6 +417,19 @@ RSpec.describe FormField do
       expect(field.answer_inclusion_error("Foundation/Funder: ACME")).to eq("has an invalid selection")
     end
 
+    it "treats the CE question's 'Yes' as a plain choice (hours come from the event)" do
+      field = selectable_field(type: :single_select_radio, option_names: %w[Yes No])
+      field.update!(field_identifier: "ce_credit_interest")
+      expect(field.answer_inclusion_error("Yes")).to be_nil
+      expect(field.answer_inclusion_error("No")).to be_nil
+      expect(field.answer_inclusion_error("Yes: 6")).to eq("has an invalid selection")
+    end
+
+    it "treats a bare 'Yes' as a plain choice on other fields" do
+      field = selectable_field(type: :single_select_radio, option_names: %w[Yes No])
+      expect(field.answer_inclusion_error("Yes: 6")).to eq("has an invalid selection")
+    end
+
     it "rejects an Other answer when the field does not offer Other" do
       field = selectable_field(type: :single_select_radio, option_names: %w[Red Blue])
       expect(field.answer_inclusion_error("Other: chartreuse")).to eq("has an invalid selection")
@@ -380,33 +451,61 @@ RSpec.describe FormField do
         expect(field.answer_inclusion_error("999999")).to eq("has an invalid selection")
       end
 
-      it "rejects the Other sector for the primary service-area field but accepts it for additional" do
-        other = create(:sector, :published, name: "Other")
-        primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_service_area_single")
-        additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_service_area")
+      # The canonical identifiers, the legacy "primary_sector" additional name,
+      # and the legacy "service area" names must all behave identically so
+      # existing form data keeps resolving.
+      {
+        "sector" => %w[primary_sector_single additional_sectors],
+        "sector (legacy additional name)" => %w[primary_sector_single primary_sector],
+        "service area (legacy)" => %w[primary_service_area_single primary_service_area]
+      }.each do |scheme, (primary_id, additional_id)|
+        it "rejects the Other sector for the primary #{scheme} field but accepts it for additional" do
+          other = create(:sector, :published, name: "Other")
+          primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: primary_id)
+          additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: additional_id)
 
-        expect(primary.answer_inclusion_error(other.id.to_s)).to eq("has an invalid selection")
-        expect(additional.answer_inclusion_error([ other.id.to_s ])).to be_nil
+          expect(primary.answer_inclusion_error(other.id.to_s)).to eq("has an invalid selection")
+          expect(additional.answer_inclusion_error([ other.id.to_s ])).to be_nil
+        end
       end
 
       it "accepts a published Category id from the backing type for a category field" do
-        type = create(:category_type, name: "WorkshopEnvironment")
-        offered = create(:category, :published, category_type: type)
+        type = create(:category_type, name: "AgeRange")
+        offered = create(:category, :published, category_type: type, name: "3-5")
         other_type_category = create(:category, :published)
-        field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "workshop_environments")
+        field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_age_group")
 
         expect(field.answer_inclusion_error([ offered.id.to_s ])).to be_nil
         expect(field.answer_inclusion_error([ other_type_category.id.to_s ])).to eq("has an invalid selection")
       end
 
-      it "rejects the Mixed-age groups category for the primary age group field" do
+      it "offers every published AgeRange category to both age group fields (no catch-all)" do
         type = create(:category_type, name: "AgeRange")
-        concrete = create(:category, :published, category_type: type, name: "3-5")
-        mixed = create(:category, :published, category_type: type, name: Category::MIXED_AGE_RANGE_NAME)
-        field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_age_group")
+        children = create(:category, :published, category_type: type, name: "Children (0-12)")
+        adults = create(:category, :published, category_type: type, name: "Adults (18+)")
+        unpublished = create(:category, :unpublished, category_type: type, name: "Retired range")
+        primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_age_group")
+        additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_age_group")
 
-        expect(field.answer_inclusion_error([ concrete.id.to_s ])).to be_nil
-        expect(field.answer_inclusion_error([ mixed.id.to_s ])).to eq("has an invalid selection")
+        # Age groups have no catch-all to drop (unlike the additional sector field's
+        # "Other"), so both fields offer exactly the published categories.
+        expect(primary.dynamic_categories).to contain_exactly(children, adults)
+        expect(additional.dynamic_categories).to contain_exactly(children, adults)
+        expect(additional.answer_inclusion_error([ unpublished.id.to_s ])).to eq("has an invalid selection")
+      end
+
+      it "accepts a folded \"Other: <text>\" value for the additional sectors field" do
+        create(:sector, :published, name: "Other")
+        mental_health = create(:sector, :published, name: "Mental Health")
+        additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_sectors")
+        primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_sector_single")
+
+        # The "Other" Sector renders a free-text box on the additional checkboxes,
+        # which submits the folded "Other: <text>" (or a bare "Other"); both pass.
+        expect(additional.answer_inclusion_error([ mental_health.id.to_s, "Other: equine therapy" ])).to be_nil
+        expect(additional.answer_inclusion_error([ "Other" ])).to be_nil
+        # The primary dropdown drops "Other" from its options, so it stays invalid there.
+        expect(primary.answer_inclusion_error([ "Other: equine therapy" ])).to eq("has an invalid selection")
       end
     end
   end
@@ -427,6 +526,20 @@ RSpec.describe FormField do
     it "returns false for text fields" do
       field = build(:form_field, form: form, answer_type: :free_form_input_one_line)
       expect(field.selectable?).to be false
+    end
+  end
+
+  describe "#fixed_options?" do
+    let(:form) { create(:form) }
+
+    it "returns true for the payment-method field" do
+      field = build(:form_field, form: form, field_identifier: "payment_method")
+      expect(field.fixed_options?).to be true
+    end
+
+    it "returns false for an ordinary field" do
+      field = build(:form_field, form: form, field_identifier: "how_did_you_hear")
+      expect(field.fixed_options?).to be false
     end
   end
 

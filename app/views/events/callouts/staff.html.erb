@@ -1,0 +1,19 @@
+<% title = @builtin_callout&.title.presence || "Meet the staff" %>
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "#{title} — #{@event.title}") %>
+<%# Admin-only jump to the staff editor, shown top-right of the body above the
+    callout page text. Hidden from registrants; opens in a new tab so the
+    registrant view is kept. %>
+<% edit_staff_action = capture do %>
+  <% if allowed_to?(:edit_staff?, @event) %>
+    <%# Carry the origin so the editor's eyebrow and post-save redirect return here
+        (the sample preview, or this registrant's staff callout page). %>
+    <% edit_path = sample_preview? ?
+         edit_staff_event_path(@event, return_to: "sample_staff") :
+         edit_staff_event_path(@event, return_to: "registration_staff", reg: @event_registration.slug) %>
+    <%= render "events/callouts/admin_edit_link", path: edit_path, label: "Edit staff" %>
+  <% end %>
+<% end %>
+<%= render layout: "events/callouts/callout_page", locals: { title: title, container_width: "max-w-5xl", body_action: edit_staff_action } do %>
+  <%= render "events/staff_cards", event_staffs: @event_staffs %>
+<% end %>

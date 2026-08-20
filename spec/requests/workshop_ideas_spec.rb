@@ -15,6 +15,7 @@ RSpec.describe "/workshop_ideas", type: :request do
       created_by_id: regular_user.id,
       updated_by_id: regular_user.id,
       windows_type_id: windows_type.id,
+      author_credit_preference: "full_name",
       time_creation: 30
     }
   end

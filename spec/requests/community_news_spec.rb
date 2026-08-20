@@ -17,6 +17,7 @@ RSpec.describe "/community_news", type: :request do
   # CommunityNews. As you add validations to CommunityNews, be sure to
   # adjust the attributes here as well.
   let(:admin) { create(:user, :admin) }
+  let(:author_person) { create(:person) }
 
   let(:valid_attributes) {
     {
@@ -24,7 +25,7 @@ RSpec.describe "/community_news", type: :request do
       rhino_body: "MyText",
       published: false,
       featured: false,
-      author_id: admin.id,
+      author_id: author_person.id,
       reference_url: "www.google.com",
       organization: nil,
       windows_type: nil,
@@ -53,6 +54,19 @@ RSpec.describe "/community_news", type: :request do
       CommunityNews.create! valid_attributes
       get community_news_index_url
       expect(response).to be_successful
+    end
+
+    it "sorts by the credited person, falling back to the creator when no author" do
+      aaron = create(:person, first_name: "Aaron", last_name: "Adams")
+      late_creator = create(:user, :with_person)
+      late_creator.person.update!(first_name: "Zeke", last_name: "Zimmer")
+
+      CommunityNews.create!(valid_attributes.merge(title: "Has Author", author: aaron))
+      CommunityNews.create!(valid_attributes.merge(title: "No Author", author: nil, created_by: late_creator))
+
+      get community_news_index_url(sort: "author", direction: "asc"), headers: { "Turbo-Frame" => "community_news_results" }
+      # Aaron Adams (explicit author) sorts before Zeke Zimmer (creator fallback).
+      expect(response.body.index("Has Author")).to be < response.body.index("No Author")
     end
 
     it "filters by organization_id on lazy turbo-frame request" do
@@ -125,6 +139,19 @@ RSpec.describe "/community_news", type: :request do
       it "redirects to the created community news" do
         post community_news_index_url, params: { community_news: valid_attributes }
         expect(response).to redirect_to(community_news_url(CommunityNews.last))
+      end
+
+      it "records the current user as created_by regardless of submitted value" do
+        someone_else = create(:user)
+        post community_news_index_url, params: { community_news: valid_attributes.merge(created_by_id: someone_else.id) }
+
+        expect(CommunityNews.last.created_by).to eq(admin)
+      end
+
+      it "assigns the chosen person as author" do
+        post community_news_index_url, params: { community_news: valid_attributes }
+
+        expect(CommunityNews.last.author).to eq(author_person)
       end
     end
 

@@ -26,14 +26,20 @@ class Notification < ApplicationRecord
     event_registration_confirmation_fyi
     event_registration_cancelled
     event_registration_cancelled_fyi
+    event_registration_reminder
     bulk_payment_confirmation
     bulk_payment_confirmation_fyi
     idea_submitted
     idea_submitted_fyi
+    story_promoted
+    story_promoted_fyi
     report_submitted
     report_submitted_fyi
     workshop_log_submitted
     workshop_log_submitted_fyi
+
+    form_submission_confirmation
+    form_submission_confirmation_fyi
 
     manual_log
   ].freeze
@@ -59,7 +65,9 @@ class Notification < ApplicationRecord
   NOTICEABLE_TYPES = %w[
     EventRegistration
     FormSubmission
+    Person
     Report
+    Story
     StoryIdea
     User
     WorkshopLog
@@ -71,17 +79,25 @@ class Notification < ApplicationRecord
   EMAIL_TOPICS = [
     [ "Admin FYI (all)", "[FYI]" ],
     [ "Admin FYI: event registration confirmed", "[FYI] New event registration" ],
+    [ "Admin FYI: event scholarship registration confirmed", "[FYI] New event scholarship registration" ],
     [ "Admin FYI: event registration cancelled", "[FYI] Event registration cancelled" ],
+    [ "Admin FYI: event scholarship registration cancelled", "[FYI] Event scholarship registration cancelled" ],
     [ "Admin FYI: bulk payment", "[FYI] New bulk payment" ],
     [ "Admin FYI: idea submitted", "submission by" ],
+    [ "Admin FYI: story promoted", "Story idea promoted" ],
     [ "Admin FYI: password reset", "[FYI] New password reset" ],
     [ "Admin FYI: workshop log submission", "New WorkshopLog submission" ],
+    [ "Admin FYI: form submission", "[FYI] New form submission" ],
     [ "Admin FYI: contact form submission", "contact form submission" ],
+    [ "Form: submission confirmation", "We received your response" ],
     [ "Contact: form confirmation", "We received your message" ],
-    [ "Event: event registration cancelled", "Event registration cancelled" ],
-    [ "Event: event registration confirmed", "Event registration confirmed" ],
+    [ "Event registration cancelled", "Event registration cancelled" ],
+    [ "Event scholarship registration cancelled", "Event scholarship registration cancelled" ],
+    [ "Event registration received", "Event registration received" ],
+    [ "Event scholarship registration received", "Event scholarship registration received" ],
     [ "Bulk payment: confirmation", "Bulk payment received" ],
     [ "Idea: confirmation (all)", "has been received" ],
+    [ "Story: promotion confirmation", "is now a story" ],
     [ "Idea: confirmation: workshop log", "workshop log has been received" ],
     [ "User: confirm new email", "Confirm your new email address" ],
     [ "User: password reset", "Password reset request" ],
@@ -94,23 +110,68 @@ class Notification < ApplicationRecord
     person
   ].freeze
 
+  # Direction of a communication relative to the person it is about. "outgoing"
+  # (the default) was sent to the person by staff or the portal; "incoming" was
+  # sent by the person themselves and is being logged after the fact.
+  DIRECTIONS = %w[outgoing incoming].freeze
+
+  # Synthetic activity name matching an ahoy event's "verb.noun" shape, so a
+  # communication filters and displays like an event on the admin timeline.
+  COMMUNICATION_TIMELINE_PREFIX = "communication".freeze
+  TIMELINE_NAMES_BY_DIRECTION = {
+    "outgoing" => "communication.sent",
+    "incoming" => "communication.received"
+  }.freeze
+
   # Scopes
   scope :delivered, -> { where.not(delivered_at: nil) }
   scope :undelivered, -> { where(delivered_at: nil) }
+
+  # The portal launched on this date. Any undelivered email created before it is
+  # pre-launch data (imported/legacy) whose delivery job is long gone — it will
+  # never send, so we retire it from the "pending" treatment (see #archived?)
+  # rather than flagging tens of thousands of old rows as stuck.
+  LAUNCHED_ON = Date.new(2026, 1, 1)
 
   validates :kind, presence: true, inclusion: { in: KINDS }
   validates :recipient_role, presence: true, inclusion: { in: RECIPIENT_ROLES }
   validates :recipient_email, presence: true
   validates :notification_type, presence: true
   validates :channel, inclusion: { in: CHANNELS }, allow_nil: true
+  validates :direction, presence: true, inclusion: { in: DIRECTIONS }
+  # A hand-logged communication must carry a subject (it's the line shown to the
+  # user); the nested flow drops blank-subject rows via reject_if, so this only
+  # bites the standalone "New communication" form.
+  validates :email_subject, presence: true, if: :manual_log?
 
   # A manually logged communication (created inline, e.g. from the registration
   # edit page) records a contact that already happened — fill in the sensible
   # defaults so it validates without going through the delivery pipeline.
   before_validation :apply_manual_log_defaults, on: :create, if: -> { kind.blank? }
+  # The portal only ever sends autoemails; every other channel is a hand-logged
+  # communication, so a non-autoemail channel with no kind yet defaults to
+  # "manual_log". We only fill in a *blank* kind — an already-set kind is never
+  # silently overwritten, so a real notification keeps its kind even if some
+  # caller sets a manual channel on it.
+  before_validation :classify_manual_channel_as_manual_log, if: -> { kind.blank? && channel.present? && channel != "autoemail" }
+  # "autoemail" is reserved for messages the portal sends automatically — it can
+  # be neither selected in the manual form nor set on a hand-logged (manual_log)
+  # communication. Fall back to a manual channel so one is never autoemail (the
+  # channel column defaults to "autoemail", so this also covers a blank choice).
+  before_validation :force_manual_log_channel, if: :manual_log?
+  # A contact_us_fyi is always something a person sent us — stamp it incoming.
+  before_validation :mark_incoming, on: :create, if: -> { kind == "contact_us_fyi" }
 
   def manual_log?
     kind == "manual_log"
+  end
+
+  def incoming?
+    direction == "incoming"
+  end
+
+  def timeline_activity_name
+    TIMELINE_NAMES_BY_DIRECTION.fetch(direction)
   end
 
   # Scopes
@@ -121,11 +182,14 @@ class Notification < ApplicationRecord
   scope :record_type, ->(record_type) { where(noticeable_type: record_type.to_s.camelize.titleize.gsub(" ", "")) }
   scope :subject_line, ->(subject) { where("notifications.email_subject LIKE ?", "%#{subject}%") }
   scope :email_topic, ->(topic) { where("notifications.email_subject LIKE ?", "%#{topic}%") }
+  # contact_us_fyi is included explicitly for historical rows predating #mark_incoming.
+  scope :requires_response, -> { where(direction: "incoming").or(where(kind: "contact_us_fyi")) }
+  scope :no_response_needed, -> { where.not(direction: "incoming").where.not(kind: "contact_us_fyi") }
   scope :responded_status, ->(status) {
     case status.to_s
-    when "yes" then where(kind: "contact_us_fyi", responded: true)
-    when "no"  then where(kind: "contact_us_fyi", responded: false)
-    when "na"  then where.not(kind: "contact_us_fyi")
+    when "yes" then requires_response.where(responded: true)
+    when "no"  then requires_response.where(responded: false)
+    when "na"  then no_response_needed
     else all
     end
   }
@@ -151,7 +215,7 @@ class Notification < ApplicationRecord
   end
 
   def requires_response?
-    kind == "contact_us_fyi"
+    incoming? || kind == "contact_us_fyi"
   end
 
   def delivered?
@@ -160,6 +224,28 @@ class Notification < ApplicationRecord
 
   def failed?
     error_at.present? && !delivered?
+  end
+
+  # A pre-launch undelivered email — legacy data that never sent. Shown as
+  # "Archived" (neutral) instead of "Pending" so the old backlog doesn't read
+  # as a live problem. Delivered/failed rows keep their own status.
+  def archived?
+    return false if delivered? || failed?
+
+    created_at.present? && created_at.to_date < LAUNCHED_ON
+  end
+
+  # An autoemail normally delivers within seconds of enqueue, so one still
+  # undelivered past this window is stuck (its job never completed). Fresh
+  # pending emails inside the window aren't flagged, so a normal in-flight send
+  # doesn't briefly read as a problem; archived ones are intentionally retired,
+  # so they aren't flagged either.
+  DELIVERY_GRACE_PERIOD = 1.hour
+
+  def stuck_pending?
+    return false if delivered? || failed? || archived?
+
+    created_at.present? && created_at < DELIVERY_GRACE_PERIOD.ago
   end
 
   def record_error!(exception)
@@ -214,5 +300,17 @@ class Notification < ApplicationRecord
     self.recipient_role ||= "person"
     self.notification_type ||= 0
     self.delivered_at ||= Time.current
+  end
+
+  def force_manual_log_channel
+    self.channel = "email" if channel.blank? || channel == "autoemail"
+  end
+
+  def classify_manual_channel_as_manual_log
+    self.kind = "manual_log"
+  end
+
+  def mark_incoming
+    self.direction = "incoming"
   end
 end

@@ -5,6 +5,27 @@ class EventDecorator < ApplicationDecorator
     URI.parse(videoconference_url).host&.split(".")&.[](-2)&.capitalize rescue "video call"
   end
 
+  # The meeting room pulled out of the join URL so registrants can dial in
+  # manually: the numeric ID for Zoom (".../j/1234567890") or the meeting code
+  # for Google Meet ("meet.google.com/abc-defg-hij"). Returns a { label:, value: }
+  # hash, or nil when the URL is blank or the platform isn't recognized.
+  def videoconference_room
+    return if videoconference_url.blank?
+
+    uri = URI.parse(videoconference_url)
+    host = uri.host.to_s.downcase
+
+    if host.end_with?("zoom.us")
+      id = uri.path[%r{/(?:j|wc/join|wc)/(\d+)}, 1]
+      id && { label: "Meeting ID", value: format_zoom_meeting_id(id) }
+    elsif host == "meet.google.com"
+      code = uri.path.delete_prefix("/").presence
+      code && { label: "Meeting code", value: code }
+    end
+  rescue URI::InvalidURIError
+    nil
+  end
+
   def display_image
     return primary_asset.file if primary_asset&.file&.attached?
 
@@ -19,6 +40,38 @@ class EventDecorator < ApplicationDecorator
 
   def date
     start_date.strftime("%B %d, %Y")
+  end
+
+  # Subject pre-filled on the bulk reminder page and used as the send-time
+  # fallback, so the preview and the delivered email always agree. An on-demand
+  # event's start date bounds enrollment rather than naming a session, so putting
+  # it in the subject reads as "be there on August 7".
+  def default_reminder_subject(time_zone: Time.zone.name)
+    return "AWBW Portal: Reminder: #{title}" if on_demand? || start_date.blank?
+
+    "AWBW Portal: Reminder: #{title} – #{start_date.in_time_zone(time_zone).strftime("%B %-d, %Y")}"
+  end
+
+  # Display in the viewer's TZ. Returns nil when no deadline is set.
+  def ce_payment_due_deadline_display
+    return if ce_payment_due_deadline.blank?
+    ce_payment_due_deadline.in_time_zone(Time.zone).strftime("%-l:%M %p %Z on %B %-d, %Y")
+  end
+
+  # The date the training must be finished by (e.g. "August 30, 2026"). Nil when
+  # unset. Date-only, so no time or zone is applied — unlike the two payment
+  # deadlines below.
+  def completion_deadline_display
+    return if completion_deadline.blank?
+    completion_deadline.strftime("%B %-d, %Y")
+  end
+
+  # The ticket payment deadline in the viewer's TZ (e.g. "5:00 PM UTC on April 9,
+  # 2026"). Nil when unset. Distinct from ce_payment_due_deadline, which is the
+  # continuing-education payment deadline.
+  def payment_due_deadline_display
+    return if payment_due_deadline.blank?
+    payment_due_deadline.in_time_zone(Time.zone).strftime("%-l:%M %p %Z on %B %-d, %Y")
   end
 
   # Weekday-prefixed date range (e.g. "Thu-Fri, Jan 1-2, 2026") that collapses the
@@ -37,37 +90,87 @@ class EventDecorator < ApplicationDecorator
     end
   end
 
+  # Same collapsed range as `date_range` but without the weekday prefix
+  # (e.g. "Sep 20-21, 2026") — for tighter contexts where the weekday is noise.
+  def short_date_range
+    s = start_date.in_time_zone(Time.zone)
+    e = (end_date || start_date).in_time_zone(Time.zone)
+    return s.strftime("%b %-d, %Y") if s.to_date == e.to_date
+
+    if s.year == e.year && s.month == e.month
+      "#{s.strftime('%b')} #{s.strftime('%-d')}-#{e.strftime('%-d')}, #{s.strftime('%Y')}"
+    elsif s.year == e.year
+      "#{s.strftime('%b %-d')} - #{e.strftime('%b %-d')}, #{s.strftime('%Y')}"
+    else
+      "#{s.strftime('%b %-d, %Y')} - #{e.strftime('%b %-d, %Y')}"
+    end
+  end
+
   def detail(length: nil)
     length ? description&.truncate(length) : description
   end
 
-  def calendar_links
+  # Short reason an event sits in the index archive list rather than the cards
+  # grid: unpublished drafts read as "Draft", everything else there has ended.
+  def archive_status_label
+    published? ? "Ended" : "Draft"
+  end
+
+  # Compact event label for tight/tabular or multi-event contexts: the admin-set
+  # abbreviation (e.g. "TOS205") when present, otherwise the full title. Pair it
+  # with the full title as a tooltip so the abbreviation is never ambiguous.
+  def compact_label
+    object.abbreviation.presence || object.title
+  end
+
+  # `show_videoconference_details` controls whether the join link/ID/passcode are
+  # carried into the calendar entry. Callers with a registration pass that
+  # registrant's gate (date + paid/intends); the default falls back to the
+  # event-level date gate for registration-less contexts. `re_add_url` and
+  # `payment_pending` (per registrant) feed the gated re-download note (see below).
+  def calendar_links(show_videoconference_details: object.videoconference_details_visible?, re_add_url: nil, payment_pending: false)
     start_time   = object.start_date.utc.strftime("%Y%m%dT%H%M%SZ")
     end_time     = object.end_date.utc.strftime("%Y%m%dT%H%M%SZ")
     title_encoded = ERB::Util.url_encode(object.title)
 
-    has_url      = object.videoconference_url.present?
+    # The join URL doubles as the calendar location, so withhold it from there
+    # too until the details may be shared — a physical location (if any) takes
+    # its place, otherwise the entry is left without a location.
+    has_url      = object.videoconference_url.present? && show_videoconference_details
     has_location = object.location.present?
     location_name = has_location ? object.location.name : nil
 
     # If both: URL in location field, physical location in description
     # If only URL: URL in location field
     # If only location: location in location field
-    event_description = object.rhino_description.to_plain_text
+    # Prefer the admin-authored short description; fall back to a flattened
+    # version of the rich show-page description when it's blank.
+    event_description = object.short_description.presence || object.rhino_description.to_plain_text
 
     if has_url && has_location
       cal_location = object.videoconference_url
-      description  = "#{location_name}\n\n#{event_description}"
+      base_description = "#{location_name}\n\n#{event_description}"
     elsif has_url
       cal_location = object.videoconference_url
-      description  = event_description
+      base_description = event_description
     elsif has_location
       cal_location = location_name
-      description  = event_description
+      base_description = event_description
     else
       cal_location = nil
-      description  = event_description
+      base_description = event_description
     end
+
+    # Carry the join link, meeting ID/code, and passcode into the calendar entry
+    # so registrants have everything they need to connect straight from the event
+    # — but only once the details may be shared (date + paid/intends).
+    vc_details =
+      if show_videoconference_details
+        videoconference_calendar_details
+      elsif object.videoconference_url.present?
+        videoconference_calendar_pending_note(re_add_url: re_add_url, payment_pending: payment_pending)
+      end
+    description = [ vc_details, base_description ].compact_blank.join("\n\n")
 
     desc_encoded     = ERB::Util.url_encode(description)
     location_encoded = ERB::Util.url_encode(cal_location.to_s)
@@ -122,6 +225,25 @@ class EventDecorator < ApplicationDecorator
     )
   end
 
+  # The note left in a gated calendar entry, telling the viewer to re-download from
+  # the Portal once the link unlocks. A calendar description can't hold a link, so
+  # `re_add_url` is appended as plain text; the _html form links it for the hover.
+  def videoconference_calendar_pending_note(re_add_url: nil, payment_pending: false)
+    note = "The videoconference join link isn't in this calendar entry yet. " \
+      "Re-download it from the Portal #{videoconference_pending_reveal_phrase(payment_pending: payment_pending)} to include it."
+    re_add_url.present? ? "#{note}\n#{re_add_url}" : note
+  end
+
+  # HTML form of the note for the hover, linking the re-download phrase to `portal_url`.
+  def videoconference_calendar_pending_note_html(portal_url, payment_pending: false)
+    link = h.link_to("Re-download it from the Portal", portal_url, class: "underline font-medium")
+    h.safe_join([
+      "The videoconference join link isn't in this calendar entry yet. ",
+      link,
+      " #{videoconference_pending_reveal_phrase(payment_pending: payment_pending)} to include it."
+    ])
+  end
+
   # True when the event spans more than one calendar day in the viewer's time
   # zone. Display-derived (so it agrees with the dates actually shown), which is
   # why it lives here rather than on the model. Drives singular/plural labels and
@@ -157,15 +279,6 @@ class EventDecorator < ApplicationDecorator
       t
     end
 
-    parts_for = lambda do |d, prefix: nil|
-      parts = []
-      parts << wrap.call(prefix, muted) if prefix
-      parts << "#{day.call(d)}, " if display_day
-      parts << "#{date.call(d)} @ " if display_date
-      parts << format_time.call(d)
-      h.safe_join(parts)
-    end
-
     tz_display = wrap.call(" #{tz_abbr}", muted)
 
     # --------------------------------------------------
@@ -199,20 +312,26 @@ class EventDecorator < ApplicationDecorator
     end
 
     # --------------------------------------------------
-    # DIFFERENT DAY → two lines
+    # DIFFERENT DAY → date range + per-day time range
+    # The event runs the same hours each day, so we show the date span and a
+    # single start-end time (e.g. "Mon-Wed, Apr 21-23 @ 9 am - 4:30 pm PST")
+    # rather than a continuous range that would imply an overnight event.
     # --------------------------------------------------
     if s.to_date != e.to_date
-      if inline
-        return h.safe_join(
-          [ parts_for.call(s), h.safe_join([ parts_for.call(e), tz_display ]) ],
-          " - "
-        )
+      date_part = if s.month == e.month && s.year == e.year
+        "#{date.call(s)}-#{e.strftime('%-d')}"
+      elsif s.year == e.year
+        "#{date.call(s)} - #{date.call(e)}"
       else
-        return h.safe_join(
-          [ parts_for.call(s), h.safe_join([ parts_for.call(e), tz_display ]) ],
-          h.tag.br
-        )
+        "#{s.strftime('%b %-d, %Y')} - #{e.strftime('%b %-d, %Y')}"
       end
+
+      parts = []
+      parts << "#{day.call(s)}-#{day.call(e)}, " if display_day
+      parts << "#{date_part} @ " if display_date
+      parts << "#{format_time.call(s)} - #{format_time.call(e)}"
+      parts << tz_display
+      return h.safe_join(parts)
     end
 
     # --------------------------------------------------
@@ -265,10 +384,7 @@ class EventDecorator < ApplicationDecorator
     return if cost_cents.blank?
     return "Free event" if cost_cents.zero?
 
-    dollars = cost_cents / 100
-    cents   = cost_cents % 100
-    formatted = cents.zero? ? "$#{dollars}" : "$#{dollars}.#{cents.to_s.rjust(2, '0')}"
-    "Cost: #{formatted}"
+    "Cost: #{MoneyFormatter.dollars_from_cents(cost_cents)}"
   end
 
   def content
@@ -295,6 +411,48 @@ class EventDecorator < ApplicationDecorator
   end
 
   private
+
+  # The pending-condition clause: names payment and/or the drip date, the date only
+  # while it's still in the future (never one that has already passed).
+  def videoconference_pending_reveal_phrase(payment_pending: false)
+    reveal = object.videoconference_details_available_from
+    date_clause = "on #{reveal.to_date.strftime("%B %-d, %Y")}" if reveal.present? && Time.current < reveal
+
+    if payment_pending && date_clause
+      "once your payment is on file and the link unlocks #{date_clause}"
+    elsif payment_pending
+      "once your payment is on file"
+    elsif date_clause
+      date_clause
+    else
+      "once the link is available"
+    end
+  end
+
+  # The videoconference connection block (join link, meeting ID/code, passcode)
+  # as plain text for embedding in calendar entries. Nil when there's no link.
+  # Whether it's actually embedded is the caller's call (see #calendar_links).
+  def videoconference_calendar_details
+    return if videoconference_url.blank?
+
+    lines = [ "Join on #{videoconference_domain}: #{videoconference_url}" ]
+    if (room = videoconference_room)
+      lines << "#{room[:label]}: #{room[:value]}"
+    end
+    lines << "Passcode: #{videoconference_passcode}" if videoconference_passcode.present?
+    lines.join("\n")
+  end
+
+  # Group Zoom meeting-ID digits the way Zoom's own UI does so they're easy to
+  # read aloud/type (e.g. "88285411273" → "882 8541 1273"). Unknown lengths are
+  # returned unchanged.
+  def format_zoom_meeting_id(id)
+    case id.length
+    when 11 then id.sub(/\A(\d{3})(\d{4})(\d{4})\z/, '\1 \2 \3')
+    when 10 then id.sub(/\A(\d{3})(\d{3})(\d{4})\z/, '\1 \2 \3')
+    else id
+    end
+  end
 
   def header_image
     return unless object.rhino_header.body.present?

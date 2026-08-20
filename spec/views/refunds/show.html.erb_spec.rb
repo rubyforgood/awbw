@@ -11,7 +11,7 @@ RSpec.describe "refunds/show", type: :view do
   end
 
   it "shows refund details" do
-    expect(rendered).to have_content("$10.00")
+    expect(rendered).to have_content("$10")
     expect(rendered).to have_content("Check")
     expect(rendered).to have_content(person.name)
   end

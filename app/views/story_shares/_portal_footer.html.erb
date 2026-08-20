@@ -1,0 +1,27 @@
+<footer class="bg-black text-white print:hidden">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+    <div class="flex justify-center md:justify-start">
+      <%= link_to "Contact us", contact_us_path(from: "story_share"),
+                  class: "inline-block rounded border border-white px-6 py-2 text-sm font-bold uppercase tracking-wide hover:bg-white hover:text-black transition-colors" %>
+    </div>
+
+    <div class="text-center text-sm space-y-3">
+      <p>Registered 501(c)(3). EIN: 95-448606</p>
+      <p>© 2021–<%= Date.current.year %> A Window Between Worlds</p>
+    </div>
+
+    <div class="flex justify-center md:justify-end">
+      <a href="https://www.guidestar.org/profile/95-4448606"
+         target="_blank"
+         rel="noopener noreferrer"
+         class="bg-white p-1 rounded-sm border border-[#a9c5dd]">
+        <span class="block border-2 border-[#a9c5dd] px-5 py-4 text-black text-sm leading-tight">
+          <span class="block">Platinum</span>
+          <span class="block">Transparency</span>
+          <span class="block"><%= Date.current.year %></span>
+          <span class="block font-bold mt-3">Candid.</span>
+        </span>
+      </a>
+    </div>
+  </div>
+</footer>

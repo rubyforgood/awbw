@@ -55,7 +55,7 @@
       </div>
 
       <div class="hidden mt-2 pb-2 flex flex-col gap-2" data-field-options-target="panel">
-        <%= f.text_area :hint_text, rows: 2,
+        <%= f.text_area :subtitle, rows: 2,
               class: "w-full text-sm text-gray-600 rounded border-gray-300 shadow-sm px-2 py-1",
               placeholder: "Subtitle" %>
         <%= link_to_remove_association "Remove", f,
@@ -67,7 +67,7 @@
       <div class="flex flex-wrap items-center gap-2">
         <%= f.text_area :name, required: true, rows: 1, class: "min-w-0 flex-[3_1_10rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
         <%
-          type_order = %w[free_form_input_one_line free_form_input_paragraph single_select_radio single_select_dropdown multi_select_checkbox no_user_input group_header]
+          type_order = %w[free_form_input_one_line free_form_input_paragraph single_select_radio single_select_dropdown multi_select_checkbox file_upload no_user_input group_header]
           type_options = type_order.map { |t| [ FormField::ANSWER_TYPE_LABELS[t] || t.titleize, t ] }
         %>
         <%= f.select :answer_type, type_options,
@@ -130,9 +130,12 @@
               [ "Quarter width", "quarter" ]
             ]
           %>
-          <%= f.text_area :hint_text, rows: 1, placeholder: "Subtitle",
+          <%= f.text_area :subtitle, rows: 1, placeholder: "Subtitle",
                 class: "min-w-0 flex-[2_1_9rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
                 title: "Optional subtitle shown under the field label" %>
+          <%= f.text_area :hint_text, rows: 1, placeholder: "Hint",
+                class: "min-w-0 flex-[2_1_9rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+                title: "Optional hint shown below the field input" %>
           <%= f.select :width, width_options,
                 {},
                 class: "ml-auto shrink-0 rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
@@ -147,13 +150,39 @@
                 class: "text-sm text-gray-400 hover:text-red-600 underline shrink-0" %>
         </div>
 
+        <% if params[:admin] == "true" %>
+          <%# Field identifiers tie a field to backend logic (Stripe, service areas, email, etc.),
+              so they're only editable with ?admin=true on the URL. %>
+          <label class="flex items-center justify-end gap-2 text-xs text-gray-500">
+            <span class="shrink-0 font-medium">Field identifier</span>
+            <%= f.text_field :field_identifier, placeholder: "e.g. payment_method",
+                  class: "w-1/4 min-w-0 rounded border-gray-300 shadow-sm px-2 py-1 font-mono text-xs",
+                  title: "Internal identifier linking this field to system logic — leave blank for an ordinary field" %>
+          </label>
+        <% end %>
+
         <% unless option_source %>
+          <% options_locked = field.fixed_options? && params[:admin] != "true" %>
           <div class="hidden space-y-2 pl-1 border-t border-gray-100 pt-3" data-answer-options-target="list">
-            <%= f.fields_for :form_field_answer_options do |opt| %>
-              <%= render "form_field_answer_option_fields", f: opt %>
+            <% if options_locked %>
+              <%# Payment-method options drive Stripe charge logic, so they're shown
+                  read-only here. Append ?admin=true to the URL to edit them. %>
+              <% field.form_field_answer_options.each do |option| %>
+                <div class="flex items-center gap-2 text-sm text-gray-600">
+                  <i class="fa-solid fa-circle text-gray-300 text-4xs shrink-0"></i>
+                  <span><%= option.option_name %></span>
+                </div>
+              <% end %>
+              <p class="text-xs text-gray-400 italic">
+                These options aren't editable here — they're tied to system logic and must stay in sync with it.
+              </p>
+            <% else %>
+              <%= f.fields_for :form_field_answer_options do |opt| %>
+                <%= render "form_field_answer_option_fields", f: opt %>
+              <% end %>
+              <%= link_to_add_association "+ Add option", f, :form_field_answer_options,
+                    class: "text-sm text-purple-600 hover:text-purple-800 font-medium" %>
             <% end %>
-            <%= link_to_add_association "+ Add option", f, :form_field_answer_options,
-                  class: "text-sm text-purple-600 hover:text-purple-800 font-medium" %>
           </div>
         <% end %>
       </div>

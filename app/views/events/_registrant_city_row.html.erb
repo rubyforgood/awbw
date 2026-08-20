@@ -1,0 +1,41 @@
+<%# One row of the Registrants-by-city breakdown. Locals: row (a
+    RegistrantCityBreakdown::Row), metrics (:registrants/:scholarships/:both), and
+    event. The whole row filters the page to that city's registrants; the
+    scholarship figure to just its scholarship recipients. Registrant total
+    and scholarship figure get their own right-aligned columns so counts line up;
+    tabular-nums + a 3-digit min-width keep padding even. %>
+<%# row_paths/scholarship_paths (set on the cross-event index and the read-only
+    recipients charts) supply per-city paths keyed by city label; a missing entry
+    (e.g. Unknown) renders the row non-clickable. Absent, the row builds its own
+    event-scoped roster filter. Either way the path keeps the charts panel open
+    (charts: 1 here, carried in row_paths elsewhere) — the row lives inside it. %>
+<% row_paths = local_assigns[:row_paths] %>
+<% scholarship_paths = local_assigns[:scholarship_paths] %>
+<% if row_paths %>
+  <% row_path = row_paths[row.city] %>
+  <% scholarship_path = scholarship_paths&.dig(row.city) %>
+<% else %>
+  <% row_path = roster_event_path(event, registrant_ids: row.registrant_ids.join("-").presence || "0", charts: 1) %>
+  <% scholarship_path = roster_event_path(event, registrant_ids: row.scholarship_recipient_ids.join("-").presence || "0", charts: 1) %>
+<% end %>
+<tr class="border-t border-gray-100 group hover:bg-gray-50 <%= "cursor-pointer" if row_path %> transition-colors"
+    <% if row_path %>onclick="window.location='<%= row_path %>'"<% end %>>
+  <td class="py-1 text-gray-700 w-full"><span class="<%= "group-hover:underline" if row_path %>"><%= row.city %></span></td>
+  <% unless metrics == :scholarships %>
+    <td class="py-1 pl-3 text-right tabular-nums whitespace-nowrap font-medium text-gray-700 min-w-[3ch]"><%= row.registrant_count %></td>
+  <% end %>
+  <% unless metrics == :registrants %>
+    <td class="py-1 pl-2 text-right tabular-nums whitespace-nowrap text-gray-400 min-w-[4ch]">
+      <% if row.scholarship_count.positive? %>
+        <% scholarship_figure = capture do %><% if metrics == :both %>(<% end %><i class="fa-solid fa-graduation-cap <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>" aria-hidden="true"></i> <span class="font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>"><%= row.scholarship_count %></span><% if metrics == :both %>)<% end %><% end %>
+        <% if scholarship_path %>
+          <%= link_to scholarship_path,
+                      class: "hover:underline", title: "Scholarship recipients in #{row.city}",
+                      onclick: "event.stopPropagation()" do %><%= scholarship_figure %><% end %>
+        <% else %>
+          <span title="Scholarship recipients in <%= row.city %>"><%= scholarship_figure %></span>
+        <% end %>
+      <% end %>
+    </td>
+  <% end %>
+</tr>

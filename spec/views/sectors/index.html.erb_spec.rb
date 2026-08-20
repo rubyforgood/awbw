@@ -8,6 +8,7 @@ RSpec.describe "sectors/index", type: :view do
       create(:category, :published, name: "Sector One"),
       create(:category, name: "Sector Two")
     ])
+    assign(:taggings_counts, {})
     allow(view).to receive(:current_user).and_return(admin)
   end
 

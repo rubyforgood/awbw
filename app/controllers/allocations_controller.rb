@@ -16,7 +16,7 @@ class AllocationsController < ApplicationController
     # for an aggregate).
     @allocations_total_cents = base.sum(:amount)
     @allocations = base.includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 10)
-    render :allocation_results if turbo_frame_request? && @allocatable.blank?
+    render :allocations_results if turbo_frame_request? && @allocatable.blank?
   end
 
   def new

@@ -1,0 +1,10 @@
+<%# A training's name, date range, and on-demand note for a scholarship report
+    row's Training cell — shared by the plain cell and the recipient-expander
+    summary. Pass `column` (an EventScholarshipReport::Column). %>
+<span class="font-medium text-gray-900"><%= column.label %></span>
+<% if column.date_label %>
+  <span class="block text-xs text-gray-500"><%= column.date_label %></span>
+<% end %>
+<% if column.on_demand? %>
+  <span class="block text-xs text-gray-500">On-demand</span>
+<% end %>

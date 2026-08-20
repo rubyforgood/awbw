@@ -1,0 +1,28 @@
+<%# Placeholder shown while the grants_results frame loads its filtered rows. %>
+<div class="overflow-x-auto bg-white rounded-xl border border-gray-200 shadow-sm">
+  <table class="w-full border-collapse">
+    <thead>
+      <tr class="border-b border-gray-200 bg-gray-50 animate-pulse">
+        <% 8.times do %>
+          <th class="px-4 py-3"><div class="h-3 w-16 rounded bg-gray-200"></div></th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      <% 5.times do %>
+        <tr class="animate-pulse">
+          <% 8.times do %>
+            <td class="px-4 py-3.5"><div class="h-4 w-20 rounded bg-gray-100"></div></td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<%# Pagination skeleton, mirroring the bar placeholders on the other lazy indexes. %>
+<div class="flex justify-center space-x-2 mt-12 animate-pulse">
+  <% 3.times do %>
+    <div class="h-8 w-10 rounded bg-gray-200"></div>
+  <% end %>
+</div>

@@ -13,5 +13,9 @@ FactoryBot.define do
     required { FormField::NON_INPUT_ANSWER_TYPES.exclude?(answer_type.to_s) }
 
     # Add other attributes based on schema if needed
+
+    trait :file_upload do
+      answer_type { :file_upload }
+    end
   end
 end

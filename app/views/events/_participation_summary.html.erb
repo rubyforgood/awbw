@@ -1,0 +1,82 @@
+<%# Compact participation headline for the reports hub, linking to the full
+    report. Expects `report` (an EventParticipationReport) and `period` (its
+    resolved PeriodScope: #label, #year and #metrics). %>
+<div class="h-full flex flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+  <div class="flex items-start justify-between mb-4">
+    <h3 class="text-base font-semibold text-gray-900">Participation</h3>
+    <div class="flex flex-col items-end gap-1">
+      <%= link_to "Details →", participation_events_path(hub_to_report_params),
+            class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+      <%= link_to "Attendees →", attendees_events_path(hub_to_attendees_params),
+            class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+      <%# Demographics live next to the people they describe, so this points at the
+          attendees index's breakdowns rather than duplicating them here — scoped to
+          the one event when the hub is, cross-event otherwise (hub_to_attendees_params
+          carries event_id either way, and opens the index's event-type filter so a
+          non-training event isn't filtered out). ?charts=1 opens the panel on arrival
+          and the #breakdowns anchor scrolls to it, so the link doesn't land on a
+          collapsed section. return_to keeps the eyebrow pointing back to the hub. %>
+      <%= link_to "Breakdowns →", attendees_events_path(hub_to_attendees_params(charts: 1, anchor: "breakdowns")),
+            class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+    </div>
+  </div>
+
+  <% if report.any? %>
+    <% metrics = period.metrics %>
+    <% people = report.training_split(year: period.year) %>
+    <% registrations = report.registrations_split(year: period.year) %>
+    <% reach = report.demographics(year: period.year) %>
+    <%# Person ids behind each headline, so the totals link into the training-
+        attendees index (which shows the training-attendee subset of them). %>
+    <% attended_ids = report.attended_person_ids(year: period.year) %>
+    <% active_ids = report.active_registrant_ids(year: period.year) %>
+    <div class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2"><%= period.label %></div>
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Registrations</div>
+        <div class="mt-1 tabular-nums">
+          <%= link_to number_with_delimiter(metrics.active_registration_count),
+                attendees_events_path(registrant_ids: active_ids.join("-").presence || "0", event_id: params[:event_id].presence, return_to: "reports"),
+                class: "text-xl font-bold text-gray-900 hover:underline" %>
+          <% if metrics.inactive_registration_count.positive? %><span class="text-xs text-gray-400">(<%= number_with_delimiter(metrics.inactive_registration_count) %> inactive)</span><% end %>
+        </div>
+        <%# Each side links to all registrants of that event type. %>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums">
+          <%= link_to "#{number_with_delimiter(registrations[:trainings])} trainings", attendees_events_path(event_type: "trainings", attendance_status: EventRegistration::FILTER_ALL, event_year: period.year, event_id: params[:event_id].presence, return_to: "reports"), class: "hover:underline" %>
+          · <%= link_to "#{number_with_delimiter(registrations[:non_trainings])} other", attendees_events_path(event_type: "other", attendance_status: EventRegistration::FILTER_ALL, event_year: period.year, event_id: params[:event_id].presence, return_to: "reports"), class: "hover:underline" %>
+        </div>
+      </div>
+      <div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">People attended</div>
+        <div class="mt-1 tabular-nums">
+          <%= link_to number_with_delimiter(metrics.unique_people),
+                attendees_events_path(registrant_ids: attended_ids.join("-").presence || "0", event_id: params[:event_id].presence, return_to: "reports"),
+                class: "text-xl font-bold text-blue-700 hover:underline" %>
+        </div>
+        <%# Each side links to the attended registrants of that event type. %>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums">
+          <%= link_to "#{number_with_delimiter(people[:trainings])} trainings", attendees_events_path(event_year: period.year, event_id: params[:event_id].presence, return_to: "reports"), class: "hover:underline" %>
+          · <%= link_to "#{number_with_delimiter(people[:non_trainings])} other", attendees_events_path(event_type: "other", attendance_status: "attended", event_year: period.year, event_id: params[:event_id].presence, return_to: "reports"), class: "hover:underline" %>
+        </div>
+      </div>
+    </div>
+    <%# Reach of the scoped registrants, like the dashboard's breakdown cards. %>
+    <div class="grid grid-cols-5 gap-2 mb-4">
+      <% [ [ "Orgs", reach.organizations ], [ "Sectors", reach.sectors ], [ "Cities", reach.cities ], [ "States", reach.states ], [ "Countries", reach.countries ] ].each do |label, value| %>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-2 text-center">
+          <div class="text-lg font-bold tabular-nums text-gray-900"><%= number_with_delimiter(value) %></div>
+          <div class="text-xs text-gray-500"><%= label %></div>
+        </div>
+      <% end %>
+    </div>
+    <div class="mt-auto">
+      <%# One colour per status, in STATUS_LABELS order: attended, registered,
+          transferred in, cancelled, partial, no-show, transferred out. %>
+      <%= column_chart report.chart_series, stacked: true, thousands: ",",
+            colors: [ "#2563eb", "#93c5fd", "#14b8a6", "#d1d5db", "#d97706", "#dc2626", "#9ca3af" ],
+            height: "120px", legend: false, library: { borderRadius: 3 } %>
+    </div>
+  <% else %>
+    <p class="text-sm text-gray-500 my-auto">No attendance recorded for these filters.</p>
+  <% end %>
+</div>

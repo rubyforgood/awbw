@@ -51,10 +51,6 @@ class WorkshopDecorator < ApplicationDecorator
     "#{breadcrumbs_title} >> #{breadcrumb_link}".html_safe
   end
 
-  def author
-    author_credit_preference.present? ? author_credit : full_name.to_s
-  end
-
   def list_sectors
     sectorable_items.map(&:sector).map(&:name).to_sentence
   end

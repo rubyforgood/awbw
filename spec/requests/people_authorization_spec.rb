@@ -125,6 +125,16 @@ RSpec.describe "People authorization", type: :request do
         get edit_person_path(other_person)
         expect(response).to have_http_status(:ok)
       end
+
+      it "shows the racial/ethnic identity field" do
+        get edit_person_path(other_person)
+        expect(response.body).to include("person[racial_ethnic_identity]")
+      end
+
+      it "shows the FileMaker code field" do
+        get edit_person_path(other_person)
+        expect(response.body).to include("person[filemaker_code]")
+      end
     end
   end
 
@@ -145,6 +155,31 @@ RSpec.describe "People authorization", type: :request do
         patch person_path(other_person), params: { person: { first_name: "Updated" } }
         expect(response).to redirect_to(person_path(other_person))
         expect(other_person.reload.first_name).to eq("Updated")
+      end
+
+      it "updates the racial/ethnic identity" do
+        patch person_path(other_person), params: { person: { racial_ethnic_identity: "Asian" } }
+        expect(other_person.reload.racial_ethnic_identity).to eq("Asian")
+      end
+
+      it "updates the FileMaker code" do
+        patch person_path(other_person), params: { person: { filemaker_code: "FM-123" } }
+        expect(other_person.reload.filemaker_code).to eq("FM-123")
+      end
+
+      it "withdraws mailing list consent when the box is unchecked" do
+        other_person.update!(mailing_list_consent_at: Time.current, mailing_list_consent_source: "Registration: X")
+
+        patch person_path(other_person), params: { person: { mailing_list_consented: "0" } }
+
+        expect(other_person.reload.mailing_list_consent_at).to be_nil
+        expect(other_person.mailing_list_consent_source).to be_nil
+      end
+
+      it "records mailing list consent when the box is checked" do
+        patch person_path(other_person), params: { person: { mailing_list_consented: "1" } }
+
+        expect(other_person.reload.mailing_list_consent_at).to be_present
       end
     end
   end

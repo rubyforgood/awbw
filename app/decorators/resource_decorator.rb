@@ -13,7 +13,7 @@ class ResourceDecorator < ApplicationDecorator
   end
 
   def truncated_author
-    h.truncate author, length: 20
+    h.truncate author_credit, length: 20
   end
 
   def truncated_title
@@ -37,7 +37,7 @@ class ResourceDecorator < ApplicationDecorator
   end
 
   def author_full_name
-    author || created_by.name
+    author_credit
   end
 
   def display_date

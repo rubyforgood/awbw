@@ -5,6 +5,12 @@ module Admin
     def index
       authorize! :ahoy_activity, to: :index?
 
+      @person = Person.find_by(id: params[:person_id]) if params[:person_id].present?
+
+      # The full page renders only the header, filters, and an empty results frame;
+      # the frame's src request (turbo_frame_request?) loads the filtered rows.
+      return render :index unless turbo_frame_request?
+
       @users = params[:user_id].present? ? User.where(id: params[:user_id].to_s.split("--")) : nil
 
       page = params[:page].presence&.to_i || 1
@@ -23,13 +29,21 @@ module Admin
                             *prefixes.map { |p| "#{p}.%" })
       end
 
-      # Filter by event name
+      # Filter by event name. Split on any non-alphanumeric run so hyphens (and
+      # commas, dots, spaces) are interchangeable separators and each token must
+      # match — e.g. "account-auth" finds "auth.account_deactivated".
       if params[:event_name].present?
-        scope = scope.where("ahoy_events.name LIKE ?", "%#{Ahoy::Event.sanitize_sql_like(params[:event_name])}%")
+        params[:event_name].split(/[^a-z0-9]+/i).reject(&:blank?).each do |token|
+          scope = scope.where("ahoy_events.name LIKE ?", "%#{Ahoy::Event.sanitize_sql_like(token)}%")
+        end
       end
 
       # Filter by user (if viewing specific user activity)
       scope = scope.where(user: @users) if @users.present?
+
+      if params[:user_search].present?
+        scope = scope.where(user_id: User.activity_search(params[:user_search]).select(:id))
+      end
 
       # Time filter
       scope = scope.where(time: time_range) if time_range.present?
@@ -70,7 +84,33 @@ module Admin
         scope = scope.where(resource_id: params[:resource_id])
       end
 
-      @events = scope.paginate(page: page, per_page: per_page)
+      # Filter to a person's full history: the person, their user, and every
+      # associated record (see Analytics::PersonActivityEvents).
+      if @person
+        scope = scope.where(id: Analytics::PersonActivityEvents.new(@person).relation.select(:id))
+
+        # Attendance sign-ins happen on a login-free public callout (no Current),
+        # so they aren't ahoy-tracked either — read the entries directly.
+        @person_time_entries = EventAttendanceTimeEntry
+          .where(event_registration_id: @person.event_registrations.select(:id))
+          .includes(event_registration: :event)
+          .order(signed_in_at: :desc)
+          .limit(15)
+          .decorate
+
+        # Notifications aren't ahoy-tracked, so fold them in as their own stream.
+        entries = Analytics::PersonTimeline.new(
+          events: scope.to_a,
+          communications: person_communications.to_a
+        ).entries
+        @timeline = entries.paginate(page: page, per_page: per_page)
+        @total_count = @timeline.total_entries
+      else
+        @events = scope.paginate(page: page, per_page: per_page)
+        @total_count = @events.total_entries
+      end
+
+      render :activity_results
     end
 
     def show
@@ -95,6 +135,10 @@ module Admin
       # Filter by user
       if params[:user_id].present?
         scope = scope.where(user_id: params[:user_id])
+      end
+
+      if params[:user_search].present?
+        scope = scope.where(user_id: User.activity_search(params[:user_search]).select(:id))
       end
 
       # Filter by visit
@@ -131,6 +175,51 @@ module Admin
     end
 
     private
+
+    # A visit_id filter excludes communications — they have no visit to belong to.
+    def person_communications
+      email = @person.communications_email
+      return Notification.none if email.blank? || params[:visit_id].present?
+
+      scope = Notification.email(email).includes(:noticeable, sender: :person).order(created_at: :desc)
+      scope = scope.where(created_at: time_range) if time_range.present?
+      scope = filter_communications_by_activity_name(scope)
+      scope = filter_communications_by_prefixes(scope)
+
+      if params[:props].present?
+        term = Notification.sanitize_sql_like(params[:props])
+        scope = scope.where(
+          "notifications.email_subject LIKE :term OR notifications.email_body_text LIKE :term",
+          term: "%#{term}%"
+        )
+      end
+
+      scope = scope.where(noticeable_type: params[:resource_type]) if params[:resource_type].present?
+      scope = scope.where(noticeable_id: params[:resource_id]) if params[:resource_id].present?
+
+      scope
+    end
+
+    # Tokenize like the event-name search, then keep the directions whose synthetic
+    # name matches every token (so "received" keeps only incoming, none keeps none).
+    def filter_communications_by_activity_name(scope)
+      return scope if params[:event_name].blank?
+
+      tokens = params[:event_name].split(/[^a-z0-9]+/i).reject(&:blank?).map(&:downcase)
+      directions = Notification::TIMELINE_NAMES_BY_DIRECTION.select do |_direction, name|
+        tokens.all? { |token| name.include?(token) }
+      end.keys
+      scope.where(direction: directions)
+    end
+
+    def filter_communications_by_prefixes(scope)
+      return scope if params[:prefixes].blank?
+
+      prefixes = params[:prefixes].split("--").map(&:strip)
+      return scope if prefixes.include?(Notification::COMMUNICATION_TIMELINE_PREFIX)
+
+      scope.none
+    end
 
     def prepare_chart_data
       events = scoped_events

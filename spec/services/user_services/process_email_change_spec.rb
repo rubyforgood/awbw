@@ -37,6 +37,18 @@ RSpec.describe UserServices::ProcessEmailChange do
 
         expect(result.summary).to include("confirmation email has been sent to new@example.com")
       end
+
+      it "credits the acting admin as updated_by" do
+        user.update_columns(updated_by_id: create(:user, :admin).id)
+
+        described_class.call(
+          user: user,
+          send_confirmation: true,
+          current_user: admin
+        )
+
+        expect(user.reload.updated_by).to eq(admin)
+      end
     end
 
     context "with send_confirmation false" do

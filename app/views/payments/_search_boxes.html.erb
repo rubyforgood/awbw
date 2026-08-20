@@ -1,48 +1,26 @@
-<!-- Filters -->
+<!-- Filters — field, label, and button styling modeled on the allocations search. -->
 <% default_btn = "text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-800 shadow-sm" %>
 <% selected_btn = "text-white bg-blue-600 border-blue-600 hover:bg-blue-700 hover:text-white shadow-md ring-2 ring-blue-300" %>
+<% field_class = search_field_class %>
+<% label_class = search_label_class %>
+<% placeholder_select_class = "#{field_class} search-select-placeholder" %>
 
 <div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
   <%= form_tag payments_path, method: :get, class: "space-y-4",
     data: {
       controller: "collection",
-      turbo_frame: "payment_results",
+      turbo_frame: "payments_results",
       collection_unselected_class: default_btn,
       collection_selected_class: selected_btn
     }, autocomplete: "off" do %>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div>
-        <label for="type" class="text-sm font-medium text-gray-500 mb-1 block">Type</label>
-
-        <%= select_tag "type[]",
-          options_for_select({ "All" => "", "Cash" => "CashPayment", "Check" => "CheckPayment", "Credit Card" => "CreditCardPayment", "Stripe" => "ExternalProcessorPayment" }, Array(params[:type]).first),
-          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
-      </div>
-
-      <div>
-        <label for="has_remaining" class="text-sm font-medium text-gray-500 mb-1 block">Amount Remaining</label>
-
-        <%= select_tag "has_remaining",
-          options_for_select({ "All" => "all", "Yes" => "yes", "No" => "no" }, params[:has_remaining] || "all"),
-          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
-      </div>
-
-      <div>
-        <label for="payer_type" class="text-sm font-medium text-gray-500 mb-1 block">Payer Type</label>
-
-        <%= select_tag "payer_type",
-          options_for_select(["Person", "Organization"], params[:payer_type]),
-          include_blank: "All",
-          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
-      </div>
-
-      <div>
-        <label for="person_id" class="text-sm font-medium text-gray-500 mb-1 block">Person</label>
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+      <div class="md:col-span-2">
+        <label for="person_id" class="<%= label_class %>">Person</label>
 
         <%= select_tag "person_id",
           options_for_select(Person.where(id: params[:person_id]).map { |p| [p.full_name, p.id] }),
           include_blank: true,
-          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+          class: field_class,
           data: {
             controller: "remote-select",
             remote_select_model_value: "person"
@@ -50,13 +28,13 @@
           prompt: "Search for a person" %>
       </div>
 
-      <div>
-        <label for="organization_id" class="text-sm font-medium text-gray-500 mb-1 block">Organization</label>
+      <div class="md:col-span-2">
+        <label for="organization_id" class="<%= label_class %>">Organization</label>
 
         <%= select_tag "organization_id",
           options_for_select(Organization.where(id: params[:organization_id]).map { |o| [o.name, o.id] }),
           include_blank: true,
-          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+          class: field_class,
           data: {
             controller: "remote-select",
             remote_select_model_value: "organization"
@@ -64,7 +42,74 @@
           prompt: "Search for an organization" %>
       </div>
 
-      <div class="md:col-span-4 flex gap-2 justify-end"><%= submit_tag "Search", class: "btn btn-primary" %><%= link_to "Clear filters", payments_path, class: "btn btn-secondary", data: { action: "collection#clearAndSubmit" } %></div>
+      <div class="md:col-span-4">
+        <label for="search" class="<%= label_class %>">Search metadata / Stripe charge ID</label>
+
+        <%= text_field_tag "search", params[:search],
+          placeholder: "Search metadata or Stripe charge ID",
+          class: field_class %>
+      </div>
+
+      <div class="md:col-span-2">
+        <label for="type" class="<%= label_class %>">Payment method</label>
+
+        <%= select_tag "type[]",
+          options_for_select({ "All" => "", "Cash" => "CashPayment", "Check" => "CheckPayment", "Stripe" => "ExternalProcessorPayment" }, Array(params[:type]).first),
+          class: placeholder_select_class %>
+      </div>
+
+      <div class="md:col-span-2">
+        <label for="payer_type" class="<%= label_class %>">Payer type</label>
+
+        <%= select_tag "payer_type",
+          options_for_select(["Person", "Organization"], params[:payer_type]),
+          include_blank: "All",
+          class: placeholder_select_class %>
+      </div>
+
+      <div class="md:col-span-2">
+        <label for="start_date" class="<%= label_class %>">Created from</label>
+
+        <%= date_field_tag "start_date", params[:start_date],
+          class: field_class %>
+      </div>
+
+      <div class="md:col-span-2">
+        <label for="end_date" class="<%= label_class %>">Created to</label>
+
+        <%= date_field_tag "end_date", params[:end_date],
+          class: field_class %>
+      </div>
+
+      <div class="md:col-span-2">
+        <label for="amount_min" class="<%= label_class %>">Min amount ($)</label>
+
+        <%= number_field_tag "amount_min", params[:amount_min], min: 0, step: "0.01",
+          placeholder: "Min",
+          class: field_class %>
+      </div>
+
+      <div class="md:col-span-2">
+        <label for="amount_max" class="<%= label_class %>">Max amount ($)</label>
+
+        <%= number_field_tag "amount_max", params[:amount_max], min: 0, step: "0.01",
+          placeholder: "Max",
+          class: field_class %>
+      </div>
+
+      <div class="md:col-span-2">
+        <label for="has_remaining" class="<%= label_class %>">Has unallocated</label>
+
+        <%= select_tag "has_remaining",
+          options_for_select({ "All" => "all", "Yes" => "yes", "No" => "no" }, params[:has_remaining] || "all"),
+          class: placeholder_select_class %>
+      </div>
+
+      <div class="md:col-span-2 flex flex-col">
+        <span class="<%= label_class %>" aria-hidden="true">&nbsp;</span>
+
+        <%= link_to "Clear filters", payments_path, class: "btn btn-utility-outline flex-1 w-full justify-center", data: { action: "collection#clearAndSubmit" } %>
+      </div>
     </div>
   <% end %>
 </div>

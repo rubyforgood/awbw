@@ -14,7 +14,7 @@ Devise.setup do |config|
   config.sign_in_after_reset_password = true
 
   # Use Turbo-compatible HTTP status codes
-  config.responder.error_status = :unprocessable_entity
+  config.responder.error_status = :unprocessable_content
   config.responder.redirect_status = :see_other
 
   # Configure the class responsible to send e-mails.
@@ -250,17 +250,6 @@ Devise.setup do |config|
   #   manager.intercept_401 = false
   #   manager.default_strategies(scope: :user).unshift :some_external_strategy
   # end
-
-  # Store the attempted email in the session when login fails because the
-  # account is unconfirmed, so the resend-confirmation link in the flash
-  # can send the email without an intermediate form.
-  Warden::Manager.before_failure do |env, opts|
-    if opts[:message] == :unconfirmed
-      request = Rack::Request.new(env)
-      email = request.params.dig("user", "email")
-      env["rack.session"]["unconfirmed_email"] = email if email.present?
-    end
-  end
 
   # ==> Mountable engine configurations
   # When using Devise inside an engine, let's call it `MyEngine`, and this engine

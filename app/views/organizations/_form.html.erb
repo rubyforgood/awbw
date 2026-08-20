@@ -1,4 +1,9 @@
-<%= simple_form_for(@organization, html: { data: { controller: "affiliation-dates affiliation-facilitator-warning" } }) do |f| %>
+<%= simple_form_for(@organization, html: { data: {
+      controller: "affiliation-dates affiliation-facilitator-warning",
+      affiliation_dates_merged_periods_value: true,
+      affiliation_dates_affiliated_since_fallback_value: @organization.start_date&.strftime("%b %Y") || "",
+      affiliation_dates_status_buckets_value: OrganizationDecorator.status_bucket_styles.to_json
+    } }) do |f| %>
   <%= render 'shared/errors', resource: @organization if @organization.errors.any? %>
   <%= render "duplicate_organizations_warning" %>
   <% has_affiliations = f.object.persisted? && f.object.affiliations.any? %>
@@ -70,23 +75,24 @@
 
   <!-- Profile-specific Categories (e.g. Workshop Settings) -->
   <% if @org_categories_grouped.present? %>
+    <% primary_age_ids = @organization.primary_age_category_ids %>
     <div class="form-group space-y-4 mb-8">
+      <%# Ensures the primary-age param is always submitted so unchecking every
+          toggle clears the primary flags. %>
+      <%= hidden_field_tag "organization[primary_age_category_ids][]", "" %>
       <% @org_categories_grouped.each do |type, cats| %>
+        <% is_age = type.name == "AgeRange" %>
         <div class="font-semibold text-gray-700 mb-2"><%= type.display_label %></div>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+          <% if is_age %>
+            <p class="text-sm text-gray-500 mb-3">Check every age group served, then mark the primary ones.</p>
+          <% end %>
           <div class="flex flex-wrap gap-3">
             <% cats.each do |category| %>
-              <% id = "organization_category_ids_#{category.id}" %>
-              <label for="<%= id %>"
-                     class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                <%= hidden_field_tag "organization[category_ids][]", "" %>
-                <%= check_box_tag "organization[category_ids][]",
-                                  category.id,
-                                  @organization.category_ids.include?(category.id),
-                                  id: id,
-                                  class: "h-4 w-4 text-blue-600 rounded" %>
-                <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
-              </label>
+              <%= render "shared/category_checkbox", param_key: "organization", category: category,
+                         checked: @organization.category_ids.include?(category.id),
+                         is_age: is_age,
+                         primary_checked: is_age && primary_age_ids.include?(category.id) %>
             <% end %>
           </div>
         </div>
@@ -104,19 +110,15 @@
 
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
     <div class="flex flex-col">
+      <% agency_type_option = f.object.decorate.agency_type_option %>
       <%= f.input :agency_type,
                   label: "Organization Type",
                   as: :select,
                   required: true,
-                  collection: [
-                    "501c3/nonprofit",
-                    "For-profit",
-                    "Government agency",
-                    "Other (please specify below)"
-                  ],
-                  selected: f.object.agency_type,
+                  collection: Organization::AGENCY_TYPES,
+                  selected: agency_type_option,
                   input_html: {
-                    value: f.object.agency_type,
+                    value: agency_type_option,
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
       <%= f.input :agency_type_other,
@@ -141,7 +143,7 @@
       <%= f.input :website_url,
                   label: "Website URL #{website_warning}".html_safe,
                   as: :string,
-                  hint: "Enter full URL: https:// or http://".html_safe,
+                  hint: "Invalid URLs won't be clickable in Portal".html_safe,
                   wrapper_html: { id: "website-url-field" },
                   input_html: {
                     class: "rounded-md #{"bg-red-200" if website_warning.present? } border-gray-300
@@ -156,20 +158,18 @@
                     input_html: {
                       class: "rounded-md border-gray-300 bg-blue-100 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     } %>
+        <% high_profile_gem = tag.i(class: "fa-solid fa-gem text-purple-600", aria: { hidden: true }) %>
+        <%= f.input :high_profile,
+                    label: "High profile",
+                    hint: "Shows a #{high_profile_gem} next to the org on dashboards and reports".html_safe %>
       </div>
     <% end %>
 
-    <% if params[:admin] && allowed_to?(:manage?, Organization) %>
-      <%= f.input :organization_status_id,
-                  as: :select,
-                  collection: @organization_statuses,
-                  include_blank: true,
-                  label: "Status",
-                  required: true,
-                  input_html: {
-                    class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                  } %>
-    <% else %>
+    <%# Compared as program-status buckets, not raw status names — the legacy column
+        no longer drives anything, so this only flags where it has gone stale. %>
+    <% status_matches_affiliations = !f.object.decorate.legacy_status_mismatch? %>
+    <% show_status_select = allowed_to?(:manage?, Organization) && params[:admin] %>
+    <% unless show_status_select %>
       <%= f.hidden_field :organization_status_id, value: f.object.organization_status_id || OrganizationStatus.find_by(name: "Active")&.id %>
     <% end %>
   </div>
@@ -246,19 +246,39 @@
     </div>
   </div>
 
-  <div class="form-group space-y-4 mb-8">
+  <div id="affiliations" class="form-group space-y-4 mb-8 scroll-mt-20">
     <div class="font-semibold text-gray-700 mb-2">
       Affiliations
     </div>
 
-    <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:people) %> p-4 mb-4 shadow-sm">
+    <div class="relative rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:people) %> p-4 mb-4 shadow-sm">
+      <% if show_status_select %>
+        <div class="absolute top-4 right-4 z-10 w-56">
+          <%= f.input :organization_status_id,
+                      as: :select,
+                      collection: @organization_statuses,
+                      include_blank: true,
+                      label: "Organization status",
+                      required: true,
+                      wrapper_html: { class: "mb-0" },
+                      input_html: {
+                        class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                      } %>
+          <% unless status_matches_affiliations %>
+            <p class="mt-1 text-xs text-red-600">Does not match affiliations status</p>
+          <% end %>
+        </div>
+      <% elsif allowed_to?(:manage?, Organization) && !status_matches_affiliations %>
+        <div class="absolute top-4 right-4 z-10 group cursor-help">
+          <i class="fa-solid fa-triangle-exclamation text-amber-500 text-lg"></i>
+          <div class="hidden group-hover:block absolute z-50 right-0 top-full mt-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
+            Legacy organization status does not match affiliation status
+          </div>
+        </div>
+      <% end %>
       <% org_earliest_aff = f.object.persisted? ? f.object.affiliations.minimum(:start_date) : nil %>
       <% org_aff_ended = f.object.persisted? && f.object.affiliations.any? && !f.object.affiliations.active.exists? %>
-      <% org_latest_end = f.object.persisted? ? f.object.affiliations.maximum(:end_date) : nil %>
-      <% org_end_date = org_aff_ended ? org_latest_end : f.object.end_date %>
       <% org_decorated = f.object.decorate %>
-      <% org_fac_start = org_decorated.facilitator_since_date %>
-      <% org_fac_ended = org_decorated.facilitation_end_date %>
       <div class="flex flex-col md:flex-row gap-6 mb-4">
         <div class="shrink-0 relative group cursor-help">
           <label class="inline-flex items-center gap-1 text-md font-medium text-gray-700 mb-1">
@@ -266,7 +286,7 @@
           </label>
           <div class="hidden group-hover:block absolute z-50 left-0 bottom-full mb-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
             <% if has_affiliations && org_earliest_aff.present? %>
-              <p>Auto-managed from affiliation records. Earliest affiliation start date: <%= org_earliest_aff.strftime('%b %Y') %>.</p>
+              <p>Auto-managed from affiliation records — shown as merged year-based periods (e.g. "2010-2012, 2026").</p>
               <% if f.object.start_date.present? && f.object.start_date.beginning_of_month != org_earliest_aff.beginning_of_month %>
                 <p class="mt-2 text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i>Organization start_date (<%= f.object.start_date.strftime('%b %Y') %>) differs from earliest affiliation.</p>
               <% end %>
@@ -282,7 +302,7 @@
             <% end %>
           </div>
           <div class="pt-1">
-            <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><% if org_aff_ended || (f.object.end_date.present? && !has_affiliations) %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="Affiliation ended"></i><% end %><%= (org_earliest_aff || f.object.start_date)&.strftime('%b %Y') || "—" %><%= " – #{org_end_date.strftime('%b %Y')}" if org_end_date.present? %></span>
+            <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><%= org_decorated.affiliated_since_display.presence || "—" %></span>
             <% if has_affiliations && org_earliest_aff.nil? %>
               <i class="fa-solid fa-triangle-exclamation text-amber-500 ml-1"></i>
             <% elsif f.object.start_date.present? && org_earliest_aff.present? && f.object.start_date.beginning_of_month != org_earliest_aff.beginning_of_month %>
@@ -302,18 +322,40 @@
         </div>
         <div class="shrink-0 relative group cursor-help">
           <label class="inline-flex items-center gap-1 text-md font-medium text-gray-700 mb-1">
-            Facilitations/program since <i class="fa-solid fa-circle-info text-gray-400 text-xs"></i>
+            Art program since <i class="fa-solid fa-circle-info text-gray-400 text-xs"></i>
           </label>
           <div class="hidden group-hover:block absolute z-50 left-0 bottom-full mb-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
-            <p>Earliest start date from affiliations with 'facilitator' in the title. Edit affiliation records to change this date.</p>
+            <p>When this organization's art program ran, from its 'Facilitator' affiliations — one period per stretch of facilitating, so a lapse and a return read as separate periods (e.g. "Aug 2015 – Jun 2018, Feb 2024"). Updates live as you edit the affiliation rows below.</p>
           </div>
           <div class="pt-1">
-            <span class="text-gray-900 font-medium" data-affiliation-dates-target="facilitatorSince"><% if org_fac_ended %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active facilitator affiliations"></i><% end %><%= org_fac_start&.strftime("%b %Y") || "—" %><%= " – #{org_fac_ended.strftime('%b %Y')}" if org_fac_ended %></span>
+            <span class="text-gray-900 font-medium" data-affiliation-dates-target="facilitatorSince"><%= org_decorated.program_since_display.presence || "—" %></span>
           </div>
         </div>
+        <% if allowed_to?(:manage?, Organization) %>
+          <% org_events = @organization_events || [] %>
+          <div id="program-status" class="shrink-0 relative group cursor-help scroll-mt-20">
+            <label class="inline-flex items-center gap-1 text-md font-medium text-gray-700 mb-1">
+              Program status <i class="fa-solid fa-circle-info text-gray-400 text-xs"></i>
+            </label>
+            <div class="hidden group-hover:block absolute z-50 left-0 bottom-full mb-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
+              <p>Overall status first (Active / Formerly active / Never active), then the facilitator-program status as of each event's date:<br>
+                • <span class="font-medium">New</span> — no facilitator affiliations yet<br>
+                • <span class="font-medium">Ongoing</span> — has an active facilitator<br>
+                • <span class="font-medium">Reinstated</span> — new again, but formerly active (all prior facilitations had ended).</p>
+            </div>
+            <div class="pt-1 flex flex-wrap items-center gap-2 max-w-md">
+              <%= org_decorated.organization_status_chip(data: { affiliation_dates_target: "programStatus" }) %>
+              <%= render "organizations/program_status_event_chips",
+                         organization: f.object, events: org_events, return_to: "organization_edit" %>
+            </div>
+          </div>
+        <% end %>
       </div>
       <% if allowed_to?(:manage?, Organization) %>
         <div class="p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10" data-affiliation-dates-target="affiliationsContainer">
+          <% if f.object.affiliations.present? %>
+            <%= render "affiliations/header", label: "Person" %>
+          <% end %>
           <%= f.fields_for :affiliations do |affiliation_form| %>
             <div data-paginated-fields-target="item">
               <%= render "affiliation_fields",
@@ -322,7 +364,7 @@
           <% end %>
           <div data-paginated-fields-target="nav"></div>
 
-          <div class="p-3 mt-6"><%= link_to_add_association "➕ Add Affiliation",
+          <div class="mt-2"><%= link_to_add_association "➕ Add Affiliation",
                                         f,
                                         :affiliations,
                                         class: "btn btn-secondary-outline" %></div>
@@ -364,6 +406,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
           <%= f.input :profile_show_sectors, label: "Show sectors" %>
+          <%= f.input :profile_show_age_ranges, label: "Show age ranges" %>
           <%= f.input :profile_show_workshops, label: "Show workshops" %>
           <%= f.input :profile_show_stories, label: "Show stories" %>
           <%= f.input :profile_show_events_registered, label: "Show events hosted" %>
@@ -382,7 +425,7 @@
       <div class="form-group space-y-4 mb-8" id="comments-section">
         <div class="font-semibold text-gray-700 mb-2">Comments</div>
 
-        <div class="admin-only bg-blue-50 rounded-lg border border-gray-200 p-4 mb-4 shadow-sm" data-controller="paginated-fields comment-edit-toggle" data-paginated-fields-per-page-value="5">
+        <div class="admin-only bg-blue-50 rounded-lg border border-gray-200 p-4 mb-4 shadow-sm" data-controller="paginated-fields edit-toggle" data-paginated-fields-per-page-value="5">
           <%= f.simple_fields_for :comments do |cf| %>
             <%= render "comments/comment_fields", f: cf %>
           <% end %>
@@ -393,10 +436,10 @@
             type="button"
             class="text-sm text-gray-400 hover:text-blue-600 underline cursor-pointer whitespace-nowrap"
             style="float:right"
-            data-action="click->comment-edit-toggle#toggle"
+            data-action="edit-toggle#toggle"
           >
-            <span data-comment-edit-toggle-target="editLabel">Edit Comments</span>
-            <span data-comment-edit-toggle-target="viewLabel" style="display:none">Done Editing</span>
+            <span data-edit-toggle-target="editLabel">Edit Comments</span>
+            <span data-edit-toggle-target="viewLabel" class="hidden">Done Editing</span>
           </button>
 
           <%= link_to_add_association "➕ Add Comment",

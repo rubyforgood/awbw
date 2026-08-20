@@ -39,6 +39,30 @@ RSpec.describe "/resources", type: :request do
     end
   end
 
+  describe "GET /index search results filtering" do
+    let!(:visible_resource) do
+      create(:resource, :publicly_visible, :published, title: "Visible In Search")
+    end
+    let!(:hidden_resource) do
+      create(:resource, :publicly_visible, :published, :hidden_from_search, title: "Hidden From Search")
+    end
+
+    it "includes hidden resources for an admin" do
+      get resources_url, headers: { "Turbo-Frame" => "resources_results" }
+
+      expect(response.body).to include("Visible In Search")
+      expect(response.body).to include("Hidden From Search")
+    end
+
+    it "excludes hidden resources for a guest" do
+      sign_out user
+      get resources_url, headers: { "Turbo-Frame" => "resources_results" }
+
+      expect(response.body).to include("Visible In Search")
+      expect(response.body).not_to include("Hidden From Search")
+    end
+  end
+
   describe "GET /show" do
     context "when resource has NO external link" do
       let(:resource) do
@@ -50,6 +74,20 @@ RSpec.describe "/resources", type: :request do
 
         expect(response).to have_http_status(:ok)
       end
+
+      it "relaxes object-src to :self for the PDF <object> preview" do
+        get resource_url(resource)
+
+        expect(response.headers["Content-Security-Policy-Report-Only"]).to include("object-src 'self'")
+      end
+    end
+  end
+
+  describe "GET /index (non-preview action)" do
+    it "keeps the strict global object-src 'none'" do
+      get resources_url
+
+      expect(response.headers["Content-Security-Policy-Report-Only"]).to include("object-src 'none'")
     end
   end
 
@@ -68,6 +106,15 @@ RSpec.describe "/resources", type: :request do
 
       expect(response).to have_http_status(:ok)
     end
+
+    it "renders the visibility flags, including hidden from search, with definitions" do
+      resource = Resource.create! valid_attributes
+      get edit_resource_url(resource)
+
+      expect(response.body).to include('name="resource[hidden_from_search]"')
+      expect(response.body).to include('name="resource[publicly_visible]"')
+      expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:hidden_from_search][:description])
+    end
   end
 
   describe "POST /create" do
@@ -82,6 +129,16 @@ RSpec.describe "/resources", type: :request do
         post resources_url, params: { resource: valid_attributes }
 
         expect(response).to redirect_to(resource_url(Resource.last))
+      end
+
+      it "credits the chosen person as author and records the creator" do
+        facilitator = create(:person)
+
+        post resources_url, params: { resource: valid_attributes.merge(author_id: facilitator.id) }
+
+        resource = Resource.last
+        expect(resource.author).to eq(facilitator)
+        expect(resource.created_by).to eq(user)
       end
     end
 

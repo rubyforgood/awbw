@@ -18,13 +18,15 @@ RSpec.describe "events/edit", type: :view do
     assign(:registration_forms, [])
     assign(:sectors, [])
     assign(:categories_grouped, [])
+    assign(:scholarship_forms, [])
+    assign(:bulk_payment_forms, [])
     allow(view).to receive(:current_user).and_return(build_stubbed(:user, :admin))
     allow(view).to receive(:allowed_to?).with(:manage?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:registrants?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:dashboard?, event).and_return(true)
-    allow(view).to receive(:allowed_to?).with(:background?, event).and_return(true)
+    allow(view).to receive(:allowed_to?).with(:roster?, event).and_return(true)
+    allow(view).to receive(:allowed_to?).with(:event_reports?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:recipients?, event).and_return(true)
-    allow(view).to receive(:allowed_to?).with(:staff?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:bulk_payments?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:edit?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:index?, Event).and_return(true)
@@ -49,7 +51,7 @@ RSpec.describe "events/edit", type: :view do
     render
 
     expect(rendered).to have_link("Dashboard", href: dashboard_event_path(event))
-    expect(rendered).to have_link("Registrants", href: registrants_event_path(event))
+    expect(rendered).to have_link("Registrations", href: registrants_event_path(event))
   end
 
   it "renders submit button" do

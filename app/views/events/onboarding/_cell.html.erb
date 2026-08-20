@@ -1,0 +1,28 @@
+<%# One editable onboarding cell, targeted by id for inline turbo replacement.
+    Locals: registration, field (a CHECKLIST_STEPS key, a DAY_FIELDS key, or "fee_note"). %>
+<span id="<%= dom_id(registration, field) %>" class="inline-block">
+  <% if field == "fee_note" %>
+    <%= form_with url: update_onboarding_event_registration_path(registration), method: :patch, class: "inline" do %>
+      <%= hidden_field_tag :field, "fee_note" %>
+      <%= text_field_tag :value, registration.fee_note,
+            placeholder: "—",
+            onchange: "this.form.requestSubmit()",
+            "aria-label": "Fee note",
+            class: "w-28 rounded border border-transparent hover:border-gray-300 focus:border-blue-400 focus:ring focus:ring-blue-200 focus:outline-none px-1.5 py-0.5 text-xs text-gray-700" %>
+    <% end %>
+  <% else %>
+    <% is_step = EventRegistration::CHECKLIST_STEPS.key?(field) %>
+    <% checked = is_step ? registration.checklist_step_completed?(field) : registration.public_send(field) %>
+    <% completion = is_step ? registration.checklist_completion_for(field) : nil %>
+    <% tooltip = completion&.completed_at ? "Completed by #{completion.completed_by&.full_name || 'an admin'} on #{completion.completed_at.strftime('%b %-d, %Y at %l:%M %P')}" : nil %>
+    <%= form_with url: update_onboarding_event_registration_path(registration), method: :patch, class: "inline" do %>
+      <%= hidden_field_tag :field, field %>
+      <%= hidden_field_tag :value, "0" %>
+      <%= check_box_tag :value, "1", checked,
+            onchange: "this.form.requestSubmit()",
+            title: tooltip,
+            "aria-label": EventRegistration::CHECKLIST_STEPS[field] || field.humanize,
+            class: "h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-200 cursor-pointer" %>
+    <% end %>
+  <% end %>
+</span>

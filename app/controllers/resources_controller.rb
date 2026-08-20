@@ -1,10 +1,19 @@
 class ResourcesController < ApplicationController
   include ExternallyRedirectable, AhoyTracking, TagAssignable, MentionableScopable
 
-  skip_before_action :authenticate_user!, only: [ :index, :show ]
+  skip_before_action :authenticate_user!, only: [ :index, :show, :download ]
+
+  # The show page previews a PDF in an <object>, which is governed by object-src.
+  # The global policy sets object_src :none to block legacy <object>/<embed>
+  # injection app-wide; relax it to :self only here, where the one legitimate PDF
+  # embed lives. The blob streams same-origin via proxy mode, so :self is enough.
+  content_security_policy(only: :show) do |policy|
+    policy.object_src :self
+  end
 
   def index
     authorize!
+    @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 18
@@ -21,7 +30,7 @@ class ResourcesController < ApplicationController
 
       track_index_intent(Resource, @resources, params)
 
-      render :resource_results
+      render :resources_results
     else
       render :index
     end
@@ -29,7 +38,7 @@ class ResourcesController < ApplicationController
 
   def stories
     authorize!
-    @stories = Resource.story.paginate(page: params[:page], per_page: 6).decorate
+    @stories = authorized_scope(Resource.story).paginate(page: params[:page], per_page: 6).decorate
   end
 
   def new
@@ -53,6 +62,7 @@ class ResourcesController < ApplicationController
   def show
     @resource = Resource.includes(
       :created_by,
+      :author,
       :bookmarks,
       primary_asset:  :file_attachment,
       downloadable_asset:  :file_attachment,
@@ -151,10 +161,6 @@ class ResourcesController < ApplicationController
     @resource.build_downloadable_asset if @resource.downloadable_asset.blank?
     @resource.gallery_assets.build
     @windows_types = WindowsType.all
-    @authors = authorized_scope(User.has_access.or(User.where(id: @resource.created_by_id)))
-                   .includes(:person)
-                   .order("people.first_name, people.last_name")
-                   .map { |u| [ u.full_name, u.id ] }
     @categories_grouped =
       Category
         .includes(:category_type)
@@ -173,7 +179,8 @@ class ResourcesController < ApplicationController
   def resource_params
     params.require(:resource).permit(
       :rhino_body, :kind, :male, :female, :title, :featured, :published, :publicly_visible, :publicly_featured,
-      :agency, :author, :filemaker_code, :windows_type_id, :position,
+      :hidden_from_search,
+      :agency, :author_id, :author_credit_preference, :filemaker_code, :windows_type_id, :position,
       primary_asset_attributes: [ :id, :file, :_destroy ],
       downloadable_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],

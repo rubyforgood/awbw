@@ -64,10 +64,10 @@ module Dedupable
   rescue ActionPolicy::Unauthorized
     raise
   rescue StandardError => e
-    render json: { error: e.message }, status: :unprocessable_entity
+    render json: { error: e.message }, status: :unprocessable_content
   end
 
-  def dedupe_execute
+  def dedupe_perform
     authorize!
     config = dedupe_config
     mc = config[:model_class]

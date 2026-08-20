@@ -7,23 +7,27 @@
     <%= f.hidden_field :created_by_id, value: f.object.created_by_id || current_user&.id %>
     <%= f.hidden_field :updated_by_id, value: current_user&.id %>
 
-    <!-- Content -->
-    <%= f.input :content,
-                as: :text,
-                label: "Banner Content",
-                input_html: {
-                  rows: 2,
-                  class: "rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                         focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
-                },
-                hint: "You can include limited HTML (e.g. <b>, <i>, <a>)." %>
+    <!-- Content + Visibility -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
+      <div class="md:col-span-3">
+        <%= f.input :content,
+                    as: :text,
+                    label: "Banner Content",
+                    input_html: {
+                      rows: 2,
+                      class: "w-full rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
+                    },
+                    hint: "You can include limited HTML (e.g. <b>, <i>, <a>)." %>
+      </div>
 
-    <%= f.input :published,
-                as: :boolean,
-                input_html: {
-                  class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                },
-                wrapper_html: { class: "flex items-center space-x-2" } %>
+      <div class="admin-only bg-blue-100 rounded mt-6 md:mt-0 p-3">
+        <%= render "shared/visibility_info", flags: %i[published] %>
+        <div class="grid grid-cols-1 items-center">
+          <%= visibility_flag_input f, :published %>
+        </div>
+      </div>
+    </div>
 
     <div class="action-buttons mt-8 flex justify-center gap-3">
       <% if allowed_to?(:destroy?, f.object) %>

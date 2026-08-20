@@ -30,6 +30,18 @@ class PersonDecorator < ApplicationDecorator
     affiliations.maximum(:end_date)
   end
 
+  # Org names where this person is currently an active facilitator. Filters the
+  # affiliations in Ruby (rather than re-querying via the .facilitators.active
+  # scopes) so list pages that preload `affiliations: :organization` pay no
+  # per-row query cost.
+  def active_facilitator_organization_names
+    affiliations
+      .select { |affiliation| affiliation.facilitator? && affiliation.active? }
+      .filter_map { |affiliation| affiliation.organization&.name }
+      .uniq
+      .sort
+  end
+
   def facilitation_end_date
     facilitator_affiliations = affiliations.facilitators
     return nil if facilitator_affiliations.active.exists?
@@ -72,7 +84,20 @@ class PersonDecorator < ApplicationDecorator
   end
 
   def affiliated_since_date
-    @affiliated_since_date ||= affiliations.minimum(:start_date)
+    # Compute in Ruby from the (eager-loaded) association so list pages that
+    # preload affiliations don't fire a MIN(start_date) query per row.
+    # `.minimum` would ignore the loaded records and hit the DB every time.
+    @affiliated_since_date ||= affiliations.filter_map(&:start_date).min
+  end
+
+  # The server-rendered twin of affiliation_dates_controller#updateDisplay, which
+  # replaces this content as the person form's affiliation rows are edited.
+  def affiliated_since_range
+    date_range_display(affiliated_since_date, affiliation_end_date, ended_title: "No active affiliations")
+  end
+
+  def facilitator_since_range
+    date_range_display(facilitator_since_date, facilitation_end_date, ended_title: "No active facilitator affiliations")
   end
 
   private
@@ -95,6 +120,14 @@ class PersonDecorator < ApplicationDecorator
       badges << badge("Affiliated since #{affiliated_since_date.strftime('%B %Y')}", :affiliated_person)
     end
     badges
+  end
+
+  def date_range_display(since, ended, ended_title:)
+    parts = []
+    parts << h.content_tag(:i, "", class: "fa-solid fa-circle-xmark text-red-400 mr-1", title: ended_title) if ended
+    parts << (since&.strftime("%b %Y") || "—")
+    parts << " – #{ended.strftime('%b %Y')}" if ended
+    h.safe_join(parts)
   end
 
   def badge(label, key)

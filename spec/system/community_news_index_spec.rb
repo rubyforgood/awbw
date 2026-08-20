@@ -144,6 +144,29 @@ RSpec.describe "Community News Index", type: :system do
     expect(find_field("query").value).to eq("")
   end
 
+  # Arriving with the filters already in the URL (a shared link, a drill-in) is the
+  # case where the server renders them as value/selected attributes — so clearing
+  # has to beat the browser's notion of the form's defaults, not just the fields'
+  # current state.
+  scenario "Admin clears filters that arrived in the URL" do
+    org = create(:organization, name: "Banana Org")
+    create(:community_news, :published, title: "Banana News", rhino_body: "content", organization: org)
+    create(:community_news, :published, title: "Apple News", rhino_body: "content")
+
+    sign_in admin
+    visit community_news_index_path(title: "Banana", organization_id: org.id)
+
+    expect(page).to have_content("Banana News")
+    expect(page).not_to have_content("Apple News")
+
+    click_link "Clear filters"
+
+    expect(page).to have_content("Banana News")
+    expect(page).to have_content("Apple News")
+    expect(find_field("title").value).to eq("")
+    expect(find_field("organization_id").value).to eq("")
+  end
+
   scenario "Admin sees message when no community news exist" do
     sign_in admin
 

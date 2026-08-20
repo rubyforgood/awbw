@@ -1,0 +1,53 @@
+<%# Index filters, mirroring the registrants search: a GET form driven by the
+    collection controller. Selects submit on change and the text boxes (grant/
+    funder name) debounce-submit as you type, all into the grants_results frame —
+    so the old rows blur (blur-on-submit) while the next page loads. %>
+<% field_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                  focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+<% label_class = "block text-sm font-medium text-gray-700 mb-1" %>
+<%= form_with url: grants_path, method: :get,
+      data: { controller: "collection", turbo_frame: "grants_results" },
+      autocomplete: "off",
+      class: "space-y-4" do %>
+  <div class="mb-6 flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end">
+    <div class="w-full md:flex-1">
+      <%= label_tag :name, "Grant name", class: label_class %>
+      <%= text_field_tag :name, params[:name], class: field_class, placeholder: "Grant name" %>
+    </div>
+    <div class="w-full md:flex-1">
+      <%= label_tag :funder_name, "Funder name", class: label_class %>
+      <%= text_field_tag :funder_name, params[:funder_name], class: field_class, placeholder: "Organization or person" %>
+    </div>
+    <div class="w-full md:w-32">
+      <%= label_tag :funds, "Funds remaining", class: label_class %>
+      <%= select_tag :funds,
+                     options_for_select([ [ "Available", "available" ], [ "None left", "none" ] ], params[:funds]),
+                     include_blank: "All",
+                     class: field_class %>
+    </div>
+    <div class="w-full md:w-32">
+      <%= label_tag :funder_type, "Funder type", class: label_class %>
+      <%= select_tag :funder_type,
+                     options_for_select([ [ "Organization", "Organization" ], [ "Individual", "Person" ] ], params[:funder_type]),
+                     include_blank: "All",
+                     class: field_class %>
+    </div>
+    <div class="w-full md:w-40">
+      <%= label_tag :planned_giving, "Legacy Circle scholarship", class: label_class %>
+      <%= select_tag :planned_giving,
+                     options_for_select([ [ "Legacy Circle scholarships", "yes" ], [ "Other grants", "no" ] ], params[:planned_giving]),
+                     include_blank: "All",
+                     class: field_class %>
+    </div>
+    <div class="w-full md:w-32">
+      <%= label_tag :tasks, "Tasks completed", class: label_class %>
+      <%= select_tag :tasks,
+                     options_for_select([ [ "Completed", "completed" ], [ "Outstanding", "outstanding" ] ], params[:tasks]),
+                     include_blank: "All",
+                     class: field_class %>
+    </div>
+    <div class="flex w-full items-end md:w-auto">
+      <%= link_to "Clear filters", grants_path, class: "btn btn-utility-outline", data: { action: "collection#clearAndSubmit" } %>
+    </div>
+  </div>
+<% end %>

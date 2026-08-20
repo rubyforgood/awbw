@@ -1,7 +1,13 @@
 class SearchController < ApplicationController
   skip_before_action :preload_current_user_associations, raise: false
 
+  # Virtual "model" that searches people and organizations together for the
+  # compound payer / funder pickers, listing organizations first.
+  COMPOUND_MODEL = "person_or_organization".freeze
+
   def index
+    return render json: compound_results if params[:model] == COMPOUND_MODEL
+
     model_class = allowed_model(params[:model])
     unless model_class
       skip_verify_authorized!
@@ -33,6 +39,21 @@ class SearchController < ApplicationController
 
   private
 
+  # Search people and organizations, listing organizations first (the more
+  # common funder/payer).
+  def compound_results
+    authorize! Organization, to: :search?
+    authorize! Person, to: :search?
+
+    query = params[:q].to_s.strip
+    return [] if query.blank?
+
+    records = authorized_scope(Organization.remote_search(query)).limit(25).to_a +
+      authorized_scope(Person.remote_search(query)).limit(25).to_a
+
+    records.map(&:compound_search_label)
+  end
+
   def allowed_model(model_param)
     {
       "person"   => Person,
@@ -40,7 +61,10 @@ class SearchController < ApplicationController
       "workshop" => Workshop,
       "organization" => Organization,
       "event" => Event,
-      "event_registration" => EventRegistration
+      "event_registration" => EventRegistration,
+      "resource" => Resource,
+      "sector" => Sector,
+      "category" => Category
     }[model_param]
   end
 

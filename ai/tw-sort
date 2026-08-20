@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Sort Tailwind utility classes into canonical order with rustywind.
+#
+# ERB is where nearly all our classes live, and Prettier (with
+# prettier-plugin-tailwindcss) can't parse ERB — so we use rustywind, which
+# reorders only the class-attribute tokens in place and leaves interpolations
+# (<%= ... %>) and the rest of the markup untouched.
+#
+# Usage:
+#   ai/tw-sort            Sort files changed vs origin/main (gradual convergence)
+#   ai/tw-sort --check    Check those files; non-zero exit if any need sorting
+#   ai/tw-sort --all      Sort the whole tree (app/views + app/frontend/javascript)
+#   ai/tw-sort --all --check
+set -euo pipefail
+source "$(dirname "$0")/.ruby-env"
+
+rustywind="$(dirname "$0")/../node_modules/.bin/rustywind"
+
+mode="write"
+scope="changed"
+for arg in "$@"; do
+  case "$arg" in
+    --check) mode="check" ;;
+    --all) scope="all" ;;
+    *) echo "unknown option: $arg" >&2; exit 2 ;;
+  esac
+done
+
+flag="--write"
+[[ "$mode" == "check" ]] && flag="--check-formatted"
+
+if [[ "$scope" == "all" ]]; then
+  exec "$rustywind" "$flag" app/views app/frontend/javascript
+fi
+
+# Changed files only: everything modified vs origin/main plus the working tree.
+files=()
+while IFS= read -r f; do
+  [[ -n "$f" && -f "$f" ]] && files+=("$f")
+done < <(
+  { git diff --name-only --diff-filter=ACMR origin/main...HEAD
+    git diff --name-only --diff-filter=ACMR
+    git diff --name-only --diff-filter=ACMR --cached
+  } | sort -u | grep -E '\.(erb|js)$' || true
+)
+
+if [[ ${#files[@]} -eq 0 ]]; then
+  echo "No changed .erb/.js files to sort."
+  exit 0
+fi
+
+exec "$rustywind" "$flag" "${files[@]}"

@@ -53,6 +53,18 @@ RSpec.describe "/workshop_variations", type: :request do
         expect(response.body).to include(workshop_variation_idea.name)
         expect(response.body).to include("&lt;p&gt;Original idea body content&lt;/p&gt;")
       end
+
+      it "shows the asset-transfer checkbox when the idea has attachments" do
+        idea_with_asset = create(:workshop_variation_idea, workshop: workshop)
+        PrimaryAsset.create!(
+          owner: idea_with_asset,
+          file: fixture_file_upload("spec/fixtures/files/sample.png", "image/png")
+        )
+
+        get new_workshop_variation_path(workshop_variation_idea_id: idea_with_asset.id)
+
+        expect(response.body).to include("transfer attachments from the variation idea")
+      end
     end
 
     describe "POST /create from workshop_variation_idea" do
@@ -165,12 +177,64 @@ RSpec.describe "/workshop_variations", type: :request do
         get workshop_variations_path
         expect(response).to have_http_status(:ok)
       end
+
+      it "sorts by the credited author's name on the lazy turbo-frame request" do
+        aaron = create(:person, first_name: "Aaron", last_name: "Adams")
+        zoe = create(:person, first_name: "Zoe", last_name: "Zephyr")
+        var_a = create(:workshop_variation, valid_attributes.merge(name: "First variation", author: aaron))
+        var_z = create(:workshop_variation, valid_attributes.merge(name: "Second variation", author: zoe))
+
+        get workshop_variations_path, params: { sort: "author", direction: "asc" },
+                                      headers: { "Turbo-Frame" => "workshop_variations_results" }
+
+        expect(response.body.index(var_a.name)).to be < response.body.index(var_z.name)
+      end
+
+      it "sorts by name on the lazy turbo-frame request" do
+        var_b = create(:workshop_variation, valid_attributes.merge(name: "Bravo variation"))
+        var_a = create(:workshop_variation, valid_attributes.merge(name: "Alpha variation"))
+
+        get workshop_variations_path, params: { sort: "name", direction: "asc" },
+                                      headers: { "Turbo-Frame" => "workshop_variations_results" }
+
+        expect(response.body.index(var_a.name)).to be < response.body.index(var_b.name)
+      end
+
+      it "renders an apostrophe in the name without double-escaping it" do
+        create(:workshop_variation, valid_attributes.merge(name: "New Year's Resolution"))
+
+        get workshop_variations_path,
+            headers: { "Turbo-Frame" => "workshop_variations_results" }
+
+        expect(response.body).to include("New Year&#39;s Resolution")
+        expect(response.body).not_to include("New Year&amp;#39;s Resolution")
+      end
+
+      it "matches a search query against the credited author's name on the lazy turbo-frame request" do
+        person = create(:person, first_name: "Bartholomew", last_name: "Quill")
+        authored = create(:workshop_variation, valid_attributes.merge(name: "Authored variation", author: person))
+        other = create(:workshop_variation, valid_attributes.merge(name: "Other variation"))
+
+        get workshop_variations_path, params: { query: "Bartholomew" },
+                                      headers: { "Turbo-Frame" => "workshop_variations_results" }
+
+        expect(response.body).to include(authored.name)
+        expect(response.body).not_to include(other.name)
+      end
     end
 
     describe "GET /new" do
       it "renders successfully" do
         get new_workshop_variation_path
         expect(response).to have_http_status(:ok)
+      end
+
+      it "renders the published and publicly visible flags with definitions" do
+        get new_workshop_variation_path
+
+        expect(response.body).to include('name="workshop_variation[published]"')
+        expect(response.body).to include('name="workshop_variation[publicly_visible]"')
+        expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:published][:description])
       end
     end
 
@@ -182,6 +246,17 @@ RSpec.describe "/workshop_variations", type: :request do
           }.to change(WorkshopVariation, :count).by(1)
 
           expect(response).to redirect_to(workshop_variation_path(WorkshopVariation.last))
+        end
+
+        it "credits the chosen person as author and records the creator" do
+          facilitator = create(:person)
+
+          post workshop_variations_path,
+               params: { workshop_variation: valid_attributes.merge(author_id: facilitator.id) }
+
+          variation = WorkshopVariation.last
+          expect(variation.author).to eq(facilitator)
+          expect(variation.created_by).to eq(admin)
         end
       end
 
@@ -243,6 +318,20 @@ RSpec.describe "/workshop_variations", type: :request do
 
         expect(variation.reload.name).to eq("Updated Name")
         expect(response).to redirect_to(workshop_variation_path(variation))
+      end
+
+      it "attaches assets from the idea when promote_idea_assets is true" do
+        idea_with_asset = create(:workshop_variation_idea, workshop: workshop)
+        PrimaryAsset.create!(
+          owner: idea_with_asset,
+          file: fixture_file_upload("spec/fixtures/files/sample.png", "image/png")
+        )
+        variation = create(:workshop_variation, valid_attributes.merge(workshop_variation_idea: idea_with_asset))
+
+        expect {
+          patch workshop_variation_path(variation),
+                params: { workshop_variation: { name: "Updated Name" }, promote_idea_assets: "true" }
+        }.to change { variation.reload.assets.count }.by(1)
       end
     end
   end

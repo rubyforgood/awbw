@@ -1,0 +1,32 @@
+<% inline_title = local_assigns[:inline_title] %>
+<% page_content = local_assigns[:page_content] %>
+<% show_actions = resource.downloadable_asset&.file&.attached? || allowed_to?(:edit?, resource) %>
+
+<% if show_actions %>
+  <%# Floated right so the title and page content flow full-width beneath it.
+      Download sits on top; the admin-only Edit link tucks in below (new tab so
+      the callout context isn't lost). %>
+  <div class="float-right ml-4 flex flex-col items-end gap-2">
+    <% if resource.downloadable_asset&.file&.attached? %>
+      <%= link_to url_for(resource.downloadable_asset.file), download: true, class: "btn btn-utility" do %>
+        Download
+        <i class="fa-solid fa-download"></i>
+      <% end %>
+    <% end %>
+    <% if allowed_to?(:edit?, resource) %>
+      <%= render "events/callouts/admin_edit_link", path: edit_resource_path(resource), label: "Edit resource" %>
+    <% end %>
+  </div>
+<% end %>
+
+<% if inline_title.present? %>
+  <h2 class="text-2xl font-semibold text-gray-900 break-words"><%= inline_title %></h2>
+<% end %>
+
+<% if page_content.present? %>
+  <p class="text-gray-600 max-w-3xl mt-1"><%= page_content %></p>
+<% end %>
+
+<p class="clear-both text-xs text-gray-400 pt-3 mb-3">The preview below may take a moment to load.</p>
+
+<%= render "assets/resource_display", resource: resource %>

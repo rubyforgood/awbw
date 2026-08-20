@@ -1,4 +1,4 @@
-<%= simple_form_for(event_registration, data: { turbo: false }) do |f| %>
+<%= simple_form_for(event_registration, data: { turbo: false, controller: "dirty-form" }) do |f| %>
   <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to].present? %>
   <%= render "shared/errors", resource: event_registration if event_registration.errors.any? %>
 
@@ -10,25 +10,36 @@
           while it differs from what's stored). A colored icon inside the select
           echoes the status color. ---- %>
       <% event_form_ids = f.object.event.form_ids %>
-      <% submissions = event_form_ids.any? ? FormSubmission.joins(:form).where(form_id: event_form_ids, person_id: f.object.registrant_id).order(Arel.sql("forms.name")).pluck(Arel.sql("forms.name"), :created_at) : [] %>
-      <% form_show_params = f.object.slug.present? ? { reg: f.object.slug } : { person_id: f.object.registrant_id } %>
+      <% submissions = event_form_ids.any? ? FormSubmission.where(event_id: f.object.event.id, person_id: f.object.registrant_id).joins(:form).where(form_id: event_form_ids).order(Arel.sql("forms.name")).pluck(Arel.sql("forms.name"), :created_at) : [] %>
       <% status_icon_colors = {
            "registered"            => "text-blue-600",
            "attended"              => "text-green-600",
            "incomplete_attendance" => "text-amber-600",
            "cancelled"             => "text-gray-500",
-           "no_show"               => "text-red-600"
+           "no_show"               => "text-red-600",
+           "transferred_in"        => "text-teal-600",
+           "transferred_out"       => "text-purple-600"
          } %>
       <% status_icons = {
            "registered"            => "fa-clipboard-list",
            "attended"              => "fa-circle-check",
            "incomplete_attendance" => "fa-clock",
            "cancelled"             => "fa-ban",
-           "no_show"               => "fa-circle-xmark"
+           "no_show"               => "fa-circle-xmark",
+           "transferred_in"        => "fa-right-to-bracket",
+           "transferred_out"       => "fa-right-from-bracket"
          } %>
       <% current_icon_color = status_icon_colors[f.object.status] || "text-gray-500" %>
       <% current_icon = status_icons[f.object.status] || "fa-question" %>
-      <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <%# The attendance-status controller spans the whole card so the per-day
+          checkmarks in the meta strip below can drive the status select above. %>
+      <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+           data-controller="attendance-status"
+           data-attendance-status-colors-value="<%= status_icon_colors.to_json %>"
+           data-attendance-status-icons-value="<%= status_icons.to_json %>"
+           data-attendance-status-initial-value="<%= f.object.status %>"
+           data-attendance-status-active-statuses-value="<%= EventRegistration::ACTIVE_STATUSES.to_json %>"
+           data-attendance-status-day-count-value="<%= f.object.event.day_count %>">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
           <div class="min-w-0 flex-1">
             <%= person_profile_button(f.object.registrant, subtitle: f.object.registrant.preferred_email) %>
@@ -52,7 +63,7 @@
                end %>
             <% account_box = capture do %>
               <i class="fa-solid <%= account_icon %> <%= account_icon_color %> text-base"></i>
-              <span class="text-[0.6rem] font-medium leading-tight text-gray-700">User account</span>
+              <span class="text-2xs font-medium leading-tight text-gray-700">User account</span>
             <% end %>
             <% if allowed_to?(:show?, account) %>
               <%= link_to user_path(account), class: "#{box_base} #{account_border}", title: "User account: #{account_status}", data: { turbo_frame: "_top" } do %>
@@ -64,26 +75,22 @@
           <% elsif allowed_to?(:new?, User) %>
             <%= link_to new_user_path(person_id: f.object.registrant_id, event_registration_id: f.object.id), class: "#{box_base} border-gray-300 text-gray-600", title: "Create a user account", data: { turbo_frame: "_top" } do %>
               <i class="fa-solid fa-user-plus text-base"></i>
-              <span class="text-[0.6rem] font-medium leading-tight">Create user</span>
+              <span class="text-2xs font-medium leading-tight">Create user</span>
             <% end %>
           <% else %>
             <div class="<%= box_base %> border-gray-300 text-gray-500" title="No user account">
               <i class="fa-solid fa-user-slash text-base"></i>
-              <span class="text-[0.6rem] font-medium leading-tight">No account</span>
+              <span class="text-2xs font-medium leading-tight">No account</span>
             </div>
           <% end %>
 
-          <div class="sm:w-64"
-               data-controller="attendance-status"
-               data-attendance-status-colors-value="<%= status_icon_colors.to_json %>"
-               data-attendance-status-icons-value="<%= status_icons.to_json %>"
-               data-attendance-status-initial-value="<%= f.object.status %>">
+          <div class="sm:w-64">
             <div class="mb-1 flex items-center justify-between gap-2">
               <span class="text-xs font-medium text-gray-400">Registration status</span>
               <span data-attendance-status-target="dirty"
-                    class="hidden items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[0.65rem] font-medium text-amber-700"
+                    class="hidden items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-2xs font-medium text-amber-700"
                     title="Save the form to apply this change">
-                <i class="fa-solid fa-pen text-[0.55rem]"></i>
+                <i class="fa-solid fa-pen text-3xs"></i>
                 Unsaved
               </span>
             </div>
@@ -110,58 +117,85 @@
 
           <% if f.object.slug.present? %>
             <%= link_to registration_ticket_path(f.object.slug),
-                        class: "group inline-flex items-center gap-1.5 font-medium #{DomainTheme.text_class_for(:event_registrations, intensity: 600)} hover:underline",
+                        class: "group inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2.5 py-1 font-medium shadow-sm #{DomainTheme.text_class_for(:event_registrations, intensity: 600)} hover:bg-gray-50 transition-colors",
                         target: "_blank",
                         data: { turbo_frame: "_top" } do %>
               <i class="fa-solid fa-ticket"></i>
               View ticket
-              <i class="fa-solid fa-arrow-up-right-from-square text-[0.55rem] text-gray-400"></i>
+              <i class="fa-solid fa-arrow-up-right-from-square text-3xs text-gray-400"></i>
             <% end %>
           <% end %>
 
           <% submissions.each_with_index do |(form_name, ts), i| %>
-            <%= link_to event_public_registration_path(f.object.event, **form_show_params),
+            <%= link_to event_registrant_submissions_path(f.object.event, person_id: f.object.registrant_id),
                         class: "group inline-flex items-center gap-1.5 font-medium #{DomainTheme.text_class_for(:event_registrations, intensity: 600)} hover:underline",
                         target: "_blank",
                         title: "#{form_name} — submitted #{ts.strftime('%b %-d, %Y')}",
                         data: { turbo_frame: "_top" } do %>
               <i class="fa-solid fa-file-lines"></i>
-              View submission<%= " ##{i + 1}" if submissions.size > 1 %>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[0.55rem] text-gray-400"></i>
+              View form submission<%= " ##{i + 1}" if submissions.size > 1 %>
+              <i class="fa-solid fa-arrow-up-right-from-square text-3xs text-gray-400"></i>
             <% end %>
           <% end %>
+
+          <%# ---- Per-day attendance — the same checkmarks as the Onboarding
+              matrix. Toggling a day rolls the status select above forward/back
+              (see the attendance-status controller), and the boxes save with the
+              form. ---- %>
+          <div class="ml-auto flex flex-col items-end gap-1">
+            <span class="text-gray-400">Days attended</span>
+            <div class="flex flex-wrap items-center justify-end gap-1.5">
+              <% (1..f.object.event.day_count).each do |day| %>
+                <label class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-medium cursor-pointer transition-colors border-gray-200 text-gray-500 has-[:checked]:border-green-300 has-[:checked]:bg-green-50 has-[:checked]:text-green-700">
+                  <%= f.check_box "completed_day_#{day}",
+                        "aria-label": "Day #{day}",
+                        data: { "attendance-status-target": "day", action: "attendance-status#deriveFromDays" },
+                        class: "h-3.5 w-3.5 rounded border-gray-300 text-green-600 focus:ring-green-200 cursor-pointer" %>
+                  Day <%= day %>
+                </label>
+              <% end %>
+            </div>
+          </div>
         </div>
       </div>
 
-      <%# ---- Organizations, scholarship, and continuing education — one row ---- %>
+      <%# The org card widens to absorb a column for each of the other two cards that's hidden. %>
+      <% show_scholarship = f.object.event&.scholarship_eligible? || f.object.scholarships.any? %>
+      <% show_ce = f.object.event&.ce_eligible? %>
+      <% org_span = 1 + (show_scholarship ? 0 : 1) + (show_ce ? 0 : 1) %>
+      <% org_span_class = { 1 => "sm:col-span-1", 2 => "sm:col-span-2", 3 => "sm:col-span-3" }.fetch(org_span) %>
       <% active_orgs = f.object.registrant.affiliations.select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }.map(&:organization).compact.uniq.sort_by(&:name) %>
       <% connected_org_ids = f.object.organizations.map(&:id) %>
       <% addable_orgs = active_orgs.reject { |org| connected_org_ids.include?(org.id) } %>
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-4">
-        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:col-span-2">
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <section class="flex min-h-[12rem] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm <%= org_span_class %>">
           <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:organizations, intensity: 100) %> <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:organizations, f.object.organizations.any?) %>">
               <i class="fa-solid fa-building"></i>
             </span>
-            <h2 class="min-w-0 text-sm font-semibold text-gray-700">Registration organizations</h2>
+            <h2 class="min-w-0 text-sm font-semibold text-gray-700">Linked organizations</h2>
           </div>
 
-          <div class="p-4">
+          <div class="flex flex-1 flex-col p-4">
             <div data-org-toggle-target="section" <%= "hidden" unless f.object.organizations.any? %>>
               <div class="flex flex-wrap gap-1.5" data-org-toggle-target="chips">
+                <%# Matched pair (like the registrants roster): the org name as a grey
+                    rounded-md rectangle linking to the org profile (same emerald hover
+                    as the roster), plus a separate × toggle. The checkbox is the peer, so
+                    unchecking it (clicking ×) turns the name red + line-through and the ×
+                    red; the org is unlinked on save. The × is a <label for> rather than
+                    wrapping the checkbox so the name link stays a plain profile link. %>
+                <%# Emerald hover is scoped to the linked (checked) state so a to-be-removed
+                    chip stays red on hover. %>
+                <% org_name_classes = "inline-flex min-w-0 items-center break-words rounded-md text-xs font-medium border px-3 py-0.5 transition bg-red-50 border-red-200 text-red-500 line-through peer-checked:bg-gray-50 peer-checked:border-gray-200 peer-checked:text-gray-500 peer-checked:no-underline peer-checked:hover:bg-emerald-200 peer-checked:hover:text-emerald-800 peer-checked:hover:border-emerald-300 peer-checked:hover:shadow-sm" %>
+                <% remove_classes = "inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs leading-none cursor-pointer transition-colors bg-red-100 border-red-300 text-red-600 peer-checked:bg-gray-50 peer-checked:border-gray-200 peer-checked:text-gray-400" %>
                 <% f.object.organizations.sort_by(&:name).each do |org| %>
-                  <label class="inline-flex items-center gap-1 px-4 py-1 rounded-full text-xs border cursor-pointer transition-colors bg-red-50 border-red-200 text-red-400 line-through has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-200 has-[:checked]:text-emerald-800 has-[:checked]:no-underline">
-                    <input
-                      type="checkbox"
-                      name="event_registration[organization_ids][]"
-                      value="<%= org.id %>"
-                      checked
-                      class="sr-only"
-                    >
-
-                    <span><%= org.name %></span>
-                    <span class="text-xs opacity-50">&times;</span>
-                  </label>
+                  <span class="inline-flex min-w-0 max-w-full items-start gap-1">
+                    <input type="checkbox" id="org_chip_<%= org.id %>" name="event_registration[organization_ids][]" value="<%= org.id %>" checked class="peer sr-only">
+                    <%# Warn before leaving to the profile if the form has unsaved edits. %>
+                    <%= link_to org.name, organization_path(org), title: org.name, class: org_name_classes, data: { turbo_frame: "_top", action: "dirty-form#confirmCancel" } %>
+                    <label for="org_chip_<%= org.id %>" title="Remove from this registration" class="<%= remove_classes %>">&times;</label>
+                  </span>
                 <% end %>
               </div>
             </div>
@@ -170,23 +204,25 @@
               <p data-org-toggle-target="empty" class="text-sm text-gray-400">No organizations linked to this registration.</p>
             <% end %>
 
-            <button
-              type="button"
-              data-org-toggle-target="addButton"
-              data-action="org-toggle#showAddForm"
-              class="mt-3 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer">
-              <i class="fa-solid fa-plus text-[0.6rem]"></i>
-              Connect organization
-            </button>
+            <div class="mt-auto pt-3">
+              <button
+                type="button"
+                data-org-toggle-target="addButton"
+                data-action="org-toggle#showAddForm"
+                class="inline-flex items-center gap-1.5 self-start rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer">
+                <i class="fa-solid fa-plus text-2xs"></i>
+                Connect organization
+              </button>
+            </div>
 
             <%# Pending-chip template cloned by org_toggle_controller when adding. Kept in
                 the markup (not a JS string) so Tailwind always compiles the amber variants. %>
             <template data-org-toggle-target="template">
-              <label title="Pending — saved when you save the form" class="inline-flex items-center gap-1 px-4 py-1 rounded-full text-xs border cursor-pointer transition-colors bg-red-50 border-red-200 text-red-400 line-through has-[:checked]:bg-amber-50 has-[:checked]:border-amber-200 has-[:checked]:text-amber-800 has-[:checked]:no-underline">
-                <input type="checkbox" name="event_registration[organization_ids][]" value="" checked class="sr-only">
-                <span data-org-toggle-name></span>
-                <span class="text-xs opacity-50">&times;</span>
-              </label>
+              <span class="inline-flex min-w-0 max-w-full items-start gap-1">
+                <input type="checkbox" name="event_registration[organization_ids][]" value="" checked class="peer sr-only">
+                <a href="#" data-org-toggle-name title="Pending — saved when you save the form" data-turbo-frame="_top" data-action="dirty-form#confirmCancel" class="inline-flex min-w-0 items-center break-words rounded-md border px-3 py-0.5 text-xs font-medium transition bg-red-50 border-red-200 text-red-500 line-through peer-checked:bg-amber-50 peer-checked:border-amber-200 peer-checked:text-amber-800 peer-checked:no-underline peer-checked:hover:bg-amber-100 peer-checked:hover:border-amber-300 peer-checked:hover:shadow-sm"></a>
+                <label data-org-toggle-remove title="Remove from this registration" class="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs leading-none cursor-pointer transition-colors bg-red-100 border-red-300 text-red-600 peer-checked:bg-amber-50 peer-checked:border-amber-200 peer-checked:text-amber-500">&times;</label>
+              </span>
             </template>
 
             <div data-org-toggle-target="addForm" class="mt-3 hidden <%= "border-t border-gray-100 pt-4" if f.object.organizations.any? %>">
@@ -208,38 +244,13 @@
           </div>
         </section>
 
-        <%= render "scholarship", event_registration: f.object, scholarship: f.object.scholarships.first %>
+        <% if show_scholarship %>
+          <%= render "scholarship", event_registration: f.object, scholarship: f.object.scholarships.first %>
+        <% end %>
 
-        <%# ---- CE status — placeholder scaffold for future continuing-education tracking (no-op for now) ---- %>
-        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
-              <i class="fa-solid fa-certificate"></i>
-            </span>
-            <h2 class="text-sm font-semibold text-gray-700">CE credits</h2>
-          </div>
-
-          <div class="space-y-3 p-4">
-            <label class="flex items-center gap-2.5 cursor-pointer"
-                   data-controller="ce-credit-requested"
-                   data-ce-credit-requested-initial-value="<%= f.object.ce_credit_requested %>">
-              <input type="hidden" name="event_registration[ce_credit_requested]" value="0" autocomplete="off">
-              <input type="checkbox"
-                     name="event_registration[ce_credit_requested]"
-                     value="1"
-                     <%= "checked" if f.object.ce_credit_requested %>
-                     data-ce-credit-requested-target="checkbox"
-                     data-action="ce-credit-requested#refresh"
-                     class="sr-only peer">
-              <span data-ce-credit-requested-target="track" class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
-              <span class="text-sm font-medium text-gray-700">Requested</span>
-            </label>
-
-            <div class="flex items-center gap-2 border-t border-gray-100 pt-3">
-              <span class="text-sm font-semibold text-gray-900 tabular-nums">$0.00</span>
-            </div>
-          </div>
-        </section>
+        <% if show_ce %>
+          <%= render "continuing_education", event_registration: f.object, ce_registration: f.object.continuing_education_registrations.first %>
+        <% end %>
       </div>
 
       <% if f.object.payment_unresolved? %>
@@ -260,21 +271,24 @@
       <%= render "payment_history", event_registration: f.object %>
 
       <% if allowed_to?(:index?, with: NotificationPolicy) %>
-        <%= render "notifications", f: f %>
+        <%= render "notifications/communications", f: f,
+              title_key: "communications.registration_title", none_key: "communications.none_for_registrant" %>
       <% end %>
 
       <%# ---- Comments ---- %>
-      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="comment-edit-toggle">
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm scroll-mt-24" id="comments-section" data-controller="edit-toggle">
         <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:quotes, intensity: 100) %> <%= DomainTheme.text_class_for(:quotes, intensity: 600) %>">
-            <i class="fa-solid fa-comments"></i>
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:comments, f.object.comments.any?) %>">
+            <i class="fa-solid fa-message"></i>
           </span>
           <h2 class="text-sm font-semibold text-gray-700">Registration comments</h2>
-          <%= link_to event_registration_comments_path(f.object),
-                      class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
-                      target: "_blank", rel: "noopener" do %>
-            View all
-            <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+          <% if f.object.registrant %>
+            <%= link_to all_comments_person_path(f.object.registrant),
+                        class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
+                        target: "_blank", rel: "noopener" do %>
+              View all
+              <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
+            <% end %>
           <% end %>
         </div>
 
@@ -292,19 +306,61 @@
                   partial: "comments/comment_fields",
                   data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
                   class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
-              <i class="fa-solid fa-plus text-[0.6rem]"></i>
+              <i class="fa-solid fa-plus text-2xs"></i>
               Add comment
             <% end %>
 
             <button
               type="button"
               class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
-              data-action="click->comment-edit-toggle#toggle"
+              data-action="edit-toggle#toggle"
             >
-              <i class="fa-solid fa-pen text-[0.6rem]"></i>
-              <span data-comment-edit-toggle-target="editLabel">Edit comments</span>
-              <span data-comment-edit-toggle-target="viewLabel" style="display:none">Done editing</span>
+              <i class="fa-solid fa-pen text-2xs"></i>
+              <span data-edit-toggle-target="editLabel">Edit comments</span>
+              <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
             </button>
+          </div>
+        </div>
+      </section>
+
+      <%# ---- Shout out — admin opts this registrant into the recipients page
+          shout-out block and edits the text shown there. The text lives on the
+          registrant's profile (Person#shoutout_text); editing it here updates
+          their profile via nested attributes. ---- %>
+      <section id="shout-out" class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:scholarships, f.object.shoutout? || f.object.registrant.shoutout_text.present?) %>">
+            <i class="fa-solid fa-bullhorn"></i>
+          </span>
+          <h2 class="text-sm font-semibold text-gray-700">Shout out</h2>
+        </div>
+
+        <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-start">
+          <label class="flex shrink-0 items-center gap-2.5 cursor-pointer sm:mt-6">
+            <input type="hidden" name="event_registration[shoutout]" value="0" autocomplete="off">
+            <input type="checkbox"
+                   name="event_registration[shoutout]"
+                   value="1"
+                   <%= "checked" if f.object.shoutout? %>
+                   class="sr-only peer">
+            <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
+            <span class="text-sm font-medium text-gray-700">Feature on the recipients page</span>
+          </label>
+
+          <div class="flex-1">
+            <%= f.simple_fields_for :registrant do |rf| %>
+              <%= rf.label :shoutout_text, "Shout-out text", class: "mb-1 block text-xs font-medium text-gray-700" %>
+              <%= rf.input :shoutout_text,
+                    label: false,
+                    as: :text,
+                    placeholder: "Shown beneath their name on the recipients page",
+                    wrapper_html: { class: "mb-0" },
+                    input_html: {
+                      maxlength: 1650,
+                      rows: 1,
+                      class: "w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring focus:ring-emerald-200 focus:outline-none"
+                    } %>
+            <% end %>
           </div>
         </div>
       </section>
@@ -357,24 +413,43 @@
 
     <%# ---- Footer actions ---- %>
     <div class="flex items-center gap-3 border-t border-gray-200 pt-6">
-      <% if allowed_to?(:destroy?, f.object) %>
+      <% if allowed_to?(:destroy?, f.object) && f.object.deletable? %>
         <%= link_to event_registration_path(@event_registration, return_to: params[:return_to].presence),
                     class: "btn btn-danger-outline",
                     data: { turbo: true, turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } do %>
           <i class="fa-solid fa-trash-can"></i>
           Delete
         <% end %>
+      <% elsif allowed_to?(:destroy?, f.object) %>
+        <span class="inline-flex max-w-md items-start gap-2 text-sm text-gray-500">
+          <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-gray-400"></i>
+          <%= f.object.decorate.deletion_blocked_reason %>
+        </span>
       <% end %>
 
-      <% cancel_path = case params[:return_to]
-                       when "registrants" then registrants_event_path(event_registration.event)
-                       when "index" then event_registrations_path
-                       else allowed_to?(:index?, EventRegistration) ? event_registrations_path : root_path
-                       end %>
+      <%# Cancel returns where the eyebrow does — the event's registrants roster by
+          default, only the global index when the admin explicitly came from it. A
+          not-yet-saved registration has no event/roster to return to, so it falls
+          back to the index (or root for non-admins). %>
+      <% cancel_path = if event_registration.persisted? && event_registration.event
+        case params[:return_to]
+        when "index" then event_registrations_path
+        when "bulk_payments" then bulk_payments_return_path(event_registration.event)
+        when "preview_reminder" then preview_reminder_event_path(event_registration.event)
+        when "onboarding" then onboarding_event_row_path(event_registration.event, event_registration.id)
+        when "attendees" then attendees_events_path
+        when "roster" then roster_event_path(event_registration.event)
+        when "recipient_card" then recipients_event_card_path(event_registration.event, event_registration.slug)
+        when "recipients" then recipients_event_path(event_registration.event, anchor: "shout-outs")
+        else allowed_to?(:manage?, with: EventRegistrationPolicy) ? registrants_event_row_path(event_registration.event, event_registration.id) : registration_ticket_path(event_registration.slug)
+        end
+      else
+        allowed_to?(:index?, EventRegistration) ? event_registrations_path : root_path
+      end %>
 
       <div class="ml-auto flex items-center gap-3">
         <%= link_to "Cancel", cancel_path, class: "btn btn-secondary-outline" %>
-        <%= f.button :submit, f.object.persisted? ? "Save changes" : "Create registration", class: "btn btn-primary" %>
+        <%= f.button :submit, f.object.persisted? ? "Save changes" : "Submit", class: "btn btn-primary" %>
       </div>
     </div>
   </div>

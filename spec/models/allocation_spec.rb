@@ -2,6 +2,73 @@ require "rails_helper"
 
 RSpec.describe Allocation, type: :model do
   describe "validations" do
+    describe "validate_ce_registration_cost" do
+      let(:ce_reg) { create(:continuing_education_registration, cost_cents: 10_000) }
+      let(:payment) { create(:payment, amount_cents: 10_000, amount_cents_remaining: 10_000) }
+
+      it "is valid when amount is within the CE cost" do
+        allocation = build(:allocation, source: payment, allocatable: ce_reg, amount: 5_000)
+        expect(allocation).to be_valid
+      end
+
+      it "is invalid when allocating more than the remaining CE cost" do
+        create(:allocation, source: payment, allocatable: ce_reg, amount: 8_000)
+        second_payment = create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000)
+        allocation = build(:allocation, source: second_payment, allocatable: ce_reg, amount: 5_000)
+        expect(allocation).not_to be_valid
+        expect(allocation.errors[:base].join).to include("Cannot allocate more than remaining CE cost")
+      end
+
+      it "is invalid when the CE registration is already fully paid" do
+        create(:allocation, source: payment, allocatable: ce_reg, amount: 10_000)
+        second_payment = create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000)
+        allocation = build(:allocation, source: second_payment, allocatable: ce_reg, amount: 1_000)
+        expect(allocation).not_to be_valid
+        expect(allocation.errors[:base]).to include("CE registration is already fully paid.")
+      end
+    end
+
+    describe "membership invoices" do
+      let(:term) { create(:membership_invoice, cost_cents: 2_500) }
+      let(:payment) { create(:payment, amount_cents: 2_500, amount_cents_remaining: 2_500) }
+
+      it "is valid when amount is within the membership cost" do
+        expect(build(:allocation, source: payment, allocatable: term, amount: 1_000)).to be_valid
+      end
+
+      it "is invalid when allocating more than the remaining membership balance" do
+        create(:allocation, source: payment, allocatable: term, amount: 2_000)
+        allocation = build(:allocation,
+          source: create(:payment, amount_cents: 2_000, amount_cents_remaining: 2_000),
+          allocatable: term, amount: 2_000)
+
+        expect(allocation).not_to be_valid
+        expect(allocation.errors[:base].join).to include("Cannot allocate more than the remaining membership balance")
+      end
+
+      it "is invalid when the invoice is already fully paid" do
+        create(:allocation, source: payment, allocatable: term, amount: 2_500)
+        allocation = build(:allocation,
+          source: create(:payment, amount_cents: 500, amount_cents_remaining: 500),
+          allocatable: term, amount: 500)
+
+        expect(allocation).not_to be_valid
+        expect(allocation.errors[:base]).to include("Membership invoice is already fully paid.")
+      end
+
+      it "is invalid when the invoice is comped" do
+        allocation = build(:allocation, source: payment, allocatable: create(:membership_invoice, :comped), amount: 500)
+
+        expect(allocation).not_to be_valid
+        expect(allocation.errors[:base]).to include("Cannot allocate to a membership invoice with no cost.")
+      end
+
+      it "allows a reversal on a fully paid invoice" do
+        create(:allocation, source: payment, allocatable: term, amount: 2_500)
+        expect(build(:allocation, source: payment, allocatable: term, amount: -2_500)).to be_valid
+      end
+    end
+
     describe "validate_event_registration_cost" do
       let(:event) { create(:event, cost_cents: 10_000) }
       let(:registration) { create(:event_registration, event:) }
@@ -15,6 +82,13 @@ RSpec.describe Allocation, type: :model do
       it "is valid when amount exactly covers remaining cost" do
         allocation = build(:allocation, source: payment, allocatable: registration, amount: 10_000)
         expect(allocation).to be_valid
+      end
+
+      it "is invalid when allocating to a zero-cost event" do
+        free_reg = create(:event_registration, event: create(:event, cost_cents: 0))
+        allocation = build(:allocation, source: payment, allocatable: free_reg, amount: 5_000)
+        expect(allocation).not_to be_valid
+        expect(allocation.errors[:base]).to include("Cannot allocate to a free event.")
       end
 
       it "is invalid when allocating to a free event" do
@@ -66,10 +140,10 @@ RSpec.describe Allocation, type: :model do
         expect(allocation.errors[:base]).to include(a_string_starting_with("Cannot allocate more than remaining"))
       end
 
-      it "skips validation when allocatable is not an EventRegistration" do
-        allocation = build(:allocation, source: payment, allocatable: registration, amount: 5_000)
-        allow(allocation).to receive(:allocatable).and_return(nil)
-        allocation.send(:validate_event_registration_cost)
+      it "does not run the event-cost validation for a non-EventRegistration allocatable" do
+        ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
+        allocation = build(:allocation, source: payment, allocatable: ce_reg, amount: 5_000)
+        expect(allocation).to be_valid
         expect(allocation.errors[:base]).to be_empty
       end
     end

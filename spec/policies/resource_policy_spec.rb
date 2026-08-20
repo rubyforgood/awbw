@@ -124,19 +124,40 @@ RSpec.describe ResourcePolicy, type: :policy do
   # -----------------------------------------
 
   describe "#download?" do
-    it "allows admin" do
-      expect(policy_for(record: private_resource, user: admin_user))
-        .to be_allowed_to(:download?)
+    context "admin" do
+      it "can download anything" do
+        expect(policy_for(record: private_resource, user: admin_user))
+          .to be_allowed_to(:download?)
+      end
     end
 
-    it "allows regular user" do
-      expect(policy_for(record: private_resource, user: regular_user))
-        .to be_allowed_to(:download?)
+    context "regular user" do
+      it "can download published resource" do
+        expect(policy_for(record: published_resource, user: regular_user))
+          .to be_allowed_to(:download?)
+      end
+
+      it "cannot download private resource" do
+        expect(policy_for(record: private_resource, user: regular_user))
+          .not_to be_allowed_to(:download?)
+      end
+
+      it "can download publicly visible resource" do
+        expect(policy_for(record: public_resource, user: regular_user))
+          .to be_allowed_to(:download?)
+      end
     end
 
-    it "allows guest" do
-      expect(policy_for(record: private_resource, user: guest_user))
-        .to be_allowed_to(:download?)
+    context "guest" do
+      it "can download publicly visible resource" do
+        expect(policy_for(record: public_resource, user: guest_user))
+          .to be_allowed_to(:download?)
+      end
+
+      it "cannot download published-only resource" do
+        expect(policy_for(record: published_resource, user: guest_user))
+          .not_to be_allowed_to(:download?)
+      end
     end
   end
 
@@ -173,6 +194,31 @@ RSpec.describe ResourcePolicy, type: :policy do
         scope  = policy.apply_scope(Resource.all, type: :active_record_relation)
 
         expect(scope).to contain_exactly(public_record)
+      end
+    end
+
+    context "resources hidden from search" do
+      let!(:hidden_public_record) { create(:resource, :publicly_visible, :published, :hidden_from_search) }
+
+      it "admin still sees hidden resources" do
+        policy = described_class.new(Resource, user: admin_user)
+        scope  = policy.apply_scope(Resource.all, type: :active_record_relation)
+
+        expect(scope).to include(hidden_public_record)
+      end
+
+      it "regular user does not see hidden resources" do
+        policy = described_class.new(Resource, user: regular_user)
+        scope  = policy.apply_scope(Resource.all, type: :active_record_relation)
+
+        expect(scope).not_to include(hidden_public_record)
+      end
+
+      it "guest does not see hidden resources" do
+        policy = described_class.new(Resource, user: guest_user)
+        scope  = policy.apply_scope(Resource.all, type: :active_record_relation)
+
+        expect(scope).not_to include(hidden_public_record)
       end
     end
   end

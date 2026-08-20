@@ -1,0 +1,179 @@
+class RegistrationTicketCallout < ApplicationRecord
+  # "Action" callouts prompt the registrant to do something (download a form,
+  # pay a balance); "Reference" callouts are informational reading (policies, CE
+  # requirements). The distinction drives the default icon/colour and lets us
+  # group them on the ticket later.
+  CALLOUT_TYPES = %w[ action reference ].freeze
+
+  # Hidden identifiers for the built-in callouts. A row carrying one of
+  # these was seeded from a code-defined default (see BuiltinCallouts) and
+  # keeps its ticket behavior — badges, per-registration visibility — driven by
+  # that key. Admin-authored callouts have a nil builtin_key. Built-in callouts are
+  # hidden rather than destroyed so they can be restored to their default.
+  BUILTIN_KEYS = %w[
+    payment certificate scholarship ce_hours art_supplies
+    videoconference staff handouts faq
+  ].freeze
+
+  # "Content" built-in callouts render their own editable copy/resources (like custom
+  # callouts), on the generic callout page. "Behavioral" built-in callouts (the rest)
+  # render live per-registration status through BuiltinCalloutCards#card_for — the row
+  # still owns the editable title/subtitle/text, order, visibility, and resources.
+  CONTENT_BUILTIN_KEYS = %w[ art_supplies handouts faq ].freeze
+
+  # Behavioral built-ins that also carry event-level config edited inline in their
+  # row (CE hours offered / cost); their text lives on the row like everything else.
+  CONFIG_BUILTIN_KEYS = %w[ ce_hours ].freeze
+
+  # Built-ins whose card colour the app sets from live status — Payment turns
+  # orange while a balance is due, and Scholarship / CE hours turn amber while the
+  # registrant has something outstanding. For these, the app colour overrides the
+  # selected one (see BuiltinCalloutCards#card_for).
+  APP_COLORED_BUILTIN_KEYS = %w[ payment scholarship ce_hours ].freeze
+
+  # Per-type fallbacks for the icon and colour. These are callout-specific (unlike
+  # the generic colour swatches and palette, which live in DomainTheme so the whole
+  # app can reuse them for tinted boxes — amount-due, scholarship box, etc.).
+  # The leading icon defaults to the info "i"; the trailing "go to page" arrow
+  # lives on the right (see _callout_card). Both types share the same leading
+  # fallback so a callout without a custom icon always reads as informational.
+  DEFAULT_ICONS = { "action" => "fa-solid fa-circle-info", "reference" => "fa-solid fa-circle-info" }.freeze
+  DEFAULT_COLORS = { "action" => "orange", "reference" => "indigo" }.freeze
+
+  # New callouts start with the info icon pre-filled so admins see a sensible
+  # value rather than an empty field. Loaded records keep their stored value; a
+  # blank one still falls back via #display_icon_class.
+  attribute :icon_class, :string, default: -> { DEFAULT_ICONS["action"] }
+
+  belongs_to :event
+
+  # A callout can link many resources, shown in order on its detail page (PDF
+  # previews + download buttons) beneath its own title/subtitle/content — e.g.
+  # the Handouts card's worksheets, or a custom callout's supporting documents.
+  has_many :registration_ticket_callout_resources, -> { ordered }, dependent: :destroy,
+           inverse_of: :registration_ticket_callout
+  has_many :resources, through: :registration_ticket_callout_resources
+
+  # Linked resources are added one dropdown at a time in the editor (cocoon
+  # add/remove), like Sectors on a Person. Blank picks are dropped.
+  accepts_nested_attributes_for :registration_ticket_callout_resources, allow_destroy: true,
+    reject_if: proc { |attrs| attrs["resource_id"].blank? }
+
+  # Per-event ordering, drag-reordered after save via the shared `sortable`
+  # Stimulus controller (a per-row PUT to #update). The gem reflows the other
+  # callouts' positions on each move, exactly like Category. It assigns position
+  # after validations, so position must allow nil here.
+  positioned on: :event_id
+
+  validates :title, presence: true
+  validates :callout_type, inclusion: { in: CALLOUT_TYPES }
+  validates :color_class, inclusion: { in: DomainTheme::SWATCH_COLORS.map(&:to_s) }, allow_blank: true
+  validates :position, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
+  validates :builtin_key, inclusion: { in: BUILTIN_KEYS }, allow_nil: true
+  validates :builtin_key, uniqueness: { scope: :event_id }, allow_nil: true
+
+  scope :ordered, -> { order(:position, :id) }
+  scope :visible, -> { where(hidden: false) }
+  scope :builtin, -> { where.not(builtin_key: nil) }
+  scope :custom, -> { where(builtin_key: nil) }
+
+  # Reset flagged rows to their template after the save that set the flag. The
+  # flag is cleared first so the reset's own update doesn't recurse.
+  after_save :apply_reset_to_default, if: :reset_to_default?
+
+  def apply_reset_to_default
+    self.reset_to_default = nil
+    BuiltinCallouts.reset(self)
+  end
+
+  def action?
+    callout_type == "action"
+  end
+
+  # The editor exposes visibility as "Published" — the inverse of the stored
+  # `hidden` flag — so a checked box means the callout shows on the ticket.
+  def published
+    !hidden
+  end
+  alias_method :published?, :published
+
+  def published=(value)
+    self.hidden = !ActiveModel::Type::Boolean.new.cast(value)
+  end
+
+  # Set from the editor's "Restore default" checkbox. When checked, the row is
+  # reset to its built-in template as part of the normal event save — no separate
+  # request — overriding whatever else was submitted for it.
+  attr_accessor :reset_to_default
+
+  def reset_to_default?
+    builtin? && ActiveModel::Type::Boolean.new.cast(reset_to_default)
+  end
+
+  # A seeded built-in callout (Handouts, FAQ, …) rather than an admin-authored
+  # one. Built-in callouts hide instead of delete and can be reset to default.
+  def builtin?
+    builtin_key.present?
+  end
+
+  # A behavioral built-in callout whose card is rendered by BuiltinCalloutCards
+  # (live status), as opposed to a content callout that renders from its own row.
+  def behavioral_builtin?
+    builtin? && CONTENT_BUILTIN_KEYS.exclude?(builtin_key)
+  end
+
+  # Whether the row carries the inline CE config fields (hours offered / cost).
+  def ce_config?
+    CONFIG_BUILTIN_KEYS.include?(builtin_key.to_s)
+  end
+
+  # Whether the app sets this card's colour from live status, overriding the
+  # selected colour (so the editor notes it under the colour picker).
+  def app_colored?
+    APP_COLORED_BUILTIN_KEYS.include?(builtin_key.to_s)
+  end
+
+  # Whether the callout's own page has content to show — its editable text or any
+  # linked resources. Drives whether the ticket card links to a page and shows the
+  # trailing "go to page" arrow.
+  def page_content?
+    description.present? || resources.any?
+  end
+
+  # The Payment built-in's visibility is driven entirely by live balance status,
+  # so the manual visibility controls (drip date, payment gate) don't apply — the
+  # editor hides its Visibility section.
+  def payment?
+    builtin_key == "payment"
+  end
+
+  # The built-in whose page lists the event's staff roster, pulled from the
+  # Event staff section — editing this row only owns the title/subtitle/intro copy.
+  def staff?
+    builtin_key == "staff"
+  end
+
+  # Whether the callout's page content is drip-scheduled to reveal only from a
+  # future date. The card still shows on the ticket; the page withholds its
+  # content until then (see the callout show page).
+  def dripping?(now = Time.current)
+    display_from.present? && display_from > now
+  end
+
+  # Font Awesome class for the leading icon, falling back to a sensible default
+  # per callout type so a callout never renders without an icon.
+  def display_icon_class
+    icon_class.presence || DEFAULT_ICONS.fetch(callout_type, DEFAULT_ICONS["reference"])
+  end
+
+  # The colour swatch (icon/border/bg/hover/title/subtitle classes) for this
+  # callout, falling back to the per-type default colour.
+  def theme
+    color = color_class.presence || DEFAULT_COLORS.fetch(callout_type, "indigo")
+    DomainTheme.swatch(color)
+  end
+
+  def to_s
+    title
+  end
+end

@@ -1,4 +1,11 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% if params[:return_to] == "onboarding" && params[:event_id].present? %>
+  <div class="mb-2">
+    <%= link_to onboarding_event_row_path(params[:event_id], params[:highlight]), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Onboarding
+    <% end %>
+  </div>
+<% end %>
 <div class="border border-gray-200 rounded-xl shadow overflow-hidden">
       <!-- User account header banner -->
       <div class="<%= DomainTheme.bg_class_for(:users, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:users, intensity: 300) %> px-8 py-3">

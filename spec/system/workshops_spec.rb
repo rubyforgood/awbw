@@ -33,6 +33,14 @@ RSpec.describe "Workshops", type: :system do
 
         fill_in 'query', with: 'best workshop'
 
+        # The text filter auto-submits on a 400ms debounce while the checkbox
+        # submits immediately — let the debounced full-text reload settle before
+        # touching the dropdown, so the two Turbo-frame reloads can't overlap and
+        # leave an unfiltered frame under the assertions (flaky ~1 in 3, see #2214).
+        expect(page).to have_content(workshop_world.title)
+        expect(page).to have_content(workshop_mars.title)
+        expect(page).not_to have_content(workshop_hello.title)
+
         # Open the dropdown
         click_on "Windows audience"  # this clicks the <button> text/label
         check("windows_types_#{adult_window.id}")

@@ -1,0 +1,63 @@
+<%# Compact revenue headline for the reports hub, linking to the full report.
+    Expects `report` (an EventRevenueReport) and `period` (its resolved
+    PeriodScope: #label, #year and #metrics). %>
+<div class="h-full flex flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+  <%# min-h reserves the height the participation/scholarship cards get from their
+      stacked Attendees/Breakdowns links, so this card's period label and stat
+      boxes line up with theirs even though it has only the one link. %>
+  <div class="flex items-start justify-between mb-4 min-h-[3.5rem]">
+    <h3 class="text-base font-semibold text-gray-900">Revenue</h3>
+    <%= link_to "Details →", revenue_events_path(hub_to_report_params),
+          class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+  </div>
+
+  <% if report.any? %>
+    <% metrics = period.metrics %>
+    <div class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2"><%= period.label %></div>
+    <% ce_collected_cents = metrics.fees_cents - metrics.registration_payments_cents %>
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Fees collected</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-blue-700"><%= dollars_from_cents(metrics.fees_cents) %></div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums">
+          <%= MoneyFormatter.compact_from_cents(metrics.registration_payments_cents, precision: 0) %> registration + <%= MoneyFormatter.compact_from_cents(ce_collected_cents, precision: 0) %> CE
+        </div>
+      </div>
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Net</div>
+        <div class="mt-1 tabular-nums">
+          <span class="text-xl font-bold <%= metrics.net_cents.negative? ? "text-rose-700" : "text-gray-900" %>"><%= signed_dollars_from_cents(metrics.net_cents) %></span>
+        </div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums">fees + funded −<br>unfunded − discounts</div>
+        <div class="mt-0.5 text-xs text-gray-400 tabular-nums"><%= dollars_from_cents(metrics.discount_cents) %> discounts</div>
+      </div>
+      <div class="rounded-lg border border-orange-200 bg-orange-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Outstanding</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-orange-600"><%= dollars_from_cents(metrics.outstanding_cents) %></div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums">registration + CE owed</div>
+      </div>
+      <div class="rounded-lg border border-green-300 bg-green-50 p-3">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Total expected</div>
+        <div class="mt-1 text-xl font-bold tabular-nums text-gray-900"><%= dollars_from_cents(metrics.total_expected_cents) %></div>
+        <div class="mt-1 text-xs text-gray-500 tabular-nums">net once all paid</div>
+      </div>
+    </div>
+    <%# Per-year figures from the KPI boxes, appended to the chart hover. %>
+    <% revenue_tooltip_lines = report.years.reject { |group| group.year.nil? }.to_h { |group|
+         [ group.year.to_s, [
+           "Net: #{dollars_from_cents(group.net_cents)}",
+           "Outstanding: #{dollars_from_cents(group.outstanding_cents)}",
+           "Total expected: #{dollars_from_cents(group.total_expected_cents)}"
+         ] ] } %>
+    <div class="mt-auto"
+         data-controller="chart-tooltip-footer"
+         data-chart-tooltip-footer-chart-id-value="revenue-hub-chart"
+         data-chart-tooltip-footer-lines-value="<%= revenue_tooltip_lines.to_json %>">
+      <%= column_chart report.chart_series, id: "revenue-hub-chart", stacked: true, prefix: "$", thousands: ",",
+            colors: [ "#2563eb", "#c026d3", "#dc2626" ], height: "120px", legend: false,
+            library: { borderRadius: 3 } %>
+    </div>
+  <% else %>
+    <p class="text-sm text-gray-500 my-auto">No paid events match these filters.</p>
+  <% end %>
+</div>

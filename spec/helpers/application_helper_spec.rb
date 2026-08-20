@@ -1,6 +1,73 @@
 require "rails_helper"
 
 RSpec.describe ApplicationHelper, type: :helper do
+  describe "#credited_author_link" do
+    let(:person) { create(:person, first_name: "Ada", last_name: "Lovelace") }
+
+    it "links to the person profile when the credit resolves to a searchable person" do
+      allow(person).to receive(:profile_is_searchable).and_return(true)
+      workshop = create(:workshop, author_credit_preference: "full_name")
+      allow(workshop).to receive(:author).and_return(person)
+
+      html = helper.credited_author_link(workshop)
+      expect(html).to include("<a")
+      expect(html).to include(person_path(person))
+      expect(html).to include("Ada Lovelace")
+    end
+
+    it "renders plain text when the person profile is not searchable" do
+      allow(person).to receive(:profile_is_searchable).and_return(false)
+      workshop = create(:workshop, author_credit_preference: "full_name")
+      allow(workshop).to receive(:author).and_return(person)
+
+      expect(helper.credited_author_link(workshop)).to eq("Ada Lovelace")
+    end
+
+    it "never links an anonymous credit, even to a searchable person" do
+      allow(person).to receive(:profile_is_searchable).and_return(true)
+      workshop = create(:workshop, author_credit_preference: "anonymous")
+      allow(workshop).to receive(:author).and_return(person)
+
+      expect(helper.credited_author_link(workshop)).to eq("Anonymous")
+    end
+
+    it "renders a legacy free-text author as plain text with no link" do
+      workshop = create(:workshop, author: nil, full_name: "Jane Legacy",
+                                   created_by: create(:user, person: nil))
+
+      expect(helper.credited_author_link(workshop)).to eq("Jane Legacy")
+    end
+
+    it "shows a creator-fallback credit as plain text, never linking the creator's profile" do
+      creator_person = create(:person, first_name: "Cara", last_name: "Creator")
+      allow(creator_person).to receive(:profile_is_searchable).and_return(true)
+      creator = create(:user)
+      allow(creator).to receive(:person).and_return(creator_person)
+      workshop = create(:workshop, author: nil, full_name: nil, author_credit_preference: "full_name")
+      allow(workshop).to receive(:author).and_return(nil)
+      allow(workshop).to receive(:created_by).and_return(creator)
+
+      result = helper.credited_author_link(workshop)
+      expect(result).to eq("Cara Creator")
+      expect(result).not_to include("<a")
+    end
+  end
+
+  describe "#timezone_visibility_hint" do
+    let(:me) { create(:user) }
+    let(:other) { create(:user) }
+
+    before { allow(helper).to receive(:current_user).and_return(me) }
+
+    it "uses second person when the form is about the current user" do
+      expect(helper.timezone_visibility_hint(me)).to eq("You will see times and dates in this timezone.")
+    end
+
+    it "uses 'User' when an admin edits someone else" do
+      expect(helper.timezone_visibility_hint(other)).to eq("User will see times and dates in this timezone.")
+    end
+  end
+
   describe "#dollars_from_cents" do
     it "drops the cents for whole-dollar amounts and adds thousands separators" do
       expect(helper.dollars_from_cents(150_000)).to eq("$1,500")
@@ -125,6 +192,12 @@ RSpec.describe ApplicationHelper, type: :helper do
 
     it "keeps heading tags" do
       expect(helper.form_label_html("<h2>Section</h2>")).to eq("<h2>Section</h2>")
+    end
+
+    it "keeps collapsible <details>/<summary> disclosures (incl. the open state)" do
+      input = %(<details open><summary>Workshop 1</summary><ul><li>Glue</li></ul></details>)
+      # The sanitizer normalizes the boolean attribute to open="" — functionally identical.
+      expect(helper.form_label_html(input)).to eq(%(<details open=""><summary>Workshop 1</summary><ul><li>Glue</li></ul></details>))
     end
 
     it "keeps font size and color via inline style" do
@@ -293,6 +366,115 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#reminder_days_phrase" do
+    it "says today for 0 days" do
+      expect(helper.reminder_days_phrase(0)).to eq(" <strong>today</strong>")
+    end
+
+    it "says tomorrow for 1 day" do
+      expect(helper.reminder_days_phrase(1)).to eq(" <strong>tomorrow</strong>")
+    end
+
+    it "bolds the day count for more than one day out" do
+      expect(helper.reminder_days_phrase(60)).to eq(" in <strong>60 days</strong>")
+    end
+
+    it "is blank when the day count is unknown" do
+      expect(helper.reminder_days_phrase(nil)).to eq("")
+    end
+  end
+
+  describe "#default_reminder_message" do
+    before do
+      allow(ENV).to receive(:fetch).and_call_original
+      allow(ENV).to receive(:fetch).with("ORGANIZATION_NAME", "AWBW").and_return("A Window Between Worlds")
+    end
+
+    it "names the organization and the bolded dynamic day count" do
+      expect(helper.default_reminder_message(60))
+        .to eq("This is a reminder that you're registered for the following A Window Between Worlds event in <strong>60 days</strong>.")
+    end
+
+    it "omits the day phrase when the count is unknown" do
+      expect(helper.default_reminder_message(nil))
+        .to eq("This is a reminder that you're registered for the following A Window Between Worlds event.")
+    end
+
+    # Self-paced training has no session date, and admins hide the details box for
+    # it — so "the following event" would point at nothing. The copy carries the
+    # title itself instead, and drops the day count.
+    it "names an on-demand event inline instead of pointing at the details box" do
+      event = build(:event, title: "Trauma-Informed Basics", on_demand: true)
+      expect(helper.default_reminder_message(60, event: event))
+        .to eq("This is a reminder that you're registered for the A Window Between Worlds training <strong>Trauma-Informed Basics</strong>.")
+    end
+
+    # These titles already carry the format ("On-Demand Training 2026"), so the
+    # copy says "training" and lets the title speak for itself.
+    it "does not repeat 'on-demand' ahead of a title that already says it" do
+      event = build(:event, title: "On-Demand Training 2026", on_demand: true)
+      expect(helper.default_reminder_message(nil, event: event))
+        .to eq("This is a reminder that you're registered for the A Window Between Worlds training <strong>On-Demand Training 2026</strong>.")
+    end
+
+    it "escapes HTML in an on-demand event title" do
+      event = build(:event, title: "Art & <Healing>", on_demand: true)
+      expect(helper.default_reminder_message(nil, event: event)).to include("Art &amp; &lt;Healing&gt;")
+    end
+
+    it "keeps the live-event copy when the event is not on-demand" do
+      event = build(:event, title: "Healing Workshop", on_demand: false)
+      expect(helper.default_reminder_message(60, event: event))
+        .to eq("This is a reminder that you're registered for the following A Window Between Worlds event in <strong>60 days</strong>.")
+    end
+
+    # Every event with a deadline carries it in the editable copy, so admins can
+    # reword it. There is no standalone block in the email template.
+    it "adds the completion deadline to an on-demand event's copy" do
+      event = build(:event, title: "On-Demand Training 2026", on_demand: true, completion_deadline: Date.new(2026, 8, 30))
+      expect(helper.default_reminder_message(nil, event: event))
+        .to eq("This is a reminder that you're registered for the A Window Between Worlds training <strong>On-Demand Training 2026</strong>. Please complete it by <strong>August 30, 2026</strong>.")
+    end
+
+    it "leaves the deadline sentence out when an on-demand event has no deadline" do
+      event = build(:event, title: "On-Demand Training 2026", on_demand: true, completion_deadline: nil)
+      expect(helper.default_reminder_message(nil, event: event)).not_to include("Please complete it by")
+    end
+
+    it "adds the completion deadline to a live event's copy too" do
+      event = build(:event, title: "Healing Workshop", on_demand: false, completion_deadline: Date.new(2026, 8, 30))
+      expect(helper.default_reminder_message(60, event: event))
+        .to eq("This is a reminder that you're registered for the following A Window Between Worlds event in <strong>60 days</strong>. Please complete it by <strong>August 30, 2026</strong>.")
+    end
+
+    it "leaves the deadline sentence out when a live event has no deadline" do
+      event = build(:event, title: "Healing Workshop", on_demand: false, completion_deadline: nil)
+      expect(helper.default_reminder_message(60, event: event)).not_to include("Please complete it by")
+    end
+  end
+
+  describe "#default_reminder_subject" do
+    it "uses the AWBW Portal prefix with the event title and formatted start date" do
+      event = build(:event, title: "Healing Workshop", start_date: Time.zone.local(2026, 8, 7, 18, 0))
+      expect(helper.default_reminder_subject(event))
+        .to eq("AWBW Portal: Reminder: Healing Workshop – August 7, 2026")
+    end
+
+    it "omits the date suffix when the event has no start date" do
+      event = build(:event, title: "Healing Workshop", start_date: nil)
+      expect(helper.default_reminder_subject(event))
+        .to eq("AWBW Portal: Reminder: Healing Workshop")
+    end
+
+    # A start date on self-paced training is an enrollment boundary, not a session
+    # time — putting it in the subject reads as "be there on August 7".
+    it "omits the date suffix for an on-demand event that has a start date" do
+      event = build(:event, title: "Healing Workshop", start_date: Time.zone.local(2026, 8, 7, 18, 0), on_demand: true)
+      expect(helper.default_reminder_subject(event))
+        .to eq("AWBW Portal: Reminder: Healing Workshop")
+    end
+  end
+
   describe "#event_registration_close_date_label" do
     it "is the month and day, without year, ordinal, or time" do
       event = build(:event, registration_close_date: Time.zone.local(2026, 8, 7, 8, 45))
@@ -379,12 +561,12 @@ RSpec.describe ApplicationHelper, type: :helper do
   end
 
   describe "#noticeable_label" do
-    it "describes a registration by registrant and event" do
+    it "describes a registration by registrant and event, with the event's month and year" do
       person = create(:person, first_name: "Jane", last_name: "Doe")
-      event = create(:event, title: "Summer Workshop")
+      event = create(:event, title: "Summer Workshop", start_date: Time.zone.local(2026, 8, 14))
       registration = create(:event_registration, registrant: person, event: event)
 
-      expect(helper.noticeable_label(registration)).to eq("#{person.name} · Summer Workshop")
+      expect(helper.noticeable_label(registration)).to eq("#{person.name} · Summer Workshop (August 2026)")
     end
 
     it "describes a form submission by submitter and form" do
@@ -433,15 +615,48 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(descriptions["Mental Health"]).to be_nil
     end
 
-    it "omits the Mixed-age groups category for the primary age group field" do
+    it "offers the published AgeRange categories for the primary age group field" do
       type = create(:category_type, name: "AgeRange")
-      create(:category, :published, category_type: type, name: "3-5")
-      create(:category, :published, category_type: type, name: Category::MIXED_AGE_RANGE_NAME)
+      create(:category, :published, category_type: type, name: "Children (0-12)")
+      create(:category, :unpublished, category_type: type, name: "Retired range")
       field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_age_group")
 
       labels = helper.dynamic_form_field_options(field).map(&:first)
-      expect(labels).to include("3-5")
-      expect(labels).not_to include(Category::MIXED_AGE_RANGE_NAME)
+      expect(labels).to include("Children (0-12)")
+      expect(labels).not_to include("Retired range")
+    end
+  end
+
+  describe "#index_button" do
+    it "renders no count badge for a zero count" do
+      html = helper.index_button(Story.all)
+
+      expect(Story.count).to eq(0)
+      expect(html).not_to include("None")
+      expect(html).not_to include(">0<")
+    end
+
+    it "renders the delimited count when records exist" do
+      create_list(:story, 2)
+
+      html = helper.index_button(Story.all)
+
+      expect(html).to include(">2<")
+      expect(html).not_to include("None")
+    end
+  end
+
+  describe "#badge_classes" do
+    it "builds the pill recipe with the theme classes and default padding" do
+      result = helper.badge_classes("bg-green-50 text-green-700 border-green-200")
+
+      expect(result).to include("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border text-xs font-medium")
+      expect(result).to include("bg-green-50 text-green-700 border-green-200")
+      expect(result).to include("px-2 py-0.5")
+    end
+
+    it "accepts custom padding" do
+      expect(helper.badge_classes("bg-blue-50", padding: "px-5 py-0.5")).to include("px-5 py-0.5")
     end
   end
 end

@@ -1,5 +1,8 @@
 <div class="rounded-xl bg-white p-6">
   <%= simple_form_for(story_idea) do |f| %>
+    <% if (return_to = local_assigns.fetch(:return_to, params[:return_to])).present? %>
+      <%= hidden_field_tag :return_to, return_to %>
+    <% end %>
     <%= f.hidden_field :created_by_id, value: f.object.created_by_id || (@user || current_user)&.id %>
     <%= f.hidden_field :updated_by_id, value: (@user || current_user)&.id %>
     <% selected_sector_ids = @preselected_sector_ids || @story_idea.sector_ids %>
@@ -18,14 +21,14 @@
 
     <% if allowed_to?(:manage?, StoryIdea) || @user %>
       <% if promoted_to_story %>
-        <div class="flex items-center space-x-2 mb-4">
+        <div class="mb-4 flex items-center space-x-2">
           <label class="text-gray-700"> Promoted to Story </label>
           <% f.object.stories.each do |story| %>
             <%= link_to story.title, story_path(story), class: "btn btn-secondary-outline" %>
           <% end %>
         </div>
       <% elsif allowed_to?(:manage?, StoryIdea) && f.object.persisted? %>
-        <div class="admin-only bg-blue-100 p-3 mb-4">
+        <div class="admin-only mb-4 bg-blue-100 p-3">
           <%= link_to "Promote to Story", new_story_path(story_idea_id: @story_idea.id),
                       class: "btn btn-secondary-outline ms-2" %>
         </div>
@@ -42,8 +45,8 @@
       }
     %>
     <!-- </div> -->
-    <div class="flex flex-col md:flex-row md:space-x-4 mt-6">
-      <div class="flex-1 mb-4 md:mb-0">
+    <div class="mt-6 flex flex-col md:flex-row md:space-x-4">
+      <div class="mb-4 flex-1 md:mb-0">
         <%= f.input :windows_type_id,
                     collection: @windows_types, label_method: :short_name, value_method: :id,
                     disabled: promoted_to_story,
@@ -56,7 +59,7 @@
                       onchange: select_caret_onchange
                     } %>
       </div>
-      <div class="flex-1 mb-4 md:mb-0">
+      <div class="mb-4 flex-1 md:mb-0">
         <%= f.input :workshop_id,
           collection: f.object.workshop.present? ? [[ f.object.workshop.remote_search_label[:label], f.object.workshop.id]] : [],
           include_blank: true,
@@ -70,15 +73,26 @@
           },
           prompt: "Type to search workshops…",
           label: "Workshop",
+          wrapper_html: { class: "mb-0" },
           label_html: { class: "block font-medium mb-1 text-gray-700 #{ 'readonly' if promoted_to_story }" } %>
 
-        <%= f.input :external_workshop_title,
-                    as: :text,
-                    label: "Workshop title (if different or unlisted)",
-                    input_html: {
-                      rows: 1,
-                      class: ("readonly" if promoted_to_story)
-                    } %>
+        <%# Native <details> reveals the optional custom-title field on click — no JS.
+            Sits right under the field like a hint. Auto-opens when a title is
+            already set so it isn't hidden on edit. %>
+        <details class="group mt-1"<%= " open".html_safe if f.object.external_workshop_title.present? %>>
+          <summary class="text-sm text-purple-700 hover:underline cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+            Enter custom title
+          </summary>
+          <%= f.input :external_workshop_title,
+                      as: :text,
+                      label: "Workshop title (if different or unlisted)",
+                      wrapper_html: { class: "mt-2" },
+                      label_html: { class: "block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1" },
+                      input_html: {
+                        rows: 1,
+                        class: ("readonly" if promoted_to_story)
+                      } %>
+        </details>
       </div>
       <div class="flex-1 mb-4 md:mb-0">
         <% default_org = default_organization_for_form(f.object) %>
@@ -265,7 +279,7 @@
                                   id: id,
                                   class: "h-4 w-4 text-blue-600 rounded" %>
 
-                <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
+                <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.decorate.display_name %></span>
               </label>
             <% end %>
           </div>
@@ -313,12 +327,69 @@
                   } %>
     </div>
 
+    <% if f.object.persisted? %>
+      <%# ---- Communications + comments — same boxes as the registration edit page,
+          shown once the story idea exists so there's a record to attach them to. ---- %>
+      <div class="space-y-6 mt-8">
+        <% if allowed_to?(:index?, with: NotificationPolicy) %>
+          <%= render "notifications/communications", f: f,
+                title_key: "communications.story_idea_title", none_key: "communications.none_for_story_idea" %>
+        <% end %>
+
+        <%# ---- Comments ---- %>
+        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="edit-toggle">
+          <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:comments, f.object.comments.any?) %>">
+              <i class="fa-solid fa-comments"></i>
+            </span>
+            <h2 class="text-sm font-semibold text-gray-700">Story idea comments</h2>
+            <% if f.object.created_by&.person %>
+              <%= link_to all_comments_person_path(f.object.created_by.person),
+                          class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
+                          target: "_blank", rel: "noopener" do %>
+                View all
+                <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
+              <% end %>
+            <% end %>
+          </div>
+
+          <div class="space-y-4 p-4" data-controller="paginated-fields" data-paginated-fields-per-page-value="5">
+            <div id="comment-list" class="space-y-4">
+              <%= f.simple_fields_for :comments do |cf| %>
+                <%= render "comments/comment_fields", f: cf %>
+              <% end %>
+            </div>
+
+            <div data-paginated-fields-target="nav"></div>
+
+            <div class="flex items-center justify-between gap-2">
+              <%= link_to_add_association f, :comments,
+                    partial: "comments/comment_fields",
+                    data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
+                    class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
+                <i class="fa-solid fa-plus text-2xs"></i>
+                Add comment
+              <% end %>
+
+              <button
+                type="button"
+                class="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                data-action="edit-toggle#toggle"
+              >
+                <i class="fa-solid fa-pen text-2xs"></i>
+                <span data-edit-toggle-target="editLabel">Edit comments</span>
+                <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    <% end %>
+
     <div class="action-buttons mt-8 flex justify-center gap-3 pt-6">
       <% if allowed_to?(:destroy?, f.object) && f.object.stories.none? %>
-        <span class="admin-only bg-blue-100 p-3">
-          <%= link_to "Delete", @story_idea, class: "btn btn-danger-outline",
-                      data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
-        </span>
+        <%= link_to "Delete", @story_idea, class: "btn btn-danger-outline admin-only bg-blue-100",
+                    data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
       <% end %>
       <%= link_to "Cancel",
                   (allowed_to?(:index?, StoryIdea) ? story_ideas_path : root_path),

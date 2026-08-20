@@ -163,6 +163,15 @@ RSpec.describe "/faqs", type: :request do
       get new_faq_url
       expect(response).to be_successful
     end
+
+    it "renders the admin visibility card with the published and publicly visible flags" do
+      get new_faq_url
+
+      expect(response.body).to include("admin-only bg-blue-100")
+      expect(response.body).to include('name="faq[published]"')
+      expect(response.body).to include('name="faq[publicly_visible]"')
+      expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:publicly_visible][:description])
+    end
   end
 
   describe "GET /edit" do
@@ -172,6 +181,14 @@ RSpec.describe "/faqs", type: :request do
       faq = Faq.create!(valid_attributes)
       get edit_faq_url(faq)
       expect(response).to be_successful
+    end
+
+    it "renders the visibility flags for an existing FAQ" do
+      faq = Faq.create!(valid_attributes)
+      get edit_faq_url(faq)
+
+      expect(response.body).to include('name="faq[published]"')
+      expect(response.body).to include('name="faq[publicly_visible]"')
     end
   end
 

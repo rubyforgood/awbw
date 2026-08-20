@@ -39,4 +39,21 @@ RSpec.describe "People search", type: :request do
       expect(response.body).not_to include("Bob")
     end
   end
+
+  describe "GET /people?organization_id=X (full page)" do
+    let!(:org) { create(:organization, name: "Scoped Org") }
+
+    it "surfaces a chip naming the scoped organization" do
+      get people_path, params: { organization_id: org.id }
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Filtered to")
+      expect(response.body).to include("Scoped Org")
+    end
+
+    it "preserves the organization_id filter when the search form is submitted" do
+      get people_path, params: { organization_id: org.id }
+      page = Capybara.string(response.body)
+      expect(page).to have_css("input[type=hidden][name=organization_id][value='#{org.id}']", visible: :all)
+    end
+  end
 end

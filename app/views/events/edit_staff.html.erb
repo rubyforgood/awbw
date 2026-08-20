@@ -1,8 +1,16 @@
-<% content_for(:page_bg_class, "admin-only bg-white") %>
+<% content_for(:page_bg_class, "admin-or-owner bg-white") %>
 
 <div class="max-w-5xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6 sm:p-8">
+  <%# Eyebrow returns to wherever the editor was opened from: a registrant's (or
+      the sample's) staff callout page, else the admin staff roster. Kept in sync
+      with EventsController#update_staff's post-save redirect. %>
+  <% back_path, back_label = case params[:return_to]
+     when "sample_staff" then [ sample_staff_event_path(@event), "← Back to staff preview" ]
+     when "registration_staff" then params[:reg].present? ? [ registration_staff_path(params[:reg]), "← Back to staff" ] : [ staff_event_path(@event), "← Back to staff" ]
+     else [ staff_event_path(@event), "← Back to staff" ]
+     end %>
   <div class="flex flex-wrap items-center gap-2 mb-6">
-    <%= link_to "← Back to staff", staff_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <%= link_to back_label, back_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
   </div>
 
   <div class="mb-8">
@@ -11,13 +19,21 @@
     <p class="text-gray-500 mt-1 text-sm">Connect people to this event and set their role. Use the toggle to mark who is expected to attend.</p>
   </div>
 
-  <%= simple_form_for @event, url: staff_event_path(@event), method: :patch, html: { id: "event-staff-form" } do |f| %>
+  <%= simple_form_for @event, url: staff_event_path(@event, return_to: params[:return_to], reg: params[:reg]), method: :patch, html: { id: "event-staff-form" } do |f| %>
     <% if @event.errors.any? %>
       <%= render "shared/errors", resource: @event %>
     <% end %>
 
-    <div class="bg-gray-50 border border-gray-200 rounded-md p-4 sm:p-6 mb-6">
-      <div id="event-staffs">
+    <div class="bg-gray-50 border border-gray-200 rounded-md p-4 sm:p-6 mb-6" data-controller="expandable-cards" data-expandable-cards-expanded-value="false">
+      <div class="flex justify-end mb-3">
+        <button type="button" data-action="expandable-cards#toggleAll"
+                class="inline-flex items-center gap-2 text-sm font-medium text-blue-700 hover:text-blue-900">
+          <i class="fa-solid fa-chevron-down transition-transform" data-expandable-cards-target="icon"></i>
+          <span data-expandable-cards-target="label">Expand all</span>
+        </button>
+      </div>
+
+      <div id="event-staffs" class="space-y-3">
         <%= f.fields_for :event_staffs do |staff_form| %>
           <%= render "event_staff_fields", f: staff_form %>
         <% end %>

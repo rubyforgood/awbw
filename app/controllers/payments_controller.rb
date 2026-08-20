@@ -1,4 +1,7 @@
 class PaymentsController < ApplicationController
+  # authorize! calls use with: PaymentPolicy explicitly because @payment uses STI
+  # (CashPayment, CheckPayment, ExternalProcessorPayment), and ActionPolicy would
+  # otherwise look up a policy by the subclass name (e.g. ExternalProcessorPaymentPolicy).
   PERMITTED_PAYMENT_TYPES = %w[CashPayment CheckPayment ExternalProcessorPayment].freeze
   def index
     authorize!
@@ -6,7 +9,7 @@ class PaymentsController < ApplicationController
 
     if turbo_frame_request?
       @payments = Payment.search_by_params(params).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
-      render :payment_results
+      render :payments_results
     else
       @payments = Payment.search_by_params(params).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
     end
@@ -22,10 +25,9 @@ class PaymentsController < ApplicationController
 
     if params[:allocatable_sgid].present?
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
-      if @allocatable.is_a?(EventRegistration)
-        @payment.person = @allocatable.registrant
-        @payment.organization = @allocatable.organizations.first
-      end
+      person, organization = @allocatable.registrant, organization_for(@allocatable)
+      @payment.person = person
+      @payment.organization = organization
     end
   end
 
@@ -48,7 +50,7 @@ class PaymentsController < ApplicationController
 
         process_allocation!(@payment, allocatable)
 
-        flash[:notice] = "Allocation created. $#{'%.2f' % @payment.reload.remaining_dollars} remaining on payment."
+        flash[:notice] = "Allocation created. #{helpers.dollars_from_cents(@payment.reload.amount_cents_remaining)} remaining on payment."
         redirect_path = allocations_path(allocatable_sgid: allocatable.to_sgid.to_s)
       else
         @payment = payment_class.new(payment_params.except(:allocatable_sgid, :type))
@@ -83,6 +85,80 @@ class PaymentsController < ApplicationController
     authorize! @payment, with: PaymentPolicy
   end
 
+  def edit
+    @payment = Payment.find(params[:id])
+    authorize! @payment, with: PaymentPolicy
+  end
+
+  def update
+    @payment = Payment.find(params[:id])
+    authorize! @payment, with: PaymentPolicy
+
+    if @payment.update(edit_payment_params)
+      redirect_to payment_path(@payment), notice: "Payment was successfully updated."
+    else
+      flash.now[:alert] = @payment.errors.full_messages.join(", ")
+      render :edit, status: :unprocessable_content
+    end
+  end
+
+  def new_checkout_link
+    authorize!
+  end
+
+  def create_checkout_link
+    authorize!
+    amount_cents = (params[:amount_dollars].to_d * 100).to_i
+
+    if amount_cents <= 0
+      flash.now[:alert] = "Amount must be greater than $0.00"
+      render :new_checkout_link, status: :unprocessable_content
+      return
+    end
+
+    description = params[:description].presence || "Custom Stripe Payment"
+
+    checkout_session = Stripe::Checkout::Session.create(
+      mode: "payment",
+      line_items: [ {
+        price_data: {
+          currency: "usd",
+          product_data: { name: description },
+          unit_amount: amount_cents
+        },
+        quantity: 1
+      } ],
+      payment_intent_data: {
+        description: description
+      },
+      custom_fields: [
+        {
+          key: "first_name",
+          label: { type: "custom", custom: "First name" },
+          type: "text",
+          optional: false
+        },
+        {
+          key: "last_name",
+          label: { type: "custom", custom: "Last name" },
+          type: "text",
+          optional: false
+        },
+        {
+          key: "organization",
+          label: { type: "custom", custom: "Organization" },
+          type: "text",
+          optional: true
+        }
+      ],
+      success_url: root_url,
+      cancel_url: root_url
+    )
+
+    @checkout_url = checkout_session.url
+    render :new_checkout_link
+  end
+
   def allocation_form
     authorize!
     payment_type = params[:type].presence
@@ -93,10 +169,9 @@ class PaymentsController < ApplicationController
 
     if params[:allocatable_sgid].present?
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
-      if @allocatable.is_a?(EventRegistration)
-        @payment.person = @allocatable.registrant
-        @payment.organization = @allocatable.organizations.first
-      end
+      person, organization = @allocatable.registrant, organization_for(@allocatable)
+      @payment.person = person
+      @payment.organization = organization
     end
 
     respond_to do |format|
@@ -112,7 +187,7 @@ class PaymentsController < ApplicationController
   end
 
   def payment_params
-    params.require(:payment).permit(:type, :payer_type, :person_id, :organization_id, :amount_dollars, :currency, :check_number, :memo, :allocatable_sgid)
+    params.require(:payment).permit(:type, :payer_type, :person_id, :organization_id, :payer_sgid, :additional_designation_sgid, :amount_dollars, :currency, :check_number, :memo, :allocatable_sgid)
   end
 
   def locate_allocatable
@@ -120,9 +195,18 @@ class PaymentsController < ApplicationController
     GlobalID::Locator.locate_signed(params[:payment][:allocatable_sgid])
   end
 
+  def organization_for(allocatable)
+    case allocatable
+    when EventRegistration
+      allocatable.organizations.first
+    when ContinuingEducationRegistration
+      allocatable.event_registration.organizations.first
+    end
+  end
+
   def build_payment_attributes(payment_params, allocatable)
     attrs = payment_params.except(:allocatable_sgid, :type)
-    attrs[:person_id] ||= allocatable.try(:registrant_id) if allocatable.is_a?(EventRegistration)
+    attrs[:person_id] ||= allocatable.registrant&.id
     attrs
   end
 
@@ -150,28 +234,25 @@ class PaymentsController < ApplicationController
   end
 
   def calculate_allocation_amount(payment, allocatable)
-    payment_amount = payment.amount_cents
+    cost_cents = allocatable.cost_cents
 
-    if allocatable.is_a?(EventRegistration)
-      event_cost = allocatable.event.cost_cents
-
-      if event_cost.blank?
-        payment.errors.add(:base, "Cannot allocate to a free event.")
-        raise ActiveRecord::RecordInvalid.new(payment)
-      end
-
-      already_allocated = allocatable.allocations_sum
-      remaining_needed = event_cost - already_allocated
-
-      if remaining_needed <= 0
-        payment.errors.add(:base, "Event registration is already fully paid.")
-        raise ActiveRecord::RecordInvalid.new(payment)
-      end
-
-      [ payment_amount, remaining_needed ].min
-    else
-      payment_amount
+    if cost_cents.blank? || cost_cents <= 0
+      payment.errors.add(:base, "Cannot allocate to a free registration.")
+      raise ActiveRecord::RecordInvalid.new(payment)
     end
+
+    remaining_needed = cost_cents - allocatable.allocations_sum
+
+    if remaining_needed <= 0
+      payment.errors.add(:base, "Registration is already fully paid.")
+      raise ActiveRecord::RecordInvalid.new(payment)
+    end
+
+    [ payment.amount_cents, remaining_needed ].min
+  end
+
+  def edit_payment_params
+    params.require(:payment).permit(:person_id, :organization_id, :form_submission_id, :payer_sgid, :additional_designation_sgid)
   end
 
   def redirect_path_for(allocatable)

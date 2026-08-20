@@ -139,7 +139,6 @@ if MonthlyReport.none?
         )
       end
     end
-    puts "  Created monthly reports for Aisha across #{1 + report_counts.size} batches"
   end
 
   # A few monthly reports for the admin user as well

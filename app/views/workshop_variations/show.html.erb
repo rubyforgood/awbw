@@ -39,7 +39,7 @@
       <div class="flex flex-col gap-1">
         <div class="flex items-center text-gray-600 text-sm gap-2">
           <span>
-            <%= @workshop_variation.author_credit %>
+            <%= credited_author_link(@workshop_variation, class: "hover:underline") %>
           </span>
           <span class="<%= "border-l border-gray-400 pl-2" if @workshop_variation.created_by.present? %>">
             <%= @workshop_variation.created_at.strftime('%B %e, %Y') %>
@@ -47,8 +47,8 @@
         </div>
       </div>
 
-      <!-- Primary Asset -->
-      <%= render "assets/display_assets", resource: @workshop_variation, link: true %>
+      <!-- Images (uniform-size carousel) -->
+      <%= render "assets/display_assets_carousel", resource: @workshop_variation %>
 
       <!-- URL -->
       <% if @workshop_variation.youtube_url.present? %>

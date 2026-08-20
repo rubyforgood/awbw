@@ -1,20 +1,6 @@
 Rails.application.routes.draw do
-  # temporary direct routes to images for migration audit
-  resources :attachments, only: [ :show ]
-  resources :media_files, only: [ :show ]
-  # namespace :assets do
-  #   resources :primary_assets, only: [ :show ]
-  #   resources :gallery_assets, only: [ :show ]
-  # end
   resources :primary_assets
   resources :rich_text_assets
-
-  namespace :images do
-    resources :primary_images, only: [ :show ]
-    resources :gallery_images, only: [ :show ]
-    resources :rich_texts, only: [ :show ]
-  end
-  resources :images, only: [ :show ]
 
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   authenticate :user, ->(user) { user.super_user? } do
@@ -27,7 +13,6 @@ Rails.application.routes.draw do
                             unlocks: "unlocks" }
   devise_scope :user do
     get "/confirm/:confirmation_token", to: "confirmations#show", as: :confirm
-    get "/users/confirmation/resend", to: "confirmations#resend", as: :resend_user_confirmation
   end
   get "users/change_password", to: "users#change_password", as: "change_password"
   post "users/update_password", to: "users#update_password", as: "update_password"
@@ -48,7 +33,7 @@ Rails.application.routes.draw do
       get :confirm_email_manual
       post :process_email_manual
     end
-    resources :comments, only: [ :index, :create, :update ]
+    resources :comments, only: [ :create, :update ]
   end
 
   get "contact_us", to: "contact_us#index"
@@ -70,6 +55,8 @@ Rails.application.routes.draw do
     post "activities/counts/print",  to: "analytics#print", as: "analytics_print"
   end
 
+  resources :comments, only: [ :index ]
+
   resources :banners
   resources :bookmarks do
     post :search
@@ -83,12 +70,37 @@ Rails.application.routes.draw do
     collection do
       get :dedupe_index
       get :dedupe_preview
-      post :dedupe_execute
+      post :dedupe_perform
       patch :dedupe_update_keep
     end
   end
   resources :community_news
+  # Public pretty-URL for a standalone, published form — fillable with no account.
+  get "f/:slug", to: "public_forms#show", as: :public_form
+  post "f/:slug", to: "public_forms#create"
+  get "f/:slug/thank-you", to: "public_forms#thank_you", as: :thank_you_public_form
+  get "bulk_payment/:slug", to: "events/bulk_payment_form_submissions#ticket", as: :bulk_payment_ticket
+  post "bulk_payment/:slug/resend_confirmation", to: "events/bulk_payment_form_submissions#resend_confirmation", as: :bulk_payment_resend_confirmation
   get "registration/:slug", to: "events/registrations#show", as: :registration_ticket
+  get "registration/:slug/invoice", to: "events/registrations#invoice", as: :registration_invoice
+  get "registration/:slug/receipt", to: "events/registrations#receipt", as: :registration_receipt
+  get "registration/:slug/scholarship", to: "events/callouts#scholarship", as: :registration_scholarship
+  post "registration/:slug/scholarship/agreement", to: "events/callouts#sign_agreement", as: :registration_scholarship_agreement
+  post "registration/:slug/scholarship/decline", to: "events/callouts#decline_agreement", as: :registration_scholarship_decline
+  get "registration/:slug/faq", to: "events/callouts#faq", as: :registration_faq
+  get "registration/:slug/payment", to: "events/callouts#payment", as: :registration_payment
+  get "registration/:slug/certificate", to: "events/callouts#certificate", as: :registration_certificate
+  get "registration/:slug/ce", to: "events/callouts#ce", as: :registration_ce
+  post "registration/:slug/ce/license", to: "events/callouts#update_ce_license", as: :registration_ce_license
+  post "registration/:slug/ce/request", to: "events/callouts#request_ce", as: :registration_ce_request
+  post "registration/:slug/ce/pay", to: "events/callouts#pay_ce", as: :registration_ce_pay
+  post "registration/:slug/ce/sign-in", to: "events/callouts#sign_in_ce", as: :registration_ce_sign_in
+  post "registration/:slug/ce/sign-out", to: "events/callouts#sign_out_ce", as: :registration_ce_sign_out
+  patch "registration/:slug/ce/attendance", to: "events/callouts#update_ce_attendance", as: :registration_ce_attendance
+  get "registration/:slug/handouts", to: "events/callouts#handouts", as: :registration_handouts
+  get "registration/:slug/resource/:resource_id", to: "events/callouts#resource", as: :registration_resource
+  get "registration/:slug/videoconference", to: "events/callouts#videoconference", as: :registration_videoconference
+  get "registration/:slug/staff", to: "events/callouts#staff", as: :registration_staff
   post "registration/:slug/resend_confirmation", to: "events/registrations#resend_confirmation", as: :registration_resend_confirmation
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate
@@ -101,48 +113,109 @@ Rails.application.routes.draw do
       post :select_organization
       post :create_organization
       delete :unlink_organization
+      patch :update_onboarding
+      patch :toggle_certificate_issued
+      patch :update_attendance
     end
-    resources :comments, only: [ :index, :create, :update ]
+    resources :comments, only: [ :create, :update ]
+  end
+  resources :topic_subscriptions, except: [ :show ] do
+    collection do
+      get :email_addresses
+    end
+    member do
+      patch :unsubscribe
+      patch :resubscribe
+    end
+    resources :comments, only: [ :create, :update ]
+  end
+  resources :topic_subscription_types, except: [ :show ] do
+    member do
+      patch :archive
+      patch :unarchive
+    end
   end
   resources :forms do
+    collection do
+      get :smart_form_settings
+    end
     member do
+      post :copy
       patch :reorder_field
       put :reorder_fields
       get :edit_sections
       patch :update_sections
     end
   end
-  resources :form_submissions, only: [ :show ]
+  resources :form_submissions, only: [ :index, :show ]
   resources :grants
-  resources :scholarships, only: [ :new, :create, :show, :edit, :update, :destroy ] do
-    member { patch :toggle_tasks }
+  resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
+    member do
+      patch :toggle_tasks
+      post :reoffer
+    end
+    resources :comments, only: [ :create, :update ]
   end
+  resources :continuing_education_registrations, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
+    member { patch :toggle_certificate }
+    resources :comments, only: [ :create, :update ]
+  end
+  # The admin-only browse index plus standalone new/edit flows. (Licenses can
+  # also be edited inline on the person + CE forms.)
+  resources :professional_licenses, only: [ :index, :new, :create, :edit, :update ]
   resources :discounts, only: [ :create, :show, :destroy ] do
     collection do
       post :allocation_form
     end
   end
   resources :events do
+    collection do
+      get :revenue
+      get :participation
+      get :reports
+      get :scholarships
+      get :program_statuses
+      get :attendees
+      get :signins
+    end
     member do
       get :dashboard
-      get :background
+      get :attendance
+      get :sample_ticket
+      # Admin-only in-memory previews of the behavioral built-in callout pages,
+      # linked from the sample ticket. They reuse Events::CalloutsController's
+      # actions/views with an unsaved sample registration (see its sample mode).
+      get "sample_ticket/payment", to: "events/callouts#payment", defaults: { sample: "1" }, as: :sample_payment
+      get "sample_ticket/certificate", to: "events/callouts#certificate", defaults: { sample: "1" }, as: :sample_certificate
+      get "sample_ticket/scholarship", to: "events/callouts#scholarship", defaults: { sample: "1" }, as: :sample_scholarship
+      get "sample_ticket/ce", to: "events/callouts#ce", defaults: { sample: "1" }, as: :sample_ce
+      get "sample_ticket/videoconference", to: "events/callouts#videoconference", defaults: { sample: "1" }, as: :sample_videoconference
+      get "sample_ticket/staff", to: "events/callouts#staff", defaults: { sample: "1" }, as: :sample_staff
       get :registrants
-      get :details
+      get :roster
+      get :onboarding
       get :staff
       get "staff/edit", action: :edit_staff, as: :edit_staff
       patch "staff", action: :update_staff
       get :recipients
-      get :bulk_payments
+      post :feature_recipient_shoutout
+      get :bulk_payments, to: "events/bulk_payments#index"
       get :preview_reminder
       patch :preview
       post :copy_registration_form
+      post :confirm_reminder
       post :send_reminder
-      post :allocate_bulk_payment
-      post :create_bulk_payment
+      post :allocate_bulk_payment, to: "events/bulk_payments#allocate"
+      post :bulk_payments, to: "events/bulk_payments#create"
+      post :link_bulk_payment, to: "events/bulk_payments#link"
+      delete :unlink_bulk_payment, to: "events/bulk_payments#unlink"
     end
-    resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
+    resources :registration_ticket_callouts, only: [ :show, :update ]
+    resource :registrations, only: %i[ create ], module: :events, as: :registrant_registration
     resource :public_registration, only: [ :new, :create, :show ], module: :events
-    resource :bulk_payment, only: [ :new, :create, :show ], module: :events
+    resource :bulk_payment, only: [ :new, :create, :show ], controller: "events/bulk_payment_form_submissions"
+    resource :invoice, only: [ :show ], module: :events
+    get "form_submissions/:person_id", to: "events/form_submissions#show", as: :registrant_submissions
   end
   resources :people do
     collection do
@@ -152,15 +225,31 @@ Rails.application.routes.draw do
       get :workshop_logs
       get :checkout
       get :bio
+      get :all_comments
     end
-    resources :comments, only: [ :index, :create, :update ]
+    resources :comments, only: [ :create, :update ]
+    resources :memberships, only: [ :index, :new, :create ]
   end
   resources :faqs
-  resources :notifications, only: [ :index, :show, :update ] do
+  resources :features do
+    collection do
+      post :import
+    end
+  end
+  resources :other_responses, only: [ :index, :update ] do
+    collection do
+      post :promote
+      post :curate
+    end
+  end
+  resources :notifications, only: [ :index, :new, :create, :show, :update ] do
     member do
       post :resend
     end
   end
+  # Friendly alias — the feature is called "Communications" in the UI, but the
+  # controller and routes stay :notifications. Redirect, preserving any filters.
+  get "communications", to: redirect { |_params, req| [ "/notifications", req.query_string.presence ].compact.join("?") }, as: :communications
   resources :organizations do
     collection do
       get :check_duplicates
@@ -168,21 +257,30 @@ Rails.application.routes.draw do
     member do
       get :populations_served
     end
-    resources :comments, only: [ :index, :create, :update ]
+    resources :comments, only: [ :create, :update ]
     resources :monthly_reports, only: :index
   end
-  resources :payments, only: [ :new, :create, :show, :index ] do
+  resources :payments, only: [ :new, :create, :show, :index, :edit, :update ] do
     collection do
       post :allocation_form
+      get :new_checkout_link
+      post :create_checkout_link
     end
   end
   resources :allocations, only: [ :new, :create, :index ] do
     post :revert, on: :member
   end
 
+  resources :memberships, only: [ :edit, :update ] do
+    resources :membership_invoices, only: [ :new, :create ]
+  end
+
+  resources :membership_invoices, only: [ :index, :show, :edit, :update ]
+  resources :membership_checkouts, only: [ :create ]
+
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
-  resources :affiliations
+  resources :affiliations, only: [ :edit, :update, :destroy ]
   resources :quotes
 
   resources :monthly_reports, only: [ :index, :show ], constraints: { id: /\d+/ }
@@ -201,14 +299,22 @@ Rails.application.routes.draw do
     collection do
       get :dedupe_index
       get :dedupe_preview
-      post :dedupe_execute
+      post :dedupe_perform
       patch :dedupe_update_keep
     end
   end
   get "search/:model", to: "search#index"
   resources :story_ideas
+  resource :story_import, only: %i[new create], path: "stories/import",
+                          controller: "story_imports" do
+    post :confirm
+  end
   resources :stories
-  resources :story_shares, only: [ :index, :show ]
+  get "story_share/admin", to: "story_share_admin#show", as: :story_share_admin
+  match "story_share/admin/reorder", to: "story_share_admin#reorder", via: [ :put, :patch ], as: :story_share_admin_reorder
+  post "story_share/admin/add", to: "story_share_admin#add", as: :story_share_admin_add
+  delete "story_share/admin/remove", to: "story_share_admin#remove", as: :story_share_admin_remove
+  resources :story_shares, path: "story_share", only: [ :index, :show, :new ]
   resources :video_recordings
   resources :user_forms
   resources :windows_types
@@ -218,7 +324,7 @@ Rails.application.routes.draw do
   resources :workshop_variation_ideas
   resources :workshop_variations
   resources :workshops do
-    resources :comments, only: [ :index, :create, :update ]
+    resources :comments, only: [ :create, :update ]
   end
 
   resources :workshop_mentions, only: [ :index ]

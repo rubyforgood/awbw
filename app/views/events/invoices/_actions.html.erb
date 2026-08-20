@@ -1,0 +1,12 @@
+<%# Eyebrow + "Download PDF" controls above an invoice. Hidden when printing so
+    only the invoice document lands in the PDF. `back_path` / `back_label` set
+    the return link to wherever the invoice was opened from. %>
+<div class="max-w-3xl mx-auto flex flex-wrap items-center gap-2 px-4 sm:px-8 pt-4 print:hidden">
+  <%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+    <i class="fa-solid fa-arrow-left text-xs"></i> <%= back_label %>
+  <% end %>
+  <button onclick="window.print();"
+          class="ml-auto inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
+    <i class="fa-solid fa-file-arrow-down"></i> Download PDF
+  </button>
+</div>

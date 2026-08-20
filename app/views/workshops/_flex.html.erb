@@ -12,7 +12,7 @@
       <h3><%= link_to workshop.title, link_route, data: { turbo_prefetch: false } %></h3>
       <small><%= "#{workshop.windows_type.short_name unless workshop.windows_type.nil?} - #{workshop.date}" %></small><br/>
       <small>Author:
-        <%= workshop.author %></small>
+        <%= credited_author_link(workshop) %></small>
       <p class='workshop-description'><%= truncate(
           workshop.formatted_objective,
           length: 120,

@@ -1,23 +1,47 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<div class="max-w-2xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(:events) %> rounded-xl border border-gray-200 p-6 shadow">
   <div class="mb-6">
     <%= link_to "← Edit scholarship", edit_scholarship_path(@scholarship), class: "text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block" %>
     <h1 class="text-2xl font-semibold text-gray-900">Scholarship</h1>
     <% if @scholarship.recipient.present? %>
-      <p class="text-gray-600 mt-1"><%= @scholarship.recipient.full_name %></p>
+      <p class="mt-1 text-gray-600"><%= @scholarship.recipient.full_name %></p>
     <% end %>
   </div>
 
   <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
     <div>
       <dt class="text-sm font-medium text-gray-500">Amount</dt>
-      <dd class="mt-1 text-sm text-gray-900"><%= number_to_currency(@scholarship.amount_dollars) %></dd>
+      <dd class="mt-1 text-sm text-gray-900"><%= dollars_from_cents(@scholarship.amount_cents) %></dd>
     </div>
     <div>
       <dt class="text-sm font-medium text-gray-500">Tasks Completed</dt>
       <dd class="mt-1 text-sm text-gray-900"><%= @scholarship.tasks_completed? ? "Yes" : "No" %></dd>
     </div>
+    <% latest_response = @scholarship.latest_agreement_response %>
+    <div>
+      <dt class="text-sm font-medium text-gray-500">Agreement signed</dt>
+      <dd class="mt-1 text-sm text-gray-900">
+        <%= @scholarship.agreement_signed? ? "Yes" : "No" %>
+        <% if @scholarship.agreement_signed? && latest_response&.responded_at %>
+          <span class="text-gray-500">· <%= latest_response.responded_at.strftime("%B %d, %Y") %></span>
+        <% end %>
+      </dd>
+    </div>
+    <% if @scholarship.agreement_declined? %>
+      <div class="sm:col-span-2">
+        <dt class="text-sm font-medium text-gray-500">Agreement declined</dt>
+        <dd class="mt-1 text-sm text-gray-900">
+          <span class="font-medium text-red-700">Declined</span>
+          <% if latest_response&.responded_at %>
+            <span class="text-gray-500">· <%= latest_response.responded_at.strftime("%B %d, %Y") %></span>
+          <% end %>
+          <% if latest_response&.reason.present? %>
+            <p class="mt-1 text-gray-700">“<%= latest_response.reason %>”</p>
+          <% end %>
+        </dd>
+      </div>
+    <% end %>
     <% if @scholarship.grant.present? %>
       <div>
         <dt class="text-sm font-medium text-gray-500">Grant</dt>

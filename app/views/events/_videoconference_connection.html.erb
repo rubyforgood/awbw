@@ -1,0 +1,14 @@
+<%# Meeting room ID/code (parsed from the join URL) and passcode for the event.
+    Render only where the join link itself is revealed. `event` must be a
+    decorated Event. %>
+<% room = event.videoconference_room %>
+<% if room || event.videoconference_passcode.present? %>
+  <div class="mt-2 space-y-0.5 text-sm text-gray-600">
+    <% if room %>
+      <div><span class="font-medium text-gray-700"><%= room[:label] %>:</span> <%= room[:value] %></div>
+    <% end %>
+    <% if event.videoconference_passcode.present? %>
+      <div><span class="font-medium text-gray-700">Passcode:</span> <%= event.videoconference_passcode %></div>
+    <% end %>
+  </div>
+<% end %>

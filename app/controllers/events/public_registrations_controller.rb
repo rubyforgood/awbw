@@ -4,16 +4,11 @@ module Events
     before_action :set_event
     before_action :ensure_registerable, only: [ :new, :create ]
 
-    rescue_from ActionController::InvalidAuthenticityToken do
-      flash[:alert] = "Your session has expired. Please try submitting the form again."
-      redirect_to new_event_public_registration_path(@event)
-    end
-
     def new
       authorize! :public_registration, to: :new?
 
-      @form = registration_form
-      unless @form
+      @registration_form = registration_form
+      unless @registration_form
         redirect_to event_path(@event), alert: "Registration form is not available for this event."
         return
       end
@@ -21,6 +16,7 @@ module Events
       @form_fields = visible_form_fields
       @scholarship = scholarship_mode?
       @scholarship_form = @event.scholarship_form if @scholarship
+      @continuing_education_form = @event.continuing_education_form
       @event = @event.decorate
     end
 
@@ -32,21 +28,28 @@ module Events
         return
       end
 
-      @form = registration_form
+      @registration_form = registration_form
       @scholarship = scholarship_mode?
       @scholarship_form = @event.scholarship_form if @scholarship
+      @continuing_education_form = @event.continuing_education_form
 
-      all_params = params.dig(:public_registration, :form_fields)&.to_unsafe_h || {}
-      registration_params, scholarship_params = split_form_params(all_params)
+      all_params = merge_retained_uploads(params.dig(:public_registration, :form_fields)&.to_unsafe_h || {})
+      registration_params, scholarship_params, continuing_education_params = split_form_params(all_params)
 
       @field_errors = validate_required_fields(registration_params)
       if @scholarship_form
         scholarship_fields = @scholarship_form.form_fields.where.not(answer_type: :group_header).to_a
         @field_errors = @field_errors.merge(FormAnswerValidator.call(scholarship_fields, scholarship_params))
       end
+      if @continuing_education_form
+        ce_fields = @continuing_education_form.form_fields.where.not(answer_type: :group_header).to_a
+        @field_errors = @field_errors.merge(FormAnswerValidator.call(ce_fields, continuing_education_params))
+      end
       if @field_errors.any?
         @form_fields = visible_form_fields
+        @continuing_education_form = @event.continuing_education_form
         @event = @event.decorate
+        flash.now[:alert] = "Your registration is not complete yet. Scroll down to check for any errors or missing information."
         render :new, status: :unprocessable_content
         return
       end
@@ -55,10 +58,14 @@ module Events
 
       result = EventRegistrationServices::PublicRegistration.call(
         event: @event,
-        form: @form,
+        registration_form: @registration_form,
         form_params: registration_params,
         scholarship_requested: @scholarship,
-        person: current_user&.person
+        person: current_user&.person,
+        scholarship_form: @scholarship_form,
+        scholarship_params: scholarship_params,
+        continuing_education_form: @continuing_education_form,
+        continuing_education_params: continuing_education_params
       )
 
       if result.success?
@@ -73,8 +80,10 @@ module Events
         end
       else
         @form_fields = visible_form_fields
+        @continuing_education_form = @event.continuing_education_form
         @event = @event.decorate
-        flash.now[:alert] = result.errors.join(", ")
+        flash.now[:error] = result.errors.join(", ")
+        flash.now[:alert] = "Your registration is not complete yet. Scroll down to check for any errors or missing information."
         render :new, status: :unprocessable_content
       end
     end
@@ -87,19 +96,32 @@ module Events
         person = registration.registrant
       elsif params[:person_id].present?
         person = Person.find(params[:person_id])
+        # Unlike the registration slug — an unguessable token handed to the
+        # registrant — person ids are sequential, so this branch is not a
+        # capability. It exists as the admin-side fallback for registrations with
+        # no slug, so gate it on the same access as the event's other submission
+        # views (or on the viewer being that person).
+        authorize! @event, to: :form_submissions? unless current_user&.person_id == person.id
         registration = @event.event_registrations.find_by(registrant: person)
       else
         redirect_to event_path(@event), alert: "Registration not found."
         return
       end
 
-      @form = registration_form
-      unless @form
+      @registration_form = registration_form
+      unless @registration_form
         redirect_to event_path(@event), alert: "Registration form not found."
         return
       end
 
-      @form_submission = @form.form_submissions.find_by(person: person)
+      # Scope submissions to this event so a person registered for multiple
+      # events that share the same form sees only the answers for this one.
+      submissions = @registration_form.form_submissions.where(person: person, event: @event)
+      @form_submission = if params[:form_submission_id].present?
+        submissions.find_by(id: params[:form_submission_id])
+      else
+        submissions.first
+      end
       unless @form_submission
         redirect_to event_path(@event), alert: "No registration form submission found."
         return
@@ -107,13 +129,33 @@ module Events
 
       @form_fields = visible_form_fields
       @responses = @form_submission.form_answers.index_by(&:form_field_id)
+
+      load_scholarship_submission(person)
+      load_continuing_education_submission(person)
+
       @event = @event.decorate
     end
 
     private
 
+    # A file input can't be repopulated, so a form re-rendered after a validation
+    # error carries the already-uploaded blob's signed id in retained_uploads.
+    # An untouched file input still posts a blank value, so fall back to the
+    # retained id wherever the field itself came back empty.
+    def merge_retained_uploads(form_params)
+      retained = params.dig(:public_registration, :retained_uploads)&.to_unsafe_h || {}
+      return form_params if retained.blank?
+
+      retained.each do |field_id, signed_id|
+        next if signed_id.blank? || form_params[field_id].present?
+
+        form_params[field_id] = signed_id
+      end
+      form_params
+    end
+
     def credit_card_payment?(form_params)
-      payment_method_field = @form.form_fields.find_by(field_identifier: "payment_method")
+      payment_method_field = @registration_form.form_fields.find_by(field_identifier: "payment_method")
       return false unless payment_method_field
 
       form_params[payment_method_field.id.to_s]&.downcase == FormBuilderService::PAYMENT_METHOD_PAY_NOW.downcase
@@ -156,12 +198,45 @@ module Events
       @event.registration_form
     end
 
+    # Surface the dedicated scholarship form's application in its own card on the
+    # view-submission page when the registrant filled it out. Answers are gathered
+    # by field identifier (they may live on the scholarship submission or on the
+    # registration submission), so a registrant who answered the questions while
+    # registering still sees them. Only set when answers are on file, so plain
+    # registrations render nothing. Embedded-section scholarship questions need no
+    # separate card — they already render inline with the registration answers.
+    def load_scholarship_submission(person)
+      scholarship_form = @event.scholarship_form
+      return unless scholarship_form
+
+      application = ScholarshipApplication.new(event: @event, person: person)
+      return unless application.answered?
+
+      @scholarship_submission = application.submission
+      @scholarship_form = scholarship_form
+      @scholarship_fields = scholarship_form.form_fields.reorder(position: :asc)
+      @scholarship_responses = application.answers_by_field_id
+    end
+
+    def load_continuing_education_submission(person)
+      ce_form = @event.continuing_education_form
+      return unless ce_form
+
+      submission = ce_form.form_submissions.find_by(person: person, event: @event, role: "continuing_education")
+      return unless submission
+
+      @continuing_education_submission = submission
+      @continuing_education_form = ce_form
+      @continuing_education_fields = ce_form.form_fields.reorder(position: :asc)
+      @continuing_education_responses = submission.form_answers.index_by(&:form_field_id)
+    end
+
     def scholarship_mode?
       params[:scholarship_requested] == "true"
     end
 
     def split_form_params(all_params)
-      reg_field_ids = @form.form_fields.pluck(:id).map(&:to_s)
+      reg_field_ids = @registration_form.form_fields.pluck(:id).map(&:to_s)
       registration = all_params.slice(*reg_field_ids)
 
       scholarship = {}
@@ -170,51 +245,35 @@ module Events
         scholarship = all_params.slice(*scholarship_field_ids)
       end
 
-      [ registration, scholarship ]
-    end
-
-    def create_or_update_scholarship_submission(person, scholarship_params)
-      scholarship_form = @event.scholarship_form
-      return unless scholarship_form
-
-      submission = FormSubmission.find_or_create_by!(
-        person: person, form: scholarship_form, role: "scholarship"
-      ) do |record|
-        record.event = @event
+      continuing_education = {}
+      if @continuing_education_form
+        ce_field_ids = @continuing_education_form.form_fields.pluck(:id).map(&:to_s)
+        continuing_education = all_params.slice(*ce_field_ids)
       end
 
-      scholarship_params.each do |field_id, raw_value|
-        field = scholarship_form.form_fields.find_by(id: field_id)
-        next unless field
-        next if field.group_header?
-
-        text = raw_value.is_a?(Array) ? raw_value.reject(&:blank?).join(", ") : raw_value.to_s
-
-        record = submission.form_answers.find_or_initialize_by(form_field: field)
-        record.update!(submitted_answer: text, question_name_when_answered: field.name)
-      end
+      [ registration, scholarship, continuing_education ]
     end
 
     def visible_form_fields
-      scope = @form.form_fields
+      scope = @registration_form.form_fields
 
       person = current_user&.person
       if person
         # Always hide logged_out_only fields for logged-in users with known data
         known_identifiers = person_known_identifiers(person)
         if known_identifiers.any?
-          known_ids = @form.form_fields
+          known_ids = @registration_form.form_fields
                            .where(visibility: :logged_out_only, field_identifier: known_identifiers)
                            .ids
           scope = scope.where.not(id: known_ids) if known_ids.any?
         end
 
         # Hide logged_out_only headers when all their non-header fields are hidden
-        logged_out_sections = @form.form_fields.where(visibility: :logged_out_only)
+        logged_out_sections = @registration_form.form_fields.where(visibility: :logged_out_only)
                                   .where.not(answer_type: :group_header)
                                   .pluck(:section).uniq.compact
         logged_out_sections.each do |sect|
-          section_field_ids = @form.form_fields.where(section: sect, visibility: :logged_out_only)
+          section_field_ids = @registration_form.form_fields.where(section: sect, visibility: :logged_out_only)
                                   .where.not(answer_type: :group_header).ids
           if section_field_ids.any? && known_identifiers.any? && (section_field_ids - scope.where(id: section_field_ids).ids).any?
             remaining = scope.where(id: section_field_ids).ids
@@ -224,11 +283,11 @@ module Events
           end
         end
 
-        if @form.hide_answered_form_questions?
+        if @registration_form.hide_answered_form_questions?
           answered_field_ids = []
 
           # One-time fields: hide if answered on ANY form submission for this person
-          one_time_field_ids = @form.form_fields.where(visibility: :answers_on_file, one_time: true)
+          one_time_field_ids = @registration_form.form_fields.where(visibility: :answers_on_file, one_time: true)
                                    .where.not(answer_type: :group_header).ids
           if one_time_field_ids.any?
             answered_one_time = FormAnswer.joins(:form_submission)
@@ -242,7 +301,7 @@ module Events
           # Regular fields: hide if answered on a submission for this event
           event_submissions = FormSubmission.where(person: person, event_id: @event.id)
           if event_submissions.exists?
-            regular_field_ids = @form.form_fields.where(visibility: :answers_on_file, one_time: false)
+            regular_field_ids = @registration_form.form_fields.where(visibility: :answers_on_file, one_time: false)
                                      .where.not(answer_type: :group_header).ids
             if regular_field_ids.any?
               answered_regular = FormAnswer.where(form_submission: event_submissions)
@@ -258,10 +317,10 @@ module Events
             scope = scope.where.not(id: answered_field_ids)
 
             # Hide section headers when all their non-header fields are answered
-            answered_sections = @form.form_fields.where(id: answered_field_ids)
+            answered_sections = @registration_form.form_fields.where(id: answered_field_ids)
                                     .pluck(:section).uniq.compact
             answered_sections.each do |sect|
-              section_field_ids = @form.form_fields.where(section: sect, visibility: :answers_on_file)
+              section_field_ids = @registration_form.form_fields.where(section: sect, visibility: :answers_on_file)
                                       .where.not(answer_type: :group_header).ids
               if section_field_ids.any? && (section_field_ids - answered_field_ids).empty?
                 scope = scope.where.not(section: sect, answer_type: :group_header, visibility: :answers_on_file)
@@ -272,11 +331,11 @@ module Events
       end
 
       if @event.cost_cents.to_i <= 0
-        payment_field_ids = @form.form_fields.where(field_identifier: "payment_method").ids
+        payment_field_ids = @registration_form.form_fields.where(field_identifier: "payment_method").ids
         if payment_field_ids.any?
           scope = scope.where.not(id: payment_field_ids)
 
-          header = @form.form_fields.find_by(answer_type: :group_header, name: "Payment Information")
+          header = @registration_form.form_fields.find_by(answer_type: :group_header, name: "Payment Information")
           scope = scope.where.not(id: header.id) if header
         end
       end
