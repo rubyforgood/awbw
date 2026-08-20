@@ -74,6 +74,7 @@ class Person < ApplicationRecord
   validates :email_2, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
   validates :legal_first_name, length: { maximum: 255 }
   validates :pronouns, length: { maximum: 255 }
+  validates :pronunciation, length: { maximum: 255 }
   validates :best_time_to_call, length: { maximum: 255 }
   validates :racial_ethnic_identity, length: { maximum: 255 }
   validates :linked_in_url, length: { maximum: 255 }
