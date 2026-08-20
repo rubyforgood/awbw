@@ -10,10 +10,8 @@ module AhoyTrackable
   end
 
   class_methods do
-    # Every value this model's events can carry in `resource_type`, for code that
-    # reads events back. Analytics::EventBuilder stamps the instance's own class
-    # name, so an STI model must list its subtypes here (and the base name, for
-    # rows written before the subtypes existed) — see Affiliation.
+    # Read events back through this: EventBuilder stamps the instance's own class
+    # name, so an STI model must override it with every name it has written.
     def event_resource_types
       [ name ]
     end

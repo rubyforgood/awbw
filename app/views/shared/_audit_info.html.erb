@@ -4,8 +4,6 @@
   return unless resource&.persisted?
 
   model = resource.respond_to?(:object) ? resource.object : resource
-  # An STI model's events are spread across its class names, so ask the model
-  # which ones to look under rather than assuming its own (see AhoyTrackable).
   resource_types = model.class.event_resource_types
   ahoy_scope = Ahoy::Event.where(resource_type: resource_types, resource_id: model.id)
 
