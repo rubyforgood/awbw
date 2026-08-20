@@ -14,8 +14,9 @@ RSpec.describe "Person profile private (submitted) sections", type: :request do
   end
 
   before do
-    # The story-idea card titles by workshop_title, so put the marker there.
-    create(:story_idea, created_by: owner_user, updated_by: owner_user,
+    # The section lists ideas by authorship; the story-idea card titles by
+    # workshop_title, so put the marker there.
+    create(:story_idea, created_by: owner_user, updated_by: owner_user, author: person,
                         external_workshop_title: "My Private Submission")
   end
 

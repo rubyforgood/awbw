@@ -24,6 +24,9 @@ class WorkshopIdeasController < ApplicationController
 
   def create
     @workshop_idea = WorkshopIdea.new(workshop_idea_params)
+    # Credit the submitting account's person as the author, so the idea lists on
+    # their profile by authorship like every other content type.
+    @workshop_idea.author ||= @workshop_idea.created_by&.person
     authorize! @workshop_idea
 
     if @workshop_idea.save

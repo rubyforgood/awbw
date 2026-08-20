@@ -164,9 +164,9 @@ RSpec.describe AuthorCreditDivergenceQuery do
       expect(described_class.new.call.creator.flat_map(&:records)).not_to include(story)
     end
 
-    it "excludes idea models, whose only credit path is the creator" do
+    it "includes an idea with a creator but no author, now that ideas name an author" do
       idea = create(:story_idea, created_by: author_user)
-      expect(described_class.new.call.creator.flat_map(&:records)).not_to include(idea)
+      expect(described_class.new.call.creator.flat_map(&:records)).to include(idea)
     end
 
     it "excludes records covered by the legacy section instead" do
