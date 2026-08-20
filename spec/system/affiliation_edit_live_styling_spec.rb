@@ -19,6 +19,23 @@ RSpec.describe "Affiliation editor live styling", type: :system do
 
   def row = find("[data-inactive-toggle-target='row']")
 
+  # The controller ends a row on the *browser's* today, while Ruby's Date.current
+  # follows the Rails zone — they disagree for part of each day. Ask the browser.
+  def browser_today
+    page.evaluate_script(
+      "(() => { const d = new Date(); const p = n => String(n).padStart(2, '0'); " \
+      "return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}` })()"
+    )
+  end
+
+  def set_end_date(value)
+    page.execute_script(
+      "arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('change', { bubbles: true }))",
+      find("[data-inactive-toggle-target~='endDate']"), value
+    )
+  end
+
+
   it "tints an active facilitator row without striking it through" do
     expect(row[:class]).to include("bg-purple-50")
     expect(row[:class]).not_to include("aff-ended")
@@ -31,20 +48,9 @@ RSpec.describe "Affiliation editor live styling", type: :system do
   end
 
   it "strikes it through for an end date of today, which the date rule alone calls active" do
-    end_date = find("[data-inactive-toggle-target~='endDate']")
-    page.execute_script(
-      "arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('change', { bubbles: true }))",
-      end_date, Date.current.strftime("%Y-%m-%d")
-    )
+    set_end_date(browser_today)
 
     expect(row[:class]).to include("aff-ended")
-  end
-
-  def set_end_date(value)
-    page.execute_script(
-      "arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('change', { bubbles: true }))",
-      find("[data-inactive-toggle-target~='endDate']"), value
-    )
   end
 
   def checkbox = find("[data-inactive-toggle-target='inactiveCheckbox']")
@@ -59,7 +65,7 @@ RSpec.describe "Affiliation editor live styling", type: :system do
     end
 
     it "ticks itself for an end date of today, which the date rule alone calls active" do
-      set_end_date(Date.current.strftime("%Y-%m-%d"))
+      set_end_date(browser_today)
 
       expect(checkbox).to be_checked
     end
@@ -83,7 +89,7 @@ RSpec.describe "Affiliation editor live styling", type: :system do
 
     # The point of the whole mechanism: the flag has to survive the round trip.
     it "persists inactive after saving an end date of today" do
-      set_end_date(Date.current.strftime("%Y-%m-%d"))
+      set_end_date(browser_today)
       click_button "Save changes"
 
       expect(page).to have_text("successfully updated")
