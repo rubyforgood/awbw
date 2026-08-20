@@ -183,6 +183,20 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).not_to include("Youth")
     end
 
+    it "shows a staff member's license credentials, gated by their profile toggle" do
+      staffer = create(:person)
+      create(:professional_license, person: staffer, kind: "LMFT", number: "44556")
+      create(:registration_ticket_callout, event:, builtin_key: "staff", hidden: false)
+      create(:event_staff, event:, person: staffer)
+
+      get registration_staff_path(registration.slug)
+      expect(response.body).to include("LMFT")
+
+      staffer.update!(profile_show_credentials: false)
+      get registration_staff_path(registration.slug)
+      expect(response.body).not_to include("LMFT")
+    end
+
     it "shows an admin-only Edit staff button to admins" do
       create(:registration_ticket_callout, event:, builtin_key: "staff", hidden: false)
       sign_in create(:user, super_user: true)
