@@ -62,7 +62,7 @@
   <% end %>
 
   <%= render "events/filter_select", param: :attendance_status, label: "Attendance",
-        options: EventRegistration::ATTENDANCE_STATUSES.map { |s| [ EventRegistration.new(status: s).attendance_status_label, s ] },
+        options: EventRegistration::ATTENDANCE_FILTER_OPTIONS,
         selected: params[:attendance_status], blank: "All statuses", field_class: field_class %>
 
   <% if has_cost %>

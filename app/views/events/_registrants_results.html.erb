@@ -375,20 +375,29 @@
                         Pending → Issued). Each state links to the connected CE
                         registration's edit page; "Create" opens the new CE form. %>
                     <% ce_registration = registration.continuing_education_registrations.first %>
-                    <% if ce_registration.nil? %>
+                    <% if ce_registration %>
+                      <%# The transfer-in reg carries its own CE record now, so it
+                          shows the normal status badge linking to that record. %>
+                      <%= render "event_registrations/ce_status_badge", registration: registration,
+                            href: edit_continuing_education_registration_path(ce_registration, return_to: "registrants") %>
+                    <% elsif registration.transferred_in? %>
+                      <%# No CE came across on transfer, and CE isn't created here —
+                          it's managed on the original registration. %>
+                      <span class="text-gray-300">—</span>
+                    <% else %>
                       <%= render "shared/badge",
                             label: "Create",
                             classes: "bg-gray-50 text-gray-400 border-gray-200",
                             href: new_continuing_education_registration_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"),
                             title: "Add CE registration" %>
-                    <% else %>
-                      <%= render "event_registrations/ce_status_badge", registration: registration,
-                            href: edit_continuing_education_registration_path(ce_registration, return_to: "registrants") %>
                     <% end %>
                   </td>
                 <% end %>
 
-                <% scholarship = registration.scholarships.first %>
+                <%# effective_scholarship resolves a transferred-in reg to the award on
+                    its source registration, so it still "gets the hat" here. %>
+                <% scholarship = registration.effective_scholarship %>
+                <% transferred_scholarship = scholarship && registration.transferred_in? %>
                 <% scholarship_sort = if scholarship&.tasks_completed?
                      0
                    elsif scholarship
@@ -400,29 +409,33 @@
                    end %>
                 <td class="px-4 py-2 text-center text-sm <%= "hidden" unless scholarship_on %>" data-column-toggle-col="scholarship" data-sort-value="<%= scholarship_sort %>">
                   <% if (s = scholarship) %>
+                    <%# A transferred-in reg's award lives on its source registration —
+                        open it in a new tab and flag that it's on the original. %>
+                    <% badge_opts = transferred_scholarship ? { title: "Awarded on the original registration", target: "_blank", rel: "noopener" } : {} %>
                     <% if s.tasks_completed? %>
-                      <%= render "shared/badge",
-                            label: "Completed",
+                      <%= render "shared/badge", **badge_opts,
+                            label: transferred_scholarship ? "Completed (transferred)" : "Completed",
                             classes: "bg-green-50 text-green-700 border-green-200",
                             href: edit_scholarship_path(s, return_to: "registrants") %>
                     <% else %>
-                      <%= render "shared/badge",
-                            label: "Recipient",
+                      <%= render "shared/badge", **badge_opts,
+                            label: transferred_scholarship ? "Recipient (transferred)" : "Recipient",
                             classes: "bg-blue-50 text-blue-700 border-blue-200",
                             href: edit_scholarship_path(s, return_to: "registrants") %>
                     <% end %>
+                  <% elsif registration.transferred_in? %>
+                    <%# Transferred in with no scholarship on the source — nothing to award here. %>
+                    <span class="text-gray-300">—</span>
+                  <% elsif registration.scholarship_requested? %>
+                    <%= render "shared/badge",
+                          label: "Requested",
+                          classes: "bg-amber-50 text-amber-700 border-amber-200",
+                          href: new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants") %>
                   <% else %>
-                    <% if registration.scholarship_requested? %>
-                      <%= render "shared/badge",
-                            label: "Requested",
-                            classes: "bg-amber-50 text-amber-700 border-amber-200",
-                            href: new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants") %>
-                    <% else %>
-                      <%= render "shared/badge",
-                            label: "Create",
-                            classes: "bg-gray-50 text-gray-400 border-gray-200",
-                            href: new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants") %>
-                    <% end %>
+                    <%= render "shared/badge",
+                          label: "Create",
+                          classes: "bg-gray-50 text-gray-400 border-gray-200",
+                          href: new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants") %>
                   <% end %>
                 </td>
 
@@ -492,7 +505,7 @@
                   <% end %>
                 </td>
 
-                <td class="px-4 py-2 text-center text-sm text-nowrap" data-column-toggle-col="attendance" data-sort-value="<%= registration.status %>"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
+                <td class="px-4 py-2 text-center text-sm text-nowrap" data-column-toggle-col="attendance" data-sort-value="<%= registration.status %>"><%= render "event_registrations/attendance_status_badge", registration: registration, return_to: "registrants" %></td>
                 <td class="hidden px-4 py-2 text-center text-sm text-nowrap text-gray-600" data-column-toggle-col="date" data-sort-value="<%= registration.created_at.to_i %>" title="<%= registration.created_at.strftime("%B %-d, %Y at %l:%M %P") %>"><%= registration.created_at.strftime("%b %-d, %Y") %></td>
                 <% readiness = @readiness[registration.id] %>
                 <td class="px-4 py-2 text-center text-sm" data-sort-value="<%= readiness.status_sort_key %>">

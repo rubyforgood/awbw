@@ -29,6 +29,8 @@
              event: registration.event,
              person: registration.registrant %>
 
+  <%= render "event_registrations/transferred_out_caution", registration: registration %>
+
   <div class="space-y-6">
     <%= simple_form_for @ce_registration, url: continuing_education_registration_path(@ce_registration, return_to: params[:return_to].presence),
           html: { id: "ce_registration_form", data: { turbo: false } } do |f| %>

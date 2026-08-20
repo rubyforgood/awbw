@@ -2,7 +2,7 @@
     records are created on the dedicated CE form (license/hours/cost). This card
     links to that form when no record exists, or shows the record + Edit link
     once one does. Only rendered for CE-eligible events. ---- %>
-<section class="flex min-h-[12rem] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+<section id="ce-card" class="flex min-h-[12rem] scroll-mt-20 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:continuing_education, ce_registration.present?) %>">
       <i class="fa-solid fa-certificate"></i>
@@ -11,7 +11,11 @@
   </div>
 
   <div class="flex flex-1 flex-col gap-3 p-4">
-    <% unless ce_registration %>
+    <% if ce_registration.nil? %>
+      <%# No CE record — offer the normal create. A transfer-in reg with no CE means
+          the source had none, so it's being decided now and attaches to THIS reg;
+          when the source did have CE, the transfer carries a record here and this
+          card shows it (with a link back to the original) in the branch below. (#1944) %>
       <%# Open the full new form (license/hours/cost) in a new tab and return here. %>
       <div class="mt-auto border-t border-gray-100 pt-3">
         <%= link_to new_continuing_education_registration_path(allocatable_sgid: event_registration.to_sgid.to_s, return_to: "registration"),
@@ -45,6 +49,32 @@
             <span class="font-medium text-amber-700">Needs license</span>
           <% end %>
         </p>
+
+        <%# Two-record CE after a transfer (issue #1944): the source keeps a paid,
+            zero-hours stub whose hours moved to the destination reg's live record;
+            the destination's record carries the hours with a cost snapshotted from
+            the source's outstanding balance and links back to the paid original. %>
+        <% if ce_registration.transfer_created? %>
+          <% origin = ce_registration.origin_ce_registration %>
+          <p class="text-xs text-teal-700">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            Transferred from
+            <%= link_to event_registration.transferred_from_registration.event.title,
+                        edit_event_registration_path(event_registration.transferred_from_registration, return_to: "registrants"),
+                        class: "font-medium underline", target: "_blank", rel: "noopener" %>
+            <% if origin %>·
+              <%= link_to "paid on original", edit_continuing_education_registration_path(origin, return_to: "registration"),
+                          class: "font-medium underline", target: "_blank", rel: "noopener" %>
+            <% end %>
+          </p>
+        <% elsif (moved_to = event_registration.transferred_to_registration) %>
+          <p class="text-xs text-teal-700">
+            <i class="fa-solid fa-award"></i>
+            Hours moved to
+            <%= link_to moved_to.event.title, edit_event_registration_path(moved_to, return_to: "registrants"),
+                        class: "font-medium underline", target: "_blank", rel: "noopener" %>
+          </p>
+        <% end %>
 
         <%# Pinned to the card's bottom so it lines up with the scholarship card's
             chip and the organizations card's "Connect organization" link. %>

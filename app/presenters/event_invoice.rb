@@ -32,6 +32,10 @@ class EventInvoice
   # the balance actually due. The registrant's snapshotted organization (if any)
   # is the bill-to; otherwise bill the person.
   def self.from_registration(registration)
+    # A transferred-in reg holds no money of its own — its balance and payments
+    # live on the source (the old event, where they paid). The invoice is reached
+    # through the new ticket but documents that source. (#1944)
+    registration = registration.transferred_from_registration if registration.transferred_in?
     event = registration.event
     registrant = registration.registrant
     organization = registration.organizations.first

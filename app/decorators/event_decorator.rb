@@ -42,6 +42,11 @@ class EventDecorator < ApplicationDecorator
     start_date.strftime("%B %d, %Y")
   end
 
+  # Month + year alone (e.g. "October 2026"), to disambiguate same-titled events.
+  def month_year
+    start_date&.strftime("%B %Y")
+  end
+
   # Subject pre-filled on the bulk reminder page and used as the send-time
   # fallback, so the preview and the delivered email always agree. An on-demand
   # event's start date bounds enrollment rather than naming a session, so putting

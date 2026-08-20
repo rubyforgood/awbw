@@ -247,7 +247,7 @@
 
     <% when :attendance %>
       <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= registration.status %>">
-        <%= render "event_registrations/attendance_status_badge", registration: registration %>
+        <%= render "event_registrations/attendance_status_badge", registration: registration, return_to: "onboarding" %>
       </td>
 
     <% when :flagged_comments %>

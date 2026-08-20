@@ -78,6 +78,24 @@ RSpec.describe EventInvoice do
         expect(invoice.client_id).to eq(organization.id)
       end
     end
+
+    context "for a transferred-in registration" do
+      let(:new_event) { create(:event, title: "On-Demand Follow-up", cost_cents: 40_000) }
+
+      it "bills at the source event's cost with the source's applied credits" do
+        payment = create(:payment, type: "CashPayment", amount_cents: 40_000)
+        create(:allocation, source: payment, allocatable: registration, amount: 40_000)
+        transferred_in = create(:event_registration, event: new_event, registrant: registrant,
+          transferred_from_registration: registration)
+
+        invoice = described_class.from_registration(transferred_in)
+
+        expect(invoice.event).to eq(event)
+        expect(invoice.line_items.first.unit_price_cents).to eq(150_000)
+        expect(invoice.amount_applied_cents).to eq(40_000)
+        expect(invoice.balance_due_cents).to eq(110_000)
+      end
+    end
   end
 
   describe ".from_event" do

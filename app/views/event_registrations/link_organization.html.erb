@@ -21,6 +21,14 @@
     </div>
     <p class="text-gray-600 mb-6">Registrant: <strong><%= @person.full_name %></strong></p>
 
+    <% if @event_registration.editing_locked? %>
+      <%# Org links are locked on a transferred-out reg; the write actions warn too. (#1944) %>
+      <div class="mb-6 flex items-start gap-3 rounded-xl border border-purple-200 bg-purple-50 p-4 text-sm text-purple-900">
+        <i class="fa-solid fa-lock mt-0.5 shrink-0 text-purple-600"></i>
+        <p>This registration was transferred out and is locked — linked organizations can't be changed. Undo the transfer first.</p>
+      </div>
+    <% end %>
+
     <%# === Registration form submission (what the registrant typed). Shown first
         as the source answer admins reconcile against; rendered grey/neutral. A
         registrant can have more than one submission, so each is listed with its
