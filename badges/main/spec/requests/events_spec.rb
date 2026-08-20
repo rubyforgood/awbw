@@ -3733,6 +3733,36 @@ RSpec.describe "Events", type: :request do
         get staff_event_path(published_event)
         expect(response.body).to include(edit_staff_event_path(published_event))
       end
+
+      it "shows a staff member's license credentials when their profile allows it" do
+        staffer.update!(profile_show_credentials: true)
+        create(:professional_license, person: staffer, kind: "LMFT", number: "44556")
+        create(:event_staff, event: published_event, person: staffer)
+        sign_in admin
+        get staff_event_path(published_event)
+        expect(response.body).to include("LMFT")
+      end
+
+      it "hides a staff member's license credentials when their profile disallows it" do
+        staffer.update!(profile_show_credentials: false)
+        create(:professional_license, person: staffer, kind: "LMFT", number: "44556")
+        create(:event_staff, event: published_event, person: staffer)
+        sign_in admin
+        get staff_event_path(published_event)
+        expect(response.body).not_to include("LMFT")
+      end
+
+      it "joins a staff member's multiple license credentials comma-separated" do
+        staffer.update!(profile_show_credentials: true)
+        create(:professional_license, person: staffer, kind: "LMFT", number: "44556")
+        create(:professional_license, person: staffer, kind: "LCSW", number: "77889")
+        create(:event_staff, event: published_event, person: staffer)
+        credentials = staffer.reload.license_credentials
+        expect(credentials).to include(", ").and(include("LMFT")).and(include("LCSW"))
+        sign_in admin
+        get staff_event_path(published_event)
+        expect(response.body).to include(credentials)
+      end
     end
 
     describe "GET /staff/edit" do

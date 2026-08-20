@@ -315,7 +315,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :staff?
     @event = @event.decorate
     @event_staffs = @event.event_staffs
-      .includes(person: [ :sectors, { categorizable_items: { category: :category_type } }, { avatar_attachment: :blob }, { affiliations: :organization } ])
+      .includes(person: [ :sectors, :professional_licenses, { categorizable_items: { category: :category_type } }, { avatar_attachment: :blob }, { affiliations: :organization } ])
       .ordered_by_name
   end
 
