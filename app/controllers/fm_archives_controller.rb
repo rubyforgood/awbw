@@ -23,6 +23,17 @@ class FmArchivesController < ApplicationController
   def index
     authorize! :fm_archive, to: :index?
 
+    if params[:id].present?
+      @record = TABLES.values.map { |c| c[:model] }.filter_map { |m| m.find_by(fm_id: params[:id].to_s.strip) }.first
+
+      if @record
+        render :show
+      else
+        redirect_to fm_archives_path, alert: "No record found with ID '#{params[:id].to_s.strip}'"
+      end
+      return
+    end
+
     @tables = TABLES
     @selected = params[:table]
 
@@ -31,11 +42,14 @@ class FmArchivesController < ApplicationController
       @records = @model.order(:fm_id).paginate(page: params[:page], per_page: 50)
     end
   end
-
   def show
     authorize! :fm_archive, to: :show?
 
-    @record = TABLES.values.map { |c| c[:model] }.filter_map { |m| m.find_by(fm_id: params[:id]) }.first
-    raise ActiveRecord::RecordNotFound, "No FM record with fm_id=#{params[:id]}" unless @record
+    @record = TABLES.values.map { |c| c[:model] }.filter_map { |m| m.find_by(fm_id: params[:id].to_s.strip) }.first
+
+    unless @record
+      redirect_to fm_archives_path, alert: "No record found with ID '#{params[:id].to_s.strip}'"
+      return
+    end
   end
 end
