@@ -1109,7 +1109,7 @@ class EventsController < ApplicationController
   def event_registration_csv_row(registration, cost_required, include_ce = false)
     person = registration.registrant
     orgs = person.affiliations
-      .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }
+      .select(&:active?)
       .map(&:organization).compact.uniq
     org_names = orgs.map(&:name).join("; ")
     total_cents = registration.allocations_sum

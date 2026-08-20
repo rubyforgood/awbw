@@ -5,7 +5,7 @@
 <% include_inactive = local_assigns.fetch(:include_inactive, false) %>
 <% all_affiliations = affiliations.select { |a| a.organization.present? } %>
 <% active_affiliations = all_affiliations
-     .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }
+     .select(&:active?)
      .sort_by { |a| a.organization.name.to_s.downcase } %>
 <% inactive_affiliations = include_inactive ?
      (all_affiliations - active_affiliations).sort_by { |a| a.organization.name.to_s.downcase } : [] %>
