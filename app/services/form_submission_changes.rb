@@ -25,18 +25,22 @@ class FormSubmissionChanges
       .sort_by { |group| [ GROUP_ORDER.index(group.record_type) || GROUP_ORDER.size, group.title.to_s ] }
   end
 
-  # A submission "changed" a value only when it overwrote one that was already
-  # there. Creating records, adding tags, and filling blanks are new data from a
-  # new submission — not edits — so they don't count here.
+  # A submission "changed" a value only when it edited a record that already
+  # existed — a value replaced, or a blank filled, on that record (both come from
+  # an update event). Creating new records and adding tags are a new submission's
+  # own data, not edits, so they don't count. (This is why linking an org that
+  # wasn't a clean match can raise the count: the fill lands on the existing org.)
+  EDIT_OUTCOMES = %w[Replaced Filled].freeze
+
   def edited_groups
     groups.filter_map do |group|
-      edits = group.changes.select { |change| change.outcome == "Replaced" }
+      edits = group.changes.select { |change| EDIT_OUTCOMES.include?(change.outcome) }
       Group.new(record_type: group.record_type, title: group.title, changes: edits) if edits.any?
     end
   end
 
   def edited_count
-    relevant_events.sum { |event| replaced_changes(event.properties["changes"]).size }
+    relevant_events.sum { |event| attribute_changes(event.properties["changes"] || {}).size }
   end
 
   def edited?
@@ -78,12 +82,6 @@ class FormSubmissionChanges
     return [ record_change(action, event) ] if action.in?(%w[create destroy])
 
     []
-  end
-
-  def replaced_changes(changes)
-    return [] if changes.blank?
-
-    attribute_changes(changes).select { |change| change.outcome == "Replaced" }
   end
 
   def attribute_changes(changes)

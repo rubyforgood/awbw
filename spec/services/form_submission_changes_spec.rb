@@ -61,8 +61,8 @@ RSpec.describe FormSubmissionChanges do
     expect(described_class.new(submission).groups).to be_empty
   end
 
-  describe "edited (overwritten) values" do
-    it "counts and groups only values that overwrote an existing one" do
+  describe "edited values (changes to records that already existed)" do
+    it "counts both replaced and filled values on an existing record" do
       org = create(:organization, name: "Riverside")
       stamp("update.organization", resource_type: "Organization", resource_id: org.id,
             properties: { "resource_title" => org.name, "changes" => {
@@ -72,16 +72,16 @@ RSpec.describe FormSubmissionChanges do
 
       changes = described_class.new(submission)
       expect(changes.edited?).to be(true)
-      expect(changes.edited_count).to eq(1)
-      expect(changes.edited_groups.sum { |group| group.changes.size }).to eq(1)
-      expect(changes.edited_groups.first.changes.first).to have_attributes(outcome: "Replaced", value: "new.com")
+      expect(changes.edited_count).to eq(2)
+      expect(changes.edited_groups.sum { |group| group.changes.size }).to eq(2)
+      expect(changes.edited_groups.first.changes.map(&:outcome)).to contain_exactly("Replaced", "Filled")
     end
 
-    it "does not count a fresh submission that only creates, adds, and fills blanks" do
+    it "does not count a fresh submission that only creates records and adds tags" do
       person = create(:person)
       sector = create(:sector, :published)
-      stamp("update.person", resource_type: "Person", resource_id: person.id,
-            properties: { "changes" => { "pronouns" => { "before" => nil, "after" => "she/her" } } })
+      stamp("create.person", resource_type: "Person", resource_id: person.id,
+            properties: { "resource_title" => person.full_name, "attributes" => { "first_name" => "Dana" } })
       stamp("create.sectorable_item", resource_type: "SectorableItem",
             properties: { "attributes" => { "sector_id" => sector.id, "sectorable_type" => "Person", "sectorable_id" => person.id } })
 
