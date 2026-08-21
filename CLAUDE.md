@@ -50,7 +50,7 @@ When changing a model or controller, check whether these related files need upda
 | Decorator | Decorator spec |
 | Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
 | Add/remove model, concern, service, or gem | AGENTS.md |
-| Ship a user-facing feature | `config/features.yml` (the Features & tips seed — see below) |
+| Ship a user-facing feature **or improvement/change** | `config/features.yml` (the Features & tips seed — see below) |
 
 ## Code Style
 
@@ -291,9 +291,21 @@ see what the portal does. It is **database-backed** (`Feature` model) and edited
 in-app by super-admins — the rich `description` uses the Rhino WYSIWYG (so pages
 can carry screenshots), and each feature can link an external process doc.
 
-**Keep it current as you ship.** When you add a user-facing feature, append an
-entry to `config/features.yml` (the checked-in **seed**):
+**Keep it current as you ship.** When you ship anything a facilitator or admin
+would want to know about, append an entry to `config/features.yml` (the checked-in
+**seed**). This is **not just brand-new features** — a user-facing *improvement,
+change, or enhancement* to something that already exists (a new filter, an extra
+column, a reworked flow) belongs here too. If in doubt whether a change is "big
+enough," add it: a short entry is cheap and the page is where non-devs discover
+what changed.
 
+- **There is no separate "feature vs. update" flag** — every entry is just a
+  `Feature` row, and audience is the only axis (`display_status`). Signal that an
+  entry is a smaller update through its `summary`/`name` wording (e.g. "Filter
+  registrants by registration date"), not a schema field. (If we ever want the UI
+  to visually separate launches from tweaks, that's a `kind:` column on `Feature` +
+  `CATALOG_FIELDS` + a decorator badge — a deliberate change, not something to
+  fake with `area`/`display_status`.)
 - Fields: `name`, `area` (a `Feature::AREA_KEYS` value), `display_status`
   (`public_facing` / `user_facing` / `admin_facing`), `summary` (1–2 plain
   sentences), `released_on` (ship date), plus optional `pro_tips` (list),

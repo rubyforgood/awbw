@@ -203,6 +203,19 @@ class EventRegistration < ApplicationRecord
   # Registrations whose event falls in the given calendar year. Uses a subquery
   # (via Event.in_year) so it composes with the other filters without extra joins.
   scope :in_event_year, ->(year) { where(event_id: Event.in_year(year.to_i)) }
+  # Registration date range, matched on when the registration was created. Accepts
+  # raw "YYYY-MM-DD" filter strings and no-ops on either end when blank/unparseable,
+  # so callers can pass params straight through.
+  scope :registered_between, ->(start_date, end_date) {
+    scope = all
+    if (from = parse_filter_date(start_date))
+      scope = scope.where(created_at: from.beginning_of_day..)
+    end
+    if (to = parse_filter_date(end_date))
+      scope = scope.where(created_at: ..to.end_of_day)
+    end
+    scope
+  }
   scope :registrant_state, ->(state) {
     joins(registrant: :addresses)
       .where(addresses: { inactive: false, state: state })
@@ -300,6 +313,13 @@ class EventRegistration < ApplicationRecord
     Allocation
       .where(allocatable_type: "EventRegistration", source_type: "Scholarship", source_id: scholarships.select(:id))
       .select(:allocatable_id)
+  end
+
+  def self.parse_filter_date(value)
+    return if value.blank?
+    Date.parse(value.to_s)
+  rescue ArgumentError, TypeError
+    nil
   end
   # Funding source of a registrant's scholarship. "awbw" = org-subsidized (no
   # grant, or a grant AWBW funded itself); "external" = grant-funded (drawn from an

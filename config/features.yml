@@ -27,6 +27,24 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Filter registrants by registration date"
+  area: events
+  display_status: user_facing
+  released_on: 2026-08-21
+  action_path: "/events"
+  summary: >-
+    Narrow the registrants roster to people who registered within a date range, using new
+    "Registered from" and "Registered to" filters.
+  description: >-
+    The registrants roster now has a registration date range in its filters — set a
+    "Registered from" date, a "Registered to" date, or both, to show only the people who
+    signed up in that window. It works alongside every other filter, so you can combine it
+    with attendance, payment, scholarship and the rest. The same range carries over when
+    you open "Send bulk emails" from the roster, so a date-filtered roster pre-selects the
+    matching recipients for a reminder.
+  pro_tips:
+    - "Leave one end blank for an open-ended range — e.g. just \"Registered from\" for everyone who signed up on or after a date."
+
 - name: "Choose how you're credited on what you share"
   area: people
   display_status: user_facing
