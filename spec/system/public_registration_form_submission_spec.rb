@@ -106,7 +106,7 @@ RSpec.describe "Public form submissions", type: :system do
         "primary_sector" => sector_education.id.to_s,
         "additional_sectors" => sector_mental_health.id.to_s,
         "primary_age_group" => age_adults.id.to_s,
-        "additional_age_group" => age_teens.id.to_s,
+        "additional_age_groups" => age_teens.id.to_s,
         "racial_ethnic_identity" => "Multi-racial",
         "referral_source" => "Online Search",
         "training_motivation" => "Address staff burnout through art",
@@ -412,7 +412,7 @@ RSpec.describe "Public form submissions", type: :system do
     select_pr reg_field("primary_sector"), "Education"
     check_pr_box reg_field("additional_sectors"), sector_mental_health.id.to_s
     select_pr reg_field("primary_age_group"), "Adults (18+)"
-    check_pr_box reg_field("additional_age_group"), age_teens.id.to_s
+    check_pr_box reg_field("additional_age_groups"), age_teens.id.to_s
 
     choose_pr_radio reg_field("racial_ethnic_identity"), "Multi-racial"
     choose_pr_radio reg_field("referral_source"), "Online Search"

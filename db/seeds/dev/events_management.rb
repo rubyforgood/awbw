@@ -1172,7 +1172,7 @@ record_professional_answers = ->(submission, i) do
   # Additional age groups are multi-select checkboxes, so store a couple of
   # ", "-joined AgeRange ids the way public registration does.
   additional_ages = age_range_categories.rotate(i + 1).reject { |category| category == age }.first(2)
-  additional_age_field = form.form_fields.find_by(field_identifier: "additional_age_group")
+  additional_age_field = form.form_fields.find_by(field_identifier: "additional_age_groups")
   if additional_age_field && additional_ages.present? && submission.form_answers.where(form_field: additional_age_field).none?
     submission.form_answers.create!(form_field: additional_age_field,
                                     submitted_answer: additional_ages.map(&:id).join(", "),

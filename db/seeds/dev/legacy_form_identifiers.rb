@@ -1,15 +1,17 @@
 # Legacy field-identifier registration form (dev-only).
 #
-# The professional sector questions still accept one *legacy* field_identifier —
-# "primary_sector_single" for the single-select primary sector — so older forms
-# keep working (see FormField::PRIMARY_SECTOR_FIELD_IDENTIFIERS). The canonical
-# combination already ships as "Training Registration Form"; this extra standalone
-# form carries the legacy primary identifier, with a demo registrant + submission
-# + tags, so every surface (form rendering, the form submission show, and the
-# registrant's profile/edit pages) can be eyeballed on real data.
+# Two professional questions still accept a *legacy* field_identifier —
+# "primary_sector_single" for the single-select primary sector (see
+# FormField::PRIMARY_SECTOR_FIELD_IDENTIFIERS) and "additional_age_group" for the
+# multi-select additional age groups (see
+# FormField::ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS) — so older forms keep working.
+# The canonical combination already ships as "Training Registration Form"; this
+# extra standalone form carries the legacy identifiers, with a demo registrant +
+# submission + tags, so every surface (form rendering, the form submission show,
+# and the registrant's profile/edit pages) can be eyeballed on real data.
 #
-# The additional sector field and both age-group fields have never been renamed,
-# so they stay canonical.
+# The additional sector field and the primary age-group field have never been
+# renamed, so they stay canonical.
 #
 # Loaded last in the dev seed order so its extra role: "registration" form can't
 # shadow the canonical one that events_management.rb / scholarships.rb look up via
@@ -24,7 +26,7 @@ concrete_sectors = Sector.published.excluding_other.order(:name).to_a
 other_sector = Sector.published.find_by(name: Sector::OTHER_SECTOR_NAME)
 age_categories = Category.age_ranges.published.order(:position, :name).to_a
 
-form_name = "Training Registration Form (legacy primary sector name)"
+form_name = "Training Registration Form (legacy field names)"
 
 form = Form.standalone.find_by(name: form_name)
 unless form
@@ -33,8 +35,9 @@ unless form
     sections: %i[person_identifier professional_info],
     role: "registration"
   ).call
-  # Rename the canonical primary sector field onto its still-accepted legacy name.
+  # Rename the canonical fields onto their still-accepted legacy names.
   form.form_fields.find_by(field_identifier: "primary_sector")&.update!(field_identifier: "primary_sector_single")
+  form.form_fields.find_by(field_identifier: "additional_age_groups")&.update!(field_identifier: "additional_age_group")
 end
 
 # A demo registrant whose submission + tags back the form, so the profile and

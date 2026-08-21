@@ -163,7 +163,7 @@ RSpec.describe FormBuilderService do
 
       it "asks for a single primary age group via a dropdown alongside additional-age checkboxes" do
         primary = form.form_fields.find_by(field_identifier: "primary_age_group")
-        additional = form.form_fields.find_by(field_identifier: "additional_age_group")
+        additional = form.form_fields.find_by(field_identifier: "additional_age_groups")
 
         expect(primary.answer_type).to eq("single_select_dropdown")
         expect(additional.answer_type).to eq("multi_select_checkbox")

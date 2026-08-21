@@ -36,7 +36,7 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
       let(:primary_sector_field)    { form.form_fields.find_by!(field_identifier: ids[:primary_sector]) }
       let(:additional_sector_field) { form.form_fields.find_by!(field_identifier: ids[:additional_sector]) }
       let(:primary_age_field)       { form.form_fields.find_by!(field_identifier: "primary_age_group") }
-      let(:additional_age_field)    { form.form_fields.find_by!(field_identifier: "additional_age_group") }
+      let(:additional_age_field)    { form.form_fields.find_by!(field_identifier: "additional_age_groups") }
 
       before { EventForm.create!(event: event, form: form, role: "registration") }
 
@@ -93,7 +93,7 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
             ids[:primary_sector] => sector_education.id.to_s,
             ids[:additional_sector] => "#{sector_mh.id}, Other: Equine therapy",
             "primary_age_group" => age_adults.id.to_s,
-            "additional_age_group" => "#{age_teens.id}, #{age_children.id}"
+            "additional_age_groups" => "#{age_teens.id}, #{age_children.id}"
           )
         end
 
