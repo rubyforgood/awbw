@@ -66,11 +66,15 @@
       </div>
     <% end %>
 
-    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div class="flex items-center gap-2.5 border-b border-purple-300 bg-purple-100 px-6 py-3">
-        <i class="fa-solid fa-gear text-purple-700"></i>
-        <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Form settings</h2>
-      </div>
+    <details class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+        <div class="flex items-center gap-2.5 border-b border-transparent [[open]_&]:border-purple-300 bg-purple-100 px-6 py-3 hover:bg-purple-200">
+          <i class="fa-solid fa-gear text-purple-700"></i>
+          <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Form settings</h2>
+          <i class="fa-solid fa-chevron-down text-purple-500 text-xs ml-auto transition-transform [[open]_&]:rotate-180"></i>
+        </div>
+        <p class="px-6 py-3 text-sm text-gray-400 [[open]_&]:hidden">Toggle to edit</p>
+      </summary>
       <div class="space-y-4 p-6">
         <div class="flex flex-col gap-4 sm:flex-row">
           <div class="flex-1">
@@ -98,7 +102,7 @@
           </label>
         </div>
       </div>
-    </div>
+    </details>
 
     <% if @form.standalone? %>
       <%# Only a standalone form with no event connection can be published publicly;
@@ -107,16 +111,20 @@
         <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div class="flex items-center gap-2.5 border-b border-purple-300 bg-purple-100 px-6 py-3">
             <i class="fa-solid fa-link text-purple-700"></i>
-            <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Public form</h2>
+            <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Share with a public link</h2>
           </div>
           <p class="p-6 text-sm text-gray-600">This form is connected to an event, so it can't be published at a public link — event-connected forms are filled out through their event.</p>
         </div>
       <% else %>
-      <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div class="flex items-center gap-2.5 border-b border-purple-300 bg-purple-100 px-6 py-3">
-          <i class="fa-solid fa-link text-purple-700"></i>
-          <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Public form</h2>
-        </div>
+      <details class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+          <div class="flex items-center gap-2.5 border-b border-transparent [[open]_&]:border-purple-300 bg-purple-100 px-6 py-3 hover:bg-purple-200">
+            <i class="fa-solid fa-link text-purple-700"></i>
+            <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Share with a public link</h2>
+            <i class="fa-solid fa-chevron-down text-purple-500 text-xs ml-auto transition-transform [[open]_&]:rotate-180"></i>
+          </div>
+          <p class="px-6 py-3 text-sm text-gray-400 [[open]_&]:hidden">Toggle to edit</p>
+        </summary>
         <div class="space-y-4 p-6">
           <label class="flex cursor-pointer items-center gap-2">
             <%= f.check_box :published, class: "rounded border-gray-300 text-purple-600" %>
@@ -143,16 +151,21 @@
             </div>
           <% end %>
         </div>
-      </div>
+      </details>
       <% end %>
     <% end %>
 
-    <%# Optional HTML intro rendered under the title on the form's public pages %>
-    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-      <div class="flex items-center gap-2.5 px-6 py-3 bg-purple-100 border-b border-purple-300">
-        <i class="fa-solid fa-heading text-purple-700"></i>
-        <h2 class="text-sm font-semibold text-purple-900 uppercase tracking-wide">Form header</h2>
-      </div>
+    <%# Optional HTML intro rendered under the title on the form's public pages.
+        Collapsed by default so the header setup stays out of the way once configured. %>
+    <details class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+        <div class="flex items-center gap-2.5 px-6 py-3 bg-purple-100 border-b border-transparent [[open]_&]:border-purple-300 hover:bg-purple-200">
+          <i class="fa-solid fa-heading text-purple-700"></i>
+          <h2 class="text-sm font-semibold text-purple-900 uppercase tracking-wide">Form header</h2>
+          <i class="fa-solid fa-chevron-down text-purple-500 text-xs ml-auto transition-transform [[open]_&]:rotate-180"></i>
+        </div>
+        <p class="px-6 py-3 text-sm text-gray-400 [[open]_&]:hidden">Toggle to edit</p>
+      </summary>
       <div class="p-6 flex flex-col lg:flex-row gap-4">
         <div class="flex-1 flex flex-col space-y-2">
           <label class="block text-sm font-medium text-gray-700">Intro shown under the form title</label>
@@ -176,22 +189,26 @@
           </dl>
         </div>
       </div>
-    </div>
+    </details>
 
-    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
+    <details open class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
          data-controller="expand-all"
          data-expand-all-field-options-outlet="[data-controller~='field-options']">
-      <div class="px-6 py-3 bg-purple-50 border-b border-purple-200 flex items-center justify-between">
+      <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden px-6 py-3 bg-purple-50 border-b border-purple-200 hover:bg-purple-100 flex items-center justify-between">
         <h2 class="flex items-center gap-2.5 text-sm font-semibold text-purple-900 uppercase tracking-wide">
           <i class="fa-solid fa-list-ul text-purple-500"></i>Questions
         </h2>
         <div class="flex items-center gap-3">
           <span class="text-sm text-gray-500"><%= pluralize(@form_fields.size, "question") %></span>
-          <button type="button"
-                  class="text-sm <%= DomainTheme.text_class_for(:forms, intensity: 600) %> <%= DomainTheme.text_class_for(:forms, intensity: 800, hover: true) %> font-medium cursor-pointer"
-                  data-action="expand-all#toggleAll"
-                  data-expand-all-target="btn">Expand all</button>
+          <i class="fa-solid fa-chevron-down text-purple-500 text-xs transition-transform [[open]_&]:rotate-180"></i>
         </div>
+      </summary>
+
+      <div class="px-6 py-2 border-b border-gray-100 flex justify-end">
+        <button type="button"
+                class="text-sm <%= DomainTheme.text_class_for(:forms, intensity: 600) %> <%= DomainTheme.text_class_for(:forms, intensity: 800, hover: true) %> font-medium cursor-pointer"
+                data-action="expand-all#toggleAll"
+                data-expand-all-target="btn">Expand all</button>
       </div>
 
       <details class="border-b border-gray-100">
@@ -253,7 +270,7 @@
                       association_insertion_method: "append" },
               class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} font-medium" %>
       </div>
-    </div>
+    </details>
 
     <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
       <div class="flex items-center gap-3">
