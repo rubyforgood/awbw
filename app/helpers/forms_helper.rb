@@ -17,4 +17,17 @@ module FormsHelper
   def form_role_label(form)
     form.role.presence&.titleize || "General"
   end
+
+  OTHER_RESPONSES_PHRASE = "Other responses review queue"
+
+  # Renders a smart field's plain-text effect with the "Other responses review
+  # queue" phrase turned into a link to that page. The effect strings stay plain
+  # prose (testable, no markup); the link is woven in here at render time.
+  def smart_field_effect(effect)
+    return effect unless effect.include?(OTHER_RESPONSES_PHRASE)
+
+    link = link_to OTHER_RESPONSES_PHRASE, other_responses_path,
+      class: "text-purple-600 hover:text-purple-800 underline", target: "_blank", rel: "noopener"
+    safe_join(effect.split(OTHER_RESPONSES_PHRASE, -1), link)
+  end
 end

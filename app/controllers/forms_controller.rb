@@ -17,6 +17,7 @@ class FormsController < ApplicationController
     @answer_only_identifiers = SmartFormFields::ANSWER_ONLY_IDENTIFIERS
     @return_form = Form.find_by(id: params[:form_id])
     @dashboard_event = Event.find_by(id: params[:event_id])
+    @return_field_id = params[:field_id]
   end
 
   def show
