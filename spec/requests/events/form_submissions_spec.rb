@@ -20,6 +20,13 @@ RSpec.describe "Events::FormSubmissions", type: :request do
         expect(response.body).to include(form.name)
       end
 
+      it "links each submission to its admin changes audit" do
+        get event_registrant_submissions_path(event, person_id: person.id)
+
+        expect(response.body).to include(changes_form_submission_path(submission))
+        expect(response.body).to include("What this submission changed")
+      end
+
       it "returns 404 when person does not exist" do
         get event_registrant_submissions_path(event, person_id: 999999)
         expect(response).to have_http_status(:not_found)

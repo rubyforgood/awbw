@@ -742,6 +742,15 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("didn't change any records")
       end
+
+      it "returns to the event registrant submissions when arriving from there" do
+        submission = create(:form_submission, :with_event)
+
+        get changes_form_submission_path(submission, return_to: "event_registrant_submissions")
+
+        expect(response.body).to include("Back to submissions")
+        expect(response.body).to include(event_registrant_submissions_path(submission.resolved_event, person_id: submission.person_id))
+      end
     end
 
     context "as a non-admin" do

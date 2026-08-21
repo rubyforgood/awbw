@@ -5,6 +5,9 @@
   back_link = case params[:return_to]
   when "link_organization"
     { label: "← Back to linked organizations", path: link_organization_event_registration_path(params[:event_registration_id]) } if params[:event_registration_id].present?
+  when "event_registrant_submissions"
+    event = @form_submission.resolved_event
+    { label: "← Back to submissions", path: event_registrant_submissions_path(event, person_id: @form_submission.person_id) } if event
   end
   back_link ||= { label: "← Back to submission", path: form_submission_path(@form_submission) }
 
