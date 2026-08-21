@@ -25,11 +25,6 @@ class PersonDecorator < ApplicationDecorator
     "missing.png"
   end
 
-  def affiliation_end_date
-    return nil if affiliations.active.exists?
-    affiliations.maximum(:end_date)
-  end
-
   # Org names where this person is currently an active facilitator. Filters the
   # affiliations in Ruby (rather than re-querying via the .facilitators.active
   # scopes) so list pages that preload `affiliations: :organization` pay no
@@ -57,19 +52,9 @@ class PersonDecorator < ApplicationDecorator
     member_since.present? && earliest_facilitator.present? && member_since.beginning_of_month < earliest_facilitator.beginning_of_month
   end
 
-  def member_since_earlier_than_all_affiliations?
-    earliest = affiliations.minimum(:start_date)
-    member_since.present? && earliest.present? && member_since.beginning_of_month < earliest.beginning_of_month
-  end
-
   def member_since_differs_from_facilitator_affiliations?
     earliest_facilitator = affiliations.facilitators.minimum(:start_date)
     member_since.present? && earliest_facilitator.present? && member_since.beginning_of_month != earliest_facilitator.beginning_of_month
-  end
-
-  def member_since_differs_from_all_affiliations?
-    earliest = affiliations.minimum(:start_date)
-    member_since.present? && earliest.present? && member_since.beginning_of_month != earliest.beginning_of_month
   end
 
   def badges
@@ -90,14 +75,18 @@ class PersonDecorator < ApplicationDecorator
     @affiliated_since_date ||= affiliations.filter_map(&:start_date).min
   end
 
-  # The server-rendered twin of affiliation_dates_controller#updateDisplay, which
-  # replaces this content as the person form's affiliation rows are edited.
-  def affiliated_since_range
-    date_range_display(affiliated_since_date, affiliation_end_date, ended_title: "No active affiliations")
-  end
-
   def facilitator_since_range
     date_range_display(facilitator_since_date, facilitation_end_date, ended_title: "No active facilitator affiliations")
+  end
+
+  # A grey secondary line under "Facilitator since", shown only when the earliest
+  # affiliation start differs (by month/year) from the facilitator start — so the
+  # two aren't redundant. Nil when they match or there's no affiliation date.
+  def affiliated_since_note
+    date = affiliated_since_date
+    return nil if date.nil?
+    return nil if facilitator_since_date && date.beginning_of_month == facilitator_since_date.beginning_of_month
+    "Affiliated since #{date.strftime('%b %Y')}"
   end
 
   private

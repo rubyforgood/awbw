@@ -35,6 +35,15 @@ puts "Creating Persons and Affiliations for seed users…"
   )
 end
 
+# Give Amy and Aisha a legacy member_since that predates their facilitator
+# affiliations, so their person edit pages show the member_since-vs-facilitator
+# discrepancy flag (alongside the grey "Affiliated since" note).
+{ "amy.user@example.com" => 8.years.ago.to_date,
+  "aisha.user@example.com" => 5.years.ago.to_date }.each do |email, date|
+  person = User.find_by(email: email)&.person
+  person.update!(member_since: date) if person && person.member_since.nil?
+end
+
 puts "Creating People…"
 admin_user = User.find_by(email: "umberto.user@example.com")
 orgs = Organization.all.to_a
@@ -178,6 +187,23 @@ Person.where(
       inactive: [ false, false, false, true ].sample
     )
   end
+end
+
+# A deterministic person whose legacy member_since AND earlier non-facilitator
+# affiliation both diverge from the facilitator start — so the person edit form
+# shows BOTH the grey "Affiliated since" note and the member_since flag at once.
+puts "Creating the member-since discrepancy demo person…"
+unless Person.exists?(first_name: "Grace", last_name: "Legacy")
+  demo = Person.create!(
+    first_name: "Grace",
+    last_name: "Legacy",
+    profile_is_searchable: true,
+    member_since: Date.new(2016, 1, 1),
+    created_by: admin_user,
+    updated_by: admin_user
+  )
+  Affiliation.create!(person: demo, organization: orgs.first, title: "Board Member", start_date: Date.new(2015, 3, 1))
+  Affiliation.create!(person: demo, organization: orgs.second || orgs.first, title: "Facilitator", start_date: Date.new(2018, 6, 1))
 end
 
 puts "Assigning addresses and sectors to people…"

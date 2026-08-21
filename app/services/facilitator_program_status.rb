@@ -23,10 +23,10 @@ class FacilitatorProgramStatus
   def year_anchored? = @year_anchored
 
   def status
-    @status ||= if earlier.empty?
-      :new
-    elsif active_on_anchor.any?
+    @status ||= if active_on_anchor.any?
       :ongoing
+    elsif earlier.empty?
+      :new
     else
       :reinstated
     end
@@ -82,13 +82,25 @@ class FacilitatorProgramStatus
 
   def month(date) = date&.strftime("%b %Y")
 
-  # Strictly before: an affiliation starting ON the anchor is the one this event
-  # minted (ADR-0001 D8), so a first-time org still reads New at its own training.
+  # Strictly before: prior history that decides :new vs :reinstated once we know no
+  # affiliation is active on the anchor. An affiliation starting ON the anchor is the
+  # one this event minted (ADR-0001 D8), so it stays out of the history here.
   def earlier
     @earlier ||= @facilitators.select { |affiliation| affiliation.start_date < as_of }
   end
 
+  # Facilitators whose span covers the anchor. A same-day facilitation
+  # (start == end) counts as active on that exact day, so an org reads Ongoing for a
+  # one-day program running then (ADR-0001 D4). The open-ended affiliation a
+  # registration mints ON the anchor is still excluded (D8), keeping a first-time
+  # org New at its own training.
   def active_on_anchor
-    @active_on_anchor ||= earlier.select { |affiliation| affiliation.end_date.nil? || affiliation.end_date >= as_of }
+    @active_on_anchor ||= @facilitators.select do |affiliation|
+      if affiliation.start_date == affiliation.end_date
+        affiliation.start_date == as_of
+      else
+        affiliation.start_date < as_of && (affiliation.end_date.nil? || affiliation.end_date >= as_of)
+      end
+    end
   end
 end
