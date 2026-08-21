@@ -1185,7 +1185,7 @@ record_professional_answers = ->(submission, i) do
 
   # Mirror the registration form's two sector fields: the single-select primary
   # sector dropdown and the multi-select additional sectors checkboxes.
-  primary_field = form.form_fields.find_by(field_identifier: "primary_sector_single")
+  primary_field = form.form_fields.find_by(field_identifier: "primary_sector")
   if primary_field && primary_sector && submission.form_answers.where(form_field: primary_field).none?
     submission.form_answers.create!(form_field: primary_field,
                                     submitted_answer: primary_sector.id.to_s,

@@ -103,7 +103,7 @@ RSpec.describe "Public form submissions", type: :system do
         "agency_website" => "https://hope.example.org",
         "agency_type" => "501c3/nonprofit",
         "agency_country" => "United States",
-        "primary_sector_single" => sector_education.id.to_s,
+        "primary_sector" => sector_education.id.to_s,
         "additional_sectors" => sector_mental_health.id.to_s,
         "primary_age_group" => age_adults.id.to_s,
         "additional_age_group" => age_teens.id.to_s,
@@ -141,7 +141,7 @@ RSpec.describe "Public form submissions", type: :system do
       expect(page).not_to have_selector("##{pr_dom_id(reg_field('first_name'))}")
       expect(page).not_to have_selector("##{pr_dom_id(reg_field('mailing_city'))}")
 
-      select_pr reg_field("primary_sector_single"), "Education"
+      select_pr reg_field("primary_sector"), "Education"
       check_pr_box reg_field("additional_sectors"), sector_dv.id.to_s
       select_pr reg_field("primary_age_group"), "Teens (13-17)"
       choose_pr_radio reg_field("racial_ethnic_identity"), "Asian"
@@ -159,7 +159,7 @@ RSpec.describe "Public form submissions", type: :system do
 
       answers = answers_by_identifier(registration_form.form_submissions.find_by!(person: logged_in_person))
       expect(answers).to include(
-        "primary_sector_single" => sector_education.id.to_s,
+        "primary_sector" => sector_education.id.to_s,
         "additional_sectors" => sector_dv.id.to_s,
         "primary_age_group" => age_teens.id.to_s,
         "racial_ethnic_identity" => "Asian",
@@ -409,7 +409,7 @@ RSpec.describe "Public form submissions", type: :system do
     fill_pr_text reg_field("agency_zip"), with: "91101"
     fill_pr_text reg_field("agency_country"), with: "United States"
 
-    select_pr reg_field("primary_sector_single"), "Education"
+    select_pr reg_field("primary_sector"), "Education"
     check_pr_box reg_field("additional_sectors"), sector_mental_health.id.to_s
     select_pr reg_field("primary_age_group"), "Adults (18+)"
     check_pr_box reg_field("additional_age_group"), age_teens.id.to_s

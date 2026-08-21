@@ -50,7 +50,7 @@ class FormBuilderService
       agency_street agency_city agency_state agency_zip agency_country
     ],
     person_background: %w[racial_ethnic_identity],
-    professional_info: %w[primary_sector_single additional_sectors primary_age_group additional_age_group],
+    professional_info: %w[primary_sector additional_sectors primary_age_group additional_age_group],
     marketing: %w[referral_source training_motivation interested_in_more],
     continuing_education: %w[ce_credit_interest ce_license_number],
     scholarship: %w[scholarship_eligibility scholarship_contribution impact_description implementation_plan additional_comments],
@@ -455,7 +455,7 @@ class FormBuilderService
     position = add_header(form, position, "Professional Information", group: "professional")
 
     position = add_field(form, position, "Primary sector", :single_select_dropdown,
-                         key: "primary_sector_single", group: "professional", required: false,
+                         key: "primary_sector", group: "professional", required: false,
                          subtitle: "Select the option that best represents those you primarily intend to serve through the art workshops")
     position = add_field(form, position, "Additional sectors", :multi_select_checkbox,
                          key: "additional_sectors", group: "professional", required: false,

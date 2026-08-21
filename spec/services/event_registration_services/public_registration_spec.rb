@@ -582,7 +582,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         event: event,
         registration_form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
-          field_id("primary_sector_single") => primary_sector.id.to_s,
+          field_id("primary_sector") => primary_sector.id.to_s,
           field_id("additional_sectors") => [ additional_sector.id.to_s ]
         )
       )
@@ -601,7 +601,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         event: event,
         registration_form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
-          field_id("primary_sector_single") => primary_sector.id.to_s
+          field_id("primary_sector") => primary_sector.id.to_s
         )
       )
 
@@ -616,7 +616,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         event: event,
         registration_form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
-          field_id("primary_sector_single") => primary_sector.id.to_s
+          field_id("primary_sector") => primary_sector.id.to_s
         )
       )
 

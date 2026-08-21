@@ -2,8 +2,7 @@ require "rails_helper"
 
 # The four professional registration questions (primary/additional sector and
 # primary/additional age group) resolve their options dynamically from Sector /
-# AgeRange records and must keep working across every legacy field_identifier a
-# form might still carry. For each identifier scheme this exercises, end to end:
+# AgeRange records. This exercises the canonical field_identifiers end to end:
 #
 #   * option rendering — the primary sector field is a dropdown of the published
 #     sectors minus the catch-all "Other"; the additional sector field keeps
@@ -29,12 +28,8 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
   let!(:sector_other)     { create(:sector, :published, name: Sector::OTHER_SECTOR_NAME) }
   let!(:sector_hidden)    { create(:sector, name: "Hidden sector") }
 
-  # Each scheme maps the two sector fields onto a canonical or legacy identifier;
-  # the age-group fields have never been renamed, so they stay constant.
   {
-    "canonical identifiers"         => { primary_sector: "primary_sector_single",       additional_sector: "additional_sectors" },
-    "legacy additional-sector name" => { primary_sector: "primary_sector_single",       additional_sector: "primary_sector" },
-    "legacy service-area names"     => { primary_sector: "primary_service_area_single", additional_sector: "primary_service_area" }
+    "canonical identifiers" => { primary_sector: "primary_sector", additional_sector: "additional_sectors" }
   }.each do |scheme_name, ids|
     context "with #{scheme_name}" do
       let(:form) { build_professional_form(ids) }
@@ -149,16 +144,14 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
 
   # ---- Form construction ----
 
-  # Builds a registration form with just the identity + professional sections,
-  # then renames the two sector fields onto the scheme's identifiers (the age
-  # fields keep their canonical names — they were never renamed).
+  # Builds a registration form with just the identity + professional sections.
   def build_professional_form(ids)
     form = FormBuilderService.new(
       name: "Reg #{ids[:primary_sector]} / #{ids[:additional_sector]}",
       sections: %i[person_identifier professional_info],
       role: "registration"
     ).call
-    rename_field(form, "primary_sector_single", ids[:primary_sector])
+    rename_field(form, "primary_sector", ids[:primary_sector])
     rename_field(form, "additional_sectors", ids[:additional_sector])
     form
   end

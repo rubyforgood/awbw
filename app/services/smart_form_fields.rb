@@ -108,13 +108,11 @@ class SmartFormFields
                "records rather than from options typed into the form editor. The tags are applied to " \
                "the registrant and to their linked organization.",
       fields: [
-        [ "primary_sector_single", "Primary sector", "Tags the person and organization with one primary sector. Offers no \"Other\" — a primary sector must be a real sector." ],
+        [ "primary_sector", "Primary sector", "Tags the person and organization with one primary sector. Offers no \"Other\" — a primary sector must be a real sector." ],
         [ "additional_sectors", "Additional sectors", "Tags the person and organization with any number of additional sectors. An \"Other\" answer goes to the Other responses review queue, where it can be promoted into a real sector." ],
         [ "primary_age_group", "Primary age group(s) served", "Tags the person and organization with the primary age range served." ],
         [ "additional_age_group", "Additional age group(s) served", "Tags the person and organization with additional age ranges served." ],
-        [ "primary_sector", "Additional sectors (legacy)", "Older name for the additional sectors question. Still honored so existing forms keep working; use additional_sectors on new forms." ],
-        [ "primary_service_area", "Additional sectors (legacy)", "Older name for the additional sectors question. Still honored; use additional_sectors on new forms." ],
-        [ "primary_service_area_single", "Primary sector (legacy)", "Older name for the primary sector question. Still honored; use primary_sector_single on new forms." ]
+        [ "primary_sector_single", "Primary sector (legacy)", "Older name for the primary sector question. Still honored; use primary_sector on new forms." ]
       ]
     },
     {

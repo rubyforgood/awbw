@@ -15,17 +15,15 @@ class FormField < ApplicationRecord
   # "required" flag is meaningless for them (nothing to fill in).
   NON_INPUT_ANSWER_TYPES = %w[no_user_input group_header].freeze
 
-  # Multi-select "additional sectors" field identifiers. "additional_sectors" is
-  # the canonical name new forms are built with; the older "primary_sector" name
-  # (a misnomer — it was always the multi-select additional field) and the legacy
-  # "service area" name are both still accepted so existing form data keeps
-  # resolving.
-  ADDITIONAL_SECTOR_FIELD_IDENTIFIERS = %w[additional_sectors primary_sector primary_service_area].freeze
+  # Multi-select "additional sectors" field identifier.
+  ADDITIONAL_SECTOR_FIELD_IDENTIFIERS = %w[additional_sectors].freeze
 
-  # Single-select "primary sector" field identifiers (current + legacy). Unlike
-  # the multi-select "additional" field, these omit the catch-all "Other" sector
-  # — a respondent's primary sector must be a concrete sector.
-  PRIMARY_SECTOR_FIELD_IDENTIFIERS = %w[primary_sector_single primary_service_area_single].freeze
+  # Single-select "primary sector" field identifiers. "primary_sector" is the
+  # canonical name; the legacy "primary_sector_single" is still accepted so
+  # existing forms keep resolving. Unlike the multi-select "additional" field,
+  # these omit the catch-all "Other" sector — a respondent's primary sector must
+  # be a concrete sector.
+  PRIMARY_SECTOR_FIELD_IDENTIFIERS = %w[primary_sector primary_sector_single].freeze
 
   # Field identifiers whose selectable options are sourced dynamically from
   # Sector records rather than the field's own stored answer options. The
@@ -91,7 +89,7 @@ class FormField < ApplicationRecord
   # Keeps an over-long name as a friendly validation error instead of a
   # database ValueTooLong exception (the column is text, this is the UX cap).
   validates :name, length: { maximum: 1000 }
-  # A field_identifier wires a field to backend logic (Stripe, service areas,
+  # A field_identifier wires a field to backend logic (Stripe, sectors,
   # email checks, etc.), so the same identifier must not appear twice on one form
   # or that logic would target an ambiguous field. Ordinary fields carry no
   # identifier, so blanks are exempt — any number of them may coexist.

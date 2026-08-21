@@ -441,8 +441,8 @@ RSpec.describe FormField do
     end
 
     context "with dynamically-sourced options" do
-      it "accepts a published Sector id and rejects others for a service-area field" do
-        field = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_service_area_single")
+      it "accepts a published Sector id and rejects others for a primary sector field" do
+        field = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_sector")
         offered = create(:sector, :published)
         unpublished = create(:sector, :unpublished)
 
@@ -451,22 +451,13 @@ RSpec.describe FormField do
         expect(field.answer_inclusion_error("999999")).to eq("has an invalid selection")
       end
 
-      # The canonical identifiers, the legacy "primary_sector" additional name,
-      # and the legacy "service area" names must all behave identically so
-      # existing form data keeps resolving.
-      {
-        "sector" => %w[primary_sector_single additional_sectors],
-        "sector (legacy additional name)" => %w[primary_sector_single primary_sector],
-        "service area (legacy)" => %w[primary_service_area_single primary_service_area]
-      }.each do |scheme, (primary_id, additional_id)|
-        it "rejects the Other sector for the primary #{scheme} field but accepts it for additional" do
-          other = create(:sector, :published, name: "Other")
-          primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: primary_id)
-          additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: additional_id)
+      it "rejects the Other sector for the primary sector field but accepts it for additional" do
+        other = create(:sector, :published, name: "Other")
+        primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_sector")
+        additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_sectors")
 
-          expect(primary.answer_inclusion_error(other.id.to_s)).to eq("has an invalid selection")
-          expect(additional.answer_inclusion_error([ other.id.to_s ])).to be_nil
-        end
+        expect(primary.answer_inclusion_error(other.id.to_s)).to eq("has an invalid selection")
+        expect(additional.answer_inclusion_error([ other.id.to_s ])).to be_nil
       end
 
       it "accepts a published Category id from the backing type for a category field" do
@@ -498,7 +489,7 @@ RSpec.describe FormField do
         create(:sector, :published, name: "Other")
         mental_health = create(:sector, :published, name: "Mental Health")
         additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_sectors")
-        primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_sector_single")
+        primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_sector")
 
         # The "Other" Sector renders a free-text box on the additional checkboxes,
         # which submits the folded "Other: <text>" (or a bare "Other"); both pass.
