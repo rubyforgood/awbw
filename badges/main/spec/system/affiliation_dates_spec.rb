@@ -32,16 +32,10 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     )
   end
 
-  it "updates Affiliated since when a start date changes" do
-    visit_and_wait edit_person_path(person, admin: true)
-
-    affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
-    expect(affiliated).to have_text("Mar 2020")
-
-    start_inputs = all("input[name*='affiliations_attributes'][name*='start_date']")
-    set_date_input(start_inputs.first, "2018-01-15")
-
-    expect(affiliated).to have_text("Jan 2018", wait: 5)
+  def facilitator_row
+    all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
+      f.find("input[name*='title']").value.strip == "Facilitator"
+    }
   end
 
   it "updates Facilitator since when a start date changes" do
@@ -50,12 +44,7 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     facilitator = find("[data-affiliation-dates-target='facilitatorSince']")
     expect(facilitator).to have_text("Mar 2020")
 
-    # Find the Facilitator affiliation's start_date input specifically
-    facilitator_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
-      f.find("input[name*='title']").value.include?("Facilitator")
-    }
-    start_input = facilitator_row.find("input[name*='start_date']")
-    set_date_input(start_input, "2019-07-01")
+    set_date_input(facilitator_row.find("input[name*='start_date']"), "2019-07-01")
 
     expect(facilitator).to have_text("Jul 2019", wait: 5)
   end
@@ -68,25 +57,66 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
 
     # Renaming the only exact "Facilitator" to a variant drops it — facilitator
     # matching is exact and case-sensitive, so "Lead Facilitator" no longer counts.
-    facilitator_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
-      f.find("input[name*='title']").value.strip == "Facilitator"
-    }
     set_text_input(facilitator_row.find("input[name*='title']"), "Lead Facilitator")
 
     expect(facilitator).to have_text("—", wait: 5)
   end
 
-  it "shows end date and icon when all affiliations are inactive" do
+  it "toggles the affiliated-since note live as the earliest start crosses the facilitator start" do
+    visit_and_wait edit_person_path(person, admin: true)
+    note = "[data-affiliation-dates-target='affiliatedNote']"
+
+    volunteer_start = -> {
+      all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
+        f.find("input[name*='title']").value.strip == "Volunteer"
+      }.find("input[name*='start_date']")
+    }
+
+    # Facilitator (Mar 2020) is the earliest affiliation, so affiliated == facilitator.
+    expect(page).to have_no_css(note)
+
+    # Move it before the facilitator start — now affiliated differs, note appears.
+    set_date_input(volunteer_start.call, "2018-01-15")
+    expect(page).to have_css(note, text: "Affiliated since Jan 2018", wait: 5)
+
+    # Move it back into the facilitator's month — note disappears again.
+    set_date_input(volunteer_start.call, "2020-03-20")
+    expect(page).to have_no_css(note, wait: 5)
+  end
+
+  it "toggles the member-since flag live as the facilitator start crosses member_since" do
+    flagged = create(:person, member_since: Date.new(2015, 6, 1))
+    create(:affiliation, person: flagged, organization: org1, title: "Facilitator", start_date: "2020-03-01")
+
+    visit_and_wait edit_person_path(flagged, admin: true)
+    flag = "[data-affiliation-dates-target='memberSinceFlag']"
+    fac_start = -> {
+      all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
+        f.find("input[name*='title']").value.strip == "Facilitator"
+      }.find("input[name*='start_date']")
+    }
+
+    # member_since (Jun 2015) is earlier than the facilitator start (Mar 2020).
+    expect(page).to have_css("#{flag}.text-amber-700", text: "Earlier date on file: Jun 2015")
+
+    # Facilitator start now precedes member_since — it merely differs.
+    set_date_input(fac_start.call, "2014-01-01")
+    expect(page).to have_css("#{flag}.text-gray-500", text: "Different date on file: Jun 2015", wait: 5)
+
+    # Facilitator start lands in member_since's month — no flag.
+    set_date_input(fac_start.call, "2015-06-10")
+    expect(page).to have_no_css(flag, wait: 5)
+  end
+
+  it "shows end date and icon when the facilitator affiliation is inactive" do
     visit_and_wait edit_person_path(person, admin: true)
 
-    affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
+    facilitator = find("[data-affiliation-dates-target='facilitatorSince']")
 
-    end_inputs = all("input[name*='affiliations_attributes'][name*='end_date']")
-    set_date_input(end_inputs[0], "2023-01-01")
-    set_date_input(end_inputs[1], "2024-06-01")
+    set_date_input(facilitator_row.find("input[name*='end_date']"), "2023-01-01")
 
-    expect(affiliated).to have_text("Jun 2024", wait: 5)
-    within(affiliated) do
+    expect(facilitator).to have_text("Jan 2023", wait: 5)
+    within(facilitator) do
       expect(page).to have_css("i.fa-circle-xmark")
     end
   end
@@ -94,36 +124,30 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
   it "displays correct month for first-of-month dates in US timezones" do
     visit_and_wait edit_person_path(person, admin: true)
 
-    affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
+    facilitator = find("[data-affiliation-dates-target='facilitatorSince']")
 
-    # Set both affiliations to first-of-month dates and verify the JS controller
-    # formats them correctly. This catches UTC-to-local timezone bugs where midnight
-    # UTC rolls back to the previous month in behind-UTC timezones
-    # (e.g., 2025-01-01T00:00Z → Dec 31 in EST).
-    start_inputs = all("input[name*='affiliations_attributes'][name*='start_date']")
-    set_date_input(start_inputs[0], "2025-03-01")
-    set_date_input(start_inputs[1], "2025-01-01")
+    # A first-of-month date must format to that month, not roll back a day. This
+    # catches UTC-to-local timezone bugs where midnight UTC lands on the previous
+    # month in behind-UTC timezones (e.g., 2025-01-01T00:00Z → Dec 31 in EST).
+    set_date_input(facilitator_row.find("input[name*='start_date']"), "2025-01-01")
 
-    # Should show Jan 2025, not Dec 2024
-    expect(affiliated).to have_text("Jan 2025", wait: 5)
-    expect(affiliated).not_to have_text("Dec 2024")
+    expect(facilitator).to have_text("Jan 2025", wait: 5)
+    expect(facilitator).not_to have_text("Dec 2024")
   end
 
-  it "removes an affiliation via the editor and recalculates" do
-    # Persisted affiliations are now deleted from the affiliation editor (reached
-    # via the row's gear); removing the Facilitator (Mar 2020) leaves Volunteer (Jun 2022).
+  it "surfaces the affiliation start as a grey note when it differs from the facilitator start" do
+    # Facilitator (Mar 2020) gone; the remaining Volunteer (Jun 2022) now surfaces
+    # as the grey "Affiliated since" note beside an empty Facilitator since.
     facilitator = person.affiliations.find_by!(title: "Facilitator")
     visit edit_affiliation_path(facilitator, return_to: "person", origin_id: person.id)
 
     accept_confirm { click_button "Delete" }
 
-    affiliated = find("[data-affiliation-dates-target='affiliatedSince']", wait: 10)
-    expect(affiliated).to have_text("Jun 2022", wait: 5)
+    expect(page).to have_text("Affiliated since Jun 2022", wait: 10)
   end
 
-  # The org form renders "Affiliated since" as merged, year-based periods
-  # (AffiliationPeriods) rather than a single range; it must live-update in that
-  # same format so the value doesn't jump on save.
+  # "Facilitators since" on the org form is a merged-period value at month
+  # precision, so it must live-update in that format — not an earliest→latest range.
   context "on the organization form" do
     let!(:org_person) { create(:person) }
     let!(:merged_org) { create(:organization) }
@@ -135,22 +159,6 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
              title: "Facilitator", start_date: "2022-01-01", end_date: nil)
     end
 
-    it "live-updates the merged 'Affiliated since' periods" do
-      visit_and_wait edit_organization_path(merged_org)
-
-      affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
-      expect(affiliated).to have_text("2018-2019, 2022")
-
-      ongoing_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
-        f.find("input[name*='start_date']").value == "2022-01-01"
-      }
-      set_date_input(ongoing_row.find("input[name*='start_date']"), "2021-05-01")
-
-      expect(affiliated).to have_text("2018-2019, 2021", wait: 5)
-    end
-
-    # "Facilitators since" is the same merged-period value at month precision, so it
-    # has to live-update in that format too — not the old earliest→latest range.
     it "live-updates 'Facilitators since' as month-precision periods" do
       visit_and_wait edit_organization_path(merged_org)
 

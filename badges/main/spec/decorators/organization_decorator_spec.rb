@@ -39,6 +39,29 @@ RSpec.describe OrganizationDecorator do
     end
   end
 
+  describe "#affiliated_since_note" do
+    let(:organization) { create(:organization) }
+
+    it "surfaces the affiliation start when it differs from the facilitator start" do
+      create(:affiliation, organization: organization, person: create(:person), title: "Volunteer", start_date: Date.new(2010, 3, 1))
+      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: Date.new(2015, 8, 1))
+
+      expect(organization.reload.decorate.affiliated_since_note).to eq("Affiliated since Mar 2010")
+    end
+
+    it "is nil when the affiliation and facilitator starts share a month and year" do
+      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: Date.new(2015, 8, 1))
+
+      expect(organization.reload.decorate.affiliated_since_note).to be_nil
+    end
+
+    it "is nil when there is no affiliation start date" do
+      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: nil)
+
+      expect(organization.reload.decorate.affiliated_since_note).to be_nil
+    end
+  end
+
   describe "#organization_status_label" do
     # Every stored status reads "Never active" here: with no facilitator affiliation
     # there is no program, whatever the legacy column says.

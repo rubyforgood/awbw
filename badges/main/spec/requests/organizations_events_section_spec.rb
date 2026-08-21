@@ -57,24 +57,14 @@ RSpec.describe "Organization profile events-attended section", type: :request do
     expect(response.body.scan(/>\s*Shared Event/).size).to eq(1)
   end
 
-  it "shows an admin program-status chip per event in the profile's Program status block" do
-    event = create(:event, title: "Trauma-Informed Onsite", abbreviation: "TOS205", start_date: 2.days.from_now, facilitator_training: true)
-    person = create(:person)
-    create(:affiliation, organization: organization, person: person, title: "Facilitator", start_date: 1.year.ago, end_date: nil)
-    registration = create(:event_registration, registrant: person, event: event, status: "registered")
-    registration.event_registration_organizations.create!(organization: organization)
+  it "shows the org program-status chip beside the name in an admin-only wrapper" do
+    create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: 1.year.ago, end_date: nil)
 
     get organization_path(organization)
 
-    expect(response.body).to include("Program status")
-    expect(response.body).to include("TOS205")
-    expect(response.body).to include("Ongoing")
-    # The chip opens in a new tab, so it must tell the report how to get back here —
-    # and the block needs the id the report's eyebrow anchors to.
-    expect(response.body).to include(
-      CGI.escapeHTML(participation_events_path(event_id: event.id, return_organization_id: organization.id, return_to: "organization"))
-    )
-    expect(response.body).to include("id=\"#{EventParticipationHelper::PROGRAM_STATUS_ANCHOR}\"")
+    chip_wrapper = Capybara.string(response.body).find("##{EventParticipationHelper::PROGRAM_STATUS_ANCHOR}")
+    expect(chip_wrapper[:class]).to include("admin-only")
+    expect(chip_wrapper).to have_text("Active")
   end
 
   it "renders the section heading and lazy frame on the profile page" do

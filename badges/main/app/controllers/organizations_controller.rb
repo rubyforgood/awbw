@@ -47,14 +47,6 @@ class OrganizationsController < ApplicationController
 
     track_view(@organization)
 
-    # The admin-only "Program status" block. Trainings only — program status is
-    # meaningless for other events (ADR-0001 D6).
-    @organization_events = authorized_scope(
-      Event.where(id: @organization.event_registrations.active.select(:event_id))
-           .where(facilitator_training: true)
-           .order(start_date: :desc)
-    )
-
     workshop_logs = WorkshopLog.where(organization_id: @organization.id)
     @month_year_options = workshop_logs.group("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m')")
                                        .select("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m') AS ym,

@@ -34,6 +34,17 @@ RSpec.describe FacilitatorProgramStatus do
       expect(status_on.status).to eq(:ongoing)
     end
 
+    it "is :ongoing for a same-day (start == end) facilitation on the anchor" do
+      # A one-day program is active on its own day, even though it starts on the anchor.
+      facilitator(start_date: anchor, end_date: anchor)
+      expect(status_on.status).to eq(:ongoing)
+    end
+
+    it "is :reinstated for a same-day facilitation that ran before the anchor" do
+      facilitator(start_date: Date.new(2020, 1, 1), end_date: Date.new(2020, 1, 1))
+      expect(status_on.status).to eq(:reinstated)
+    end
+
     it "is :reinstated when every earlier facilitator affiliation has ended" do
       facilitator(start_date: Date.new(2015, 8, 1), end_date: Date.new(2018, 6, 1))
       expect(status_on.status).to eq(:reinstated)

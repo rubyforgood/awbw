@@ -52,4 +52,27 @@ RSpec.describe PersonDecorator do
       expect(person.decorate.affiliated_since_date).to be_nil
     end
   end
+
+  describe "#affiliated_since_note" do
+    let(:person) { create(:person) }
+
+    it "surfaces the affiliation start when it differs from the facilitator start" do
+      create(:affiliation, person: person, title: "Board Member", start_date: Date.new(2015, 3, 1))
+      create(:affiliation, person: person, title: "Facilitator", start_date: Date.new(2018, 8, 1))
+
+      expect(person.decorate.affiliated_since_note).to eq("Affiliated since Mar 2015")
+    end
+
+    it "is nil when the affiliation and facilitator starts share a month and year" do
+      create(:affiliation, person: person, title: "Facilitator", start_date: Date.new(2018, 8, 1))
+
+      expect(person.decorate.affiliated_since_note).to be_nil
+    end
+
+    it "is nil when there is no affiliation start date" do
+      create(:affiliation, person: person, start_date: nil)
+
+      expect(person.decorate.affiliated_since_note).to be_nil
+    end
+  end
 end
