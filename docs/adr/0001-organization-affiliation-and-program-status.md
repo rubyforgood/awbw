@@ -9,7 +9,7 @@ The organization profile/edit page surfaces several affiliation-derived figures
 that are easy to confuse with one another:
 
 - **Affiliated since**
-- **Facilitations/program since**
+- **Facilitators since**
 - an org-wide **status chip** (Active / Formerly active / Never active)
 - per-event **program-status chips** (New / Ongoing / Reinstate)
 
@@ -44,11 +44,15 @@ with a registrant**. Rendered as merged year-based periods
 (`AffiliationPeriods.label`), e.g. `2010-2012, 2026`; falls back to the org's own
 `start_date`, then blank. See `OrganizationDecorator#affiliated_since_display`.
 
-### D2 — "Art program since": facilitator affiliations only, month precision
+### D2 — "Facilitators since": facilitator affiliations only, month precision
+
+*Formerly labeled "Art program since" in the UI; the decorator method is still
+`program_since_display`, so code, old references, and the current label all name
+the same figure.*
 
 Same merged-period rendering as D1 but over **facilitator** affiliations only,
 and at **month** precision (`AffiliationPeriods.label(…, precision: :month)`) —
-when a program started or lapsed is the point of the figure. Ongoing reads
+when facilitating started or lapsed is the point of the figure. Ongoing reads
 `Feb 2024`, closed reads `Aug 2015 – Jun 2018`, e.g.
 `Aug 2015 – Jun 2018, Feb 2024`. Blank when the org has never facilitated. See
 `OrganizationDecorator#program_since_display`.

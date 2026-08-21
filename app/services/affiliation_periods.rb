@@ -3,8 +3,8 @@
 #
 #   * :year (default) — "Affiliated since", e.g. "2010-2012, 2026". A lone ongoing
 #     period keeps its month when it began this year ("Jul 2026").
-#   * :month — "Art program since", e.g. "Aug 2015 – Jun 2018, Feb 2024", where the
-#     month a program started or lapsed is the point.
+#   * :month — "Facilitators since", e.g. "Aug 2015 – Jun 2018, Feb 2024", where the
+#     month facilitating started or lapsed is the point.
 #
 # Nil when no affiliation carries a start date, so callers can fall back to the
 # organization's own start_date.

@@ -149,9 +149,9 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
       expect(affiliated).to have_text("2018-2019, 2021", wait: 5)
     end
 
-    # "Art program since" is the same merged-period value at month precision, so it
+    # "Facilitators since" is the same merged-period value at month precision, so it
     # has to live-update in that format too — not the old earliest→latest range.
-    it "live-updates 'Art program since' as month-precision periods" do
+    it "live-updates 'Facilitators since' as month-precision periods" do
       visit_and_wait edit_organization_path(merged_org)
 
       program = find("[data-affiliation-dates-target='facilitatorSince']")
