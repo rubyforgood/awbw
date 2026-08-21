@@ -88,17 +88,18 @@ class SmartFormFields
                "below fill in the organization's profile. Both affiliations are connected to the " \
                "organization's address when it has exactly one; with several addresses the address is " \
                "left blank for an admin to set. When it doesn't match, nothing is written and " \
-               "an admin resolves it on the event registration's Link organization page.",
+               "an admin resolves it on the event registration's Link organization page. Older forms " \
+               "may carry the legacy \"agency_\" names for these questions; both spellings still work.",
       fields: [
-        [ "agency_name", "Organization name", "Looked up against existing organizations by exact name. A match is linked to the registration; no match leaves the registration unlinked for an admin to resolve." ],
-        [ "agency_position", "Position / title", "Becomes the job title on the registrant's Job Affiliation with that organization." ],
-        [ "agency_website", "Organization website", "Sets the organization's website. Replaces what is on file when the registrant submits it; when an admin links it by hand (Link or Create and link) it only fills a blank, and a conflicting answer is flagged instead. Note: a raw URL is saved exactly as entered, so it may not be clickable if it isn't a properly formed URL." ],
-        [ "agency_type", "Organization type", "Sets the organization's type. An \"Other\" choice stores the typed text separately and adds it to the Other responses review queue." ],
-        [ "agency_street", "Organization street address", "Sets the street of the organization's work address." ],
-        [ "agency_city", "Organization city", "Sets the city, and decides whether an organization address is saved at all — no city answered means no address." ],
-        [ "agency_state", "Organization state / province", "Sets the state. Without it, no new address can be saved (an address requires a state), though an address already on file is still updated." ],
-        [ "agency_zip", "Organization zip / postal code", "Sets the postal code. Also used to recognize an address already on file whose city is spelled differently." ],
-        [ "agency_country", "Organization country", "Sets the country of the organization's work address." ]
+        [ "organization_name", "Organization name", "Looked up against existing organizations by exact name. A match is linked to the registration; no match leaves the registration unlinked for an admin to resolve." ],
+        [ "organization_position", "Position / title", "Becomes the job title on the registrant's Job Affiliation with that organization." ],
+        [ "organization_website", "Organization website", "Sets the organization's website. Replaces what is on file when the registrant submits it; when an admin links it by hand (Link or Create and link) it only fills a blank, and a conflicting answer is flagged instead. Note: a raw URL is saved exactly as entered, so it may not be clickable if it isn't a properly formed URL." ],
+        [ "organization_type", "Organization type", "Sets the organization's type. An \"Other\" choice stores the typed text separately and adds it to the Other responses review queue." ],
+        [ "organization_street", "Organization street address", "Sets the street of the organization's work address." ],
+        [ "organization_city", "Organization city", "Sets the city, and decides whether an organization address is saved at all — no city answered means no address." ],
+        [ "organization_state", "Organization state / province", "Sets the state. Without it, no new address can be saved (an address requires a state), though an address already on file is still updated." ],
+        [ "organization_zip", "Organization zip / postal code", "Sets the postal code. Also used to recognize an address already on file whose city is spelled differently." ],
+        [ "organization_country", "Organization country", "Sets the country of the organization's work address." ]
       ]
     },
     {

@@ -619,4 +619,37 @@ RSpec.describe FormField do
       expect(field.answer_type_label).to eq("One line")
     end
   end
+
+  describe ".aliased_identifiers" do
+    it "expands a canonical organization identifier to its canonical and legacy names" do
+      expect(described_class.aliased_identifiers("organization_name")).to eq(%w[organization_name agency_name])
+    end
+
+    it "expands a legacy agency identifier to the same canonical and legacy names" do
+      expect(described_class.aliased_identifiers("agency_type")).to eq(%w[organization_type agency_type])
+    end
+
+    it "returns the identifier alone when it isn't a renamed organization field" do
+      expect(described_class.aliased_identifiers("first_name")).to eq(%w[first_name])
+    end
+  end
+
+  describe "#matches_identifier?" do
+    let(:form) { create(:form) }
+
+    it "matches a field carrying the canonical organization identifier" do
+      field = build(:form_field, form: form, field_identifier: "organization_website")
+      expect(field.matches_identifier?("organization_website")).to be(true)
+    end
+
+    it "matches a field carrying the legacy agency identifier against the canonical name" do
+      field = build(:form_field, form: form, field_identifier: "agency_website")
+      expect(field.matches_identifier?("organization_website")).to be(true)
+    end
+
+    it "does not match an unrelated identifier" do
+      field = build(:form_field, form: form, field_identifier: "phone")
+      expect(field.matches_identifier?("organization_website")).to be(false)
+    end
+  end
 end

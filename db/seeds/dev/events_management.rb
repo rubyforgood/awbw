@@ -1086,20 +1086,20 @@ form_submissions.each do |data|
   data[:form].form_fields.where(answer_type: [ :free_form_input_one_line, :free_form_input_paragraph ]).each do |field|
     # Organization Name + Position / Title are seeded later with org-matching values
     # (record_organization_answers), so leave them blank here.
-    next if %w[agency_name agency_position].include?(field.field_identifier)
+    next if field.matches_identifier?("organization_name") || field.matches_identifier?("organization_position")
 
     sample_text = case field.field_identifier
     when "first_name" then data[:person].first_name
     when "last_name" then data[:person].last_name
     when "primary_email", "enter_email", "confirm_email" then data[:person].preferred_email || "sample@example.com"
     when "phone" then "(555) #{rand(100..999)}-#{rand(1000..9999)}"
-    when "street_address", "agency_street_address" then Faker::Address.street_address
-    when "city", "agency_city" then Faker::Address.city
-    when "state_province", "agency_state_province" then Faker::Address.state_abbr
-    when "zip_postal_code", "agency_zip_postal_code" then Faker::Address.zip_code
+    when "street_address", "agency_street_address", "organization_street" then Faker::Address.street_address
+    when "city", "agency_city", "organization_city" then Faker::Address.city
+    when "state_province", "agency_state_province", "organization_state" then Faker::Address.state_abbr
+    when "zip_postal_code", "agency_zip_postal_code", "organization_zip" then Faker::Address.zip_code
     when "agency_organization_name" then Faker::Company.name
     when "position_title" then "Facilitator"
-    when "agency_website" then "https://example.org"
+    when "agency_website", "organization_website" then "https://example.org"
     when "secondary_email" then data[:person].email_2
     when "preferred_nickname" then data[:person].first_name
     when "pronouns" then [ "she/her", "he/him", "they/them" ].sample
@@ -1231,14 +1231,14 @@ record_organization_answers = ->(registration, submission, i) do
   # A title on most submissions, but leave roughly one in five blank so dev data
   # exercises both registration/linking outcomes: a job + Facilitator affiliation
   # when a title was given, and a Facilitator-only affiliation when it wasn't.
-  position_field = form.form_fields.find_by(field_identifier: "agency_position")
+  position_field = form.form_fields.find_by(field_identifier: FormField.aliased_identifiers("organization_position"))
   if position_field && i % 5 != 4 && submission.form_answers.where(form_field: position_field).none?
     submission.form_answers.create!(form_field: position_field,
                                     submitted_answer: job_titles[i % job_titles.size],
                                     question_name_when_answered: position_field.name)
   end
 
-  agency_field = form.form_fields.find_by(field_identifier: "agency_name")
+  agency_field = form.form_fields.find_by(field_identifier: FormField.aliased_identifiers("organization_name"))
   next unless agency_field && org_answer_orgs.any?
   next if submission.form_answers.where(form_field: agency_field).any?
 
@@ -1439,14 +1439,14 @@ puts "Creating organization-link demo registrants on the flagship training…"
 if facilitator_training && registration_form
   # "Pending" only exists when the form has the Organization Name field,
   # which lives in the person_contact_info section the dev form otherwise omits.
-  unless registration_form.form_fields.exists?(field_identifier: "agency_name")
+  unless registration_form.form_fields.exists?(field_identifier: FormField.aliased_identifiers("organization_name"))
     FormBuilderService.update_sections!(
       registration_form,
       (registration_form.sections || []).map(&:to_sym) | [ :person_contact_info ]
     )
   end
-  agency_field = registration_form.form_fields.find_by(field_identifier: "agency_name")
-  agency_position_field = registration_form.form_fields.find_by(field_identifier: "agency_position")
+  agency_field = registration_form.form_fields.find_by(field_identifier: FormField.aliased_identifiers("organization_name"))
+  agency_position_field = registration_form.form_fields.find_by(field_identifier: FormField.aliased_identifiers("organization_position"))
 
   # Real, existing orgs to link against / match on (skip the AWBW house org).
   demo_orgs = Organization.where.not(name: "A Window Between Worlds").order(:name).to_a
@@ -1611,7 +1611,7 @@ if facilitator_training && registration_form
   # --- Affiliation-status demo: two affiliations per org (a real job title plus the
   # Facilitator role that gates AWBW-active), plus the position typed on the form, so
   # the org-link editor's affiliation pills can be seen across their states. ---
-  position_field = registration_form.form_fields.find_by(field_identifier: "agency_position")
+  position_field = registration_form.form_fields.find_by(field_identifier: FormField.aliased_identifiers("organization_position"))
   submit_field = ->(registration, field, value) do
     if field
       submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form, role: "registration", event: registration.event)
