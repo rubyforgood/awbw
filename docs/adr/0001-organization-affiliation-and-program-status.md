@@ -46,6 +46,10 @@ with a registrant**. Rendered as merged year-based periods
 
 ### D2 — "Facilitators since": facilitator affiliations only, month precision
 
+*Formerly labeled "Art program since" in the UI; the decorator method is still
+`program_since_display`, so code, old references, and the current label all name
+the same figure.*
+
 Same merged-period rendering as D1 but over **facilitator** affiliations only,
 and at **month** precision (`AffiliationPeriods.label(…, precision: :month)`) —
 when facilitating started or lapsed is the point of the figure. Ongoing reads
