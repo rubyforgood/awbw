@@ -7,7 +7,7 @@
 <div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8 py-6">
   <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
     <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
-      <%= link_to "← Reports", reports_events_path(report_to_hub_params), class: "text-sm #{eyebrow_link_class}" %>
+      <%= link_to "← Reports", reports_events_path(report_to_hub_params), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <%= render "events/report_subnav", current: :signins %>
     </div>
 

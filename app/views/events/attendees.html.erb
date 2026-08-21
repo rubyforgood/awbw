@@ -11,16 +11,16 @@
       <div>
       <% case params[:return_to] %>
       <% when "participation" %>
-        <%= link_to "← Event participation", participation_events_path(report_return), class: "text-sm #{eyebrow_link_class}" %>
+        <%= link_to "← Event participation", participation_events_path(report_return), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% when "revenue" %>
-        <%= link_to "← Event revenue", revenue_events_path(report_return), class: "text-sm #{eyebrow_link_class}" %>
+        <%= link_to "← Event revenue", revenue_events_path(report_return), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% when "reports" %>
-        <%= link_to "← Event reports", reports_events_path(report_return), class: "text-sm #{eyebrow_link_class}" %>
+        <%= link_to "← Event reports", reports_events_path(report_return), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% else %>
         <% if @filter_event %>
-          <%= link_to "← #{@filter_event.title}", dashboard_event_path(@filter_event), class: "text-sm #{eyebrow_link_class}" %>
+          <%= link_to "← #{@filter_event.title}", dashboard_event_path(@filter_event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <% else %>
-          <%= link_to "← Event reports", reports_events_path, class: "text-sm #{eyebrow_link_class}" %>
+          <%= link_to "← Event reports", reports_events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <% end %>
       <% end %>
       </div>
