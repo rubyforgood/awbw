@@ -37,8 +37,8 @@
         expected next step — so those take the solid (primary) style and "Link
         organization" is demoted to the outline style. %>
     <% create_is_primary = @creatable_org_names.any? %>
-    <% btn_solid = "bg-blue-900 text-white hover:bg-blue-800" %>
-    <% btn_outline = "border border-blue-900 text-blue-900 hover:bg-blue-50" %>
+    <% btn_solid = "btn btn-primary" %>
+    <% btn_outline = "btn btn-primary-outline" %>
     <details class="mb-8" open>
       <summary class="flex items-center justify-between gap-3 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden mb-3">
         <h2 class="text-sm font-bold uppercase tracking-wide text-gray-500">Registration form submission</h2>
@@ -174,7 +174,7 @@
                             method: :post,
                             params: { organization_name: creatable_name },
                             form: { class: "shrink-0", data: { turbo_frame: "_top" } },
-                            class: "shrink-0 w-48 text-center rounded-md px-6 py-2 font-semibold #{btn_solid} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition cursor-pointer" do %>
+                            class: "btn #{btn_solid} shrink-0 w-48 justify-center focus:ring-primary cursor-pointer" do %>
                 Create and link
               <% end %>
             </div>
@@ -195,7 +195,7 @@
                 <div class="min-w-0">
                   <p class="font-medium text-gray-800"><%= org.name %><% if org.city_state.present? %> <span class="text-xs text-gray-500">· <%= org.city_state %></span><% end %></p>
                 </div>
-                <%= submit_tag "Link organization", class: "rounded-md bg-blue-900 px-4 py-1.5 text-white text-sm font-medium hover:bg-blue-800 transition cursor-pointer" %>
+                <%= submit_tag "Link organization", class: "btn btn-primary cursor-pointer" %>
               <% end %>
             <% end %>
           </div>
@@ -215,7 +215,7 @@
                            prompt: "Type to search organizations…" %>
           </div>
           <%= submit_tag "Link organization",
-                         class: "shrink-0 w-48 text-center rounded-md px-6 py-2 font-semibold #{create_is_primary ? btn_outline : btn_solid} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition cursor-pointer" %>
+                         class: "btn #{create_is_primary ? btn_outline : btn_solid} shrink-0 w-48 justify-center focus:ring-primary cursor-pointer" %>
         <% end %>
       </div>
     </div>

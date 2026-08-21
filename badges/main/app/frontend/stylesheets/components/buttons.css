@@ -6,6 +6,11 @@
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
+  /* Compact size modifier — pair with .btn (e.g. `btn btn-sm btn-primary`). */
+  .btn-sm {
+    @apply px-3 py-1 text-xs;
+  }
+
   /* solid */
   .btn-primary {
     @apply border border-primary bg-primary text-white
