@@ -83,13 +83,13 @@
           <%# Native <details>; while it's open :has() hides Agree so the decline form stands alone. %>
           <div class="group mt-3 flex flex-wrap items-center gap-3">
             <%= form_with url: registration_scholarship_agreement_path(@event_registration.slug), method: :post, class: "group-has-[[open]]:hidden" do %>
-              <button type="submit" name="agreement" value="yes" class="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700">
+              <button type="submit" name="agreement" value="yes" class="btn btn-success">
                 <i class="fa-solid fa-check"></i> Agree
               </button>
             <% end %>
 
             <details class="group/details">
-              <summary class="inline-flex cursor-pointer list-none items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 [&::-webkit-details-marker]:hidden">
+              <summary class="btn btn-secondary-outline cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                 <i class="fa-solid fa-xmark"></i> Decline
               </summary>
               <%= form_with url: registration_scholarship_decline_path(@event_registration.slug), method: :post, class: "mt-3 w-full max-w-md" do %>
