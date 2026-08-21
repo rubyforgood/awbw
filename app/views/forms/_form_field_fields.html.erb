@@ -155,7 +155,7 @@
               checks, etc.); most fields need none, and the linked hint explains each one. %>
           <div class="flex shrink-0 items-center gap-2">
             <div class="flex flex-col shrink-0">
-              <%= f.text_field :field_identifier, placeholder: "Smart field name",
+              <%= f.text_field :field_identifier, placeholder: "Smart field",
                     class: "w-32 min-w-0 rounded border-gray-300 shadow-sm px-2 py-1 font-mono text-xs",
                     title: "Internal name that wires this field to backend logic — leave blank for an ordinary field" %>
               <%= link_to "What's this?", smart_form_settings_forms_path(form_id: @form.id, event_id: @dashboard_event&.id, field_id: field.id),

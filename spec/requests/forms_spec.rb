@@ -282,7 +282,7 @@ RSpec.describe "Forms", type: :request do
 
       get edit_form_path(form)
 
-      expect(response.body).to include("Smart field name")
+      expect(response.body).to include("Smart field")
       expect(response.body).to include("[field_identifier]")
       expect(response.body).to include(smart_form_settings_forms_path(form_id: form.id))
     end
