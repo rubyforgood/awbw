@@ -250,6 +250,18 @@
   pro_tips:
     - "The designation is for recognizing memorial gifts on the Story Share pages."
 
+- name: "Features & tips page"
+  area: content
+  display_status: user_facing
+  released_on: 2026-08-16
+  action_path: "/features"
+  pr_number: 2170
+  summary: >-
+    A login-gated page listing the portal's shipped features — newest first, filterable
+    by area, audience, and date — so facilitators and admins can see what the portal does.
+  pro_tips:
+    - "Super-admins can edit any feature in place (rich descriptions with screenshots) and click \"Sync latest updates\" to pull in newly-shipped ones."
+
 - name: "Edit an affiliation's details and comments"
   area: people
   display_status: admin_facing
