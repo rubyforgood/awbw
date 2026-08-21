@@ -23,6 +23,7 @@ namespace :db do
       scholarships
       membership
       bulk_payments
+      legacy_form_identifiers
       public_forms
     ]
 
@@ -122,6 +123,11 @@ namespace :db do
     desc "Seed bulk payment demo submissions, payments, and allocations (dev only)"
     task bulk_payments: :environment do
       load Rails.root.join("db/seeds/dev/bulk_payments.rb")
+    end
+
+    desc "Seed a registration form using the legacy primary-sector identifier (dev only)"
+    task legacy_form_identifiers: :environment do
+      load Rails.root.join("db/seeds/dev/legacy_form_identifiers.rb")
     end
 
     desc "Seed standalone public forms with submissions and answers (dev only)"
