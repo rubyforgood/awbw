@@ -2848,7 +2848,7 @@ RSpec.describe "Events", type: :request do
           submission = create(:form_submission, person: person, form: registration_form)
 
           sector = create(:sector, name: "Sexual Assault")
-          sector_field = create(:form_field, form: registration_form, field_identifier: "primary_sector_single")
+          sector_field = create(:form_field, form: registration_form, field_identifier: "primary_sector")
           create(:form_answer, form_submission: submission, form_field: sector_field, submitted_answer: sector.id.to_s)
 
           age_range = create(:category_type, name: "AgeRange")

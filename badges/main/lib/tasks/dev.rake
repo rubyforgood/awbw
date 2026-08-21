@@ -125,7 +125,7 @@ namespace :db do
       load Rails.root.join("db/seeds/dev/bulk_payments.rb")
     end
 
-    desc "Seed registration forms using legacy professional-field identifiers (dev only)"
+    desc "Seed a registration form using the legacy primary-sector identifier (dev only)"
     task legacy_form_identifiers: :environment do
       load Rails.root.join("db/seeds/dev/legacy_form_identifiers.rb")
     end
