@@ -55,6 +55,11 @@
            hover:bg-primary hover:text-white;
   }
 
+  .btn-accent-outline {
+    @apply border-2 border-accent text-accent
+           hover:bg-accent hover:text-white;
+  }
+
   .btn-secondary-outline {
     @apply border border-secondary text-secondary
            hover:bg-secondary hover:text-white;
