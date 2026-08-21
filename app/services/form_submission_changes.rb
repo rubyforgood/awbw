@@ -25,8 +25,22 @@ class FormSubmissionChanges
       .sort_by { |group| [ GROUP_ORDER.index(group.record_type) || GROUP_ORDER.size, group.title.to_s ] }
   end
 
-  def any?
-    groups.any?
+  # A submission "changed" a value only when it overwrote one that was already
+  # there. Creating records, adding tags, and filling blanks are new data from a
+  # new submission — not edits — so they don't count here.
+  def edited_groups
+    groups.filter_map do |group|
+      edits = group.changes.select { |change| change.outcome == "Replaced" }
+      Group.new(record_type: group.record_type, title: group.title, changes: edits) if edits.any?
+    end
+  end
+
+  def edited_count
+    relevant_events.sum { |event| replaced_changes(event.properties["changes"]).size }
+  end
+
+  def edited?
+    edited_count.positive?
   end
 
   private
@@ -64,6 +78,12 @@ class FormSubmissionChanges
     return [ record_change(action, event) ] if action.in?(%w[create destroy])
 
     []
+  end
+
+  def replaced_changes(changes)
+    return [] if changes.blank?
+
+    attribute_changes(changes).select { |change| change.outcome == "Replaced" }
   end
 
   def attribute_changes(changes)

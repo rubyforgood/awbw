@@ -46,7 +46,7 @@
 
     <div class="px-6 py-6 space-y-5">
       <% if @change_groups.any? %>
-        <p class="text-xs text-gray-500">Each row shows what actually happened to the record — a value <strong>replaced</strong> or <strong>filled</strong>, or a tag <strong>added</strong> / <strong>removed</strong>.</p>
+        <p class="text-xs text-gray-500"><strong><%= pluralize(@changed_count, "value") %></strong> this submission overwrote on records that already existed. The previous value is kept so it can be put back. (New records, added tags, and filled-in blanks aren't shown — they're new data, not changes.)</p>
 
         <% @change_groups.each do |group| %>
           <section class="rounded-xl border border-gray-200 overflow-hidden">
@@ -73,7 +73,7 @@
       <% else %>
         <div class="rounded-xl border border-gray-200 bg-gray-50 px-5 py-8 text-center text-gray-500">
           <i class="fa-solid fa-circle-check text-gray-400 text-xl mb-2"></i>
-          <p>This submission didn't change any records.</p>
+          <p>This submission didn't overwrite any existing values.</p>
         </div>
       <% end %>
     </div>

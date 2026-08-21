@@ -20,11 +20,24 @@ RSpec.describe "Events::FormSubmissions", type: :request do
         expect(response.body).to include(form.name)
       end
 
-      it "links each submission to its admin changes audit" do
+      it "links a submission to its changes audit once it has overwritten a value" do
+        org = create(:organization)
+        create(:ahoy_event, name: "update.organization", properties: {
+          "resource_type" => "Organization", "resource_id" => org.id,
+          "form_submission_id" => submission.id,
+          "changes" => { "website_url" => { "before" => "old.com", "after" => "new.com" } }
+        })
+
         get event_registrant_submissions_path(event, person_id: person.id)
 
         expect(response.body).to include(changes_form_submission_path(submission))
         expect(response.body).to include("What this submission changed")
+      end
+
+      it "omits the changes link for a submission that only created new data" do
+        get event_registrant_submissions_path(event, person_id: person.id)
+
+        expect(response.body).not_to include(changes_form_submission_path(submission))
       end
 
       it "returns 404 when person does not exist" do

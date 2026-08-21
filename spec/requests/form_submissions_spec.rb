@@ -736,11 +736,11 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include("new.com")
       end
 
-      it "shows an empty state when nothing changed" do
+      it "shows an empty state when nothing was overwritten" do
         get changes_form_submission_path(submission)
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("didn't change any records")
+        expect(response.body).to include("didn't overwrite any existing values")
       end
 
       it "returns to the event registrant submissions when arriving from there" do
