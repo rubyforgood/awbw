@@ -45,6 +45,56 @@
   pro_tips:
     - "Leave one end blank for an open-ended range — e.g. just \"Registered from\" for everyone who signed up on or after a date."
 
+- name: "Portal colors aligned with the AWBW brand"
+  area: content
+  display_status: public_facing
+  released_on: 2026-08-21
+  pr_number: 2282
+  external_url: "https://github.com/rubyforgood/awbw/blob/main/app/assets/images/brand/awbw-brand-guide.pdf"
+  summary: >-
+    The portal's core colors now match AWBW's official brand palette, so it looks like
+    the rest of AWBW. The primary blue, the green on action buttons, and the orange
+    accent all use the exact brand values.
+  description: >-
+    We reconciled the portal's theme with the official AWBW brand guide. The primary
+    color moved from a darker navy to the true brand blue (#24479E), the green on
+    "registered" and confirmation buttons is now the brand green (#4E8324), and the
+    orange accent is the brand orange (#D56027). These carry across buttons, links,
+    banners, and highlights throughout the portal. The brand guide is linked below for
+    reference.
+
+- name: "Smart field name on every form field"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-08-21
+  action_path: "/forms"
+  pr_number: 2273
+  summary: >-
+    Every form field now shows its "smart field name" — the identifier that wires a
+    field to backend logic — with a "What's this?" link to a reference page, instead
+    of hiding it behind a URL flag.
+
+- name: "Name pronunciation on profiles"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-20
+  action_path: "/people/1"
+  pr_number: 2271
+  summary: >-
+    A person's edit form has a name-pronunciation field, so you can record how to say
+    someone's name alongside their pronouns.
+
+- name: "License credentials on staff cards"
+  area: people
+  display_status: public_facing
+  released_on: 2026-08-19
+  action_path: "/events/1/staff"
+  pr_number: 2263
+  summary: >-
+    Staff flip-cards — on the event staff page and the registrant staff callout — show
+    a person's license-derived credentials after their name, matching their profile,
+    when their profile is set to display credentials.
+
 - name: "Choose how you're credited on what you share"
   area: people
   display_status: user_facing
@@ -187,6 +237,18 @@
       people's primary tags.
     - The "Facilitators since" chip shows each stretch of facilitating separately,
       so a lapse and a return read as two periods.
+
+- name: "\"In memoriam\" designation on legacy grants"
+  area: scholarships
+  display_status: admin_facing
+  released_on: 2026-08-17
+  action_path: "/grants"
+  pr_number: 2244
+  summary: >-
+    Legacy Circle grants can be flagged "in memoriam" so memorial gifts are
+    distinguishable from other legacy scholarships, with a chip on the grant.
+  pro_tips:
+    - "The designation is for recognizing memorial gifts on the Story Share pages."
 
 - name: "Edit an affiliation's details and comments"
   area: people
@@ -783,6 +845,48 @@
     person, not just people with active login accounts.
 
 # ── 2026-06 ─────────────────────────────────────────────────────────────────
+
+- name: "\"Events attended\" on organization profiles"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-06-21
+  action_path: "/organizations/1"
+  pr_number: 1816
+  summary: >-
+    An organization's profile lists the events its people attended, mirroring the
+    events list already shown on person profiles.
+
+- name: "Associated records on person and organization pages"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-07-04
+  action_path: "/people/1"
+  pr_number: 1889
+  summary: >-
+    Person and organization edit and profile pages gather links to everything related
+    to that record — registrations, scholarships, affiliations, the login account, and
+    more — so you can jump straight to any of it from one place.
+
+- name: "Time zone on profiles"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-02-16
+  action_path: "/people/1"
+  pr_number: 1001
+  summary: >-
+    A person can have a time zone set on their profile, so times shown to them line up
+    with where they are.
+
+- name: "Admin account-flow reference"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-03-28
+  action_path: "/users/flow_diagram"
+  pr_number: 1442
+  summary: >-
+    A reference page (linked from the users index) diagramming how invitations, password
+    resets, email changes, and account lockout/unlock work, with an admin triage cheat
+    sheet for common "I can't sign in" situations.
 
 - name: "Refreshed registration ticket"
   area: registration
