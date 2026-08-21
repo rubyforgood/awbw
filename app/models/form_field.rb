@@ -30,22 +30,27 @@ class FormField < ApplicationRecord
   # submitted value for these is a Sector id (as a string).
   SECTOR_FIELD_IDENTIFIERS = (ADDITIONAL_SECTOR_FIELD_IDENTIFIERS + PRIMARY_SECTOR_FIELD_IDENTIFIERS).freeze
 
+  # Single-select "primary age group" field identifier.
+  PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS = %w[primary_age_group].freeze
+
+  # Multi-select "additional age groups" field identifiers. "additional_age_groups"
+  # is the canonical name new forms are built with; the legacy singular
+  # "additional_age_group" is still accepted so existing forms keep resolving.
+  ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS = %w[additional_age_groups additional_age_group].freeze
+
+  # Both age group fields (the single-select "primary" and the multi-select
+  # "additional"), backing the "All age groups" breakdown. The primary field
+  # alone backs the "Primary age group" chart.
+  AGE_GROUP_FIELD_IDENTIFIERS = (PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS + ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS).freeze
+
   # Field identifiers whose selectable options are sourced dynamically from a
   # CategoryType's published categories. The submitted value is a Category id
   # (as a string). Maps the field identifier to its backing CategoryType name.
-  # Both the "primary" and "additional" age group fields are backed by the
-  # published AgeRange categories. Unlike the sector fields, age groups have no
-  # catch-all option — the additional sector field keeps "Other", but neither age
+  # Every age group field (primary + additional, canonical and legacy) is backed
+  # by the published AgeRange categories. Unlike the sector fields, age groups have
+  # no catch-all option — the additional sector field keeps "Other", but no age
   # field offers one.
-  DYNAMIC_FIELD_CATEGORY_TYPES = {
-    "primary_age_group" => "AgeRange",
-    "additional_age_group" => "AgeRange"
-  }.freeze
-
-  # Both age group fields (the single-select "primary" and the multi-select
-  # "additional"), backing the "All age groups" breakdown. The "primary_age_group"
-  # field alone backs the "Primary age group" chart.
-  AGE_GROUP_FIELD_IDENTIFIERS = %w[primary_age_group additional_age_group].freeze
+  DYNAMIC_FIELD_CATEGORY_TYPES = AGE_GROUP_FIELD_IDENTIFIERS.index_with { "AgeRange" }.freeze
 
   # The payment-method field. Its answer options ("Credit card (now)", etc.) are
   # wired to Stripe charge logic in the controllers, so they must not be edited
