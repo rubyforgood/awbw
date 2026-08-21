@@ -632,8 +632,13 @@ class EventRegistrationsController < ApplicationController
     form = registration.event.registration_form
     return [] unless form
 
+    organization_identifiers = %w[
+      organization_name organization_position organization_website organization_type
+      organization_street organization_city organization_state organization_zip organization_country
+    ]
+    accepted = organization_identifiers.flat_map { |identifier| FormField.aliased_identifiers(identifier) }
     field_ids = form.form_fields
-      .where(field_identifier: %w[agency_name agency_position agency_website agency_type agency_street agency_city agency_state agency_zip agency_country])
+      .where(field_identifier: accepted)
       .pluck(:field_identifier, :id).to_h
 
     entries = registration.registrant.form_submissions
@@ -642,19 +647,24 @@ class EventRegistrationsController < ApplicationController
       .includes(:form_answers)
       .map do |submission|
         answers = submission.form_answers.index_by(&:form_field_id)
-        answer = ->(identifier) { (id = field_ids[identifier]) && answers[id]&.submitted_answer }
+        # Resolve the canonical identifier to whichever spelling this form used
+        # (canonical or legacy "agency_*"), then read its answer.
+        answer = ->(identifier) do
+          id = FormField.aliased_identifiers(identifier).lazy.filter_map { |name| field_ids[name] }.first
+          id && answers[id]&.submitted_answer
+        end
         {
           submission: submission,
-          org_name: answer.call("agency_name"),
-          position: answer.call("agency_position"),
-          website: answer.call("agency_website"),
-          agency_type: answer.call("agency_type"),
+          org_name: answer.call("organization_name"),
+          position: answer.call("organization_position"),
+          website: answer.call("organization_website"),
+          agency_type: answer.call("organization_type"),
           address: {
-            street_address: answer.call("agency_street"),
-            city: answer.call("agency_city"),
-            state: answer.call("agency_state"),
-            zip_code: answer.call("agency_zip"),
-            country: answer.call("agency_country")
+            street_address: answer.call("organization_street"),
+            city: answer.call("organization_city"),
+            state: answer.call("organization_state"),
+            zip_code: answer.call("organization_zip"),
+            country: answer.call("organization_country")
           }
         }
       end

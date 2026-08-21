@@ -19,25 +19,26 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
           registrant: source.registrant, transferred_from_registration: source)
       end
 
-      it "blocks the manual new form, redirecting to the source registration" do
+      it "allows the manual new form so CE can be added at the new event" do
         get new_continuing_education_registration_path(allocatable_sgid: transferred_in.to_sgid.to_s)
 
-        expect(response).to redirect_to(edit_event_registration_path(source))
+        expect(response).to have_http_status(:success)
       end
 
-      it "blocks manual create, redirecting to the source registration" do
+      it "allows a manual create at the new event" do
         expect {
           post continuing_education_registrations_path,
                params: { allocatable_sgid: transferred_in.to_sgid.to_s,
                          continuing_education_registration: { hours: "6", cost_dollars: "50",
                            license_kind: "LCSW", license_number: "123" } }
-        }.not_to change(ContinuingEducationRegistration, :count)
-
-        expect(response).to redirect_to(edit_event_registration_path(source))
+        }.to change(ContinuingEducationRegistration, :count).by(1)
       end
 
-      it "ignores a submitted cost when updating a transfer-created record (cost is locked)" do
+      it "ignores a submitted cost when updating a transfer-carried record (cost is locked)" do
         license = create(:professional_license, person: source.registrant)
+        # A genuine transfer-carried record: the source holds the matching stub.
+        source.continuing_education_registrations.create!(
+          professional_license: license, hours: 0, cost_cents: 4_000, skip_event_defaults: true)
         ce = transferred_in.continuing_education_registrations.create!(
           professional_license: license, hours: 6, cost_cents: 6_000, skip_event_defaults: true)
 
@@ -46,6 +47,18 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
                         license_kind: license.kind, license_number: license.number } }
 
         expect(ce.reload.cost_cents).to eq(6_000)
+      end
+
+      it "lets an admin edit the cost of a CE added fresh at the new event (no source stub)" do
+        license = create(:professional_license, person: source.registrant)
+        ce = transferred_in.continuing_education_registrations.create!(
+          professional_license: license, hours: 6, cost_cents: 6_000, skip_event_defaults: true)
+
+        patch continuing_education_registration_path(ce),
+              params: { continuing_education_registration: { hours: "6", cost_dollars: "999",
+                        license_kind: license.kind, license_number: license.number } }
+
+        expect(ce.reload.cost_cents).to eq(99_900)
       end
     end
 

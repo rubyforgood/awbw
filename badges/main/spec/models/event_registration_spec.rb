@@ -1186,6 +1186,25 @@ RSpec.describe EventRegistration, type: :model do
       expect(EventRegistration.organization_linking_status("linked", event)).to contain_exactly(linked)
       expect(EventRegistration.organization_linking_status("unlinked", event)).to contain_exactly(unlinked)
     end
+
+    it "filters pending: a submitted organization name with nothing linked yet" do
+      form = create(:form)
+      create(:event_form, :registration, event: event, form: form)
+      field = create(:form_field, form: form, field_identifier: "organization_name")
+
+      pending = create(:event_registration, event: event)
+      pending_submission = create(:form_submission, person: pending.registrant, form: form)
+      create(:form_answer, form_submission: pending_submission, form_field: field, submitted_answer: "Unlisted Org")
+
+      linked = create(:event_registration, event: event)
+      linked_submission = create(:form_submission, person: linked.registrant, form: form)
+      create(:form_answer, form_submission: linked_submission, form_field: field, submitted_answer: "Linked Org")
+      create(:event_registration_organization, event_registration: linked)
+
+      create(:event_registration, event: event)
+
+      expect(EventRegistration.organization_linking_status("pending", event)).to contain_exactly(pending)
+    end
   end
 
   describe "#paid_in_full?" do

@@ -18,6 +18,21 @@
             </p>
           </div>
         </div>
+      <% elsif f.object.transferred_in? && (transfer_source = f.object.transferred_from_registration) %>
+        <%# ---- Transferred-in notice (issue #1944): mirror the transferred-out lock
+            as a prominent in-frame card so admins/staff see the context. ---- %>
+        <div class="flex items-start gap-3 rounded-xl border border-teal-200 bg-teal-50 p-4 text-sm text-teal-900">
+          <i class="fa-solid fa-right-to-bracket mt-0.5 shrink-0 text-teal-600"></i>
+          <div>
+            <p class="font-semibold">This registration was transferred in from <%= transfer_source.event.title %>.</p>
+            <p class="mt-0.5 text-teal-800">
+              Their payment, scholarship, and continuing-education records live on the
+              <%= link_to "original registration", edit_event_registration_path(transfer_source, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>;
+              attendance and the certificate are earned here.
+              <%= link_to "Manage transfer", transfer_event_registration_path(transfer_source, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>.
+            </p>
+          </div>
+        </div>
       <% end %>
       <%# ---- Registrant + registration status — one compact card. The person on
           the left (registration date and submission links beneath); the status

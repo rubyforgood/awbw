@@ -52,6 +52,37 @@ class FormField < ApplicationRecord
   # field offers one.
   DYNAMIC_FIELD_CATEGORY_TYPES = AGE_GROUP_FIELD_IDENTIFIERS.index_with { "AgeRange" }.freeze
 
+  # Organization ("agency") contact-info field identifiers. New forms are built
+  # with the canonical "organization_" names; the legacy "agency_" names stay
+  # valid so existing forms — and the submissions already stored against them —
+  # keep resolving. Maps each canonical identifier to every identifier accepted
+  # for it (canonical first, legacy second). This is the single source of truth
+  # for the rename: a lookup keyed on either spelling matches a field carrying
+  # either one.
+  ORGANIZATION_FIELD_ALIASES = {
+    "organization_name" => %w[organization_name agency_name],
+    "organization_position" => %w[organization_position agency_position],
+    "organization_website" => %w[organization_website agency_website],
+    "organization_type" => %w[organization_type agency_type],
+    "organization_street" => %w[organization_street agency_street],
+    "organization_city" => %w[organization_city agency_city],
+    "organization_state" => %w[organization_state agency_state],
+    "organization_zip" => %w[organization_zip agency_zip],
+    "organization_country" => %w[organization_country agency_country]
+  }.freeze
+
+  # Every identifier that should match a field for the given identifier — a
+  # renamed organization field's canonical name plus its legacy "agency_" alias,
+  # or just the identifier itself for everything else. Accepts either spelling as
+  # input, so callers can key on the canonical name and still match legacy data
+  # (or pass a legacy literal and still match a new form). Use it to build the
+  # `field_identifier IN (…)` set for a lookup, or to compare an identifier.
+  def self.aliased_identifiers(identifier)
+    ORGANIZATION_FIELD_ALIASES[identifier] ||
+      ORGANIZATION_FIELD_ALIASES.values.find { |names| names.include?(identifier) } ||
+      [ identifier ]
+  end
+
   # The payment-method field. Its answer options ("Credit card (now)", etc.) are
   # wired to Stripe charge logic in the controllers, so they must not be edited
   # casually from the form builder — the editor shows them read-only unless the
@@ -175,6 +206,14 @@ class FormField < ApplicationRecord
 
   def selectable?
     answer_type.in?(SELECTABLE_ANSWER_TYPES)
+  end
+
+  # True when this field's identifier matches the given identifier, treating a
+  # renamed organization field's canonical and legacy "agency_" spellings as
+  # equivalent (see ORGANIZATION_FIELD_ALIASES). Lets a caller compare against the
+  # canonical name and still match a field seeded under the legacy one.
+  def matches_identifier?(identifier)
+    field_identifier.in?(FormField.aliased_identifiers(identifier))
   end
 
   # True for fields whose answer options are tied to backend logic (currently the

@@ -30,12 +30,12 @@ module EventRegistrationServices
     ADDITIONAL_FORMS_W9 = "W-9".freeze
 
     # Well-known field_identifiers for the registrant's organization name and
-    # position on the registration form. We name them in organization terms here
-    # as we move the vocabulary away from "agency"; the stored identifiers are
-    # still "agency_*" pending a form-field rename. Kept here so the service,
-    # controller, and specs agree on a single source.
-    ORGANIZATION_NAME_IDENTIFIER = "agency_name".freeze
-    ORGANIZATION_POSITION_IDENTIFIER = "agency_position".freeze
+    # position on the registration form. New forms carry the canonical
+    # "organization_*" names; legacy "agency_*" forms still resolve because
+    # field_value expands both (see FormField.aliased_identifiers). Kept here so
+    # the service, controller, and specs agree on a single source.
+    ORGANIZATION_NAME_IDENTIFIER = "organization_name".freeze
+    ORGANIZATION_POSITION_IDENTIFIER = "organization_position".freeze
 
     # Well-known field_identifier of the "Will someone else be paying?" question
     # seeded after the payment method. Answering it "Yes" sets the registration's
@@ -156,7 +156,7 @@ module EventRegistrationServices
     end
 
     def field_value(key)
-      field = @registration_form.form_fields.find_by(field_identifier: key)
+      field = @registration_form.form_fields.find_by(field_identifier: FormField.aliased_identifiers(key))
       return nil unless field
       @form_params[field.id.to_s]
     end
@@ -231,8 +231,8 @@ module EventRegistrationServices
     def sync_organization_profile(organization)
       OrganizationServices::SyncProfile.call(
         organization: organization,
-        website: field_value("agency_website"),
-        agency_type: field_value("agency_type")
+        website: field_value("organization_website"),
+        agency_type: field_value("organization_type")
       )
     end
 
@@ -368,11 +368,11 @@ module EventRegistrationServices
     def create_agency_address(organization)
       OrganizationServices::UpsertAddress.call(
         organization: organization,
-        street_address: field_value("agency_street"),
-        city: field_value("agency_city"),
-        state: field_value("agency_state"),
-        zip_code: field_value("agency_zip"),
-        country: field_value("agency_country")
+        street_address: field_value("organization_street"),
+        city: field_value("organization_city"),
+        state: field_value("organization_state"),
+        zip_code: field_value("organization_zip"),
+        country: field_value("organization_country")
       )
     end
 

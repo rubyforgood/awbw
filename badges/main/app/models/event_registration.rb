@@ -474,15 +474,16 @@ class EventRegistration < ApplicationRecord
   }
   # The registrant's organization-LINKING status, not the org's own
   # OrganizationStatus: "linked" = at least one org linked; "unlinked" = none;
-  # "pending" = an agency name was submitted but nothing is linked yet (the Pending
-  # chip on the roster). Needs the event to resolve its agency_name field.
+  # "pending" = an organization name was submitted but nothing is linked yet (the
+  # Pending chip on the roster). Needs the event to resolve its organization-name
+  # field (canonical "organization_name" or the legacy "agency_name").
   scope :organization_linking_status, ->(value, event) {
     linked = EventRegistrationOrganization.select(:event_registration_id)
     case value
     when "linked" then where(id: linked)
     when "unlinked" then where.not(id: linked)
     when "pending"
-      field = event.registration_form&.form_fields&.find_by(field_identifier: "agency_name")
+      field = event.registration_form&.form_fields&.find_by(field_identifier: FormField.aliased_identifiers("organization_name"))
       next none unless field
       submitted = FormAnswer.joins(:form_submission)
         .where(form_field_id: field.id, form_submissions: { form_id: event.registration_form.id })
