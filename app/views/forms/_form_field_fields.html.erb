@@ -13,7 +13,8 @@
     answers_on_file: "bg-white text-amber-600 border-amber-300"
   }
 %>
-<div class="nested-fields flex items-center gap-3 <%= field.group_header? ? 'pl-3 pr-6' : 'px-6' %> py-3 border-b border-gray-100 hover:bg-gray-50"
+<div class="nested-fields flex items-center gap-3 <%= field.group_header? ? 'pl-3 pr-6' : 'px-6' %> py-3 border-b border-gray-100 hover:bg-gray-50 scroll-mt-24"
+     <% if field.persisted? %>id="form_field_<%= field.id %>"<% end %>
      data-sortable-id="<%= field.id %>"
      <% if field.section.present? %>data-section="<%= field.section %>"<% end %>
      <% if field.group_header? %>data-group-header<% end %>>
@@ -146,20 +147,20 @@
           <%= f.number_field :max_characters, min: 1, placeholder: "Max chars",
                 class: "w-24 shrink-0 rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
                 title: "Maximum number of characters allowed (free-form text fields only)" %>
+          <%# The smart field name wires this field to backend logic (Stripe, service
+              areas, email checks, etc.); most fields need none. The linked hint opens
+              the reference page listing what each name does. %>
+          <div class="flex flex-col shrink-0">
+            <%= f.text_field :field_identifier, placeholder: "Smart field name",
+                  class: "w-32 min-w-0 rounded border-gray-300 shadow-sm px-2 py-1 font-mono text-xs",
+                  title: "Internal name that wires this field to backend logic — leave blank for an ordinary field" %>
+            <%= link_to "What's this?", smart_form_settings_forms_path(form_id: @form.id, event_id: @dashboard_event&.id, field_id: field.id),
+                  class: "mt-0.5 text-3xs text-purple-600 hover:text-purple-800 underline",
+                  target: "_blank", rel: "noopener" %>
+          </div>
           <%= link_to_remove_association "Remove", f,
                 class: "text-sm text-gray-400 hover:text-red-600 underline shrink-0" %>
         </div>
-
-        <% if params[:admin] == "true" %>
-          <%# Field identifiers tie a field to backend logic (Stripe, service areas, email, etc.),
-              so they're only editable with ?admin=true on the URL. %>
-          <label class="flex items-center justify-end gap-2 text-xs text-gray-500">
-            <span class="shrink-0 font-medium">Field identifier</span>
-            <%= f.text_field :field_identifier, placeholder: "e.g. payment_method",
-                  class: "w-1/4 min-w-0 rounded border-gray-300 shadow-sm px-2 py-1 font-mono text-xs",
-                  title: "Internal identifier linking this field to system logic — leave blank for an ordinary field" %>
-          </label>
-        <% end %>
 
         <% unless option_source %>
           <% options_locked = field.fixed_options? && params[:admin] != "true" %>

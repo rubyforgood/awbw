@@ -96,6 +96,17 @@ RSpec.describe "Forms", type: :request do
 
         expect(response.body).not_to include("Back to")
       end
+
+      # Opened in a new tab from a field's "What's this?" hint, so the back link
+      # must anchor to that exact field's row, not just the editor.
+      it "anchors the back link to the field it was opened from" do
+        form = create(:form, :standalone, name: "Reg form")
+        field = create(:form_field, form: form)
+
+        get smart_form_settings_forms_path(form_id: form.id, field_id: field.id)
+
+        expect(response.body).to include("#{edit_form_path(form)}#form_field_#{field.id}")
+      end
     end
 
     context "as regular user" do
@@ -264,6 +275,16 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).not_to match(/payment_method.{0,600}\+ Add option/m)
       # A note explains why they're locked.
       expect(response.body).to include("tied to system logic")
+    end
+
+    it "shows the smart field name input without the admin override, with a link to the reference page" do
+      form = FormBuilderService.new(name: "Test", sections: %i[person_identifier]).call
+
+      get edit_form_path(form)
+
+      expect(response.body).to include("Smart field name")
+      expect(response.body).to include("[field_identifier]")
+      expect(response.body).to include(smart_form_settings_forms_path(form_id: form.id))
     end
 
     it "renders payment-method options as editable inputs with ?admin=true" do
