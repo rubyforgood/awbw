@@ -164,10 +164,6 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       let(:license) { create(:professional_license, person: origin_reg.registrant) }
 
       it "carries hours/cost from the source without re-defaulting from the event" do
-        # A real transfer leaves a matching stub on the source; that stub is what
-        # marks the destination record as transfer-carried.
-        origin_reg.continuing_education_registrations.create!(
-          professional_license: license, hours: 0, cost_cents: 10_000, skip_event_defaults: true)
         dest_reg = create(:event_registration, event: create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 10_000),
           registrant: origin_reg.registrant, transferred_from_registration: origin_reg)
         ce = dest_reg.continuing_education_registrations.create!(

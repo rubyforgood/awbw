@@ -45,14 +45,12 @@ module Events
     # scholarship exists, or a pending state while it is only requested. Nothing
     # to show when neither requested nor received.
     def scholarship
-      # A transferred-in recipient's award lives on the source registration, so
-      # resolve through the transfer and still show the callout here. (#1944)
-      unless @event_registration.scholarship_requested? || @event_registration.scholarship_recipient?
+      unless @event_registration.scholarship_requested? || @event_registration.scholarship?
         redirect_to registration_ticket_path(@event_registration.slug)
         return
       end
 
-      @scholarship = @event_registration.effective_scholarship
+      @scholarship = @event_registration.scholarships.first
       @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
     end
 

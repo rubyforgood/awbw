@@ -525,13 +525,8 @@ RSpec.describe "EventRegistrations", type: :request do
         source = create(:event_registration, event: source_event, status: "transferred_out")
         incoming = create(:event_registration, event: create(:event, ce_hours_offered: 6),
           registrant: source.registrant, transferred_from_registration: source)
-        license = create(:professional_license, person: source.registrant)
-        # A real transfer leaves a matching stub on the source; that's what marks
-        # the destination record as transfer-carried.
-        source.continuing_education_registrations.create!(hours: 0, cost_cents: 4_000,
-          skip_event_defaults: true, professional_license: license)
-        incoming.continuing_education_registrations.create!(hours: 6, cost_cents: 0,
-          skip_event_defaults: true, professional_license: license)
+        incoming.continuing_education_registrations.create!(hours: 6, cost_cents: 0, skip_event_defaults: true,
+          professional_license: create(:professional_license, person: source.registrant))
 
         get edit_event_registration_path(incoming)
 

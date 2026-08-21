@@ -30,9 +30,7 @@
     </div>
   </div>
 
-  <%# A transferred-out reg is settled/paid at the new event, not here — hide the
-      pay action (the balance still shows above for reference). (#1944) %>
-  <% if @event_registration.remaining_cost.positive? && !@event_registration.transferred_out? %>
+  <% if @event_registration.remaining_cost.positive? %>
     <div class="mt-6 flex justify-center">
       <% if sample_preview? %>
         <button type="button" disabled
