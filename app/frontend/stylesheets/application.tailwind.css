@@ -136,6 +136,15 @@
   text-decoration: line-through;
 }
 
+/* An empty date filter renders its mm/dd/yyyy hint in the field's text color,
+   not a ::placeholder, so it can't be greyed with placeholder:* utilities. Match
+   it to the neighboring placeholders (placeholder:text-gray-400). The empty class
+   is only present while the field has no value (see events/_filter_date), so a
+   real date still renders in the normal text color. */
+input.date-filter-empty::-webkit-datetime-edit {
+  color: var(--color-gray-400);
+}
+
 /* Tom Select "flat" variant: the wrapper inherits the field's bordered box,
    so the inner control is transparent and borderless — no box-within-a-box.
    Used for optional searchable-selects (e.g. the event location) so the field

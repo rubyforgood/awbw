@@ -5,7 +5,13 @@
       label        – field label
       field_class  – Tailwind classes for the <input>
       wrapper_class – optional wrapper width (defaults to the roster's w-48) %>
+<%# A native date input has no ::placeholder, so the browser renders its
+    mm/dd/yyyy format hint in the field's own text color (dark). Tag it empty so
+    the stylesheet can grey that hint to match the text/select placeholders next
+    to it; the class drops once a date is set (server-rendered), so a real value
+    stays dark. %>
+<% input_class = params[param].present? ? field_class : "#{field_class} date-filter-empty" %>
 <div class="<%= local_assigns.fetch(:wrapper_class, "w-full md:w-48") %>">
   <%= label_tag param, label, class: search_label_class %>
-  <%= date_field_tag param, params[param], class: field_class %>
+  <%= date_field_tag param, params[param], class: input_class %>
 </div>
