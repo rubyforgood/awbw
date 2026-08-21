@@ -314,17 +314,6 @@ textarea.comment-truncated:focus {
   text-align: left;
 }
 
-/* Event register/deregister buttons (!important needed to override inline styles) */
-.event-register-btn:hover {
-  color: rgb(170, 46, 0) !important;
-  background-color: white !important;
-}
-
-.event-deregister-btn:hover {
-  background-color: rgb(170, 46, 0) !important;
-  color: white !important;
-}
-
 /* Responsive table: Kevin Powell card-based approach for small screens */
 @media (max-width: 767px) {
   .responsive-table thead {
