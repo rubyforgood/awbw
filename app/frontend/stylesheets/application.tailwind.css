@@ -24,8 +24,8 @@
      surface here and every box updates. Surfaces are the brand palette; borders
      and fg are derived to stay readable on them. `neutral` is the gray fallback
      for unrecognized flash types (kept plain — gray is not a status color). */
-  --color-info-surface: #c9def5;
-  --color-info-border: #a7c7ea;
+  --color-info-surface: #cfdbf2;
+  --color-info-border: #a6badf;
   --color-info-fg: #24479e;
   --color-success-surface: #e7f0c6;
   --color-success-border: #cbdd97;
