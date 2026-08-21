@@ -101,8 +101,9 @@
       <% option_source = form_field_option_source(field) %>
       <div class="hidden mt-2 pb-2 flex flex-col gap-3" data-field-options-target="panel">
         <div class="flex flex-wrap items-center gap-2">
-          <%# Fixed-width first column so the Subtitle box lines up under the answer-type dropdown above. %>
-          <div class="min-w-0 flex-[3_1_10rem]">
+          <%# Fixed-width first column (no grow) so it doesn't balloon and push the rest of
+              the row rightward, keeping room for the smart field name and Remove. %>
+          <div class="min-w-0 flex-[0_1_10rem]">
             <% if option_source %>
               <%# These options are managed centrally, not per-field — link admins to that list. %>
               <span class="inline-flex items-center gap-1.5 text-sm text-gray-500">
@@ -132,10 +133,10 @@
             ]
           %>
           <%= f.text_area :subtitle, rows: 1, placeholder: "Subtitle",
-                class: "min-w-0 flex-[2_1_9rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+                class: "min-w-0 flex-[0_1_7rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
                 title: "Optional subtitle shown under the field label" %>
           <%= f.text_area :hint_text, rows: 1, placeholder: "Hint",
-                class: "min-w-0 flex-[2_1_9rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+                class: "min-w-0 flex-[0_1_7rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
                 title: "Optional hint shown below the field input" %>
           <%= f.select :width, width_options,
                 {},
