@@ -35,6 +35,15 @@ puts "Creating Persons and Affiliations for seed users…"
   )
 end
 
+# Give Amy and Aisha a legacy member_since that predates their facilitator
+# affiliations, so their person edit pages show the member_since-vs-facilitator
+# discrepancy flag (alongside the grey "Affiliated since" note).
+{ "amy.user@example.com" => 8.years.ago.to_date,
+  "aisha.user@example.com" => 5.years.ago.to_date }.each do |email, date|
+  person = User.find_by(email: email)&.person
+  person.update!(member_since: date) if person && person.member_since.nil?
+end
+
 puts "Creating People…"
 admin_user = User.find_by(email: "umberto.user@example.com")
 orgs = Organization.all.to_a
