@@ -180,6 +180,23 @@ Person.where(
   end
 end
 
+# A deterministic person whose legacy member_since AND earlier non-facilitator
+# affiliation both diverge from the facilitator start — so the person edit form
+# shows BOTH the grey "Affiliated since" note and the member_since flag at once.
+puts "Creating the member-since discrepancy demo person…"
+unless Person.exists?(first_name: "Grace", last_name: "Legacy")
+  demo = Person.create!(
+    first_name: "Grace",
+    last_name: "Legacy",
+    profile_is_searchable: true,
+    member_since: Date.new(2016, 1, 1),
+    created_by: admin_user,
+    updated_by: admin_user
+  )
+  Affiliation.create!(person: demo, organization: orgs.first, title: "Board Member", start_date: Date.new(2015, 3, 1))
+  Affiliation.create!(person: demo, organization: orgs.second || orgs.first, title: "Facilitator", start_date: Date.new(2018, 6, 1))
+end
+
 puts "Assigning addresses and sectors to people…"
 # Curated state/county pairs so the event overview's States and Counties cards
 # show a recognizable spread rather than scattered random values.
