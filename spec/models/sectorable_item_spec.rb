@@ -27,6 +27,30 @@ RSpec.describe SectorableItem do
 
       expect(tagging.title).to start_with(log.title.to_s)
     end
+
+    it "does not raise for a non-WorkshopLog sectorable (e.g. a person)" do
+      item = create(:person).sectorable_items.create!(sector: create(:sector, :published))
+
+      expect { item.title }.not_to raise_error
+    end
+  end
+
+  describe "lifecycle tracking" do
+    # Regression: SectorableItem#title referenced windows_type (a WorkshopLog-only
+    # association), so building the Ahoy payload raised for a person/org sector tag
+    # and the event was silently swallowed — sector tag changes went untracked.
+    it "buffers a create.sectorable_item event when a person is tagged with a sector" do
+      person = create(:person)
+      Current.source = "public_registration"
+      allow(Analytics::LifecycleBuffer).to receive(:push).and_call_original
+
+      person.sectorable_items.create!(sector: create(:sector, :published))
+
+      expect(Analytics::LifecycleBuffer).to have_received(:push)
+        .with(hash_including(name: "create.sectorable_item"))
+    ensure
+      Current.source = nil
+    end
   end
 
   # it 'is valid with valid attributes' do

@@ -863,4 +863,78 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       end
     end
   end
+
+  describe "POST create stamps the submission id on lifecycle events" do
+    def field(identifier)
+      create(:form_field, form: form, field_identifier: identifier, name: identifier.humanize, required: false)
+    end
+
+    # One question per record the registration writes, so every smart-field-induced
+    # change fires a lifecycle event we can assert carries the submission id.
+    let!(:first_field) { field("first_name") }
+    let!(:last_field) { field("last_name") }
+    let!(:email_field) { field("primary_email") }
+    let!(:ethnicity_field) { field("racial_ethnic_identity") }
+    let!(:street_field) { field("mailing_street") }
+    let!(:city_field) { field("mailing_city") }
+    let!(:state_field) { field("mailing_state") }
+    let!(:zip_field) { field("mailing_zip") }
+    let!(:phone_field) { field("phone") }
+    let!(:name_field) { field("agency_name") }
+    let!(:website_field) { field("agency_website") }
+    let!(:position_field) { field("agency_position") }
+    let!(:sector_field) do
+      create(:form_field, form: form, answer_type: :multi_select_checkbox,
+             field_identifier: "primary_service_area", name: "Primary sector", required: false)
+    end
+    let!(:age_field) do
+      create(:form_field, form: form, answer_type: :multi_select_checkbox,
+             field_identifier: "primary_age_group", name: "Age group", required: false)
+    end
+
+    let!(:organization) { create(:organization, name: "Riverside Community Arts", website_url: "old.example.com") }
+    let!(:sector) { create(:sector, :published, name: "Healthcare") }
+    let!(:age_type) { create(:category_type, :published, name: "AgeRange") }
+    let!(:age_group) { create(:category, :published, name: "Adolescents (13-17)", category_type: age_type) }
+
+    it "traces every record the registration wrote back to its form submission" do
+      tracked = []
+      allow_any_instance_of(Ahoy::Tracker).to receive(:track) do |_instance, name, props|
+        tracked << [ name, props ]
+      end
+
+      post event_public_registration_path(event), params: { public_registration: { form_fields: {
+        essay_field.id.to_s => "this answer has more than five words",
+        first_field.id.to_s => "Dana",
+        last_field.id.to_s => "Ruiz",
+        email_field.id.to_s => "dana@example.com",
+        ethnicity_field.id.to_s => "Prefer not to say",
+        street_field.id.to_s => "114 SE Alder St",
+        city_field.id.to_s => "Portland",
+        state_field.id.to_s => "OR",
+        zip_field.id.to_s => "97214",
+        phone_field.id.to_s => "5035550148",
+        name_field.id.to_s => "Riverside Community Arts",
+        website_field.id.to_s => "new.example.com",
+        position_field.id.to_s => "Art therapist",
+        sector_field.id.to_s => [ sector.id.to_s ],
+        age_field.id.to_s => [ age_group.id.to_s ]
+      } } }
+
+      submission = FormSubmission.find_by!(form: form, event: event, role: "registration")
+
+      lifecycle = tracked.select { |name, _| name.match?(/\A(create|update|destroy)\.[a-z_]+\z/) }
+      record_types = lifecycle.map { |name, _| name.split(".").last }.uniq
+
+      # Every kind of record a smart field touches must be represented…
+      expect(record_types).to include(
+        "person", "address", "contact_method", "organization", "affiliation",
+        "sectorable_item", "categorizable_item", "event_registration", "form_submission"
+      )
+
+      # …and each of those events must trace back to this submission.
+      unstamped = lifecycle.reject { |_name, props| props[:form_submission_id] == submission.id }
+      expect(unstamped.map(&:first)).to be_empty
+    end
+  end
 end
