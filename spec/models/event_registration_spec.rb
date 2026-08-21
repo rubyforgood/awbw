@@ -487,6 +487,27 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe ".registered_between" do
+    let!(:early) { create(:event_registration).tap { |r| r.update_column(:created_at, Time.zone.parse("2026-01-10 09:00")) } }
+    let!(:mid) { create(:event_registration).tap { |r| r.update_column(:created_at, Time.zone.parse("2026-02-15 09:00")) } }
+    let!(:late) { create(:event_registration).tap { |r| r.update_column(:created_at, Time.zone.parse("2026-03-20 09:00")) } }
+
+    it "filters to registrations created within an inclusive date range" do
+      results = EventRegistration.registered_between("2026-02-01", "2026-02-28")
+      expect(results).to contain_exactly(mid)
+    end
+
+    it "includes registrations created on the end date (end of day)" do
+      results = EventRegistration.registered_between(nil, "2026-02-15")
+      expect(results).to contain_exactly(early, mid)
+    end
+
+    it "treats a blank or unparseable bound as open-ended" do
+      expect(EventRegistration.registered_between("2026-02-01", "")).to contain_exactly(mid, late)
+      expect(EventRegistration.registered_between("not-a-date", "not-a-date")).to contain_exactly(early, mid, late)
+    end
+  end
+
   describe ".comment_text" do
     it "matches registrations whose comment topic or body contains the term" do
       reg_body = create(:event_registration)
