@@ -1,5 +1,6 @@
 <%= simple_form_for @person, html: { multipart: true, class: "space-y-8",
-                                          data: { controller: "dirty-form affiliation-dates affiliation-facilitator-warning" } } do |f| %>
+                                          data: { controller: "dirty-form affiliation-dates affiliation-facilitator-warning",
+                                                  affiliation_dates_member_since_value: @person.member_since&.strftime("%Y-%m-%d") || "" } } do |f| %>
   <%= render 'shared/errors', resource: @person if @person.errors.any? %>
   <%= render "duplicate_people_warning" %>
 
@@ -275,11 +276,16 @@
           </div>
           <div class="pt-1">
             <span class="font-medium text-gray-900" data-affiliation-dates-target="facilitatorSince"><%= decorated.facilitator_since_range %></span>
-            <% if decorated.member_since_earlier_than_facilitator_affiliations? %>
-              <p class="mt-1 text-xs text-amber-700">⚠ Earlier date on file: <%= person.member_since.strftime("%b %Y") %></p>
-            <% elsif decorated.member_since_differs_from_facilitator_affiliations? %>
-              <p class="mt-1 text-xs text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i>Different date on file: <%= person.member_since.strftime("%b %Y") %></p>
-            <% end %>
+            <% member_since_earlier = decorated.member_since_earlier_than_facilitator_affiliations? %>
+            <% member_since_differs = !member_since_earlier && decorated.member_since_differs_from_facilitator_affiliations? %>
+            <p class="mt-1 text-xs <%= member_since_earlier ? "text-amber-700" : member_since_differs ? "text-gray-500" : "hidden" %>"
+               data-affiliation-dates-target="memberSinceFlag">
+              <% if member_since_earlier %>
+                ⚠ Earlier date on file: <%= person.member_since.strftime("%b %Y") %>
+              <% elsif member_since_differs %>
+                <i class="fa-solid fa-circle-info mr-1"></i>Different date on file: <%= person.member_since.strftime("%b %Y") %>
+              <% end %>
+            </p>
             <div class="group/aff relative mt-1 inline-flex items-center gap-1 cursor-help <%= "hidden" unless decorated.affiliated_since_note %>"
                  data-affiliation-dates-target="affiliatedNote">
               <span class="text-xs text-gray-500" data-affiliation-dates-target="affiliatedNoteText"><%= decorated.affiliated_since_note %></span>

@@ -84,6 +84,30 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     expect(page).to have_css("#{note}.hidden", visible: :all, wait: 5)
   end
 
+  it "toggles the member-since flag live as the facilitator start crosses member_since" do
+    flagged = create(:person, member_since: Date.new(2015, 6, 1))
+    create(:affiliation, person: flagged, organization: org1, title: "Facilitator", start_date: "2020-03-01")
+
+    visit_and_wait edit_person_path(flagged, admin: true)
+    flag = "[data-affiliation-dates-target='memberSinceFlag']"
+    fac_start = -> {
+      all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
+        f.find("input[name*='title']").value.strip == "Facilitator"
+      }.find("input[name*='start_date']")
+    }
+
+    # member_since (Jun 2015) is earlier than the facilitator start (Mar 2020).
+    expect(page).to have_css("#{flag}.text-amber-700", text: "Earlier date on file: Jun 2015")
+
+    # Facilitator start now precedes member_since — it merely differs.
+    set_date_input(fac_start.call, "2014-01-01")
+    expect(page).to have_css("#{flag}.text-gray-500", text: "Different date on file: Jun 2015", wait: 5)
+
+    # Facilitator start lands in member_since's month — no flag.
+    set_date_input(fac_start.call, "2015-06-10")
+    expect(page).to have_css("#{flag}.hidden", visible: :all, wait: 5)
+  end
+
   it "shows end date and icon when the facilitator affiliation is inactive" do
     visit_and_wait edit_person_path(person, admin: true)
 

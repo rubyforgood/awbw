@@ -1,13 +1,15 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["facilitatorSince", "affiliatedNote", "affiliatedNoteText", "affiliationsContainer", "programStatus"]
+  static targets = ["facilitatorSince", "affiliatedNote", "affiliatedNoteText", "memberSinceFlag", "affiliationsContainer", "programStatus"]
   // The person form shows a single Mon YYYY – Mon YYYY range; the org form
   // (mergedPeriods) mirrors the AffiliationPeriods service so the live value
-  // matches the server render. statusBuckets carries each bucket's label + pill
-  // classes from DomainTheme.
+  // matches the server render. memberSince is the person's legacy facilitator-since
+  // date (person form only), flagged when it disagrees with the facilitator start.
+  // statusBuckets carries each bucket's label + pill classes from DomainTheme.
   static values = {
     mergedPeriods: Boolean,
+    memberSince: String,
     statusBuckets: Object
   }
 
@@ -82,6 +84,11 @@ export default class extends Controller {
       this.updateAffiliatedNote(affiliatedSince, facilitatorSince)
     }
 
+    // Mirrors PersonDecorator#member_since_{earlier_than,differs_from}_facilitator_affiliations?.
+    if (this.hasMemberSinceFlagTarget) {
+      this.updateMemberSinceFlag(facilitatorSince)
+    }
+
     // Mirrors OrganizationDecorator#organization_status_bucket.
     if (this.hasProgramStatusTarget) {
       let bucket
@@ -102,6 +109,27 @@ export default class extends Controller {
     this.affiliatedNoteTarget.classList.toggle("hidden", !show)
     if (show && this.hasAffiliatedNoteTextTarget) {
       this.affiliatedNoteTextTarget.textContent = `Affiliated since ${this.formatDate(affiliatedSince)}`
+    }
+  }
+
+  // Compares member_since (fixed) with the live facilitator start; only meaningful
+  // when a facilitator affiliation has a start date, matching the decorator guards.
+  updateMemberSinceFlag(facilitatorSince) {
+    const target = this.memberSinceFlagTarget
+    const ms = this.memberSinceValue ? new Date(this.memberSinceValue) : null
+    const msMonth = ms ? Date.UTC(ms.getUTCFullYear(), ms.getUTCMonth()) : null
+    const facMonth = facilitatorSince ? Date.UTC(facilitatorSince.getUTCFullYear(), facilitatorSince.getUTCMonth()) : null
+    if (msMonth === null || facMonth === null || msMonth === facMonth) {
+      target.className = "mt-1 text-xs hidden"
+      return
+    }
+    const label = this.formatDate(ms)
+    if (msMonth < facMonth) {
+      target.className = "mt-1 text-xs text-amber-700"
+      target.textContent = `⚠ Earlier date on file: ${label}`
+    } else {
+      target.className = "mt-1 text-xs text-gray-500"
+      target.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i>Different date on file: ${label}`
     }
   }
 
