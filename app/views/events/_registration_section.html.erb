@@ -11,7 +11,7 @@
       <% if allowed_to?(:manage?, event) %>
         <%= button_to "Register",
                       event_registrant_registration_path(event_id: event),
-                      class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+                      class: button_classes(:primary_outline, extra: "admin-only bg-blue-100") %>
       <% end %>
     <% elsif !registered && !slug_registered %>
       <% if slug_cancelled && event.registerable? %>
@@ -25,18 +25,18 @@
             <%= button_to button_text,
                           event_registrant_registration_path(event_id: event),
                           data: { turbo: !event.object.cost_cents.to_i.positive? },
-                          class: "btn btn-accent px-10 py-2 text-2xl uppercase",
+                          class: button_classes(:accent, size: nil, extra: "px-10 py-2 text-2xl uppercase"),
                           style: "font-family: 'Telefon Bold', sans-serif;" %>
           <% else %>
             <%= link_to button_text,
                         new_event_public_registration_path(event),
-                        class: "btn btn-accent px-10 py-2 text-2xl uppercase",
+                        class: button_classes(:accent, size: nil, extra: "px-10 py-2 text-2xl uppercase"),
                         style: "font-family: 'Telefon Bold', sans-serif;" %>
           <% end %>
         <% elsif event.object.public_registration_enabled? && event.object.event_forms.registration.exists? %>
           <%= link_to button_text,
                       new_event_public_registration_path(event),
-                      class: "btn btn-accent px-10 py-2 text-2xl uppercase",
+                      class: button_classes(:accent, size: nil, extra: "px-10 py-2 text-2xl uppercase"),
                       style: "font-family: 'Telefon Bold', sans-serif;" %>
         <% end %>
       <% else %>
@@ -47,11 +47,11 @@
     <% if registered %>
       <% registration = event.active_registration_for(current_user&.person) %>
       <%= link_to "View ticket", registration_ticket_path(registration.slug),
-                  class: "btn btn-success px-10 py-2 text-2xl uppercase",
+                  class: button_classes(:success, size: nil, extra: "px-10 py-2 text-2xl uppercase"),
                   style: "font-family: 'Telefon Bold', sans-serif;" %>
     <% elsif slug_registered %>
       <%= link_to "View ticket", registration_ticket_path(slug_registration.slug),
-                  class: "btn btn-success px-10 py-2 text-2xl uppercase",
+                  class: button_classes(:success, size: nil, extra: "px-10 py-2 text-2xl uppercase"),
                   style: "font-family: 'Telefon Bold', sans-serif;" %>
     <% end %>
   </div>
