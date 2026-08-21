@@ -15,7 +15,7 @@
   --color-danger: var(--color-red-500);
   --color-warning: var(--color-yellow-500);
   --color-info: var(--color-blue-500);
-  --color-success: var(--color-green-500);
+  --color-success: #4e8324;
   --color-transparent: transparent;
   --font-telefon: "Telefon Bold", sans-serif;
 
@@ -312,22 +312,6 @@ textarea.comment-truncated:focus {
 .rhino-centered table,
 .rhino-centered pre {
   text-align: left;
-}
-
-/* Event register/deregister buttons (!important needed to override inline styles) */
-.event-register-btn:hover {
-  color: rgb(170, 46, 0) !important;
-  background-color: white !important;
-}
-
-.event-view-registration-btn:hover {
-  color: rgb(22, 101, 52) !important;
-  background-color: white !important;
-}
-
-.event-deregister-btn:hover {
-  background-color: rgb(170, 46, 0) !important;
-  color: white !important;
 }
 
 /* Responsive table: Kevin Powell card-based approach for small screens */
