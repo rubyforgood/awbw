@@ -84,8 +84,10 @@ class SmartFormFields
       title: "The registrant's organization",
       summary: "The organization name is looked up by exact name — the registration never creates an " \
                "organization by itself. When it matches, the organization is linked to the registration, " \
-               "the registrant gets a job affiliation and a facilitator affiliation, and the answers " \
-               "below fill in the organization's profile. When it doesn't match, nothing is written and " \
+               "the registrant gets a Job Affiliation and a Facilitator Affiliation, and the answers " \
+               "below fill in the organization's profile. Both affiliations are connected to the " \
+               "organization's address when it has exactly one; with several addresses the address is " \
+               "left blank for an admin to set. When it doesn't match, nothing is written and " \
                "an admin resolves it on the event registration's Link organization page.",
       fields: [
         [ "agency_name", "Organization name", "Looked up against existing organizations by exact name. A match is linked to the registration; no match leaves the registration unlinked for an admin to resolve." ],
