@@ -4,10 +4,10 @@
 
 <div class="mx-auto max-w-3xl bg-white border border-gray-200 rounded-xl shadow p-4 sm:p-6">
   <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
-    <%= link_to person_path(@person), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+    <%= link_to person_path(@person), class: "text-sm #{eyebrow_link_class}" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> <%= @person.full_name %>
     <% end %>
-    <%= link_to "All memberships", membership_invoices_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <%= link_to "All memberships", membership_invoices_path, class: "text-sm #{eyebrow_link_class}" %>
   </div>
 
   <div class="flex flex-wrap items-end justify-between gap-2 mb-6">

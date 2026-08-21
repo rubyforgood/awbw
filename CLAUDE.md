@@ -177,6 +177,24 @@ point is single-source theming: re-coloring a whole domain is a one-line change 
   multi-color pickers/swatches, and classes a Stimulus controller also toggles (keep ERB and JS in
   sync as literals). Convert only a domain's *own identity* color.
 
+## Sharing repeated Tailwind (avoid `@apply`)
+
+When the same utility string is repeated across many views, **unify it with a Rails view
+helper or a shared partial — not `@apply`.** `@apply` hides the utilities inside a CSS rule
+and creates the indirection the tailwind-best-practices guidance warns against; a helper
+keeps the utilities scannable (Tailwind already scans `app/helpers`) and reads as a real
+template abstraction.
+
+- **Helper returning a class string** — the same shape as the `DomainTheme.*_class_for`
+  helpers. Return only the *shared* fragment (e.g. a color pair) and let each caller keep its
+  own context-specific layout classes. Example: `eyebrow_link_class` returns the muted gray for
+  page eyebrows / back-nav links; views interpolate it
+  (`class: "text-sm #{eyebrow_link_class} px-2 py-1"`).
+- **Shared partial** — when the repeated thing is markup (icon + text + structure), not just a
+  class list.
+- **`@apply` is reserved** for genuine element/base styles (e.g. `.btn` in
+  `components/buttons.css`), not for extracting repeated utility clusters.
+
 ## HTML/ERB Formatting
 
 ### Tag Attributes

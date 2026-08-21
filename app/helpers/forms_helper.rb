@@ -4,7 +4,7 @@ module FormsHelper
   # "View form" link to the real public-facing registration page — the preview
   # can't fill header tokens or run conditional logic without an event.
   def form_editor_view_links(form, event)
-    link_class = "text-sm text-gray-500 hover:text-gray-700 px-2 py-1"
+    link_class = "text-sm #{eyebrow_link_class} px-2 py-1"
     preview = link_to "Preview", form_path(form), class: link_class
     return preview unless event
 

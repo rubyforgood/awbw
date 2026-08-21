@@ -7,12 +7,12 @@
       <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Attendance filter">
         <%= link_to registrants_event_path(@event, status_filter: "active", keyword: params[:keyword].presence),
               data: { turbo_frame: "_top" },
-              class: "px-3 py-1 rounded-md transition-colors #{current_filter == "active" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}" do %>
+              class: "px-3 py-1 rounded-md transition-colors #{current_filter == "active" ? "bg-white text-gray-800 shadow-sm" : "#{eyebrow_link_class}"}" do %>
           Active <span class="text-gray-400">(<%= @active_count %>)</span>
         <% end %>
         <%= link_to registrants_event_path(@event, status_filter: "inactive", keyword: params[:keyword].presence),
               data: { turbo_frame: "_top" },
-              class: "px-3 py-1 rounded-md transition-colors #{current_filter == "inactive" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}" do %>
+              class: "px-3 py-1 rounded-md transition-colors #{current_filter == "inactive" ? "bg-white text-gray-800 shadow-sm" : "#{eyebrow_link_class}"}" do %>
           Inactive <span class="text-gray-400">(<%= @inactive_count %>)</span>
         <% end %>
       </nav>
@@ -518,7 +518,7 @@
                 <td class="hidden px-4 py-2 text-center text-sm" data-column-toggle-col="certificate">
                   <%= render "event_registrations/certificate_issued_toggle", registration: registration %>
                 </td>
-                <td class="px-4 py-2 text-right text-sm"><%= link_to "Edit", edit_event_registration_path(registration, return_to: "registrants"), class: "text-gray-500 hover:text-gray-700 underline", data: { turbo_frame: "_top" } %></td>
+                <td class="px-4 py-2 text-right text-sm"><%= link_to "Edit", edit_event_registration_path(registration, return_to: "registrants"), class: "#{eyebrow_link_class} underline", data: { turbo_frame: "_top" } %></td>
               </tr>
             <% end %>
           </tbody>
