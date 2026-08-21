@@ -50,13 +50,13 @@ module RhinoEditorHelper
                 :button,
                 "Cancel",
                 data: { action: "click->rhino-source#hide" },
-                class: "mr-2 px-4 py-2 bg-gray-200 rounded"
+                class: "btn btn-utility mr-2"
               ),
               content_tag(
                 :button,
                 "Save",
                 data: { action: "click->rhino-source#save" },
-                class: "px-4 py-2 bg-primary text-white rounded"
+                class: "btn btn-primary"
               )
             ])
           end
