@@ -102,6 +102,20 @@ class OrganizationDecorator < ApplicationDecorator
     AffiliationPeriods.label(affiliations.select(&:facilitator?), precision: :month) || ""
   end
 
+  def program_since_date
+    @program_since_date ||= object.affiliations.select(&:facilitator?).filter_map(&:start_date).min
+  end
+
+  # A grey secondary line under "Facilitators since", shown only when the earliest
+  # affiliation start differs (by month/year) from the facilitator start — so the
+  # two aren't redundant. Nil when they match or there's no affiliation date.
+  def affiliated_since_note
+    date = affiliated_since_date
+    return nil if date.nil?
+    return nil if program_since_date && date.beginning_of_month == program_since_date.beginning_of_month
+    "Affiliated since #{date.strftime('%b %Y')}"
+  end
+
   ORG_STATUS_BUCKET_LABELS = {
     active: "Active", formerly_active: "Formerly active", never_active: "Never active"
   }.freeze

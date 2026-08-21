@@ -100,6 +100,16 @@ class PersonDecorator < ApplicationDecorator
     date_range_display(facilitator_since_date, facilitation_end_date, ended_title: "No active facilitator affiliations")
   end
 
+  # A grey secondary line under "Facilitator since", shown only when the earliest
+  # affiliation start differs (by month/year) from the facilitator start — so the
+  # two aren't redundant. Nil when they match or there's no affiliation date.
+  def affiliated_since_note
+    date = affiliated_since_date
+    return nil if date.nil?
+    return nil if facilitator_since_date && date.beginning_of_month == facilitator_since_date.beginning_of_month
+    "Affiliated since #{date.strftime('%b %Y')}"
+  end
+
   private
 
   def compute_badges

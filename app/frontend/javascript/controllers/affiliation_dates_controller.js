@@ -1,14 +1,13 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["affiliatedSince", "facilitatorSince", "affiliationsContainer", "programStatus"]
+  static targets = ["facilitatorSince", "affiliationsContainer", "programStatus"]
   // The person form shows a single Mon YYYY – Mon YYYY range; the org form
   // (mergedPeriods) mirrors the AffiliationPeriods service so the live value
-  // matches the server render. affiliatedSinceFallback is the org's own start_date,
-  // and statusBuckets each bucket's label + pill classes from DomainTheme.
+  // matches the server render. statusBuckets carries each bucket's label + pill
+  // classes from DomainTheme.
   static values = {
     mergedPeriods: Boolean,
-    affiliatedSinceFallback: String,
     statusBuckets: Object
   }
 
@@ -49,24 +48,6 @@ export default class extends Controller {
     const affiliations = this.getVisibleAffiliations()
     const now = new Date()
     const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
-
-    if (this.hasAffiliatedSinceTarget) {
-      if (this.mergedPeriodsValue) {
-        const label = this.periodsLabel(affiliations, today, "year") || this.affiliatedSinceFallbackValue
-        this.affiliatedSinceTarget.textContent = label || "—"
-      } else {
-        const startDates = affiliations.map(a => a.startDate).filter(Boolean)
-        const affiliatedSince = startDates.length
-          ? new Date(Math.min(...startDates.map(d => new Date(d))))
-          : null
-        const allInactive = affiliations.length > 0 &&
-          affiliations.every(a => a.endDate && new Date(a.endDate) < today)
-        const affiliatedEnd = allInactive
-          ? new Date(Math.max(...affiliations.map(a => new Date(a.endDate))))
-          : null
-        this.updateDisplay(this.affiliatedSinceTarget, affiliatedSince, affiliatedEnd)
-      }
-    }
 
     // Mirrors Affiliation#facilitator?: exact, case-sensitive, trimmed — so the
     // live figure matches the server render.

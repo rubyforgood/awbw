@@ -256,36 +256,6 @@
       <div class="mb-4 flex flex-col gap-6 md:flex-row">
         <div class="group relative shrink-0 cursor-help">
           <label class="mb-1 inline-flex items-center gap-1 text-md font-medium text-gray-700">
-            Affiliated since <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
-          </label>
-          <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover:block">
-            <% affiliated_start = person.affiliations.minimum(:start_date) %>
-            <% if affiliated_start.nil? && person.affiliations.exists? && person.member_since.present? %>
-              <p>Earliest start date from any affiliation, regardless of title.<br><br><span class="font-medium text-amber-700">⚠ No affiliations have a start date. Legacy member_since value is <%= person.member_since.strftime('%b %Y') %>. Add a start date to an affiliation to use it here.</span></p>
-            <% elsif affiliated_start.nil? && person.affiliations.exists? %>
-              <p>Earliest start date from any affiliation, regardless of title.<br><br><span class="font-medium text-amber-700">⚠ No affiliations have a start date. Edit the affiliation records to add one.</span></p>
-            <% else %>
-              <p>Earliest start date from any affiliation, regardless of title. Edit affiliation records to change this date.</p>
-              <% if decorated.member_since_earlier_than_all_affiliations? %>
-                <p class="mt-2 font-medium text-amber-700">⚠ Member since (<%= person.member_since.strftime('%b %Y') %>) is earlier than any affiliation. Create an affiliation with that start date to reflect it on the profile.</p>
-              <% elsif decorated.member_since_differs_from_all_affiliations? %>
-                <p class="mt-2 text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i>Member since (<%= person.member_since.strftime('%b %Y') %>) differs from the earliest affiliation start date.</p>
-              <% end %>
-            <% end %>
-          </div>
-          <div class="pt-1">
-            <span class="font-medium text-gray-900" data-affiliation-dates-target="affiliatedSince"><%= decorated.affiliated_since_range %></span>
-            <% if decorated.affiliated_since_date.nil? && person.affiliations.exists? %>
-              <i class="fa-solid fa-triangle-exclamation ml-1 text-amber-500"></i>
-            <% elsif decorated.member_since_earlier_than_all_affiliations? %>
-              <p class="mt-1 text-xs text-amber-700">⚠ Earlier date on file: <%= person.member_since.strftime("%b %Y") %></p>
-            <% elsif decorated.member_since_differs_from_all_affiliations? %>
-              <p class="mt-1 text-xs text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i>Different date on file: <%= person.member_since.strftime("%b %Y") %></p>
-            <% end %>
-          </div>
-        </div>
-        <div class="group relative shrink-0 cursor-help">
-          <label class="mb-1 inline-flex items-center gap-1 text-md font-medium text-gray-700">
             Facilitator since <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
           </label>
           <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover:block">
@@ -307,6 +277,9 @@
               <p class="mt-1 text-xs text-amber-700">⚠ Earlier date on file: <%= person.member_since.strftime("%b %Y") %></p>
             <% elsif decorated.member_since_differs_from_facilitator_affiliations? %>
               <p class="mt-1 text-xs text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i>Different date on file: <%= person.member_since.strftime("%b %Y") %></p>
+            <% end %>
+            <% if (affiliated_note = decorated.affiliated_since_note) %>
+              <p class="mt-1 text-xs text-gray-500"><%= affiliated_note %></p>
             <% end %>
           </div>
         </div>
