@@ -26,16 +26,16 @@
      for unrecognized flash types (kept plain — gray is not a status color). */
   --color-info-surface: #c6d2f1;
   --color-info-border: #a6b8e3;
-  --color-info-fg: #24479e;
+  --color-info-fg: #1b3470;
   --color-success-surface: #e7f0c6;
   --color-success-border: #cbdd97;
-  --color-success-fg: #4e8324;
+  --color-success-fg: #355717;
   --color-warning-surface: #ffefc7;
   --color-warning-border: #f3d48a;
-  --color-warning-fg: #8a6a1b;
+  --color-warning-fg: #5c4510;
   --color-danger-surface: #ffddcf;
   --color-danger-border: #f3b49e;
-  --color-danger-fg: #9a3412;
+  --color-danger-fg: #7c2a0e;
   --font-telefon: "Telefon Bold", sans-serif;
 
   /* Social network brand colors, used for the hover fill on share/follow
