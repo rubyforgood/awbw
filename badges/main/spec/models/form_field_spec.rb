@@ -476,13 +476,22 @@ RSpec.describe FormField do
         adults = create(:category, :published, category_type: type, name: "Adults (18+)")
         unpublished = create(:category, :unpublished, category_type: type, name: "Retired range")
         primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_age_group")
-        additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_age_group")
+        additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_age_groups")
 
         # Age groups have no catch-all to drop (unlike the additional sector field's
         # "Other"), so both fields offer exactly the published categories.
         expect(primary.dynamic_categories).to contain_exactly(children, adults)
         expect(additional.dynamic_categories).to contain_exactly(children, adults)
         expect(additional.answer_inclusion_error([ unpublished.id.to_s ])).to eq("has an invalid selection")
+      end
+
+      it "backs the additional age group field under its legacy singular identifier too" do
+        type = create(:category_type, name: "AgeRange")
+        offered = create(:category, :published, category_type: type, name: "Teens (13-17)")
+        legacy = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_age_group")
+
+        expect(legacy.dynamic_categories).to contain_exactly(offered)
+        expect(legacy.answer_inclusion_error([ offered.id.to_s ])).to be_nil
       end
 
       it "accepts a folded \"Other: <text>\" value for the additional sectors field" do

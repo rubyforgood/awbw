@@ -169,7 +169,7 @@ class EventDashboard
   # file as form answers. Sector answers are normalized under the "sector" key
   # (see #header_answers_by_applicant) so the view reads one key regardless of
   # which sector field identifier the answer was stored under.
-  HEADER_ANSWER_IDENTIFIERS = (FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS + %w[primary_age_group]).freeze
+  HEADER_ANSWER_IDENTIFIERS = (FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS + FormField::PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS).freeze
 
   # The key sector answers are filed under in the per-applicant header hash.
   HEADER_SECTOR_KEY = "sector".freeze
@@ -805,8 +805,8 @@ class EventDashboard
   end
 
   # Every age group (primary + additional) served, read from registrants'
-  # answers to BOTH the "primary_age_group" and "additional_age_group"
-  # registration questions, backing the "All age groups" chart. The
+  # answers to BOTH the primary and additional age group registration
+  # questions, backing the "All age groups" chart. The
   # "Primary age group" chart instead uses #age_groups / #age_group_counts,
   # which read only the primary question.
   def all_age_groups
@@ -1433,7 +1433,7 @@ class EventDashboard
   # registrants' "primary_age_group" registration answers. Deduped per
   # [ person, category ].
   def age_group_answer_rows
-    @age_group_answer_rows ||= age_group_rows_for(%w[primary_age_group])
+    @age_group_answer_rows ||= age_group_rows_for(FormField::PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS)
   end
 
   # Same, but across BOTH the primary and additional age group questions —
