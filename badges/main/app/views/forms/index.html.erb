@@ -35,7 +35,7 @@
             <td class="px-4 py-2 text-sm text-gray-600"><%= form.form_fields.size %></td>
             <td class="px-4 py-2 text-sm text-gray-600">
               <% if form.events.size.positive? %>
-                <%= link_to form.events.size, events_path(form_id: form.id), class: "inline-flex items-center rounded-md bg-purple-50 px-2 py-0.5 text-purple-700 font-medium hover:bg-purple-100" %>
+                <%= link_to form.events.size, events_path(form_id: form.id), class: "inline-flex items-center rounded-md #{DomainTheme.bg_class_for(:forms)} px-2 py-0.5 #{DomainTheme.text_class_for(:forms, intensity: 700)} font-medium #{DomainTheme.bg_class_for(:forms, hover: true)}" %>
               <% else %>
                 0
               <% end %>
@@ -52,7 +52,7 @@
                   <% end %>
                 <% end %>
                 <% if form.events.size.positive? %>
-                  <span class="inline-flex items-center gap-1.5 rounded-md bg-purple-50 px-2 py-0.5 text-xs text-purple-700">
+                  <span class="inline-flex items-center gap-1.5 rounded-md <%= DomainTheme.bg_class_for(:forms) %> px-2 py-0.5 text-xs <%= DomainTheme.text_class_for(:forms, intensity: 700) %>">
                     <i class="fa-solid fa-calendar-day"></i>Event form
                   </span>
                 <% end %>
@@ -65,7 +65,7 @@
               <% submissions_count = form.form_submissions.size %>
               <% if submissions_count.positive? %>
                 <%= link_to submissions_count, form_submissions_path(form_id: form.id, return_to: "forms"),
-                            class: "inline-flex items-center rounded-md bg-purple-50 px-2 py-0.5 text-purple-700 font-medium hover:bg-purple-100" %>
+                            class: "inline-flex items-center rounded-md #{DomainTheme.bg_class_for(:forms)} px-2 py-0.5 #{DomainTheme.text_class_for(:forms, intensity: 700)} font-medium #{DomainTheme.bg_class_for(:forms, hover: true)}" %>
               <% else %>
                 0
               <% end %>

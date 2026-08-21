@@ -18,7 +18,7 @@
 
     <div class="space-y-6">
       <!-- SECTORS -->
-      <section class="bg-lime-100 border border-lime-200 rounded-xl p-6">
+      <section class="<%= DomainTheme.bg_class_for(:sectors, intensity: 100) %> border <%= DomainTheme.border_class_for(:sectors, intensity: 200) %> rounded-xl p-6">
         <div class="flex items-start justify-between gap-6 mb-5">
           <div>
             <h2 class="text-lg font-semibold text-slate-900">
@@ -42,7 +42,7 @@
       </section>
 
       <!-- CATEGORIES -->
-      <section class="bg-lime-100 border border-lime-200 rounded-xl p-6">
+      <section class="<%= DomainTheme.bg_class_for(:categories, intensity: 100) %> border <%= DomainTheme.border_class_for(:categories, intensity: 200) %> rounded-xl p-6">
         <div class="flex items-start justify-between gap-6 mb-5">
           <div>
             <h2 class="text-lg font-semibold text-stone-900">

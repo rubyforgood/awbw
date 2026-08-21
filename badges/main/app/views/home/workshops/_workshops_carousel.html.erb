@@ -11,8 +11,8 @@
       swiper-button-next-custom
       absolute top-36 sm:top-36 right-2
       w-12 h-12 rounded-full
-      bg-white border border-indigo-200
-      text-indigo-700
+      bg-white border <%= DomainTheme.border_class_for(:workshops, intensity: 200) %>
+      <%= DomainTheme.text_class_for(:workshops, intensity: 700) %>
       shadow-md hover:shadow-lg
       flex items-center justify-center
       transition hover:<%= DomainTheme.bg_class_for(:workshops) %>
@@ -36,8 +36,8 @@
       swiper-button-prev-custom
       absolute top-36 sm:top-36 left-2
       w-12 h-12 rounded-full
-      bg-white border border-indigo-200
-      text-indigo-700
+      bg-white border <%= DomainTheme.border_class_for(:workshops, intensity: 200) %>
+      <%= DomainTheme.text_class_for(:workshops, intensity: 700) %>
       shadow-md hover:shadow-lg
       flex items-center justify-center
       transition hover:<%= DomainTheme.bg_class_for(:workshops) %>
