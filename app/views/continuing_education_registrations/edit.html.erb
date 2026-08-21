@@ -104,7 +104,7 @@
           <% end %>
         </p>
         <%= button_to toggle_certificate_continuing_education_registration_path(@ce_registration, return_to: params[:return_to].presence),
-              method: :patch, class: "rounded-lg border px-3 py-1.5 text-sm font-medium #{@ce_registration.certificate_sent_at.present? ? "border-gray-300 text-gray-600 hover:bg-gray-50" : "border-teal-300 bg-teal-50 text-teal-700 hover:bg-teal-100"} cursor-pointer" do %>
+              method: :patch, class: "rounded-lg border px-3 py-1.5 text-sm font-medium #{@ce_registration.certificate_sent_at.present? ? "border-gray-300 text-gray-600 hover:bg-gray-50" : "#{DomainTheme.border_class_for(:continuing_education_registrations)} #{DomainTheme.bg_class_for(:continuing_education_registrations)} #{DomainTheme.text_class_for(:continuing_education_registrations, intensity: 700)} #{DomainTheme.bg_class_for(:continuing_education_registrations, hover: true)}"} cursor-pointer" do %>
           <%= @ce_registration.certificate_sent_at.present? ? "Mark not issued" : "Mark certificate issued" %>
         <% end %>
       </div>
