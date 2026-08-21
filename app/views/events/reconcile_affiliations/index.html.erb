@@ -2,7 +2,7 @@
 <% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
 <div class="max-w-5xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
-    <%= link_to "← Registrants", registrants_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <%= link_to "← Registrants", registrants_event_path(@event), class: "text-sm #{eyebrow_link_class}" %>
     <%= render "events/subnav", event: @event, current: :registrants %>
   </div>
 
@@ -119,7 +119,7 @@
     </div>
 
     <div class="mt-6 flex items-center justify-end gap-3">
-      <%= link_to "Cancel", registrants_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
+      <%= link_to "Cancel", registrants_event_path(@event), class: "text-sm #{eyebrow_link_class}" %>
       <%= submit_tag "Preview changes", form: "reconcile_form", class: "btn btn-primary" %>
     </div>
   <% end %>
