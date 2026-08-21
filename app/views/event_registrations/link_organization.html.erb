@@ -65,6 +65,17 @@
               </li>
             <% end %>
           </ul>
+          <%# Admin-only jump to the audit of what these answers changed across records. %>
+          <% changes_submission = present_entries.first[:submission] %>
+          <% if changes_submission && allowed_to?(:changes?, changes_submission) %>
+            <%= link_to changes_form_submission_path(changes_submission, return_to: "link_organization", event_registration_id: @event_registration.id),
+                        data: { turbo_frame: "_top" },
+                        class: "group mt-3 flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-blue-100" do %>
+              <i class="fa-solid fa-circle-info text-blue-500"></i>
+              What this registration's form changed
+              <i class="fa-solid fa-arrow-right text-xs ml-auto text-blue-400 transition-transform group-hover:translate-x-0.5"></i>
+            <% end %>
+          <% end %>
         <% elsif @form_submission %>
           <p class="text-sm text-gray-500">
             No organization was submitted on the <%= link_to "registration form submission", event_registrant_submissions_path(@event_registration.event, person_id: @person.id, form_submission_id: @form_submission.id, return_to: "link_organization", link_org_return_to: params[:return_to]), target: "_blank", class: "text-blue-600 hover:underline", data: { turbo_frame: "_top" } %>.

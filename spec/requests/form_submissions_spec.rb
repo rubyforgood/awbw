@@ -709,4 +709,49 @@ RSpec.describe "FormSubmissions", type: :request do
       end
     end
   end
+
+  describe "GET /form_submissions/:id/changes" do
+    def stamp(name, resource_type:, resource_id: 0, properties: {})
+      create(:ahoy_event, name: name, properties: {
+        "resource_type" => resource_type, "resource_id" => resource_id,
+        "form_submission_id" => submission.id
+      }.merge(properties))
+    end
+
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "renders what the submission changed, grouped by record" do
+        org = create(:organization, name: "Riverside Community Arts")
+        stamp("update.organization", resource_type: "Organization", resource_id: org.id,
+              properties: { "resource_title" => org.name,
+                            "changes" => { "website_url" => { "before" => "old.com", "after" => "new.com" } } })
+
+        get changes_form_submission_path(submission)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("What this form submission changed")
+        expect(response.body).to include("Riverside Community Arts")
+        expect(response.body).to include("Replaced")
+        expect(response.body).to include("new.com")
+      end
+
+      it "shows an empty state when nothing changed" do
+        get changes_form_submission_path(submission)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("didn't change any records")
+      end
+    end
+
+    context "as a non-admin" do
+      before { sign_in create(:user) }
+
+      it "redirects away" do
+        get changes_form_submission_path(submission)
+
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
 end
