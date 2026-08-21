@@ -132,17 +132,17 @@
               [ "Quarter width", "quarter" ]
             ]
           %>
+          <%# ml-auto here pushes Subtitle and everything after it to the right, so
+              Subtitle/Hint sit next to the width control as one right-aligned cluster. %>
           <%= f.text_area :subtitle, rows: 1, placeholder: "Subtitle",
-                class: "min-w-0 flex-[0_1_7rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+                class: "ml-auto min-w-0 flex-[0_1_7rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
                 title: "Optional subtitle shown under the field label" %>
           <%= f.text_area :hint_text, rows: 1, placeholder: "Hint",
                 class: "min-w-0 flex-[0_1_7rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
                 title: "Optional hint shown below the field input" %>
-          <%# Right-align the trailing controls to the row's edge so Remove keeps its
-              original right margin — the shrunk Subtitle/Hint keep it all on one line. %>
           <%= f.select :width, width_options,
                 {},
-                class: "ml-auto shrink-0 rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+                class: "shrink-0 rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
                 title: "How wide this field appears on the form" %>
           <%= f.number_field :min_words, min: 0, placeholder: "Min words",
                 class: "w-24 shrink-0 rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
