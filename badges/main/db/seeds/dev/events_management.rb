@@ -1684,3 +1684,20 @@ if facilitator_training && registration_form
     end
   end
 end
+
+# Spread each registration's "registered on" date (created_at) around its event's
+# start instead of leaving it at the seed run's "today", so the roster's
+# registration-date filter has realistic data to work with. Most people register
+# in advance (days to weeks before the event); a couple register a day or two
+# after it starts (late / at-the-door). The offset is derived from the
+# registration id, so re-seeding keeps the same spread and this stays idempotent.
+puts "Spreading registration dates around each event's start…"
+# Days BEFORE the event start; the two negatives put a couple registrations just
+# after the start. Weighted toward the final weeks, with a long early-bird tail.
+registration_day_offsets = [ 56, 45, 38, 30, 28, 24, 21, 18, 16, 14, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, -1, -2 ]
+EventRegistration.includes(:event).find_each do |registration|
+  start = registration.event&.start_date
+  next unless start
+  offset_days = registration_day_offsets[registration.id % registration_day_offsets.length]
+  registration.update_column(:created_at, start - offset_days.days)
+end

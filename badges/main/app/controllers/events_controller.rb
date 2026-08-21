@@ -228,6 +228,7 @@ class EventsController < ApplicationController
     scope = scope.registrant_state(params[:state]) if params[:state].present?
     scope = scope.registrant_county(params[:county]) if params[:county].present?
     scope = scope.registrant_sector(params[:sector]) if params[:sector].present?
+    scope = scope.registered_between(params[:registered_from], params[:registered_to])
 
     @active_count = scope.active.count
     @inactive_count = scope.inactive.count
