@@ -68,7 +68,7 @@ RSpec.describe "Forms", type: :request do
         get smart_form_settings_forms_path
 
         expect(response).to have_http_status(:success)
-        expect(response.body).to include("Smart form settings")
+        expect(response.body).to include("Smart field settings")
         expect(response.body).to include("agency_name")
         expect(response.body).to include("Looked up against existing organizations by exact name")
       end
