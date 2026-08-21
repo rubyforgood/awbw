@@ -25,11 +25,6 @@ class PersonDecorator < ApplicationDecorator
     "missing.png"
   end
 
-  def affiliation_end_date
-    return nil if affiliations.active.exists?
-    affiliations.maximum(:end_date)
-  end
-
   # Org names where this person is currently an active facilitator. Filters the
   # affiliations in Ruby (rather than re-querying via the .facilitators.active
   # scopes) so list pages that preload `affiliations: :organization` pay no
@@ -88,12 +83,6 @@ class PersonDecorator < ApplicationDecorator
     # preload affiliations don't fire a MIN(start_date) query per row.
     # `.minimum` would ignore the loaded records and hit the DB every time.
     @affiliated_since_date ||= affiliations.filter_map(&:start_date).min
-  end
-
-  # The server-rendered twin of affiliation_dates_controller#updateDisplay, which
-  # replaces this content as the person form's affiliation rows are edited.
-  def affiliated_since_range
-    date_range_display(affiliated_since_date, affiliation_end_date, ended_title: "No active affiliations")
   end
 
   def facilitator_since_range
