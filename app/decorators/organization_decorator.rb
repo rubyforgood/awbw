@@ -96,7 +96,7 @@ class OrganizationDecorator < ApplicationDecorator
     AffiliationPeriods.label(affiliations) || object.start_date&.strftime("%b %Y") || ""
   end
 
-  # "Art program since" — facilitators only, at month precision, since the exact
+  # "Facilitators since" — facilitators only, at month precision, since the exact
   # start/lapse month is the point. Blank when the org has never facilitated.
   def program_since_display(affiliations = object.affiliations)
     AffiliationPeriods.label(affiliations.select(&:facilitator?), precision: :month) || ""

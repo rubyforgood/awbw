@@ -114,7 +114,7 @@ RSpec.describe "organizations/edit", type: :view do
     end
   end
 
-  describe "art program since" do
+  describe "facilitators since" do
     before(:each) { assign(:organization_statuses, OrganizationStatus.all) }
 
     around { |ex| travel_to(Date.new(2026, 8, 3)) { ex.run } }
@@ -132,7 +132,7 @@ RSpec.describe "organizations/edit", type: :view do
       assert_select "[data-affiliation-dates-target='facilitatorSince']", text: /Sep 2026/, count: 0
     end
 
-    # This form and the profile used to render "Art program since" two different
+    # This form and the profile used to render "Facilitators since" two different
     # ways — the profile as merged periods, this form as one earliest→latest span,
     # which silently swallowed the gap. Both now render the one decorator value.
     it "renders a lapse and a return as separate periods, matching the profile" do
