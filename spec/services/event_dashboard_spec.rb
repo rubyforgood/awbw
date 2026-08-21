@@ -305,7 +305,7 @@ RSpec.describe EventDashboard do
                              form_submission: FormSubmission.find_by!(person: person2, form: registration_form))
       end
 
-      it "counts distinct sectors named as a primary service area" do
+      it "counts distinct sectors named as a primary sector" do
         expect(dashboard.primary_sector_count).to eq(2)
       end
 
