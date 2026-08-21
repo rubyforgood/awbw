@@ -1,6 +1,4 @@
-<!-- Filters — field, label, and button styling modeled on the allocations search. -->
-<% default_btn = "text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-800 shadow-sm" %>
-<% selected_btn = "text-white bg-blue-600 border-blue-600 hover:bg-blue-700 hover:text-white shadow-md ring-2 ring-blue-300" %>
+<!-- Filters — field and label styling modeled on the allocations search. -->
 <% field_class = search_field_class %>
 <% label_class = search_label_class %>
 <% placeholder_select_class = "#{field_class} search-select-placeholder" %>
@@ -9,9 +7,7 @@
   <%= form_tag payments_path, method: :get, class: "space-y-4",
     data: {
       controller: "collection",
-      turbo_frame: "payments_results",
-      collection_unselected_class: default_btn,
-      collection_selected_class: selected_btn
+      turbo_frame: "payments_results"
     }, autocomplete: "off" do %>
     <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
       <div class="md:col-span-2">
