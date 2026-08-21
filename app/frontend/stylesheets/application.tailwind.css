@@ -17,6 +17,25 @@
   --color-info: var(--color-blue-500);
   --color-success: #4e8324;
   --color-transparent: transparent;
+
+  /* Status-box surfaces — the pale background/border/text tints for info,
+     success, warning, and danger callouts (info/warning notices, error boxes,
+     flash messages). Single source for recoloring every status box: change the
+     surface here and every box updates. Surfaces are the brand palette; borders
+     and fg are derived to stay readable on them. `neutral` is the gray fallback
+     for unrecognized flash types (kept plain — gray is not a status color). */
+  --color-info-surface: #c9def5;
+  --color-info-border: #a7c7ea;
+  --color-info-fg: #24479e;
+  --color-success-surface: #e7f0c6;
+  --color-success-border: #cbdd97;
+  --color-success-fg: #4e8324;
+  --color-warning-surface: #ffefc7;
+  --color-warning-border: #f3d48a;
+  --color-warning-fg: #8a6a1b;
+  --color-danger-surface: #ffddcf;
+  --color-danger-border: #f3b49e;
+  --color-danger-fg: #9a3412;
   --font-telefon: "Telefon Bold", sans-serif;
 
   /* Social network brand colors, used for the hover fill on share/follow
@@ -59,6 +78,11 @@
 /* Per-field form layout widths (generated from FormField::WIDTH_GRID_SPANS, which
    lives in a model file Tailwind does not scan) */
 @source inline("md:col-span-{3,4,6,12}");
+
+/* Status-box surface classes (from StatusBoxHelper — see the tokens in @theme) */
+@source inline("bg-{info,success,warning,danger}-surface");
+@source inline("border-{info,success,warning,danger}-border");
+@source inline("text-{info,success,warning,danger}-fg");
 
 /* ✅ Safelist dynamically generated colors */
 @layer utilities {
