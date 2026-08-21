@@ -19,5 +19,7 @@ export default class extends Controller {
     const row = this.element.closest(".nested-fields")
     row?.classList.toggle("bg-amber-50", this.expandedValue)
     row?.classList.toggle("hover:bg-gray-50", !this.expandedValue)
+    // Separate expanded blocks so a wall of open fields is easier to scan.
+    row?.classList.toggle("my-3", this.expandedValue)
   }
 }
