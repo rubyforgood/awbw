@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["facilitatorSince", "affiliationsContainer", "programStatus"]
+  static targets = ["facilitatorSince", "affiliatedNote", "affiliatedNoteText", "affiliationsContainer", "programStatus"]
   // The person form shows a single Mon YYYY – Mon YYYY range; the org form
   // (mergedPeriods) mirrors the AffiliationPeriods service so the live value
   // matches the server render. statusBuckets carries each bucket's label + pill
@@ -73,6 +73,15 @@ export default class extends Controller {
       }
     }
 
+    // Mirrors PersonDecorator/OrganizationDecorator#affiliated_since_note: the
+    // earliest start across all roles, surfaced only when it predates (differs by
+    // month/year from) the facilitator start, so it isn't redundant.
+    if (this.hasAffiliatedNoteTarget) {
+      const allStartDates = affiliations.map(a => a.startDate).filter(Boolean).map(d => new Date(d))
+      const affiliatedSince = allStartDates.length ? new Date(Math.min(...allStartDates)) : null
+      this.updateAffiliatedNote(affiliatedSince, facilitatorSince)
+    }
+
     // Mirrors OrganizationDecorator#organization_status_bucket.
     if (this.hasProgramStatusTarget) {
       let bucket
@@ -82,6 +91,17 @@ export default class extends Controller {
         bucket = allFacInactive ? "formerly_active" : "active"
       }
       this.updateProgramStatus(bucket)
+    }
+  }
+
+  updateAffiliatedNote(affiliatedSince, facilitatorSince) {
+    const sameMonth = affiliatedSince && facilitatorSince &&
+      affiliatedSince.getUTCFullYear() === facilitatorSince.getUTCFullYear() &&
+      affiliatedSince.getUTCMonth() === facilitatorSince.getUTCMonth()
+    const show = Boolean(affiliatedSince) && !sameMonth
+    this.affiliatedNoteTarget.classList.toggle("hidden", !show)
+    if (show && this.hasAffiliatedNoteTextTarget) {
+      this.affiliatedNoteTextTarget.textContent = `Affiliated since ${this.formatDate(affiliatedSince)}`
     }
   }
 

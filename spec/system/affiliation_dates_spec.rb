@@ -62,6 +62,28 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     expect(facilitator).to have_text("—", wait: 5)
   end
 
+  it "toggles the affiliated-since note live as the earliest start crosses the facilitator start" do
+    visit_and_wait edit_person_path(person, admin: true)
+    note = "[data-affiliation-dates-target='affiliatedNote']"
+
+    volunteer_start = -> {
+      all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
+        f.find("input[name*='title']").value.strip == "Volunteer"
+      }.find("input[name*='start_date']")
+    }
+
+    # Facilitator (Mar 2020) is the earliest affiliation, so affiliated == facilitator.
+    expect(page).to have_css("#{note}.hidden", visible: :all)
+
+    # Move it before the facilitator start — now affiliated differs, note appears.
+    set_date_input(volunteer_start.call, "2018-01-15")
+    expect(page).to have_css(note, text: "Affiliated since Jan 2018", wait: 5)
+
+    # Move it back into the facilitator's month — note disappears again.
+    set_date_input(volunteer_start.call, "2020-03-20")
+    expect(page).to have_css("#{note}.hidden", visible: :all, wait: 5)
+  end
+
   it "shows end date and icon when the facilitator affiliation is inactive" do
     visit_and_wait edit_person_path(person, admin: true)
 
