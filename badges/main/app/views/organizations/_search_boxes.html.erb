@@ -36,9 +36,9 @@
         <%= select_tag :program_status,
                        options_for_select([
                          [ "Active", "active" ],
+                         [ "Inactive", "formerly_or_never" ],
                          [ "Formerly active", "formerly_active" ],
-                         [ "Never active", "never_active" ],
-                         [ "Formerly + Never active", "formerly_or_never" ]
+                         [ "Never active", "never_active" ]
                        ], params[:program_status]),
                        include_blank: "All statuses",
                        class: "w-44 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm

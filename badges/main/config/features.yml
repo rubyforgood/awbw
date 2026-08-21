@@ -161,12 +161,12 @@
   action_path: "/organizations"
   pr_number: 1993
   summary: >-
-    The organization list gains Sectors and Age group columns and an "Art program
+    The organization list gains Sectors and Age group columns and a "Facilitators
     since" chip, filterable by sector, age group and program status.
   pro_tips:
     - Sector and age group match the organization's own tags plus its affiliated
       people's primary tags.
-    - The "Art program since" chip shows each stretch of facilitating separately,
+    - The "Facilitators since" chip shows each stretch of facilitating separately,
       so a lapse and a return read as two periods.
 
 - name: "Edit an affiliation's details and comments"
