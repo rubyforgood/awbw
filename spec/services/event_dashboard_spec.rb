@@ -297,11 +297,11 @@ RSpec.describe EventDashboard do
         # single-select dropdown. Both also carry sector1 as a tag, so sector1 is
         # primary for person1 AND an additional sector for person2 — the counts
         # overlap (don't partition).
-        service_field = create(:form_field, form: registration_form, field_identifier: "primary_service_area_single",
-                                            answer_type: :single_select_dropdown)
-        create(:form_answer, form_field: service_field, submitted_answer: sector1.id.to_s,
+        primary_field = create(:form_field, form: registration_form, field_identifier: "primary_sector",
+                                             answer_type: :single_select_dropdown)
+        create(:form_answer, form_field: primary_field, submitted_answer: sector1.id.to_s,
                              form_submission: FormSubmission.find_by!(person: person1, form: registration_form))
-        create(:form_answer, form_field: service_field, submitted_answer: sector2.id.to_s,
+        create(:form_answer, form_field: primary_field, submitted_answer: sector2.id.to_s,
                              form_submission: FormSubmission.find_by!(person: person2, form: registration_form))
       end
 
@@ -569,11 +569,9 @@ RSpec.describe EventDashboard do
     end
 
     it "gathers header (sector / age group) answers keyed by applicant, sector answers under the normalized sector key" do
-      # Use a legacy "service area" identifier to confirm it still resolves under
-      # the normalized sector key alongside the current "sector" identifiers.
-      service_field = create(:form_field, form: registration_form, name: "Primary sector", field_identifier: "primary_service_area")
+      sector_field = create(:form_field, form: registration_form, name: "Additional sectors", field_identifier: "additional_sectors")
       reg_submission = FormSubmission.find_by(person: embedded_applicant, form: registration_form)
-      create(:form_answer, form_submission: reg_submission, form_field: service_field, submitted_answer: "5")
+      create(:form_answer, form_submission: reg_submission, form_field: sector_field, submitted_answer: "5")
 
       header = dashboard.header_answers_by_applicant
 

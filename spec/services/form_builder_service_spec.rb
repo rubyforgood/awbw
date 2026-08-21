@@ -153,7 +153,7 @@ RSpec.describe FormBuilderService do
       let(:form) { described_class.new(name: "Test", sections: %i[professional_info]).call }
 
       it "asks for a single primary sector via a dropdown before the additional sectors checkboxes" do
-        primary = form.form_fields.find_by(field_identifier: "primary_sector_single")
+        primary = form.form_fields.find_by(field_identifier: "primary_sector")
         additional = form.form_fields.find_by(field_identifier: "additional_sectors")
 
         expect(primary).to have_attributes(name: "Primary sector", answer_type: "single_select_dropdown")
