@@ -462,7 +462,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       register_with_agency_type("Other: Equine therapy")
 
       answer = FormAnswer.joins(:form_field)
-        .find_by(form_fields: { field_identifier: "agency_type" })
+        .find_by(form_fields: { field_identifier: FormField.aliased_identifiers("organization_type") })
       expect(answer.submitted_answer).to eq("Other: Equine therapy")
     end
 
@@ -1123,7 +1123,6 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
     let(:legacy_form) do
       f = FormBuilderService.new(name: "Legacy", sections: %i[person_identifier]).call
-      header = f.form_fields.create!(name: "Organization", answer_type: :group_header, status: :active, position: 100)
       {
         "agency_name" => "Organization name",
         "agency_position" => "Position",
