@@ -74,7 +74,7 @@
                   <% if promoted_variation %>
                     <%= link_to "Variation ##{promoted_variation.id}",
                                 workshop_variation_path(promoted_variation),
-                                class: "text-purple-600 hover:text-purple-800 hover:underline" %>
+                                class: "#{DomainTheme.text_class_for(:workshop_variation_ideas, intensity: 600)} #{DomainTheme.text_class_for(:workshop_variation_ideas, intensity: 800, hover: true)} hover:underline" %>
                   <% else %>
                     <span class="text-gray-300">--</span>
                   <% end %>

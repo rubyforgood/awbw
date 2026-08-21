@@ -37,6 +37,26 @@ RSpec.describe DomainTheme do
     end
   end
 
+  describe ".text_class_for" do
+    it "returns the correct Tailwind text class for a domain" do
+      expect(DomainTheme.text_class_for(:workshops)).to eq("text-indigo-800")
+    end
+
+    it "supports intensity overrides" do
+      expect(DomainTheme.text_class_for(:forms, intensity: 600))
+        .to eq("text-purple-600")
+    end
+
+    it "supports hover classes" do
+      expect(DomainTheme.text_class_for(:forms, intensity: 800, hover: true))
+        .to eq("hover:text-purple-800")
+    end
+
+    it "falls back safely for unknown keys" do
+      expect(DomainTheme.text_class_for(:unknown)).to eq("text-gray-800")
+    end
+  end
+
   describe ".color_for" do
     it "returns configured color symbols" do
       expect(DomainTheme.color_for(:workshops)).to eq(:indigo)

@@ -118,8 +118,9 @@ module DomainTheme
     "#{prefix}-#{color}-#{intensity}"
   end
 
-  def self.text_class_for(key, intensity: 800)
-    "text-#{color_for(key)}-#{intensity}"
+  def self.text_class_for(key, intensity: 800, hover: false)
+    prefix = hover ? "hover:text" : "text"
+    "#{prefix}-#{color_for(key)}-#{intensity}"
   end
 
   def self.border_class_for(key, intensity: 300)

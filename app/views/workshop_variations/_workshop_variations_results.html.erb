@@ -69,7 +69,7 @@
                 <%= link_to "Idea ##{workshop_variation.workshop_variation_idea.id}",
                             workshop_variation_idea_path(workshop_variation.workshop_variation_idea),
                             data: { turbo_frame: "_top" },
-                            class: "text-purple-600 hover:text-purple-800 hover:underline" %>
+                            class: "#{DomainTheme.text_class_for(:workshop_variations, intensity: 600)} #{DomainTheme.text_class_for(:workshop_variations, intensity: 800, hover: true)} hover:underline" %>
               <% else %>
                 <span class="text-gray-300">--</span>
               <% end %>

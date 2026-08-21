@@ -71,10 +71,10 @@
               <% end %>
             </td>
             <td class="space-x-3 px-4 py-2 text-right text-sm">
-              <%= link_to "View", form_path(form), class: "text-purple-600 hover:text-purple-800 underline" %>
-              <%= link_to "Edit", edit_form_path(form), class: "text-purple-600 hover:text-purple-800 underline" %>
+              <%= link_to "View", form_path(form), class: "#{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" %>
+              <%= link_to "Edit", edit_form_path(form), class: "#{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" %>
               <% if allowed_to?(:copy?, form) %>
-                <%= link_to "Copy", copy_form_path(form), class: "text-purple-600 hover:text-purple-800 underline",
+                <%= link_to "Copy", copy_form_path(form), class: "#{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline",
                             data: { turbo_method: :post, turbo_confirm: "Make a full copy of \"#{form.display_name}\"?" } %>
               <% end %>
             </td>

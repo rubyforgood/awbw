@@ -19,7 +19,7 @@
      <% if field.section.present? %>data-section="<%= field.section %>"<% end %>
      <% if field.group_header? %>data-group-header<% end %>>
   <% if field.group_header? %>
-    <div class="cursor-grab rounded bg-purple-50 text-purple-500 hover:bg-purple-100 hover:text-purple-700 px-1.5 py-1"
+    <div class="cursor-grab rounded <%= DomainTheme.bg_class_for(:forms) %> <%= DomainTheme.text_class_for(:forms, intensity: 500) %> <%= DomainTheme.bg_class_for(:forms, hover: true) %> <%= DomainTheme.text_class_for(:forms, intensity: 700, hover: true) %> px-1.5 py-1"
          data-sortable-handle
          title="Drag to move this entire section">
       <i class="fa-solid fa-up-down-left-right"></i>
@@ -110,7 +110,7 @@
                 <i class="fa-solid fa-database text-xs text-gray-400"></i>
                 Options from
                 <%= link_to option_source[:label], option_source[:path],
-                      class: "font-medium text-purple-600 hover:text-purple-800 underline",
+                      class: "font-medium #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline",
                       target: "_blank", rel: "noopener" %>
               </span>
             <% else %>
@@ -159,7 +159,7 @@
                     class: "w-32 min-w-0 rounded border-gray-300 shadow-sm px-2 py-1 font-mono text-xs",
                     title: "Internal name that wires this field to backend logic — leave blank for an ordinary field" %>
               <%= link_to "What's this?", smart_form_settings_forms_path(form_id: @form.id, event_id: @dashboard_event&.id, field_id: field.id),
-                    class: "mt-0.5 text-3xs text-purple-600 hover:text-purple-800 underline",
+                    class: "mt-0.5 text-3xs #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline",
                     target: "_blank", rel: "noopener" %>
             </div>
             <%= link_to_remove_association "Remove", f,
@@ -187,7 +187,7 @@
                 <%= render "form_field_answer_option_fields", f: opt %>
               <% end %>
               <%= link_to_add_association "+ Add option", f, :form_field_answer_options,
-                    class: "text-sm text-purple-600 hover:text-purple-800 font-medium" %>
+                    class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} font-medium" %>
             <% end %>
           </div>
         <% end %>
