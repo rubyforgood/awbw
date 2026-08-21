@@ -73,7 +73,7 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     }
 
     # Facilitator (Mar 2020) is the earliest affiliation, so affiliated == facilitator.
-    expect(page).to have_css("#{note}.hidden", visible: :all)
+    expect(page).to have_no_css(note)
 
     # Move it before the facilitator start — now affiliated differs, note appears.
     set_date_input(volunteer_start.call, "2018-01-15")
@@ -81,7 +81,7 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
 
     # Move it back into the facilitator's month — note disappears again.
     set_date_input(volunteer_start.call, "2020-03-20")
-    expect(page).to have_css("#{note}.hidden", visible: :all, wait: 5)
+    expect(page).to have_no_css(note, wait: 5)
   end
 
   it "toggles the member-since flag live as the facilitator start crosses member_since" do
@@ -105,7 +105,7 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
 
     # Facilitator start lands in member_since's month — no flag.
     set_date_input(fac_start.call, "2015-06-10")
-    expect(page).to have_css("#{flag}.hidden", visible: :all, wait: 5)
+    expect(page).to have_no_css(flag, wait: 5)
   end
 
   it "shows end date and icon when the facilitator affiliation is inactive" do

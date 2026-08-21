@@ -286,13 +286,14 @@
                 <i class="fa-solid fa-circle-info mr-1"></i>Different date on file: <%= person.member_since.strftime("%b %Y") %>
               <% end %>
             </p>
-            <div class="group/aff relative mt-1 inline-flex items-center gap-1 cursor-help <%= "hidden" unless decorated.affiliated_since_note %>"
-                 data-affiliation-dates-target="affiliatedNote">
-              <span class="text-xs text-gray-500" data-affiliation-dates-target="affiliatedNoteText"><%= decorated.affiliated_since_note %></span>
-              <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
-              <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/aff:block">
-                <p>The earliest date this person was affiliated with any organization, in any role. Shown only when it's earlier than the facilitator start — otherwise the two dates are the same.</p>
-              </div>
+            <div class="mt-1 <%= "hidden" unless decorated.affiliated_since_note %>" data-affiliation-dates-target="affiliatedNote">
+              <span class="group/aff relative inline-flex items-center gap-1 cursor-help">
+                <span class="text-xs text-gray-500" data-affiliation-dates-target="affiliatedNoteText"><%= decorated.affiliated_since_note %></span>
+                <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
+                <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/aff:block">
+                  <p>The earliest date this person was affiliated with any organization, in any role. Shown only when it's earlier than the facilitator start — otherwise the two dates are the same.</p>
+                </div>
+              </span>
             </div>
           </div>
         </div>

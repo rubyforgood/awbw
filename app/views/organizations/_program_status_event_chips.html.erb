@@ -8,6 +8,6 @@
               target: "_blank", rel: "noopener noreferrer",
               title: "#{event.title} — #{status.explanation}",
               class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{OrganizationDecorator.program_status_classes(status.status)}" do %>
-    <%= "#{event.start_date.strftime('%b %Y')} · " if event.start_date %><%= status.label %> · <%= event.decorate.compact_label.truncate(24) %>
+    <%= "#{event.start_date.strftime('%b %Y')} · " if event.start_date %><%= status.label %> · <%= event.decorate.compact_label.truncate(40) %>
   <% end %>
 <% end %>
