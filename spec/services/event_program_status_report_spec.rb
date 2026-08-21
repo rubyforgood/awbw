@@ -45,6 +45,33 @@ RSpec.describe EventProgramStatusReport do
       expect(column.organization_count).to eq(3)
     end
 
+    it "counts a same-day (start == end) facilitation dated to the training as New" do
+      # The minted affiliation with a same-day span is still the training's own,
+      # not prior history (ADR-0001 D8) — so it must not read Ongoing.
+      one_day = create(:organization, name: "One Day")
+      facilitator_since(one_day, spring.start_date, spring.start_date)
+      represent(one_day, spring)
+
+      column = report.years.first.columns.first
+
+      expect(column.statuses[one_day.id].status).to eq(:new)
+      expect(column.new_count).to eq(2)
+    end
+
+    it "reads Ongoing for an org with a prior active facilitator plus one minted at the training" do
+      # Status is judged over ALL the org's facilitator affiliations (ADR-0001 D5),
+      # so the training-minted one does not downgrade an already-running program.
+      mixed = create(:organization, name: "Mixed")
+      facilitator_since(mixed, Date.new(2019, 5, 1))  # prior, still active
+      facilitator_since(mixed, spring.start_date)     # minted at this training
+      represent(mixed, spring)
+
+      column = report.years.first.columns.first
+
+      expect(column.statuses[mixed.id].status).to eq(:ongoing)
+      expect(column.ongoing_count).to eq(2)
+    end
+
     it "counts only organizations on active registrations" do
       cancelled_org = create(:organization, name: "Cancelled")
       represent(cancelled_org, spring, status: "cancelled")

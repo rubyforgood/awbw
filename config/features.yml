@@ -171,6 +171,7 @@
       behind it.
     - An organization's overall status comes from its facilitator affiliations, not
       the old status field — the edit form flags where the two disagree.
+    - A first-time organization reads New at its own training, not Ongoing.
 
 - name: "Sector, age group and program-status filters on the organization index"
   area: people

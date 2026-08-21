@@ -981,6 +981,42 @@ RSpec.describe EventDashboard do
     end
   end
 
+  context "same-day facilitation dated to the event start (ADR-0001 D8)" do
+    let(:event) { create(:event) }
+
+    it "reads New — the affiliation the training mints is not prior history" do
+      org = create(:organization, name: "One Day Program")
+      facilitator = create(:person)
+      # start == end == the event date: the minted affiliation, not a prior program,
+      # so this must NOT read Ongoing.
+      create(:affiliation, organization: org, person: facilitator, title: "Facilitator",
+             start_date: event.start_date.to_date, end_date: event.start_date.to_date)
+      create(:event_registration, event: event, registrant: facilitator, status: "registered")
+
+      expect(dashboard.program_status_counts).to eq(new: 1, ongoing: 0, reinstated: 0)
+      expect(dashboard.program_statuses_by_registrant[facilitator.id].map(&:status)).to eq([ :new ])
+    end
+  end
+
+  context "an organization with both a prior facilitator and one minted at the event" do
+    let(:event) { create(:event) }
+
+    it "reads Ongoing — a prior active facilitator outweighs the training-minted one (D5)" do
+      org = create(:organization, name: "Mixed Program")
+      registrant = create(:person)
+      # A facilitator already active before this training…
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+             start_date: Date.new(2023, 1, 1), end_date: nil)
+      # …plus the registrant's own affiliation minted at the training itself.
+      create(:affiliation, organization: org, person: registrant, title: "Facilitator",
+             start_date: event.start_date.to_date)
+      create(:event_registration, event: event, registrant: registrant, status: "registered")
+
+      expect(dashboard.program_status_counts).to eq(new: 0, ongoing: 1, reinstated: 0)
+      expect(dashboard.program_statuses_by_registrant[registrant.id].map(&:status)).to eq([ :ongoing ])
+    end
+  end
+
   context "program-status breakdown for non-facilitator affiliations" do
     let(:event) { create(:event) }
     let(:org) { create(:organization, name: "Day Job Agency") }
