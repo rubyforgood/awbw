@@ -1691,12 +1691,12 @@ RSpec.describe "Events", type: :request do
           .at_css("tr#registrant-row-#{registration.id} td[data-column-toggle-col='organization']")&.text&.squish
       end
 
-      # Stores a submitted "agency_name" answer for the registrant, mirroring what
-      # public registration captures, so the Pending/None chip logic has data.
+      # Stores a submitted "organization_name" answer for the registrant, mirroring
+      # what public registration captures, so the Pending/None chip logic has data.
       def submit_agency_name(name)
         registration_form = Form.find_by(name: "Registration") || create(:form, name: "Registration")
-        field = registration_form.form_fields.find_by(field_identifier: "agency_name") ||
-          create(:form_field, form: registration_form, field_identifier: "agency_name")
+        field = registration_form.form_fields.find_by(field_identifier: "organization_name") ||
+          create(:form_field, form: registration_form, field_identifier: "organization_name")
         create(:event_form, :registration, event: event, form: registration_form) unless event.registration_form
         submission = create(:form_submission, person: person, form: registration_form)
         create(:form_answer, form_submission: submission, form_field: field, submitted_answer: name)

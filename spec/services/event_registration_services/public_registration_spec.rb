@@ -11,8 +11,11 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     f
   end
 
+  # Resolve a field by identifier, tolerating the organization rename: the seeded
+  # form carries the canonical "organization_*" names, but specs may reference
+  # either spelling (see FormField.aliased_identifiers).
   def field_id(key)
-    form.form_fields.find_by!(field_identifier: key).id.to_s
+    form.form_fields.find_by!(field_identifier: FormField.aliased_identifiers(key)).id.to_s
   end
 
   def base_form_params(first_name:, last_name:, email:)
@@ -459,7 +462,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       register_with_agency_type("Other: Equine therapy")
 
       answer = FormAnswer.joins(:form_field)
-        .find_by(form_fields: { field_identifier: "agency_type" })
+        .find_by(form_fields: { field_identifier: FormField.aliased_identifiers("organization_type") })
       expect(answer.submitted_answer).to eq("Other: Equine therapy")
     end
 
@@ -1110,6 +1113,58 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       answer = result.form_submission.form_answers.find_by(form_field: upload_field)
       expect(answer.uploaded_file).to be_attached
       expect(answer.submitted_answer).to eq("sample.png")
+    end
+  end
+
+  # Guards the rename: forms built before the "agency_" -> "organization_" rename
+  # still carry the legacy identifiers, and the pipeline must keep reading them.
+  describe "legacy agency_ organization identifiers" do
+    let!(:organization) { create(:organization, name: "Legacy Org") }
+
+    let(:legacy_form) do
+      f = FormBuilderService.new(name: "Legacy", sections: %i[person_identifier]).call
+      {
+        "agency_name" => "Organization name",
+        "agency_position" => "Position",
+        "agency_website" => "Website",
+        "agency_type" => "Type",
+        "agency_street" => "Street",
+        "agency_city" => "City",
+        "agency_state" => "State",
+        "agency_zip" => "Zip",
+        "agency_country" => "Country"
+      }.each_with_index do |(identifier, name), index|
+        f.form_fields.create!(name: name, answer_type: :free_form_input_one_line, status: :active,
+                              position: 101 + index, field_identifier: identifier)
+      end
+      event.event_forms.create!(form: f, role: "registration")
+      f
+    end
+
+    def legacy_field_id(identifier)
+      legacy_form.form_fields.find_by!(field_identifier: identifier).id.to_s
+    end
+
+    it "links the organization and fills its profile from the legacy identifiers" do
+      params = {
+        legacy_field_id("first_name") => "Lee",
+        legacy_field_id("last_name") => "Legacy",
+        legacy_field_id("primary_email") => "lee@example.com",
+        legacy_field_id("agency_name") => "Legacy Org",
+        legacy_field_id("agency_website") => "legacy.org",
+        legacy_field_id("agency_type") => "501c3/nonprofit",
+        legacy_field_id("agency_city") => "Reno",
+        legacy_field_id("agency_state") => "NV"
+      }
+
+      result = described_class.call(event: event, registration_form: legacy_form, form_params: params)
+      organization.reload
+
+      expect(result.success?).to be true
+      expect(result.event_registration.organizations).to include(organization)
+      expect(organization.agency_type).to eq("501c3/nonprofit")
+      expect(organization.website_url).to include("legacy.org")
+      expect(organization.addresses.find_by(city: "Reno")).to be_present
     end
   end
 end

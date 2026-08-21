@@ -98,11 +98,11 @@ RSpec.describe "Public form submissions", type: :system do
         "mailing_country" => "United States",
         "phone" => "555-123-4567",
         "phone_type" => "Work",
-        "agency_name" => "Hope Center",
-        "agency_position" => "Art Therapist",
-        "agency_website" => "https://hope.example.org",
-        "agency_type" => "501c3/nonprofit",
-        "agency_country" => "United States",
+        "organization_name" => "Hope Center",
+        "organization_position" => "Art Therapist",
+        "organization_website" => "https://hope.example.org",
+        "organization_type" => "501c3/nonprofit",
+        "organization_country" => "United States",
         "primary_sector" => sector_education.id.to_s,
         "additional_sectors" => sector_mental_health.id.to_s,
         "primary_age_group" => age_adults.id.to_s,
@@ -399,15 +399,15 @@ RSpec.describe "Public form submissions", type: :system do
     fill_pr_text reg_field("phone"), with: "555-123-4567"
     choose_pr_radio reg_field("phone_type"), "Work"
 
-    fill_pr_text reg_field("agency_name"), with: "Hope Center"
-    fill_pr_text reg_field("agency_position"), with: "Art Therapist"
-    fill_pr_text reg_field("agency_website"), with: "https://hope.example.org"
-    choose_pr_radio reg_field("agency_type"), "501c3/nonprofit"
-    fill_pr_text reg_field("agency_street"), with: "9 Center Ave"
-    fill_pr_text reg_field("agency_city"), with: "Pasadena"
-    select_pr reg_field("agency_state"), "California (CA)"
-    fill_pr_text reg_field("agency_zip"), with: "91101"
-    fill_pr_text reg_field("agency_country"), with: "United States"
+    fill_pr_text reg_field("organization_name"), with: "Hope Center"
+    fill_pr_text reg_field("organization_position"), with: "Art Therapist"
+    fill_pr_text reg_field("organization_website"), with: "https://hope.example.org"
+    choose_pr_radio reg_field("organization_type"), "501c3/nonprofit"
+    fill_pr_text reg_field("organization_street"), with: "9 Center Ave"
+    fill_pr_text reg_field("organization_city"), with: "Pasadena"
+    select_pr reg_field("organization_state"), "California (CA)"
+    fill_pr_text reg_field("organization_zip"), with: "91101"
+    fill_pr_text reg_field("organization_country"), with: "United States"
 
     select_pr reg_field("primary_sector"), "Education"
     check_pr_box reg_field("additional_sectors"), sector_mental_health.id.to_s

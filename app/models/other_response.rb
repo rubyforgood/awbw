@@ -24,9 +24,11 @@ class OtherResponse < ApplicationRecord
   # Kinds that can be promoted into a real tag today.
   PROMOTABLE_KINDS = %w[sector].freeze
 
-  # The organization-type question. Its "Other" is org-owned (see
-  # PublicRegistration#sync_agency_type).
-  ORGANIZATION_TYPE_FIELD_IDENTIFIER = "agency_type"
+  # The organization-type question. Its "Other" is org-owned (captured against
+  # the Organization in PublicRegistration#sync_organization_profile). The
+  # canonical identifier is "organization_type"; the legacy "agency_type" still
+  # resolves (see FormField.aliased_identifiers).
+  ORGANIZATION_TYPE_FIELD_IDENTIFIER = "organization_type"
 
   # A response starts life as `pending` (awaiting a curator's decision) and is
   # then either promoted into a real tag, kept as auxiliary data, or dismissed.
@@ -66,7 +68,7 @@ class OtherResponse < ApplicationRecord
     identifier = field_identifier.to_s
     if identifier.in?(FormField::SECTOR_FIELD_IDENTIFIERS)
       "sector"
-    elsif identifier == ORGANIZATION_TYPE_FIELD_IDENTIFIER
+    elsif identifier.in?(FormField.aliased_identifiers(ORGANIZATION_TYPE_FIELD_IDENTIFIER))
       "organization_type"
     else
       "generic"
