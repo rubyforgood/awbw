@@ -148,6 +148,35 @@ picker), use `MoneyFormatter.compact_from_cents(cents)` (`$12.5k`, `$1.2m`) — 
   `scholarship_preview_controller.js`). Keep the server-rendered initial value and the JS-updated value
   formatted identically.
 
+## Domain colors (DomainTheme)
+
+Each domain (workshops, organizations, events, forms, sectors, scholarships, …) has one
+canonical Tailwind color, mapped in **`DomainTheme::COLORS`** (`lib/domain_theme.rb`). The
+point is single-source theming: re-coloring a whole domain is a one-line change in `COLORS`.
+
+- **Never hard-code a domain's own identity color.** When a panel, badge, chip, button, link,
+  or icon is themed to a domain, resolve the class through `DomainTheme`, not a literal like
+  `bg-emerald-50` / `text-indigo-700` / `hover:text-purple-800`.
+- **Helpers** (all take a domain key symbol, e.g. `:organizations`):
+  - `DomainTheme.bg_class_for(key, intensity: 50, hover: false)` → `"bg-emerald-50"` (`hover: true`
+    prefixes `hover:bg-` and bumps one step).
+  - `DomainTheme.text_class_for(key, intensity: 800, hover: false)` → `"text-emerald-800"`
+    (**`hover: true` prefixes `hover:text-`** at the intensity you pass — use it for link hover
+    states instead of a literal `hover:text-*`).
+  - `DomainTheme.border_class_for(key, intensity: 300)` → `"border-emerald-300"`.
+  - `DomainTheme.color_for(key)` → the raw color symbol (e.g. `:emerald`); unknown keys fall back
+    to `:gray`.
+- **In views** interpolate the helper into the class list (`<%= DomainTheme.bg_class_for(:forms) %>`);
+  **in decorators/POROs** (no helper access) call `DomainTheme.…` directly — it's a plain module.
+- **New color?** Add the key → color to `DomainTheme::COLORS` **and** add the color to the
+  `@source inline(...)` safelist in `app/frontend/stylesheets/application.tailwind.css`, or Tailwind
+  won't generate the dynamically-built class and it renders unstyled.
+- **Leave genuinely non-domain colors literal** — don't force these through `DomainTheme`: the
+  `bg-blue-100` `page_bg_class` marker, the global `focus:border-blue-500 focus:ring-blue-200`
+  form-focus convention, status colors (green = success, amber/yellow = warning, red = error),
+  multi-color pickers/swatches, and classes a Stimulus controller also toggles (keep ERB and JS in
+  sync as literals). Convert only a domain's *own identity* color.
+
 ## HTML/ERB Formatting
 
 ### Tag Attributes
