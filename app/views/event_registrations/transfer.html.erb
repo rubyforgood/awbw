@@ -10,7 +10,7 @@
   roster_path = registrants_event_path(source.event)
 %>
 <div class="mb-4">
-  <%= link_to roster_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700" do %>
+  <%= link_to roster_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class}" do %>
     <i class="fa-solid fa-arrow-left text-xs"></i>
     <%= source.event.title %> registrants
   <% end %>

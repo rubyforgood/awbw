@@ -4,7 +4,7 @@
   <div class="w-full">
     <%# Back link to the scholarship that opened this page via its grant "View all". %>
     <% if params[:from_scholarship].present? %>
-      <%= link_to edit_scholarship_path(params[:from_scholarship]), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4" do %>
+      <%= link_to edit_scholarship_path(params[:from_scholarship]), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} mb-4" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Scholarship
       <% end %>
     <% end %>

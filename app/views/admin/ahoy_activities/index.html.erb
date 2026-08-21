@@ -5,12 +5,12 @@
         <%# Scoped to a person (from their edit page's History card, or the filter) —
             return to that person, not the generic Admin default. %>
         <% if @person %>
-          <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700" do %>
+          <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1 text-sm #{eyebrow_link_class}" do %>
             <i class="fas fa-arrow-left"></i>
             <span><%= truncate(@person.name, length: 30) %></span>
           <% end %>
         <% elsif allowed_to?(:index?, with: Admin::HomePolicy) %>
-          <%= link_to admin_path, class: "inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700" do %>
+          <%= link_to admin_path, class: "inline-flex items-center gap-1 text-sm #{eyebrow_link_class}" do %>
             <i class="fas fa-arrow-left"></i>
             <span>Admin</span>
           <% end %>
@@ -131,7 +131,7 @@
                         class: "text-indigo-600 hover:underline" %>
 
             <%= link_to "Clear filters", request.path,
-                        class: "ml-auto text-gray-500 hover:text-gray-700",
+                        class: "ml-auto #{eyebrow_link_class}",
                         data: { action: "collection#clearAndSubmit" } %>
           </div>
 

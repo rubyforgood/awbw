@@ -4,7 +4,7 @@
       Scholarships (<%= scholarships.total_entries %>)
     </h2>
     <%= link_to new_scholarship_path(grant_id: grant.id, return_to: return_to),
-                class: "inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-700" do %>
+                class: "inline-flex items-center gap-1.5 text-sm font-medium #{eyebrow_link_class}" do %>
       <i class="fa-solid fa-plus text-xs"></i>
       Add scholarship
       <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400"></i>
@@ -45,7 +45,7 @@
               </td>
               <td class="px-4 py-2 whitespace-nowrap text-sm text-right">
                 <%= link_to "Edit", edit_scholarship_path(scholarship, return_to: return_to),
-                            class: "text-gray-500 hover:text-gray-700 underline" %>
+                            class: "#{eyebrow_link_class} underline" %>
               </td>
             </tr>
           <% end %>

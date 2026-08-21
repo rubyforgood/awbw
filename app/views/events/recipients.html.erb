@@ -16,7 +16,7 @@
 <div class="bg-white border border-gray-200 rounded-xl shadow p-4 sm:p-6">
   <%# Top bar: back link + sub-nav, matching the other event pages %>
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6 print:hidden">
-    <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm #{eyebrow_link_class}" %>
     <%= render "events/subnav", event: @event, current: :scholarships %>
   </div>
   <%# Reports / Grants are cross-page navigation, so they read as text links; only
@@ -24,13 +24,13 @@
   <% recipient_actions = capture do %>
     <% if allowed_to?(:cross_event_reports?, @event) %>
       <%= link_to scholarships_events_path, target: "_blank", rel: "noopener",
-            class: "text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap" do %>
+            class: "text-sm #{eyebrow_link_class} whitespace-nowrap" do %>
         <i class="fa-solid fa-chart-line"></i> Reports
       <% end %>
     <% end %>
     <% if allowed_to?(:index?, Grant) %>
       <%= link_to grants_path, target: "_blank", rel: "noopener",
-            class: "text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap" do %>
+            class: "text-sm #{eyebrow_link_class} whitespace-nowrap" do %>
         <i class="fa-solid fa-hand-holding-dollar"></i> Grants
       <% end %>
     <% end %>
@@ -255,7 +255,7 @@
             <% reg_id = @dashboard.registration_id_by_registrant[shoutout.recipient.id] %>
             <% if reg_id %>
               <%= link_to edit_event_registration_path(reg_id, return_to: "recipients", anchor: "shout-out"),
-                          class: "shrink-0 inline-flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline print:hidden" do %>
+                          class: "shrink-0 inline-flex items-center gap-1 text-xs font-medium #{eyebrow_link_class} hover:underline print:hidden" do %>
                 <i class="fa-solid fa-pen"></i> Edit
               <% end %>
             <% end %>

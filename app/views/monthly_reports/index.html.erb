@@ -15,7 +15,7 @@
 
       <div class="flex gap-2 items-center text-right">
         <% if @organization %>
-          <%= link_to "Back to organization", edit_organization_path(@organization), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+          <%= link_to "Back to organization", edit_organization_path(@organization), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <% end %>
       </div>
     </div>
