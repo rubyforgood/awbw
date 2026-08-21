@@ -10,7 +10,7 @@
 
 @theme {
   --color-primary: #24479e;
-  --color-accent: #aa2e00;
+  --color-accent: #d56027;
   --color-secondary: var(--color-gray-500);
   --color-danger: var(--color-red-500);
   --color-warning: var(--color-yellow-500);
