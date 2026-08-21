@@ -241,7 +241,9 @@ class BuiltinCalloutCards
   # behind it holds the decline confirmation — but with nothing left to act on.
   def scholarship_status_card
     return if config_gap?("scholarship")
-    return unless registration.scholarship_requested?
+    # A transferred-in recipient's award lives on the source; keep the card so they
+    # can reach it (the page routes to the original registration). (#1944)
+    return unless registration.scholarship_requested? || registration.scholarship_recipient?
     # Awarded is display-only: the scholarship record exists earlier, but the award
     # is only shown as awarded once the recipient signs the agreement. Until then
     # the card prompts them to accept.

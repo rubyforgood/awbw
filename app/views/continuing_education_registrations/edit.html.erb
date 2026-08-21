@@ -31,6 +31,22 @@
 
   <%= render "event_registrations/transferred_out_caution", registration: registration %>
 
+  <%# Transferred-in CE: a prominent in-frame card mirroring the transferred-out
+      caution, linking back to the paid original record. (#1944) %>
+  <% if @ce_registration.transfer_created? && (origin_ce = @ce_registration.origin_ce_registration) %>
+    <div class="mb-6 flex items-start gap-3 rounded-xl border border-teal-200 bg-teal-50 p-4 text-sm text-teal-900">
+      <i class="fa-solid fa-right-to-bracket mt-0.5 shrink-0 text-teal-600"></i>
+      <div>
+        <p class="font-semibold">These CE hours transferred in from <%= registration.transferred_from_registration.event.title %>.</p>
+        <p class="mt-0.5 text-teal-800">
+          The cost is the balance carried from the
+          <%= link_to "paid original record", edit_continuing_education_registration_path(origin_ce, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>;
+          new payments and the certificate are handled here.
+        </p>
+      </div>
+    </div>
+  <% end %>
+
   <div class="space-y-6">
     <%= simple_form_for @ce_registration, url: continuing_education_registration_path(@ce_registration, return_to: params[:return_to].presence),
           html: { id: "ce_registration_form", data: { turbo: false } } do |f| %>
