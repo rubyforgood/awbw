@@ -4,7 +4,11 @@
       carrying the event so the editor reopens in its dashboard context. %>
   <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
     <% if @return_form %>
-      <%= link_to "← Back to #{@return_form.display_name}", edit_form_path(@return_form, event_id: @dashboard_event&.id),
+      <%# Anchor straight back to the field the hint was opened from — this page opens in
+          a new tab, so the browser back button can't return the admin to that row. %>
+      <%= link_to "← Back to #{@return_form.display_name}",
+                  edit_form_path(@return_form, event_id: @dashboard_event&.id,
+                                 anchor: @return_field_id.present? ? "form_field_#{@return_field_id}" : nil),
                   class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1 mr-auto" %>
     <% end %>
     <%= link_to "Forms", forms_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
@@ -18,7 +22,7 @@
         </div>
         <div>
           <p class="text-xs font-medium uppercase tracking-[0.2em] text-purple-200">Reference</p>
-          <h1 class="text-2xl font-bold tracking-tight leading-tight">Smart form settings</h1>
+          <h1 class="text-2xl font-bold tracking-tight leading-tight">Smart field settings</h1>
         </div>
       </div>
       <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
@@ -26,16 +30,20 @@
 
     <div class="bg-white px-4 sm:px-6 py-6 space-y-6">
       <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-        <p class="flex items-start gap-2">
+        <div class="flex items-start gap-2">
           <i class="fa-solid fa-circle-info mt-0.5 shrink-0"></i>
-          <span>
-            Most questions need no field identifier — their answers are saved on the submission and read there.
-            A <strong>field identifier</strong> is what wires a question to a record, so the answer also updates
-            a person, an organization, or a payment. This page lists every identifier that does something, and
-            what it does. Identifiers are set per question in the form editor, and only one question per form
-            may carry a given identifier.
-          </span>
-        </p>
+          <div class="space-y-2">
+            <p>
+              A <strong>smart field</strong> connects a question to a person, an organization, or a payment,
+              so answering it updates them directly — not just this form.
+            </p>
+            <p>
+              This page lists every smart field and related actions. Smart fields are set per question in the
+              form editor, and only one question per form may carry a given smart field. Note: most questions
+              need no smart field — their answers are saved on the submission and read there.
+            </p>
+          </div>
+        </div>
       </div>
 
       <%# Jump list — the page is long and admins arrive looking for one identifier. %>
@@ -66,7 +74,7 @@
                     <code class="inline-block rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-800 break-all"><%= field.identifier %></code>
                     <p class="mt-1 text-xs text-gray-500"><%= field.question %></p>
                   </dt>
-                  <dd class="mt-1 sm:mt-0 text-sm text-gray-700"><%= field.effect %></dd>
+                  <dd class="mt-1 sm:mt-0 text-sm text-gray-700"><%= smart_field_effect(field.effect) %></dd>
                 </div>
               <% end %>
             </dl>
@@ -76,12 +84,12 @@
 
       <section class="rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div class="px-5 py-3 bg-gray-100 border-b border-gray-300">
-          <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Identifiers that do nothing extra</h2>
+          <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Smart fields that do nothing extra</h2>
         </div>
         <div class="px-5 py-4">
           <p class="text-sm text-gray-600 mb-3">
             These come with the question library and are stored on the submission like any ordinary question.
-            They carry an identifier only so reports and exports can find them by name — no record is updated.
+            They carry a smart field only so reports and exports can find them by name — no record is updated.
           </p>
           <div class="flex flex-wrap gap-2">
             <% @answer_only_identifiers.each do |identifier| %>
@@ -92,8 +100,8 @@
       </section>
 
       <p class="text-xs text-gray-500">
-        An identifier not listed here does nothing — the answer is stored on the submission and no record is updated.
-        Changing an identifier on a live form changes where future answers go; answers already submitted stay as they are.
+        A smart field not listed here does nothing — the answer is stored on the submission and no record is updated.
+        Changing a smart field on a live form changes where future answers go; answers already submitted stay as they are.
       </p>
     </div>
   </div>
