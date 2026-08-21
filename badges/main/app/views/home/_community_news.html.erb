@@ -1,6 +1,6 @@
 <% title ||= "Community News" %>
 
-<section class="<%# mt-6 %> py-10 bg-orange-50">
+<section class="<%# mt-6 %> py-10 <%= DomainTheme.bg_class_for(:community_news) %>">
   <div class="max-w-6xl mx-auto px-4">
     <%= render "home/home_section_header",
                title: title,

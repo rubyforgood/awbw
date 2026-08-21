@@ -35,9 +35,9 @@ class ScholarshipDecorator < ApplicationDecorator
   # Tailwind pill classes for the program-status badge.
   def program_status_classes
     case program&.program_status(object.recipient)
-    when "Ongoing"   then "bg-blue-50 text-blue-700 border-blue-200"
-    when "New"       then "bg-indigo-50 text-indigo-700 border-indigo-200"
-    when "Reinstate" then "bg-purple-50 text-purple-700 border-purple-200"
+    when "Ongoing"   then program_pill(:program_ongoing)
+    when "New"       then program_pill(:program_new)
+    when "Reinstate" then program_pill(:program_reinstated)
     else "bg-gray-50 text-gray-500 border-gray-200"
     end
   end
@@ -94,5 +94,12 @@ class ScholarshipDecorator < ApplicationDecorator
     label = prefix ? "Agreement #{agreement_status_label.downcase}" : agreement_status_label
     h.render "shared/badge", label: label, classes: agreement_status_classes,
              icon: [ agreement_status_icon, icon_size ].compact_blank.join(" ")
+  end
+
+  private
+
+  # Program-status pill classes for a DomainTheme program key (bg-50/text-700/border-200).
+  def program_pill(key)
+    "#{DomainTheme.bg_class_for(key)} #{DomainTheme.text_class_for(key, intensity: 700)} #{DomainTheme.border_class_for(key, intensity: 200)}"
   end
 end
