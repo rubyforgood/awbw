@@ -230,13 +230,28 @@
   action_path: "/organizations"
   pr_number: 1993
   summary: >-
-    The organization list gains Sectors and Age group columns and a "Facilitators
-    since" chip, filterable by sector, age group and program status.
+    The organization list gains Sectors and Age group columns, filterable by sector,
+    age group and program status.
   pro_tips:
     - Sector and age group match the organization's own tags plus its affiliated
       people's primary tags.
-    - The "Facilitators since" chip shows each stretch of facilitating separately,
-      so a lapse and a return read as two periods.
+
+- name: "\"Facilitators since\" on organizations"
+  area: people
+  display_status: user_facing
+  released_on: 2026-08-18
+  action_path: "/organizations"
+  pr_number: 1993
+  summary: >-
+    Each organization shows how long it has been facilitating — a "Facilitators since"
+    chip on the organization index, profile, and edit form, at month precision. This is
+    about tenure, separate from the New / Ongoing / Reinstated program status.
+  pro_tips:
+    - The chip shows each stretch of facilitating separately, so a lapse and a return
+      read as two periods.
+    - A grey "Affiliated since" line appears underneath only when the org's first
+      affiliation predates its first facilitator affiliation, so the two aren't
+      redundant.
 
 - name: "\"In memoriam\" designation on legacy grants"
   area: scholarships
