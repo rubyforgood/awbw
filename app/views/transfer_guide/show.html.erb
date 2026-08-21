@@ -1,0 +1,116 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% content_for(:page_title, "Transfer guide") %>
+<%
+  # Grouped, plain-language reference. Each row contrasts the ORIGINAL
+  # (transferred-out) registration with the NEW (transferred-in) one.
+  groups = [
+    [ "Staff pages", [
+      [ "Registration (staff edit)",
+        "How staff manage a person's registration.",
+        "A purple “transferred out & locked” banner; only comments/communications are editable — everything else runs through Manage transfer.",
+        "A teal “transferred in” banner linking back to the original; the registration stays fully editable and tracks its own attendance." ],
+      [ "Continuing education (CE)",
+        "How staff manage a person's CE credit and payment.",
+        "Keeps a paid $0-hours “stub” — the money already paid stays counted at this event.",
+        "Carries the hours and the remaining balance, with a note linking back to the paid original. New CE payments and the certificate are handled here. If the original had no CE, staff can add fresh CE here normally." ],
+      [ "Scholarship (staff edit)",
+        "How staff manage a person's scholarship award.",
+        "The award lives here — the amount, agreement, and tasks.",
+        "No separate award; the scholarship callout and edit link point back to the award on the original registration." ],
+      [ "Manage transfer",
+        "The one screen for correcting a transfer.",
+        "Change the destination event or undo the transfer entirely (which restores the status and re-merges CE).",
+        "Reached from the original via the “Manage transfer” link." ]
+    ] ],
+    [ "The registrant's ticket", [
+      [ "Registration ticket",
+        "The page the registrant sees.",
+        "A banner explains they transferred out; participation material is hidden.",
+        "A banner explains they transferred in; this is where they attend." ],
+      [ "Payment",
+        "Where a balance is paid.",
+        "The “Pay” button is hidden — they pay at the new event. The balance still shows for reference.",
+        "Shows the balance and the “Pay” button." ],
+      [ "Scholarship",
+        "The registrant's scholarship details.",
+        "Shows the award (it lives here).",
+        "Still shows the scholarship, linking back to the award on the original registration." ],
+      [ "Continuing education & certificate",
+        "CE hours, balance, and the completion certificate.",
+        "Shows the paid original record.",
+        "Carries the hours + remaining balance; the certificate is earned here." ],
+      [ "Handouts, videoconference, staff",
+        "Participation material for the event.",
+        "Hidden — they withdrew from this event.",
+        "Shown — this is the event they attend." ]
+    ] ],
+    [ "Billing documents", [
+      [ "Invoice & receipt",
+        "The registrant's billing documents.",
+        "Document this event's cost and the payments made here.",
+        "Reached through the new ticket, but still document the original event's cost/payments." ]
+    ] ]
+  ]
+%>
+
+<div class="mb-4">
+  <%= link_to features_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class}" do %>
+    <i class="fa-solid fa-arrow-left text-xs"></i>
+    Features &amp; tips
+  <% end %>
+</div>
+
+<div class="mx-auto max-w-4xl space-y-6">
+  <header>
+    <h1 class="text-2xl font-semibold text-gray-900">Transferring a registration — what changes</h1>
+    <p class="mt-2 text-sm leading-relaxed text-gray-600">
+      When you move a registrant from one event to another, the portal keeps
+      <strong>two</strong> registrations. This page shows what each screen looks like on both
+      sides, so you know where money, attendance, and records live.
+    </p>
+  </header>
+
+  <%# The core principle, up top. %>
+  <div class="grid gap-3 sm:grid-cols-2">
+    <div class="rounded-xl border border-purple-200 bg-purple-50 p-4">
+      <p class="flex items-center gap-2 text-sm font-semibold text-purple-900">
+        <i class="fa-solid fa-right-from-bracket text-purple-600"></i> Original registration &mdash; transferred out
+      </p>
+      <p class="mt-1 text-sm text-purple-800">The event they left. Keeps their <strong>payments, scholarship, and CE money</strong>; locked from editing.</p>
+    </div>
+    <div class="rounded-xl border border-teal-200 bg-teal-50 p-4">
+      <p class="flex items-center gap-2 text-sm font-semibold text-teal-900">
+        <i class="fa-solid fa-right-to-bracket text-teal-600"></i> New registration &mdash; transferred in
+      </p>
+      <p class="mt-1 text-sm text-teal-800">The event they'll attend. Tracks <strong>attendance</strong>, carries <strong>CE hours + balance</strong>, and earns the <strong>certificate</strong>.</p>
+    </div>
+  </div>
+
+  <% groups.each do |group_title, rows| %>
+    <section class="space-y-3">
+      <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-400"><%= group_title %></h2>
+      <% rows.each do |title, desc, original, incoming| %>
+        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div class="border-b border-gray-100 px-4 py-3">
+            <h3 class="text-sm font-semibold text-gray-800"><%= title %></h3>
+            <p class="text-xs text-gray-500"><%= desc %></p>
+          </div>
+          <div class="grid gap-px bg-gray-100 sm:grid-cols-2">
+            <div class="bg-white p-4">
+              <p class="mb-1 flex items-center gap-1.5 text-xs font-semibold text-purple-700">
+                <i class="fa-solid fa-right-from-bracket"></i> Transferred out
+              </p>
+              <p class="text-sm text-gray-700"><%= original %></p>
+            </div>
+            <div class="bg-white p-4">
+              <p class="mb-1 flex items-center gap-1.5 text-xs font-semibold text-teal-700">
+                <i class="fa-solid fa-right-to-bracket"></i> Transferred in
+              </p>
+              <p class="text-sm text-gray-700"><%= incoming %></p>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </section>
+  <% end %>
+</div>
