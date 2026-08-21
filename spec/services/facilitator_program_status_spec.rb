@@ -34,10 +34,17 @@ RSpec.describe FacilitatorProgramStatus do
       expect(status_on.status).to eq(:ongoing)
     end
 
-    it "is :ongoing for a same-day (start == end) facilitation on the anchor" do
-      # A one-day program is active on its own day, even though it starts on the anchor.
+    it "is :new for a same-day (start == end) facilitation dated to the anchor" do
+      # start == end == the event date is the affiliation this training mints (D8),
+      # so a first-time org still reads New — not Ongoing.
       facilitator(start_date: anchor, end_date: anchor)
-      expect(status_on.status).to eq(:ongoing)
+      expect(status_on.status).to eq(:new)
+    end
+
+    it "is :new for an affiliation that starts on the anchor with a later end date" do
+      # Still the minted affiliation (starts on the event), just not open-ended.
+      facilitator(start_date: anchor, end_date: anchor + 30)
+      expect(status_on.status).to eq(:new)
     end
 
     it "is :reinstated for a same-day facilitation that ran before the anchor" do
