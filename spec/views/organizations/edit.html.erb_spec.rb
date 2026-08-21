@@ -172,6 +172,35 @@ RSpec.describe "organizations/edit", type: :view do
       expect(rendered).to include("id=\"#{EventParticipationHelper::PROGRAM_STATUS_ANCHOR}\"")
     end
 
+    it "labels a same-day facilitation dated to the event as New, not Ongoing (ADR-0001 D8)" do
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+                           start_date: Date.new(2026, 8, 1), end_date: Date.new(2026, 8, 1))
+      event = create(:event, title: "August Training", abbreviation: "PES205", start_date: Date.new(2026, 8, 1))
+
+      assign(:organization, org.reload)
+      assign(:organization_statuses, OrganizationStatus.all)
+      assign(:organization_events, Event.where(id: event.id))
+      render
+
+      expect(rendered).to include("Aug 2026 · New · PES205")
+      expect(rendered).not_to include("Aug 2026 · Ongoing · PES205")
+    end
+
+    it "labels a lapsed program as Reinstated" do
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+                           start_date: Date.new(2015, 1, 1), end_date: Date.new(2018, 1, 1))
+      event = create(:event, title: "August Training", abbreviation: "PES205", start_date: Date.new(2026, 8, 1))
+
+      assign(:organization, org.reload)
+      assign(:organization_statuses, OrganizationStatus.all)
+      assign(:organization_events, Event.where(id: event.id))
+      render
+
+      expect(rendered).to include("Aug 2026 · Reinstated · PES205")
+    end
+
     it "always shows the general status chip, even with no events" do
       org = organization
       org.update!(organization_status: OrganizationStatus.find_or_create_by!(name: "Unknown"))

@@ -981,6 +981,23 @@ RSpec.describe EventDashboard do
     end
   end
 
+  context "same-day facilitation dated to the event start (ADR-0001 D8)" do
+    let(:event) { create(:event) }
+
+    it "reads New — the affiliation the training mints is not prior history" do
+      org = create(:organization, name: "One Day Program")
+      facilitator = create(:person)
+      # start == end == the event date: the minted affiliation, not a prior program,
+      # so this must NOT read Ongoing.
+      create(:affiliation, organization: org, person: facilitator, title: "Facilitator",
+             start_date: event.start_date.to_date, end_date: event.start_date.to_date)
+      create(:event_registration, event: event, registrant: facilitator, status: "registered")
+
+      expect(dashboard.program_status_counts).to eq(new: 1, ongoing: 0, reinstated: 0)
+      expect(dashboard.program_statuses_by_registrant[facilitator.id].map(&:status)).to eq([ :new ])
+    end
+  end
+
   context "program-status breakdown for non-facilitator affiliations" do
     let(:event) { create(:event) }
     let(:org) { create(:organization, name: "Day Job Agency") }

@@ -45,6 +45,19 @@ RSpec.describe EventProgramStatusReport do
       expect(column.organization_count).to eq(3)
     end
 
+    it "counts a same-day (start == end) facilitation dated to the training as New" do
+      # The minted affiliation with a same-day span is still the training's own,
+      # not prior history (ADR-0001 D8) — so it must not read Ongoing.
+      one_day = create(:organization, name: "One Day")
+      facilitator_since(one_day, spring.start_date, spring.start_date)
+      represent(one_day, spring)
+
+      column = report.years.first.columns.first
+
+      expect(column.statuses[one_day.id].status).to eq(:new)
+      expect(column.new_count).to eq(2)
+    end
+
     it "counts only organizations on active registrations" do
       cancelled_org = create(:organization, name: "Cancelled")
       represent(cancelled_org, spring, status: "cancelled")
