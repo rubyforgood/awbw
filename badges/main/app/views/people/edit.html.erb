@@ -3,13 +3,13 @@
         <div class="sticky top-0 z-10 <%= DomainTheme.bg_class_for(:people) %> pb-3">
           <% if params[:return_to] == "onboarding" && params[:event_id].present? %>
             <div class="mb-2">
-              <%= link_to onboarding_event_row_path(params[:event_id], params[:highlight]), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+              <%= link_to onboarding_event_row_path(params[:event_id], params[:highlight]), class: "text-sm #{eyebrow_link_class}" do %>
                 <i class="fa-solid fa-arrow-left text-xs"></i> Onboarding
               <% end %>
             </div>
           <% elsif params[:return_to] == "registration_link" && params[:event_registration_id].present? %>
             <div class="mb-2">
-              <%= link_to link_organization_event_registration_path(params[:event_registration_id], return_to: params[:link_org_return_to].presence), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+              <%= link_to link_organization_event_registration_path(params[:event_registration_id], return_to: params[:link_org_return_to].presence), class: "text-sm #{eyebrow_link_class}" do %>
                 <i class="fa-solid fa-arrow-left text-xs"></i> Organization linking
               <% end %>
             </div>
@@ -24,12 +24,12 @@
               </div>
             <% end %>
             <% if @person.user %>
-              <%= link_to "User account", edit_user_path(@person.user), class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+              <%= link_to "User account", edit_user_path(@person.user), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
             <% end %>
-            <%= link_to "Change password", change_password_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-            <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-            <%= link_to "People", people_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-            <%= link_to "Profile", person_path(@person), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+            <%= link_to "Change password", change_password_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+            <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+            <%= link_to "People", people_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+            <%= link_to "Profile", person_path(@person), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
           </div>
           <h1 class="text-3xl font-semibold text-gray-900 tracking-tight">
             Edit Person: <%= truncate(@person.name, length: 30) %>
