@@ -154,10 +154,13 @@
     <%# Optional HTML intro rendered under the title on the form's public pages.
         Collapsed by default so the header setup stays out of the way once configured. %>
     <details class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-      <summary class="flex items-center gap-2.5 px-6 py-3 bg-purple-100 border-b border-transparent [[open]_&]:border-purple-300 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden hover:bg-purple-200">
-        <i class="fa-solid fa-heading text-purple-700"></i>
-        <h2 class="text-sm font-semibold text-purple-900 uppercase tracking-wide">Form header</h2>
-        <i class="fa-solid fa-chevron-down text-purple-500 text-xs ml-auto transition-transform [[open]_&]:rotate-180"></i>
+      <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+        <div class="flex items-center gap-2.5 px-6 py-3 bg-purple-100 border-b border-transparent [[open]_&]:border-purple-300 hover:bg-purple-200">
+          <i class="fa-solid fa-heading text-purple-700"></i>
+          <h2 class="text-sm font-semibold text-purple-900 uppercase tracking-wide">Form header</h2>
+          <i class="fa-solid fa-chevron-down text-purple-500 text-xs ml-auto transition-transform [[open]_&]:rotate-180"></i>
+        </div>
+        <p class="px-6 py-3 text-sm text-gray-400 [[open]_&]:hidden">Toggle to edit</p>
       </summary>
       <div class="p-6 flex flex-col lg:flex-row gap-4">
         <div class="flex-1 flex flex-col space-y-2">
