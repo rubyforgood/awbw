@@ -132,7 +132,7 @@ rename_registration_header.call("Mailing Address", "Primary Mailing Address",
                                 subtitle: "For mailing raffle prizes, incentives, and important announcements")
 rename_registration_header.call("Organization Information", "Your Organization",
                                 subtitle: "If your organization has a website, please put your organization name as it appears on the website. " \
-                                          "If you're not associated with an organization, please provide a name for your art program.")
+                                          "If you're not associated with an organization, please provide a name for your program.")
 rename_registration_header.call("Professional Information", "Participant Information")
 rename_registration_header.call("Background Information", "About You")
 
