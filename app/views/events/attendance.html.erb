@@ -160,10 +160,10 @@
                   <div class="relative z-10 min-w-0 justify-self-start">
                     <% if ce_reg %>
                       <%= link_to row.name, registration_ce_path(row.registration.slug, return_to: "attendance"),
-                            class: "font-medium text-gray-900 hover:text-teal-700 hover:underline" %>
+                            class: "font-medium text-gray-900 #{DomainTheme.text_class_for(:events, intensity: 700, hover: true)} hover:underline" %>
                     <% else %>
                       <%= link_to row.name, edit_event_registration_path(row.registration, return_to: "attendance"),
-                            class: "font-medium text-gray-900 hover:text-teal-700 hover:underline" %>
+                            class: "font-medium text-gray-900 #{DomainTheme.text_class_for(:events, intensity: 700, hover: true)} hover:underline" %>
                     <% end %>
                     <%# Day-scoped: this row is one day, so the flag has to be about
                         this day's entries, not any open entry on any day. %>

@@ -25,7 +25,7 @@
             <span class="text-sm font-medium <%= DomainTheme.text_class_for(:workshop_variation_ideas) %>">
               Promoted to:
               <% visible_variations.each do |variation| %>
-                <%= link_to variation.title, workshop_variation_path(variation), class: "underline hover:text-purple-600" %>
+                <%= link_to variation.title, workshop_variation_path(variation), class: "underline #{DomainTheme.text_class_for(:workshop_variation_ideas, intensity: 600, hover: true)}" %>
               <% end %>
             </span>
           </div>

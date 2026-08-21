@@ -56,7 +56,7 @@
           Your continuing education (CE) credit<%= " (#{ce_hours_label} hours)" if ce_hours.positive? %>
           isn't shown on this certificate yet — it's added once <%= ce_pending_reason %>.
           <%= link_to "View your CE status", registration_ce_path(@event_registration.slug),
-                class: "font-medium text-teal-700 underline hover:text-teal-900" %>.
+                class: "font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} underline #{DomainTheme.text_class_for(:events, intensity: 900, hover: true)}" %>.
         </span>
       </div>
     </div>
