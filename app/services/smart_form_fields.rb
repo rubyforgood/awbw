@@ -90,7 +90,7 @@ class SmartFormFields
       fields: [
         [ "agency_name", "Organization name", "Looked up against existing organizations by exact name. A match is linked to the registration; no match leaves the registration unlinked for an admin to resolve." ],
         [ "agency_position", "Position / title", "Becomes the job title on the registrant's Job Affiliation with that organization." ],
-        [ "agency_website", "Organization website", "Sets the organization's website. Replaces what is on file when the registrant submits it; when an admin links the organization by hand it only fills a blank, and a conflicting answer is flagged instead." ],
+        [ "agency_website", "Organization website", "Sets the organization's website. Replaces what is on file when the registrant submits it; when an admin links it by hand (Link or Create and link) it only fills a blank, and a conflicting answer is flagged instead. Note: a raw URL is saved exactly as entered, so it may not be clickable if it isn't a properly formed URL." ],
         [ "agency_type", "Organization type", "Sets the organization's type. An \"Other\" choice stores the typed text separately and adds it to the Other responses review queue." ],
         [ "agency_street", "Organization street address", "Sets the street of the organization's work address." ],
         [ "agency_city", "Organization city", "Sets the city, and decides whether an organization address is saved at all — no city answered means no address." ],
