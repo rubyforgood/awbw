@@ -92,15 +92,14 @@ the warning on a fair number of orgs — that is the drift it exists to surface.
 **One value per (organization, anchor date)**, computed over **all** of the org's
 facilitator affiliations by a single class, `FacilitatorProgramStatus`:
 
-- **Ongoing** — a facilitator affiliation is **active on the anchor**: it started
-  on/before it and has no end date or ends on/after it. A **same-day** facilitation
-  (`start == end`) counts as active on that exact day, so a one-day program reads
-  Ongoing then. The open-ended affiliation a registration mints **on** the anchor is
-  excluded (D8), so a first-time org is not Ongoing at its own training.
-- **New** — no facilitator affiliation is active on the anchor and none started
-  **before** it (strict `<`).
-- **Reinstated** — none active on the anchor, but earlier facilitator
-  affiliation(s) existed and **all ended** before it (a lapse, now returning).
+- **New** — no facilitator affiliation started **before** the anchor (strict `<`).
+  An affiliation dated **on** the anchor is the one this event mints (D8), so a
+  first-time org reads New at its own training — including a **same-day**
+  (`start == end`) affiliation dated to the event.
+- **Ongoing** — an earlier facilitator affiliation is **still active** on the
+  anchor (no end date, or it ends on/after it).
+- **Reinstated** — earlier facilitator affiliation(s) existed but **all ended**
+  before the anchor (a lapse, now returning).
 
 `Organization#facilitator_program_status(as_of:)` returns that object;
 `#facilitator_status_on(date)` is the bare symbol for counting and filtering.
