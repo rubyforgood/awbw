@@ -139,7 +139,7 @@
                 title: "Optional hint shown below the field input" %>
           <%= f.select :width, width_options,
                 {},
-                class: "ml-auto shrink-0 rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+                class: "shrink-0 rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
                 title: "How wide this field appears on the form" %>
           <%= f.number_field :min_words, min: 0, placeholder: "Min words",
                 class: "w-24 shrink-0 rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
@@ -147,19 +147,21 @@
           <%= f.number_field :max_characters, min: 1, placeholder: "Max chars",
                 class: "w-24 shrink-0 rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
                 title: "Maximum number of characters allowed (free-form text fields only)" %>
-          <%# The smart field name wires this field to backend logic (Stripe, service
-              areas, email checks, etc.); most fields need none. The linked hint opens
-              the reference page listing what each name does. %>
-          <div class="flex flex-col shrink-0">
-            <%= f.text_field :field_identifier, placeholder: "Smart field name",
-                  class: "w-32 min-w-0 rounded border-gray-300 shadow-sm px-2 py-1 font-mono text-xs",
-                  title: "Internal name that wires this field to backend logic — leave blank for an ordinary field" %>
-            <%= link_to "What's this?", smart_form_settings_forms_path(form_id: @form.id, event_id: @dashboard_event&.id, field_id: field.id),
-                  class: "mt-0.5 text-3xs text-purple-600 hover:text-purple-800 underline",
-                  target: "_blank", rel: "noopener" %>
+          <%# Smart field name + Remove stay pinned together so Remove never lands on its own
+              line. The name wires this field to backend logic (Stripe, service areas, email
+              checks, etc.); most fields need none, and the linked hint explains each one. %>
+          <div class="flex shrink-0 items-center gap-2">
+            <div class="flex flex-col shrink-0">
+              <%= f.text_field :field_identifier, placeholder: "Smart field name",
+                    class: "w-32 min-w-0 rounded border-gray-300 shadow-sm px-2 py-1 font-mono text-xs",
+                    title: "Internal name that wires this field to backend logic — leave blank for an ordinary field" %>
+              <%= link_to "What's this?", smart_form_settings_forms_path(form_id: @form.id, event_id: @dashboard_event&.id, field_id: field.id),
+                    class: "mt-0.5 text-3xs text-purple-600 hover:text-purple-800 underline",
+                    target: "_blank", rel: "noopener" %>
+            </div>
+            <%= link_to_remove_association "Remove", f,
+                  class: "shrink-0 text-sm text-gray-400 hover:text-red-600 underline" %>
           </div>
-          <%= link_to_remove_association "Remove", f,
-                class: "text-sm text-gray-400 hover:text-red-600 underline shrink-0" %>
         </div>
 
         <% unless option_source %>
