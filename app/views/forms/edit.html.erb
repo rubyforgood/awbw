@@ -112,11 +112,15 @@
           <p class="p-6 text-sm text-gray-600">This form is connected to an event, so it can't be published at a public link — event-connected forms are filled out through their event.</p>
         </div>
       <% else %>
-      <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div class="flex items-center gap-2.5 border-b border-purple-300 bg-purple-100 px-6 py-3">
-          <i class="fa-solid fa-link text-purple-700"></i>
-          <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Public form</h2>
-        </div>
+      <details class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+          <div class="flex items-center gap-2.5 border-b border-transparent [[open]_&]:border-purple-300 bg-purple-100 px-6 py-3 hover:bg-purple-200">
+            <i class="fa-solid fa-link text-purple-700"></i>
+            <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Public form</h2>
+            <i class="fa-solid fa-chevron-down text-purple-500 text-xs ml-auto transition-transform [[open]_&]:rotate-180"></i>
+          </div>
+          <p class="px-6 py-3 text-sm text-gray-400 [[open]_&]:hidden">Toggle to edit</p>
+        </summary>
         <div class="space-y-4 p-6">
           <label class="flex cursor-pointer items-center gap-2">
             <%= f.check_box :published, class: "rounded border-gray-300 text-purple-600" %>
@@ -143,7 +147,7 @@
             </div>
           <% end %>
         </div>
-      </div>
+      </details>
       <% end %>
     <% end %>
 
