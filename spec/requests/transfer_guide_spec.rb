@@ -10,6 +10,9 @@ RSpec.describe "TransferGuide", type: :request do
     expect(response.body).to include("Transferring a registration")
     expect(response.body).to include("Transferred in")
     expect(response.body).to include("Transferred out")
+    # The inline HTML mockups render (not just the descriptive text).
+    expect(response.body).to include("Pay with credit card")
+    expect(response.body).to include("From original registration")
   end
 
   it "redirects a non-admin away" do

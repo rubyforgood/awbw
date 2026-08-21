@@ -2,53 +2,78 @@
 <% content_for(:page_title, "Transfer guide") %>
 <%
   # Grouped, plain-language reference. Each row contrasts the ORIGINAL
-  # (transferred-out) registration with the NEW (transferred-in) one.
+  # (transferred-out) registration with the NEW (transferred-in) one. The `out`/`in`
+  # mockups are small static HTML approximations of the real screens (not live).
+  pill = ->(cls, icon, text) { %(<span class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[0.65rem] font-medium #{cls}"><i class="fa-solid #{icon}"></i> #{text}</span>) }
+  banner = ->(cls, icon, html) { %(<div class="rounded-lg border p-2.5 text-[0.7rem] leading-snug #{cls}"><i class="fa-solid #{icon}"></i> #{html}</div>) }
+  due_badge = %(<div class="text-right"><div class="text-[0.55rem] font-medium uppercase tracking-wide text-gray-400">Amount due</div><div class="mt-0.5 inline-block rounded-full bg-amber-100 px-3 py-1 text-sm font-bold text-amber-800 tabular-nums">$50</div></div>)
+
   groups = [
     [ "Staff pages", [
-      [ "Registration (staff edit)",
-        "How staff manage a person's registration.",
-        "A purple “transferred out & locked” banner; only comments/communications are editable — everything else runs through Manage transfer.",
-        "A teal “transferred in” banner linking back to the original; the registration stays fully editable and tracks its own attendance." ],
-      [ "Continuing education (CE)",
-        "How staff manage a person's CE credit and payment.",
-        "Keeps a paid $0-hours “stub” — the money already paid stays counted at this event.",
-        "Carries the hours and the remaining balance, with a note linking back to the paid original. New CE payments and the certificate are handled here. If the original had no CE, staff can add fresh CE here normally." ],
-      [ "Scholarship (staff edit)",
-        "How staff manage a person's scholarship award.",
-        "The award lives here — the amount, agreement, and tasks.",
-        "No separate award; the scholarship callout and edit link point back to the award on the original registration." ],
-      [ "Manage transfer",
-        "The one screen for correcting a transfer.",
-        "Change the destination event or undo the transfer entirely (which restores the status and re-merges CE).",
-        "Reached from the original via the “Manage transfer” link." ]
+      { title: "Registration (staff edit)",
+        desc: "How staff manage a person's registration.",
+        out_text: "A purple “transferred out & locked” banner; only comments/communications are editable — everything else runs through Manage transfer.",
+        out_mock: banner.("border-purple-200 bg-purple-50 text-purple-900", "fa-lock text-purple-600", "<b>Transferred out and is locked.</b> Only comments &amp; communications can be edited — <u>manage the transfer</u>."),
+        in_text: "A teal “transferred in” banner linking back to the original; the registration stays fully editable and tracks its own attendance.",
+        in_mock: banner.("border-teal-200 bg-teal-50 text-teal-900", "fa-right-to-bracket text-teal-600", "<b>Transferred in from Origin Training.</b> Records live on the <u>original registration</u>; attendance is earned here.") },
+      { title: "Continuing education (CE)",
+        desc: "How staff manage a person's CE credit and payment.",
+        out_text: "Keeps a paid $0-hours “stub” — the money already paid stays counted at this event.",
+        out_mock: %(<div class="rounded-lg border border-gray-200 p-2.5 text-xs"><div class="font-semibold text-gray-900">$40 <span class="font-normal text-gray-400">·</span> 0 hrs</div><div class="mt-0.5 text-[0.65rem] text-gray-500">Paid stub — settled here</div></div>),
+        in_text: "Carries the hours and the remaining balance, with a link back to the paid original. New payments + the certificate happen here. If the original had no CE, staff can add fresh CE here normally.",
+        in_mock: %(<div class="rounded-lg border border-gray-200 p-2.5 text-xs"><div class="font-semibold text-gray-900">$60 <span class="font-normal text-gray-400">·</span> 6 hrs</div><div class="mt-0.5 text-[0.65rem] text-teal-700"><i class="fa-solid fa-right-to-bracket"></i> <u>From original registration</u></div></div>) },
+      { title: "Scholarship (staff edit)",
+        desc: "How staff manage a person's scholarship award.",
+        out_text: "The award lives here — the amount, agreement, and tasks.",
+        out_mock: %(<div class="rounded-lg border border-gray-200 p-2.5 text-xs"><div class="text-[0.55rem] uppercase text-gray-400">Amount awarded</div><div class="font-semibold text-gray-900">$50</div></div>),
+        in_text: "No separate award; the scholarship callout and edit link point back to the award on the original registration.",
+        in_mock: banner.("border-teal-200 bg-teal-50 text-teal-900", "fa-graduation-cap text-teal-600", "Scholarship recipient — award held on the <u>original registration</u>.") },
+      { title: "Manage transfer",
+        desc: "The one screen for correcting a transfer.",
+        out_text: "Change the destination event or undo the transfer entirely (which restores the status and re-merges CE).",
+        out_mock: %(<div class="flex flex-wrap gap-1.5">#{pill.("border-gray-300 bg-white text-gray-700", "fa-pen", "Change destination")} #{pill.("border-red-300 bg-red-50 text-red-700", "fa-rotate-left", "Undo transfer")}</div>),
+        in_text: "Reached from the original via the “Manage transfer” link.",
+        in_mock: nil }
     ] ],
     [ "The registrant's ticket", [
-      [ "Registration ticket",
-        "The page the registrant sees.",
-        "A banner explains they transferred out; participation material is hidden.",
-        "A banner explains they transferred in; this is where they attend." ],
-      [ "Payment",
-        "Where a balance is paid.",
-        "The “Pay” button is hidden — they pay at the new event. The balance still shows for reference.",
-        "Shows the balance and the “Pay” button." ],
-      [ "Scholarship",
-        "The registrant's scholarship details.",
-        "Shows the award (it lives here).",
-        "Still shows the scholarship, linking back to the award on the original registration." ],
-      [ "Continuing education & certificate",
-        "CE hours, balance, and the completion certificate.",
-        "Shows the paid original record.",
-        "Carries the hours + remaining balance; the certificate is earned here." ],
-      [ "Handouts, videoconference, staff",
-        "Participation material for the event.",
-        "Hidden — they withdrew from this event.",
-        "Shown — this is the event they attend." ]
+      { title: "Registration ticket",
+        desc: "The page the registrant sees.",
+        out_text: "A banner explains they transferred out; participation material is hidden.",
+        out_mock: banner.("border-purple-200 bg-purple-50 text-purple-900", "fa-right-from-bracket text-purple-600", "You transferred out of <b>Origin Training</b> to your new registration."),
+        in_text: "A banner explains they transferred in; this is where they attend.",
+        in_mock: banner.("border-teal-200 bg-teal-50 text-teal-900", "fa-right-to-bracket text-teal-600", "You transferred into <b>Destination Training</b>. Your records stay on your original registration.") },
+      { title: "Payment",
+        desc: "Where a balance is paid.",
+        out_text: "The “Pay” button is hidden — they pay at the new event. The balance still shows for reference.",
+        out_mock: %(<div class="rounded-lg border border-gray-200 p-2.5">#{due_badge}<p class="mt-2 text-center text-[0.65rem] italic text-gray-400">No pay button — paid at the new event</p></div>),
+        in_text: "Shows the balance and the “Pay” button.",
+        in_mock: %(<div class="rounded-lg border border-gray-200 p-2.5">#{due_badge}<div class="mt-2 text-center"><span class="inline-block rounded bg-red-800 px-3 py-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white">Pay with credit card</span></div></div>) },
+      { title: "Scholarship",
+        desc: "The registrant's scholarship details.",
+        out_text: "Shows the award (it lives here).",
+        out_mock: nil,
+        in_text: "Still shows the scholarship, linking back to the award on the original registration.",
+        in_mock: nil },
+      { title: "Continuing education & certificate",
+        desc: "CE hours, balance, and the completion certificate.",
+        out_text: "Shows the paid original record.",
+        out_mock: nil,
+        in_text: "Carries the hours + remaining balance; the certificate is earned here.",
+        in_mock: nil },
+      { title: "Handouts, videoconference, staff",
+        desc: "Participation material for the event.",
+        out_text: "Hidden — they withdrew from this event.",
+        out_mock: %(<div class="text-[0.7rem] text-gray-400"><i class="fa-solid fa-eye-slash"></i> Hidden</div>),
+        in_text: "Shown — this is the event they attend.",
+        in_mock: %(<div class="text-[0.7rem] text-teal-700"><i class="fa-solid fa-eye"></i> Shown</div>) }
     ] ],
     [ "Billing documents", [
-      [ "Invoice & receipt",
-        "The registrant's billing documents.",
-        "Document this event's cost and the payments made here.",
-        "Reached through the new ticket, but still document the original event's cost/payments." ]
+      { title: "Invoice & receipt",
+        desc: "The registrant's billing documents.",
+        out_text: "Document this event's cost and the payments made here.",
+        out_mock: nil,
+        in_text: "Reached through the new ticket, but still document the original event's cost/payments.",
+        in_mock: nil }
     ] ]
   ]
 %>
@@ -66,11 +91,11 @@
     <p class="mt-2 text-sm leading-relaxed text-gray-600">
       When you move a registrant from one event to another, the portal keeps
       <strong>two</strong> registrations. This page shows what each screen looks like on both
-      sides, so you know where money, attendance, and records live.
+      sides, so you know where money, attendance, and records live. The small previews below
+      approximate the real screens.
     </p>
   </header>
 
-  <%# The core principle, up top. %>
   <div class="grid gap-3 sm:grid-cols-2">
     <div class="rounded-xl border border-purple-200 bg-purple-50 p-4">
       <p class="flex items-center gap-2 text-sm font-semibold text-purple-900">
@@ -89,25 +114,24 @@
   <% groups.each do |group_title, rows| %>
     <section class="space-y-3">
       <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-400"><%= group_title %></h2>
-      <% rows.each do |title, desc, original, incoming| %>
+      <% rows.each do |row| %>
         <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div class="border-b border-gray-100 px-4 py-3">
-            <h3 class="text-sm font-semibold text-gray-800"><%= title %></h3>
-            <p class="text-xs text-gray-500"><%= desc %></p>
+            <h3 class="text-sm font-semibold text-gray-800"><%= row[:title] %></h3>
+            <p class="text-xs text-gray-500"><%= row[:desc] %></p>
           </div>
           <div class="grid gap-px bg-gray-100 sm:grid-cols-2">
-            <div class="bg-white p-4">
-              <p class="mb-1 flex items-center gap-1.5 text-xs font-semibold text-purple-700">
-                <i class="fa-solid fa-right-from-bracket"></i> Transferred out
-              </p>
-              <p class="text-sm text-gray-700"><%= original %></p>
-            </div>
-            <div class="bg-white p-4">
-              <p class="mb-1 flex items-center gap-1.5 text-xs font-semibold text-teal-700">
-                <i class="fa-solid fa-right-to-bracket"></i> Transferred in
-              </p>
-              <p class="text-sm text-gray-700"><%= incoming %></p>
-            </div>
+            <% [ [ :out, "text-purple-700", "fa-right-from-bracket", "Transferred out" ], [ :in, "text-teal-700", "fa-right-to-bracket", "Transferred in" ] ].each do |side, color, icon, label| %>
+              <div class="bg-white p-4">
+                <p class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold <%= color %>">
+                  <i class="fa-solid <%= icon %>"></i> <%= label %>
+                </p>
+                <p class="text-sm text-gray-700"><%= row[:"#{side}_text"] %></p>
+                <% if row[:"#{side}_mock"] %>
+                  <div class="mt-2.5"><%= raw row[:"#{side}_mock"] %></div>
+                <% end %>
+              </div>
+            <% end %>
           </div>
         </div>
       <% end %>
