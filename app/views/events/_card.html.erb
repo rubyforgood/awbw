@@ -79,7 +79,7 @@
         <%= link_to "Register",
                     new_event_public_registration_path(event),
                     data: { turbo_frame: "_top" },
-                    class: "btn px-3 py-2 text-xs uppercase leading-tight font-telefon text-accent border-2 border-accent hover:text-white hover:bg-orange-700" %>
+                    class: "btn btn-accent-outline px-3 py-2 text-xs uppercase leading-tight font-telefon" %>
       <% end %>
     <% else %>
       <span class="text-sm text-gray-500 italic">Registration closed</span>
