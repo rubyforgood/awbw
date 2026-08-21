@@ -77,7 +77,7 @@ RSpec.describe "Forms", type: :request do
         get smart_form_settings_forms_path
 
         expect(response.body).to include("referral_source")
-        expect(response.body).to include("Identifiers that do nothing extra")
+        expect(response.body).to include("Smart fields that do nothing extra")
       end
 
       # Reached from a form editor, so it has to offer a way back to that editor
