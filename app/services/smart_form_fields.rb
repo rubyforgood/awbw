@@ -89,7 +89,7 @@ class SmartFormFields
                "an admin resolves it on the event registration's Link organization page.",
       fields: [
         [ "agency_name", "Organization name", "Looked up against existing organizations by exact name. A match is linked to the registration; no match leaves the registration unlinked for an admin to resolve." ],
-        [ "agency_position", "Position / title", "Becomes the job title on the registrant's affiliation with that organization." ],
+        [ "agency_position", "Position / title", "Becomes the job title on the registrant's Job Affiliation with that organization." ],
         [ "agency_website", "Organization website", "Sets the organization's website. Replaces what is on file when the registrant submits it; when an admin links the organization by hand it only fills a blank, and a conflicting answer is flagged instead." ],
         [ "agency_type", "Organization type", "Sets the organization's type. An \"Other\" choice stores the typed text separately and adds it to the Other responses review queue." ],
         [ "agency_street", "Organization street address", "Sets the street of the organization's work address." ],
