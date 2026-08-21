@@ -1696,6 +1696,28 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response).to redirect_to(link_organization_event_registration_path(existing_registration))
         end
 
+        it "attributes the org fill to the submission that named it, so its changes audit updates" do
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_name" => organization.name, "agency_website" => "helpinghands.org" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          tracked = []
+          allow_any_instance_of(Ahoy::Tracker).to receive(:track) do |_instance, name, props|
+            tracked << [ name, props ]
+          end
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          org_events = tracked.select { |name, _| name == "update.organization" }
+          expect(org_events).not_to be_empty
+          org_events.each { |_name, props| expect(props[:form_submission_id]).to eq(submission.id) }
+        end
+
         it "creates a job affiliation and a facilitator affiliation from the submitted position" do
           reg_form = create(:form, name: "Reg form")
           field = create(:form_field, form: reg_form, field_identifier: EventRegistrationServices::PublicRegistration::ORGANIZATION_POSITION_IDENTIFIER)
