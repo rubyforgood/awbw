@@ -74,7 +74,7 @@
                     <code class="inline-block rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-800 break-all"><%= field.identifier %></code>
                     <p class="mt-1 text-xs text-gray-500"><%= field.question %></p>
                   </dt>
-                  <dd class="mt-1 sm:mt-0 text-sm text-gray-700"><%= field.effect %></dd>
+                  <dd class="mt-1 sm:mt-0 text-sm text-gray-700"><%= smart_field_effect(field.effect) %></dd>
                 </div>
               <% end %>
             </dl>

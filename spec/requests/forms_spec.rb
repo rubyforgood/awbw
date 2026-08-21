@@ -73,6 +73,13 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include("Looked up against existing organizations by exact name")
       end
 
+      it "links the Other responses review queue phrase to that page" do
+        get smart_form_settings_forms_path
+
+        expect(response.body).to include(other_responses_path)
+        expect(response.body).to match(/href="#{Regexp.escape(other_responses_path)}"[^>]*>Other responses review queue</)
+      end
+
       it "lists the identifiers that only store an answer" do
         get smart_form_settings_forms_path
 
