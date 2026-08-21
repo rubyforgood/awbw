@@ -13,6 +13,7 @@ namespace :db do
       workshop_logs
       monthly_reports
       events_management
+      form_submission_changes
       resources
       faqs
       video_recordings
@@ -79,6 +80,11 @@ namespace :db do
     desc "Seed dev resources"
     task resources: :environment do
       load Rails.root.join("db/seeds/dev/resources.rb")
+    end
+
+    desc "Seed a post-registration edit trail for a known person (dev only)"
+    task form_submission_changes: :environment do
+      load Rails.root.join("db/seeds/dev/form_submission_changes.rb")
     end
 
     desc "Seed dev FAQs"

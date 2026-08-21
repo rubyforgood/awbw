@@ -20,7 +20,7 @@ RSpec.describe FormSubmissionChanges do
     group = described_class.new(submission).groups.find { |g| g.record_type == "Organization" }
     expect(group.title).to eq("Riverside Community Arts")
     change = group.changes.first
-    expect(change).to have_attributes(outcome: "Replaced", label: "Website url", value: "new.com", previous_value: "old.com")
+    expect(change).to have_attributes(outcome: "Replaced", label: "Website", value: "new.com", previous_value: "old.com")
   end
 
   it "labels a change from blank as filled" do

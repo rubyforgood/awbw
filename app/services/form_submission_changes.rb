@@ -9,6 +9,12 @@ class FormSubmissionChanges
   RELEVANT_TYPES = %w[Person Organization Address ContactMethod Affiliation SectorableItem CategorizableItem].freeze
   GROUP_ORDER = %w[Person Organization Affiliation].freeze
   IGNORED_ATTRIBUTES = %w[id created_at updated_at slug locality].freeze
+  # Friendlier than humanizing the raw column (e.g. "value" on a phone contact).
+  ATTRIBUTE_LABELS = {
+    "website_url" => "Website", "agency_type" => "Type", "value" => "Phone",
+    "racial_ethnic_identity" => "Racial / ethnic identity", "zip_code" => "ZIP",
+    "street_address" => "Street address"
+  }.freeze
 
   Change = Struct.new(:outcome, :label, :value, :previous_value, keyword_init: true)
   Group = Struct.new(:record_type, :title, :changes, keyword_init: true)
@@ -91,7 +97,7 @@ class FormSubmissionChanges
 
       Change.new(
         outcome: before.present? ? "Replaced" : "Filled",
-        label: attribute.humanize,
+        label: ATTRIBUTE_LABELS[attribute] || attribute.humanize,
         value: display_value(after),
         previous_value: display_value(before)
       )
