@@ -86,7 +86,7 @@ class SmartFormFields
                "organization by itself. When it matches, the organization is linked to the registration, " \
                "the registrant gets a job affiliation and a facilitator affiliation, and the answers " \
                "below fill in the organization's profile. When it doesn't match, nothing is written and " \
-               "an admin resolves it on the registration's Link organization page.",
+               "an admin resolves it on the event registration's Link organization page.",
       fields: [
         [ "agency_name", "Organization name", "Looked up against existing organizations by exact name. A match is linked to the registration; no match leaves the registration unlinked for an admin to resolve." ],
         [ "agency_position", "Position / title", "Becomes the job title on the registrant's affiliation with that organization." ],
