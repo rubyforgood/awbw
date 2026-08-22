@@ -41,6 +41,10 @@ class Person < ApplicationRecord
            dependent: :restrict_with_error
   has_many :workshop_variation_ideas_as_author, inverse_of: :author, class_name: "WorkshopVariationIdea",
            foreign_key: :author_id, dependent: :restrict_with_error
+  has_many :workshop_logs_as_author, inverse_of: :author, class_name: "WorkshopLog", foreign_key: :author_id,
+           dependent: :restrict_with_error
+  has_many :monthly_reports_as_author, inverse_of: :author, class_name: "MonthlyReport", foreign_key: :author_id,
+           dependent: :restrict_with_error
   # has_many through
   has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
   has_many :topic_subscriptions, dependent: :destroy
@@ -393,6 +397,13 @@ class Person < ApplicationRecord
   # credentials field). Nil when no licensed types are on file.
   def license_credentials
     professional_licenses.filter_map { |license| license.kind.presence&.strip }.uniq.join(", ").presence
+  end
+
+  # Monthly reports are deprecated. Only surface the profile section and its
+  # visibility toggle for people who already have some (explicit author, or the
+  # legacy fallback to their user's creations) — newer users never see it.
+  def any_monthly_reports?
+    MonthlyReport.credited_to_person(self).exists?
   end
 
   def full_name_with_email

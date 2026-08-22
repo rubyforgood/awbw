@@ -22,11 +22,20 @@ RSpec.describe "Person profile resources section", type: :request do
     expect(response.body).to include("Authored Resource")
   end
 
-  it "excludes resources the person's user merely created (audit trail only)" do
-    create(:resource, :published, title: "Only Created Resource", created_by: owner_user)
+  it "includes unauthored resources the person's user created (legacy fallback)" do
+    create(:resource, :published, title: "Only Created Resource", created_by: owner_user, author: nil)
 
     get_resources_section
 
-    expect(response.body).not_to include("Only Created Resource")
+    expect(response.body).to include("Only Created Resource")
+  end
+
+  it "excludes resources the person's user created but credited to someone else" do
+    create(:resource, :published, title: "Someone Elses Resource",
+                                  created_by: owner_user, author: create(:person))
+
+    get_resources_section
+
+    expect(response.body).not_to include("Someone Elses Resource")
   end
 end

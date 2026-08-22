@@ -4,7 +4,7 @@ class PeopleController < ApplicationController
 
   # The profile's "Submitted content" sections — private to the person and admins,
   # not part of the public profile even after profile viewing opens up.
-  PRIVATE_SECTIONS = %w[ workshop_ideas story_ideas workshop_variation_ideas workshop_logs ].freeze
+  PRIVATE_SECTIONS = %w[ workshop_ideas story_ideas workshop_variation_ideas workshop_logs monthly_reports ].freeze
 
   def index
     authorize!
@@ -59,44 +59,43 @@ class PeopleController < ApplicationController
 
       case section
       when "workshops"
-        # Credit the person for workshops they authored — not ones their user
-        # merely created (created_by is a pure audit trail).
-        @workshops = visible_authored_content(@person.workshops_as_author).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        # Credit the person for workshops they authored, or — the legacy fallback —
+        # that their user account created (AuthorCreditable#author_person).
+        @workshops = visible_authored_content(Workshop.credited_to_person(@person)).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshops", locals: { person: @person, workshops: @workshops }
       when "workshop_variations"
-        # Credit the person for variations they authored — not ones their user
-        # merely entered (created_by is a pure audit trail).
-        @workshop_variations = visible_authored_content(@person.workshop_variations_as_author).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        # Author, or the legacy fallback to their user's creations (author_person).
+        @workshop_variations = visible_authored_content(WorkshopVariation.credited_to_person(@person)).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshop_variations", locals: { person: @person, workshop_variations: @workshop_variations }
       when "stories"
-        # Credit the person for stories they authored or were spotlighted in —
-        # not ones their user merely entered (created_by is a pure audit trail).
-        # The spotlight is a separate credit from authorship, so anonymity doesn't apply.
-        story_ids = visible_authored_content(@person.stories_as_author).pluck(:id) +
+        # Author (or legacy creator) plus stories they were spotlighted in. The
+        # spotlight is a separate credit from authorship, so anonymity doesn't apply.
+        story_ids = visible_authored_content(Story.credited_to_person(@person)).pluck(:id) +
           @person.stories_as_spotlighted_facilitator.pluck(:id)
         @stories = Story.where(id: story_ids).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/stories", locals: { person: @person, stories: @stories }
       when "resources"
-        # Credit the person for resources they authored — not ones their user
-        # merely entered (created_by is a pure audit trail).
-        @resources = visible_authored_content(@person.resources_as_author).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        # Author, or the legacy fallback to their user's creations (author_person).
+        @resources = visible_authored_content(Resource.credited_to_person(@person)).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/resources", locals: { person: @person, resources: @resources }
       when "events"
         @event_registrations = @person.event_registrations.active.includes(:event).order("events.start_date DESC").references(:events).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/events", locals: { person: @person, event_registrations: @event_registrations }
       when "workshop_ideas"
-        # Credit the person for ideas they authored — not ones their user merely
-        # entered (created_by is a pure audit trail).
-        @workshop_ideas = @person.workshop_ideas_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        # Author, or the legacy fallback to their user's creations (author_person).
+        @workshop_ideas = WorkshopIdea.credited_to_person(@person).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshop_ideas", locals: { person: @person, workshop_ideas: @workshop_ideas }
       when "story_ideas"
-        @story_ideas = @person.story_ideas_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        @story_ideas = StoryIdea.credited_to_person(@person).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/story_ideas", locals: { person: @person, story_ideas: @story_ideas }
       when "workshop_logs"
-        @workshop_logs = @person.user&.workshop_logs&.includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets)&.order(workshop_held_on: :desc, created_at: :desc) || WorkshopLog.none
+        @workshop_logs = WorkshopLog.credited_to_person(@person).includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets).order(workshop_held_on: :desc, created_at: :desc)
         render partial: "people/sections/workshop_logs", locals: { person: @person, workshop_logs: @workshop_logs }
+      when "monthly_reports"
+        @monthly_reports = MonthlyReport.credited_to_person(@person).order(Arel.sql("COALESCE(reports.date, reports.created_at) DESC")).paginate(page: params[:page], per_page: per_page)
+        render partial: "people/sections/monthly_reports", locals: { person: @person, monthly_reports: @monthly_reports }
       when "workshop_variation_ideas"
-        @workshop_variation_ideas = @person.workshop_variation_ideas_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        @workshop_variation_ideas = WorkshopVariationIdea.credited_to_person(@person).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshop_variation_ideas", locals: { person: @person, workshop_variation_ideas: @workshop_variation_ideas }
       when "affiliations"
         @affiliations = @person.affiliations.active.includes(organization: :logo_attachment).paginate(page: params[:page], per_page: per_page)
@@ -133,7 +132,7 @@ class PeopleController < ApplicationController
   def workshop_logs
     authorize! @person
     @person = @person.decorate
-    all_logs = @person.user&.workshop_logs&.includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets)&.order(workshop_held_on: :desc, created_at: :desc) || WorkshopLog.none
+    all_logs = WorkshopLog.credited_to_person(@person).includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets).order(workshop_held_on: :desc, created_at: :desc)
     @grouped_logs = all_logs.group_by { |log| log.workshop_id || log.external_workshop_title }.sort_by { |_key, logs|
       dates = logs.first(10).map { |l| -(l.workshop_held_on || l.created_at.to_date).to_time.to_i }
       dates.fill(0, dates.size...10)
@@ -570,6 +569,7 @@ class PeopleController < ApplicationController
       :profile_show_workshops,
       :profile_show_workshop_ideas,
       :profile_show_workshop_logs,
+      :profile_show_monthly_reports,
       :profile_show_resources,
       :member_since,
       :linked_in_url,
