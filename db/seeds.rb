@@ -155,7 +155,8 @@ end
   Affiliation.create!(
     person: user.person,
     organization: awbw_org,
-    title: Affiliation::LEADER_TITLE,
+    title: Affiliation::FACILITATOR_TITLE,
+    primary_contact: true,
     start_date: 1.year.ago.to_date
   )
 end

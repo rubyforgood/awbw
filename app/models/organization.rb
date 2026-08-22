@@ -186,12 +186,6 @@ class Organization < ApplicationRecord
     facilitator_program_status(as_of: reference_date).status
   end
 
-  # Methods
-  def led_by?(user)
-    return false unless leader
-    leader.user == user
-  end
-
   def state
     addresses.active.first&.state
   end
@@ -330,10 +324,6 @@ class Organization < ApplicationRecord
     if end_date_changed?
       errors.add(:end_date, "is managed automatically by affiliations")
     end
-  end
-
-  def leader
-    affiliations.find_by(title: Affiliation::LEADER_TITLE)
   end
 
   def remove_duplicate_sectorable_items
