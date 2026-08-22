@@ -1,0 +1,61 @@
+require "rails_helper"
+
+RSpec.describe "/staff_tags", type: :request do
+  let(:admin) { create(:user, :admin) }
+
+  describe "as an admin" do
+    before { sign_in admin }
+
+    it "lists staff tags" do
+      tag = create(:staff_tag, name: "Highlight roster")
+      get staff_tags_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Highlight roster")
+    end
+
+    it "creates a staff tag and stamps the author" do
+      expect {
+        post staff_tags_path, params: { staff_tag: { name: "Potential future trainer", description: "Pipeline" } }
+      }.to change(StaffTag, :count).by(1)
+
+      tag = StaffTag.order(:created_at).last
+      expect(tag.name).to eq("Potential future trainer")
+      expect(tag.created_by).to eq(admin)
+      expect(response).to redirect_to(staff_tag_path(tag))
+    end
+
+    it "rejects a blank name" do
+      post staff_tags_path, params: { staff_tag: { name: "" } }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "archives and unarchives" do
+      tag = create(:staff_tag)
+
+      patch archive_staff_tag_path(tag)
+      expect(tag.reload).to be_archived
+
+      patch unarchive_staff_tag_path(tag)
+      expect(tag.reload).not_to be_archived
+    end
+
+    it "won't delete a tag that is still applied" do
+      tag = create(:staff_tag)
+      create(:staff_tagging, staff_tag: tag)
+
+      expect {
+        delete staff_tag_path(tag)
+      }.not_to change(StaffTag, :count)
+      expect(flash[:alert]).to be_present
+    end
+  end
+
+  describe "as a non-admin" do
+    before { sign_in create(:user, super_user: false) }
+
+    it "forbids the index" do
+      get staff_tags_path
+      expect(response).not_to have_http_status(:ok)
+    end
+  end
+end

@@ -51,7 +51,7 @@ This codebase (Rails 8.1)
 | `app/models/` | ActiveRecord models | ~90 files |
 | `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~69 files |
 | `app/jobs/` | SolidQueue background jobs | 6 files |
-| `app/models/concerns/` | Shared model modules | 17 concerns |
+| `app/models/concerns/` | Shared model modules | 18 concerns |
 
 ### Presentation
 
@@ -103,6 +103,8 @@ This codebase (Rails 8.1)
 | `Story` | Editorial content with facilitators, primary/gallery assets |
 | `Resource` | Handouts, toolkits, templates with downloadable assets |
 | `Person` | Organization affiliates with contacts, addresses, sectors |
+| `StaffTag` | Internal, admin-only label for people (talent pipeline / roster / outreach — "Potential future trainer", "DV Leadership Cohort"). Admin-CRUD'd; `archived_at` retires a tag from the pickers without deleting; never shown publicly (`StaffTagPolicy` gates every action + relation scope). Applied via the polymorphic `StaffTagging` join (`StaffTaggable` concern, Person today) |
+| `StaffTagging` | Polymorphic join linking a `StaffTag` to the record it tags (`staff_taggable`); `created_by` records which admin applied it |
 | `OtherResponse` | A free-text "Other" typed on a form question, captured at submission time (registration, scholarship, bulk payment). Polymorphic `owner`: a **sector** "Other" is owned by the `Person` (promotable into a `Sector`, shown on their profile/edit chip); an **organization_type** "Other" is owned by the `Organization` (stored now, not promotable until `OrganizationType` is a model). `generic` questions aren't captured — that stays searchable in the form answers. `field_identifier` records the question; `kind` is derived. Curated at `/other_responses` (grouped by kind/question): `promote` (sectors only), `keep`, `dismiss`. `dismissed` hides the chip from the profile but stays in the review queue (still promotable later); only `promoted` leaves the queue. Admins deep-link there from a person's chip. |
 | `Organization` | Groups with affiliations, addresses, logos via ActiveStorage |
 | `Grant` | Funds (polymorphic `funder`: Organization or Person) with eligibility criteria, tasks, deadlines; parent of `Scholarship`. Scholarship totals cannot exceed the grant amount |
@@ -147,6 +149,7 @@ This codebase (Rails 8.1)
 | `RemoteSearchable` | AJAX remote search by column |
 | `RichTextSearchable` | Full-text search on ActionText rich_text fields |
 | `SectorsTaggable` | Enforces a single primary sector for sector-tagged owners |
+| `StaffTaggable` | Adds the polymorphic `staff_taggings`/`staff_tags` associations for internal admin StaffTags (Person today) |
 | `TagFilterable` | Scope-based filtering by tag names |
 | `Trendable` | Trending metrics tracking |
 | `WindowsTypeFilterable` | Filter by WindowsType association |

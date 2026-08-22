@@ -1,17 +1,17 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="min-h-screen py-8">
-  <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="admin-only bg-blue-100 rounded p-6">
-      <div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:staff_tags, intensity: 100) %>
-        border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+  <div class="mx-auto max-w-full px-4 sm:px-6 lg:px-8">
+    <div class="admin-only rounded bg-blue-100 p-6">
+      <div class="mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:staff_tags, intensity: 100) %>
+        rounded-xl border border-gray-200 p-6 shadow-lg transition-shadow duration-200 hover:shadow-xl">
       <div class="space-y-6">
         <!-- Header -->
-        <div class="flex items-start justify-between mb-6">
+        <div class="mb-6 flex items-start justify-between">
           <div>
             <h1 class="text-2xl font-semibold text-gray-900">
               Staff tags (<%= @count_display %>)
             </h1>
-            <p class="text-sm text-gray-600 mt-1 max-w-2xl">
+            <p class="mt-1 max-w-2xl text-sm text-gray-600">
               Internal, admin-only labels for people — pipelines, rosters, and outreach lists
               (e.g. potential future trainers, cohort candidates). Never shown publicly.
             </p>
@@ -23,7 +23,7 @@
           </div>
         </div>
 
-        <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm">
+        <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
@@ -31,19 +31,19 @@
                 <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Description</th>
                 <th class="px-4 py-2 text-center text-sm font-medium text-gray-700">Status</th>
                 <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">People tagged</th>
-                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700 w-56">Actions</th>
+                <th class="w-56 px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
               </tr>
             </thead>
 
             <tbody class="divide-y divide-gray-100">
               <% @staff_tags.each do |staff_tag| %>
               <tr class="<%= "opacity-60" if staff_tag.archived? %>">
-                <td class="px-4 py-2 text-gray-700 text-base font-bold">
+                <td class="px-4 py-2 text-base font-bold text-gray-700">
                   <%= link_to staff_tag.name, staff_tag_path(staff_tag),
                               class: "#{DomainTheme.text_class_for(:staff_tags)} hover:underline" %>
                 </td>
 
-                <td class="px-4 py-2 text-gray-700 text-sm max-w-md">
+                <td class="max-w-md px-4 py-2 text-sm text-gray-700">
                   <%= truncate(staff_tag.description, length: 120) %>
                 </td>
 
@@ -85,13 +85,13 @@
 
         <!-- Empty state -->
         <% unless @staff_tags.any? %>
-          <p class="text-gray-500 text-center py-6">
+          <p class="py-6 text-center text-gray-500">
             No staff tags yet. Create one to start marking people for pipelines and rosters.
           </p>
         <% end %>
 
         <!-- Pagination -->
-        <div class="pagination flex justify-center mt-12">
+        <div class="pagination mt-12 flex justify-center">
           <%= tailwind_paginate @staff_tags %>
         </div>
       </div>

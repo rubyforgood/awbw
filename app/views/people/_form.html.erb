@@ -230,7 +230,7 @@
     <%# Union of active tags and any the person already carries (archived
         included), so saving the form never silently drops an archived tagging. %>
     <% staff_tag_options = ((@staff_tags || []).to_a + @person.staff_tags.to_a).uniq.sort_by { |tag| tag.name.to_s.downcase } %>
-    <div class="form-group space-y-2 admin-only bg-blue-100 rounded-lg p-4">
+    <div class="form-group admin-only space-y-2 rounded-lg bg-blue-100 p-4">
       <div class="flex items-baseline justify-between">
         <h3 class="font-semibold text-gray-700">Staff tags</h3>
         <%= link_to "Manage tags", staff_tags_path, class: "text-sm #{eyebrow_link_class}", target: "_blank", rel: "noopener" %>
@@ -243,12 +243,12 @@
           <% staff_tag_options.each do |tag| %>
             <% id = "person_staff_tag_ids_#{tag.id}" %>
             <label for="<%= id %>"
-                   class="flex items-center gap-2 p-3 min-w-[180px] bg-white border <%= DomainTheme.border_class_for(:staff_tags) %> rounded-lg shadow-sm hover:bg-gray-50 cursor-pointer transition">
+                   class="flex min-w-[180px] items-center gap-2 border bg-white p-3 <%= DomainTheme.border_class_for(:staff_tags) %> cursor-pointer rounded-lg shadow-sm transition hover:bg-gray-50">
               <%= check_box_tag "person[staff_tag_ids][]", tag.id,
                                 @current_staff_tag_ids&.include?(tag.id),
                                 id: id,
                                 class: "h-4 w-4 rounded #{DomainTheme.text_class_for(:staff_tags, intensity: 600)}" %>
-              <span class="text-sm text-gray-700 whitespace-nowrap">
+              <span class="text-sm whitespace-nowrap text-gray-700">
                 <%= tag.name %><% if tag.archived? %> <span class="text-xs text-gray-400">(archived)</span><% end %>
               </span>
             </label>
@@ -324,7 +324,7 @@
               <% end %>
             </p>
             <div class="mt-1 <%= "hidden" unless decorated.affiliated_since_note %>" data-affiliation-dates-target="affiliatedNote">
-              <span class="group/aff relative inline-flex items-center gap-1 cursor-help">
+              <span class="group/aff relative inline-flex cursor-help items-center gap-1">
                 <span class="text-xs text-gray-500" data-affiliation-dates-target="affiliatedNoteText"><%= decorated.affiliated_since_note %></span>
                 <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
                 <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/aff:block">
