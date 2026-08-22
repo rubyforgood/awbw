@@ -7,11 +7,13 @@
 
 Admins link a person's submitted organization from two editors: the event
 registration one (registrants roster) and the standalone form submission one.
-The collaboration agreement was split into three public forms, one per intake
-scenario — expressed through **form roles**, not a stored purpose: a standalone
-public `registration`-role form is the on-demand agreement, and `new_job` /
-`reinstatement` are their own roles. Each scenario means something different
-for the person's *existing* affiliations. Meanwhile event registrations already had their own rules. This
+The collaboration agreement was split by intake scenario — expressed through
+**form roles**, not a stored purpose. On-demand intake is a `registration`-role
+form connected to the current on-demand facilitator-training event: people fill
+out that event's **public registration form** link (the full registration
+pipeline), like any other training. `new_job` / `reinstatement` are their own
+roles on standalone forms reached by **public `/f/` links**. Each scenario
+means something different for the person's *existing* affiliations. Meanwhile event registrations already had their own rules. This
 ADR pins which flow does what, and why the submission side records links the
 way it does.
 
@@ -24,12 +26,14 @@ way it does.
   four confer the Facilitator affiliation; the last doesn't. Always **derived
   at call time**, never stored as its own column.
 - **Agreement form roles** — `Form::AGREEMENT_ROLES`
-  (`registration` / `new_job` / `reinstatement`): the form roles whose
-  standalone public submissions are agreement intake.
-  `FormSubmission#linking_scenario` derives the scenario — `new_job` and
-  `reinstatement` map to themselves; a `registration`-role submission maps to
-  `on_demand` only on the standalone public path (`role: "public"`), because an
-  event-connected registration takes its scenario from the event instead.
+  (`registration` / `new_job` / `reinstatement`). On-demand's primary intake is
+  the on-demand training event's public registration form (an event
+  registration, scenario from the event); a *standalone* public
+  `registration`-role submission is only the fallback path — it maps to
+  `on_demand` (`FormSubmission#linking_scenario`, `role: "public"` only) and
+  auto-registers the person for `Event.current_on_demand_facilitator_training`
+  so both paths converge. `new_job` and `reinstatement` map to themselves and
+  are always standalone `/f/` forms.
 - **Linking core** — `OrganizationServices::LinkSubmittedOrganization`: the
   shared work of both editors (fill-blanks profile + work-address sync,
   affiliation creation, conflict diff, flash text). Each editor keeps only a
@@ -51,15 +55,16 @@ in both editors belongs in the core, not a wrapper.
 
 | Scenario | Confers Facilitator | End-dating |
 |---|---|---|
-| `on_demand` (standalone public registration-role submission, **or** an on-demand facilitator-training event) | yes — dated to submission / event start | none |
+| `on_demand` (registration for an on-demand facilitator-training event; the standalone public registration-role form is the fallback, which auto-registers) | yes — dated to event start / submission | none |
 | `reinstatement` (form role) | yes — dated to submission, only when no active one exists | none |
 | `new_job` (form role) | yes — dated to submission; the job affiliation is start-dated too | other orgs' affiliations |
 | `facilitator_training` (scheduled facilitator-training event) | yes — dated to event start | none |
 | `non_facilitator_training` (any other event) | no — job affiliation only | none |
 
-The on-demand path is **one scenario** however it arrives — the standalone
-agreement form (LMS completion) or an on-demand training event; it is the
-registration flow, just timestamped at submission rather than event start.
+The on-demand path is **one scenario** however it arrives — registering on
+the on-demand training event's public registration form (the primary path) or
+the standalone fallback form, which auto-registers; it is the registration
+flow either way.
 Event scenarios are derived from the event
 (`EventRegistrationsController#event_linking_scenario`), never stored on a
 form: registration forms are reused across events, and
