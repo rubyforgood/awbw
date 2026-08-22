@@ -36,8 +36,9 @@
         </div>
         <div class="w-44">
           <%= label_tag :answer_type, "Question type", class: search_label_class %>
+          <%# Section headers and informational-only fields never capture answers, so they're omitted. %>
           <%= select_tag :answer_type,
-                options_for_select(FormField::ANSWER_TYPE_LABELS.map { |key, label| [ label, key ] }, params[:answer_type]),
+                options_for_select(FormField::ANSWER_TYPE_LABELS.except(*FormField::NON_INPUT_ANSWER_TYPES).map { |key, label| [ label, key ] }, params[:answer_type]),
                 include_blank: "All types",
                 class: search_field_class(extra: "search-select-placeholder") %>
         </div>
