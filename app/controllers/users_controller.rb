@@ -429,7 +429,7 @@ class UsersController < ApplicationController
       #####
 
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
-      affiliations_attributes: [ :id, :organization_id, :position, :title, :inactive, :primary_contact, :start_date, :end_date, :_destroy ],
+      affiliations_attributes: [ :id, :organization_id, :title, :inactive, :primary_contact, :start_date, :end_date, :_destroy ],
     )
   end
 end
