@@ -28,7 +28,12 @@
               <td class="px-4 py-3"><%= submission.role&.humanize %></td>
               <td class="px-4 py-3">
                 <% if submission.resolved_event %>
-                  <%= submission.resolved_event.name %>
+                  <% event = submission.resolved_event %>
+                  <span class="font-medium text-gray-900"><%= event.name %></span>
+                  <% if event.decorate.month_year %>
+                    <span class="text-gray-400">·</span>
+                    <span class="whitespace-nowrap text-gray-500"><%= event.decorate.month_year %></span>
+                  <% end %>
                 <% elsif submission.role == "public" %>
                   <span class="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
                     <i class="fa-solid fa-link text-3xs"></i>Public form

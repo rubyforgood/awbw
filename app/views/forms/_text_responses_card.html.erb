@@ -1,0 +1,36 @@
+<%# A free-text question's answers, listed newest-first. Long lists are capped
+    with a link out to the full, filterable responses index. Locals:
+      report: a FormResponseAggregator::FieldReport with kind: :text
+      form:   the Form (for the "view all" / per-response links) %>
+<% cap = 25 %>
+<% link_class = "#{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" %>
+<div class="scroll-mt-24 break-inside-avoid rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+  <div class="mb-3 flex items-center justify-between">
+    <h2 class="text-sm font-semibold text-gray-700"><%= report.label %></h2>
+    <span class="text-xs text-gray-500"><%= report.answered_count %></span>
+  </div>
+
+  <% if report.responses.empty? %>
+    <p class="py-8 text-center text-sm italic text-gray-400">No responses yet.</p>
+  <% else %>
+    <ul class="divide-y divide-gray-100">
+      <% report.responses.first(cap).each do |response| %>
+        <li class="py-2">
+          <%# submitted_answer is rendered escaped — never raw/simple_format (see FormAnswer). %>
+          <p class="whitespace-pre-line text-sm text-gray-800"><%= response.text %></p>
+          <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-400">
+            <% if response.person_name.present? %><span><%= response.person_name %></span><% end %>
+            <% if response.submitted_at %>
+              <span aria-hidden="true">·</span>
+              <span><%= response.submitted_at.to_date.to_fs(:long) %></span>
+            <% end %>
+            <span aria-hidden="true">·</span>
+            <%= link_to "View", form_submission_path(response.submission_id, return_to: "form_results", form_id: form.id), class: link_class %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+
+    <%= render "forms/view_all_responses", form: form, count: report.responses.size %>
+  <% end %>
+</div>
