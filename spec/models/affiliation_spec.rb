@@ -118,9 +118,9 @@ RSpec.describe Affiliation, type: :model do
     end
   end
 
-  describe '#facilitator? (STI type derived from title on validation)' do
-    # #facilitator? reads the STI type column, which set_type_from_title assigns in
-    # before_validation — so validate before reading it.
+  describe '#facilitator? (synced from title on validation)' do
+    # #facilitator? reads the denormalized column, which sync_facilitator_from_title
+    # sets in before_validation — so validate before reading it.
     def facilitator_flag(title)
       build(:affiliation, title: title).tap(&:validate).facilitator?
     end
@@ -146,37 +146,15 @@ RSpec.describe Affiliation, type: :model do
       expect(facilitator_flag(nil)).to be false
     end
 
-    it 're-types the row when retitled to or from "Facilitator"' do
+    it 'flips the column when a row is retitled to or from "Facilitator"' do
       affiliation = create(:affiliation, title: "Facilitator")
-      expect(described_class.find(affiliation.id)).to be_a(FacilitatorAffiliation)
+      expect(affiliation.facilitator?).to be true
 
       affiliation.update!(title: "Lead Facilitator")
-      expect(described_class.find(affiliation.id)).to be_a(JobAffiliation)
       expect(affiliation.reload.facilitator?).to be false
 
       affiliation.update!(title: "Facilitator")
-      expect(described_class.find(affiliation.id)).to be_a(FacilitatorAffiliation)
       expect(affiliation.reload.facilitator?).to be true
-    end
-  end
-
-  describe 'STI subtypes' do
-    it 'loads a "Facilitator"-titled row as FacilitatorAffiliation and others as JobAffiliation' do
-      facilitator = create(:affiliation, title: "Facilitator")
-      job = create(:affiliation, title: "Volunteer")
-
-      expect(described_class.find(facilitator.id)).to be_a(FacilitatorAffiliation)
-      expect(described_class.find(job.id)).to be_a(JobAffiliation)
-    end
-
-    it 'defaults an untitled row to JobAffiliation' do
-      affiliation = create(:affiliation, title: nil)
-      expect(described_class.find(affiliation.id)).to be_a(JobAffiliation)
-    end
-
-    it 'authorizes both subtypes through AffiliationPolicy' do
-      expect(FacilitatorAffiliation.policy_class).to eq(AffiliationPolicy)
-      expect(JobAffiliation.policy_class).to eq(AffiliationPolicy)
     end
   end
 
@@ -187,18 +165,17 @@ RSpec.describe Affiliation, type: :model do
     let!(:lowercase) { create(:affiliation, title: "facilitator") }
 
     it 'includes only the exact, case-sensitive title "Facilitator" (whitespace-trimmed)' do
-      expect(described_class.facilitators.ids).to contain_exactly(exact.id, whitespace.id)
+      expect(described_class.facilitators).to contain_exactly(exact, whitespace)
     end
 
-    it 'returns exactly the rows whose title matches the rule (type ↔ scope agree)' do
+    it 'returns exactly the rows whose title matches the rule (column ↔ scope agree)' do
       expected = described_class.all.select { |a| a.title.to_s.strip == "Facilitator" }.map(&:id).sort
       expect(described_class.facilitators.ids.sort).to eq(expected)
     end
 
-    it 'keeps the persisted STI type in step with the title rule' do
+    it 'keeps the persisted facilitator column in step with the title rule' do
       described_class.find_each do |affiliation|
-        expected_type = affiliation.title.to_s.strip == "Facilitator" ? "FacilitatorAffiliation" : "JobAffiliation"
-        expect(affiliation.type).to eq(expected_type)
+        expect(affiliation.facilitator).to eq(affiliation.title.to_s.strip == "Facilitator")
       end
     end
   end

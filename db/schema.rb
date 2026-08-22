@@ -108,6 +108,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_200730) do
     t.datetime "created_at", precision: nil, null: false
     t.date "end_date"
     t.bigint "event_registration_id"
+    t.boolean "facilitator", default: false, null: false
     t.string "filemaker_code"
     t.boolean "inactive", default: false, null: false
     t.bigint "organization_address_id"
@@ -118,7 +119,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_200730) do
     t.boolean "primary_contact", default: false, null: false
     t.date "start_date"
     t.string "title"
-    t.string "type"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "user_id"
     t.index ["event_registration_id"], name: "index_affiliations_on_event_registration_id"
@@ -126,7 +126,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_200730) do
     t.index ["organization_agency_id"], name: "index_affiliations_on_organization_agency_id"
     t.index ["organization_id"], name: "index_affiliations_on_organization_id"
     t.index ["person_id"], name: "index_affiliations_on_person_id"
-    t.index ["type"], name: "index_affiliations_on_type"
     t.index ["user_id"], name: "index_affiliations_on_user_id"
   end
 

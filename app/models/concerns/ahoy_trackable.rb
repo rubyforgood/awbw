@@ -9,14 +9,6 @@ module AhoyTrackable
     before_destroy :capture_destroy_snapshot
   end
 
-  class_methods do
-    # Read events back through this: EventBuilder stamps the instance's own class
-    # name, so an STI model must override it with every name it has written.
-    def event_resource_types
-      [ name ]
-    end
-  end
-
   private
 
   def devise_only_changes?(changes)

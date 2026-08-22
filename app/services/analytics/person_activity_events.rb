@@ -33,7 +33,7 @@ module Analytics
     def resource_ids_by_type
       map = {
         "Person" => [ @person.id ],
-        Affiliation.event_resource_types => @person.affiliations.select(:id),
+        "Affiliation" => @person.affiliations.select(:id),
         "ProfessionalLicense" => @person.professional_licenses.select(:id),
         "Membership" => @person.memberships.select(:id),
         "Address" => @person.addresses.select(:id),

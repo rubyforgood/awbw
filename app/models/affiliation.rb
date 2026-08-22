@@ -49,7 +49,10 @@ class Affiliation < ApplicationRecord
       .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", date)
   }
 
-  scope :facilitators, -> { where(type: FacilitatorAffiliation.name) }
+  # Reads the denormalized `facilitator` flag, which #sync_facilitator_from_title
+  # keeps in lock-step with the title rule (exactly "Facilitator", trimmed,
+  # case-sensitive). An executable agreement spec locks the column to that rule.
+  scope :facilitators, -> { where(facilitator: true) }
 
   # Affiliations whose #status_on(date) equals the given status, expressed in SQL
   # so it composes as a subquery (e.g. person-id narrowing). Kept in lock-step with
@@ -74,7 +77,7 @@ class Affiliation < ApplicationRecord
     end
   }
 
-  before_validation :set_type_from_title
+  before_validation :sync_facilitator_from_title
   before_validation :skip_if_duplicate
   # Runs before validation so a reassigned org drops its stale organization_address_id
   # before organization_address_belongs_to_organization would reject it.
@@ -85,29 +88,12 @@ class Affiliation < ApplicationRecord
   after_destroy :sync_organization_status_with_affiliations
   after_destroy :sync_organization_affiliation_dates
 
-  # Both STI subtypes authorize through the one AffiliationPolicy.
-  def self.policy_class
-    AffiliationPolicy
-  end
-
-  # Both subtypes share Affiliation's routes, param key, and dom_ids — without this,
-  # url_for/dom_id would derive facilitator_affiliation_* and break the controller.
-  def self.model_name
-    @_affiliation_model_name ||= ActiveModel::Name.new(Affiliation)
-  end
-
-  # All three: "Affiliation" for rows built as the base class or saved before the
-  # STI split, each subtype for rows saved after being loaded back.
-  def self.event_resource_types
-    [ Affiliation, FacilitatorAffiliation, JobAffiliation ].map(&:name)
-  end
-
   # Methods
-  # Reads the type column, not #is_a?, so it holds on a base-built instance whose
-  # type was just assigned by #set_type_from_title but not yet reloaded.
-  def facilitator?
-    type == FacilitatorAffiliation.name
-  end
+  # `facilitator?` is the boolean column's auto-generated reader. A facilitator
+  # affiliation is one whose title is *exactly* "Facilitator" (trimmed,
+  # case-sensitive); #sync_facilitator_from_title keeps the column in step with
+  # that rule on every save, so #facilitator? and the .facilitators scope agree.
+  # Variants like "Lead Facilitator" or "facilitator" are deliberately excluded.
 
   # Current: not flagged inactive and not past its end date. Mirrors the `active`
   # scope so already-loaded affiliations can be filtered in Ruby without another
@@ -181,10 +167,12 @@ class Affiliation < ApplicationRecord
     self.inactive = end_date.present? && end_date < Date.current
   end
 
-  # Title is the source of truth for the subtype, re-derived on every save. Never
-  # write `title` via update_columns/update_all — that skips this and drifts the type.
-  def set_type_from_title
-    self.type = title.to_s.strip == FACILITATOR_TITLE ? FacilitatorAffiliation.name : JobAffiliation.name
+  # Keep the denormalized flag in step with the title rule (exactly "Facilitator",
+  # trimmed, case-sensitive) on every save, so the .facilitators scope and
+  # #facilitator? agree. Invariant: never write `title` via update_columns /
+  # update_all — that skips this callback and lets the flag drift.
+  def sync_facilitator_from_title
+    self.facilitator = title.to_s.strip == FACILITATOR_TITLE
   end
 
   def sync_organization_affiliation_dates

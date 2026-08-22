@@ -4,8 +4,7 @@
   return unless resource&.persisted?
 
   model = resource.respond_to?(:object) ? resource.object : resource
-  resource_types = model.class.event_resource_types
-  ahoy_scope = Ahoy::Event.where(resource_type: resource_types, resource_id: model.id)
+  ahoy_scope = Ahoy::Event.where(resource_type: model.class.name, resource_id: model.id)
 
   created_by_user = resource.try(:created_by) || resource.try(:user) ||
     ahoy_scope.where("name LIKE 'create.%'").order(time: :asc).first&.user
@@ -24,7 +23,7 @@
           by <%= link_to created_by_user.full_name, person_path(created_by_user.person), class: "text-indigo-600 hover:underline" %>
         <% end %>
         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-          <%= link_to admin_activities_events_path(resource_type: resource_types, resource_id: resource.id),
+          <%= link_to admin_activities_events_path(resource_type: model.class.name, resource_id: resource.id),
                       class: "ml-1 text-indigo-600 hover:underline",
                       title: "View creation event in Ahoy" do %>
             <i class="fas fa-chart-line"></i>
@@ -41,7 +40,7 @@
           by <%= link_to updated_by_user.full_name, person_path(updated_by_user.person), class: "text-indigo-600 hover:underline" %>
         <% end %>
         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-          <%= link_to admin_activities_events_path(resource_type: resource_types, resource_id: resource.id),
+          <%= link_to admin_activities_events_path(resource_type: model.class.name, resource_id: resource.id),
                       class: "ml-1 text-indigo-600 hover:underline",
                       title: "View update events in Ahoy" do %>
             <i class="fas fa-chart-line"></i>
