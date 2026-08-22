@@ -66,6 +66,7 @@ Rails.application.routes.draw do
     end
   end
   resources :category_types
+  resources :staff_tags
   resources :categories do
     collection do
       get :dedupe_index

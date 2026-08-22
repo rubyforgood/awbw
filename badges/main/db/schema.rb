@@ -1342,6 +1342,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_112435) do
     t.index ["story_share_position"], name: "index_sectors_on_story_share_position"
   end
 
+  create_table "staff_taggings", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.bigint "staff_tag_id", null: false
+    t.bigint "staff_taggable_id", null: false
+    t.string "staff_taggable_type", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.index ["created_by_id"], name: "index_staff_taggings_on_created_by_id"
+    t.index ["staff_tag_id", "staff_taggable_type", "staff_taggable_id"], name: "index_staff_taggings_uniqueness", unique: true
+    t.index ["staff_tag_id"], name: "index_staff_taggings_on_staff_tag_id"
+    t.index ["staff_taggable_type", "staff_taggable_id"], name: "index_staff_taggings_on_staff_taggable"
+    t.index ["updated_by_id"], name: "index_staff_taggings_on_updated_by_id"
+  end
+
+  create_table "staff_tags", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.text "description"
+    t.string "name", null: false
+    t.boolean "published", default: true, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.index ["created_by_id"], name: "index_staff_tags_on_created_by_id"
+    t.index ["name"], name: "index_staff_tags_on_name", unique: true
+    t.index ["published"], name: "index_staff_tags_on_published"
+    t.index ["updated_by_id"], name: "index_staff_tags_on_updated_by_id"
+  end
+
   create_table "stories", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "author_credit_preference"
     t.bigint "author_id"
@@ -1941,6 +1970,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_112435) do
   add_foreign_key "scholarships", "grants"
   add_foreign_key "scholarships", "people", column: "recipient_id"
   add_foreign_key "sectorable_items", "sectors"
+  add_foreign_key "staff_taggings", "staff_tags"
   add_foreign_key "stories", "organizations"
   add_foreign_key "stories", "people", column: "author_id"
   add_foreign_key "stories", "people", column: "spotlighted_facilitator_id"
