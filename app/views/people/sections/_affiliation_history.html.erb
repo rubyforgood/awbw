@@ -26,8 +26,10 @@
   <div class="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-600">
     Affiliation records are maintained by AWBW staff. See something that needs correcting?
     <%= link_to "Contact us to request a change",
-                contact_us_path(subject: "Request to update my affiliation history",
+                contact_us_path(return_to: "profile",
+                                subject: "Request to update my affiliation history",
                                 message: "Hi AWBW team,\n\nI'd like to request a change to my affiliation history. Here's what needs updating:\n\n"),
+                data: { turbo_frame: "_top" },
                 class: "font-medium text-blue-600 hover:text-blue-800 hover:underline" %>.
   </div>
 <% end %>

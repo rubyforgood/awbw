@@ -1,8 +1,16 @@
 <% content_for(:page_bg_class, "public") %>
 <%= render "shared/public_welcome_banner" unless @from_story_share %>
 
+<% profile_return_path = (person_path(current_user.person, anchor: "affiliation_history") if @return_to == "profile" && current_user&.person) %>
 <div class="px-4 py-8 sm:px-6 lg:px-8">
 <div class="mx-auto w-full max-w-7xl rounded-xl border border-gray-200 bg-white p-6 shadow" id="contact-us-container">
+      <% if profile_return_path %>
+        <div class="mb-3">
+          <%= link_to profile_return_path, class: "text-sm #{eyebrow_link_class}" do %>
+            <i class="fa-solid fa-arrow-left text-xs"></i> Back to my profile
+          <% end %>
+        </div>
+      <% end %>
       <!-- Header -->
       <header class="space-y-4">
         <h2 class="text-3xl font-bold tracking-tight text-gray-900">
@@ -99,6 +107,10 @@
                 <div class="pt-2">
                   <%= link_to "Back to story share", story_shares_path, class: "btn btn-primary" %>
                 </div>
+              <% elsif profile_return_path %>
+                <div class="pt-2">
+                  <%= link_to "Back to my profile", profile_return_path, class: "btn btn-primary" %>
+                </div>
               <% end %>
             </div>
             <script>document.getElementById("thank-you").scrollIntoView({ behavior: "smooth", block: "center" });</script>
@@ -121,6 +133,9 @@
               <input type="hidden" name="contact_us[q]" value="general">
               <% if @from_story_share %>
                 <input type="hidden" name="from" value="story_share">
+              <% end %>
+              <% if @return_to.present? %>
+                <input type="hidden" name="return_to" value="<%= @return_to %>">
               <% end %>
               <% unless current_user %>
                 <!-- Name Row -->

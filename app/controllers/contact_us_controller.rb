@@ -20,15 +20,17 @@ class ContactUsController < ApplicationController
     @from_story_share = params[:from] == "story_share"
     @prefilled_subject = params[:subject]
     @prefilled_message = params[:message]
+    @return_to = params[:return_to]
     render layout: "story_shares" if @from_story_share
   end
 
   def create
     authorize! :contact_us, to: :create?
     from = "story_share" if params[:from] == "story_share"
+    return_to = params[:return_to].presence
 
     if params[:contact_us][:website_url].present?
-      redirect_to contact_us_path(from: from)
+      redirect_to contact_us_path(from: from, return_to: return_to)
       return
     end
 
@@ -63,7 +65,7 @@ class ContactUsController < ApplicationController
     NotificationServices::PersistDeliveredEmail.call(notification: admin_notification, mail: admin_mail)
 
     flash[:form_submitted] = true
-    redirect_to contact_us_path(anchor: "thank-you", from: from)
+    redirect_to contact_us_path(anchor: "thank-you", from: from, return_to: return_to)
   end
 
   private
