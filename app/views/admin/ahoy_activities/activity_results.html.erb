@@ -70,12 +70,12 @@
           <% if entry.communication? %>
             <%= render "communication_row", notification: entry.record %>
           <% else %>
-            <%= render "activity_row", event: entry.record %>
+            <%= render "activity_row", event: entry.record, record_cache: @record_cache %>
           <% end %>
         <% end %>
       <% else %>
         <% @events.each do |event| %>
-          <%= render "activity_row", event: event %>
+          <%= render "activity_row", event: event, record_cache: @record_cache %>
         <% end %>
       <% end %>
       </tbody>

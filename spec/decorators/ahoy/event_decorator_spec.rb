@@ -141,5 +141,23 @@ RSpec.describe Ahoy::EventDecorator do
       expect(link_row[:link][:text]).to eq("Workshop #0")
       expect(link_row[:link][:path]).to be_nil
     end
+
+    it "resolves references from the page record_cache without its own query" do
+      workshop = create(:workshop)
+      cache = { [ "Workshop", workshop.id ] => workshop }
+      event = create(:ahoy_event, properties: {
+        "association_changes" => { "workshops" => [ { "action" => "added", "id" => workshop.id, "type" => "Workshop" } ] }
+      }).reload.decorate(context: { record_cache: cache })
+
+      link_row = nil
+      queries = 0
+      counter = ->(_n, _s, _f, _i, payload) { queries += 1 if payload[:sql]&.include?("`workshops`") }
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+        link_row = event.detail_rows.find { |r| r[:link] }
+      end
+
+      expect(link_row[:link][:text]).to eq(workshop.title)
+      expect(queries).to eq(0)
+    end
   end
 end

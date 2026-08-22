@@ -87,18 +87,8 @@ module Ahoy
       end
     end
 
-    # A referenced record: a type + id and nothing but reference bookkeeping — no
-    # name/title (those collapse to a label instead) and no snapshot columns.
-    REFERENCE_KEYS = %w[type id record_type record_id action blob_id changes].freeze
-    private_constant :REFERENCE_KEYS
-
     def reference?(item)
-      return false unless item.is_a?(Hash)
-
-      type = item["type"] || item["record_type"]
-      has_id = item.key?("id") || item.key?("record_id")
-      type.present? && has_id && item["name"].blank? && item["title"].blank? &&
-        (item.keys - REFERENCE_KEYS).empty?
+      Analytics::EventReferenceLoader.reference?(item)
     end
 
     def named_entity?(item)
@@ -120,7 +110,13 @@ module Ahoy
         link: { text: text, path: show_path_for(record) } }
     end
 
+    # Prefer the page-level cache (one query per type, built by
+    # Analytics::EventReferenceLoader) and only fall back to a direct lookup when
+    # no cache was supplied (e.g. specs or the single-event detail page).
     def find_referenced_record(type, id)
+      cache = context[:record_cache]
+      return cache[[ type.to_s, id ]] if cache
+
       klass = type.to_s.safe_constantize
       return nil unless klass.respond_to?(:find_by) && klass < ApplicationRecord
 

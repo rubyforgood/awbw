@@ -25,7 +25,7 @@
     <%= event.visit_id %>
   </td>
 
-  <% activity = event.decorate %>
+  <% activity = event.decorate(context: { record_cache: local_assigns[:record_cache] }) %>
   <td data-label="Details" class="px-4 py-3 align-top text-gray-500">
     <% if activity.extra_details? %>
       <div class="space-y-1.5">
