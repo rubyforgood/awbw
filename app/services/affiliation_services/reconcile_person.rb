@@ -105,13 +105,11 @@ module AffiliationServices
       affiliation.event_registration&.event_id == @event.id
     end
 
-    # Where a deactivation ends the row (ADR-0002 D6). The row this training minted
-    # is an assumption that never came true, so it collapses to nothing. Any older
-    # row records facilitation that really happened: it ends at this training, so
-    # the years before it survive and anchored program status doesn't move.
+    # Only rows this training did NOT mint reach here (minted ones are deleted), and
+    # they record facilitation that really happened — so they end at this training
+    # and the years before it survive, leaving anchored program status where it was
+    # (ADR-0002 D6). Never before the row's own start date.
     def deactivation_end_date(affiliation)
-      return affiliation.start_date if minted_here?(affiliation) && affiliation.start_date
-
       [ @event.start_date&.to_date || Date.current, affiliation.start_date ].compact.max
     end
 
@@ -150,7 +148,10 @@ module AffiliationServices
         reason = ended_by_reconciliation?(affiliation) ? ALREADY_DEACTIVATED : ALREADY_ENDED
         Decision.new(affiliation:, action: :noop, reason:)
       elsif deactivation_ready?(affiliation)
-        Decision.new(affiliation:, action: :deactivate)
+        # The row this training minted recorded an assumption that never came true,
+        # so it goes rather than lingering as a zero-length row. Anything older
+        # records facilitation that really happened and is only ended (ADR-0002 D6).
+        Decision.new(affiliation:, action: minted_here?(affiliation) ? :delete : :deactivate)
       else
         Decision.new(affiliation:, action: :noop, reason: TRAINING_PENDING)
       end

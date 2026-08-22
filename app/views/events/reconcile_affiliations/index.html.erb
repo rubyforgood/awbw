@@ -13,14 +13,14 @@
       <p>
         This step brings facilitator affiliations in line with who registered and attended. Before the training it
         <strong>creates</strong> any missing facilitator affiliations for linked organizations. After the training it
-        <strong>ends</strong> the affiliation of anyone who didn't attend and marks it inactive. Someone later marked
-        attended gets a <strong>new</strong> affiliation dated to this training rather than having the old one reopened,
-        so a lapse stays visible. Job affiliations are never touched.
+        <strong>deletes</strong> the affiliation this training created for anyone who didn't attend. Someone later
+        marked attended gets a <strong>new</strong> affiliation dated to this training rather than having an old one
+        reopened, so a lapse stays visible. Job affiliations are never touched.
       </p>
       <p>
-        Ending never erases history: an affiliation this training created is same-dayed, while an older one ends on this
-        training's date, so the period the person really facilitated — and this organization's program status at every
-        earlier training — stays as it was.
+        Only the row this training created is deleted — it recorded an assumption that never came true. An
+        <strong>older</strong> affiliation is ended on this training's date instead, so the period the person really
+        facilitated — and this organization's program status at every earlier training — stays as it was.
       </p>
     <% else %>
       <p>

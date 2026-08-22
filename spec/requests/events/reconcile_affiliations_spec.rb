@@ -20,13 +20,25 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
   before { sign_in admin }
 
   describe "GET index" do
-    it "previews the no-show as a deactivation, checked by default" do
+    it "previews the no-show's minted row as a deletion, checked by default" do
       person, _affiliation = registrant_with_affiliation(status: "no_show")
 
       get reconcile_affiliations_event_path(event)
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(person.name)
+      expect(response.body).to include("Will be deleted")
+    end
+
+    it "previews an older hand-entered row as an end-date, not a deletion" do
+      person = create(:person)
+      reg = create(:event_registration, event: event, registrant: person, status: "no_show")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+      create(:affiliation, person: person, organization: organization, title: "Facilitator",
+                           start_date: 2.years.ago.to_date)
+
+      get reconcile_affiliations_event_path(event)
+
       expect(response.body).to include("Deactivate affiliation")
     end
 

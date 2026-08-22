@@ -181,7 +181,7 @@ RSpec.describe "facilitator affiliation math" do
       expect(bucket).to eq(:formerly_active)
     end
 
-    it "leaves the verdict alone when the row the training minted is same-dayed" do
+    it "leaves the verdict alone when the row the training minted is deleted" do
       person = create(:person)
       event = create(:event, :ended, facilitator_training: true)
       anchor = event.start_date.to_date
@@ -195,11 +195,11 @@ RSpec.describe "facilitator affiliation math" do
       AffiliationServices::ReconcilePerson.new(
         person: person, organization: organization, event: event,
         registration: registration, include_unowned: true
-      ).perform(:deactivate, affiliation: minted)
+      ).perform(:delete, affiliation: minted)
 
       expect(status_on(anchor)).to eq(:new)
-      expect(minted.reload.end_date).to eq(anchor)
-      expect(bucket).to eq(:formerly_active)
+      expect(Affiliation.exists?(minted.id)).to be(false)
+      expect(bucket).to eq(:never_active)
     end
   end
 end

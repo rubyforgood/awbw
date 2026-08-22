@@ -29,30 +29,27 @@ RSpec.describe AffiliationServices::ReconcilePerson do
   end
 
   describe "deactivation" do
-    it "same-days the owned facilitator affiliation when the person never attended" do
+    it "deletes the row this training minted when the person never attended" do
       reg = training_registration(status: "no_show")
       affiliation = owned_facilitator(registration: reg)
 
       reconcile(reg)
-      affiliation.reload
 
-      expect(affiliation.end_date).to eq(affiliation.start_date)
-      expect(affiliation).to be_inactive
-      expect(affiliation).not_to be_active
+      expect(Affiliation.exists?(affiliation.id)).to be(false)
     end
 
     %w[ incomplete_attendance registered cancelled transferred_out ].each do |status|
-      it "deactivates when the only registration is #{status}" do
+      it "deletes the minted row when the only registration is #{status}" do
         reg = training_registration(status: status)
         affiliation = owned_facilitator(registration: reg)
 
         reconcile(reg)
 
-        expect(affiliation.reload).not_to be_active
+        expect(Affiliation.exists?(affiliation.id)).to be(false)
       end
     end
 
-    it "deactivates on the day a one-day training ends, when the affiliation starts that same day" do
+    it "deletes it on the day a one-day training ends, with no reliance on the inactive flag" do
       event = create(:event, facilitator_training: true, start_date: 3.hours.ago,
                      end_date: 1.hour.ago, registration_close_date: 4.hours.ago)
       reg = create(:event_registration, registrant: person, event: event, status: "no_show")
@@ -61,7 +58,29 @@ RSpec.describe AffiliationServices::ReconcilePerson do
 
       reconcile(reg)
 
-      expect(affiliation.reload).not_to be_active
+      expect(Affiliation.exists?(affiliation.id)).to be(false)
+    end
+
+    it "leaves the person's other organizations' affiliations alone" do
+      reg = training_registration(status: "no_show")
+      owned_facilitator(registration: reg)
+      elsewhere = create(:affiliation, person: person, organization: create(:organization),
+                                       title: "Facilitator", start_date: 1.year.ago.to_date)
+
+      reconcile(reg)
+
+      expect(elsewhere.reload).to be_active
+    end
+
+    it "leaves a job affiliation from the same registration alone" do
+      reg = training_registration(status: "no_show")
+      owned_facilitator(registration: reg)
+      job = create(:affiliation, person: person, organization: organization, title: "Counselor",
+                                 event_registration: reg)
+
+      reconcile(reg)
+
+      expect(Affiliation.exists?(job.id)).to be(true)
     end
 
     it "leaves an assumptive affiliation alone while its training is still upcoming" do
@@ -119,19 +138,37 @@ RSpec.describe AffiliationServices::ReconcilePerson do
   end
 
   describe "the comment reconciliation leaves behind" do
-    it "records why a row was ended, and who did it" do
+    it "records why an older row was ended, and who did it" do
       user = create(:user, :admin)
       Current.user = user
       reg = training_registration(status: "no_show")
-      affiliation = owned_facilitator(registration: reg)
+      older = create(:affiliation, person: person, organization: organization,
+                                   title: "Facilitator", start_date: 2.years.ago.to_date)
 
-      reconcile(reg)
+      reconcile(reg, include_unowned: true)
 
-      comment = affiliation.reload.comments.last
+      comment = older.reload.comments.last
       expect(comment.topic).to eq(described_class::COMMENT_TOPIC)
       expect(comment.body).to include("marked inactive by reconciliation")
       expect(comment.body).to include(reg.event.title)
       expect(comment.created_by).to eq(user)
+    ensure
+      Current.user = nil
+    end
+
+    # A deleted row takes its comments with it, so the trail for those lives in the
+    # Ahoy destroy event instead — with the full attribute snapshot.
+    it "leaves the deletion of a minted row in the activity log" do
+      Current.user = create(:user, :admin)
+      reg = training_registration(status: "no_show")
+      affiliation = owned_facilitator(registration: reg)
+      allow(Analytics::LifecycleBuffer).to receive(:push).and_call_original
+
+      reconcile(reg)
+
+      expect(Analytics::LifecycleBuffer).to have_received(:push)
+        .with(hash_including(name: "destroy.affiliation",
+                             properties: hash_including(resource_id: affiliation.id)))
     ensure
       Current.user = nil
     end
@@ -239,27 +276,49 @@ RSpec.describe AffiliationServices::ReconcilePerson do
   end
 
   describe "idempotence" do
-    it "is stable across repeated runs" do
+    it "does not move an older row's end date on a second run" do
       reg = training_registration(status: "no_show")
-      affiliation = owned_facilitator(registration: reg)
+      older = create(:affiliation, person: person, organization: organization,
+                                   title: "Facilitator", start_date: 2.years.ago.to_date)
+
+      reconcile(reg, include_unowned: true)
+      first = older.reload.end_date
+      reconcile(reg, include_unowned: true)
+
+      expect(older.reload.end_date).to eq(first)
+    end
+
+    it "has nothing left to do once the minted row is gone" do
+      reg = training_registration(status: "no_show")
+      owned_facilitator(registration: reg)
 
       reconcile(reg)
-      first = affiliation.reload.end_date
-      reconcile(reg)
 
-      expect(affiliation.reload.end_date).to eq(first)
+      expect { reconcile(reg) }.not_to change { Affiliation.count }
     end
   end
 
   describe "#plan (dry run)" do
-    it "reports :deactivate without writing" do
+    it "reports :delete for the minted row without writing" do
       reg = training_registration(status: "no_show")
       affiliation = owned_facilitator(registration: reg)
 
       plan = described_class.new(person: person, organization: organization, event: reg.event).plan
 
+      expect(plan.map(&:action)).to eq([ :delete ])
+      expect(Affiliation.exists?(affiliation.id)).to be(true)
+    end
+
+    it "reports :deactivate for an older row, which is ended rather than deleted" do
+      reg = training_registration(status: "no_show")
+      older = create(:affiliation, person: person, organization: organization,
+                                   title: "Facilitator", start_date: 2.years.ago.to_date)
+
+      plan = described_class.new(person: person, organization: organization,
+                                 event: reg.event, include_unowned: true).plan
+
       expect(plan.map(&:action)).to eq([ :deactivate ])
-      expect(affiliation.reload).to be_active
+      expect(older.reload).to be_active
     end
 
     it "reports the reason a row needs no action" do

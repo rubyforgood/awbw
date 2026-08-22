@@ -165,26 +165,35 @@ consequences:
 - Any write that changes an affiliation's dates is a write to the historical
   record. It must be justified against D6.
 
-### D6 — Ending an affiliation must not erase the period it records
+### D6 — Delete what the training assumed; only end what actually happened
 
-When reconciliation ends a facilitator affiliation for someone who didn't complete
-a training, where the end date lands depends on what the row represents:
+When someone doesn't complete a training, what reconciliation does to their
+facilitator affiliation depends on what that row represents:
 
 - **The row this training minted** (owned by an `event_registration` for this
-  event) — same-day it: `end_date = start_date`. It recorded an *assumption* that
-  the person would become a facilitator on the training date. They didn't, so it
-  collapses to nothing. It never counted as prior history anyway (ADR-0001 D5/D8
-  use a strict `<`), so no anchored verdict moves.
-- **Any older row** — hand-entered, or minted by an earlier training — ends on
-  **this training's start date**. It records facilitation that really happened.
-  Same-daying it would delete years of history and retroactively flip the org from
-  Ongoing to Reinstated at every training in between.
+  event) — **deleted**. It recorded an *assumption* that the person would become a
+  facilitator on the training date. They didn't, so there is no period to preserve
+  and nothing is lost by removing it. It never counted as prior history anyway
+  (ADR-0001 D5/D8 use a strict `<`), so no anchored verdict moves.
+- **Any older row** — hand-entered, or minted by an earlier training — **ended** on
+  this training's start date, never deleted. It records facilitation that really
+  happened. Deleting it, or dating it back to its own start, would erase years of
+  history and retroactively flip the org from Ongoing to Reinstated at every
+  training in between.
 
-If an older row somehow starts *after* this training, it same-days instead; an end
-date before its own start is never written.
+An end date is never written before the row's own start date; a row starting after
+this training same-days instead.
 
-`inactive: true` is set in both cases (D2), which is what makes the row read as
-ended today even when the end date is today.
+**Deleting the minted row is what lets reconciliation stop relying on the `inactive`
+flag.** A same-dayed row could land on today and still read as active by dates
+alone, which is why D2's flag existed here. A deleted row has no such problem, and
+an older row is ended on a training date that has already passed, so the date rule
+derives `inactive` by itself. The flag is still set on the older row for the one
+case that remains — reconciling on the day the training ends.
+
+**What a deletion costs:** the row's comments go with it, so the "why" D6b records
+survives only for ended rows. The deletion itself is still on the record as a
+`destroy.affiliation` Ahoy event carrying the full attribute snapshot.
 
 The org's *current* bucket is expected to change — that's the point. Its *anchored*
 verdicts are not.
@@ -229,7 +238,8 @@ than inferred from the single-affiliation cases
 4. **Both questions on the same org** — Ongoing at a past training while Formerly
    active today, and vice versa.
 5. **The bucket agrees with the SQL scope** the index filter uses.
-6. **Reconciliation doesn't move an anchored verdict** — D6, both branches.
+6. **Reconciliation doesn't move an anchored verdict** — D6, both branches: the
+   minted row is deleted, the older row ended at the training date.
 7. **A return after a lapse adds a row and leaves the lapse intact** — D6a, asserted
    on both the row count and the mid-gap verdict.
 

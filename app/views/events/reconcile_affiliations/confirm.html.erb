@@ -12,8 +12,8 @@
 
   <% sections = {
        create: [ "Create", "bg-blue-50 text-blue-800 border-blue-200", "A new facilitator affiliation is created for this organization." ],
-       deactivate: [ "Deactivate", "bg-red-50 text-red-800 border-red-200", "The facilitator affiliation is marked inactive and given an end date — its own start date if this training created it, otherwise this training's date, so earlier facilitating stays on the record. Reversible." ],
-       delete: [ "Delete", "bg-red-100 text-red-900 border-red-300", "The facilitator affiliation is permanently deleted. Job and other-org affiliations are untouched." ]
+       deactivate: [ "Deactivate", "bg-red-50 text-red-800 border-red-200", "The facilitator affiliation is given an end date of this training's date and marked inactive, so the years before it stay on the record. Reversible." ],
+       delete: [ "Delete", "bg-red-100 text-red-900 border-red-300", "The facilitator affiliation is permanently deleted — this is what happens to a row this training created for someone who didn't attend. Job and other-org affiliations are untouched." ]
      } %>
 
   <div class="space-y-5">
