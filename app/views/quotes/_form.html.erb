@@ -107,6 +107,49 @@
       </div>
     </div>
 
+    <!-- Sectors & categories -->
+    <div class="space-y-6">
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+        <h3 class="mb-3 text-base font-semibold text-gray-800">Sectors</h3>
+        <div class="flex flex-wrap gap-3">
+          <% @sectors.each do |sector| %>
+            <% id = "quote_sector_ids_#{sector.id}" %>
+            <label for="<%= id %>"
+                   class="flex w-auto min-w-[180px] cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition hover:bg-gray-100">
+              <%= hidden_field_tag "quote[sector_ids][]", "" %>
+              <%= check_box_tag "quote[sector_ids][]",
+                                sector.id,
+                                f.object.sector_ids.include?(sector.id),
+                                id: id,
+                                class: "h-4 w-4 rounded text-blue-600" %>
+              <span class="text-sm whitespace-nowrap text-gray-700"><%= sector.name %></span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+
+      <% @categories_grouped.each do |type, cats| %>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+          <h3 class="mb-3 text-base font-semibold text-gray-800"><%= type.name.underscore.humanize %></h3>
+          <div class="flex flex-wrap gap-3">
+            <% cats.each do |category| %>
+              <% id = "quote_category_ids_#{category.id}" %>
+              <label for="<%= id %>"
+                     class="flex w-auto min-w-[180px] cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition hover:bg-gray-100">
+                <%= hidden_field_tag "quote[category_ids][]", "" %>
+                <%= check_box_tag "quote[category_ids][]",
+                                  category.id,
+                                  f.object.category_ids.include?(category.id),
+                                  id: id,
+                                  class: "h-4 w-4 rounded text-blue-600" %>
+                <span class="text-sm whitespace-nowrap text-gray-700"><%= category.name %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
     <div class="action-buttons mt-8 flex justify-center gap-3">
       <% if allowed_to?(:destroy?, f.object) %>
         <%= link_to "Delete", @quote, class: "btn btn-danger-outline",
