@@ -343,11 +343,30 @@
                                         class: "admin-only bg-blue-100 btn btn-secondary-outline" %></div>
         </div>
       <% else %>
-        <% f.object.affiliations.each do |affiliation| %>
-          <div class="mb-2 ps-6">
-            <li><%= affiliation.title %> - <%= affiliation.persisted? ? (link_to affiliation.organization&.name, organization_path(affiliation.organization), class: "underline") : affiliation.organization&.name %></li>
-          </div>
+        <% owner_affiliations = f.object.affiliations.select(&:persisted?) %>
+        <% if owner_affiliations.any? %>
+          <ul class="space-y-1.5 ps-6">
+            <% owner_affiliations.each do |affiliation| %>
+              <li class="flex flex-wrap items-center gap-2 text-gray-700">
+                <span class="font-medium"><%= affiliation.title.presence || Affiliation::FACILITATOR_TITLE %></span>
+                <span>–</span>
+                <%= link_to affiliation.organization&.name, organization_path(affiliation.organization), class: "underline" %>
+                <span class="text-sm text-gray-500"><%= affiliation.decorate.period_label %></span>
+                <%= affiliation.decorate.status_badge %>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="ps-6 text-gray-500 italic">No affiliations on record.</p>
         <% end %>
+        <div class="mt-4 ps-6 text-sm text-gray-600">
+          Affiliation records are maintained by AWBW staff. See something that needs correcting?
+          <%= link_to "Contact us to request a change",
+                      contact_us_path(return_to: "person_edit",
+                                      subject: "Request to update my affiliation history",
+                                      message: "Hi AWBW team,\n\nI'd like to request a change to my affiliation history. Here's what needs updating:\n\n"),
+                      class: "font-medium text-blue-600 hover:text-blue-800 hover:underline" %>.
+        </div>
       <% end %>
     </div>
   </div>

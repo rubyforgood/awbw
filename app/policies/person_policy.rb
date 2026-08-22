@@ -33,7 +33,7 @@ class PersonPolicy < ApplicationPolicy
   end
 
   def edit?
-    admin?
+    admin? || owner?
   end
 
   def update?
