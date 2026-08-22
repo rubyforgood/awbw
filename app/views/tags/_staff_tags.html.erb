@@ -1,0 +1,10 @@
+<% return_to ||= "tags" %>
+<div class="flex flex-wrap gap-2">
+  <% @staff_tags.each do |staff_tag| %>
+    <%= link_to people_path(staff_tag_ids: staff_tag.id, return_to: return_to),
+                class: "inline-flex items-center rounded-full border border-blue-300 bg-white px-3 py-1 text-sm font-medium text-gray-800 transition hover:bg-blue-50",
+                data: { turbo_frame: "_top" } do %>
+      <%= staff_tag.name %>
+    <% end %>
+  <% end %>
+</div>

@@ -1,0 +1,56 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="min-h-screen py-8">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-5xl rounded-xl border border-gray-200 bg-white p-6 shadow-lg transition-shadow duration-200 hover:shadow-xl">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <%= link_to "← Staff tags", staff_tags_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <%= link_to "Edit", edit_staff_tag_path(@staff_tag), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+      </div>
+      <h1 class="mb-2 text-2xl font-semibold text-gray-900">
+        Staff tag: <%= @staff_tag.name %>
+      </h1>
+
+      <div class="mt-2 mb-4 flex items-center gap-6">
+        <p class="text-gray-700">
+          <span class="font-bold">Status:</span>
+          <span class="ml-1"><%= @staff_tag.status_label %></span>
+        </p>
+      </div>
+
+      <% if @staff_tag.description.present? %>
+        <p class="mb-4 text-gray-700"><%= simple_format(@staff_tag.description) %></p>
+      <% end %>
+
+      <!-- Tagged people -->
+      <div class="border-t border-gray-200 pt-6">
+        <div class="mb-3 flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-gray-900">
+            Tagged people (<%= @taggings.size %>)
+          </h2>
+          <%= link_to "View as filtered roster", people_path(staff_tag_ids: @staff_tag.id, return_to: "staff_tag"),
+                      class: "btn btn-secondary-outline" %>
+        </div>
+
+        <% if @taggings.any? %>
+          <ul class="space-y-2">
+            <% @taggings.each do |tagging| %>
+              <% taggable = tagging.staff_taggable %>
+              <li class="flex flex-wrap items-baseline justify-between gap-2 rounded-md border border-gray-200 bg-gray-50 px-4 py-2">
+                <%= link_to taggable.name, polymorphic_path(taggable),
+                            class: "font-medium #{DomainTheme.text_class_for(:people)} hover:underline" %>
+                <span class="text-xs text-gray-500">
+                  Tagged<% if tagging.created_by&.person %> by <%= tagging.created_by.full_name %><% end %>
+                  on <%= tagging.created_at.strftime("%b %-d, %Y") %>
+                </span>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="text-sm text-gray-500 italic">No one carries this tag yet.</p>
+        <% end %>
+      </div>
+
+      <%= render "shared/audit_info", resource: @staff_tag %>
+    </div>
+  </div>
+</div>

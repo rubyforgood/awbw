@@ -199,6 +199,32 @@
     <% end %>
   </div>
 
+  <!-- Staff tags (internal, admin-only) -->
+  <% if allowed_to?(:manage?, StaffTag) %>
+    <% staff_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
+    <div class="form-group admin-only space-y-2 rounded-lg bg-blue-100 p-4">
+      <div class="flex items-baseline justify-between">
+        <h3 class="font-semibold text-gray-700">Staff tags</h3>
+        <%= link_to "Manage tags", staff_tags_path, class: "text-sm #{eyebrow_link_class}", target: "_blank", rel: "noopener" %>
+      </div>
+      <p class="text-xs text-gray-500">Internal only — pipelines, rosters, and outreach lists. Never shown publicly.</p>
+      <div class="flex flex-wrap content-start items-center gap-2 pt-1">
+        <%= f.simple_fields_for :staff_taggings, staff_owner.staff_taggings do |sfi| %>
+          <%= render "people/staff_tag_item_fields", f: sfi %>
+        <% end %>
+
+        <%= link_to_add_association "➕ Add staff tag",
+                                    f,
+                                    :staff_taggings,
+                                    partial: "people/staff_tag_item_fields",
+                                    render_options: {
+                                      locals: { collection: (@staff_tags_collection || [])
+                                        .reject { |_, id| (@current_staff_tag_ids || []).include?(id) } } },
+                                    class: "btn btn-secondary-outline" %>
+      </div>
+    </div>
+  <% end %>
+
   <!-- Profile-specific Categories (other than age ranges) -->
   <% other_category_types = (@person_categories_grouped || {}).reject { |type, _| type.name == "AgeRange" } %>
   <% if other_category_types.present? %>
@@ -287,7 +313,7 @@
               <% end %>
             </p>
             <div class="mt-1 <%= "hidden" unless decorated.affiliated_since_note %>" data-affiliation-dates-target="affiliatedNote">
-              <span class="group/aff relative inline-flex items-center gap-1 cursor-help">
+              <span class="group/aff relative inline-flex cursor-help items-center gap-1">
                 <span class="text-xs text-gray-500" data-affiliation-dates-target="affiliatedNoteText"><%= decorated.affiliated_since_note %></span>
                 <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
                 <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/aff:block">

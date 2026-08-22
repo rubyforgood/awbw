@@ -1,5 +1,5 @@
 class Person < ApplicationRecord
-  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable
+  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable, StaffTaggable
 
   pay_customer default_payment_processor: :stripe
 
@@ -188,6 +188,10 @@ class Person < ApplicationRecord
       .distinct }
   scope :sector_leaders, -> {
     joins(:sectorable_items).where(sectorable_items: { is_leader: true }).distinct }
+  scope :staff_tagged_with, ->(ids) {
+    tag_ids = Array(ids).reject(&:blank?)
+    return all if tag_ids.empty?
+    joins(:staff_taggings).where(staff_taggings: { staff_tag_id: tag_ids }).distinct }
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
@@ -197,6 +201,7 @@ class Person < ApplicationRecord
     results = results.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     results = results.organization_name(params[:organization_name]) if params[:organization_name].present?
     results = results.organization_id(params[:organization_id]) if params[:organization_id].present?
+    results = results.staff_tagged_with(params[:staff_tag_ids]) if params[:staff_tag_ids].present?
     results = results.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     results
   end

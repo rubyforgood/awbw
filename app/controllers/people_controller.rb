@@ -376,6 +376,9 @@ class PeopleController < ApplicationController
     # of any other type (age ranges included, handled by nested attributes), so
     # saving the form can't drop a person's other category connections.
     @managed_category_type_ids = @person_categories_grouped.map { |type, _| type.id }
+
+    @staff_tags_collection = StaffTag.published.ordered.pluck(:name, :id)
+    @current_staff_tag_ids = @person.staff_tag_ids
   end
 
   def find_duplicate_people(first_name, last_name, email, legal_first_name: nil, email_2: nil)
@@ -575,6 +578,7 @@ class PeopleController < ApplicationController
       :twitter_url,
       :created_by_id, :updated_by_id,
       sectorable_items_attributes: [ :id, :sector_id, :is_leader, :is_primary, :_destroy ],
+      staff_taggings_attributes: [ :id, :staff_tag_id, :_destroy ],
       age_range_categorizable_items_attributes: [ :id, :category_id, :is_primary, :_destroy ],
       addresses_attributes: [
         :id,

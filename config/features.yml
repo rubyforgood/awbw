@@ -1828,3 +1828,23 @@
       credit preference, so it never surfaces a name shown as anonymous.
     - Workshop ideas now list the credited author (per that person's display
       preference) rather than whoever entered the idea.
+
+- name: "Tag people with internal staff tags"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/staff_tags"
+  pr_number: 2313
+  summary: >-
+    Mark people with internal, admin-only staff tags for talent pipelines,
+    rosters, and outreach — potential future trainers, sector leader candidates,
+    cohort or roundtable prospects. Tag someone on their edit page, then filter
+    the people list by a tag to pull the roster.
+  pro_tips:
+    - Staff tags are internal only — public visitors never see them. Admins get a
+      Staff tags section on the Tags and Taggings pages where each tag links to its
+      people roster.
+    - Manage the list of tags at /staff_tags. Unpublish a tag to retire it from the
+      pickers while keeping its history; you can only delete a tag that isn't in
+      use.
+    - Each tag records which admin applied it, and when.
