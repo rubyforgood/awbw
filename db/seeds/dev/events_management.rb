@@ -1701,3 +1701,38 @@ EventRegistration.includes(:event).find_each do |registration|
   offset_days = registration_day_offsets[registration.id % registration_day_offsets.length]
   registration.update_column(:created_at, start - offset_days.days)
 end
+
+# The yearly on-demand facilitator trainings: last year's (ended), the current
+# one (what Event.current_on_demand_facilitator_training resolves to — the
+# on-demand agreement path registers people here), and next year's upcoming
+# one. Each spans its calendar year and shares the standalone registration
+# form, so the person-page "Email form links" panel and the public
+# registration form both have real targets.
+puts "Creating yearly on-demand facilitator trainings…"
+(Date.current.year - 1..Date.current.year + 1).each do |year|
+  title = "On-Demand Training #{year}"
+  event = Event.find_or_create_by!(title: title) do |e|
+    e.description = "Self-paced facilitator training for #{year}."
+    e.rhino_description = "Self-paced facilitator training for #{year}."
+    e.start_date = Date.new(year, 1, 1)
+    e.end_date = Date.new(year, 12, 31).end_of_day
+    e.created_by = admin_user
+    e.published = true
+  end
+
+  # Keep the schedule current on re-seed (find_or_create_by! only sets on create).
+  event.update!(
+    start_date: Date.new(year, 1, 1),
+    end_date: Date.new(year, 12, 31).end_of_day,
+    registration_close_date: Date.new(year, 12, 31),
+    cost_cents: 0,
+    published: true,
+    on_demand: true,
+    facilitator_training: true
+  )
+
+  EventForm.find_or_create_by!(event: event, role: "registration") do |ef|
+    ef.form = registration_form
+  end
+  event.update!(public_registration_enabled: true) unless event.public_registration_enabled?
+end
