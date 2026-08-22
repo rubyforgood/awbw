@@ -24,7 +24,7 @@ RSpec.describe "People send_form_link", type: :request do
         expect(notification.custom_subject).to include(form.display_name)
         expect(notification.custom_message).to include("/f/collab-new-job")
         expect(notification.sender).to eq(admin)
-        expect(response).to redirect_to(edit_person_path(person, anchor: "agreement-links"))
+        expect(response).to redirect_to(edit_person_path(person, agreement_links: 1, anchor: "agreement-links"))
       end
 
       it "404s for a form that isn't publicly fillable" do
@@ -72,19 +72,40 @@ RSpec.describe "People send_form_link", type: :request do
   describe "the agreement links panel on the person edit page" do
     before { sign_in admin }
 
-    it "lists each agreement form with its send button and last-sent info" do
+    it "lists each agreement form with its send button and how many times it has been sent" do
       form
-      Notification.create!(kind: "form_link_request", noticeable: person, recipient_role: "person",
-                           recipient_email: "fac@example.com", notification_type: 0,
-                           custom_subject: "Link to complete #{form.display_name}",
-                           custom_message: "http://example.com/f/collab-new-job", sender: admin)
+      2.times do
+        Notification.create!(kind: "form_link_request", noticeable: person, recipient_role: "person",
+                             recipient_email: "fac@example.com", notification_type: 0,
+                             custom_subject: "Link to complete #{form.display_name}",
+                             custom_message: "http://example.com/f/collab-new-job", sender: admin)
+      end
 
       get edit_person_path(person)
 
       expect(response.body).to include("Agreement form links")
       expect(response.body).to include("New job")
       expect(response.body).to include(send_form_link_person_path(person, form_id: form.id))
-      expect(response.body).to include("Last sent")
+      expect(response.body).to include("Sent 2 times")
+    end
+
+    it "says never sent for a form this person has not been emailed" do
+      form
+
+      get edit_person_path(person)
+
+      expect(response.body).to include("Never sent")
+    end
+
+    it "collapses the panel by default and reopens it after a send" do
+      form
+
+      get edit_person_path(person)
+      expect(response.body).to match(/<details id="agreement-links"[^>]*>\s*<summary/)
+
+      get edit_person_path(person, agreement_links: 1)
+      expect(response.body).to include("open")
+      expect(response.body).to match(/<details id="agreement-links"[^>]*open/)
     end
 
     it "omits the panel when no agreement forms exist" do

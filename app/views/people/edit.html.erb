@@ -54,8 +54,5 @@
               <%= render "associated_records", person: @person %>
             </div>
           </div>
-          <% if allowed_to?(:send_form_link?, @person) %>
-            <%= render "agreement_form_links", person: @person %>
-          <% end %>
         </div>
 </div>

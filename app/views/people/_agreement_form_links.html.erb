@@ -1,24 +1,32 @@
 <%# One row per publicly fillable agreement form (Form::AGREEMENT_ROLES — a
     standalone registration form is the on-demand agreement; new job and
     reinstatement are their own roles): email the person its public link and
-    see when they were last sent it, so staff know who was contacted for which
-    scenario. %>
+    see how many times it has been sent and when, so staff know who was
+    contacted for which scenario — and can tell a first ask from a chase.
+    Collapsed by default; reopened by the ?agreement_links param the send
+    action redirects back with, since a fragment alone can't expand it.
+    Rendered inside the person form, so the actions are Turbo links rather
+    than button_to (a nested <form> would be invalid). %>
 <% forms = Form.agreement_forms.order(:name) %>
 <% return if forms.empty? %>
+<%# Every link this person has been sent, newest first, grouped by which form's
+    public URL it carried — one query rather than one per form. %>
+<% sends_by_slug = Notification.where(kind: "form_link_request", noticeable: person)
+                               .order(created_at: :desc)
+                               .group_by { |sent| sent.custom_message.to_s.split("/f/").last } %>
 
-<div id="agreement-links" class="scroll-mt-24 rounded bg-white p-6">
-  <div class="mb-2 font-semibold text-gray-700">
-    Agreement form links
-  </div>
-  <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-    <p class="mb-3 text-sm text-gray-600">
-      Email <%= person.name %> the link to the collaboration agreement form matching their scenario.
-    </p>
+<details id="agreement-links" class="mt-4 scroll-mt-24 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
+         <%= "open" if params[:agreement_links].present? %>>
+  <summary class="flex cursor-pointer list-none items-center gap-2 px-4 py-3 hover:bg-gray-50 [&::-webkit-details-marker]:hidden">
+    <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+    <span class="text-sm font-semibold text-gray-700">Agreement form links</span>
+    <span class="text-xs text-gray-500">— email the collaboration agreement matching their scenario</span>
+  </summary>
+  <div class="border-t border-gray-200 p-4">
     <ul class="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
       <% forms.each do |form| %>
-        <% last_sent = Notification.where(kind: "form_link_request", noticeable: person)
-                                   .where("custom_message LIKE ?", "%/f/#{Notification.sanitize_sql_like(form.slug.to_s)}")
-                                   .order(created_at: :desc).first %>
+        <% sends = sends_by_slug[form.slug] || [] %>
+        <% last_sent = sends.first %>
         <li class="flex flex-wrap items-center gap-3 px-4 py-3">
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-2">
@@ -27,17 +35,20 @@
             </div>
             <% if last_sent %>
               <p class="mt-1 text-xs text-gray-500">
-                Last sent <%= l(last_sent.created_at.to_date, format: :long) %><% if last_sent.sender %> by <%= last_sent.sender.full_name %><% end %>
+                Sent <%= pluralize(sends.size, "time") %> — last <%= l(last_sent.created_at.to_date, format: :long) %><% if last_sent.sender %> by <%= last_sent.sender.full_name %><% end %>
               </p>
+            <% else %>
+              <p class="mt-1 text-xs text-gray-400">Never sent</p>
             <% end %>
           </div>
           <%= link_to public_form_path(form.slug), target: "_blank", rel: "noopener",
                       class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" do %>
             /f/<%= form.slug %>
           <% end %>
-          <%= button_to "Send link", send_form_link_person_path(person, form_id: form.id),
-                        class: "btn btn-secondary-outline whitespace-nowrap",
-                        form: { data: { turbo_confirm: "Email the #{form.display_name} link to #{person.preferred_email.presence || "this person"}?" } } %>
+          <%= link_to "Send link", send_form_link_person_path(person, form_id: form.id),
+                      class: "btn btn-secondary-outline whitespace-nowrap",
+                      data: { turbo_method: :post,
+                              turbo_confirm: "Email the #{form.display_name} link to #{person.preferred_email.presence || "this person"}?" } %>
         </li>
       <% end %>
     </ul>
@@ -45,4 +56,4 @@
       <p class="mt-2 text-xs text-amber-700"><i class="fa-solid fa-triangle-exclamation"></i> No email on file — add one before sending.</p>
     <% end %>
   </div>
-</div>
+</details>

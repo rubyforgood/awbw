@@ -294,7 +294,8 @@ class PeopleController < ApplicationController
   # Email this person the public link to one of the agreement scenario forms
   # (Form.agreement_forms), recording the send so staff can see who was contacted for
   # which scenario. The notification stores what was sent: the form name in
-  # custom_subject and the public form URL in custom_message.
+  # custom_subject and the public form URL in custom_message. `agreement_links`
+  # reopens the collapsed panel on the way back.
   def send_form_link
     authorize! @person, to: :send_form_link?
 
@@ -302,7 +303,7 @@ class PeopleController < ApplicationController
 
     email = @person.preferred_email
     if email.blank?
-      redirect_to edit_person_path(@person, anchor: "agreement-links"), alert: "#{@person.name} has no email address on file."
+      redirect_to edit_person_path(@person, agreement_links: 1, anchor: "agreement-links"), alert: "#{@person.name} has no email address on file."
       return
     end
 
@@ -317,7 +318,7 @@ class PeopleController < ApplicationController
       sender: current_user
     )
 
-    redirect_to edit_person_path(@person, anchor: "agreement-links"), notice: "Sent the #{form.display_name} link to #{email}."
+    redirect_to edit_person_path(@person, agreement_links: 1, anchor: "agreement-links"), notice: "Sent the #{form.display_name} link to #{email}."
   end
 
   def check_duplicates

@@ -116,7 +116,8 @@
     status.
   pro_tips:
     - Send someone the right form straight from their person edit page — the
-      "Agreement form links" section emails the link and records who sent it.
+      "Agreement form links" section emails the link and shows how many times
+      it has been sent, plus who sent it last.
     - Filter the form submissions list by name, scenario, organization linking,
       account status, or date — then link the submitted organization and invite
       the person to the portal without leaving the flow.
