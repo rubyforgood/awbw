@@ -133,7 +133,14 @@ TopicSubscriptionType::CANONICAL.each do |key, attrs|
 end
 
 puts "Creating StaffTags…"
-StaffTag::SEED.each do |name, description|
+{
+  "Potential future trainer" => "Facilitator we'd consider inviting to train others.",
+  "Sector leader candidate" => "Potential future sector leader.",
+  "Highlight roster" => "Facilitators to spotlight.",
+  "Leads non-English workshops" => "Leads workshops in a language other than English (from annual eval).",
+  "DV Leadership Cohort" => "Possible member of a domestic-violence leadership cohort.",
+  "Foster Care Roundtable outreach" => "Possible outreach for a foster-care roundtable."
+}.each do |name, description|
   find_or_create_by_name!(StaffTag, name, description: description)
 end
 
