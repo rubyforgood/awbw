@@ -111,15 +111,12 @@
       <% if params[:admin] == "true" && allowed_to?(:manage?, @affiliation) %>
         <div class="admin-only rounded-md bg-blue-100 p-3">
           <%= f.input :event_registration_id,
-                collection: @affiliation.event_registration ? [ [ @affiliation.event_registration.remote_search_label[:label], @affiliation.event_registration_id ] ] : [],
+                collection: @registration_choices.map { |er| [ er.decorate.affiliation_choice_label, er.id ] },
                 selected: @affiliation.event_registration_id,
-                include_blank: "— None",
+                include_blank: "— Not linked to a registration —",
                 label: "Linked registration",
                 label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
-                hint: "Search by registrant or event to link (or clear) the source registration. Reassigning the organization clears this automatically.",
-                input_html: {
-                  data: { controller: "remote-select", remote_select_model_value: "event_registration" }
-                } %>
+                hint: "This person's registrations, labelled with the linked organization. Clearing the link marks the row as manually created, so reconciliation leaves it alone. Reassigning the organization clears it automatically." %>
           <% if @affiliation.event_registration.present? %>
             <%= link_to edit_event_registration_path(@affiliation.event_registration),
                   class: "mt-1 inline-block text-xs underline font-medium text-gray-600", target: "_blank", rel: "noopener" do %>
@@ -137,7 +134,8 @@
                   edit_event_registration_path(er), class: "underline font-medium", target: "_blank", rel: "noopener" %><%= " — #{er.event.title}" if er.event %>.
             Reassigning the organization here unlinks that registration from this affiliation; update the organization in the
             <%= link_to "registration's organization-linking step",
-                  link_organization_event_registration_path(er), class: "underline font-medium", target: "_blank", rel: "noopener" %> as well.
+                  link_organization_event_registration_path(er),
+                  class: "underline font-medium", target: "_blank", rel: "noopener" %> as well.
           </p>
         </div>
       <% end %>
