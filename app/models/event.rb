@@ -120,6 +120,13 @@ class Event < ApplicationRecord
     trainings.where(start_date: ..Date.current).order(start_date: :desc).first ||
       trainings.upcoming.order(:start_date).first
   end
+
+  # People are invited to an on-demand facilitator training only after they've
+  # completed the external LMS course, so registering here means the training
+  # is already done — registrations flip straight to "attended".
+  def on_demand_facilitator_training?
+    on_demand? && facilitator_training?
+  end
   # Events that charge a registration fee (cost_cents may be nil for free ones).
   scope :paid, -> { where("cost_cents > 0") }
   # Events whose start date falls in the given calendar year. Keyed off the year

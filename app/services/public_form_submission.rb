@@ -57,7 +57,10 @@ class PublicFormSubmission
     return unless event
 
     submission.update!(event: event)
-    EventRegistration.find_or_create_by!(event: event, registrant: submission.person)
+    registration = EventRegistration.find_or_create_by!(event: event, registrant: submission.person)
+    # Created "registered" (the column default), then flipped: an on-demand
+    # agreement only arrives after the external LMS training is complete.
+    registration.update!(status: "attended") unless registration.status == "attended"
   end
 
   def field_value(identifier)

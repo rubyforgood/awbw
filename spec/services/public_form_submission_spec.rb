@@ -32,16 +32,20 @@ RSpec.describe PublicFormSubmission do
       registration = EventRegistration.last
       expect(registration.event).to eq(training)
       expect(registration.registrant).to eq(result.person)
-      expect(registration.status).to eq("registered")
+      # Invited only after completing the external LMS, so the registration
+      # flips straight to attended.
+      expect(registration.status).to eq("attended")
       expect(result.form_submission.event).to eq(training)
     end
 
-    it "does not duplicate an existing registration" do
+    it "does not duplicate an existing registration, but flips it to attended" do
       person = create(:person, user: nil, first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
-      create(:event_registration, event: training, registrant: person)
+      existing = create(:event_registration, event: training, registrant: person, status: "registered")
 
       expect { described_class.call(form: form, form_params: params_for) }
         .not_to change(EventRegistration, :count)
+
+      expect(existing.reload.status).to eq("attended")
     end
 
     it "quietly skips when no current on-demand training exists" do
