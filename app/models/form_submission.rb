@@ -4,6 +4,12 @@ class FormSubmission < ApplicationRecord
   belongs_to :event, optional: true
   has_many :form_answers, dependent: :destroy
   has_one :payment
+  # A submission is a quote source: answers to a "quote" smart field are captured
+  # as Quotes linked here, so they carry a source and show under the quotes Source
+  # filter like workshop/report quotes. Nullify (not destroy) so a captured quote
+  # outlives the submission — matching how reports and workshop logs keep theirs.
+  has_many :quotable_item_quotes, as: :quotable, dependent: :nullify, inverse_of: :quotable
+  has_many :quotes, through: :quotable_item_quotes
 
   accepts_nested_attributes_for :form_answers
 
@@ -287,6 +293,12 @@ class FormSubmission < ApplicationRecord
 
   def linked_registrations
     EventRegistration.where(id: linked_registration_ids)
+  end
+
+  # A quotable's display label + link target: the quotes show page renders each
+  # source via `quotable.title` and `polymorphic_path(quotable)`.
+  def title
+    "#{form&.display_name} submission ##{id}"
   end
 
   private

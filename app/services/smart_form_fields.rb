@@ -131,13 +131,12 @@ class SmartFormFields
     {
       key: :quotes,
       title: "Quotes",
-      summary: "Marks a question whose answers can become published quotes. Nothing happens on submission " \
-               "— instead, an admin reviewing form answers (on the Form answers page or a submission's page) " \
-               "gets a \"Promote to quote\" button that turns the answer into a draft Quote. The quote carries " \
-               "no named author, so it credits \"Participant\", and records the submitter as its creator. The " \
-               "admin lands in the quote editor to set the speaker, tags, and publish it.",
+      summary: "Turns a question's answer into a quote automatically. When a submission comes in, the answer " \
+               "becomes an unpublished Quote credited to \"Participant\" (no named author), with the submitter " \
+               "recorded as its creator and the submission kept as the quote's source. An admin then reviews, " \
+               "refines, and publishes it from the Quotes admin — nothing appears publicly until they do.",
       fields: [
-        [ "quote", "Quote", "Adds a \"Promote to quote\" button to this question's answers. Promotion is manual and admin-only; the answer text becomes the quote body, credited to \"Participant\" (no named author)." ]
+        [ "quote", "Quote", "The answer is saved as an unpublished Quote on submission, credited to \"Participant\" (no named author) and linked back to the submission. Review and publish it from the Quotes admin." ]
       ]
     },
     {

@@ -14,38 +14,6 @@ class FormAnswersController < ApplicationController
     end
   end
 
-  # Turn a form answer into a draft Quote so an admin can finalize it. The quote
-  # carries no author — an unattributed quote reads as "Participant" — and records
-  # the submitter as its creator (per the request that a quote track who it came
-  # from). Lands in the quote editor to set the speaker, tags, and publish.
-  #
-  # Re-promoting the same answer is idempotent: a quote whose untouched
-  # `original_body` still matches this answer (from the same submitter) is reused
-  # rather than duplicated, so a second click reopens the existing quote. The
-  # guard keys on `original_body` — not the editable `body` — so it survives the
-  # admin refining the published text, and only applies when there is a creator to
-  # scope by, so it can't false-match an unrelated authorless quote.
-  def promote_to_quote
-    answer = FormAnswer.find(params[:id])
-    creator = answer.form_submission.person&.user
-    quote = Quote.new(body: answer.submitted_answer, created_by: creator)
-    authorize! quote, to: :create?
-
-    if answer.submitted_answer.blank?
-      redirect_back fallback_location: form_answers_path, alert: "That answer is empty — nothing to promote."
-      return
-    end
-
-    existing = creator && Quote.find_by(original_body: answer.submitted_answer, created_by: creator)
-    if existing
-      redirect_to edit_quote_path(existing), notice: "This answer is already a quote — here it is."
-    elsif quote.save
-      redirect_to edit_quote_path(quote), notice: "Quote created from the answer. Finish setting it up here."
-    else
-      redirect_back fallback_location: form_answers_path, alert: "Couldn't create the quote: #{quote.errors.full_messages.to_sentence}"
-    end
-  end
-
   private
 
   # Each filter is a no-op when its param is blank, so combinations stack.

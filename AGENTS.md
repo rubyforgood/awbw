@@ -272,6 +272,7 @@ action, or `authorize! :workshop, to: :summary?`).
 ### Other responses
 
 - `OtherResponses::CaptureFromSubmission` — Materializes a form submission's **person-owned** "Other" answers (sectors) as `OtherResponse` records; org-type "Other" is captured separately in `PublicRegistration#sync_agency_type` (owned by the org). Uses `OtherOption.texts`, which keys strictly on the `Other:` prefix, so named specify options and the CE `Yes: N` box are ignored; de-dupes per owner + question. Shared by the registration, scholarship, and bulk-payment submission paths
+- `Quotes::CaptureFromSubmission` — Materializes the answer to a `quote` smart field (`FormField::QUOTE_FIELD_IDENTIFIER`) as an **unpublished** `Quote` when a submission comes in: no author (credits "Participant"), the submitter's user as `created_by`, and a `QuotableItemQuote` linking it to the `FormSubmission` (now a quotable) so it carries a source and shows under the quotes Source filter. Idempotent per submission — keyed on the untouched `original_body`, so an edited re-submission or an admin editing the published `body` doesn't duplicate it. Called alongside `OtherResponses::CaptureFromSubmission` on the registration, scholarship, bulk-payment, and public-form paths
 
 ### Forms
 
