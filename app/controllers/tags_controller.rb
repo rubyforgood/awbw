@@ -12,6 +12,8 @@ class TagsController < ApplicationController
       .distinct
       .order("category_type_name ASC, categories.name ASC")
     @categories_by_type = @categories.to_a.group_by(&:category_type_name)
+    # Admin-only: relation_scope returns none for everyone else, so the section hides.
+    @staff_tags = authorized_scope(StaffTag.all).published.ordered
     track_view("tags", { page: "index" })
   end
 

@@ -1841,8 +1841,9 @@
     cohort or roundtable prospects. Tag someone on their edit page, then filter
     the people list by a tag to pull the roster.
   pro_tips:
-    - Staff tags are internal only — they never appear on public profiles or the
-      tag-browsing pages.
+    - Staff tags are internal only — public visitors never see them. Admins get a
+      Staff tags section on the Tags and Taggings pages where each tag links to its
+      people roster.
     - Manage the list of tags at /staff_tags. Unpublish a tag to retire it from the
       pickers while keeping its history; you can only delete a tag that isn't in
       use.
