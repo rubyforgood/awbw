@@ -35,6 +35,18 @@ RSpec.describe EventDecorator do
     end
   end
 
+  describe "#title_with_month_year" do
+    it "appends the start month and year in parentheses" do
+      event = build(:event, title: "Facilitator Training", start_date: Time.zone.local(2026, 10, 3)).decorate
+      expect(event.title_with_month_year).to eq("Facilitator Training (October 2026)")
+    end
+
+    it "falls back to the bare title when there is no start date" do
+      event = build(:event, title: "Facilitator Training", start_date: nil).decorate
+      expect(event.title_with_month_year).to eq("Facilitator Training")
+    end
+  end
+
   describe "#archive_status_label" do
     it "reads as Draft for an unpublished event" do
       event = build(:event, :unpublished).decorate
