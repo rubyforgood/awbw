@@ -68,6 +68,11 @@
           <p class="mt-1 text-xs text-amber-700">
             <i class="fa-solid fa-triangle-exclamation mr-1"></i>
             Reassigning the organization links the new organization's address automatically only if it has exactly one — otherwise set the address after saving.
+            <% if @affiliation.organization %>
+              <%= link_to "Add or edit this organization's addresses",
+                    edit_organization_path(@affiliation.organization, anchor: "addresses"),
+                    class: "underline font-medium", target: "_blank", rel: "noopener" %>.
+            <% end %>
           </p>
         </div>
       </div>
