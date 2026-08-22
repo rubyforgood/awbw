@@ -2,7 +2,6 @@ class EventPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
   #
   # override or add new rules here that are not defined in ApplicationPolicy
-  authorize :person, optional: true, allow_nil: true
 
   def index?
     true
@@ -127,14 +126,6 @@ class EventPolicy < ApplicationPolicy
   # Who can view a person's form submissions for this event
   def form_submissions?
     manage?
-  end
-
-  # Who can view one specific person's registration submission for this event:
-  # the event's submission managers, or that person viewing their own. The person
-  # is passed as context because the admin-side person_id fallback authorizes
-  # against the event while still allowing the registrant themselves through.
-  def person_form_submission?
-    form_submissions? || (person.present? && user&.person_id == person.id)
   end
 
   def preview_reminder?

@@ -705,36 +705,6 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       end
     end
 
-    context "when a signed-in user who is neither the registrant nor staff looks it up by person id" do
-      let(:other_user) { create(:user, :with_person) }
-
-      before do
-        sign_out admin
-        sign_in other_user
-      end
-
-      it "does not serve another person's registration" do
-        get event_public_registration_path(event, person_id: person.id)
-
-        expect(response).to redirect_to(root_path)
-      end
-    end
-
-    context "when the registrant views their own submission by person id" do
-      let(:registrant_user) { create(:user, person: person) }
-
-      before do
-        sign_out admin
-        sign_in registrant_user
-      end
-
-      it "serves the submission" do
-        get event_public_registration_path(event, person_id: person.id)
-
-        expect(response).to have_http_status(:success)
-      end
-    end
-
     it "renders header and field-label HTML unescaped on the response page" do
       create(:form_field, form: form, answer_type: :group_header, name: "<strong>Your details</strong>")
       create(:form_field, form: form, answer_type: :free_form_input_one_line, name: "<em>Name</em>", required: false)
