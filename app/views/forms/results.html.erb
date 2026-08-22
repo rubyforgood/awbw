@@ -65,7 +65,8 @@
           <% when :select %>
             <%= render "events/breakdown_card", title: report.label, data: report.rows,
                        chart: report.chart, palette: palette, empty_message: "No responses yet.",
-                       note: report.multi ? "Multiple answers allowed, so counts can exceed the submission total." : nil %>
+                       note: report.multi ? "Multiple answers allowed, so counts can exceed the submission total." : nil,
+                       footer: report.answered_count.positive? ? render("forms/view_all_responses", form: @form, count: report.answered_count) : nil %>
             <% if report.specify_rows.any? %>
               <div class="mt-6">
                 <%= render "events/breakdown_card", title: "#{report.label}: written-in answers",
@@ -75,7 +76,7 @@
           <% when :text %>
             <%= render "forms/text_responses_card", report: report, form: @form %>
           <% when :file %>
-            <%= render "forms/file_responses_card", report: report %>
+            <%= render "forms/file_responses_card", report: report, form: @form %>
           <% end %>
         </div>
       <% end %>

@@ -1,0 +1,7 @@
+<%# Footer link from a results card to the full, filterable submissions list for
+    this form. Locals: form, count. %>
+<div class="mt-3 border-t border-gray-100 pt-3 text-center">
+  <%= link_to "View all #{count} #{"response".pluralize(count)}",
+              form_submissions_path(form_id: form.id, return_to: "form_results"),
+              class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" %>
+</div>
