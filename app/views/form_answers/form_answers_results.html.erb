@@ -12,7 +12,6 @@
           <tr class="border-b border-gray-200 bg-gray-50 text-left text-sm text-gray-600">
             <th class="px-4 py-3">Question</th>
             <th class="px-4 py-3">Answer</th>
-            <th class="px-4 py-3">Type</th>
             <th class="px-4 py-3">Form &amp; person</th>
             <th class="px-4 py-3">Submitted</th>
           </tr>
@@ -21,20 +20,18 @@
           <% @form_answers.each do |answer| %>
             <% submission = answer.form_submission %>
             <tr class="border-b border-gray-100 align-top text-sm text-gray-800 last:border-0">
-              <td class="px-4 py-3 font-medium"><%= answer.form_field&.name.presence || answer.question_name_when_answered %></td>
+              <td class="px-4 py-3">
+                <div class="font-medium"><%= answer.form_field&.name.presence || answer.question_name_when_answered %></div>
+                <% if answer.form_field %>
+                  <span class="mt-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-gray-600">
+                    <%= FormField::ANSWER_TYPE_LABELS[answer.form_field.answer_type] %>
+                  </span>
+                <% end %>
+              </td>
               <td class="max-w-md px-4 py-3">
                 <% if answer.submitted_answer.present? %>
                   <%# submitted_answer is stored verbatim and unsanitized — always auto-escape it. %>
                   <span class="line-clamp-3 whitespace-pre-line"><%= answer.submitted_answer %></span>
-                <% else %>
-                  <span class="text-gray-300">—</span>
-                <% end %>
-              </td>
-              <td class="px-4 py-3">
-                <% if answer.form_field %>
-                  <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-gray-600">
-                    <%= FormField::ANSWER_TYPE_LABELS[answer.form_field.answer_type] %>
-                  </span>
                 <% else %>
                   <span class="text-gray-300">—</span>
                 <% end %>
