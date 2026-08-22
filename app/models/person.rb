@@ -211,10 +211,18 @@ class Person < ApplicationRecord
   # People with at least one currently-active facilitator affiliation.
   scope :facilitators_active, -> {
     where(id: Affiliation.facilitators.active.select(:person_id)) }
-  # People with facilitator affiliation(s) but none currently active.
+  # People with a facilitator affiliation not yet started (future start, none
+  # active) — Upcoming, not Active or Inactive.
+  scope :facilitators_upcoming, -> {
+    where(id: Affiliation.facilitators.with_status("Upcoming").select(:person_id))
+      .where.not(id: Affiliation.facilitators.active.select(:person_id)) }
+  # People with facilitator affiliation(s) but none active or upcoming — every
+  # facilitator term has ended (or is flagged inactive). A future-start-only
+  # facilitator is Upcoming, so it is excluded here.
   scope :facilitators_inactive, -> {
     where(id: Affiliation.facilitators.select(:person_id))
-      .where.not(id: Affiliation.facilitators.active.select(:person_id)) }
+      .where.not(id: Affiliation.facilitators.active.select(:person_id))
+      .where.not(id: Affiliation.facilitators.with_status("Upcoming").select(:person_id)) }
   # Not currently active, but a past facilitator term genuinely ended (real end
   # date in the past) — distinguishes "used to facilitate" from merely flagged inactive.
   scope :facilitators_formerly_active, -> {
@@ -238,6 +246,7 @@ class Person < ApplicationRecord
   scope :by_facilitator_status, ->(status) {
     case status
     when "active" then facilitators_active
+    when "upcoming" then facilitators_upcoming
     when "inactive" then facilitators_inactive
     when "boomerang" then boomerang_facilitators
     when "formerly_active" then facilitators_formerly_active
@@ -305,6 +314,7 @@ class Person < ApplicationRecord
   FACILITATOR_STATUS_FILTER_OPTIONS = [
     [ "Active", "active" ],
     [ "Inactive", "inactive" ],
+    [ "Upcoming", "upcoming" ],
     [ "Boomerang (left, then active again)", "boomerang" ],
     [ "Formerly active", "formerly_active" ]
   ].freeze

@@ -255,6 +255,18 @@
   pro_tips:
     - "An award with no registration behind it falls back to the start of the current year — the hover text says so."
 
+- name: "Upcoming facilitators read as their own status, not Active"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/people"
+  summary: >-
+    A facilitator affiliation with a future start date now reads as "Upcoming"
+    rather than Active — on the person edit form and the people directory, whose
+    facilitator-status filter gains an "Upcoming" option.
+  pro_tips:
+    - "Active means started and not ended; a future start date reads as Upcoming until that date arrives, then no longer shows under Inactive."
+
 - name: "Activity log: readable details column"
   area: reporting
   display_status: admin_facing

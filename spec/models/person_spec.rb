@@ -658,6 +658,23 @@ RSpec.describe Person, type: :model do
         expect(results).to include(person_alice, person_bob)
       end
 
+      it "active: excludes people whose only facilitator affiliation starts in the future" do
+        upcoming = create(:person, first_name: "Upcoming", last_name: "Fac")
+        create(:affiliation, person: upcoming, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+
+        results = Person.search_by_params(facilitator_status: "active")
+        expect(results).not_to include(upcoming)
+      end
+
+      it "upcoming: includes people whose facilitator affiliation has not yet started" do
+        upcoming = create(:person, first_name: "Upcoming", last_name: "Fac")
+        create(:affiliation, person: upcoming, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+
+        results = Person.search_by_params(facilitator_status: "upcoming")
+        expect(results).to include(upcoming)
+        expect(results).not_to include(person_alice)
+      end
+
       it "inactive: includes people whose facilitator affiliations are all inactive" do
         lapsed = create(:person, first_name: "Lapsed", last_name: "Fac")
         create(:affiliation, person: lapsed, title: "Facilitator", end_date: 1.year.ago)
@@ -665,6 +682,14 @@ RSpec.describe Person, type: :model do
         results = Person.search_by_params(facilitator_status: "inactive")
         expect(results).to include(lapsed)
         expect(results).not_to include(person_alice)
+      end
+
+      it "inactive: excludes people whose facilitator affiliation is upcoming (not yet started)" do
+        upcoming = create(:person, first_name: "Upcoming", last_name: "Fac")
+        create(:affiliation, person: upcoming, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+
+        results = Person.search_by_params(facilitator_status: "inactive")
+        expect(results).not_to include(upcoming)
       end
 
       it "boomerang: includes people whose active term began after an earlier term ended" do

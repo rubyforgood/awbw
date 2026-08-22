@@ -37,13 +37,22 @@ class Affiliation < ApplicationRecord
 
   # Not flagged inactive and not past its end date. Includes affiliations whose
   # start_date is still in the future (e.g. a Facilitator affiliation dated to an
-  # upcoming training) — they are "pending" but counted here.
+  # upcoming training) — they are "pending" but counted here. Use this for
+  # "active or not-yet-started" checks (e.g. registration dedup); use `active` for
+  # genuinely-current rows.
   scope :active_or_pending, -> {
     where(inactive: false)
       .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", Date.current)
   }
 
-  scope :active, -> { active_or_pending }
+  # Genuinely active *now*: not flagged inactive, already started (no future
+  # start), and not past its end date. The SQL twin of #active? and of
+  # status_on == "Active" — a future-start row is Upcoming, not Active.
+  scope :active, -> {
+    where(inactive: false)
+      .where("affiliations.start_date IS NULL OR affiliations.start_date <= ?", Date.current)
+      .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", Date.current)
+  }
 
   # Affiliations that overlapped a given date, judged purely by their start/end
   # dates rather than the cached `inactive` flag (which reflects "now"). Use this
@@ -100,11 +109,12 @@ class Affiliation < ApplicationRecord
     title.to_s.strip == FACILITATOR_TITLE
   end
 
-  # Current: not flagged inactive and not past its end date. Mirrors the `active`
-  # scope so already-loaded affiliations can be filtered in Ruby without another
-  # query (e.g. on list pages that preload affiliations).
+  # Genuinely active now — the in-memory twin of the `active` scope and of
+  # status_on == "Active", so already-loaded affiliations can be filtered in Ruby
+  # without another query (e.g. on list pages that preload affiliations). A
+  # future-start row is Upcoming, not Active.
   def active?
-    !inactive? && (end_date.nil? || end_date >= Date.current)
+    status_on == "Active"
   end
 
   # This affiliation's status as of a date: Inactive (flagged or ended), Upcoming

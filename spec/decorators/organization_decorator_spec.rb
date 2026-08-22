@@ -97,6 +97,12 @@ RSpec.describe OrganizationDecorator do
       create(:affiliation, organization: org, person: create(:person), title: "Volunteer", start_date: 1.year.ago, end_date: nil)
       expect(org.reload.decorate.organization_status_bucket).to eq(:never_active)
     end
+
+    it "is not :active when its only facilitator affiliation has not started yet (future start)" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+      expect(org.reload.decorate.organization_status_bucket).not_to eq(:active)
+    end
   end
 
   describe "#legacy_status_mismatch?" do

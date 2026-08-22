@@ -4,9 +4,10 @@ import { isFacilitatorTitle } from "../lib/affiliation";
 // Live styling for the affiliation editor row as you edit, before saving. Four
 // states by colour: role is the hue (facilitator = purple, else blue) and status
 // is the saturation (active = full, inactive = super-light). Inactive rows also
-// strike their fields (.aff-ended).
+// strike their fields (.aff-ended). A not-yet-started row (future start date, not
+// ended) additionally shows an "Upcoming" badge.
 export default class extends Controller {
-  static targets = ["endDate", "title", "row", "accentBar", "valueField"]
+  static targets = ["endDate", "title", "row", "accentBar", "valueField", "startDate", "upcomingBadge"]
   static values = { expired: Boolean }
 
   connect() {
@@ -36,7 +37,22 @@ export default class extends Controller {
     this.updateRowBackground();
     this.styleTitle();
     this.paintFields();
+    this.updateUpcoming();
     this.rowTarget.classList.toggle("aff-ended", this.isPast());
+  }
+
+  // Show the "Upcoming" badge when the affiliation has a future start date and
+  // has not ended.
+  updateUpcoming() {
+    if (!this.hasUpcomingBadgeTarget) return;
+    this.upcomingBadgeTarget.classList.toggle("hidden", !this.isUpcoming());
+  }
+
+  isUpcoming() {
+    if (this.isPast()) return false;
+    const value = this.hasStartDateTarget ? this.startDateTarget.value : "";
+    if (!value) return false;
+    return new Date(value) > new Date(new Date().toDateString());
   }
 
   styleTitle() {

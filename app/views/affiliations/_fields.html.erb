@@ -6,6 +6,9 @@
 <% manage_subject = person_side ? Organization : Person %>
 <% if allowed_to?(:manage?, manage_subject) %>
   <% expired = f.object.inactive? || (f.object.end_date.present? && f.object.end_date < Date.current) %>
+  <%# Not yet started: a future start date, and not already ended. Shown as an
+      "Upcoming" badge; kept live by inactive-toggle as the start date is edited. %>
+  <% upcoming = !expired && f.object.start_date.present? && f.object.start_date > Date.current %>
   <%# A blank title displays (and saves) as the "Facilitator" default, so treat it
       as a facilitator for the row styling too — otherwise the JS (which reads the
       shown title) tints the row purple while the server-rendered pill stays neutral. %>
@@ -75,6 +78,10 @@
             label: label,
             label_html: { class: "block text-sm font-medium text-gray-700 mb-1 xl:hidden" } %>
         <% end %>
+        <span data-inactive-toggle-target="upcomingBadge"
+              class="<%= "hidden" unless upcoming %> mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+          <i class="fa-solid fa-clock"></i>Upcoming
+        </span>
       </div>
 
       <div class="w-full sm:w-[150px] xl:w-auto min-w-0">
@@ -105,7 +112,7 @@
                       value: (f.object.start_date || (Date.current unless f.object.persisted?))&.strftime("%Y-%m-%d"),
                       class: "w-full rounded-md border-gray-300! focus:ring-blue-500 focus:border-blue-500 text-sm #{field_bg.call(f.object.start_date.present? || !f.object.persisted?)}",
                       style: "height: 42px;",
-                      data: { inactive_toggle_target: "valueField", action: "change->affiliation-dates#recalculate change->inactive-toggle#paintFields" }
+                      data: { inactive_toggle_target: "valueField startDate", action: "change->affiliation-dates#recalculate change->inactive-toggle#paintFields change->inactive-toggle#updateUpcoming" }
                     } %>
       </div>
 
