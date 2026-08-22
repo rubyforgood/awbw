@@ -183,15 +183,15 @@ RSpec.describe "FormSubmissions", type: :request do
       end
 
       it "filters agreement submissions across forms with the scenario filter" do
-        job_change = create(:form_submission, form: create(:form, purpose: "job_change"))
-        on_demand = create(:form_submission, form: create(:form, purpose: "on_demand"))
+        job_change = create(:form_submission, form: create(:form, role: "new_job"))
+        on_demand = create(:form_submission, role: "public", form: create(:form, role: "registration"))
         plain = create(:form_submission)
 
         get form_submissions_path(scenario: "any"), headers: frame_headers
         expect(response.body).to include(form_submission_path(job_change), form_submission_path(on_demand))
         expect(response.body).not_to include(form_submission_path(plain))
 
-        get form_submissions_path(scenario: "job_change"), headers: frame_headers
+        get form_submissions_path(scenario: "new_job"), headers: frame_headers
         expect(response.body).to include(form_submission_path(job_change))
         expect(response.body).not_to include(form_submission_path(on_demand))
       end
@@ -290,11 +290,11 @@ RSpec.describe "FormSubmissions", type: :request do
     context "processing panel for agreement scenario forms" do
       before { sign_in admin }
 
-      let(:form) { create(:form, purpose: "job_change", name: "Collaboration agreement (job change)") }
+      let(:form) { create(:form, role: "new_job", name: "Collaboration agreement (new job)") }
       let(:person) { create(:person, user: nil) }
       let(:submission) { create(:form_submission, form: form, person: person) }
 
-      it "is absent on a form without a purpose" do
+      it "is absent on a submission without an agreement scenario" do
         plain = create(:form_submission)
 
         get form_submission_path(plain)
@@ -309,7 +309,7 @@ RSpec.describe "FormSubmissions", type: :request do
 
         get form_submission_path(submission)
 
-        expect(response.body).to include("Job change agreement")
+        expect(response.body).to include("New job agreement")
         expect(response.body).to include("New Org")
         expect(response.body).to include("Old Org")
         expect(response.body).to include(new_user_path(person_id: person.id))
@@ -330,9 +330,9 @@ RSpec.describe "FormSubmissions", type: :request do
         )
       end
 
-      it "offers no End button outside the job change scenario" do
+      it "offers no End button outside the new-job scenario" do
         reinstatement = create(:form_submission, person: person,
-                               form: create(:form, purpose: "reinstatement"))
+                               form: create(:form, role: "reinstatement"))
         affiliation = create(:affiliation, person: person, organization: create(:organization))
 
         get form_submission_path(reinstatement)
@@ -343,7 +343,7 @@ RSpec.describe "FormSubmissions", type: :request do
     end
 
     context "organization linking for a submission" do
-      let(:form) { create(:form, purpose: "job_change", name: "Collaboration agreement (job change)") }
+      let(:form) { create(:form, role: "new_job", name: "Collaboration agreement (new job)") }
       let(:person) { create(:person, user: nil) }
       let(:submission) { create(:form_submission, form: form, person: person) }
 
@@ -381,7 +381,7 @@ RSpec.describe "FormSubmissions", type: :request do
       end
 
       describe "POST /form_submissions/:id/select_organization" do
-        it "creates the job and Facilitator affiliations, dating the facilitator one to the submission" do
+        it "creates the job and Facilitator affiliations, both dated to the submission (new job)" do
           add_answer("organization_name", "Harbor Family Shelter")
           add_answer("organization_position", "Counselor")
           organization = create(:organization, name: "Harbor Family Shelter")
@@ -389,7 +389,8 @@ RSpec.describe "FormSubmissions", type: :request do
           post select_organization_form_submission_path(submission, organization_id: organization.id)
 
           titles = person.affiliations.where(organization: organization).pluck(:title, :start_date)
-          expect(titles).to contain_exactly([ "Counselor", nil ], [ "Facilitator", submission.created_at.to_date ])
+          expect(titles).to contain_exactly([ "Counselor", submission.created_at.to_date ],
+                                            [ "Facilitator", submission.created_at.to_date ])
           expect(response).to redirect_to(link_organization_form_submission_path(submission))
         end
 
@@ -411,7 +412,7 @@ RSpec.describe "FormSubmissions", type: :request do
           expect(response.body).to include(edit_affiliation_path(old_facilitator))
         end
 
-        it "creates only the job affiliation for a form without an agreement purpose" do
+        it "creates only the job affiliation for a form without an agreement role" do
           plain_form = create(:form)
           plain = create(:form_submission, form: plain_form, person: person)
           field = create(:form_field, form: plain_form, field_identifier: "organization_position")

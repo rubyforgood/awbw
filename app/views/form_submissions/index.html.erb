@@ -115,7 +115,7 @@
         <div>
           <%= label_tag :scenario, "Agreement scenario", class: search_label_class %>
           <%= select_tag :scenario,
-                options_for_select([ [ "Any agreement scenario", "any" ] ] + Form::PURPOSES.map { |value, label| [ label, value ] }, params[:scenario]),
+                options_for_select([ [ "Any agreement scenario", "any" ] ] + FormSubmission::LINKING_SCENARIOS.map { |value, label| [ label, value ] }, params[:scenario]),
                 include_blank: "All submissions",
                 class: search_field_class(extra: "search-select-placeholder") %>
         </div>

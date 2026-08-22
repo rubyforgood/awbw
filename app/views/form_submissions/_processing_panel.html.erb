@@ -1,7 +1,7 @@
-<%# Admin aid for processing an agreement scenario submission (Form::PURPOSES):
+<%# Admin aid for processing an agreement scenario submission (ADR-0002):
     what the person submitted for their organization, their current affiliations
     with scenario-specific actions, and their portal account status. %>
-<% form = submission.form %>
+<% scenario = submission.linking_scenario %>
 <% person = submission.person %>
 <% answers = submission.answers_by_identifier %>
 <% submitted_org = FormField.aliased_identifiers("organization_name").filter_map { |key| answers[key].presence }.first %>
@@ -9,13 +9,13 @@
 <% affiliations = person.affiliations.includes(:organization).order(Arel.sql("end_date IS NOT NULL, end_date DESC, start_date DESC")) %>
 <% guidance = {
      "on_demand" => "New facilitator from the on-demand training — link their organization below, then invite them to the portal.",
-     "reinstatement" => "Returning facilitator — link their organization below: linking ends any stale Facilitator affiliations and adds a fresh one dated to this submission. Then invite or re-invite them to the portal.",
-     "job_change" => "Active facilitator changing organizations — link the new organization below: linking ends their affiliations at other organizations automatically (or end one by hand here first). Check that their login email still reaches them."
-   }[form.purpose] %>
+     "reinstatement" => "Returning facilitator — link their organization below: linking adds a fresh Facilitator affiliation dated to this submission unless an active one already exists. Then invite or re-invite them to the portal.",
+     "new_job" => "Facilitator starting at a new organization — link it below: linking ends their affiliations at other organizations automatically (or end one by hand here first) and starts the new ones on the submission date. Check that their login email still reaches them."
+   }[scenario] %>
 
 <div class="mt-6 rounded-2xl border <%= DomainTheme.border_class_for(:forms, intensity: 200) %> <%= DomainTheme.bg_class_for(:forms) %> p-6 shadow-sm">
   <div class="flex flex-wrap items-center gap-2">
-    <span class="inline-flex items-center rounded-md bg-white px-2 py-0.5 text-xs font-medium <%= DomainTheme.text_class_for(:forms, intensity: 700) %> border <%= DomainTheme.border_class_for(:forms, intensity: 200) %>"><%= form.purpose_label %></span>
+    <span class="inline-flex items-center rounded-md bg-white px-2 py-0.5 text-xs font-medium <%= DomainTheme.text_class_for(:forms, intensity: 700) %> border <%= DomainTheme.border_class_for(:forms, intensity: 200) %>"><%= FormSubmission::LINKING_SCENARIOS[scenario] %></span>
     <h2 class="text-base font-semibold text-gray-900">Processing</h2>
   </div>
   <p class="mt-2 text-sm text-gray-700"><%= guidance %></p>
@@ -89,7 +89,7 @@
                 <%# Ends the day before the agreement takes effect, matching the
                     automatic scenario end-dating (see ADR-0002 D4). %>
                 <% end_on = submission.created_at.to_date - 1.day %>
-                <% if form.purpose == "job_change" && affiliation.active? && !matches_submitted %>
+                <% if scenario == "new_job" && affiliation.active? && !matches_submitted %>
                   <%= button_to "End", end_affiliation_path(affiliation, form_submission_id: submission.id, end_date: end_on.iso8601),
                                 class: "btn btn-secondary-outline whitespace-nowrap",
                                 form: { data: { turbo_confirm: "End #{person.name}'s affiliation with #{affiliation.organization.name} as of #{end_on.to_fs(:long)} (the day before this agreement)?" } } %>

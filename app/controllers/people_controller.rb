@@ -292,17 +292,13 @@ class PeopleController < ApplicationController
   end
 
   # Email this person the public link to one of the agreement scenario forms
-  # (Form::PURPOSES), recording the send so staff can see who was contacted for
+  # (Form.agreement_forms), recording the send so staff can see who was contacted for
   # which scenario. The notification stores what was sent: the form name in
   # custom_subject and the public form URL in custom_message.
   def send_form_link
     authorize! @person, to: :send_form_link?
 
-    form = Form.with_purpose.find(params[:form_id])
-    unless form.publicly_fillable?
-      redirect_to edit_person_path(@person, anchor: "agreement-links"), alert: "#{form.display_name} has no public link — publish it with a link address first."
-      return
-    end
+    form = Form.agreement_forms.find(params[:form_id])
 
     email = @person.preferred_email
     if email.blank?

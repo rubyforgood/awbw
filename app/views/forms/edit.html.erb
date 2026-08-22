@@ -85,18 +85,10 @@
           <div class="sm:w-56">
             <label class="mb-1 block text-sm font-medium text-gray-700">Form role</label>
             <%= f.select :role,
-                  [["General", ""], ["Registration", "registration"], ["Scholarship", "scholarship"], ["Bulk Payment", "bulk_payment"], ["Continuing Education", "continuing_education"]],
+                  [["General", ""], ["Registration", "registration"], ["New job", "new_job"], ["Reinstatement", "reinstatement"], ["Scholarship", "scholarship"], ["Bulk Payment", "bulk_payment"], ["Continuing Education", "continuing_education"]],
                   { selected: @form.role || "" },
                   class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm" %>
-          </div>
-
-          <div class="sm:w-64">
-            <label class="mb-1 block text-sm font-medium text-gray-700">Agreement scenario</label>
-            <%= f.select :purpose,
-                  [["None", ""]] + Form::PURPOSES.map { |value, label| [ label, value ] },
-                  { selected: @form.purpose || "" },
-                  class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm" %>
-            <p class="mt-1 text-xs text-gray-500">Marks this form as one of the collaboration agreement scenarios, so submissions are counted per scenario and processing guidance appears on each submission.</p>
+            <p class="mt-1 text-xs text-gray-500">A standalone public registration form is the on-demand agreement; new job and reinstatement carry their own affiliation processing (each submission gets a processing panel).</p>
           </div>
         </div>
 

@@ -40,13 +40,13 @@ module OrganizationServices
       end
     end
 
-    # The five linking scenarios (ADR-0002 D2). The three agreement values are
-    # stored form purposes (Form::PURPOSES); the two event values are derived
-    # per registration (an on-demand facilitator training shares the agreement
-    # path's "on_demand" scenario). All but non_facilitator_training confer the
-    # standing Facilitator affiliation; a nil scenario (an unpurposed public
-    # form) confers nothing.
-    FACILITATOR_CONFERRING_SCENARIOS = %w[on_demand facilitator_training reinstatement job_change].freeze
+    # The five linking scenarios (ADR-0002 D2), derived per call — from the
+    # form's role for a standalone submission (FormSubmission#linking_scenario)
+    # or from the event for a registration (an on-demand facilitator training
+    # shares the submission path's "on_demand" scenario). All but
+    # non_facilitator_training confer the standing Facilitator affiliation; a
+    # nil scenario (a non-agreement form) confers nothing.
+    FACILITATOR_CONFERRING_SCENARIOS = %w[on_demand facilitator_training reinstatement new_job].freeze
     SCENARIOS = (FACILITATOR_CONFERRING_SCENARIOS + %w[non_facilitator_training]).freeze
 
     def self.call(person:, organization:, entry:, scenario:, training_date: nil, event_registration: nil)
@@ -74,7 +74,10 @@ module OrganizationServices
         training_date: @training_date,
         organization_address: address_result.address || sole_address,
         facilitator_training: FACILITATOR_CONFERRING_SCENARIOS.include?(@scenario),
-        event_registration: @event_registration
+        event_registration: @event_registration,
+        # A new job demonstrably starts with the agreement; every other
+        # scenario leaves the job affiliation undated (unknown tenure).
+        job_start_date: (@training_date if @scenario == "new_job")
       )
 
       Result.new(saved: profile_changes + address_result.changes, conflicts: conflicts,
@@ -84,14 +87,13 @@ module OrganizationServices
     private
 
     # An agreement scenario first settles the person's existing affiliations
-    # (job change ends the other orgs'; reinstatement ends stale facilitator
-    # rows) so the creations below start from the right state. Returns what it
-    # ended.
+    # (a new job ends the other orgs' rows) so the creations below start from
+    # the right state. Returns what it ended.
     def apply_scenario_end_dating
       return [] unless @scenario
 
       AffiliationServices::ApplyScenarioEndDating.call(
-        person: @person, organization: @organization, purpose: @scenario,
+        person: @person, organization: @organization, scenario: @scenario,
         effective_date: (@training_date || Date.current).to_date
       )
     end

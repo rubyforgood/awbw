@@ -33,9 +33,6 @@
           <tr id="form_<%= form.id %>" class="scroll-mt-24 hover:bg-gray-50">
             <td class="px-4 py-2 text-sm font-medium text-gray-900">
               <%= form.display_name %>
-              <% if form.purpose? %>
-                <span class="ml-1 inline-flex items-center rounded-md <%= DomainTheme.bg_class_for(:forms) %> px-2 py-0.5 text-xs font-medium <%= DomainTheme.text_class_for(:forms, intensity: 700) %>"><%= form.purpose_label %></span>
-              <% end %>
             </td>
             <td class="px-4 py-2 text-sm text-gray-600"><%= form.form_fields.size %></td>
             <td class="px-4 py-2 text-sm text-gray-600">

@@ -1,7 +1,9 @@
-<%# One row per agreement scenario form (Form::PURPOSES): email the person its
-    public link and see when they were last sent it, so staff know who was
-    contacted for which scenario. %>
-<% forms = Form.with_purpose.order(:name) %>
+<%# One row per publicly fillable agreement form (Form::AGREEMENT_ROLES — a
+    standalone registration form is the on-demand agreement; new job and
+    reinstatement are their own roles): email the person its public link and
+    see when they were last sent it, so staff know who was contacted for which
+    scenario. %>
+<% forms = Form.agreement_forms.order(:name) %>
 <% return if forms.empty? %>
 
 <div id="agreement-links" class="scroll-mt-24 rounded bg-white p-6">
@@ -16,11 +18,11 @@
       <% forms.each do |form| %>
         <% last_sent = Notification.where(kind: "form_link_request", noticeable: person)
                                    .where("custom_message LIKE ?", "%/f/#{Notification.sanitize_sql_like(form.slug.to_s)}")
-                                   .order(created_at: :desc).first if form.slug.present? %>
+                                   .order(created_at: :desc).first %>
         <li class="flex flex-wrap items-center gap-3 px-4 py-3">
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-2">
-              <span class="inline-flex items-center rounded-md <%= DomainTheme.bg_class_for(:forms) %> px-2 py-0.5 text-xs font-medium <%= DomainTheme.text_class_for(:forms, intensity: 700) %>"><%= form.purpose_label %></span>
+              <span class="inline-flex items-center rounded-md <%= DomainTheme.bg_class_for(:forms) %> px-2 py-0.5 text-xs font-medium <%= DomainTheme.text_class_for(:forms, intensity: 700) %>"><%= form.role.humanize %></span>
               <span class="text-sm font-medium text-gray-900"><%= form.display_name %></span>
             </div>
             <% if last_sent %>
@@ -29,17 +31,13 @@
               </p>
             <% end %>
           </div>
-          <% if form.publicly_fillable? %>
-            <%= link_to public_form_path(form.slug), target: "_blank", rel: "noopener",
-                        class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" do %>
-              /f/<%= form.slug %>
-            <% end %>
-            <%= button_to "Send link", send_form_link_person_path(person, form_id: form.id),
-                          class: "btn btn-secondary-outline whitespace-nowrap",
-                          form: { data: { turbo_confirm: "Email the #{form.display_name} link to #{person.preferred_email.presence || "this person"}?" } } %>
-          <% else %>
-            <span class="text-xs text-gray-400">Not published — no public link to send</span>
+          <%= link_to public_form_path(form.slug), target: "_blank", rel: "noopener",
+                      class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" do %>
+            /f/<%= form.slug %>
           <% end %>
+          <%= button_to "Send link", send_form_link_person_path(person, form_id: form.id),
+                        class: "btn btn-secondary-outline whitespace-nowrap",
+                        form: { data: { turbo_confirm: "Email the #{form.display_name} link to #{person.preferred_email.presence || "this person"}?" } } %>
         </li>
       <% end %>
     </ul>

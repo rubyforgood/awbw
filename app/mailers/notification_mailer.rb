@@ -179,7 +179,7 @@ class NotificationMailer < ApplicationMailer
   end
 
   # A staff member sent this person the public link to one of the agreement
-  # forms (see Form::PURPOSES). The notification carries what was sent: the
+  # forms (see Form.agreement_forms). The notification carries what was sent: the
   # form name in custom_subject and the public form URL in custom_message.
   def form_link_request(notification)
     @person = notification.noticeable

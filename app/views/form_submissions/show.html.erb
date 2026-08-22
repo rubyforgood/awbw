@@ -53,7 +53,7 @@
     </div>
   </div>
 
-  <% if @form_submission.form.purpose? && allowed_to?(:process?, @form_submission) %>
+  <% if @form_submission.agreement_scenario? && allowed_to?(:process?, @form_submission) %>
     <%= render "processing_panel", submission: @form_submission %>
   <% end %>
 </div>

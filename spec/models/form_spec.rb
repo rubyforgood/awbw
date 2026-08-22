@@ -28,39 +28,21 @@ RSpec.describe Form do
   #   pending("Requires functional owner factory and association uncommented")
   # end
 
-  describe "purpose (agreement scenarios)" do
-    it "accepts each known purpose" do
-      Form::PURPOSES.each_key do |purpose|
-        expect(build(:form, purpose: purpose)).to be_valid
-      end
+  describe ".agreement_forms (agreement scenarios by role)" do
+    it "returns publicly fillable forms with an agreement role" do
+      on_demand = create(:form, role: "registration", slug: "collab", published: true)
+      new_job = create(:form, role: "new_job", slug: "collab-new-job", published: true)
+
+      expect(Form.agreement_forms).to contain_exactly(on_demand, new_job)
     end
 
-    it "rejects an unknown purpose" do
-      form = build(:form, purpose: "mystery_agreement")
+    it "excludes unpublished, event-connected, and non-agreement-role forms" do
+      create(:form, role: "new_job", slug: "draft", published: false)
+      create(:form, role: "scholarship", slug: "scholarship", published: true)
+      connected = create(:form, role: "registration", slug: "event-reg")
+      create(:event_form, form: connected)
 
-      expect(form).not_to be_valid
-      expect(form.errors[:purpose]).to be_present
-    end
-
-    it "normalizes a blank purpose (the select's empty option) to nil" do
-      form = create(:form, purpose: "")
-
-      expect(form.purpose).to be_nil
-    end
-
-    it "scopes purposed forms with .with_purpose" do
-      plain = create(:form)
-      purposed = create(:form, purpose: "job_change")
-
-      expect(Form.with_purpose).to include(purposed)
-      expect(Form.with_purpose).not_to include(plain)
-    end
-
-    it "labels the purpose for display" do
-      form = build(:form, purpose: "on_demand")
-
-      expect(form.purpose_label).to eq("On-demand agreement")
-      expect(build(:form).purpose_label).to be_nil
+      expect(Form.agreement_forms).to be_empty
     end
   end
 

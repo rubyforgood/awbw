@@ -18,14 +18,11 @@ class FormCopyService
 
   # A published form requires a slug, and slug is globally unique — so a copy
   # starts unpublished with no slug for the admin to set before publishing.
-  # Purpose is cleared too: two forms sharing an agreement scenario would
-  # double-count it, so the admin assigns the copy's scenario deliberately.
   def build_form_copy
     @form.dup.tap do |copy|
       copy.name = "#{COPY_NAME_PREFIX}#{@form.display_name}"
       copy.slug = nil
       copy.published = false
-      copy.purpose = nil
     end
   end
 

@@ -4,15 +4,13 @@ class Form < ApplicationRecord
   # payment" (the form role). Single source of truth so both ends stay in sync.
   BULK_PAYMENT_PUBLIC_NAME = "Pay for Other(s)".freeze
 
-  # The collaboration agreement intake scenarios, each served by its own copy of
-  # the form so submissions count per scenario and admins know which processing
-  # (affiliation changes, portal access) a submission calls for. Keyed by the
-  # stored `purpose` value, mapped to the admin-facing label.
-  PURPOSES = {
-    "on_demand" => "On-demand agreement",
-    "reinstatement" => "Reinstatement agreement",
-    "job_change" => "Job change agreement"
-  }.freeze
+  # Form roles whose standalone public submissions are agreement intake
+  # scenarios with affiliation processing (ADR-0002): a standalone
+  # registration-role form is the on-demand agreement (the registration flow,
+  # timestamped at submission), and new_job / reinstatement carry their own
+  # reconciliation rules. Drives the person-page "send link" panel and the
+  # submissions index scenario filter.
+  AGREEMENT_ROLES = %w[registration new_job reinstatement].freeze
 
   belongs_to :owner, polymorphic: true, optional: true
   has_many :form_fields, dependent: :destroy, inverse_of: :form
@@ -30,12 +28,12 @@ class Form < ApplicationRecord
   scope :standalone, -> { where(owner_id: nil, owner_type: nil) }
   scope :published, -> { where(published: true) }
   scope :not_event_connected, -> { where.missing(:event_forms) }
-  scope :with_purpose, -> { where.not(purpose: nil) }
+  # The publicly fillable agreement forms — the ones the person-page panel
+  # offers to send a link for.
+  scope :agreement_forms, -> { standalone.published.not_event_connected.where(role: AGREEMENT_ROLES).where.not(slug: nil) }
 
   before_validation :normalize_slug
-  before_validation :normalize_purpose
 
-  validates :purpose, inclusion: { in: PURPOSES.keys }, allow_nil: true
   validates :slug, uniqueness: true, allow_nil: true
   validates :slug, format: { with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/,
     message: "may only contain lowercase letters, numbers, and hyphens" }, allow_blank: true
@@ -60,10 +58,6 @@ class Form < ApplicationRecord
     standalone? && !event_connected? && published? && slug.present?
   end
 
-  def purpose_label
-    PURPOSES[purpose]
-  end
-
   private
 
   # Blank stays nil (never ""), so the unique index tolerates the many forms with
@@ -73,12 +67,6 @@ class Form < ApplicationRecord
     return if slug.nil?
 
     self.slug = slug.parameterize.presence || slug.presence
-  end
-
-  # Blank select submissions stay nil so unpurposed forms don't trip the
-  # inclusion validation.
-  def normalize_purpose
-    self.purpose = purpose.presence
   end
 
   def published_form_has_slug

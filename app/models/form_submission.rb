@@ -96,10 +96,26 @@ class FormSubmission < ApplicationRecord
     end
   }
 
-  # Purposed (agreement scenario) submissions — a specific scenario, or "any"
-  # for all three at once (see Form::PURPOSES).
+  # The submission-side agreement scenarios (ADR-0002), keyed by scenario name
+  # with the admin-facing label for the panel chip and index filter.
+  LINKING_SCENARIOS = {
+    "on_demand" => "On-demand agreement",
+    "new_job" => "New job agreement",
+    "reinstatement" => "Reinstatement agreement"
+  }.freeze
+
+  # Agreement-scenario submissions — a specific scenario, or "any" for all
+  # three at once. On-demand is a standalone public submission to a
+  # registration-role form; new_job/reinstatement are form roles.
   scope :scenario, ->(value) {
-    value == "any" ? joins(:form).merge(Form.with_purpose) : joins(:form).where(forms: { purpose: value })
+    scoped = joins(:form)
+    on_demand = scoped.where(role: "public", forms: { role: "registration" })
+    case value
+    when "on_demand" then on_demand
+    when "new_job", "reinstatement" then scoped.where(forms: { role: value })
+    when "any" then scoped.where(forms: { role: %w[new_job reinstatement] }).or(on_demand)
+    else all
+    end
   }
 
   validates :slug, uniqueness: true, allow_nil: true
@@ -198,6 +214,20 @@ class FormSubmission < ApplicationRecord
   # amount can be shown even before a payment record lands.
   def bulk_payment_amount_cents(event)
     event.cost_cents.to_i * bulk_payment_attendee_count
+  end
+
+  # Which linking scenario this submission drives (ADR-0002): its form's role,
+  # with a standalone public submission to a registration-role form being the
+  # on-demand agreement. Nil for everything else — no agreement processing.
+  def linking_scenario
+    case form.role
+    when "new_job", "reinstatement" then form.role
+    when "registration" then "on_demand" if role == "public"
+    end
+  end
+
+  def agreement_scenario?
+    linking_scenario.present?
   end
 
   # --- Linked organizations (explicit admin resolution) ---
