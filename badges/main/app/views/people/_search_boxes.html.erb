@@ -45,36 +45,41 @@
           options: Category.age_ranges.published.ordered_by_position_and_name.map { |c| [ c.decorate.age_group_label, c.name ] },
           selected: params[:age_range_names_all], blank: "Any age range",
           field_class: search_field_class, wrapper_class: "w-full md:w-56" %>
+
+    <!-- Clear filters -->
+    <div class="w-full md:ml-auto md:w-auto">
+      <%= render "shared/search_clear", url: people_path %>
+    </div>
   </div>
 
   <% if allowed_to?(:manage?, Person) %>
     <div class="rounded-xl border border-blue-200 bg-blue-100 p-4">
       <p class="mb-3 text-xs font-semibold tracking-wide text-blue-800 uppercase">Admin-only filters</p>
-      <div class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end">
+      <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <!-- Role -->
         <%= render "events/filter_select", param: :role, label: "Role",
               options: Person::ROLE_FILTER_OPTIONS, selected: params[:role],
               blank: "All people", field_class: search_field_class,
-              wrapper_class: "w-full md:w-56" %>
+              wrapper_class: "w-full" %>
 
         <!-- Facilitator status -->
         <%= render "events/filter_select", param: :facilitator_status, label: "Facilitator status",
               options: Person::FACILITATOR_STATUS_FILTER_OPTIONS, selected: params[:facilitator_status],
               blank: "Any status", field_class: search_field_class,
-              wrapper_class: "w-full md:w-56" %>
+              wrapper_class: "w-full" %>
 
         <!-- Membership status -->
         <%= render "events/filter_select", param: :membership_status, label: "Membership status",
               options: Person::MEMBERSHIP_STATUS_FILTER_OPTIONS, selected: params[:membership_status],
               blank: "Any status", field_class: search_field_class,
-              wrapper_class: "w-full md:w-56" %>
+              wrapper_class: "w-full" %>
 
         <!-- Staff tag -->
         <% if allowed_to?(:index?, StaffTag) %>
           <%= render "events/filter_select", param: :staff_tag_ids, label: "Staff tag",
                 options: StaffTag.published.ordered.map { |t| [ t.name, t.id ] },
                 selected: params[:staff_tag_ids], blank: "Any",
-                field_class: search_field_class, wrapper_class: "w-full md:w-56",
+                field_class: search_field_class, wrapper_class: "w-full",
                 hint: link_to("Manage staff tags", staff_tags_path, class: eyebrow_link_class, target: "_blank", rel: "noopener") %>
         <% end %>
 
@@ -82,14 +87,9 @@
         <%= render "events/filter_select", param: :topic_subscription_type_id, label: "Topic subscription",
               options: TopicSubscriptionType.active.ordered.pluck(:name, :id),
               selected: params[:topic_subscription_type_id], blank: "Any topic",
-              field_class: search_field_class, wrapper_class: "w-full md:w-56",
+              field_class: search_field_class, wrapper_class: "w-full",
               hint: link_to("Manage topics", topic_subscription_types_path, class: eyebrow_link_class, target: "_blank", rel: "noopener") %>
       </div>
     </div>
   <% end %>
-
-  <!-- Clear filters -->
-  <div class="flex justify-end">
-    <%= render "shared/search_clear", url: people_path %>
-  </div>
 <% end %>
