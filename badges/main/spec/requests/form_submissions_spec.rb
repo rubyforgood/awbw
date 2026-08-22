@@ -43,6 +43,61 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).not_to include(form_submission_path(theirs))
       end
 
+      it "filters by role" do
+        registration = create(:form_submission, role: "registration")
+        scholarship = create(:form_submission, role: "scholarship")
+
+        get form_submissions_path(role: "registration"), headers: frame_headers
+
+        expect(response.body).to include(form_submission_path(registration))
+        expect(response.body).not_to include(form_submission_path(scholarship))
+      end
+
+      it "filters by event" do
+        event = create(:event)
+        here = create(:form_submission, event: event)
+        elsewhere = create(:form_submission, event: create(:event))
+
+        get form_submissions_path(event_id: event.id), headers: frame_headers
+
+        expect(response.body).to include(form_submission_path(here))
+        expect(response.body).not_to include(form_submission_path(elsewhere))
+      end
+
+      it "filters by submission date range" do
+        old = create(:form_submission, created_at: 1.year.ago)
+        recent = create(:form_submission, created_at: Date.current)
+
+        get form_submissions_path(start_date: 1.week.ago.to_date.iso8601), headers: frame_headers
+
+        expect(response.body).to include(form_submission_path(recent))
+        expect(response.body).not_to include(form_submission_path(old))
+      end
+
+      it "filters by organization through its registration link" do
+        organization = create(:organization)
+        linked = create(:form_submission)
+        other = create(:form_submission)
+        create(:event_registration_organization, organization: organization, form_submission: linked)
+
+        get form_submissions_path(organization_id: organization.id), headers: frame_headers
+
+        expect(response.body).to include(form_submission_path(linked))
+        expect(response.body).not_to include(form_submission_path(other))
+      end
+
+      it "carries the new filters back through each View link" do
+        event = create(:event)
+        submission = create(:form_submission, event: event, role: "registration")
+
+        get form_submissions_path(event_id: event.id, role: "registration"), headers: frame_headers
+
+        expect(response.body).to include(
+          CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions",
+                                              person_id: submission.person_id, event_id: event.id, role: "registration"))
+        )
+      end
+
       it "breaks the View link out of the results frame" do
         create(:form_submission)
         get form_submissions_path, headers: frame_headers
