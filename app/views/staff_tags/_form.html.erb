@@ -3,19 +3,21 @@
     <%= f.error_notification %>
     <%= render "shared/errors", resource: @staff_tag if @staff_tag.errors.any? %>
 
-    <div class="grid grid-cols-1 gap-6">
-      <%= f.input :name,
-                  label: "Name",
-                  hint: "Short, admin-facing label (e.g. \"Potential future trainer\").",
-                  input_html: { class: "form-control" },
-                  required: true %>
-      <%= f.input :description,
-                  label: "Description",
-                  hint: "Optional note on what this tag means and how it's used.",
-                  input_html: { class: "form-control", rows: 3 },
-                  as: :text %>
+    <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-4">
+      <div class="space-y-6 md:col-span-3">
+        <%= f.input :name,
+                    label: "Name",
+                    hint: "Short, admin-facing label (e.g. \"Potential future trainer\").",
+                    input_html: { class: "form-control" },
+                    required: true %>
+        <%= f.input :description,
+                    label: "Description",
+                    hint: "Optional note on what this tag means and how it's used.",
+                    input_html: { class: "form-control", rows: 3 },
+                    as: :text %>
+      </div>
 
-      <div class="admin-only rounded bg-blue-100 p-3">
+      <div class="admin-only mt-6 rounded bg-blue-100 p-3 md:mt-0">
         <%= render "shared/visibility_info", flags: %i[published] %>
         <div class="grid grid-cols-1 items-center">
           <%= visibility_flag_input f, :published %>
