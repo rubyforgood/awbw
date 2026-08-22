@@ -152,7 +152,13 @@ Rails.application.routes.draw do
       patch :update_sections
     end
   end
-  resources :form_submissions, only: [ :index, :show ]
+  resources :form_submissions, only: [ :index, :show ] do
+    member do
+      get :link_organization
+      post :select_organization
+      post :create_organization
+    end
+  end
   resources :form_answers, only: [ :index ]
   resources :grants
   resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
@@ -239,6 +245,7 @@ Rails.application.routes.draw do
       get :checkout
       get :bio
       get :all_comments
+      post :send_form_link
     end
     resources :comments, only: [ :create, :update ]
     resources :memberships, only: [ :index, :new, :create ]
@@ -294,7 +301,11 @@ Rails.application.routes.draw do
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
-  resources :affiliations, only: [ :edit, :update, :destroy ]
+  resources :affiliations, only: [ :edit, :update, :destroy ] do
+    member do
+      post :end, to: "affiliations#end_affiliation"
+    end
+  end
   resources :quotes
 
   resources :monthly_reports, only: [ :index, :show ], constraints: { id: /\d+/ }

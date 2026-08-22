@@ -13,6 +13,14 @@ class FormSubmission < ApplicationRecord
 
   UNREADABLE_UPLOAD_MESSAGE = "We couldn't read one of your uploaded files. Please choose it again.".freeze
 
+  # The index's "Organization linking" filter vocabulary: linked = the submitted
+  # organization name matches one of the person's active affiliations.
+  ORG_LINK_STATUS_FILTER_OPTIONS = [
+    [ "Linked", "linked" ],
+    [ "Not linked", "unlinked" ],
+    [ "No organization answer", "none" ]
+  ].freeze
+
   scope :bulk_payment, -> { where(role: "bulk_payment") }
 
   # Submitted on `created_at` — there is no separate submitted_at column.
@@ -30,6 +38,86 @@ class FormSubmission < ApplicationRecord
     where(id: EventRegistrationOrganization.where(organization_id: organization_id).select(:form_submission_id))
   }
 
+  scope :search, ->(query) {
+    joins(:person).where(
+      "CONCAT_WS(' ', people.first_name, people.last_name) LIKE :q OR people.email LIKE :q OR people.email_2 LIKE :q",
+      q: "%#{sanitize_sql_like(query)}%"
+    )
+  }
+
+  # Answers stored against an organization-name field (canonical or legacy
+  # "agency_name"), the submitted-organization signal the index filters on.
+  def self.org_name_answers
+    FormAnswer.joins(:form_field)
+      .where(form_fields: { field_identifier: FormField.aliased_identifiers("organization_name") })
+      .where.not(submitted_answer: [ nil, "" ])
+  end
+
+  # SQL test for an explicit admin link recorded in metadata (see
+  # #link_organization!). COALESCE: metadata (or the key) may be absent.
+  EXPLICIT_ORG_LINK_SQL = "COALESCE(JSON_LENGTH(JSON_EXTRACT(form_submissions.metadata, '$.linked_organization_ids')), 0) > 0".freeze
+
+  scope :org_link_status, ->(value) {
+    answered = org_name_answers.select(:form_submission_id)
+    case value
+    when "linked", "unlinked"
+      # Linked: the submitted name matches an org the person holds an active (or
+      # pending) affiliation with — the same rule as the index's Linked chip —
+      # or an admin explicitly linked an org to this submission (which covers a
+      # typo'd name resolved to a differently-named org).
+      affiliation_linked = org_name_answers
+        .joins(form_submission: { person: { affiliations: :organization } })
+        .merge(Affiliation.active_or_pending)
+        .where("organizations.name = form_answers.submitted_answer")
+        .select(:form_submission_id)
+      if value == "linked"
+        where(id: answered).and(where(id: affiliation_linked).or(where(EXPLICIT_ORG_LINK_SQL)))
+      else
+        where(id: answered).where.not(id: affiliation_linked).where.not(EXPLICIT_ORG_LINK_SQL)
+      end
+    when "none" then where.not(id: answered)
+    else all
+    end
+  }
+
+  # Mirrors EventRegistration.account_status (same filter vocabulary as the
+  # registrants roster), keyed on the submission's person.
+  scope :account_status, ->(value) {
+    with_user = User.where.not(person_id: nil).select(:person_id)
+    has_access = User.has_access.where.not(person_id: nil).select(:person_id)
+    invited = User.where.not(person_id: nil).where.not(welcome_instructions_sent_at: nil).select(:person_id)
+    case value
+    when "none" then where.not(person_id: with_user)
+    when "has_access" then where(person_id: has_access)
+    when "invited" then where(person_id: invited).where.not(person_id: has_access)
+    when "no_access" then where(person_id: with_user).where.not(person_id: has_access).where.not(person_id: invited)
+    when "not_invited" then where.not(person_id: invited).where.not(person_id: has_access)
+    else all
+    end
+  }
+
+  # The submission-side agreement scenarios (ADR-0002), keyed by scenario name
+  # with the admin-facing label for the panel chip and index filter.
+  LINKING_SCENARIOS = {
+    "on_demand" => "On-demand agreement",
+    "new_job" => "New job agreement",
+    "reinstatement" => "Reinstatement agreement"
+  }.freeze
+
+  # Agreement-scenario submissions — a specific scenario, or "any" for all
+  # three at once. On-demand is a standalone public submission to a
+  # registration-role form; new_job/reinstatement are form roles.
+  scope :scenario, ->(value) {
+    scoped = joins(:form)
+    on_demand = scoped.where(role: "public", forms: { role: "registration" })
+    case value
+    when "on_demand" then on_demand
+    when "new_job", "reinstatement" then scoped.where(forms: { role: value })
+    when "any" then scoped.where(forms: { role: %w[new_job reinstatement] }).or(on_demand)
+    else all
+    end
+  }
+
   validates :slug, uniqueness: true, allow_nil: true
 
   # Bulk payment submissions are reachable by their payer (who has no account)
@@ -45,6 +133,10 @@ class FormSubmission < ApplicationRecord
     results = results.where(event_id: params[:event_id]) if params[:event_id].present?
     results = results.where(role: params[:role]) if params[:role].present?
     results = results.for_organization(params[:organization_id]) if params[:organization_id].present?
+    results = results.search(params[:search]) if params[:search].present?
+    results = results.org_link_status(params[:org_status]) if params[:org_status].present?
+    results = results.account_status(params[:account_status]) if params[:account_status].present?
+    results = results.scenario(params[:scenario]) if params[:scenario].present?
     results.submitted_between(parse_date(params[:start_date]), parse_date(params[:end_date]))
   end
 
@@ -89,9 +181,11 @@ class FormSubmission < ApplicationRecord
   end
 
   # Answers keyed by their field's identifier. Bulk payment (and similar) forms
-  # address fields by identifier rather than position.
+  # address fields by identifier rather than position. Reuses an already-loaded
+  # association so per-row calls on a preloaded index don't requery.
   def answers_by_identifier
-    form_answers.includes(:form_field).each_with_object({}) do |answer, map|
+    answers = form_answers.loaded? ? form_answers : form_answers.includes(:form_field)
+    answers.each_with_object({}) do |answer, map|
       identifier = answer.form_field&.field_identifier
       map[identifier] = answer.submitted_answer if identifier.present?
     end
@@ -120,6 +214,55 @@ class FormSubmission < ApplicationRecord
   # amount can be shown even before a payment record lands.
   def bulk_payment_amount_cents(event)
     event.cost_cents.to_i * bulk_payment_attendee_count
+  end
+
+  # Which linking scenario this submission drives (ADR-0002): its form's role,
+  # with a standalone public submission to a registration-role form being the
+  # on-demand agreement. Nil for everything else — no agreement processing.
+  def linking_scenario
+    case form.role
+    when "new_job", "reinstatement" then form.role
+    when "registration" then "on_demand" if role == "public"
+    end
+  end
+
+  def agreement_scenario?
+    linking_scenario.present?
+  end
+
+  # --- Linked organizations (explicit admin resolution) ---
+  # Recorded when an admin links an org to this submission — from the
+  # submission's own org-linking editor, or back-applied by the event
+  # registration editor when this submission's answers describe the org. Keeps
+  # a submitted name that was resolved to a differently-named org reading as
+  # linked, where the affiliation-name match alone would not.
+
+  def linked_organization_ids
+    (metadata || {}).fetch("linked_organization_ids", [])
+  end
+
+  def link_organization!(organization_id)
+    ids = linked_organization_ids | [ organization_id.to_i ]
+    update!(metadata: (metadata || {}).merge("linked_organization_ids" => ids))
+  end
+
+  def linked_organizations
+    Organization.where(id: linked_organization_ids)
+  end
+
+  # Affiliations the agreement scenario end-dated when an admin linked the
+  # submitted organization — flagged on the processing panel so a wrongly-ended
+  # one (e.g. a multi-org facilitator changing only one job) can be corrected.
+
+  def scenario_ended_affiliation_ids
+    (metadata || {}).fetch("scenario_ended_affiliation_ids", [])
+  end
+
+  def record_scenario_ended!(affiliation_ids)
+    return if affiliation_ids.empty?
+
+    ids = scenario_ended_affiliation_ids | affiliation_ids.map(&:to_i)
+    update!(metadata: (metadata || {}).merge("scenario_ended_affiliation_ids" => ids))
   end
 
   # --- Linked registrations (bulk payment designations) ---

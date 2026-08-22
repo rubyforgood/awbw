@@ -45,6 +45,11 @@
       <% if params[:return_to].present? %><%= hidden_field_tag :return_to, params[:return_to] %><% end %>
       <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
         <div>
+          <%= label_tag :search, "Search", class: search_label_class %>
+          <%= text_field_tag :search, params[:search], placeholder: "Name or email", class: search_field_class %>
+        </div>
+
+        <div>
           <%= f.label :form_id, "Form", class: search_label_class %>
           <%= f.select :form_id,
                 options_from_collection_for_select(@forms, :id, :display_name, params[:form_id].to_i),
@@ -88,6 +93,31 @@
                 prompt: "Search for an organization",
                 class: search_field_class,
                 data: { controller: "remote-select", remote_select_model_value: "organization" } %>
+        </div>
+
+        <div>
+          <%= label_tag :org_status, "Organization linking", class: search_label_class %>
+          <%= select_tag :org_status,
+                options_for_select(FormSubmission::ORG_LINK_STATUS_FILTER_OPTIONS, params[:org_status]),
+                include_blank: "Any linking",
+                class: search_field_class(extra: "search-select-placeholder") %>
+        </div>
+
+        <%# Same vocabulary as the registrants roster's User account filter. %>
+        <div>
+          <%= label_tag :account_status, "User account", class: search_label_class %>
+          <%= select_tag :account_status,
+                options_for_select(EventRegistration::ACCOUNT_STATUS_FILTER_OPTIONS, params[:account_status]),
+                include_blank: "Any account status",
+                class: search_field_class(extra: "search-select-placeholder") %>
+        </div>
+
+        <div>
+          <%= label_tag :scenario, "Agreement scenario", class: search_label_class %>
+          <%= select_tag :scenario,
+                options_for_select([ [ "Any agreement scenario", "any" ] ] + FormSubmission::LINKING_SCENARIOS.map { |value, label| [ label, value ] }, params[:scenario]),
+                include_blank: "All submissions",
+                class: search_field_class(extra: "search-select-placeholder") %>
         </div>
 
         <div>

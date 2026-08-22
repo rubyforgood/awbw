@@ -1,6 +1,6 @@
 class PeopleController < ApplicationController
   include AhoyTracking, TagAssignable
-  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments ]
+  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments send_form_link ]
 
   # The profile's "Submitted content" sections — private to the person and admins,
   # not part of the public profile even after profile viewing opens up.
@@ -289,6 +289,46 @@ class PeopleController < ApplicationController
     respond_to do |format|
       format.html { redirect_to people_path, status: :see_other, notice: "Person was successfully destroyed." }
     end
+  end
+
+  # Email this person the public link to one of the agreement scenario forms
+  # (Form.agreement_forms), recording the send so staff can see who was contacted for
+  # which scenario. The notification stores what was sent: the form name in
+  # custom_subject and the public form URL in custom_message. `agreement_links`
+  # reopens the collapsed panel on the way back.
+  def send_form_link
+    authorize! @person
+
+    # Either an agreement form's public link, or an upcoming facilitator
+    # training's public registration form (the panel's nested event rows).
+    if params[:event_id].present?
+      event = Event.where(published: true).facilitator_trainings.find(params[:event_id])
+      link_name = "#{event.decorate.title_with_month_year} registration"
+      link_url = new_event_public_registration_url(event)
+    else
+      form = Form.agreement_forms.find(params[:form_id])
+      link_name = form.display_name
+      link_url = public_form_url(form.slug)
+    end
+
+    email = @person.preferred_email
+    if email.blank?
+      redirect_to edit_person_path(@person, agreement_links: 1, anchor: "agreement-links"), alert: "#{@person.name} has no email address on file."
+      return
+    end
+
+    NotificationServices::CreateNotification.call(
+      noticeable: @person,
+      kind: :form_link_request,
+      recipient_role: :person,
+      recipient_email: email,
+      notification_type: 0,
+      custom_subject: link_name,
+      custom_message: link_url,
+      sender: current_user
+    )
+
+    redirect_to edit_person_path(@person, agreement_links: 1, anchor: "agreement-links"), notice: "Sent the #{link_name} link to #{email}."
   end
 
   def check_duplicates

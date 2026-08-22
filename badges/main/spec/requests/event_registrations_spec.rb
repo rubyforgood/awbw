@@ -1619,6 +1619,17 @@ RSpec.describe "EventRegistrations", type: :request do
             .to contain_exactly("Facilitator")
         end
 
+        it "back-applies the org link onto the submission that describes it" do
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(submission.reload.linked_organization_ids).to eq([ organization.id ])
+        end
+
         it "records the linking registration on the created affiliations" do
           post select_organization_event_registration_path(existing_registration),
             params: { organization_id: organization.id }

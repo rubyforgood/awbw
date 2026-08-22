@@ -45,6 +45,12 @@ RSpec.describe EventDecorator do
       event = build(:event, title: "Facilitator Training", start_date: nil).decorate
       expect(event.title_with_month_year).to eq("Facilitator Training")
     end
+
+    it "skips the month for on-demand events, whose year-long span has no meaningful start month" do
+      event = build(:event, title: "On-Demand Training 2026", on_demand: true,
+                    start_date: Time.zone.local(2026, 1, 1)).decorate
+      expect(event.title_with_month_year).to eq("On-Demand Training 2026")
+    end
   end
 
   describe "#archive_status_label" do

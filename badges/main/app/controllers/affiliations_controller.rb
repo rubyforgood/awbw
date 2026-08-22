@@ -1,5 +1,5 @@
 class AffiliationsController < ApplicationController
-  before_action :set_affiliation, only: %i[ edit update destroy ]
+  before_action :set_affiliation, only: %i[ edit update destroy end_affiliation ]
   before_action :set_registration_choices, only: %i[ edit update ]
 
   def edit
@@ -16,6 +16,28 @@ class AffiliationsController < ApplicationController
       redirect_to affiliation_return_path, notice: "Affiliation was successfully updated.", status: :see_other
     else
       render :edit, status: :unprocessable_content
+    end
+  end
+
+  # One-click end-dating from an agreement submission's processing panel (a job
+  # change means the old affiliation ends). The end date defaults to today; the
+  # panel passes the submission date so the affiliation ends when the person
+  # said it did, and the inactive flag derives from the date as usual.
+  def end_affiliation
+    authorize! @affiliation, to: :update?
+
+    end_date = begin
+      Date.iso8601(params[:end_date].to_s)
+    rescue Date::Error
+      Date.current
+    end
+
+    if @affiliation.update(end_date: end_date)
+      redirect_to end_affiliation_return_path,
+                  notice: "Ended #{@affiliation.person.name}'s affiliation with #{@affiliation.organization.name} on #{helpers.l(end_date, format: :long)}.",
+                  status: :see_other
+    else
+      redirect_to end_affiliation_return_path, alert: @affiliation.errors.full_messages.to_sentence, status: :see_other
     end
   end
 
@@ -82,6 +104,16 @@ class AffiliationsController < ApplicationController
       :organization_address_id, :filemaker_code, :event_registration_id,
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ]
     )
+  end
+
+  # Back to the submission whose processing panel triggered the end-dating, or
+  # the person's edit page when reached any other way.
+  def end_affiliation_return_path
+    if params[:form_submission_id].present?
+      form_submission_path(params[:form_submission_id])
+    else
+      edit_person_path(@affiliation.person, anchor: helpers.dom_id(@affiliation))
+    end
   end
 
   # Return to whichever edit page the gear was clicked from, scrolled to the row

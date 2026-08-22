@@ -17,6 +17,8 @@
             <th class="px-4 py-3">Role</th>
             <th class="px-4 py-3">Event</th>
             <% unless @person %><th class="px-4 py-3">Person</th><% end %>
+            <th class="px-4 py-3">Organization</th>
+            <th class="px-4 py-3">User account</th>
             <th class="px-4 py-3">Submitted</th>
             <th class="px-4 py-3"></th>
           </tr>
@@ -43,6 +45,44 @@
                 <% end %>
               </td>
               <% unless @person %><td class="px-4 py-3"><%= submission.person&.name %></td><% end %>
+              <td class="px-4 py-3">
+                <%# The submitted organization answer, with whether the person already
+                    has an active affiliation to an organization of that name — the
+                    "link organization" signal for processing agreement submissions. %>
+                <% answers = submission.answers_by_identifier %>
+                <% submitted_org = FormField.aliased_identifiers("organization_name").filter_map { |key| answers[key].presence }.first %>
+                <% if submitted_org %>
+                  <%= submitted_org %>
+                  <%# The chip doubles as the way into the submission's org-linking
+                      editor, like the org chips on the registrants roster. %>
+                  <% linked = submission.linked_organization_ids.any? ||
+                       submission.person&.affiliations&.any? { |a| a.active? && a.organization.name.casecmp?(submitted_org) } %>
+                  <% editor_path = link_organization_form_submission_path(submission, return_to: "form_submissions") %>
+                  <% if linked %>
+                    <%= link_to editor_path, title: "Open the organization linking editor", data: { turbo_frame: "_top" },
+                                class: "ml-1 inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 transition hover:opacity-80 hover:shadow-sm" do %>
+                      <i class="fa-solid fa-check text-3xs"></i>Linked
+                    <% end %>
+                  <% else %>
+                    <%= link_to editor_path, title: "Link the submitted organization", data: { turbo_frame: "_top" },
+                                class: "ml-1 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 transition hover:opacity-80 hover:shadow-sm" do %>
+                      <i class="fa-solid fa-circle-exclamation text-3xs"></i>Not linked
+                    <% end %>
+                  <% end %>
+                <% else %>
+                  <span class="text-gray-300">—</span>
+                <% end %>
+              </td>
+              <td class="px-4 py-3">
+                <% if submission.person&.user %>
+                  <%= render "users/confirmed_status", user: submission.person.user, invite_params: { return_to: "form_submission", form_submission_id: submission.id } %>
+                <% elsif submission.person %>
+                  <%= link_to "Create user", new_user_path(person_id: submission.person.id),
+                              class: "btn btn-secondary-outline whitespace-nowrap", data: { turbo_frame: "_top" } %>
+                <% else %>
+                  <span class="text-gray-300">—</span>
+                <% end %>
+              </td>
               <td class="px-4 py-3 whitespace-nowrap"><%= submission.created_at.to_fs(:long) %></td>
               <td class="px-4 py-3 text-right">
                 <%# origin: where this index itself was reached from, so the detail page can hand it back and the eyebrow survives the round trip. %>

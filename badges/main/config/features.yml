@@ -103,6 +103,55 @@
     open a submission and come back, so you land on the same filtered list.
   pro_tips:
     - "The Organization filter matches submissions linked to an org through an event registration."
+- name: "On-demand training agreement"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/forms"
+  pr_number: 2304
+  summary: >-
+    Someone finishing the on-demand training signs up on the on-demand training
+    event's public registration form, like any other training. Linking their
+    organization creates their job affiliation and a Facilitator affiliation
+    dated to their sign-up.
+  pro_tips:
+    - Email the registration link from their person edit page — the "Email form
+      links" section lists the current on-demand training and every upcoming
+      one, with how many times each link has been sent and by whom.
+
+- name: "Reinstatement agreement"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/forms"
+  pr_number: 2304
+  summary: >-
+    A returning facilitator signs the reinstatement agreement at its public
+    form link. Linking their organization adds a fresh Facilitator affiliation
+    dated to the submission (and a job affiliation from their position) only
+    where no active one exists — nothing is ended, history is kept.
+  pro_tips:
+    - Each submission shows a processing panel with the person's affiliations
+      and portal account status, so reinstating and re-inviting happens in one
+      place.
+
+- name: "New job agreement"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/forms"
+  pr_number: 2304
+  summary: >-
+    A facilitator moving to a new organization signs the new job agreement at
+    its public form link. Linking the new organization ends their affiliations
+    at other organizations and starts fresh job and Facilitator affiliations on
+    the submission date.
+  pro_tips:
+    - Anything the agreement ended is flagged on the submission's processing
+      panel ("Ended by this agreement") with an edit link, so a wrongly-ended
+      affiliation is easy to correct.
+    - Filter the form submissions list by scenario, organization linking, or
+      account status to work the queue end to end.
 
 - name: "Form results: charts and answer lists per form"
   area: reporting

@@ -27,11 +27,11 @@ module AffiliationServices
   # with the org for years before this training), and dating it to registration
   # would misrepresent that.
   class CreateFromRegistration
-    def self.call(person:, organization:, job_title: nil, training_date: nil, organization_address: nil, facilitator_training: true, event_registration: nil)
-      new(person:, organization:, job_title:, training_date:, organization_address:, facilitator_training:, event_registration:).call
+    def self.call(person:, organization:, job_title: nil, training_date: nil, organization_address: nil, facilitator_training: true, event_registration: nil, job_start_date: nil)
+      new(person:, organization:, job_title:, training_date:, organization_address:, facilitator_training:, event_registration:, job_start_date:).call
     end
 
-    def initialize(person:, organization:, job_title: nil, training_date: nil, organization_address: nil, facilitator_training: true, event_registration: nil)
+    def initialize(person:, organization:, job_title: nil, training_date: nil, organization_address: nil, facilitator_training: true, event_registration: nil, job_start_date: nil)
       @person = person
       @organization = organization
       @job_title = job_title.presence&.strip
@@ -39,6 +39,7 @@ module AffiliationServices
       @organization_address = organization_address
       @facilitator_training = facilitator_training
       @event_registration = event_registration
+      @job_start_date = job_start_date
     end
 
     def call
@@ -50,13 +51,16 @@ module AffiliationServices
 
     private
 
+    # The job affiliation normally carries no start date (we don't know when
+    # the person began that role); a new-job agreement is the exception — the
+    # caller passes `job_start_date:` because the job demonstrably starts then.
     def create_job_affiliation
       return unless @job_title
 
       existing = active_or_pending_affiliations_with_title(@job_title)
       return backfill_address(existing) if existing.exists?
 
-      create_affiliation(@job_title, start_date: nil)
+      create_affiliation(@job_title, start_date: @job_start_date)
     end
 
     def create_facilitator_affiliation

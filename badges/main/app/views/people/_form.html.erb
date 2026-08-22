@@ -368,6 +368,12 @@
                       class: "font-medium text-blue-600 hover:text-blue-800 hover:underline" %>.
         </div>
       <% end %>
+
+      <%# Sending an agreement form is affiliation work — it's how a new job or
+          reinstatement starts — so it lives here, collapsed. %>
+      <% if allowed_to?(:send_form_link?, person) %>
+        <%= render "agreement_form_links", person: person %>
+      <% end %>
     </div>
   </div>
 
@@ -393,11 +399,11 @@
   </div>
 
   <div class="form-group space-y-4">
-    <div class="font-semibold text-gray-700 mb-2">
+    <div class="mb-2 font-semibold text-gray-700">
       Professional licenses
     </div>
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-      <p class="text-sm text-gray-500 mb-3">Used for continuing-education credit. Once a license has CE registrations it can't be removed, and only an admin can edit it.</p>
+      <p class="mb-3 text-sm text-gray-500">Used for continuing-education credit. Once a license has CE registrations it can't be removed, and only an admin can edit it.</p>
       <%= f.simple_fields_for :professional_licenses do |license_form| %>
         <%= render "professional_licenses/professional_license_fields", f: license_form %>
       <% end %>

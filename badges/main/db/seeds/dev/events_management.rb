@@ -1701,3 +1701,44 @@ EventRegistration.includes(:event).find_each do |registration|
   offset_days = registration_day_offsets[registration.id % registration_day_offsets.length]
   registration.update_column(:created_at, start - offset_days.days)
 end
+
+# The yearly on-demand facilitator trainings: last year's (ended), the current
+# one (what Event.current_on_demand_facilitator_training resolves to — the
+# on-demand agreement path registers people here), and next year's upcoming
+# one. Each spans its calendar year and shares the standalone registration
+# form, so the person-page "Email form links" panel and the public
+# registration form both have real targets.
+puts "Creating yearly on-demand facilitator trainings…"
+(Date.current.year - 1..Date.current.year + 1).each do |year|
+  title = "On-Demand Training #{year}"
+  # start/end are datetimes and pages render them in the viewer's zone — anchor
+  # in AWBW's home (Pacific) zone so Jan 1 doesn't display as Dec 31 of the
+  # prior year for US viewers.
+  pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+  opens = pacific.local(year, 1, 1)
+  closes = pacific.local(year, 12, 31).end_of_day
+  event = Event.find_or_create_by!(title: title) do |e|
+    e.description = "Self-paced facilitator training for #{year}."
+    e.rhino_description = "Self-paced facilitator training for #{year}."
+    e.start_date = opens
+    e.end_date = closes
+    e.created_by = admin_user
+    e.published = true
+  end
+
+  # Keep the schedule current on re-seed (find_or_create_by! only sets on create).
+  event.update!(
+    start_date: opens,
+    end_date: closes,
+    registration_close_date: closes,
+    cost_cents: 0,
+    published: true,
+    on_demand: true,
+    facilitator_training: true
+  )
+
+  EventForm.find_or_create_by!(event: event, role: "registration") do |ef|
+    ef.form = registration_form
+  end
+  event.update!(public_registration_enabled: true) unless event.public_registration_enabled?
+end

@@ -21,7 +21,8 @@ class NotificationMailerJob < ApplicationJob
       "bulk_payment_confirmation" => ->(n) { EventMailer.bulk_payment_confirmation(n.noticeable) },
       "bulk_payment_confirmation_fyi" => ->(n) { NotificationMailer.bulk_payment_confirmation_fyi(n) },
       "form_submission_confirmation" => ->(n) { NotificationMailer.form_submission_confirmation(n) },
-      "form_submission_confirmation_fyi" => ->(n) { NotificationMailer.form_submission_confirmation_fyi(n) }
+      "form_submission_confirmation_fyi" => ->(n) { NotificationMailer.form_submission_confirmation_fyi(n) },
+      "form_link_request" => ->(n) { NotificationMailer.form_link_request(n) }
     }
 
     mailer = mailer_map[notification.kind]&.call(notification)

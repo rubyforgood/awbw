@@ -4,6 +4,14 @@ class Form < ApplicationRecord
   # payment" (the form role). Single source of truth so both ends stay in sync.
   BULK_PAYMENT_PUBLIC_NAME = "Pay for Other(s)".freeze
 
+  # Form roles whose standalone public submissions are agreement intake
+  # scenarios with affiliation processing (ADR-0002): a standalone
+  # registration-role form is the on-demand agreement (the registration flow,
+  # timestamped at submission), and new_job / reinstatement carry their own
+  # reconciliation rules. Drives the person-page "send link" panel and the
+  # submissions index scenario filter.
+  AGREEMENT_ROLES = %w[registration new_job reinstatement].freeze
+
   belongs_to :owner, polymorphic: true, optional: true
   has_many :form_fields, dependent: :destroy, inverse_of: :form
   has_many :event_forms, dependent: :destroy
@@ -20,6 +28,9 @@ class Form < ApplicationRecord
   scope :standalone, -> { where(owner_id: nil, owner_type: nil) }
   scope :published, -> { where(published: true) }
   scope :not_event_connected, -> { where.missing(:event_forms) }
+  # The publicly fillable agreement forms — the ones the person-page panel
+  # offers to send a link for.
+  scope :agreement_forms, -> { standalone.published.not_event_connected.where(role: AGREEMENT_ROLES).where.not(slug: nil) }
 
   before_validation :normalize_slug
 

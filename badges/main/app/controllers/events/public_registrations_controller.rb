@@ -99,9 +99,9 @@ module Events
         # Unlike the registration slug — an unguessable token handed to the
         # registrant — person ids are sequential, so this branch is not a
         # capability. It exists as the admin-side fallback for registrations with
-        # no slug, so gate it on the same access as the event's other submission
-        # views (or on the viewer being that person).
-        authorize! @event, to: :form_submissions? unless current_user&.person_id == person.id
+        # no slug, so the policy gates it on the same access as the event's other
+        # submission views (or on the viewer being that person).
+        authorize! @event, to: :person_form_submission?, context: { person: person }
         registration = @event.event_registrations.find_by(registrant: person)
       else
         redirect_to event_path(@event), alert: "Registration not found."

@@ -110,6 +110,23 @@ class Event < ApplicationRecord
   # start_date is a date column, so compare against a date — a Time would be cast
   # to midnight and drop events starting today.
   scope :upcoming, -> { where("start_date >= ?", Date.current) }
+
+  # The on-demand facilitator training an on-demand agreement submission
+  # registers the person for (ADR-0002): the published, not-yet-ended on-demand
+  # training that started most recently — "this year's" — falling back to the
+  # next upcoming one when none has started yet. Never an ended training.
+  def self.current_on_demand_facilitator_training
+    trainings = where(published: true).facilitator_trainings.on_demand.where(end_date: Time.current..)
+    trainings.where(start_date: ..Date.current).order(start_date: :desc).first ||
+      trainings.upcoming.order(:start_date).first
+  end
+
+  # People are invited to an on-demand facilitator training only after they've
+  # completed the external LMS course, so registering here means the training
+  # is already done — registrations flip straight to "attended".
+  def on_demand_facilitator_training?
+    on_demand? && facilitator_training?
+  end
   # Events that charge a registration fee (cost_cents may be nil for free ones).
   scope :paid, -> { where("cost_cents > 0") }
   # Events whose start date falls in the given calendar year. Keyed off the year
