@@ -307,8 +307,14 @@ RSpec.describe "Event registration edit page", type: :system do
 
       within("section", text: "Registration communications") do
         click_on "Add communication"
+        # Wait for cocoon to insert the field and the paginated-fields controller
+        # to finish its re-render before typing, so the input node isn't swapped
+        # mid-fill (which raced as a stale-node error).
         expect(page).to have_field("Subject")
         fill_in "Subject", with: "They emailed us"
+        # Confirm the field registered its value before touching the direction
+        # toggle, so the DOM has settled and the label/checkbox nodes are stable.
+        expect(page).to have_field("Subject", with: "They emailed us")
 
         expect(page).not_to have_field("Already responded")
         find("label", text: "Incoming").click
