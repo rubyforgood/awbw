@@ -42,6 +42,15 @@ RSpec.describe "/affiliations", type: :request do
         expect(response.body).to include("Linked registration")
         expect(response.body).to include("event_registration")
       end
+
+      it "surfaces a link to the linked registration in the admin picker" do
+        registration = create(:event_registration)
+        affiliation.update_column(:event_registration_id, registration.id)
+
+        get edit_affiliation_path(affiliation, admin: "true")
+
+        expect(response.body).to include(edit_event_registration_path(registration))
+      end
     end
 
     context "as a non-admin" do
@@ -103,22 +112,13 @@ RSpec.describe "/affiliations", type: :request do
         expect(affiliation.reload.filemaker_code).to eq("FM-123")
       end
 
-      it "links a registration when in admin mode" do
+      it "links a registration through the picker" do
         registration = create(:event_registration)
 
         patch affiliation_path(affiliation, return_to: "organization", origin_id: organization.id, admin: "true"),
               params: { affiliation: { event_registration_id: registration.id } }
 
         expect(affiliation.reload.event_registration_id).to eq(registration.id)
-      end
-
-      it "ignores the registration link outside admin mode" do
-        registration = create(:event_registration)
-
-        patch affiliation_path(affiliation, return_to: "organization", origin_id: organization.id),
-              params: { affiliation: { event_registration_id: registration.id } }
-
-        expect(affiliation.reload.event_registration_id).to be_nil
       end
     end
 

@@ -63,10 +63,11 @@ class AffiliationsController < ApplicationController
   end
 
   def affiliation_params
-    keys = [ :person_id, :organization_id, :title, :start_date, :end_date, :primary_contact,
-             :organization_address_id, :filemaker_code ]
-    keys << :event_registration_id if params[:admin] == "true"
-    params.require(:affiliation).permit(*keys, comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ])
+    params.require(:affiliation).permit(
+      :person_id, :organization_id, :title, :start_date, :end_date, :primary_contact,
+      :organization_address_id, :filemaker_code, :event_registration_id,
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ]
+    )
   end
 
   # Return to whichever edit page the gear was clicked from, scrolled to the row

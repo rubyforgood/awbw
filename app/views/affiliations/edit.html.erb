@@ -89,6 +89,12 @@
                 input_html: {
                   data: { controller: "remote-select", remote_select_model_value: "event_registration" }
                 } %>
+          <% if @affiliation.event_registration.present? %>
+            <%= link_to edit_event_registration_path(@affiliation.event_registration),
+                  class: "mt-1 inline-block text-xs underline font-medium text-gray-600", target: "_blank", rel: "noopener" do %>
+              <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>Open the linked registration
+            <% end %>
+          <% end %>
         </div>
       <% elsif @affiliation.event_registration.present? %>
         <% er = @affiliation.event_registration %>
