@@ -38,6 +38,16 @@
   pro_tips:
     - "Filter the people list first — the email list always matches whatever the list is showing."
 
+- name: "Hide the View ticket button in a bulk email"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/events/1/preview_reminder"
+  summary: >-
+    When composing a bulk email, tick "Hide the View ticket button" to send a plain
+    informational message with no link to a registrant's ticket — the same way you can
+    already hide the event details box.
+
 - name: "Affiliation editor: FileMaker code"
   area: people
   display_status: admin_facing

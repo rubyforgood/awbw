@@ -4034,7 +4034,7 @@ RSpec.describe "Events", type: :request do
         post send_reminder_event_path(event), params: { registration_ids: [] }
       }.not_to change(Notification, :count)
 
-      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: "", custom_subject: "", hide_event_card: "0"))
+      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: "", custom_subject: "", hide_event_card: "0", hide_ticket_button: "0"))
     end
 
     it "logs an Ahoy event with the recipient count on a successful send" do

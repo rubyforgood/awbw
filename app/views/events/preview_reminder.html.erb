@@ -126,6 +126,18 @@
                   reader never sees change. Announce it instead. %>
               <p class="sr-only" role="status" aria-live="polite" data-reminder-preview-target="cardStatus"></p>
             </div>
+            <div>
+              <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <%= check_box_tag :hide_ticket_button, "1", @hide_ticket_button,
+                      class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500",
+                      data: { reminder_preview_target: "ticketButtonToggle", action: "reminder-preview#toggleTicketButton" } %>
+                Hide the "View ticket" button
+              </label>
+              <p class="text-xs text-gray-400 mt-1.5 ml-6">
+                Leaves out the "View ticket" button and its lead-in line — send a plain informational email with no link to the registrant's ticket.
+              </p>
+              <p class="sr-only" role="status" aria-live="polite" data-reminder-preview-target="ticketStatus"></p>
+            </div>
           </div>
         </div>
       <% end %>

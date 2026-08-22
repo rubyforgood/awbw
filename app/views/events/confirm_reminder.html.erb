@@ -3,7 +3,7 @@
   <%# Top bar: eyelash + sub-nav, matching the other event pages. The eyebrow
       returns to the recipient picker so the admin can adjust the selection. %>
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
-    <%= link_to "← Recipients", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message, hide_event_card: (@hide_event_card ? "1" : "0")), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <%= link_to "← Recipients", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message, hide_event_card: (@hide_event_card ? "1" : "0"), hide_ticket_button: (@hide_ticket_button ? "1" : "0")), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <%= render "events/subnav", event: @event, current: nil %>
   </div>
 
@@ -66,6 +66,12 @@
           Event details box hidden — the date, time, cost, and location won't be in this email.
         </p>
       <% end %>
+      <% if @hide_ticket_button && !@invite_mode %>
+        <p class="text-xs text-gray-500 mt-1.5">
+          <i class="fa-solid fa-eye-slash text-gray-400"></i>
+          "View ticket" button hidden — this email won't link to the registrant's ticket.
+        </p>
+      <% end %>
     </div>
     <div class="email-preview overflow-auto max-h-[70vh] p-4" style="font-family: Lato, sans-serif;">
       <%= raw @reminder_preview_html %>
@@ -79,13 +85,14 @@
     <% if @invite_mode %>
       <%= hidden_field_tag :mode, "invite" %>
     <% else %>
-      <%# Carry the composed subject/message and the hide-card choice through to the send untouched. %>
+      <%# Carry the composed subject/message and the hide choices through to the send untouched. %>
       <%= hidden_field_tag :custom_subject, @custom_subject %>
       <%= hidden_field_tag :custom_message, @custom_message %>
       <%= hidden_field_tag :hide_event_card, (@hide_event_card ? "1" : "0") %>
+      <%= hidden_field_tag :hide_ticket_button, (@hide_ticket_button ? "1" : "0") %>
     <% end %>
     <div class="flex justify-center gap-3">
-      <%= link_to "Cancel", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message, hide_event_card: (@hide_event_card ? "1" : "0")), class: "btn btn-secondary-outline" %>
+      <%= link_to "Cancel", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message, hide_event_card: (@hide_event_card ? "1" : "0"), hide_ticket_button: (@hide_ticket_button ? "1" : "0")), class: "btn btn-secondary-outline" %>
       <%= f.submit(@invite_mode ? "Send invites" : "Send reminder", class: "btn btn-primary") %>
     </div>
   <% end %>
