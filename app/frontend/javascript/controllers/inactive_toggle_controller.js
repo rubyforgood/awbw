@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus";
+import { isFacilitatorTitle } from "../lib/affiliation";
 
 // Live styling for the affiliation editor row as you edit, before saving. Four
 // states by colour: role is the hue (facilitator = purple, else blue) and status
@@ -92,9 +93,7 @@ export default class extends Controller {
     return this.expiredValue;
   }
 
-  // Mirror Affiliation#facilitator? — an exact, case-sensitive match on
-  // "Facilitator" (trimmed), so the live styling matches what the server renders.
   isFacilitator() {
-    return this.hasTitleTarget && this.titleTarget.value.trim() === "Facilitator";
+    return this.hasTitleTarget && isFacilitatorTitle(this.titleTarget.value);
   }
 }

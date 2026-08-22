@@ -152,6 +152,28 @@ RSpec.describe Affiliation, type: :model do
     end
   end
 
+  describe 'title normalization on write' do
+    it 'stores the title trimmed' do
+      affiliation = create(:affiliation, title: "  Facilitator ")
+      expect(affiliation.reload.title).to eq("Facilitator")
+    end
+
+    it 'stores a blank title as nil' do
+      affiliation = create(:affiliation, title: "   ")
+      expect(affiliation.reload.title).to be_nil
+    end
+  end
+
+  describe 'facilitator seam (#facilitator? <-> .facilitators agree)' do
+    it '.facilitators returns exactly the saved rows whose #facilitator? is true' do
+      [ "Facilitator", "  Facilitator ", "Lead Facilitator", "facilitator", "FACILITATOR", "Volunteer", nil ]
+        .each { |t| create(:affiliation, title: t) }
+
+      in_ruby = described_class.all.select(&:facilitator?).map(&:id).sort
+      expect(described_class.facilitators.ids.sort).to eq(in_ruby)
+    end
+  end
+
   describe '#sync_organization_status_with_affiliations' do
     let!(:active_status) { OrganizationStatus.find_or_create_by!(name: "Active") }
     let!(:inactive_status) { OrganizationStatus.find_or_create_by!(name: "Inactive") }
