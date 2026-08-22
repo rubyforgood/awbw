@@ -153,6 +153,38 @@ RSpec.describe "FormSubmissions", type: :request do
           CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions", person_id: person.id))
         )
       end
+
+      it "shows the submitted organization with whether it is linked to the person" do
+        submission = create(:form_submission)
+        org_field = create(:form_field, form: submission.form, name: "Organization name",
+                           field_identifier: "organization_name")
+        create(:form_answer, form_submission: submission, form_field: org_field,
+               submitted_answer: "Harbor Family Shelter")
+
+        get form_submissions_path, headers: frame_headers
+        expect(response.body).to include("Harbor Family Shelter")
+        expect(response.body).to include("Not linked")
+
+        create(:affiliation, person: submission.person,
+               organization: create(:organization, name: "Harbor Family Shelter"))
+        get form_submissions_path, headers: frame_headers
+        expect(response.body).to include("Linked")
+      end
+
+      it "shows the person's account status with an invite or create-user action" do
+        no_account = create(:form_submission, person: create(:person, user: nil))
+        with_account = create(:form_submission)
+        with_account.person.user.update_columns(confirmed_at: nil, welcome_instructions_sent_at: nil)
+
+        get form_submissions_path, headers: frame_headers
+
+        expect(response.body).to include(new_user_path(person_id: no_account.person_id))
+        expect(response.body).to include(
+          CGI.escapeHTML(send_welcome_instructions_user_path(with_account.person.user,
+                                                             return_to: "form_submission",
+                                                             form_submission_id: with_account.id))
+        )
+      end
     end
 
     context "as a non-admin" do
@@ -217,6 +249,61 @@ RSpec.describe "FormSubmissions", type: :request do
         # The stored ids resolve to names; the free-text "Other:" answer passes through.
         expect(response.body).to include("Mental Health, Other: Equine therapy")
         expect(response.body).not_to match(/>\s*#{sector.id},/)
+      end
+    end
+
+    context "processing panel for agreement scenario forms" do
+      before { sign_in admin }
+
+      let(:form) { create(:form, purpose: "job_change_agreement", name: "Collaboration agreement (job change)") }
+      let(:person) { create(:person, user: nil) }
+      let(:submission) { create(:form_submission, form: form, person: person) }
+
+      it "is absent on a form without a purpose" do
+        plain = create(:form_submission)
+
+        get form_submission_path(plain)
+
+        expect(response.body).not_to include("Processing")
+      end
+
+      it "shows the scenario, submitted organization, affiliations, and account status" do
+        org_field = create(:form_field, form: form, name: "Organization name", field_identifier: "organization_name")
+        create(:form_answer, form_submission: submission, form_field: org_field, submitted_answer: "New Org")
+        create(:affiliation, person: person, organization: create(:organization, name: "Old Org"))
+
+        get form_submission_path(submission)
+
+        expect(response.body).to include("Job change agreement")
+        expect(response.body).to include("New Org")
+        expect(response.body).to include("Old Org")
+        expect(response.body).to include(new_user_path(person_id: person.id))
+        expect(response.body).to include(
+          CGI.escapeHTML(edit_person_path(person, return_to: "form_submission",
+                                          form_submission_id: submission.id, anchor: "affiliations"))
+        )
+      end
+
+      it "offers a one-click End (dated to the submission) for an active affiliation on a job change" do
+        affiliation = create(:affiliation, person: person, organization: create(:organization, name: "Old Org"))
+
+        get form_submission_path(submission)
+
+        expect(response.body).to include(
+          CGI.escapeHTML(end_affiliation_path(affiliation, form_submission_id: submission.id,
+                                              end_date: submission.created_at.to_date.iso8601))
+        )
+      end
+
+      it "offers no End button outside the job change scenario" do
+        reinstatement = create(:form_submission, person: person,
+                               form: create(:form, purpose: "reinstatement_agreement"))
+        affiliation = create(:affiliation, person: person, organization: create(:organization))
+
+        get form_submission_path(reinstatement)
+
+        expect(response.body).to include("Returning facilitator")
+        expect(response.body).not_to include(end_affiliation_path(affiliation))
       end
     end
 

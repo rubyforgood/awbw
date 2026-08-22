@@ -1,6 +1,6 @@
 class PeopleController < ApplicationController
   include AhoyTracking, TagAssignable
-  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments ]
+  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments send_form_link ]
 
   # The profile's "Submitted content" sections — private to the person and admins,
   # not part of the public profile even after profile viewing opens up.
@@ -289,6 +289,39 @@ class PeopleController < ApplicationController
     respond_to do |format|
       format.html { redirect_to people_path, status: :see_other, notice: "Person was successfully destroyed." }
     end
+  end
+
+  # Email this person the public link to one of the agreement scenario forms
+  # (Form::PURPOSES), recording the send so staff can see who was contacted for
+  # which scenario. The notification stores what was sent: the subject in
+  # custom_subject and the public form URL in custom_message.
+  def send_form_link
+    authorize! @person, to: :send_form_link?
+
+    form = Form.with_purpose.find(params[:form_id])
+    unless form.publicly_fillable?
+      redirect_to edit_person_path(@person, anchor: "agreement-links"), alert: "#{form.display_name} has no public link — publish it with a link address first."
+      return
+    end
+
+    email = @person.preferred_email
+    if email.blank?
+      redirect_to edit_person_path(@person, anchor: "agreement-links"), alert: "#{@person.name} has no email address on file."
+      return
+    end
+
+    NotificationServices::CreateNotification.call(
+      noticeable: @person,
+      kind: :form_link_request,
+      recipient_role: :person,
+      recipient_email: email,
+      notification_type: 0,
+      custom_subject: "Link to complete #{form.display_name}",
+      custom_message: public_form_url(form.slug),
+      sender: current_user
+    )
+
+    redirect_to edit_person_path(@person, anchor: "agreement-links"), notice: "Sent the #{form.display_name} link to #{email}."
   end
 
   def check_duplicates

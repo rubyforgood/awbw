@@ -10,6 +10,14 @@ RSpec.describe FormCopyService do
       expect(copy.name).to eq("COPY of Volunteer Intake")
     end
 
+    it "clears the agreement purpose so two forms never share a scenario" do
+      form = create(:form, purpose: "reinstatement_agreement")
+
+      copy = described_class.new(form).call
+
+      expect(copy.purpose).to be_nil
+    end
+
     it "returns a persisted, distinct record" do
       form = create(:form)
 

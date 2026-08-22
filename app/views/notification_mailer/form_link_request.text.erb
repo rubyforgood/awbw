@@ -1,0 +1,9 @@
+A form for you to complete
+
+Hello <%= @person.name %>,
+
+<% if @sender %><%= @sender.full_name %> from A Window Between Worlds sent you a form to complete.<% else %>A Window Between Worlds sent you a form to complete.<% end %> Please follow the link below to fill it out.
+
+<%= @url %>
+
+If you have any questions, just reply to this email.

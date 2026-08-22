@@ -7,7 +7,7 @@ class FormSubmissionsController < ApplicationController
 
     if turbo_frame_request?
       @form_submissions = FormSubmission.search_by_params(params)
-        .includes(:form, :event, :person)
+        .includes(:form, :event, { person: [ :user, { affiliations: :organization } ] }, { form_answers: :form_field })
         .order(created_at: :desc)
         .paginate(page: params[:page], per_page: 50)
       render :form_submissions_results

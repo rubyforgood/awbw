@@ -67,11 +67,11 @@
     <% end %>
 
     <details class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
-        <div class="flex items-center gap-2.5 border-b border-transparent [[open]_&]:border-purple-300 bg-purple-100 px-6 py-3 hover:bg-purple-200">
+      <summary class="cursor-pointer list-none select-none [&::-webkit-details-marker]:hidden">
+        <div class="flex items-center gap-2.5 border-b border-transparent bg-purple-100 px-6 py-3 hover:bg-purple-200 [[open]_&]:border-purple-300">
           <i class="fa-solid fa-gear text-purple-700"></i>
           <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Form settings</h2>
-          <i class="fa-solid fa-chevron-down text-purple-500 text-xs ml-auto transition-transform [[open]_&]:rotate-180"></i>
+          <i class="fa-solid fa-chevron-down ml-auto text-xs text-purple-500 transition-transform [[open]_&]:rotate-180"></i>
         </div>
         <p class="px-6 py-3 text-sm text-gray-400 [[open]_&]:hidden">Toggle to edit</p>
       </summary>
@@ -88,6 +88,15 @@
                   [["General", ""], ["Registration", "registration"], ["Scholarship", "scholarship"], ["Bulk Payment", "bulk_payment"], ["Continuing Education", "continuing_education"]],
                   { selected: @form.role || "" },
                   class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm" %>
+          </div>
+
+          <div class="sm:w-64">
+            <label class="mb-1 block text-sm font-medium text-gray-700">Agreement scenario</label>
+            <%= f.select :purpose,
+                  [["None", ""]] + Form::PURPOSES.map { |value, label| [ label, value ] },
+                  { selected: @form.purpose || "" },
+                  class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm" %>
+            <p class="mt-1 text-xs text-gray-500">Marks this form as one of the collaboration agreement scenarios, so submissions are counted per scenario and processing guidance appears on each submission.</p>
           </div>
         </div>
 
@@ -117,11 +126,11 @@
         </div>
       <% else %>
       <details class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
-          <div class="flex items-center gap-2.5 border-b border-transparent [[open]_&]:border-purple-300 bg-purple-100 px-6 py-3 hover:bg-purple-200">
+        <summary class="cursor-pointer list-none select-none [&::-webkit-details-marker]:hidden">
+          <div class="flex items-center gap-2.5 border-b border-transparent bg-purple-100 px-6 py-3 hover:bg-purple-200 [[open]_&]:border-purple-300">
             <i class="fa-solid fa-link text-purple-700"></i>
             <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Share with a public link</h2>
-            <i class="fa-solid fa-chevron-down text-purple-500 text-xs ml-auto transition-transform [[open]_&]:rotate-180"></i>
+            <i class="fa-solid fa-chevron-down ml-auto text-xs text-purple-500 transition-transform [[open]_&]:rotate-180"></i>
           </div>
           <p class="px-6 py-3 text-sm text-gray-400 [[open]_&]:hidden">Toggle to edit</p>
         </summary>

@@ -1,0 +1,26 @@
+<h1>A form for you to complete</h1>
+
+<div style="margin-top: 36px; text-align: left;">
+  <p>
+    Hello <strong><%= @person.name %></strong>,
+  </p>
+
+  <p>
+    <% if @sender %>
+      <%= @sender.full_name %> from A Window Between Worlds sent you a form to complete.
+    <% else %>
+      A Window Between Worlds sent you a form to complete.
+    <% end %>
+    Please follow the link below to fill it out.
+  </p>
+
+  <div style="text-align: center; background-color: #f3f4f6; border-radius: 6px; padding: 24px; margin: 16px 0;">
+    <a href="<%= @url %>" style="font-size: 18px; font-weight: bold; color: #166534; font-family: Lato, sans-serif;">
+      <%= @url %>
+    </a>
+  </div>
+
+  <p>
+    If you have any questions, just reply to this email.
+  </p>
+</div>

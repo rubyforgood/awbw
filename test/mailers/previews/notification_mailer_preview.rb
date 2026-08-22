@@ -87,6 +87,25 @@ class NotificationMailerPreview < ActionMailer::Preview
     NotificationMailer.form_submission_confirmation_fyi(notification)
   end
 
+  def form_link_request
+    person = Person.where.not(email: nil).first || raise("Need a Person with an email")
+    form = Form.with_purpose.first || Form.standalone.first || raise("Need a Form")
+
+    notification = find_valid_notification("form_link_request") ||
+      Notification.create!(
+        noticeable: person,
+        notification_type: 0,
+        kind: "form_link_request",
+        recipient_role: "person",
+        recipient_email: person.preferred_email,
+        custom_subject: "Link to complete #{form.display_name}",
+        custom_message: "https://portal.awbw.org/f/#{form.slug.presence || "example-form"}",
+        sender: User.first
+      )
+
+    NotificationMailer.form_link_request(notification)
+  end
+
   def idea_submitted
     noticeable = StoryIdea.first || WorkshopVariationIdea.first
     user = noticeable&.created_by || User.first

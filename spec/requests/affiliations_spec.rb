@@ -167,4 +167,38 @@ RSpec.describe "/affiliations", type: :request do
       end
     end
   end
+
+  describe "POST /affiliations/:id/end" do
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "end-dates the affiliation and returns to the submission it came from" do
+        submission = create(:form_submission, person: person)
+
+        post end_affiliation_path(affiliation, end_date: "2026-08-14", form_submission_id: submission.id)
+
+        expect(affiliation.reload.end_date).to eq(Date.new(2026, 8, 14))
+        expect(affiliation.inactive).to be(true)
+        expect(response).to redirect_to(form_submission_path(submission))
+      end
+
+      it "falls back to today and the person's edit page without params" do
+        post end_affiliation_path(affiliation, end_date: "not-a-date")
+
+        expect(affiliation.reload.end_date).to eq(Date.current)
+        expect(response.location).to include(edit_person_path(person))
+      end
+    end
+
+    context "as a non-admin" do
+      before { sign_in regular_user }
+
+      it "does not end the affiliation" do
+        post end_affiliation_path(affiliation, end_date: "2026-08-14")
+
+        expect(affiliation.reload.end_date).to be_nil
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
 end

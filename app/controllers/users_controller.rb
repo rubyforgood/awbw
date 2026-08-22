@@ -307,6 +307,13 @@ class UsersController < ApplicationController
     @user.update(welcome_instructions_sent_at: Time.current, welcome_instructions_sent_by: current_user)
     @user.send_confirmation_instructions(sender: current_user)
 
+    # Back to the agreement submission the Invite button was on, when it came
+    # from a processing panel; the users index otherwise.
+    if params[:return_to] == "form_submission" && params[:form_submission_id].present?
+      redirect_to form_submission_path(params[:form_submission_id]), notice: "Invitation sent to #{@user.email}."
+      return
+    end
+
     redirect_to users_path(search: params[:search],
                            super_user: params[:super_user],
                            inactive: params[:inactive],

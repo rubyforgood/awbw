@@ -103,6 +103,22 @@
     open a submission and come back, so you land on the same filtered list.
   pro_tips:
     - "The Organization filter matches submissions linked to an org through an event registration."
+- name: "Collaboration agreement scenario forms"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/forms"
+  pr_number: 2304
+  summary: >-
+    The collaboration agreement now runs as three separate public forms — one
+    each for on-demand training, reinstatement, and job change. Each submission
+    shows a processing panel with the person's affiliations and portal account
+    status.
+  pro_tips:
+    - Send someone the right form straight from their person edit page — the
+      "Agreement form links" section emails the link and records who sent it.
+    - The form submissions list now shows whether the submitted organization is
+      linked to the person and lets you invite them to the portal from the list.
 
 - name: "Form results: charts and answer lists per form"
   area: reporting

@@ -28,6 +28,42 @@ RSpec.describe Form do
   #   pending("Requires functional owner factory and association uncommented")
   # end
 
+  describe "purpose (agreement scenarios)" do
+    it "accepts each known purpose" do
+      Form::PURPOSES.each_key do |purpose|
+        expect(build(:form, purpose: purpose)).to be_valid
+      end
+    end
+
+    it "rejects an unknown purpose" do
+      form = build(:form, purpose: "mystery_agreement")
+
+      expect(form).not_to be_valid
+      expect(form.errors[:purpose]).to be_present
+    end
+
+    it "normalizes a blank purpose (the select's empty option) to nil" do
+      form = create(:form, purpose: "")
+
+      expect(form.purpose).to be_nil
+    end
+
+    it "scopes purposed forms with .with_purpose" do
+      plain = create(:form)
+      purposed = create(:form, purpose: "job_change_agreement")
+
+      expect(Form.with_purpose).to include(purposed)
+      expect(Form.with_purpose).not_to include(plain)
+    end
+
+    it "labels the purpose for display" do
+      form = build(:form, purpose: "on_demand_agreement")
+
+      expect(form.purpose_label).to eq("On-demand agreement")
+      expect(build(:form).purpose_label).to be_nil
+    end
+  end
+
   describe ".where(role: 'scholarship')" do
     it "returns only forms with scholarship role" do
       regular_form = create(:form)

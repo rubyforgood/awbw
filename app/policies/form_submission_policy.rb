@@ -28,4 +28,10 @@ class FormSubmissionPolicy < ApplicationPolicy
   def show_invoice?
     record.role == "bulk_payment" || admin?
   end
+
+  # The agreement processing panel (affiliation actions, portal invite) — staff
+  # only, even where a submitter can reach their own submission by slug.
+  def process?
+    admin?
+  end
 end

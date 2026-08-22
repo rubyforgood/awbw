@@ -716,6 +716,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_154252) do
     t.integer "owner_id"
     t.string "owner_type"
     t.boolean "published", default: false, null: false
+    t.string "purpose"
     t.string "role"
     t.json "sections"
     t.string "slug"

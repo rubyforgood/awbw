@@ -89,9 +89,11 @@ class FormSubmission < ApplicationRecord
   end
 
   # Answers keyed by their field's identifier. Bulk payment (and similar) forms
-  # address fields by identifier rather than position.
+  # address fields by identifier rather than position. Reuses an already-loaded
+  # association so per-row calls on a preloaded index don't requery.
   def answers_by_identifier
-    form_answers.includes(:form_field).each_with_object({}) do |answer, map|
+    answers = form_answers.loaded? ? form_answers : form_answers.includes(:form_field)
+    answers.each_with_object({}) do |answer, map|
       identifier = answer.form_field&.field_identifier
       map[identifier] = answer.submitted_answer if identifier.present?
     end

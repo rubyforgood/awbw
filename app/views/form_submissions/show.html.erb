@@ -52,4 +52,8 @@
       <% end %>
     </div>
   </div>
+
+  <% if @form_submission.form.purpose? && allowed_to?(:process?, @form_submission) %>
+    <%= render "processing_panel", submission: @form_submission %>
+  <% end %>
 </div>
