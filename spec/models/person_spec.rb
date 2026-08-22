@@ -651,14 +651,38 @@ RSpec.describe Person, type: :model do
         expect(results).not_to include(person_alice)
       end
 
-      it "boomerang: includes people with 2+ facilitator affiliations and at least one active" do
-        multi = create(:person, first_name: "Multi", last_name: "Fac")
-        create(:affiliation, person: multi, title: "Facilitator", end_date: nil)
-        create(:affiliation, person: multi, title: "Facilitator", end_date: 1.year.from_now)
+      it "boomerang: includes people whose active term began after an earlier term ended" do
+        returnee = create(:person, first_name: "Returnee", last_name: "Fac")
+        create(:affiliation, person: returnee, title: "Facilitator",
+                             start_date: 5.years.ago, end_date: 3.years.ago)
+        create(:affiliation, person: returnee, title: "Facilitator",
+                             start_date: 1.year.ago, end_date: nil)
 
         results = Person.search_by_params(facilitator_status: "boomerang")
-        expect(results).to include(multi)
+        expect(results).to include(returnee)
         expect(results).not_to include(person_alice)
+      end
+
+      it "boomerang: excludes people serving two orgs concurrently who never left" do
+        concurrent = create(:person, first_name: "Concurrent", last_name: "Fac")
+        create(:affiliation, person: concurrent, title: "Facilitator",
+                             start_date: 5.years.ago, end_date: nil)
+        create(:affiliation, person: concurrent, title: "Facilitator",
+                             start_date: 1.year.ago, end_date: nil)
+
+        results = Person.search_by_params(facilitator_status: "boomerang")
+        expect(results).not_to include(concurrent)
+      end
+
+      it "boomerang: excludes a continuous term overlapping a since-ended second org" do
+        overlapper = create(:person, first_name: "Overlap", last_name: "Fac")
+        create(:affiliation, person: overlapper, title: "Facilitator",
+                             start_date: 5.years.ago, end_date: nil)
+        create(:affiliation, person: overlapper, title: "Facilitator",
+                             start_date: 3.years.ago, end_date: 1.year.ago)
+
+        results = Person.search_by_params(facilitator_status: "boomerang")
+        expect(results).not_to include(overlapper)
       end
 
       it "formerly_active: includes people whose facilitator term ended and none is active" do

@@ -1951,9 +1951,9 @@
   pro_tips:
     - The role dropdown replaces the old "Sector leaders only" checkbox; pick
       "Sector leaders" there to get the same list.
-    - "Facilitator status: \"boomerang\" means two or more facilitator affiliations
-      with at least one still active; \"formerly active\" means a past term ended
-      and none is active now."
+    - "Facilitator status: \"boomerang\" means someone who left and came back — an
+      active term that began after an earlier facilitator term had ended; \"formerly
+      active\" means a past term ended and none is active now."
     - "Membership status reads the current invoice: \"due\" still owes but is within
       the grace period, \"overdue\" has passed it."
     - The topic and staff tag dropdowns sit in the same blue admin panel; topic

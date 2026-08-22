@@ -216,11 +216,20 @@ class Person < ApplicationRecord
     ended = Affiliation.facilitators.where.not(end_date: nil)
       .where("affiliations.end_date < ?", Date.current).select(:person_id)
     where(id: ended).where.not(id: Affiliation.facilitators.active.select(:person_id)) }
-  # Facilitators tied to 2+ facilitator affiliations with at least one still active
-  # (e.g. moved between partner orgs, or serve more than one at once).
+  # True returnees: a currently-active facilitator term that began after an earlier
+  # facilitator term had genuinely ended — "left and came back", not merely serving
+  # two orgs at once (both of which the old count-based definition matched;
+  # rubyforgood/awbw#2327). The self-join pairs each active term with a prior term of
+  # the same person that ended before the active one started.
   scope :boomerang_facilitators, -> {
-    multiple = Affiliation.facilitators.group(:person_id).having("COUNT(affiliations.id) >= 2").select(:person_id)
-    where(id: multiple).where(id: Affiliation.facilitators.active.select(:person_id)) }
+    returnees = Affiliation.facilitators.active.where.not(start_date: nil)
+      .joins("INNER JOIN affiliations prior_terms " \
+             "ON prior_terms.person_id = affiliations.person_id " \
+             "AND prior_terms.title = BINARY '#{Affiliation::FACILITATOR_TITLE}' " \
+             "AND prior_terms.end_date IS NOT NULL " \
+             "AND prior_terms.end_date < affiliations.start_date")
+      .select(:person_id)
+    where(id: returnees) }
   scope :by_facilitator_status, ->(status) {
     case status
     when "active" then facilitators_active
@@ -291,7 +300,7 @@ class Person < ApplicationRecord
   FACILITATOR_STATUS_FILTER_OPTIONS = [
     [ "Active", "active" ],
     [ "Inactive", "inactive" ],
-    [ "Boomerang (2+ affiliations, 1+ active)", "boomerang" ],
+    [ "Boomerang (left, then active again)", "boomerang" ],
     [ "Formerly active", "formerly_active" ]
   ].freeze
 
