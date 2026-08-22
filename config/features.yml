@@ -43,6 +43,7 @@
   display_status: admin_facing
   released_on: 2026-08-22
   action_path: "/events/1/preview_reminder"
+  pr_number: 2344
   summary: >-
     When composing a bulk email, tick "Hide the View ticket button" to send a plain
     informational message with no link to a registrant's ticket — the same way you can
