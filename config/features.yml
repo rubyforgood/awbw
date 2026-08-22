@@ -1900,3 +1900,13 @@
       matches people still subscribed, staff tag matches people carrying that tag.
     - The age range dropdown lists your published age ranges and matches anyone
       tagged with that range.
+
+- name: "Flag blog contributors from the person edit form"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  pr_number: 2323
+  summary: >-
+    Admins can now check "Blog contributor" on a person's edit page to add the
+    orange Blog Contributor badge to their profile. Previously the flag could
+    only be set outside the app.
