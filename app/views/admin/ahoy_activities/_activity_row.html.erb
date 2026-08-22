@@ -27,25 +27,34 @@
 
   <% activity = event.decorate %>
   <td data-label="Details" class="px-4 py-3 align-top text-gray-500">
-    <% if activity.changes? %>
-      <ul class="space-y-1.5">
-        <% activity.changes_summary.each do |change| %>
-          <li>
-            <span class="font-medium text-gray-700"><%= change[:field] %></span>
-            <div class="mt-0.5 flex flex-wrap items-center gap-1 text-xs">
-              <span class="text-gray-400">Before:</span>
-              <span class="rounded bg-red-50 px-1.5 py-0.5 text-red-700 line-through"><%= change[:before] %></span>
-              <span class="text-gray-400">After:</span>
-              <span class="rounded bg-green-50 px-1.5 py-0.5 text-green-700"><%= change[:after] %></span>
-            </div>
-          </li>
+    <% if activity.extra_details? %>
+      <div class="space-y-1.5">
+        <% if activity.changes? %>
+          <ul class="space-y-1.5">
+            <% activity.changes_summary.each do |change| %>
+              <li>
+                <span class="font-medium text-gray-700"><%= change[:field] %></span>
+                <div class="mt-0.5 flex flex-wrap items-center gap-1 text-xs">
+                  <span class="text-gray-400">Before:</span>
+                  <span class="rounded bg-red-50 px-1.5 py-0.5 text-red-700 line-through"><%= change[:before] %></span>
+                  <span class="text-gray-400">After:</span>
+                  <span class="rounded bg-green-50 px-1.5 py-0.5 text-green-700"><%= change[:after] %></span>
+                </div>
+              </li>
+            <% end %>
+          </ul>
         <% end %>
-      </ul>
-    <% elsif activity.extra_details? %>
-      <%= link_to admin_activities_event_path(event),
-                  class: "text-indigo-600 text-xs font-medium bg-indigo-50 px-2 py-0.5 rounded hover:bg-indigo-100" do %>
-        View details
-      <% end %>
+        <% activity.detail_rows.each do |row| %>
+          <div class="text-xs" style="padding-left: <%= row[:depth] * 12 %>px;">
+            <% if row[:label] %>
+              <span class="font-medium text-gray-700"><%= row[:label] %><%= ":" if row[:value] %></span>
+            <% end %>
+            <% if row[:value] %>
+              <span class="text-gray-600"><%= row[:value] %></span>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
     <% else %>
       <span class="text-gray-300">—</span>
     <% end %>

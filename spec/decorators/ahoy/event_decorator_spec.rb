@@ -58,4 +58,36 @@ RSpec.describe Ahoy::EventDecorator do
       expect(event.changes_summary).to eq([])
     end
   end
+
+  describe "#detail_rows" do
+    it "flattens scalar extras into humanized rows" do
+      event = decorate("resource_title" => "Test", "source" => "import", "result_count" => 3)
+      expect(event.detail_rows).to match_array(
+        [
+          { label: "Source", value: "import", depth: 0 },
+          { label: "Result count", value: "3", depth: 0 }
+        ]
+      )
+    end
+
+    it "indents a nested hash under its label" do
+      event = decorate("keywords" => { "full_text" => "watercolor" })
+      expect(event.detail_rows).to eq(
+        [
+          { label: "Keywords", value: nil, depth: 0 },
+          { label: "Full text", value: "watercolor", depth: 1 }
+        ]
+      )
+    end
+
+    it "joins an array of scalars into one row" do
+      event = decorate("sectors" => %w[Veterans Youth])
+      expect(event.detail_rows).to eq([ { label: "Sectors", value: "Veterans, Youth", depth: 0 } ])
+    end
+
+    it "excludes the changes diff (rendered separately)" do
+      event = decorate("changes" => { "title" => { "before" => "A", "after" => "B" } })
+      expect(event.detail_rows).to eq([])
+    end
+  end
 end

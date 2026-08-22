@@ -31,8 +31,15 @@ module Ahoy
       end
     end
 
-    def properties_count
-      properties_hash.size
+    # Every non-change extra property flattened into readable, humanized rows
+    # for inline display: [{ label:, value:, depth: }, ...]. Nested hashes and
+    # arrays are indented under their parent (depth) so the whole payload is
+    # visible in the table without opening the detail page.
+    def detail_rows
+      rows = extra_properties.except("changes")
+      return [] if rows.empty?
+
+      flatten_rows(rows)
     end
 
     private
@@ -43,6 +50,41 @@ module Ahoy
 
     def change_diffs
       properties_hash["changes"]
+    end
+
+    def flatten_rows(value, label = nil, depth = 0)
+      case value
+      when Hash
+        nested_rows(value, label, depth)
+      when Array
+        array_rows(value, label, depth)
+      else
+        [ { label: label, value: display_value(value), depth: depth } ]
+      end
+    end
+
+    def nested_rows(hash, label, depth)
+      return [ { label: label, value: "(empty)", depth: depth } ] if hash.empty?
+
+      rows = label ? [ { label: label, value: nil, depth: depth } ] : []
+      child_depth = label ? depth + 1 : depth
+      hash.each do |key, val|
+        rows.concat(flatten_rows(val, key.to_s.humanize, child_depth))
+      end
+      rows
+    end
+
+    def array_rows(array, label, depth)
+      return [ { label: label, value: "(empty)", depth: depth } ] if array.empty?
+
+      if array.all? { |item| item.is_a?(Hash) }
+        rows = label ? [ { label: label, value: nil, depth: depth } ] : []
+        child_depth = label ? depth + 1 : depth
+        array.each { |item| rows.concat(nested_rows(item, nil, child_depth)) }
+        rows
+      else
+        [ { label: label, value: array.map { |item| display_value(item) }.join(", "), depth: depth } ]
+      end
     end
 
     def display_value(value)
