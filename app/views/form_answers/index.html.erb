@@ -1,0 +1,62 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="form-answers-index mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:forms) %> rounded-xl border border-gray-200 p-6 shadow">
+  <div class="w-full">
+    <div class="mb-6 flex items-start gap-4">
+      <span class="hidden h-12 w-12 shrink-0 items-center justify-center rounded-xl sm:flex <%= DomainTheme.bg_class_for(:forms) %> <%= DomainTheme.text_class_for(:forms, intensity: 700) %> border <%= DomainTheme.border_class_for(:forms, intensity: 200) %> shadow-sm">
+        <i class="fa-solid fa-list-check text-xl" aria-hidden="true"></i>
+      </span>
+      <div>
+        <h2 class="text-2xl font-semibold text-gray-900">Form answers</h2>
+        <p class="mt-1 text-gray-600">
+          Every answer submitted across the site's forms — search the answer text or
+          filter by form, person, submission, or question type.
+        </p>
+      </div>
+    </div>
+
+    <%# GET filter form outside the frame. The collection controller debounce-submits
+        the text boxes and submits the selects on change, into the results frame. %>
+    <%= form_with url: form_answers_path, method: :get, data: { controller: "collection", turbo_frame: "form_answers_results" }, autocomplete: "off" do %>
+      <div class="mb-6 flex flex-wrap items-end gap-3">
+        <div class="min-w-64 flex-1">
+          <%= label_tag :q, "Answer text", class: search_label_class %>
+          <%= text_field_tag :q, params[:q], class: search_field_class, placeholder: "Search answer text" %>
+        </div>
+        <div class="min-w-48">
+          <%= label_tag :person, "Person", class: search_label_class %>
+          <%= text_field_tag :person, params[:person], class: search_field_class, placeholder: "Name or email" %>
+        </div>
+        <div class="min-w-56">
+          <%= label_tag :form_id, "Form", class: search_label_class %>
+          <%= select_tag :form_id,
+                options_from_collection_for_select(@forms, :id, :display_name, params[:form_id].to_i),
+                include_blank: "All forms",
+                class: search_field_class(extra: "search-select-placeholder") %>
+        </div>
+        <div class="min-w-52">
+          <%= label_tag :answer_type, "Question type", class: search_label_class %>
+          <%= select_tag :answer_type,
+                options_for_select(FormField::ANSWER_TYPE_LABELS.map { |key, label| [ label, key ] }, params[:answer_type]),
+                include_blank: "All types",
+                class: search_field_class(extra: "search-select-placeholder") %>
+        </div>
+        <div class="w-32">
+          <%= label_tag :form_submission_id, "Submission #", class: search_label_class %>
+          <%= number_field_tag :form_submission_id, params[:form_submission_id], class: search_field_class, placeholder: "ID" %>
+        </div>
+        <% if params.slice(:q, :person, :form_id, :answer_type, :form_submission_id).values.any?(&:present?) %>
+          <%= render "shared/search_clear", url: form_answers_path %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% result_src = form_answers_path(request.query_parameters) %>
+    <%= turbo_frame_tag :form_answers_results, src: result_src, data: { turbo: "temporary" } do %>
+      <div class="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-400 shadow-sm">
+        <i class="fa-solid fa-spinner fa-spin text-2xl" aria-hidden="true"></i>
+        <p class="mt-2 text-sm">Loading answers…</p>
+      </div>
+    <% end %>
+  </div>
+</div>
