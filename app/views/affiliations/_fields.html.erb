@@ -38,7 +38,8 @@
       <%# Escape to the full affiliation editor: comments + reassign person/org. %>
       <%= link_to edit_affiliation_path(f.object,
                     return_to: person_side ? "organization" : "person",
-                    origin_id: person_side ? f.object.organization_id : f.object.person_id),
+                    origin_id: person_side ? f.object.organization_id : f.object.person_id,
+                    admin: params[:admin].presence),
                   target: "_blank", rel: "noopener",
                   class: "absolute top-1/2 right-2 z-10 -translate-y-1/2 text-gray-300 hover:text-gray-500",
                   title: "Edit affiliation, add comments, or reassign (opens in a new tab)" do %>
