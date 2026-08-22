@@ -339,6 +339,15 @@
               <% end %>
             </div>
           <% end %>
+          <!-- Monthly reports (admin/owner only) -->
+          <% if @person.profile_show_monthly_reports? %>
+            <div id="monthly_reports" class="admin-or-owner p-3">
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Monthly reports submitted</h2>
+              <%= turbo_frame_tag "person_monthly_reports_section", src: person_path(@person, section: "monthly_reports"), loading: :lazy do %>
+                <p class="text-gray-500 italic">Loading monthly reports...</p>
+              <% end %>
+            </div>
+          <% end %>
         </div>
       </div>
     <% end %>

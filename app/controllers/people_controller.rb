@@ -4,7 +4,7 @@ class PeopleController < ApplicationController
 
   # The profile's "Submitted content" sections — private to the person and admins,
   # not part of the public profile even after profile viewing opens up.
-  PRIVATE_SECTIONS = %w[ workshop_ideas story_ideas workshop_variation_ideas workshop_logs ].freeze
+  PRIVATE_SECTIONS = %w[ workshop_ideas story_ideas workshop_variation_ideas workshop_logs monthly_reports ].freeze
 
   def index
     authorize!
@@ -91,6 +91,9 @@ class PeopleController < ApplicationController
       when "workshop_logs"
         @workshop_logs = WorkshopLog.credited_to_person(@person).includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets).order(workshop_held_on: :desc, created_at: :desc)
         render partial: "people/sections/workshop_logs", locals: { person: @person, workshop_logs: @workshop_logs }
+      when "monthly_reports"
+        @monthly_reports = MonthlyReport.credited_to_person(@person).order(Arel.sql("COALESCE(reports.date, reports.created_at) DESC")).paginate(page: params[:page], per_page: per_page)
+        render partial: "people/sections/monthly_reports", locals: { person: @person, monthly_reports: @monthly_reports }
       when "workshop_variation_ideas"
         @workshop_variation_ideas = WorkshopVariationIdea.credited_to_person(@person).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshop_variation_ideas", locals: { person: @person, workshop_variation_ideas: @workshop_variation_ideas }
@@ -566,6 +569,7 @@ class PeopleController < ApplicationController
       :profile_show_workshops,
       :profile_show_workshop_ideas,
       :profile_show_workshop_logs,
+      :profile_show_monthly_reports,
       :profile_show_resources,
       :member_since,
       :linked_in_url,

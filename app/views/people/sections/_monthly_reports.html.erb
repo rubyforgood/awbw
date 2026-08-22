@@ -1,0 +1,18 @@
+<%= turbo_frame_tag "person_monthly_reports_section" do %>
+  <% if monthly_reports.any? %>
+    <ul class="divide-y divide-gray-200 blur-on-submit">
+      <% monthly_reports.each do |report| %>
+        <li class="flex items-center justify-between gap-3 py-2">
+          <%= link_to report.name, monthly_report_path(report), class: "#{eyebrow_link_class} hover:underline",
+                      data: { turbo_frame: "_top" } %>
+          <span class="text-sm text-gray-400"><%= report.display_date %></span>
+        </li>
+      <% end %>
+    </ul>
+    <div class="mt-6 flex justify-center">
+      <%= tailwind_paginate monthly_reports, params: { section: "monthly_reports" } %>
+    </div>
+  <% else %>
+    <p class="text-gray-500 italic">No monthly reports submitted yet.</p>
+  <% end %>
+<% end %>

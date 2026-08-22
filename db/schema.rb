@@ -1082,6 +1082,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_154252) do
     t.boolean "profile_show_email", default: true, null: false
     t.boolean "profile_show_events_registered", default: true, null: false
     t.boolean "profile_show_member_since", default: true, null: false
+    t.boolean "profile_show_monthly_reports", default: true, null: false
     t.boolean "profile_show_phone", default: true, null: false
     t.boolean "profile_show_pronouns", default: true, null: false
     t.boolean "profile_show_resources", default: true, null: false
