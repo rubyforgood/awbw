@@ -510,7 +510,7 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (9 files):
+Located in `lib/tasks/` (10 files):
 - `dev.rake` — Development database seeding from XML/CSV
 - `rhino_migrator.rake` — Rich text editor migration
 - `attachment_report.rake` — Attachment reporting
@@ -520,4 +520,4 @@ Located in `lib/tasks/` (9 files):
 - `migrate_sectors.rake` — Sector data migration
 - `import_stories.rake` — Imports stories from a WordPress Posts Export CSV (`StoryImporter`)
 - `migrate_workshop_logs.rake` — Workshop log migration
-- `migrate_sectors.rake` — Sector data migration
+- `backfill_affiliation_facilitator.rake` — One-off post-deploy backfill of `affiliations.facilitator` from the title
