@@ -18,40 +18,40 @@
     <%# GET filter form outside the frame. The collection controller debounce-submits
         the text boxes and submits the selects on change, into the results frame. %>
     <%= form_with url: form_answers_path, method: :get, data: { controller: "collection", turbo_frame: "form_answers_results" }, autocomplete: "off" do %>
-      <div class="mb-6 flex flex-wrap items-end gap-3">
-        <div class="min-w-64 flex-1">
+      <div class="mb-6 flex flex-wrap items-end gap-2">
+        <div class="min-w-40 flex-1">
           <%= label_tag :q, "Answer text", class: search_label_class %>
           <%= text_field_tag :q, params[:q], class: search_field_class, placeholder: "Search answer text" %>
         </div>
-        <div class="min-w-56 flex-1">
+        <div class="w-40">
           <%= label_tag :question, "Question text", class: search_label_class %>
-          <%= text_field_tag :question, params[:question], class: search_field_class, placeholder: "Search question text" %>
+          <%= text_field_tag :question, params[:question], class: search_field_class, placeholder: "Search question" %>
         </div>
-        <div class="min-w-48">
-          <%= label_tag :person, "Person", class: search_label_class %>
-          <%= text_field_tag :person, params[:person], class: search_field_class, placeholder: "Name or email" %>
-        </div>
-        <div class="min-w-56">
-          <%= label_tag :form_id, "Form", class: search_label_class %>
-          <%= select_tag :form_id,
-                options_from_collection_for_select(@forms, :id, :display_name, params[:form_id].to_i),
-                include_blank: "All forms",
-                class: search_field_class(extra: "search-select-placeholder") %>
-        </div>
-        <div class="min-w-52">
+        <div class="w-40">
           <%= label_tag :answer_type, "Question type", class: search_label_class %>
           <%= select_tag :answer_type,
                 options_for_select(FormField::ANSWER_TYPE_LABELS.map { |key, label| [ label, key ] }, params[:answer_type]),
                 include_blank: "All types",
                 class: search_field_class(extra: "search-select-placeholder") %>
         </div>
-        <div class="w-32">
+        <div class="w-40">
+          <%= label_tag :person, "Person", class: search_label_class %>
+          <%= text_field_tag :person, params[:person], class: search_field_class, placeholder: "Name or email" %>
+        </div>
+        <div class="w-40">
+          <%= label_tag :form_id, "Form", class: search_label_class %>
+          <%= select_tag :form_id,
+                options_from_collection_for_select(@forms, :id, :display_name, params[:form_id].to_i),
+                include_blank: "All forms",
+                class: search_field_class(extra: "search-select-placeholder") %>
+        </div>
+        <div class="w-24">
           <%= label_tag :form_submission_id, "Submission #", class: search_label_class %>
           <%= number_field_tag :form_submission_id, params[:form_submission_id], class: search_field_class, placeholder: "ID" %>
         </div>
-        <% if params.slice(:q, :question, :person, :form_id, :answer_type, :form_submission_id).values.any?(&:present?) %>
+        <div class="flex items-end">
           <%= render "shared/search_clear", url: form_answers_path %>
-        <% end %>
+        </div>
       </div>
     <% end %>
 
