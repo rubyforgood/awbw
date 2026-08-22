@@ -6,7 +6,7 @@
         <i class="fa-solid fa-arrow-left text-xs"></i> Back to form submissions
       <% end %>
     <% elsif params[:return_to] == "form_answers" %>
-      <%= link_to form_answers_path(q: params[:q].presence, question: params[:question].presence, person: params[:person].presence, form_id: params[:form_id].presence, answer_type: params[:answer_type].presence, form_submission_id: params[:form_submission_id].presence), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      <%= link_to form_answers_path(q: params[:q].presence, question: params[:question].presence, person: params[:person].presence, form_id: params[:form_id].presence, event_id: params[:event_id].presence, answer_type: params[:answer_type].presence, form_submission_id: params[:form_submission_id].presence), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Back to form answers
       <% end %>
     <% elsif event && params[:return_to] == "bulk_payments" %>

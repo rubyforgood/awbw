@@ -48,7 +48,7 @@
                       form_submission_path(submission, return_to: "form_answers",
                         q: params[:q].presence, question: params[:question].presence,
                         person: params[:person].presence, form_id: params[:form_id].presence,
-                        answer_type: params[:answer_type].presence,
+                        event_id: params[:event_id].presence, answer_type: params[:answer_type].presence,
                         form_submission_id: params[:form_submission_id].presence),
                       data: { turbo_frame: "_top" },
                       class: "mt-1 inline-block text-sm whitespace-nowrap text-blue-600 hover:underline" %>

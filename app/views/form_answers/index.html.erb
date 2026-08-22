@@ -46,18 +46,28 @@
           <%= label_tag :person, "Person", class: search_label_class %>
           <%= text_field_tag :person, params[:person], class: search_field_class, placeholder: "Name or email" %>
         </div>
-        <div class="w-44">
+        <div class="w-24">
+          <%= label_tag :form_submission_id, "Submission #", class: search_label_class %>
+          <%= number_field_tag :form_submission_id, params[:form_submission_id], class: search_field_class, placeholder: "ID" %>
+        </div>
+      </div>
+
+      <div class="mt-3 flex flex-wrap items-end gap-3">
+        <div class="w-56">
           <%= label_tag :form_id, "Form", class: search_label_class %>
           <%= select_tag :form_id,
                 options_from_collection_for_select(@forms, :id, :display_name, params[:form_id].to_i),
                 include_blank: "All forms",
                 class: search_field_class(extra: "search-select-placeholder") %>
         </div>
-        <div class="w-24">
-          <%= label_tag :form_submission_id, "Submission #", class: search_label_class %>
-          <%= number_field_tag :form_submission_id, params[:form_submission_id], class: search_field_class, placeholder: "ID" %>
+        <div class="w-56">
+          <%= label_tag :event_id, "Event", class: search_label_class %>
+          <%= select_tag :event_id,
+                options_from_collection_for_select(@events, :id, :time_title, params[:event_id].to_i),
+                include_blank: "All events",
+                class: search_field_class(extra: "search-select-placeholder") %>
         </div>
-        <div class="ml-auto flex items-end">
+        <div class="flex items-end">
           <%= render "shared/search_clear", url: form_answers_path %>
         </div>
       </div>

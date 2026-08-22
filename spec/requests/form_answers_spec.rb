@@ -54,6 +54,20 @@ RSpec.describe "FormAnswers", type: :request do
         expect(response.body).not_to include("drop-me")
       end
 
+      it "filters by event" do
+        wanted_event = create(:event)
+        other_event = create(:event)
+        create(:form_answer, submitted_answer: "at-my-event",
+               form_submission: create(:form_submission, event: wanted_event))
+        create(:form_answer, submitted_answer: "at-other-event",
+               form_submission: create(:form_submission, event: other_event))
+
+        get form_answers_path(event_id: wanted_event.id), headers: frame_headers
+
+        expect(response.body).to include("at-my-event")
+        expect(response.body).not_to include("at-other-event")
+      end
+
       it "filters by person name" do
         priya = create(:person, first_name: "Priya", last_name: "Patel")
         other = create(:person, first_name: "Sam", last_name: "Jones")

@@ -10,6 +10,7 @@ class FormAnswersController < ApplicationController
       render :form_answers_results
     else
       @forms = Form.order(:name)
+      @events = Event.order(start_date: :desc)
       render :index
     end
   end
@@ -29,6 +30,9 @@ class FormAnswersController < ApplicationController
     end
     if params[:form_id].present?
       scope = scope.joins(:form_submission).where(form_submissions: { form_id: params[:form_id] })
+    end
+    if params[:event_id].present?
+      scope = scope.joins(:form_submission).where(form_submissions: { event_id: params[:event_id] })
     end
     if params[:person].present?
       term = "%#{Person.sanitize_sql_like(params[:person])}%"
