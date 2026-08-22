@@ -30,18 +30,6 @@
                      onchange: "this.form.requestSubmit()" %>
     </div>
 
-    <!-- Author name -->
-    <div class="flex w-full flex-col sm:w-1/2 md:w-1/4 lg:w-1/5">
-      <%= label_tag :author_name, "Author name", class: search_label_class %>
-      <div class="relative">
-        <%= text_field_tag :author_name, params[:author_name],
-                           placeholder: "e.g. Jane Doe",
-                           class: search_field_class(extra: "pr-10") %>
-
-        <%= render "shared/search_submit" %>
-      </div>
-    </div>
-
     <!-- Person -->
     <div class="flex w-full flex-col sm:w-1/2 md:w-1/4 lg:w-1/5" data-controller="searchable-select" data-searchable-select-mode-value="person">
       <%= label_tag :created_by_id, "Person", class: search_label_class %>

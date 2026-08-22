@@ -1800,8 +1800,10 @@
   pr_number: 2311
   summary: >-
     Type a name into the filter box to narrow an index by who authored or is
-    named on each record. Added to Stories, Workshop variations, Workshop logs,
-    Workshop ideas, Membership invoices, and Payments.
+    named on each record. Added to Stories, Workshop variations, Workshop ideas,
+    Membership invoices, and Payments.
   pro_tips:
     - Partial names work — "jane" matches "Jane Doe" — and it honors each author's
       credit preference, so it never surfaces a name shown as anonymous.
+    - Workshop ideas now list the credited author (per that person's display
+      preference) rather than whoever entered the idea.
