@@ -1,28 +1,28 @@
 <%= turbo_stream.replace("workshop_variations_count", partial: "workshop_variations_count") %>
 <%
-  sort_base = params.permit(:query, :author_id, :number_of_items_per_page).to_h.symbolize_keys
+  sort_base = params.permit(:query, :author_name, :author_id, :number_of_items_per_page).to_h.symbolize_keys
   sort_link = sort_header_link(frame: "workshop_variations_results", path: ->(p) { workshop_variations_path(p) }, base: sort_base)
 %>
-<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= 'animate-fade blur-on-submit' if @workshop_variations.any? %>">
-  <table class="table table-responsive table-bordered table-curved">
+<div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm <%= 'animate-fade blur-on-submit' if @workshop_variations.any? %>">
+  <table class="table-responsive table-bordered table-curved table">
     <thead>
       <tr id="table-thead-tr">
-        <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[2%]"></th>
-        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 whitespace-nowrap"><%= sort_link.call("name", "Name") %></th>
+        <th class="w-[2%] px-4 py-2 text-center text-sm font-semibold text-gray-700"></th>
+        <th class="px-4 py-2 text-left text-sm font-semibold whitespace-nowrap text-gray-700"><%= sort_link.call("name", "Name") %></th>
         <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Description</th>
         <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700"><%= sort_link.call("author", "Author") %></th>
         <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">From idea</th>
         <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700"><%= sort_link.call("updated_at", "Updated") %></th>
-        <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[2%]">Edit</th>
+        <th class="w-[2%] px-4 py-2 text-center text-sm font-semibold text-gray-700">Edit</th>
       </tr>
     </thead>
 
     <tbody class="divide-y divide-gray-100">
       <% if @workshop_variations.any? %>
         <% @workshop_variations.each do |workshop_variation| %>
-          <tr class="hover:bg-gray-50 transition-colors duration-150">
+          <tr class="transition-colors duration-150 hover:bg-gray-50">
             <td class="px-4 py-2">
-              <div class="w-12 h-9 rounded bg-gray-200 overflow-hidden">
+              <div class="h-9 w-12 overflow-hidden rounded bg-gray-200">
                 <%= render "assets/display_image",
                            resource: workshop_variation,
                            width: 12, height: 9,
@@ -33,13 +33,13 @@
               </div>
             </td>
             <td class="px-4 py-2" title="<%= workshop_variation.name %>">
-              <div class="flex items-center gap-2 text-sm text-gray-800 font-semibold">
+              <div class="flex items-center gap-2 text-sm font-semibold text-gray-800">
                 <%= link_to workshop_variation_path(workshop_variation), data: { turbo_frame: "_top" }, class: "hover:text-blue-600 hover:underline" do %>
                   <%= truncate(workshop_variation.name, length: 30) %> (<%= workshop_variation.windows_type&.short_name || "Combined" %>)
                 <% end %>
                 <% unless workshop_variation.published? %>
-                  <span class="inline-flex items-center pl-2 pr-3 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-gray-600 whitespace-nowrap">
-                    <span class="inline-flex justify-center w-4"><i class="fa-solid fa-eye-slash"></i></span>
+                  <span class="inline-flex items-center rounded-full bg-blue-100 py-0.5 pr-3 pl-2 text-xs font-medium whitespace-nowrap text-gray-600">
+                    <span class="inline-flex w-4 justify-center"><i class="fa-solid fa-eye-slash"></i></span>
                     <span class="ml-1">Unpublished</span>
                   </span>
                 <% end %>
@@ -61,10 +61,10 @@
                 </span>
               <% end %>
             </td>
-            <td class="px-4 py-2 text-sm text-gray-800 text-center">
+            <td class="px-4 py-2 text-center text-sm text-gray-800">
               <%= credited_author_link(workshop_variation, class: "#{eyebrow_link_class}") %>
             </td>
-            <td class="px-4 py-2 text-sm text-center whitespace-nowrap">
+            <td class="px-4 py-2 text-center text-sm whitespace-nowrap">
               <% if workshop_variation.workshop_variation_idea %>
                 <%= link_to "Idea ##{workshop_variation.workshop_variation_idea.id}",
                             workshop_variation_idea_path(workshop_variation.workshop_variation_idea),
@@ -74,7 +74,7 @@
                 <span class="text-gray-300">--</span>
               <% end %>
             </td>
-            <td class="px-4 py-2 text-sm text-gray-500 text-center whitespace-nowrap"><%= workshop_variation.updated_at&.strftime('%m/%d/%y') %></td>
+            <td class="px-4 py-2 text-center text-sm whitespace-nowrap text-gray-500"><%= workshop_variation.updated_at&.strftime('%m/%d/%y') %></td>
             <td class="px-4 py-2 text-center whitespace-nowrap">
               <%= link_to "Edit",
                           edit_workshop_variation_path(workshop_variation),
@@ -85,8 +85,8 @@
         <% end %>
       <% else %>
         <tr>
-          <td colspan="7" class="text-center py-16">
-            <h2 class="text-gray-600 text-lg mb-2">No <%= WorkshopVariation.model_name.human.pluralize.downcase %> found.</h2>
+          <td colspan="7" class="py-16 text-center">
+            <h2 class="mb-2 text-lg text-gray-600">No <%= WorkshopVariation.model_name.human.pluralize.downcase %> found.</h2>
             <% if allowed_to?(:new?, WorkshopVariation) %>
               <div class="p-3">
                 <%= link_to "New #{WorkshopVariation.model_name.human.downcase}",

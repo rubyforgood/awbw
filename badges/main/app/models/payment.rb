@@ -46,6 +46,7 @@ class Payment < ApplicationRecord
     results = results.by_type(params[:type]) if params[:type].present?
     results = results.where(payer_type: params[:payer_type]) if params[:payer_type].present?
     results = results.where(person_id: params[:person_id]) if params[:person_id].present?
+    results = results.by_person_name(params[:person_name]) if params[:person_name].present?
     results = results.where(organization_id: params[:organization_id]) if params[:organization_id].present?
     results = results.has_remaining(params[:has_remaining]) if params[:has_remaining].present? && params[:has_remaining] != "all"
     results = results.matching_search(params[:search]) if params[:search].present?
@@ -67,6 +68,15 @@ class Payment < ApplicationRecord
     pattern = "%#{sanitize_sql_like(query)}%"
     where("CAST(metadata AS CHAR) LIKE :q OR stripe_charge_id LIKE :q", q: pattern)
   end
+
+  scope :by_person_name, ->(query) {
+    return all if query.blank?
+    needle = "%#{sanitize_sql_like(query.to_s.strip.downcase)}%"
+    joins(:person).where(
+      "LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :needle " \
+      "OR LOWER(people.first_name) LIKE :needle OR LOWER(people.last_name) LIKE :needle",
+      needle: needle)
+  }
 
   def payer
     case payer_type
