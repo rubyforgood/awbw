@@ -193,7 +193,7 @@ class Person < ApplicationRecord
     return all if tag_ids.empty?
     joins(:staff_taggings).where(staff_taggings: { staff_tag_id: tag_ids }).distinct }
   scope :story_authors, -> { joins(:stories_as_author).distinct }
-  scope :blog_authors, -> { joins(:community_news_as_author).distinct }
+  scope :blog_contributors, -> { where(blog_contributor: true) }
   scope :workshop_authors, -> { joins(:workshops_as_author).distinct }
   scope :workshop_variation_authors, -> { joins(:workshop_variations_as_author).distinct }
   # WorkshopLog has no author column — it is created_by a User, so "author" here
@@ -240,7 +240,7 @@ class Person < ApplicationRecord
   scope :by_role, ->(role) {
     case role
     when "story_author" then story_authors
-    when "blog_author" then blog_authors
+    when "blog_contributor" then blog_contributors
     when "workshop_author" then workshop_authors
     when "workshop_variation_author" then workshop_variation_authors
     when "workshop_log_author" then workshop_log_authors
@@ -270,7 +270,7 @@ class Person < ApplicationRecord
     end }
 
   ROLE_FILTER_OPTIONS = [
-    [ "Blog authors", "blog_author" ],
+    [ "Blog contributors", "blog_contributor" ],
     [ "Sector leaders", "sector_leader" ],
     [ "Story authors", "story_author" ],
     [ "Workshop authors", "workshop_author" ],

@@ -539,10 +539,10 @@ RSpec.describe Person, type: :model do
       end
     end
 
-    context "role: blog_author" do
-      it "returns only people who authored community news" do
-        create(:community_news, author: person_bob)
-        results = Person.search_by_params(role: "blog_author")
+    context "role: blog_contributor" do
+      it "returns only people flagged as blog contributors" do
+        person_bob.update!(blog_contributor: true)
+        results = Person.search_by_params(role: "blog_contributor")
         expect(results).to include(person_bob)
         expect(results).not_to include(person_alice)
       end
