@@ -1,0 +1,27 @@
+<%# A cocoon nested field for one staff tag on the person form — the staff-tag
+    counterpart of shared/_sectorable_item_fields, minus the primary/leader flags.
+    A persisted tagging shows its tag name; a new one (added via "Add staff tag")
+    shows a select of the active tags not already applied. %>
+<% collection ||= @staff_tags_collection || StaffTag.active.ordered.pluck(:name, :id) %>
+<div class="nested-fields inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 transition">
+  <% if f.object&.staff_tag_id.present? %>
+    <%= f.hidden_field :staff_tag_id %>
+    <span>
+      <%= f.object.staff_tag&.name %><% if f.object.staff_tag&.archived? %> <span class="text-xs text-gray-400">(archived)</span><% end %>
+    </span>
+  <% else %>
+    <%= f.input :staff_tag_id,
+                as: :select,
+                label: false,
+                collection: collection,
+                selected: f.object&.staff_tag_id,
+                include_blank: "Select staff tag…",
+                wrapper: false,
+                input_html: {
+                  class: "bg-transparent border-none focus:ring-0 text-sm text-gray-500 cursor-pointer py-0"
+                } %>
+  <% end %>
+  <%= link_to_remove_association "✖",
+                                 f,
+                                 class: "ml-0.5 text-gray-400 hover:text-gray-600 font-bold text-xs transition" %>
+</div>

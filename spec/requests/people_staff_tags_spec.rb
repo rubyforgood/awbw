@@ -6,45 +6,50 @@ RSpec.describe "Person staff tags", type: :request do
   let!(:trainer_tag) { create(:staff_tag, name: "Potential future trainer") }
   let!(:cohort_tag) { create(:staff_tag, name: "DV Leadership Cohort") }
 
-  def update_staff_tags(ids)
+  def set_staff_taggings(attrs)
     patch person_path(person), params: {
-      person: { first_name: person.first_name, staff_tag_ids: ids }
+      person: { first_name: person.first_name, staff_taggings_attributes: attrs }
     }
   end
 
   describe "as an admin" do
     before { sign_in admin }
 
-    it "renders the admin-only staff tags section on the edit form" do
+    it "renders the admin-only staff tags chip picker on the edit form" do
       get edit_person_path(person)
 
       expect(response.body).to include("Staff tags")
+      expect(response.body).to include("Add staff tag")
+      # The active tags are offered in the add-a-chip select.
       expect(response.body).to include("Potential future trainer")
       expect(response.body).to include("DV Leadership Cohort")
     end
 
-    it "assigns staff tags and records who applied them" do
-      update_staff_tags([ "", trainer_tag.id.to_s ])
+    it "assigns staff tags via nested attributes and records who applied them" do
+      set_staff_taggings([ { staff_tag_id: trainer_tag.id } ])
 
       expect(person.reload.staff_tags).to contain_exactly(trainer_tag)
       expect(person.staff_taggings.first.created_by).to eq(admin)
     end
 
-    it "clears staff tags when none are submitted" do
-      person.staff_tags << cohort_tag
-      update_staff_tags([ "" ])
+    it "removes a staff tag when the chip is marked for destruction" do
+      tagging = person.staff_taggings.create!(staff_tag: cohort_tag)
+      set_staff_taggings([ { id: tagging.id, staff_tag_id: cohort_tag.id, _destroy: "1" } ])
 
       expect(person.reload.staff_tags).to be_empty
     end
 
-    it "keeps an already-applied archived tag when the form re-submits it" do
+    it "shows and keeps an already-applied archived tag" do
       archived = create(:staff_tag, :archived, name: "Legacy roster")
-      person.staff_tags << archived
+      archived_tagging = person.staff_taggings.create!(staff_tag: archived)
 
       get edit_person_path(person)
       expect(response.body).to include("Legacy roster")
 
-      update_staff_tags([ "", archived.id.to_s, trainer_tag.id.to_s ])
+      set_staff_taggings([
+        { id: archived_tagging.id, staff_tag_id: archived.id },
+        { staff_tag_id: trainer_tag.id }
+      ])
       expect(person.reload.staff_tags).to contain_exactly(archived, trainer_tag)
     end
   end
@@ -63,9 +68,11 @@ RSpec.describe "Person staff tags", type: :request do
       expect(response.body).not_to include("Untagged")
     end
 
-    it "exposes the staff tag filter to admins" do
-      get people_path
+    it "pre-selects the clicked staff tag in the filter dropdown" do
+      get people_path(staff_tag_ids: cohort_tag.id)
+
       expect(response.body).to include('name="staff_tag_ids"')
+      expect(response.body).to match(/value="#{cohort_tag.id}"[^>]*\bselected\b|\bselected\b[^>]*value="#{cohort_tag.id}"/)
     end
   end
 end

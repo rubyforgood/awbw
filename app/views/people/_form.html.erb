@@ -201,38 +201,27 @@
 
   <!-- Staff tags (internal, admin-only) -->
   <% if allowed_to?(:manage?, StaffTag) %>
-    <%# Union of active tags and any the person already carries (archived
-        included), so saving the form never silently drops an archived tagging. %>
-    <% staff_tag_options = ((@staff_tags || []).to_a + @person.staff_tags.to_a).uniq.sort_by { |tag| tag.name.to_s.downcase } %>
-    <div class="form-group admin-only space-y-2 rounded-lg bg-blue-100 p-4">
+    <% staff_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
+    <div class="form-group space-y-2">
       <div class="flex items-baseline justify-between">
         <h3 class="font-semibold text-gray-700">Staff tags</h3>
         <%= link_to "Manage tags", staff_tags_path, class: "text-sm #{eyebrow_link_class}", target: "_blank", rel: "noopener" %>
       </div>
       <p class="text-xs text-gray-500">Internal only — pipelines, rosters, and outreach lists. Never shown publicly.</p>
-      <%# Always submit the key (blank included) so unchecking every tag clears it. %>
-      <%= hidden_field_tag "person[staff_tag_ids][]", "" %>
-      <% if staff_tag_options.any? %>
-        <div class="flex flex-wrap gap-3 pt-1">
-          <% staff_tag_options.each do |tag| %>
-            <% id = "person_staff_tag_ids_#{tag.id}" %>
-            <label for="<%= id %>"
-                   class="flex min-w-[180px] cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition hover:bg-gray-50">
-              <%= check_box_tag "person[staff_tag_ids][]", tag.id,
-                                @current_staff_tag_ids&.include?(tag.id),
-                                id: id,
-                                class: "h-4 w-4 rounded text-blue-600" %>
-              <span class="text-sm whitespace-nowrap text-gray-700">
-                <%= tag.name %><% if tag.archived? %> <span class="text-xs text-gray-400">(archived)</span><% end %>
-              </span>
-            </label>
-          <% end %>
-        </div>
-      <% else %>
-        <p class="text-sm text-gray-500 italic">
-          No staff tags yet. <%= link_to "Create one", new_staff_tag_path, class: eyebrow_link_class, target: "_blank", rel: "noopener" %>.
-        </p>
-      <% end %>
+      <div class="flex flex-wrap content-start items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+        <%= f.simple_fields_for :staff_taggings, staff_owner.staff_taggings do |sfi| %>
+          <%= render "people/staff_tag_item_fields", f: sfi %>
+        <% end %>
+
+        <%= link_to_add_association "➕ Add staff tag",
+                                    f,
+                                    :staff_taggings,
+                                    partial: "people/staff_tag_item_fields",
+                                    render_options: {
+                                      locals: { collection: (@staff_tags_collection || [])
+                                        .reject { |_, id| (@current_staff_tag_ids || []).include?(id) } } },
+                                    class: "btn btn-secondary-outline" %>
+      </div>
     </div>
   <% end %>
 

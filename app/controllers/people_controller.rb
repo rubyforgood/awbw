@@ -249,7 +249,6 @@ class PeopleController < ApplicationController
     respond_to do |format|
       if @person.save
         assign_associations(@person) if params.dig(:person, :category_ids)
-        assign_staff_tags(@person)
         format.html { redirect_to @person, notice: "Person was successfully created." }
       else
         set_form_variables
@@ -277,7 +276,6 @@ class PeopleController < ApplicationController
 
     if @person.save
       assign_associations(@person) if params.dig(:person, :category_ids)
-      assign_staff_tags(@person)
       redirect_to person_update_return_path, notice: "Person was successfully updated."
     else
       set_form_variables
@@ -310,23 +308,6 @@ class PeopleController < ApplicationController
   end
 
   private
-
-  # Sync a person's internal staff tags from the admin-only form section. Gated to
-  # admins (a non-admin can't see the section and a forged param is ignored), and
-  # only runs when the form actually submitted the field. Diffed by hand rather
-  # than a collection setter so each new tagging records which admin applied it.
-  def assign_staff_tags(person)
-    return unless allowed_to?(:manage?, StaffTag)
-    return unless params.dig(:person, :staff_tag_ids)
-
-    desired = Array(params[:person][:staff_tag_ids]).reject(&:blank?).map(&:to_i)
-    existing = person.staff_taggings.index_by(&:staff_tag_id)
-
-    (desired - existing.keys).each do |tag_id|
-      person.staff_taggings.create!(staff_tag_id: tag_id, created_by: current_user)
-    end
-    existing.each { |tag_id, tagging| tagging.destroy unless desired.include?(tag_id) }
-  end
 
   # Showing anonymous content to anyone but the person and admins would tie an
   # "Anonymous" credit back to a name.
@@ -396,10 +377,11 @@ class PeopleController < ApplicationController
     # saving the form can't drop a person's other category connections.
     @managed_category_type_ids = @person_categories_grouped.map { |type, _| type.id }
 
-    # Internal, admin-only staff tags (talent pipeline / roster / outreach). The
-    # section only renders for admins; archived tags stay hidden from the picker
-    # but a person already carrying one keeps it (see the union in the form).
-    @staff_tags = StaffTag.active.ordered
+    # Internal, admin-only staff tags (talent pipeline / roster / outreach), edited
+    # as a cocoon chip picker like sectors. Only active tags are offered to add; a
+    # person already carrying an archived tag keeps it (the persisted chip shows the
+    # name and isn't in this add-collection).
+    @staff_tags_collection = StaffTag.active.ordered.pluck(:name, :id)
     @current_staff_tag_ids = @person.staff_tag_ids
   end
 
@@ -600,6 +582,7 @@ class PeopleController < ApplicationController
       :twitter_url,
       :created_by_id, :updated_by_id,
       sectorable_items_attributes: [ :id, :sector_id, :is_leader, :is_primary, :_destroy ],
+      staff_taggings_attributes: [ :id, :staff_tag_id, :_destroy ],
       age_range_categorizable_items_attributes: [ :id, :category_id, :is_primary, :_destroy ],
       addresses_attributes: [
         :id,

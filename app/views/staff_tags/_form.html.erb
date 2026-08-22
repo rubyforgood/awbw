@@ -16,10 +16,19 @@
                   as: :text %>
     </div>
 
-    <div class="action-buttons mt-8 flex justify-center gap-3">
+    <div class="action-buttons mt-8 flex flex-wrap justify-center gap-3">
       <% if allowed_to?(:destroy?, f.object) %>
         <%= link_to "Delete", @staff_tag, class: "btn btn-danger-outline",
                     data: { turbo_method: :delete, turbo_confirm: "Delete this staff tag? Archive it instead if it's still in use." } %>
+      <% end %>
+      <% if f.object.persisted? %>
+        <% if f.object.archived? %>
+          <%= link_to "Unarchive", unarchive_staff_tag_path(f.object), class: "btn btn-secondary-outline",
+                      data: { turbo_method: :patch } %>
+        <% else %>
+          <%= link_to "Archive", archive_staff_tag_path(f.object), class: "btn btn-secondary-outline",
+                      data: { turbo_method: :patch } %>
+        <% end %>
       <% end %>
       <%= link_to "Cancel", staff_tags_path, class: "btn btn-secondary-outline" %>
       <%= f.button :submit, class: "btn btn-primary" %>
