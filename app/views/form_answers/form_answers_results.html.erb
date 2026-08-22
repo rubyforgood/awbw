@@ -15,7 +15,6 @@
             <th class="px-4 py-3">Type</th>
             <th class="px-4 py-3">Form &amp; person</th>
             <th class="px-4 py-3">Submitted</th>
-            <th class="px-4 py-3"></th>
           </tr>
         </thead>
         <tbody>
@@ -44,8 +43,8 @@
                 <div class="font-medium text-gray-900"><%= submission.form&.display_name %></div>
                 <div class="text-gray-600"><%= submission.person&.name %></div>
               </td>
-              <td class="px-4 py-3 whitespace-nowrap"><%= answer.created_at.to_fs(:long) %></td>
-              <td class="px-4 py-3 text-right">
+              <td class="px-4 py-3 whitespace-nowrap">
+                <div><%= answer.created_at.to_fs(:long) %></div>
                 <%= link_to "View submission",
                       form_submission_path(submission, return_to: "form_answers",
                         q: params[:q].presence, question: params[:question].presence,
@@ -53,7 +52,7 @@
                         answer_type: params[:answer_type].presence,
                         form_submission_id: params[:form_submission_id].presence),
                       data: { turbo_frame: "_top" },
-                      class: "whitespace-nowrap text-blue-600 hover:underline" %>
+                      class: "mt-1 inline-block text-sm whitespace-nowrap text-blue-600 hover:underline" %>
               </td>
             </tr>
           <% end %>
