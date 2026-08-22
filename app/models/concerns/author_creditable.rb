@@ -59,6 +59,19 @@ module AuthorCreditable
     # The idea models' only authorship link. Keyed on person, not user, so it stays
     # empty for a person with no account.
     scope :created_by_person, ->(person_id) { joins(:created_by).where(users: { person_id: person_id }) }
+
+    # Everything a person is credited for under author_person semantics: the
+    # explicit author, or — the legacy fallback, only when nobody else is the
+    # explicit author — anything their user account created. The read-side twin
+    # of #author_person, for profile listings.
+    scope :credited_to_person, ->(person) {
+      if person
+        where(author_id: person.id)
+          .or(where(author_id: nil, created_by_id: User.where(person_id: person.id).select(:id)))
+      else
+        none
+      end
+    }
   end
 
   # The linkable credited person, in precedence order: the explicit/legacy author

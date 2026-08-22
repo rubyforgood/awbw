@@ -22,11 +22,20 @@ RSpec.describe "Person profile workshop variations section", type: :request do
     expect(response.body).to include("Authored Variation")
   end
 
-  it "excludes variations the person's user merely created (audit trail only)" do
-    create(:workshop_variation, name: "Only Created Variation", created_by: owner_user)
+  it "includes unauthored variations the person's user created (legacy fallback)" do
+    create(:workshop_variation, name: "Only Created Variation", created_by: owner_user, author: nil)
 
     get_workshop_variations_section
 
-    expect(response.body).not_to include("Only Created Variation")
+    expect(response.body).to include("Only Created Variation")
+  end
+
+  it "excludes variations the person's user created but credited to someone else" do
+    create(:workshop_variation, name: "Someone Elses Variation",
+                                created_by: owner_user, author: create(:person))
+
+    get_workshop_variations_section
+
+    expect(response.body).not_to include("Someone Elses Variation")
   end
 end

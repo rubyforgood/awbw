@@ -22,12 +22,21 @@ RSpec.describe "Person profile workshops section", type: :request do
     expect(response.body).to include("Authored Workshop")
   end
 
-  it "excludes workshops the person's user merely created (audit trail only)" do
-    create(:workshop, :published, title: "Only Created Workshop", created_by: owner_user)
+  it "includes unauthored workshops the person's user created (legacy fallback)" do
+    create(:workshop, :published, title: "Only Created Workshop", created_by: owner_user, author: nil)
 
     get_workshops_section
 
-    expect(response.body).not_to include("Only Created Workshop")
+    expect(response.body).to include("Only Created Workshop")
+  end
+
+  it "excludes workshops the person's user created but credited to someone else" do
+    create(:workshop, :published, title: "Someone Elses Workshop",
+                                  created_by: owner_user, author: create(:person))
+
+    get_workshops_section
+
+    expect(response.body).not_to include("Someone Elses Workshop")
   end
 
   it "flags an anonymously-credited authored workshop for an admin" do

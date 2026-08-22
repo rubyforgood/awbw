@@ -187,6 +187,28 @@ RSpec.shared_examples "author_creditable" do |factory:, org_credited:, credits_c
     end
   end
 
+  if names_author
+    describe ".credited_to_person" do
+      let(:person) { create(:person) }
+      let(:their_user) { create(:user, person: person) }
+
+      it "includes records they explicitly authored" do
+        record = create(factory, author: person, created_by: create(:user))
+        expect(model.credited_to_person(person)).to include(record)
+      end
+
+      it "includes unauthored records their user created (legacy fallback)" do
+        record = create(factory, author: nil, created_by: their_user)
+        expect(model.credited_to_person(person)).to include(record)
+      end
+
+      it "excludes records authored by someone else, even if their user created them" do
+        record = create(factory, author: create(:person), created_by: their_user)
+        expect(model.credited_to_person(person)).not_to include(record)
+      end
+    end
+  end
+
   describe ".by_credited_person_name" do
     if names_author
       let(:author_user) { create(:user, :with_person) }
