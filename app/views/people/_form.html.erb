@@ -199,6 +199,43 @@
     <% end %>
   </div>
 
+  <!-- Staff tags (internal, admin-only) -->
+  <% if allowed_to?(:manage?, StaffTag) %>
+    <%# Union of active tags and any the person already carries (archived
+        included), so saving the form never silently drops an archived tagging. %>
+    <% staff_tag_options = ((@staff_tags || []).to_a + @person.staff_tags.to_a).uniq.sort_by { |tag| tag.name.to_s.downcase } %>
+    <div class="form-group admin-only space-y-2 rounded-lg bg-blue-100 p-4">
+      <div class="flex items-baseline justify-between">
+        <h3 class="font-semibold text-gray-700">Staff tags</h3>
+        <%= link_to "Manage tags", staff_tags_path, class: "text-sm #{eyebrow_link_class}", target: "_blank", rel: "noopener" %>
+      </div>
+      <p class="text-xs text-gray-500">Internal only — pipelines, rosters, and outreach lists. Never shown publicly.</p>
+      <%# Always submit the key (blank included) so unchecking every tag clears it. %>
+      <%= hidden_field_tag "person[staff_tag_ids][]", "" %>
+      <% if staff_tag_options.any? %>
+        <div class="flex flex-wrap gap-3 pt-1">
+          <% staff_tag_options.each do |tag| %>
+            <% id = "person_staff_tag_ids_#{tag.id}" %>
+            <label for="<%= id %>"
+                   class="flex min-w-[180px] cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition hover:bg-gray-50">
+              <%= check_box_tag "person[staff_tag_ids][]", tag.id,
+                                @current_staff_tag_ids&.include?(tag.id),
+                                id: id,
+                                class: "h-4 w-4 rounded text-blue-600" %>
+              <span class="text-sm whitespace-nowrap text-gray-700">
+                <%= tag.name %><% if tag.archived? %> <span class="text-xs text-gray-400">(archived)</span><% end %>
+              </span>
+            </label>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-sm text-gray-500 italic">
+          No staff tags yet. <%= link_to "Create one", new_staff_tag_path, class: eyebrow_link_class, target: "_blank", rel: "noopener" %>.
+        </p>
+      <% end %>
+    </div>
+  <% end %>
+
   <!-- Profile-specific Categories (other than age ranges) -->
   <% other_category_types = (@person_categories_grouped || {}).reject { |type, _| type.name == "AgeRange" } %>
   <% if other_category_types.present? %>
@@ -221,43 +258,6 @@
         <div class="flex flex-wrap gap-2">
           <%= render "people/other_responses", responses: workshop_other %>
         </div>
-      <% end %>
-    </div>
-  <% end %>
-
-  <!-- Staff tags (internal, admin-only) -->
-  <% if allowed_to?(:manage?, StaffTag) %>
-    <%# Union of active tags and any the person already carries (archived
-        included), so saving the form never silently drops an archived tagging. %>
-    <% staff_tag_options = ((@staff_tags || []).to_a + @person.staff_tags.to_a).uniq.sort_by { |tag| tag.name.to_s.downcase } %>
-    <div class="form-group admin-only space-y-2 rounded-lg bg-blue-100 p-4">
-      <div class="flex items-baseline justify-between">
-        <h3 class="font-semibold text-gray-700">Staff tags</h3>
-        <%= link_to "Manage tags", staff_tags_path, class: "text-sm #{eyebrow_link_class}", target: "_blank", rel: "noopener" %>
-      </div>
-      <p class="text-xs text-gray-500">Internal only — pipelines, rosters, and outreach lists. Never shown publicly.</p>
-      <%# Always submit the key (blank included) so unchecking every tag clears it. %>
-      <%= hidden_field_tag "person[staff_tag_ids][]", "" %>
-      <% if staff_tag_options.any? %>
-        <div class="flex flex-wrap gap-3 pt-1">
-          <% staff_tag_options.each do |tag| %>
-            <% id = "person_staff_tag_ids_#{tag.id}" %>
-            <label for="<%= id %>"
-                   class="flex min-w-[180px] items-center gap-2 border bg-white p-3 <%= DomainTheme.border_class_for(:staff_tags) %> cursor-pointer rounded-lg shadow-sm transition hover:bg-gray-50">
-              <%= check_box_tag "person[staff_tag_ids][]", tag.id,
-                                @current_staff_tag_ids&.include?(tag.id),
-                                id: id,
-                                class: "h-4 w-4 rounded #{DomainTheme.text_class_for(:staff_tags, intensity: 600)}" %>
-              <span class="text-sm whitespace-nowrap text-gray-700">
-                <%= tag.name %><% if tag.archived? %> <span class="text-xs text-gray-400">(archived)</span><% end %>
-              </span>
-            </label>
-          <% end %>
-        </div>
-      <% else %>
-        <p class="text-sm text-gray-500 italic">
-          No staff tags yet. <%= link_to "Create one", new_staff_tag_path, class: eyebrow_link_class, target: "_blank", rel: "noopener" %>.
-        </p>
       <% end %>
     </div>
   <% end %>

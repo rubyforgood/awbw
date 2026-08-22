@@ -40,7 +40,7 @@
               <tr class="<%= "opacity-60" if staff_tag.archived? %>">
                 <td class="px-4 py-2 text-base font-bold text-gray-700">
                   <%= link_to staff_tag.name, staff_tag_path(staff_tag),
-                              class: "#{DomainTheme.text_class_for(:staff_tags)} hover:underline" %>
+                              class: "text-gray-900 hover:underline" %>
                 </td>
 
                 <td class="max-w-md px-4 py-2 text-sm text-gray-700">
@@ -51,12 +51,12 @@
                   <% if staff_tag.archived? %>
                     <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Archived</span>
                   <% else %>
-                    <span class="inline-flex items-center rounded-full <%= DomainTheme.bg_class_for(:staff_tags, intensity: 100) %> <%= DomainTheme.text_class_for(:staff_tags, intensity: 700) %> px-2 py-0.5 text-xs">Active</span>
+                    <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">Active</span>
                   <% end %>
                 </td>
 
                 <td class="px-4 py-2 text-gray-700">
-                  <%= link_to staff_tag.people.count,
+                  <%= link_to @tagged_people_counts.fetch(staff_tag.id, 0),
                               people_path(staff_tag_ids: staff_tag.id),
                               class: "btn btn-secondary-default" %>
                 </td>
