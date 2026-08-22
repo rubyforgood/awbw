@@ -1,7 +1,7 @@
 <%= form_tag workshop_logs_path, method: :get, id: "filter-form", class: "w-full" do %>
-  <div class="flex flex-wrap items-end gap-4 mb-4">
+  <div class="mb-4 flex flex-wrap items-end gap-4">
     <!-- Month -->
-    <div class="flex flex-col w-full sm:w-auto min-w-[10rem]">
+    <div class="flex w-full min-w-[10rem] flex-col sm:w-auto">
       <%= label_tag :month_and_year, "Month Submitted", class: search_label_class %>
       <%= select_tag :month_and_year,
                      options_for_select(@month_year_options, params[:month_and_year]),
@@ -11,7 +11,7 @@
     </div>
 
     <!-- Year -->
-    <div class="flex flex-col w-full sm:w-auto min-w-[9rem]">
+    <div class="flex w-full min-w-[9rem] flex-col sm:w-auto">
       <%= label_tag :year, "Year", class: search_label_class %>
       <%= select_tag :year,
                      options_for_select(@year_options, params[:year]),
@@ -21,7 +21,7 @@
     </div>
 
     <!-- Workshop -->
-    <div class="flex flex-col w-full sm:w-1/2 md:w-1/4 lg:w-1/5">
+    <div class="flex w-full flex-col sm:w-1/2 md:w-1/4 lg:w-1/5">
       <%= label_tag :workshop_id, "Workshop", class: search_label_class %>
       <%= select_tag :workshop_id,
                      options_from_collection_for_select(@workshops, :id, :type_name, params[:workshop_id]),
@@ -30,8 +30,20 @@
                      onchange: "this.form.requestSubmit()" %>
     </div>
 
+    <!-- Author name -->
+    <div class="flex w-full flex-col sm:w-1/2 md:w-1/4 lg:w-1/5">
+      <%= label_tag :author_name, "Author name", class: search_label_class %>
+      <div class="relative">
+        <%= text_field_tag :author_name, params[:author_name],
+                           placeholder: "e.g. Jane Doe",
+                           class: search_field_class(extra: "pr-10") %>
+
+        <%= render "shared/search_submit" %>
+      </div>
+    </div>
+
     <!-- Person -->
-    <div class="flex flex-col w-full sm:w-1/2 md:w-1/4 lg:w-1/5" data-controller="searchable-select" data-searchable-select-mode-value="person">
+    <div class="flex w-full flex-col sm:w-1/2 md:w-1/4 lg:w-1/5" data-controller="searchable-select" data-searchable-select-mode-value="person">
       <%= label_tag :created_by_id, "Person", class: search_label_class %>
       <%= select_tag :created_by_id,
                      options_from_collection_for_select(@users, :id, :full_name_with_email, params[:created_by_id]),
@@ -41,7 +53,7 @@
     </div>
 
     <!-- Organization -->
-    <div class="flex flex-col w-full sm:w-2/3 md:w-1/3 lg:flex-1">
+    <div class="flex w-full flex-col sm:w-2/3 md:w-1/3 lg:flex-1">
       <%= label_tag :organization_id, "Organization", class: search_label_class %>
       <%= select_tag :organization_id,
                      options_from_collection_for_select(@organizations, :id, :name, params[:organization_id]),

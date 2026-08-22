@@ -18,6 +18,10 @@ class WorkshopVariation < ApplicationRecord
       by_person = results.by_credited_person_name(params[:query]).select("workshop_variations.id")
       results = results.where(id: by_text).or(results.where(id: by_person))
     end
+    if params[:author_name].present?
+      by_name = results.by_credited_person_name(params[:author_name]).select("workshop_variations.id")
+      results = results.where(id: by_name)
+    end
     results = results.authored_by(params[:author_id])
     results
   end

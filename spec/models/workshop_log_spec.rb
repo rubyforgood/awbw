@@ -143,6 +143,23 @@ RSpec.describe WorkshopLog do
         results = WorkshopLog.search({})
         expect(results).to include(log1, log2)
       end
+
+      it "filters by author_name matching the creating user's person" do
+        author = create(:user, person: create(:person, first_name: "Marguerite", last_name: "Enterer"))
+        log = create(:workshop_log, created_by: author)
+        other_log = create(:workshop_log)
+
+        results = WorkshopLog.search(author_name: "Marguerite")
+        expect(results).to include(log)
+        expect(results).not_to include(other_log)
+      end
+
+      it "matches author_name against the creating user's email" do
+        author = create(:user, email: "quackenbush@example.com")
+        log = create(:workshop_log, created_by: author)
+
+        expect(WorkshopLog.search(author_name: "quackenbush")).to include(log)
+      end
     end
   end
 

@@ -50,6 +50,15 @@ class WorkshopLog < ApplicationRecord
   scope :workshop_id, ->(workshop_id) { where(workshop_id: workshop_id) if workshop_id.present? }
   scope :organization_id, ->(organization_id) { where(organization_id: organization_id) if organization_id.present? }
   scope :created_by_id, ->(created_by_id) { where(created_by_id: created_by_id.to_i) if created_by_id.present? }
+  scope :author_name, ->(author_name) {
+    return all if author_name.blank?
+    needle = "%#{sanitize_sql_like(author_name.to_s.strip.downcase)}%"
+    joins("INNER JOIN users ON users.id = workshop_logs.created_by_id")
+      .joins("LEFT OUTER JOIN people ON people.id = users.person_id")
+      .where("LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :needle " \
+             "OR LOWER(people.first_name) LIKE :needle OR LOWER(people.last_name) LIKE :needle " \
+             "OR LOWER(users.email) LIKE :needle", needle: needle)
+  }
   scope :month_and_year, ->(month_and_year) {
     if month_and_year.present?
       year, month = month_and_year.split("-").map(&:to_i)
@@ -65,6 +74,7 @@ class WorkshopLog < ApplicationRecord
   def self.search(params)
     logs = is_a?(ActiveRecord::Relation) ? self : all
     logs = logs.created_by_id(params[:created_by_id]) if params[:created_by_id].present?
+    logs = logs.author_name(params[:author_name]) if params[:author_name].present?
     logs = logs.month_and_year(params[:month_and_year]) if params[:month_and_year].present?
     logs = logs.year(params[:year]) if params[:year].present?
     logs = logs.workshop_id(params[:workshop_id]) if params[:workshop_id].present?

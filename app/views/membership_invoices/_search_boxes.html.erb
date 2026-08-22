@@ -1,0 +1,24 @@
+<% field_class = search_field_class(extra: "bg-white pr-10") %>
+<% label_class = search_label_class %>
+<div class="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+  <%= form_with url: membership_invoices_path, method: :get,
+        data: { controller: "collection", turbo_frame: "membership_invoices_results" },
+        autocomplete: "off", class: "space-y-2" do %>
+    <div class="flex flex-wrap items-end gap-4 md:flex-nowrap">
+      <div class="min-w-[200px] flex-1">
+        <%= label_tag :person_name, "Person name", class: label_class %>
+        <div class="relative">
+          <%= text_field_tag :person_name, params[:person_name],
+                             placeholder: "e.g. Jane Doe",
+                             class: field_class %>
+
+          <%= render "shared/search_submit" %>
+        </div>
+      </div>
+      <div>
+        <label class="<%= label_class %>">&nbsp;</label>
+        <%= render "shared/search_clear", url: membership_invoices_path %>
+      </div>
+    </div>
+  <% end %>
+</div>

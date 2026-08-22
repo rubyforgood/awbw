@@ -1792,3 +1792,15 @@
     - Transferring someone a second time collapses the chain — the new
       registration points straight at the original source and the middle stop is
       removed.
+
+- name: "Filter index pages by author or person name"
+  area: content
+  display_status: user_facing
+  released_on: 2026-08-22
+  summary: >-
+    Type a name into the filter box to narrow an index by who authored or is
+    named on each record. Added to Stories, Workshop variations, Workshop logs,
+    Workshop ideas, Membership invoices, and Payments.
+  pro_tips:
+    - Partial names work — "jane" matches "Jane Doe" — and it honors each author's
+      credit preference, so it never surfaces a name shown as anonymous.

@@ -73,6 +73,22 @@ RSpec.describe "MembershipInvoices", type: :request do
 
         expect(response.body).to include("No membership invoices yet")
       end
+
+      it "renders the person-name filter box on the index" do
+        get membership_invoices_path
+
+        expect(response.body).to include("person_name")
+      end
+
+      it "filters the frame results by person name" do
+        term_for("Ada")
+        term_for("Grace")
+
+        get membership_invoices_path(person_name: "Ada"), headers: frame
+
+        expect(response.body).to include("Ada Tester")
+        expect(response.body).not_to include("Grace Tester")
+      end
     end
   end
 
