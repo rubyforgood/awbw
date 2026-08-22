@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe WorkshopVariation do
-  it_behaves_like "author_creditable", factory: :workshop_variation, org_credited: false
+  it_behaves_like "author_creditable", factory: :workshop_variation, org_credited: false, credits_creator_legacy: true
 
   describe "associations" do
     it { should belong_to(:workshop).optional }
@@ -12,10 +12,22 @@ RSpec.describe WorkshopVariation do
   end
 
   describe "#missing_author_label" do
-    it "credits unattributed variations to AWBW Facilitator" do
+    it "credits an unauthored variation to the creator's person by name" do
+      creator = create(:user, :with_person)
+      variation = create(:workshop_variation, author: nil, created_by: creator)
+      expect(variation.author_credit).to eq(creator.person.name)
+    end
+
+    it "reads Anonymous when there is no author and no creator person" do
       variation = create(:workshop_variation, author: nil, created_by: create(:user, person: nil))
-      expect(variation.missing_author_label).to eq("AWBW Facilitator")
-      expect(variation.author_credit).to eq("AWBW Facilitator")
+      expect(variation.missing_author_label).to eq("Anonymous")
+      expect(variation.author_credit).to eq("Anonymous")
+    end
+
+    it "reads Anonymous when the creator's person opted out of being credited" do
+      creator = create(:user, person: create(:person, :anonymous_contributions))
+      variation = create(:workshop_variation, author: nil, created_by: creator)
+      expect(variation.author_credit).to eq("Anonymous")
     end
   end
 

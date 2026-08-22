@@ -354,6 +354,15 @@ RSpec.describe "/workshop_logs", type: :request do
         expect(response).to have_http_status(:redirect)
       end
 
+      it "sets the workshop log author to the creator's person" do
+        person = create(:person)
+        user.update!(person: person)
+
+        post workshop_logs_path, params: { workshop_log: valid_attributes }
+
+        expect(WorkshopLog.last.author).to eq(person)
+      end
+
       it "credits nested quotes to the current user without setting the quote author" do
         post workshop_logs_path, params: {
           workshop_log: valid_attributes.merge(

@@ -89,9 +89,9 @@ class DisplayImagePresenter
       resolve_previewable
     elsif @variant == :hero
       @file
-    elsif large_display?
+    elsif large_display? && variant_defined?(:card)
       @file.variant(:card)
-    elsif use_thumbnail?
+    elsif use_thumbnail? && variant_defined?(:thumbnail)
       @file.variant(:thumbnail)
     else
       @file
@@ -102,11 +102,19 @@ class DisplayImagePresenter
     @width == "full" && @file.variable?
   end
 
+  # Asking an attachment for a variant its model doesn't declare raises.
+  def variant_defined?(name)
+    return false unless @file.respond_to?(:record) && @file.respond_to?(:name)
+
+    reflection = @file.record.class.reflect_on_attachment(@file.name)
+    reflection&.named_variants&.key?(name) || false
+  end
+
   def resolve_previewable
     if pdf?
       preview_size = PDF_PREVIEW_SIZES.fetch(@variant, [ 300, 300 ])
       @file.preview(resize_to_limit: preview_size)
-    elsif use_thumbnail?
+    elsif use_thumbnail? && variant_defined?(:thumbnail)
       @file.variant(:thumbnail)
     else
       @file.preview(resize_to_limit: PDF_PREVIEW_SIZES.fetch(@variant, [ 300, 300 ]))

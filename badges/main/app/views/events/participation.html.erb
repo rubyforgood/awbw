@@ -6,7 +6,7 @@
   <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
     <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
       <% label, return_path = participation_return_link %>
-      <%= link_to label, return_path, class: "text-sm #{eyebrow_link_class}" %>
+      <%= link_to label, return_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <%= render "events/report_subnav", current: :details %>
     </div>
 

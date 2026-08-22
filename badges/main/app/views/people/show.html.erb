@@ -4,7 +4,7 @@
 <% if params[:return_to] == "registrants" && params[:event_id].present? %>
   <% back_registration = @person.event_registrations.find_by(event_id: params[:event_id]) %>
   <div class="mb-3">
-    <%= link_to(back_registration ? registrants_event_row_path(params[:event_id], back_registration.id) : registrants_event_path(params[:event_id]), class: "text-sm #{eyebrow_link_class}") do %>
+    <%= link_to(back_registration ? registrants_event_row_path(params[:event_id], back_registration.id) : registrants_event_path(params[:event_id]), class: "text-sm #{eyebrow_link_class} px-2 py-1") do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Back to registrants
     <% end %>
   </div>
@@ -336,6 +336,15 @@
               <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop logs submitted</h2>
               <%= turbo_frame_tag "person_workshop_logs_section", src: person_path(@person, section: "workshop_logs"), loading: :lazy do %>
                 <p class="text-gray-500 italic">Loading workshop logs...</p>
+              <% end %>
+            </div>
+          <% end %>
+          <!-- Monthly reports (admin/owner only; deprecated — only for people who have some) -->
+          <% if @person.profile_show_monthly_reports? && @person.any_monthly_reports? %>
+            <div id="monthly_reports" class="admin-or-owner p-3">
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Monthly reports submitted</h2>
+              <%= turbo_frame_tag "person_monthly_reports_section", src: person_path(@person, section: "monthly_reports"), loading: :lazy do %>
+                <p class="text-gray-500 italic">Loading monthly reports...</p>
               <% end %>
             </div>
           <% end %>

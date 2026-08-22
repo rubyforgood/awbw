@@ -1,8 +1,11 @@
 require "rails_helper"
 
 RSpec.describe WorkshopLog do
+  it_behaves_like "author_creditable", factory: :workshop_log, org_credited: false
+
   describe "associations" do
     it { should belong_to(:created_by).optional }
+    it { should belong_to(:author).class_name("Person").optional }
     it { should belong_to(:organization).optional }
     it { should belong_to(:windows_type).optional }
     it { should belong_to(:workshop).optional }

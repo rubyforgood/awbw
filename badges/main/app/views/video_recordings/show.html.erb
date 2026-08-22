@@ -49,9 +49,9 @@
         <!-- Back Button -->
         <div class="mt-8">
           <% if @video_recording.is_instructional? %>
-            <%= link_to "← Instructional videos", video_recordings_path(video_type: "instructional"), class: "text-sm #{eyebrow_link_class}" %>
+            <%= link_to "← Instructional videos", video_recordings_path(video_type: "instructional"), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
           <% else %>
-            <%= link_to "← Videos", video_recordings_path(video_type: "all"), class: "text-sm #{eyebrow_link_class}" %>
+            <%= link_to "← Videos", video_recordings_path(video_type: "all"), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
           <% end %>
         </div>
 

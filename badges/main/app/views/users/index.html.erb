@@ -11,7 +11,7 @@
       </div>
       <div>
         <div class="flex gap-2 items-center">
-          <%= link_to flow_diagram_users_path, class: "text-sm #{eyebrow_link_class}" do %>
+          <%= link_to flow_diagram_users_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
             <i class="fa-solid fa-diagram-project"></i> Account flow diagram
           <% end %>
           <% if allowed_to?(:new?, User) %>

@@ -10,13 +10,13 @@
       </div>
     <% elsif params[:return_to] == "forms" && @form %>
       <div class="mb-4">
-        <%= link_to forms_path(anchor: "form_#{@form.id}"), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class}" do %>
+        <%= link_to forms_path(anchor: "form_#{@form.id}"), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
           <i class="fa-solid fa-arrow-left text-xs"></i> Forms
         <% end %>
       </div>
     <% elsif @person %>
       <div class="mb-4">
-        <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class}" do %>
+        <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
           <i class="fa-solid fa-arrow-left text-xs"></i> Edit <%= @person.name %>
         <% end %>
       </div>

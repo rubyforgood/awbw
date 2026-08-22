@@ -7,35 +7,35 @@
     <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
       <% if @allocatable.is_a?(EventRegistration) && params[:return_to] == "bulk_payments" %>
         <%# Re-expand the originating submission's row and scroll to it on return. %>
-        <%= link_to bulk_payments_return_path(@allocatable.event), class: "text-sm #{eyebrow_link_class}" do %>
+        <%= link_to bulk_payments_return_path(@allocatable.event), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
           <i class="fa-solid fa-arrow-left text-xs"></i> Bulk payments
         <% end %>
       <% elsif @allocatable.is_a?(EventRegistration) && params[:return_to] == "registrants" %>
-        <%= link_to registrants_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm #{eyebrow_link_class}" do %>
+        <%= link_to registrants_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
           <i class="fa-solid fa-arrow-left text-xs"></i> Registrants
         <% end %>
       <% elsif @allocatable.is_a?(EventRegistration) && params[:return_to] == "onboarding" %>
-        <%= link_to onboarding_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm #{eyebrow_link_class}" do %>
+        <%= link_to onboarding_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
           <i class="fa-solid fa-arrow-left text-xs"></i> Onboarding
         <% end %>
       <% elsif @allocatable.is_a?(EventRegistration) %>
-        <%= link_to edit_event_registration_path(@allocatable), class: "text-sm #{eyebrow_link_class}" do %>
+        <%= link_to edit_event_registration_path(@allocatable), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
           <i class="fa-solid fa-arrow-left text-xs"></i> Registration
         <% end %>
       <% elsif @allocatable.is_a?(ContinuingEducationRegistration) %>
-        <%= link_to edit_continuing_education_registration_path(@allocatable), class: "text-sm #{eyebrow_link_class}" do %>
+        <%= link_to edit_continuing_education_registration_path(@allocatable), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
           <i class="fa-solid fa-arrow-left text-xs"></i> CE registration
         <% end %>
       <% elsif @allocatable.respond_to?(:event) %>
-        <%= link_to registrants_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm #{eyebrow_link_class}" do %>
+        <%= link_to registrants_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
           <i class="fa-solid fa-arrow-left text-xs"></i> Registrants
         <% end %>
       <% else %>
         <span></span>
       <% end %>
       <div class="flex items-center gap-3">
-        <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class}" %>
-        <%= link_to "All allocations", allocations_path, class: "text-sm #{eyebrow_link_class}" %>
+        <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <%= link_to "All allocations", allocations_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       </div>
     </div>
 
@@ -124,7 +124,7 @@
       registrants index (left-aligned title, filter form, results table). ---- %>
   <div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:payments) %> border border-gray-200 rounded-xl shadow p-6">
     <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
-      <%= link_to "← Home", root_path, class: "text-sm #{eyebrow_link_class}" %>
+      <%= link_to "← Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     </div>
 
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">

@@ -1082,6 +1082,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_154252) do
     t.boolean "profile_show_email", default: true, null: false
     t.boolean "profile_show_events_registered", default: true, null: false
     t.boolean "profile_show_member_since", default: true, null: false
+    t.boolean "profile_show_monthly_reports", default: true, null: false
     t.boolean "profile_show_phone", default: true, null: false
     t.boolean "profile_show_pronouns", default: true, null: false
     t.boolean "profile_show_resources", default: true, null: false
@@ -1230,6 +1231,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_154252) do
   create_table "reports", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "adults_first_time", default: 0
     t.integer "adults_ongoing", default: 0
+    t.string "author_credit_preference"
+    t.bigint "author_id"
     t.integer "children_first_time", default: 0
     t.integer "children_ongoing", default: 0
     t.datetime "created_at", precision: nil, null: false
@@ -1253,6 +1256,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_154252) do
     t.integer "windows_type_id"
     t.integer "workshop_id"
     t.string "workshop_name"
+    t.index ["author_id"], name: "index_reports_on_author_id"
     t.index ["created_by_id"], name: "index_reports_on_created_by_id"
     t.index ["organization_id"], name: "index_reports_on_organization_id"
     t.index ["type", "date"], name: "index_reports_on_type_and_date"
@@ -1668,6 +1672,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_154252) do
   create_table "workshop_logs", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "adults_first_time", default: 0
     t.integer "adults_ongoing", default: 0
+    t.string "author_credit_preference"
+    t.bigint "author_id"
     t.integer "children_first_time", default: 0
     t.integer "children_ongoing", default: 0
     t.datetime "created_at", precision: nil, null: false
@@ -1684,6 +1690,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_154252) do
     t.integer "windows_type_id"
     t.date "workshop_held_on"
     t.integer "workshop_id"
+    t.index ["author_id"], name: "index_workshop_logs_on_author_id"
     t.index ["created_by_id"], name: "index_workshop_logs_on_created_by_id"
     t.index ["organization_id", "workshop_held_on"], name: "index_workshop_logs_on_org_and_workshop_held_on"
     t.index ["organization_id"], name: "index_workshop_logs_on_organization_id"
@@ -1956,6 +1963,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_154252) do
   add_foreign_key "report_form_field_answers", "reports"
   add_foreign_key "report_form_field_answers", "workshop_logs"
   add_foreign_key "reports", "organizations"
+  add_foreign_key "reports", "people", column: "author_id"
   add_foreign_key "reports", "users", column: "created_by_id"
   add_foreign_key "reports", "windows_types"
   add_foreign_key "resources", "people", column: "author_id"
@@ -2001,6 +2009,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_154252) do
   add_foreign_key "workshop_ideas", "users", column: "updated_by_id"
   add_foreign_key "workshop_ideas", "windows_types"
   add_foreign_key "workshop_logs", "organizations"
+  add_foreign_key "workshop_logs", "people", column: "author_id"
   add_foreign_key "workshop_logs", "users", column: "created_by_id"
   add_foreign_key "workshop_logs", "windows_types"
   add_foreign_key "workshop_logs", "workshops"
