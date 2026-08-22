@@ -13,6 +13,14 @@ class FormSubmission < ApplicationRecord
 
   UNREADABLE_UPLOAD_MESSAGE = "We couldn't read one of your uploaded files. Please choose it again.".freeze
 
+  # The index's "Organization linking" filter vocabulary: linked = the submitted
+  # organization name matches one of the person's active affiliations.
+  ORG_LINK_STATUS_FILTER_OPTIONS = [
+    [ "Linked", "linked" ],
+    [ "Not linked", "unlinked" ],
+    [ "No organization answer", "none" ]
+  ].freeze
+
   scope :bulk_payment, -> { where(role: "bulk_payment") }
 
   # Submitted on `created_at` — there is no separate submitted_at column.
@@ -30,6 +38,60 @@ class FormSubmission < ApplicationRecord
     where(id: EventRegistrationOrganization.where(organization_id: organization_id).select(:form_submission_id))
   }
 
+  scope :search, ->(query) {
+    joins(:person).where(
+      "CONCAT_WS(' ', people.first_name, people.last_name) LIKE :q OR people.email LIKE :q OR people.email_2 LIKE :q",
+      q: "%#{sanitize_sql_like(query)}%"
+    )
+  }
+
+  # Answers stored against an organization-name field (canonical or legacy
+  # "agency_name"), the submitted-organization signal the index filters on.
+  def self.org_name_answers
+    FormAnswer.joins(:form_field)
+      .where(form_fields: { field_identifier: FormField.aliased_identifiers("organization_name") })
+      .where.not(submitted_answer: [ nil, "" ])
+  end
+
+  scope :org_link_status, ->(value) {
+    answered = org_name_answers.select(:form_submission_id)
+    case value
+    when "linked", "unlinked"
+      # Linked: the submitted name matches an org the person holds an active (or
+      # pending) affiliation with — the same rule as the index's Linked chip.
+      linked = org_name_answers
+        .joins(form_submission: { person: { affiliations: :organization } })
+        .merge(Affiliation.active_or_pending)
+        .where("organizations.name = form_answers.submitted_answer")
+        .select(:form_submission_id)
+      value == "linked" ? where(id: linked) : where(id: answered).where.not(id: linked)
+    when "none" then where.not(id: answered)
+    else all
+    end
+  }
+
+  # Mirrors EventRegistration.account_status (same filter vocabulary as the
+  # registrants roster), keyed on the submission's person.
+  scope :account_status, ->(value) {
+    with_user = User.where.not(person_id: nil).select(:person_id)
+    has_access = User.has_access.where.not(person_id: nil).select(:person_id)
+    invited = User.where.not(person_id: nil).where.not(welcome_instructions_sent_at: nil).select(:person_id)
+    case value
+    when "none" then where.not(person_id: with_user)
+    when "has_access" then where(person_id: has_access)
+    when "invited" then where(person_id: invited).where.not(person_id: has_access)
+    when "no_access" then where(person_id: with_user).where.not(person_id: has_access).where.not(person_id: invited)
+    when "not_invited" then where.not(person_id: invited).where.not(person_id: has_access)
+    else all
+    end
+  }
+
+  # Purposed (agreement scenario) submissions — a specific scenario, or "any"
+  # for all three at once (see Form::PURPOSES).
+  scope :scenario, ->(value) {
+    value == "any" ? joins(:form).merge(Form.with_purpose) : joins(:form).where(forms: { purpose: value })
+  }
+
   validates :slug, uniqueness: true, allow_nil: true
 
   # Bulk payment submissions are reachable by their payer (who has no account)
@@ -45,6 +107,10 @@ class FormSubmission < ApplicationRecord
     results = results.where(event_id: params[:event_id]) if params[:event_id].present?
     results = results.where(role: params[:role]) if params[:role].present?
     results = results.for_organization(params[:organization_id]) if params[:organization_id].present?
+    results = results.search(params[:search]) if params[:search].present?
+    results = results.org_link_status(params[:org_status]) if params[:org_status].present?
+    results = results.account_status(params[:account_status]) if params[:account_status].present?
+    results = results.scenario(params[:scenario]) if params[:scenario].present?
     results.submitted_between(parse_date(params[:start_date]), parse_date(params[:end_date]))
   end
 

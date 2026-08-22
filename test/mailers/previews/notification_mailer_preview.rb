@@ -98,7 +98,7 @@ class NotificationMailerPreview < ActionMailer::Preview
         kind: "form_link_request",
         recipient_role: "person",
         recipient_email: person.preferred_email,
-        custom_subject: "Link to complete #{form.display_name}",
+        custom_subject: form.display_name,
         custom_message: "https://portal.awbw.org/f/#{form.slug.presence || "example-form"}",
         sender: User.first
       )

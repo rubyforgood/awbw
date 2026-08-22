@@ -293,7 +293,7 @@ class PeopleController < ApplicationController
 
   # Email this person the public link to one of the agreement scenario forms
   # (Form::PURPOSES), recording the send so staff can see who was contacted for
-  # which scenario. The notification stores what was sent: the subject in
+  # which scenario. The notification stores what was sent: the form name in
   # custom_subject and the public form URL in custom_message.
   def send_form_link
     authorize! @person, to: :send_form_link?
@@ -316,7 +316,7 @@ class PeopleController < ApplicationController
       recipient_role: :person,
       recipient_email: email,
       notification_type: 0,
-      custom_subject: "Link to complete #{form.display_name}",
+      custom_subject: form.display_name,
       custom_message: public_form_url(form.slug),
       sender: current_user
     )

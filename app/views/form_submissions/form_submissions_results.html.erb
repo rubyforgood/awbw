@@ -53,11 +53,20 @@
                 <% submitted_org = FormField.aliased_identifiers("organization_name").filter_map { |key| answers[key].presence }.first %>
                 <% if submitted_org %>
                   <%= submitted_org %>
+                  <%# The chip doubles as the way into the submission's org-linking
+                      editor, like the org chips on the registrants roster. %>
                   <% linked = submission.person&.affiliations&.any? { |a| a.active? && a.organization.name.casecmp?(submitted_org) } %>
+                  <% editor_path = link_organization_form_submission_path(submission, return_to: "form_submissions") %>
                   <% if linked %>
-                    <span class="ml-1 inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700"><i class="fa-solid fa-check text-3xs"></i>Linked</span>
+                    <%= link_to editor_path, title: "Open the organization linking editor", data: { turbo_frame: "_top" },
+                                class: "ml-1 inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 transition hover:opacity-80 hover:shadow-sm" do %>
+                      <i class="fa-solid fa-check text-3xs"></i>Linked
+                    <% end %>
                   <% else %>
-                    <span class="ml-1 inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">Not linked</span>
+                    <%= link_to editor_path, title: "Link the submitted organization", data: { turbo_frame: "_top" },
+                                class: "ml-1 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 transition hover:opacity-80 hover:shadow-sm" do %>
+                      <i class="fa-solid fa-circle-exclamation text-3xs"></i>Not linked
+                    <% end %>
                   <% end %>
                 <% else %>
                   <span class="text-gray-300">—</span>

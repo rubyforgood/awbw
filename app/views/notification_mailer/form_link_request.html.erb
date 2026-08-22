@@ -1,4 +1,4 @@
-<h1>A form for you to complete</h1>
+<h1>The <%= @form_name %> to complete</h1>
 
 <div style="margin-top: 36px; text-align: left;">
   <p>
@@ -7,9 +7,9 @@
 
   <p>
     <% if @sender %>
-      <%= @sender.full_name %> from A Window Between Worlds sent you a form to complete.
+      <%= @sender.full_name %> from A Window Between Worlds sent you the <strong><%= @form_name %></strong> to complete.
     <% else %>
-      A Window Between Worlds sent you a form to complete.
+      A Window Between Worlds sent you the <strong><%= @form_name %></strong> to complete.
     <% end %>
     Please follow the link below to fill it out.
   </p>

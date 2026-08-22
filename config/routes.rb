@@ -152,7 +152,13 @@ Rails.application.routes.draw do
       patch :update_sections
     end
   end
-  resources :form_submissions, only: [ :index, :show ]
+  resources :form_submissions, only: [ :index, :show ] do
+    member do
+      get :link_organization
+      post :select_organization
+      post :create_organization
+    end
+  end
   resources :form_answers, only: [ :index ]
   resources :grants
   resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do

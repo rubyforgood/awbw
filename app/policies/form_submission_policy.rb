@@ -34,4 +34,16 @@ class FormSubmissionPolicy < ApplicationPolicy
   def process?
     admin?
   end
+
+  def link_organization?
+    admin?
+  end
+
+  def select_organization?
+    admin?
+  end
+
+  def create_organization?
+    admin?
+  end
 end

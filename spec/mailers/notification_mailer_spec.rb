@@ -31,15 +31,16 @@ RSpec.describe NotificationMailer, type: :mailer do
     let(:notification) do
       create(:notification, kind: "form_link_request", noticeable: person,
              recipient_role: "person", recipient_email: "fay@example.com",
-             custom_subject: "Link to complete Collaboration agreement (job change)",
+             custom_subject: "Collaboration agreement (job change)",
              custom_message: "http://example.com/f/collab-job-change", sender: sender)
     end
 
-    it "sends the stored subject and public link to the person" do
+    it "names the form and sends the public link to the person" do
       mail = described_class.form_link_request(notification)
 
       expect(mail.to).to eq([ "fay@example.com" ])
       expect(mail.subject).to include("Link to complete Collaboration agreement (job change)")
+      expect(mail.body.encoded).to include("the Collaboration agreement (job change) to complete")
       expect(mail.body.encoded).to include("http://example.com/f/collab-job-change")
       expect(mail.body.encoded).to include("Fay Facilitator")
     end

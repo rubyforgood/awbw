@@ -171,6 +171,41 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include("Linked")
       end
 
+      it "filters by person name via the search box" do
+        person = create(:person, user: nil, first_name: "Priya", last_name: "Patel")
+        mine = create(:form_submission, person: person)
+        theirs = create(:form_submission)
+
+        get form_submissions_path(search: "Priya"), headers: frame_headers
+
+        expect(response.body).to include(form_submission_path(mine))
+        expect(response.body).not_to include(form_submission_path(theirs))
+      end
+
+      it "filters agreement submissions across forms with the scenario filter" do
+        job_change = create(:form_submission, form: create(:form, purpose: "job_change_agreement"))
+        on_demand = create(:form_submission, form: create(:form, purpose: "on_demand_agreement"))
+        plain = create(:form_submission)
+
+        get form_submissions_path(scenario: "any"), headers: frame_headers
+        expect(response.body).to include(form_submission_path(job_change), form_submission_path(on_demand))
+        expect(response.body).not_to include(form_submission_path(plain))
+
+        get form_submissions_path(scenario: "job_change_agreement"), headers: frame_headers
+        expect(response.body).to include(form_submission_path(job_change))
+        expect(response.body).not_to include(form_submission_path(on_demand))
+      end
+
+      it "filters by submitted date range" do
+        old = create(:form_submission, created_at: Date.new(2026, 1, 10))
+        recent = create(:form_submission, created_at: Date.new(2026, 8, 10))
+
+        get form_submissions_path(start_date: "2026-06-01", end_date: "2026-08-31"), headers: frame_headers
+
+        expect(response.body).to include(form_submission_path(recent))
+        expect(response.body).not_to include(form_submission_path(old))
+      end
+
       it "shows the person's account status with an invite or create-user action" do
         no_account = create(:form_submission, person: create(:person, user: nil))
         with_account = create(:form_submission)
@@ -304,6 +339,134 @@ RSpec.describe "FormSubmissions", type: :request do
 
         expect(response.body).to include("Returning facilitator")
         expect(response.body).not_to include(end_affiliation_path(affiliation))
+      end
+    end
+
+    context "organization linking for a submission" do
+      let(:form) { create(:form, purpose: "job_change_agreement", name: "Collaboration agreement (job change)") }
+      let(:person) { create(:person, user: nil) }
+      let(:submission) { create(:form_submission, form: form, person: person) }
+
+      def add_answer(identifier, value)
+        field = form.form_fields.find_by(field_identifier: identifier) ||
+                create(:form_field, form: form, field_identifier: identifier)
+        create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+      end
+
+      before { sign_in admin }
+
+      describe "GET /form_submissions/:id/link_organization" do
+        it "offers a create-and-link row for a submitted org that isn't in the database" do
+          add_answer("organization_name", "Lakeside Community College")
+          add_answer("organization_position", "Counselor")
+
+          get link_organization_form_submission_path(submission)
+
+          expect(response.body).to include("Lakeside Community College")
+          expect(response.body).to include("Create and link")
+          expect(response.body).to include("Pending")
+          expect(response.body).to include(CGI.escapeHTML(create_organization_form_submission_path(submission)))
+        end
+
+        it "shows the matched organization when an active affiliation matches the submitted name" do
+          add_answer("organization_name", "Harbor Family Shelter")
+          create(:affiliation, person: person, organization: create(:organization, name: "Harbor Family Shelter"))
+
+          get link_organization_form_submission_path(submission)
+
+          expect(response.body).to include("Harbor Family Shelter")
+          expect(response.body).not_to include("Create and link")
+          expect(response.body).to include("Affiliations:")
+        end
+      end
+
+      describe "POST /form_submissions/:id/select_organization" do
+        it "creates the job and Facilitator affiliations, dating the facilitator one to the submission" do
+          add_answer("organization_name", "Harbor Family Shelter")
+          add_answer("organization_position", "Counselor")
+          organization = create(:organization, name: "Harbor Family Shelter")
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          titles = person.affiliations.where(organization: organization).pluck(:title, :start_date)
+          expect(titles).to contain_exactly([ "Counselor", nil ], [ "Facilitator", submission.created_at.to_date ])
+          expect(response).to redirect_to(link_organization_form_submission_path(submission))
+        end
+
+        it "creates only the job affiliation for a form without an agreement purpose" do
+          plain_form = create(:form)
+          plain = create(:form_submission, form: plain_form, person: person)
+          field = create(:form_field, form: plain_form, field_identifier: "organization_position")
+          create(:form_answer, form_submission: plain, form_field: field, submitted_answer: "Volunteer")
+          organization = create(:organization)
+
+          post select_organization_form_submission_path(plain, organization_id: organization.id)
+
+          expect(person.affiliations.where(organization: organization).pluck(:title)).to eq([ "Volunteer" ])
+        end
+
+        it "fills blank org profile fields from the submission and flags conflicting ones" do
+          add_answer("organization_name", "Harbor Family Shelter")
+          add_answer("organization_website", "https://harbor.example.org")
+          organization = create(:organization, name: "Harbor Family Shelter", agency_type: "School")
+          field = form.form_fields.find_by(field_identifier: "organization_type") ||
+                  create(:form_field, form: form, field_identifier: "organization_type")
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Government Agency")
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          expect(organization.reload.website_url).to eq("https://harbor.example.org")
+          expect(organization.agency_type).to eq("School")
+          expect(flash[:warning]).to include("differ")
+        end
+      end
+
+      describe "POST /form_submissions/:id/create_organization" do
+        it "creates the organization from the submitted name and links it" do
+          create(:organization_status, name: "Active")
+          add_answer("organization_name", "Lakeside Community College")
+          add_answer("organization_position", "Counselor")
+
+          expect {
+            post create_organization_form_submission_path(submission)
+          }.to change(Organization, :count).by(1)
+
+          organization = Organization.find_by(name: "Lakeside Community College")
+          expect(person.affiliations.where(organization: organization).pluck(:title)).to contain_exactly("Counselor", "Facilitator")
+        end
+
+        it "reuses an existing organization with the submitted name instead of duplicating it" do
+          add_answer("organization_name", "harbor family shelter")
+          existing = create(:organization, name: "Harbor Family Shelter")
+
+          expect {
+            post create_organization_form_submission_path(submission)
+          }.not_to change(Organization, :count)
+
+          expect(person.affiliations.where(organization: existing)).to exist
+        end
+
+        it "refuses when no organization name was submitted" do
+          expect {
+            post create_organization_form_submission_path(submission)
+          }.not_to change(Organization, :count)
+
+          expect(flash[:alert]).to include("No submitted organization name")
+        end
+      end
+
+      context "as a non-admin" do
+        before { sign_in create(:user) }
+
+        it "denies the editor and the link actions" do
+          organization = create(:organization)
+
+          get link_organization_form_submission_path(submission)
+          expect(response).to redirect_to(root_path)
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+          expect(person.affiliations).to be_empty
+        end
       end
     end
 
