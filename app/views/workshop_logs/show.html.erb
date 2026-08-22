@@ -188,7 +188,7 @@
                   </span>
                 </div>
                 <div class="text-gray-700 mt-3">
-                  -- <%= quote.attribution %>
+                  <span class="font-medium not-italic">Speaker:</span> <%= quote.attribution %>
                   <%= "@ " + quote.created_at.strftime("%m-%d-%-Y") %>
                   <%= ("re " + link_to(quote.workshop.title, workshop_path(quote.workshop),
                                        class: "hover:underline") if quote.workshop).to_s.html_safe %>

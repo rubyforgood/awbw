@@ -17,7 +17,7 @@ class QuoteDecorator < ApplicationDecorator
   end
 
   def attribution
-    name = author&.name.presence || speaker_name.presence || "anonymous"
+    name = object.author_credit
 
     details = []
     details << "#{age.gsub("years", "").gsub("yrs", "")} yrs" if age.present?
