@@ -1797,6 +1797,7 @@
   area: content
   display_status: user_facing
   released_on: 2026-08-22
+  pr_number: 2311
   summary: >-
     Type a name into the filter box to narrow an index by who authored or is
     named on each record. Added to Stories, Workshop variations, Workshop logs,
