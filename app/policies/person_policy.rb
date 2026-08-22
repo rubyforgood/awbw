@@ -6,7 +6,7 @@ class PersonPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? # || owner?
+    admin? || owner?
   end
 
   # Admin, or the profile's own person. The narrow rule for owner-only content
@@ -33,7 +33,7 @@ class PersonPolicy < ApplicationPolicy
   end
 
   def edit?
-    admin? # || owner?
+    admin?
   end
 
   def update?
