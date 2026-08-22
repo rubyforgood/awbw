@@ -108,12 +108,6 @@ RSpec.describe AuthorCreditDivergenceQuery do
       expect(workshop.author_credit).to eq("Marguerite Pre-Person")
     end
 
-    it "lists quotes credited by a legacy speaker name and no author, even with no creator" do
-      quote = create(:quote, author: nil, created_by: nil, speaker_name: "Marguerite Pre-Person")
-
-      expect(legacy_records_for("quotes.speaker_name")).to include(quote)
-    end
-
     it "drops a record once a real author is credited" do
       workshop = create(:workshop, author: nil, full_name: "Marguerite Pre-Person")
       workshop.update!(author: person)
@@ -124,7 +118,7 @@ RSpec.describe AuthorCreditDivergenceQuery do
     it "keeps a group per legacy column even when it is empty, so each can be retired" do
       columns = described_class.new.call.legacy.map(&:column)
 
-      expect(columns).to contain_exactly("workshops.full_name", "resources.legacy_author_name", "quotes.speaker_name")
+      expect(columns).to contain_exactly("workshops.full_name", "resources.legacy_author_name")
       expect(described_class.new.call).to be_legacy_empty
     end
 

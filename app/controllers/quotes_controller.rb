@@ -73,7 +73,6 @@ class QuotesController < ApplicationController
   def quote_params
     params.require(:quote).permit(
       :age,
-      :author_credit_preference,
       :author_id,
       :body,
       :gender,
