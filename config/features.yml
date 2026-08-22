@@ -27,6 +27,24 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Activity log: readable details column"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/admin/activities/events"
+  summary: >-
+    The activity log's properties column is now a plain-language "Details" column: edits show
+    what changed as before/after, searches list the sectors and categories by name, and any
+    records involved link straight to their pages.
+  pr_number: 2316
+  pro_tips:
+    - "Use the Details search box to find activity by what's inside it (a name, a search term)."
+  description: >-
+    Each row's Details column now reads like a sentence instead of a raw property dump. For an
+    edit, every changed field shows its before and after value. For a search or filter, the
+    sectors, categories, and windows types are listed by name and the total results found. When
+    an activity touches other records, those records link straight to their show pages.
+
 - name: "Quotes: standout flag, linked author, and preserved original"
   area: content
   display_status: admin_facing
