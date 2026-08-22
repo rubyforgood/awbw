@@ -1,4 +1,8 @@
 class MonthlyReport < Report
+  include AuthorCreditable
+  # No explicit author → credit the creator's person by name, else "Anonymous".
+  self.unattributed_author_label = "Anonymous"
+
   PARTICIPANT_ONGOING_QUESTION = "Total # On-going Participants"
   PARTICIPANT_FIRST_TIME_QUESTION = "Total # First-Time Participants"
 
@@ -9,6 +13,7 @@ class MonthlyReport < Report
   # Associations (override Report's)
   belongs_to :owner, polymorphic: true, optional: true
   belongs_to :created_by, class_name: "User"
+  belongs_to :author, class_name: "Person", optional: true
   belongs_to :organization
   belongs_to :windows_type
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -101,6 +106,14 @@ class MonthlyReport < Report
 
   def name
     "Monthly Report ##{id}"
+  end
+
+  # The legacy (pre-Person-author) credit for a report: the creator's person by
+  # name, honoring their credit preference — suppressed when the person opted
+  # out. Nil (no creator/person, or opted out) reads "Anonymous".
+  def legacy_author_name_text
+    person = created_by&.person
+    person.name unless person.nil? || person.anonymous_contributions?
   end
 
   def display_date

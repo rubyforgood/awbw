@@ -41,6 +41,10 @@ class Person < ApplicationRecord
            dependent: :restrict_with_error
   has_many :workshop_variation_ideas_as_author, inverse_of: :author, class_name: "WorkshopVariationIdea",
            foreign_key: :author_id, dependent: :restrict_with_error
+  has_many :workshop_logs_as_author, inverse_of: :author, class_name: "WorkshopLog", foreign_key: :author_id,
+           dependent: :restrict_with_error
+  has_many :monthly_reports_as_author, inverse_of: :author, class_name: "MonthlyReport", foreign_key: :author_id,
+           dependent: :restrict_with_error
   # has_many through
   has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
   has_many :topic_subscriptions, dependent: :destroy
