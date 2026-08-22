@@ -354,6 +354,23 @@ RSpec.describe "/workshop_logs", type: :request do
         expect(response).to have_http_status(:redirect)
       end
 
+      it "credits nested quotes to the current user without setting the quote author" do
+        post workshop_logs_path, params: {
+          workshop_log: valid_attributes.merge(
+            all_quotable_item_quotes_attributes: {
+              "0" => {
+                quotable_type: "WorkshopLog",
+                quote_attributes: { body: "Coming here makes me feel happy!", age: "child" }
+              }
+            }
+          )
+        }
+
+        quote = WorkshopLog.last.quotes.last
+        expect(quote.created_by).to eq(user)
+        expect(quote.author).to be_nil
+      end
+
       it "creates admin and submitter notifications and enqueues mail" do
         expect {
           post workshop_logs_path, params: {
