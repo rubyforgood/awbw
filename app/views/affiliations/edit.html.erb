@@ -39,9 +39,20 @@
                 data: { controller: "remote-select", remote_select_model_value: "person" }
               } %>
 
-        <div>
-          <span class="block text-sm font-medium text-gray-700 mb-1">Primary organization contact</span>
-          <%= render "affiliations/primary_contact_toggle", f: f %>
+        <div class="flex items-start gap-4">
+          <div>
+            <span class="block text-sm font-medium text-gray-700 mb-1">Primary contact</span>
+            <%= render "affiliations/primary_contact_toggle", f: f %>
+            <p class="mt-1 text-xs text-gray-500">Main contact for this org</p>
+          </div>
+          <% if allowed_to?(:manage?, @affiliation) %>
+            <div class="admin-only w-28 rounded-md bg-blue-100 p-2">
+              <%= f.input :filemaker_code,
+                    label: "FileMaker code",
+                    label_html: { class: "block text-xs font-medium text-gray-700 mb-1" },
+                    input_html: { class: "w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-blue-500 focus:ring-blue-200 text-sm" } %>
+            </div>
+          <% end %>
         </div>
       </div>
 
@@ -132,16 +143,6 @@
                 input_html: { type: "date", value: @affiliation.end_date&.strftime("%Y-%m-%d") } %>
         </div>
       </div>
-
-      <% if allowed_to?(:manage?, @affiliation) %>
-        <div class="admin-only rounded-md bg-blue-100 p-3">
-          <%= f.input :filemaker_code,
-                label: "FileMaker code",
-                label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
-                hint: "Legacy FileMaker import identifier.",
-                input_html: { class: "rounded-md border-gray-300 bg-white shadow-sm focus:border-blue-500 focus:ring-blue-200" } %>
-        </div>
-      <% end %>
     </div>
 
     <%# ---- Comments (saved with the affiliation, like the other forms) ---- %>
