@@ -504,7 +504,7 @@ RSpec.describe Person, type: :model do
       }.not_to raise_error
     end
 
-    context 'sector_leaders_only' do
+    context "role: sector_leader" do
       let(:sector) { create(:sector) }
 
       before do
@@ -512,21 +512,186 @@ RSpec.describe Person, type: :model do
         person_bob.sectorable_items.create!(sector: sector, is_leader: false)
       end
 
-      it 'returns only people who lead a sector when truthy' do
-        results = Person.search_by_params(sector_leaders_only: '1')
+      it "returns only people who lead a sector" do
+        results = Person.search_by_params(role: "sector_leader")
         expect(results).to include(person_alice)
         expect(results).not_to include(person_bob)
       end
 
-      it 'returns a person once even when they lead several sectors' do
+      it "returns a person once even when they lead several sectors" do
         person_alice.sectorable_items.create!(sector: create(:sector), is_leader: true)
-        results = Person.search_by_params(sector_leaders_only: '1')
+        results = Person.search_by_params(role: "sector_leader")
         expect(results.to_a.count(person_alice)).to eq(1)
       end
 
-      it 'ignores the filter when unchecked' do
-        results = Person.search_by_params(sector_leaders_only: '0')
+      it "ignores the filter when role is blank" do
+        results = Person.search_by_params(role: "")
         expect(results).to include(person_alice, person_bob)
+      end
+    end
+
+    context "role: story_author" do
+      it "returns only people who authored a story" do
+        create(:story, author: person_alice)
+        results = Person.search_by_params(role: "story_author")
+        expect(results).to include(person_alice)
+        expect(results).not_to include(person_bob)
+      end
+    end
+
+    context "role: blog_contributor" do
+      it "returns only people flagged as blog contributors" do
+        person_bob.update!(blog_contributor: true)
+        results = Person.search_by_params(role: "blog_contributor")
+        expect(results).to include(person_bob)
+        expect(results).not_to include(person_alice)
+      end
+    end
+
+    context "role: workshop_author" do
+      it "returns only people who authored a workshop" do
+        create(:workshop, author: person_alice)
+        results = Person.search_by_params(role: "workshop_author")
+        expect(results).to include(person_alice)
+        expect(results).not_to include(person_bob)
+      end
+    end
+
+    context "role: workshop_variation_author" do
+      it "returns only people who authored a workshop variation" do
+        create(:workshop_variation, author: person_bob)
+        results = Person.search_by_params(role: "workshop_variation_author")
+        expect(results).to include(person_bob)
+        expect(results).not_to include(person_alice)
+      end
+    end
+
+    context "role: workshop_log_author" do
+      it "returns people whose linked user created a workshop log" do
+        user = create(:user, person: person_alice)
+        create(:workshop_log, created_by: user)
+        results = Person.search_by_params(role: "workshop_log_author")
+        expect(results).to include(person_alice)
+        expect(results).not_to include(person_bob)
+      end
+    end
+
+    context "membership_status" do
+      it "active: includes people with a non-cancelled membership" do
+        member = create(:person, first_name: "Member", last_name: "Active")
+        create(:membership, person: member)
+        results = Person.search_by_params(membership_status: "active")
+        expect(results).to include(member)
+        expect(results).not_to include(person_alice)
+      end
+
+      it "inactive: includes people whose only membership is cancelled" do
+        former = create(:person, first_name: "Former", last_name: "Member")
+        create(:membership, :cancelled, person: former)
+        results = Person.search_by_params(membership_status: "inactive")
+        expect(results).to include(former)
+        expect(results).not_to include(person_alice)
+      end
+
+      it "paid: includes people with a covered current invoice" do
+        member = create(:person, first_name: "Paid", last_name: "Member")
+        create(:membership_invoice, :comped, membership: create(:membership, person: member))
+        results = Person.search_by_params(membership_status: "paid")
+        expect(results).to include(member)
+      end
+
+      it "due: includes people owing on a current invoice still within grace" do
+        member = create(:person, first_name: "Due", last_name: "Member")
+        create(:membership_invoice, membership: create(:membership, person: member),
+                                    start_date: Date.current)
+        results = Person.search_by_params(membership_status: "due")
+        expect(results).to include(member)
+      end
+
+      it "overdue: includes people owing past the grace period" do
+        member = create(:person, first_name: "Overdue", last_name: "Member")
+        create(:membership_invoice, membership: create(:membership, person: member),
+                                    start_date: 60.days.ago, end_date: 305.days.from_now)
+        results = Person.search_by_params(membership_status: "overdue")
+        expect(results).to include(member)
+      end
+    end
+
+    context "facilitator_status" do
+      # person_alice and person_bob each already have one active facilitator affiliation.
+
+      it "active: includes people with a currently-active facilitator affiliation" do
+        results = Person.search_by_params(facilitator_status: "active")
+        expect(results).to include(person_alice, person_bob)
+      end
+
+      it "inactive: includes people whose facilitator affiliations are all inactive" do
+        lapsed = create(:person, first_name: "Lapsed", last_name: "Fac")
+        create(:affiliation, person: lapsed, title: "Facilitator", end_date: 1.year.ago)
+
+        results = Person.search_by_params(facilitator_status: "inactive")
+        expect(results).to include(lapsed)
+        expect(results).not_to include(person_alice)
+      end
+
+      it "boomerang: includes people with 2+ facilitator affiliations and at least one active" do
+        multi = create(:person, first_name: "Multi", last_name: "Fac")
+        create(:affiliation, person: multi, title: "Facilitator", end_date: nil)
+        create(:affiliation, person: multi, title: "Facilitator", end_date: 1.year.from_now)
+
+        results = Person.search_by_params(facilitator_status: "boomerang")
+        expect(results).to include(multi)
+        expect(results).not_to include(person_alice)
+      end
+
+      it "formerly_active: includes people whose facilitator term ended and none is active" do
+        former = create(:person, first_name: "Former", last_name: "Fac")
+        create(:affiliation, person: former, title: "Facilitator", end_date: 1.year.ago)
+
+        results = Person.search_by_params(facilitator_status: "formerly_active")
+        expect(results).to include(former)
+        expect(results).not_to include(person_alice)
+      end
+    end
+
+    context "topic_subscription_type_id" do
+      let(:topic) { create(:topic_subscription_type) }
+
+      it "returns people with an active subscription to the topic" do
+        create(:topic_subscription, person: person_alice, topic_subscription_type: topic)
+        results = Person.search_by_params(topic_subscription_type_id: topic.id)
+        expect(results).to include(person_alice)
+        expect(results).not_to include(person_bob)
+      end
+
+      it "excludes people whose subscription to the topic is unsubscribed" do
+        create(:topic_subscription, :unsubscribed, person: person_bob, topic_subscription_type: topic)
+        results = Person.search_by_params(topic_subscription_type_id: topic.id)
+        expect(results).not_to include(person_bob)
+      end
+    end
+
+    context "age_range_names_all" do
+      let(:age_type) { create(:category_type, name: "AgeRange", published: true) }
+      let(:teens) { create(:category, :published, name: "Teens", category_type: age_type) }
+      let(:seniors) { create(:category, :published, name: "Seniors", category_type: age_type) }
+
+      it "returns only people tagged with the named age range" do
+        person_alice.categorizable_items.create!(category: teens)
+        person_bob.categorizable_items.create!(category: seniors)
+
+        results = Person.search_by_params(age_range_names_all: "Teens")
+        expect(results).to include(person_alice)
+        expect(results).not_to include(person_bob)
+      end
+
+      it "does not match a same-named category from another category type" do
+        other_type = create(:category_type, name: "Setting", published: true)
+        other_teens = create(:category, :published, name: "Teens", category_type: other_type)
+        person_bob.categorizable_items.create!(category: other_teens)
+
+        results = Person.search_by_params(age_range_names_all: "Teens")
+        expect(results).not_to include(person_bob)
       end
     end
   end

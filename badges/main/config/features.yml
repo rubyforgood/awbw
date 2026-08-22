@@ -1876,3 +1876,27 @@
     A new Form answers page lists every individual answer submitted across the
     site's forms. Search the answer text or filter by form, person, submission,
     event, or question type, then jump straight to the full submission.
+
+- name: "Filter the people directory by role, status, age range, topic, and staff tag"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/people"
+  pr_number: 2312
+  summary: >-
+    New dropdowns filter the people directory by age range, by what a person
+    creates (story, blog, workshop, variation, and log authors, plus sector
+    leaders), by facilitator status, by membership status, by topic subscription,
+    and by staff tag. The admin-only filters sit together in a blue panel.
+  pro_tips:
+    - The role dropdown replaces the old "Sector leaders only" checkbox; pick
+      "Sector leaders" there to get the same list.
+    - "Facilitator status: \"boomerang\" means two or more facilitator affiliations
+      with at least one still active; \"formerly active\" means a past term ended
+      and none is active now."
+    - "Membership status reads the current invoice: \"due\" still owes but is within
+      the grace period, \"overdue\" has passed it."
+    - The topic and staff tag dropdowns sit in the same blue admin panel; topic
+      matches people still subscribed, staff tag matches people carrying that tag.
+    - The age range dropdown lists your published age ranges and matches anyone
+      tagged with that range.

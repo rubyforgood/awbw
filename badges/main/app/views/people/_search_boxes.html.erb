@@ -6,23 +6,12 @@
   autocomplete: "off",
   class: "space-y-4") do |f| %>
   <%= hidden_field_tag "organization_id", params[:organization_id] if params[:organization_id].present? %>
-  <div class="mb-6 flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end">
+  <div class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end">
     <!-- Contact info -->
     <div class="w-full md:flex-1">
       <%= label_tag :contact_info, "Name, email, or phone", class: search_label_class %>
       <div class="relative">
         <%= text_field_tag :contact_info, params[:contact_info],
-                           class: search_field_class(extra: "pr-10"),
-                           placeholder: "" %>
-        <%= render "shared/search_submit" %>
-      </div>
-    </div>
-
-    <!-- Sector name -->
-    <div class="w-full md:flex-1">
-      <%= label_tag :sector_names_all, "Sector name(s)", class: search_label_class %>
-      <div class="relative">
-        <%= text_field_tag :sector_names_all, params[:sector_names_all],
                            class: search_field_class(extra: "pr-10"),
                            placeholder: "" %>
         <%= render "shared/search_submit" %>
@@ -40,32 +29,68 @@
       </div>
     </div>
 
-    <!-- Sector leaders only -->
-    <div class="flex w-full items-center md:w-auto">
-      <label class="inline-flex cursor-pointer items-center gap-2 py-2 text-sm font-medium text-gray-700">
-        <%= check_box_tag :sector_leaders_only, "1", params[:sector_leaders_only].present?,
-                          class: "rounded border-gray-300 text-blue-600 focus:ring focus:ring-blue-200" %>
-        <span>Sector leaders only</span>
-      </label>
+    <!-- Sector name -->
+    <div class="w-full md:flex-1">
+      <%= label_tag :sector_names_all, "Sector name(s)", class: search_label_class %>
+      <div class="relative">
+        <%= text_field_tag :sector_names_all, params[:sector_names_all],
+                           class: search_field_class(extra: "pr-10"),
+                           placeholder: "" %>
+        <%= render "shared/search_submit" %>
+      </div>
     </div>
 
-    <!-- Staff tag (internal, admin-only) -->
-    <% if allowed_to?(:index?, StaffTag) %>
-      <% staff_tags = StaffTag.published.ordered %>
-      <% if staff_tags.any? %>
-        <div class="w-full md:flex-1">
-          <%= label_tag :staff_tag_ids, "Staff tag", class: search_label_class %>
-          <%= select_tag :staff_tag_ids,
-                         options_from_collection_for_select(staff_tags, :id, :name, params[:staff_tag_ids]),
-                         include_blank: "Any",
-                         class: search_field_class %>
-        </div>
-      <% end %>
-    <% end %>
+    <!-- Age range -->
+    <%= render "events/filter_select", param: :age_range_names_all, label: "Age range",
+          options: Category.age_ranges.published.ordered_by_position_and_name.map { |c| [ c.decorate.age_group_label, c.name ] },
+          selected: params[:age_range_names_all], blank: "Any age range",
+          field_class: search_field_class, wrapper_class: "w-full md:w-56" %>
+  </div>
 
-    <!-- Clear filters -->
-    <div class="flex w-full justify-end md:w-auto">
-      <%= render "shared/search_clear", url: people_path %>
+  <% if allowed_to?(:manage?, Person) %>
+    <div class="rounded-xl border border-blue-200 bg-blue-100 p-4">
+      <p class="mb-3 text-xs font-semibold tracking-wide text-blue-800 uppercase">Admin-only filters</p>
+      <div class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end">
+        <!-- Role -->
+        <%= render "events/filter_select", param: :role, label: "Role",
+              options: Person::ROLE_FILTER_OPTIONS, selected: params[:role],
+              blank: "All people", field_class: search_field_class,
+              wrapper_class: "w-full md:w-56" %>
+
+        <!-- Facilitator status -->
+        <%= render "events/filter_select", param: :facilitator_status, label: "Facilitator status",
+              options: Person::FACILITATOR_STATUS_FILTER_OPTIONS, selected: params[:facilitator_status],
+              blank: "Any status", field_class: search_field_class,
+              wrapper_class: "w-full md:w-56" %>
+
+        <!-- Membership status -->
+        <%= render "events/filter_select", param: :membership_status, label: "Membership status",
+              options: Person::MEMBERSHIP_STATUS_FILTER_OPTIONS, selected: params[:membership_status],
+              blank: "Any status", field_class: search_field_class,
+              wrapper_class: "w-full md:w-56" %>
+
+        <!-- Staff tag -->
+        <% if allowed_to?(:index?, StaffTag) %>
+          <% staff_tags = StaffTag.published.ordered %>
+          <% if staff_tags.any? %>
+            <%= render "events/filter_select", param: :staff_tag_ids, label: "Staff tag",
+                  options: staff_tags.map { |t| [ t.name, t.id ] },
+                  selected: params[:staff_tag_ids], blank: "Any",
+                  field_class: search_field_class, wrapper_class: "w-full md:w-56" %>
+          <% end %>
+        <% end %>
+
+        <!-- Topic subscription -->
+        <%= render "events/filter_select", param: :topic_subscription_type_id, label: "Topic subscription",
+              options: TopicSubscriptionType.active.ordered.pluck(:name, :id),
+              selected: params[:topic_subscription_type_id], blank: "Any topic",
+              field_class: search_field_class, wrapper_class: "w-full md:w-56" %>
+      </div>
     </div>
+  <% end %>
+
+  <!-- Clear filters -->
+  <div class="flex justify-end">
+    <%= render "shared/search_clear", url: people_path %>
   </div>
 <% end %>
