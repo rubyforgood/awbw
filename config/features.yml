@@ -1866,3 +1866,13 @@
       pickers while keeping its history; you can only delete a tag that isn't in
       use.
     - Each tag records which admin applied it, and when.
+
+- name: "Browse and search all form answers"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/form_answers"
+  summary: >-
+    A new Form answers page lists every individual answer submitted across the
+    site's forms. Search the answer text or filter by form, person, submission,
+    event, or question type, then jump straight to the full submission.
