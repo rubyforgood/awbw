@@ -25,6 +25,7 @@ namespace :db do
       bulk_payments
       legacy_form_identifiers
       public_forms
+      form_results_showcase
     ]
 
     desc "Generate representative sample data for development"
@@ -133,6 +134,11 @@ namespace :db do
     desc "Seed standalone public forms with submissions and answers (dev only)"
     task public_forms: :environment do
       load Rails.root.join("db/seeds/dev/public_forms.rb")
+    end
+
+    desc "Seed a form covering every field type + varied answers for the results page (dev only)"
+    task form_results_showcase: :environment do
+      load Rails.root.join("db/seeds/dev/form_results_showcase.rb")
     end
   end
 end
