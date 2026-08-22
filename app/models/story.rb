@@ -105,6 +105,10 @@ class Story < ApplicationRecord
                        .or(stories.where(id: by_credited_person_name(query).select("stories.id")))
     end
 
+    if params[:author_name].present?
+      stories = stories.where(id: by_credited_person_name(params[:author_name]).select("stories.id"))
+    end
+
     stories = stories.by_year(params[:year]) if params[:year].present? && params[:year].match?(/\A\d{4}\z/)
     stories = stories.facilitator_spotlights(params[:facilitator_spotlights]) if params[:facilitator_spotlights].present?
     stories = stories.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?

@@ -159,5 +159,14 @@ RSpec.describe WorkshopVariation do
       results = WorkshopVariation.search_by_params(query: "nonexistent")
       expect(results).not_to include(variation_a, variation_b)
     end
+
+    it "filters by author_name matching the credited author" do
+      facilitator = create(:person, first_name: "Bartholomew", last_name: "Snazzlepants")
+      authored = create(:workshop_variation, name: "Authored", author: facilitator)
+
+      results = WorkshopVariation.search_by_params(author_name: "Bartholomew")
+      expect(results).to include(authored)
+      expect(results).not_to include(variation_a, variation_b)
+    end
   end
 end
