@@ -31,12 +31,10 @@
       <% end %>
     </ul>
 
-    <% if report.responses.size > cap %>
-      <div class="mt-3 border-t border-gray-100 pt-3 text-center">
-        <%= link_to "View all #{report.responses.size} responses",
-                    form_submissions_path(form_id: form.id, return_to: "form_results"),
-                    class: "text-sm #{link_class}" %>
-      </div>
-    <% end %>
+    <div class="mt-3 border-t border-gray-100 pt-3 text-center">
+      <%= link_to "View all #{report.responses.size} responses",
+                  form_submissions_path(form_id: form.id, return_to: "form_results"),
+                  class: "text-sm #{link_class}" %>
+    </div>
   <% end %>
 </div>
