@@ -4,6 +4,10 @@ class Affiliation < ApplicationRecord
   # (both treat exactly "Facilitator" as canonical).
   FACILITATOR_TITLE = "Facilitator".freeze
 
+  # Legacy role title, seeded when the old integer `position` enum (liaison: 1)
+  # was converted to free-text `title` (#432/#735). Gates monthly-report editing.
+  LIAISON_TITLE = "Liaison".freeze
+
   # Status taxonomy shown as a chip on each person's row, in display order.
   STATUSES = %w[ Active Upcoming Inactive ].freeze
   # Filter-only value combining the two current-or-future statuses — never a chip,
