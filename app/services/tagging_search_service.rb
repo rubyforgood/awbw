@@ -75,7 +75,7 @@ class TaggingSearchService
                 .includes(:sectors, :primary_asset, :gallery_assets)
                 .sector_names_all(sector_names_all)
                 .category_names_all(category_names_all)
-                .order(:quote)
+                .order(:body)
                 .paginate(page: pages[:quotes] || 1, per_page: number_of_items_per_page)
                 .decorate,
 
