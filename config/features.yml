@@ -45,6 +45,24 @@
     sectors, categories, and windows types are listed by name and the total results found. When
     an activity touches other records, those records link straight to their show pages.
 
+- name: "See your full affiliation history on your profile"
+  area: people
+  display_status: user_facing
+  released_on: 2026-08-22
+  action_path: "/features"
+  summary: >-
+    Your profile now shows your complete affiliation history — including past and inactive
+    roles with their dates — visible only to you, with a link to request corrections.
+  description: >-
+    The public part of your profile still lists just your active affiliations. A new
+    "Affiliation history" section, visible only to you and AWBW staff, shows every
+    affiliation on record with its title, dates, and status (active, upcoming, or inactive).
+    Because these records are maintained by AWBW staff and mostly come from training history,
+    the section includes a "Contact us to request a change" link with the message pre-filled,
+    so it's easy to flag anything that needs correcting.
+  pro_tips:
+    - "Only you and AWBW staff can see the history section — other profile visitors still see just your active affiliations."
+
 - name: "Quotes: standout flag, linked author, and preserved original"
   area: content
   display_status: admin_facing

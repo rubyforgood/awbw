@@ -52,6 +52,13 @@ RSpec.describe "ContactUs", type: :request do
         expect(response.body).to include("respond by email")
       end
 
+      it "prefills the subject and message from query params" do
+        get contact_us_path(subject: "Request to update my affiliation history",
+                            message: "Please fix my dates.")
+        expect(response.body).to include('value="Request to update my affiliation history"')
+        expect(response.body).to include("Please fix my dates.")
+      end
+
       it "shows thank you message after form submission" do
         post contact_us_path, params: valid_params
         follow_redirect!

@@ -5,7 +5,7 @@
       <% grouped.each do |organization, org_affiliations| %>
         <div>
           <%= organization_profile_button(organization, inactive: org_affiliations.none?(&:active?), data: { turbo_frame: "_top" }) %>
-          <ul class="mt-2 pl-2 space-y-1.5">
+          <ul class="mt-2 space-y-1.5 pl-2">
             <% org_affiliations.each do |affiliation| %>
               <li class="flex flex-wrap items-center gap-2 text-sm text-gray-700">
                 <span class="font-medium"><%= affiliation.title.presence || Affiliation::FACILITATOR_TITLE %></span>
