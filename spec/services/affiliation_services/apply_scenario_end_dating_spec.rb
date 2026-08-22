@@ -15,7 +15,7 @@ RSpec.describe AffiliationServices::ApplyScenarioEndDating do
       job = create(:affiliation, person: person, organization: old_org, title: "Counselor")
       facilitator = create(:affiliation, person: person, organization: old_org, title: "Facilitator")
 
-      ended = call_with("job_change_agreement")
+      ended = call_with("job_change")
 
       expect(job.reload.end_date).to eq(effective_date - 1.day)
       expect(facilitator.reload.end_date).to eq(effective_date - 1.day)
@@ -28,7 +28,7 @@ RSpec.describe AffiliationServices::ApplyScenarioEndDating do
       long_gone = create(:affiliation, person: person, organization: old_org, title: "Facilitator",
                          end_date: Date.new(2024, 1, 31))
 
-      call_with("job_change_agreement")
+      call_with("job_change")
 
       expect(at_new_org.reload.end_date).to be_nil
       expect(long_gone.reload.end_date).to eq(Date.new(2024, 1, 31))
@@ -41,7 +41,7 @@ RSpec.describe AffiliationServices::ApplyScenarioEndDating do
       same_org_facilitator = create(:affiliation, person: person, organization: new_org, title: "Facilitator")
       job = create(:affiliation, person: person, organization: old_org, title: "Counselor")
 
-      call_with("reinstatement_agreement")
+      call_with("reinstatement")
 
       expect(stale_facilitator.reload.end_date).to eq(effective_date - 1.day)
       expect(same_org_facilitator.reload.end_date).to eq(effective_date - 1.day)
@@ -53,7 +53,7 @@ RSpec.describe AffiliationServices::ApplyScenarioEndDating do
     it "ends nothing" do
       facilitator = create(:affiliation, person: person, organization: old_org, title: "Facilitator")
 
-      call_with("on_demand_agreement")
+      call_with("on_demand")
       call_with(nil)
 
       expect(facilitator.reload.end_date).to be_nil

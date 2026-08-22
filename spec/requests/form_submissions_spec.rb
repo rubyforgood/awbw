@@ -183,15 +183,15 @@ RSpec.describe "FormSubmissions", type: :request do
       end
 
       it "filters agreement submissions across forms with the scenario filter" do
-        job_change = create(:form_submission, form: create(:form, purpose: "job_change_agreement"))
-        on_demand = create(:form_submission, form: create(:form, purpose: "on_demand_agreement"))
+        job_change = create(:form_submission, form: create(:form, purpose: "job_change"))
+        on_demand = create(:form_submission, form: create(:form, purpose: "on_demand"))
         plain = create(:form_submission)
 
         get form_submissions_path(scenario: "any"), headers: frame_headers
         expect(response.body).to include(form_submission_path(job_change), form_submission_path(on_demand))
         expect(response.body).not_to include(form_submission_path(plain))
 
-        get form_submissions_path(scenario: "job_change_agreement"), headers: frame_headers
+        get form_submissions_path(scenario: "job_change"), headers: frame_headers
         expect(response.body).to include(form_submission_path(job_change))
         expect(response.body).not_to include(form_submission_path(on_demand))
       end
@@ -290,7 +290,7 @@ RSpec.describe "FormSubmissions", type: :request do
     context "processing panel for agreement scenario forms" do
       before { sign_in admin }
 
-      let(:form) { create(:form, purpose: "job_change_agreement", name: "Collaboration agreement (job change)") }
+      let(:form) { create(:form, purpose: "job_change", name: "Collaboration agreement (job change)") }
       let(:person) { create(:person, user: nil) }
       let(:submission) { create(:form_submission, form: form, person: person) }
 
@@ -332,7 +332,7 @@ RSpec.describe "FormSubmissions", type: :request do
 
       it "offers no End button outside the job change scenario" do
         reinstatement = create(:form_submission, person: person,
-                               form: create(:form, purpose: "reinstatement_agreement"))
+                               form: create(:form, purpose: "reinstatement"))
         affiliation = create(:affiliation, person: person, organization: create(:organization))
 
         get form_submission_path(reinstatement)
@@ -343,7 +343,7 @@ RSpec.describe "FormSubmissions", type: :request do
     end
 
     context "organization linking for a submission" do
-      let(:form) { create(:form, purpose: "job_change_agreement", name: "Collaboration agreement (job change)") }
+      let(:form) { create(:form, purpose: "job_change", name: "Collaboration agreement (job change)") }
       let(:person) { create(:person, user: nil) }
       let(:submission) { create(:form_submission, form: form, person: person) }
 

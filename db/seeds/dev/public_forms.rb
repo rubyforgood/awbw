@@ -101,7 +101,7 @@ active_status = OrganizationStatus.find_by!(name: "Active")
 
 agreement_forms = [
   {
-    purpose: "on_demand_agreement",
+    purpose: "on_demand",
     slug: "collab-agreement-on-demand",
     name: "Collaboration agreement (on-demand training)",
     header: "You've completed the on-demand facilitator training — sign the collaboration agreement to become an active AWBW facilitator.",
@@ -109,7 +109,7 @@ agreement_forms = [
                  organization: "Harbor Family Shelter", position: "Youth Program Coordinator" }
   },
   {
-    purpose: "reinstatement_agreement",
+    purpose: "reinstatement",
     slug: "collab-agreement-reinstatement",
     name: "Collaboration agreement (reinstatement)",
     header: "Welcome back! Sign the collaboration agreement to be reinstated as an active AWBW facilitator.",
@@ -118,7 +118,7 @@ agreement_forms = [
                  prior_affiliation: { organization: "Harbor Family Shelter", ended_on: Date.new(2024, 6, 30) } }
   },
   {
-    purpose: "job_change_agreement",
+    purpose: "job_change",
     slug: "collab-agreement-job-change",
     name: "Collaboration agreement (job change)",
     header: "Changing organizations? Sign the collaboration agreement to keep facilitating at your new organization.",

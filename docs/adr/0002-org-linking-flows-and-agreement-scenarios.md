@@ -16,10 +16,17 @@ way it does.
 
 ## Vocabulary
 
-- **Agreement scenario / purpose** — `forms.purpose`, one of `Form::PURPOSES`.
-  Marks a standalone public form as one of the three collaboration agreement
-  intake scenarios. Copies never inherit it (`FormCopyService` clears it), so a
-  scenario is claimed by at most the forms an admin deliberately assigns.
+- **Linking scenario** — one shared vocabulary for what linking does to
+  affiliations, across both flows: `on_demand`, `facilitator_training`,
+  `reinstatement`, `job_change`, `non_facilitator_training`
+  (`OrganizationServices::LinkSubmittedOrganization::SCENARIOS`). The first
+  four confer the Facilitator affiliation; the last doesn't.
+- **Agreement scenario / purpose** — `forms.purpose`, one of `Form::PURPOSES`
+  (`on_demand`, `reinstatement`, `job_change` — the stored value IS the linking
+  scenario name). Marks a standalone public form as one of the three
+  collaboration agreement intake scenarios. Copies never inherit it
+  (`FormCopyService` clears it), so a scenario is claimed by at most the forms
+  an admin deliberately assigns.
 - **Linking core** — `OrganizationServices::LinkSubmittedOrganization`: the
   shared work of both editors (fill-blanks profile + work-address sync,
   affiliation creation, conflict diff, flash text). Each editor keeps only a
@@ -37,18 +44,26 @@ row, the submission pin, and the persistent autofill notes. The submission
 flow's wrapper owns the explicit link. Anything that should behave identically
 in both editors belongs in the core, not a wrapper.
 
-### D2 — Three variants of affiliation creation
+### D2 — Five linking scenarios, one vocabulary, two stored discriminators
 
-- **Facilitator-training event registrations** (on-demand or scheduled —
-  `events.facilitator_training`): job affiliation from the submitted position
-  plus the standing **Facilitator affiliation** dated to the event start.
-- **Non-facilitator-training event registrations**: job affiliation only.
-  Being a facilitator is conferred by a training or an agreement, never by
-  merely attending an org-linked event.
-- **Agreement-purposed form submissions**: job affiliation plus the Facilitator
-  affiliation dated to the **submission date** (the agreement is the gate to
-  active-facilitator status). Unpurposed public forms create the job
-  affiliation only.
+| Scenario | Source | Confers Facilitator | Dated to |
+|---|---|---|---|
+| `on_demand` | `forms.purpose`, **or** an on-demand facilitator-training event | yes | submission date / event start |
+| `facilitator_training` | scheduled facilitator-training event | yes | event start |
+| `reinstatement` | `forms.purpose` | yes | submission date |
+| `job_change` | `forms.purpose` | yes | submission date |
+| `non_facilitator_training` | any other event | no — job affiliation only | — |
+
+The on-demand path is **one scenario** however it arrives — through the
+agreement form (LMS completion) or an on-demand training event. Event
+scenarios are **derived at call time** from the event
+(`EventRegistrationsController#event_linking_scenario`), never stored on a
+form: registration forms are reused across events, and
+`events.facilitator_training` is the canonical event-side fact (it also drives
+ADR-0001's program-status machinery) — a form-side purpose would be a second
+source of truth that could contradict it. Unpurposed public forms have no
+scenario and confer nothing. Being a facilitator is conferred by a training or
+an agreement, never by merely attending an org-linked event.
 
 ### D3 — Per-scenario end-dating happens at linking time (submission flow only)
 

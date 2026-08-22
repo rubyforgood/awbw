@@ -771,7 +771,7 @@ class EventRegistrationsController < ApplicationController
       person: @event_registration.registrant,
       organization: organization,
       entry: entry,
-      facilitator_training: @event_registration.event.facilitator_training,
+      scenario: event_linking_scenario(@event_registration.event),
       training_date: @event_registration.event.start_date,
       event_registration: @event_registration
     )
@@ -787,5 +787,15 @@ class EventRegistrationsController < ApplicationController
     warning = result.warning(organization: organization)
     flash[:warning] = warning if warning
     result.notice(organization: organization, verb: verb)
+  end
+
+  # Which linking scenario this registration's event maps to (ADR-0002 D2): an
+  # on-demand facilitator training shares the agreement path's "on_demand"
+  # scenario, a scheduled one is "facilitator_training", and anything else
+  # confers no Facilitator affiliation. Event scenarios never end-date.
+  def event_linking_scenario(event)
+    return "non_facilitator_training" unless event.facilitator_training
+
+    event.on_demand ? "on_demand" : "facilitator_training"
   end
 end

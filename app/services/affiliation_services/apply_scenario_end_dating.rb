@@ -30,9 +30,9 @@ module AffiliationServices
     # processing panel can flag them for correction.
     def call
       case @purpose
-      when "job_change_agreement"
+      when "job_change"
         end_affiliations(@person.affiliations.active_or_pending.where.not(organization: @organization))
-      when "reinstatement_agreement"
+      when "reinstatement"
         end_affiliations(@person.affiliations.active_or_pending.facilitators)
       else
         []

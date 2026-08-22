@@ -50,14 +50,14 @@ RSpec.describe Form do
 
     it "scopes purposed forms with .with_purpose" do
       plain = create(:form)
-      purposed = create(:form, purpose: "job_change_agreement")
+      purposed = create(:form, purpose: "job_change")
 
       expect(Form.with_purpose).to include(purposed)
       expect(Form.with_purpose).not_to include(plain)
     end
 
     it "labels the purpose for display" do
-      form = build(:form, purpose: "on_demand_agreement")
+      form = build(:form, purpose: "on_demand")
 
       expect(form.purpose_label).to eq("On-demand agreement")
       expect(build(:form).purpose_label).to be_nil

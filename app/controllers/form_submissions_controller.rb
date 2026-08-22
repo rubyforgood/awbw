@@ -147,9 +147,8 @@ class FormSubmissionsController < ApplicationController
       person: @form_submission.person,
       organization: organization,
       entry: submission_org_entry,
-      facilitator_training: @form_submission.form.purpose?,
-      training_date: @form_submission.created_at.to_date,
-      scenario: @form_submission.form.purpose
+      scenario: @form_submission.form.purpose,
+      training_date: @form_submission.created_at.to_date
     )
 
     # The explicit link keeps this submission reading as linked even when the

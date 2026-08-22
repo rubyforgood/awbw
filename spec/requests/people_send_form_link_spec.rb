@@ -5,7 +5,7 @@ RSpec.describe "People send_form_link", type: :request do
   # No portal user, so preferred_email is the person's own email.
   let(:person) { create(:person, user: nil, email: "fac@example.com") }
   let(:form) do
-    create(:form, name: "Collaboration agreement (job change)", purpose: "job_change_agreement",
+    create(:form, name: "Collaboration agreement (job change)", purpose: "job_change",
                   slug: "collab-job-change", published: true)
   end
 

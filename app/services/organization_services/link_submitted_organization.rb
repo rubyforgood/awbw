@@ -40,18 +40,26 @@ module OrganizationServices
       end
     end
 
-    def self.call(person:, organization:, entry:, facilitator_training:, training_date: nil, event_registration: nil, scenario: nil)
-      new(person:, organization:, entry:, facilitator_training:, training_date:, event_registration:, scenario:).call
+    # The five linking scenarios (ADR-0002 D2). The three agreement values are
+    # stored form purposes (Form::PURPOSES); the two event values are derived
+    # per registration (an on-demand facilitator training shares the agreement
+    # path's "on_demand" scenario). All but non_facilitator_training confer the
+    # standing Facilitator affiliation; a nil scenario (an unpurposed public
+    # form) confers nothing.
+    FACILITATOR_CONFERRING_SCENARIOS = %w[on_demand facilitator_training reinstatement job_change].freeze
+    SCENARIOS = (FACILITATOR_CONFERRING_SCENARIOS + %w[non_facilitator_training]).freeze
+
+    def self.call(person:, organization:, entry:, scenario:, training_date: nil, event_registration: nil)
+      new(person:, organization:, entry:, scenario:, training_date:, event_registration:).call
     end
 
-    def initialize(person:, organization:, entry:, facilitator_training:, training_date: nil, event_registration: nil, scenario: nil)
+    def initialize(person:, organization:, entry:, scenario:, training_date: nil, event_registration: nil)
       @person = person
       @organization = organization
       @entry = entry
-      @facilitator_training = facilitator_training
+      @scenario = scenario
       @training_date = training_date
       @event_registration = event_registration
-      @scenario = scenario
     end
 
     def call
@@ -65,7 +73,7 @@ module OrganizationServices
         job_title: @entry && @entry[:position],
         training_date: @training_date,
         organization_address: address_result.address || sole_address,
-        facilitator_training: @facilitator_training,
+        facilitator_training: FACILITATOR_CONFERRING_SCENARIOS.include?(@scenario),
         event_registration: @event_registration
       )
 

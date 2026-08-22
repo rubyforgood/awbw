@@ -9,9 +9,9 @@ class Form < ApplicationRecord
   # (affiliation changes, portal access) a submission calls for. Keyed by the
   # stored `purpose` value, mapped to the admin-facing label.
   PURPOSES = {
-    "on_demand_agreement" => "On-demand agreement",
-    "reinstatement_agreement" => "Reinstatement agreement",
-    "job_change_agreement" => "Job change agreement"
+    "on_demand" => "On-demand agreement",
+    "reinstatement" => "Reinstatement agreement",
+    "job_change" => "Job change agreement"
   }.freeze
 
   belongs_to :owner, polymorphic: true, optional: true

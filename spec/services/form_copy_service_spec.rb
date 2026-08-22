@@ -11,7 +11,7 @@ RSpec.describe FormCopyService do
     end
 
     it "clears the agreement purpose so two forms never share a scenario" do
-      form = create(:form, purpose: "reinstatement_agreement")
+      form = create(:form, purpose: "reinstatement")
 
       copy = described_class.new(form).call
 
