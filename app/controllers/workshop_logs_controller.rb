@@ -40,6 +40,7 @@ class WorkshopLogsController < ApplicationController
     set_default_values
     @workshop_log = WorkshopLog.new(workshop_log_params)
     authorize! @workshop_log
+    @workshop_log.author ||= @workshop_log.created_by&.person
     credit_new_quotes_to_current_user
 
     if @workshop_log.save
