@@ -64,6 +64,11 @@ module AuthorCreditable
     # explicit author, or — the legacy fallback, only when nobody else is the
     # explicit author — anything their user account created. The read-side twin
     # of #author_person, for profile listings.
+    #
+    # The created_by fallback only matters on the select models that carry legacy,
+    # author-less rows (workshop variations, monthly reports, and older workshop
+    # logs from before we set author on create). On models where author is always
+    # populated, the fallback clause matches nothing and this is just authored_by.
     scope :credited_to_person, ->(person) {
       if person
         where(author_id: person.id)
