@@ -26,9 +26,10 @@ class FormSubmissionsController < ApplicationController
   end
 
   # Org-linking editor for a standalone submission, mirroring the event
-  # registration one. "Linked" here means the person holds an active affiliation
-  # with the submitted organization — there is no submission–org join, so linking
-  # creates the affiliations (and unlinking is managed on the person record).
+  # registration one. "Linked" here means an org was explicitly linked to this
+  # submission (metadata) or the person holds an active affiliation matching the
+  # submitted name; linking creates the affiliations (unlinking is managed on
+  # the person record).
   def link_organization
     authorize! @form_submission, to: :link_organization?
     @person = @form_submission.person
@@ -111,9 +112,13 @@ class FormSubmissionsController < ApplicationController
     Organization.where("LOWER(name) = ?", name.downcase).exists? ? [] : [ name ]
   end
 
-  # The org whose name matches the submitted answer among the person's active
-  # affiliations — the same rule as the index's Linked chip.
+  # The org this submission resolves to: an explicitly linked one first (an
+  # admin's resolution, which survives a submitted name that doesn't match the
+  # org), else the org whose name matches the submitted answer among the
+  # person's active affiliations — the same rule as the index's Linked chip.
   def matched_organization
+    explicit = @form_submission.linked_organizations.first
+    return explicit if explicit
     return if @submitted_org_name.blank?
 
     @person.affiliations.select { |a| a.active? && a.organization.name.casecmp?(@submitted_org_name.strip) }
@@ -130,52 +135,26 @@ class FormSubmissionsController < ApplicationController
     )
   end
 
-  # Fill the org's blank profile/address fields from the submission (curated
-  # values are kept and flagged as discrepancies), create the job + facilitator
-  # affiliations, and build the flash notice. Only an agreement-scenario form
-  # confers the standing Facilitator affiliation (dated to the submission) —
-  # other forms create just the job affiliation.
+  # Fill the org's blank profile/address fields from the submission, create the
+  # affiliations, record the explicit submission -> org link, and build the flash
+  # notice — via the linking core shared with the event registration editor.
+  # Only an agreement-scenario form confers the standing Facilitator affiliation
+  # (dated to the submission); other forms create just the job affiliation.
   def link_and_report(organization, verb:)
-    entry = submission_org_entry
-    profile_changes = OrganizationServices::SyncProfile.call(
-      organization: organization, overwrite: false, website: entry[:website], agency_type: entry[:agency_type]
-    ).changes
-    address_result = OrganizationServices::UpsertAddress.call(
-      organization: organization, overwrite: false, **entry[:address]
-    )
-
-    AffiliationServices::CreateFromRegistration.call(
+    result = OrganizationServices::LinkSubmittedOrganization.call(
       person: @form_submission.person,
       organization: organization,
-      job_title: entry[:position],
-      training_date: @form_submission.created_at.to_date,
-      organization_address: address_result.address || sole_address(organization),
-      facilitator_training: @form_submission.form.purpose?
+      entry: submission_org_entry,
+      facilitator_training: @form_submission.form.purpose?,
+      training_date: @form_submission.created_at.to_date
     )
 
-    stage_conflict_warning(organization)
-    saved = profile_changes + address_result.changes
-    notice = "#{flash_safe(organization.name)} #{verb}."
-    notice += " Saved from the form: #{saved.map { |change| flash_safe(change.description) }.to_sentence}." if saved.any?
-    notice
-  end
+    # The explicit link keeps this submission reading as linked even when the
+    # submitted name differs from the org it was resolved to.
+    @form_submission.link_organization!(organization.id)
 
-  def stage_conflict_warning(organization)
-    conflicts = profile_diff_for(organization)
-    return if conflicts.none?
-
-    descriptions = conflicts.map { |conflict| "#{conflict.label} (form: “#{flash_safe(conflict.submitted)}”, saved: “#{flash_safe(conflict.saved)}”)" }
-    flash[:warning] = "Some form answers differ from #{flash_safe(organization.name)}’s saved profile and were not applied: #{descriptions.to_sentence}. Edit the organization if they should change."
-  end
-
-  def sole_address(organization)
-    addresses = organization.addresses.active
-    addresses.first if addresses.count == 1
-  end
-
-  # Flash messages are rendered with `html_safe`, so anything a respondent typed
-  # has to be escaped before it goes into one.
-  def flash_safe(text)
-    ERB::Util.html_escape(text)
+    warning = result.warning(organization: organization)
+    flash[:warning] = warning if warning
+    result.notice(organization: organization, verb: verb)
   end
 end

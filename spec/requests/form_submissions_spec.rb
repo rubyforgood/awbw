@@ -405,6 +405,19 @@ RSpec.describe "FormSubmissions", type: :request do
           expect(person.affiliations.where(organization: organization).pluck(:title)).to eq([ "Volunteer" ])
         end
 
+        it "records the explicit link so a resolved name mismatch still reads as linked" do
+          add_answer("organization_name", "Acme Inc")
+          organization = create(:organization, name: "Acme Corporation")
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          expect(submission.reload.linked_organization_ids).to eq([ organization.id ])
+
+          get link_organization_form_submission_path(submission)
+          expect(response.body).to include("Acme Corporation")
+          expect(response.body).not_to include("No organization linked")
+        end
+
         it "fills blank org profile fields from the submission and flags conflicting ones" do
           add_answer("organization_name", "Harbor Family Shelter")
           add_answer("organization_website", "https://harbor.example.org")

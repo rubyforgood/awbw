@@ -112,6 +112,27 @@ RSpec.describe FormSubmission do
         expect(described_class.org_link_status("linked")).to be_empty
         expect(described_class.org_link_status("unlinked")).to contain_exactly(submission)
       end
+
+      it "counts an explicitly linked org even when the submitted name doesn't match it" do
+        submission = submission_with_org_answer("Acme Inc")
+        submission.link_organization!(create(:organization, name: "Acme Corporation").id)
+
+        expect(described_class.org_link_status("linked")).to contain_exactly(submission)
+        expect(described_class.org_link_status("unlinked")).to be_empty
+      end
+    end
+
+    describe "#link_organization!" do
+      it "records ids in metadata without duplicates and resolves them to orgs" do
+        submission = create(:form_submission)
+        organization = create(:organization)
+
+        submission.link_organization!(organization.id)
+        submission.link_organization!(organization.id)
+
+        expect(submission.reload.linked_organization_ids).to eq([ organization.id ])
+        expect(submission.linked_organizations).to contain_exactly(organization)
+      end
     end
 
     describe ".account_status" do

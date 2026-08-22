@@ -53,18 +53,28 @@ class FormSubmission < ApplicationRecord
       .where.not(submitted_answer: [ nil, "" ])
   end
 
+  # SQL test for an explicit admin link recorded in metadata (see
+  # #link_organization!). COALESCE: metadata (or the key) may be absent.
+  EXPLICIT_ORG_LINK_SQL = "COALESCE(JSON_LENGTH(JSON_EXTRACT(form_submissions.metadata, '$.linked_organization_ids')), 0) > 0".freeze
+
   scope :org_link_status, ->(value) {
     answered = org_name_answers.select(:form_submission_id)
     case value
     when "linked", "unlinked"
       # Linked: the submitted name matches an org the person holds an active (or
-      # pending) affiliation with — the same rule as the index's Linked chip.
-      linked = org_name_answers
+      # pending) affiliation with — the same rule as the index's Linked chip —
+      # or an admin explicitly linked an org to this submission (which covers a
+      # typo'd name resolved to a differently-named org).
+      affiliation_linked = org_name_answers
         .joins(form_submission: { person: { affiliations: :organization } })
         .merge(Affiliation.active_or_pending)
         .where("organizations.name = form_answers.submitted_answer")
         .select(:form_submission_id)
-      value == "linked" ? where(id: linked) : where(id: answered).where.not(id: linked)
+      if value == "linked"
+        where(id: answered).and(where(id: affiliation_linked).or(where(EXPLICIT_ORG_LINK_SQL)))
+      else
+        where(id: answered).where.not(id: affiliation_linked).where.not(EXPLICIT_ORG_LINK_SQL)
+      end
     when "none" then where.not(id: answered)
     else all
     end
@@ -188,6 +198,26 @@ class FormSubmission < ApplicationRecord
   # amount can be shown even before a payment record lands.
   def bulk_payment_amount_cents(event)
     event.cost_cents.to_i * bulk_payment_attendee_count
+  end
+
+  # --- Linked organizations (explicit admin resolution) ---
+  # Recorded when an admin links an org to this submission — from the
+  # submission's own org-linking editor, or back-applied by the event
+  # registration editor when this submission's answers describe the org. Keeps
+  # a submitted name that was resolved to a differently-named org reading as
+  # linked, where the affiliation-name match alone would not.
+
+  def linked_organization_ids
+    (metadata || {}).fetch("linked_organization_ids", [])
+  end
+
+  def link_organization!(organization_id)
+    ids = linked_organization_ids | [ organization_id.to_i ]
+    update!(metadata: (metadata || {}).merge("linked_organization_ids" => ids))
+  end
+
+  def linked_organizations
+    Organization.where(id: linked_organization_ids)
   end
 
   # --- Linked registrations (bulk payment designations) ---
