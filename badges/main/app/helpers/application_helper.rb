@@ -463,9 +463,8 @@ module ApplicationHelper
   # Training (August 2026)") so a registration reads as which occurrence it's for.
   def event_title_with_month_year(event)
     return if event.blank?
-    return event.title if event.start_date.blank?
 
-    "#{event.title} (#{event.start_date.strftime('%B %Y')})"
+    event.decorate.title_with_month_year
   end
 
   def search_page(params)

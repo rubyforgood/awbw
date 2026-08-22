@@ -202,10 +202,10 @@ class WorkshopLogsController < ApplicationController
       :workshop_id, :windows_type_id, :external_workshop_title,
       quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,
-        quote_attributes: [ :id, :quote, :age, :workshop_id, :_destroy ] ],
+        quote_attributes: [ :id, :body, :age, :workshop_id, :_destroy ] ],
       all_quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,
-        quote_attributes: [ :id, :quote, :age, :workshop_id, :_destroy ] ],
+        quote_attributes: [ :id, :body, :age, :workshop_id, :_destroy ] ],
       report_form_field_answers_attributes: [ :id, :form_field_id, :answer_option_id,
                                              :answer, :workshop_log_id, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ])

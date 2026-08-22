@@ -62,6 +62,11 @@ module VisibilityFlagsHelper
       label: "Profile specific",
       hint: "Shown on person & organization forms",
       description: "Shown on the person and organization forms."
+    },
+    standout: {
+      label: "Standout",
+      hint: "Mark as an especially good quote",
+      description: "Marks this as an especially good quote so staff can quickly find the best ones. (Does not affect visibility.)"
     }
   }.freeze
 
