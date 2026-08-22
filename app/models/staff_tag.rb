@@ -1,0 +1,34 @@
+# An internal, admin-only label applied to people (and, via the polymorphic join,
+# any StaffTaggable record). Used to mark folks for talent pipelines, rosters, and
+# outreach — "Potential future trainer", "DV Leadership Cohort", "Highlight roster".
+# These are staff judgments, never opt-in comms, and are never shown on public
+# surfaces (see StaffTagPolicy and StaffTaggable). Admins CRUD the list in-app;
+# archiving hides a tag from the pickers while keeping its history.
+class StaffTag < ApplicationRecord
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
+  has_many :staff_taggings, dependent: :restrict_with_error
+  has_many :people, through: :staff_taggings, source: :staff_taggable, source_type: "Person"
+
+  validates :name, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
+
+  scope :active, -> { where(archived_at: nil) }
+  scope :archived, -> { where.not(archived_at: nil) }
+  scope :ordered, -> { order(:name) }
+
+  def archived?
+    archived_at.present?
+  end
+
+  def archive!
+    update!(archived_at: Time.current)
+  end
+
+  def unarchive!
+    update!(archived_at: nil)
+  end
+
+  def to_s
+    name
+  end
+end

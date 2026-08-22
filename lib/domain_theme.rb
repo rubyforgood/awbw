@@ -18,6 +18,7 @@ module DomainTheme
     sectors:                  :lime,
     categories:               :lime,
     category_types:            :lime,
+    staff_tags:               :rose,
 
     forms:                    :purple,
     faqs:                     :pink,

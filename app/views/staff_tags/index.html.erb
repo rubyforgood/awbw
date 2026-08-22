@@ -1,0 +1,101 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="min-h-screen py-8">
+  <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="admin-only bg-blue-100 rounded p-6">
+      <div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:staff_tags, intensity: 100) %>
+        border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+      <div class="space-y-6">
+        <!-- Header -->
+        <div class="flex items-start justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-semibold text-gray-900">
+              Staff tags (<%= @count_display %>)
+            </h1>
+            <p class="text-sm text-gray-600 mt-1 max-w-2xl">
+              Internal, admin-only labels for people — pipelines, rosters, and outreach lists
+              (e.g. potential future trainers, cohort candidates). Never shown publicly.
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <%= link_to "New staff tag",
+                        new_staff_tag_path,
+                        class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Name</th>
+                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Description</th>
+                <th class="px-4 py-2 text-center text-sm font-medium text-gray-700">Status</th>
+                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">People tagged</th>
+                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700 w-56">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody class="divide-y divide-gray-100">
+              <% @staff_tags.each do |staff_tag| %>
+              <tr class="<%= "opacity-60" if staff_tag.archived? %>">
+                <td class="px-4 py-2 text-gray-700 text-base font-bold">
+                  <%= link_to staff_tag.name, staff_tag_path(staff_tag),
+                              class: "#{DomainTheme.text_class_for(:staff_tags)} hover:underline" %>
+                </td>
+
+                <td class="px-4 py-2 text-gray-700 text-sm max-w-md">
+                  <%= truncate(staff_tag.description, length: 120) %>
+                </td>
+
+                <td class="px-4 py-2 text-center text-gray-700">
+                  <% if staff_tag.archived? %>
+                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Archived</span>
+                  <% else %>
+                    <span class="inline-flex items-center rounded-full <%= DomainTheme.bg_class_for(:staff_tags, intensity: 100) %> <%= DomainTheme.text_class_for(:staff_tags, intensity: 700) %> px-2 py-0.5 text-xs">Active</span>
+                  <% end %>
+                </td>
+
+                <td class="px-4 py-2 text-gray-700">
+                  <%= link_to staff_tag.people.count,
+                              people_path(staff_tag_ids: staff_tag.id),
+                              class: "btn btn-secondary-default" %>
+                </td>
+
+                <td class="px-4 py-2">
+                  <div class="flex items-center gap-3">
+                    <%= link_to "Edit",
+                                edit_staff_tag_path(staff_tag),
+                                class: "btn btn-secondary-outline" %>
+                    <% if staff_tag.archived? %>
+                      <%= link_to "Unarchive", unarchive_staff_tag_path(staff_tag),
+                                  class: "btn btn-secondary-outline",
+                                  data: { turbo_method: :patch } %>
+                    <% else %>
+                      <%= link_to "Archive", archive_staff_tag_path(staff_tag),
+                                  class: "btn btn-secondary-outline",
+                                  data: { turbo_method: :patch } %>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty state -->
+        <% unless @staff_tags.any? %>
+          <p class="text-gray-500 text-center py-6">
+            No staff tags yet. Create one to start marking people for pipelines and rosters.
+          </p>
+        <% end %>
+
+        <!-- Pagination -->
+        <div class="pagination flex justify-center mt-12">
+          <%= tailwind_paginate @staff_tags %>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
