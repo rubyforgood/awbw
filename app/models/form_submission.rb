@@ -15,11 +15,45 @@ class FormSubmission < ApplicationRecord
 
   scope :bulk_payment, -> { where(role: "bulk_payment") }
 
+  # Submitted on `created_at` — there is no separate submitted_at column.
+  scope :submitted_between, ->(start_date, end_date) {
+    scope = all
+    scope = scope.where(created_at: start_date.beginning_of_day..) if start_date
+    scope = scope.where(created_at: ..end_date.end_of_day) if end_date
+    scope
+  }
+
+  # Submissions linked to an organization through an event registration. This is
+  # the only queryable submission → organization path (the org an answer names is
+  # otherwise just free text); submissions that never linked an org won't match.
+  scope :for_organization, ->(organization_id) {
+    where(id: EventRegistrationOrganization.where(organization_id: organization_id).select(:form_submission_id))
+  }
+
   validates :slug, uniqueness: true, allow_nil: true
 
   # Bulk payment submissions are reachable by their payer (who has no account)
   # through a public, slug-based ticket URL. Other roles are reached by id.
   before_create :generate_slug, if: :bulk_payment?
+
+  # Narrow the admin index by the optional filter params. Each filter is a no-op
+  # when its param is blank, so combinations stack.
+  def self.search_by_params(params)
+    results = all
+    results = results.where(person_id: params[:person_id]) if params[:person_id].present?
+    results = results.where(form_id: params[:form_id]) if params[:form_id].present?
+    results = results.where(event_id: params[:event_id]) if params[:event_id].present?
+    results = results.where(role: params[:role]) if params[:role].present?
+    results = results.for_organization(params[:organization_id]) if params[:organization_id].present?
+    results.submitted_between(parse_date(params[:start_date]), parse_date(params[:end_date]))
+  end
+
+  def self.parse_date(value)
+    return if value.blank?
+    Date.parse(value)
+  rescue ArgumentError, TypeError
+    nil
+  end
 
   def self.generate_unique_slug
     loop do

@@ -9,6 +9,43 @@ RSpec.describe FormSubmission do
     it { should accept_nested_attributes_for(:form_answers) }
   end
 
+  describe ".search_by_params" do
+    it "returns all submissions when no filters are given" do
+      a = create(:form_submission)
+      b = create(:form_submission)
+
+      expect(FormSubmission.search_by_params({})).to contain_exactly(a, b)
+    end
+
+    it "filters by form, role, event, and person" do
+      form = create(:form)
+      event = create(:event)
+      person = create(:person)
+      wanted = create(:form_submission, form: form, role: "registration", event: event, person: person)
+      create(:form_submission, role: "scholarship")
+
+      expect(FormSubmission.search_by_params(form_id: form.id, role: "registration",
+                                             event_id: event.id, person_id: person.id)).to contain_exactly(wanted)
+    end
+
+    it "filters by submission date range on created_at, ignoring unparseable dates" do
+      old = create(:form_submission, created_at: 2.years.ago)
+      recent = create(:form_submission, created_at: Date.current)
+
+      expect(FormSubmission.search_by_params(start_date: 1.month.ago.to_date.iso8601)).to contain_exactly(recent)
+      expect(FormSubmission.search_by_params(end_date: "not-a-date")).to contain_exactly(old, recent)
+    end
+
+    it "filters by organization through the registration link" do
+      organization = create(:organization)
+      linked = create(:form_submission)
+      create(:form_submission)
+      create(:event_registration_organization, organization: organization, form_submission: linked)
+
+      expect(FormSubmission.search_by_params(organization_id: organization.id)).to contain_exactly(linked)
+    end
+  end
+
   describe "slug" do
     it "generates a unique slug for bulk payment submissions" do
       submission = create(:form_submission, role: "bulk_payment")

@@ -6,13 +6,14 @@ class FormSubmissionsController < ApplicationController
     @form = Form.find_by(id: params[:form_id]) if params[:form_id].present?
 
     if turbo_frame_request?
-      submissions = FormSubmission.includes(:form, :event, :person)
-      submissions = submissions.where(person_id: @person.id) if @person
-      submissions = submissions.where(form_id: @form.id) if @form
-      @form_submissions = submissions.order(created_at: :desc).paginate(page: params[:page], per_page: 50)
+      @form_submissions = FormSubmission.search_by_params(params)
+        .includes(:form, :event, :person)
+        .order(created_at: :desc)
+        .paginate(page: params[:page], per_page: 50)
       render :form_submissions_results
     else
       @forms = Form.order(:name)
+      @roles = FormSubmission.distinct.pluck(:role).compact.sort
       render :index
     end
   end
