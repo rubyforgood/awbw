@@ -65,9 +65,16 @@ RSpec.describe Ahoy::EventDecorator do
       expect(event.detail_rows).to match_array(
         [
           { label: "Source", value: "import", depth: 0 },
-          { label: "Result count", value: "3", depth: 0 }
+          { label: "Results found", value: "3", depth: 0 }
         ]
       )
+    end
+
+    it "labels both result_count and the legacy page_result_count as Results found" do
+      current = decorate("result_count" => 8)
+      legacy = decorate("page_result_count" => 21)
+      expect(current.detail_rows).to eq([ { label: "Results found", value: "8", depth: 0 } ])
+      expect(legacy.detail_rows).to eq([ { label: "Results found", value: "21", depth: 0 } ])
     end
 
     it "indents a nested hash under its label" do

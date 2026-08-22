@@ -69,7 +69,7 @@ module Ahoy
 
       rows = label ? [ { label: label, value: nil, depth: depth } ] : []
       child_depth = label ? depth + 1 : depth
-      hash.each { |key, val| rows.concat(flatten_rows(val, key.to_s.humanize, child_depth)) }
+      hash.each { |key, val| rows.concat(flatten_rows(val, humanize_key(key), child_depth)) }
       rows
     end
 
@@ -135,6 +135,19 @@ module Ahoy
       h.polymorphic_path(record)
     rescue StandardError
       nil
+    end
+
+    # Friendlier labels for keys whose humanized form is dev-speak. Both
+    # result_count (index searches) and the legacy page_result_count (older
+    # tagging events, before both unified on result_count) read the same.
+    KEY_LABELS = {
+      "result_count" => "Results found",
+      "page_result_count" => "Results found"
+    }.freeze
+    private_constant :KEY_LABELS
+
+    def humanize_key(key)
+      KEY_LABELS[key.to_s] || key.to_s.humanize
     end
 
     def display_value(value)
