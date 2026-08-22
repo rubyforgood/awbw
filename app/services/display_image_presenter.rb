@@ -102,9 +102,7 @@ class DisplayImagePresenter
     @width == "full" && @file.variable?
   end
 
-  # Attachments declare their named variants in the model (e.g. Asset#file has
-  # :thumbnail and :card, Person#avatar has only :thumbnail). Asking for an
-  # undeclared variant raises, so degrade to the original file instead.
+  # Asking an attachment for a variant its model doesn't declare raises.
   def variant_defined?(name)
     return false unless @file.respond_to?(:record) && @file.respond_to?(:name)
 
