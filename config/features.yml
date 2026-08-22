@@ -1944,22 +1944,82 @@
   action_path: "/people"
   pr_number: 2312
   summary: >-
-    New dropdowns filter the people directory by age range, by what a person
-    creates (story, blog, workshop, variation, and log authors, plus sector
-    leaders), by facilitator status, by membership status, by topic subscription,
-    and by staff tag. The admin-only filters sit together in a blue panel.
+    The people directory gains a row of dropdown filters — role, facilitator
+    status, membership status, age range, topic subscription, and staff tag —
+    together in a blue admin panel. Each filter's values are explained in its own
+    entry below.
+
+- name: "People filter: role"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/people"
+  pr_number: 2312
+  summary: >-
+    Filter people by what they create or lead: story authors, blog contributors,
+    workshop authors, workshop variation authors, workshop log authors, and sector
+    leaders.
   pro_tips:
     - The role dropdown replaces the old "Sector leaders only" checkbox; pick
       "Sector leaders" there to get the same list.
-    - "Facilitator status: \"boomerang\" means someone who left and came back — an
-      active term that began after an earlier facilitator term had ended; \"formerly
-      active\" means a past term ended and none is active now."
-    - "Membership status reads the current invoice: \"due\" still owes but is within
-      the grace period, \"overdue\" has passed it."
-    - The topic and staff tag dropdowns sit in the same blue admin panel; topic
-      matches people still subscribed, staff tag matches people carrying that tag.
-    - The age range dropdown lists your published age ranges and matches anyone
-      tagged with that range.
+
+- name: "People filter: facilitator status"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/people"
+  pr_number: 2312
+  summary: >-
+    Filter people by their facilitator standing: active, inactive, boomerang (left
+    and came back), or formerly active.
+  description: >-
+    Active — a current facilitator term. Inactive — has facilitator terms but none
+    current. Boomerang — left and came back: a current term that began after an
+    earlier facilitator term had ended. Formerly active — a past term genuinely
+    ended and none is current.
+
+- name: "People filter: membership status"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/people"
+  pr_number: 2312
+  summary: >-
+    Filter people by membership standing, read from their current invoice: active,
+    inactive, paid, due, or overdue.
+  description: >-
+    Active — membership not cancelled. Inactive — has a membership but it's
+    cancelled. Paid — the current invoice is covered. Due — still owes but within
+    the grace period. Overdue — past the grace period.
+
+- name: "People filter: age range"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/people"
+  pr_number: 2312
+  summary: >-
+    Filter people by age range. The dropdown lists your published age ranges and
+    matches anyone tagged with the one you pick.
+
+- name: "People filter: topic subscription"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/people"
+  pr_number: 2312
+  summary: >-
+    Filter people by topic subscription. Pick a topic to see everyone still
+    subscribed to it; anyone who unsubscribed is left out.
+
+- name: "People filter: staff tag"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/people"
+  pr_number: 2312
+  summary: >-
+    Filter people by staff tag. Pick a tag to see everyone carrying it.
 
 - name: "People filters: staff tag dropdown always shows, with manage links"
   area: people
