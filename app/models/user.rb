@@ -193,17 +193,6 @@ class User < ApplicationRecord
     logs.uniq.group_by { |log| log.workshop_held_on }
   end
 
-  def organization_workshop_logs(date, windows_type, organization_id)
-    if organization_id
-      logs = workshop_logs.where(organization_id: organization_id, windows_type_id: windows_type.id)
-      logs = logs.select do |log|
-        log.workshop_held_on && log.workshop_held_on.month == date.month.to_i &&
-          log.workshop_held_on.year == date.year.to_i
-      end.flatten
-      logs.uniq.group_by { |log| log.workshop_held_on }
-    end
-  end
-
   def deletable?
     !reports.exists? &&
       !workshop_logs.exists? &&
