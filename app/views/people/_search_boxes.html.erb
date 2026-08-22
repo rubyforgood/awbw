@@ -71,20 +71,19 @@
 
         <!-- Staff tag -->
         <% if allowed_to?(:index?, StaffTag) %>
-          <% staff_tags = StaffTag.published.ordered %>
-          <% if staff_tags.any? %>
-            <%= render "events/filter_select", param: :staff_tag_ids, label: "Staff tag",
-                  options: staff_tags.map { |t| [ t.name, t.id ] },
-                  selected: params[:staff_tag_ids], blank: "Any",
-                  field_class: search_field_class, wrapper_class: "w-full md:w-56" %>
-          <% end %>
+          <%= render "events/filter_select", param: :staff_tag_ids, label: "Staff tag",
+                options: StaffTag.published.ordered.map { |t| [ t.name, t.id ] },
+                selected: params[:staff_tag_ids], blank: "Any",
+                field_class: search_field_class, wrapper_class: "w-full md:w-56",
+                hint: link_to("Manage staff tags", staff_tags_path, class: eyebrow_link_class, target: "_blank", rel: "noopener") %>
         <% end %>
 
         <!-- Topic subscription -->
         <%= render "events/filter_select", param: :topic_subscription_type_id, label: "Topic subscription",
               options: TopicSubscriptionType.active.ordered.pluck(:name, :id),
               selected: params[:topic_subscription_type_id], blank: "Any topic",
-              field_class: search_field_class, wrapper_class: "w-full md:w-56" %>
+              field_class: search_field_class, wrapper_class: "w-full md:w-56",
+              hint: link_to("Manage topics", topic_subscription_types_path, class: eyebrow_link_class, target: "_blank", rel: "noopener") %>
       </div>
     </div>
   <% end %>

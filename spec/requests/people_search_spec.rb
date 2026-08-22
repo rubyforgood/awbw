@@ -79,6 +79,26 @@ RSpec.describe "People search", type: :request do
     end
   end
 
+  describe "GET /people (full page) admin filters" do
+    it "always renders the staff tag filter with a manage link, even when none are published" do
+      expect(StaffTag.published).to be_empty
+
+      get people_path
+      page = Capybara.string(response.body)
+      expect(page).to have_css("select[name=staff_tag_ids]")
+      expect(page).to have_link("Manage staff tags", href: staff_tags_path)
+    end
+
+    it "always renders the topic subscription filter with a manage link, even when none exist" do
+      expect(TopicSubscriptionType.active).to be_empty
+
+      get people_path
+      page = Capybara.string(response.body)
+      expect(page).to have_css("select[name=topic_subscription_type_id]")
+      expect(page).to have_link("Manage topics", href: topic_subscription_types_path)
+    end
+  end
+
   describe "GET /people?organization_id=X (full page)" do
     let!(:org) { create(:organization, name: "Scoped Org") }
 
