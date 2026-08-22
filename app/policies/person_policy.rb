@@ -32,8 +32,10 @@ class PersonPolicy < ApplicationPolicy
     admin?
   end
 
+  # Admin-only for now; flips to `admin? || owner?` at profile launch, when the
+  # owner read-only affiliation view on the edit form goes live.
   def edit?
-    admin? || owner?
+    admin?
   end
 
   def update?

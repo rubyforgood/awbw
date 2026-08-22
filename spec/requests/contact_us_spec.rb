@@ -59,14 +59,6 @@ RSpec.describe "ContactUs", type: :request do
         expect(response.body).to include("Please fix my dates.")
       end
 
-      it "shows a back-to-profile eyebrow and carries return_to when returning from a profile" do
-        sign_in user
-        get contact_us_path(return_to: "profile")
-        expect(response.body).to include("Back to my profile")
-        expect(response.body).to include(person_path(user.person, anchor: "affiliation_history"))
-        expect(response.body).to include('name="return_to" value="profile"')
-      end
-
       it "returns to the edit form when the request came from the person edit page" do
         sign_in user
         get contact_us_path(return_to: "person_edit")

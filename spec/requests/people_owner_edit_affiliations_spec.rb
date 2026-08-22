@@ -1,5 +1,9 @@
 require "rails_helper"
 
+# The read-only owner view of affiliations on the person edit form is staged
+# behind the profile-launch policy flip: PersonPolicy#edit? is admin-only for
+# now and goes to admin || owner at launch. These specs simulate that flip to
+# exercise the owner branch that lights up then.
 RSpec.describe "Owner view of affiliations on the person edit form", type: :request do
   let(:owner_user) { create(:user, :with_person) }
   let(:person) { owner_user.person }
@@ -10,6 +14,7 @@ RSpec.describe "Owner view of affiliations on the person edit form", type: :requ
                          title: "Facilitator", start_date: Date.new(2018, 1, 1),
                          end_date: Date.new(2020, 6, 1), inactive: true)
     sign_in owner_user
+    allow_any_instance_of(PersonPolicy).to receive(:edit?).and_return(true)
   end
 
   it "lists the owner's affiliations with dates, status, and a contact-us request link" do
