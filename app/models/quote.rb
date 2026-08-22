@@ -3,6 +3,8 @@ class Quote < ApplicationRecord
 
   belongs_to :workshop, optional: true
   belongs_to :author, class_name: "Person", optional: true
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :quotable_item_quotes, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable

@@ -40,20 +40,28 @@
         </div>
 
         <!-- Author -->
-        <div>
-          <%= f.input :author_id,
-                      as: :select,
-                      collection: author_picker_person(f.object).present? ? [[ author_picker_person(f.object).remote_search_label[:label], author_picker_person(f.object).id ]] : [],
-                      selected: author_picker_person(f.object)&.id,
-                      include_blank: "Select an author",
-                      label: (f.object.author ? (
-                        link_to "Author", person_path(f.object.author),
-                                class: "hover:underline") : "Author").html_safe,
-                      hint: "Link the person who said this, if they're on file. Otherwise use the speaker name below.",
-                      input_html: { class: "w-full rounded border-gray-300",
-                                    data: { controller: "remote-select",
-                                            remote_select_model_value: "person" } }
-          %>
+        <div class="flex flex-col gap-4 md:flex-row md:space-x-4">
+          <div class="flex-1">
+            <%= f.input :author_id,
+                        as: :select,
+                        collection: author_picker_person(f.object).present? ? [[ author_picker_person(f.object).remote_search_label[:label], author_picker_person(f.object).id ]] : [],
+                        selected: author_picker_person(f.object)&.id,
+                        include_blank: "Select an author",
+                        label: (f.object.author ? (
+                          link_to "Author", person_path(f.object.author),
+                                  class: "hover:underline") : "Author").html_safe,
+                        hint: "Link the person who said this, if they're on file. Otherwise use the speaker name below.",
+                        input_html: { class: "w-full rounded border-gray-300",
+                                      data: { controller: "remote-select",
+                                              remote_select_model_value: "person" } }
+            %>
+            <%= render "shared/author_credit_note", record: f.object %>
+          </div>
+
+          <div class="flex-1">
+            <%= render "shared/author_credit_field", f: f %>
+            <%= render "shared/author_credit_warning", record: f.object %>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-3">

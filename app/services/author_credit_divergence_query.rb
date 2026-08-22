@@ -17,6 +17,7 @@ class AuthorCreditDivergenceQuery
     WorkshopVariationIdea
     Resource
     CommunityNews
+    Quote
   ].freeze
 
   SECTIONS = %w[preference legacy creator unattributed].freeze
@@ -86,9 +87,17 @@ class AuthorCreditDivergenceQuery
   end
 
   def includes_for(model)
-    includes = [ { created_by: :person } ]
+    includes = []
+    includes << { created_by: :person } if model.reflect_on_association(:created_by)
     includes << :author if model.column_names.include?("author_id")
     includes
+  end
+
+  # A creator is only a credit suggestion, and some content (quotes) records no
+  # creating user — those simply never surface in the creator/unattributed sections.
+  def creator_person_for(record)
+    return nil unless record.respond_to?(:created_by)
+    record.created_by&.person
   end
 
   def preference_groups
@@ -147,10 +156,10 @@ class AuthorCreditDivergenceQuery
     records = authorable_models.flat_map do |model|
       scoped(model)
         .where(author_id: nil)
-        .select { |record| record.legacy_author_name_text.blank? && record.created_by&.person.present? }
+        .select { |record| record.legacy_author_name_text.blank? && creator_person_for(record).present? }
     end
 
-    group_by_person(records) { |record| record.created_by.person }
+    group_by_person(records) { |record| creator_person_for(record) }
   end
 
   def unattributed_records
@@ -159,7 +168,7 @@ class AuthorCreditDivergenceQuery
     authorable_models.flat_map do |model|
       sorted(scoped(model)
         .where(author_id: nil)
-        .select { |record| record.legacy_author_name_text.blank? && record.created_by&.person.blank? })
+        .select { |record| record.legacy_author_name_text.blank? && creator_person_for(record).blank? })
     end
   end
 

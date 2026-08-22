@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_111422) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_112435) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1147,6 +1147,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_111422) do
     t.bigint "author_id"
     t.text "body", size: :long
     t.datetime "created_at", precision: nil, null: false
+    t.integer "created_by_id"
     t.string "gender", limit: 1
     t.boolean "inactive", default: true
     t.boolean "legacy", default: false
@@ -1156,10 +1157,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_111422) do
     t.string "speaker_name"
     t.boolean "standout", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
+    t.integer "updated_by_id"
     t.integer "workshop_id"
     t.index ["author_id"], name: "index_quotes_on_author_id"
+    t.index ["created_by_id"], name: "index_quotes_on_created_by_id"
     t.index ["published"], name: "index_quotes_on_published"
     t.index ["standout"], name: "index_quotes_on_standout"
+    t.index ["updated_by_id"], name: "index_quotes_on_updated_by_id"
     t.index ["workshop_id"], name: "index_quotes_on_workshop_id"
   end
 
@@ -1917,6 +1921,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_111422) do
   add_foreign_key "professional_licenses", "people"
   add_foreign_key "quotable_item_quotes", "quotes"
   add_foreign_key "quotes", "people", column: "author_id"
+  add_foreign_key "quotes", "users", column: "created_by_id"
+  add_foreign_key "quotes", "users", column: "updated_by_id"
   add_foreign_key "quotes", "workshops"
   add_foreign_key "registration_ticket_callout_resources", "registration_ticket_callouts", on_delete: :cascade
   add_foreign_key "registration_ticket_callout_resources", "resources", on_delete: :cascade

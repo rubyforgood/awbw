@@ -8,8 +8,8 @@ class QuoteDecorator < ApplicationDecorator
     length ? text&.truncate(length) : text
   end
 
-  def created_by # TODO - add to model and quote creation
-    object.quotable_item_quotes.last&.quotable&.decorate&.created_by
+  def created_by
+    object.created_by || object.quotable_item_quotes.last&.quotable&.decorate&.created_by
   end
 
   def body

@@ -30,6 +30,7 @@ class QuotesController < ApplicationController
 
   def create
     @quote = Quote.new(quote_params)
+    @quote.created_by = current_user
     authorize! @quote
 
     if @quote.save
@@ -42,6 +43,7 @@ class QuotesController < ApplicationController
 
   def update
     authorize! @quote
+    @quote.updated_by = current_user
     if @quote.update(quote_params)
       redirect_to @quote, notice: "Quote was successfully updated.", status: :see_other
     else
@@ -71,6 +73,7 @@ class QuotesController < ApplicationController
   def quote_params
     params.require(:quote).permit(
       :age,
+      :author_credit_preference,
       :author_id,
       :body,
       :gender,
