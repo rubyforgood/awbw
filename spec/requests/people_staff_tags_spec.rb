@@ -74,5 +74,19 @@ RSpec.describe "Person staff tags", type: :request do
       expect(response.body).to include('name="staff_tag_ids"')
       expect(response.body).to match(/value="#{cohort_tag.id}"[^>]*\bselected\b|\bselected\b[^>]*value="#{cohort_tag.id}"/)
     end
+
+    it "shows a back-to-staff-tag eyebrow when opened from a tag's roster link" do
+      get people_path(staff_tag_ids: cohort_tag.id, return_to: "staff_tag")
+
+      expect(response.body).to include(staff_tag_path(cohort_tag))
+      expect(response.body).to include("DV Leadership Cohort")
+    end
+
+    it "shows a back-to-staff-tags eyebrow when opened from the staff tags index" do
+      get people_path(staff_tag_ids: cohort_tag.id, return_to: "staff_tags")
+
+      expect(response.body).to include("← Staff tags")
+      expect(response.body).to include(staff_tags_path)
+    end
   end
 end

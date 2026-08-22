@@ -11,7 +11,7 @@ RSpec.describe "Staff tags on the tag-browsing pages", type: :request do
 
       expect(response.body).to include("Staff tags")
       expect(response.body).to include("Highlight roster")
-      expect(response.body).to include(people_path(staff_tag_ids: published_tag.id))
+      expect(response.body).to include("staff_tag_ids=#{published_tag.id}")
       # Unpublished tags stay out of the browse section.
       expect(response.body).not_to include("Legacy roster")
     end
