@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~90 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~70 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~69 files |
 | `app/jobs/` | SolidQueue background jobs | 6 files |
 | `app/models/concerns/` | Shared model modules | 18 concerns |
 
@@ -233,7 +233,6 @@ action, or `authorize! :workshop, to: :summary?`).
 - `BulkInviteService` — Bulk send welcome instructions and reset created_at for users
 - `PersonInviter` — Invites a single person to the portal: creates a user account if they have none, then sends the welcome/invite email attributed to the sender. Backs the bulk "Send Portal invite emails" flow on the reminders page (`?mode=invite`)
 - `FormBuilderService` — Builds configurable forms from composable sections with per-field visibility
-- `FormResponseAggregator` — Rolls up every submission to one form into a per-question report for the `/forms/:id/results` page (`FormsController#results`): selectable questions become chartable `[ label, count ]` tallies (sector/age-group ids resolved to names, `Other: <text>` write-ins split into their own list), geographic fields (`mailing_state`/`organization_state`/`ce_license_issuing_state` → US map, `mailing_country`/`organization_country` → world map) become choropleths, free-text questions become newest-first answer lists, file questions a count. Returns `FieldReport` structs in form order; rendered via the shared `events/_breakdown_card` partial (pie/bar/map/world_map) plus `forms/_text_responses_card`
 - `ModelDeduper` — Deduplication logic
 - `RichTextMigrator` — Rich text migration utility
 - `StoryImporter` — Imports stories from a WordPress Posts Export CSV. Every row becomes a Story (published per the WP Status); a non-AWBW author's story also gets a promoted StoryIdea. Resolves the author Person from the facilitator name (unresolvable names kept as a Comment), converts content via wpautop, translates Categories/Tags/User Categories/who_is_your_story_about into Sectors + Categories via `config/story_import_sector_mapping.yml`, resolves orgs via `config/story_import_organization_mapping.yml`, links grant-tagged stories through the author's Scholarship, enqueues a `StoryAssetImportJob` per story to download its "Image URL" images in the background, and returns a row-by-row preview for the dry-run interstitial

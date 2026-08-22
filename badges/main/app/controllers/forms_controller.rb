@@ -1,5 +1,5 @@
 class FormsController < ApplicationController
-  before_action :set_form, only: %i[show results edit update destroy copy reorder_field reorder_fields edit_sections update_sections]
+  before_action :set_form, only: %i[show edit update destroy copy reorder_field reorder_fields edit_sections update_sections]
   before_action :set_dashboard_event, only: %i[show edit edit_sections update update_sections]
 
   def index
@@ -26,13 +26,6 @@ class FormsController < ApplicationController
     # visibility. The conditional logic itself only runs on the live
     # registration and public registration forms.
     @form_fields = @form.form_fields.reorder(position: :asc)
-  end
-
-  # Aggregated rollup of this form's submissions: select/checkbox questions as
-  # charts, free-text questions as lists of the actual answers.
-  def results
-    authorize! @form
-    @aggregator = FormResponseAggregator.new(@form)
   end
 
   def new
