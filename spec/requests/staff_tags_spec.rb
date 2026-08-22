@@ -42,6 +42,12 @@ RSpec.describe "/staff_tags", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
     end
 
+    it "renders the staff-tag-specific published hint, not the generic one" do
+      get new_staff_tag_path
+      expect(response.body).to include("Offered in the tag pickers")
+      expect(response.body).not_to include("Visible to signed-in users")
+    end
+
     it "publishes and unpublishes via the edit form" do
       tag = create(:staff_tag)
 

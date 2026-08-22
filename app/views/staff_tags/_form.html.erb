@@ -18,9 +18,9 @@
       </div>
 
       <div class="admin-only mt-6 rounded bg-blue-100 p-3 md:mt-0">
-        <%= render "shared/visibility_info", flags: %i[published] %>
+        <%= render "shared/visibility_info", flags: %i[staff_tag_published] %>
         <div class="grid grid-cols-1 items-center">
-          <%= visibility_flag_input f, :published %>
+          <%= visibility_flag_input f, :published, definition_key: :staff_tag_published %>
         </div>
       </div>
     </div>

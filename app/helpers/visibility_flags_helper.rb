@@ -53,6 +53,13 @@ module VisibilityFlagsHelper
       hint: "Hides all child categories",
       description: "When off, this type and all of its child categories are hidden."
     },
+    # Staff tags are admin-only regardless; `published` just controls whether the
+    # tag is offered in the pickers, so it uses this definition via definition_key.
+    staff_tag_published: {
+      label: "Published",
+      hint: "Offered in the tag pickers",
+      description: "When off, this tag is retired from the pickers but stays on anyone already carrying it. Staff tags are admin-only either way — never shown publicly."
+    },
     story_specific: {
       label: "Story specific",
       hint: "Needed for story share subsite",
