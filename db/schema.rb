@@ -1490,7 +1490,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_133627) do
   create_table "users", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "address"
     t.string "address2"
-    t.integer "agency_id"
     t.string "avatar_content_type"
     t.string "avatar_file_name"
     t.integer "avatar_file_size"
@@ -1545,7 +1544,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_133627) do
     t.string "welcome_instructions_token"
     t.string "zip"
     t.string "zip2"
-    t.index ["agency_id"], name: "index_users_on_agency_id"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["created_by_id"], name: "index_users_on_created_by_id"
     t.index ["email"], name: "index_users_on_email", unique: true
@@ -1992,7 +1990,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_133627) do
   add_foreign_key "user_permissions", "permissions"
   add_foreign_key "user_permissions", "users"
   add_foreign_key "users", "events", column: "favorite_event_id"
-  add_foreign_key "users", "organizations", column: "agency_id"
   add_foreign_key "users", "people"
   add_foreign_key "users", "users", column: "created_by_id"
   add_foreign_key "users", "users", column: "updated_by_id"
