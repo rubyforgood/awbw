@@ -112,11 +112,11 @@ class Event < ApplicationRecord
   scope :upcoming, -> { where("start_date >= ?", Date.current) }
 
   # The on-demand facilitator training an on-demand agreement submission
-  # registers the person for (ADR-0002): the published on-demand training that
-  # started most recently — "this year's" — falling back to the next upcoming
-  # one when none has started yet.
+  # registers the person for (ADR-0002): the published, not-yet-ended on-demand
+  # training that started most recently — "this year's" — falling back to the
+  # next upcoming one when none has started yet. Never an ended training.
   def self.current_on_demand_facilitator_training
-    trainings = where(published: true).facilitator_trainings.on_demand
+    trainings = where(published: true).facilitator_trainings.on_demand.where(end_date: Time.current..)
     trainings.where(start_date: ..Date.current).order(start_date: :desc).first ||
       trainings.upcoming.order(:start_date).first
   end

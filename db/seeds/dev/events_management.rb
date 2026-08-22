@@ -1711,20 +1711,26 @@ end
 puts "Creating yearly on-demand facilitator trainings…"
 (Date.current.year - 1..Date.current.year + 1).each do |year|
   title = "On-Demand Training #{year}"
+  # start/end are datetimes and pages render them in the viewer's zone — anchor
+  # in AWBW's home (Pacific) zone so Jan 1 doesn't display as Dec 31 of the
+  # prior year for US viewers.
+  pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+  opens = pacific.local(year, 1, 1)
+  closes = pacific.local(year, 12, 31).end_of_day
   event = Event.find_or_create_by!(title: title) do |e|
     e.description = "Self-paced facilitator training for #{year}."
     e.rhino_description = "Self-paced facilitator training for #{year}."
-    e.start_date = Date.new(year, 1, 1)
-    e.end_date = Date.new(year, 12, 31).end_of_day
+    e.start_date = opens
+    e.end_date = closes
     e.created_by = admin_user
     e.published = true
   end
 
   # Keep the schedule current on re-seed (find_or_create_by! only sets on create).
   event.update!(
-    start_date: Date.new(year, 1, 1),
-    end_date: Date.new(year, 12, 31).end_of_day,
-    registration_close_date: Date.new(year, 12, 31),
+    start_date: opens,
+    end_date: closes,
+    registration_close_date: closes,
     cost_cents: 0,
     published: true,
     on_demand: true,

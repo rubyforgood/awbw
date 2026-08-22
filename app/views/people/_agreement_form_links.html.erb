@@ -1,9 +1,9 @@
 <%# Email the person the form matching their scenario and see how many times
     each has been sent and when, so staff know who was contacted for what — and
     can tell a first ask from a chase. The Registration group nests the
-    facilitator-training events: the current on-demand training and each
-    upcoming scheduled one (next 12 months); Send emails that event's public
-    registration form (the full registration pipeline — the standalone /f/
+    facilitator-training events: the current on-demand training plus every
+    upcoming one within 12 months, on-demand or scheduled; Send emails that
+    event's public registration form (the full registration pipeline — the standalone /f/
     on-demand form remains only as a fallback and isn't offered here). New job
     and reinstatement are standalone public forms sent by their /f/ links.
     Collapsed by default; reopened by the ?agreement_links param the send
@@ -12,8 +12,12 @@
     than button_to (a nested <form> would be invalid). %>
 <% other_forms = Form.agreement_forms.order(:name).reject { |form| form.role == "registration" } %>
 <% on_demand_training = Event.current_on_demand_facilitator_training %>
-<% upcoming_trainings = Event.where(published: true).facilitator_trainings.live.upcoming
-                             .where(start_date: ..12.months.from_now.to_date).order(:start_date) %>
+<%# Scheduled trainings list by start date (next 12 months); on-demand ones by
+    "hasn't ended yet" — their year-long spans make start dates meaningless. %>
+<% trainings = Event.where(published: true).facilitator_trainings %>
+<% upcoming_trainings = trainings.live.upcoming.where(start_date: ..12.months.from_now.to_date)
+                                 .or(trainings.on_demand.where(end_date: Time.current..))
+                                 .where.not(id: on_demand_training&.id).order(:start_date) %>
 <% return if other_forms.empty? && upcoming_trainings.empty? && on_demand_training.nil? %>
 <%# Every link this person has been sent, newest first, grouped by the link's
     path (hosts vary between environments) — one query rather than one per row. %>
@@ -60,7 +64,7 @@
               <li class="flex flex-wrap items-center gap-3">
                 <div class="min-w-0 flex-1">
                   <div class="flex flex-wrap items-center gap-2">
-                    <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">Facilitator training</span>
+                    <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"><%= event.on_demand? ? "On-demand" : "Facilitator training" %></span>
                     <span class="text-sm font-medium text-gray-900"><%= event.decorate.title_with_month_year %></span>
                   </div>
                   <%= render "people/agreement_link_sent_note", sends: sends %>

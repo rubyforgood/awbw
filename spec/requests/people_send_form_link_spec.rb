@@ -119,6 +119,11 @@ RSpec.describe "People send_form_link", type: :request do
                     title: "Spring Training", start_date: 3.months.from_now)
       create(:event, :published, facilitator_training: true, on_demand: false,
              title: "Distant Training", start_date: 14.months.from_now)
+      # On-demand events list by "hasn't ended", regardless of start date.
+      far_on_demand = create(:event, :published, facilitator_training: true, on_demand: true,
+                             title: "Far On-Demand Training", start_date: 14.months.from_now, end_date: 26.months.from_now)
+      create(:event, :published, facilitator_training: true, on_demand: true,
+             title: "Ended On-Demand Training", start_date: 2.years.ago, end_date: 1.year.ago)
 
       get edit_person_path(person)
 
@@ -130,6 +135,9 @@ RSpec.describe "People send_form_link", type: :request do
       expect(response.body).to include("Spring Training")
       expect(response.body).to include(send_form_link_person_path(person, event_id: soon.id))
       expect(response.body).not_to include("Distant Training")
+      expect(response.body).to include("Far On-Demand Training")
+      expect(response.body).to include(send_form_link_person_path(person, event_id: far_on_demand.id))
+      expect(response.body).not_to include("Ended On-Demand Training")
     end
 
     it "says never sent for a form this person has not been emailed" do

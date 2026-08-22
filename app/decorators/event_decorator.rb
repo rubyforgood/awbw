@@ -48,10 +48,12 @@ class EventDecorator < ApplicationDecorator
   end
 
   # The canonical "which occurrence" label: title with its month and year
-  # appended (e.g. "AWBW Facilitator Training (October 2026)"). Falls back to the
-  # bare title when the event has no start date.
+  # appended (e.g. "AWBW Facilitator Training (October 2026)"). Falls back to
+  # the bare title when the event has no start date — and for on-demand events,
+  # whose year-long span makes a start month meaningless (their titles carry
+  # the year themselves, e.g. "On-Demand Training 2026").
   def title_with_month_year
-    return title if start_date.blank?
+    return title if start_date.blank? || on_demand?
 
     "#{title} (#{month_year})"
   end
