@@ -129,6 +129,21 @@ RSpec.describe Quote do
       expect(results).to include(standout)
       expect(results).not_to include(published_quote, another_published, draft_quote)
     end
+
+    it 'filters by source type' do
+      from_log = create(:quote, body: 'From a log')
+      create(:quotable_item_quote, quote: from_log, quotable: create(:workshop_log))
+      results = Quote.search_by_params(source_type: 'WorkshopLog')
+      expect(results).to include(from_log)
+      expect(results).not_to include(published_quote, another_published, draft_quote)
+    end
+  end
+
+  describe '.source_type_options' do
+    it 'builds humanized [ label, type ] pairs from the sources in the data' do
+      create(:quotable_item_quote, quote: create(:quote), quotable: create(:workshop_log))
+      expect(Quote.source_type_options).to include([ 'Workshop log', 'WorkshopLog' ])
+    end
   end
 
   describe '#speaker' do

@@ -32,6 +32,22 @@ class Quote < ApplicationRecord
     where(standout: value)
   end
 
+  # Filter by the polymorphic source a quote was submitted through
+  # (Workshop, WorkshopLog, Report, …) via quotable_item_quotes.
+  scope :source_type, ->(type) do
+    joins(:quotable_item_quotes).where(quotable_item_quotes: { quotable_type: type }).distinct
+  end
+
+  # Source-type filter options built from the data that actually exists,
+  # as [ label, quotable_type ] pairs in sentence case.
+  def self.source_type_options
+    QuotableItemQuote.where.not(quotable_type: [ nil, "" ])
+                     .distinct
+                     .pluck(:quotable_type)
+                     .sort
+                     .map { |type| [ type.underscore.humanize, type ] }
+  end
+
   # Search Cop
   include SearchCop
   search_scope :search do
@@ -67,6 +83,7 @@ class Quote < ApplicationRecord
     quotes = quotes.published(params[:published]) if params[:published].present?
     quotes = quotes.featured(params[:featured]) if params[:featured].present?
     quotes = quotes.standout(params[:standout]) if params[:standout].present?
+    quotes = quotes.source_type(params[:source_type]) if params[:source_type].present?
     quotes = quotes.authored_by(params[:author_id])
     quotes
   end

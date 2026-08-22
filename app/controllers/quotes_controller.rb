@@ -10,6 +10,7 @@ class QuotesController < ApplicationController
                          .order(created_at: :desc)
     @quotes_count = filtered.count
     @quotes = filtered.paginate(page: params[:page], per_page: per_page)
+    @source_type_options = Quote.source_type_options
   end
 
   def show
