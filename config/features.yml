@@ -27,6 +27,17 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Affiliation editor: FileMaker code and registration relinking"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  pr_number: 2332
+  summary: >-
+    The affiliation editor now shows the FileMaker code, and in admin mode adds a
+    searchable picker to link, change, or clear the registration an affiliation came from.
+  pro_tips:
+    - "Add ?admin=true to the affiliation editor URL to reveal the registration picker."
+
 - name: "Activity log: readable details column"
   area: reporting
   display_status: admin_facing
