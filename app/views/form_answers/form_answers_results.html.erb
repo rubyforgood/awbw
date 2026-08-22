@@ -19,26 +19,28 @@
         <tbody>
           <% @form_answers.each do |answer| %>
             <% submission = answer.form_submission %>
-            <tr class="border-b border-gray-100 align-top text-sm text-gray-800 last:border-0">
+            <tr class="border-b border-gray-100 align-top text-sm text-gray-500 last:border-0">
               <td class="px-4 py-3">
-                <div class="font-medium"><%= answer.form_field&.name.presence || answer.question_name_when_answered %></div>
+                <span class="font-medium text-gray-700"><%= answer.form_field&.name.presence || answer.question_name_when_answered %></span>
                 <% if answer.form_field %>
-                  <span class="mt-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-gray-600">
+                  <span class="ml-1.5 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 align-middle text-xs font-medium whitespace-nowrap text-gray-500">
                     <%= FormField::ANSWER_TYPE_LABELS[answer.form_field.answer_type] %>
                   </span>
                 <% end %>
               </td>
               <td class="max-w-md px-4 py-3">
                 <% if answer.submitted_answer.present? %>
-                  <%# submitted_answer is stored verbatim and unsanitized — always auto-escape it. %>
-                  <span class="line-clamp-3 whitespace-pre-line"><%= answer.submitted_answer %></span>
+                  <%# The answer is the focal column — larger, darker, heavier than its neighbours.
+                      submitted_answer is stored verbatim and unsanitized — always auto-escape it.
+                      title shows the full text (pretty-printed if JSON) on hover. %>
+                  <span class="line-clamp-3 cursor-help text-base font-medium whitespace-pre-line text-gray-900" title="<%= answer.decorate.tooltip_text %>"><%= answer.submitted_answer %></span>
                 <% else %>
                   <span class="text-gray-300">—</span>
                 <% end %>
               </td>
               <td class="px-4 py-3">
-                <div class="font-medium text-gray-900"><%= submission.form&.display_name %></div>
-                <div class="text-gray-600"><%= submission.person&.name %></div>
+                <div class="font-medium text-gray-600"><%= submission.form&.display_name %></div>
+                <div class="text-gray-400"><%= submission.person&.name %></div>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <div><%= answer.created_at.to_fs(:long) %></div>
