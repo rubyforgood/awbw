@@ -304,7 +304,7 @@ class Person < ApplicationRecord
   end
 
   def has_liasion_position_for?(organization_id)
-    !affiliations.where(organization_id: organization_id, position: 1).first.nil?
+    affiliations.where(organization_id: organization_id, title: Affiliation::LIAISON_TITLE).exists?
   end
 
   def primary_organization

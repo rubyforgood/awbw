@@ -633,6 +633,35 @@ RSpec.describe Person, type: :model do
       expect(person.mailing_list_consent_source).to be_nil
     end
   end
+
+  describe "#has_liasion_position_for?" do
+    let(:person) { create(:person) }
+    let(:organization) { create(:organization) }
+
+    it "is true when the person has a Liaison affiliation with that organization" do
+      create(:affiliation, person: person, organization: organization, title: Affiliation::LIAISON_TITLE)
+
+      expect(person.has_liasion_position_for?(organization.id)).to be(true)
+    end
+
+    it "matches the legacy title regardless of case" do
+      create(:affiliation, person: person, organization: organization, title: "liaison")
+
+      expect(person.has_liasion_position_for?(organization.id)).to be(true)
+    end
+
+    it "is false for a non-liaison affiliation with that organization" do
+      create(:affiliation, person: person, organization: organization, title: "Facilitator")
+
+      expect(person.has_liasion_position_for?(organization.id)).to be(false)
+    end
+
+    it "is false when the Liaison affiliation is with a different organization" do
+      create(:affiliation, person: person, organization: organization, title: Affiliation::LIAISON_TITLE)
+
+      expect(person.has_liasion_position_for?(create(:organization).id)).to be(false)
+    end
+  end
 end
 
 RSpec.describe Person, "scholarship index helpers" do

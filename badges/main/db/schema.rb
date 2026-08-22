@@ -113,7 +113,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_112435) do
     t.bigint "organization_address_id"
     t.integer "organization_id", null: false
     t.bigint "person_id", null: false
-    t.integer "position"
     t.boolean "primary_contact", default: false, null: false
     t.date "start_date"
     t.string "title"

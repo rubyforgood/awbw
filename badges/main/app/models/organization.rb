@@ -333,7 +333,7 @@ class Organization < ApplicationRecord
   end
 
   def leader
-    affiliations.find_by(position: 2)
+    affiliations.find_by(title: Affiliation::LEADER_TITLE)
   end
 
   def remove_duplicate_sectorable_items

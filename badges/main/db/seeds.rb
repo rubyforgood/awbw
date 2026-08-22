@@ -143,7 +143,7 @@ end
   Affiliation.create!(
     person: user.person,
     organization: awbw_org,
-    position: :leader,
+    title: Affiliation::LEADER_TITLE,
     start_date: 1.year.ago.to_date
   )
 end
