@@ -2702,3 +2702,18 @@
     preview now share one header so what you preview is what registrants see.
   pro_tips:
     - "The preview page and the live public form use the same header now, so the preview is a true likeness."
+
+- name: "Data health checks for admins"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-08-21
+  action_path: "/admin/data_health"
+  summary: >-
+    A page listing consistency checks that span every record rather than one page
+    at a time — each shows a count, the rows it found, and a button to fix them
+    where a correct fix exists.
+  pro_tips:
+    - "Checks with nothing to report stay quiet, so an empty page is the healthy state."
+    - >-
+      Not every check can be fixed automatically. Ones marked "Review by hand"
+      report only, because the right answer is a judgement call rather than a rule.

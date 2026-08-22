@@ -179,6 +179,12 @@ RSpec.describe Affiliation, type: :model do
     it 'includes only the exact, case-sensitive title "Facilitator" (whitespace-trimmed)' do
       expect(described_class.facilitators).to contain_exactly(exact, whitespace)
     end
+
+    it 'qualifies title when joined with events (which also has title)' do
+      expect {
+        described_class.facilitators.joins(event_registration: :event).to_a
+      }.not_to raise_error
+    end
   end
 
   describe 'title normalization on write' do

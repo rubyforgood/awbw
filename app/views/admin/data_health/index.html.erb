@@ -1,0 +1,63 @@
+<% content_for(:page_title, "Data health") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% clean = @checks.none?(&:any?) %>
+
+<div class="mx-auto max-w-4xl">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+    <%= link_to "← Admin", admin_path, class: "text-sm #{eyebrow_link_class}" %>
+  </div>
+
+  <h1 class="mb-2 text-2xl font-semibold text-gray-900">Data health</h1>
+  <p class="mb-6 text-sm text-gray-600">
+    Consistency checks that span every record, not one page at a time. A check with nothing to report
+    stays quiet. Repairs are logged like any other change, so you can see what ran and when.
+  </p>
+
+  <% if clean %>
+    <div class="rounded-xl border border-green-200 bg-green-50 p-6 text-center text-sm text-green-800">
+      <i class="fa-solid fa-circle-check mr-1"></i>
+      Everything checks out — no inconsistencies found.
+    </div>
+  <% end %>
+
+  <div class="space-y-4">
+    <% @checks.each do |check| %>
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="flex flex-wrap items-start justify-between gap-3 border-b border-gray-100 px-4 py-3">
+          <div class="min-w-0">
+            <h2 class="text-sm font-semibold text-gray-800">
+              <%= check.title %>
+              <span class="ml-1 rounded-full px-2 py-0.5 text-xs font-medium <%= check.any? ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-500" %>">
+                <%= check.count %>
+              </span>
+            </h2>
+            <p class="mt-1 text-xs text-gray-500"><%= check.explanation %></p>
+          </div>
+
+          <% if check.any? && check.repairable? %>
+            <%= button_to check.repair_label, admin_data_health_repair_path(check: check.key),
+                  method: :post, class: "btn btn-danger-outline shrink-0",
+                  form: { data: { turbo_confirm: "#{check.repair_label} for #{check.count} #{'record'.pluralize(check.count)}? This can't be undone." } } %>
+          <% elsif check.any? %>
+            <span class="shrink-0 rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
+              Review by hand
+            </span>
+          <% end %>
+        </div>
+
+        <% if check.any? %>
+          <ul class="divide-y divide-gray-100 text-sm">
+            <% check.preview.each do |record| %>
+              <li class="px-4 py-2 text-gray-700"><%= check.describe(record) %></li>
+            <% end %>
+          </ul>
+          <% if check.more_than_preview.positive? %>
+            <p class="border-t border-gray-100 px-4 py-2 text-xs text-gray-400">
+              …and <%= check.more_than_preview %> more. A repair covers all <%= check.count %>, not just the ones listed.
+            </p>
+          <% end %>
+        <% end %>
+      </section>
+    <% end %>
+  </div>
+</div>

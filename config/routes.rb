@@ -53,6 +53,8 @@ Rails.application.routes.draw do
     get "activities/charts",         to: "ahoy_activities#charts", as: "activities_charts"
     get "activities/counts",         to: "analytics#index", as: "activities_counts"
     post "activities/counts/print",  to: "analytics#print", as: "analytics_print"
+    get "data_health",               to: "data_health#index", as: "data_health"
+    post "data_health/:check/repair", to: "data_health#repair", as: "data_health_repair"
   end
 
   resources :fm_archives, only: [ :index, :show ]
