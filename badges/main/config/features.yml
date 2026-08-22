@@ -42,8 +42,9 @@
   released_on: 2026-08-22
   pr_number: 2332
   summary: >-
-    In admin mode the affiliation editor adds a searchable picker to link, change, or clear
-    the registration an affiliation came from, with a link straight to that registration.
+    In admin mode the affiliation editor adds a picker of that person's registrations — each
+    labelled with its linked organization — to link, change, or clear the registration an
+    affiliation came from, with a link straight to that registration.
   pro_tips:
     - "Add ?admin=true to the affiliation editor URL to reveal the registration picker."
 
@@ -102,6 +103,28 @@
     open a submission and come back, so you land on the same filtered list.
   pro_tips:
     - "The Organization filter matches submissions linked to an org through an event registration."
+
+- name: "Form results: charts and answer lists per form"
+  area: reporting
+  display_status: user_facing
+  released_on: 2026-08-22
+  action_path: "/forms"
+  summary: >-
+    Every form now has a Results page that rolls up all of its submissions —
+    multiple-choice and dropdown questions become charts with counts and
+    percentages, and written answers become lists you can read at a glance.
+  description: >-
+    Open a form's Results page from the Forms list (the new "Results" link). It
+    aggregates every submission question by question, in form order: single- and
+    multiple-select questions render as pie or bar charts with a legend showing each
+    option's count and share, "Other / please specify" write-ins are broken out into
+    their own list, and free-text questions list the actual answers with who
+    submitted them and when. A summary up top shows the submission count, number of
+    respondents, question count, and the date range covered. From there, "View
+    responses" jumps to the full, filterable list of individual submissions for that
+    form.
+  pro_tips:
+    - "Selects with just a few options show a pie chart; longer lists switch to a bar chart automatically."
 
 - name: "Filter registrants by registration date"
   area: events
@@ -1937,6 +1960,18 @@
       matches people still subscribed, staff tag matches people carrying that tag.
     - The age range dropdown lists your published age ranges and matches anyone
       tagged with that range.
+
+- name: "People filters: staff tag dropdown always shows, with manage links"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/people"
+  pr_number: 2328
+  summary: >-
+    The staff tag filter in the people directory now always appears, even before
+    you've published any staff tags. Both it and the topic subscription filter
+    carry a small "Manage staff tags" / "Manage topics" link so you can add or
+    edit the underlying records in one hop.
 
 - name: "Flag blog contributors from the person edit form"
   area: people
