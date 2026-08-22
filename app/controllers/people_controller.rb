@@ -2,9 +2,11 @@ class PeopleController < ApplicationController
   include AhoyTracking, TagAssignable
   before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments ]
 
-  # The profile's "Submitted content" sections — private to the person and admins,
-  # not part of the public profile even after profile viewing opens up.
-  PRIVATE_SECTIONS = %w[ workshop_ideas story_ideas workshop_variation_ideas workshop_logs ].freeze
+  # The profile's owner-and-admin-only sections — private to the person and admins,
+  # not part of the public profile even after profile viewing opens up. The full
+  # affiliation history (incl. past/inactive) is owner-only; the public profile
+  # keeps the active-only "affiliations" section.
+  PRIVATE_SECTIONS = %w[ workshop_ideas story_ideas workshop_variation_ideas workshop_logs affiliation_history ].freeze
 
   def index
     authorize!
@@ -101,6 +103,11 @@ class PeopleController < ApplicationController
       when "affiliations"
         @affiliations = @person.affiliations.active.includes(organization: :logo_attachment).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/affiliations", locals: { person: @person, affiliations: @affiliations }
+      when "affiliation_history"
+        @affiliations = @person.affiliations.includes(organization: :logo_attachment)
+                               .order(Arel.sql("affiliations.start_date IS NULL, affiliations.start_date DESC"))
+                               .paginate(page: params[:page], per_page: per_page)
+        render partial: "people/sections/affiliation_history", locals: { person: @person, affiliations: @affiliations }
       end
     end
   end

@@ -187,6 +187,20 @@
           <% end %>
         </div>
       </div>
+      <!-- Affiliation history (owner + admin only; full history incl. past/inactive) -->
+      <% if allowed_to?(:own_record?, @person) %>
+        <div id="affiliation_history" class="user-only <%= DomainTheme.bg_class_for(:user_only) %> border <%= DomainTheme.border_class_for(:user_only) %> rounded-lg shadow-sm scroll-mt-4">
+          <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3 border-b <%= DomainTheme.border_class_for(:user_only) %>">
+            <h2 class="text-xl font-semibold text-gray-800">Affiliation history</h2>
+            <span class="text-sm text-amber-700 italic">Only visible to you</span>
+          </div>
+          <div class="section-content px-3 sm:px-4 py-4 sm:py-6">
+            <%= turbo_frame_tag "person_affiliation_history_section", src: person_path(@person, section: "affiliation_history"), loading: :lazy do %>
+              <p class="text-gray-500 italic">Loading affiliation history...</p>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
       <!-- Bio -->
       <% if @person.profile_show_bio? && @person.bio.present? %>
         <div class="<%= DomainTheme.bg_class_for(:person_bio) %>

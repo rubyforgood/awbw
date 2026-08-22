@@ -1,0 +1,33 @@
+<%= turbo_frame_tag "person_affiliation_history_section" do %>
+  <% grouped = affiliations.select { |a| a.organization.present? }.group_by(&:organization) %>
+  <% if grouped.any? %>
+    <div class="space-y-4 blur-on-submit">
+      <% grouped.each do |organization, org_affiliations| %>
+        <div>
+          <%= organization_profile_button(organization, inactive: org_affiliations.none?(&:active?), data: { turbo_frame: "_top" }) %>
+          <ul class="mt-2 pl-2 space-y-1.5">
+            <% org_affiliations.each do |affiliation| %>
+              <li class="flex flex-wrap items-center gap-2 text-sm text-gray-700">
+                <span class="font-medium"><%= affiliation.title.presence || Affiliation::FACILITATOR_TITLE %></span>
+                <span class="text-gray-500"><%= affiliation.decorate.period_label %></span>
+                <%= affiliation.decorate.status_badge %>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+    </div>
+    <div class="mt-6 flex justify-center">
+      <%= tailwind_paginate affiliations, params: { section: "affiliation_history" } %>
+    </div>
+  <% else %>
+    <p class="text-gray-500 italic">No affiliations on record.</p>
+  <% end %>
+  <div class="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-600">
+    Affiliation records are maintained by AWBW staff. See something that needs correcting?
+    <%= link_to "Contact us to request a change",
+                contact_us_path(subject: "Request to update my affiliation history",
+                                message: "Hi AWBW team,\n\nI'd like to request a change to my affiliation history. Here's what needs updating:\n\n"),
+                class: "font-medium text-blue-600 hover:text-blue-800 hover:underline" %>.
+  </div>
+<% end %>

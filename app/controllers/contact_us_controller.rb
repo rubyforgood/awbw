@@ -18,6 +18,8 @@ class ContactUsController < ApplicationController
     @user = current_user if user_signed_in?
     @form_submitted = flash[:form_submitted] == true
     @from_story_share = params[:from] == "story_share"
+    @prefilled_subject = params[:subject]
+    @prefilled_message = params[:message]
     render layout: "story_shares" if @from_story_share
   end
 

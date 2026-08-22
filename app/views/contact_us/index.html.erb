@@ -204,6 +204,7 @@
                   </label>
                   <input type="text"
                          name="contact_us[subject]"
+                         value="<%= @prefilled_subject %>"
                          required
                          maxlength="100"
                          data-error-message="Subject line is required"
@@ -220,7 +221,7 @@
                           required
                           rows="6"
                           data-error-message="Message is required"
-                          class="w-full resize-none rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"></textarea>
+                          class="w-full resize-none rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"><%= @prefilled_message %></textarea>
                 <p class="field-error mt-1 hidden text-xs text-red-600"></p>
               </div>
               <!-- Submit -->
