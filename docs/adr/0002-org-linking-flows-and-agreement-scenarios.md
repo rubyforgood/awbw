@@ -46,13 +46,13 @@ in both editors belongs in the core, not a wrapper.
 
 ### D2 — Five linking scenarios, one vocabulary, two stored discriminators
 
-| Scenario | Source | Confers Facilitator | Dated to |
-|---|---|---|---|
-| `on_demand` | `forms.purpose`, **or** an on-demand facilitator-training event | yes | submission date / event start |
-| `facilitator_training` | scheduled facilitator-training event | yes | event start |
-| `reinstatement` | `forms.purpose` | yes | submission date |
-| `job_change` | `forms.purpose` | yes | submission date |
-| `non_facilitator_training` | any other event | no — job affiliation only | — |
+| Scenario | Confers Facilitator | End-dating |
+|---|---|---|
+| `on_demand` (form.purpose, **or** an on-demand facilitator-training event) | yes — dated to submission / event start | none |
+| `reinstatement` (form.purpose) | yes — dated to submission | active Facilitator rows |
+| `job_change` (form.purpose) | yes — dated to submission | other orgs' affiliations |
+| `facilitator_training` (scheduled facilitator-training event) | yes — dated to event start | none |
+| `non_facilitator_training` (any other event) | no — job affiliation only | none |
 
 The on-demand path is **one scenario** however it arrives — through the
 agreement form (LMS completion) or an on-demand training event. Event
