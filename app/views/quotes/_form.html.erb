@@ -17,11 +17,23 @@
           %>
         </div>
 
-        <!-- Quote Text -->
+        <!-- Published quote (shown in the quotes index and to users) -->
         <div>
           <%= f.input :quote,
                       as: :text,
-                      label: "Quote body",
+                      label: "Published quote",
+                      hint: "The wording shown in the quotes index and to users.",
+                      input_html: { rows: 5, class: "w-full" },
+                      wrapper_html: { class: "w-full" }
+          %>
+        </div>
+
+        <!-- Original submission (as received; preserved automatically) -->
+        <div>
+          <%= f.input :original_quote,
+                      as: :text,
+                      label: "Original submission",
+                      hint: "What we received. Captured automatically the first time; edit the published quote above to change what's shown.",
                       input_html: { rows: 5, class: "w-full" },
                       wrapper_html: { class: "w-full" }
           %>
@@ -60,10 +72,19 @@
         </div>
       </div>
 
-      <div class="admin-only bg-blue-100 rounded mt-6 md:mt-0 p-3">
-        <%= render "shared/visibility_info", flags: %i[published] %>
-        <div class="grid grid-cols-1 items-center">
-          <%= visibility_flag_input f, :published %>
+      <div class="space-y-4 mt-6 md:mt-0">
+        <div class="admin-only bg-blue-100 rounded p-3">
+          <%= render "shared/visibility_info", flags: %i[published] %>
+          <div class="grid grid-cols-1 items-center">
+            <%= visibility_flag_input f, :published %>
+          </div>
+        </div>
+
+        <div class="admin-only bg-blue-100 rounded p-3">
+          <%= render "shared/visibility_info", flags: %i[standout], heading: "Quality" %>
+          <div class="grid grid-cols-1 items-center">
+            <%= visibility_flag_input f, :standout %>
+          </div>
         </div>
       </div>
     </div>

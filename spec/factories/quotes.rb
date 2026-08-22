@@ -5,10 +5,15 @@ FactoryBot.define do
     age { rand(18..99) }
     gender { [ 'M', 'F', 'O', nil ].sample }
     published { false }
+    standout { false }
     workshop_id { nil }
 
     trait :featured do
       featured { true }
+    end
+
+    trait :standout do
+      standout { true }
     end
 
     trait :published do

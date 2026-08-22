@@ -31,6 +31,21 @@
                        class: search_field_class(extra: "search-select-placeholder"),
                        onchange: "this.form.requestSubmit()" %>
       </div>
+
+      <!-- STANDOUT -->
+      <div class="min-w-[150px] admin-only bg-blue-100 p-2 rounded-md">
+        <label for="standout" class="<%= search_label_class %>">
+          Standout
+        </label>
+
+        <%= select_tag :standout,
+                       options_for_select(
+                         [["All", ""], ["Standout", "true"], ["Not standout", "false"]],
+                         params[:standout]
+                       ),
+                       class: search_field_class(extra: "search-select-placeholder"),
+                       onchange: "this.form.requestSubmit()" %>
+      </div>
     <% end %>
 
     <!-- Clear -->

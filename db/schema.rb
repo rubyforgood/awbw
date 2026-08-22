@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_091233) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_110603) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1148,12 +1148,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_091233) do
     t.boolean "inactive", default: true
     t.boolean "legacy", default: false
     t.integer "legacy_id"
+    t.text "original_quote", size: :long
     t.boolean "published", default: false, null: false
     t.text "quote", size: :long
     t.string "speaker_name"
+    t.boolean "standout", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.integer "workshop_id"
     t.index ["published"], name: "index_quotes_on_published"
+    t.index ["standout"], name: "index_quotes_on_standout"
     t.index ["workshop_id"], name: "index_quotes_on_workshop_id"
   end
 

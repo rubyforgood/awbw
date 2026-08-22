@@ -27,6 +27,23 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Flag standout quotes and keep the original submission"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/quotes"
+  summary: >-
+    Mark especially good quotes as "Standout" and filter the quotes list to just those.
+    Quotes also keep the original submission separately from the wording you publish.
+  description: >-
+    The quote form has a new "Standout" flag for calling out the best quotes, with an
+    admin-only "Standout" filter on the quotes list to pull them up quickly. Each quote now
+    stores the original submission separately from the published wording, so editing what's
+    shown never loses what was originally received. Quote search matches both the published
+    text and the original submission.
+  pro_tips:
+    - "Edit the \"Published quote\" to clean up wording for display — the \"Original submission\" is preserved automatically."
+
 - name: "Filter registrants by registration date"
   area: events
   display_status: user_facing

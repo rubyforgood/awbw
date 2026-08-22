@@ -40,6 +40,15 @@
 
                     <% end %>
 
+                    <% if quote.standout? && allowed_to?(:manage?, Quote) %>
+                      <span
+                        class="inline-flex items-center px-2 py-0.5 rounded-full
+                               text-xs font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap">
+                        <i class="fa-solid fa-star mr-1"></i>
+                        Standout
+                      </span>
+                    <% end %>
+
                     <!-- Featured badge -->
                     <%# if true || (quote.featured? && controller_name != "home") %>
 <!--                      <span-->

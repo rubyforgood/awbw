@@ -20,10 +20,19 @@ class Quote < ApplicationRecord
   validates :age, length: { maximum: 255 }
   validates :speaker_name, length: { maximum: 255 }
 
+  # Preserve the untouched submission the first time we store a body, so later
+  # edits to `quote` (the published/displayed text) never lose the original.
+  before_save :capture_original_quote
+
+  scope :standout, ->(flag = nil) do
+    value = flag.nil? || flag == "" ? true : ActiveModel::Type::Boolean.new.cast(flag)
+    where(standout: value)
+  end
+
   # Search Cop
   include SearchCop
   search_scope :search do
-    attributes :quote
+    attributes :quote, :original_quote
   end
 
   def self.search_by_params(params)
@@ -34,6 +43,7 @@ class Quote < ApplicationRecord
     quotes = quotes.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     quotes = quotes.published(params[:published]) if params[:published].present?
     quotes = quotes.featured(params[:featured]) if params[:featured].present?
+    quotes = quotes.standout(params[:standout]) if params[:standout].present?
     quotes
   end
 
@@ -43,5 +53,11 @@ class Quote < ApplicationRecord
 
   def name
     quote.truncate(30)
+  end
+
+  private
+
+  def capture_original_quote
+    self.original_quote = quote if original_quote.blank? && quote.present?
   end
 end

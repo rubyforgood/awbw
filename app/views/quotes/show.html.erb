@@ -52,7 +52,22 @@
                   Published
                 </span>
               <% end %>
+              <% if @quote.standout? %>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full
+                               text-xs font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap">
+                  <i class="fa-solid fa-star mr-1"></i>
+                  Standout
+                </span>
+              <% end %>
             </div>
+
+            <!-- Original submission (admin-only, when it differs from what's published) -->
+            <% if allowed_to?(:manage?, Quote) && @quote.original_quote.present? && @quote.original_quote != @quote.quote %>
+              <div>
+                <h3 class="text-sm font-medium text-gray-500">Original submission</h3>
+                <p class="text-sm text-gray-700 italic"><%= @quote.original_quote %></p>
+              </div>
+            <% end %>
 
             <!-- Workshop -->
             <% if @quote.workshop.present? %>

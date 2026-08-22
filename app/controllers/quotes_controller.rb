@@ -72,9 +72,11 @@ class QuotesController < ApplicationController
     params.require(:quote).permit(
       :age,
       :gender,
+      :original_quote,
       :published,
       :quote,
       :speaker_name,
+      :standout,
       :workshop_id,
     )
   end

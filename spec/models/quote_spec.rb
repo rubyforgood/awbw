@@ -47,6 +47,25 @@ RSpec.describe Quote do
     expect(build(:quote)).to be_valid
   end
 
+  describe 'capturing the original submission' do
+    it 'copies the body into original_quote the first time it is saved' do
+      quote = create(:quote, quote: 'As received')
+      expect(quote.original_quote).to eq('As received')
+    end
+
+    it 'keeps the original untouched when the published body is later edited' do
+      quote = create(:quote, quote: 'As received')
+      quote.update!(quote: 'Cleaned up for publication')
+      expect(quote.original_quote).to eq('As received')
+      expect(quote.quote).to eq('Cleaned up for publication')
+    end
+
+    it 'does not overwrite an explicitly provided original' do
+      quote = create(:quote, quote: 'Published', original_quote: 'Raw original')
+      expect(quote.original_quote).to eq('Raw original')
+    end
+  end
+
   describe '.search_by_params' do
     let!(:published_quote) { create(:quote, :published, quote: 'Art heals the soul', speaker_name: 'Jane') }
     let!(:another_published) { create(:quote, :published, quote: 'Creativity is freedom', speaker_name: 'Bob') }
@@ -73,6 +92,20 @@ RSpec.describe Quote do
       results = Quote.search_by_params(query: 'freedom', published: 'true')
       expect(results).to include(another_published)
       expect(results).not_to include(published_quote, draft_quote)
+    end
+
+    it 'matches on the original submission as well as the published body' do
+      quote = create(:quote, quote: 'Cleaned up', original_quote: 'raw submitted words')
+      results = Quote.search_by_params(query: 'submitted')
+      expect(results).to include(quote)
+      expect(results).not_to include(published_quote, another_published)
+    end
+
+    it 'filters by standout' do
+      standout = create(:quote, :standout, quote: 'A gem')
+      results = Quote.search_by_params(standout: 'true')
+      expect(results).to include(standout)
+      expect(results).not_to include(published_quote, another_published, draft_quote)
     end
   end
 end
