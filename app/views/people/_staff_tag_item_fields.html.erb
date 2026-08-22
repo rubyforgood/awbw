@@ -1,5 +1,3 @@
-<%# A cocoon nested field for one staff tag on the person form — the staff-tag
-    counterpart of shared/_sectorable_item_fields, minus the primary/leader flags. %>
 <% collection ||= @staff_tags_collection || StaffTag.published.ordered.pluck(:name, :id) %>
 <div class="nested-fields inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 transition">
   <% if f.object&.staff_tag_id.present? %>

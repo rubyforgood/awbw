@@ -1,12 +1,7 @@
-# An internal, admin-only label applied to people (and, via the polymorphic join,
-# any StaffTaggable record) to mark folks for talent pipelines, rosters, and
-# outreach. Never shown on public surfaces (see StaffTagPolicy). Admins CRUD the
-# list in-app; unpublishing hides a tag from the pickers while keeping its history.
 class StaffTag < ApplicationRecord
   include Publishable
 
-  # Starter tags seeded for all environments (db/seeds.rb). Admins add/edit/(un)publish
-  # more in-app; the seed is idempotent and never overwrites an admin's edits.
+  # Seeded in all environments (db/seeds.rb); the seed never overwrites admin edits.
   SEED = {
     "Potential future trainer" => "Facilitator we'd consider inviting to train others.",
     "Sector leader candidate" => "Potential future sector leader.",

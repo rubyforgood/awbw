@@ -377,8 +377,6 @@ class PeopleController < ApplicationController
     # saving the form can't drop a person's other category connections.
     @managed_category_type_ids = @person_categories_grouped.map { |type, _| type.id }
 
-    # Only published staff tags are offered to add; an already-applied unpublished
-    # tag stays on its persisted chip and isn't in this add-collection.
     @staff_tags_collection = StaffTag.published.ordered.pluck(:name, :id)
     @current_staff_tag_ids = @person.staff_tag_ids
   end

@@ -1,8 +1,6 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
 <div class="community-news-index mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:people) %> rounded-xl border border-gray-200 p-6 shadow">
   <div class="w-full">
-    <%# Eyebrow back link adapts to where the roster was opened from (staff tag
-        index/detail, or the Tags/Taggings browse). %>
     <% back_label, back_path =
          case params[:return_to]
          when "staff_tags"

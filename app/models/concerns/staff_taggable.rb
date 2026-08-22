@@ -1,5 +1,3 @@
-# Mixed into models that can carry internal admin StaffTags (Person today). The
-# join is polymorphic, so adding another taggable model later is just an include.
 module StaffTaggable
   extend ActiveSupport::Concern
 
