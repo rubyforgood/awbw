@@ -132,6 +132,11 @@ TopicSubscriptionType::CANONICAL.each do |key, attrs|
   TopicSubscriptionType.where(key: key).first_or_create!(name: attrs[:name], event_selector: attrs[:event_selector])
 end
 
+puts "Creating StaffTags…"
+StaffTag::SEED.each do |name, description|
+  find_or_create_by_name!(StaffTag, name, description: description)
+end
+
 puts "Creating Organization…"
 awbw_org = Organization.find_or_create_by!(name: ENV.fetch("ORGANIZATION_NAME", "AWBW")) do |org|
   org.organization_status = OrganizationStatus.find_by!(name: "Active")

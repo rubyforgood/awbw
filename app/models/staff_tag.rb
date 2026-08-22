@@ -5,6 +5,17 @@
 # surfaces (see StaffTagPolicy and StaffTaggable). Admins CRUD the list in-app;
 # archiving hides a tag from the pickers while keeping its history.
 class StaffTag < ApplicationRecord
+  # Starter tags seeded for all environments (db/seeds.rb). Admins add/edit/archive
+  # more in-app; the seed is idempotent and never overwrites an admin's edits.
+  SEED = {
+    "Potential future trainer" => "Facilitator we'd consider inviting to train others.",
+    "Sector leader candidate" => "Potential future sector leader.",
+    "Highlight roster" => "Facilitators to spotlight.",
+    "Leads non-English workshops" => "Leads workshops in a language other than English (from annual eval).",
+    "DV Leadership Cohort" => "Possible member of a domestic-violence leadership cohort.",
+    "Foster Care Roundtable outreach" => "Possible outreach for a foster-care roundtable."
+  }.freeze
+
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
   has_many :staff_taggings, dependent: :restrict_with_error
