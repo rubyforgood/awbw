@@ -1,45 +1,90 @@
-<%# One row per publicly fillable agreement form (Form::AGREEMENT_ROLES — a
-    standalone registration form is the on-demand agreement; new job and
-    reinstatement are their own roles): email the person its public link and
-    see how many times it has been sent and when, so staff know who was
-    contacted for which scenario — and can tell a first ask from a chase.
+<%# Email the person the form matching their scenario and see how many times
+    each has been sent and when, so staff know who was contacted for what — and
+    can tell a first ask from a chase. The Registration group nests the
+    facilitator-training events: the current on-demand training and each
+    upcoming scheduled one (next 12 months); Send emails that event's public
+    registration form (the full registration pipeline — the standalone /f/
+    on-demand form remains only as a fallback and isn't offered here). New job
+    and reinstatement are standalone public forms sent by their /f/ links.
     Collapsed by default; reopened by the ?agreement_links param the send
     action redirects back with, since a fragment alone can't expand it.
     Rendered inside the person form, so the actions are Turbo links rather
     than button_to (a nested <form> would be invalid). %>
-<% forms = Form.agreement_forms.order(:name) %>
-<% return if forms.empty? %>
-<%# Every link this person has been sent, newest first, grouped by which form's
-    public URL it carried — one query rather than one per form. %>
-<% sends_by_slug = Notification.where(kind: "form_link_request", noticeable: person)
+<% other_forms = Form.agreement_forms.order(:name).reject { |form| form.role == "registration" } %>
+<% on_demand_training = Event.current_on_demand_facilitator_training %>
+<% upcoming_trainings = Event.where(published: true).facilitator_trainings.live.upcoming
+                             .where(start_date: ..12.months.from_now.to_date).order(:start_date) %>
+<% return if other_forms.empty? && upcoming_trainings.empty? && on_demand_training.nil? %>
+<%# Every link this person has been sent, newest first, grouped by the link's
+    path (hosts vary between environments) — one query rather than one per row. %>
+<% sends_by_path = Notification.where(kind: "form_link_request", noticeable: person)
                                .order(created_at: :desc)
-                               .group_by { |sent| sent.custom_message.to_s.split("/f/").last } %>
+                               .group_by { |sent| sent.custom_message.to_s.sub(%r{\Ahttps?://[^/]+}, "") } %>
 
 <details id="agreement-links" class="mt-4 scroll-mt-24 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
          <%= "open" if params[:agreement_links].present? %>>
   <summary class="flex cursor-pointer list-none items-center gap-2 px-4 py-3 hover:bg-gray-50 [&::-webkit-details-marker]:hidden">
     <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
-    <span class="text-sm font-semibold text-gray-700">Agreement form links</span>
-    <span class="text-xs text-gray-500">— email the collaboration agreement matching their scenario</span>
+    <span class="text-sm font-semibold text-gray-700">Email form links</span>
+    <span class="text-xs text-gray-500">— email a form matching their scenario</span>
   </summary>
   <div class="border-t border-gray-200 p-4">
     <ul class="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
-      <% forms.each do |form| %>
-        <% sends = sends_by_slug[form.slug] || [] %>
-        <% last_sent = sends.first %>
+      <% if on_demand_training || upcoming_trainings.any? %>
+        <li class="px-4 py-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="inline-flex items-center rounded-md <%= DomainTheme.bg_class_for(:forms) %> px-2 py-0.5 text-xs font-medium <%= DomainTheme.text_class_for(:forms, intensity: 700) %>">Registration</span>
+            <span class="text-xs text-gray-500">the on-demand training, or an upcoming scheduled one</span>
+          </div>
+          <ul class="mt-2 space-y-2 border-l-2 border-gray-100 pl-4">
+            <% if on_demand_training %>
+              <% sends = sends_by_path[new_event_public_registration_path(on_demand_training)] || [] %>
+              <li class="flex flex-wrap items-center gap-3">
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">On-demand</span>
+                    <span class="text-sm font-medium text-gray-900"><%= on_demand_training.decorate.title_with_month_year %></span>
+                  </div>
+                  <%= render "people/agreement_link_sent_note", sends: sends %>
+                </div>
+                <%= link_to "Registration form", new_event_public_registration_path(on_demand_training), target: "_blank", rel: "noopener",
+                            class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" %>
+                <%= link_to "Send link", send_form_link_person_path(person, event_id: on_demand_training.id),
+                            class: "btn btn-secondary-outline whitespace-nowrap",
+                            data: { turbo_method: :post,
+                                    turbo_confirm: "Email the #{on_demand_training.decorate.title_with_month_year} registration link to #{person.preferred_email.presence || "this person"}?" } %>
+              </li>
+            <% end %>
+            <% upcoming_trainings.each do |event| %>
+              <% sends = sends_by_path[new_event_public_registration_path(event)] || [] %>
+              <li class="flex flex-wrap items-center gap-3">
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">Facilitator training</span>
+                    <span class="text-sm font-medium text-gray-900"><%= event.decorate.title_with_month_year %></span>
+                  </div>
+                  <%= render "people/agreement_link_sent_note", sends: sends %>
+                </div>
+                <%= link_to "Registration form", new_event_public_registration_path(event), target: "_blank", rel: "noopener",
+                            class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" %>
+                <%= link_to "Send link", send_form_link_person_path(person, event_id: event.id),
+                            class: "btn btn-secondary-outline whitespace-nowrap",
+                            data: { turbo_method: :post,
+                                    turbo_confirm: "Email the #{event.decorate.title_with_month_year} registration link to #{person.preferred_email.presence || "this person"}?" } %>
+              </li>
+            <% end %>
+          </ul>
+        </li>
+      <% end %>
+      <% other_forms.each do |form| %>
+        <% sends = sends_by_path[public_form_path(form.slug)] || [] %>
         <li class="flex flex-wrap items-center gap-3 px-4 py-3">
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-2">
               <span class="inline-flex items-center rounded-md <%= DomainTheme.bg_class_for(:forms) %> px-2 py-0.5 text-xs font-medium <%= DomainTheme.text_class_for(:forms, intensity: 700) %>"><%= form.role.humanize %></span>
               <span class="text-sm font-medium text-gray-900"><%= form.display_name %></span>
             </div>
-            <% if last_sent %>
-              <p class="mt-1 text-xs text-gray-500">
-                Sent <%= pluralize(sends.size, "time") %> — last <%= l(last_sent.created_at.to_date, format: :long) %><% if last_sent.sender %> by <%= last_sent.sender.full_name %><% end %>
-              </p>
-            <% else %>
-              <p class="mt-1 text-xs text-gray-400">Never sent</p>
-            <% end %>
+            <%= render "people/agreement_link_sent_note", sends: sends %>
           </div>
           <%= link_to public_form_path(form.slug), target: "_blank", rel: "noopener",
                       class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" do %>

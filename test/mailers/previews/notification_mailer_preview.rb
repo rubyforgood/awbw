@@ -89,7 +89,7 @@ class NotificationMailerPreview < ActionMailer::Preview
 
   def form_link_request
     person = Person.where.not(email: nil).first || raise("Need a Person with an email")
-    form = Form.with_purpose.first || Form.standalone.first || raise("Need a Form")
+    form = Form.agreement_forms.first || Form.standalone.first || raise("Need a Form")
 
     notification = find_valid_notification("form_link_request") ||
       Notification.create!(

@@ -31,26 +31,28 @@ class FormSubmissionsController < ApplicationController
   # submitted name; linking creates the affiliations (unlinking is managed on
   # the person record).
   def link_organization
-    authorize! @form_submission, to: :link_organization?
+    authorize! @form_submission
     @person = @form_submission.person
     @entry = submission_org_entry
     @submitted_org_name = @entry[:org_name]
     @submitted_position = @entry[:position]
     @affiliations_by_org = @person.affiliations.includes(:organization).group_by(&:organization_id)
     @creatable_org_names = creatable_org_names
-    @potential_matches = if @submitted_org_name.present?
-      Organization.remote_search(@submitted_org_name).limit(10)
-    else
-      Organization.none
-    end
     # The already-matching org (if any) gets the linked-card treatment with its
     # unapplied-answer conflicts, like a linked org on the registration editor.
     @matched_organization = matched_organization
     @profile_conflicts = @matched_organization ? profile_diff_for(@matched_organization) : []
+    # The org already shown as linked is left out of the suggestions, so the page
+    # can't offer to link what it just linked (as on the registration editor).
+    @potential_matches = if @submitted_org_name.present?
+      Organization.remote_search(@submitted_org_name).where.not(id: @matched_organization&.id).limit(10)
+    else
+      Organization.none
+    end
   end
 
   def select_organization
-    authorize! @form_submission, to: :select_organization?
+    authorize! @form_submission
     organization = Organization.find(params[:organization_id])
 
     notice = link_and_report(organization, verb: "linked")
@@ -59,7 +61,7 @@ class FormSubmissionsController < ApplicationController
   end
 
   def create_organization
-    authorize! @form_submission, to: :create_organization?
+    authorize! @form_submission
     # Build the org from the name actually submitted on the form, so the button
     # can't create an arbitrary org — it only resolves the submitted name.
     name = submission_org_entry[:org_name].presence&.strip

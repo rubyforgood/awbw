@@ -297,9 +297,19 @@ class PeopleController < ApplicationController
   # custom_subject and the public form URL in custom_message. `agreement_links`
   # reopens the collapsed panel on the way back.
   def send_form_link
-    authorize! @person, to: :send_form_link?
+    authorize! @person
 
-    form = Form.agreement_forms.find(params[:form_id])
+    # Either an agreement form's public link, or an upcoming facilitator
+    # training's public registration form (the panel's nested event rows).
+    if params[:event_id].present?
+      event = Event.where(published: true).facilitator_trainings.find(params[:event_id])
+      link_name = "#{event.decorate.title_with_month_year} registration"
+      link_url = new_event_public_registration_url(event)
+    else
+      form = Form.agreement_forms.find(params[:form_id])
+      link_name = form.display_name
+      link_url = public_form_url(form.slug)
+    end
 
     email = @person.preferred_email
     if email.blank?
@@ -313,12 +323,12 @@ class PeopleController < ApplicationController
       recipient_role: :person,
       recipient_email: email,
       notification_type: 0,
-      custom_subject: form.display_name,
-      custom_message: public_form_url(form.slug),
+      custom_subject: link_name,
+      custom_message: link_url,
       sender: current_user
     )
 
-    redirect_to edit_person_path(@person, agreement_links: 1, anchor: "agreement-links"), notice: "Sent the #{form.display_name} link to #{email}."
+    redirect_to edit_person_path(@person, agreement_links: 1, anchor: "agreement-links"), notice: "Sent the #{link_name} link to #{email}."
   end
 
   def check_duplicates

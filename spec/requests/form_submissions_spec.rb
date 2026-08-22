@@ -378,6 +378,20 @@ RSpec.describe "FormSubmissions", type: :request do
           expect(response.body).not_to include("Create and link")
           expect(response.body).to include("Affiliations:")
         end
+
+        it "leaves the already-linked org out of the suggested matches" do
+          add_answer("organization_name", "Harbor Family Shelter")
+          matched = create(:organization, name: "Harbor Family Shelter")
+          other = create(:organization, name: "Harbor Family Shelter East")
+          create(:affiliation, person: person, organization: matched)
+
+          get link_organization_form_submission_path(submission)
+
+          suggested_input = ->(org) { %(name="organization_id" id="organization_id" value="#{org.id}") }
+          expect(response.body).to include("Suggested matches")
+          expect(response.body).to include(suggested_input.call(other))
+          expect(response.body).not_to include(suggested_input.call(matched))
+        end
       end
 
       describe "POST /form_submissions/:id/select_organization" do

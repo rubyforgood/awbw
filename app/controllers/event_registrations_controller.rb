@@ -687,15 +687,6 @@ class EventRegistrationsController < ApplicationController
       .uniq { |name| name.downcase }
   end
 
-  # The job title the registrant typed on the submission that describes this org.
-  # Nil when no submission describes it, so an extra org an admin linked by hand
-  # doesn't inherit the title the registrant wrote about a different one — the
-  # affiliation is created untitled (just "Facilitator") instead.
-  def submitted_position(registration, organization)
-    entry = submission_entry_for(registration, organization)
-    entry && entry[:position]
-  end
-
   # The submission entry whose answers describe `organization`: the one pinned on
   # the link when it was made, else the one whose typed org name matches, else —
   # only when the pairing is unambiguous, i.e. a single submission and a single
@@ -703,8 +694,8 @@ class EventRegistrationsController < ApplicationController
   # admin resolving a typo'd "Acme Inc" to the saved "Acme Corporation". Nil
   # otherwise: an extra org an admin linked by hand isn't the one the registrant
   # wrote about, so none of the submitted answers apply to it.
-  # Memoized per org: each linking action asks five times (profile, address,
-  # position, notice, warning) and the fallback counts the registration's linked orgs.
+  # Memoized per org: a linking action asks for the entry and then again for the
+  # conflict note, and the fallback counts the registration's linked orgs.
   def submission_entry_for(registration, organization, linked_count: nil)
     @submission_entries_by_org ||= {}
     return @submission_entries_by_org[organization.id] if @submission_entries_by_org.key?(organization.id)
@@ -732,14 +723,6 @@ class EventRegistrationsController < ApplicationController
   def pinned_submission_ids(registration)
     @pinned_submission_ids ||= registration.event_registration_organizations
       .pluck(:organization_id, :form_submission_id).to_h
-  end
-
-  # The address fields the registrant typed on the submission that describes this
-  # org, as attrs for OrganizationServices::UpsertAddress. Empty when no submission
-  # describes it, so another org's address is never written onto it.
-  def submitted_agency_address(registration, organization)
-    entry = submission_entry_for(registration, organization)
-    (entry && entry[:address]) || {}
   end
 
   # The submitted answers for this org that differ from a value already on it, for

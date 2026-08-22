@@ -17,6 +17,52 @@ RSpec.describe PublicFormSubmission do
     }
   end
 
+  describe "on-demand training registration" do
+    let(:form) { create(:form, slug: "collab-on-demand", published: true, role: "registration") }
+    let!(:training) do
+      create(:event, :published, facilitator_training: true, on_demand: true,
+             title: "On-Demand Facilitator Training", start_date: 2.months.ago, end_date: 10.months.from_now)
+    end
+
+    it "registers the person for the current on-demand facilitator training and stamps the event" do
+      result = nil
+      expect { result = described_class.call(form: form, form_params: params_for) }
+        .to change(EventRegistration, :count).by(1)
+
+      registration = EventRegistration.last
+      expect(registration.event).to eq(training)
+      expect(registration.registrant).to eq(result.person)
+      expect(registration.status).to eq("registered")
+      expect(result.form_submission.event).to eq(training)
+    end
+
+    it "does not duplicate an existing registration" do
+      person = create(:person, user: nil, first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
+      create(:event_registration, event: training, registrant: person)
+
+      expect { described_class.call(form: form, form_params: params_for) }
+        .not_to change(EventRegistration, :count)
+    end
+
+    it "quietly skips when no current on-demand training exists" do
+      training.update!(published: false)
+
+      expect { described_class.call(form: form, form_params: params_for) }
+        .not_to change(EventRegistration, :count)
+    end
+
+    it "does not register submissions to non-registration forms" do
+      plain = create(:form, slug: "plain", published: true)
+      field = create(:form_field, form: plain, field_identifier: "first_name")
+      last = create(:form_field, form: plain, field_identifier: "last_name")
+      email = create(:form_field, form: plain, field_identifier: "primary_email")
+
+      expect {
+        described_class.call(form: plain, form_params: { field.id.to_s => "Sam", last.id.to_s => "Rivera", email.id.to_s => "sam@example.com" })
+      }.not_to change(EventRegistration, :count)
+    end
+  end
+
   it "creates a person, submission, and answers" do
     result = nil
     expect { result = described_class.call(form: form, form_params: params_for) }
