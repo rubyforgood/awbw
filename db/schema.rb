@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_20_200730) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_091233) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -111,7 +111,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_200730) do
     t.string "filemaker_code"
     t.boolean "inactive", default: false, null: false
     t.bigint "organization_address_id"
-    t.integer "organization_agency_id"
     t.integer "organization_id", null: false
     t.bigint "person_id", null: false
     t.integer "position"
@@ -122,7 +121,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_200730) do
     t.integer "user_id"
     t.index ["event_registration_id"], name: "index_affiliations_on_event_registration_id"
     t.index ["organization_address_id"], name: "index_affiliations_on_organization_address_id"
-    t.index ["organization_agency_id"], name: "index_affiliations_on_organization_agency_id"
     t.index ["organization_id"], name: "index_affiliations_on_organization_id"
     t.index ["person_id"], name: "index_affiliations_on_person_id"
     t.index ["user_id"], name: "index_affiliations_on_user_id"
@@ -1838,7 +1836,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_200730) do
   add_foreign_key "affiliations", "addresses", column: "organization_address_id", on_delete: :nullify
   add_foreign_key "affiliations", "event_registrations", on_delete: :nullify
   add_foreign_key "affiliations", "organizations"
-  add_foreign_key "affiliations", "organizations", column: "organization_agency_id"
   add_foreign_key "affiliations", "people"
   add_foreign_key "affiliations", "users"
   add_foreign_key "age_ranges", "windows_types"
