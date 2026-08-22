@@ -1,5 +1,6 @@
 class AffiliationsController < ApplicationController
   before_action :set_affiliation, only: %i[ edit update destroy ]
+  before_action :set_registration_choices, only: %i[ edit update ]
 
   def edit
     authorize! @affiliation
@@ -60,6 +61,19 @@ class AffiliationsController < ApplicationController
 
   def set_affiliation
     @affiliation = Affiliation.find(params[:id])
+  end
+
+  # The registration picker offers this person's own registrations, newest event
+  # first, plus the currently-linked one even if it belongs to someone else (so an
+  # existing link never silently drops out of the options).
+  def set_registration_choices
+    ids = EventRegistration.where(registrant_id: @affiliation.person_id).ids
+    ids |= [ @affiliation.event_registration_id ].compact
+    @registration_choices = EventRegistration
+      .where(id: ids)
+      .includes(:event, :organizations)
+      .references(:event)
+      .order(Arel.sql("events.start_date DESC"))
   end
 
   def affiliation_params

@@ -10,7 +10,6 @@ class FormAnswersController < ApplicationController
       render :form_answers_results
     else
       @forms = Form.order(:name)
-      @events = Event.order(start_date: :desc)
       render :index
     end
   end

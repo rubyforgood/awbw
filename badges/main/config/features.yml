@@ -42,8 +42,9 @@
   released_on: 2026-08-22
   pr_number: 2332
   summary: >-
-    In admin mode the affiliation editor adds a searchable picker to link, change, or clear
-    the registration an affiliation came from, with a link straight to that registration.
+    In admin mode the affiliation editor adds a picker of that person's registrations — each
+    labelled with its linked organization — to link, change, or clear the registration an
+    affiliation came from, with a link straight to that registration.
   pro_tips:
     - "Add ?admin=true to the affiliation editor URL to reveal the registration picker."
 
