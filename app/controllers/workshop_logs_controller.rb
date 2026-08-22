@@ -24,8 +24,10 @@ class WorkshopLogsController < ApplicationController
     set_default_values
     @workshop_log = WorkshopLog.find(params[:id])
     authorize! @workshop_log
+    @workshop_log.assign_attributes(workshop_log_params)
+    credit_new_quotes_to_current_user
 
-    if @workshop_log.update(workshop_log_params)
+    if @workshop_log.save
       redirect_to @workshop_log, notice: "Thanks for reporting on a workshop."
     else
       flash.now[:alert] = "Failed to update workshop log."
@@ -38,6 +40,7 @@ class WorkshopLogsController < ApplicationController
     set_default_values
     @workshop_log = WorkshopLog.new(workshop_log_params)
     authorize! @workshop_log
+    credit_new_quotes_to_current_user
 
     if @workshop_log.save
       NotificationServices::CreateNotification.call(
@@ -176,6 +179,16 @@ class WorkshopLogsController < ApplicationController
         .order(:name)
     organization = params[:agency_id].present? ? Organization.where(id: params[:agency_id]).last : @organizations.first
     @organization_id = organization.id if organization
+  end
+
+  # Credit new quotes to the facilitator submitting the log — the speaker (the
+  # quote's `author` Person) is left unset, since it's the participant, not the
+  # submitter. Only new records, so editing a log never re-credits existing quotes.
+  def credit_new_quotes_to_current_user
+    @workshop_log.all_quotable_item_quotes.each do |qiq|
+      quote = qiq.quote
+      quote.created_by = current_user if quote&.new_record?
+    end
   end
 
   def set_default_values
