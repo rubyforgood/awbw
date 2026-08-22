@@ -377,11 +377,9 @@ class PeopleController < ApplicationController
     # saving the form can't drop a person's other category connections.
     @managed_category_type_ids = @person_categories_grouped.map { |type, _| type.id }
 
-    # Internal, admin-only staff tags (talent pipeline / roster / outreach), edited
-    # as a cocoon chip picker like sectors. Only active tags are offered to add; a
-    # person already carrying an archived tag keeps it (the persisted chip shows the
-    # name and isn't in this add-collection).
-    @staff_tags_collection = StaffTag.active.ordered.pluck(:name, :id)
+    # Only published staff tags are offered to add; an already-applied unpublished
+    # tag stays on its persisted chip and isn't in this add-collection.
+    @staff_tags_collection = StaffTag.published.ordered.pluck(:name, :id)
     @current_staff_tag_ids = @person.staff_tag_ids
   end
 

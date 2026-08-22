@@ -1,5 +1,5 @@
 class StaffTagsController < ApplicationController
-  before_action :set_staff_tag, only: [ :show, :edit, :update, :destroy, :archive, :unarchive ]
+  before_action :set_staff_tag, only: [ :show, :edit, :update, :destroy ]
 
   def index
     authorize!
@@ -7,8 +7,7 @@ class StaffTagsController < ApplicationController
     base_scope = authorized_scope(StaffTag.all)
     @count_display = base_scope.count
     @staff_tags = base_scope.ordered.paginate(page: params[:page], per_page: per_page).decorate
-    # Precompute tagged-people counts for the page in one grouped query so the
-    # index doesn't fire a COUNT per row.
+    # One grouped query for the tagged-people counts, so the index doesn't COUNT per row.
     @tagged_people_counts = StaffTagging
       .where(staff_tag_id: @staff_tags.map(&:id), staff_taggable_type: "Person")
       .group(:staff_tag_id)
@@ -65,20 +64,8 @@ class StaffTagsController < ApplicationController
     if @staff_tag.destroy
       redirect_to staff_tags_path, notice: "Staff tag was successfully deleted.", status: :see_other
     else
-      redirect_to staff_tags_path, alert: "Can't delete a staff tag that's still in use — archive it instead.", status: :see_other
+      redirect_to staff_tags_path, alert: "Can't delete a staff tag that's still in use — unpublish it instead.", status: :see_other
     end
-  end
-
-  def archive
-    authorize! @staff_tag
-    @staff_tag.archive!
-    redirect_to staff_tags_path, notice: "Staff tag was archived.", status: :see_other
-  end
-
-  def unarchive
-    authorize! @staff_tag
-    @staff_tag.unarchive!
-    redirect_to staff_tags_path, notice: "Staff tag was unarchived.", status: :see_other
   end
 
   private
@@ -88,6 +75,6 @@ class StaffTagsController < ApplicationController
   end
 
   def staff_tag_params
-    params.require(:staff_tag).permit(:name, :description)
+    params.require(:staff_tag).permit(:name, :description, :published)
   end
 end

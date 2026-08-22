@@ -10,25 +10,18 @@ RSpec.describe StaffTag, type: :model do
     expect(build(:staff_tag, name: "highlight roster")).not_to be_valid
   end
 
-  describe "archiving" do
-    it "toggles archived state" do
-      tag = create(:staff_tag)
-      expect(tag).not_to be_archived
-
-      tag.archive!
-      expect(tag.reload).to be_archived
-
-      tag.unarchive!
-      expect(tag.reload).not_to be_archived
+  describe "publishing" do
+    it "defaults to published" do
+      expect(create(:staff_tag)).to be_published
     end
 
-    it "scopes active vs archived" do
-      active = create(:staff_tag)
-      archived = create(:staff_tag, :archived)
+    it "scopes published vs unpublished" do
+      published = create(:staff_tag)
+      unpublished = create(:staff_tag, :unpublished)
 
-      expect(StaffTag.active).to include(active)
-      expect(StaffTag.active).not_to include(archived)
-      expect(StaffTag.archived).to contain_exactly(archived)
+      expect(StaffTag.published).to include(published)
+      expect(StaffTag.published).not_to include(unpublished)
+      expect(StaffTag.published(false)).to contain_exactly(unpublished)
     end
   end
 

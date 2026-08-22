@@ -8,6 +8,6 @@ class StaffTagDecorator < ApplicationDecorator
   end
 
   def status_label
-    archived? ? "Archived" : "Active"
+    published? ? "Published" : "Unpublished"
   end
 end

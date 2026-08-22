@@ -42,14 +42,14 @@ RSpec.describe "/staff_tags", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
     end
 
-    it "archives and unarchives" do
+    it "publishes and unpublishes via the edit form" do
       tag = create(:staff_tag)
 
-      patch archive_staff_tag_path(tag)
-      expect(tag.reload).to be_archived
+      patch staff_tag_path(tag), params: { staff_tag: { published: "0" } }
+      expect(tag.reload).not_to be_published
 
-      patch unarchive_staff_tag_path(tag)
-      expect(tag.reload).not_to be_archived
+      patch staff_tag_path(tag), params: { staff_tag: { published: "1" } }
+      expect(tag.reload).to be_published
     end
 
     it "won't delete a tag that is still applied" do

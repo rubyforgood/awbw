@@ -1843,7 +1843,7 @@
   pro_tips:
     - Staff tags are internal only — they never appear on public profiles or the
       tag-browsing pages.
-    - Manage the list of tags at /staff_tags. Archive a tag to retire it from the
+    - Manage the list of tags at /staff_tags. Unpublish a tag to retire it from the
       pickers while keeping its history; you can only delete a tag that isn't in
       use.
     - Each tag records which admin applied it, and when.

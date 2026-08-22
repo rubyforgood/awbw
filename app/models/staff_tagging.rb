@@ -1,6 +1,4 @@
-# Join between a StaffTag and the record it tags (Person today; polymorphic so
-# organizations/events/etc. can opt in later). created_by records which admin
-# applied the tag, and when.
+# Polymorphic join between a StaffTag and the record it tags (Person today).
 class StaffTagging < ApplicationRecord
   belongs_to :staff_tag
   belongs_to :staff_taggable, polymorphic: true, touch: true
@@ -15,9 +13,7 @@ class StaffTagging < ApplicationRecord
 
   private
 
-  # Record which admin applied the tag, and who last touched it. Current.user is
-  # set per request, so this works whether the tagging is built through nested
-  # attributes or directly.
+  # Current.user is set per request, so these work through nested attributes too.
   def stamp_created_by
     self.created_by ||= Current.user
   end

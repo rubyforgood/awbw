@@ -51,7 +51,7 @@
 
     <!-- Staff tag (internal, admin-only) -->
     <% if allowed_to?(:index?, StaffTag) %>
-      <% staff_tags = StaffTag.active.ordered %>
+      <% staff_tags = StaffTag.published.ordered %>
       <% if staff_tags.any? %>
         <div class="w-full md:flex-1">
           <%= label_tag :staff_tag_ids, "Staff tag", class: search_label_class %>

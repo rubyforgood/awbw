@@ -35,7 +35,7 @@
 
             <tbody class="divide-y divide-gray-100">
               <% @staff_tags.each do |staff_tag| %>
-              <tr class="<%= "opacity-60" if staff_tag.archived? %>">
+              <tr class="<%= "opacity-60" unless staff_tag.published? %>">
                 <td class="px-4 py-2 text-base font-bold">
                   <%= link_to staff_tag.name, edit_staff_tag_path(staff_tag),
                               class: "text-gray-900 hover:underline" %>
@@ -46,10 +46,10 @@
                 </td>
 
                 <td class="px-4 py-2 text-center text-gray-700">
-                  <% if staff_tag.archived? %>
-                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Archived</span>
+                  <% if staff_tag.published? %>
+                    <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">Published</span>
                   <% else %>
-                    <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">Active</span>
+                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Unpublished</span>
                   <% end %>
                 </td>
 

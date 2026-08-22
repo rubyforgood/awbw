@@ -39,18 +39,18 @@ RSpec.describe "Person staff tags", type: :request do
       expect(person.reload.staff_tags).to be_empty
     end
 
-    it "shows and keeps an already-applied archived tag" do
-      archived = create(:staff_tag, :archived, name: "Legacy roster")
-      archived_tagging = person.staff_taggings.create!(staff_tag: archived)
+    it "shows and keeps an already-applied unpublished tag" do
+      unpublished = create(:staff_tag, :unpublished, name: "Legacy roster")
+      unpublished_tagging = person.staff_taggings.create!(staff_tag: unpublished)
 
       get edit_person_path(person)
       expect(response.body).to include("Legacy roster")
 
       set_staff_taggings([
-        { id: archived_tagging.id, staff_tag_id: archived.id },
+        { id: unpublished_tagging.id, staff_tag_id: unpublished.id },
         { staff_tag_id: trainer_tag.id }
       ])
-      expect(person.reload.staff_tags).to contain_exactly(archived, trainer_tag)
+      expect(person.reload.staff_tags).to contain_exactly(unpublished, trainer_tag)
     end
   end
 

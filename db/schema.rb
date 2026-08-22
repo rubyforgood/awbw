@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_110844) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_111728) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1349,16 +1349,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_110844) do
   end
 
   create_table "staff_tags", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "archived_at"
     t.datetime "created_at", null: false
     t.bigint "created_by_id"
     t.text "description"
     t.string "name", null: false
+    t.boolean "published", default: true, null: false
     t.datetime "updated_at", null: false
     t.bigint "updated_by_id"
-    t.index ["archived_at"], name: "index_staff_tags_on_archived_at"
     t.index ["created_by_id"], name: "index_staff_tags_on_created_by_id"
     t.index ["name"], name: "index_staff_tags_on_name", unique: true
+    t.index ["published"], name: "index_staff_tags_on_published"
     t.index ["updated_by_id"], name: "index_staff_tags_on_updated_by_id"
   end
 

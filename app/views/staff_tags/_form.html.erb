@@ -14,21 +14,19 @@
                   hint: "Optional note on what this tag means and how it's used.",
                   input_html: { class: "form-control", rows: 3 },
                   as: :text %>
+
+      <div class="admin-only rounded bg-blue-100 p-3">
+        <%= render "shared/visibility_info", flags: %i[published] %>
+        <div class="grid grid-cols-1 items-center">
+          <%= visibility_flag_input f, :published %>
+        </div>
+      </div>
     </div>
 
     <div class="action-buttons mt-8 flex flex-wrap justify-center gap-3">
       <% if allowed_to?(:destroy?, f.object) %>
         <%= link_to "Delete", @staff_tag, class: "btn btn-danger-outline",
-                    data: { turbo_method: :delete, turbo_confirm: "Delete this staff tag? Archive it instead if it's still in use." } %>
-      <% end %>
-      <% if f.object.persisted? %>
-        <% if f.object.archived? %>
-          <%= link_to "Unarchive", unarchive_staff_tag_path(f.object), class: "btn btn-secondary-outline",
-                      data: { turbo_method: :patch } %>
-        <% else %>
-          <%= link_to "Archive", archive_staff_tag_path(f.object), class: "btn btn-secondary-outline",
-                      data: { turbo_method: :patch } %>
-        <% end %>
+                    data: { turbo_method: :delete, turbo_confirm: "Delete this staff tag? Unpublish it instead if it's still in use." } %>
       <% end %>
       <%= link_to "Cancel", staff_tags_path, class: "btn btn-secondary-outline" %>
       <%= f.button :submit, class: "btn btn-primary" %>

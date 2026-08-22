@@ -3,8 +3,8 @@ FactoryBot.define do
     sequence(:name) { |n| "Staff Tag #{n}" }
     description { "What this tag means." }
 
-    trait :archived do
-      archived_at { Time.current }
+    trait :unpublished do
+      published { false }
     end
   end
 

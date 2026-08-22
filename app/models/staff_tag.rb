@@ -1,11 +1,11 @@
 # An internal, admin-only label applied to people (and, via the polymorphic join,
-# any StaffTaggable record). Used to mark folks for talent pipelines, rosters, and
-# outreach — "Potential future trainer", "DV Leadership Cohort", "Highlight roster".
-# These are staff judgments, never opt-in comms, and are never shown on public
-# surfaces (see StaffTagPolicy and StaffTaggable). Admins CRUD the list in-app;
-# archiving hides a tag from the pickers while keeping its history.
+# any StaffTaggable record) to mark folks for talent pipelines, rosters, and
+# outreach. Never shown on public surfaces (see StaffTagPolicy). Admins CRUD the
+# list in-app; unpublishing hides a tag from the pickers while keeping its history.
 class StaffTag < ApplicationRecord
-  # Starter tags seeded for all environments (db/seeds.rb). Admins add/edit/archive
+  include Publishable
+
+  # Starter tags seeded for all environments (db/seeds.rb). Admins add/edit/(un)publish
   # more in-app; the seed is idempotent and never overwrites an admin's edits.
   SEED = {
     "Potential future trainer" => "Facilitator we'd consider inviting to train others.",
@@ -23,21 +23,7 @@ class StaffTag < ApplicationRecord
 
   validates :name, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
 
-  scope :active, -> { where(archived_at: nil) }
-  scope :archived, -> { where.not(archived_at: nil) }
   scope :ordered, -> { order(:name) }
-
-  def archived?
-    archived_at.present?
-  end
-
-  def archive!
-    update!(archived_at: Time.current)
-  end
-
-  def unarchive!
-    update!(archived_at: nil)
-  end
 
   def to_s
     name
