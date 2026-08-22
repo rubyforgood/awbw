@@ -192,12 +192,116 @@ class Person < ApplicationRecord
     tag_ids = Array(ids).reject(&:blank?)
     return all if tag_ids.empty?
     joins(:staff_taggings).where(staff_taggings: { staff_tag_id: tag_ids }).distinct }
+  scope :story_authors, -> { joins(:stories_as_author).distinct }
+  scope :blog_authors, -> { joins(:community_news_as_author).distinct }
+  scope :workshop_authors, -> { joins(:workshops_as_author).distinct }
+  scope :workshop_variation_authors, -> { joins(:workshop_variations_as_author).distinct }
+  # WorkshopLog has no author column — it is created_by a User, so "author" here
+  # means the person whose linked user account created the log.
+  scope :workshop_log_authors, -> {
+    creator_user_ids = WorkshopLog.where.not(created_by_id: nil).select(:created_by_id)
+    where(id: User.where(id: creator_user_ids).where.not(person_id: nil).select(:person_id)) }
+  # People with at least one currently-active facilitator affiliation.
+  scope :facilitators_active, -> {
+    where(id: Affiliation.facilitators.active.select(:person_id)) }
+  # People with facilitator affiliation(s) but none currently active.
+  scope :facilitators_inactive, -> {
+    where(id: Affiliation.facilitators.select(:person_id))
+      .where.not(id: Affiliation.facilitators.active.select(:person_id)) }
+  # Not currently active, but a past facilitator term genuinely ended (real end
+  # date in the past) — distinguishes "used to facilitate" from merely flagged inactive.
+  scope :facilitators_formerly_active, -> {
+    ended = Affiliation.facilitators.where.not(end_date: nil)
+      .where("affiliations.end_date < ?", Date.current).select(:person_id)
+    where(id: ended).where.not(id: Affiliation.facilitators.active.select(:person_id)) }
+  # Facilitators tied to 2+ facilitator affiliations with at least one still active
+  # (e.g. moved between partner orgs, or serve more than one at once).
+  scope :boomerang_facilitators, -> {
+    multiple = Affiliation.facilitators.group(:person_id).having("COUNT(affiliations.id) >= 2").select(:person_id)
+    where(id: multiple).where(id: Affiliation.facilitators.active.select(:person_id)) }
+  scope :by_facilitator_status, ->(status) {
+    case status
+    when "active" then facilitators_active
+    when "inactive" then facilitators_inactive
+    when "boomerang" then boomerang_facilitators
+    when "formerly_active" then facilitators_formerly_active
+    else all
+    end }
+  scope :subscribed_to_topic, ->(topic_subscription_type_id) {
+    joins(:topic_subscriptions)
+      .where(topic_subscriptions: { topic_subscription_type_id: topic_subscription_type_id, unsubscribed_at: nil })
+      .distinct }
+  scope :age_range_names_all, ->(name) {
+    return all if name.blank?
+    joins(categories: :category_type)
+      .where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE })
+      .where("LOWER(categories.name) = ?", name.to_s.strip.downcase)
+      .distinct }
+  scope :by_role, ->(role) {
+    case role
+    when "story_author" then story_authors
+    when "blog_author" then blog_authors
+    when "workshop_author" then workshop_authors
+    when "workshop_variation_author" then workshop_variation_authors
+    when "workshop_log_author" then workshop_log_authors
+    when "sector_leader" then sector_leaders
+    else all
+    end }
+  # People whose membership/current invoice is in the given state.
+  scope :membership_active, -> { where(id: Membership.not_cancelled.select(:person_id)) }
+  scope :membership_inactive, -> {
+    where(id: Membership.select(:person_id))
+      .where.not(id: Membership.not_cancelled.select(:person_id)) }
+  scope :membership_paid, -> {
+    where(id: MembershipInvoice.active_on.paid_in_full.joins(:membership).select("memberships.person_id")) }
+  scope :membership_due, -> {
+    where(id: MembershipInvoice.active_on.not_paid_in_full.paid_or_within_grace
+      .joins(:membership).select("memberships.person_id")) }
+  scope :membership_overdue, -> {
+    where(id: MembershipInvoice.active_on.overdue.joins(:membership).select("memberships.person_id")) }
+  scope :by_membership_status, ->(status) {
+    case status
+    when "active" then membership_active
+    when "inactive" then membership_inactive
+    when "paid" then membership_paid
+    when "due" then membership_due
+    when "overdue" then membership_overdue
+    else all
+    end }
+
+  ROLE_FILTER_OPTIONS = [
+    [ "Story authors", "story_author" ],
+    [ "Blog authors", "blog_author" ],
+    [ "Workshop authors", "workshop_author" ],
+    [ "Workshop variation authors", "workshop_variation_author" ],
+    [ "Workshop log authors", "workshop_log_author" ],
+    [ "Sector leaders", "sector_leader" ]
+  ].freeze
+
+  MEMBERSHIP_STATUS_FILTER_OPTIONS = [
+    [ "Active", "active" ],
+    [ "Inactive", "inactive" ],
+    [ "Paid", "paid" ],
+    [ "Due", "due" ],
+    [ "Overdue", "overdue" ]
+  ].freeze
+
+  FACILITATOR_STATUS_FILTER_OPTIONS = [
+    [ "Active", "active" ],
+    [ "Inactive", "inactive" ],
+    [ "Boomerang (2+ affiliations, 1+ active)", "boomerang" ],
+    [ "Formerly active", "formerly_active" ]
+  ].freeze
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:contact_info]) if params[:contact_info].present?
-    results = results.sector_leaders if ActiveModel::Type::Boolean.new.cast(params[:sector_leaders_only])
+    results = results.by_role(params[:role]) if params[:role].present?
+    results = results.by_facilitator_status(params[:facilitator_status]) if params[:facilitator_status].present?
+    results = results.by_membership_status(params[:membership_status]) if params[:membership_status].present?
+    results = results.subscribed_to_topic(params[:topic_subscription_type_id]) if params[:topic_subscription_type_id].present?
     results = results.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    results = results.age_range_names_all(params[:age_range_names_all]) if params[:age_range_names_all].present?
     results = results.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     results = results.organization_name(params[:organization_name]) if params[:organization_name].present?
     results = results.organization_id(params[:organization_id]) if params[:organization_id].present?
