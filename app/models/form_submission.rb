@@ -220,6 +220,21 @@ class FormSubmission < ApplicationRecord
     Organization.where(id: linked_organization_ids)
   end
 
+  # Affiliations the agreement scenario end-dated when an admin linked the
+  # submitted organization — flagged on the processing panel so a wrongly-ended
+  # one (e.g. a multi-org facilitator changing only one job) can be corrected.
+
+  def scenario_ended_affiliation_ids
+    (metadata || {}).fetch("scenario_ended_affiliation_ids", [])
+  end
+
+  def record_scenario_ended!(affiliation_ids)
+    return if affiliation_ids.empty?
+
+    ids = scenario_ended_affiliation_ids | affiliation_ids.map(&:to_i)
+    update!(metadata: (metadata || {}).merge("scenario_ended_affiliation_ids" => ids))
+  end
+
   # --- Linked registrations (bulk payment designations) ---
 
   def linked_registration_ids

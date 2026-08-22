@@ -153,8 +153,10 @@ class FormSubmissionsController < ApplicationController
     )
 
     # The explicit link keeps this submission reading as linked even when the
-    # submitted name differs from the org it was resolved to.
+    # submitted name differs from the org it was resolved to; the ended ids let
+    # the processing panel flag what the scenario end-dated, for correction.
     @form_submission.link_organization!(organization.id)
+    @form_submission.record_scenario_ended!(result.ended_affiliations.map(&:id))
 
     warning = result.warning(organization: organization)
     flash[:warning] = warning if warning

@@ -12,13 +12,18 @@ module OrganizationServices
   # profile sync and conflict detection are skipped, but the affiliations are
   # still created — untitled, anchored to the org's sole address when it has one.
   class LinkSubmittedOrganization
-    Result = Struct.new(:saved, :conflicts, :address, keyword_init: true) do
-      # Flash notice naming the org and everything the form actually wrote onto
-      # it. Flash messages render html_safe, so submitted text is escaped.
-      # `verb` is the past tense ("linked" / "created and linked").
+    Result = Struct.new(:saved, :conflicts, :address, :ended_affiliations, keyword_init: true) do
+      # Flash notice naming the org, everything the form actually wrote onto it,
+      # and any affiliations the agreement scenario ended. Flash messages render
+      # html_safe, so submitted text is escaped. `verb` is the past tense
+      # ("linked" / "created and linked").
       def notice(organization:, verb:)
         text = "#{ERB::Util.html_escape(organization.name)} #{verb}."
         text += " Saved from the form: #{saved.map { |change| ERB::Util.html_escape(change.description) }.to_sentence}." if saved.any?
+        if ended_affiliations.any?
+          ended = ended_affiliations.map { |a| ERB::Util.html_escape("#{a.organization.name} (#{a.title.presence || "no title"})") }
+          text += " Ended by this agreement: #{ended.to_sentence}."
+        end
         text
       end
 
@@ -50,7 +55,7 @@ module OrganizationServices
     end
 
     def call
-      apply_scenario_end_dating
+      ended_affiliations = apply_scenario_end_dating
       profile_changes = sync_profile
       address_result = upsert_address
 
@@ -64,16 +69,18 @@ module OrganizationServices
         event_registration: @event_registration
       )
 
-      Result.new(saved: profile_changes + address_result.changes, conflicts: conflicts, address: address_result.address)
+      Result.new(saved: profile_changes + address_result.changes, conflicts: conflicts,
+                 address: address_result.address, ended_affiliations: ended_affiliations)
     end
 
     private
 
     # An agreement scenario first settles the person's existing affiliations
     # (job change ends the other orgs'; reinstatement ends stale facilitator
-    # rows) so the creations below start from the right state.
+    # rows) so the creations below start from the right state. Returns what it
+    # ended.
     def apply_scenario_end_dating
-      return unless @scenario
+      return [] unless @scenario
 
       AffiliationServices::ApplyScenarioEndDating.call(
         person: @person, organization: @organization, purpose: @scenario,

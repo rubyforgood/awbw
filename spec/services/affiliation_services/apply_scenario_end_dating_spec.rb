@@ -11,15 +11,16 @@ RSpec.describe AffiliationServices::ApplyScenarioEndDating do
   end
 
   describe "job change" do
-    it "ends the person's active job and facilitator affiliations at other orgs, the day before" do
+    it "ends the person's active job and facilitator affiliations at other orgs, the day before, and returns them" do
       job = create(:affiliation, person: person, organization: old_org, title: "Counselor")
       facilitator = create(:affiliation, person: person, organization: old_org, title: "Facilitator")
 
-      call_with("job_change_agreement")
+      ended = call_with("job_change_agreement")
 
       expect(job.reload.end_date).to eq(effective_date - 1.day)
       expect(facilitator.reload.end_date).to eq(effective_date - 1.day)
       expect(job.inactive).to be(true)
+      expect(ended).to contain_exactly(job, facilitator)
     end
 
     it "spares the linked org's own affiliations and already-ended rows" do

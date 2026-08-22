@@ -72,7 +72,12 @@ manual per-affiliation **End** button remains for ending without linking.
 never overlap (one active row per day), and a row ended "today" still counts as
 active-or-pending until the day is over — it would make
 `AffiliationServices::CreateFromRegistration` skip the fresh reinstatement
-Facilitator affiliation as a duplicate.
+Facilitator affiliation as a duplicate. The panel's manual **End** button uses
+the same date. Every affiliation a scenario ends is recorded on the submission
+(`metadata.scenario_ended_affiliation_ids`) and flagged on the processing panel
+("Ended by this agreement", with an edit link) — end-dating all other orgs on a
+job change is deliberately blunt, and the flag is how a wrongly-ended row (a
+multi-org facilitator changing only one job) gets corrected.
 
 ### D5 — "Linked" on the submission side is explicit-link OR name-match; no join table
 

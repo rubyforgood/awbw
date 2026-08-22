@@ -326,7 +326,7 @@ RSpec.describe "FormSubmissions", type: :request do
 
         expect(response.body).to include(
           CGI.escapeHTML(end_affiliation_path(affiliation, form_submission_id: submission.id,
-                                              end_date: submission.created_at.to_date.iso8601))
+                                              end_date: (submission.created_at.to_date - 1.day).iso8601))
         )
       end
 
@@ -393,7 +393,7 @@ RSpec.describe "FormSubmissions", type: :request do
           expect(response).to redirect_to(link_organization_form_submission_path(submission))
         end
 
-        it "ends the old org's affiliations when linking a job change" do
+        it "ends the old org's affiliations when linking a job change, and flags them on the panel" do
           add_answer("organization_name", "Harbor Family Shelter")
           organization = create(:organization, name: "Harbor Family Shelter")
           old_facilitator = create(:affiliation, person: person, title: "Facilitator",
@@ -403,6 +403,12 @@ RSpec.describe "FormSubmissions", type: :request do
 
           expect(old_facilitator.reload.end_date).to eq(submission.created_at.to_date - 1.day)
           expect(person.affiliations.where(organization: organization).pluck(:title)).to include("Facilitator")
+          expect(flash[:notice]).to include("Ended by this agreement", "Old Org")
+          expect(submission.reload.scenario_ended_affiliation_ids).to eq([ old_facilitator.id ])
+
+          get form_submission_path(submission)
+          expect(response.body).to include("Ended by this agreement")
+          expect(response.body).to include(edit_affiliation_path(old_facilitator))
         end
 
         it "creates only the job affiliation for a form without an agreement purpose" do

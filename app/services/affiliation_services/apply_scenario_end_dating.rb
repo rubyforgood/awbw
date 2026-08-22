@@ -26,19 +26,26 @@ module AffiliationServices
       @effective_date = effective_date
     end
 
+    # Returns the affiliations it ended, so callers can report them and the
+    # processing panel can flag them for correction.
     def call
       case @purpose
       when "job_change_agreement"
         end_affiliations(@person.affiliations.active_or_pending.where.not(organization: @organization))
       when "reinstatement_agreement"
         end_affiliations(@person.affiliations.active_or_pending.facilitators)
+      else
+        []
       end
     end
 
     private
 
     def end_affiliations(affiliations)
-      affiliations.find_each { |affiliation| affiliation.update!(end_date: @effective_date - 1.day) }
+      affiliations.find_each.map do |affiliation|
+        affiliation.update!(end_date: @effective_date - 1.day)
+        affiliation
+      end
     end
   end
 end
