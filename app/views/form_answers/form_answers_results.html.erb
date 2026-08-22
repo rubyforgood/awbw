@@ -47,8 +47,9 @@
               <td class="px-4 py-3 text-right">
                 <%= link_to "View submission",
                       form_submission_path(submission, return_to: "form_answers",
-                        q: params[:q].presence, person: params[:person].presence,
-                        form_id: params[:form_id].presence, answer_type: params[:answer_type].presence,
+                        q: params[:q].presence, question: params[:question].presence,
+                        person: params[:person].presence, form_id: params[:form_id].presence,
+                        answer_type: params[:answer_type].presence,
                         form_submission_id: params[:form_submission_id].presence),
                       data: { turbo_frame: "_top" },
                       class: "whitespace-nowrap text-blue-600 hover:underline" %>

@@ -27,6 +27,19 @@ RSpec.describe "FormAnswers", type: :request do
         expect(response.body).not_to include("Prefers sculpture")
       end
 
+      it "searches by question text" do
+        form = create(:form)
+        wanted = create(:form_field, form: form, name: "What is your favorite medium?")
+        other = create(:form_field, form: form, name: "How did you hear about us?")
+        create(:form_answer, submitted_answer: "medium-answer", form_field: wanted)
+        create(:form_answer, submitted_answer: "referral-answer", form_field: other)
+
+        get form_answers_path(question: "favorite medium"), headers: frame_headers
+
+        expect(response.body).to include("medium-answer")
+        expect(response.body).not_to include("referral-answer")
+      end
+
       it "filters by form" do
         wanted_form = create(:form, name: "Volunteer interest")
         other_form = create(:form, name: "Something else")

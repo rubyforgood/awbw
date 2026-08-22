@@ -21,6 +21,12 @@ class FormAnswersController < ApplicationController
     if params[:q].present?
       scope = scope.where("form_answers.submitted_answer LIKE ?", "%#{FormAnswer.sanitize_sql_like(params[:q])}%")
     end
+    if params[:question].present?
+      term = "%#{FormField.sanitize_sql_like(params[:question])}%"
+      scope = scope.left_joins(:form_field).where(
+        "form_fields.name LIKE :t OR form_answers.question_name_when_answered LIKE :t", t: term
+      )
+    end
     if params[:form_id].present?
       scope = scope.joins(:form_submission).where(form_submissions: { form_id: params[:form_id] })
     end

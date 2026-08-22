@@ -23,6 +23,10 @@
           <%= label_tag :q, "Answer text", class: search_label_class %>
           <%= text_field_tag :q, params[:q], class: search_field_class, placeholder: "Search answer text" %>
         </div>
+        <div class="min-w-56 flex-1">
+          <%= label_tag :question, "Question text", class: search_label_class %>
+          <%= text_field_tag :question, params[:question], class: search_field_class, placeholder: "Search question text" %>
+        </div>
         <div class="min-w-48">
           <%= label_tag :person, "Person", class: search_label_class %>
           <%= text_field_tag :person, params[:person], class: search_field_class, placeholder: "Name or email" %>
@@ -45,7 +49,7 @@
           <%= label_tag :form_submission_id, "Submission #", class: search_label_class %>
           <%= number_field_tag :form_submission_id, params[:form_submission_id], class: search_field_class, placeholder: "ID" %>
         </div>
-        <% if params.slice(:q, :person, :form_id, :answer_type, :form_submission_id).values.any?(&:present?) %>
+        <% if params.slice(:q, :question, :person, :form_id, :answer_type, :form_submission_id).values.any?(&:present?) %>
           <%= render "shared/search_clear", url: form_answers_path %>
         <% end %>
       </div>
