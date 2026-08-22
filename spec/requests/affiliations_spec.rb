@@ -18,37 +18,42 @@ RSpec.describe "/affiliations", type: :request do
         expect(response).to be_successful
       end
 
-      it "surfaces a linked registration with the org-linking warning" do
-        registration = create(:event_registration)
-        affiliation.update_column(:event_registration_id, registration.id)
-
-        get edit_affiliation_path(affiliation)
-
-        expect(response.body).to include("Linked to a registration")
-        expect(response.body).to include(link_organization_event_registration_path(registration))
-      end
-
       it "surfaces the FileMaker code field" do
         get edit_affiliation_path(affiliation)
 
         expect(response.body).to include("affiliation[filemaker_code]")
       end
 
-      it "shows the registration remote-search picker only in admin mode" do
-        get edit_affiliation_path(affiliation)
-        expect(response.body).not_to include("Linked registration")
+      it "hides the registration picker outside admin mode, showing the read-only banner instead" do
+        registration = create(:event_registration, registrant: person)
+        affiliation.update_column(:event_registration_id, registration.id)
 
-        get edit_affiliation_path(affiliation, admin: "true")
-        expect(response.body).to include("Linked registration")
-        expect(response.body).to include("event_registration")
+        get edit_affiliation_path(affiliation)
+
+        expect(response.body).not_to include("Linked registration")
+        expect(response.body).to include(link_organization_event_registration_path(registration))
       end
 
-      it "surfaces a link to the linked registration in the admin picker" do
+      it "in admin mode offers the person's registrations, labelled with the linked org" do
+        event = create(:event, title: "Spring Training")
+        org = create(:organization, name: "Sunrise House")
+        registration = create(:event_registration, registrant: person, event: event, organizations: [ org ])
+
+        get edit_affiliation_path(affiliation, admin: "true")
+
+        expect(response.body).to include("Linked registration")
+        expect(response.body).to include("Spring Training")
+        expect(response.body).to include("Sunrise House")
+        expect(response.body).to include(%(value="#{registration.id}"))
+      end
+
+      it "in admin mode keeps the current link selectable even when it isn't the person's own" do
         registration = create(:event_registration)
         affiliation.update_column(:event_registration_id, registration.id)
 
         get edit_affiliation_path(affiliation, admin: "true")
 
+        expect(response.body).to include(%(value="#{registration.id}"))
         expect(response.body).to include(edit_event_registration_path(registration))
       end
     end
@@ -96,6 +101,18 @@ RSpec.describe "/affiliations", type: :request do
         expect(comment.created_by).to eq(admin)
       end
 
+      it "links and unlinks the affiliation's registration through the picker" do
+        registration = create(:event_registration, registrant: person)
+
+        patch affiliation_path(affiliation, return_to: "organization", origin_id: organization.id),
+              params: { affiliation: { event_registration_id: registration.id } }
+        expect(affiliation.reload.event_registration_id).to eq(registration.id)
+
+        patch affiliation_path(affiliation, return_to: "organization", origin_id: organization.id),
+              params: { affiliation: { event_registration_id: "" } }
+        expect(affiliation.reload.event_registration_id).to be_nil
+      end
+
       it "assigns the organization address through the editor" do
         address = create(:address, addressable: organization)
 
@@ -110,15 +127,6 @@ RSpec.describe "/affiliations", type: :request do
               params: { affiliation: { filemaker_code: "FM-123" } }
 
         expect(affiliation.reload.filemaker_code).to eq("FM-123")
-      end
-
-      it "links a registration through the picker" do
-        registration = create(:event_registration)
-
-        patch affiliation_path(affiliation, return_to: "organization", origin_id: organization.id, admin: "true"),
-              params: { affiliation: { event_registration_id: registration.id } }
-
-        expect(affiliation.reload.event_registration_id).to eq(registration.id)
       end
     end
 
