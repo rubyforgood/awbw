@@ -6,13 +6,13 @@
   <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
     <div class="mb-6">
       <% if @filter_event %>
-        <%= link_to "← #{@filter_event.title}", dashboard_event_path(@filter_event), class: "text-sm #{eyebrow_link_class}" %>
+        <%= link_to "← #{@filter_event.title}", dashboard_event_path(@filter_event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% elsif params[:return_to] == "events" || !current_user&.super_user? %>
         <%# Event owners reach the unfiltered hub too, and can't follow the admin
             home link — send them back to the events index instead. %>
-        <%= link_to "← Events", events_path, class: "text-sm #{eyebrow_link_class}" %>
+        <%= link_to "← Events", events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% else %>
-        <%= link_to "← Admin home", admin_path, class: "text-sm #{eyebrow_link_class}" %>
+        <%= link_to "← Admin home", admin_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% end %>
     </div>
 

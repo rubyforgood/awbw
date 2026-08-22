@@ -3,7 +3,7 @@
   <%# Top bar: eyelash + sub-nav, matching the other event pages. The eyebrow
       returns to the recipient picker so the admin can adjust the selection. %>
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
-    <%= link_to "← Recipients", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message, hide_event_card: (@hide_event_card ? "1" : "0")), class: "text-sm #{eyebrow_link_class}" %>
+    <%= link_to "← Recipients", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message, hide_event_card: (@hide_event_card ? "1" : "0")), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <%= render "events/subnav", event: @event, current: nil %>
   </div>
 

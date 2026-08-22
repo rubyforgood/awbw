@@ -3,13 +3,13 @@
         <div class="sticky top-0 z-10 <%= DomainTheme.bg_class_for(:people) %> pb-3">
           <% if params[:return_to] == "onboarding" && params[:event_id].present? %>
             <div class="mb-2">
-              <%= link_to onboarding_event_row_path(params[:event_id], params[:highlight]), class: "text-sm #{eyebrow_link_class}" do %>
+              <%= link_to onboarding_event_row_path(params[:event_id], params[:highlight]), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
                 <i class="fa-solid fa-arrow-left text-xs"></i> Onboarding
               <% end %>
             </div>
           <% elsif params[:return_to] == "registration_link" && params[:event_registration_id].present? %>
             <div class="mb-2">
-              <%= link_to link_organization_event_registration_path(params[:event_registration_id], return_to: params[:link_org_return_to].presence), class: "text-sm #{eyebrow_link_class}" do %>
+              <%= link_to link_organization_event_registration_path(params[:event_registration_id], return_to: params[:link_org_return_to].presence), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
                 <i class="fa-solid fa-arrow-left text-xs"></i> Organization linking
               <% end %>
             </div>

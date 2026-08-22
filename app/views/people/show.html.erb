@@ -4,7 +4,7 @@
 <% if params[:return_to] == "registrants" && params[:event_id].present? %>
   <% back_registration = @person.event_registrations.find_by(event_id: params[:event_id]) %>
   <div class="mb-3">
-    <%= link_to(back_registration ? registrants_event_row_path(params[:event_id], back_registration.id) : registrants_event_path(params[:event_id]), class: "text-sm #{eyebrow_link_class}") do %>
+    <%= link_to(back_registration ? registrants_event_row_path(params[:event_id], back_registration.id) : registrants_event_path(params[:event_id]), class: "text-sm #{eyebrow_link_class} px-2 py-1") do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Back to registrants
     <% end %>
   </div>

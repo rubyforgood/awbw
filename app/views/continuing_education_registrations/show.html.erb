@@ -8,12 +8,12 @@
 <div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:continuing_education) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
   <%# Top bar: back to the CE registrations index + Edit / Home. %>
   <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
-    <%= link_to continuing_education_registrations_path, class: "text-sm #{eyebrow_link_class}" do %>
+    <%= link_to continuing_education_registrations_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> CE registrations
     <% end %>
     <div class="flex items-center gap-3">
-      <%= link_to "Edit", edit_continuing_education_registration_path(@ce_registration, return_to: "ce_index"), class: "text-sm #{eyebrow_link_class}" %>
-      <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class}" %>
+      <%= link_to "Edit", edit_continuing_education_registration_path(@ce_registration, return_to: "ce_index"), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+      <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     </div>
   </div>
 

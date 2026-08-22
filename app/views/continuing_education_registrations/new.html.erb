@@ -5,10 +5,10 @@
 <div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:continuing_education) %> rounded-xl border border-gray-200 p-4 shadow sm:p-6">
   <%# Top bar: back link + Home, matching the CE edit page. %>
   <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
-    <%= link_to ce_registration_return_path(registration), class: "text-sm #{eyebrow_link_class}" do %>
+    <%= link_to ce_registration_return_path(registration), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> <%= ce_registration_return_label %>
     <% end %>
-    <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class}" %>
+    <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
   <%= render "shared/event_page_header",

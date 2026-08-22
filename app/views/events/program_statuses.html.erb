@@ -6,9 +6,9 @@
   <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
     <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
       <% if params[:return_to] == "dashboard" && params[:event_id].present? %>
-        <%= link_to "← Dashboard", dashboard_event_path(params[:event_id]), class: "text-sm #{eyebrow_link_class}" %>
+        <%= link_to "← Dashboard", dashboard_event_path(params[:event_id]), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% else %>
-        <%= link_to "← Reports", reports_events_path(report_to_hub_params), class: "text-sm #{eyebrow_link_class}" %>
+        <%= link_to "← Reports", reports_events_path(report_to_hub_params), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% end %>
       <%= render "events/report_subnav", current: :program_statuses %>
     </div>

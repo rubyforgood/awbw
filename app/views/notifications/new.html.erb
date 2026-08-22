@@ -1,7 +1,7 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="mx-auto max-w-3xl">
   <div class="mb-3">
-    <%= link_to notifications_path, class: "text-sm #{eyebrow_link_class}" do %>
+    <%= link_to notifications_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> <%= t("communications.back_link") %>
     <% end %>
   </div>
@@ -78,7 +78,7 @@
       </div>
 
       <div class="mt-6 flex items-center justify-end gap-3">
-        <%= link_to "Cancel", notifications_path, class: "text-sm #{eyebrow_link_class}" %>
+        <%= link_to "Cancel", notifications_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <%= f.button :submit, t("communications.new"),
                      class: "btn btn-primary" %>
       </div>
