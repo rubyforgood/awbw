@@ -241,6 +241,7 @@ Rails.application.routes.draw do
     resources :memberships, only: [ :index, :new, :create ]
   end
   resources :faqs
+  get "transfer_guide", to: "transfer_guide#show", as: :transfer_guide
   resources :features do
     collection do
       post :import

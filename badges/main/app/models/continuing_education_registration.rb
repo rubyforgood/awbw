@@ -82,19 +82,22 @@ class ContinuingEducationRegistration < ApplicationRecord
   # sign-ins/early sign-outs. You can't certify hours the sign-in sheet doesn't support.
   ATTENDANCE_COVERAGE_THRESHOLD = 0.9
 
-  # This record was created by a transfer — it lives on a transferred-in reg,
-  # carrying the hours forward from the source event with a cost snapshotted from
-  # the source's outstanding balance. Its cost is admin-locked (payments received
-  # here settle that balance); certification happens at this event. (#1944)
+  # This record was created by a transfer — carried onto a transferred-in reg from
+  # a matching CE the split left on the source. Identified by that source stub
+  # existing (matched by license), NOT merely by the reg being a transfer-in: a CE
+  # an admin adds fresh at the new event has no source stub, so it stays a normal,
+  # editable record. Cost is admin-locked only for the transfer-carried record;
+  # certification happens at this event. (#1944)
   def transfer_created?
-    event_registration&.transferred_in? || false
+    origin_ce_registration.present?
   end
 
   # The source reg's CE record this one was split from — the paid $0-hours "stub"
   # left at the original event, matched by license. Drives the "paid on original →"
-  # link on a transfer-created record's card. Nil when the source has none. (#1944)
+  # link on a transfer-carried record's card. Nil when the source has no matching
+  # CE (i.e. this was added fresh here, not carried by the transfer). (#1944)
   def origin_ce_registration
-    return unless transfer_created?
+    return unless event_registration&.transferred_in?
 
     event_registration.transferred_from_registration
       &.continuing_education_registrations
