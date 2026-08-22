@@ -63,10 +63,10 @@ class AffiliationsController < ApplicationController
   end
 
   def affiliation_params
-    params.require(:affiliation).permit(
-      :person_id, :organization_id, :title, :start_date, :end_date, :primary_contact, :organization_address_id,
-      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ]
-    )
+    keys = [ :person_id, :organization_id, :title, :start_date, :end_date, :primary_contact,
+             :organization_address_id, :filemaker_code ]
+    keys << :event_registration_id if params[:admin] == "true"
+    params.require(:affiliation).permit(*keys, comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ])
   end
 
   # Return to whichever edit page the gear was clicked from, scrolled to the row
@@ -74,11 +74,11 @@ class AffiliationsController < ApplicationController
   def affiliation_return_path(anchor: helpers.dom_id(@affiliation))
     case params[:return_to]
     when "person"
-      edit_person_path(params[:origin_id], anchor: anchor)
+      edit_person_path(params[:origin_id], anchor: anchor, admin: params[:admin].presence)
     when "organization"
-      edit_organization_path(params[:origin_id], anchor: anchor)
+      edit_organization_path(params[:origin_id], anchor: anchor, admin: params[:admin].presence)
     else
-      edit_affiliation_path(@affiliation)
+      edit_affiliation_path(@affiliation, admin: params[:admin].presence)
     end
   end
 end

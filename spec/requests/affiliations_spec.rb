@@ -27,6 +27,21 @@ RSpec.describe "/affiliations", type: :request do
         expect(response.body).to include("Linked to a registration")
         expect(response.body).to include(link_organization_event_registration_path(registration))
       end
+
+      it "surfaces the FileMaker code field" do
+        get edit_affiliation_path(affiliation)
+
+        expect(response.body).to include("affiliation[filemaker_code]")
+      end
+
+      it "shows the registration remote-search picker only in admin mode" do
+        get edit_affiliation_path(affiliation)
+        expect(response.body).not_to include("Linked registration")
+
+        get edit_affiliation_path(affiliation, admin: "true")
+        expect(response.body).to include("Linked registration")
+        expect(response.body).to include("event_registration")
+      end
     end
 
     context "as a non-admin" do
@@ -79,6 +94,31 @@ RSpec.describe "/affiliations", type: :request do
               params: { affiliation: { organization_address_id: address.id } }
 
         expect(affiliation.reload.organization_address_id).to eq(address.id)
+      end
+
+      it "updates the FileMaker code" do
+        patch affiliation_path(affiliation, return_to: "organization", origin_id: organization.id),
+              params: { affiliation: { filemaker_code: "FM-123" } }
+
+        expect(affiliation.reload.filemaker_code).to eq("FM-123")
+      end
+
+      it "links a registration when in admin mode" do
+        registration = create(:event_registration)
+
+        patch affiliation_path(affiliation, return_to: "organization", origin_id: organization.id, admin: "true"),
+              params: { affiliation: { event_registration_id: registration.id } }
+
+        expect(affiliation.reload.event_registration_id).to eq(registration.id)
+      end
+
+      it "ignores the registration link outside admin mode" do
+        registration = create(:event_registration)
+
+        patch affiliation_path(affiliation, return_to: "organization", origin_id: organization.id),
+              params: { affiliation: { event_registration_id: registration.id } }
+
+        expect(affiliation.reload.event_registration_id).to be_nil
       end
     end
 
