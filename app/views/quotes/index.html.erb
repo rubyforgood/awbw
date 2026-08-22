@@ -1,8 +1,8 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:quotes) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:quotes) %> rounded-xl border border-gray-200 p-6 shadow">
       <div class="space-y-6">
         <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
+        <div class="mb-6 flex items-center justify-between">
           <h1 class="text-2xl font-semibold text-gray-900">
             <%= Quote.model_name.human.pluralize %> (<%= @quotes_count %>)
           </h1>
@@ -21,19 +21,18 @@
             <thead class="bg-gray-100">
             <tr>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Content</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[2%]">Actions</th>
+              <th class="w-[2%] px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
             </tr>
             </thead>
 
             <tbody class="divide-y divide-gray-200">
             <% @quotes.decorate.each do |quote| %>
-              <tr class="hover:bg-gray-50 transition-colors duration-150">
+              <tr class="transition-colors duration-150 hover:bg-gray-50">
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <div class="mb-1">
                     <% if allowed_to?(:manage?, Quote) && !quote.published? && controller_name != "home" %>
                       <span
-                        class="inline-flex items-center px-2 py-0.5 rounded-full
-                               text-xs font-medium bg-blue-100 text-gray-600 whitespace-nowrap">
+                        class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-gray-600">
                         <i class="fa-solid fa-eye-slash mr-1"></i>
                         Unpublished
                       </span>
@@ -42,8 +41,7 @@
 
                     <% if quote.standout? && allowed_to?(:manage?, Quote) %>
                       <span
-                        class="inline-flex items-center px-2 py-0.5 rounded-full
-                               text-xs font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap">
+                        class="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-yellow-800">
                         <i class="fa-solid fa-star mr-1"></i>
                         Standout
                       </span>
@@ -58,10 +56,10 @@
 <!--                      </span>-->
                     <%# end %>
                   </div>
-                  <div class="font-semibold text-lg text-gray-700">
+                  <div class="text-lg font-semibold text-gray-700">
                     <%= link_to h(quote.detail), quote_path(quote.object), class: "hover:underline" %>
                   </div>
-                  <div class="italic text-gray-700 mt-1">
+                  <div class="mt-1 text-gray-700 italic">
                     <%= "-- " %>
                     <%= quote.attribution %>
                     <%= "@ " + quote.created_at.strftime("%m-%d-%-Y") %>
@@ -90,7 +88,7 @@
 
         <!-- Empty state -->
         <% unless @quotes.any? %>
-          <p class="text-gray-500 text-center py-6">
+          <p class="py-6 text-center text-gray-500">
             No <%= Quote.model_name.human.pluralize.downcase %> found.
           </p>
         <% end %>

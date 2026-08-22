@@ -4,7 +4,7 @@ class QuoteDecorator < ApplicationDecorator
   end
 
   def detail(length: nil)
-    text = object.quote
+    text = object.body
     length ? text&.truncate(length) : text
   end
 
@@ -12,12 +12,12 @@ class QuoteDecorator < ApplicationDecorator
     object.quotable_item_quotes.last&.quotable&.decorate&.created_by
   end
 
-  def quote
-    object.quote
+  def body
+    object.body
   end
 
   def attribution
-    name = speaker_name.presence || "anonymous"
+    name = author&.name.presence || speaker_name.presence || "anonymous"
 
     details = []
     details << "#{age.gsub("years", "").gsub("yrs", "")} yrs" if age.present?

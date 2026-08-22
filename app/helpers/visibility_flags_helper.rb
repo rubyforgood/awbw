@@ -65,7 +65,7 @@ module VisibilityFlagsHelper
     },
     standout: {
       label: "Standout",
-      hint: "Flagged as an especially good quote",
+      hint: "Mark as an especially good quote",
       description: "Marks this as an especially good quote so staff can quickly find the best ones. (Does not affect visibility.)"
     }
   }.freeze

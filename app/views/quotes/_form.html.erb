@@ -1,8 +1,8 @@
 <div class="rounded-xl bg-white p-6">
   <%= simple_form_for(@quote) do |f| %>
   <div class="space-y-6">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
-      <div class="md:col-span-3 space-y-6">
+    <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-4">
+      <div class="space-y-6 md:col-span-3">
         <!-- Workshop -->
         <div>
           <%= f.input :workshop_id,
@@ -19,7 +19,7 @@
 
         <!-- Published quote (shown in the quotes index and to users) -->
         <div>
-          <%= f.input :quote,
+          <%= f.input :body,
                       as: :text,
                       label: "Published quote",
                       hint: "The wording shown in the quotes index and to users.",
@@ -30,7 +30,7 @@
 
         <!-- Original submission (as received; preserved automatically) -->
         <div>
-          <%= f.input :original_quote,
+          <%= f.input :original_body,
                       as: :text,
                       label: "Original submission",
                       hint: "What we received. Captured automatically the first time; edit the published quote above to change what's shown.",
@@ -39,10 +39,28 @@
           %>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Author -->
+        <div>
+          <%= f.input :author_id,
+                      as: :select,
+                      collection: author_picker_person(f.object).present? ? [[ author_picker_person(f.object).remote_search_label[:label], author_picker_person(f.object).id ]] : [],
+                      selected: author_picker_person(f.object)&.id,
+                      include_blank: "Select an author",
+                      label: (f.object.author ? (
+                        link_to "Author", person_path(f.object.author),
+                                class: "hover:underline") : "Author").html_safe,
+                      hint: "Link the person who said this, if they're on file. Otherwise use the speaker name below.",
+                      input_html: { class: "w-full rounded border-gray-300",
+                                    data: { controller: "remote-select",
+                                            remote_select_model_value: "person" } }
+          %>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
             <%= f.input :speaker_name,
                         label: "Speaker name",
+                        hint: "Free-text fallback when the speaker isn't a person on file.",
                         input_html: { value: f.object.speaker_name, class: "w-full" },
                         wrapper_html: { class: "w-full" }
             %>
@@ -72,15 +90,15 @@
         </div>
       </div>
 
-      <div class="space-y-4 mt-6 md:mt-0">
-        <div class="admin-only bg-blue-100 rounded p-3">
+      <div class="mt-6 space-y-4 md:mt-0">
+        <div class="admin-only rounded bg-blue-100 p-3">
           <%= render "shared/visibility_info", flags: %i[published] %>
           <div class="grid grid-cols-1 items-center">
             <%= visibility_flag_input f, :published %>
           </div>
         </div>
 
-        <div class="admin-only bg-blue-100 rounded p-3">
+        <div class="admin-only rounded bg-blue-100 p-3">
           <%= render "shared/visibility_info", flags: %i[standout], heading: "Quality" %>
           <div class="grid grid-cols-1 items-center">
             <%= visibility_flag_input f, :standout %>

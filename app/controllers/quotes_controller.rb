@@ -5,7 +5,7 @@ class QuotesController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(Quote.where.not(quote: [ nil, "" ]))
+    base_scope = authorized_scope(Quote.where.not(body: [ nil, "" ]))
     filtered = base_scope.search_by_params(params)
                          .order(created_at: :desc)
     @quotes_count = filtered.count
@@ -71,10 +71,11 @@ class QuotesController < ApplicationController
   def quote_params
     params.require(:quote).permit(
       :age,
+      :author_id,
+      :body,
       :gender,
-      :original_quote,
+      :original_body,
       :published,
-      :quote,
       :speaker_name,
       :standout,
       :workshop_id,

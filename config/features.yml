@@ -27,22 +27,26 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
-- name: "Flag standout quotes and keep the original submission"
+- name: "Quotes: standout flag, linked author, and preserved original"
   area: content
   display_status: admin_facing
   released_on: 2026-08-22
   action_path: "/quotes"
   summary: >-
-    Mark especially good quotes as "Standout" and filter the quotes list to just those.
-    Quotes also keep the original submission separately from the wording you publish.
+    Mark especially good quotes as "Standout" and filter the list to just those. Quotes can
+    now link to a person as the author, keep the original submission separate from the
+    published wording, and search across all of it.
   description: >-
     The quote form has a new "Standout" flag for calling out the best quotes, with an
-    admin-only "Standout" filter on the quotes list to pull them up quickly. Each quote now
-    stores the original submission separately from the published wording, so editing what's
-    shown never loses what was originally received. Quote search matches both the published
-    text and the original submission.
+    admin-only "Standout" filter on the quotes list to pull them up quickly. Quotes can now
+    link to a person on file as the author; the free-text speaker name stays as the fallback
+    for the many participants who aren't in the system. Each quote also stores the original
+    submission separately from the published wording, so editing what's shown never loses
+    what was received. Quote search now matches the published text, the original submission,
+    the linked author's name, and the legacy speaker name.
   pro_tips:
     - "Edit the \"Published quote\" to clean up wording for display — the \"Original submission\" is preserved automatically."
+    - "Link an author when the speaker is a person on file; otherwise just type their name in \"Speaker name\"."
 
 - name: "Filter registrants by registration date"
   area: events
