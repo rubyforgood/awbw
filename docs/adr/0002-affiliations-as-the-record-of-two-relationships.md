@@ -242,15 +242,14 @@ Adding a rule here means adding a case there.
   derivation from the dates. Worth adding as a plain string column constrained by a
   constant if the distinction ever needs to be surfaced or filtered; deliberately
   deferred until there's a reader for it.
-- **Naming now advertises D3.** The historical readers say "by date" —
-  `Affiliation.active_by_date_on(date)` and
-  `FacilitatorProgramStatus#active_by_date_on_anchor` — naming the input that
-  separates them from the current-state `active?` / `.active` — `Affiliation.active_by_date_on(date)` and
-  `FacilitatorProgramStatus#active_by_date_on_anchor` — so a call site can't mistake them
-  for the current-state `active?` / `.active`. Note the subject: these ask whether
-  **one affiliation's own period** covered a date. The organization-level questions
-  are built on top (D4 for now, `FacilitatorProgramStatus` for a date). Anything new
-  that answers "as of a date" should follow the same convention.
+- **The public reader says "by date".** `Affiliation.active_by_date_on(date)` names
+  the input that separates it from the current-state `active?` / `.active`, and asks
+  whether **one affiliation's own period** covered that date. The organization-level
+  questions are built on top (D4 for now, `FacilitatorProgramStatus` for a date).
+  Anything new answering "as of a date" should follow the same convention.
+  `FacilitatorProgramStatus` keeps its own `active_on_anchor` — it is private to a
+  file upstream edits often, and renaming it there bought a recurring rebase
+  conflict for no call-site clarity.
 - **ADR-0001's vocabulary entry for "Active affiliation" is superseded by D2**, and
   its note that an affiliation is "not tied to any event" is superseded by D2a — it
   is tied to a *registration*, which is not the same thing.
