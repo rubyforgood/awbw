@@ -162,6 +162,23 @@ RSpec.describe "FormAnswers", type: :request do
         expect { post promote_to_quote_form_answer_path(answer) }.not_to change(Quote, :count)
         expect(response).to redirect_to(form_answers_path)
       end
+
+      it "reuses the existing quote when the same answer is promoted again" do
+        post promote_to_quote_form_answer_path(answer)
+        quote = Quote.last
+
+        expect { post promote_to_quote_form_answer_path(answer) }.not_to change(Quote, :count)
+        expect(response).to redirect_to(edit_quote_path(quote))
+      end
+
+      it "still recognizes the answer after the published body was edited" do
+        post promote_to_quote_form_answer_path(answer)
+        quote = Quote.last
+        quote.update!(body: "An edited, published version")
+
+        expect { post promote_to_quote_form_answer_path(answer) }.not_to change(Quote, :count)
+        expect(response).to redirect_to(edit_quote_path(quote))
+      end
     end
 
     context "as a non-admin" do
