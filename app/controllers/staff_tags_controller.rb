@@ -16,8 +16,11 @@ class StaffTagsController < ApplicationController
   end
 
   def show
-    @staff_tag = @staff_tag.decorate
     authorize! @staff_tag
+    @taggings = @staff_tag.staff_taggings
+                          .includes(:created_by, :updated_by, :staff_taggable)
+                          .order(created_at: :desc)
+    @staff_tag = @staff_tag.decorate
   end
 
   def new

@@ -21,4 +21,15 @@ RSpec.describe StaffTagging, type: :model do
 
     expect(tagging.created_by).to eq(admin)
   end
+
+  it "stamps created_by and updated_by from Current.user" do
+    admin = create(:user, :admin)
+    Current.user = admin
+    tagging = create(:staff_tagging)
+
+    expect(tagging.created_by).to eq(admin)
+    expect(tagging.updated_by).to eq(admin)
+  ensure
+    Current.user = nil
+  end
 end

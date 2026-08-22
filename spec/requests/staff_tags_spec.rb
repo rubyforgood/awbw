@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "/staff_tags", type: :request do
-  let(:admin) { create(:user, :admin) }
+  let(:admin) { create(:user, :admin, :with_person) }
 
   describe "as an admin" do
     before { sign_in admin }
@@ -11,6 +11,19 @@ RSpec.describe "/staff_tags", type: :request do
       get staff_tags_path
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Highlight roster")
+    end
+
+    it "shows tagged people with who applied the tag, plus audit info" do
+      tag = create(:staff_tag, name: "Highlight roster", created_by: admin, updated_by: admin)
+      person = create(:person, first_name: "Ada", last_name: "Tagged")
+      tag.staff_taggings.create!(staff_taggable: person, created_by: admin)
+
+      get staff_tag_path(tag)
+
+      expect(response.body).to include("Ada Tagged")
+      expect(response.body).to include("Tagged")
+      expect(response.body).to include(admin.full_name)
+      expect(response.body).to include("Created:")
     end
 
     it "creates a staff tag and stamps the author" do

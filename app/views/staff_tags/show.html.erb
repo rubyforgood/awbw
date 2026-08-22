@@ -26,18 +26,23 @@
       <div class="border-t border-gray-200 pt-6">
         <div class="mb-3 flex items-center justify-between">
           <h2 class="text-lg font-semibold text-gray-900">
-            Tagged people (<%= @staff_tag.people.count %>)
+            Tagged people (<%= @taggings.size %>)
           </h2>
           <%= link_to "View as filtered roster", people_path(staff_tag_ids: @staff_tag.id),
                       class: "btn btn-secondary-outline" %>
         </div>
 
-        <% if @staff_tag.people.any? %>
+        <% if @taggings.any? %>
           <ul class="space-y-2">
-            <% @staff_tag.people.order(:last_name, :first_name).each do |person| %>
-              <li class="rounded-md border border-gray-200 bg-gray-50 px-4 py-2">
-                <%= link_to person.name, person_path(person),
+            <% @taggings.each do |tagging| %>
+              <% taggable = tagging.staff_taggable %>
+              <li class="flex flex-wrap items-baseline justify-between gap-2 rounded-md border border-gray-200 bg-gray-50 px-4 py-2">
+                <%= link_to taggable.name, polymorphic_path(taggable),
                             class: "font-medium #{DomainTheme.text_class_for(:people)} hover:underline" %>
+                <span class="text-xs text-gray-500">
+                  Tagged<% if tagging.created_by&.person %> by <%= tagging.created_by.full_name %><% end %>
+                  on <%= tagging.created_at.strftime("%b %-d, %Y") %>
+                </span>
               </li>
             <% end %>
           </ul>
@@ -45,6 +50,8 @@
           <p class="text-sm text-gray-500 italic">No one carries this tag yet.</p>
         <% end %>
       </div>
+
+      <%= render "shared/audit_info", resource: @staff_tag %>
     </div>
   </div>
 </div>
