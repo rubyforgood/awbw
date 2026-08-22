@@ -86,6 +86,23 @@
     - "Edit the \"Published quote\" to clean up wording for display — the \"Original submission\" is preserved automatically."
     - "Link an author when the speaker is a person on file; otherwise just type their name in \"Speaker name\"."
 
+- name: "Filter form submissions by date, event, person, organization, and role"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/form_submissions"
+  summary: >-
+    The form submissions index now has a full filter bar — narrow submissions by submission
+    date range, event, person, organization, and role, on top of the existing form filter.
+  description: >-
+    The admin form submissions index used to filter by form only. It now has a filter bar
+    matching the other index pages: a submitted-from / submitted-to date range, searchable
+    Event, Person, and Organization pickers, and a Role dropdown. Filters stack, and a
+    "Clear filters" button appears once any is set. The chosen filters carry over when you
+    open a submission and come back, so you land on the same filtered list.
+  pro_tips:
+    - "The Organization filter matches submissions linked to an org through an event registration."
+
 - name: "Filter registrants by registration date"
   area: events
   display_status: user_facing
