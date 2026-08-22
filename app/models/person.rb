@@ -412,10 +412,6 @@ class Person < ApplicationRecord
     (phones.find(&:primary?) || phones.first)&.value
   end
 
-  def has_liasion_position_for?(organization_id)
-    affiliations.where(organization_id: organization_id, title: Affiliation::LIAISON_TITLE).exists?
-  end
-
   def primary_organization
     affiliations
       .active
