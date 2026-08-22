@@ -115,6 +115,10 @@
   color: rgb(156 163 175);   /* gray-400 */
   font-size: 0.875rem;       /* text-sm */
   line-height: 1.5rem;       /* text-sm/6: keeps the select the height of a text input */
+  /* Safari sizes a <select> by its font-size, ignoring line-height, so the smaller
+     placeholder font would render shorter than the paired text input. Pin the box to
+     the text-input height: 1.5rem line + py-2 (1rem) + 2px border. */
+  min-height: 2.625rem;
 }
 
 /* Optional fields get a subtle gray background */

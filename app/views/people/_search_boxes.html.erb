@@ -69,12 +69,6 @@
               blank: "Any status", field_class: search_field_class,
               wrapper_class: "w-full md:w-56" %>
 
-        <!-- Topic subscription -->
-        <%= render "events/filter_select", param: :topic_subscription_type_id, label: "Topic subscription",
-              options: TopicSubscriptionType.active.ordered.pluck(:name, :id),
-              selected: params[:topic_subscription_type_id], blank: "Any topic",
-              field_class: search_field_class, wrapper_class: "w-full md:w-56" %>
-
         <!-- Staff tag -->
         <% if allowed_to?(:index?, StaffTag) %>
           <% staff_tags = StaffTag.published.ordered %>
@@ -85,6 +79,12 @@
                   field_class: search_field_class, wrapper_class: "w-full md:w-56" %>
           <% end %>
         <% end %>
+
+        <!-- Topic subscription -->
+        <%= render "events/filter_select", param: :topic_subscription_type_id, label: "Topic subscription",
+              options: TopicSubscriptionType.active.ordered.pluck(:name, :id),
+              selected: params[:topic_subscription_type_id], blank: "Any topic",
+              field_class: search_field_class, wrapper_class: "w-full md:w-56" %>
       </div>
     </div>
   <% end %>

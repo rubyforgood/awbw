@@ -270,12 +270,12 @@ class Person < ApplicationRecord
     end }
 
   ROLE_FILTER_OPTIONS = [
-    [ "Story authors", "story_author" ],
     [ "Blog authors", "blog_author" ],
+    [ "Sector leaders", "sector_leader" ],
+    [ "Story authors", "story_author" ],
     [ "Workshop authors", "workshop_author" ],
-    [ "Workshop variation authors", "workshop_variation_author" ],
     [ "Workshop log authors", "workshop_log_author" ],
-    [ "Sector leaders", "sector_leader" ]
+    [ "Workshop variation authors", "workshop_variation_author" ]
   ].freeze
 
   MEMBERSHIP_STATUS_FILTER_OPTIONS = [
