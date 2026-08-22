@@ -47,4 +47,23 @@ RSpec.describe "Person profile monthly reports section", type: :request do
 
     expect(response).to redirect_to(root_path)
   end
+
+  describe "section visibility on the full profile (deprecated functionality)" do
+    it "shows the section heading when the person has monthly reports" do
+      sign_in owner_user
+      create(:monthly_report, created_by: owner_user)
+
+      get person_path(person)
+
+      expect(response.body).to include("Monthly reports submitted")
+    end
+
+    it "hides the section heading when the person has none" do
+      sign_in owner_user
+
+      get person_path(person)
+
+      expect(response.body).not_to include("Monthly reports submitted")
+    end
+  end
 end

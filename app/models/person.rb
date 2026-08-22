@@ -390,6 +390,13 @@ class Person < ApplicationRecord
     professional_licenses.filter_map { |license| license.kind.presence&.strip }.uniq.join(", ").presence
   end
 
+  # Monthly reports are deprecated. Only surface the profile section and its
+  # visibility toggle for people who already have some (explicit author, or the
+  # legacy fallback to their user's creations) — newer users never see it.
+  def any_monthly_reports?
+    MonthlyReport.credited_to_person(self).exists?
+  end
+
   def full_name_with_email
     email = preferred_email
     name = full_name
