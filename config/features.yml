@@ -132,11 +132,12 @@
   released_on: 2026-08-22
   action_path: "/quotes"
   summary: >-
-    Give a question the "quote" smart field and every answer to it is saved as an unpublished
-    quote on submission — credited to "Participant" (no named author), with the submitter kept as
-    its source — ready for an admin to review and publish from the Quotes admin.
+    Give a question the "quote" smart field and its answer is saved as an unpublished quote on
+    submission, with the submitter kept as its source — ready for an admin to review and publish
+    from the Quotes admin. Add "quote_speaker_name" and "quote_age_range" fields to capture the
+    speaker and age too; with no speaker the quote credits "Anonymous".
   pro_tips:
-    - "Set a question's smart field to \"quote\" in the form editor to enable this."
+    - "Set a question's smart field to \"quote\" (the text), plus optional \"quote_speaker_name\" and \"quote_age_range\"."
     - "New quotes start unpublished, so nothing appears publicly until you review and publish it."
 
 - name: "Affiliation editor: FileMaker code"

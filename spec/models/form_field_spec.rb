@@ -546,9 +546,11 @@ RSpec.describe FormField do
   describe "#quote_field?" do
     let(:form) { create(:form) }
 
-    it "returns true for the quote identifier" do
-      field = build(:form_field, form: form, field_identifier: "quote")
-      expect(field.quote_field?).to be true
+    it "returns true for every quote identifier" do
+      %w[quote quote_body quote_speaker_name quote_age_range].each do |identifier|
+        field = build(:form_field, form: form, field_identifier: identifier)
+        expect(field.quote_field?).to be(true), "expected #{identifier} to be a quote field"
+      end
     end
 
     it "returns false for an ordinary field" do

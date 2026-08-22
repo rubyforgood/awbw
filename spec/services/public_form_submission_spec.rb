@@ -132,7 +132,7 @@ RSpec.describe PublicFormSubmission do
     quote = submission.quotes.sole
     expect(quote.body).to eq("This place changed my life")
     expect(quote).not_to be_published
-    expect(quote.author_credit).to eq("Participant")
+    expect(quote.author_credit).to eq("Anonymous")
   end
 
   it "captures a sector 'Other' answer as an OtherResponse, like the other submission paths" do

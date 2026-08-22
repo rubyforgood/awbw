@@ -2,9 +2,9 @@ class Quote < ApplicationRecord
   include AuthorCreditable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable
 
   # A quote's speaker is a workshop participant. When none is named — no linked
-  # author, or the author opted out — credit reads "Participant", not the default
+  # author, or the author opted out — credit reads "Anonymous", not the default
   # "AWBW Facilitator" (the facilitator entered the quote; they didn't say it).
-  self.unattributed_author_label = "Participant"
+  self.unattributed_author_label = "Anonymous"
 
   belongs_to :workshop, optional: true
   belongs_to :author, class_name: "Person", optional: true
@@ -95,7 +95,7 @@ class Quote < ApplicationRecord
 
   # Prefer the linked person, falling back to the legacy free-text speaker name.
   def speaker
-    author&.name.presence || speaker_name.presence || "Participant"
+    author&.name.presence || speaker_name.presence || "Anonymous"
   end
 
   def name
