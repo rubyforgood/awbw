@@ -443,14 +443,20 @@
           </div>
         </div>
 
-        <div class="w-full">
+        <div class="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <%= f.input :mailing_list_consented,
                       as: :boolean,
                       label: "Consented to mailing list",
                       hint: f.object.mailing_list_consent_at.present? ?
                               "Consented #{f.object.mailing_list_consent_at.to_date.to_fs(:long)} (#{f.object.mailing_list_consent_source}). Uncheck to withdraw." :
                               "No consent on file. Check to record consent.",
-                      wrapper_html: { class: "w-full" } %>
+                      wrapper_html: { class: "w-full sm:flex-1" } %>
+
+          <%= f.input :blog_contributor,
+                      as: :boolean,
+                      label: "Blog contributor",
+                      hint: "Adds a blog contributor badge to this person's profile.",
+                      wrapper_html: { class: "w-full sm:w-auto sm:text-right" } %>
         </div>
       </div>
     <% end %>

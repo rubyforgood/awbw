@@ -545,6 +545,7 @@ class PeopleController < ApplicationController
       :racial_ethnic_identity,
       :filemaker_code,
       :mailing_list_consented,
+      :blog_contributor,
       :bio, :shoutout_text, :notes,
       :display_name_preference,
       :anonymous_contributions,
