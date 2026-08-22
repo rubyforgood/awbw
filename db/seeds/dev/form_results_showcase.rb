@@ -49,8 +49,15 @@ region = upsert_field!(form, "Which region are you in?", :single_select_radio, 7
                        options: [ "Pacific", "Mountain", "Midwest", "Southwest", "Southeast", "Northeast", "Mid-Atlantic", "International" ])
 age_group = upsert_field!(form, "Primary age group you serve", :single_select_dropdown, 8, field_identifier: "primary_age_group")
 sector_field = upsert_field!(form, "Additional sectors you serve", :multi_select_checkbox, 9, field_identifier: "additional_sectors")
-info = upsert_field!(form, "Thanks for sharing — the rest is optional.", :no_user_input, 10)
-upload = upsert_field!(form, "Upload a sample of your work", :file_upload, 11)
+# Geographic fields — charted as US-state / world choropleths (like the roster
+# breakdowns) off their field_identifier, even though captured as free text.
+state_field = upsert_field!(form, "Which state are you in?", :free_form_input_one_line, 10, field_identifier: "mailing_state")
+country_field = upsert_field!(form, "Which country are you in?", :free_form_input_one_line, 11, field_identifier: "mailing_country")
+info = upsert_field!(form, "Thanks for sharing — the rest is optional.", :no_user_input, 12)
+upload = upsert_field!(form, "Upload a sample of your work", :file_upload, 13)
+
+states = [ "California", "Texas", "New York", "Florida", "Washington", "Illinois", "Massachusetts", "Oregon", "Georgia", "Ohio" ]
+countries = [ "United States", "United States", "United States", "Canada", "United Kingdom", "Australia", "Mexico" ]
 
 paragraphs = [
   "I run weekly art groups at a domestic violence shelter and love AWBW's approach.",
@@ -91,6 +98,8 @@ respondent_count.times do |i|
     medium => mediums[i % mediums.size],
     heard => heard_answers[i % heard_answers.size],
     region => regions[i % regions.size],
+    state_field => states[i % states.size],
+    country_field => countries[i % countries.size],
     # A rotating 1–3 topic subset, so the multi-select bar chart varies.
     topics => all_topics.each_with_index.select { |_, j| (i + j) % 3 == 0 }.map(&:first).join(", "),
     # Every third respondent skips the file upload, for a realistic count.

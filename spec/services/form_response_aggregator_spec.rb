@@ -83,6 +83,33 @@ RSpec.describe FormResponseAggregator do
     end
   end
 
+  describe "geographic questions" do
+    it "charts a state field as a US map, regardless of answer type" do
+      field = create(:form_field, form: form, name: "State", answer_type: :free_form_input_one_line,
+                                  field_identifier: "mailing_state")
+      answer(create(:form_submission, form: form), field, "California")
+      answer(create(:form_submission, form: form), field, "California")
+      answer(create(:form_submission, form: form), field, "Texas")
+
+      report = described_class.new(form).field_reports.first
+
+      expect(report.kind).to eq(:map)
+      expect(report.chart).to eq(:map)
+      expect(report.rows).to eq([ [ "California", 2 ], [ "Texas", 1 ] ])
+    end
+
+    it "charts a country field as a world map" do
+      field = create(:form_field, form: form, name: "Country", answer_type: :single_select_dropdown,
+                                  field_identifier: "organization_country")
+      answer(create(:form_submission, form: form), field, "Canada")
+
+      report = described_class.new(form).field_reports.first
+
+      expect(report.kind).to eq(:map)
+      expect(report.chart).to eq(:world_map)
+    end
+  end
+
   describe "free-text questions" do
     it "lists the actual answers newest-first with their submitter" do
       field = create(:form_field, form: form, name: "Thoughts", answer_type: :free_form_input_paragraph)

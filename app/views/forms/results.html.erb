@@ -68,11 +68,18 @@
                        note: report.multi ? "Multiple answers allowed, so counts can exceed the submission total." : nil,
                        footer: report.answered_count.positive? ? render("forms/view_all_responses", form: @form, count: report.answered_count) : nil %>
             <% if report.specify_rows.any? %>
+              <% specify_count = report.specify_rows.sum { |_, count| count } %>
               <div class="mt-6">
                 <%= render "events/breakdown_card", title: "#{report.label}: written-in answers",
-                           data: report.specify_rows, chart: nil, palette: palette %>
+                           data: report.specify_rows, chart: nil, palette: palette,
+                           footer: render("forms/view_all_responses", form: @form, count: specify_count) %>
               </div>
             <% end %>
+          <% when :map %>
+            <%= render "events/breakdown_card", title: report.label, data: report.rows,
+                       chart: report.chart, palette: palette, map_color: "#475569",
+                       empty_message: "No responses yet.",
+                       footer: report.answered_count.positive? ? render("forms/view_all_responses", form: @form, count: report.answered_count) : nil %>
           <% when :text %>
             <%= render "forms/text_responses_card", report: report, form: @form %>
           <% when :file %>

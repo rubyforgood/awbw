@@ -24,6 +24,16 @@ class FormResponseAggregator
   # its counts can exceed the submission total).
   PIE_OPTION_LIMIT = 6
 
+  # Geographic fields chart as choropleths (same as the registrant breakdowns),
+  # keyed by field_identifier regardless of the field's answer type — a state or
+  # country captured as free text still maps. The map matches full state names or
+  # USPS abbreviations / country names, and lists exact counts in the legend for
+  # anything it can't place. Legacy "agency_" spellings resolve via aliases.
+  US_STATE_IDENTIFIERS = (%w[mailing_state ce_license_issuing_state] +
+    FormField.aliased_identifiers("organization_state")).to_set
+  COUNTRY_IDENTIFIERS = (%w[mailing_country] +
+    FormField.aliased_identifiers("organization_country")).to_set
+
   def initialize(form)
     @form = form
   end
@@ -76,10 +86,33 @@ class FormResponseAggregator
 
   def build_report(field)
     answers = answers_by_field_id.fetch(field.id, [])
+    return build_map_report(field, answers, :map) if US_STATE_IDENTIFIERS.include?(field.field_identifier)
+    return build_map_report(field, answers, :world_map) if COUNTRY_IDENTIFIERS.include?(field.field_identifier)
     return build_select_report(field, answers) if field.selectable?
     return build_file_report(field, answers) if field.file_upload?
 
     build_text_report(field, answers)
+  end
+
+  # A choropleth tally of a geographic field: counts per submitted place value,
+  # left as-is (the map matches state/country names itself; the legend lists the
+  # exact counts). Multi-value answers split like any other select.
+  def build_map_report(field, answers, chart)
+    tally = Hash.new(0)
+    answered = 0
+
+    answers.each do |answer|
+      values = split_values(answer.submitted_answer)
+      next if values.empty?
+
+      answered += 1
+      values.each { |raw| tally[raw] += 1 }
+    end
+
+    FieldReport.new(
+      field: field, label: field.name, kind: :map, answered_count: answered,
+      rows: tally.sort_by { |label, count| [ -count, label ] }, chart: chart
+    )
   end
 
   def build_select_report(field, answers)
