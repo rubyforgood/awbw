@@ -27,6 +27,25 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     }
   end
 
+  describe "registration status" do
+    it "flips an on-demand facilitator-training registration straight to attended" do
+      on_demand = create(:event, :published, :publicly_visible, facilitator_training: true, on_demand: true)
+      on_demand.event_forms.create!(form: form, role: "registration")
+
+      result = described_class.call(event: on_demand, registration_form: form,
+                                    form_params: base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com"))
+
+      expect(result.event_registration.status).to eq("attended")
+    end
+
+    it "leaves a scheduled event's registration as registered" do
+      result = described_class.call(event: event, registration_form: form,
+                                    form_params: base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com"))
+
+      expect(result.event_registration.status).to eq("registered")
+    end
+  end
+
   describe "affiliation creation" do
     # A facilitator affiliation is only minted off a facilitator-training event.
     let(:event) { create(:event, :published, :publicly_visible, facilitator_training: true) }

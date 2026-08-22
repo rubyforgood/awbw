@@ -50,6 +50,10 @@ class PersonPolicy < ApplicationPolicy
     admin?
   end
 
+  def send_form_link?
+    admin?
+  end
+
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
 

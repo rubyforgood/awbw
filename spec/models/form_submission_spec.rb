@@ -71,6 +71,85 @@ RSpec.describe FormSubmission do
     end
   end
 
+  describe "index filter scopes" do
+    def submission_with_org_answer(org_name, person: create(:person, user: nil))
+      submission = create(:form_submission, person: person)
+      field = create(:form_field, form: submission.form, field_identifier: "organization_name")
+      create(:form_answer, form_submission: submission, form_field: field, submitted_answer: org_name)
+      submission
+    end
+
+    describe ".search" do
+      it "matches the person's name or email" do
+        person = create(:person, user: nil, first_name: "Priya", last_name: "Patel", email: "priya@example.com")
+        mine = create(:form_submission, person: person)
+        other = create(:form_submission)
+
+        expect(described_class.search("Priya")).to include(mine)
+        expect(described_class.search("priya@example.com")).to include(mine)
+        expect(described_class.search("Priya")).not_to include(other)
+      end
+    end
+
+    describe ".org_link_status" do
+      it "separates linked, unlinked, and answerless submissions" do
+        linked = submission_with_org_answer("Harbor Family Shelter")
+        create(:affiliation, person: linked.person, organization: create(:organization, name: "Harbor Family Shelter"))
+        unlinked = submission_with_org_answer("Lakeside College")
+        no_answer = create(:form_submission)
+
+        expect(described_class.org_link_status("linked")).to contain_exactly(linked)
+        expect(described_class.org_link_status("unlinked")).to contain_exactly(unlinked)
+        expect(described_class.org_link_status("none")).to include(no_answer)
+        expect(described_class.org_link_status("none")).not_to include(linked, unlinked)
+      end
+
+      it "does not count an ended affiliation as linked" do
+        submission = submission_with_org_answer("Harbor Family Shelter")
+        create(:affiliation, person: submission.person, end_date: 1.year.ago,
+               organization: create(:organization, name: "Harbor Family Shelter"))
+
+        expect(described_class.org_link_status("linked")).to be_empty
+        expect(described_class.org_link_status("unlinked")).to contain_exactly(submission)
+      end
+
+      it "counts an explicitly linked org even when the submitted name doesn't match it" do
+        submission = submission_with_org_answer("Acme Inc")
+        submission.link_organization!(create(:organization, name: "Acme Corporation").id)
+
+        expect(described_class.org_link_status("linked")).to contain_exactly(submission)
+        expect(described_class.org_link_status("unlinked")).to be_empty
+      end
+    end
+
+    describe "#link_organization!" do
+      it "records ids in metadata without duplicates and resolves them to orgs" do
+        submission = create(:form_submission)
+        organization = create(:organization)
+
+        submission.link_organization!(organization.id)
+        submission.link_organization!(organization.id)
+
+        expect(submission.reload.linked_organization_ids).to eq([ organization.id ])
+        expect(submission.linked_organizations).to contain_exactly(organization)
+      end
+    end
+
+    describe ".account_status" do
+      it "separates no-account, invited, and has-access people" do
+        no_account = create(:form_submission, person: create(:person, user: nil))
+        invited = create(:form_submission)
+        invited.person.user.update_columns(confirmed_at: nil, welcome_instructions_sent_at: Time.current)
+        confirmed = create(:form_submission)
+        confirmed.person.user.update_columns(confirmed_at: Time.current, locked_at: nil, inactive: false)
+
+        expect(described_class.account_status("none")).to contain_exactly(no_account)
+        expect(described_class.account_status("invited")).to contain_exactly(invited)
+        expect(described_class.account_status("has_access")).to include(confirmed)
+      end
+    end
+  end
+
   describe "#bulk_payment_attendees" do
     let(:form) { create(:form) }
     let(:field) { create(:form_field, form: form, field_identifier: "bulk_payment_attendees", name: "Attendees") }

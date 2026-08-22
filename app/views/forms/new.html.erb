@@ -1,46 +1,48 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="py-8 px-4">
-  <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
+<div class="px-4 py-8">
+  <div class="mb-4 flex flex-wrap items-center justify-end gap-2">
     <%= link_to "Forms", forms_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
   <%# Colored hero banner so the page reads at a glance instead of all-white %>
-  <div class="rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5 bg-purple-900">
-    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-6">
+  <div class="overflow-hidden rounded-2xl bg-purple-900 shadow-lg ring-1 ring-black/5">
+    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 px-6 py-6 text-white sm:px-8">
       <div class="flex items-center gap-4">
         <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15">
           <i class="fa-solid fa-file-circle-plus text-xl"></i>
         </div>
         <div>
-          <p class="text-xs font-medium uppercase tracking-[0.2em] text-purple-200">New form</p>
-          <h1 class="text-2xl font-bold tracking-tight leading-tight">Create a form</h1>
+          <p class="text-xs font-medium tracking-[0.2em] text-purple-200 uppercase">New form</p>
+          <h1 class="text-2xl leading-tight font-bold tracking-tight">Create a form</h1>
         </div>
       </div>
-      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
+      <div class="from-accent to-accent absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r via-amber-400"></div>
     </div>
 
-    <div class="px-4 sm:px-6 py-6">
+    <div class="px-4 py-6 sm:px-6">
       <%= form_with url: forms_path, method: :post, class: "space-y-6", data: { controller: "section-filter" } do |f| %>
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div class="flex items-center gap-2.5 px-6 py-3 bg-purple-100 border-b border-purple-300">
+        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div class="flex items-center gap-2.5 border-b border-purple-300 bg-purple-100 px-6 py-3">
             <i class="fa-solid fa-gear text-purple-700"></i>
-            <h2 class="text-sm font-semibold text-purple-900 uppercase tracking-wide">Form details</h2>
+            <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Form details</h2>
           </div>
-          <div class="p-6 space-y-4">
-            <div class="flex flex-col sm:flex-row gap-4">
+          <div class="space-y-4 p-6">
+            <div class="flex flex-col gap-4 sm:flex-row">
               <div class="flex-1">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Form name</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Form name</label>
                 <input type="text" name="name" value="<%= params[:name] %>"
-                       class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-2xl font-bold"
+                       class="w-full rounded border-gray-300 px-3 py-2 text-2xl font-bold shadow-sm"
                        placeholder="e.g. Short Event Registration">
               </div>
 
               <div class="sm:w-56">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Form role</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Form role</label>
                 <select name="role" data-section-filter-target="select" data-action="section-filter#filter"
-                        class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm">
+                        class="w-full rounded border-gray-300 px-3 py-2 text-sm shadow-sm">
                   <option value="">General</option>
                   <option value="registration" <%= "selected" if params[:role] == "registration" %>>Registration</option>
+                  <option value="new_job" <%= "selected" if params[:role] == "new_job" %>>New job</option>
+                  <option value="reinstatement" <%= "selected" if params[:role] == "reinstatement" %>>Reinstatement</option>
                   <option value="scholarship" <%= "selected" if params[:role] == "scholarship" %>>Scholarship</option>
                   <option value="bulk_payment" <%= "selected" if params[:role] == "bulk_payment" %>>Bulk Payment</option>
                   <option value="continuing_education" <%= "selected" if params[:role] == "continuing_education" %>>Continuing Education</option>
@@ -50,10 +52,10 @@
           </div>
         </div>
 
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div class="flex items-center gap-2.5 px-6 py-3 bg-purple-100 border-b border-purple-300">
+        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div class="flex items-center gap-2.5 border-b border-purple-300 bg-purple-100 px-6 py-3">
             <i class="fa-solid fa-list-check text-purple-700"></i>
-            <h2 class="text-sm font-semibold text-purple-900 uppercase tracking-wide">Sections to include</h2>
+            <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Sections to include</h2>
           </div>
           <div class="p-6">
             <div class="space-y-1.5">
@@ -68,7 +70,7 @@
                 <div class="rounded-lg border border-gray-200 px-3 py-2" data-section-role="<%= section_role %>"
                      data-controller="expandable-card" data-expandable-card-expanded-value="false">
                   <div class="flex items-center gap-2">
-                    <label class="flex flex-1 items-center gap-2 cursor-pointer">
+                    <label class="flex flex-1 cursor-pointer items-center gap-2">
                       <input type="checkbox" name="sections[]" value="<%= key %>"
                              class="rounded border-gray-300 text-purple-600"
                              <%= "checked" if params.dig(:sections)&.include?(key.to_s) %>>
@@ -87,7 +89,7 @@
           </div>
         </div>
 
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div class="flex items-center gap-3">
             <%= f.submit "Submit", class: "btn btn-primary cursor-pointer" %>
             <%= link_to "Cancel", forms_path, class: "btn btn-secondary-outline" %>

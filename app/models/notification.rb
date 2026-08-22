@@ -40,6 +40,7 @@ class Notification < ApplicationRecord
 
     form_submission_confirmation
     form_submission_confirmation_fyi
+    form_link_request
 
     manual_log
   ].freeze
@@ -90,6 +91,7 @@ class Notification < ApplicationRecord
     [ "Admin FYI: form submission", "[FYI] New form submission" ],
     [ "Admin FYI: contact form submission", "contact form submission" ],
     [ "Form: submission confirmation", "We received your response" ],
+    [ "Form: link to complete", "Link to complete" ],
     [ "Contact: form confirmation", "We received your message" ],
     [ "Event registration cancelled", "Event registration cancelled" ],
     [ "Event scholarship registration cancelled", "Event scholarship registration cancelled" ],

@@ -1,0 +1,9 @@
+<%# Send history line for one agreement-panel row. Locals: sends (newest-first
+    form_link_request notifications for this row's link). %>
+<% if sends.any? %>
+  <p class="mt-1 text-xs text-gray-500">
+    Sent <%= pluralize(sends.size, "time") %> — last <%= l(sends.first.created_at.to_date, format: :long) %><% if sends.first.sender %> by <%= sends.first.sender.full_name %><% end %>
+  </p>
+<% else %>
+  <p class="mt-1 text-xs text-gray-400">Never sent</p>
+<% end %>

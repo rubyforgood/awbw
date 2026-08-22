@@ -687,15 +687,6 @@ class EventRegistrationsController < ApplicationController
       .uniq { |name| name.downcase }
   end
 
-  # The job title the registrant typed on the submission that describes this org.
-  # Nil when no submission describes it, so an extra org an admin linked by hand
-  # doesn't inherit the title the registrant wrote about a different one — the
-  # affiliation is created untitled (just "Facilitator") instead.
-  def submitted_position(registration, organization)
-    entry = submission_entry_for(registration, organization)
-    entry && entry[:position]
-  end
-
   # The submission entry whose answers describe `organization`: the one pinned on
   # the link when it was made, else the one whose typed org name matches, else —
   # only when the pairing is unambiguous, i.e. a single submission and a single
@@ -703,8 +694,8 @@ class EventRegistrationsController < ApplicationController
   # admin resolving a typo'd "Acme Inc" to the saved "Acme Corporation". Nil
   # otherwise: an extra org an admin linked by hand isn't the one the registrant
   # wrote about, so none of the submitted answers apply to it.
-  # Memoized per org: each linking action asks five times (profile, address,
-  # position, notice, warning) and the fallback counts the registration's linked orgs.
+  # Memoized per org: a linking action asks for the entry and then again for the
+  # conflict note, and the fallback counts the registration's linked orgs.
   def submission_entry_for(registration, organization, linked_count: nil)
     @submission_entries_by_org ||= {}
     return @submission_entries_by_org[organization.id] if @submission_entries_by_org.key?(organization.id)
@@ -734,14 +725,6 @@ class EventRegistrationsController < ApplicationController
       .pluck(:organization_id, :form_submission_id).to_h
   end
 
-  # The address fields the registrant typed on the submission that describes this
-  # org, as attrs for OrganizationServices::UpsertAddress. Empty when no submission
-  # describes it, so another org's address is never written onto it.
-  def submitted_agency_address(registration, organization)
-    entry = submission_entry_for(registration, organization)
-    (entry && entry[:address]) || {}
-  end
-
   # The submitted answers for this org that differ from a value already on it, for
   # the linking flash and the per-card note. Empty when no submission describes it,
   # so one org's answers are never reported against another.
@@ -759,89 +742,43 @@ class EventRegistrationsController < ApplicationController
 
   # Link the org to the registration, fill what it's missing from the submission
   # that names it (blanks only — curated values are kept and reported as
-  # discrepancies instead), and build the flash notice. The link is created first
-  # so submission_entry_for counts it when deciding whether the pairing is
+  # discrepancies instead), and build the flash notice — via the linking core
+  # shared with the form submission editor. The link row is created first so
+  # submission_entry_for counts it when deciding whether the pairing is
   # unambiguous. `record_fills` keeps a persistent note of what the form changed.
   def link_and_report(organization, verb:, record_fills:)
     link = @event_registration.event_registration_organizations.find_or_create_by!(organization: organization)
     entry = submission_entry_for(@event_registration, organization)
-    profile_changes = sync_org_profile(organization)
-    address_result = link_affiliations_for(@event_registration, organization)
 
-    saved = profile_changes + address_result.changes
+    result = OrganizationServices::LinkSubmittedOrganization.call(
+      person: @event_registration.registrant,
+      organization: organization,
+      entry: entry,
+      scenario: event_linking_scenario(@event_registration.event),
+      training_date: @event_registration.event.start_date,
+      event_registration: @event_registration
+    )
+
     # Pin the pairing even when nothing was filled — an org whose every answer
     # conflicts fills nothing, and that's exactly the one whose note has to survive.
     link.record_form_submission(entry[:submission]) if entry
-    link.record_autofill(saved) if record_fills
-    link_result_notice(organization, verb, saved)
+    # Back-apply the resolution onto the submission itself, so the form
+    # submissions side reads it as linked too (even under a name mismatch).
+    entry[:submission].link_organization!(organization.id) if entry
+    link.record_autofill(result.saved) if record_fills
+
+    warning = result.warning(organization: organization)
+    flash[:warning] = warning if warning
+    result.notice(organization: organization, verb: verb)
   end
 
-  # Fill the linked org's blank type/website from the submission that names it,
-  # and return what was written.
-  def sync_org_profile(organization)
-    entry = submission_entry_for(@event_registration, organization)
-    return [] unless entry
+  # Which linking scenario this registration's event maps to (ADR-0002 D2): an
+  # on-demand facilitator training shares the agreement path's "on_demand"
+  # scenario, a scheduled one is "facilitator_training", and anything else
+  # confers no Facilitator affiliation. Event scenarios never end-date.
+  def event_linking_scenario(event)
+    return "non_facilitator_training" unless event.facilitator_training
 
-    OrganizationServices::SyncProfile.call(
-      organization: organization, overwrite: false, website: entry[:website], agency_type: entry[:agency_type]
-    ).changes
-  end
-
-  # Build the flash notice after linking, and stage a flash warning for any
-  # submitted answer (type/website/address) that differs from a value already on
-  # the org so the admin can reconcile it by hand. Computed after the sync +
-  # address upsert have run, so only the genuinely-kept discrepancies remain.
-  # `verb` is the notice's past tense ("linked" / "created and linked").
-  def link_result_notice(organization, verb, saved)
-    conflicts = profile_diff_for(organization)
-    if conflicts.any?
-      descriptions = conflicts.map { |conflict| "#{conflict.label} (form: “#{flash_safe(conflict.submitted)}”, saved: “#{flash_safe(conflict.saved)}”)" }
-      flash[:warning] = "Some form answers differ from #{flash_safe(organization.name)}’s saved profile and were not applied: #{descriptions.to_sentence}. Edit the organization if they should change."
-    end
-
-    notice = "#{flash_safe(organization.name)} #{verb}."
-    # The flash names what changed; the values go on the linking page's card note,
-    # which has room for them and is still there after the flash has gone.
-    notice += " Saved from the form: #{saved.map { |change| flash_safe(change.description) }.to_sentence}." if saved.any?
-    notice
-  end
-
-  # Flash messages are rendered with `html_safe` (shared/_flash_messages), so
-  # anything a registrant typed has to be escaped before it goes into one.
-  def flash_safe(text)
-    ERB::Util.html_escape(text)
-  end
-
-  # Upsert the linked org's work address from the registrant's submission (filling
-  # blanks only, so a conflicting saved address is kept and flagged rather than
-  # overwritten) and create the job + facilitator affiliations linked to it. When
-  # the submission carried no address, fall back to the org's sole address so the
-  # affiliation is still anchored. Returns the upsert result so the caller can
-  # report what was actually saved. Shared by the org-linking actions.
-  def link_affiliations_for(registration, organization)
-    address_result = OrganizationServices::UpsertAddress.call(
-      organization: organization,
-      overwrite: false,
-      **submitted_agency_address(registration, organization)
-    )
-
-    AffiliationServices::CreateFromRegistration.call(
-      person: registration.registrant,
-      organization: organization,
-      job_title: submitted_position(registration, organization),
-      training_date: registration.event.start_date,
-      organization_address: address_result.address || sole_address(organization),
-      facilitator_training: registration.event.facilitator_training,
-      event_registration: registration
-    )
-
-    address_result
-  end
-
-  # The org's single address, when it has exactly one — so a linked affiliation
-  # can be anchored to it even if the registrant submitted no address.
-  def sole_address(organization)
-    addresses = organization.addresses.active
-    addresses.first if addresses.count == 1
+    event.on_demand ? "on_demand" : "facilitator_training"
   end
 end

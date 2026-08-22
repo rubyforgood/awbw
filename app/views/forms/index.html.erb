@@ -31,7 +31,9 @@
       <tbody class="divide-y divide-gray-200">
         <% @forms.each do |form| %>
           <tr id="form_<%= form.id %>" class="scroll-mt-24 hover:bg-gray-50">
-            <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= form.display_name %></td>
+            <td class="px-4 py-2 text-sm font-medium text-gray-900">
+              <%= form.display_name %>
+            </td>
             <td class="px-4 py-2 text-sm text-gray-600"><%= form.form_fields.size %></td>
             <td class="px-4 py-2 text-sm text-gray-600">
               <% if form.events.size.positive? %>

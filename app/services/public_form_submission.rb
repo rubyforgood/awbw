@@ -30,6 +30,7 @@ class PublicFormSubmission
       submission = FormSubmission.create!(person: person, form: @form, role: ROLE)
       save_form_answers(submission)
       OtherResponses::CaptureFromSubmission.call(submission)
+      register_for_on_demand_training(submission)
       send_notifications(submission)
 
       Result.new(success?: true, form_submission: submission, person: person, errors: [])
@@ -43,6 +44,24 @@ class PublicFormSubmission
   end
 
   private
+
+  # A standalone registration-role form is the on-demand agreement (ADR-0002),
+  # and submitting it IS registering for the current on-demand facilitator
+  # training — so mint that event registration (idempotent via the unique
+  # registrant+event index) and stamp the event on the submission. A quiet
+  # no-op when no current on-demand training exists.
+  def register_for_on_demand_training(submission)
+    return unless @form.role == "registration"
+
+    event = Event.current_on_demand_facilitator_training
+    return unless event
+
+    submission.update!(event: event)
+    registration = EventRegistration.find_or_create_by!(event: event, registrant: submission.person)
+    # Created "registered" (the column default), then flipped: an on-demand
+    # agreement only arrives after the external LMS training is complete.
+    registration.update!(status: "attended") unless registration.status == "attended"
+  end
 
   def field_value(identifier)
     field = @form.form_fields.find_by(field_identifier: identifier)
