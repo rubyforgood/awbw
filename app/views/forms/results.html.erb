@@ -55,22 +55,29 @@
       </p>
     <% end %>
 
-    <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+    <%# Masonry columns (not a row-aligned grid) so cards of very different
+        heights pack tightly and fill the space instead of leaving gaps beside
+        the tall charts. Each card avoids breaking across a column. %>
+    <div class="columns-1 gap-6 lg:columns-2 xl:columns-3">
       <% @aggregator.field_reports.each do |report| %>
-        <% case report.kind %>
-        <% when :select %>
-          <%= render "events/breakdown_card", title: report.label, data: report.rows,
-                     chart: report.chart, palette: palette, empty_message: "No responses yet.",
-                     note: report.multi ? "Multiple answers allowed, so counts can exceed the submission total." : nil %>
-          <% if report.specify_rows.any? %>
-            <%= render "events/breakdown_card", title: "#{report.label}: written-in answers",
-                       data: report.specify_rows, chart: nil, palette: palette %>
+        <div class="mb-6 break-inside-avoid">
+          <% case report.kind %>
+          <% when :select %>
+            <%= render "events/breakdown_card", title: report.label, data: report.rows,
+                       chart: report.chart, palette: palette, empty_message: "No responses yet.",
+                       note: report.multi ? "Multiple answers allowed, so counts can exceed the submission total." : nil %>
+            <% if report.specify_rows.any? %>
+              <div class="mt-6">
+                <%= render "events/breakdown_card", title: "#{report.label}: written-in answers",
+                           data: report.specify_rows, chart: nil, palette: palette %>
+              </div>
+            <% end %>
+          <% when :text %>
+            <%= render "forms/text_responses_card", report: report, form: @form %>
+          <% when :file %>
+            <%= render "forms/file_responses_card", report: report %>
           <% end %>
-        <% when :text %>
-          <%= render "forms/text_responses_card", report: report, form: @form %>
-        <% when :file %>
-          <%= render "forms/file_responses_card", report: report %>
-        <% end %>
+        </div>
       <% end %>
     </div>
   <% end %>
