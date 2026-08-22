@@ -543,6 +543,39 @@ RSpec.describe FormField do
     end
   end
 
+  describe "#quote_field?" do
+    let(:form) { create(:form) }
+
+    it "returns true for the quote identifier" do
+      field = build(:form_field, form: form, field_identifier: "quote")
+      expect(field.quote_field?).to be true
+    end
+
+    it "returns false for an ordinary field" do
+      field = build(:form_field, form: form, field_identifier: nil, name: "Favorite color")
+      expect(field.quote_field?).to be false
+    end
+  end
+
+  describe "#quote_related?" do
+    let(:form) { create(:form) }
+
+    it "is true for the quote identifier" do
+      field = build(:form_field, form: form, field_identifier: "quote", name: "Anything")
+      expect(field.quote_related?).to be true
+    end
+
+    it "is true when the name mentions quote, regardless of identifier" do
+      field = build(:form_field, form: form, field_identifier: nil, name: "Share a Quote from a participant")
+      expect(field.quote_related?).to be true
+    end
+
+    it "is false for an unrelated field" do
+      field = build(:form_field, form: form, field_identifier: nil, name: "Favorite color")
+      expect(field.quote_related?).to be false
+    end
+  end
+
   describe "#html_input_type" do
     let(:form) { create(:form) }
 

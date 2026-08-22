@@ -126,6 +126,19 @@
     person's News subscriptions, where mailing-list interest is tracked. Registration and
     public form consent answers now create a News subscription, sourced to the event or form.
 
+- name: "Promote a form answer to a quote"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/form_answers"
+  summary: >-
+    Give a question the "quote" smart field and its answers gain a "Promote to quote" button —
+    on the Form answers page and on each submission — that turns the answer into a draft quote
+    credited to "Participant" (no named author), ready to finish and publish.
+  pro_tips:
+    - "Set a question's smart field to \"quote\" in the form editor to enable this."
+    - "The form preview flags any quote question so you can see which answers can become quotes."
+
 - name: "Affiliation editor: FileMaker code"
   area: people
   display_status: admin_facing

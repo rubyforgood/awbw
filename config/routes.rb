@@ -159,7 +159,11 @@ Rails.application.routes.draw do
       post :create_organization
     end
   end
-  resources :form_answers, only: [ :index ]
+  resources :form_answers, only: [ :index ] do
+    member do
+      post :promote_to_quote
+    end
+  end
   resources :grants
   resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
     member do

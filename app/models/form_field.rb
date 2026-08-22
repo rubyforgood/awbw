@@ -89,6 +89,11 @@ class FormField < ApplicationRecord
   # admin override is present.
   PAYMENT_METHOD_FIELD_IDENTIFIER = "payment_method"
 
+  # Marks a question whose answers an admin can promote into a published Quote
+  # (from the form answers index or a submission's page). Promotion is manual and
+  # only surfaces the button — nothing happens automatically on submission.
+  QUOTE_FIELD_IDENTIFIER = "quote"
+
   # The generic free-text option label that lets a respondent supply their own
   # value; a chosen "Other" answer is stored as "Other" or "Other: <text>".
   OTHER_OPTION_PREFIX = "Other"
@@ -263,6 +268,18 @@ class FormField < ApplicationRecord
 
   def email_field?
     field_identifier.in?(EMAIL_FIELD_IDENTIFIERS)
+  end
+
+  # A quote smart field — its answers get a "Promote to quote" button.
+  def quote_field?
+    field_identifier == QUOTE_FIELD_IDENTIFIER
+  end
+
+  # Whether the admin form preview should flag this field as quote-related: either
+  # it carries the quote identifier, or its name mentions "quote" (a hint for
+  # older fields that predate the identifier).
+  def quote_related?
+    quote_field? || name.to_s.downcase.include?("quote")
   end
 
   # Counts whitespace-separated tokens. Uses the Unicode-aware [[:space:]] class

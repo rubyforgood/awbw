@@ -129,6 +129,18 @@ class SmartFormFields
       ]
     },
     {
+      key: :quotes,
+      title: "Quotes",
+      summary: "Marks a question whose answers can become published quotes. Nothing happens on submission " \
+               "— instead, an admin reviewing form answers (on the Form answers page or a submission's page) " \
+               "gets a \"Promote to quote\" button that turns the answer into a draft Quote. The quote carries " \
+               "no named author, so it credits \"Participant\", and records the submitter as its creator. The " \
+               "admin lands in the quote editor to set the speaker, tags, and publish it.",
+      fields: [
+        [ "quote", "Quote", "Adds a \"Promote to quote\" button to this question's answers. Promotion is manual and admin-only; the answer text becomes the quote body, credited to \"Participant\" (no named author)." ]
+      ]
+    },
+    {
       key: :consent,
       title: "Consent",
       summary: "Asks registrants to opt in to email communication. An affirmative answer subscribes " \

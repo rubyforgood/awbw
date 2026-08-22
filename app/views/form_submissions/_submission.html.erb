@@ -5,6 +5,9 @@
 <% form_fields = submission.form.form_fields.reorder(position: :asc) %>
 <% responses = submission.form_answers.index_by(&:form_field_id) %>
 <% attendees = submission.bulk_payment_attendees %>
+<%# This partial is also rendered on the public bulk-payment page, so the
+    promote-to-quote action is gated on quote-create authorization (admins only). %>
+<% can_promote_quotes = allowed_to?(:create?, Quote.new) %>
 <div class="space-y-1">
   <% form_fields.each do |field| %>
     <% next if field.field_identifier == "bulk_payment_attendees" %>
@@ -24,6 +27,10 @@
               fields to their names; free-text ("Other: …") and plain answers pass
               through unchanged. File-upload answers render a preview + link. %>
           <%= render "shared/form_answer_value", field: field, response: response %>
+          <% if can_promote_quotes && field.quote_field? && response&.submitted_answer.present? %>
+            <%= button_to "Promote to quote", promote_to_quote_form_answer_path(response),
+                  class: "mt-1.5 inline-flex items-center gap-1 text-sm #{DomainTheme.text_class_for(:quotes, intensity: 700)} #{DomainTheme.text_class_for(:quotes, intensity: 900, hover: true)} hover:underline" %>
+          <% end %>
         </dd>
       </div>
     <% end %>

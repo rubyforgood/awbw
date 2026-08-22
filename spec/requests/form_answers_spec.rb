@@ -132,4 +132,45 @@ RSpec.describe "FormAnswers", type: :request do
       end
     end
   end
+
+  describe "POST /form_answers/:id/promote_to_quote" do
+    let(:submitter) { create(:user, :with_person) }
+    let(:field) { create(:form_field, field_identifier: "quote") }
+    let(:answer) do
+      create(:form_answer, submitted_answer: "Painting gave me a voice",
+             form_field: field,
+             form_submission: create(:form_submission, person: submitter.person))
+    end
+
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "creates a quote with no author, crediting the submitter as creator" do
+        expect { post promote_to_quote_form_answer_path(answer) }.to change(Quote, :count).by(1)
+
+        quote = Quote.last
+        expect(quote.body).to eq("Painting gave me a voice")
+        expect(quote.author).to be_nil
+        expect(quote.created_by).to eq(submitter)
+        expect(quote.author_credit).to eq("Participant")
+        expect(response).to redirect_to(edit_quote_path(quote))
+      end
+
+      it "does not create a quote from a blank answer" do
+        answer.update!(submitted_answer: "")
+
+        expect { post promote_to_quote_form_answer_path(answer) }.not_to change(Quote, :count)
+        expect(response).to redirect_to(form_answers_path)
+      end
+    end
+
+    context "as a non-admin" do
+      before { sign_in create(:user) }
+
+      it "is forbidden and creates nothing" do
+        expect { post promote_to_quote_form_answer_path(answer) }.not_to change(Quote, :count)
+        expect(response).not_to have_http_status(:ok)
+      end
+    end
+  end
 end
