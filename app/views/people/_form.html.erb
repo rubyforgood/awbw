@@ -202,13 +202,13 @@
   <!-- Staff tags (internal, admin-only) -->
   <% if allowed_to?(:manage?, StaffTag) %>
     <% staff_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
-    <div class="form-group space-y-2">
+    <div class="form-group admin-only space-y-2 rounded-lg bg-blue-100 p-4">
       <div class="flex items-baseline justify-between">
         <h3 class="font-semibold text-gray-700">Staff tags</h3>
         <%= link_to "Manage tags", staff_tags_path, class: "text-sm #{eyebrow_link_class}", target: "_blank", rel: "noopener" %>
       </div>
       <p class="text-xs text-gray-500">Internal only — pipelines, rosters, and outreach lists. Never shown publicly.</p>
-      <div class="flex flex-wrap content-start items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+      <div class="flex flex-wrap content-start items-center gap-2 pt-1">
         <%= f.simple_fields_for :staff_taggings, staff_owner.staff_taggings do |sfi| %>
           <%= render "people/staff_tag_item_fields", f: sfi %>
         <% end %>
