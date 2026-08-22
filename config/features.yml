@@ -103,6 +103,28 @@
   pro_tips:
     - "The Organization filter matches submissions linked to an org through an event registration."
 
+- name: "Form results: charts and answer lists per form"
+  area: reporting
+  display_status: user_facing
+  released_on: 2026-08-22
+  action_path: "/forms"
+  summary: >-
+    Every form now has a Results page that rolls up all of its submissions —
+    multiple-choice and dropdown questions become charts with counts and
+    percentages, and written answers become lists you can read at a glance.
+  description: >-
+    Open a form's Results page from the Forms list (the new "Results" link). It
+    aggregates every submission question by question, in form order: single- and
+    multiple-select questions render as pie or bar charts with a legend showing each
+    option's count and share, "Other / please specify" write-ins are broken out into
+    their own list, and free-text questions list the actual answers with who
+    submitted them and when. A summary up top shows the submission count, number of
+    respondents, question count, and the date range covered. From there, "View
+    responses" jumps to the full, filterable list of individual submissions for that
+    form.
+  pro_tips:
+    - "Selects with just a few options show a pie chart; longer lists switch to a bar chart automatically."
+
 - name: "Filter registrants by registration date"
   area: events
   display_status: user_facing

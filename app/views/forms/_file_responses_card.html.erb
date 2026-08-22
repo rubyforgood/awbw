@@ -1,0 +1,12 @@
+<%# A file-upload question: files aren't charted or previewed here, just counted.
+    Locals: report — a FormResponseAggregator::FieldReport with kind: :file. %>
+<div class="scroll-mt-24 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+  <div class="mb-3 flex items-center justify-between">
+    <h2 class="text-sm font-semibold text-gray-700"><%= report.label %></h2>
+    <span class="text-xs text-gray-500"><i class="fa-solid fa-paperclip" aria-hidden="true"></i></span>
+  </div>
+  <p class="py-6 text-center text-gray-700">
+    <span class="text-2xl font-bold tabular-nums"><%= report.answered_count %></span>
+    <span class="ml-1 text-sm text-gray-500"><%= "file".pluralize(report.answered_count) %> uploaded</span>
+  </p>
+</div>

@@ -772,6 +772,48 @@ RSpec.describe "Forms", type: :request do
     end
   end
 
+  describe "GET /forms/:id/results" do
+    context "as admin" do
+      before { sign_in admin }
+
+      it "renders the results page with the aggregated select answers and text responses" do
+        form = create(:form, :standalone, name: "Survey")
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+
+        blue = create(:form_submission, form: form)
+        create(:form_answer, form_submission: blue, form_field: color, submitted_answer: "Blue")
+        create(:form_answer, form_submission: blue, form_field: thoughts, submitted_answer: "Loved it")
+
+        red = create(:form_submission, form: form)
+        create(:form_answer, form_submission: red, form_field: color, submitted_answer: "Red")
+
+        get results_form_path(form)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("Favorite color")
+        expect(response.body).to include("Any thoughts")
+        expect(response.body).to include("Loved it")
+      end
+
+      it "shows an empty state when the form has no submissions" do
+        form = create(:form, :standalone, name: "Untouched")
+        get results_form_path(form)
+        expect(response.body).to include("No submissions to this form yet")
+      end
+    end
+
+    context "as a regular user" do
+      before { sign_in user }
+
+      it "denies access" do
+        form = create(:form, :standalone)
+        get results_form_path(form)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
   describe "GET /forms/:id/edit_sections" do
     before { sign_in admin }
 
