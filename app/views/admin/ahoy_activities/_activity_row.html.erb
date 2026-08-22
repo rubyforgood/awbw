@@ -1,4 +1,4 @@
-<tr class="hover:bg-gray-50 transition">
+<tr class="transition hover:bg-gray-50">
   <td data-label="Time" class="px-4 py-3 whitespace-nowrap text-gray-500">
     <%= event.time.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
   </td>
@@ -25,40 +25,49 @@
     <%= event.visit_id %>
   </td>
 
-  <td data-label="Properties" class="px-4 py-3 text-gray-500 relative group">
-    <% if event.properties.present? && event.properties.any? %>
-      <%= link_to admin_activities_event_path(event),
-                  class: "cursor-default text-indigo-600 text-xs font-medium bg-indigo-50 px-2 py-0.5 rounded hover:bg-indigo-100" do %>
-        <%= event.properties.size %> <%= "prop".pluralize(event.properties.size) %>
-      <% end %>
-      <%
-        props = event.properties.dup
-        display_props = []
-        # Combine polymorphic _type/_id pairs
-        props.keys.select { |k| k.end_with?("_type") }.each do |type_key|
-          prefix = type_key.chomp("_type")
-          id_key = "#{prefix}_id"
-          if props.key?(id_key)
-            display_props << [prefix, "#{props[type_key]}.find(#{props[id_key]})"]
-            props.delete(type_key)
-            props.delete(id_key)
-          end
-        end
-        # Show resource_title first, then remaining props
-        if props.key?("resource_title")
-          display_props.unshift(["resource_title", props.delete("resource_title")])
-        end
-        props.each do |key, value|
-          display_props << [key, value.is_a?(Hash) ? value.to_json : value]
-        end
-      %>
-      <div class="hidden group-hover:block absolute z-50 right-0 top-full bg-gray-900 text-gray-100 text-xs rounded-lg shadow-lg px-3 py-3 max-h-64 overflow-y-auto" style="width: 400px;">
-        <% display_props.each do |key, value| %>
-          <div class="py-1"><span class="text-indigo-300 font-semibold"><%= key %>:</span> <%= value.nil? ? "nil" : value.to_s.delete('"') %></div>
+  <% activity = event.decorate(context: { record_cache: local_assigns[:record_cache] }) %>
+  <td data-label="Details" class="px-4 py-3 align-top text-gray-500">
+    <% if activity.extra_details? %>
+      <div class="space-y-1.5">
+        <% if activity.changes? %>
+          <ul class="space-y-1.5">
+            <% activity.changes_summary.each do |change| %>
+              <li>
+                <span class="font-medium text-gray-700"><%= change[:field] %></span>
+                <div class="mt-0.5 space-y-0.5 text-xs">
+                  <div class="flex flex-wrap items-baseline gap-1">
+                    <span class="text-gray-400">Before:</span>
+                    <span class="rounded bg-gray-100 px-1.5 py-0.5 text-gray-500 line-through"><%= change[:before] %></span>
+                  </div>
+                  <div class="flex flex-wrap items-baseline gap-1">
+                    <span class="text-gray-400">After:</span>
+                    <span class="rounded bg-green-50 px-1.5 py-0.5 text-green-700"><%= change[:after] %></span>
+                  </div>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+        <% activity.detail_rows.each do |row| %>
+          <div class="text-xs" style="padding-left: <%= row[:depth] * 12 %>px;">
+            <% if row[:label] %>
+              <span class="font-medium text-gray-700"><%= row[:label] %><%= ":" if row[:value] || row[:link] %></span>
+            <% end %>
+            <% if row[:link] %>
+              <% if row[:action] %><span class="text-gray-400"><%= row[:action] %></span><% end %>
+              <% if row[:link][:path] %>
+                <%= link_to row[:link][:text], row[:link][:path], class: "text-indigo-600 hover:underline" %>
+              <% else %>
+                <span class="text-gray-600"><%= row[:link][:text] %></span>
+              <% end %>
+            <% elsif row[:value] %>
+              <span class="text-gray-600"><%= row[:value] %></span>
+            <% end %>
+          </div>
         <% end %>
       </div>
     <% else %>
-      <span class="text-gray-300 italic">none</span>
+      <span class="text-gray-300">—</span>
     <% end %>
   </td>
 </tr>

@@ -165,6 +165,27 @@ RSpec.describe AhoyTracking, type: :controller do
     end
   end
 
+  describe "#track_tagging_browse" do
+    before do
+      allow(controller).to receive(:params).and_return(
+        ActionController::Parameters.new(sector_names_all: "Youth", category_names_all: "Healing")
+      )
+    end
+
+    it "records the paginated total across groups as result_count" do
+      grouped = {
+        workshops: double("page", total_entries: 12, size: 9),
+        resources: double("page", total_entries: 3, size: 3)
+      }
+
+      controller.send(:track_tagging_browse, grouped)
+
+      event = Ahoy::Event.find_by(name: "search.taggings")
+      expect(event.properties).to include("result_count" => 15)
+      expect(event.properties).not_to have_key("page_result_count")
+    end
+  end
+
   describe "session isolation" do
     xit "tracks different actions separately" do
       get  :index, params: { id: workshop.id }

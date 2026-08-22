@@ -199,6 +199,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `Analytics::EventBuilder` — Constructs analytics event payloads
 - `Analytics::AhoyTracker` — Coordinates ahoy event tracking
 - `Analytics::PersonActivityEvents` — Aggregates Ahoy events for a person, their user, and associated data (powers the person edit History card + `person_id` filter on the Ahoy activities index)
+- `Analytics::EventReferenceLoader` — Batch-loads the records referenced in a page of Ahoy event properties (association changes, associated records), one query per type, so the activity table's Details column links each to its show page without an N+1
 
 ### Business Logic
 

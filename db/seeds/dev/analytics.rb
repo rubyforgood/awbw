@@ -125,7 +125,7 @@ else
     visit = ahoy_visits.sample
     cats = seed_categories.sample(rand(1..3)).map { |c| { id: c.id, name: c.name, type: c.category_type&.name } }
     secs = seed_sectors.sample(rand(1..2)).map { |s| { id: s.id, name: s.name } }
-    wts = seed_windows_types.sample(rand(1..2)).map(&:id)
+    wts = seed_windows_types.sample(rand(1..2)).map { |wt| { id: wt.id, name: wt.name } }
 
     props = {
       resource_type: "Workshop",
@@ -147,7 +147,7 @@ else
     visit = ahoy_visits.sample
     cats = seed_categories.sample(rand(1..2)).map { |c| { id: c.id, name: c.name, type: c.category_type&.name } }
     secs = seed_sectors.sample(rand(1..2)).map { |s| { id: s.id, name: s.name } }
-    wts = seed_windows_types.sample(rand(1..2)).map(&:id)
+    wts = seed_windows_types.sample(rand(1..2)).map { |wt| { id: wt.id, name: wt.name } }
 
     props = {
       resource_type: "Workshop",
