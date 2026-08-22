@@ -38,6 +38,45 @@ RSpec.describe "People search", type: :request do
       expect(response.body).to include("Alice")
       expect(response.body).not_to include("Bob")
     end
+
+    it "filters by role" do
+      create(:story, author: person_alice)
+
+      get people_path, params: { role: "story_author" }, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Alice")
+      expect(response.body).not_to include("Bob")
+    end
+
+    it "filters by facilitator status" do
+      create(:affiliation, person: person_alice, title: "Facilitator", end_date: nil)
+      create(:affiliation, person: person_bob, title: "Facilitator", end_date: 1.year.ago)
+
+      get people_path, params: { facilitator_status: "active" }, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Alice")
+      expect(response.body).not_to include("Bob")
+    end
+
+    it "filters by topic subscription" do
+      topic = create(:topic_subscription_type)
+      create(:topic_subscription, person: person_bob, topic_subscription_type: topic)
+
+      get people_path, params: { topic_subscription_type_id: topic.id }, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Bob")
+      expect(response.body).not_to include("Alice")
+    end
+
+    it "filters by staff tag" do
+      tag = create(:staff_tag)
+      create(:staff_tagging, staff_tag: tag, staff_taggable: person_alice)
+
+      get people_path, params: { staff_tag_ids: tag.id }, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Alice")
+      expect(response.body).not_to include("Bob")
+    end
   end
 
   describe "GET /people?organization_id=X (full page)" do
