@@ -393,6 +393,18 @@ RSpec.describe "FormSubmissions", type: :request do
           expect(response).to redirect_to(link_organization_form_submission_path(submission))
         end
 
+        it "ends the old org's affiliations when linking a job change" do
+          add_answer("organization_name", "Harbor Family Shelter")
+          organization = create(:organization, name: "Harbor Family Shelter")
+          old_facilitator = create(:affiliation, person: person, title: "Facilitator",
+                                   organization: create(:organization, name: "Old Org"))
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          expect(old_facilitator.reload.end_date).to eq(submission.created_at.to_date - 1.day)
+          expect(person.affiliations.where(organization: organization).pluck(:title)).to include("Facilitator")
+        end
+
         it "creates only the job affiliation for a form without an agreement purpose" do
           plain_form = create(:form)
           plain = create(:form_submission, form: plain_form, person: person)

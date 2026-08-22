@@ -8,9 +8,9 @@
 <% submitted_position = FormField.aliased_identifiers("organization_position").filter_map { |key| answers[key].presence }.first %>
 <% affiliations = person.affiliations.includes(:organization).order(Arel.sql("end_date IS NOT NULL, end_date DESC, start_date DESC")) %>
 <% guidance = {
-     "on_demand_agreement" => "New facilitator from the on-demand training — link their organization below (add an affiliation if none matches), then invite them to the portal.",
-     "reinstatement_agreement" => "Returning facilitator — add a fresh Facilitator affiliation for their organization (keep the ended one for history), then invite or re-invite them to the portal.",
-     "job_change_agreement" => "Active facilitator changing organizations — end their old affiliation, add one for the new organization, and check that their login email still reaches them."
+     "on_demand_agreement" => "New facilitator from the on-demand training — link their organization below, then invite them to the portal.",
+     "reinstatement_agreement" => "Returning facilitator — link their organization below: linking ends any stale Facilitator affiliations and adds a fresh one dated to this submission. Then invite or re-invite them to the portal.",
+     "job_change_agreement" => "Active facilitator changing organizations — link the new organization below: linking ends their affiliations at other organizations automatically (or end one by hand here first). Check that their login email still reaches them."
    }[form.purpose] %>
 
 <div class="mt-6 rounded-2xl border <%= DomainTheme.border_class_for(:forms, intensity: 200) %> <%= DomainTheme.bg_class_for(:forms) %> p-6 shadow-sm">

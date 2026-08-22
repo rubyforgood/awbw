@@ -35,20 +35,22 @@ module OrganizationServices
       end
     end
 
-    def self.call(person:, organization:, entry:, facilitator_training:, training_date: nil, event_registration: nil)
-      new(person:, organization:, entry:, facilitator_training:, training_date:, event_registration:).call
+    def self.call(person:, organization:, entry:, facilitator_training:, training_date: nil, event_registration: nil, scenario: nil)
+      new(person:, organization:, entry:, facilitator_training:, training_date:, event_registration:, scenario:).call
     end
 
-    def initialize(person:, organization:, entry:, facilitator_training:, training_date: nil, event_registration: nil)
+    def initialize(person:, organization:, entry:, facilitator_training:, training_date: nil, event_registration: nil, scenario: nil)
       @person = person
       @organization = organization
       @entry = entry
       @facilitator_training = facilitator_training
       @training_date = training_date
       @event_registration = event_registration
+      @scenario = scenario
     end
 
     def call
+      apply_scenario_end_dating
       profile_changes = sync_profile
       address_result = upsert_address
 
@@ -66,6 +68,18 @@ module OrganizationServices
     end
 
     private
+
+    # An agreement scenario first settles the person's existing affiliations
+    # (job change ends the other orgs'; reinstatement ends stale facilitator
+    # rows) so the creations below start from the right state.
+    def apply_scenario_end_dating
+      return unless @scenario
+
+      AffiliationServices::ApplyScenarioEndDating.call(
+        person: @person, organization: @organization, purpose: @scenario,
+        effective_date: (@training_date || Date.current).to_date
+      )
+    end
 
     def sync_profile
       return [] unless @entry

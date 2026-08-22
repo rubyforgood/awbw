@@ -64,6 +64,33 @@ RSpec.describe OrganizationServices::LinkSubmittedOrganization do
       expect(person.affiliations.where(organization: organization).pluck(:title)).to eq([ "Facilitator" ])
     end
 
+    it "on a job change, ends the other orgs' affiliations before creating the new ones" do
+      old_org = create(:organization, name: "Old Org")
+      old_facilitator = create(:affiliation, person: person, organization: old_org, title: "Facilitator")
+
+      described_class.call(person: person, organization: organization, entry: entry,
+                           facilitator_training: true, training_date: Date.new(2026, 8, 14),
+                           scenario: "job_change_agreement")
+
+      expect(old_facilitator.reload.end_date).to eq(Date.new(2026, 8, 13))
+      expect(person.affiliations.where(organization: organization).pluck(:title))
+        .to contain_exactly("Counselor", "Facilitator")
+    end
+
+    it "on a reinstatement, replaces a stale Facilitator affiliation with a fresh one dated to the submission" do
+      stale = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+                     start_date: Date.new(2022, 3, 1))
+
+      described_class.call(person: person, organization: organization, entry: entry,
+                           facilitator_training: true, training_date: Date.new(2026, 8, 14),
+                           scenario: "reinstatement_agreement")
+
+      expect(stale.reload.end_date).to eq(Date.new(2026, 8, 13))
+      facilitators = person.affiliations.facilitators.where(organization: organization).order(:start_date)
+      expect(facilitators.map(&:start_date)).to eq([ Date.new(2022, 3, 1), Date.new(2026, 8, 14) ])
+      expect(facilitators.last).to be_active
+    end
+
     it "anchors the affiliation to the org's sole address when none was submitted" do
       address = create(:address, addressable: organization)
 
