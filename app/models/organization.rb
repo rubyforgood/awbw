@@ -332,6 +332,10 @@ class Organization < ApplicationRecord
     end
   end
 
+  def leader
+    affiliations.find_by(title: Affiliation::LEADER_TITLE)
+  end
+
   def remove_duplicate_sectorable_items
     sectorable_items
       .group_by(&:sector_id)
