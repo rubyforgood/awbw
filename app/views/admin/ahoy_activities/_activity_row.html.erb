@@ -51,9 +51,16 @@
         <% activity.detail_rows.each do |row| %>
           <div class="text-xs" style="padding-left: <%= row[:depth] * 12 %>px;">
             <% if row[:label] %>
-              <span class="font-medium text-gray-700"><%= row[:label] %><%= ":" if row[:value] %></span>
+              <span class="font-medium text-gray-700"><%= row[:label] %><%= ":" if row[:value] || row[:link] %></span>
             <% end %>
-            <% if row[:value] %>
+            <% if row[:link] %>
+              <% if row[:action] %><span class="text-gray-400"><%= row[:action] %></span><% end %>
+              <% if row[:link][:path] %>
+                <%= link_to row[:link][:text], row[:link][:path], class: "text-indigo-600 hover:underline" %>
+              <% else %>
+                <span class="text-gray-600"><%= row[:link][:text] %></span>
+              <% end %>
+            <% elsif row[:value] %>
               <span class="text-gray-600"><%= row[:value] %></span>
             <% end %>
           </div>

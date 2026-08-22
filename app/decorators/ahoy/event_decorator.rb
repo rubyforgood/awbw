@@ -31,10 +31,13 @@ module Ahoy
       end
     end
 
-    # Every non-change extra property flattened into readable, humanized rows
-    # for inline display: [{ label:, value:, depth: }, ...]. Nested hashes and
-    # arrays are indented under their parent (depth) so the whole payload is
-    # visible in the table without opening the detail page.
+    # Every non-change extra property flattened into compact, humanized rows for
+    # inline display. Row shapes:
+    #   { label:, value:, depth: }                  plain label/value (value nil = header)
+    #   { label:, action:, link: { text:, path: }, depth: }  record reference (linked)
+    # Lists of named entities (filter sectors/categories) collapse onto one line;
+    # record references (association changes, associated records) become links to
+    # the record's show page so admins can jump straight to it.
     def detail_rows
       rows = extra_properties.except("changes")
       return [] if rows.empty?
@@ -54,37 +57,84 @@ module Ahoy
 
     def flatten_rows(value, label = nil, depth = 0)
       case value
-      when Hash
-        nested_rows(value, label, depth)
-      when Array
-        array_rows(value, label, depth)
-      else
-        [ { label: label, value: display_value(value), depth: depth } ]
+      when Hash then hash_rows(value, label, depth)
+      when Array then array_rows(value, label, depth)
+      else [ { label: label, value: display_value(value), depth: depth } ]
       end
     end
 
-    def nested_rows(hash, label, depth)
+    def hash_rows(hash, label, depth)
+      return [ reference_row(label, hash, depth) ] if reference?(hash)
       return [ { label: label, value: "(empty)", depth: depth } ] if hash.empty?
 
       rows = label ? [ { label: label, value: nil, depth: depth } ] : []
       child_depth = label ? depth + 1 : depth
-      hash.each do |key, val|
-        rows.concat(flatten_rows(val, key.to_s.humanize, child_depth))
-      end
+      hash.each { |key, val| rows.concat(flatten_rows(val, key.to_s.humanize, child_depth)) }
       rows
     end
 
     def array_rows(array, label, depth)
       return [ { label: label, value: "(empty)", depth: depth } ] if array.empty?
 
-      if array.all? { |item| item.is_a?(Hash) }
-        rows = label ? [ { label: label, value: nil, depth: depth } ] : []
+      if array.all? { |item| named_entity?(item) }
+        [ { label: label, value: array.map { |item| entity_label(item) }.join(", "), depth: depth } ]
+      elsif array.all? { |item| reference?(item) }
+        header = label ? [ { label: label, value: nil, depth: depth } ] : []
         child_depth = label ? depth + 1 : depth
-        array.each { |item| rows.concat(nested_rows(item, nil, child_depth)) }
-        rows
+        header + array.map { |item| reference_row(nil, item, child_depth) }
       else
         [ { label: label, value: array.map { |item| display_value(item) }.join(", "), depth: depth } ]
       end
+    end
+
+    # A referenced record: a type + id and nothing but reference bookkeeping — no
+    # name/title (those collapse to a label instead) and no snapshot columns.
+    REFERENCE_KEYS = %w[type id record_type record_id action blob_id changes].freeze
+    private_constant :REFERENCE_KEYS
+
+    def reference?(item)
+      return false unless item.is_a?(Hash)
+
+      type = item["type"] || item["record_type"]
+      has_id = item.key?("id") || item.key?("record_id")
+      type.present? && has_id && item["name"].blank? && item["title"].blank? &&
+        (item.keys - REFERENCE_KEYS).empty?
+    end
+
+    def named_entity?(item)
+      item.is_a?(Hash) && (item["name"].present? || item["title"].present?)
+    end
+
+    def entity_label(item)
+      name = item["name"] || item["title"]
+      type = item["type"]
+      type.present? ? "#{name} (#{type.to_s.underscore.humanize})" : name
+    end
+
+    def reference_row(label, item, depth)
+      type = item["type"] || item["record_type"]
+      id = item["id"] || item["record_id"]
+      record = find_referenced_record(type, id)
+      text = record.try(:title).presence || record.try(:name).presence || "#{type} ##{id}"
+      { label: label, depth: depth, action: item["action"],
+        link: { text: text, path: show_path_for(record) } }
+    end
+
+    def find_referenced_record(type, id)
+      klass = type.to_s.safe_constantize
+      return nil unless klass.respond_to?(:find_by) && klass < ApplicationRecord
+
+      klass.find_by(id: id)
+    rescue StandardError
+      nil
+    end
+
+    def show_path_for(record)
+      return nil unless record
+
+      h.polymorphic_path(record)
+    rescue StandardError
+      nil
     end
 
     def display_value(value)
