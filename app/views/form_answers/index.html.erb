@@ -63,9 +63,11 @@
         <div class="w-56">
           <%= label_tag :event_id, "Event", class: search_label_class %>
           <%= select_tag :event_id,
-                options_from_collection_for_select(@events, :id, :time_title, params[:event_id].to_i),
-                include_blank: "All events",
-                class: search_field_class(extra: "search-select-placeholder") %>
+                options_for_select(Event.where(id: params[:event_id]).map { |event| [ event.remote_search_label[:label], event.id ] }, params[:event_id]),
+                include_blank: true,
+                prompt: "Search for an event",
+                class: search_field_class,
+                data: { controller: "remote-select", remote_select_model_value: "event" } %>
         </div>
         <div class="flex items-end">
           <%= render "shared/search_clear", url: form_answers_path %>
