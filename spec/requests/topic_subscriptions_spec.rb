@@ -6,6 +6,13 @@ RSpec.describe "TopicSubscriptions", type: :request do
 
   before { sign_in admin }
 
+  describe "GET /topic_subscriptions/:id/edit" do
+    it_behaves_like "a page with a change log" do
+      let(:record) { create(:topic_subscription, topic_subscription_type: trainings) }
+      let(:page_path) { edit_topic_subscription_path(record) }
+    end
+  end
+
   describe "GET /topic_subscriptions" do
     it "renders the index shell for a full-page request" do
       get topic_subscriptions_path

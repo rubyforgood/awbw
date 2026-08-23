@@ -13,6 +13,11 @@ RSpec.describe "/affiliations", type: :request do
     context "as an admin" do
       before { sign_in admin }
 
+      it_behaves_like "a page with a change log" do
+        let(:record) { affiliation }
+        let(:page_path) { edit_affiliation_path(affiliation) }
+      end
+
       it "renders the edit form" do
         get edit_affiliation_path(affiliation)
         expect(response).to be_successful

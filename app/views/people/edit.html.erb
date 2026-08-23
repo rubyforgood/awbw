@@ -52,6 +52,11 @@
             </div>
             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
               <%= render "associated_records", person: @person %>
+              <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+                <div class="mt-4 flex justify-end">
+                  <%= render "application/activity_log", record: @person %>
+                </div>
+              <% end %>
             </div>
           </div>
         </div>

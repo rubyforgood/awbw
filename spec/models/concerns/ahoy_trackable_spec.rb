@@ -106,6 +106,17 @@ RSpec.describe AhoyTrackable do
       removed = event_named("update.person")[:properties][:association_changes][:professional_licenses].first
       expect(removed).to include(action: "removed", id: license.id, type: "ProfessionalLicense")
     end
+
+    it "records a staff tag given to a person on the person's own event" do
+      person = create(:person)
+      tag = create(:staff_tag)
+      Analytics::LifecycleBuffer.store.clear
+
+      person.update!(staff_taggings_attributes: [ { staff_tag_id: tag.id } ])
+
+      tagged = event_named("update.person")[:properties][:association_changes][:staff_taggings].first
+      expect(tagged).to include(action: "added", type: "StaffTagging")
+    end
   end
 
   describe "attachments" do

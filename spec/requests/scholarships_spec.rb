@@ -10,6 +10,11 @@ RSpec.describe "Scholarships", type: :request do
   before { sign_in admin }
 
   describe "GET /scholarships/:id/edit" do
+    it_behaves_like "a page with a change log" do
+      let(:record) { scholarship }
+      let(:page_path) { edit_scholarship_path(scholarship) }
+    end
+
     it "renders the cost summary with event cost, scholarship amount, and still owed" do
       get edit_scholarship_path(scholarship)
 
