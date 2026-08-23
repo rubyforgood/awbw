@@ -52,7 +52,15 @@ export default class extends Controller {
     if (this.isPast()) return false;
     const value = this.hasStartDateTarget ? this.startDateTarget.value : "";
     if (!value) return false;
-    return new Date(value) > new Date(new Date().toDateString());
+    return value > this.todayISO();
+  }
+
+  // Local "today" as YYYY-MM-DD, compared against the date inputs' own
+  // YYYY-MM-DD values as strings — no cross-timezone Date parsing (a UTC-parsed
+  // date input vs a local "today" would misjudge a start/end that equals today).
+  todayISO() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
 
   styleTitle() {
@@ -105,7 +113,7 @@ export default class extends Controller {
   // server's inactive flag, so trust the server-rendered `expired` value.
   isPast() {
     const value = this.hasEndDateTarget ? this.endDateTarget.value : "";
-    if (value) return new Date(value) < new Date(new Date().toDateString());
+    if (value) return value < this.todayISO();
     return this.expiredValue;
   }
 
