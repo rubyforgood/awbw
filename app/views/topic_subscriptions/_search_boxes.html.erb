@@ -20,14 +20,13 @@
               data: { controller: "remote-select", remote_select_model_value: "person" } %>
       </div>
       <div class="flex-1 min-w-[200px]">
-        <%= f.label :organization_id, "Organization", class: label_class %>
-        <%= select_tag :organization_id,
-              options_for_select(Organization.where(id: params[:organization_id]).map { |organization| [ organization.name, organization.id ] }, params[:organization_id]),
-              include_blank: true,
-              prompt: "Search for an organization",
-              class: field_class,
-              onchange: "this.form.requestSubmit()",
-              data: { controller: "remote-select", remote_select_model_value: "organization" } %>
+        <%= f.label :organization_name, "Organization", class: label_class %>
+        <div class="relative">
+          <%= text_field_tag :organization_name, params[:organization_name],
+                class: search_field_class(extra: "bg-white pr-10"),
+                placeholder: "Search by organization name" %>
+          <%= render "shared/search_submit" %>
+        </div>
       </div>
       <div class="min-w-[180px]">
         <%= f.label :topic_subscription_type_id, "Topic", class: label_class %>

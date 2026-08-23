@@ -66,12 +66,12 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).not_to include("Tara Trainings")
     end
 
-    it "filters by organization via the frame request" do
+    it "filters by organization name via the frame request" do
       acme = create(:organization, name: "Acme Shelter")
       create(:topic_subscription, person: create(:person, first_name: "Orla", last_name: "Acme"), topic_subscription_type: trainings, organization: acme)
       create(:topic_subscription, person: create(:person, first_name: "Nadia", last_name: "Noorg"), topic_subscription_type: trainings, organization: nil)
 
-      get topic_subscriptions_path(organization_id: acme.id), headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+      get topic_subscriptions_path(organization_name: "acme"), headers: { "Turbo-Frame" => "topic_subscriptions_results" }
 
       expect(response.body).to include("Orla Acme")
       expect(response.body).not_to include("Nadia Noorg")
