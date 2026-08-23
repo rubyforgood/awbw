@@ -37,6 +37,10 @@ RSpec.describe "Organizations index preloading", type: :request do
 
   it "does not issue more queries as more organizations are listed" do
     create_orgs(2)
+    # Warm process-level, once-per-boot memoization (survives Rails.cache.clear) so
+    # the baseline isn't inflated by a first-request query the comparison lacks —
+    # otherwise this flakes when the example runs cold early in a CI group.
+    queries_for_results_frame
     baseline = queries_for_results_frame
 
     create_orgs(6)

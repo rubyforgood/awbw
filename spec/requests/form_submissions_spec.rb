@@ -289,6 +289,10 @@ RSpec.describe "FormSubmissions", type: :request do
 
     context "processing panel for agreement scenario forms" do
       before { sign_in admin }
+      # The request runs in the user's (Pacific) zone while these assertions run
+      # in the default UTC zone; freeze to midday UTC so both land on the same
+      # calendar date and the submission-derived dates don't drift by a day.
+      before { travel_to Time.current.midday }
 
       let(:form) { create(:form, role: "new_job", name: "Collaboration agreement (new job)") }
       let(:person) { create(:person, user: nil) }
@@ -354,6 +358,10 @@ RSpec.describe "FormSubmissions", type: :request do
       end
 
       before { sign_in admin }
+      # The request runs in the user's (Pacific) zone while these assertions run
+      # in the default UTC zone; freeze to midday UTC so both land on the same
+      # calendar date and the submission-derived dates don't drift by a day.
+      before { travel_to Time.current.midday }
 
       describe "GET /form_submissions/:id/link_organization" do
         it "offers a create-and-link row for a submitted org that isn't in the database" do
