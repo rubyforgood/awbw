@@ -20,92 +20,96 @@
 <% updated_color = show_updated ? chip_color(updated_user.id) : nil %>
 <% current_color = chip_color(current_user&.id) %>
 <% is_age_range_data = f.object.persisted? && f.object.body&.include?("[AGE_RANGE_DATA]") %>
-<div class="nested-fields flex items-start gap-x-1" data-paginated-fields-target="item">
+<%# Each comment renders in the comments-themed card (amber when it carries the
+    age-range data flag), with the follow-up flag inside the card. %>
+<% card_tint = is_age_range_data ? "border-amber-200 bg-amber-50" : "#{DomainTheme.border_class_for(:comments, intensity: 200)} #{DomainTheme.bg_class_for(:comments, intensity: 50)}" %>
+<div class="nested-fields" data-paginated-fields-target="item">
   <%= f.hidden_field :id if f.object.persisted? %>
-  <label class="mt-1 inline-flex w-4 shrink-0 cursor-pointer justify-center leading-none" title="Flag for follow-up">
-    <%= f.check_box :flagged, class: "peer sr-only" %>
-    <i class="fa-regular fa-flag text-gray-500 peer-checked:text-orange-500 peer-checked:[--fa-style:900]! hover:text-orange-400"></i>
-  </label>
-  <div class="grow">
-  <% if f.object.persisted? %>
-    <div class="mb-3 flex items-center gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>" data-edit-toggle-target="view">
-      <span class="shrink-0 text-xs whitespace-nowrap text-gray-400">
-        <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
-      </span>
-      <span class="inline-flex w-20 shrink-0 items-center gap-x-1">
-        <% if show_updated %>
-          <span class="<%= created_color[0] %> <%= created_color[1] %> w-1/2 cursor-default truncate rounded px-1.5 py-0.5 text-center text-xs" title="<%= created_name %>"><%= created_initials.presence || "--" %></span>
-          <span class="<%= updated_color[0] %> <%= updated_color[1] %> w-1/2 cursor-default truncate rounded px-1.5 py-0.5 text-center text-xs" title="Edited by <%= updated_name %>"><%= updated_initials.presence || "--" %></span>
-        <% else %>
-          <span class="<%= created_color[0] %> <%= created_color[1] %> max-w-full cursor-default truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= created_name %>"><%= truncate(created_first_name.presence || "--", length: 10, omission: "..") %></span>
-        <% end %>
-      </span>
-      <span class="text-sm <%= is_age_range_data ? "text-amber-700" : "text-gray-900" %> truncate" data-edit-toggle-target="body" title="<%= [ f.object.topic, f.object.body ].compact_blank.join(" — ") %>">
-        <% if is_age_range_data %><i class="fa-solid fa-triangle-exclamation"></i><% end %>
-        <% if f.object.topic.present? %><span class="font-bold tracking-wide uppercase"><%= f.object.topic %></span> <% end %><%= f.object.body %>
-      </span>
-    </div>
-    <div class="mb-1 flex hidden items-start gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>" data-edit-toggle-target="edit">
-      <span class="mt-2 shrink-0 text-xs whitespace-nowrap text-gray-400">
-        <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
-      </span>
-      <span class="mt-2 inline-flex w-20 shrink-0 items-center gap-x-1">
-        <% if show_updated %>
-          <span class="<%= created_color[0] %> <%= created_color[1] %> w-1/2 cursor-default truncate rounded px-1.5 py-0.5 text-center text-xs" title="<%= created_name %>"><%= created_initials.presence || "--" %></span>
-          <span class="<%= updated_color[0] %> <%= updated_color[1] %> w-1/2 cursor-default truncate rounded px-1.5 py-0.5 text-center text-xs" title="Edited by <%= updated_name %>"><%= updated_initials.presence || "--" %></span>
-        <% else %>
-          <span class="<%= created_color[0] %> <%= created_color[1] %> max-w-full cursor-default truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= created_name %>"><%= truncate(created_first_name.presence || "--", length: 10, omission: "..") %></span>
-        <% end %>
-      </span>
-      <div class="flex grow items-start gap-x-2"
-           data-controller="field-required"
-           data-action="input->field-required#update">
-        <div class="w-1/3 shrink-0">
-          <%= f.input_field :topic,
-                            placeholder: "Topic",
-                            data: { field_required_target: "field" },
-                            class: "w-full bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
-          <p class="mt-1 text-xs text-gray-500">Reason for this note</p>
-        </div>
-        <%= f.input_field :body,
-                          as: :text,
-                          rows: 1,
-                          required: false,
-                          data: { field_required_target: "field required" },
-                          class: "grow bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+  <div class="flex items-start gap-x-1 rounded-md border <%= card_tint %> px-3 py-2">
+    <label class="mt-1 inline-flex w-4 shrink-0 cursor-pointer justify-center leading-none" title="Flag for follow-up">
+      <%= f.check_box :flagged, class: "peer sr-only" %>
+      <i class="fa-regular fa-flag text-gray-500 peer-checked:text-orange-500 peer-checked:[--fa-style:900]! hover:text-orange-400"></i>
+    </label>
+    <div class="grow">
+    <% if f.object.persisted? %>
+      <div class="flex items-center gap-x-1" data-edit-toggle-target="view">
+        <span class="shrink-0 text-xs whitespace-nowrap text-gray-400">
+          <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
+        </span>
+        <span class="inline-flex w-20 shrink-0 items-center gap-x-1">
+          <% if show_updated %>
+            <span class="<%= created_color[0] %> <%= created_color[1] %> w-1/2 cursor-default truncate rounded px-1.5 py-0.5 text-center text-xs" title="<%= created_name %>"><%= created_initials.presence || "--" %></span>
+            <span class="<%= updated_color[0] %> <%= updated_color[1] %> w-1/2 cursor-default truncate rounded px-1.5 py-0.5 text-center text-xs" title="Edited by <%= updated_name %>"><%= updated_initials.presence || "--" %></span>
+          <% else %>
+            <span class="<%= created_color[0] %> <%= created_color[1] %> max-w-full cursor-default truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= created_name %>"><%= truncate(created_first_name.presence || "--", length: 10, omission: "..") %></span>
+          <% end %>
+        </span>
+        <span class="text-sm <%= is_age_range_data ? "text-amber-700" : "text-gray-900" %> truncate" data-edit-toggle-target="body" title="<%= [ f.object.topic, f.object.body ].compact_blank.join(" — ") %>">
+          <% if is_age_range_data %><i class="fa-solid fa-triangle-exclamation"></i><% end %>
+          <% if f.object.topic.present? %><span class="font-bold tracking-wide uppercase"><%= f.object.topic %></span> <% end %><%= f.object.body %>
+        </span>
       </div>
-      <%= link_to_remove_association "Remove", f,
-            class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap mt-2 shrink-0" %>
-    </div>
-  <% else %>
-    <% current_first_name = current_user&.person&.first_name || current_user&.name.to_s.split.first %>
-    <%# New, unsaved comment — tinted with the comments theme until the parent form is saved. %>
-    <div class="mb-3 flex items-start gap-x-1 rounded-md border <%= DomainTheme.border_class_for(:comments, intensity: 200) %> <%= DomainTheme.bg_class_for(:comments, intensity: 50) %> px-4 py-2">
-      <span class="mt-2 shrink-0 text-xs whitespace-nowrap text-gray-400">
-        <%= Time.current.strftime("%-m/%-d/%Y %-I:%M %p") %>
-      </span>
-      <span class="mt-2 inline-flex w-20 shrink-0 items-center">
-        <span class="<%= current_color[0] %> <%= current_color[1] %> max-w-full cursor-default truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= current_user&.person&.name || current_user&.name %>"><%= truncate(current_first_name.to_s, length: 10, omission: "..") %></span>
-      </span>
-      <div class="flex grow items-start gap-x-2"
-           data-controller="field-required"
-           data-action="input->field-required#update">
-        <div class="w-1/3 shrink-0">
-          <%= f.input_field :topic,
-                            placeholder: "Topic",
-                            data: { field_required_target: "field" },
-                            class: "w-full bg-white rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
-          <p class="mt-1 text-xs text-gray-500">Reason for this note</p>
+      <div class="flex hidden items-start gap-x-1" data-edit-toggle-target="edit">
+        <span class="mt-2 shrink-0 text-xs whitespace-nowrap text-gray-400">
+          <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
+        </span>
+        <span class="mt-2 inline-flex w-20 shrink-0 items-center gap-x-1">
+          <% if show_updated %>
+            <span class="<%= created_color[0] %> <%= created_color[1] %> w-1/2 cursor-default truncate rounded px-1.5 py-0.5 text-center text-xs" title="<%= created_name %>"><%= created_initials.presence || "--" %></span>
+            <span class="<%= updated_color[0] %> <%= updated_color[1] %> w-1/2 cursor-default truncate rounded px-1.5 py-0.5 text-center text-xs" title="Edited by <%= updated_name %>"><%= updated_initials.presence || "--" %></span>
+          <% else %>
+            <span class="<%= created_color[0] %> <%= created_color[1] %> max-w-full cursor-default truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= created_name %>"><%= truncate(created_first_name.presence || "--", length: 10, omission: "..") %></span>
+          <% end %>
+        </span>
+        <div class="flex grow items-start gap-x-2"
+             data-controller="field-required"
+             data-action="input->field-required#update">
+          <div class="w-1/3 shrink-0">
+            <%= f.input_field :topic,
+                              placeholder: "Topic",
+                              data: { field_required_target: "field" },
+                              class: "w-full bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+            <p class="mt-1 text-xs text-gray-500">Reason for this note</p>
+          </div>
+          <%= f.input_field :body,
+                            as: :text,
+                            rows: 1,
+                            required: false,
+                            data: { field_required_target: "field required" },
+                            class: "grow bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
         </div>
-        <%= f.input_field :body,
-                          as: :text,
-                          rows: 2,
-                          required: false,
-                          placeholder: "Type your comment",
-                          data: { field_required_target: "field required" },
-                          class: "grow bg-white rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+        <%= link_to_remove_association "Remove", f,
+              class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap mt-2 shrink-0" %>
       </div>
+    <% else %>
+      <% current_first_name = current_user&.person&.first_name || current_user&.name.to_s.split.first %>
+      <div class="flex items-start gap-x-1">
+        <span class="mt-2 shrink-0 text-xs whitespace-nowrap text-gray-400">
+          <%= Time.current.strftime("%-m/%-d/%Y %-I:%M %p") %>
+        </span>
+        <span class="mt-2 inline-flex w-20 shrink-0 items-center">
+          <span class="<%= current_color[0] %> <%= current_color[1] %> max-w-full cursor-default truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= current_user&.person&.name || current_user&.name %>"><%= truncate(current_first_name.to_s, length: 10, omission: "..") %></span>
+        </span>
+        <div class="flex grow items-start gap-x-2"
+             data-controller="field-required"
+             data-action="input->field-required#update">
+          <div class="w-1/3 shrink-0">
+            <%= f.input_field :topic,
+                              placeholder: "Topic",
+                              data: { field_required_target: "field" },
+                              class: "w-full bg-white rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+            <p class="mt-1 text-xs text-gray-500">Reason for this note</p>
+          </div>
+          <%= f.input_field :body,
+                            as: :text,
+                            rows: 2,
+                            required: false,
+                            placeholder: "Type your comment",
+                            data: { field_required_target: "field required" },
+                            class: "grow bg-white rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+        </div>
+      </div>
+    <% end %>
     </div>
-  <% end %>
   </div>
 </div>
