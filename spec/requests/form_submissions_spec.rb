@@ -74,11 +74,11 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).not_to include(form_submission_path(old))
       end
 
-      it "filters by organization through its registration link" do
+      it "filters by the organization linked directly to the submission" do
         organization = create(:organization)
         linked = create(:form_submission)
         other = create(:form_submission)
-        create(:event_registration_organization, organization: organization, form_submission: linked)
+        linked.link_organization!(organization.id)
 
         get form_submissions_path(organization_id: organization.id), headers: frame_headers
 

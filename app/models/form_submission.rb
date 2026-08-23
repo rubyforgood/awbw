@@ -34,26 +34,15 @@ class FormSubmission < ApplicationRecord
     scope
   }
 
-  # Submissions associated with an organization, reconciling every signal:
-  #   1. directly — an explicit link recorded in metadata (see #link_organization!),
-  #   2. via the submission's event registration — the join row pinned to this
-  #      submission, or a registration for the same person + event linked to the org.
+  # Submissions with the organization linked directly to them — the explicit link
+  # an admin makes in the org-linking editor, recorded in metadata (see
+  # #link_organization!). Nothing else counts: a matching affiliation or an org on
+  # the submission's event registration doesn't make the submission match.
   scope :for_organization, ->(organization_id) {
-    oid = organization_id.to_i
-    direct = where(
-      "JSON_CONTAINS(JSON_EXTRACT(form_submissions.metadata, '$.linked_organization_ids'), CAST(? AS JSON))", oid
+    where(
+      "JSON_CONTAINS(JSON_EXTRACT(form_submissions.metadata, '$.linked_organization_ids'), CAST(? AS JSON))",
+      organization_id.to_i
     )
-    pinned = EventRegistrationOrganization.where(organization_id: oid).select(:form_submission_id)
-    via_registration = joins(
-      "INNER JOIN event_registrations " \
-      "ON event_registrations.registrant_id = form_submissions.person_id " \
-      "AND event_registrations.event_id = form_submissions.event_id"
-    ).joins(
-      "INNER JOIN event_registration_organizations " \
-      "ON event_registration_organizations.event_registration_id = event_registrations.id"
-    ).where(event_registration_organizations: { organization_id: oid }).select(:id)
-
-    direct.or(where(id: pinned)).or(where(id: via_registration))
   }
 
   scope :search, ->(query) {
