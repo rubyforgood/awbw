@@ -27,6 +27,17 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Copy email addresses from the people list"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-23
+  action_path: "/people"
+  summary: >-
+    The people index has an "Email addresses" link that opens a copy-paste list of every unique
+    email address for the people your current filters narrow to.
+  pro_tips:
+    - "Filter the people list first — the email list always matches whatever the list is showing."
+
 - name: "Affiliation editor: FileMaker code"
   area: people
   display_status: admin_facing

@@ -29,6 +29,12 @@ class PeopleController < ApplicationController
     end
   end
 
+  def email_addresses
+    authorize! Person, to: :index?
+    people = authorized_scope(Person.includes(:user)).search_by_params(params.to_unsafe_h)
+    @email_addresses = people.filter_map { |person| person.preferred_email.presence }.uniq.sort
+  end
+
   def show
     authorize! @person
     @person = Person.includes(:avatar_attachment, :contact_methods, :user,
