@@ -567,18 +567,16 @@ RSpec.describe Person, type: :model do
     end
 
     context "role: workshop_log_author" do
-      it "returns people whose linked user created a workshop log" do
-        user = create(:user, person: person_alice)
-        create(:workshop_log, created_by: user)
+      it "returns only people credited as a workshop log author" do
+        create(:workshop_log, author: person_alice)
         results = Person.search_by_params(role: "workshop_log_author")
         expect(results).to include(person_alice)
         expect(results).not_to include(person_bob)
       end
 
-      it "credits the log's creator, not other people (confirmed meaning, awbw#2326)" do
-        alice_user = create(:user, person: person_alice)
-        create(:workshop_log, created_by: alice_user)
-        create(:user, person: person_bob)
+      it "matches the credited author, not whoever logged it" do
+        logger = create(:user, person: person_bob)
+        create(:workshop_log, created_by: logger, author: person_alice)
 
         results = Person.search_by_params(role: "workshop_log_author")
 
@@ -586,8 +584,8 @@ RSpec.describe Person, type: :model do
         expect(results).not_to include(person_bob)
       end
 
-      it "ignores logs whose creating user has no linked person" do
-        create(:workshop_log, created_by: create(:user, person: nil))
+      it "ignores logs with no credited author" do
+        create(:workshop_log, author: nil)
         results = Person.search_by_params(role: "workshop_log_author")
         expect(results).not_to include(person_alice, person_bob)
       end

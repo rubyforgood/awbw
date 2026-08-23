@@ -200,13 +200,7 @@ class Person < ApplicationRecord
   scope :blog_contributors, -> { where(blog_contributor: true) }
   scope :workshop_authors, -> { joins(:workshops_as_author).distinct }
   scope :workshop_variation_authors, -> { joins(:workshop_variations_as_author).distinct }
-  # WorkshopLog has no author column — it is created_by a User, so "author" here
-  # means the person whose linked user account created the log. Confirmed intended
-  # (rubyforgood/awbw#2326): the logger is the author; we deliberately don't add an
-  # author_id column, since created_by.person already carries that meaning.
-  scope :workshop_log_authors, -> {
-    creator_user_ids = WorkshopLog.where.not(created_by_id: nil).select(:created_by_id)
-    where(id: User.where(id: creator_user_ids).where.not(person_id: nil).select(:person_id)) }
+  scope :workshop_log_authors, -> { joins(:workshop_logs_as_author).distinct }
   # People with at least one currently-active facilitator affiliation.
   scope :facilitators_active, -> {
     where(id: Affiliation.facilitators.active.select(:person_id)) }
