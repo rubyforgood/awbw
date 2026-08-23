@@ -258,9 +258,10 @@ RSpec.describe "Event registration edit page", type: :system do
     end
   end
 
-  describe "notifications box" do
-    it "lists notifications sent to the registrant" do
+  describe "communications in the combined section" do
+    it "lists communications filed against this registration" do
       create(:notification,
+             noticeable: registration,
              recipient_email: registration.registrant.preferred_email,
              email_subject: "Event registration confirmed")
 
@@ -269,11 +270,11 @@ RSpec.describe "Event registration edit page", type: :system do
 
       notification = Notification.find_by!(email_subject: "Event registration confirmed")
 
-      within("section", text: "Registration communications") do
+      within("#comments-section") do
         expect(page).to have_text("Event registration confirmed")
         # The whole row links through to the communication's detail page.
         expect(page).to have_link("Event registration confirmed", href: notification_path(notification))
-        expect(page).to have_link("View all")
+        expect(page).to have_link("All comments")
       end
     end
 
@@ -281,7 +282,7 @@ RSpec.describe "Event registration edit page", type: :system do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
-      within("section", text: "Registration communications") do
+      within("#comments-section") do
         click_on "Add communication"
         # Wait for cocoon to insert the field and the paginated-fields controller
         # to finish its re-render before typing, so the input node isn't swapped
@@ -305,7 +306,7 @@ RSpec.describe "Event registration edit page", type: :system do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
-      within("section", text: "Registration communications") do
+      within("#comments-section") do
         click_on "Add communication"
         # Wait for cocoon to insert the field and the paginated-fields controller
         # to finish its re-render before typing, so the input node isn't swapped
