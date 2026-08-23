@@ -103,6 +103,11 @@ the same date. Every affiliation a scenario ends is recorded on the submission
 new job is deliberately blunt, and the flag is how a wrongly-ended row (a
 multi-org facilitator changing only one job) gets corrected.
 
+**Reconciliation ends rows the same way**, for the first of those reasons —
+[ADR-0003](0003-affiliations-as-the-record-of-two-relationships.md) D6. Keep the two
+in step: they are one convention with two callers, and a reader who finds only one
+of them will assume it is local to that flow.
+
 ### D5 — "Linked" on the submission side is a direct link only; no join table
 
 A submission reads as linked only through a real link to an org — never because

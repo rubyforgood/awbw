@@ -182,7 +182,9 @@ facilitator affiliation depends on what that row represents:
   training in between.
 
 **The end date is the day BEFORE the training**, matching
-`AffiliationServices::ApplyScenarioEndDating` (main's ADR-0002 D4). A row that ends
+`AffiliationServices::ApplyScenarioEndDating`
+([ADR-0002](0002-org-linking-flows-and-agreement-scenarios.md) D4, which points back
+here — one convention, two callers). A row that ends
 the same day another starts counts on both, which doubles the person in any report
 that totals a date. The cost is that the row then falls outside the training's own
 anchor, so an organization whose only facilitator is ended this way reads
