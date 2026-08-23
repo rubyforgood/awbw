@@ -22,11 +22,14 @@
       <div id="people_count" class="pr-6">
         <h2 class="mb-2 text-2xl font-semibold">People</h2>
       </div>
-      <div class="flex items-center gap-2 text-right">
+      <div class="flex flex-wrap items-center justify-end gap-2 text-right">
         <% if allowed_to?(:index?, TopicSubscription) %>
-          <%= link_to "Subscriptions",
-                      topic_subscriptions_path,
-                      class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+          <%= link_to "Subscriptions", topic_subscriptions_path,
+                      class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <% end %>
+        <% if allowed_to?(:index?, Person) %>
+          <%= link_to "Email addresses", email_addresses_people_path(request.query_parameters),
+                      class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <% end %>
         <% if allowed_to?(:new?, Person) %>
           <%= link_to "New Person",
