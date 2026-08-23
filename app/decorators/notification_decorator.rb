@@ -25,11 +25,12 @@ class NotificationDecorator < ApplicationDecorator
   PORTAL_SENDER_NAME = "AWBW Portal".freeze
 
   # At-a-glance audience pill for the compact row/index and detail page — only
-  # the two exceptions are flagged: yellow for an incoming message (the person
-  # wrote to us) and teal for an admin "FYI" copy (recipient_role "admin"). A
+  # the two exceptions are flagged: a dark comms-blue for an incoming message (the
+  # person wrote to us — see #incoming_badge, which darkens it further than the
+  # channel chip) and teal for an admin "FYI" copy (recipient_role "admin"). A
   # regular message to the person is the norm and shows no pill.
   AUDIENCE_META = {
-    "incoming" => { label: "Incoming", classes: "bg-yellow-100 text-yellow-800" },
+    "incoming" => { label: "Incoming", classes: "bg-sky-100 text-sky-800" },
     "fyi" => { label: "FYI", classes: "bg-teal-100 text-teal-800" }
   }.freeze
 
@@ -150,7 +151,9 @@ class NotificationDecorator < ApplicationDecorator
     meta = AUDIENCE_META["incoming"]
     icon = responded? ? "fa-solid fa-square-check" : "fa-regular fa-square"
     label = h.safe_join([ h.content_tag(:i, "", class: icon, "aria-hidden": "true"), meta[:label] ], " ")
-    pill(meta.merge(label: label), **options)
+    # A dark comms-blue, deeper than the channel chip, so Incoming stands out.
+    classes = "#{DomainTheme.bg_class_for(:notifications, intensity: 600)} text-white"
+    pill(meta.merge(label: label, classes: classes), **options)
   end
 
   # Part of a bulk send, so the index can flag it with a "Bulk" pill. Two things
