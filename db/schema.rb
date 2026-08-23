@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_154252) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_23_184624) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1449,6 +1449,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_154252) do
     t.datetime "created_at", null: false
     t.bigint "created_by_id"
     t.bigint "interested_event_id"
+    t.integer "organization_id"
     t.bigint "person_id", null: false
     t.string "source"
     t.datetime "subscribed_at", null: false
@@ -1458,6 +1459,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_154252) do
     t.bigint "updated_by_id"
     t.index ["created_by_id"], name: "index_topic_subscriptions_on_created_by_id"
     t.index ["interested_event_id"], name: "index_topic_subscriptions_on_interested_event_id"
+    t.index ["organization_id"], name: "index_topic_subscriptions_on_organization_id"
     t.index ["person_id"], name: "index_topic_subscriptions_on_person_id"
     t.index ["topic_subscription_type_id"], name: "index_topic_subscriptions_on_topic_subscription_type_id"
     t.index ["unsubscribed_at"], name: "index_topic_subscriptions_on_unsubscribed_at"
@@ -1990,6 +1992,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_154252) do
   add_foreign_key "story_ideas", "windows_types"
   add_foreign_key "story_ideas", "workshops"
   add_foreign_key "topic_subscriptions", "events", column: "interested_event_id"
+  add_foreign_key "topic_subscriptions", "organizations"
   add_foreign_key "topic_subscriptions", "people"
   add_foreign_key "topic_subscriptions", "topic_subscription_types"
   add_foreign_key "user_form_form_fields", "form_fields"

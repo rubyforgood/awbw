@@ -8,7 +8,7 @@ class TopicSubscriptionsController < ApplicationController
     # active), so exclude status from the shared filter and apply it here.
     base = TopicSubscription
       .search_by_params(params.except(:status))
-      .includes(:topic_subscription_type, :interested_event, person: [ :user, { event_registrations: :event } ])
+      .includes(:topic_subscription_type, :interested_event, :organization, person: [ :user, { event_registrations: :event } ])
 
     @active_count = base.active.count
     @unsubscribed_count = base.unsubscribed.count
@@ -50,6 +50,7 @@ class TopicSubscriptionsController < ApplicationController
     @topic_subscription = TopicSubscription.new(
       topic_subscription_type_id: new_topic_type_id,
       interested_event_id: params[:interested_event_id],
+      organization_id: params[:organization_id],
       person_id: params[:person_id]
     )
   end
@@ -122,7 +123,7 @@ class TopicSubscriptionsController < ApplicationController
   end
 
   def topic_subscription_params
-    permitted = params.require(:topic_subscription).permit(:person_id, :topic_subscription_type_id, :interested_event_id, :source,
+    permitted = params.require(:topic_subscription).permit(:person_id, :topic_subscription_type_id, :interested_event_id, :organization_id, :source,
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       person_attributes: [ :first_name, :last_name, :email ])
 

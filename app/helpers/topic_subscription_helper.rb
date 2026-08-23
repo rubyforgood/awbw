@@ -2,7 +2,7 @@ module TopicSubscriptionHelper
   # The filters the subscriptions index applies. They ride along on links off the
   # index and back through the form so a return trip lands on the same filtered
   # list rather than the bare index.
-  INDEX_FILTER_KEYS = %w[person_id topic_subscription_type_id status page].freeze
+  INDEX_FILTER_KEYS = %w[person_id organization_name topic_subscription_type_id status page].freeze
 
   # Where a subscription form came from, keyed by the `return_to` param its
   # originating link set (the subscriptions index, an event's Forms menu, or a
@@ -55,6 +55,8 @@ module TopicSubscriptionHelper
       person = Person.find_by(id: params[:person_id])
       filters << [ "Person", person&.full_name || "Unknown" ]
     end
+
+    filters << [ "Organization", params[:organization_name] ] if params[:organization_name].present?
 
     if params[:topic_subscription_type_id].present?
       topic = TopicSubscriptionType.find_by(id: params[:topic_subscription_type_id])
