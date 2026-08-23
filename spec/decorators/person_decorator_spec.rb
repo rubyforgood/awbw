@@ -72,6 +72,45 @@ RSpec.describe PersonDecorator do
     end
   end
 
+  describe "#facilitator_since_year" do
+    let(:person) { create(:person) }
+
+    it "returns the earliest facilitator affiliation year, ignoring other roles" do
+      create(:affiliation, person: person, title: "Volunteer", start_date: Date.new(2015, 1, 1))
+      create(:affiliation, person: person, title: "Facilitator", start_date: Date.new(2020, 6, 1))
+      expect(person.decorate.facilitator_since_year).to eq(2020)
+    end
+
+    it "falls back to member_since when there is no facilitator start date" do
+      person.update!(member_since: Date.new(2018, 3, 1))
+      expect(person.decorate.facilitator_since_year).to eq(2018)
+    end
+  end
+
+  describe "#facilitator_status_label" do
+    let(:person) { create(:person) }
+
+    it "is nil when the person has never been a facilitator" do
+      create(:affiliation, person: person, title: "Volunteer", start_date: 1.year.ago)
+      expect(person.decorate.facilitator_status_label).to be_nil
+    end
+
+    it "is Active with a current facilitator affiliation" do
+      create(:affiliation, person: person, title: "Facilitator", start_date: 1.year.ago, end_date: nil)
+      expect(person.decorate.facilitator_status_label).to eq("Active")
+    end
+
+    it "is Upcoming when a facilitator affiliation is scheduled but none is active" do
+      create(:affiliation, person: person, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+      expect(person.decorate.facilitator_status_label).to eq("Upcoming")
+    end
+
+    it "is Inactive when every facilitator term has ended" do
+      create(:affiliation, person: person, title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
+      expect(person.decorate.facilitator_status_label).to eq("Inactive")
+    end
+  end
+
   describe "#affiliated_since_note" do
     let(:person) { create(:person) }
 
