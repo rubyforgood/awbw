@@ -144,6 +144,18 @@ RSpec.describe OrganizationDecorator do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Pending"))
       expect(org.decorate).not_to be_legacy_status_mismatch
     end
+
+    it "is false for a stored 'Pending' org whose only facilitator is upcoming" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Pending"))
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+      expect(org.reload.decorate).not_to be_legacy_status_mismatch
+    end
+
+    it "is true for a stored 'Active' org whose only facilitator is upcoming" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+      expect(org.reload.decorate).to be_legacy_status_mismatch
+    end
   end
 
   describe "#organization_status_chip" do

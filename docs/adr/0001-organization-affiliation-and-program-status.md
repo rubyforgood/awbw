@@ -111,6 +111,11 @@ show a warning where it contradicts the affiliations
 (`OrganizationDecorator#legacy_status_mismatch?`). Nothing else reads it. Expect
 the warning on a fair number of orgs — that is the drift it exists to surface.
 
+The column has no **Upcoming** of its own, so a derived `:upcoming` is compared
+as `:never_active`: a scheduled-but-not-started program is fairly recorded as
+`Pending` (or blank/`Unknown`, which bucket with it), and only a stored
+`Active`/`Reinstate` or `Inactive`/`Suspended` counts as drift.
+
 ### D4 — Program status: New / Ongoing / Reinstate, judged on one anchor date
 
 **One value per (organization, anchor date)**, computed over **all** of the org's

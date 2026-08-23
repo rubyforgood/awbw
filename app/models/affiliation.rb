@@ -46,13 +46,10 @@ class Affiliation < ApplicationRecord
   }
 
   # Genuinely active *now*: not flagged inactive, already started (no future
-  # start), and not past its end date. The SQL twin of #active? and of
-  # status_on == "Active" — a future-start row is Upcoming, not Active.
-  scope :active, -> {
-    where(inactive: false)
-      .where("affiliations.start_date IS NULL OR affiliations.start_date <= ?", Date.current)
-      .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", Date.current)
-  }
+  # start), and not past its end date. A future-start row is Upcoming, not Active.
+  # Delegates to with_status so the SQL lives in one place, the way #active?
+  # delegates to #status_on.
+  scope :active, -> { with_status("Active") }
 
   # Affiliations that overlapped a given date, judged purely by their start/end
   # dates rather than the cached `inactive` flag (which reflects "now"). Use this

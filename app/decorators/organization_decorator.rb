@@ -140,7 +140,11 @@ class OrganizationDecorator < ApplicationDecorator
   end
 
   # E.g. a stored "Active" on an org that never had a facilitator affiliation.
+  # The legacy column has no Upcoming of its own, so a scheduled-but-not-started
+  # program is fairly recorded as Pending (or blank/Unknown, which bucket with it).
   def legacy_status_mismatch?
+    return stored_status_bucket != :never_active if organization_status_bucket == :upcoming
+
     organization_status_bucket != stored_status_bucket
   end
 
