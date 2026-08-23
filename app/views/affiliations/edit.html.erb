@@ -179,7 +179,7 @@
                     type: "date",
                     value: @affiliation.end_date&.strftime("%Y-%m-%d"),
                     class: field_bg.call(@affiliation.end_date.present?),
-                    data: { inactive_toggle_target: "endDate valueField", action: "change->inactive-toggle#toggle" }
+                    data: { inactive_toggle_target: "endDate valueField", action: "change->inactive-toggle#endDateChanged" }
                   } %>
           </div>
         </div>
@@ -188,7 +188,9 @@
                 as: :boolean,
                 label: "Inactive",
                 hint: "Overrides the dates — tick to end an affiliation the dates still call active.",
-                input_html: { class: "mr-2 rounded focus:ring-blue-500 text-blue-600" } %>
+                input_html: { class: "mr-2 rounded focus:ring-blue-500 text-blue-600",
+                              data: { inactive_toggle_target: "inactiveCheckbox",
+                                      action: "inactive-toggle#toggle" } } %>
         </div>
       </div>
     </div>
