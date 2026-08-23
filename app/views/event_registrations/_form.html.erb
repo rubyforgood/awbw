@@ -257,6 +257,9 @@
           </div>
 
           <div class="flex flex-1 flex-col p-4">
+            <%# Fallback so unchecking every org chip still submits an empty organization_ids
+                array — otherwise no key is sent and the removal is silently dropped. %>
+            <input type="hidden" name="event_registration[organization_ids][]" value="">
             <div data-org-toggle-target="section" <%= "hidden" unless f.object.organizations.any? %>>
               <div class="flex flex-wrap gap-1.5" data-org-toggle-target="chips">
                 <%# Matched pair (like the registrants roster): the org name as a grey
