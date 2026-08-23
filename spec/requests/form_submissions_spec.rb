@@ -163,18 +163,19 @@ RSpec.describe "FormSubmissions", type: :request do
 
         get form_submissions_path, headers: frame_headers
         expect(response.body).to include("Harbor Family Shelter")
-        expect(response.body).to include("Not linked")
+        expect(response.body).to include("Pending")
 
         # A matching affiliation the person holds does not mark it linked — only a
-        # direct link made in the editor does, so it stays in the "to process" queue.
+        # direct link made in the editor does, so it stays Pending (the queue).
         create(:affiliation, person: submission.person,
                organization: create(:organization, name: "Harbor Family Shelter"))
         get form_submissions_path, headers: frame_headers
-        expect(response.body).to include("Not linked")
+        expect(response.body).to include("Pending")
 
         submission.link_organization!(create(:organization, name: "Harbor Family Shelter").id)
         get form_submissions_path, headers: frame_headers
-        expect(response.body).not_to include("Not linked")
+        expect(response.body).not_to include("Pending")
+        expect(response.body).to include("Linked")
       end
 
       it "filters by person name via the search box" do

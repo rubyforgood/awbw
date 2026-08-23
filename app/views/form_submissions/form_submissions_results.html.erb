@@ -64,9 +64,11 @@
                       <i class="fa-solid fa-check text-3xs"></i>Linked
                     <% end %>
                   <% else %>
+                    <%# Same amber "Pending" chip as the registrants roster: a submitted
+                        org that hasn't been linked to the submission yet. %>
                     <%= link_to editor_path, title: "Link the submitted organization", data: { turbo_frame: "_top" },
                                 class: "ml-1 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 transition hover:opacity-80 hover:shadow-sm" do %>
-                      <i class="fa-solid fa-circle-exclamation text-3xs"></i>Not linked
+                      <i class="fa-solid fa-circle-exclamation text-3xs"></i>Pending
                     <% end %>
                   <% end %>
                 <% else %>

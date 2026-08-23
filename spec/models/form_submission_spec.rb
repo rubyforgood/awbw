@@ -113,25 +113,26 @@ RSpec.describe FormSubmission do
     end
 
     describe ".org_link_status" do
-      it "separates linked, unlinked, and answerless submissions by the direct submission link" do
+      it "separates linked, pending, and unlinked by the direct submission link" do
         linked = submission_with_org_answer("Harbor Family Shelter")
         linked.link_organization!(create(:organization, name: "Harbor Family Shelter").id)
-        unlinked = submission_with_org_answer("Lakeside College")
+        pending = submission_with_org_answer("Lakeside College")
         no_answer = create(:form_submission)
 
         expect(described_class.org_link_status("linked")).to contain_exactly(linked)
-        expect(described_class.org_link_status("unlinked")).to contain_exactly(unlinked)
-        expect(described_class.org_link_status("none")).to include(no_answer)
-        expect(described_class.org_link_status("none")).not_to include(linked, unlinked)
+        # Pending is the actionable queue: named an org, nothing linked.
+        expect(described_class.org_link_status("pending")).to contain_exactly(pending)
+        # Unlinked is broad: everything not linked, including the no-org-answer one.
+        expect(described_class.org_link_status("unlinked")).to contain_exactly(pending, no_answer)
       end
 
       it "counts only a direct submission link, not a matching affiliation the person holds" do
         submission = submission_with_org_answer("Harbor Family Shelter")
         create(:affiliation, person: submission.person, organization: create(:organization, name: "Harbor Family Shelter"))
 
-        # The submission still needs processing — nothing has been linked to it.
+        # Still needs processing — nothing has been linked to the submission.
         expect(described_class.org_link_status("linked")).to be_empty
-        expect(described_class.org_link_status("unlinked")).to contain_exactly(submission)
+        expect(described_class.org_link_status("pending")).to contain_exactly(submission)
       end
 
       it "counts an explicitly linked org even when the submitted name doesn't match it" do
@@ -139,7 +140,7 @@ RSpec.describe FormSubmission do
         submission.link_organization!(create(:organization, name: "Acme Corporation").id)
 
         expect(described_class.org_link_status("linked")).to contain_exactly(submission)
-        expect(described_class.org_link_status("unlinked")).to be_empty
+        expect(described_class.org_link_status("pending")).to be_empty
       end
     end
 

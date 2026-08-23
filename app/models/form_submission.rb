@@ -15,10 +15,13 @@ class FormSubmission < ApplicationRecord
 
   # The index's "Organization linking" filter vocabulary: linked = the submitted
   # organization name matches one of the person's active affiliations.
+  # Mirrors the registrants roster (events/_registrant_filters): "pending" is the
+  # actionable queue (named an org, not linked), "unlinked" is the broad set (not
+  # linked, whichever — including no org answer), "linked" is processed.
   ORG_LINK_STATUS_FILTER_OPTIONS = [
-    [ "Linked to submission", "linked" ],
-    [ "Not linked to submission", "unlinked" ],
-    [ "No organization answer", "none" ]
+    [ "Pending", "pending" ],
+    [ "Linked", "linked" ],
+    [ "Unlinked", "unlinked" ]
   ].freeze
 
   scope :bulk_payment, -> { where(role: "bulk_payment") }
@@ -72,16 +75,18 @@ class FormSubmission < ApplicationRecord
   # #link_organization!). COALESCE: metadata (or the key) may be absent.
   EXPLICIT_ORG_LINK_SQL = "COALESCE(JSON_LENGTH(JSON_EXTRACT(form_submissions.metadata, '$.linked_organization_ids')), 0) > 0".freeze
 
-  # Whether an org has been *directly linked to the submission* (the metadata link
-  # an admin sets in the org-linking editor) — i.e. whether it's been processed.
-  # A matching affiliation the person happens to hold does NOT count: "unlinked" is
-  # the processing queue of submissions that named an org but haven't been linked.
+  # Linking status keyed on whether an org is *directly linked to the submission*
+  # (the metadata link an admin sets in the editor) — a matching affiliation the
+  # person happens to hold does NOT count. Mirrors the registrants roster:
+  #   linked   — an org was linked (processed).
+  #   unlinked — no org linked, whichever kind (broad; includes no org answer).
+  #   pending  — named an org but nothing linked yet — the actionable queue.
   scope :org_link_status, ->(value) {
     answered = org_name_answers.select(:form_submission_id)
     case value
     when "linked" then where(EXPLICIT_ORG_LINK_SQL)
-    when "unlinked" then where(id: answered).where.not(EXPLICIT_ORG_LINK_SQL)
-    when "none" then where.not(id: answered).where.not(EXPLICIT_ORG_LINK_SQL)
+    when "unlinked" then where.not(EXPLICIT_ORG_LINK_SQL)
+    when "pending" then where(id: answered).where.not(EXPLICIT_ORG_LINK_SQL)
     else all
     end
   }
