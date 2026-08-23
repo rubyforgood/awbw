@@ -19,6 +19,16 @@
               onchange: "this.form.requestSubmit()",
               data: { controller: "remote-select", remote_select_model_value: "person" } %>
       </div>
+      <div class="flex-1 min-w-[200px]">
+        <%= f.label :organization_id, "Organization", class: label_class %>
+        <%= select_tag :organization_id,
+              options_for_select(Organization.where(id: params[:organization_id]).map { |organization| [ organization.name, organization.id ] }, params[:organization_id]),
+              include_blank: true,
+              prompt: "Search for an organization",
+              class: field_class,
+              onchange: "this.form.requestSubmit()",
+              data: { controller: "remote-select", remote_select_model_value: "organization" } %>
+      </div>
       <div class="min-w-[180px]">
         <%= f.label :topic_subscription_type_id, "Topic", class: label_class %>
         <%= f.select :topic_subscription_type_id,

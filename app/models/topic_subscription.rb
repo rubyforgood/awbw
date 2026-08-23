@@ -37,13 +37,14 @@ class TopicSubscription < ApplicationRecord
     end
   }
 
-  # Drives the subscriptions index filters: person, topic type, and status
-  # ("active"/"unsubscribed" — the two the segmented toggle emits). The person
-  # filter is an exact id — the index picks people through the remote-select
-  # search, so there's no free-text name matching to do here.
+  # Drives the subscriptions index filters: person, organization, topic type, and
+  # status ("active"/"unsubscribed" — the two the segmented toggle emits). The
+  # person and organization filters are exact ids — the index picks both through
+  # the remote-select search, so there's no free-text name matching to do here.
   def self.search_by_params(params)
     scope = all
     scope = scope.where(person_id: params[:person_id]) if params[:person_id].present?
+    scope = scope.where(organization_id: params[:organization_id]) if params[:organization_id].present?
     scope = scope.for_topic_type(params[:topic_subscription_type_id]) if params[:topic_subscription_type_id].present?
     scope = scope.comment_status(params[:comment_status]) if params[:comment_status].present?
 
