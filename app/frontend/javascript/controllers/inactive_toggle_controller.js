@@ -7,7 +7,7 @@ import { isFacilitatorTitle } from "../lib/affiliation";
 // strike their fields (.aff-ended). A not-yet-started row (future start date, not
 // ended) additionally shows an "Upcoming" badge.
 export default class extends Controller {
-  static targets = ["endDate", "title", "row", "accentBar", "valueField", "startDate", "upcomingBadge"]
+  static targets = ["endDate", "title", "row", "accentBar", "valueField", "startDate", "upcomingBadge", "inactiveBadge"]
   static values = { expired: Boolean }
 
   connect() {
@@ -37,15 +37,17 @@ export default class extends Controller {
     this.updateRowBackground();
     this.styleTitle();
     this.paintFields();
-    this.updateUpcoming();
+    this.updateBadges();
     this.rowTarget.classList.toggle("aff-ended", this.isPast());
   }
 
-  // Show the "Upcoming" badge when the affiliation has a future start date and
-  // has not ended.
-  updateUpcoming() {
-    if (!this.hasUpcomingBadgeTarget) return;
-    this.upcomingBadgeTarget.classList.toggle("hidden", !this.isUpcoming());
+  // "Inactive" whenever the affiliation isn't currently active (ended, flagged,
+  // or not-yet-started); "Upcoming" additionally for a future start — so an
+  // upcoming row shows both and an ended one shows only Inactive.
+  updateBadges() {
+    const notActive = this.isPast() || this.isUpcoming();
+    if (this.hasInactiveBadgeTarget) this.inactiveBadgeTarget.classList.toggle("hidden", !notActive);
+    if (this.hasUpcomingBadgeTarget) this.upcomingBadgeTarget.classList.toggle("hidden", !this.isUpcoming());
   }
 
   isUpcoming() {
