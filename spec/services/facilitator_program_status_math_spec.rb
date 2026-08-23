@@ -160,7 +160,10 @@ RSpec.describe "facilitator affiliation math" do
   end
 
   describe "reconciliation does not move an anchored verdict" do
-    it "keeps the training-date status when a no-show's older affiliation is ended" do
+    # Ending the day before the training (ADR-0003 D6) puts the row outside the
+    # training's own anchor, so the org reads Reinstated there rather than Ongoing.
+    # The years before it are still intact — every earlier anchor is unchanged.
+    it "leaves every earlier anchor intact when a no-show's older affiliation is ended" do
       person = create(:person)
       event = create(:event, :ended, facilitator_training: true)
       anchor = event.start_date.to_date
@@ -176,7 +179,8 @@ RSpec.describe "facilitator affiliation math" do
         registration: registration, include_unowned: true
       ).perform(:deactivate, affiliation: older)
 
-      expect(status_on(anchor)).to eq(:ongoing)
+      expect(status_on(anchor)).to eq(:reinstated)
+      expect(status_on(anchor - 1.year)).to eq(:ongoing)
       expect(status_on(anchor + 1.year)).to eq(:reinstated)
       expect(bucket).to eq(:formerly_active)
     end

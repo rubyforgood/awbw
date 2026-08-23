@@ -181,8 +181,15 @@ facilitator affiliation depends on what that row represents:
   history and retroactively flip the org from Ongoing to Reinstated at every
   training in between.
 
-An end date is never written before the row's own start date; a row starting after
-this training same-days instead.
+**The end date is the day BEFORE the training**, matching
+`AffiliationServices::ApplyScenarioEndDating` (main's ADR-0002 D4). A row that ends
+the same day another starts counts on both, which doubles the person in any report
+that totals a date. The cost is that the row then falls outside the training's own
+anchor, so an organization whose only facilitator is ended this way reads
+**Reinstated** at that training rather than Ongoing. Every earlier anchor is
+unaffected, which is what D5's stability promise is about.
+
+An end date is never written before the row's own start date.
 
 **Deleting the minted row is what lets reconciliation stop relying on the `inactive`
 flag.** A same-dayed row could land on today and still read as active by dates
@@ -251,6 +258,36 @@ judgement someone recorded, and the logged times are the evidence behind it — 
 admin deciding whether to delete a facilitator affiliation should see which days
 were missed without leaving the page.
 
+### D6d — A transfer moves the affiliation; it does not end it
+
+Transferring to another event isn't a failure to complete one — the person is still
+going to train, somewhere else. So the affiliation **follows them**: its start date
+becomes the destination event's, and its `event_registration_id` re-points at the
+destination registration.
+
+Re-pointing the provenance is not cosmetic. The FK is the auto-vs-manual gate
+(D2a), so a row dated to the destination event but still pointing at the source
+registration would not be recognised as "the row this training minted" when the
+destination is reconciled — it would be treated as an older row and end-dated.
+
+The rules:
+
+- **Which row moves** — this person's facilitator affiliation with this organization
+  that has **no end date**. One decision per (person, organization), not one per row.
+- **An already-ended row stays put.** It records a finished stretch. With no open row
+  to move, the destination mints a fresh affiliation instead.
+- **No destination recorded yet** (`transfer_destination_pending?`) — reported, not
+  guessed at. There is no date to move to.
+- **Destination linked to a different organization** — reported. Re-dating this
+  organization's row to a training about another one would assert something false.
+- **Chained transfers need no traversal.** A→B→C collapses when the second transfer
+  is made (`EventRegistrationsController#transfer` points C straight at A), so the
+  source's `transferred_to_registration` is already the final destination.
+
+This is deliberately *not* one of `LinkSubmittedOrganization::SCENARIOS`. Those
+describe what kind of linking is happening and run at link time; a transfer is an
+attendance outcome discovered at reconcile time, with nothing being linked.
+
 ### D7 — What has to be tested
 
 The arithmetic is what the grant figures rest on, so it is covered directly rather
@@ -272,7 +309,10 @@ than inferred from the single-affiliation cases
    minted row is deleted, the older row ended at the training date.
 7. **`registered` after the event is reported, never acted on** — D6c, asserted on
    both the plan's reason and that the row survives.
-8. **A return after a lapse adds a row and leaves the lapse intact** — D6a, asserted
+8. **A transfer moves the row rather than ending it** — D6d: the open row re-dates
+   and re-points, an ended row is left alone with a fresh one created at the
+   destination, and a pending or differently-linked destination is reported.
+9. **A return after a lapse adds a row and leaves the lapse intact** — D6a, asserted
    on both the row count and the mid-gap verdict.
 
 Adding a rule here means adding a case there.

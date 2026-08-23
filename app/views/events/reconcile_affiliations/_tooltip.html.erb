@@ -10,6 +10,9 @@
       <li>Job affiliations for this org</li>
       <li>Facilitator affiliations for other orgs</li>
     </ul>
+  <% when :retarget %>
+    <p class="mb-1">They transferred to another event, so the affiliation follows them: its start date becomes the new event's, and it re-points at that registration.</p>
+    <p>Nothing is ended or deleted. If their only affiliation here has already ended, a new one is created at the new event instead.</p>
   <% when :create %>
     Creates the facilitator affiliation for this organization.
   <% when :keep %>

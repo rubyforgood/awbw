@@ -30,6 +30,8 @@ module AffiliationServices
     # #attendance_recorded? deliberately excludes it. Acting on it would be acting
     # on missing data, so the row is surfaced for an admin to resolve instead.
     ATTENDANCE_NOT_RECORDED = "Attendance never recorded — set an outcome first".freeze
+    TRANSFER_PENDING = "Transferred out — record where they went first".freeze
+    TRANSFER_ELSEWHERE = "Transferred out to an event not linked to this organization".freeze
 
     def self.call(person:, organization:, event:, registration: nil, include_unowned: false)
       new(person:, organization:, event:, registration:, include_unowned:).call
@@ -51,12 +53,13 @@ module AffiliationServices
 
     # Returns whether anything changed, so callers can count real changes.
     def perform(action, affiliation: nil)
-      return false if affiliation.nil? && action != :create
+      return false if affiliation.nil? && !%i[ create retarget ].include?(action)
 
       case action
       when :create then create_and_note
       when :delete then affiliation.destroy!
       when :deactivate then deactivate(affiliation)
+      when :retarget then retarget(affiliation)
       else return false
       end
       true
@@ -85,6 +88,26 @@ module AffiliationServices
       affiliation.update!(end_date: ends_on, inactive: true)
       note(affiliation, "Ended #{ends_on.strftime('%b %-d, %Y')} and marked inactive by reconciliation " \
                         "for #{@event.title} — no attended facilitator training for #{@organization.name} on record.")
+    end
+
+    # Moves the open row to the destination training: its start date becomes that
+    # event's, and its provenance re-points at that registration so reconciling the
+    # destination recognises it as the row that training minted (ADR-0003 D2a).
+    # With no open row to move, the destination mints a fresh one.
+    def retarget(affiliation)
+      starts_on = transfer_destination.event&.start_date&.to_date || Date.current
+      return create_at_destination(starts_on) if affiliation.nil?
+
+      affiliation.update!(start_date: starts_on, event_registration: transfer_destination)
+      note(affiliation, "Moved to #{transfer_destination.event&.title} (starting #{starts_on.strftime('%b %-d, %Y')}) " \
+                        "when #{@person.name} transferred out of #{@event.title}.")
+    end
+
+    def create_at_destination(starts_on)
+      CreateFromRegistration.call(
+        person: @person, organization: @organization, facilitator_training: true,
+        training_date: starts_on, event_registration: transfer_destination
+      )
     end
 
     def create_and_note
@@ -126,11 +149,15 @@ module AffiliationServices
     end
 
     # Only rows this training did NOT mint reach here (minted ones are deleted), and
-    # they record facilitation that really happened — so they end at this training
-    # and the years before it survive, leaving anchored program status where it was
-    # (ADR-0003 D6). Never before the row's own start date.
+    # they record facilitation that really happened — so the years before this
+    # training survive (ADR-0003 D6).
+    #
+    # The day BEFORE the training, matching ApplyScenarioEndDating: a row that ends
+    # on the same day another starts counts on both, which double-counts the person
+    # in any report that totals a date. Never before the row's own start date.
     def deactivation_end_date(affiliation)
-      [ @event.start_date&.to_date || Date.current, affiliation.start_date ].compact.max
+      ends_on = (@event.start_date&.to_date || Date.current) - 1.day
+      [ ends_on, affiliation.start_date ].compact.max
     end
 
     # A non-training event confers no facilitation, so it only removes what was
@@ -144,9 +171,47 @@ module AffiliationServices
     end
 
     def training_plan
+      return transfer_plan if transferred_out?
+
       decisions = reconcilable_affiliations.map { |affiliation| classify(affiliation) }
       decisions << creation_decision if needs_affiliation?
       decisions
+    end
+
+    def transferred_out?
+      registration_here&.transferred_out?
+    end
+
+    # A transfer isn't a failure — they're training somewhere else. The affiliation
+    # follows them: it re-dates to the destination event and re-points at that
+    # registration, rather than being ended or deleted (ADR-0003 D6d).
+    #
+    # One decision per (person, organization), not one per row: only the open row
+    # moves, and an already-ended row is history that stays put.
+    def transfer_plan
+      return [ Decision.new(affiliation: open_facilitator_affiliation, action: :noop, reason: TRANSFER_PENDING) ] if transfer_destination.nil?
+      return [ Decision.new(affiliation: open_facilitator_affiliation, action: :noop, reason: TRANSFER_ELSEWHERE) ] unless destination_links_this_org?
+
+      [ Decision.new(affiliation: open_facilitator_affiliation, action: :retarget) ]
+    end
+
+    # A→B→C collapses when the second transfer is made, so this is already the
+    # final destination — no chain to walk (see EventRegistrationsController#transfer).
+    def transfer_destination
+      return @transfer_destination if defined?(@transfer_destination)
+
+      @transfer_destination = registration_here&.transferred_to_registration
+    end
+
+    def destination_links_this_org?
+      transfer_destination.organizations.any? { |organization| organization.id == @organization.id }
+    end
+
+    # The row a transfer moves: this person's facilitator affiliation with this org
+    # that hasn't ended. An already-ended row records a finished stretch, so it is
+    # left alone and a new affiliation is created at the destination instead.
+    def open_facilitator_affiliation
+      facilitator_affiliations.find { |affiliation| affiliation.end_date.nil? }
     end
 
     # Someone with no active facilitator affiliation needs one when they have never

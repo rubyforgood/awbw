@@ -38,7 +38,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       expect(Affiliation.exists?(affiliation.id)).to be(false)
     end
 
-    %w[ incomplete_attendance cancelled transferred_out ].each do |status|
+    %w[ incomplete_attendance cancelled ].each do |status|
       it "deletes the minted row when the only registration is #{status}" do
         reg = training_registration(status: status)
         affiliation = owned_facilitator(registration: reg)
@@ -140,7 +140,9 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       expect(hand_created.reload).not_to be_active
     end
 
-    it "ends an older affiliation at the training, keeping the years it really facilitated" do
+    # The day before, not the day of: a row ending the same day another starts would
+    # count on both and double the person in any report that totals a date.
+    it "ends an older affiliation the day before the training, keeping the years it really facilitated" do
       reg = training_registration(status: "no_show")
       started_on = 2.years.ago.to_date
       hand_created = create(:affiliation, person: person, organization: organization,
@@ -148,7 +150,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
 
       reconcile(reg, include_unowned: true)
 
-      expect(hand_created.reload.end_date).to eq(reg.event.start_date.to_date)
+      expect(hand_created.reload.end_date).to eq(reg.event.start_date.to_date - 1.day)
       expect(hand_created.start_date).to eq(started_on)
     end
 
@@ -222,6 +224,87 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       expect(plan.map(&:reason)).to include(described_class::ALREADY_ENDED)
       expect(plan.map(&:reason)).not_to include(described_class::ALREADY_DEACTIVATED)
       expect(admin_ended.reload.end_date).to eq(2.years.ago.to_date)
+    end
+  end
+
+  describe "a transfer out" do
+    # Source registration transferred out to `destination_event`, with the org
+    # carried onto the destination the way the transfer flow does.
+    def transferred_out(destination_event:, link_org: organization)
+      source = training_registration(status: "registered")
+      destination = create(:event_registration, registrant: person, event: destination_event, status: "registered")
+      create(:event_registration_organization, event_registration: destination, organization: link_org) if link_org
+      destination.update!(transferred_from_registration: source)
+      source.update!(status: "transferred_out")
+      [ source, destination ]
+    end
+
+    let(:destination_event) do
+      create(:event, facilitator_training: true, start_date: 3.months.from_now,
+                     end_date: 3.months.from_now + 1.day,
+                     registration_close_date: 2.months.from_now)
+    end
+
+    it "moves the open affiliation to the destination event and re-points its provenance" do
+      source, destination = transferred_out(destination_event: destination_event)
+      affiliation = owned_facilitator(registration: source)
+
+      described_class.call(person: person, organization: organization, event: source.event,
+                           registration: source, include_unowned: true)
+
+      affiliation.reload
+      expect(affiliation.start_date).to eq(destination_event.start_date.to_date)
+      expect(affiliation.event_registration_id).to eq(destination.id)
+      expect(affiliation.end_date).to be_nil
+    end
+
+    it "leaves an already-ended row alone and creates a fresh one at the destination" do
+      source, destination = transferred_out(destination_event: destination_event)
+      ended = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+                                   start_date: 3.years.ago.to_date, end_date: 2.years.ago.to_date)
+
+      expect {
+        described_class.call(person: person, organization: organization, event: source.event,
+                             registration: source, include_unowned: true)
+      }.to change { person.affiliations.facilitators.where(organization: organization).count }.by(1)
+
+      expect(ended.reload.end_date).to eq(2.years.ago.to_date)
+      fresh = person.affiliations.facilitators.where(organization: organization).order(:start_date).last
+      expect(fresh.start_date).to eq(destination_event.start_date.to_date)
+      expect(fresh.event_registration_id).to eq(destination.id)
+    end
+
+    it "reports rather than guesses when the destination hasn't been recorded" do
+      source = training_registration(status: "registered")
+      source.update!(status: "transferred_out")
+      owned_facilitator(registration: source)
+
+      plan = described_class.new(person: person, organization: organization, event: source.event,
+                                 registration: source, include_unowned: true).plan
+
+      expect(plan.map(&:action)).to eq([ :noop ])
+      expect(plan.first.reason).to eq(described_class::TRANSFER_PENDING)
+    end
+
+    it "reports when the destination is linked to a different organization" do
+      source, _destination = transferred_out(destination_event: destination_event, link_org: create(:organization))
+      affiliation = owned_facilitator(registration: source)
+
+      described_class.call(person: person, organization: organization, event: source.event,
+                           registration: source, include_unowned: true)
+
+      expect(affiliation.reload.start_date).to eq(source.event.start_date.to_date)
+      expect(affiliation.event_registration_id).to eq(source.id)
+    end
+
+    it "records why the affiliation moved" do
+      source, _destination = transferred_out(destination_event: destination_event)
+      affiliation = owned_facilitator(registration: source)
+
+      described_class.call(person: person, organization: organization, event: source.event,
+                           registration: source, include_unowned: true)
+
+      expect(affiliation.reload.comments.last.body).to include("transferred out of")
     end
   end
 
