@@ -36,13 +36,24 @@ RSpec.describe FormSubmission do
       expect(FormSubmission.search_by_params(end_date: "not-a-date")).to contain_exactly(old, recent)
     end
 
-    it "filters by organization through the registration link" do
+    it "filters by the organization linked directly to the submission" do
       organization = create(:organization)
       linked = create(:form_submission)
+      linked.link_organization!(organization.id)
       create(:form_submission)
-      create(:event_registration_organization, organization: organization, form_submission: linked)
 
       expect(FormSubmission.search_by_params(organization_id: organization.id)).to contain_exactly(linked)
+    end
+
+    it "ignores an org reached only through the submission's event registration" do
+      organization = create(:organization)
+      event = create(:event)
+      person = create(:person)
+      create(:form_submission, person: person, event: event)
+      registration = create(:event_registration, registrant: person, event: event)
+      create(:event_registration_organization, event_registration: registration, organization: organization)
+
+      expect(FormSubmission.search_by_params(organization_id: organization.id)).to be_empty
     end
   end
 
@@ -92,25 +103,28 @@ RSpec.describe FormSubmission do
     end
 
     describe ".org_link_status" do
-      it "separates linked, unlinked, and answerless submissions" do
+      it "separates linked, pending, none, and unlinked by the direct submission link" do
         linked = submission_with_org_answer("Harbor Family Shelter")
-        create(:affiliation, person: linked.person, organization: create(:organization, name: "Harbor Family Shelter"))
-        unlinked = submission_with_org_answer("Lakeside College")
+        linked.link_organization!(create(:organization, name: "Harbor Family Shelter").id)
+        pending = submission_with_org_answer("Lakeside College")
         no_answer = create(:form_submission)
 
         expect(described_class.org_link_status("linked")).to contain_exactly(linked)
-        expect(described_class.org_link_status("unlinked")).to contain_exactly(unlinked)
-        expect(described_class.org_link_status("none")).to include(no_answer)
-        expect(described_class.org_link_status("none")).not_to include(linked, unlinked)
+        # Pending: gave an org answer, nothing linked yet — the actionable queue.
+        expect(described_class.org_link_status("pending")).to contain_exactly(pending)
+        # None: no organization answer provided.
+        expect(described_class.org_link_status("none")).to contain_exactly(no_answer)
+        # Unlinked is broad: pending + none (everything not linked).
+        expect(described_class.org_link_status("unlinked")).to contain_exactly(pending, no_answer)
       end
 
-      it "does not count an ended affiliation as linked" do
+      it "counts only a direct submission link, not a matching affiliation the person holds" do
         submission = submission_with_org_answer("Harbor Family Shelter")
-        create(:affiliation, person: submission.person, end_date: 1.year.ago,
-               organization: create(:organization, name: "Harbor Family Shelter"))
+        create(:affiliation, person: submission.person, organization: create(:organization, name: "Harbor Family Shelter"))
 
+        # Still needs processing — nothing has been linked to the submission.
         expect(described_class.org_link_status("linked")).to be_empty
-        expect(described_class.org_link_status("unlinked")).to contain_exactly(submission)
+        expect(described_class.org_link_status("pending")).to contain_exactly(submission)
       end
 
       it "counts an explicitly linked org even when the submitted name doesn't match it" do
@@ -118,7 +132,7 @@ RSpec.describe FormSubmission do
         submission.link_organization!(create(:organization, name: "Acme Corporation").id)
 
         expect(described_class.org_link_status("linked")).to contain_exactly(submission)
-        expect(described_class.org_link_status("unlinked")).to be_empty
+        expect(described_class.org_link_status("pending")).to be_empty
       end
     end
 

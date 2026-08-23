@@ -307,8 +307,14 @@ class UsersController < ApplicationController
     @user.update(welcome_instructions_sent_at: Time.current, welcome_instructions_sent_by: current_user)
     @user.send_confirmation_instructions(sender: current_user)
 
-    # Back to the agreement submission the Invite button was on, when it came
-    # from a processing panel; the users index otherwise.
+    # Back to the form submissions index with the row highlighted, when invited
+    # from there; back to the submission itself when invited from its processing
+    # panel; the users index otherwise.
+    if params[:return_to] == "form_submissions" && params[:form_submission_id].present?
+      redirect_to form_submissions_path(anchor: helpers.form_submission_row_id(params[:form_submission_id]), highlight: params[:form_submission_id]), notice: "Invitation sent to #{@user.email}."
+      return
+    end
+
     if params[:return_to] == "form_submission" && params[:form_submission_id].present?
       redirect_to form_submission_path(params[:form_submission_id]), notice: "Invitation sent to #{@user.email}."
       return

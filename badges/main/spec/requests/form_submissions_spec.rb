@@ -18,6 +18,20 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include("Form submissions")
       end
 
+      it "offers a Clear filters link to the unfiltered index when a filter is active" do
+        form = create(:form)
+        get form_submissions_path(form_id: form.id)
+
+        expect(response.body).to include("Clear filters")
+        expect(response.body).to include(%(href="#{form_submissions_path}"))
+      end
+
+      it "omits the Clear filters link when no filter is active" do
+        get form_submissions_path
+
+        expect(response.body).not_to include("Clear filters")
+      end
+
       it "lists a person's submissions and links each to its detail page" do
         person = create(:person, first_name: "Priya", last_name: "Patel")
         other = create(:person)
@@ -74,11 +88,11 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).not_to include(form_submission_path(old))
       end
 
-      it "filters by organization through its registration link" do
+      it "filters by the organization linked directly to the submission" do
         organization = create(:organization)
         linked = create(:form_submission)
         other = create(:form_submission)
-        create(:event_registration_organization, organization: organization, form_submission: linked)
+        linked.link_organization!(organization.id)
 
         get form_submissions_path(organization_id: organization.id), headers: frame_headers
 
@@ -94,7 +108,7 @@ RSpec.describe "FormSubmissions", type: :request do
 
         expect(response.body).to include(
           CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions",
-                                              person_id: submission.person_id, event_id: event.id, role: "registration"))
+                                              event_id: event.id, role: "registration"))
         )
       end
 
@@ -127,7 +141,7 @@ RSpec.describe "FormSubmissions", type: :request do
 
         expect(response.body).to include(
           CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions", origin: "forms",
-                                              person_id: submission.person_id, form_id: form.id))
+                                              form_id: form.id))
         )
       end
 
@@ -138,8 +152,7 @@ RSpec.describe "FormSubmissions", type: :request do
         get form_submissions_path(form_id: form.id), headers: frame_headers
 
         expect(response.body).to include(
-          CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions",
-                                              person_id: submission.person_id, form_id: form.id))
+          CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions", form_id: form.id))
         )
       end
 
@@ -154,7 +167,7 @@ RSpec.describe "FormSubmissions", type: :request do
         )
       end
 
-      it "shows the submitted organization with whether it is linked to the person" do
+      it "shows the submitted organization with whether it is linked to the submission" do
         submission = create(:form_submission)
         org_field = create(:form_field, form: submission.form, name: "Organization name",
                            field_identifier: "organization_name")
@@ -163,12 +176,64 @@ RSpec.describe "FormSubmissions", type: :request do
 
         get form_submissions_path, headers: frame_headers
         expect(response.body).to include("Harbor Family Shelter")
-        expect(response.body).to include("Not linked")
+        expect(response.body).to include("Pending")
 
+        # A matching affiliation the person holds does not mark it linked — only a
+        # direct link made in the editor does, so it stays Pending (the queue).
         create(:affiliation, person: submission.person,
                organization: create(:organization, name: "Harbor Family Shelter"))
         get form_submissions_path, headers: frame_headers
-        expect(response.body).to include("Linked")
+        expect(response.body).to include("Pending")
+
+        organization = create(:organization, name: "Harbor Family Shelter")
+        submission.link_organization!(organization.id)
+        get form_submissions_path, headers: frame_headers
+        # Once linked, the org shows as its own chip (linking to the org) — no
+        # "Pending", matching the registrants roster.
+        expect(response.body).not_to include("Pending")
+        expect(response.body).to include(CGI.escapeHTML(organization_path(organization)))
+      end
+
+      it "shows a None chip linking to the editor when no organization was submitted" do
+        submission = create(:form_submission)
+
+        get form_submissions_path, headers: frame_headers
+
+        expect(response.body).to include("None")
+        expect(response.body).to include(CGI.escapeHTML(link_organization_form_submission_path(submission, return_to: "form_submissions")))
+      end
+
+      it "shows the linked org as a chip even when no org was submitted, instead of None" do
+        submission = create(:form_submission)
+        organization = create(:organization, name: "Harbor Family Shelter")
+        submission.link_organization!(organization.id)
+
+        get form_submissions_path, headers: frame_headers
+
+        expect(response.body).to include("Harbor Family Shelter")
+        expect(response.body).to include(CGI.escapeHTML(organization_path(organization)))
+      end
+
+      it "offers column toggles and hides the user account column by default" do
+        create(:form_submission)
+
+        get form_submissions_path, headers: frame_headers
+
+        expect(response.body).to include('data-column-toggle-group-value="user_account"')
+        expect(response.body).to include('data-column-toggle-col="role"')
+        expect(response.body).to include('data-column-toggle-col="event"')
+        expect(response.body).to include('data-column-toggle-col="submitted"')
+        # User account column starts hidden.
+        expect(response.body).to include('class="px-4 py-3 hidden" data-column-toggle-col="user_account"')
+      end
+
+      it "highlights the submission row matching the highlight param" do
+        submission = create(:form_submission)
+
+        get form_submissions_path(highlight: submission.id), headers: frame_headers
+
+        expect(response.body).to include(%(id="form-submission-row-#{submission.id}"))
+        expect(response.body).to include("ring-yellow-500")
       end
 
       it "filters by person name via the search box" do
@@ -248,10 +313,13 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include("AWBW")
       end
 
-      it "shows a back link to the form submissions index when arriving from it" do
+      it "shows a back link to the form submissions index, highlighting the row, when arriving from it" do
         get form_submission_path(submission, return_to: "form_submissions", person_id: submission.person_id)
 
-        expect(response.body).to include(form_submissions_path(person_id: submission.person_id))
+        expect(response.body).to include(
+          CGI.escapeHTML(form_submissions_path(person_id: submission.person_id, highlight: submission.id,
+                                               anchor: "form-submission-row-#{submission.id}"))
+        )
         expect(response.body).to include("Back to form submissions")
       end
 
@@ -268,7 +336,8 @@ RSpec.describe "FormSubmissions", type: :request do
                                  form_id: submission.form_id)
 
         expect(response.body).to include(
-          CGI.escapeHTML(form_submissions_path(form_id: submission.form_id, return_to: "forms"))
+          CGI.escapeHTML(form_submissions_path(form_id: submission.form_id, return_to: "forms",
+                                               highlight: submission.id, anchor: "form-submission-row-#{submission.id}"))
         )
       end
 
@@ -364,6 +433,15 @@ RSpec.describe "FormSubmissions", type: :request do
       before { travel_to Time.current.midday }
 
       describe "GET /form_submissions/:id/link_organization" do
+        it "eyebrows back to the index with the row highlighted when arriving from it" do
+          get link_organization_form_submission_path(submission, return_to: "form_submissions")
+
+          expect(response.body).to include("Back to form submissions")
+          expect(response.body).to include(
+            CGI.escapeHTML(form_submissions_path(highlight: submission.id, anchor: "form-submission-row-#{submission.id}"))
+          )
+        end
+
         it "offers a create-and-link row for a submitted org that isn't in the database" do
           add_answer("organization_name", "Lakeside Community College")
           add_answer("organization_position", "Counselor")

@@ -131,9 +131,11 @@
         </div>
 
         <% if form_submission_filters_active?(params) %>
-          <div class="flex flex-col">
+          <div class="flex flex-col items-start">
             <span class="<%= search_label_class %>" aria-hidden="true">&nbsp;</span>
-            <%= render "shared/search_clear", url: form_submissions_path(return_to: params[:return_to].presence) %>
+            <%# Plain navigation to the unfiltered index — a reset that never depends
+                on JS clearing each remote-select field. %>
+            <%= link_to "Clear filters", form_submissions_path(return_to: params[:return_to].presence), class: "btn btn-utility whitespace-nowrap" %>
           </div>
         <% end %>
       </div>

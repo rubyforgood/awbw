@@ -102,7 +102,9 @@
     "Clear filters" button appears once any is set. The chosen filters carry over when you
     open a submission and come back, so you land on the same filtered list.
   pro_tips:
-    - "The Organization filter matches submissions linked to an org through an event registration."
+    - "The Organization filter matches a submission only when that organization is linked directly to it in the org-linking editor."
+    - "Set the organization-linking filter to \"Pending\" for a work queue of submissions that named an org but haven't been linked yet."
+    - "Use the column toggles above the table to show or hide the Role, Event, Submitted date, and User account columns; your choices stick as you filter."
 - name: "On-demand training agreement"
   area: people
   display_status: admin_facing
