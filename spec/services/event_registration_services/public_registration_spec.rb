@@ -281,6 +281,44 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "News subscription capture" do
+    let!(:news) { create(:topic_subscription_type, name: "News") }
+
+    it "subscribes the registrant to News with the event as the source when they opt in" do
+      params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
+        field_id("communication_consent") => [ "Yes" ]
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+      person = Person.find_by!(email: "coco@example.com")
+
+      subscription = person.topic_subscriptions.active.for_topic_type(news).sole
+      expect(subscription.source).to eq("#{event.start_date.to_date.iso8601} #{event.title} registration")
+    end
+
+    it "does not subscribe when the consent box is left unchecked" do
+      params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
+        field_id("communication_consent") => [ "" ]
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(Person.find_by!(email: "coco@example.com").topic_subscriptions).to be_empty
+    end
+
+    it "does not add a second active subscription when one already exists" do
+      person = create(:person, first_name: "Coco", last_name: "Lee", email: "coco@example.com")
+      create(:topic_subscription, person: person, topic_subscription_type: news, source: "Earlier")
+      params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
+        field_id("communication_consent") => [ "Yes" ]
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(person.topic_subscriptions.active.for_topic_type(news).sole.source).to eq("Earlier")
+    end
+  end
+
   describe "structured contact and organization data" do
     it "stores the mailing country on a new registrant's address" do
       params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(

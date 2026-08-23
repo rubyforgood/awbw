@@ -131,9 +131,10 @@ class SmartFormFields
     {
       key: :consent,
       title: "Consent",
-      summary: "Asks registrants to opt in to email communication. The answer is stored with the submission.",
+      summary: "Asks registrants to opt in to email communication. An affirmative answer subscribes " \
+               "the person to the News (mailing-list) topic, with the event or form recorded as its source.",
       fields: [
-        [ "communication_consent", "Email communication consent", "Records the registrant's opt-in answer on the submission." ]
+        [ "communication_consent", "Email communication consent", "Any non-blank answer creates an active News topic subscription, sourced to this event or form." ]
       ]
     },
     {

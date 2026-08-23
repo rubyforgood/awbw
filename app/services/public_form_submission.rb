@@ -25,6 +25,8 @@ class PublicFormSubmission
       person = find_or_create_person
       return Result.new(success?: false, errors: [ IDENTITY_MISSING_MESSAGE ]) unless person
 
+      record_news_subscription(person)
+
       submission = FormSubmission.create!(person: person, form: @form, role: ROLE)
       save_form_answers(submission)
       OtherResponses::CaptureFromSubmission.call(submission)
@@ -89,6 +91,14 @@ class PublicFormSubmission
     Person
       .where("LOWER(email) = ? AND LOWER(last_name) = ?", email.downcase, last_name.downcase)
       .first
+  end
+
+  # An affirmative communication-consent answer subscribes the person to the
+  # News (mailing-list) topic, recording the form as its source.
+  def record_news_subscription(person)
+    return unless Array(field_value("communication_consent")).any? { |value| value.to_s.strip.present? }
+
+    NewsSubscriptionCapture.call(person: person, source: "#{@form.display_name} (public form)")
   end
 
   def save_form_answers(submission)

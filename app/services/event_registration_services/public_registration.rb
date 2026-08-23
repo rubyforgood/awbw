@@ -71,6 +71,7 @@ module EventRegistrationServices
       ActiveRecord::Base.transaction do
         person = find_or_create_person
         sync_person_profile(person)
+        record_news_subscription(person)
 
         create_mailing_address(person) if field_value("mailing_city").present?
         create_phone_contact(person) if field_value("phone").present?
@@ -241,6 +242,23 @@ module EventRegistrationServices
     def apply_value(record, attribute, value)
       return if value.blank?
       record.update!(attribute => value.strip)
+    end
+
+    def record_news_subscription(person)
+      return unless communication_consent_given?
+
+      NewsSubscriptionCapture.call(person: person, source: news_subscription_source)
+    end
+
+    def communication_consent_given?
+      Array(field_value("communication_consent")).any? { |value| value.to_s.strip.present? }
+    end
+
+    # Identify the event by start date *and* title — many trainings share a title,
+    # so the leading date is what makes the source traceable to one event,
+    # e.g. "2026-06-23 Facilitator Training registration".
+    def news_subscription_source
+      [ @event.start_date&.to_date&.iso8601, "#{@event.title} registration" ].compact.join(" ")
     end
 
     def create_mailing_address(person)

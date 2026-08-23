@@ -57,7 +57,8 @@
   pr_number: 2358
   summary: >-
     The person editor's old "mailing list consent" checkbox is gone; it now links to that
-    person's News subscriptions, where mailing-list interest is tracked.
+    person's News subscriptions, where mailing-list interest is tracked. Registration and
+    public form consent answers now create a News subscription, sourced to the event or form.
 
 - name: "Affiliation editor: FileMaker code"
   area: people
