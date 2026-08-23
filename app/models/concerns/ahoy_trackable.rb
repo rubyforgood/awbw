@@ -9,8 +9,7 @@ module AhoyTrackable
     after_create  -> { track_create_event }
     after_update  -> { track_update_event }
     after_destroy -> { track_lifecycle_event("destroy", @_destroy_snapshot || {}) }
-    before_save :capture_pending_association_removals
-    before_save :capture_pending_rich_text_changes
+    before_save :capture_pending_changes
     before_destroy :capture_destroy_snapshot
   end
 
@@ -58,57 +57,49 @@ module AhoyTrackable
     track_lifecycle_event("update", extra)
   end
 
-  # Capture records marked for destruction before autosave removes them from the target
-  def capture_pending_association_removals
-    @_pending_association_removals = {}
+  # Autosave writes children, rich text, and attachments *after* this record's own
+  # callbacks have run, clearing their dirty state on the way — so everything the
+  # update event says about them has to be read here, while it's still pending.
+  def capture_pending_changes
+    capture_pending_association_changes
+    capture_pending_rich_text_changes
+    capture_pending_attachment_changes
+  end
+
+  def capture_pending_association_changes
+    @_pending_association_changes = []
 
     self.class.nested_attributes_options.each_key do |assoc_name|
-      assoc = association(assoc_name.to_s)
-      next unless assoc.loaded?
-
-      marked = Array(assoc.target).compact.select(&:marked_for_destruction?)
-      next if marked.empty?
-
-      @_pending_association_removals[assoc_name] = marked.map do |record|
-        { action: "removed", id: record.id, type: record.class.name }
+      # A symbol: the association cache is symbol-keyed, and a string lookup hands
+      # back a fresh, unloaded association whose target is empty.
+      Array(association(assoc_name).target).compact.each do |record|
+        pending = pending_association_change(assoc_name, record)
+        @_pending_association_changes << pending if pending
       end
     end
   end
 
+  def pending_association_change(assoc_name, record)
+    return { assoc: assoc_name, record: record, action: "removed" } if record.marked_for_destruction?
+    return { assoc: assoc_name, record: record, action: "added" } if record.new_record?
+
+    record_changes = record.changes.except("updated_at", "created_at")
+    return if record_changes.empty?
+
+    { assoc: assoc_name, record: record, action: "updated", changes: format_tracked_changes(record_changes) }
+  end
+
+  # Ids are read now rather than at capture time: a record added through nested
+  # attributes has none until the save goes through.
   def collect_association_changes
-    changes = {}
+    (@_pending_association_changes.to_a + @_pending_attachment_changes.to_a).each_with_object({}) do |pending, changes|
+      entry = { action: pending[:action], type: pending[:type] || pending[:record].class.name }
+      entry[:id] = pending[:record].id if pending[:record]
+      entry[:filename] = pending[:filename] if pending[:filename]
+      entry[:changes] = pending[:changes] if pending[:changes]
 
-    self.class.nested_attributes_options.each_key do |assoc_name|
-      assoc = association(assoc_name.to_s)
-      next unless assoc.loaded?
-
-      Array(assoc.target).compact.each do |record|
-        if record.previously_new_record?
-          changes[assoc_name] ||= []
-          changes[assoc_name] << { action: "added", id: record.id, type: record.class.name }
-        else
-          record_changes = record.previous_changes.except("updated_at", "created_at")
-          next if record_changes.empty?
-
-          changes[assoc_name] ||= []
-          changes[assoc_name] << { action: "updated", id: record.id, type: record.class.name,
-                                   changes: format_tracked_changes(record_changes) }
-        end
-      end
+      (changes[pending[:assoc]] ||= []) << entry
     end
-
-    # Merge in removals captured before save
-    if @_pending_association_removals.present?
-      @_pending_association_removals.each do |assoc_name, removals|
-        changes[assoc_name] ||= []
-        changes[assoc_name].concat(removals)
-      end
-    end
-
-    # Track attachment changes
-    collect_attachment_changes(changes)
-
-    changes
   end
 
   # Rich text saves through the parent's autosave chain, so by the time the update
@@ -145,39 +136,28 @@ module AhoyTrackable
     text.squish.truncate(RICH_TEXT_PREVIEW_LIMIT)
   end
 
-  def collect_attachment_changes(changes)
-    self.class.reflect_on_all_associations.each do |assoc|
-      next if assoc.polymorphic?
-      next unless safe_assoc_class_name(assoc) == "ActiveStorage::Attachment"
+  # ActiveStorage stages attach/purge on the record and applies it during save, so
+  # the staged change is the only reliable description of what happened.
+  def capture_pending_attachment_changes
+    @_pending_attachment_changes = []
+    return unless respond_to?(:attachment_changes, true)
 
-      if assoc.macro == :has_many
-        Array(association(assoc.name.to_s).target).compact.each do |record|
-          next unless record.previously_new_record?
+    attachment_changes.each do |name, change|
+      removal = change.is_a?(ActiveStorage::Attached::Changes::DeleteOne) ||
+        change.is_a?(ActiveStorage::Attached::Changes::DeleteMany)
 
-          changes[assoc.name] ||= []
-          changes[assoc.name] << { action: "added", type: "ActiveStorage::Attachment", record_id: record.id, blob_id: record.blob_id }
-        end
-      elsif assoc.macro == :has_one
-        record = public_send(assoc.name)
-        next unless record&.previously_new_record?
-
-        changes[assoc.name] ||= []
-        changes[assoc.name] << { action: "added", type: "ActiveStorage::Attachment", record_id: record.id, blob_id: record.blob_id }
-      end
+      @_pending_attachment_changes << {
+        assoc: :"#{name}_attachment",
+        type: "ActiveStorage::Attachment",
+        action: removal ? "removed" : "added",
+        filename: (attachment_filenames(change) unless removal)
+      }.compact
     end
+  end
 
-    if @_pending_association_removals.blank?
-      # Check for attachment removals via attachment_changes (Rails built-in tracking)
-      return unless respond_to?(:attachment_changes, true) && attachment_changes.present?
-
-      attachment_changes.each do |name, change|
-        assoc_name = "#{name}_attachment".to_sym
-        if change.is_a?(ActiveStorage::Attached::Changes::DeleteOne) || change.is_a?(ActiveStorage::Attached::Changes::DeleteMany)
-          changes[assoc_name] ||= []
-          changes[assoc_name] << { action: "removed", type: "ActiveStorage::Attachment" }
-        end
-      end
-    end
+  def attachment_filenames(change)
+    blobs = change.try(:blobs) || Array(change.try(:blob))
+    blobs.filter_map { |blob| blob.filename.to_s.presence }.join(", ").presence
   end
 
   def capture_destroy_snapshot
@@ -194,7 +174,7 @@ module AhoyTrackable
     records = {}
 
     self.class.nested_attributes_options.each_key do |assoc_name|
-      assoc = association(assoc_name.to_s)
+      assoc = association(assoc_name)
       next unless assoc.loaded?
 
       created = Array(assoc.target).compact.select(&:persisted?)
@@ -222,7 +202,7 @@ module AhoyTrackable
       next if assoc.polymorphic?
       next unless safe_assoc_class_name(assoc) == "ActiveStorage::Attachment"
 
-      target = association(assoc.name.to_s).target
+      target = association(assoc.name).target
       attached = Array(target).compact.select(&:persisted?)
       next if attached.empty?
 

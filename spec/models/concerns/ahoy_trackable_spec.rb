@@ -70,4 +70,53 @@ RSpec.describe AhoyTrackable do
       expect(event_named("update.event")).to be_nil
     end
   end
+
+  describe "nested records" do
+    it "records an added nested record on the parent's event" do
+      registration = create(:event_registration)
+      Analytics::LifecycleBuffer.store.clear
+
+      registration.update!(comments_attributes: [ { body: "Called the registrant" } ])
+
+      added = event_named("update.event_registration")[:properties][:association_changes][:comments].first
+      expect(added).to include(action: "added", type: "Comment")
+    end
+
+    it "records an edited nested record with its field changes" do
+      person = create(:person)
+      license = create(:professional_license, person: person, number: "LIC-1")
+      person.professional_licenses.load
+      Analytics::LifecycleBuffer.store.clear
+
+      person.update!(professional_licenses_attributes: [ { id: license.id, number: "LIC-2" } ])
+
+      edited = event_named("update.person")[:properties][:association_changes][:professional_licenses].first
+      expect(edited).to include(action: "updated")
+      expect(edited[:changes]["number"]).to eq({ before: "LIC-1", after: "LIC-2" })
+    end
+
+    it "records a removed nested record" do
+      person = create(:person)
+      license = create(:professional_license, person: person)
+      person.professional_licenses.load
+      Analytics::LifecycleBuffer.store.clear
+
+      person.update!(professional_licenses_attributes: [ { id: license.id, _destroy: "1" } ])
+
+      removed = event_named("update.person")[:properties][:association_changes][:professional_licenses].first
+      expect(removed).to include(action: "removed", id: license.id, type: "ProfessionalLicense")
+    end
+  end
+
+  describe "attachments" do
+    it "records an added attachment on the record's event" do
+      person = create(:person)
+      Analytics::LifecycleBuffer.store.clear
+
+      person.update!(avatar: Rack::Test::UploadedFile.new(Rails.root.join("app/assets/images/missing.png"), "image/png"))
+
+      attached = event_named("update.person")[:properties][:association_changes][:avatar_attachment].first
+      expect(attached).to include(action: "added", type: "ActiveStorage::Attachment")
+    end
+  end
 end
