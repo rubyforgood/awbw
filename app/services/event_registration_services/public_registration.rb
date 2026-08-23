@@ -474,7 +474,15 @@ module EventRegistrationServices
       ce_field_value(CE_LICENSE_EXPIRES_ON_IDENTIFIER).presence
     end
 
+    # A CE question can be asked on the nested CE form, on the registration form's
+    # built-in continuing_education section, or both — and the nested copy is
+    # suppressed as a duplicate when both carry it — so read whichever copy the
+    # registrant was actually shown.
     def ce_field_value(key)
+      nested_ce_value(key).presence || field_value(key)
+    end
+
+    def nested_ce_value(key)
       field = @continuing_education_form.form_fields.find_by(field_identifier: key)
       return nil unless field
 

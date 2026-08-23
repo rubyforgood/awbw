@@ -284,6 +284,43 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
              } } }
       }.to change(EventRegistration, :count).by(1)
     end
+
+    # Both forms come from the same builder, so every CE question on the nested
+    # form is a duplicate and gets suppressed — the opt-in and license details
+    # have to be read from the copy the registrant was actually shown.
+    context "when the registration form carries the built-in CE section" do
+      let(:ce_section_event) { create(:event, cost_cents: 0, ce_hours_offered: 3) }
+      let(:builder_registration_form) do
+        FormBuilderService.new(name: "Reg", sections: %i[person_identifier continuing_education],
+                               role: "registration").call
+      end
+      let(:builder_ce_form) do
+        FormBuilderService.new(name: "CE", sections: %i[continuing_education],
+                               role: "continuing_education").call
+      end
+
+      before do
+        EventForm.create!(event: ce_section_event, form: builder_registration_form, role: "registration")
+        EventForm.create!(event: ce_section_event, form: builder_ce_form, role: "continuing_education")
+      end
+
+      def registration_answers
+        %w[first_name last_name primary_email confirm_email ce_credit_interest ce_license_number]
+          .zip([ "Pat", "Lee", "pat@example.com", "pat@example.com", "Yes", "12345" ])
+          .to_h { |identifier, answer|
+            [ builder_registration_form.form_fields.find_by(field_identifier: identifier).id.to_s, answer ]
+          }
+      end
+
+      it "creates the CE registration from the registration form's answer" do
+        expect {
+          post event_public_registration_path(ce_section_event),
+               params: { public_registration: { form_fields: registration_answers } }
+        }.to change(ContinuingEducationRegistration, :count).by(1)
+
+        expect(ContinuingEducationRegistration.last.professional_license.number).to eq("12345")
+      end
+    end
   end
 
   describe "GET new" do
@@ -839,6 +876,32 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
         expect(response).to have_http_status(:success)
         expect(response.body).to include("Why do you need a scholarship?")
         expect(response.body).to include("Our agency training budget was cut.")
+      end
+    end
+
+    context "when the scholarship form only repeats registration questions" do
+      let(:scholarship_form) { create(:form, role: "scholarship") }
+      let!(:registration_twin) do
+        create(:form_field, form: form, field_identifier: "impact_description",
+               name: "How will this help?", required: false)
+      end
+      let!(:scholarship_duplicate) do
+        create(:form_field, form: scholarship_form, field_identifier: "impact_description",
+               answer_type: :free_form_input_paragraph, name: "How will this help?", required: false)
+      end
+
+      before do
+        EventForm.create!(event: event, form: scholarship_form, role: "scholarship")
+        submission = FormSubmission.create!(person: person, form: scholarship_form, event: event, role: "scholarship")
+        submission.form_answers.create!(form_field: scholarship_duplicate,
+                                        submitted_answer: "Our agency training budget was cut.")
+      end
+
+      it "omits the scholarship card instead of rendering it with no questions" do
+        get event_public_registration_path(event, person_id: person.id)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).not_to include("Scholarship application")
       end
     end
 

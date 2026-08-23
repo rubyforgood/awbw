@@ -84,8 +84,9 @@
   </div>
 
   <%# ---- SCHOLARSHIP APPLICATION CARD — only when the registrant filled out the
-      separate scholarship form (its own role: "scholarship" submission). ---- %>
-  <% if @scholarship_submission %>
+      separate scholarship form (its own role: "scholarship" submission) and it
+      still has questions of its own once the registration form's are dropped. ---- %>
+  <% if @scholarship_submission && @scholarship_fields.any? %>
     <div id="scholarship-application" class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden mt-8 scroll-mt-24">
 
       <%# Card Header %>
@@ -135,8 +136,8 @@
 
   <%# ---- CONTINUING EDUCATION CARD — only when the registrant filled out the
       separate continuing_education form (its own role: "continuing_education"
-      submission). ---- %>
-  <% if @continuing_education_submission %>
+      submission) and it still has questions of its own. ---- %>
+  <% if @continuing_education_submission && @continuing_education_fields.any? %>
     <div id="continuing-education" class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden mt-8 scroll-mt-24">
 
       <%# Card Header %>
