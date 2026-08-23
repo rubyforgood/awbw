@@ -45,7 +45,20 @@
           <% end %>
         </div>
 
-        <% if check.any? %>
+        <% if check.any? && check.row_partial %>
+          <%# display:contents on each row so its cells land in this grid and the
+              columns line up across records. %>
+          <ol class="grid grid-cols-[1fr_max-content_max-content] items-center gap-x-4 px-4 pb-2 text-sm">
+            <li class="contents text-xs font-medium tracking-wide text-gray-400 uppercase">
+              <% check.columns.each do |heading| %><span class="pt-2"><%= heading %></span><% end %>
+            </li>
+            <% check.preview.each do |record| %>
+              <li class="contents">
+                <%= render check.row_partial, record: record %>
+              </li>
+            <% end %>
+          </ol>
+        <% elsif check.any? %>
           <ul class="divide-y divide-gray-100 text-sm">
             <% check.preview.each do |record| %>
               <li class="px-4 py-2 text-gray-700"><%= check.describe(record) %></li>

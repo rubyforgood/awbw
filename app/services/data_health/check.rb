@@ -57,5 +57,12 @@ module DataHealth
     def describe(record)
       record.to_s
     end
+
+    # A check whose rows are worth comparing side by side names its column
+    # headings here and a partial to render each row; the page falls back to the
+    # one-line #describe when both are nil.
+    def columns = nil
+
+    def row_partial = nil
   end
 end

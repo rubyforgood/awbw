@@ -21,6 +21,12 @@ module DataHealth
       Organization.where(id: drifted_ids).includes(:organization_status)
     end
 
+    # Two columns so the disagreement reads at a glance: what the affiliations say
+    # (the answer the app uses) against what the column stores (the one it ignores).
+    def columns = [ "Organization", "Affiliations say", "Stored status" ]
+
+    def row_partial = "admin/data_health/organization_status_row"
+
     def describe(organization)
       deco = organization.decorate
       "#{organization.name} — stored #{organization.organization_status&.name.presence || 'none'}, " \

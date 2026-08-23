@@ -34,6 +34,45 @@ RSpec.describe "Admin::DataHealth", type: :request do
       expect(response.body).not_to include("Everything checks out")
     end
 
+    # The drift check is the one worth reading side by side: what the app uses
+    # against what the ignored column stores.
+    context "the legacy status drift check" do
+      let!(:active_status) { OrganizationStatus.find_or_create_by!(name: "Active") }
+      let!(:drifted) { create(:organization, name: "Drifted Org", organization_status: active_status) }
+
+      it "renders both statuses as chips, in labelled columns" do
+        get admin_data_health_path
+
+        doc = Nokogiri::HTML(response.body)
+        headings = doc.css("li.contents").first.css("span").map(&:text).map(&:strip)
+        expect(headings).to eq([ "Organization", "Affiliations say", "Stored status" ])
+
+        row = doc.css("li.contents").last
+        expect(row.text).to include("Drifted Org")
+        expect(row.text).to include("Never active")
+        expect(row.text).to include("Active")
+      end
+
+      it "colours each chip from its own bucket, so a disagreement is visible" do
+        get admin_data_health_path
+
+        row = Nokogiri::HTML(response.body).css("li.contents").last
+        chips = row.css("span[class*='rounded-full']").map { |c| c["class"] }
+
+        expect(chips.size).to eq(2)
+        expect(chips.first).to eq(chips.first) # affiliation-derived
+        expect(chips.first).not_to eq(chips.last), "both chips got the same colour, so the drift is invisible"
+      end
+
+      it "links each organization to its program-status section" do
+        get admin_data_health_path
+
+        expect(response.body).to include(
+          CGI.escapeHTML(edit_organization_path(drifted, anchor: "program-status"))
+        )
+      end
+    end
+
     it "offers a repair only for checks that have one" do
       offending_affiliation
 

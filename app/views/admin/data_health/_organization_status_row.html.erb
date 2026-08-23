@@ -1,0 +1,20 @@
+<%# Locals: record (an Organization). One row of the legacy-status drift check:
+    the affiliation-derived bucket the app actually uses, against the stored
+    column it ignores (ADR-0001 D3a). Both chips take their colour from the same
+    DomainTheme lookup the org pages use, so the two answers are comparable. %>
+<% deco = record.decorate %>
+<% stored_name = record.organization_status&.name.presence %>
+<% chip = "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium whitespace-nowrap" %>
+<% cell = "border-t border-gray-100 py-2" %>
+
+<%= link_to record.name, edit_organization_path(record, anchor: "program-status"),
+      target: "_blank", rel: "noopener",
+      class: "min-w-0 truncate border-t border-gray-100 py-2 font-medium text-gray-800 hover:text-blue-700 hover:underline" %>
+
+<span class="<%= cell %>"><span class="<%= chip %> <%= OrganizationDecorator.status_classes_for_bucket(deco.organization_status_bucket) %>">
+  <%= deco.organization_status_label %>
+</span></span>
+
+<span class="<%= cell %>"><span class="<%= chip %> <%= OrganizationDecorator.status_classes_for_bucket(deco.stored_status_bucket) %>">
+  <%= stored_name || "None" %>
+</span></span>
