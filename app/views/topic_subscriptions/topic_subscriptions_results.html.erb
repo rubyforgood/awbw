@@ -74,7 +74,7 @@
                     <%# Org the subscription is narrowed to, linked to its profile; outside the
                         person card so it isn't a link nested in a link. %>
                     <%= link_to organization_path(subscription.organization),
-                                class: "mt-1 inline-flex max-w-56 items-center gap-1 text-xs text-gray-400 hover:text-gray-600 hover:underline",
+                                class: "mt-1 inline-flex max-w-56 items-center gap-1 pl-2 text-xs text-gray-400 hover:text-gray-600 hover:underline",
                                 data: { turbo_frame: "_top" } do %>
                       <i class="fa-solid fa-building flex-shrink-0 text-2xs"></i>
                       <span class="truncate"><%= subscription.organization.name %></span>
@@ -84,19 +84,19 @@
 
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <div class="font-medium"><%= subscription.topic_label %></div>
-                  <div class="mt-0.5 text-xs text-gray-500">
-                    <% if subscription.general_event_scope? %>
+                  <% if subscription.general_event_scope? %>
+                    <div class="mt-0.5 text-xs text-gray-500">
                       <span class="inline-flex items-center gap-1">
                         <i class="fa-solid fa-layer-group text-2xs"></i>
                         <%= subscription.event_label %>
                       </span>
-                    <% elsif subscription.interested_event %>
-                      <%# The label may be a terse abbreviation, so carry the full title as a tooltip. %>
+                    </div>
+                  <% elsif subscription.interested_event %>
+                    <%# The label may be a terse abbreviation, so carry the full title as a tooltip. %>
+                    <div class="mt-0.5 text-xs text-gray-500">
                       <span title="<%= subscription.interested_event.title %>"><%= subscription.event_label %></span>
-                    <% else %>
-                      <%= subscription.event_label %>
-                    <% end %>
-                  </div>
+                    </div>
+                  <% end %>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-800">

@@ -22,9 +22,9 @@ RSpec.describe TopicSubscriptionDecorator do
       expect(subscription.decorate.event_label).to eq("Any — facilitator trainings")
     end
 
-    it "is 'N/A' for a topic with no event dimension" do
+    it "is nil for a topic with no event dimension" do
       subscription = create(:topic_subscription, topic_subscription_type: news)
-      expect(subscription.decorate.event_label).to eq("N/A")
+      expect(subscription.decorate.event_label).to be_nil
     end
   end
 
