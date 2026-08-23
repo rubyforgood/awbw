@@ -160,4 +160,26 @@ RSpec.describe Ahoy::EventDecorator do
       expect(queries).to eq(0)
     end
   end
+
+  describe "a reference whose record has a broken label" do
+    it "falls back to the type and id instead of raising" do
+      organization = create(:organization)
+      tagging = create(:sectorable_item, sectorable: organization, sector: create(:sector))
+      allow_any_instance_of(SectorableItem).to receive(:title).and_raise(NoMethodError)
+      event = create(
+        :ahoy_event,
+        name: "update.organization",
+        resource_type: "Organization",
+        resource_id: organization.id,
+        properties: {
+          resource_type: "Organization", resource_id: organization.id,
+          association_changes: { sectorable_items: [ { action: "added", type: "SectorableItem", id: tagging.id } ] }
+        }
+      )
+
+      rows = event.decorate.detail_rows
+
+      expect(rows.map { |row| row[:link] }.compact.first[:text]).to eq("SectorableItem ##{tagging.id}")
+    end
+  end
 end

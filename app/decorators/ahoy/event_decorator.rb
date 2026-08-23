@@ -115,9 +115,18 @@ module Ahoy
       type = item["type"] || item["record_type"]
       id = item["id"] || item["record_id"]
       record = find_referenced_record(type, id)
-      text = record.try(:title).presence || record.try(:name).presence || "#{type} ##{id}"
+      text = safe_label(record) || "#{type} ##{id}"
       { label: label, depth: depth, action: item["action"],
         link: { text: text, path: show_path_for(record) } }
+    end
+
+    # A model's own title/name can raise on records it wasn't written for, and a
+    # change log is not the place to find out.
+    def safe_label(record)
+      label = record.try(:title).presence || record.try(:name).presence
+      label.is_a?(String) ? label : label&.to_s
+    rescue StandardError
+      nil
     end
 
     # Prefer the page-level cache (one query per type, built by
