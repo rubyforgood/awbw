@@ -55,6 +55,16 @@ RSpec.describe PublicFormSubmission do
         .not_to change(EventRegistration, :count)
     end
 
+    it "rejects a blank-identity submission rather than recording it anonymously" do
+      result = nil
+      expect { result = described_class.call(form: form, form_params: params_for(first: "", last: "", email: "")) }
+        .to change(FormSubmission, :count).by(0)
+        .and change(EventRegistration, :count).by(0)
+
+      expect(result.success?).to be(false)
+      expect(result.errors).to include(PublicFormSubmission::IDENTITY_REQUIRED_MESSAGE)
+    end
+
     it "does not register submissions to non-registration forms" do
       plain = create(:form, slug: "plain", published: true)
       field = create(:form_field, form: plain, field_identifier: "first_name")
@@ -92,14 +102,6 @@ RSpec.describe PublicFormSubmission do
     expect(FormSubmission.last.person).to eq(existing)
   end
 
-  it "fails with a friendly error when the form can't identify the respondent" do
-    result = described_class.call(form: form, form_params: params_for(email: ""))
-
-    expect(result.success?).to be(false)
-    expect(result.errors).to include(PublicFormSubmission::IDENTITY_MISSING_MESSAGE)
-    expect(FormSubmission.count).to eq(0)
-  end
-
   it "sends a confirmation to the submitter and an FYI to admin" do
     expect { described_class.call(form: form, form_params: params_for) }
       .to change { Notification.where(kind: "form_submission_confirmation").count }.by(1)
@@ -108,6 +110,34 @@ RSpec.describe PublicFormSubmission do
     confirmation = Notification.find_by(kind: "form_submission_confirmation")
     expect(confirmation.recipient_email).to eq("sam@example.com")
     expect(confirmation.recipient_role).to eq("person")
+  end
+
+  context "when identity is left blank (optional name/email questions)" do
+    it "records a person-less submission when identity is blank" do
+      result = nil
+      expect { result = described_class.call(form: form, form_params: params_for(first: "", last: "", email: "")) }
+        .to change(FormSubmission, :count).by(1)
+        .and change(Person, :count).by(0)
+
+      expect(result.success?).to be(true)
+      expect(result.form_submission.person).to be_nil
+      expect(result.form_submission).to be_anonymous
+      expect(result.form_submission.form_answers.find_by(form_field: question_field).submitted_answer).to eq("I care.")
+    end
+
+    it "still builds a person when the respondent chooses to identify" do
+      result = nil
+      expect { result = described_class.call(form: form, form_params: params_for) }
+        .to change(Person, :count).by(1)
+
+      expect(result.form_submission.person.email).to eq("sam@example.com")
+    end
+
+    it "skips the submitter confirmation but still sends the admin FYI for an anonymous submission" do
+      expect { described_class.call(form: form, form_params: params_for(first: "", last: "", email: "")) }
+        .to change { Notification.where(kind: "form_submission_confirmation").count }.by(0)
+        .and change { Notification.where(kind: "form_submission_confirmation_fyi").count }.by(1)
+    end
   end
 
   it "subscribes the submitter to News, sourced to the form, when the consent question is answered" do

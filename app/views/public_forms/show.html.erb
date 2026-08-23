@@ -21,6 +21,13 @@
     <div class="px-6 py-7 sm:px-8">
       <%= render "forms/header", form: @form %>
 
+      <% if @form.accepts_anonymous_submissions? %>
+        <p class="mb-6 flex items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+          <i class="fa-solid fa-user-secret mt-0.5 text-gray-400"></i>
+          <span>You can submit this form anonymously — name and email are optional.</span>
+        </p>
+      <% end %>
+
       <% if flash[:alert] %>
         <div role="alert" class="mb-6 flex scroll-mt-24 items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-800" data-controller="form-errors">
           <i class="fa-solid fa-circle-exclamation mt-0.5 text-red-500"></i>
@@ -41,7 +48,7 @@
             <% else %>
               <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
               <div class="<%= field.grid_span_class %>">
-                <%= render "events/public_registrations/form_field", field: field, value: submitted_value %>
+                <%= render "events/public_registrations/form_field", field: field, value: submitted_value, required: @form.requires_answer?(field) %>
               </div>
             <% end %>
           <% end %>

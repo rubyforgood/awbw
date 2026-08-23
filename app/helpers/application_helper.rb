@@ -401,7 +401,7 @@ module ApplicationHelper
   # show page.
   def form_submission_link_path(submission)
     event = submission.resolved_event
-    registration = event && submission.person.event_registrations.find_by(event: event)
+    registration = event && submission.person&.event_registrations&.find_by(event: event)
     return event_public_registration_path(event, reg: registration.slug) if registration&.slug.present?
     form_submission_path(submission)
   end

@@ -858,7 +858,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_160913) do
     t.bigint "event_id"
     t.integer "form_id", null: false
     t.json "metadata"
-    t.bigint "person_id", null: false
+    t.bigint "person_id"
     t.string "role"
     t.string "slug"
     t.datetime "updated_at", null: false

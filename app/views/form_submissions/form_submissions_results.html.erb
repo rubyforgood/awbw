@@ -62,7 +62,7 @@
                   <span class="text-gray-300">—</span>
                 <% end %>
               </td>
-              <% unless @person %><td class="px-4 py-3"><%= submission.person&.name %></td><% end %>
+              <% unless @person %><td class="px-4 py-3"><%= submission.person&.name || content_tag(:span, "Anonymous", class: "text-gray-400 italic") %></td><% end %>
               <td class="px-4 py-3">
                 <%# The submitted organization answer, with whether an org has been
                     directly linked to this submission yet — the "to process" signal.
