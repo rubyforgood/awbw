@@ -46,17 +46,17 @@
               </td>
               <% unless @person %><td class="px-4 py-3"><%= submission.person&.name %></td><% end %>
               <td class="px-4 py-3">
-                <%# The submitted organization answer, with whether the person already
-                    has an active affiliation to an organization of that name — the
-                    "link organization" signal for processing agreement submissions. %>
+                <%# The submitted organization answer, with whether an org has been
+                    directly linked to this submission yet — the "to process" signal.
+                    A matching affiliation the person holds doesn't count; only an
+                    explicit link made in the editor does. %>
                 <% answers = submission.answers_by_identifier %>
                 <% submitted_org = FormField.aliased_identifiers("organization_name").filter_map { |key| answers[key].presence }.first %>
                 <% if submitted_org %>
                   <%= submitted_org %>
                   <%# The chip doubles as the way into the submission's org-linking
                       editor, like the org chips on the registrants roster. %>
-                  <% linked = submission.linked_organization_ids.any? ||
-                       submission.person&.affiliations&.any? { |a| a.active? && a.organization.name.casecmp?(submitted_org) } %>
+                  <% linked = submission.linked_organization_ids.any? %>
                   <% editor_path = link_organization_form_submission_path(submission, return_to: "form_submissions") %>
                   <% if linked %>
                     <%= link_to editor_path, title: "Open the organization linking editor", data: { turbo_frame: "_top" },

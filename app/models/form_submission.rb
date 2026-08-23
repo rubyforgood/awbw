@@ -16,8 +16,8 @@ class FormSubmission < ApplicationRecord
   # The index's "Organization linking" filter vocabulary: linked = the submitted
   # organization name matches one of the person's active affiliations.
   ORG_LINK_STATUS_FILTER_OPTIONS = [
-    [ "Linked", "linked" ],
-    [ "Not linked", "unlinked" ],
+    [ "Linked to submission", "linked" ],
+    [ "Not linked to submission", "unlinked" ],
     [ "No organization answer", "none" ]
   ].freeze
 
@@ -72,25 +72,16 @@ class FormSubmission < ApplicationRecord
   # #link_organization!). COALESCE: metadata (or the key) may be absent.
   EXPLICIT_ORG_LINK_SQL = "COALESCE(JSON_LENGTH(JSON_EXTRACT(form_submissions.metadata, '$.linked_organization_ids')), 0) > 0".freeze
 
+  # Whether an org has been *directly linked to the submission* (the metadata link
+  # an admin sets in the org-linking editor) — i.e. whether it's been processed.
+  # A matching affiliation the person happens to hold does NOT count: "unlinked" is
+  # the processing queue of submissions that named an org but haven't been linked.
   scope :org_link_status, ->(value) {
     answered = org_name_answers.select(:form_submission_id)
     case value
-    when "linked", "unlinked"
-      # Linked: the submitted name matches an org the person holds an active (or
-      # pending) affiliation with — the same rule as the index's Linked chip —
-      # or an admin explicitly linked an org to this submission (which covers a
-      # typo'd name resolved to a differently-named org).
-      affiliation_linked = org_name_answers
-        .joins(form_submission: { person: { affiliations: :organization } })
-        .merge(Affiliation.active_or_pending)
-        .where("organizations.name = form_answers.submitted_answer")
-        .select(:form_submission_id)
-      if value == "linked"
-        where(id: answered).and(where(id: affiliation_linked).or(where(EXPLICIT_ORG_LINK_SQL)))
-      else
-        where(id: answered).where.not(id: affiliation_linked).where.not(EXPLICIT_ORG_LINK_SQL)
-      end
-    when "none" then where.not(id: answered)
+    when "linked" then where(EXPLICIT_ORG_LINK_SQL)
+    when "unlinked" then where(id: answered).where.not(EXPLICIT_ORG_LINK_SQL)
+    when "none" then where.not(id: answered).where.not(EXPLICIT_ORG_LINK_SQL)
     else all
     end
   }

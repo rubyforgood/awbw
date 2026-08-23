@@ -113,9 +113,9 @@ RSpec.describe FormSubmission do
     end
 
     describe ".org_link_status" do
-      it "separates linked, unlinked, and answerless submissions" do
+      it "separates linked, unlinked, and answerless submissions by the direct submission link" do
         linked = submission_with_org_answer("Harbor Family Shelter")
-        create(:affiliation, person: linked.person, organization: create(:organization, name: "Harbor Family Shelter"))
+        linked.link_organization!(create(:organization, name: "Harbor Family Shelter").id)
         unlinked = submission_with_org_answer("Lakeside College")
         no_answer = create(:form_submission)
 
@@ -125,11 +125,11 @@ RSpec.describe FormSubmission do
         expect(described_class.org_link_status("none")).not_to include(linked, unlinked)
       end
 
-      it "does not count an ended affiliation as linked" do
+      it "counts only a direct submission link, not a matching affiliation the person holds" do
         submission = submission_with_org_answer("Harbor Family Shelter")
-        create(:affiliation, person: submission.person, end_date: 1.year.ago,
-               organization: create(:organization, name: "Harbor Family Shelter"))
+        create(:affiliation, person: submission.person, organization: create(:organization, name: "Harbor Family Shelter"))
 
+        # The submission still needs processing — nothing has been linked to it.
         expect(described_class.org_link_status("linked")).to be_empty
         expect(described_class.org_link_status("unlinked")).to contain_exactly(submission)
       end

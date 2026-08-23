@@ -103,6 +103,7 @@
     open a submission and come back, so you land on the same filtered list.
   pro_tips:
     - "The Organization filter matches a submission whether the org was linked directly to it or reached through its event registration."
+    - "Set the organization-linking filter to \"Not linked to submission\" for a work queue of submissions that named an org but haven't been linked yet."
 - name: "On-demand training agreement"
   area: people
   display_status: admin_facing

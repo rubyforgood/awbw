@@ -154,7 +154,7 @@ RSpec.describe "FormSubmissions", type: :request do
         )
       end
 
-      it "shows the submitted organization with whether it is linked to the person" do
+      it "shows the submitted organization with whether it is linked to the submission" do
         submission = create(:form_submission)
         org_field = create(:form_field, form: submission.form, name: "Organization name",
                            field_identifier: "organization_name")
@@ -165,10 +165,16 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include("Harbor Family Shelter")
         expect(response.body).to include("Not linked")
 
+        # A matching affiliation the person holds does not mark it linked — only a
+        # direct link made in the editor does, so it stays in the "to process" queue.
         create(:affiliation, person: submission.person,
                organization: create(:organization, name: "Harbor Family Shelter"))
         get form_submissions_path, headers: frame_headers
-        expect(response.body).to include("Linked")
+        expect(response.body).to include("Not linked")
+
+        submission.link_organization!(create(:organization, name: "Harbor Family Shelter").id)
+        get form_submissions_path, headers: frame_headers
+        expect(response.body).not_to include("Not linked")
       end
 
       it "filters by person name via the search box" do
