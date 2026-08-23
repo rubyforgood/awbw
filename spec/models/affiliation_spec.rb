@@ -98,6 +98,21 @@ RSpec.describe Affiliation, type: :model do
     end
   end
 
+  describe '#upcoming?' do
+    it 'is true for a future start date that has not ended' do
+      expect(build(:affiliation, inactive: false, start_date: 1.month.from_now, end_date: nil).upcoming?).to be true
+    end
+
+    it 'is false for a past or absent start date' do
+      expect(build(:affiliation, inactive: false, start_date: 1.year.ago, end_date: nil).upcoming?).to be false
+      expect(build(:affiliation, inactive: false, start_date: nil, end_date: nil).upcoming?).to be false
+    end
+
+    it 'is false when flagged inactive, even with a future start' do
+      expect(build(:affiliation, inactive: true, start_date: 1.month.from_now, end_date: nil).upcoming?).to be false
+    end
+  end
+
   describe '.active' do
     let!(:active_op) { create(:affiliation, inactive: false, end_date: nil) }
     let!(:active_with_future_end) { create(:affiliation, inactive: false, end_date: 1.month.from_now) }

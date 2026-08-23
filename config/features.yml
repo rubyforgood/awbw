@@ -263,10 +263,10 @@
   pr_number: 2336
   summary: >-
     A facilitator affiliation with a future start date now reads as "Upcoming"
-    rather than Active — on the person edit form and the people directory, whose
-    facilitator-status filter gains an "Upcoming" option.
+    rather than Active — for people and organizations. The people and organization
+    indexes each gain an "Upcoming" status filter, and orgs show an Upcoming badge.
   pro_tips:
-    - "Active means started and not ended; a future start date reads as Upcoming until that date arrives, then no longer shows under Inactive."
+    - "Active means started and not ended; a future start reads as Upcoming until that date arrives. Upcoming orgs also still appear under the Inactive filter."
 
 - name: "Activity log: readable details column"
   area: reporting

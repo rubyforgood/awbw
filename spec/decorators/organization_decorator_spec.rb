@@ -98,10 +98,27 @@ RSpec.describe OrganizationDecorator do
       expect(org.reload.decorate.organization_status_bucket).to eq(:never_active)
     end
 
-    it "is not :active when its only facilitator affiliation has not started yet (future start)" do
+    it "is :upcoming when its only facilitator affiliation has not started yet (future start)" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
       create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
-      expect(org.reload.decorate.organization_status_bucket).not_to eq(:active)
+      expect(org.reload.decorate.organization_status_bucket).to eq(:upcoming)
+      expect(org.reload.decorate.organization_status_label).to eq("Upcoming")
+    end
+
+    it "prefers :active over :upcoming when a facilitator is active and another is upcoming" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
+      person = create(:person)
+      create(:affiliation, organization: org, person: person, title: "Facilitator", start_date: 1.year.ago, end_date: nil)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+      expect(org.reload.decorate.organization_status_bucket).to eq(:active)
+    end
+
+    it "prefers :upcoming over :formerly_active when a lapsed facilitator has a new upcoming term" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
+      person = create(:person)
+      create(:affiliation, organization: org, person: person, title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+      expect(org.reload.decorate.organization_status_bucket).to eq(:upcoming)
     end
   end
 

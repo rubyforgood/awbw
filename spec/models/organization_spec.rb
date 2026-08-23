@@ -248,6 +248,7 @@ RSpec.describe Organization do
     end
 
     let!(:active_fac) { org_with("Suspended", start_date: 1.year.ago, end_date: nil) }
+    let!(:upcoming_fac) { org_with("Active", start_date: 1.month.from_now, end_date: nil) }
     let!(:lapsed_fac) { org_with("Active", start_date: 3.years.ago, end_date: 1.year.ago) }
     let!(:no_fac) { org_with("Active") }
     let!(:non_fac_only) do
@@ -260,7 +261,11 @@ RSpec.describe Organization do
       expect(Organization.program_status("active")).to contain_exactly(active_fac)
     end
 
-    it "buckets only-lapsed facilitator affiliations as formerly_active" do
+    it "buckets a not-yet-started facilitator affiliation as upcoming" do
+      expect(Organization.program_status("upcoming")).to contain_exactly(upcoming_fac)
+    end
+
+    it "buckets only-lapsed facilitator affiliations as formerly_active (excludes upcoming)" do
       expect(Organization.program_status("formerly_active")).to contain_exactly(lapsed_fac)
     end
 
@@ -268,8 +273,8 @@ RSpec.describe Organization do
       expect(Organization.program_status("never_active")).to contain_exactly(no_fac, non_fac_only)
     end
 
-    it "combines formerly + never" do
-      expect(Organization.program_status("formerly_or_never")).to contain_exactly(lapsed_fac, no_fac, non_fac_only)
+    it "combines formerly + never + upcoming under the Inactive (not-active) umbrella" do
+      expect(Organization.program_status("formerly_or_never")).to contain_exactly(lapsed_fac, no_fac, non_fac_only, upcoming_fac)
     end
   end
 

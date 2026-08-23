@@ -117,19 +117,21 @@ class OrganizationDecorator < ApplicationDecorator
   end
 
   ORG_STATUS_BUCKET_LABELS = {
-    active: "Active", formerly_active: "Formerly active", never_active: "Never active"
+    active: "Active", upcoming: "Upcoming", formerly_active: "Formerly active", never_active: "Never active"
   }.freeze
   ORG_STATUS_BUCKET_THEMES = {
-    active: :org_active, formerly_active: :org_formerly_active, never_active: :org_never_active
+    active: :org_active, upcoming: :org_upcoming, formerly_active: :org_formerly_active, never_active: :org_never_active
   }.freeze
 
   # Derived purely from facilitator affiliations; the stored organization_status
-  # never feeds into this (ADR-0001 D3).
+  # never feeds into this (ADR-0001 D3). Upcoming (a facilitator scheduled but not
+  # started) is distinct from Active and from a lapsed Formerly active.
   def organization_status_bucket
     facilitators = object.affiliations.select(&:facilitator?)
     return :never_active if facilitators.none?
-
-    facilitators.any?(&:active?) ? :active : :formerly_active
+    return :active if facilitators.any?(&:active?)
+    return :upcoming if facilitators.any?(&:upcoming?)
+    :formerly_active
   end
 
   # Only used to flag where the legacy column disagrees with the affiliations.

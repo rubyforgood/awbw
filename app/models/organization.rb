@@ -120,9 +120,11 @@ class Organization < ApplicationRecord
   scope :program_status, ->(bucket) {
     fac_ids = Affiliation.facilitators.select(:organization_id)
     active_fac_ids = Affiliation.facilitators.active.select(:organization_id)
+    upcoming_fac_ids = Affiliation.facilitators.with_status("Upcoming").select(:organization_id)
     case bucket.to_s
     when "active"            then where(id: active_fac_ids)
-    when "formerly_active"   then where(id: fac_ids).where.not(id: active_fac_ids)
+    when "upcoming"          then where(id: upcoming_fac_ids).where.not(id: active_fac_ids)
+    when "formerly_active"   then where(id: fac_ids).where.not(id: active_fac_ids).where.not(id: upcoming_fac_ids)
     when "never_active"      then where.not(id: fac_ids)
     when "formerly_or_never" then where.not(id: active_fac_ids)
     else all

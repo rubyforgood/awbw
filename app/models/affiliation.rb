@@ -117,6 +117,12 @@ class Affiliation < ApplicationRecord
     status_on == "Active"
   end
 
+  # Not yet started: a future start date, not flagged inactive and not ended.
+  # The in-memory twin of status_on == "Upcoming".
+  def upcoming?
+    status_on == "Upcoming"
+  end
+
   # This affiliation's status as of a date: Inactive (flagged or ended), Upcoming
   # (future start), otherwise Active. The in-memory twin of the .with_status scope.
   def status_on(date = Date.current)
