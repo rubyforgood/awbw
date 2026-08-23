@@ -19,16 +19,18 @@
 <% chip = chip_color(notification.incoming? ? decorated.contact_person&.id : notification.sender_id) %>
 <% row = capture do %>
   <div class="flex items-center gap-x-1">
-    <span class="flex w-4 shrink-0 justify-center"><%= decorated.channel_icon %></span>
-    <span class="shrink-0 whitespace-nowrap text-xs text-gray-400">
+    <%# Flag column left empty — communications have no follow-up flag. %>
+    <span class="w-4 shrink-0"></span>
+    <span class="shrink-0 text-xs whitespace-nowrap text-gray-400">
       <%= notification.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
     </span>
     <span class="inline-flex w-20 shrink-0 items-center">
       <span class="<%= chip[0] %> <%= chip[1] %> max-w-full truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= decorated.from_title.presence || from_name %>"><%= truncate(from_first.to_s, length: 10, omission: "..") %></span>
     </span>
     <span class="min-w-0 flex-1 truncate text-sm">
-      <span class="font-semibold text-gray-900"><%= subject %></span>
       <%= decorated.flag_badges %>
+      <%= decorated.channel_icon %>
+      <span class="font-semibold text-gray-900"><%= subject %></span>
       <% if body.present? %>
         <% if body_admin_only && mark_admin_only %>
           <%# Internal staff note on a page non-admins can view — flag it admin-only. %>
