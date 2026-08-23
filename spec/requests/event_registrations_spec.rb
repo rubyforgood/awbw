@@ -462,6 +462,33 @@ RSpec.describe "EventRegistrations", type: :request do
         )
       end
 
+      it "shows the record's tracked changes in a change log" do
+        create(
+          :ahoy_event,
+          name: "update.event_registration",
+          resource_type: "EventRegistration",
+          resource_id: existing_registration.id,
+          properties: {
+            resource_type: "EventRegistration", resource_id: existing_registration.id,
+            changes: { "status" => { "before" => "registered", "after" => "attended" } }
+          }
+        )
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Change log")
+        # Rendered by the shared details partial: humanized field, before → after.
+        expect(response.body).to include("Status")
+        expect(response.body).to include("registered")
+        expect(response.body).to include("attended")
+      end
+
+      it "omits the change log when the record has no tracked activity" do
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).not_to include("Change log")
+      end
+
       it "shows a Delete button for a deletable registration" do
         get edit_event_registration_path(existing_registration)
 
