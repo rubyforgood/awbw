@@ -139,6 +139,18 @@ RSpec.describe TopicSubscription, type: :model do
     end
   end
 
+  describe "organization" do
+    it "is optional" do
+      expect(build(:topic_subscription, topic_subscription_type: trainings, organization: nil)).to be_valid
+    end
+
+    it "links an organization when given one" do
+      organization = create(:organization)
+      subscription = create(:topic_subscription, topic_subscription_type: trainings, organization: organization)
+      expect(subscription.organization).to eq(organization)
+    end
+  end
+
   describe "#general?" do
     it "is true without an event and false with one" do
       expect(build(:topic_subscription, interested_event: nil)).to be_general

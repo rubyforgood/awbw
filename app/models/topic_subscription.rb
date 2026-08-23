@@ -4,6 +4,9 @@ class TopicSubscription < ApplicationRecord
   # Optional narrowing to a specific event (e.g. one training). Null = the topic
   # broadly.
   belongs_to :interested_event, class_name: "Event", optional: true
+  # Optional narrowing to a specific organization. Null = the topic isn't tied
+  # to any organization.
+  belongs_to :organization, optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
