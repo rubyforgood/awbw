@@ -5,8 +5,14 @@ RSpec.describe TopicSubscriptionDecorator do
   let(:news) { create(:topic_subscription_type, :news) }
 
   describe "#event_label" do
-    it "is the event title for an event-specific subscription" do
-      event = create(:event, title: "Spring Training")
+    it "is the event abbreviation for an event-specific subscription when set" do
+      event = create(:event, title: "Spring Training", abbreviation: "TOS205")
+      subscription = create(:topic_subscription, topic_subscription_type: trainings, interested_event: event)
+      expect(subscription.decorate.event_label).to eq("TOS205")
+    end
+
+    it "falls back to the event title when there's no abbreviation" do
+      event = create(:event, title: "Spring Training", abbreviation: nil)
       subscription = create(:topic_subscription, topic_subscription_type: trainings, interested_event: event)
       expect(subscription.decorate.event_label).to eq("Spring Training")
     end
@@ -16,9 +22,9 @@ RSpec.describe TopicSubscriptionDecorator do
       expect(subscription.decorate.event_label).to eq("Any — facilitator trainings")
     end
 
-    it "is 'N/A' for a topic with no event dimension" do
+    it "is nil for a topic with no event dimension" do
       subscription = create(:topic_subscription, topic_subscription_type: news)
-      expect(subscription.decorate.event_label).to eq("N/A")
+      expect(subscription.decorate.event_label).to be_nil
     end
   end
 

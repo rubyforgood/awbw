@@ -66,6 +66,17 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).not_to include("Tara Trainings")
     end
 
+    it "filters by organization name via the frame request" do
+      acme = create(:organization, name: "Acme Shelter")
+      create(:topic_subscription, person: create(:person, first_name: "Orla", last_name: "Acme"), topic_subscription_type: trainings, organization: acme)
+      create(:topic_subscription, person: create(:person, first_name: "Nadia", last_name: "Noorg"), topic_subscription_type: trainings, organization: nil)
+
+      get topic_subscriptions_path(organization_name: "acme"), headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+
+      expect(response.body).to include("Orla Acme")
+      expect(response.body).not_to include("Nadia Noorg")
+    end
+
     it "eager loads each subscriber's user so the row count doesn't drive the query count" do
       5.times { create(:topic_subscription, person: create(:person), topic_subscription_type: trainings) }
 
@@ -360,6 +371,17 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(subscription.created_by).to eq(admin)
       expect(subscription).to be_general
       expect(subscription).to be_active
+    end
+
+    it "links the chosen organization to the subscription" do
+      person = create(:person)
+      organization = create(:organization)
+
+      post topic_subscriptions_path, params: {
+        topic_subscription: { person_id: person.id, topic_subscription_type_id: trainings.id, organization_id: organization.id, source: "admin" }
+      }
+
+      expect(TopicSubscription.last.organization).to eq(organization)
     end
 
     it "creates a new person inline and links them to the subscription" do

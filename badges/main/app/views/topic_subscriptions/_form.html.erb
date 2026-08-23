@@ -130,6 +130,18 @@
     <p class="mt-1 text-xs text-gray-500">Choose a specific upcoming event, or “All upcoming events”.</p>
   </div>
 
+  <%# Organization — optional narrowing to a specific org, unrelated to the topic's
+      event dimension, so it's always shown (not gated on the topic like Event). %>
+  <div>
+    <%= f.label :organization_id, "Organization", class: label_class %>
+    <%= f.select :organization_id,
+      options_for_select(Organization.where(id: @topic_subscription.organization_id).map { |o| [ o.name, o.id ] }, @topic_subscription.organization_id),
+      { include_blank: true, prompt: "Search for an organization" },
+      class: field_class,
+      data: { controller: "remote-select", remote_select_model_value: "organization" } %>
+    <p class="mt-1 text-xs text-gray-500">Optional — narrow this subscription to a specific organization.</p>
+  </div>
+
   <div>
     <%= f.label :source, class: label_class %>
     <%= f.text_field :source, class: field_class, placeholder: "e.g. Facilitator Training registration, admin" %>
