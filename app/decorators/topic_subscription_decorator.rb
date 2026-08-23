@@ -37,10 +37,4 @@ class TopicSubscriptionDecorator < ApplicationDecorator
   def general_event_scope?
     general? && topic_subscription_type&.event_selector?
   end
-
-  # The organization this subscription is narrowed to, or nil when it isn't tied
-  # to one.
-  def organization_label
-    organization&.name
-  end
 end

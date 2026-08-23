@@ -29,7 +29,6 @@
             <tr>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Person</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Topic</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Organization</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Training registrations</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Subscribed</th>
             </tr>
@@ -71,6 +70,16 @@
                     <% end %>
                     <%= subscription.status_badge %>
                   </div>
+                  <% if subscription.organization %>
+                    <%# Org the subscription is narrowed to, linked to its profile; outside the
+                        person card so it isn't a link nested in a link. %>
+                    <%= link_to organization_path(subscription.organization),
+                                class: "mt-1 inline-flex max-w-56 items-center gap-1 text-xs #{DomainTheme.text_class_for(:organizations, intensity: 700)} #{DomainTheme.text_class_for(:organizations, intensity: 800, hover: true)} hover:underline",
+                                data: { turbo_frame: "_top" } do %>
+                      <i class="fa-solid fa-building flex-shrink-0 text-2xs"></i>
+                      <span class="truncate"><%= subscription.organization.name %></span>
+                    <% end %>
+                  <% end %>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-800">
@@ -88,10 +97,6 @@
                       <%= subscription.event_label %>
                     <% end %>
                   </div>
-                </td>
-
-                <td class="px-4 py-2 text-sm text-gray-800">
-                  <%= subscription.organization_label || content_tag(:span, "—", class: "text-gray-400") %>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-800">
