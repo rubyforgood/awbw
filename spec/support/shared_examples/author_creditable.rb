@@ -11,8 +11,8 @@ RSpec.shared_examples "author_creditable" do |factory:, org_credited:, credits_c
     org_credited ? "AWBW Staff" : "AWBW Facilitator"
   end
 
-  # Only a model with an author_id credits a person; the idea models (no author_id)
-  # never credit whoever entered them, so they always fall to the generic label.
+  # Only a model with an author_id credits a person; without one, a record always
+  # falls to the generic label no matter who entered it.
   def credited_record(factory, user, person, names_author, **attrs)
     attrs[:author] = person if names_author
     create(factory, created_by: user, **attrs)

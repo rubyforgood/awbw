@@ -139,6 +139,16 @@ RSpec.describe WorkshopLog do
         expect(results).not_to include(other_log)
       end
 
+      it "filters by author_name matching the credited author" do
+        author = create(:person, first_name: "Bartholomew", last_name: "Snazzlepants")
+        log = create(:workshop_log, author: author)
+        other_log = create(:workshop_log)
+
+        results = WorkshopLog.search(author_name: "Bartholomew")
+        expect(results).to include(log)
+        expect(results).not_to include(other_log)
+      end
+
       it "returns all when no filters" do
         log1 = create(:workshop_log)
         log2 = create(:workshop_log)

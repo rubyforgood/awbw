@@ -71,5 +71,15 @@ RSpec.describe StoryIdea, type: :model do
       expect(results).to include(idea_alpha)
       expect(results).not_to include(idea_beta)
     end
+
+    it "filters by author_name matching the credited author" do
+      author = create(:person, first_name: "Bartholomew", last_name: "Snazzlepants")
+      authored = create(:story_idea, title: "Authored", author: author)
+
+      results = StoryIdea.search_by_params(author_name: "Bartholomew")
+
+      expect(results).to include(authored)
+      expect(results).not_to include(idea_alpha, idea_beta)
+    end
   end
 end

@@ -38,6 +38,23 @@
   pro_tips:
     - "Filter the people list first — the email list always matches whatever the list is showing."
 
+- name: "Search workshop ideas, story ideas, and workshop logs by author"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-08-23
+  summary: >-
+    Workshop ideas, story ideas, workshop variation ideas, and workshop logs now have an
+    "Author name" search box that finds records by their credited author.
+  description: >-
+    These index pages already showed each record's credited author; now you can search by
+    that author too. The "Author name" box matches the credited author on file, following
+    the same credit and anonymity rules as the rest of the site — so a name someone's
+    profile hides from their credit won't surface their content, and anonymous work isn't
+    findable by name. Workshop logs keep their separate "Person" filter for who logged the
+    workshop; the new box searches the credited author instead.
+  pro_tips:
+    - "The Author name box searches the credited author — on a workshop log that can differ from whoever logged it."
+
 - name: "Hide the View ticket button in a bulk email"
   area: communications
   display_status: admin_facing

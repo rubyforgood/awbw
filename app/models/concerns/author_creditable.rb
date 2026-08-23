@@ -194,8 +194,7 @@ module AuthorCreditable
 
     private
 
-    # Only an explicit author is ever credited, so search and sort reach that person
-    # alone — and nobody at all on the idea models, which have no author_id.
+    # Only an explicit author is ever credited, so search and sort reach that person alone.
     def credited_person_aliases
       explicit_author? ? [ "credited_author" ] : []
     end

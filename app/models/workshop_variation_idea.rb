@@ -8,6 +8,7 @@ class WorkshopVariationIdea < ApplicationRecord
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:query]) if params[:query].present?
+    results = results.where(id: by_credited_person_name(params[:author_name]).select("workshop_variation_ideas.id")) if params[:author_name].present?
     results = results.created_by_person(params[:created_by_person_id]) if params[:created_by_person_id].present?
     results
   end
