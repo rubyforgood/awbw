@@ -82,6 +82,27 @@ RSpec.describe AhoyTrackable do
       expect(added).to include(action: "added", type: "Comment")
     end
 
+    it "records what an added nested record said, once it has an id" do
+      registration = create(:event_registration)
+      Analytics::LifecycleBuffer.store.clear
+
+      registration.update!(comments_attributes: [ { body: "Left a voicemail", topic: "Payment" } ])
+
+      added = event_named("update.event_registration")[:properties][:association_changes][:comments].first
+      expect(added[:attributes]).to eq({ "body" => "Left a voicemail", "topic" => "Payment" })
+      expect(added[:id]).to eq(registration.comments.reload.first.id)
+    end
+
+    it "leaves keys and timestamps out of what an added record said" do
+      registration = create(:event_registration)
+      Analytics::LifecycleBuffer.store.clear
+
+      registration.update!(comments_attributes: [ { body: "Left a voicemail" } ])
+
+      added = event_named("update.event_registration")[:properties][:association_changes][:comments].first
+      expect(added[:attributes].keys).to contain_exactly("body")
+    end
+
     it "records an edited nested record with its field changes" do
       person = create(:person)
       license = create(:professional_license, person: person, number: "LIC-1")
@@ -105,6 +126,7 @@ RSpec.describe AhoyTrackable do
 
       removed = event_named("update.person")[:properties][:association_changes][:professional_licenses].first
       expect(removed).to include(action: "removed", id: license.id, type: "ProfessionalLicense")
+      expect(removed[:attributes]).to include("number" => license.number)
     end
 
     it "records a staff tag given to a person on the person's own event" do

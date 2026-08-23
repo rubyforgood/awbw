@@ -64,7 +64,7 @@ module Ahoy
     end
 
     def hash_rows(hash, label, depth)
-      return [ reference_row(label, hash, depth) ] if reference?(hash)
+      return reference_rows(label, hash, depth) if reference?(hash)
       return [ { label: label, value: "(empty)", depth: depth } ] if hash.empty?
 
       rows = label ? [ { label: label, value: nil, depth: depth } ] : []
@@ -81,7 +81,7 @@ module Ahoy
       elsif array.all? { |item| reference?(item) }
         header = label ? [ { label: label, value: nil, depth: depth } ] : []
         child_depth = label ? depth + 1 : depth
-        header + array.map { |item| reference_row(nil, item, child_depth) }
+        header + array.flat_map { |item| reference_rows(nil, item, child_depth) }
       else
         [ { label: label, value: array.map { |item| display_value(item) }.join(", "), depth: depth } ]
       end
@@ -99,6 +99,16 @@ module Ahoy
       name = item["name"] || item["title"]
       type = item["type"]
       type.present? ? "#{name} (#{type.to_s.underscore.humanize})" : name
+    end
+
+    # The link, then what the record actually said — a comment's body reads better
+    # than "a comment was added".
+    def reference_rows(label, item, depth)
+      detail = item["changes"].presence || item["attributes"].presence
+      rows = [ reference_row(label, item, depth) ]
+      return rows if detail.blank?
+
+      rows + flatten_rows(detail, nil, depth + 1)
     end
 
     def reference_row(label, item, depth)

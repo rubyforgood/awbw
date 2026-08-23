@@ -483,6 +483,25 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("attended")
       end
 
+      it "shows what a nested record said, not just that one changed" do
+        create(
+          :ahoy_event,
+          name: "update.event_registration",
+          resource_type: "EventRegistration",
+          resource_id: existing_registration.id,
+          properties: {
+            resource_type: "EventRegistration", resource_id: existing_registration.id,
+            association_changes: {
+              comments: [ { action: "added", type: "Comment", id: 1, attributes: { "body" => "Left a voicemail" } } ]
+            }
+          }
+        )
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Left a voicemail")
+      end
+
       it "says the log is empty rather than disappearing when the record has no tracked activity" do
         get edit_event_registration_path(existing_registration)
 

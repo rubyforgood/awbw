@@ -10,6 +10,7 @@ module AhoyTrackable
     after_update  -> { track_update_event }
     after_destroy -> { track_lifecycle_event("destroy", @_destroy_snapshot || {}) }
     before_save :capture_pending_changes
+    after_save :resolve_pending_association_ids
     before_destroy :capture_destroy_snapshot
   end
 
@@ -80,8 +81,10 @@ module AhoyTrackable
   end
 
   def pending_association_change(assoc_name, record)
-    return { assoc: assoc_name, record: record, action: "removed" } if record.marked_for_destruction?
-    return { assoc: assoc_name, record: record, action: "added" } if record.new_record?
+    if record.marked_for_destruction? || record.new_record?
+      action = record.marked_for_destruction? ? "removed" : "added"
+      return { assoc: assoc_name, record: record, action: action, attributes: content_attributes(record) }
+    end
 
     record_changes = record.changes.except("updated_at", "created_at")
     return if record_changes.empty?
@@ -89,17 +92,39 @@ module AhoyTrackable
     { assoc: assoc_name, record: record, action: "updated", changes: format_tracked_changes(record_changes) }
   end
 
+  # What the record says, minus the plumbing: an added comment should read as its
+  # body, not as a row of foreign keys. Keys, timestamps, and anything
+  # secret-shaped are left out; the child's own event keeps the full snapshot.
+  def content_attributes(record)
+    record.attributes
+      .except("id", "created_at", "updated_at")
+      .reject { |key, value| value.blank? || key.end_with?("_id", "_type") }
+      .reject { |key, _| key.match?(/password|token|secret|key|digest|salt|otp/i) }
+  end
+
   # Ids are read now rather than at capture time: a record added through nested
   # attributes has none until the save goes through.
   def collect_association_changes
+    @_unresolved_association_ids = []
+
     (@_pending_association_changes.to_a + @_pending_attachment_changes.to_a).each_with_object({}) do |pending, changes|
       entry = { action: pending[:action], type: pending[:type] || pending[:record].class.name }
       entry[:id] = pending[:record].id if pending[:record]
       entry[:filename] = pending[:filename] if pending[:filename]
       entry[:changes] = pending[:changes] if pending[:changes]
+      entry[:attributes] = pending[:attributes] if pending[:attributes].present?
+      @_unresolved_association_ids << [ entry, pending[:record] ] if pending[:record] && entry[:id].nil?
 
       (changes[pending[:assoc]] ||= []) << entry
     end
+  end
+
+  # A record added through nested attributes has no id until the collection
+  # autosave runs, which is after the update event is assembled. The buffered
+  # event holds the same hash, so filling it in here fills it in there.
+  def resolve_pending_association_ids
+    @_unresolved_association_ids.to_a.each { |entry, record| entry[:id] ||= record.id }
+    @_unresolved_association_ids = nil
   end
 
   # Rich text saves through the parent's autosave chain, so by the time the update
