@@ -9,9 +9,10 @@ class FormSubmissionsController < ApplicationController
 
     if turbo_frame_request?
       @form_submissions = FormSubmission.search_by_params(params)
-        .includes(:form, :event, { person: [ :user, { affiliations: :organization } ] }, { form_answers: :form_field })
+        .includes(:form, :event, { person: :user }, { form_answers: :form_field })
         .order(created_at: :desc)
         .paginate(page: params[:page], per_page: 50)
+      @linked_orgs = linked_orgs_for(@form_submissions)
       render :form_submissions_results
     else
       @forms = Form.order(:name)
@@ -86,6 +87,16 @@ class FormSubmissionsController < ApplicationController
 
   def set_form_submission
     @form_submission = FormSubmission.includes(:form, person: { affiliations: :organization }).find(params[:id])
+  end
+
+  # {submission_id => [Organization]} for the directly-linked orgs across the page,
+  # in one query, so the index can show the linked org chips without an N+1 over
+  # each submission's metadata id list.
+  def linked_orgs_for(submissions)
+    ids_by_submission = submissions.to_h { |submission| [ submission.id, submission.linked_organization_ids ] }
+    all_ids = ids_by_submission.values.flatten.uniq
+    orgs = all_ids.any? ? Organization.where(id: all_ids).index_by(&:id) : {}
+    ids_by_submission.transform_values { |ids| ids.filter_map { |id| orgs[id] } }
   end
 
   # The org-related answers on this submission (canonical or legacy "agency_"

@@ -13,12 +13,17 @@ class FormSubmission < ApplicationRecord
 
   UNREADABLE_UPLOAD_MESSAGE = "We couldn't read one of your uploaded files. Please choose it again.".freeze
 
-  # The index's "Organization linking" filter vocabulary: linked = the submitted
-  # organization name matches one of the person's active affiliations.
+  # The index's "Organization linking" filter vocabulary, keyed on whether an org
+  # is linked directly to the submission (see #link_organization!):
+  #   pending  — gave an org answer, not linked yet (the actionable queue).
+  #   linked   — an org was linked (processed).
+  #   unlinked — not linked, either kind: pending or no-org-answer.
+  #   none     — no organization answer was provided.
   ORG_LINK_STATUS_FILTER_OPTIONS = [
     [ "Linked", "linked" ],
-    [ "Not linked", "unlinked" ],
-    [ "No organization answer", "none" ]
+    [ "Unlinked", "unlinked" ],
+    [ "Pending", "pending" ],
+    [ "No org provided", "none" ]
   ].freeze
 
   scope :bulk_payment, -> { where(role: "bulk_payment") }
@@ -31,11 +36,15 @@ class FormSubmission < ApplicationRecord
     scope
   }
 
-  # Submissions linked to an organization through an event registration. This is
-  # the only queryable submission → organization path (the org an answer names is
-  # otherwise just free text); submissions that never linked an org won't match.
+  # Submissions with the organization linked directly to them — the explicit link
+  # an admin makes in the org-linking editor, recorded in metadata (see
+  # #link_organization!). Nothing else counts: a matching affiliation or an org on
+  # the submission's event registration doesn't make the submission match.
   scope :for_organization, ->(organization_id) {
-    where(id: EventRegistrationOrganization.where(organization_id: organization_id).select(:form_submission_id))
+    where(
+      "JSON_CONTAINS(JSON_EXTRACT(form_submissions.metadata, '$.linked_organization_ids'), CAST(? AS JSON))",
+      organization_id.to_i
+    )
   }
 
   scope :search, ->(query) {
@@ -57,25 +66,20 @@ class FormSubmission < ApplicationRecord
   # #link_organization!). COALESCE: metadata (or the key) may be absent.
   EXPLICIT_ORG_LINK_SQL = "COALESCE(JSON_LENGTH(JSON_EXTRACT(form_submissions.metadata, '$.linked_organization_ids')), 0) > 0".freeze
 
+  # Linking status keyed on whether an org is *directly linked to the submission*
+  # (the metadata link an admin sets in the editor) — a matching affiliation the
+  # person happens to hold does NOT count. Mirrors the registrants roster:
+  #   linked   — an org was linked (processed).
+  #   unlinked — no org linked, whichever kind: pending or no org answer (broad).
+  #   pending  — gave an org answer but nothing linked yet — the actionable queue.
+  #   none     — no organization answer was provided.
   scope :org_link_status, ->(value) {
     answered = org_name_answers.select(:form_submission_id)
     case value
-    when "linked", "unlinked"
-      # Linked: the submitted name matches an org the person holds an active (or
-      # pending) affiliation with — the same rule as the index's Linked chip —
-      # or an admin explicitly linked an org to this submission (which covers a
-      # typo'd name resolved to a differently-named org).
-      affiliation_linked = org_name_answers
-        .joins(form_submission: { person: { affiliations: :organization } })
-        .merge(Affiliation.active_or_pending)
-        .where("organizations.name = form_answers.submitted_answer")
-        .select(:form_submission_id)
-      if value == "linked"
-        where(id: answered).and(where(id: affiliation_linked).or(where(EXPLICIT_ORG_LINK_SQL)))
-      else
-        where(id: answered).where.not(id: affiliation_linked).where.not(EXPLICIT_ORG_LINK_SQL)
-      end
-    when "none" then where.not(id: answered)
+    when "linked" then where(EXPLICIT_ORG_LINK_SQL)
+    when "unlinked" then where.not(EXPLICIT_ORG_LINK_SQL)
+    when "pending" then where(id: answered).where.not(EXPLICIT_ORG_LINK_SQL)
+    when "none" then where.not(id: answered).where.not(EXPLICIT_ORG_LINK_SQL)
     else all
     end
   }
