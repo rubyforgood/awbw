@@ -201,6 +201,18 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include(CGI.escapeHTML(link_organization_form_submission_path(submission, return_to: "form_submissions")))
       end
 
+      it "shows a Linked chip with the org name when linked directly, even with no submitted org" do
+        submission = create(:form_submission)
+        organization = create(:organization, name: "Harbor Family Shelter")
+        submission.link_organization!(organization.id)
+
+        get form_submissions_path, headers: frame_headers
+
+        expect(response.body).to include("Harbor Family Shelter")
+        expect(response.body).to include("Linked")
+        expect(response.body).not_to include(">None<")
+      end
+
       it "offers column toggles and hides the user account column by default" do
         create(:form_submission)
 

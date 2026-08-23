@@ -64,25 +64,26 @@
                 <%# The chip doubles as the way into the submission's org-linking
                     editor, like the org chips on the registrants roster. %>
                 <% editor_path = link_organization_form_submission_path(submission, return_to: "form_submissions") %>
-                <% if submitted_org %>
+                <% linked_names = @linked_org_names[submission.id] || [] %>
+                <% if submission.linked_organization_ids.any? %>
+                  <%# An org was linked directly to this submission — show it, regardless
+                      of whether the submitter named one. %>
+                  <%= linked_names.to_sentence.presence || submitted_org %>
+                  <%= link_to editor_path, title: "Open the organization linking editor", data: { turbo_frame: "_top" },
+                              class: "ml-1 inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 transition hover:opacity-80 hover:shadow-sm" do %>
+                    <i class="fa-solid fa-check text-3xs"></i>Linked
+                  <% end %>
+                <% elsif submitted_org %>
                   <%= submitted_org %>
-                  <% linked = submission.linked_organization_ids.any? %>
-                  <% if linked %>
-                    <%= link_to editor_path, title: "Open the organization linking editor", data: { turbo_frame: "_top" },
-                                class: "ml-1 inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 transition hover:opacity-80 hover:shadow-sm" do %>
-                      <i class="fa-solid fa-check text-3xs"></i>Linked
-                    <% end %>
-                  <% else %>
-                    <%# Same amber "Pending" chip as the registrants roster: a submitted
-                        org that hasn't been linked to the submission yet. %>
-                    <%= link_to editor_path, title: "Link the submitted organization", data: { turbo_frame: "_top" },
-                                class: "ml-1 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 transition hover:opacity-80 hover:shadow-sm" do %>
-                      <i class="fa-solid fa-circle-exclamation text-3xs"></i>Pending
-                    <% end %>
+                  <%# Same amber "Pending" chip as the registrants roster: a submitted
+                      org that hasn't been linked to the submission yet. %>
+                  <%= link_to editor_path, title: "Link the submitted organization", data: { turbo_frame: "_top" },
+                              class: "ml-1 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 transition hover:opacity-80 hover:shadow-sm" do %>
+                    <i class="fa-solid fa-circle-exclamation text-3xs"></i>Pending
                   <% end %>
                 <% else %>
-                  <%# No org submitted — grey "None" chip that still opens the editor,
-                      matching the registrants roster. %>
+                  <%# No org submitted and none linked — grey "None" chip that still
+                      opens the editor, matching the registrants roster. %>
                   <%= render "shared/badge", label: "None", classes: "bg-gray-50 text-gray-500 border-gray-200", href: editor_path %>
                 <% end %>
               </td>
