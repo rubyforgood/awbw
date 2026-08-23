@@ -169,6 +169,11 @@ RSpec.describe "/affiliations", type: :request do
   end
 
   describe "POST /affiliations/:id/end" do
+    # The request runs in the user's (Pacific) zone while these assertions run in
+    # the default UTC zone; freeze to midday UTC so both land on the same calendar
+    # date and the today fallback doesn't drift by a day.
+    before { travel_to Time.current.midday }
+
     context "as an admin" do
       before { sign_in admin }
 
