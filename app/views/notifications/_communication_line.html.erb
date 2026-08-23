@@ -17,6 +17,7 @@
 <% from_name = decorated.from_name %>
 <% from_first = from_name.to_s.split.first.presence || from_name %>
 <% chip = chip_color(notification.incoming? ? decorated.contact_person&.id : notification.sender_id) %>
+<% card = "rounded-md border #{DomainTheme.border_class_for(:notifications, intensity: 200)} #{DomainTheme.bg_class_for(:notifications, intensity: 50)} px-3 py-2" %>
 <% row = capture do %>
   <div class="flex items-center gap-x-1">
     <%# Flag column left empty — communications have no follow-up flag. %>
@@ -47,7 +48,7 @@
 <% end %>
 <% if admin %>
   <%= link_to row, notification_path(notification), target: "_blank", rel: "noopener",
-              class: "block -mx-1 rounded px-1 hover:bg-gray-50" %>
+              class: "block #{card} transition-colors #{DomainTheme.bg_class_for(:notifications, intensity: 50, hover: true)}" %>
 <% else %>
-  <%= row %>
+  <div class="<%= card %>"><%= row %></div>
 <% end %>
