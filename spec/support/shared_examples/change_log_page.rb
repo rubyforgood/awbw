@@ -19,9 +19,10 @@ RSpec.shared_examples "a page with a change log" do
     expect(response.body).to include("after value")
   end
 
-  it "omits the change log when the record has no tracked activity" do
+  it "says so rather than disappearing when the record has no tracked activity" do
     get page_path
 
-    expect(response.body).not_to include("Change log")
+    expect(response.body).to include("Change log")
+    expect(response.body).to include("No changes recorded yet")
   end
 end

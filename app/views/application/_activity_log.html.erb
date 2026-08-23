@@ -8,8 +8,7 @@
 <% model = record.respond_to?(:object) ? record.object : record %>
 <% events = Ahoy::Event.where(resource_type: model.class.name, resource_id: model.id)
                        .includes(:user).order(time: :desc) %>
-<% if events.any? %>
-  <div data-controller="dropdown" class="relative">
+<div data-controller="dropdown" class="relative">
     <button type="button"
             data-action="dropdown#toggle"
             data-dropdown-payload-param='[{"<%= dom_id(model, :activity) %>":"hidden"}]'
@@ -20,6 +19,11 @@
     <div id="<%= dom_id(model, :activity) %>"
          data-dropdown-target="content"
          class="mt-2 hidden space-y-2">
+      <% if events.empty? %>
+        <p class="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-500">
+          No changes recorded yet.
+        </p>
+      <% end %>
       <% events.each do |event| %>
         <% action = event.name.split(".").first %>
         <div class="rounded-lg border border-gray-200 p-3 <%= { "create" => "bg-green-50", "destroy" => "bg-red-50" }.fetch(action, "bg-gray-50") %>">
@@ -37,4 +41,3 @@
       <% end %>
     </div>
   </div>
-<% end %>
