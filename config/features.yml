@@ -38,6 +38,24 @@
   pro_tips:
     - "Filter the people list first — the email list always matches whatever the list is showing."
 
+- name: "Nested forms skip questions the registration form already asks"
+  area: registration
+  display_status: user_facing
+  released_on: 2026-08-22
+  summary: >-
+    A scholarship or continuing-education form attached to an event now hides any question it
+    shares with the event's registration form (name, email, address, organization), so
+    registrants aren't asked twice. The same form still shows every question when used standalone.
+
+- name: "Edit sections: every section available on any form"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-08-22
+  summary: >-
+    The form "Edit sections" page now offers every built-in section regardless of the form's
+    role, so a copied single-section form (e.g. a scholarship form) can be built out with any
+    section. Currently-used sections stay checked.
+
 - name: "Affiliation editor: FileMaker code"
   area: people
   display_status: admin_facing

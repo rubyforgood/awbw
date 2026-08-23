@@ -17,6 +17,7 @@ module Events
       @scholarship = scholarship_mode?
       @scholarship_form = @event.scholarship_form if @scholarship
       @continuing_education_form = @event.continuing_education_form
+      assign_nested_form_fields
       @event = @event.decorate
     end
 
@@ -38,16 +39,20 @@ module Events
 
       @field_errors = validate_required_fields(registration_params)
       if @scholarship_form
-        scholarship_fields = @scholarship_form.form_fields.where.not(answer_type: :group_header).to_a
+        # Validate only the fields actually shown — questions suppressed as
+        # registration-form duplicates are never submitted, so requiring them
+        # would wrongly block the registration.
+        scholarship_fields = nested_visible_fields(@scholarship_form).reject(&:group_header?)
         @field_errors = @field_errors.merge(FormAnswerValidator.call(scholarship_fields, scholarship_params))
       end
       if @continuing_education_form
-        ce_fields = @continuing_education_form.form_fields.where.not(answer_type: :group_header).to_a
+        ce_fields = nested_visible_fields(@continuing_education_form).reject(&:group_header?)
         @field_errors = @field_errors.merge(FormAnswerValidator.call(ce_fields, continuing_education_params))
       end
       if @field_errors.any?
         @form_fields = visible_form_fields
         @continuing_education_form = @event.continuing_education_form
+        assign_nested_form_fields
         @event = @event.decorate
         flash.now[:alert] = "Your registration is not complete yet. Scroll down to check for any errors or missing information."
         render :new, status: :unprocessable_content
@@ -81,6 +86,7 @@ module Events
       else
         @form_fields = visible_form_fields
         @continuing_education_form = @event.continuing_education_form
+        assign_nested_form_fields
         @event = @event.decorate
         flash.now[:error] = result.errors.join(", ")
         flash.now[:alert] = "Your registration is not complete yet. Scroll down to check for any errors or missing information."
@@ -198,6 +204,48 @@ module Events
       @event.registration_form
     end
 
+    def assign_nested_form_fields
+      @scholarship_fields = @scholarship_form ? nested_visible_fields(@scholarship_form) : []
+      @continuing_education_fields = @continuing_education_form ? nested_visible_fields(@continuing_education_form) : []
+    end
+
+    # A form nested inside this event's registration form (scholarship, CE) should
+    # never re-ask a question the registration form already asks — the registrant
+    # would answer it twice, and the person/org data is captured from the
+    # registration form regardless. Drop any nested field whose identifier matches
+    # one on the registration form (legacy aliases included), plus any section
+    # header left with no surviving field. Standalone forms don't pass through here,
+    # so they still show every field.
+    def nested_visible_fields(form)
+      taken = registration_field_identifiers
+      visible = []
+      pending_header = nil
+
+      form.form_fields.reorder(position: :asc).each do |field|
+        if field.group_header?
+          pending_header = field
+          next
+        end
+        next if field.field_identifier.present? && taken.include?(field.field_identifier)
+
+        if pending_header
+          visible << pending_header
+          pending_header = nil
+        end
+        visible << field
+      end
+
+      visible
+    end
+
+    def registration_field_identifiers
+      @registration_field_identifiers ||= @registration_form.form_fields
+                                              .where.not(field_identifier: [ nil, "" ])
+                                              .pluck(:field_identifier)
+                                              .flat_map { |identifier| FormField.aliased_identifiers(identifier) }
+                                              .to_set
+    end
+
     # Surface the dedicated scholarship form's application in its own card on the
     # view-submission page when the registrant filled it out. Answers are gathered
     # by field identifier (they may live on the scholarship submission or on the
@@ -214,7 +262,7 @@ module Events
 
       @scholarship_submission = application.submission
       @scholarship_form = scholarship_form
-      @scholarship_fields = scholarship_form.form_fields.reorder(position: :asc)
+      @scholarship_fields = nested_visible_fields(scholarship_form)
       @scholarship_responses = application.answers_by_field_id
     end
 
@@ -227,7 +275,7 @@ module Events
 
       @continuing_education_submission = submission
       @continuing_education_form = ce_form
-      @continuing_education_fields = ce_form.form_fields.reorder(position: :asc)
+      @continuing_education_fields = nested_visible_fields(ce_form)
       @continuing_education_responses = submission.form_answers.index_by(&:form_field_id)
     end
 

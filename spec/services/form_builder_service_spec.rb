@@ -430,6 +430,18 @@ RSpec.describe FormBuilderService do
       expect(excluded).to include(:marketing, :payment)
     end
 
+    it "offers every built-in section even for a role-restricted form" do
+      scholarship_form = described_class.new(name: "Aid", sections: %i[scholarship], role: "scholarship").call
+
+      keys = described_class.editable_sections(scholarship_form)
+        .select { |e| e[:kind] == :builtin }.map { |e| e[:key] }
+
+      expect(keys).to match_array(FormBuilderService::SECTIONS.keys)
+      included = described_class.editable_sections(scholarship_form)
+        .select { |e| e[:included] }.map { |e| e[:key] }
+      expect(included).to eq([ :scholarship ])
+    end
+
     it "includes a custom section with the questions that follow it" do
       add_field("My Custom Section", :group_header, 100)
       first = add_field("Favorite color", :free_form_input_one_line, 101)

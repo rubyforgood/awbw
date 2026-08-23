@@ -141,20 +141,6 @@ class FormBuilderService
     bulk_payment: %w[bulk_payment]
   }.freeze
 
-  # Built-in section keys that apply to a form with the given role. Scholarship
-  # and bulk-payment forms show only their own section; every other role shows
-  # all sections except those two.
-  def self.applicable_section_keys(role)
-    SECTIONS.keys.select do |key|
-      case role
-      when "scholarship" then key == :scholarship
-      when "bulk_payment" then key == :bulk_payment
-      when "continuing_education" then key == :continuing_education
-      else key != :scholarship && key != :bulk_payment && key != :continuing_education
-      end
-    end
-  end
-
   # Built-in section keys that currently have fields on the form. This — not the
   # stored `sections` column — is the source of truth for which sections are
   # present, so add/remove stays consistent with the edit-sections checkboxes
@@ -205,7 +191,10 @@ class FormBuilderService
 
     entries = []
     last_position = 0
-    applicable_section_keys(form.role).each_with_index do |key, rank|
+    # Every built-in section is offered here regardless of the form's role, so a
+    # form (e.g. a copy of a single-section scholarship form) can be built out
+    # with any section rather than being locked to the one its role implies.
+    SECTIONS.keys.each_with_index do |key, rank|
       position = positions[key]
       last_position = position if position
       default_header = SECTION_HEADERS.fetch(key).first

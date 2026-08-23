@@ -133,14 +133,14 @@
           <% end %>
         </div>
 
-        <% if @scholarship_form && @scholarship_form.form_fields.any? %>
+        <% if @scholarship_form && @scholarship_fields.any? %>
           <div class="mt-8 rounded-xl border border-blue-100 bg-blue-50/50 px-5 py-6">
             <h3 class="flex items-center gap-2.5 text-lg font-bold text-purple-900 mb-5">
               <i class="fa-solid fa-hand-holding-heart text-accent"></i><%= @scholarship_form.display_name %>
             </h3>
             <%= render "forms/header", form: @scholarship_form, event: @event %>
             <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
-              <% @scholarship_form.form_fields.reorder(position: :asc).each do |field| %>
+              <% @scholarship_fields.each do |field| %>
                 <% if field.group_header? %>
                   <%# Skip a section header that just repeats the form name shown as the title above %>
                   <% next if field.name.to_s.strip.casecmp?(@scholarship_form.display_name.to_s.strip) %>
@@ -156,7 +156,7 @@
           </div>
         <% end %>
 
-        <% if @continuing_education_form && @continuing_education_form.form_fields.any? %>
+        <% if @continuing_education_form && @continuing_education_fields.any? %>
           <div class="mt-8 rounded-xl border border-teal-100 bg-teal-50/50 px-5 py-6">
             <h3 class="flex items-center gap-2.5 text-lg font-bold text-teal-900 mb-5">
               <i class="fa-solid fa-certificate text-teal-600"></i><%= @continuing_education_form.display_name %>
@@ -179,7 +179,7 @@
               </dl>
             <% end %>
             <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
-              <% @continuing_education_form.form_fields.reorder(position: :asc).each do |field| %>
+              <% @continuing_education_fields.each do |field| %>
                 <% if field.group_header? %>
                   <% next if field.name.to_s.strip.casecmp?(@continuing_education_form.display_name.to_s.strip) %>
                   <%= render "events/public_registrations/group_header", field: field %>

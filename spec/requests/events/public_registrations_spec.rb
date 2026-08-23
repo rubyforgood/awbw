@@ -243,6 +243,49 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     end
   end
 
+  describe "nested-form question de-duplication" do
+    let!(:reg_first_name) do
+      create(:form_field, form: form, field_identifier: "first_name", name: "Reg first name", required: false)
+    end
+    let!(:reg_last_name) do
+      create(:form_field, form: form, field_identifier: "last_name", name: "Reg last name", required: false)
+    end
+    let!(:reg_email) do
+      create(:form_field, form: form, field_identifier: "primary_email", name: "Reg email", required: false)
+    end
+    let(:ce_form) { create(:form, role: "continuing_education") }
+    let!(:ce_duplicate) do
+      create(:form_field, form: ce_form, field_identifier: "first_name", name: "Nested first name", required: false)
+    end
+    let!(:ce_unique) do
+      create(:form_field, form: ce_form, field_identifier: "ce_license_number", name: "License number", required: false)
+    end
+
+    before { event.event_forms.create!(form: ce_form, role: "continuing_education") }
+
+    it "hides a nested-form question the registration form already asks, but keeps its own" do
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("Reg first name")
+      expect(response.body).to include("License number")
+      expect(response.body).not_to include("Nested first name")
+    end
+
+    it "does not require a suppressed nested duplicate to complete registration" do
+      ce_duplicate.update!(required: true)
+
+      expect {
+        post event_public_registration_path(event),
+             params: { public_registration: { form_fields: {
+               essay_field.id.to_s => "this answer has plenty of words",
+               reg_first_name.id.to_s => "Pat",
+               reg_last_name.id.to_s => "Lee",
+               reg_email.id.to_s => "pat@example.com"
+             } } }
+      }.to change(EventRegistration, :count).by(1)
+    end
+  end
+
   describe "GET new" do
     it "shows the minimum word hint below the field" do
       get new_event_public_registration_path(event)
