@@ -12,7 +12,7 @@ class FormSubmissionsController < ApplicationController
         .includes(:form, :event, { person: :user }, { form_answers: :form_field })
         .order(created_at: :desc)
         .paginate(page: params[:page], per_page: 50)
-      @linked_org_names = linked_org_names_for(@form_submissions)
+      @linked_orgs = linked_orgs_for(@form_submissions)
       render :form_submissions_results
     else
       @forms = Form.order(:name)
@@ -89,14 +89,14 @@ class FormSubmissionsController < ApplicationController
     @form_submission = FormSubmission.includes(:form, person: { affiliations: :organization }).find(params[:id])
   end
 
-  # {submission_id => [org names]} for the directly-linked orgs across the page, in
-  # one query, so the index can show the linked org without an N+1 over each
-  # submission's metadata id list.
-  def linked_org_names_for(submissions)
+  # {submission_id => [Organization]} for the directly-linked orgs across the page,
+  # in one query, so the index can show the linked org chips without an N+1 over
+  # each submission's metadata id list.
+  def linked_orgs_for(submissions)
     ids_by_submission = submissions.to_h { |submission| [ submission.id, submission.linked_organization_ids ] }
     all_ids = ids_by_submission.values.flatten.uniq
-    names = all_ids.any? ? Organization.where(id: all_ids).pluck(:id, :name).to_h : {}
-    ids_by_submission.transform_values { |ids| ids.filter_map { |id| names[id] } }
+    orgs = all_ids.any? ? Organization.where(id: all_ids).index_by(&:id) : {}
+    ids_by_submission.transform_values { |ids| ids.filter_map { |id| orgs[id] } }
   end
 
   # The org-related answers on this submission (canonical or legacy "agency_"
