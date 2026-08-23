@@ -36,13 +36,34 @@ RSpec.describe FormSubmission do
       expect(FormSubmission.search_by_params(end_date: "not-a-date")).to contain_exactly(old, recent)
     end
 
-    it "filters by organization through the registration link" do
+    it "filters by organization through the pinned registration link" do
       organization = create(:organization)
       linked = create(:form_submission)
       create(:form_submission)
       create(:event_registration_organization, organization: organization, form_submission: linked)
 
       expect(FormSubmission.search_by_params(organization_id: organization.id)).to contain_exactly(linked)
+    end
+
+    it "filters by organization linked directly on the submission's metadata" do
+      organization = create(:organization)
+      linked = create(:form_submission)
+      linked.link_organization!(organization.id)
+      create(:form_submission)
+
+      expect(FormSubmission.search_by_params(organization_id: organization.id)).to contain_exactly(linked)
+    end
+
+    it "filters by organization reached through the submission's event registration" do
+      organization = create(:organization)
+      event = create(:event)
+      person = create(:person)
+      submission = create(:form_submission, person: person, event: event)
+      registration = create(:event_registration, registrant: person, event: event)
+      create(:event_registration_organization, event_registration: registration, organization: organization)
+      create(:form_submission)
+
+      expect(FormSubmission.search_by_params(organization_id: organization.id)).to contain_exactly(submission)
     end
   end
 

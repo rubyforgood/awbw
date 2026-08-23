@@ -102,7 +102,7 @@
     "Clear filters" button appears once any is set. The chosen filters carry over when you
     open a submission and come back, so you land on the same filtered list.
   pro_tips:
-    - "The Organization filter matches submissions linked to an org through an event registration."
+    - "The Organization filter matches a submission whether the org was linked directly to it or reached through its event registration."
 - name: "On-demand training agreement"
   area: people
   display_status: admin_facing
