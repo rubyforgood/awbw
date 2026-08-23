@@ -82,7 +82,7 @@ module AdminCardsHelper
       custom_card("Features & tips", features_path, icon: "⭐", color: :sky, intensity: 100),
       custom_card("Forms", forms_path, icon: "📋", color: :sky, intensity: 100),
       custom_card("Licenses", professional_licenses_path, icon: "🪪", color: :sky, intensity: 100),
-      disabled_card("Form submissions", icon: "📨"),
+      custom_card("Form submissions", form_submissions_path, icon: "📨", color: :sky, intensity: 100),
       custom_card("Form answers", form_answers_path, icon: "✅", color: :sky, intensity: 100),
       custom_card("Monthly reports", monthly_reports_path, icon: "📈", color: :sky, intensity: 100),
       custom_card("Payments", payments_path, icon: "💳", color: :sky, intensity: 100),
