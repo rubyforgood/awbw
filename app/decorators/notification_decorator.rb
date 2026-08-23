@@ -10,6 +10,17 @@ class NotificationDecorator < ApplicationDecorator
     "video" => "fa-video"
   }.freeze
 
+  # Short type name shown beside the channel icon in the combined section's
+  # channel chip. Autoemail reads as "Email" to a viewer — it's an email either
+  # way; the automated origin is clear from the sender chip ("AWBW Portal").
+  CHANNEL_LABELS = {
+    "autoemail" => "Email",
+    "email" => "Email",
+    "phone" => "Phone",
+    "text" => "Text",
+    "video" => "Video"
+  }.freeze
+
   # Shown as the "From" on a communication that no staff member sent by hand.
   PORTAL_SENDER_NAME = "AWBW Portal".freeze
 
@@ -132,6 +143,16 @@ class NotificationDecorator < ApplicationDecorator
     pill(AUDIENCE_META[audience], **options)
   end
 
+  # The Incoming pill doubles as a response tracker: a filled check once the
+  # incoming message has been answered, an empty checkbox while it still needs a
+  # reply. Display-only — the responded flag is toggled in the edit form.
+  def incoming_badge(**options)
+    meta = AUDIENCE_META["incoming"]
+    icon = responded? ? "fa-solid fa-square-check" : "fa-regular fa-square"
+    label = h.safe_join([ h.content_tag(:i, "", class: icon, "aria-hidden": "true"), meta[:label] ], " ")
+    pill(meta.merge(label: label), **options)
+  end
+
   # Part of a bulk send, so the index can flag it with a "Bulk" pill. Two things
   # count: the bulk_payment_* kinds (unambiguous from the kind alone), and any
   # send explicitly marked via the `bulk` column — bulk reminders and invites,
@@ -144,10 +165,13 @@ class NotificationDecorator < ApplicationDecorator
   # the audience (Incoming/FYI) plus Bulk when part of a bulk send. Empty for a
   # plain message to the person.
   def flag_badges(**options)
-    metas = [ AUDIENCE_META[audience], (BULK_META if bulk?) ].compact
-    return "" if metas.empty?
+    badges = [
+      (incoming_badge(**options) if incoming?),
+      (pill(AUDIENCE_META["fyi"], **options) if audience == "fyi"),
+      (pill(BULK_META, **options) if bulk?)
+    ].compact.reject(&:blank?)
 
-    h.safe_join(metas.map { |meta| pill(meta, **options) }, " ")
+    h.safe_join(badges, " ")
   end
 
   def title
@@ -186,6 +210,15 @@ class NotificationDecorator < ApplicationDecorator
     return "" if icon_class.blank?
 
     h.content_tag(:i, "", { class: "fa-solid #{icon_class} text-gray-400", title: channel.titleize, "aria-hidden": "true" }.merge(options))
+  end
+
+  # Channel icon + type name in a small gray chip (combined-section row).
+  def channel_chip(**options)
+    icon_class = CHANNEL_ICONS[channel]
+    return "" if icon_class.blank?
+
+    content = h.safe_join([ h.content_tag(:i, "", class: "fa-solid #{icon_class}", "aria-hidden": "true"), CHANNEL_LABELS[channel] || channel.to_s.titleize ], " ")
+    h.content_tag(:span, content, { class: "inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600" }.merge(options))
   end
 
   private
