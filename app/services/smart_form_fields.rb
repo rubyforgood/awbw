@@ -131,11 +131,9 @@ class SmartFormFields
     {
       key: :consent,
       title: "Consent",
-      summary: "Consent is opt-in and recorded once. An affirmative answer stamps the time and names the " \
-               "event it came from. It is never cleared from here — withdrawal is a separate, deliberate " \
-               "action — and a registrant who already consented is not re-stamped.",
+      summary: "Asks registrants to opt in to email communication. The answer is stored with the submission.",
       fields: [
-        [ "communication_consent", "Email communication consent", "Any non-blank answer records mailing list consent, with the event as its source." ]
+        [ "communication_consent", "Email communication consent", "Records the registrant's opt-in answer on the submission." ]
       ]
     },
     {

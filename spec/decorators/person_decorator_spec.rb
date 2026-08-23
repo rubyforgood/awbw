@@ -1,6 +1,25 @@
 require "rails_helper"
 
 RSpec.describe PersonDecorator do
+  describe "#news_subscriptions_path" do
+    let(:person) { create(:person) }
+
+    it "links to the subscriptions index filtered to this person and the News topic" do
+      news = create(:topic_subscription_type, name: "News")
+
+      path = person.decorate.news_subscriptions_path
+
+      expect(path).to include("person_id=#{person.id}")
+      expect(path).to include("topic_subscription_type_id=#{news.id}")
+    end
+
+    it "still filters by person when no News topic exists" do
+      path = person.decorate.news_subscriptions_path
+
+      expect(path).to include("person_id=#{person.id}")
+    end
+  end
+
   describe "#active_facilitator_organization_names" do
     let(:person) { create(:person) }
 

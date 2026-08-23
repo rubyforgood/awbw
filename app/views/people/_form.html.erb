@@ -469,6 +469,18 @@
         </div>
 
         <div class="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <% if person.persisted? %>
+            <div class="w-full sm:flex-1">
+              <div class="mb-1 block font-medium text-gray-700">Mailing list</div>
+              <%= link_to decorated.news_subscriptions_path,
+                          class: "inline-flex items-center gap-1.5 text-sm #{DomainTheme.text_class_for(:topic_subscriptions, intensity: 700)} #{DomainTheme.text_class_for(:topic_subscriptions, intensity: 800, hover: true)}" do %>
+                <i class="fa-solid fa-envelope-open-text"></i>
+                News subscriptions
+              <% end %>
+              <p class="mt-1 text-xs text-gray-500">Mailing-list interest is tracked in topic subscriptions.</p>
+            </div>
+          <% end %>
+
           <%= f.input :blog_contributor,
                       as: :boolean,
                       label: "Blog contributor",
