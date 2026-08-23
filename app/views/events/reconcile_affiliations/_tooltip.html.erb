@@ -2,7 +2,7 @@
   <% case kind %>
   <% when :deactivate %>
     <p class="mb-1">Ends this facilitator affiliation and marks it inactive, so it no longer counts as active. The record is kept — if the person is later marked attended, the return is recorded as a new affiliation rather than by reopening this one.</p>
-    <p class="mb-1">Offered for <strong>older</strong> affiliations only — ones this training didn't create. The end date is set to this training's date, so the years they did facilitate stay on the record.</p>
+    <p class="mb-1">Offered for <strong>older</strong> affiliations only — ones this training didn't create. The end date is set to the day before this training, so the years they did facilitate stay on the record.</p>
     <p>A row this training created is deleted instead: it recorded an assumption that never came true.</p>
   <% when :delete %>
     <p class="mb-1">Permanently deletes <strong>this</strong> facilitator affiliation. Everything else stays as-is:</p>

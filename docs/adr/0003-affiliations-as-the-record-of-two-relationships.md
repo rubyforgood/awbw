@@ -175,30 +175,40 @@ facilitator affiliation depends on what that row represents:
   facilitator on the training date. They didn't, so there is no period to preserve
   and nothing is lost by removing it. It never counted as prior history anyway
   (ADR-0001 D5/D8 use a strict `<`), so no anchored verdict moves.
-- **Any older row** — hand-entered, or minted by an earlier training — **ended** on
-  this training's start date, never deleted. It records facilitation that really
-  happened. Deleting it, or dating it back to its own start, would erase years of
-  history and retroactively flip the org from Ongoing to Reinstated at every
-  training in between.
+- **Any older row** — hand-entered, or minted by an earlier training — **ended**,
+  never deleted. It records facilitation that really happened. Deleting it, or
+  dating it back to its own start, would erase years of history and retroactively
+  change the org's status at every training in between.
 
-**The end date is the day BEFORE the training**, matching
+**Everything ends the day BEFORE the training. One rule, no exceptions**, matching
 `AffiliationServices::ApplyScenarioEndDating`
 ([ADR-0002](0002-org-linking-flows-and-agreement-scenarios.md) D4, which points back
-here — one convention, two callers). A row that ends
-the same day another starts counts on both, which doubles the person in any report
-that totals a date. The cost is that the row then falls outside the training's own
-anchor, so an organization whose only facilitator is ended this way reads
-**Reinstated** at that training rather than Ongoing. Every earlier anchor is
-unaffected, which is what D5's stability promise is about.
+here — one convention, two callers).
+
+Two reasons, and the second is the one that matters:
+
+1. A row ending the same day another starts counts on both, doubling the person in
+   any report that totals a date.
+2. **The row is being ended precisely because we have no record the person ever
+   completed a training for this organization.** Ending it *on* the training date
+   would leave it counting as active on that date — so the organization's status at
+   that training would still rest on the affiliation we just decided wasn't valid.
+   Ending the day before is what the decision actually means.
+
+The consequence is that an organization whose only facilitator is ended this way
+reads **Reinstated** at that training rather than Ongoing. That is not a cost being
+paid for consistency: with the row gone there is no basis for Ongoing, and none of
+the three labels describes "we removed the basis for their status" perfectly.
+Reinstated is the honest one. Every earlier anchor is untouched, which is what D5's
+stability promise is about.
 
 An end date is never written before the row's own start date.
 
-**Deleting the minted row is what lets reconciliation stop relying on the `inactive`
-flag.** A same-dayed row could land on today and still read as active by dates
-alone, which is why D2's flag existed here. A deleted row has no such problem, and
-an older row is ended on a training date that has already passed, so the date rule
-derives `inactive` by itself. The flag is still set on the older row for the one
-case that remains — reconciling on the day the training ends.
+**This is also what lets reconciliation stop relying on the `inactive` flag.** The
+minted row is deleted, so it can't linger; an older row ends the day before a
+training that has already happened, so the date is always in the past and
+`set_inactive_from_dates` derives the flag by itself. `deactivate` still sets it
+explicitly, which is now belt-and-braces rather than load-bearing.
 
 **What a deletion costs:** the row's comments go with it, so the "why" D6b records
 survives only for ended rows. The deletion itself is still on the record as a
