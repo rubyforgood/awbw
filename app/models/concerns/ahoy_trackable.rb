@@ -1,11 +1,16 @@
 module AhoyTrackable
   extend ActiveSupport::Concern
 
+  # Long-form bodies are stored as a readable preview, not in full: an event is a
+  # summary, and whole articles would bloat every row of ahoy_events.
+  RICH_TEXT_PREVIEW_LIMIT = 300
+
   included do
     after_create  -> { track_create_event }
     after_update  -> { track_update_event }
     after_destroy -> { track_lifecycle_event("destroy", @_destroy_snapshot || {}) }
     before_save :capture_pending_association_removals
+    before_save :capture_pending_rich_text_changes
     before_destroy :capture_destroy_snapshot
   end
 
@@ -40,7 +45,7 @@ module AhoyTrackable
   def track_update_event
     return if previously_new_record? # Skip the fake "update" that happens right after create
 
-    changes = previous_changes.except("updated_at", "created_at")
+    changes = previous_changes.except("updated_at", "created_at").merge(@_pending_rich_text_changes.to_h)
     assoc_changes = collect_association_changes
 
     return if changes.empty? && assoc_changes.empty?
@@ -100,30 +105,44 @@ module AhoyTrackable
       end
     end
 
-    # Track rich text changes
-    collect_rich_text_changes(changes)
-
     # Track attachment changes
     collect_attachment_changes(changes)
 
     changes
   end
 
-  def collect_rich_text_changes(changes)
+  # Rich text saves through the parent's autosave chain, so by the time the update
+  # event is built the body is no longer reliably readable as a change — capture it
+  # here, while it's still dirty. Keyed on the attribute (`rhino_body`), not the
+  # association, because a reader thinks of it as a field of the record; the plain
+  # text is stored rather than the markup, truncated, so an event stays readable
+  # and small.
+  def capture_pending_rich_text_changes
+    @_pending_rich_text_changes = {}
+
     self.class.reflect_on_all_associations(:has_one).each do |assoc|
       next if assoc.polymorphic?
       next unless safe_assoc_class_name(assoc) == "ActionText::RichText"
 
-      record = public_send(assoc.name)
-      next unless record&.persisted?
+      # Reading the association would build an empty record for an untouched field.
+      # The name has to stay a symbol: the association cache is symbol-keyed, and a
+      # string lookup hands back a fresh, unloaded association whose target is nil.
+      record = association(assoc.name).target
+      # plain_text_body is derived when the rich text itself saves, which happens
+      # after this, so the body is the only diff available on a first edit.
+      diff = record&.changes&.values_at("plain_text_body", "body")&.compact&.first
+      next if diff.blank?
 
-      rt_changes = record.previous_changes.slice("body", "plain_text_body")
-      next if rt_changes.empty?
+      before, after = diff.map { |value| rich_text_preview(value) }
+      next if before == after
 
-      changes[assoc.name] ||= []
-      changes[assoc.name] << { action: "updated", id: record.id, type: "ActionText::RichText",
-                                changes: format_tracked_changes(rt_changes) }
+      @_pending_rich_text_changes[assoc.name.to_s.delete_prefix("rich_text_")] = [ before, after ]
     end
+  end
+
+  def rich_text_preview(value)
+    text = value.respond_to?(:to_plain_text) ? value.to_plain_text : value.to_s
+    text.squish.truncate(RICH_TEXT_PREVIEW_LIMIT)
   end
 
   def collect_attachment_changes(changes)
