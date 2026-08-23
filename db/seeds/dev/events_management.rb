@@ -1619,9 +1619,9 @@ if facilitator_training && registration_form
       answer.update!(submitted_answer: value.to_s, question_name_when_answered: field.name)
     end
   end
-  add_affiliation = ->(person, organization, title:, end_date: nil) do
+  add_affiliation = ->(person, organization, title:, start_date: Date.current - 1.year, end_date: nil) do
     Affiliation.find_or_create_by!(person: person, organization: organization, title: title) do |aff|
-      aff.start_date = Date.current - 1.year
+      aff.start_date = start_date
       aff.end_date = end_date
     end
   end
@@ -1682,6 +1682,20 @@ if facilitator_training && registration_form
       submission.form_answers.create!(form_field: agency_field, submitted_answer: org.name, question_name_when_answered: agency_field.name) if agency_field
       link_org.call(registration, org)
     end
+  end
+
+  # A7: a facilitator dated to a future training — not started yet, so their
+  # facilitator status reads "Upcoming" (person and org), distinct from Active
+  # and from a lapsed Formerly active. The Counselor role is already active, so
+  # the row shows an active job alongside an Upcoming Facilitator affiliation.
+  if aff_org
+    person = Person.create!(email: "affdemo.7@seed.example.com", first_name: "Demo Affiliation", last_name: "A7 Upcoming facilitator")
+    registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
+    registration.event_registration_organizations.find_or_create_by!(organization: aff_org)
+    add_affiliation.call(person, aff_org, title: "Counselor")
+    add_affiliation.call(person, aff_org, title: "Facilitator", start_date: Date.current + 1.month)
+    submit_field.call(registration, agency_field, aff_org.name)
+    submit_field.call(registration, position_field, "Counselor")
   end
 end
 
