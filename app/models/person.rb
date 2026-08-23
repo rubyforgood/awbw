@@ -470,11 +470,14 @@ class Person < ApplicationRecord
     preferred_email
   end
 
-  # A person's own page shows their entire communication history by email; every
-  # other record scopes to comms filed against itself (see #communications_scope there).
+  # A person's own page shows their entire communication history — every
+  # notification to any of their addresses (user login, email, email_2). Every
+  # other record instead scopes to comms filed against itself (its `notifications`).
   def communications_scope
-    email = preferred_email
-    email.present? ? Notification.email(email) : Notification.none
+    emails = [ user&.email, email, email_2 ].compact_blank.uniq
+    return Notification.none if emails.empty?
+
+    emails.map { |address| Notification.email(address) }.reduce(:or)
   end
 
   remote_searchable_by :first_name, :last_name, :email, :legal_first_name, :email_2
