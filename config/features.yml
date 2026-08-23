@@ -42,6 +42,7 @@
   area: registration
   display_status: user_facing
   released_on: 2026-08-22
+  pr_number: 2364
   summary: >-
     A scholarship or continuing-education form attached to an event now hides any question it
     shares with the event's registration form (name, email, address, organization), so
@@ -51,6 +52,7 @@
   area: content
   display_status: admin_facing
   released_on: 2026-08-22
+  pr_number: 2364
   summary: >-
     The form "Edit sections" page now offers every built-in section regardless of the form's
     role, so a copied single-section form (e.g. a scholarship form) can be built out with any
