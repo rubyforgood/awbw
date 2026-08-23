@@ -201,6 +201,28 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include(CGI.escapeHTML(link_organization_form_submission_path(submission, return_to: "form_submissions")))
       end
 
+      it "offers column toggles and hides the user account column by default" do
+        create(:form_submission)
+
+        get form_submissions_path, headers: frame_headers
+
+        expect(response.body).to include('data-column-toggle-group-value="user_account"')
+        expect(response.body).to include('data-column-toggle-col="role"')
+        expect(response.body).to include('data-column-toggle-col="event"')
+        expect(response.body).to include('data-column-toggle-col="submitted"')
+        # User account column starts hidden.
+        expect(response.body).to include('class="px-4 py-3 hidden" data-column-toggle-col="user_account"')
+      end
+
+      it "highlights the submission row matching the highlight param" do
+        submission = create(:form_submission)
+
+        get form_submissions_path(highlight: submission.id), headers: frame_headers
+
+        expect(response.body).to include(%(id="form-submission-row-#{submission.id}"))
+        expect(response.body).to include("ring-yellow-500")
+      end
+
       it "filters by person name via the search box" do
         person = create(:person, user: nil, first_name: "Priya", last_name: "Patel")
         mine = create(:form_submission, person: person)
@@ -278,10 +300,13 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include("AWBW")
       end
 
-      it "shows a back link to the form submissions index when arriving from it" do
+      it "shows a back link to the form submissions index, highlighting the row, when arriving from it" do
         get form_submission_path(submission, return_to: "form_submissions", person_id: submission.person_id)
 
-        expect(response.body).to include(form_submissions_path(person_id: submission.person_id))
+        expect(response.body).to include(
+          CGI.escapeHTML(form_submissions_path(person_id: submission.person_id, highlight: submission.id,
+                                               anchor: "form-submission-row-#{submission.id}"))
+        )
         expect(response.body).to include("Back to form submissions")
       end
 
@@ -298,7 +323,8 @@ RSpec.describe "FormSubmissions", type: :request do
                                  form_id: submission.form_id)
 
         expect(response.body).to include(
-          CGI.escapeHTML(form_submissions_path(form_id: submission.form_id, return_to: "forms"))
+          CGI.escapeHTML(form_submissions_path(form_id: submission.form_id, return_to: "forms",
+                                               highlight: submission.id, anchor: "form-submission-row-#{submission.id}"))
         )
       end
 

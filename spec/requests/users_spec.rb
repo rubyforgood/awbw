@@ -580,6 +580,15 @@ RSpec.describe "/users", type: :request do
         expect(flash[:notice]).to include("Invitation sent")
         expect(response).to redirect_to(users_path)
       end
+
+      it "returns to the form submissions index with the row highlighted when invited from there" do
+        submission = create(:form_submission)
+        post send_welcome_instructions_user_url(user, return_to: "form_submissions", form_submission_id: submission.id)
+
+        expect(response).to redirect_to(
+          form_submissions_path(highlight: submission.id, anchor: "form-submission-row-#{submission.id}")
+        )
+      end
     end
 
     context "as regular_user" do

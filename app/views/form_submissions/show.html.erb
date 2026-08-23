@@ -2,7 +2,7 @@
 <div class="mx-auto max-w-2xl px-4 pt-4">
   <div class="flex flex-wrap items-center gap-2">
     <% if params[:return_to] == "form_submissions" %>
-      <%= link_to form_submissions_path(person_id: params[:person_id].presence, form_id: params[:form_id].presence, **form_submission_carryover_params(params), return_to: params[:origin].presence), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      <%= link_to form_submissions_path(person_id: params[:person_id].presence, form_id: params[:form_id].presence, **form_submission_carryover_params(params), return_to: params[:origin].presence, anchor: form_submission_row_id(@form_submission), highlight: @form_submission.id), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Back to form submissions
       <% end %>
     <% elsif params[:return_to] == "form_answers" %>

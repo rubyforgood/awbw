@@ -17,6 +17,13 @@ module FormSubmissionsHelper
     }.compact
   end
 
+  # Stable anchor id for a submission's row on the index, so return links (from
+  # the detail page or after inviting) can scroll to and highlight it.
+  def form_submission_row_id(record_or_id)
+    id = record_or_id.respond_to?(:id) ? record_or_id.id : record_or_id
+    "form-submission-row-#{id}"
+  end
+
   # True when any index filter is active — drives whether "Clear filters" shows.
   def form_submission_filters_active?(params)
     params.values_at(:person_id, :form_id, :event_id, :organization_id, :role,
