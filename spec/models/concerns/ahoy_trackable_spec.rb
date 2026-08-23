@@ -153,6 +153,39 @@ RSpec.describe AhoyTrackable do
     end
   end
 
+  describe "membership changes" do
+    it "records an added record as the parent's own update event" do
+      person = create(:person)
+      category = create(:category)
+      Analytics::LifecycleBuffer.store.clear
+
+      person.track_membership_changes(categories: { added: [ category ], removed: [] })
+
+      added = event_named("update.person")[:properties][:association_changes][:categories].first
+      expect(added).to eq({ action: "added", type: "Category", id: category.id })
+    end
+
+    it "records a removed record" do
+      person = create(:person)
+      category = create(:category)
+      Analytics::LifecycleBuffer.store.clear
+
+      person.track_membership_changes(categories: { added: [], removed: [ category ] })
+
+      removed = event_named("update.person")[:properties][:association_changes][:categories].first
+      expect(removed).to include(action: "removed", type: "Category", id: category.id)
+    end
+
+    it "records nothing when nothing moved" do
+      person = create(:person)
+      Analytics::LifecycleBuffer.store.clear
+
+      person.track_membership_changes(categories: { added: [], removed: [] }, sectors: nil)
+
+      expect(event_named("update.person")).to be_nil
+    end
+  end
+
   describe "attachments" do
     it "records an added attachment on the record's event" do
       person = create(:person)

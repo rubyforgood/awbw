@@ -14,7 +14,34 @@ module AhoyTrackable
     before_destroy :capture_destroy_snapshot
   end
 
+  # Category and sector memberships are reassigned through has_many :through
+  # collection setters (categories=/sectors=) that persist immediately, outside
+  # this record's dirty tracking — so the update callbacks never see them. The
+  # code that reassigns them (TagAssignable) hands the before/after records here
+  # to fold the diff onto the change log as the record's own update event.
+  def track_membership_changes(memberships)
+    association_changes = memberships.each_with_object({}) do |(assoc_name, delta), changes|
+      entries = membership_change_entries(delta)
+      changes[assoc_name] = entries if entries.present?
+    end
+    return if association_changes.blank?
+
+    track_lifecycle_event("update", association_changes: association_changes)
+  end
+
   private
+
+  def membership_change_entries(delta)
+    return [] if delta.blank?
+
+    added = Array(delta[:added]).map { |record| membership_entry("added", record) }
+    removed = Array(delta[:removed]).map { |record| membership_entry("removed", record) }
+    added + removed
+  end
+
+  def membership_entry(action, record)
+    { action: action, type: record.class.name, id: record.id }
+  end
 
   def devise_only_changes?(changes)
     auth_fields = %w[
