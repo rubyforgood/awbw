@@ -29,11 +29,8 @@
             <tr>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Person</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Topic</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Event</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Organization</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Status</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Training registrations</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Source</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Subscribed</th>
             </tr>
           </thead>
@@ -57,38 +54,45 @@
                     <% icon_classes = "text-gray-300" %>
                     <% email_classes = "text-gray-300" %>
                   <% end %>
-                  <%= link_to edit_topic_subscription_path(subscription, topic_subscription_index_filters.merge(return_to: "index")),
-                              title: [ person.name, person.preferred_email ].compact_blank.join(" — "),
-                              class: "group flex items-center gap-2 w-56 max-w-full px-2 py-1 rounded-lg border shadow-sm leading-tight transition-colors duration-200 overflow-hidden #{card_classes}",
-                              data: { turbo_frame: "_top", turbo_prefetch: false } do %>
-                    <i class="fa-solid fa-envelope-open-text flex-shrink-0 <%= icon_classes %>"></i>
-                    <div class="flex min-w-0 flex-col justify-center">
-                      <span class="truncate text-xs font-semibold"><%= truncate(person.name.to_s, length: 30) %></span>
-                      <% if person.preferred_email.present? %>
-                        <!--email_off--><span class="truncate text-xs font-normal <%= email_classes %>"><%= person.preferred_email %></span><!--email_on-->
-                      <% end %>
-                    </div>
-                  <% end %>
+                  <%# Status sits right of the person card — the card is already a link to
+                      edit, so the badge is a plain pill (no nested link). %>
+                  <div class="flex items-center gap-2">
+                    <%= link_to edit_topic_subscription_path(subscription, topic_subscription_index_filters.merge(return_to: "index")),
+                                title: [ person.name, person.preferred_email ].compact_blank.join(" — "),
+                                class: "group flex items-center gap-2 w-56 max-w-full px-2 py-1 rounded-lg border shadow-sm leading-tight transition-colors duration-200 overflow-hidden #{card_classes}",
+                                data: { turbo_frame: "_top", turbo_prefetch: false } do %>
+                      <i class="fa-solid fa-envelope-open-text flex-shrink-0 <%= icon_classes %>"></i>
+                      <div class="flex min-w-0 flex-col justify-center">
+                        <span class="truncate text-xs font-semibold"><%= truncate(person.name.to_s, length: 30) %></span>
+                        <% if person.preferred_email.present? %>
+                          <!--email_off--><span class="truncate text-xs font-normal <%= email_classes %>"><%= person.preferred_email %></span><!--email_on-->
+                        <% end %>
+                      </div>
+                    <% end %>
+                    <%= subscription.status_badge %>
+                  </div>
                 </td>
 
-                <td class="px-4 py-2 text-sm text-gray-800"><%= subscription.topic_label %></td>
-
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <% if subscription.general_event_scope? %>
-                    <span class="inline-flex items-center gap-1.5 text-gray-500">
-                      <i class="fa-solid fa-layer-group text-xs"></i>
+                  <div class="font-medium"><%= subscription.topic_label %></div>
+                  <div class="mt-0.5 text-xs text-gray-500">
+                    <% if subscription.general_event_scope? %>
+                      <span class="inline-flex items-center gap-1">
+                        <i class="fa-solid fa-layer-group text-2xs"></i>
+                        <%= subscription.event_label %>
+                      </span>
+                    <% elsif subscription.interested_event %>
+                      <%# The label may be a terse abbreviation, so carry the full title as a tooltip. %>
+                      <span title="<%= subscription.interested_event.title %>"><%= subscription.event_label %></span>
+                    <% else %>
                       <%= subscription.event_label %>
-                    </span>
-                  <% else %>
-                    <%= subscription.event_label %>
-                  <% end %>
+                    <% end %>
+                  </div>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <%= subscription.organization_label || content_tag(:span, "—", class: "text-gray-400") %>
                 </td>
-
-                <td class="px-4 py-2 text-sm"><%= subscription.status_badge(href: edit_topic_subscription_path(subscription, topic_subscription_index_filters.merge(return_to: "index"))) %></td>
 
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <% registrations = subscription.person_facilitator_training_registrations %>
@@ -106,9 +110,10 @@
                   <% end %>
                 </td>
 
-                <td class="px-4 py-2 text-sm text-gray-500"><%= subscription.source.presence || "—" %></td>
-
-                <td class="px-4 py-2 text-sm text-nowrap text-gray-500"><%= subscription.subscribed_at.strftime("%B %d, %Y") %></td>
+                <td class="px-4 py-2 text-sm text-gray-500">
+                  <div class="text-nowrap"><%= subscription.subscribed_at.strftime("%B %d, %Y") %></div>
+                  <div class="mt-0.5 text-xs text-gray-400"><%= subscription.source.presence || "—" %></div>
+                </td>
               </tr>
             <% end %>
           </tbody>
