@@ -20,9 +20,9 @@ class FormSubmission < ApplicationRecord
   #   unlinked — not linked, either kind: pending or no-org-answer.
   #   none     — no organization answer was provided.
   ORG_LINK_STATUS_FILTER_OPTIONS = [
-    [ "Pending", "pending" ],
     [ "Linked", "linked" ],
     [ "Unlinked", "unlinked" ],
+    [ "Pending", "pending" ],
     [ "No org provided", "none" ]
   ].freeze
 
