@@ -30,11 +30,4 @@ class AffiliationDecorator < ApplicationDecorator
   def return_anchor
     active? ? h.dom_id(object) : "affiliations"
   end
-
-  # e.g. "Oct 13, 2026 – present"
-  def date_range
-    start = start_date ? start_date.strftime("%b %-d, %Y") : "no start date"
-    finish = end_date ? end_date.strftime("%b %-d, %Y") : "present"
-    "#{start} – #{finish}"
-  end
 end

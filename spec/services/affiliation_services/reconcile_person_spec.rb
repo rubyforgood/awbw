@@ -14,7 +14,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
 
   # A "Facilitator" affiliation for (person, organization) owned by `registration`.
   # Defaults to the training's own date, which is what the registration flow sets
-  # (ADR-0001 D8) and what makes it "the row this training minted" (ADR-0002 D6).
+  # (ADR-0001 D8) and what makes it "the row this training minted" (ADR-0003 D6).
   def owned_facilitator(registration:, start_date: nil)
     create(:affiliation,
            person: person,

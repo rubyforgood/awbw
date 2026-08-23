@@ -31,7 +31,7 @@
               <span class="font-medium text-gray-900"><%= change.person.name %></span>
               <span class="text-gray-500">— <%= change.organization.name %></span>
               <% if change.affiliation %>
-                <span class="text-gray-400">· <%= change.affiliation.decorate.date_range %></span>
+                <span class="text-gray-400">· <%= change.affiliation.decorate.period_label %></span>
               <% end %>
             </li>
           <% end %>

@@ -1,7 +1,7 @@
 module DataHealth
   # Facilitator affiliations minted by a registration to an event that is not a
   # facilitator training. Being a facilitator is conferred by a training, not by
-  # attending anything org-linked (ADR-0002 D1), so these rows should not exist —
+  # attending anything org-linked (ADR-0003 D1), so these rows should not exist —
   # they inflate an organization's program status and its Facilitators-since.
   #
   # The reconcile page removes them one event at a time; this finds them across

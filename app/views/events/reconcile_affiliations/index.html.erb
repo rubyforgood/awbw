@@ -97,7 +97,7 @@
                 <% if row.affiliation %>
                   <%= link_to edit_person_path(row.person, anchor: dom_id(row.affiliation)), target: "_blank", rel: "noopener", title: "Edit affiliation", class: "flex-1 min-w-0 text-sm hover:underline" do %>
                     <span class="text-gray-800 hover:text-blue-700"><%= row.organization.name %></span>
-                    <span class="text-gray-400">· <%= row.affiliation.decorate.date_range %></span>
+                    <span class="text-gray-400">· <%= row.affiliation.decorate.period_label %></span>
                   <% end %>
                 <% else %>
                   <span class="flex-1 min-w-0 text-sm text-gray-800"><%= row.organization.name %></span>
@@ -145,7 +145,7 @@
                     <%= link_to row.person.name, edit_event_registration_path(row.registration), target: "_blank", rel: "noopener", class: "font-medium text-gray-800 hover:underline hover:text-blue-700" %> —
                     <% if row.affiliation %>
                       <%= link_to edit_person_path(row.person, anchor: dom_id(row.affiliation)), target: "_blank", rel: "noopener", title: "Edit affiliation", class: "hover:underline hover:text-blue-700" do %>
-                        <%= row.organization.name %> · <%= row.affiliation.decorate.date_range %>
+                        <%= row.organization.name %> · <%= row.affiliation.decorate.period_label %>
                       <% end %>
                     <% else %>
                       <span class="text-gray-400"><%= row.organization.name %></span>

@@ -2,7 +2,7 @@ require "rails_helper"
 
 # How several people's facilitator affiliations add up to ONE verdict for the
 # organization — at an anchor date (New / Ongoing / Reinstated) and right now
-# (Active / Formerly active / Never active). ADR-0002 D3–D5.
+# (Active / Formerly active / Never active). ADR-0003 D3–D5.
 #
 # The single-affiliation boundary cases live in facilitator_program_status_spec.rb;
 # this file is about the arithmetic across people, across anchors, and the

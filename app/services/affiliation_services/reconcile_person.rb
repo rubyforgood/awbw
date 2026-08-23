@@ -23,7 +23,7 @@ module AffiliationServices
     ALREADY_ENDED = "Already ended — not by reconciliation".freeze
     LAPSED = "Ended — a return is recorded as a new affiliation".freeze
     # Topic on the comment reconciliation leaves behind, so a row can say why it
-    # ended without a dedicated column (ADR-0002 D6b).
+    # ended without a dedicated column (ADR-0003 D6b).
     COMMENT_TOPIC = "Reconciliation".freeze
     NOT_ATTENDED = "Didn't attend — no affiliation created".freeze
 
@@ -91,7 +91,7 @@ module AffiliationServices
     end
 
     # Why a row changed, on the affiliation's own comments rather than a dedicated
-    # column — the edit page and its history already surface them (ADR-0002 D6b).
+    # column — the edit page and its history already surface them (ADR-0003 D6b).
     def note(affiliation, body)
       affiliation.comments.create!(topic: COMMENT_TOPIC, body: body,
                                    created_by: Current.user, updated_by: Current.user)
@@ -108,7 +108,7 @@ module AffiliationServices
     # Only rows this training did NOT mint reach here (minted ones are deleted), and
     # they record facilitation that really happened — so they end at this training
     # and the years before it survive, leaving anchored program status where it was
-    # (ADR-0002 D6). Never before the row's own start date.
+    # (ADR-0003 D6). Never before the row's own start date.
     def deactivation_end_date(affiliation)
       [ @event.start_date&.to_date || Date.current, affiliation.start_date ].compact.max
     end
@@ -131,7 +131,7 @@ module AffiliationServices
 
     # Someone with no active facilitator affiliation needs one when they have never
     # had one, or when they completed a training here and are returning after a
-    # lapse — the return is a NEW row, never a resurrected one (ADR-0002 D6a).
+    # lapse — the return is a NEW row, never a resurrected one (ADR-0003 D6a).
     def needs_affiliation?
       return false unless @registration
       return false if facilitator_affiliations.any?(&:active?)
@@ -150,7 +150,7 @@ module AffiliationServices
       elsif deactivation_ready?(affiliation)
         # The row this training minted recorded an assumption that never came true,
         # so it goes rather than lingering as a zero-length row. Anything older
-        # records facilitation that really happened and is only ended (ADR-0002 D6).
+        # records facilitation that really happened and is only ended (ADR-0003 D6).
         Decision.new(affiliation:, action: minted_here?(affiliation) ? :delete : :deactivate)
       else
         Decision.new(affiliation:, action: :noop, reason: TRAINING_PENDING)

@@ -86,7 +86,7 @@ class Organization < ApplicationRecord
   # Scopes
   # See TagFilterable, Trendable, WindowsTypeFilterable
   # An org is active because someone is affiliated there, not because the legacy
-  # status column says so (ADR-0001 D3, ADR-0002 D4).
+  # status column says so (ADR-0001 D3, ADR-0003 D4).
   scope :active, -> { where(id: Affiliation.active.select(:organization_id)) }
   scope :address, ->(address) do
     return all if address.blank?
@@ -249,7 +249,7 @@ class Organization < ApplicationRecord
   end
 
   # Needed for my_bookmarks. Keys off affiliations only — the stored
-  # organization_status has drifted and is never consulted (ADR-0002 D4).
+  # organization_status has drifted and is never consulted (ADR-0003 D4).
   # The loaded branch is the in-memory twin of the `active` scope, so a list page
   # that preloaded affiliations doesn't query once per row.
   def published?

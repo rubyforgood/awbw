@@ -1,6 +1,6 @@
 module DataHealth
   # Affiliations whose minting registration is not linked to the affiliation's own
-  # organization. ADR-0002 D2a's invariant is "FK present ⟺ this row was auto-minted
+  # organization. ADR-0003 D2a's invariant is "FK present ⟺ this row was auto-minted
   # for its *current* organization", and reconciliation's auto-vs-manual gate reads
   # that FK — so a stale link makes a row look auto-minted for an org it was never
   # minted for.

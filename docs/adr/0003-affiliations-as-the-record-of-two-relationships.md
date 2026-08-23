@@ -1,4 +1,4 @@
-# ADR-0002 — Affiliations record two relationships, and only one of them is the art program
+# ADR-0003 — Affiliations record two relationships, and only one of them is the art program
 
 - **Status:** Accepted
 - **Date:** 2026-08-19
