@@ -168,11 +168,15 @@ class Person < ApplicationRecord
 
   scope :organization_ids, ->(organization_ids)  { joins(:affiliations)
                                                      .where(affiliations: { organization_id: organization_ids }) }
-  scope :published, -> { searchable.with_active_affiliations }
+  scope :published, -> { searchable.with_active_facilitator_affiliations }
   scope :searchable, ->(searchable = nil) { searchable ? where(profile_is_searchable: searchable) : where(profile_is_searchable: true) }
-  scope :with_active_affiliations, -> {
+  # The public people directory is a directory of *active facilitators*, so only
+  # a currently-active Facilitator affiliation makes a person publicly visible —
+  # a non-facilitator role (Counselor, Board Member) or a lapsed/upcoming
+  # facilitator does not. Non-admins see only these; everyone else is admin-only.
+  scope :with_active_facilitator_affiliations, -> {
     joins(:affiliations)
-      .merge(Affiliation.active)
+      .merge(Affiliation.facilitators.active)
       .distinct
   }
   scope :where_user_not_locked, -> {
@@ -337,8 +341,12 @@ class Person < ApplicationRecord
     results
   end
 
+  # Publicly visible = searchable and a currently-active *facilitator*. The
+  # in-memory twin of the `published` scope; computed from the (eager-loaded)
+  # affiliations so the people index pays no per-row query. A non-facilitator
+  # role or a lapsed/upcoming facilitator is not published (admin-only).
   def published?
-    profile_is_searchable? && affiliations.active.exists?
+    profile_is_searchable? && affiliations.any? { |a| a.facilitator? && a.active? }
   end
 
   def membership_current?(as_of: Date.current)

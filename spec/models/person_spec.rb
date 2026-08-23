@@ -341,28 +341,42 @@ RSpec.describe Person, type: :model do
         expect(person.published?).to be false
       end
     end
+
+    context "when the only active affiliation is a non-facilitator role" do
+      before { create(:affiliation, person: person, title: "Counselor", inactive: false, end_date: nil) }
+
+      it "returns false — only active facilitators are published" do
+        expect(person.published?).to be false
+      end
+    end
   end
 
-  describe ".with_active_affiliations" do
+  describe ".with_active_facilitator_affiliations" do
     let!(:person_with_active) { create(:person) }
     let!(:person_with_inactive) { create(:person) }
+    let!(:person_non_facilitator) { create(:person) }
     let!(:person_without) { create(:person) }
 
     before do
       create(:affiliation, person: person_with_active, inactive: false, end_date: nil)
       create(:affiliation, person: person_with_inactive, inactive: true, end_date: nil)
+      create(:affiliation, person: person_non_facilitator, title: "Counselor", inactive: false, end_date: nil)
     end
 
-    it "includes people with active affiliations" do
-      expect(Person.with_active_affiliations).to include(person_with_active)
+    it "includes people with an active facilitator affiliation" do
+      expect(Person.with_active_facilitator_affiliations).to include(person_with_active)
     end
 
     it "excludes people with only inactive affiliations" do
-      expect(Person.with_active_affiliations).not_to include(person_with_inactive)
+      expect(Person.with_active_facilitator_affiliations).not_to include(person_with_inactive)
+    end
+
+    it "excludes people whose only active affiliation is a non-facilitator role" do
+      expect(Person.with_active_facilitator_affiliations).not_to include(person_non_facilitator)
     end
 
     it "excludes people with no affiliations" do
-      expect(Person.with_active_affiliations).not_to include(person_without)
+      expect(Person.with_active_facilitator_affiliations).not_to include(person_without)
     end
   end
 
@@ -498,9 +512,9 @@ RSpec.describe Person, type: :model do
       expect(results).not_to include(person_bob)
     end
 
-    it 'chains with_active_affiliations and organization_name without an ambiguous end_date error' do
+    it 'chains with_active_facilitator_affiliations and organization_name without an ambiguous end_date error' do
       expect {
-        Person.with_active_affiliations.search_by_params(organization_name: 'Alpha').to_a
+        Person.with_active_facilitator_affiliations.search_by_params(organization_name: 'Alpha').to_a
       }.not_to raise_error
     end
 
