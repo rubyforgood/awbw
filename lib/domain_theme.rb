@@ -56,10 +56,11 @@ module DomainTheme
     program_reinstated:       :purple,
 
     # Org-wide program status (the stored organization_status): Active is the
-    # positive current state, Upcoming a not-yet-started one, Formerly active a
-    # lapsed one, Never active neutral.
+    # positive current state, Upcoming a not-yet-started one (blue — a benign
+    # not-active state, not an amber warning), Formerly active a lapsed one, Never
+    # active neutral.
     org_active:               :green,
-    org_upcoming:             :amber,
+    org_upcoming:             :blue,
     org_formerly_active:      :orange,
     org_never_active:         :gray,
 
