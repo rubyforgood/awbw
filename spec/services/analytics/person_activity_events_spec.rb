@@ -59,6 +59,92 @@ RSpec.describe Analytics::PersonActivityEvents do
       expect(described_class.new(person).relation).to include(target)
     end
 
+    # These records only reach a person through a parent, so the mapping is the
+    # only thing putting them on the history — one example per hop.
+    describe "records that reach the person through a parent" do
+      let(:registration) { create(:event_registration, registrant: person) }
+
+      it "includes the registration's checklist completions, org links, and attendance entries" do
+        completion = create(:event_registration_checklist_completion, event_registration: registration)
+        org_link = create(:event_registration_organization, event_registration: registration)
+        entry = create(:event_attendance_time_entry, event_registration: registration)
+
+        relation = described_class.new(person).relation
+
+        expect(relation).to include(event(resource_type: "EventRegistrationChecklistCompletion", resource_id: completion.id))
+        expect(relation).to include(event(resource_type: "EventRegistrationOrganization", resource_id: org_link.id))
+        expect(relation).to include(event(resource_type: "EventAttendanceTimeEntry", resource_id: entry.id))
+      end
+
+      it "includes the events they staff" do
+        staffing = create(:event_staff, person: person)
+
+        expect(described_class.new(person).relation)
+          .to include(event(resource_type: "EventStaff", resource_id: staffing.id))
+      end
+
+      it "includes their membership invoices" do
+        invoice = create(:membership_invoice, membership: create(:membership, person: person))
+
+        expect(described_class.new(person).relation)
+          .to include(event(resource_type: "MembershipInvoice", resource_id: invoice.id))
+      end
+
+      it "includes allocations against anything they owe" do
+        payment = create(:payment, person: person)
+        invoice = create(:membership_invoice, membership: create(:membership, person: person))
+        ce = create(:continuing_education_registration, event_registration: registration)
+        targets = [ registration, invoice, ce ].map do |allocatable|
+          allocation = create(:allocation, source: payment, allocatable: allocatable)
+          [ allocatable.class.name, event(resource_type: "Allocation", resource_id: allocation.id) ]
+        end
+
+        relation = described_class.new(person).relation
+
+        targets.each do |allocatable_type, target|
+          expect(relation).to include(target), "expected the #{allocatable_type} allocation on the history"
+        end
+      end
+
+      it "includes refunds they receive and refunds reversing their payments" do
+        theirs = create(:refund, recipient: person, refundable: create(:payment, person: person))
+        on_their_payment = create(:refund, recipient: create(:organization), refundable: create(:payment, person: person))
+
+        relation = described_class.new(person).relation
+
+        expect(relation).to include(event(resource_type: "Refund", resource_id: theirs.id))
+        expect(relation).to include(event(resource_type: "Refund", resource_id: on_their_payment.id))
+      end
+
+      it "includes their form answers and the uploads attached to them" do
+        answer = create(:form_answer, form_submission: create(:form_submission, person: person))
+        asset = create(:asset, owner: answer)
+
+        relation = described_class.new(person).relation
+
+        expect(relation).to include(event(resource_type: "FormAnswer", resource_id: answer.id))
+        expect(relation).to include(event(resource_type: "Asset", resource_id: asset.id))
+      end
+
+      it "includes responses to their scholarship agreements" do
+        response = create(:scholarship_agreement_response, scholarship: create(:scholarship, recipient: person))
+
+        expect(described_class.new(person).relation)
+          .to include(event(resource_type: "ScholarshipAgreementResponse", resource_id: response.id))
+      end
+
+      it "excludes the same record types when they belong to someone else" do
+        other_registration = create(:event_registration)
+        completion = create(:event_registration_checklist_completion, event_registration: other_registration)
+        allocation = create(:allocation, allocatable: other_registration)
+
+        relation = described_class.new(person).relation
+
+        expect(relation).not_to include(event(resource_type: "EventRegistrationChecklistCompletion", resource_id: completion.id))
+        expect(relation).not_to include(event(resource_type: "Allocation", resource_id: allocation.id))
+      end
+    end
+
     it "excludes events unrelated to the person" do
       unrelated_person = create(:person)
       other = event(resource_type: "Person", resource_id: unrelated_person.id, name: "update.person")
