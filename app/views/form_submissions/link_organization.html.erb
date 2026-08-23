@@ -9,7 +9,7 @@
 <div class="max-w-2xl mx-auto py-8 px-4">
   <div class="mb-4">
     <% if params[:return_to] == "form_submissions" %>
-      <%= link_to "← Back to form submissions", form_submissions_path(form_id: @form_submission.form_id), class: "text-sm #{eyebrow_link_class}" %>
+      <%= link_to "← Back to form submissions", form_submissions_path(highlight: @form_submission.id, anchor: form_submission_row_id(@form_submission)), class: "text-sm #{eyebrow_link_class}" %>
     <% else %>
       <%= link_to "← Back to submission", form_submission_path(@form_submission), class: "text-sm #{eyebrow_link_class}" %>
     <% end %>

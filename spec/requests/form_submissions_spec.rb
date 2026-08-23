@@ -434,6 +434,15 @@ RSpec.describe "FormSubmissions", type: :request do
       before { travel_to Time.current.midday }
 
       describe "GET /form_submissions/:id/link_organization" do
+        it "eyebrows back to the index with the row highlighted when arriving from it" do
+          get link_organization_form_submission_path(submission, return_to: "form_submissions")
+
+          expect(response.body).to include("Back to form submissions")
+          expect(response.body).to include(
+            CGI.escapeHTML(form_submissions_path(highlight: submission.id, anchor: "form-submission-row-#{submission.id}"))
+          )
+        end
+
         it "offers a create-and-link row for a submitted org that isn't in the database" do
           add_answer("organization_name", "Lakeside Community College")
           add_answer("organization_position", "Counselor")
