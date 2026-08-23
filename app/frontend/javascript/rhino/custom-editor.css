@@ -1,6 +1,5 @@
 custom-rhino-editor table {
   border-collapse: collapse;
-  margin: 0;
   overflow: hidden;
   table-layout: fixed;
   width: 100%;
@@ -9,12 +8,8 @@ custom-rhino-editor table td, custom-rhino-editor table th {
   border: 2px solid #ced4da;
   box-sizing: border-box;
   min-width: 1em;
-  padding: 3px 5px;
   position: relative;
   vertical-align: top;
-}
-custom-rhino-editor table td > *, custom-rhino-editor table th > * {
-  margin-bottom: 0;
 }
 custom-rhino-editor table th {
   background-color: #f1f3f5;
@@ -41,9 +36,9 @@ custom-rhino-editor table .column-resize-handle {
   top: 0;
   width: 4px;
 }
-/* WYSIWYG: trix.css zeroes block margins inside .trix-content, so the editor jams
-   blocks together while the rendered `prose` page spaces them. Restore prose's
-   spacing (values mirror @tailwindcss/typography's em defaults). */
+/* WYSIWYG: the editor already sits inside a `prose` wrapper, but trix.css's blanket
+   `.trix-content *` reset outranks it, so every value prose would supply has to be
+   restated at that weight. Values mirror @tailwindcss/typography's em defaults. */
 custom-rhino-editor .trix-content > :first-child {
   margin-top: 0;
 }
@@ -55,19 +50,45 @@ custom-rhino-editor .trix-content ul,
 custom-rhino-editor .trix-content ol {
   margin: 1.25em 0;
 }
+/* The reset also strips prose's list indent, which trix.css only partly replaces
+   with `li { margin-inline-start: 1em }` — restate both so bullets line up. */
+custom-rhino-editor .trix-content ul,
+custom-rhino-editor .trix-content ol {
+  padding-inline-start: 1.625em;
+}
+custom-rhino-editor .trix-content ul ul,
+custom-rhino-editor .trix-content ul ol,
+custom-rhino-editor .trix-content ol ul,
+custom-rhino-editor .trix-content ol ol {
+  margin: 0.75em 0;
+}
 custom-rhino-editor .trix-content li {
   margin: 0.5em 0;
+  padding-inline-start: 0.375em;
 }
-/* The editor wraps each list item's text in a <p>; the rendered page doesn't.
-   Zero it so the <li> margin (not the paragraph rule) controls list spacing. */
-custom-rhino-editor .trix-content li > p {
-  margin: 0;
+custom-rhino-editor .trix-content > ul > li p {
+  margin: 0.75em 0;
+}
+custom-rhino-editor .trix-content > ul > li > p:first-child,
+custom-rhino-editor .trix-content > ol > li > p:first-child {
+  margin-top: 1.25em;
+}
+custom-rhino-editor .trix-content > ul > li > p:last-child,
+custom-rhino-editor .trix-content > ol > li > p:last-child {
+  margin-bottom: 1.25em;
 }
 custom-rhino-editor .trix-content blockquote {
+  border-inline-start-width: 0.25rem;
+  border-inline-start-color: var(--tw-prose-quote-borders);
   margin: 1.6em 0;
+  padding-inline-start: 1em;
 }
+/* trix.css shrinks h1 to 1.2em, which would leave the em-based margin below at
+   roughly half the published gap. */
 custom-rhino-editor .trix-content h1 {
-  margin: 0 0 0.889em;
+  font-size: 2.25em;
+  line-height: 1.1111111;
+  margin: 0 0 0.8888889em;
 }
 custom-rhino-editor .trix-content h2 {
   margin: 2em 0 1em;
@@ -84,8 +105,16 @@ custom-rhino-editor .trix-content figure {
 custom-rhino-editor .trix-content hr {
   margin: 3em 0;
 }
-custom-rhino-editor .trix-content table p {
-  margin: 0;
+custom-rhino-editor .trix-content :is(h2, h3, h4, hr) + * {
+  margin-top: 0;
+}
+custom-rhino-editor .trix-content table {
+  font-size: 0.875em;
+  line-height: 1.7142857;
+  margin: 2em 0;
+}
+custom-rhino-editor .trix-content table :is(td, th) {
+  padding: 0.5714286em;
 }
 custom-rhino-editor a {
   text-decoration: underline;
@@ -96,17 +125,15 @@ custom-rhino-editor a:hover {
   color: #1e40af; /* Tailwind blue-800 */
 }
 
-/* Dashed border for grid cells that have hasBorder=false (editor only). Keep the
-   outline so the grid structure stays visible/editable, but strip the padding and
-   inner block spacing so the cell doesn't balloon — it previews at the size the
-   published page renders. */
+/* The reset strips the cell's `p-3`; restate it so the cell previews at the size
+   the published page renders. */
+custom-rhino-editor .trix-content .grid-cell-editor {
+  padding: 0.75rem;
+}
+
+/* Dashed border for grid cells that have hasBorder=false (editor only) */
 custom-rhino-editor .grid-cell-editor[hasborder="false"] {
   border: 2px dashed #ced4da;
-  padding: 0;
-}
-custom-rhino-editor .grid-cell-editor[hasborder="false"] > * {
-  margin-top: 0;
-  margin-bottom: 0;
 }
 
 custom-rhino-editor span.mention {
