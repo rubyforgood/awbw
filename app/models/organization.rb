@@ -131,6 +131,18 @@ class Organization < ApplicationRecord
     end
   }
 
+  # The index's Program status dropdown, in display order. "Inactive" is the
+  # not-active umbrella (formerly + never + upcoming) with the two narrower
+  # buckets after it, mirroring Person::FACILITATOR_STATUS_FILTER_OPTIONS so the
+  # two indexes read the same way.
+  PROGRAM_STATUS_FILTER_OPTIONS = [
+    [ "Active", "active" ],
+    [ "Inactive", "formerly_or_never" ],
+    [ "Upcoming", "upcoming" ],
+    [ "Formerly active", "formerly_active" ],
+    [ "Never active", "never_active" ]
+  ].freeze
+
   # Matches a tag on the org itself OR an affiliated person's PRIMARY tag —
   # mirroring the aggregate the index/profile columns show.
   scope :sector_name_including_people, ->(name) {
