@@ -92,9 +92,10 @@ filter (`Organization.program_status`), so the filter and the chip agree.
 
 **The "Inactive" filter is a not-active umbrella.** On both the organization
 index and the people directory, the facilitator-status filter offers **Upcoming**
-as its own option, **and** its **Inactive** option returns every
-not-currently-active facilitator — Formerly active, Never active, **and
-Upcoming** — because none of them are active right now
+as its own option, **and** its **Inactive** option returns everyone/every org
+that is not a currently-active facilitator — Formerly active, Never active (no
+facilitator affiliation at all), **and Upcoming** — because none of them are
+active right now
 (`Organization.program_status("formerly_or_never")`, `Person.facilitators_inactive`).
 So an upcoming org/person shows an *Upcoming* chip but is still found when you
 filter by Inactive.

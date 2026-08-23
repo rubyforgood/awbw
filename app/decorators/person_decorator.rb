@@ -86,11 +86,11 @@ class PersonDecorator < ApplicationDecorator
   end
 
   # The person's facilitator standing for list display: Active if any facilitator
-  # affiliation is current, Upcoming if one is scheduled but none active, Inactive
-  # if every facilitator term has ended, nil if they were never a facilitator.
+  # affiliation is current, Upcoming if one is scheduled but none active, otherwise
+  # Inactive — which covers both a lapsed facilitator and someone who was never a
+  # facilitator (neither is a currently-active facilitator).
   def facilitator_status_label
     facilitator_affiliations = affiliations.select(&:facilitator?)
-    return nil if facilitator_affiliations.none?
     return "Active" if facilitator_affiliations.any?(&:active?)
     return "Upcoming" if facilitator_affiliations.any?(&:upcoming?)
     "Inactive"

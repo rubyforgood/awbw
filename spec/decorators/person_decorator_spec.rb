@@ -90,9 +90,9 @@ RSpec.describe PersonDecorator do
   describe "#facilitator_status_label" do
     let(:person) { create(:person) }
 
-    it "is nil when the person has never been a facilitator" do
+    it "is Inactive when the person has never been a facilitator" do
       create(:affiliation, person: person, title: "Volunteer", start_date: 1.year.ago)
-      expect(person.decorate.facilitator_status_label).to be_nil
+      expect(person.decorate.facilitator_status_label).to eq("Inactive")
     end
 
     it "is Active with a current facilitator affiliation" do

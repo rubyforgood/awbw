@@ -698,6 +698,16 @@ RSpec.describe Person, type: :model do
         expect(results).not_to include(person_alice)
       end
 
+      it "inactive: includes people with no facilitator affiliation (never active)" do
+        member = create(:person, first_name: "Member", last_name: "Only")
+        create(:affiliation, person: member, title: "Counselor", end_date: nil)
+        never_affiliated = create(:person, first_name: "Never", last_name: "Affiliated")
+
+        results = Person.search_by_params(facilitator_status: "inactive")
+        expect(results).to include(member, never_affiliated)
+        expect(results).not_to include(person_alice)
+      end
+
       it "inactive: includes an upcoming (not-yet-started) facilitator — the not-active umbrella" do
         upcoming = create(:person, first_name: "Upcoming", last_name: "Fac")
         create(:affiliation, person: upcoming, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
