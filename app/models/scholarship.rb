@@ -120,6 +120,13 @@ class Scholarship < ApplicationRecord
     recipient&.preferred_email
   end
 
+  # Comms shown in the combined section: only those filed against this scholarship
+  # (its hand-logged notes) — not the recipient's whole history, which lives on
+  # the person page.
+  def communications_scope
+    notifications
+  end
+
   private
 
   def within_grant_budget

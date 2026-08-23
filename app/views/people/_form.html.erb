@@ -561,55 +561,11 @@
   </div>
 
   <% if f.object.persisted? %>
-    <%# Communications — subjects are visible to the person; the body and the
-        add/edit controls are admin-only (gated inside the partial). %>
-    <%= render "notifications/communications", f: f, mark_admin_only: true,
-          title_key: "communications.title", none_key: "communications.none_for_person" %>
-
-    <!-- Comments -->
-    <% if allowed_to?(:manage?, Comment) %>
-      <section class="overflow-hidden rounded-xl border border-blue-200 bg-white shadow-sm"
-               id="comments-section"
-               data-controller="paginated-fields edit-toggle"
-               data-paginated-fields-per-page-value="5">
-        <div class="admin-only flex items-center gap-3 border-b border-blue-200 bg-blue-100 px-4 py-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-blue-600">
-            <i class="fa-solid fa-comments"></i>
-          </span>
-          <h2 class="text-sm font-semibold text-gray-700">Comments</h2>
-          <% if @person.persisted? %>
-            <%= link_to all_comments_person_path(@person),
-                        class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
-                        target: "_blank", rel: "noopener" do %>
-              View all
-              <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
-            <% end %>
-          <% end %>
-        </div>
-
-        <div class="space-y-3 p-4">
-          <%= f.simple_fields_for :comments do |cf| %>
-            <%= render "comments/comment_fields", f: cf %>
-          <% end %>
-
-          <div data-paginated-fields-target="nav"></div>
-
-          <div class="flex items-center justify-between gap-2">
-            <%= link_to_add_association "➕ Add Comment",
-                                        f,
-                                        :comments,
-                                        partial: "comments/comment_fields",
-                                        class: "btn btn-secondary-outline" %>
-            <button type="button"
-                    class="cursor-pointer text-sm whitespace-nowrap text-gray-400 underline hover:text-blue-600"
-                    data-action="edit-toggle#toggle">
-              <span data-edit-toggle-target="editLabel">Edit Comments</span>
-              <span data-edit-toggle-target="viewLabel" class="hidden">Done Editing</span>
-            </button>
-          </div>
-        </div>
-      </section>
-    <% end %>
+    <%# Combined comments & communications — comment bodies/controls are admin-only
+        and communication subjects are visible to the person (gated in the partial). %>
+    <%= render "shared/comments_and_communications", f: f, mark_admin_only: true,
+          comments_all_path: (@person.persisted? ? all_comments_person_path(@person) : nil),
+          communications_all_email: @person.communications_email %>
   <% end %>
 
   <div class="action-buttons mt-8 flex justify-center gap-3">

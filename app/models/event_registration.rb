@@ -591,6 +591,13 @@ class EventRegistration < ApplicationRecord
     registrant&.preferred_email
   end
 
+  # Comms shown in the combined section: only those filed against this
+  # registration (confirmations, reminders, hand-logged notes) — not the
+  # registrant's whole history, which lives on the person page.
+  def communications_scope
+    notifications
+  end
+
   def active?
     status.in?(ACTIVE_STATUSES)
   end

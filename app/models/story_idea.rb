@@ -64,6 +64,12 @@ class StoryIdea < ApplicationRecord
     created_by&.email
   end
 
+  # Comms shown in the combined section: only those filed against this story idea —
+  # not the submitter's whole history, which lives on the person page.
+  def communications_scope
+    notifications
+  end
+
   def full_name
     base = "#{created_at.strftime("%Y-%m-%d")} #{author_credit}"
     title = workshop_title

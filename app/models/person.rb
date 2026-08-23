@@ -472,6 +472,15 @@ class Person < ApplicationRecord
     preferred_email
   end
 
+  # Communications shown in the combined comments-and-communications section. A
+  # person's own page shows their *entire* history — every notification addressed
+  # to them, whatever record it was filed under. (Every other record scopes to
+  # comms filed to itself; see the default in the models below.)
+  def communications_scope
+    email = preferred_email
+    email.present? ? Notification.email(email) : Notification.none
+  end
+
   remote_searchable_by :first_name, :last_name, :email, :legal_first_name, :email_2
 
   def remote_search_label

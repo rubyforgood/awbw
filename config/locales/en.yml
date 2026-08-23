@@ -52,6 +52,11 @@ en:
     none_for_scholarship: "No communications for this scholarship yet."
     none_for_story: "No communications for this story yet."
     none_for_story_idea: "No communications for this story idea yet."
+    section_title: "Comments & communications"
+    section_edit: "Edit"
+    add_comment: "Add comment"
+    section_none: "No comments or communications yet."
+    section_none_comms_only: "No communications yet."
   activerecord:
     attributes:
       grant:

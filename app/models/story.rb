@@ -137,6 +137,12 @@ class Story < ApplicationRecord
     author_person&.preferred_email
   end
 
+  # Comms shown in the combined section: only those filed against this story — not
+  # the author's whole history, which lives on the person page.
+  def communications_scope
+    notifications
+  end
+
   def organization_name
     organization&.name
   end
