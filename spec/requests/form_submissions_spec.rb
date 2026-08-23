@@ -108,7 +108,7 @@ RSpec.describe "FormSubmissions", type: :request do
 
         expect(response.body).to include(
           CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions",
-                                              person_id: submission.person_id, event_id: event.id, role: "registration"))
+                                              event_id: event.id, role: "registration"))
         )
       end
 
@@ -141,7 +141,7 @@ RSpec.describe "FormSubmissions", type: :request do
 
         expect(response.body).to include(
           CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions", origin: "forms",
-                                              person_id: submission.person_id, form_id: form.id))
+                                              form_id: form.id))
         )
       end
 
@@ -152,8 +152,7 @@ RSpec.describe "FormSubmissions", type: :request do
         get form_submissions_path(form_id: form.id), headers: frame_headers
 
         expect(response.body).to include(
-          CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions",
-                                              person_id: submission.person_id, form_id: form.id))
+          CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions", form_id: form.id))
         )
       end
 
