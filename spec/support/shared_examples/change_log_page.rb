@@ -16,6 +16,7 @@ RSpec.shared_examples "a page with a change log" do
     get page_path
 
     expect(response.body).to include("Change log")
+    expect(response.body).not_to include("Change log empty")
     expect(response.body).to include("after value")
   end
 
@@ -30,13 +31,12 @@ RSpec.shared_examples "a page with a change log" do
 
     get page_path
 
-    expect(response.body).to include("No changes recorded yet")
+    expect(response.body).to include("Change log empty")
   end
 
-  it "says so rather than disappearing when the record has no tracked activity" do
+  it "says the log is empty rather than disappearing when the record has no tracked activity" do
     get page_path
 
-    expect(response.body).to include("Change log")
-    expect(response.body).to include("No changes recorded yet")
+    expect(response.body).to include("Change log empty")
   end
 end

@@ -483,11 +483,10 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("attended")
       end
 
-      it "says so rather than disappearing when the record has no tracked activity" do
+      it "says the log is empty rather than disappearing when the record has no tracked activity" do
         get edit_event_registration_path(existing_registration)
 
-        expect(response.body).to include("Change log")
-        expect(response.body).to include("No changes recorded yet")
+        expect(response.body).to include("Change log empty")
       end
 
       it "shows a Delete button for a deletable registration" do
