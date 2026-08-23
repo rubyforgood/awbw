@@ -400,7 +400,11 @@ class EventRegistrationsController < ApplicationController
     authorize! @event_registration, to: :select_organization?
     return deny_locked_org_edit if @event_registration.editing_locked?
     @person = @event_registration.registrant
-    organization = Organization.find(params[:organization_id])
+    organization = Organization.find_by(id: params[:organization_id])
+    if organization.nil?
+      redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), alert: "Choose an organization to link."
+      return
+    end
 
     notice = link_and_report(organization, verb: "linked", record_fills: true)
 
