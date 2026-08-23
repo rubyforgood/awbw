@@ -215,11 +215,11 @@ class Person < ApplicationRecord
   # People with at least one currently-active facilitator affiliation.
   scope :facilitators_active, -> {
     where(id: Affiliation.facilitators.active.select(:person_id)) }
-  # People with a facilitator affiliation not yet started (future start, none
-  # active) — Upcoming, not Active or Inactive.
+  # People with a facilitator affiliation that hasn't started yet (future start,
+  # not ended). Independent of the Active filter — someone active at one org and
+  # scheduled at another is returned by both.
   scope :facilitators_upcoming, -> {
-    where(id: Affiliation.facilitators.with_status("Upcoming").select(:person_id))
-      .where.not(id: Affiliation.facilitators.active.select(:person_id)) }
+    where(id: Affiliation.facilitators.with_status("Upcoming").select(:person_id)) }
   # Everyone who is not a currently-active facilitator — the not-active umbrella:
   # people whose facilitator affiliation has ended/is flagged or is upcoming, AND
   # people with no facilitator affiliation at all. Mirrors the org index's

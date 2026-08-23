@@ -689,6 +689,15 @@ RSpec.describe Person, type: :model do
         expect(results).not_to include(person_alice)
       end
 
+      it "upcoming and active both include someone active at one org and upcoming at another" do
+        both = create(:person, first_name: "Both", last_name: "Fac")
+        create(:affiliation, person: both, title: "Facilitator", start_date: 1.year.ago, end_date: nil)
+        create(:affiliation, person: both, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+
+        expect(Person.search_by_params(facilitator_status: "upcoming")).to include(both)
+        expect(Person.search_by_params(facilitator_status: "active")).to include(both)
+      end
+
       it "inactive: includes people whose facilitator affiliations are all inactive" do
         lapsed = create(:person, first_name: "Lapsed", last_name: "Fac")
         create(:affiliation, person: lapsed, title: "Facilitator", end_date: 1.year.ago)
