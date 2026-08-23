@@ -239,6 +239,7 @@ Rails.application.routes.draw do
   resources :people do
     collection do
       get :check_duplicates
+      get :email_addresses
     end
     member do
       get :workshop_logs
