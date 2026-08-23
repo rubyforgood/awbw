@@ -192,6 +192,15 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include("Linked")
       end
 
+      it "shows a None chip linking to the editor when no organization was submitted" do
+        submission = create(:form_submission)
+
+        get form_submissions_path, headers: frame_headers
+
+        expect(response.body).to include("None")
+        expect(response.body).to include(CGI.escapeHTML(link_organization_form_submission_path(submission, return_to: "form_submissions")))
+      end
+
       it "filters by person name via the search box" do
         person = create(:person, user: nil, first_name: "Priya", last_name: "Patel")
         mine = create(:form_submission, person: person)

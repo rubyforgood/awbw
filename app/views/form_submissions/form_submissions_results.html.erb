@@ -52,12 +52,12 @@
                     explicit link made in the editor does. %>
                 <% answers = submission.answers_by_identifier %>
                 <% submitted_org = FormField.aliased_identifiers("organization_name").filter_map { |key| answers[key].presence }.first %>
+                <%# The chip doubles as the way into the submission's org-linking
+                    editor, like the org chips on the registrants roster. %>
+                <% editor_path = link_organization_form_submission_path(submission, return_to: "form_submissions") %>
                 <% if submitted_org %>
                   <%= submitted_org %>
-                  <%# The chip doubles as the way into the submission's org-linking
-                      editor, like the org chips on the registrants roster. %>
                   <% linked = submission.linked_organization_ids.any? %>
-                  <% editor_path = link_organization_form_submission_path(submission, return_to: "form_submissions") %>
                   <% if linked %>
                     <%= link_to editor_path, title: "Open the organization linking editor", data: { turbo_frame: "_top" },
                                 class: "ml-1 inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 transition hover:opacity-80 hover:shadow-sm" do %>
@@ -72,7 +72,9 @@
                     <% end %>
                   <% end %>
                 <% else %>
-                  <span class="text-gray-300">—</span>
+                  <%# No org submitted — grey "None" chip that still opens the editor,
+                      matching the registrants roster. %>
+                  <%= render "shared/badge", label: "None", classes: "bg-gray-50 text-gray-500 border-gray-200", href: editor_path %>
                 <% end %>
               </td>
               <td class="px-4 py-3">
