@@ -18,6 +18,20 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include("Form submissions")
       end
 
+      it "offers a Clear filters link to the unfiltered index when a filter is active" do
+        form = create(:form)
+        get form_submissions_path(form_id: form.id)
+
+        expect(response.body).to include("Clear filters")
+        expect(response.body).to include(%(href="#{form_submissions_path}"))
+      end
+
+      it "omits the Clear filters link when no filter is active" do
+        get form_submissions_path
+
+        expect(response.body).not_to include("Clear filters")
+      end
+
       it "lists a person's submissions and links each to its detail page" do
         person = create(:person, first_name: "Priya", last_name: "Patel")
         other = create(:person)
