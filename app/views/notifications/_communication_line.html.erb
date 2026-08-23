@@ -1,12 +1,4 @@
-<%# ---- One communication rendered to line up column-for-column with a comment
-    in the combined section: the channel icon sits in the flag column, then the
-    date+time, then a colored person chip, then the subject (aligned with a
-    comment's topic) and body. The chip shows who the message is *from* — the
-    staff sender for an outgoing message, the person for an incoming one — colored
-    by that person's id so it matches their comment chip. The body of a hand-noted
-    (non-autoemail) communication is an internal staff note: admin-only, and given
-    the blue admin wash on pages non-admins can view. Pass admin: false for a
-    non-admin viewer. ---- %>
+<%# One communication row in the combined section (locals: notification, admin:, mark_admin_only:). %>
 <% admin = local_assigns.fetch(:admin, true) %>
 <% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
 <% decorated = notification.decorate %>
@@ -34,10 +26,8 @@
       <span class="font-semibold text-gray-900"><%= subject %></span>
       <% if body.present? %>
         <% if body_admin_only && mark_admin_only %>
-          <%# Internal staff note on a page non-admins can view — flag it admin-only. %>
           <span class="admin-only rounded bg-blue-100 px-1 text-gray-700" title="<%= body %>"><%= body %></span>
         <% elsif body_admin_only %>
-          <%# Internal staff note on an admin-only page — rendered plainly like a comment. %>
           <span class="text-gray-900" title="<%= body %>"><%= body %></span>
         <% else %>
           <span class="text-gray-500" title="<%= body %>"><%= body %></span>

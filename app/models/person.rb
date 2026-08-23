@@ -466,16 +466,12 @@ class Person < ApplicationRecord
     user&.email.presence || email.presence || email_2.presence
   end
 
-  # Email the communications box matches notifications against. Uniform accessor
-  # so the shared notifications/_communications partial works across records.
   def communications_email
     preferred_email
   end
 
-  # Communications shown in the combined comments-and-communications section. A
-  # person's own page shows their *entire* history — every notification addressed
-  # to them, whatever record it was filed under. (Every other record scopes to
-  # comms filed to itself; see the default in the models below.)
+  # A person's own page shows their entire communication history by email; every
+  # other record scopes to comms filed against itself (see #communications_scope there).
   def communications_scope
     email = preferred_email
     email.present? ? Notification.email(email) : Notification.none

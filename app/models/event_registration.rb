@@ -585,15 +585,11 @@ class EventRegistration < ApplicationRecord
     "(#{ registrant&.full_name }) #{ event.start_date.strftime("%Y-%m-%d @ %I:%M %p") }: #{ event.title }"
   end
 
-  # Email the communications box matches notifications against. Uniform accessor
-  # so the shared notifications/_communications partial works across records.
   def communications_email
     registrant&.preferred_email
   end
 
-  # Comms shown in the combined section: only those filed against this
-  # registration (confirmations, reminders, hand-logged notes) — not the
-  # registrant's whole history, which lives on the person page.
+  # Only comms filed against this registration, not the registrant's whole history.
   def communications_scope
     notifications
   end

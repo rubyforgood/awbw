@@ -20,8 +20,6 @@
 <% updated_color = show_updated ? chip_color(updated_user.id) : nil %>
 <% current_color = chip_color(current_user&.id) %>
 <% is_age_range_data = f.object.persisted? && f.object.body&.include?("[AGE_RANGE_DATA]") %>
-<%# Each comment renders in the comments-themed card (amber when it carries the
-    age-range data flag), with the follow-up flag inside the card. %>
 <% card_tint = is_age_range_data ? "border-amber-200 bg-amber-50" : "#{DomainTheme.border_class_for(:comments, intensity: 200)} #{DomainTheme.bg_class_for(:comments, intensity: 50)}" %>
 <div class="nested-fields" data-paginated-fields-target="item">
   <%= f.hidden_field :id if f.object.persisted? %>

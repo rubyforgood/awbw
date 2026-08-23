@@ -1,7 +1,5 @@
 module ChipHelper
-  # Palette for the small person chips shown on comments and communications — a
-  # stable color per person id so the same staff member always reads the same
-  # across both.
+  # Stable color per person id, shared by the comment and communication chips.
   CHIP_COLORS = [
     [ "bg-sky-100", "text-sky-800" ],
     [ "bg-purple-100", "text-purple-800" ],

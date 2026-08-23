@@ -10,9 +10,7 @@ class NotificationDecorator < ApplicationDecorator
     "video" => "fa-video"
   }.freeze
 
-  # Short type name shown beside the channel icon in the combined section's
-  # channel chip. Autoemail reads as "Email" to a viewer — it's an email either
-  # way; the automated origin is clear from the sender chip ("AWBW Portal").
+  # Type name shown beside the channel icon in the combined-section chip.
   CHANNEL_LABELS = {
     "autoemail" => "Email",
     "email" => "Email",
@@ -151,7 +149,6 @@ class NotificationDecorator < ApplicationDecorator
     meta = AUDIENCE_META["incoming"]
     icon = responded? ? "fa-solid fa-square-check" : "fa-regular fa-square"
     label = h.safe_join([ h.content_tag(:i, "", class: icon, "aria-hidden": "true"), meta[:label] ], " ")
-    # A dark comms-blue, deeper than the channel chip, so Incoming stands out.
     classes = "#{DomainTheme.bg_class_for(:notifications, intensity: 600)} text-white"
     pill(meta.merge(label: label, classes: classes), **options)
   end
@@ -215,7 +212,7 @@ class NotificationDecorator < ApplicationDecorator
     h.content_tag(:i, "", { class: "fa-solid #{icon_class} text-gray-400", title: channel.titleize, "aria-hidden": "true" }.merge(options))
   end
 
-  # Channel icon + type name in a small gray chip (combined-section row).
+  # Channel icon + type name in a small chip (combined-section row).
   def channel_chip(**options)
     icon_class = CHANNEL_ICONS[channel]
     return "" if icon_class.blank?

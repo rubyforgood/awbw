@@ -1,45 +1,24 @@
-<%# ---- Combined comments-and-communications section, shared across records
-    (person, event registration, scholarship, story, story idea, …). Comments
-    (internal staff notes) and communications (notifications) are interleaved in
-    one feed, newest first, each keeping its own row style. Both are edited inline
-    as cocoon nested attributes on the parent record's form; the section carries
-    both add buttons and one edit toggle that flips every editable row.
-
-    Which communications appear is the record's own decision — `communications_scope`
-    (a person shows their whole history by email; every other record shows only
-    comms filed against itself). Comments are gated by CommentPolicy#manage?;
-    adding/editing communications and seeing hand-noted bodies is admin-only.
-
-    Callers pass `f:` (the parent record's form builder). Optional locals:
-      mark_admin_only:        wash admin-only content in the blue admin marker
-                              (for pages non-admins can view, e.g. a person profile)
-      comments_all_path:      show an "All comments" link (e.g. the person feed)
-      communications_all_email: show an "All communications" link to the full
-                              email-keyed history (the person page only). ---- %>
+<%# Combined comments + communications section (locals: f:, and optional
+    mark_admin_only:, comments_all_path:, communications_all_email:). %>
 <% record = f.object %>
 <% can_manage_comments = allowed_to?(:manage?, Comment) %>
 <% admin = allowed_to?(:index?, with: NotificationPolicy) %>
 <% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
 <% comments_all_path = local_assigns[:comments_all_path] %>
 <% communications_all_email = local_assigns[:communications_all_email] %>
-<%# `record` may be a Draper decorator, so read the model name via `model_name`
-    (delegated to the underlying class) rather than `class.name`. %>
+<%# `record` may be a Draper decorator — read the type via model_name, not class.name. %>
 <% record_type = record.model_name.name %>
 <% list_id = "#{record.model_name.param_key}-activity-list" %>
 
 <% notifications = record.communications_scope.order(created_at: :desc).to_a %>
 <% new_notifications = admin ? record.notifications.select(&:new_record?) : [] %>
-<%# Admins can edit any hand-noted communication (any channel but "autoemail")
-    owned by this record; autoemail system messages stay view-only. %>
 <% editable_notifications = admin ? notifications.select { |n| n.channel != "autoemail" && n.noticeable_type == record_type && n.noticeable_id == record.id } : [] %>
-<%# Edit fields render the record's own in-memory notification (keyed by id) so an
-    admin's unsaved inline edits survive a validation re-render. %>
+<%# Render the in-memory notification (by id) so an admin's unsaved edits survive a re-render. %>
 <% own_notifications_by_id = admin ? record.notifications.index_by(&:id) : {} %>
 
 <% comments = can_manage_comments ? record.comments.reject(&:new_record?) : [] %>
 <% new_comments = can_manage_comments ? record.comments.select(&:new_record?) : [] %>
 
-<%# Interleave persisted comments and communications, newest first. %>
 <% entries = (comments + notifications).sort_by { |r| r.created_at || Time.current }.reverse %>
 
 <section class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
@@ -89,7 +68,6 @@
         <% end %>
       <% end %>
 
-      <%# New, unsaved entries — re-rendered here on validation error. %>
       <% if can_manage_comments %>
         <%= f.simple_fields_for :comments, new_comments do |cf| %>
           <%= render "comments/comment_fields", f: cf %>
