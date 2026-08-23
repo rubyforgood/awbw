@@ -71,6 +71,18 @@ RSpec.describe AhoyTrackable do
     end
   end
 
+  describe "blank-to-blank changes" do
+    it "records nothing for a field that was blank before and after" do
+      organization = create(:organization, email: nil)
+      Analytics::LifecycleBuffer.store.clear
+
+      organization.update!(email: "", name: "Renamed")
+
+      changes = event_named("update.organization")[:properties][:changes]
+      expect(changes.keys).to contain_exactly("name")
+    end
+  end
+
   describe "nested records" do
     it "records an added nested record on the parent's event" do
       registration = create(:event_registration)

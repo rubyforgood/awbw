@@ -3,6 +3,9 @@ module Ahoy
     # Already surfaced in their own table columns, so redundant inside the details cell.
     REDUNDANT_KEYS = %w[resource_type resource_id resource_title].freeze
 
+    # Fields that title the record they belong to, in the order they should lead.
+    HEADING_KEYS = %w[topic title name subject].freeze
+
     # Everything the dedicated columns don't already show.
     def extra_properties
       properties_hash.except(*REDUNDANT_KEYS)
@@ -21,8 +24,10 @@ module Ahoy
     def changes_summary
       return [] unless changes?
 
-      change_diffs.map do |field, diff|
+      change_diffs.filter_map do |field, diff|
         diff = {} unless diff.is_a?(Hash)
+        next if blank_change?(diff)
+
         {
           field: field.to_s.humanize,
           before: display_value(diff["before"]),
@@ -69,8 +74,18 @@ module Ahoy
 
       rows = label ? [ { label: label, value: nil, depth: depth } ] : []
       child_depth = label ? depth + 1 : depth
-      hash.each { |key, val| rows.concat(flatten_rows(val, humanize_key(key), child_depth)) }
+      heading_first(hash).each do |key, val|
+        child_rows = flatten_rows(val, humanize_key(key), child_depth)
+        child_rows.first[:emphasis] = true if HEADING_KEYS.include?(key.to_s) && child_rows.one?
+        rows.concat(child_rows)
+      end
       rows
+    end
+
+    # A comment's topic titles its body rather than sitting beside it, so it leads.
+    def heading_first(hash)
+      headings, rest = hash.partition { |key, _| HEADING_KEYS.include?(key.to_s) }
+      headings.sort_by { |key, _| HEADING_KEYS.index(key.to_s) } + rest
     end
 
     def array_rows(array, label, depth)
@@ -104,11 +119,29 @@ module Ahoy
     # The link, then what the record actually said — a comment's body reads better
     # than "a comment was added".
     def reference_rows(label, item, depth)
-      detail = item["changes"].presence || item["attributes"].presence
       rows = [ reference_row(label, item, depth) ]
-      return rows if detail.blank?
+      rows += change_rows(item["changes"], depth + 1)
+      rows += flatten_rows(item["attributes"], nil, depth + 1) if item["attributes"].present?
+      rows
+    end
 
-      rows + flatten_rows(detail, nil, depth + 1)
+    # A nested record's diffs read like the record's own: field, then before, then
+    # after. The order comes from here rather than the payload — MySQL reorders
+    # the keys of a JSON object.
+    def change_rows(diffs, depth)
+      return [] unless diffs.is_a?(Hash)
+
+      diffs.filter_map do |field, diff|
+        diff = {} unless diff.is_a?(Hash)
+        next if blank_change?(diff)
+
+        { label: humanize_key(field), depth: depth,
+          change: { before: display_value(diff["before"]), after: display_value(diff["after"]) } }
+      end
+    end
+
+    def blank_change?(diff)
+      diff["before"].blank? && diff["after"].blank?
     end
 
     def reference_row(label, item, depth)

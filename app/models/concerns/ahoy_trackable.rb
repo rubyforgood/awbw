@@ -318,6 +318,10 @@ module AhoyTrackable
   def format_tracked_changes(changes)
     safe_changes = changes.reject { |attr, _| attr.match?(/password|token|secret|key|digest|salt|otp/i) }
     safe_changes.each_with_object({}) do |(attr, (before, after)), h|
+      # A form posts every field, so untouched blanks arrive as nil -> "". Dirty
+      # tracking counts that; a reader shouldn't have to.
+      next if before.blank? && after.blank?
+
       h[attr] = { before: before, after: after }
     end
   end
