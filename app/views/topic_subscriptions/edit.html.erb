@@ -30,6 +30,7 @@
       Remove
     <% end %>
   </div>
+  <%= render "shared/audit_info", resource: @topic_subscription %>
   <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
     <div class="mt-4 flex justify-end">
       <%= render "application/activity_log", record: @topic_subscription %>
