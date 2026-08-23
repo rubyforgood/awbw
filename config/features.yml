@@ -2091,3 +2091,15 @@
     Admins can now check "Blog contributor" on a person's edit page to add the
     orange Blog Contributor badge to their profile. Previously the flag could
     only be set outside the app.
+
+- name: "Tie a topic subscription to an organization"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-08-23
+  action_path: "/topic_subscriptions"
+  pr_number: 2360
+  summary: >-
+    A topic subscription can now name a specific organization. Set it on the
+    subscription form, filter the subscriptions list by organization, and see it
+    in the new Organization column. It's optional — leave it blank for a topic
+    that isn't tied to any organization.
