@@ -74,7 +74,7 @@
                     <%# Org the subscription is narrowed to, linked to its profile; outside the
                         person card so it isn't a link nested in a link. %>
                     <%= link_to organization_path(subscription.organization),
-                                class: "mt-1 inline-flex max-w-56 items-center gap-1 text-xs #{DomainTheme.text_class_for(:organizations, intensity: 700)} #{DomainTheme.text_class_for(:organizations, intensity: 800, hover: true)} hover:underline",
+                                class: "mt-1 inline-flex max-w-56 items-center gap-1 text-xs text-gray-400 hover:text-gray-600 hover:underline",
                                 data: { turbo_frame: "_top" } do %>
                       <i class="fa-solid fa-building flex-shrink-0 text-2xs"></i>
                       <span class="truncate"><%= subscription.organization.name %></span>
