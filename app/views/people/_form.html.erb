@@ -474,7 +474,7 @@
                       label: "Consented to mailing list",
                       hint: f.object.mailing_list_consent_at.present? ?
                               "Consented #{f.object.mailing_list_consent_at.to_date.to_fs(:long)} (#{f.object.mailing_list_consent_source}). Uncheck to withdraw." :
-                              "No consent on file. Check to record consent.",
+                              "Has agreed through form or email.",
                       wrapper_html: { class: "w-full sm:flex-1" } %>
 
           <%= f.input :blog_contributor,
