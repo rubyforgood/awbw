@@ -25,11 +25,11 @@ class NotificationDecorator < ApplicationDecorator
   PORTAL_SENDER_NAME = "AWBW Portal".freeze
 
   # At-a-glance audience pill for the compact row/index and detail page — only
-  # the two exceptions are flagged: sky for an incoming message (the person wrote
-  # to us) and teal for an admin "FYI" copy (recipient_role "admin"). A regular
-  # message to the person is the norm and shows no pill.
+  # the two exceptions are flagged: yellow for an incoming message (the person
+  # wrote to us) and teal for an admin "FYI" copy (recipient_role "admin"). A
+  # regular message to the person is the norm and shows no pill.
   AUDIENCE_META = {
-    "incoming" => { label: "Incoming", classes: "bg-sky-100 text-sky-800" },
+    "incoming" => { label: "Incoming", classes: "bg-yellow-100 text-yellow-800" },
     "fyi" => { label: "FYI", classes: "bg-teal-100 text-teal-800" }
   }.freeze
 
@@ -218,7 +218,8 @@ class NotificationDecorator < ApplicationDecorator
     return "" if icon_class.blank?
 
     content = h.safe_join([ h.content_tag(:i, "", class: "fa-solid #{icon_class}", "aria-hidden": "true"), CHANNEL_LABELS[channel] || channel.to_s.titleize ], " ")
-    h.content_tag(:span, content, { class: "inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600" }.merge(options))
+    chip_class = "inline-flex items-center gap-1 rounded #{DomainTheme.bg_class_for(:notifications, intensity: 100)} px-1.5 py-0.5 text-xs font-medium #{DomainTheme.text_class_for(:notifications, intensity: 800)}"
+    h.content_tag(:span, content, { class: chip_class }.merge(options))
   end
 
   private
