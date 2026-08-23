@@ -15,7 +15,8 @@
         <strong>creates</strong> any missing facilitator affiliations for linked organizations. After the training it
         <strong>deletes</strong> the affiliation this training created for anyone who didn't attend. Someone later
         marked attended gets a <strong>new</strong> affiliation dated to this training rather than having an old one
-        reopened, so a lapse stays visible. Job affiliations are never touched.
+        reopened, so a lapse stays visible. Anyone still marked <strong>Registered</strong> is left alone and listed
+        below — that's an unfilled roster, not an outcome. Job affiliations are never touched.
       </p>
       <p>
         Only the row this training created is deleted — it recorded an assumption that never came true. An
@@ -90,6 +91,10 @@
             <%= render "event_registrations/attendance_status_badge", registration: group[:registration], return_to: "reconcile_affiliations" %>
           </div>
 
+          <% if group[:registration]&.status == "incomplete_attendance" %>
+            <%= render "attendance_days", registration: group[:registration], event: @event %>
+          <% end %>
+
           <div class="divide-y divide-gray-100 border-t border-gray-100">
             <% group[:rows].each do |row| %>
               <% chosen = (@pre_outcome && @pre_outcome[row.key]) || row.action.to_s %>
@@ -152,6 +157,9 @@
                     <% end %>
                   </span>
                   <%= render "event_registrations/attendance_status_badge", registration: row.registration, return_to: "reconcile_affiliations" %>
+                  <% if row.registration&.status == "incomplete_attendance" %>
+                    <div class="w-full"><%= render "attendance_days", registration: row.registration, event: @event %></div>
+                  <% end %>
                 </div>
               <% end %>
             </div>

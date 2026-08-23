@@ -221,6 +221,36 @@ This is the mirror of D6. D6 stops an ending from reaching too far back; D6a sto
 reactivation from reaching too far forward. Both exist because the historical readers
 (D3) trust the dates.
 
+### D6b — The reason a row changed lives in its comments
+
+Reconciliation writes a comment on the affiliation it ends or creates, topic
+`"Reconciliation"` (`ReconcilePerson::COMMENT_TOPIC`), naming the event and what it
+did. No dedicated `inactive_reason` column: the affiliation editor and its history
+already surface comments, and the topic is enough of a handle for the one place that
+needs to branch on it — telling a row reconciliation ended from one an admin ended,
+so the page stops labelling both "didn't attend".
+
+The limit is that a **deleted** row takes its comments with it (D6), so for those
+the trail is the `destroy.affiliation` Ahoy event and its attribute snapshot.
+
+### D6c — `registered` is a gap in the record, not an outcome
+
+After the event, a registration still marked `registered` means nobody filled the
+roster in. `EventRegistration#attendance_recorded?` deliberately excludes it — only
+`attended`, `incomplete_attendance` and `no_show` count as outcomes.
+
+Reconciliation therefore **does nothing** to those rows and lists them under
+"Attendance never recorded — set an outcome first". Deleting an affiliation because
+the roster is blank would be acting on missing data, and the deletion is not
+reversible. Cancelled and transferred-out are different: those are decisions
+somebody made.
+
+For `incomplete_attendance` the page shows the sign-in sheet day by day
+(`Event#event_dates` × `EventRegistration#attendance_entries_on`). "Incomplete" is a
+judgement someone recorded, and the logged times are the evidence behind it — an
+admin deciding whether to delete a facilitator affiliation should see which days
+were missed without leaving the page.
+
 ### D7 — What has to be tested
 
 The arithmetic is what the grant figures rest on, so it is covered directly rather
@@ -240,7 +270,9 @@ than inferred from the single-affiliation cases
 5. **The bucket agrees with the SQL scope** the index filter uses.
 6. **Reconciliation doesn't move an anchored verdict** — D6, both branches: the
    minted row is deleted, the older row ended at the training date.
-7. **A return after a lapse adds a row and leaves the lapse intact** — D6a, asserted
+7. **`registered` after the event is reported, never acted on** — D6c, asserted on
+   both the plan's reason and that the row survives.
+8. **A return after a lapse adds a row and leaves the lapse intact** — D6a, asserted
    on both the row count and the mid-gap verdict.
 
 Adding a rule here means adding a case there.

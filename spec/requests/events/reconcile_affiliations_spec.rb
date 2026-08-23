@@ -88,6 +88,44 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       expect(response.body).to include("Deactivate affiliation")
     end
 
+    it "asks for an outcome instead of acting when attendance was never recorded" do
+      person, affiliation = registrant_with_affiliation(status: "registered")
+
+      get reconcile_affiliations_event_path(event)
+
+      expect(response.body).to include(person.name)
+      expect(response.body).to include("Attendance never recorded")
+      expect(response.body).not_to include("Will be deleted")
+      expect(Affiliation.exists?(affiliation.id)).to be(true)
+    end
+
+    it "shows the day-by-day sign-in sheet for a partial attendance" do
+      person, _affiliation = registrant_with_affiliation(status: "incomplete_attendance")
+      registration = person.event_registrations.first
+      # Asserted by duration, not wall clock: the view renders in the viewer's zone
+      # and the spec process is in another, so a clock time would only match for
+      # part of each day.
+      signed_in = event.start_date.in_time_zone
+      registration.event_attendance_time_entries.create!(
+        signed_in_at: signed_in, signed_out_at: signed_in + 3.hours
+      )
+
+      get reconcile_affiliations_event_path(event)
+
+      expect(response.body).to include("Partial attendance")
+      expect(response.body).to include("Day 1")
+      expect(response.body).to include("3 hours")
+      expect(response.body).to include("no sign-in recorded")
+    end
+
+    it "leaves the sheet out for a plain no-show" do
+      registrant_with_affiliation(status: "no_show")
+
+      get reconcile_affiliations_event_path(event)
+
+      expect(response.body).not_to include("Partial attendance")
+    end
+
     it "denies a non-admin" do
       sign_in create(:user)
 

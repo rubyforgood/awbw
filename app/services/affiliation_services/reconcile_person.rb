@@ -26,6 +26,10 @@ module AffiliationServices
     # ended without a dedicated column (ADR-0003 D6b).
     COMMENT_TOPIC = "Reconciliation".freeze
     NOT_ATTENDED = "Didn't attend — no affiliation created".freeze
+    # `registered` after the event is a gap in the record, not an outcome:
+    # #attendance_recorded? deliberately excludes it. Acting on it would be acting
+    # on missing data, so the row is surfaced for an admin to resolve instead.
+    ATTENDANCE_NOT_RECORDED = "Attendance never recorded — set an outcome first".freeze
 
     def self.call(person:, organization:, event:, registration: nil, include_unowned: false)
       new(person:, organization:, event:, registration:, include_unowned:).call
@@ -101,6 +105,22 @@ module AffiliationServices
       affiliation.comments.any? { |comment| comment.topic == COMMENT_TOPIC }
     end
 
+    # The event is over and nobody said what happened. Distinct from cancelled or
+    # transferred out, which are decisions; this is an unfilled roster.
+    #
+    # Looked up rather than taken from `@registration`, which callers that only ask
+    # for a plan don't have to pass — the status has to be read either way.
+    def attendance_unrecorded?
+      @event.ended? && registration_here&.status == "registered"
+    end
+
+    # One per (registrant, event) — the DB enforces it with a unique index.
+    def registration_here
+      return @registration_here if defined?(@registration_here)
+
+      @registration_here = @registration || @person.event_registrations.find_by(event_id: @event.id)
+    end
+
     def minted_here?(affiliation)
       affiliation.event_registration&.event_id == @event.id
     end
@@ -147,6 +167,8 @@ module AffiliationServices
       elsif !affiliation.active?
         reason = ended_by_reconciliation?(affiliation) ? ALREADY_DEACTIVATED : ALREADY_ENDED
         Decision.new(affiliation:, action: :noop, reason:)
+      elsif attendance_unrecorded?
+        Decision.new(affiliation:, action: :noop, reason: ATTENDANCE_NOT_RECORDED)
       elsif deactivation_ready?(affiliation)
         # The row this training minted recorded an assumption that never came true,
         # so it goes rather than lingering as a zero-length row. Anything older

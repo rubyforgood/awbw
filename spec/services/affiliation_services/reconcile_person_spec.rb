@@ -38,7 +38,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       expect(Affiliation.exists?(affiliation.id)).to be(false)
     end
 
-    %w[ incomplete_attendance registered cancelled transferred_out ].each do |status|
+    %w[ incomplete_attendance cancelled transferred_out ].each do |status|
       it "deletes the minted row when the only registration is #{status}" do
         reg = training_registration(status: status)
         affiliation = owned_facilitator(registration: reg)
@@ -47,6 +47,32 @@ RSpec.describe AffiliationServices::ReconcilePerson do
 
         expect(Affiliation.exists?(affiliation.id)).to be(false)
       end
+    end
+
+    # `registered` after the event means nobody filled the roster in. Acting on it
+    # would be acting on missing data.
+    it "leaves a still-registered row alone and asks for an outcome instead" do
+      reg = training_registration(status: "registered")
+      affiliation = owned_facilitator(registration: reg)
+
+      plan = described_class.new(person: person, organization: organization,
+                                 event: reg.event, registration: reg).plan
+
+      expect(plan.map(&:action)).to eq([ :noop ])
+      expect(plan.first.reason).to eq(described_class::ATTENDANCE_NOT_RECORDED)
+
+      reconcile(reg)
+      expect(Affiliation.exists?(affiliation.id)).to be(true)
+    end
+
+    it "still says the training hasn't ended when it hasn't, rather than asking for an outcome" do
+      reg = training_registration(status: "registered", ended: false)
+      owned_facilitator(registration: reg, start_date: Date.current)
+
+      plan = described_class.new(person: person, organization: organization,
+                                 event: reg.event, registration: reg).plan
+
+      expect(plan.first.reason).to eq(described_class::TRAINING_PENDING)
     end
 
     it "deletes it on the day a one-day training ends, with no reliance on the inactive flag" do
