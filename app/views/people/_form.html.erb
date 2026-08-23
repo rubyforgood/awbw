@@ -469,14 +469,6 @@
         </div>
 
         <div class="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-          <%= f.input :mailing_list_consented,
-                      as: :boolean,
-                      label: "Consented to mailing list",
-                      hint: f.object.mailing_list_consent_at.present? ?
-                              "Consented #{f.object.mailing_list_consent_at.to_date.to_fs(:long)} (#{f.object.mailing_list_consent_source}). Uncheck to withdraw." :
-                              "Has agreed through form or email.",
-                      wrapper_html: { class: "w-full sm:flex-1" } %>
-
           <%= f.input :blog_contributor,
                       as: :boolean,
                       label: "Blog contributor",
