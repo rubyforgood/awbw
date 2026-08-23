@@ -403,6 +403,13 @@ RSpec.describe "FormSubmissions", type: :request do
       end
 
       describe "POST /form_submissions/:id/select_organization" do
+        it "redirects with an alert when submitted without choosing an organization" do
+          post select_organization_form_submission_path(submission, organization_id: "")
+
+          expect(response).to redirect_to(link_organization_form_submission_path(submission))
+          expect(flash[:alert]).to be_present
+        end
+
         it "creates the job and Facilitator affiliations, both dated to the submission (new job)" do
           add_answer("organization_name", "Harbor Family Shelter")
           add_answer("organization_position", "Counselor")

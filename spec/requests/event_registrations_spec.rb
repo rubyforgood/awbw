@@ -1608,6 +1608,13 @@ RSpec.describe "EventRegistrations", type: :request do
         # off a facilitator-training event.
         let(:event) { create(:event, title: "Test Event", facilitator_training: true) }
 
+        it "redirects with an alert when submitted without choosing an organization" do
+          post select_organization_event_registration_path(existing_registration), params: { organization_id: "" }
+
+          expect(response).to redirect_to(link_organization_event_registration_path(existing_registration))
+          expect(flash[:alert]).to be_present
+        end
+
         it "links the org to the registration and the person, then returns to the edit page" do
           expect {
             post select_organization_event_registration_path(existing_registration),

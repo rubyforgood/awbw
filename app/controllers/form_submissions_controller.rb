@@ -53,7 +53,11 @@ class FormSubmissionsController < ApplicationController
 
   def select_organization
     authorize! @form_submission
-    organization = Organization.find(params[:organization_id])
+    organization = Organization.find_by(id: params[:organization_id])
+    if organization.nil?
+      redirect_to link_organization_form_submission_path(@form_submission, return_to: params[:return_to].presence), alert: "Choose an organization to link."
+      return
+    end
 
     notice = link_and_report(organization, verb: "linked")
 
