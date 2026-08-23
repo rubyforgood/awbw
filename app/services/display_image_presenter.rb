@@ -22,7 +22,7 @@ class DisplayImagePresenter
   end
 
   def initialize(resource: nil, item: nil, file: nil, field_name: :primary_asset,
-                 variant: :gallery, width: "32", height: nil,
+                 variant: :gallery, width: "32", height: nil, prefer_thumbnail: false,
                  link: nil, link_to_object: false, display_open_pdf_link: false,
                  idx: 0, item_type: "PrimaryAsset", extra_image_classes: "",
                  view_context:)
@@ -32,6 +32,7 @@ class DisplayImagePresenter
     @variant = variant
     @width = width.to_s
     @height = (height || width).to_s
+    @prefer_thumbnail = prefer_thumbnail
     @link_to_object = link_to_object
     @link = link.nil? ? link_to_object : link
     @display_open_pdf_link = display_open_pdf_link
@@ -89,9 +90,9 @@ class DisplayImagePresenter
       resolve_previewable
     elsif @variant == :hero
       @file
-    elsif large_display? && variant_defined?(:card)
+    elsif large_display? && !@prefer_thumbnail && variant_defined?(:card)
       @file.variant(:card)
-    elsif use_thumbnail? && variant_defined?(:thumbnail)
+    elsif (use_thumbnail? || @prefer_thumbnail) && variant_defined?(:thumbnail)
       @file.variant(:thumbnail)
     else
       @file

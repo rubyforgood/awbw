@@ -77,6 +77,12 @@ RSpec.describe DisplayImagePresenter do
         expect(result.renderable.variation.transformations[:resize_to_limit]).to eq([ 1200, 1200 ])
       end
 
+      it "serves the smaller thumbnail variant when prefer_thumbnail is set for a full-width display" do
+        result = described_class.call(file: file, variant: :gallery, width: "full", height: "full", prefer_thumbnail: true, view_context: view_context)
+        expect(result.renderable).to be_a(ActiveStorage::VariantWithRecord)
+        expect(result.renderable.variation.transformations[:resize_to_limit]).to eq([ 256, 256 ])
+      end
+
       it "builds alt text with filename" do
         result = described_class.call(file: file, idx: 0, item_type: "Main", view_context: view_context)
         expect(result.alt_text).to include("missing.png")
