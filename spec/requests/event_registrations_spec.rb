@@ -451,6 +451,17 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("A Window Between Worlds")
       end
 
+      it "renders a hidden fallback so unchecking the last org still submits an empty set" do
+        organization = create(:organization, name: "A Window Between Worlds")
+        existing_registration.organizations << organization
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include(
+          "<input type=\"hidden\" name=\"event_registration[organization_ids][]\" value=\"\""
+        )
+      end
+
       it "shows a Delete button for a deletable registration" do
         get edit_event_registration_path(existing_registration)
 
@@ -643,6 +654,16 @@ RSpec.describe "EventRegistrations", type: :request do
           registrants_event_path(new_event, anchor: "registrant-row-#{existing_registration.id}", highlight: existing_registration.id)
         )
         expect(existing_registration.reload.event_id).to eq(new_event.id)
+      end
+
+      it "removes a linked organization when the last chip is unchecked" do
+        organization = create(:organization)
+        existing_registration.organizations << organization
+
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { organization_ids: [ "" ] } }
+
+        expect(existing_registration.reload.organizations).to be_empty
       end
 
       it "returns to the attendance report after saving when opened from it" do
