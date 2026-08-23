@@ -103,16 +103,18 @@ RSpec.describe FormSubmission do
     end
 
     describe ".org_link_status" do
-      it "separates linked, pending, and unlinked by the direct submission link" do
+      it "separates linked, pending, none, and unlinked by the direct submission link" do
         linked = submission_with_org_answer("Harbor Family Shelter")
         linked.link_organization!(create(:organization, name: "Harbor Family Shelter").id)
         pending = submission_with_org_answer("Lakeside College")
         no_answer = create(:form_submission)
 
         expect(described_class.org_link_status("linked")).to contain_exactly(linked)
-        # Pending is the actionable queue: named an org, nothing linked.
+        # Pending: gave an org answer, nothing linked yet — the actionable queue.
         expect(described_class.org_link_status("pending")).to contain_exactly(pending)
-        # Unlinked is broad: everything not linked, including the no-org-answer one.
+        # None: no organization answer provided.
+        expect(described_class.org_link_status("none")).to contain_exactly(no_answer)
+        # Unlinked is broad: pending + none (everything not linked).
         expect(described_class.org_link_status("unlinked")).to contain_exactly(pending, no_answer)
       end
 
