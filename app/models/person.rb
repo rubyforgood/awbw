@@ -216,13 +216,14 @@ class Person < ApplicationRecord
   scope :facilitators_upcoming, -> {
     where(id: Affiliation.facilitators.with_status("Upcoming").select(:person_id))
       .where.not(id: Affiliation.facilitators.active.select(:person_id)) }
-  # People with facilitator affiliation(s) but none active or upcoming — every
-  # facilitator term has ended (or is flagged inactive). A future-start-only
-  # facilitator is Upcoming, so it is excluded here.
+  # People with facilitator affiliation(s) but none currently active — the
+  # not-active umbrella. Upcoming (future-start) facilitators are included here
+  # since they aren't active now, mirroring the org index's "Inactive"
+  # (formerly_or_never) filter, even though Upcoming is also its own filter option
+  # and status (ADR-0001 D3).
   scope :facilitators_inactive, -> {
     where(id: Affiliation.facilitators.select(:person_id))
-      .where.not(id: Affiliation.facilitators.active.select(:person_id))
-      .where.not(id: Affiliation.facilitators.with_status("Upcoming").select(:person_id)) }
+      .where.not(id: Affiliation.facilitators.active.select(:person_id)) }
   # Not currently active, but a past facilitator term genuinely ended (real end
   # date in the past) — distinguishes "used to facilitate" from merely flagged inactive.
   scope :facilitators_formerly_active, -> {

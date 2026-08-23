@@ -10,7 +10,7 @@ that are easy to confuse with one another:
 
 - **Affiliated since**
 - **Facilitators since**
-- an org-wide **status chip** (Active / Formerly active / Never active)
+- an org-wide **status chip** (Active / Upcoming / Formerly active / Never active)
 - per-event **program-status chips** (New / Ongoing / Reinstate)
 
 Several code paths compute overlapping-but-distinct classifications with subtle
@@ -28,10 +28,17 @@ decisions that resolve the ambiguities so they're written down once.
   `"Facilitator"`** (trimmed, case-sensitive). No fuzzy/`LIKE` matching; "Lead
   Facilitator" and "facilitator" do **not** count. See `Affiliation#facilitator?`
   and the `.facilitators` scope.
-- **Active affiliation** — `inactive == false` **and** (`end_date` is null or
-  `>= today`). `inactive` is a cached column derived from the dates on save
-  (`set_inactive_from_dates`: `inactive = end_date.present? && end_date < today`),
-  so in practice "active" reduces to **no end date, or end date ≥ today**.
+- **Active affiliation** — `inactive == false`, **started** (`start_date` is null
+  or `<= today`), **and** not ended (`end_date` is null or `>= today`). A row whose
+  `start_date` is still in the future is **Upcoming**, not Active. `inactive` is a
+  cached column derived from the end date on save (`set_inactive_from_dates`:
+  `inactive = end_date.present? && end_date < today`). See `Affiliation#active?` /
+  `#status_on` and the `.active` scope.
+- **Upcoming affiliation** — `inactive == false` and `start_date > today` (a
+  facilitator scheduled but not yet started, e.g. dated to a future training). See
+  `Affiliation#upcoming?`. The looser `.active_or_pending` scope counts Active
+  **and** Upcoming together (used for registration dedup); `.active` counts Active
+  only.
 - **Facilitator-training event** — `events.facilitator_training == true`. The
   only events for which per-event program status is meaningful.
 
@@ -62,19 +69,35 @@ previously rendered its own earliest-start→latest-end span, which collapsed a
 lapse-and-return into a single unbroken range and hid the gap; that is why this
 is a single decorator method rather than per-page view logic.
 
-### D3 — Org-wide status chip: Active / Formerly active / Never active
+### D3 — Org-wide status chip: Active / Upcoming / Formerly active / Never active
 
-Three display buckets (`OrganizationDecorator#organization_status_bucket`), **not
-event-relative**, derived from **facilitator affiliations only**:
+Four display buckets (`OrganizationDecorator#organization_status_bucket`), **not
+event-relative**, derived from **facilitator affiliations only** and checked in
+precedence order:
 
 - Any **active** facilitator affiliation → **Active**
+- Otherwise any **upcoming** (future-start, not yet started) facilitator
+  affiliation → **Upcoming**
 - Facilitator affiliation(s), but **all ended** → **Formerly active**
 - **No** facilitator affiliation → **Never active**
+
+Upcoming is distinct from Formerly active: an org whose only facilitator is
+scheduled for a future training was never active, so it must not read as
+"Formerly active".
 
 The stored `OrganizationStatus` column plays **no part**. It is legacy data that
 was maintained by hand and drifted; an org is "active" because someone is
 facilitating there, not because a column says so. The same rule backs the index
-filter (`Organization.program_status`), so the filter and the chip can't disagree.
+filter (`Organization.program_status`), so the filter and the chip agree.
+
+**The "Inactive" filter is a not-active umbrella.** On both the organization
+index and the people directory, the facilitator-status filter offers **Upcoming**
+as its own option, **and** its **Inactive** option returns every
+not-currently-active facilitator — Formerly active, Never active, **and
+Upcoming** — because none of them are active right now
+(`Organization.program_status("formerly_or_never")`, `Person.facilitators_inactive`).
+So an upcoming org/person shows an *Upcoming* chip but is still found when you
+filter by Inactive.
 
 On the edit form this chip **live-updates** from the visible facilitator rows.
 
