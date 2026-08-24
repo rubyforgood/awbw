@@ -45,6 +45,11 @@
           <div class="mt-4 rounded bg-white p-6">
             <%= render "form" %>
             <%= render "shared/audit_info", resource: @person %>
+            <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+              <div class="mt-4 flex justify-end">
+                <%= render "application/activity_log", record: @person %>
+              </div>
+            <% end %>
           </div>
           <div class="rounded bg-white p-6">
             <div class="mb-2 font-semibold text-gray-700">

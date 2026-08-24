@@ -2194,3 +2194,26 @@
     subscription form, filter the subscriptions list by organization, and see it
     in the new Organization column. It's optional — leave it blank for a topic
     that isn't tied to any organization.
+
+- name: "Change log on every record's edit page"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-08-22
+  pr_number: 2245
+  summary: >-
+    Every edit page now shows a change log under its edit history: a plain-language
+    record of what changed, who changed it, and when — including nested records,
+    attached files, and rich text. When nothing has happened yet, it says so rather
+    than showing nothing.
+  description: >-
+    The change log answers "what happened to this record?" It captures real edits
+    only — plain browsing (views, prints, searches, filters, downloads) is kept out —
+    and reads each entry in plain language: what a save did to the record itself, to
+    its nested child records, to attached files (shown by name), and to rich text
+    that previously passed through unrecorded. A nested record reports what it
+    contained, not just that it changed. It sits in the same spot on every page,
+    under the edit history, and is available on the organization, continuing
+    education, staff tag, and category type pages, among others. Admin-only.
+  pro_tips:
+    - "Only mutations show: opening or printing a record never clutters its log."
+    - "Deleting a child or attachment is recorded too — the entry keeps the name even after the file is gone."

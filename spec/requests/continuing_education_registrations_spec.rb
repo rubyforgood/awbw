@@ -12,6 +12,16 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
   describe "as an admin" do
     before { sign_in admin }
 
+    it_behaves_like "a page with a change log" do
+      let(:record) { ce_registration }
+      let(:page_path) { edit_continuing_education_registration_path(ce_registration) }
+    end
+
+    it_behaves_like "a page with a change log" do
+      let(:record) { ce_registration }
+      let(:page_path) { continuing_education_registration_path(ce_registration) }
+    end
+
     describe "a transferred-in registration (two-record CE model, #1944)" do
       let(:source) { create(:event_registration, event: event) }
       let(:transferred_in) do

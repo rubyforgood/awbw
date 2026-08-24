@@ -1,10 +1,10 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:event_registrations) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:event_registrations) %> rounded-xl border border-gray-200 p-4 shadow sm:p-6">
   <%# Top bar: back link + secondary links, matching the event pages. When the
       admin arrived from the bulk payments page, the back link returns there with
       the originating submission re-expanded instead of the registrants roster. %>
-  <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
     <% if params[:return_to] == "bulk_payments" %>
       <%# Re-expand the originating submission's row and scroll to it on return. %>
       <%= link_to bulk_payments_return_path(@event_registration.event), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
@@ -64,4 +64,9 @@
 
   <%= render "form", event_registration: @event_registration %>
   <%= render "shared/audit_info", resource: @event_registration %>
+  <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+    <div class="mt-4 flex justify-end">
+      <%= render "application/activity_log", record: @event_registration %>
+    </div>
+  <% end %>
 </div>
