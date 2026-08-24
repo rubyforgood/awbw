@@ -104,7 +104,7 @@ This codebase (Rails 8.1)
 | `Resource` | Handouts, toolkits, templates with downloadable assets |
 | `Person` | Organization affiliates with contacts, addresses, sectors |
 | `StaffTag` | Internal, admin-only label for people (talent pipeline / roster / outreach — "Potential future trainer", "DV Leadership Cohort"). Admin-CRUD'd; `Publishable` (`published` flag) retires a tag from the pickers without deleting; never shown publicly (`StaffTagPolicy` gates every action + relation scope). Applied via the polymorphic `StaffTagging` join (`StaffTaggable` concern, Person today). Starter set seeded in db/seeds.rb |
-| `StaffTagging` | Polymorphic join linking a `StaffTag` to the record it tags (`staff_taggable`); `created_by`/`updated_by` (stamped from `Current.user`) record which admin applied and last touched it |
+| `StaffTagging` | Polymorphic join linking a `StaffTag` to the record it tags (`staff_taggable`); `created_by`/`updated_by` (stamped from `Current.user`) record which admin applied and last touched it. Has its own admin edit page (`StaffTaggingsController`, `/staff_taggings/:id/edit`) rendering the shared comments & communications section (`Communicable` + `commentable`), with communications keyed on the taggable person's email |
 | `OtherResponse` | A free-text "Other" typed on a form question, captured at submission time (registration, scholarship, bulk payment). Polymorphic `owner`: a **sector** "Other" is owned by the `Person` (promotable into a `Sector`, shown on their profile/edit chip); an **organization_type** "Other" is owned by the `Organization` (stored now, not promotable until `OrganizationType` is a model). `generic` questions aren't captured — that stays searchable in the form answers. `field_identifier` records the question; `kind` is derived. Curated at `/other_responses` (grouped by kind/question): `promote` (sectors only), `keep`, `dismiss`. `dismissed` hides the chip from the profile but stays in the review queue (still promotable later); only `promoted` leaves the queue. Admins deep-link there from a person's chip. |
 | `Organization` | Groups with affiliations, addresses, logos via ActiveStorage |
 | `Grant` | Funds (polymorphic `funder`: Organization or Person) with eligibility criteria, tasks, deadlines; parent of `Scholarship`. Scholarship totals cannot exceed the grant amount |
@@ -159,7 +159,7 @@ This codebase (Rails 8.1)
 
 ### Namespaces
 
-- **Root level** (~69 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
+- **Root level** (~70 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
 - **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController
 - **`events/`**: Registrations sub-resource (create/destroy + slug-based show at `/registration/:slug`)
 - **Devise overrides**: Registrations, Confirmations, Passwords

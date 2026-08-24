@@ -1,5 +1,6 @@
 <% collection ||= @staff_tags_collection || StaffTag.published.ordered.pluck(:name, :id) %>
-<div class="nested-fields inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 transition">
+<div class="nested-fields inline-flex scroll-mt-24 items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 transition"
+     <%= tag.attributes(id: dom_id(f.object)) if f.object&.persisted? %>>
   <% if f.object&.staff_tag_id.present? %>
     <%= f.hidden_field :staff_tag_id %>
     <span>
@@ -16,6 +17,14 @@
                 input_html: {
                   class: "bg-transparent border-none focus:ring-0 text-sm text-gray-500 cursor-pointer py-0"
                 } %>
+  <% end %>
+  <% if f.object&.persisted? %>
+    <%= link_to edit_staff_tagging_path(f.object, return_to: "person", origin_id: f.object.staff_taggable_id, admin: params[:admin].presence),
+                target: "_blank", rel: "noopener",
+                class: "text-gray-300 transition hover:text-gray-500",
+                title: "Edit tag, add comments or communications (opens in a new tab)" do %>
+      <i class="fa-solid fa-gear text-xs"></i>
+    <% end %>
   <% end %>
   <%= link_to_remove_association "✖",
                                  f,
