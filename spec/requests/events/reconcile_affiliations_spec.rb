@@ -126,6 +126,24 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       expect(response.body).not_to include("Partial attendance")
     end
 
+    it "offers reopen, create-instead and leave-inactive on a row this reconciliation ended" do
+      person = create(:person)
+      reg = create(:event_registration, event: event, registrant: person, status: "no_show")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+      older = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+                                   start_date: 2.years.ago.to_date)
+      AffiliationServices::ReconcilePerson.call(person: person, organization: organization,
+                                                event: event, registration: reg, include_unowned: true)
+      reg.update!(status: "attended")
+
+      get reconcile_affiliations_event_path(event)
+
+      expect(response.body).to include("Will be reactivated")
+      expect(response.body).to include("Create a new one instead")
+      expect(response.body).to include("Leave inactive")
+      expect(older.reload).not_to be_active
+    end
+
     it "denies a non-admin" do
       sign_in create(:user)
 
@@ -203,6 +221,25 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       post perform_reconcile_affiliations_event_path(same_day), params: { outcome: { "aff:#{affiliation.id}" => "deactivate" } }
 
       expect(affiliation.reload).not_to be_active
+    end
+
+    it "reopens the ended row instead of leaving the person with two" do
+      person = create(:person)
+      reg = create(:event_registration, event: event, registrant: person, status: "no_show")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+      older = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+                                   start_date: 2.years.ago.to_date)
+      AffiliationServices::ReconcilePerson.call(person: person, organization: organization,
+                                                event: event, registration: reg, include_unowned: true)
+      reg.update!(status: "attended")
+
+      expect {
+        post perform_reconcile_affiliations_event_path(event),
+             params: { outcome: { "aff:#{older.id}" => "reactivate" } }
+      }.not_to change { person.affiliations.facilitators.where(organization: organization).count }
+
+      expect(older.reload).to be_active
+      expect(older.end_date).to be_nil
     end
 
     it "spares a row set to keep" do

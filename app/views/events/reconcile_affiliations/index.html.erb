@@ -13,9 +13,10 @@
       <p>
         This step brings facilitator affiliations in line with who registered and attended. Before the training it
         <strong>creates</strong> any missing facilitator affiliations for linked organizations. After the training it
-        <strong>deletes</strong> the affiliation this training created for anyone who didn't attend. Someone later
-        marked attended gets a <strong>new</strong> affiliation dated to this training rather than having an old one
-        reopened, so a lapse stays visible. Anyone still marked <strong>Registered</strong> is left alone and listed
+        <strong>deletes</strong> the affiliation this training created for anyone who didn't attend. If that person is
+        later marked attended, an ending this step applied is <strong>undone</strong> rather than leaving them with a
+        second affiliation for an engagement that never broke. A return after a real lapse is still a
+        <strong>new</strong> affiliation, so the lapse stays visible. Anyone still marked <strong>Registered</strong> is left alone and listed
         below — that's an unfilled roster, not an outcome. Job affiliations are never touched.
       </p>
       <p>
@@ -60,6 +61,7 @@
          create: [ [ "create", "Will be created", :blue ], [ "keep", "Skip", :gray ] ],
          deactivate: [ [ "keep", "Keep active", :green ], [ "delete", "Delete affiliation", :red ], [ "deactivate", "Deactivate affiliation", :red ] ],
          delete: [ [ "delete", "Will be deleted", :red ], [ "keep", "Keep", :gray ] ],
+         reactivate: [ [ "reactivate", "Will be reactivated", :green ], [ "create", "Create a new one instead", :blue ], [ "keep", "Leave inactive", :gray ] ],
          retarget: [ [ "retarget", "Move to the new event", :blue ], [ "keep", "Leave as is", :gray ] ]
        } %>
     <% button_base = "group relative inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm cursor-pointer hover:bg-gray-50" %>

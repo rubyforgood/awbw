@@ -2,6 +2,8 @@
 
 - **Status:** Accepted
 - **Date:** 2026-08-19
+- **Revised:** 2026-08-24 — D6a reversed in part (reconciliation reopens an ending it
+  applied for the same training, instead of always adding a second row)
 - **Extends:** [ADR-0001](0001-organization-affiliation-and-program-status.md) (supersedes its
   "Active affiliation" vocabulary entry — see D2 below)
 
@@ -217,28 +219,56 @@ survives only for ended rows. The deletion itself is still on the record as a
 The org's *current* bucket is expected to change — that's the point. Its *anchored*
 verdicts are not.
 
-### D6a — A return after a lapse is a new row, never a reopened one
+### D6a — A real lapse is a new row; an ending we made ourselves is reopened
 
-When someone whose facilitator affiliation has ended completes a training for that
-organization again, reconciliation **creates a second affiliation** dated to the new
-training. It does not clear the old row's end date.
+**Revised 2026-08-24.** The original D6a said there is no `:reactivate` action at
+all. That went too far: it produced two facilitator affiliations for one
+organization in a case where nothing had actually lapsed, and the second row
+implied an engagement that never ended and restarted. The distinction below is the
+one that matters, and only the second half of the original decision survives.
 
-Reopening it would swallow the gap: `Jan 2023 – Jan 2024, Aug 2026` collapses to
-`Jan 2023`, and the organization retroactively reads Ongoing across years it was not
-running a program. The lapse is the fact the two rows exist to record — ADR-0001 D2
-renders exactly that shape, and `CreateFromRegistration` has always minted a second
-row rather than extending an ended one (an ended facilitator affiliation does not
-block a new one).
+**The invariant this serves:** a person never holds two facilitator affiliations
+for the same organization describing one unbroken engagement. A second row exists
+only when the first one genuinely ended — independently of the training being
+reconciled — and this is a second engagement.
 
-So there is no `:reactivate` action. An ended row is left alone with the reason
-"Ended — a return is recorded as a new affiliation", and the return shows up as an
-ordinary `:create`. The rule for proposing that create: the person has **no active**
-facilitator affiliation for the org, and either never had one or has completed a
-training here.
+Two endings look alike in the data and mean opposite things:
 
-This is the mirror of D6. D6 stops an ending from reaching too far back; D6a stops a
-reactivation from reaching too far forward. Both exist because the historical readers
-(D3) trust the dates.
+- **An ending reconciliation applied for *this* training.** The person was recorded
+  as not having completed it, so we ended the row by inference. When their
+  attendance is corrected — a roster filled in late, a no-show reversed — that
+  inference is simply wrong. **Reopen the row** (`:reactivate` clears `end_date` and
+  `inactive`). Nothing lapsed, so there is no gap to preserve and nothing to
+  record with a second row; leaving the ending in place and minting one alongside
+  would invent a break that never happened.
+- **Any other ending** — an admin ended it, or an earlier training's reconciliation
+  did. That records a real stretch that finished. **Leave it**, reason "Ended — a
+  return is recorded as a new affiliation", and the return shows up as an ordinary
+  `:create`. Reopening it would swallow the gap: `Jan 2023 – Jan 2024, Aug 2026`
+  collapses to `Jan 2023`, and the organization retroactively reads Ongoing across
+  years it was not running a program. The lapse is the fact the two rows exist to
+  record — ADR-0001 D2 renders exactly that shape, and `CreateFromRegistration` has
+  always minted a second row rather than extending an ended one.
+
+**Telling them apart takes two signals, both required.** The row's `end_date` is
+exactly what reconciling this training would write (`deactivation_end_date`), **and**
+it carries a D6b reconciliation comment. The date alone is not enough — an admin who
+happens to end a row the day before a training must not have it silently reopened —
+and the comment alone is not enough, because an earlier training's reconciliation
+leaves the same topic behind on a row that really did lapse.
+
+When the reopen applies, no `:create` is proposed for that person and organization.
+The two are mutually exclusive by construction, which is what keeps the invariant
+from depending on the admin picking the right button.
+
+**The admin can still overrule it.** A reopen row offers three outcomes: reopen it
+(the default), create a new one alongside instead, or leave it inactive. The
+correction-versus-second-engagement call is a judgement about what really happened,
+and the data cannot always settle it.
+
+This remains the mirror of D6. D6 stops an ending from reaching too far back; D6a
+stops a reactivation from reaching too far forward — but only reaching past an
+ending that actually meant something.
 
 ### D6b — The reason a row changed lives in its comments
 
@@ -324,8 +354,12 @@ than inferred from the single-affiliation cases
 8. **A transfer moves the row rather than ending it** — D6d: the open row re-dates
    and re-points, an ended row is left alone with a fresh one created at the
    destination, and a pending or differently-linked destination is reported.
-9. **A return after a lapse adds a row and leaves the lapse intact** — D6a, asserted
-   on both the row count and the mid-gap verdict.
+9. **A return after a real lapse adds a row and leaves the lapse intact** — D6a,
+   asserted on both the row count and the mid-gap verdict.
+10. **A corrected no-show reopens the row this training ended, and adds nothing** —
+    D6a, asserted by reconciling twice across the attendance change: the row count
+    must not move, and the row must come back active. Paired with a row an admin
+    ended on the same date, which must NOT reopen.
 
 Adding a rule here means adding a case there.
 

@@ -342,6 +342,56 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       expect(person.affiliations.facilitators.active.where(organization: organization).count).to eq(1)
     end
 
+    it "reopens the row it ended here once the person is marked attended, rather than adding a second" do
+      reg = training_registration(status: "no_show")
+      older = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+                                   start_date: 2.years.ago.to_date)
+
+      described_class.call(person: person, organization: organization, event: reg.event,
+                           registration: reg, include_unowned: true)
+      expect(older.reload.end_date).to be_present
+
+      reg.update!(status: "attended")
+
+      expect {
+        described_class.call(person: person, organization: organization, event: reg.event,
+                             registration: reg, include_unowned: true)
+      }.not_to change { person.affiliations.facilitators.where(organization: organization).count }
+
+      expect(older.reload.end_date).to be_nil
+      expect(older).to be_active
+      expect(person.affiliations.facilitators.active.where(organization: organization).count).to eq(1)
+    end
+
+    it "plans that reopen as :reactivate, with no create alongside it" do
+      reg = training_registration(status: "no_show")
+      create(:affiliation, person: person, organization: organization, title: "Facilitator",
+                           start_date: 2.years.ago.to_date)
+      described_class.call(person: person, organization: organization, event: reg.event,
+                           registration: reg, include_unowned: true)
+      reg.update!(status: "attended")
+
+      plan = described_class.new(person: person, organization: organization, event: reg.event,
+                                 registration: reg, include_unowned: true).plan
+
+      expect(plan.map(&:action)).to eq([ :reactivate ])
+    end
+
+    # Same end date, but nobody's reconciliation put it there — so it records a real
+    # lapse and the return belongs in its own row.
+    it "does not reopen a row an admin ended, even when the date matches" do
+      reg = training_registration(status: "attended")
+      create(:affiliation, person: person, organization: organization, title: "Facilitator",
+                           start_date: 3.years.ago.to_date,
+                           end_date: reg.event.start_date.to_date - 1.day)
+
+      plan = described_class.new(person: person, organization: organization, event: reg.event,
+                                 registration: reg, include_unowned: true).plan
+
+      expect(plan.map(&:action)).to contain_exactly(:noop, :create)
+      expect(plan.map(&:reason)).to include(described_class::LAPSED)
+    end
+
     it "keeps the lapse visible instead of swallowing it into one unbroken stretch" do
       lapsed = create(:affiliation, person: person, organization: organization, title: "Facilitator",
                       start_date: Date.new(2023, 1, 1), end_date: Date.new(2024, 1, 1))

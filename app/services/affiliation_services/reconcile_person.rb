@@ -59,6 +59,7 @@ module AffiliationServices
       when :create then create_and_note
       when :delete then affiliation.destroy!
       when :deactivate then deactivate(affiliation)
+      when :reactivate then reactivate(affiliation)
       when :retarget then retarget(affiliation)
       else return false
       end
@@ -88,6 +89,15 @@ module AffiliationServices
       affiliation.update!(end_date: ends_on, inactive: true)
       note(affiliation, "Ended #{ends_on.strftime('%b %-d, %Y')} and marked inactive by reconciliation " \
                         "for #{@event.title} — no attended facilitator training for #{@organization.name} on record.")
+    end
+
+    # Undoes an ending this reconciliation applied for this same training, once the
+    # attendance it rested on changes. Reopening records no lapse because none
+    # happened — the row was ended by inference, not by an event (ADR-0003 D6a).
+    def reactivate(affiliation)
+      affiliation.update!(end_date: nil, inactive: false)
+      note(affiliation, "Reopened by reconciliation for #{@event.title} — #{@person.name} is now recorded as " \
+                        "having attended, so the ending this reconciliation applied no longer holds.")
     end
 
     # Moves the open row to the destination training: its start date becomes that
@@ -126,6 +136,15 @@ module AffiliationServices
 
     def ended_by_reconciliation?(affiliation)
       affiliation.comments.any? { |comment| comment.topic == COMMENT_TOPIC }
+    end
+
+    # This row is ended, and ended exactly where reconciling THIS training would end
+    # it. So the ending is ours and rests on the attendance we are now re-reading —
+    # not on a real lapse, which is the only thing a second row should record.
+    def ended_for_this_training?(affiliation)
+      return false if affiliation.end_date.nil?
+
+      affiliation.end_date == deactivation_end_date(affiliation) && ended_by_reconciliation?(affiliation)
     end
 
     # The event is over and nobody said what happened. Distinct from cancelled or
@@ -215,11 +234,14 @@ module AffiliationServices
     end
 
     # Someone with no active facilitator affiliation needs one when they have never
-    # had one, or when they completed a training here and are returning after a
-    # lapse — the return is a NEW row, never a resurrected one (ADR-0003 D6a).
+    # had one, or when they completed a training here and are returning after a real
+    # lapse — that return is a NEW row (ADR-0003 D6a).
     def needs_affiliation?
       return false unless @registration
       return false if facilitator_affiliations.any?(&:active?)
+      # Reopening the row this training ended already gives them one; a create too
+      # would leave two facilitator affiliations for one unbroken engagement.
+      return false if reconcilable_affiliations.any? { |affiliation| ended_for_this_training?(affiliation) }
 
       facilitator_affiliations.empty? || completed_training?
     end
@@ -227,6 +249,7 @@ module AffiliationServices
     def classify(affiliation)
       if completed_training?
         return Decision.new(affiliation:, action: :noop, reason: ACTIVE_ATTENDED) if affiliation.active?
+        return Decision.new(affiliation:, action: :reactivate) if ended_for_this_training?(affiliation)
 
         Decision.new(affiliation:, action: :noop, reason: LAPSED)
       elsif !affiliation.active?
