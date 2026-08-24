@@ -5,7 +5,8 @@ class StoryIdeasController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(StoryIdea.includes(:windows_type, :organization, :workshop, :created_by, :updated_by))
+    base_scope = authorized_scope(StoryIdea.includes(:windows_type, :organization, :workshop, :author, :updated_by,
+                                                     created_by: :person))
     filtered = base_scope.search_by_params(params)
     @story_ideas = filtered.order(created_at: :desc)
                            .paginate(page: params[:page], per_page: per_page)

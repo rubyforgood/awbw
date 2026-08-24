@@ -1,5 +1,7 @@
 class WorkshopIdea < ApplicationRecord
   include AuthorCreditable
+  # The submitter is the author when none is named.
+  credits_creator
 
   belongs_to :author, class_name: "Person", inverse_of: :workshop_ideas_as_author, optional: true
   belongs_to :created_by, class_name: "User"

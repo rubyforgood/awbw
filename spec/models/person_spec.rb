@@ -584,8 +584,17 @@ RSpec.describe Person, type: :model do
         expect(results).not_to include(person_bob)
       end
 
-      it "ignores logs with no credited author" do
-        create(:workshop_log, author: nil)
+      it "credits the logger on a log that names no author (predates author_id)" do
+        create(:workshop_log, created_by: create(:user, person: person_bob), author: nil)
+
+        results = Person.search_by_params(role: "workshop_log_author")
+
+        expect(results).to include(person_bob)
+        expect(results).not_to include(person_alice)
+      end
+
+      it "ignores logs with neither an author nor a person behind the account" do
+        create(:workshop_log, author: nil, created_by: create(:user, person: nil))
         results = Person.search_by_params(role: "workshop_log_author")
         expect(results).not_to include(person_alice, person_bob)
       end

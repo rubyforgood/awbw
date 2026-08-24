@@ -1,5 +1,7 @@
 class WorkshopLog < ApplicationRecord
   include AuthorCreditable
+  # The facilitator who logged the workshop is its author when none is named.
+  credits_creator
 
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :author, class_name: "Person", optional: true

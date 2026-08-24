@@ -46,14 +46,18 @@
     Workshop ideas, story ideas, workshop variation ideas, and workshop logs now have an
     "Author name" search box that finds records by their credited author.
   description: >-
-    These index pages already showed each record's credited author; now you can search by
-    that author too. The "Author name" box matches the credited author on file, following
-    the same credit and anonymity rules as the rest of the site — so a name someone's
-    profile hides from their credit won't surface their content, and anonymous work isn't
-    findable by name. Workshop logs keep their separate "Person" filter for who logged the
-    workshop; the new box searches the credited author instead.
+    The "Author name" box matches the credited author on file, and falls back to whoever
+    submitted the record when no author is named — so older entries, from before content
+    carried an author, are still findable under the submitter's name. It follows the same
+    credit and anonymity rules as the rest of the site: a name someone's profile hides
+    from their credit won't surface their content, and anonymous work isn't findable by
+    name. Workshop logs keep their separate "Person" filter for who logged the workshop.
+    Two pages now show the credit they match: the story ideas list credits the author
+    rather than the account that entered the idea, and a workshop log's page shows its
+    author credit alongside who submitted it.
   pro_tips:
     - "The Author name box searches the credited author — on a workshop log that can differ from whoever logged it."
+    - "The people list's \"Workshop log authors\" role covers anyone credited on a log, including logs that only record who submitted them."
 
 - name: "Hide the View ticket button in a bulk email"
   area: communications

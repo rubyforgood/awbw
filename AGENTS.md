@@ -139,7 +139,7 @@ This codebase (Rails 8.1)
 |---|---|
 | `AgeGroupTaggable` | Splits AgeRange category taggings into primary/additional via `categorizable_items.is_primary` (Person, Organization) |
 | `AhoyTrackable` | Event tracking integration |
-| `AuthorCreditable` | Author attribution. Credits are formatted by the credited **person's profile** (`Person#display_name_preference`), not by the record. The record's `author_credit_preference` is the consent snapshot taken at create time and is human-editable only on the author credit divergences page. Anonymity is a one-way latch: the profile or the record can set it, neither can strip it from the other |
+| `AuthorCreditable` | Author attribution. Credits are formatted by the credited **person's profile** (`Person#display_name_preference`), not by the record. The record's `author_credit_preference` is the consent snapshot taken at create time and is human-editable only on the author credit divergences page. Anonymity is a one-way latch: the profile or the record can set it, neither can strip it from the other. `credits_to_org` flips the unattributed label to "AWBW Staff"; `credits_creator` (idea models, workshop logs) credits the submitting account's person when no author is named |
 | `Featureable` | `featured`, `publicly_featured` scopes |
 | `Mentioner` | ActionText @mention extraction and grouping |
 | `NameFilterable` | Name-based filtering |

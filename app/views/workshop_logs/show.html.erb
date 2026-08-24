@@ -33,6 +33,10 @@
           <% end %>
         </div>
         <div>
+          <span class="font-semibold text-gray-700">Author credit:</span>
+          <%= credited_author_link(@workshop_log) %>
+        </div>
+        <div>
           <span class="font-semibold text-gray-700">Organization:</span>
           <% if @workshop_log.organization && allowed_to?(:show?, @workshop_log.organization) %>
             <%= link_to @workshop_log.organization.name,

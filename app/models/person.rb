@@ -200,7 +200,12 @@ class Person < ApplicationRecord
   scope :blog_contributors, -> { where(blog_contributor: true) }
   scope :workshop_authors, -> { joins(:workshops_as_author).distinct }
   scope :workshop_variation_authors, -> { joins(:workshop_variations_as_author).distinct }
-  scope :workshop_log_authors, -> { joins(:workshop_logs_as_author).distinct }
+  # Mirrors what a log credits (WorkshopLog `credits_creator`): the named author,
+  # or — on logs that predate the author column — the person whose account logged it.
+  scope :workshop_log_authors, -> {
+    where(id: WorkshopLog.where.not(author_id: nil).select(:author_id))
+      .or(where(id: User.where(id: WorkshopLog.where(author_id: nil).select(:created_by_id))
+                        .where.not(person_id: nil).select(:person_id))) }
   # People with at least one currently-active facilitator affiliation.
   scope :facilitators_active, -> {
     where(id: Affiliation.facilitators.active.select(:person_id)) }

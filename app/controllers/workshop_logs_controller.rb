@@ -72,7 +72,7 @@ class WorkshopLogsController < ApplicationController
 
   def show
     @workshop_log = WorkshopLog.includes(
-      :organization, :windows_type, { created_by: :person },
+      :organization, :windows_type, :author, { created_by: :person },
       { quotes: :workshop },
       { gallery_assets: { file_attachment: :blob } }
     ).find(params[:id]).decorate

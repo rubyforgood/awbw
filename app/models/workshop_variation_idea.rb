@@ -1,5 +1,8 @@
 class WorkshopVariationIdea < ApplicationRecord
   include AuthorCreditable
+  # The submitter is the author when none is named.
+  credits_creator
+
   include SearchCop
   search_scope :search do
     attributes :name, :body
