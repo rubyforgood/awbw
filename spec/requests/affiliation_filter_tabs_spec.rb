@@ -70,6 +70,27 @@ RSpec.describe "the Active/Inactive split on the affiliation editor", type: :req
     expect(indices.size).to eq(2)
   end
 
+  # The bug this guards: the tabs wrapper carried a bare `group`, and Tailwind's
+  # `group-hover:` matches ANY `.group` ancestor — so hovering anywhere in the
+  # editor opened every row's comment tooltip at once. Naming it (`group/afftabs`)
+  # scopes it. Asserted structurally rather than by driving a real hover, which
+  # headless Chrome on CI doesn't reliably deliver.
+  it "leaves each comment tooltip scoped to its own icon, not the tabs wrapper" do
+    current.comments.create!(body: "Why this ended")
+
+    get edit_person_path(person)
+
+    tooltips = parsed.css("span").select { |node| node["class"].to_s.include?("group-hover:block") }
+    expect(tooltips).not_to be_empty
+
+    tooltips.each do |tooltip|
+      bare_groups = tooltip.ancestors.count { |a| a["class"].to_s.split(/\s+/).include?("group") }
+      expect(bare_groups).to eq(1),
+        "expected only the icon's own wrapper to be a bare `.group`, found #{bare_groups} — " \
+        "an unnamed group on an ancestor makes every tooltip open at once"
+    end
+  end
+
   it "adds new rows into the active group only" do
     get edit_person_path(person)
 

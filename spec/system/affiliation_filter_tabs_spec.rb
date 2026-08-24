@@ -37,33 +37,6 @@ RSpec.describe "Affiliation Active/Inactive tabs", type: :system do
     expect(row_for("Long Since Ended")).not_to be_visible
   end
 
-  # The tabs wrapper is a NAMED group. An unnamed one collided with the per-row
-  # comment icon's own `.group`, so hovering one icon opened every row's tooltip.
-  # Both commented rows must be on the SAME tab, or the hidden one masks the bug.
-  it "opens only the hovered row's comment tooltip" do
-    second = create(:affiliation, person: person, organization: create(:organization),
-                                  title: "Facilitator", start_date: 1.year.ago.to_date)
-    person.affiliations.find_by(organization: current_org).comments.create!(body: "Note about the first")
-    second.comments.create!(body: "Note about the second")
-    visit edit_person_path(person)
-
-    expect(all(".fa-comment").size).to eq(2)
-
-    # Hover is a one-shot mouse move, so unlike an assertion it doesn't retry: if
-    # the element shifts under the cursor while Stimulus settles the row styling,
-    # the move lands on nothing and no amount of waiting recovers it. Scroll it
-    # under the cursor, then re-hover if the first attempt missed.
-    icon = all(".fa-comment").first
-    page.execute_script("arguments[0].scrollIntoView({ block: 'center' })", icon)
-    3.times do
-      icon.hover
-      break if page.has_text?("Note about the first", wait: 1)
-    end
-
-    expect(page).to have_text("Note about the first")
-    expect(page).to have_no_text("Note about the second")
-  end
-
   it "opens the affiliation editor's comments when the icon is clicked" do
     affiliation = person.affiliations.find_by(organization: current_org)
     affiliation.comments.create!(body: "Why this ended")
