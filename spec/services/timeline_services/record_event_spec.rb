@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe RecordTimelineEvent do
+RSpec.describe TimelineServices::RecordEvent do
   let(:holder_class) do
     stub_const("SpecTimelineHolder", Class.new(ApplicationRecord) do
       self.table_name = "people"
