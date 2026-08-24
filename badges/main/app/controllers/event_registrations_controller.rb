@@ -94,10 +94,6 @@ class EventRegistrationsController < ApplicationController
     @event_registration.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
     @event_registration.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
 
-    # Inline-logged notifications are addressed to the registrant.
-    recipient_email = @event_registration.registrant&.preferred_email.presence || "n/a"
-    @event_registration.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
-
     if @event_registration.save
       # Marking transferred out — from the edit-form save OR the inline roster/
       # onboarding status chip (Turbo) — with no destination yet sends the admin

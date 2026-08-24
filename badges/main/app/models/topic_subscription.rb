@@ -1,4 +1,5 @@
 class TopicSubscription < ApplicationRecord
+  include Communicable
   belongs_to :person
   belongs_to :topic_subscription_type
   # Optional narrowing to a specific event (e.g. one training). Null = the topic
@@ -10,6 +11,10 @@ class TopicSubscription < ApplicationRecord
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  def communications_email
+    person&.preferred_email
+  end
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   # Lets the new-subscription form create a brand-new person inline instead of

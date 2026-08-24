@@ -1,6 +1,3 @@
-<%# On a page non-admins can view, callers pass mark_admin_only: true — a comment
-    is always staff-only, so the whole card takes the app's admin-only blue wash. %>
-<% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
 <% created_user = f.object.created_by %>
 <% updated_user = f.object.updated_by %>
 <% created_name = created_user&.person&.name || created_user&.name %>
@@ -12,7 +9,7 @@
 <% is_age_range_data = f.object.persisted? && f.object.body&.include?("[AGE_RANGE_DATA]") %>
 <div class="nested-fields" data-paginated-fields-target="item">
   <%= f.hidden_field :id if f.object.persisted? %>
-  <div class="flex items-start gap-x-1 rounded-md border <%= comment_card_class(admin_only: mark_admin_only, warning: is_age_range_data) %> px-3 py-2">
+  <div class="flex items-start gap-x-1 rounded-md border <%= comment_card_class(warning: is_age_range_data) %> px-3 py-2">
     <label class="mt-1 inline-flex w-4 shrink-0 cursor-pointer justify-center leading-none" title="Flag for follow-up">
       <%= f.check_box :flagged, class: "peer sr-only" %>
       <i class="fa-regular fa-flag text-gray-500 peer-checked:text-orange-500 peer-checked:[--fa-style:900]! hover:text-orange-400"></i>

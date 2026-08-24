@@ -100,7 +100,6 @@ class StoriesController < ApplicationController
     Story.transaction do
       @story.assign_attributes(story_params.except(:images, :category_ids, :sector_ids))
       attribute_comment_authorship
-      stamp_new_notification_recipients
       if @story.save
         assign_associations(@story)
         if params[:promote_idea_assets] == "true"
@@ -190,11 +189,6 @@ class StoriesController < ApplicationController
       notification_type: 0)
   end
 
-  # Inline-logged communications are addressed to the story's credited author.
-  def stamp_new_notification_recipients
-    recipient_email = @story.communications_email.presence || "n/a"
-    @story.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
-  end
 
   def set_story
     # Accepts both the bare id ("23") and the slugged param ("23-my-great-story");

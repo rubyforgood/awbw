@@ -102,7 +102,8 @@ class AffiliationsController < ApplicationController
     params.require(:affiliation).permit(
       :person_id, :organization_id, :title, :start_date, :end_date, :primary_contact,
       :organization_address_id, :filemaker_code, :event_registration_id,
-      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ]
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ]
     )
   end
 

@@ -460,7 +460,24 @@ RSpec.describe "TopicSubscriptions", type: :request do
 
     it "renders a comments box on the edit page" do
       get edit_topic_subscription_path(subscription)
-      expect(response.body).to include("comment-list")
+      expect(response.body).to include("topic_subscription-activity-list")
+      expect(response.body).to include("Add communication")
+    end
+
+    it "logs a communication inline, addressed to the subscriber" do
+      subscription = create(:topic_subscription)
+
+      expect {
+        patch topic_subscription_path(subscription), params: {
+          topic_subscription: {
+            notifications_attributes: { "0" => { channel: "phone", email_subject: "Called about the topic" } }
+          }
+        }
+      }.to change { subscription.notifications.count }.by(1)
+
+      logged = subscription.notifications.last
+      expect(logged.email_subject).to eq("Called about the topic")
+      expect(logged.recipient_email).to eq(subscription.person.preferred_email)
     end
 
     it "saves a comment added on the subscription form" do

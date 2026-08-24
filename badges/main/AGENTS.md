@@ -51,7 +51,7 @@ This codebase (Rails 8.1)
 | `app/models/` | ActiveRecord models | ~90 files |
 | `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~70 files |
 | `app/jobs/` | SolidQueue background jobs | 6 files |
-| `app/models/concerns/` | Shared model modules | 18 concerns |
+| `app/models/concerns/` | Shared model modules | 19 concerns |
 
 ### Presentation
 
@@ -139,6 +139,7 @@ This codebase (Rails 8.1)
 |---|---|
 | `AgeGroupTaggable` | Splits AgeRange category taggings into primary/additional via `categorizable_items.is_primary` (Person, Organization) |
 | `AhoyTrackable` | Event tracking integration |
+| `Communicable` | Gives a record the `notifications` association, nested attributes, a default `communications_scope`, and a `before_validation` addressing a hand-logged communication to the record's `communications_email`. Included by every model whose form renders `shared/_comments_and_communications` |
 | `AuthorCreditable` | Author attribution. Credits are formatted by the credited **person's profile** (`Person#display_name_preference`), not by the record. The record's `author_credit_preference` is the consent snapshot taken at create time and is human-editable only on the author credit divergences page. Anonymity is a one-way latch: the profile or the record can set it, neither can strip it from the other. `credits_to_org` flips the unattributed label to "AWBW Staff"; `credits_creator` (idea models, workshop logs) credits the submitting account's person when no author is named |
 | `Featureable` | `featured`, `publicly_featured` scopes |
 | `Mentioner` | ActionText @mention extraction and grouping |

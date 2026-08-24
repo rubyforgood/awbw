@@ -18,11 +18,10 @@ module ChipHelper
     CHIP_COLORS[(id || 0) % CHIP_COLORS.length]
   end
 
-  # Border + background for a comment card. `admin_only` wins on a page
-  # non-admins can view (comments are always staff-only there); `warning` is the
-  # amber tint for an imported [AGE_RANGE_DATA] note.
-  def comment_card_class(admin_only: false, warning: false)
-    return "admin-only border-blue-200 bg-blue-100" if admin_only
+  # Border + background for a comment card. `warning` is the amber tint for an
+  # imported [AGE_RANGE_DATA] note. Staff-only-ness is signalled by the add
+  # button alone — tinting every card blue read as a wall of blue.
+  def comment_card_class(warning: false)
     return "border-amber-200 bg-amber-50" if warning
 
     "#{DomainTheme.border_class_for(:comments, intensity: 200)} #{DomainTheme.bg_class_for(:comments, intensity: 50)}"

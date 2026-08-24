@@ -137,10 +137,11 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
         issuing_state: "CA", expires_on: Date.new(2027, 1, 31))
     end
 
-    it "renders a comments box on the edit page" do
+    it "renders the combined comments and communications section on the edit page" do
       get edit_continuing_education_registration_path(ce_registration)
-      expect(response.body).to include("CE comments")
-      expect(response.body).to include("comment-list")
+      expect(response.body).to include("Comments &amp; communications")
+      expect(response.body).to include("continuing_education_registration-activity-list")
+      expect(response.body).to include("Add communication")
     end
 
     it "saves a comment added on the CE form (with the record)" do

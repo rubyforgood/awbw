@@ -27,6 +27,18 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Comments & communications on every record that had comments"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-08-24
+  summary: >-
+    Affiliations, CE registrations, organizations, subscriptions, user accounts, and workshops
+    now show the same combined "Comments & communications" section as people, registrations,
+    scholarships, and stories — so a call or email can be logged wherever the record lives.
+  pro_tips:
+    - "Logging a communication addresses it to whoever the record is about, so you never type the email."
+    - "An organization has no person behind it, so its communications go to the organization's own email."
+
 - name: "Comments and communications in one section"
   area: communications
   display_status: admin_facing
