@@ -26,9 +26,12 @@ class NotificationsController < ApplicationController
   end
 
   # Log a communication by hand against a person — mirrors the nested
-  # notifications flow (people_controller#update): the picked person is the
-  # noticeable and supplies the recipient_email; the model fills in the
-  # manual_log defaults (kind, recipient_role, notification_type, delivered_at).
+  # notifications flow (people_controller#update): the picked person supplies the
+  # recipient_email; the model fills in the manual_log defaults (kind,
+  # recipient_role, notification_type, delivered_at). The person is also the
+  # default noticeable, but the combined feed's composer can file it against one
+  # of the person's other records instead (a signed GlobalID, so the type/id
+  # can't be tampered with).
   def create
     authorize! Notification, to: :create?
 
@@ -37,14 +40,16 @@ class NotificationsController < ApplicationController
     @notification.sender = current_user
 
     if @person
-      @notification.noticeable = @person
+      @notification.noticeable = noticeable_target || @person
       @notification.recipient_email = @person.communications_email.presence || "n/a"
     else
       @notification.errors.add(:base, "Select a person to log this communication against")
     end
 
     if @person && @notification.save
-      redirect_to notifications_path, notice: "Communication logged."
+      redirect_to after_create_path, notice: "Communication logged."
+    elsif combined_feed_person
+      redirect_to after_create_path, alert: @notification.errors.full_messages.to_sentence.presence || "Failed to log the communication."
     else
       render :new, status: :unprocessable_content
     end
@@ -101,6 +106,24 @@ class NotificationsController < ApplicationController
   end
 
   private
+
+  # The record the communication is filed against when the composer offers a
+  # picker. Signed, so a hostile value can't point at an arbitrary record.
+  def noticeable_target
+    return if params[:noticeable_sgid].blank?
+
+    GlobalID::Locator.locate_signed(params[:noticeable_sgid])
+  end
+
+  # Set when the standalone composer on a person's combined feed posted this, so
+  # the log returns there instead of the global index.
+  def combined_feed_person
+    @combined_feed_person ||= Person.find_by(id: params[:for_person_id]) if params[:for_person_id].present?
+  end
+
+  def after_create_path
+    combined_feed_person ? comments_and_communications_person_path(combined_feed_person) : notifications_path
+  end
 
   def track_responded_change(previous)
     return if @notification.responded? == previous

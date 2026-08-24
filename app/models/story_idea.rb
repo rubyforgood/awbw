@@ -58,10 +58,13 @@ class StoryIdea < ApplicationRecord
     "StoryIdea ##{id}"
   end
 
-  # Email the communications box matches notifications against. Uniform accessor
-  # so the shared notifications/_communications partial works across records.
   def communications_email
     created_by&.email
+  end
+
+  # Only comms filed against this story idea, not the submitter's whole history.
+  def communications_scope
+    notifications
   end
 
   def full_name

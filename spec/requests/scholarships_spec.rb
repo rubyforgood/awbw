@@ -282,10 +282,11 @@ RSpec.describe "Scholarships", type: :request do
   end
 
   describe "comments and communications on the edit page" do
-    it "renders the comments section" do
+    it "renders the combined comments and communications section" do
       get edit_scholarship_path(scholarship)
-      expect(response.body).to include("Scholarship comments")
+      expect(response.body).to include("Comments &amp; communications")
       expect(response.body).to include("Add comment")
+      expect(response.body).to include("Add communication")
     end
 
     it "saves a new comment with its topic, authored by the current user" do

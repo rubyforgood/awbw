@@ -27,6 +27,38 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Comments and communications in one section"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-08-23
+  pr_number: 2355
+  summary: >-
+    The separate Comments and Communications boxes on record edit pages are now one
+    "Comments & communications" section: a single newest-first feed of both, each in its own
+    card (comments purple, communications blue), with an add button for each.
+  pro_tips:
+    - "Communications now show the ones logged about the record you're viewing; a person's own page still shows their full history."
+    - "An incoming communication's pill shows a checkbox — checked once it's been responded to."
+    - "On a person's own page the comment cards carry the blue admin-only wash, since comments are staff-only and the person can view that page."
+
+- name: "All comments & communications in one feed"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-08-23
+  action_path: "/people/1/comments_and_communications"
+  pr_number: 2355
+  summary: >-
+    One filterable page per person merging every comment and every communication, reached
+    from the "All comments & communications" link on any record. Same cards as the section
+    but with full bodies, plus composers for adding either against any of their records.
+  pro_tips:
+    - "Most filters search both kinds at once: \"Subject or topic\" matches a comment's topic and an email's subject line, \"From or author\" matches who wrote the comment and who sent (or sent in) the message, and \"Attached to\" matches the record either one hangs off."
+    - "\"Follow-up: Needed\" gathers flagged comments and incoming messages nobody has answered yet."
+    - "\"Responded\" and \"Email topic\" return communications only — a comment records no reply and has no email subject."
+    - "Add comment / Add communication at the top right each open a composer with a picker for which of the person's records to file it against."
+    - "Every row's chip opens that record's edit page; a communication's subject opens the communication itself."
+    - "The back link returns to whichever record you opened the feed from."
+
 - name: "Copy email addresses from the people list"
   area: people
   display_status: admin_facing

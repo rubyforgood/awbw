@@ -466,10 +466,18 @@ class Person < ApplicationRecord
     user&.email.presence || email.presence || email_2.presence
   end
 
-  # Email the communications box matches notifications against. Uniform accessor
-  # so the shared notifications/_communications partial works across records.
   def communications_email
     preferred_email
+  end
+
+  # A person's own page shows their entire communication history — every
+  # notification to any of their addresses (user login, email, email_2). Every
+  # other record instead scopes to comms filed against itself (its `notifications`).
+  def communications_scope
+    emails = [ user&.email, email, email_2 ].compact_blank.uniq
+    return Notification.none if emails.empty?
+
+    emails.map { |address| Notification.email(address) }.reduce(:or)
   end
 
   remote_searchable_by :first_name, :last_name, :email, :legal_first_name, :email_2
