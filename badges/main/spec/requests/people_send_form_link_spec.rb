@@ -49,7 +49,8 @@ RSpec.describe "People send_form_link", type: :request do
 
       it "sends an upcoming facilitator training's public registration form link" do
         training = create(:event, :published, facilitator_training: true, on_demand: false,
-                          title: "Facilitator Training", start_date: 2.months.from_now)
+                          title: "Facilitator Training", start_date: 2.months.from_now,
+                          end_date: 2.months.from_now + 2.hours)
 
         expect {
           post send_form_link_person_path(person, event_id: training.id)
@@ -116,9 +117,11 @@ RSpec.describe "People send_form_link", type: :request do
       on_demand_event = create(:event, :published, facilitator_training: true, on_demand: true,
                                title: "On-Demand Training", start_date: 2.months.ago)
       soon = create(:event, :published, facilitator_training: true, on_demand: false,
-                    title: "Spring Training", start_date: 3.months.from_now)
+                    title: "Spring Training", start_date: 3.months.from_now,
+                    end_date: 3.months.from_now + 2.hours)
       create(:event, :published, facilitator_training: true, on_demand: false,
-             title: "Distant Training", start_date: 14.months.from_now)
+             title: "Distant Training", start_date: 14.months.from_now,
+             end_date: 14.months.from_now + 2.hours)
       # On-demand events list by "hasn't ended", regardless of start date.
       far_on_demand = create(:event, :published, facilitator_training: true, on_demand: true,
                              title: "Far On-Demand Training", start_date: 14.months.from_now, end_date: 26.months.from_now)

@@ -172,7 +172,7 @@ RSpec.describe "Event show page", type: :system do
 
     context "event ended" do
       before do
-        event.update!(end_date: 1.day.ago)
+        event.update!(start_date: 3.days.ago, end_date: 1.day.ago)
         create(:event_registration, event: event, registrant: user.person, status: "registered")
       end
 

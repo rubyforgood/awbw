@@ -743,7 +743,7 @@ RSpec.describe "Events::Callouts", type: :request do
   end
 
   describe "GET /registration/:slug/certificate" do
-    let(:event) { create(:event, end_date: 2.days.ago) }
+    let(:event) { create(:event, :ended) }
     let(:registration) { create(:event_registration, event: event, status: "attended") }
 
     it "renders the certificate once it is unlocked" do

@@ -65,7 +65,7 @@ RSpec.describe BuiltinCallouts do
     end
 
     it "seeds the Videoconference card with a drip date a week before start" do
-      event = create(:event, start_date: Date.new(2026, 9, 10))
+      event = create(:event, start_date: Date.new(2026, 9, 10), end_date: Date.new(2026, 9, 12))
       described_class.seed(event)
 
       vc = event.registration_ticket_callouts.find_by(builtin_key: "videoconference")
