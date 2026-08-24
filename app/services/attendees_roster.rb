@@ -106,8 +106,9 @@ class AttendeesRoster
     linked_org_ids_by_registrant
   end
 
-  # Distinct affiliation statuses (Active / Pending / Inactive) per person, in
-  # display order — the index-only Affiliation status column and filter.
+  # Distinct affiliation statuses (Affiliation::STATUSES — Active / Upcoming /
+  # Inactive) per person, in display order — the index-only Affiliation status
+  # column and filter.
   def affiliation_statuses_by_registrant
     @affiliation_statuses_by_registrant ||= people.to_h do |person|
       statuses = person.affiliations.map { |affiliation| affiliation_status(affiliation) }.uniq
@@ -229,6 +230,12 @@ class AttendeesRoster
     @program_status_for[[ organization_id, anchor ]] ||= organization.facilitator_program_status(as_of: anchor)
   end
 
+  # Deliberately "as of today", unlike the program status above, which anchors on
+  # each row's event. This column answers a different question — where does this
+  # person stand *now*, so you can chase a lapsed affiliation — and its filter
+  # (EventsController#person_affiliation_status_ids) is Affiliation.with_status,
+  # which also judges today. Anchoring the column on the event would leave it
+  # disagreeing with the filter that selected the rows.
   def affiliation_status(affiliation)
     affiliation.status_on
   end

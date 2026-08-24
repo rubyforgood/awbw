@@ -214,7 +214,7 @@ export default class extends Controller {
     if (!target) return
     let html = ""
     if (endDate) {
-      html += '<i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active affiliations"></i>'
+      html += '<i class="fa-solid fa-circle-xmark mr-1 text-red-400" title="No active affiliations"></i>'
     }
     html += sinceDate ? this.formatDate(sinceDate) : "—"
     if (endDate) html += ` – ${this.formatDate(endDate)}`
