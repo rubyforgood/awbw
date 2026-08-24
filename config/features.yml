@@ -71,7 +71,7 @@
     - "Add ?admin=true to the affiliation editor URL to reveal the registration picker."
 
 - name: "Scholarship program status is judged at its own training"
-  area: events
+  area: scholarships
   display_status: admin_facing
   released_on: 2026-08-23
   action_path: "/scholarships"
