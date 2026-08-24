@@ -104,8 +104,15 @@ facilitator affiliations by a single class, `FacilitatorProgramStatus`:
 `Organization#facilitator_program_status(as_of:)` returns that object;
 `#facilitator_status_on(date)` is the bare symbol for counting and filtering.
 Nothing else classifies a program — the dashboard breakdown, the onboarding
-matrix, the rosters, the org profile/edit chips and the annual report all call
-this one method, so they cannot disagree.
+matrix, the rosters, the org profile/edit chips, the **scholarship index** and
+the annual report all call this one method, so they cannot disagree.
+
+**Each row picks its own anchor.** The scholarship index anchors each award on
+the start date of the training it paid for (`Scholarship#event`, via
+allocation → event registration), so two awards listed side by side are judged
+at their own events rather than at one page-wide "now". An award with no
+registration behind it (grant-first, or funding a CE registration) falls back to
+the year anchor, which `#explanation` labels "no event in view".
 
 The status object also carries **why**: the anchor date, the month the program
 went (or last was) active, and the full facilitator history as merged periods
