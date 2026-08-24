@@ -43,21 +43,21 @@
   display_status: admin_facing
   released_on: 2026-08-23
   summary: >-
-    Workshop ideas, story ideas, workshop variation ideas, and workshop logs now have an
-    "Author name" search box that finds records by their credited author.
+    Workshop ideas, story ideas, workshop variation ideas, workshop logs, and monthly
+    reports now have an "Author name" search box that finds records by their credited author.
   description: >-
     The "Author name" box matches the credited author on file, and falls back to whoever
     submitted the record when no author is named — so older entries, from before content
     carried an author, are still findable under the submitter's name. It follows the same
     credit and anonymity rules as the rest of the site: a name someone's profile hides
     from their credit won't surface their content, and anonymous work isn't findable by
-    name. Workshop variations search the same way now. Lists show the credit they match:
-    the story ideas list credits the author rather than the account that entered the idea,
-    the workshop logs list swaps its "Person" column for "Author", and a workshop log's
-    page shows its author credit. The workshop log filter for who turned the log in is
-    still there, now labeled "Submitted by".
+    name. Workshop variations and monthly reports search the same way now. Lists show the
+    credit they match: the story ideas list credits the author rather than the account
+    that entered the idea, and the workshop logs and monthly reports lists swap their
+    submitter column for "Author". Each page shows its author credit too. The filters for
+    who turned a log or report in are still there, now labeled "Submitted by".
   pro_tips:
-    - "The Author name box searches the credited author — on a workshop log that can differ from whoever submitted it."
+    - "The Author name box searches the credited author — on a workshop log or monthly report that can differ from whoever submitted it."
     - "The people list's \"Workshop log authors\" and \"Workshop variation authors\" roles cover anyone credited, including records that only name who submitted them."
 
 - name: "Hide the View ticket button in a bulk email"

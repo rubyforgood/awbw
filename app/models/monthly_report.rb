@@ -79,6 +79,7 @@ class MonthlyReport < Report
   def self.search(params)
     logs = is_a?(ActiveRecord::Relation) ? self : all
     logs = logs.created_by_id(params[:created_by_id]) if params[:created_by_id].present?
+    logs = logs.where(id: by_credited_person_name(params[:author_name]).select("reports.id")) if params[:author_name].present?
     logs = logs.month_and_year(params[:month_and_year]) if params[:month_and_year].present?
     logs = logs.year(params[:year]) if params[:year].present?
     logs = logs.organization_id(params[:organization_id]) if params[:organization_id].present?

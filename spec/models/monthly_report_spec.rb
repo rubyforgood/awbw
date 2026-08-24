@@ -23,6 +23,30 @@ RSpec.describe MonthlyReport do
     end
   end
 
+  describe ".search" do
+    it "filters by author_name matching the credited author" do
+      author = create(:person, first_name: "Bartholomew", last_name: "Snazzlepants")
+      report = create(:monthly_report, author: author)
+      other = create(:monthly_report)
+
+      results = MonthlyReport.search(author_name: "Bartholomew")
+
+      expect(results).to include(report)
+      expect(results).not_to include(other)
+    end
+
+    it "filters by author_name matching the submitter when no author is named" do
+      submitter = create(:person, first_name: "Bartholomew", last_name: "Snazzlepants")
+      report = create(:monthly_report, author: nil, created_by: create(:user, person: submitter))
+      other = create(:monthly_report)
+
+      results = MonthlyReport.search(author_name: "Bartholomew")
+
+      expect(results).to include(report)
+      expect(results).not_to include(other)
+    end
+  end
+
   it "uses the reports table" do
     expect(MonthlyReport.table_name).to eq("reports")
   end
