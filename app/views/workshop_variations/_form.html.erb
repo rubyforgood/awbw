@@ -33,10 +33,10 @@
         </div>
 
         <% if linked_idea %>
-          <div class="admin-only bg-purple-100 rounded-lg border border-purple-200 p-4">
+          <div class="admin-only <%= DomainTheme.bg_class_for(:workshop_variations, intensity: 100) %> rounded-lg border <%= DomainTheme.border_class_for(:workshop_variations, intensity: 200) %> p-4">
             <div class="flex items-center gap-2">
-              <i class="fas fa-arrow-up-from-bracket text-purple-600"></i>
-              <span class="text-sm font-medium text-purple-800"><%= f.object.persisted? ? "Promoted from:" : "Promoting from:" %></span>
+              <i class="fas fa-arrow-up-from-bracket <%= DomainTheme.text_class_for(:workshop_variations, intensity: 600) %>"></i>
+              <span class="text-sm font-medium <%= DomainTheme.text_class_for(:workshop_variations, intensity: 800) %>"><%= f.object.persisted? ? "Promoted from:" : "Promoting from:" %></span>
               <%= link_to linked_idea.name,
                           workshop_variation_idea_path(linked_idea),
                           class: "btn btn-secondary-outline text-sm" %>
@@ -90,15 +90,8 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <%= f.input :author_credit_preference,
-                      as: :select,
-                      required: true,
-                      collection: AuthorCreditable::ADMIN_FORM_OPTIONS,
-                      include_blank: "Select a preference",
-                      selected: f.object.author_credit_preference || "full_name",
-                      label: "Author credit preference",
-                      hint: "Controls how the author’s name is displayed",
-                      input_html: { class: "h-10 rounded-md" } %>
+          <%= render "shared/author_credit_field", f: f %>
+          <%= render "shared/author_credit_warning", record: f.object %>
 
           <% if allowed_to?(:manage?, WorkshopVariation) %>
             <div class="admin-only bg-blue-100 p-4 rounded-lg mt-4">
@@ -111,8 +104,8 @@
                           link_to "Variation author",
                                   person_path(f.object.author),
                                   class: "hover:underline") : "Variation author").html_safe,
-                        collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
-                        selected: f.object.author_person&.id || current_user.person_id,
+                        collection: author_picker_person(f.object).present? ? [[ author_picker_person(f.object).remote_search_label[:label], author_picker_person(f.object).id ]] : [],
+                        selected: author_picker_person(f.object)&.id,
                         include_blank: true,
                         input_html: {
                           data: {
@@ -120,6 +113,7 @@
                             remote_select_model_value: "person"
                           }
                         } %>
+              <%= render "shared/author_credit_note", record: f.object %>
             </div>
           <% end %>
         </div>

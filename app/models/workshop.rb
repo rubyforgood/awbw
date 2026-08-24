@@ -1,6 +1,8 @@
 class Workshop < ApplicationRecord
   include AuthorCreditable
+  credits_to_org
   include Featureable, Publishable, RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include Communicable
   include PunctuationStrippable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
@@ -30,6 +32,11 @@ class Workshop < ApplicationRecord
 
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  # A communication logged on a workshop is addressed to its credited author.
+  def communications_email
+    author&.preferred_email
+  end
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
   has_many :associated_resources, class_name: "Resource", foreign_key: "workshop_id", dependent: :restrict_with_error
@@ -123,6 +130,8 @@ class Workshop < ApplicationRecord
 
   # Validations
   validates_presence_of :title
+  validates :title, length: { maximum: 255 }
+  validates :full_name, length: { maximum: 255 }
   # validates_presence_of :month, :year, if: Proc.new { |workshop| workshop.legacy }
   validates :rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }
 
@@ -171,7 +180,10 @@ class Workshop < ApplicationRecord
   # Search Cop
   include SearchCop
   search_scope :search do
-    attributes all: [ :title, :full_name ] # no spanish alternatives
+    # The legacy `full_name` is deliberately not indexed here. Author-name search —
+    # person or legacy column — goes through `by_credited_person_name`, which is the
+    # only path that honors the credit preference.
+    attributes all: [ :title ] # no spanish alternatives
     options :all, type: :text, default: true, default_operator: :or
 
     attributes :title, type: :text
@@ -193,15 +205,6 @@ class Workshop < ApplicationRecord
 
   def legacy_author_name_text
     full_name
-  end
-
-  # With no credited person or legacy name, attribute to the generic facilitator.
-  def missing_author_label
-    "AWBW Facilitator"
-  end
-
-  def author_name
-    author_person&.full_name.presence || full_name.presence
   end
 
   def date

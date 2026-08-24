@@ -13,7 +13,7 @@
     </span>
     <h2 class="text-sm font-semibold text-gray-700">Registration payments and allocations</h2>
     <%= link_to allocations_path(allocatable_sgid: event_registration.to_sgid.to_s, return_to: "registration"),
-                class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline after:absolute after:inset-0 after:content-['']",
+                class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium #{eyebrow_link_class} hover:underline after:absolute after:inset-0 after:content-['']",
                 target: "_blank", rel: "noopener" do %>
       View all
       <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>

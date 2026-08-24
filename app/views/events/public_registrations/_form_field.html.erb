@@ -57,7 +57,7 @@
                      end
         extra_attrs = []
         extra_attrs << 'min="1" step="1" pattern="[0-9]*" inputmode="numeric"' if field.number_integer?
-        extra_attrs << 'inputmode="url"' if field.field_identifier == "agency_website"
+        extra_attrs << 'inputmode="url"' if field.matches_identifier?("organization_website")
         extra_attrs << %(maxlength="#{field.effective_max_characters}") if field.effective_max_characters
       %>
       <input type="<%= html_type %>"
@@ -114,7 +114,7 @@
     <% end %>
 
   <% when "single_select_dropdown" %>
-    <%# Dynamic fields (e.g. primary_sector_single) source options from
+    <%# Dynamic fields (e.g. primary_sector) source options from
         Sector/Category data; everything else uses the field's own stored options. %>
     <%# Dropdowns have no free-text input, so the "Other" option is omitted here.
         Named specify options keep meaning as a bare choice, so they stay. %>

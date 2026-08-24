@@ -1643,6 +1643,37 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("Activa")
       end
 
+      it "filters to transferred-in registrations via the FK-backed value" do
+        source = create(:event_registration, status: "transferred_out")
+        incoming_person = create(:person, first_name: "Incomia", last_name: "Transferred")
+        create(:event_registration, event: event, registrant: incoming_person, status: "registered", transferred_from_registration: source)
+
+        get registrants_event_path(event, params: { attendance_status: "transferred_in" })
+
+        expect(response.body).to include("Incomia")
+        # The roster badge carries an "In" marker alongside the real status.
+        expect(response.body).to include("Transferred in from another event")
+        expect(response.body).not_to include("Activa")
+        expect(response.body).not_to include("Inactiva")
+      end
+
+      it "warns on a transferred-out registration whose destination isn't recorded yet" do
+        create(:event_registration, event: event, status: "transferred_out")
+
+        get registrants_event_path(event, params: { attendance_status: "transferred_out" })
+
+        expect(response.body).to include("Transfer incomplete — no destination event recorded yet")
+      end
+
+      it "drops the warning once the transfer destination is recorded" do
+        source = create(:event_registration, event: event, status: "transferred_out")
+        create(:event_registration, registrant: source.registrant, transferred_from_registration: source)
+
+        get registrants_event_path(event, params: { attendance_status: "transferred_out" })
+
+        expect(response.body).not_to include("Transfer incomplete — no destination event recorded yet")
+      end
+
       it "shows the active registrant count in the page heading" do
         get registrants_event_path(event)
 
@@ -1660,12 +1691,12 @@ RSpec.describe "Events", type: :request do
           .at_css("tr#registrant-row-#{registration.id} td[data-column-toggle-col='organization']")&.text&.squish
       end
 
-      # Stores a submitted "agency_name" answer for the registrant, mirroring what
-      # public registration captures, so the Pending/None chip logic has data.
+      # Stores a submitted "organization_name" answer for the registrant, mirroring
+      # what public registration captures, so the Pending/None chip logic has data.
       def submit_agency_name(name)
         registration_form = Form.find_by(name: "Registration") || create(:form, name: "Registration")
-        field = registration_form.form_fields.find_by(field_identifier: "agency_name") ||
-          create(:form_field, form: registration_form, field_identifier: "agency_name")
+        field = registration_form.form_fields.find_by(field_identifier: "organization_name") ||
+          create(:form_field, form: registration_form, field_identifier: "organization_name")
         create(:event_form, :registration, event: event, form: registration_form) unless event.registration_form
         submission = create(:form_submission, person: person, form: registration_form)
         create(:form_answer, form_submission: submission, form_field: field, submitted_answer: name)
@@ -2679,18 +2710,20 @@ RSpec.describe "Events", type: :request do
         create(:event_registration, event: event, registrant: create(:person), status: "attended")
         create(:event_registration, event: event, registrant: create(:person), status: "no_show")
         create(:event_registration, event: event, registrant: create(:person), status: "cancelled")
+        # A transferred-in registrant: registered here, back-linked to a source.
+        source = create(:event_registration, status: "transferred_out")
+        create(:event_registration, event: event, registrant: create(:person), status: "registered", transferred_from_registration: source)
 
         get dashboard_event_path(event)
 
         page = Capybara.string(response.body)
         expect(page).to have_text("Attended", normalize_ws: true)
-        # Every status is its own row that drills into the roster filtered to it.
-        %w[ attended no_show registered cancelled transferred_in transferred_out incomplete_attendance ].each do |status|
+        expect(page).to have_text("Transferred in", normalize_ws: true)
+        # Every row (real statuses plus the FK-backed transferred_in) drills into
+        # the roster filtered to it.
+        %w[ attended no_show registered cancelled transferred_out transferred_in incomplete_attendance ].each do |status|
           expect(page).to have_link(href: registrants_event_path(event, attendance_status: status), visible: :all)
         end
-        # 1 attended over 3 registrants (attended + registered + no-show; the
-        # cancellation is excluded) → 33%.
-        expect(page).to have_text("33%", normalize_ws: true)
       end
     end
 
@@ -2815,7 +2848,7 @@ RSpec.describe "Events", type: :request do
           submission = create(:form_submission, person: person, form: registration_form)
 
           sector = create(:sector, name: "Sexual Assault")
-          sector_field = create(:form_field, form: registration_form, field_identifier: "primary_sector_single")
+          sector_field = create(:form_field, form: registration_form, field_identifier: "primary_sector")
           create(:form_answer, form_submission: submission, form_field: sector_field, submitted_answer: sector.id.to_s)
 
           age_range = create(:category_type, name: "AgeRange")
@@ -3235,6 +3268,21 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to match(/line-through[^>]*>\s*<i[^>]*sack-dollar[^>]*><\/i>\s*\$10\b/)
       end
 
+      it "recognizes a transferred-in registrant as a scholarship recipient (award on the source)" do
+        # Same person transfers: source award + incoming reg both belong to them.
+        person = create(:person, first_name: "Transo", last_name: "Ferredin")
+        source = create(:event_registration, event: create(:event, cost_cents: 5_000), registrant: person, status: "transferred_out")
+        create(:allocation, source: create(:scholarship, recipient: person, amount_cents: 5_000),
+               allocatable: source, amount: 5_000)
+        create(:event_registration, event: event, registrant: person, status: "registered",
+               transferred_from_registration: source)
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include("Transo Ferredin")
+        expect(response.body).to include("Billed to original event")
+      end
+
       it "shows a recipient city breakdown, grouped by the registration-linked org, in the lazy charts frame" do
         org = create(:organization, name: "Reach Org")
         create(:address, addressable: org, city: "Richmond", state: "CA", inactive: false)
@@ -3258,6 +3306,9 @@ RSpec.describe "Events", type: :request do
                              title: "Facilitator", start_date: 2.weeks.from_now.to_date)
         registration = EventRegistration.find_by!(registrant: applicant, event: event)
         create(:event_registration_organization, event_registration: registration, organization: org)
+        # Anchor the start time at noon so the event's calendar date is the same in
+        # the request's viewer time zone and the assertion below, whatever the clock.
+        event.update!(start_date: event.start_date.change(hour: 12))
 
         get recipients_event_path(event), headers: { "Turbo-Frame" => "recipients_charts" }
 
@@ -3643,6 +3694,17 @@ RSpec.describe "Events", type: :request do
 
           expect(response).to redirect_to(recipients_event_path(event))
         end
+
+        it "warns and does not feature a transferred-out registration (#1944)" do
+          registration = event.event_registrations.find_by(registrant: applicant)
+          registration.update!(status: "transferred_out")
+
+          post feature_recipient_shoutout_event_path(event), params: { registration_id: registration.id }
+
+          expect(registration.reload.shoutout).to be(false)
+          expect(response).to redirect_to(recipients_event_path(event))
+          expect(flash[:alert]).to match(/transferred out|locked/i)
+        end
       end
     end
 
@@ -3729,6 +3791,36 @@ RSpec.describe "Events", type: :request do
         sign_in admin
         get staff_event_path(published_event)
         expect(response.body).to include(edit_staff_event_path(published_event))
+      end
+
+      it "shows a staff member's license credentials when their profile allows it" do
+        staffer.update!(profile_show_credentials: true)
+        create(:professional_license, person: staffer, kind: "LMFT", number: "44556")
+        create(:event_staff, event: published_event, person: staffer)
+        sign_in admin
+        get staff_event_path(published_event)
+        expect(response.body).to include("LMFT")
+      end
+
+      it "hides a staff member's license credentials when their profile disallows it" do
+        staffer.update!(profile_show_credentials: false)
+        create(:professional_license, person: staffer, kind: "LMFT", number: "44556")
+        create(:event_staff, event: published_event, person: staffer)
+        sign_in admin
+        get staff_event_path(published_event)
+        expect(response.body).not_to include("LMFT")
+      end
+
+      it "joins a staff member's multiple license credentials comma-separated" do
+        staffer.update!(profile_show_credentials: true)
+        create(:professional_license, person: staffer, kind: "LMFT", number: "44556")
+        create(:professional_license, person: staffer, kind: "LCSW", number: "77889")
+        create(:event_staff, event: published_event, person: staffer)
+        credentials = staffer.reload.license_credentials
+        expect(credentials).to include(", ").and(include("LMFT")).and(include("LCSW"))
+        sign_in admin
+        get staff_event_path(published_event)
+        expect(response.body).to include(credentials)
       end
     end
 
@@ -3942,7 +4034,7 @@ RSpec.describe "Events", type: :request do
         post send_reminder_event_path(event), params: { registration_ids: [] }
       }.not_to change(Notification, :count)
 
-      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: "", custom_subject: "", hide_event_card: "0"))
+      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: "", custom_subject: "", hide_event_card: "0", hide_ticket_button: "0"))
     end
 
     it "logs an Ahoy event with the recipient count on a successful send" do

@@ -50,7 +50,7 @@ When changing a model or controller, check whether these related files need upda
 | Decorator | Decorator spec |
 | Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
 | Add/remove model, concern, service, or gem | AGENTS.md |
-| Ship a user-facing feature | `config/features.yml` (the Features & tips seed — see below) |
+| Ship a user-facing feature **or improvement/change** | `config/features.yml` (the Features & tips seed — see below) |
 
 ## Code Style
 
@@ -148,6 +148,53 @@ picker), use `MoneyFormatter.compact_from_cents(cents)` (`$12.5k`, `$1.2m`) — 
   `scholarship_preview_controller.js`). Keep the server-rendered initial value and the JS-updated value
   formatted identically.
 
+## Domain colors (DomainTheme)
+
+Each domain (workshops, organizations, events, forms, sectors, scholarships, …) has one
+canonical Tailwind color, mapped in **`DomainTheme::COLORS`** (`lib/domain_theme.rb`). The
+point is single-source theming: re-coloring a whole domain is a one-line change in `COLORS`.
+
+- **Never hard-code a domain's own identity color.** When a panel, badge, chip, button, link,
+  or icon is themed to a domain, resolve the class through `DomainTheme`, not a literal like
+  `bg-emerald-50` / `text-indigo-700` / `hover:text-purple-800`.
+- **Helpers** (all take a domain key symbol, e.g. `:organizations`):
+  - `DomainTheme.bg_class_for(key, intensity: 50, hover: false)` → `"bg-emerald-50"` (`hover: true`
+    prefixes `hover:bg-` and bumps one step).
+  - `DomainTheme.text_class_for(key, intensity: 800, hover: false)` → `"text-emerald-800"`
+    (**`hover: true` prefixes `hover:text-`** at the intensity you pass — use it for link hover
+    states instead of a literal `hover:text-*`).
+  - `DomainTheme.border_class_for(key, intensity: 300)` → `"border-emerald-300"`.
+  - `DomainTheme.color_for(key)` → the raw color symbol (e.g. `:emerald`); unknown keys fall back
+    to `:gray`.
+- **In views** interpolate the helper into the class list (`<%= DomainTheme.bg_class_for(:forms) %>`);
+  **in decorators/POROs** (no helper access) call `DomainTheme.…` directly — it's a plain module.
+- **New color?** Add the key → color to `DomainTheme::COLORS` **and** add the color to the
+  `@source inline(...)` safelist in `app/frontend/stylesheets/application.tailwind.css`, or Tailwind
+  won't generate the dynamically-built class and it renders unstyled.
+- **Leave genuinely non-domain colors literal** — don't force these through `DomainTheme`: the
+  `bg-blue-100` `page_bg_class` marker, the global `focus:border-blue-500 focus:ring-blue-200`
+  form-focus convention, status colors (green = success, amber/yellow = warning, red = error),
+  multi-color pickers/swatches, and classes a Stimulus controller also toggles (keep ERB and JS in
+  sync as literals). Convert only a domain's *own identity* color.
+
+## Sharing repeated Tailwind (avoid `@apply`)
+
+When the same utility string is repeated across many views, **unify it with a Rails view
+helper or a shared partial — not `@apply`.** `@apply` hides the utilities inside a CSS rule
+and creates the indirection the tailwind-best-practices guidance warns against; a helper
+keeps the utilities scannable (Tailwind already scans `app/helpers`) and reads as a real
+template abstraction.
+
+- **Helper returning a class string** — the same shape as the `DomainTheme.*_class_for`
+  helpers. Return only the *shared* fragment (e.g. a color pair) and let each caller keep its
+  own context-specific layout classes. Example: `eyebrow_link_class` returns the muted gray for
+  page eyebrows / back-nav links; views interpolate it
+  (`class: "text-sm #{eyebrow_link_class} px-2 py-1"`).
+- **Shared partial** — when the repeated thing is markup (icon + text + structure), not just a
+  class list.
+- **`@apply` is reserved** for genuine element/base styles (e.g. `.btn` in
+  `components/buttons.css`), not for extracting repeated utility clusters.
+
 ## HTML/ERB Formatting
 
 ### Tag Attributes
@@ -244,9 +291,21 @@ see what the portal does. It is **database-backed** (`Feature` model) and edited
 in-app by super-admins — the rich `description` uses the Rhino WYSIWYG (so pages
 can carry screenshots), and each feature can link an external process doc.
 
-**Keep it current as you ship.** When you add a user-facing feature, append an
-entry to `config/features.yml` (the checked-in **seed**):
+**Keep it current as you ship.** When you ship anything a facilitator or admin
+would want to know about, append an entry to `config/features.yml` (the checked-in
+**seed**). This is **not just brand-new features** — a user-facing *improvement,
+change, or enhancement* to something that already exists (a new filter, an extra
+column, a reworked flow) belongs here too. If in doubt whether a change is "big
+enough," add it: a short entry is cheap and the page is where non-devs discover
+what changed.
 
+- **There is no separate "feature vs. update" flag** — every entry is just a
+  `Feature` row, and audience is the only axis (`display_status`). Signal that an
+  entry is a smaller update through its `summary`/`name` wording (e.g. "Filter
+  registrants by registration date"), not a schema field. (If we ever want the UI
+  to visually separate launches from tweaks, that's a `kind:` column on `Feature` +
+  `CATALOG_FIELDS` + a decorator badge — a deliberate change, not something to
+  fake with `area`/`display_status`.)
 - Fields: `name`, `area` (a `Feature::AREA_KEYS` value), `display_status`
   (`public_facing` / `user_facing` / `admin_facing`), `summary` (1–2 plain
   sentences), `released_on` (ship date), plus optional `pro_tips` (list),

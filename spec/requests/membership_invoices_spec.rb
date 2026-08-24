@@ -15,6 +15,15 @@ RSpec.describe "MembershipInvoices", type: :request do
       end_date: start_date + 1.year - 1.day)
   end
 
+  describe "GET /membership_invoices/:id/edit" do
+    before { sign_in admin }
+
+    it_behaves_like "a page with a change log" do
+      let(:record) { term_for("Renewal") }
+      let(:page_path) { edit_membership_invoice_path(record) }
+    end
+  end
+
   describe "GET /membership_invoices" do
     it "is not available to a signed-out visitor" do
       get membership_invoices_path
@@ -72,6 +81,22 @@ RSpec.describe "MembershipInvoices", type: :request do
         get membership_invoices_path, headers: frame
 
         expect(response.body).to include("No membership invoices yet")
+      end
+
+      it "renders the person-name filter box on the index" do
+        get membership_invoices_path
+
+        expect(response.body).to include("person_name")
+      end
+
+      it "filters the frame results by person name" do
+        term_for("Ada")
+        term_for("Grace")
+
+        get membership_invoices_path(person_name: "Ada"), headers: frame
+
+        expect(response.body).to include("Ada Tester")
+        expect(response.body).not_to include("Grace Tester")
       end
     end
   end

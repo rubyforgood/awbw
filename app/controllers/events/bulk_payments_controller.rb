@@ -7,7 +7,7 @@ module Events
       authorize! @event
       track_view("events.bulk_payments", { event_id: @event.id })
 
-      @event_registrations = @event.event_registrations.active.includes(:registrant)
+      @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
       @submissions = @event.form_submissions
                            .where(role: "bulk_payment")
                            .includes(:person, form_answers: :form_field, payment: :allocations)
@@ -18,7 +18,7 @@ module Events
 
     def create
       authorize! @event
-      @event_registrations = @event.event_registrations.active.includes(:registrant)
+      @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
       @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
 
       submission = @event.form_submissions.find(params[:submission_id])
@@ -149,13 +149,13 @@ module Events
     def assign_allocation_card_data(payment)
       @payment = payment.reload
       @submission = @payment.form_submission
-      @event_registrations = @event.event_registrations.active.includes(:registrant)
+      @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
       @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
     end
 
     def assign_bulk_payment_card_data(submission)
       @submission = submission.reload.decorate
-      @event_registrations = @event.event_registrations.active.includes(:registrant)
+      @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
       @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
     end
 

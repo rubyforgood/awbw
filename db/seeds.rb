@@ -132,6 +132,18 @@ TopicSubscriptionType::CANONICAL.each do |key, attrs|
   TopicSubscriptionType.where(key: key).first_or_create!(name: attrs[:name], event_selector: attrs[:event_selector])
 end
 
+puts "Creating StaffTags…"
+{
+  "Potential future trainer" => "Facilitator we'd consider inviting to train others.",
+  "Sector leader candidate" => "Potential future sector leader.",
+  "Highlight roster" => "Facilitators to spotlight.",
+  "Leads non-English workshops" => "Leads workshops in a language other than English (from annual eval).",
+  "DV Leadership Cohort" => "Possible member of a domestic-violence leadership cohort.",
+  "Foster Care Roundtable outreach" => "Possible outreach for a foster-care roundtable."
+}.each do |name, description|
+  find_or_create_by_name!(StaffTag, name, description: description)
+end
+
 puts "Creating Organization…"
 awbw_org = Organization.find_or_create_by!(name: ENV.fetch("ORGANIZATION_NAME", "AWBW")) do |org|
   org.organization_status = OrganizationStatus.find_by!(name: "Active")
@@ -143,7 +155,8 @@ end
   Affiliation.create!(
     person: user.person,
     organization: awbw_org,
-    position: :leader,
+    title: Affiliation::FACILITATOR_TITLE,
+    primary_contact: true,
     start_date: 1.year.ago.to_date
   )
 end

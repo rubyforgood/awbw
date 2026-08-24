@@ -1,5 +1,5 @@
 class FormsController < ApplicationController
-  before_action :set_form, only: %i[show edit update destroy reorder_field reorder_fields edit_sections update_sections]
+  before_action :set_form, only: %i[show results edit update destroy copy reorder_field reorder_fields edit_sections update_sections]
   before_action :set_dashboard_event, only: %i[show edit edit_sections update update_sections]
 
   def index
@@ -17,6 +17,7 @@ class FormsController < ApplicationController
     @answer_only_identifiers = SmartFormFields::ANSWER_ONLY_IDENTIFIERS
     @return_form = Form.find_by(id: params[:form_id])
     @dashboard_event = Event.find_by(id: params[:event_id])
+    @return_field_id = params[:field_id]
   end
 
   def show
@@ -25,6 +26,13 @@ class FormsController < ApplicationController
     # visibility. The conditional logic itself only runs on the live
     # registration and public registration forms.
     @form_fields = @form.form_fields.reorder(position: :asc)
+  end
+
+  # Aggregated rollup of this form's submissions: select/checkbox questions as
+  # charts, free-text questions as lists of the actual answers.
+  def results
+    authorize! @form
+    @aggregator = FormResponseAggregator.new(@form)
   end
 
   def new
@@ -76,6 +84,13 @@ class FormsController < ApplicationController
 
     @form.destroy!
     redirect_to forms_path, notice: "Form deleted."
+  end
+
+  def copy
+    authorize! @form
+
+    copy = FormCopyService.new(@form).call
+    redirect_to edit_form_path(copy), notice: "Form copied. Now editing \"#{copy.display_name}\"."
   end
 
   def edit_sections

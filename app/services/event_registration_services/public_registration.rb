@@ -30,12 +30,12 @@ module EventRegistrationServices
     ADDITIONAL_FORMS_W9 = "W-9".freeze
 
     # Well-known field_identifiers for the registrant's organization name and
-    # position on the registration form. We name them in organization terms here
-    # as we move the vocabulary away from "agency"; the stored identifiers are
-    # still "agency_*" pending a form-field rename. Kept here so the service,
-    # controller, and specs agree on a single source.
-    ORGANIZATION_NAME_IDENTIFIER = "agency_name".freeze
-    ORGANIZATION_POSITION_IDENTIFIER = "agency_position".freeze
+    # position on the registration form. New forms carry the canonical
+    # "organization_*" names; legacy "agency_*" forms still resolve because
+    # field_value expands both (see FormField.aliased_identifiers). Kept here so
+    # the service, controller, and specs agree on a single source.
+    ORGANIZATION_NAME_IDENTIFIER = "organization_name".freeze
+    ORGANIZATION_POSITION_IDENTIFIER = "organization_position".freeze
 
     # Well-known field_identifier of the "Will someone else be paying?" question
     # seeded after the payment method. Answering it "Yes" sets the registration's
@@ -71,7 +71,7 @@ module EventRegistrationServices
       ActiveRecord::Base.transaction do
         person = find_or_create_person
         sync_person_profile(person)
-        record_mailing_list_consent(person)
+        record_news_subscription(person)
 
         create_mailing_address(person) if field_value("mailing_city").present?
         create_phone_contact(person) if field_value("phone").present?
@@ -156,7 +156,7 @@ module EventRegistrationServices
     end
 
     def field_value(key)
-      field = @registration_form.form_fields.find_by(field_identifier: key)
+      field = @registration_form.form_fields.find_by(field_identifier: FormField.aliased_identifiers(key))
       return nil unless field
       @form_params[field.id.to_s]
     end
@@ -231,8 +231,8 @@ module EventRegistrationServices
     def sync_organization_profile(organization)
       OrganizationServices::SyncProfile.call(
         organization: organization,
-        website: field_value("agency_website"),
-        agency_type: field_value("agency_type")
+        website: field_value("organization_website"),
+        agency_type: field_value("organization_type")
       )
     end
 
@@ -244,28 +244,20 @@ module EventRegistrationServices
       record.update!(attribute => value.strip)
     end
 
-    # Consent is opt-in only and recorded once. An affirmative answer grants
-    # consent (stamping the time and where it came from) when none is on file; we
-    # never clear it from here — withdrawal is a separate, deliberate action — and
-    # we don't keep re-stamping a registrant who already consented.
-    def record_mailing_list_consent(person)
-      return if person.mailing_list_consent_at.present?
-      return unless mailing_list_consent_given?
+    def record_news_subscription(person)
+      return unless communication_consent_given?
 
-      person.update!(
-        mailing_list_consent_at: Time.current,
-        mailing_list_consent_source: mailing_list_consent_source
-      )
+      NewsSubscriptionCapture.call(person: person, source: news_subscription_source)
     end
 
-    def mailing_list_consent_given?
+    def communication_consent_given?
       Array(field_value("communication_consent")).any? { |value| value.to_s.strip.present? }
     end
 
     # Identify the event by start date *and* title — many trainings share a title,
-    # so the leading date is what makes the consent source traceable to one event,
+    # so the leading date is what makes the source traceable to one event,
     # e.g. "2026-06-23 Facilitator Training registration".
-    def mailing_list_consent_source
+    def news_subscription_source
       [ @event.start_date&.to_date&.iso8601, "#{@event.title} registration" ].compact.join(" ")
     end
 
@@ -368,19 +360,19 @@ module EventRegistrationServices
     def create_agency_address(organization)
       OrganizationServices::UpsertAddress.call(
         organization: organization,
-        street_address: field_value("agency_street"),
-        city: field_value("agency_city"),
-        state: field_value("agency_state"),
-        zip_code: field_value("agency_zip"),
-        country: field_value("agency_country")
+        street_address: field_value("organization_street"),
+        city: field_value("organization_city"),
+        state: field_value("organization_state"),
+        zip_code: field_value("organization_zip"),
+        country: field_value("organization_country")
       )
     end
 
     def assign_tags(person, organization)
-      primary_sector_ids = collect_sector_ids(FormField::PRIMARY_SECTOR_FIELD_IDENTIFIERS)
-      additional_sector_ids = collect_sector_ids(FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS)
-      primary_age_ids = collect_ids_from_checkboxes("primary_age_group")
-      additional_age_ids = collect_ids_from_checkboxes("additional_age_group")
+      primary_sector_ids = collect_ids_across(FormField::PRIMARY_SECTOR_FIELD_IDENTIFIERS)
+      additional_sector_ids = collect_ids_across(FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS)
+      primary_age_ids = collect_ids_across(FormField::PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS)
+      additional_age_ids = collect_ids_across(FormField::ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS)
 
       if primary_sector_ids.any? || additional_sector_ids.any?
         SectorTagging.apply(person: person, organizations: [ organization ],
@@ -393,7 +385,7 @@ module EventRegistrationServices
       end
     end
 
-    def collect_sector_ids(identifiers)
+    def collect_ids_across(identifiers)
       identifiers.flat_map { |id| collect_ids_from_checkboxes(id) }
     end
 
@@ -406,7 +398,7 @@ module EventRegistrationServices
     end
 
     def create_event_registration(person)
-      @event.event_registrations.create!(
+      registration = @event.event_registrations.create!(
         registrant: person,
         scholarship_requested: @scholarship_requested,
         w9_requested: w9_requested?,
@@ -414,6 +406,10 @@ module EventRegistrationServices
         expected_payment_method: field_value("payment_method")&.strip.presence,
         someone_else_will_pay: someone_else_will_pay_answer || false
       )
+      # Created "registered", then flipped: on-demand training invites only go
+      # out after the external LMS course is complete (Event#on_demand_facilitator_training?).
+      registration.update!(status: "attended") if @event.on_demand_facilitator_training?
+      registration
     end
 
     # "Will someone else be paying?" — "Yes" means a sponsor or partner covers the
@@ -495,6 +491,7 @@ module EventRegistrationServices
       submission = FormSubmission.create!(person: person, form: @registration_form, event: @event, role: "registration")
       save_form_answers(submission)
       OtherResponses::CaptureFromSubmission.call(submission)
+      Quotes::CaptureFromSubmission.call(submission)
       submission
     end
 
@@ -504,6 +501,7 @@ module EventRegistrationServices
       end
       save_form_answers(submission)
       OtherResponses::CaptureFromSubmission.call(submission)
+      Quotes::CaptureFromSubmission.call(submission)
       submission
     end
 
@@ -538,6 +536,7 @@ module EventRegistrationServices
       end
 
       OtherResponses::CaptureFromSubmission.call(submission)
+      Quotes::CaptureFromSubmission.call(submission)
     end
 
     def save_continuing_education_submission(person)

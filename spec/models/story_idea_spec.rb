@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe StoryIdea, type: :model do
-  it_behaves_like "author_creditable", factory: :story_idea
+  it_behaves_like "author_creditable", factory: :story_idea, org_credited: false, credits_creator: true
 
   describe "#workshop_title" do
     it "returns workshop title when only workshop is present" do
@@ -70,6 +70,27 @@ RSpec.describe StoryIdea, type: :model do
       results = StoryIdea.search_by_params(organization_id: idea_alpha.organization_id)
       expect(results).to include(idea_alpha)
       expect(results).not_to include(idea_beta)
+    end
+
+    it "filters by author_name matching the credited author" do
+      author = create(:person, first_name: "Bartholomew", last_name: "Snazzlepants")
+      authored = create(:story_idea, title: "Authored", author: author)
+
+      results = StoryIdea.search_by_params(author_name: "Bartholomew")
+
+      expect(results).to include(authored)
+      expect(results).not_to include(idea_alpha, idea_beta)
+    end
+
+    it "filters by author_name matching the submitter when no author is named" do
+      submitter = create(:person, first_name: "Bartholomew", last_name: "Snazzlepants")
+      submitted = create(:story_idea, title: "Submitted", author: nil,
+                                      created_by: create(:user, person: submitter))
+
+      results = StoryIdea.search_by_params(author_name: "Bartholomew")
+
+      expect(results).to include(submitted)
+      expect(results).not_to include(idea_alpha, idea_beta)
     end
   end
 end

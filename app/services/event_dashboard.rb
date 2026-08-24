@@ -63,6 +63,23 @@ class EventDashboard
     attendance_count_for("no_show")
   end
 
+  # Registrations transferred in from another event. FK-backed (an incoming reg
+  # keeps its own real status), so it's counted via the transfer link rather than
+  # the status column — parallel to the status rows in the attendance breakdown.
+  def transferred_in_count
+    transferred_in_registrant_ids.size
+  end
+
+  def transferred_in_registrants
+    people_sorted(transferred_in_registrant_ids)
+  end
+
+  # Whether a registrant (Person id) transferred into this event — for surfaces
+  # that recognize them but flag that their money is billed to the source event.
+  def transferred_in_recipient?(person_id)
+    transferred_in_registrant_ids.include?(person_id)
+  end
+
   # Registrations with an attendance outcome on record (attended / incomplete /
   # no-show).
   def attendance_outcome_count
@@ -127,7 +144,7 @@ class EventDashboard
   end
 
   def scholarship_recipient_count
-    scholarships.distinct.count(:recipient_id)
+    recognized_scholarships.map(&:recipient_id).uniq.size
   end
 
   # This event's registrants grouped by the city of the organization linked on
@@ -152,7 +169,7 @@ class EventDashboard
   # file as form answers. Sector answers are normalized under the "sector" key
   # (see #header_answers_by_applicant) so the view reads one key regardless of
   # which sector field identifier the answer was stored under.
-  HEADER_ANSWER_IDENTIFIERS = (FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS + %w[primary_age_group]).freeze
+  HEADER_ANSWER_IDENTIFIERS = (FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS + FormField::PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS).freeze
 
   # The key sector answers are filed under in the per-applicant header hash.
   HEADER_SECTOR_KEY = "sector".freeze
@@ -164,8 +181,13 @@ class EventDashboard
   # Person ids of this event's scholarship recipients — the lightweight id list
   # behind #scholarship_applicants (no includes/sort), for scoping the recipients
   # charts frame, which only needs their ids. Public: the controller calls it.
+  # Includes registrants transferred in with an award on their source reg — they
+  # are recognized recipients here even though the dollars stay on the source. (#1944)
   def scholarship_applicant_ids
-    @scholarship_applicant_ids ||= active_registrations.where(scholarship_requested: true).pluck(:registrant_id)
+    @scholarship_applicant_ids ||= (
+      active_registrations.where(scholarship_requested: true).pluck(:registrant_id) +
+      recognized_scholarships.map(&:recipient_id)
+    ).uniq
   end
 
   def scholarship_applicants
@@ -262,8 +284,7 @@ class EventDashboard
   # scholarship wins if a person has several, preferring a live award over a
   # declined one so a re-award isn't hidden behind the decline it replaced.
   def scholarship_by_recipient
-    @scholarship_by_recipient ||= all_scholarships
-      .includes(grant: :funder)
+    @scholarship_by_recipient ||= (all_scholarships.includes(grant: :funder).to_a + transferred_in_source_scholarships)
       .group_by(&:recipient_id)
       .transform_values { |awards| awards.reject(&:agreement_declined?).first || awards.first }
   end
@@ -349,7 +370,7 @@ class EventDashboard
   # Per-registrant cents still owed after payments and scholarships, keyed by
   # Person id. Aggregates across a person's registrations; sums to outstanding_cents.
   def registration_due_by_registrant
-    @registration_due_by_registrant ||= active_registration_ids.each_with_object(Hash.new(0)) do |id, map|
+    @registration_due_by_registrant ||= billable_registration_ids.each_with_object(Hash.new(0)) do |id, map|
       due = [ event.cost_cents.to_i - allocated_by_registration.fetch(id, 0), 0 ].max
       next if due.zero?
       registrant_id = registrant_id_by_registration[id]
@@ -362,16 +383,16 @@ class EventDashboard
     registration_allocations.where(source_type: "Payment").sum(:amount)
   end
 
-  # Still owed across all active registrations, after payments and scholarships.
+  # Still owed across all billable registrations, after payments and scholarships.
   def outstanding_cents
-    active_registration_ids.sum do |id|
+    billable_registration_ids.sum do |id|
       [ event.cost_cents.to_i - allocated_by_registration.fetch(id, 0), 0 ].max
     end
   end
 
-  # Full-price value of all active registrations (before scholarships/discounts).
+  # Full-price value of all billable registrations (before scholarships/discounts).
   def total_cents
-    event.cost_cents.to_i * registrant_count
+    event.cost_cents.to_i * billable_registration_ids.size
   end
 
   # Registration-fee subtotal: money received plus money still owed. This is the
@@ -412,13 +433,13 @@ class EventDashboard
   end
 
   def paid_count
-    return registrant_count if free?
-    active_registration_ids.count { |id| allocated_by_registration.fetch(id, 0) >= event.cost_cents.to_i }
+    return billable_registration_ids.size if free?
+    billable_registration_ids.count { |id| allocated_by_registration.fetch(id, 0) >= event.cost_cents.to_i }
   end
 
   def unpaid_count
     return 0 if free?
-    registrant_count - paid_count
+    billable_registration_ids.size - paid_count
   end
 
   # Registrants whose cost is fully covered (payments and/or completed
@@ -428,7 +449,7 @@ class EventDashboard
   end
 
   def unpaid_registrants
-    @unpaid_registrants ||= people_sorted(registrants_for(active_registration_ids - paid_registration_ids))
+    @unpaid_registrants ||= people_sorted(registrants_for(billable_registration_ids - paid_registration_ids))
   end
 
   # --- Continuing-education fees ---------------------------------------------
@@ -648,7 +669,7 @@ class EventDashboard
   # roster's CE column: its icon links to editing this record when present.
   def ce_registration_by_registrant
     @ce_registration_by_registrant ||= ce_registrations.each_with_object({}) do |ce_registration, map|
-      registrant_id = registrant_id_by_registration[ce_registration.event_registration_id]
+      registrant_id = ce_registrant_id_by_registration[ce_registration.event_registration_id]
       map[registrant_id] ||= ce_registration if registrant_id
     end
   end
@@ -784,8 +805,8 @@ class EventDashboard
   end
 
   # Every age group (primary + additional) served, read from registrants'
-  # answers to BOTH the "primary_age_group" and "additional_age_group"
-  # registration questions, backing the "All age groups" chart. The
+  # answers to BOTH the primary and additional age group registration
+  # questions, backing the "All age groups" chart. The
   # "Primary age group" chart instead uses #age_groups / #age_group_counts,
   # which read only the primary question.
   def all_age_groups
@@ -1005,6 +1026,14 @@ class EventDashboard
       .pluck(:event_registration_id)
   end
 
+  # The money basis: active registrations that owe THIS event, i.e. excluding
+  # transferred-in regs (whose balance lives on their source registration). Kept
+  # distinct from registrant_count/active ids — a transferred-in registrant still
+  # counts in the headcount and attendance, just not in the financial totals.
+  def billable_registration_ids
+    @billable_registration_ids ||= active_registrations.not_transferred_in.pluck(:id)
+  end
+
   def registrant_ids
     @registrant_ids ||= active_registrations.pluck(:registrant_id)
   end
@@ -1017,6 +1046,11 @@ class EventDashboard
       .each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |(status, registrant_id), map|
         map[status] << registrant_id
       end
+  end
+
+  # Registrant (Person) ids for registrations transferred in from another event.
+  def transferred_in_registrant_ids
+    @transferred_in_registrant_ids ||= event.event_registrations.transferred_in.pluck(:registrant_id)
   end
 
   # The event's own start date, not #reference_date's today-fallback: an undated
@@ -1032,6 +1066,28 @@ class EventDashboard
   # numbers regardless of affiliations that have started or ended since.
   def reference_date
     @reference_date ||= (event.start_date || Date.current).to_date
+  end
+
+  # Scholarships to RECOGNIZE recipients at this event: awards on this event's own
+  # registrations, plus awards on the SOURCE registrations of anyone transferred
+  # in (their dollars stay on the source event — see #scholarships and the
+  # billable basis — but they're still a scholarship recipient here). Recognition
+  # only: drives the recipient "hat", the recipient count, and the recipients
+  # page; NOT the dollar totals. (#1944)
+  def recognized_scholarships
+    @recognized_scholarships ||= scholarships.includes(grant: :funder).to_a + transferred_in_source_scholarships
+  end
+
+  # The source registrations' scholarships for everyone transferred into this
+  # event — recognized here, but billed to the source event.
+  def transferred_in_source_scholarships
+    source_ids = active_registrations.transferred_in.pluck(:transferred_from_registration_id)
+    return [] if source_ids.empty?
+
+    Scholarship.joins(:allocation)
+      .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: source_ids })
+      .includes(grant: :funder)
+      .to_a
   end
 
   # Grouping key for an applicant's funder: the funder identity when the
@@ -1147,13 +1203,30 @@ class EventDashboard
     @allocated_by_registration ||= registration_allocations.group(:allocatable_id).sum(:amount)
   end
 
-  # Active continuing-education registrations for this event: those tied to an
-  # active event registration. The basis for every CE money figure and for the
-  # CE registrant counts / pie.
+  # CE money/counts follow the CE record, not the registration billing basis: they
+  # count every CE record on a registration of this event that wasn't cancelled or
+  # a no-show — including a transferred-out reg's paid stub (counted here, where it
+  # was paid) and a transferred-in reg's own carried record (counted at the event it
+  # now credits). (#1944)
+  def ce_basis_registration_ids
+    @ce_basis_registration_ids ||= event.event_registrations.where.not(status: %w[ cancelled no_show ]).pluck(:id)
+  end
+
+  # Continuing-education registrations counted for this event — the basis for every
+  # CE money figure and for the CE registrant counts / pie.
   def ce_registrations
     @ce_registrations ||= ContinuingEducationRegistration
-      .where(event_registration_id: active_registration_ids)
+      .where(event_registration_id: ce_basis_registration_ids)
       .to_a
+  end
+
+  # Registrant (Person) id per registration in the CE basis. Distinct from
+  # #registrant_id_by_registration (active regs only) because CE also counts a
+  # transferred-out reg's stub, whose reg is inactive. (#1944)
+  def ce_registrant_id_by_registration
+    @ce_registrant_id_by_registration ||= event.event_registrations
+      .where(id: ce_registrations.map(&:event_registration_id).uniq)
+      .pluck(:id, :registrant_id).to_h
   end
 
   def ce_allocations
@@ -1187,7 +1260,7 @@ class EventDashboard
   def ce_unpaid_registrant_ids
     @ce_unpaid_registrant_ids ||= ce_registrations
       .select { |ce_registration| ce_due_cents(ce_registration).positive? }
-      .filter_map { |ce_registration| registrant_id_by_registration[ce_registration.event_registration_id] }
+      .filter_map { |ce_registration| ce_registrant_id_by_registration[ce_registration.event_registration_id] }
       .uniq
   end
 
@@ -1201,7 +1274,7 @@ class EventDashboard
   # { Person id => cents } hash, dropping zeros.
   def ce_cents_by_registrant
     ce_registrations.each_with_object(Hash.new(0)) do |ce_registration, map|
-      registrant_id = registrant_id_by_registration[ce_registration.event_registration_id]
+      registrant_id = ce_registrant_id_by_registration[ce_registration.event_registration_id]
       next unless registrant_id
       cents = yield(ce_registration)
       map[registrant_id] += cents if cents.positive?
@@ -1284,7 +1357,7 @@ class EventDashboard
   end
 
   def paid_registration_ids
-    @paid_registration_ids ||= active_registration_ids.select do |id|
+    @paid_registration_ids ||= billable_registration_ids.select do |id|
       allocated_by_registration.fetch(id, 0) >= event.cost_cents.to_i
     end
   end
@@ -1360,7 +1433,7 @@ class EventDashboard
   # registrants' "primary_age_group" registration answers. Deduped per
   # [ person, category ].
   def age_group_answer_rows
-    @age_group_answer_rows ||= age_group_rows_for(%w[primary_age_group])
+    @age_group_answer_rows ||= age_group_rows_for(FormField::PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS)
   end
 
   # Same, but across BOTH the primary and additional age group questions —

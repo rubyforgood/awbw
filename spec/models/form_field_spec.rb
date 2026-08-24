@@ -441,8 +441,8 @@ RSpec.describe FormField do
     end
 
     context "with dynamically-sourced options" do
-      it "accepts a published Sector id and rejects others for a service-area field" do
-        field = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_service_area_single")
+      it "accepts a published Sector id and rejects others for a primary sector field" do
+        field = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_sector")
         offered = create(:sector, :published)
         unpublished = create(:sector, :unpublished)
 
@@ -451,22 +451,13 @@ RSpec.describe FormField do
         expect(field.answer_inclusion_error("999999")).to eq("has an invalid selection")
       end
 
-      # The canonical identifiers, the legacy "primary_sector" additional name,
-      # and the legacy "service area" names must all behave identically so
-      # existing form data keeps resolving.
-      {
-        "sector" => %w[primary_sector_single additional_sectors],
-        "sector (legacy additional name)" => %w[primary_sector_single primary_sector],
-        "service area (legacy)" => %w[primary_service_area_single primary_service_area]
-      }.each do |scheme, (primary_id, additional_id)|
-        it "rejects the Other sector for the primary #{scheme} field but accepts it for additional" do
-          other = create(:sector, :published, name: "Other")
-          primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: primary_id)
-          additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: additional_id)
+      it "rejects the Other sector for the primary sector field but accepts it for additional" do
+        other = create(:sector, :published, name: "Other")
+        primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_sector")
+        additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_sectors")
 
-          expect(primary.answer_inclusion_error(other.id.to_s)).to eq("has an invalid selection")
-          expect(additional.answer_inclusion_error([ other.id.to_s ])).to be_nil
-        end
+        expect(primary.answer_inclusion_error(other.id.to_s)).to eq("has an invalid selection")
+        expect(additional.answer_inclusion_error([ other.id.to_s ])).to be_nil
       end
 
       it "accepts a published Category id from the backing type for a category field" do
@@ -485,7 +476,7 @@ RSpec.describe FormField do
         adults = create(:category, :published, category_type: type, name: "Adults (18+)")
         unpublished = create(:category, :unpublished, category_type: type, name: "Retired range")
         primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_age_group")
-        additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_age_group")
+        additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_age_groups")
 
         # Age groups have no catch-all to drop (unlike the additional sector field's
         # "Other"), so both fields offer exactly the published categories.
@@ -494,11 +485,20 @@ RSpec.describe FormField do
         expect(additional.answer_inclusion_error([ unpublished.id.to_s ])).to eq("has an invalid selection")
       end
 
+      it "backs the additional age group field under its legacy singular identifier too" do
+        type = create(:category_type, name: "AgeRange")
+        offered = create(:category, :published, category_type: type, name: "Teens (13-17)")
+        legacy = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_age_group")
+
+        expect(legacy.dynamic_categories).to contain_exactly(offered)
+        expect(legacy.answer_inclusion_error([ offered.id.to_s ])).to be_nil
+      end
+
       it "accepts a folded \"Other: <text>\" value for the additional sectors field" do
         create(:sector, :published, name: "Other")
         mental_health = create(:sector, :published, name: "Mental Health")
         additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_sectors")
-        primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_sector_single")
+        primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_sector")
 
         # The "Other" Sector renders a free-text box on the additional checkboxes,
         # which submits the folded "Other: <text>" (or a bare "Other"); both pass.
@@ -540,6 +540,41 @@ RSpec.describe FormField do
     it "returns false for an ordinary field" do
       field = build(:form_field, form: form, field_identifier: "how_did_you_hear")
       expect(field.fixed_options?).to be false
+    end
+  end
+
+  describe "#quote_field?" do
+    let(:form) { create(:form) }
+
+    it "returns true for every quote identifier" do
+      %w[quote quote_body quote_speaker_name quote_age_range].each do |identifier|
+        field = build(:form_field, form: form, field_identifier: identifier)
+        expect(field.quote_field?).to be(true), "expected #{identifier} to be a quote field"
+      end
+    end
+
+    it "returns false for an ordinary field" do
+      field = build(:form_field, form: form, field_identifier: nil, name: "Favorite color")
+      expect(field.quote_field?).to be false
+    end
+  end
+
+  describe "#quote_related?" do
+    let(:form) { create(:form) }
+
+    it "is true for the quote identifier" do
+      field = build(:form_field, form: form, field_identifier: "quote", name: "Anything")
+      expect(field.quote_related?).to be true
+    end
+
+    it "is true when the name mentions quote, regardless of identifier" do
+      field = build(:form_field, form: form, field_identifier: nil, name: "Share a Quote from a participant")
+      expect(field.quote_related?).to be true
+    end
+
+    it "is false for an unrelated field" do
+      field = build(:form_field, form: form, field_identifier: nil, name: "Favorite color")
+      expect(field.quote_related?).to be false
     end
   end
 
@@ -617,6 +652,39 @@ RSpec.describe FormField do
     it "falls back to a humanized label for unmapped types" do
       field = build(:form_field, form: form, answer_type: :free_form_input_one_line)
       expect(field.answer_type_label).to eq("One line")
+    end
+  end
+
+  describe ".aliased_identifiers" do
+    it "expands a canonical organization identifier to its canonical and legacy names" do
+      expect(described_class.aliased_identifiers("organization_name")).to eq(%w[organization_name agency_name])
+    end
+
+    it "expands a legacy agency identifier to the same canonical and legacy names" do
+      expect(described_class.aliased_identifiers("agency_type")).to eq(%w[organization_type agency_type])
+    end
+
+    it "returns the identifier alone when it isn't a renamed organization field" do
+      expect(described_class.aliased_identifiers("first_name")).to eq(%w[first_name])
+    end
+  end
+
+  describe "#matches_identifier?" do
+    let(:form) { create(:form) }
+
+    it "matches a field carrying the canonical organization identifier" do
+      field = build(:form_field, form: form, field_identifier: "organization_website")
+      expect(field.matches_identifier?("organization_website")).to be(true)
+    end
+
+    it "matches a field carrying the legacy agency identifier against the canonical name" do
+      field = build(:form_field, form: form, field_identifier: "agency_website")
+      expect(field.matches_identifier?("organization_website")).to be(true)
+    end
+
+    it "does not match an unrelated identifier" do
+      field = build(:form_field, form: form, field_identifier: "phone")
+      expect(field.matches_identifier?("organization_website")).to be(false)
     end
   end
 end

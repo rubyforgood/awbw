@@ -499,16 +499,18 @@ RSpec.describe "Notifications", type: :request do
                  recipient_role: :person,
                  custom_message: "See you tomorrow!",
                  custom_subject: "Reminder: see you tomorrow",
-                 hide_event_card: true)
+                 hide_event_card: true,
+                 hide_ticket_button: true)
         end
 
-        it "carries the composed message, subject, and hide-card choice onto the resent copy" do
+        it "carries the composed message, subject, and hide choices onto the resent copy" do
           post resend_notification_path(reminder)
 
           resent = Notification.last
           expect(resent.custom_message).to eq("See you tomorrow!")
           expect(resent.custom_subject).to eq("Reminder: see you tomorrow")
           expect(resent.hide_event_card).to be(true)
+          expect(resent.hide_ticket_button).to be(true)
         end
 
         it "delivers the same email the registrant originally received" do

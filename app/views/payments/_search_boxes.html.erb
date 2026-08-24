@@ -1,19 +1,15 @@
-<!-- Filters — field, label, and button styling modeled on the allocations search. -->
-<% default_btn = "text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-800 shadow-sm" %>
-<% selected_btn = "text-white bg-blue-600 border-blue-600 hover:bg-blue-700 hover:text-white shadow-md ring-2 ring-blue-300" %>
+<!-- Filters — field and label styling modeled on the allocations search. -->
 <% field_class = search_field_class %>
 <% label_class = search_label_class %>
 <% placeholder_select_class = "#{field_class} search-select-placeholder" %>
 
-<div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
+<div class="mb-6 rounded-lg border border-gray-200 bg-white p-4">
   <%= form_tag payments_path, method: :get, class: "space-y-4",
     data: {
       controller: "collection",
-      turbo_frame: "payments_results",
-      collection_unselected_class: default_btn,
-      collection_selected_class: selected_btn
+      turbo_frame: "payments_results"
     }, autocomplete: "off" do %>
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
       <div class="md:col-span-2">
         <label for="person_id" class="<%= label_class %>">Person</label>
 
@@ -42,7 +38,15 @@
           prompt: "Search for an organization" %>
       </div>
 
-      <div class="md:col-span-4">
+      <div class="md:col-span-2">
+        <label for="person_name" class="<%= label_class %>">Person name</label>
+
+        <%= text_field_tag "person_name", params[:person_name],
+          placeholder: "e.g. Jane Doe",
+          class: field_class %>
+      </div>
+
+      <div class="md:col-span-2">
         <label for="search" class="<%= label_class %>">Search metadata / Stripe charge ID</label>
 
         <%= text_field_tag "search", params[:search],
@@ -105,7 +109,7 @@
           class: placeholder_select_class %>
       </div>
 
-      <div class="md:col-span-2 flex flex-col">
+      <div class="flex flex-col md:col-span-2">
         <span class="<%= label_class %>" aria-hidden="true">&nbsp;</span>
 
         <%= link_to "Clear filters", payments_path, class: "btn btn-utility-outline flex-1 w-full justify-center", data: { action: "collection#clearAndSubmit" } %>

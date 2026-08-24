@@ -230,6 +230,47 @@ RSpec.describe EventPolicy, type: :policy do
     end
   end
 
+  describe "#person_form_submission?" do
+    let(:owned_event) { build_stubbed :event, created_by: regular_user }
+    let(:person) { build_stubbed :person }
+
+    def policy_for_person(record:, user:, person: nil)
+      described_class.new(record, user: user, person: person)
+    end
+
+    context "with admin user" do
+      subject { policy_for_person(record: published_event, user: admin_user, person: person) }
+
+      it { is_expected.to be_allowed_to(:person_form_submission?) }
+    end
+
+    context "with owner" do
+      subject { policy_for_person(record: owned_event, user: regular_user, person: person) }
+
+      it { is_expected.to be_allowed_to(:person_form_submission?) }
+    end
+
+    context "when the viewer is that person" do
+      let(:viewer) { build_stubbed :user, person: person }
+
+      subject { policy_for_person(record: published_event, user: viewer, person: person) }
+
+      it { is_expected.to be_allowed_to(:person_form_submission?) }
+    end
+
+    context "with a non-owner regular user viewing someone else" do
+      subject { policy_for_person(record: published_event, user: regular_user, person: person) }
+
+      it { is_expected.not_to be_allowed_to(:person_form_submission?) }
+    end
+
+    context "with no user" do
+      subject { policy_for_person(record: published_event, user: nil, person: person) }
+
+      it { is_expected.not_to be_allowed_to(:person_form_submission?) }
+    end
+  end
+
   describe "#registrants?" do
     let(:owned_event) { build_stubbed :event, created_by: regular_user }
 

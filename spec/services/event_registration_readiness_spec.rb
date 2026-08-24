@@ -42,10 +42,37 @@ RSpec.describe EventRegistrationReadiness do
       expect(readiness.event_ready_issues).not_to include("Payment due")
     end
 
+    it "does not flag payment for a transferred-in registration (paid on the source)" do
+      source = create(:event_registration, status: "transferred_out")
+      registration.update!(transferred_from_registration: source)
+      link_org(registration)
+
+      expect(readiness.event_ready_issues).not_to include("Payment due")
+      expect(readiness.event_ready?).to be(true)
+    end
+
     it "ignores the intends-to-pay flag (access only, not readiness)" do
       registration.update!(intends_to_pay: true)
 
       expect(readiness.event_ready_issues).to include("Payment due")
+    end
+
+    it "flags a transfer-out whose destination hasn't been recorded yet" do
+      pay(registration, 1000)
+      link_org(registration)
+      registration.update!(status: "transferred_out")
+
+      expect(readiness.event_ready_issues).to include("Transfer out has no destination recorded")
+      expect(readiness.event_ready?).to be(false)
+    end
+
+    it "clears the transfer flag once the destination is recorded" do
+      pay(registration, 1000)
+      link_org(registration)
+      registration.update!(status: "transferred_out")
+      create(:event_registration, registrant: registration.registrant, transferred_from_registration: registration)
+
+      expect(readiness.event_ready_issues).not_to include("Transfer out has no destination recorded")
     end
 
     context "organization" do
@@ -184,6 +211,31 @@ RSpec.describe EventRegistrationReadiness do
     end
   end
 
+  describe "CE certificate (two-record model, #1944)" do
+    let(:source) { create(:event_registration, event: create(:event, ce_hours_offered: 6, cost_cents: 0), status: "transferred_out") }
+    let(:destination) do
+      create(:event_registration, event: create(:event, ce_hours_offered: 6, cost_cents: 0),
+        registrant: source.registrant, status: "attended", transferred_from_registration: source)
+    end
+    let!(:ce) do
+      create(:continuing_education_registration, event_registration: destination, cost_cents: 0,
+        professional_license: create(:professional_license, person: source.registrant), skip_event_defaults: true)
+    end
+
+    it "flags the destination reg's roster with its own CE certificate still pending" do
+      expect(described_class.new(destination).completion_issues).to include("CE certificate not sent")
+    end
+
+    it "clears once the destination reg's CE has been issued" do
+      ce.mark_certificate_sent!
+      expect(described_class.new(destination).completion_issues).not_to include("CE certificate not sent")
+    end
+
+    it "does not flag CE on the source reg, which holds no CE record of its own here" do
+      expect(described_class.new(source).certificate_issues).not_to include("CE certificate not sent")
+    end
+  end
+
   describe "#status" do
     it "is :not_ready when a pre-event condition is outstanding" do
       # default registrant is unpaid on a paid event
@@ -245,6 +297,13 @@ RSpec.describe EventRegistrationReadiness do
       pay(registration, 1000)
 
       expect(readiness.event_ready_reason).to eq("Org validation")
+    end
+
+    it "prioritizes an incomplete transfer over other pre-event reasons" do
+      # Unpaid + no org would normally read "Payment due"; the incomplete transfer wins.
+      registration.update!(status: "transferred_out")
+
+      expect(readiness.event_ready_reason).to eq("Transfer incomplete")
     end
   end
 

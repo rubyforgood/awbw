@@ -10,6 +10,11 @@ RSpec.describe "Scholarships", type: :request do
   before { sign_in admin }
 
   describe "GET /scholarships/:id/edit" do
+    it_behaves_like "a page with a change log" do
+      let(:record) { scholarship }
+      let(:page_path) { edit_scholarship_path(scholarship) }
+    end
+
     it "renders the cost summary with event cost, scholarship amount, and still owed" do
       get edit_scholarship_path(scholarship)
 
@@ -225,6 +230,29 @@ RSpec.describe "Scholarships", type: :request do
     end
   end
 
+  describe "blocking scholarship creation on a transferred-in registration" do
+    let(:source) { create(:event_registration, event: event) }
+    let(:transferred_in) do
+      create(:event_registration, event: create(:event, cost_cents: 5000),
+        registrant: source.registrant, transferred_from_registration: source)
+    end
+
+    it "redirects the new form to the source registration, where the scholarship belongs" do
+      get new_scholarship_path(allocatable_sgid: transferred_in.to_sgid.to_s, return_to: "registration")
+
+      expect(response).to redirect_to(edit_event_registration_path(source))
+    end
+
+    it "creates nothing and redirects the POST to the source registration" do
+      expect {
+        post scholarships_path(allocatable_sgid: transferred_in.to_sgid.to_s, return_to: "registration"),
+             params: { scholarship: { amount_dollars: "40" } }
+      }.not_to change(Scholarship, :count)
+
+      expect(response).to redirect_to(edit_event_registration_path(source))
+    end
+  end
+
   describe "back link follows the page the user came from" do
     it "links the new page back to the registrants roster (anchored to the row) when return_to=registrants" do
       get new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants")
@@ -259,10 +287,11 @@ RSpec.describe "Scholarships", type: :request do
   end
 
   describe "comments and communications on the edit page" do
-    it "renders the comments section" do
+    it "renders the combined comments and communications section" do
       get edit_scholarship_path(scholarship)
-      expect(response.body).to include("Scholarship comments")
+      expect(response.body).to include("Comments &amp; communications")
       expect(response.body).to include("Add comment")
+      expect(response.body).to include("Add communication")
     end
 
     it "saves a new comment with its topic, authored by the current user" do

@@ -241,7 +241,9 @@ class BuiltinCalloutCards
   # behind it holds the decline confirmation — but with nothing left to act on.
   def scholarship_status_card
     return if config_gap?("scholarship")
-    return unless registration.scholarship_requested?
+    # A transferred-in recipient's award lives on the source; keep the card so they
+    # can reach it (the page routes to the original registration). (#1944)
+    return unless registration.scholarship_requested? || registration.scholarship_recipient?
     # Awarded is display-only: the scholarship record exists earlier, but the award
     # is only shown as awarded once the recipient signs the agreement. Until then
     # the card prompts them to accept.
@@ -418,6 +420,7 @@ class BuiltinCalloutCards
   # so the card only appears once someone's been connected in the Event staff section.
   def staff_card
     return if config_gap?("staff")
+    return if registration.transferred_out?
     Card.new(icon_class: "fa-solid fa-people-group", color: "blue",
              title: "Meet the staff",
              subtitle: "The team for this event",
@@ -425,9 +428,11 @@ class BuiltinCalloutCards
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
-  # Shown only when the event has a videoconference URL set.
+  # Shown only when the event has a videoconference URL set. Hidden once the
+  # registrant has transferred out — they no longer attend this event. (#1944)
   def videoconference_card
     return if config_gap?("videoconference")
+    return if registration.transferred_out?
     Card.new(icon_class: "fa-solid fa-video", color: "blue",
              title: "Videoconference",
              subtitle: "Join details and add to calendar links",

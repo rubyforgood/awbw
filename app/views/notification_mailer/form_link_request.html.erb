@@ -1,0 +1,28 @@
+<h1>The <%= @form_name %> to complete</h1>
+
+<div style="margin-top: 36px; text-align: left;">
+  <p>
+    Hello <strong><%= @person.name %></strong>,
+  </p>
+
+  <p>
+    <% if @sender %>
+      <%= @sender.full_name %> from A Window Between Worlds sent you the <strong><%= @form_name %></strong> to complete.
+    <% else %>
+      A Window Between Worlds sent you the <strong><%= @form_name %></strong> to complete.
+    <% end %>
+    Click the button below to fill it out.
+  </p>
+
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="<%= @url %>" class="button">Complete the form</a>
+  </p>
+
+  <p>
+    If you have any questions, just reply to this email.
+  </p>
+</div>
+
+<% content_for :fallback_url do %>
+  <%= @url %>
+<% end %>

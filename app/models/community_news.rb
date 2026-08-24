@@ -1,5 +1,6 @@
 class CommunityNews < ApplicationRecord
   include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable, AuthorCreditable
+  credits_to_org
 
   has_rich_text :rhino_body
 
@@ -29,11 +30,8 @@ class CommunityNews < ApplicationRecord
   # (created before author became a person) remain valid.
   validates :title, presence: true, length: { maximum: 150 }
   validates :rhino_body, presence: true
-
-  # Unattributed community news is credited to the organization's staff.
-  def missing_author_label
-    "AWBW Staff"
-  end
+  validates :reference_url, length: { maximum: 255 }
+  validates :youtube_url, length: { maximum: 255 }
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
@@ -45,9 +43,11 @@ class CommunityNews < ApplicationRecord
   # SearchCop
   include SearchCop
   search_scope :search do
-    attributes :title, :published, person_first: "people.first_name", person_last: "people.last_name"
+    attributes :title, :published
 
-    scope { join_rich_texts.left_joins(:author) }
+    # Author names are deliberately not indexed here — see Story. Person-name
+    # search goes through `by_credited_person_name`, which honors the preference.
+    scope { join_rich_texts }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
   end
 
@@ -69,9 +69,9 @@ class CommunityNews < ApplicationRecord
       community_news = self.search(conditions)
     end
 
-    # SearchCop's free-text query covers title + body + the explicit author. Also
-    # match the credited author/legacy author/creator by name, OR-ed in via id
-    # subqueries so the extra person joins stay isolated from SearchCop's joins.
+    # SearchCop's free-text query covers title + body only. Match the credited author
+    # by name separately, OR-ed in via id subqueries so the extra person joins stay
+    # isolated from SearchCop's joins.
     if params[:query].present?
       community_news = self.where(id: community_news.select("community_news.id"))
                            .or(self.where(id: by_credited_person_name(params[:query]).select("community_news.id")))

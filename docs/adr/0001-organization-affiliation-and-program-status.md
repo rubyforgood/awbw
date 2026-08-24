@@ -9,7 +9,7 @@ The organization profile/edit page surfaces several affiliation-derived figures
 that are easy to confuse with one another:
 
 - **Affiliated since**
-- **Facilitations/program since**
+- **Facilitators since**
 - an org-wide **status chip** (Active / Formerly active / Never active)
 - per-event **program-status chips** (New / Ongoing / Reinstate)
 
@@ -44,11 +44,15 @@ with a registrant**. Rendered as merged year-based periods
 (`AffiliationPeriods.label`), e.g. `2010-2012, 2026`; falls back to the org's own
 `start_date`, then blank. See `OrganizationDecorator#affiliated_since_display`.
 
-### D2 — "Art program since": facilitator affiliations only, month precision
+### D2 — "Facilitators since": facilitator affiliations only, month precision
+
+*Formerly labeled "Art program since" in the UI; the decorator method is still
+`program_since_display`, so code, old references, and the current label all name
+the same figure.*
 
 Same merged-period rendering as D1 but over **facilitator** affiliations only,
 and at **month** precision (`AffiliationPeriods.label(…, precision: :month)`) —
-when a program started or lapsed is the point of the figure. Ongoing reads
+when facilitating started or lapsed is the point of the figure. Ongoing reads
 `Feb 2024`, closed reads `Aug 2015 – Jun 2018`, e.g.
 `Aug 2015 – Jun 2018, Feb 2024`. Blank when the org has never facilitated. See
 `OrganizationDecorator#program_since_display`.
@@ -89,6 +93,9 @@ the warning on a fair number of orgs — that is the drift it exists to surface.
 facilitator affiliations by a single class, `FacilitatorProgramStatus`:
 
 - **New** — no facilitator affiliation started **before** the anchor (strict `<`).
+  An affiliation dated **on** the anchor is the one this event mints (D8), so a
+  first-time org reads New at its own training — including a **same-day**
+  (`start == end`) affiliation dated to the event.
 - **Ongoing** — an earlier facilitator affiliation is **still active** on the
   anchor (no end date, or it ends on/after it).
 - **Reinstated** — earlier facilitator affiliation(s) existed but **all ended**
@@ -97,8 +104,15 @@ facilitator affiliations by a single class, `FacilitatorProgramStatus`:
 `Organization#facilitator_program_status(as_of:)` returns that object;
 `#facilitator_status_on(date)` is the bare symbol for counting and filtering.
 Nothing else classifies a program — the dashboard breakdown, the onboarding
-matrix, the rosters, the org profile/edit chips and the annual report all call
-this one method, so they cannot disagree.
+matrix, the rosters, the org profile/edit chips, the **scholarship index** and
+the annual report all call this one method, so they cannot disagree.
+
+**Each row picks its own anchor.** The scholarship index anchors each award on
+the start date of the training it paid for (`Scholarship#event`, via
+allocation → event registration), so two awards listed side by side are judged
+at their own events rather than at one page-wide "now". An award with no
+registration behind it (grant-first, or funding a CE registration) falls back to
+the year anchor, which `#explanation` labels "no event in view".
 
 The status object also carries **why**: the anchor date, the month the program
 went (or last was) active, and the full facilitator history as merged periods

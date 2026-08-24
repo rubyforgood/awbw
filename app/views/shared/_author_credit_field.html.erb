@@ -1,0 +1,10 @@
+<%# Admin-facing credit preference. Interim, like the submitter forms: the value is
+    recorded but the credited person's profile decides what renders — so this sits
+    alongside the note and divergence warning, which link out to resolve it.
+    Locals: f. %>
+<%= f.input :author_credit_preference,
+            as: :select,
+            collection: AuthorCreditable::ADMIN_FORM_OPTIONS.to_a,
+            include_blank: "None (follow profile)",
+            label: "Credit preference",
+            hint: "Recorded on this item. The author's profile still decides what renders — resolve on the divergences page." %>

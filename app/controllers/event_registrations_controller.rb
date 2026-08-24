@@ -2,7 +2,11 @@ class EventRegistrationsController < ApplicationController
   require "csv"
 
   # show redirects to slug URL; kept for backwards compatibility
-  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding, :toggle_certificate_issued, :update_attendance ]
+  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding, :toggle_certificate_issued, :update_attendance, :transfer, :process_transfer, :revert_transfer ]
+  # A transferred-out reg is locked (issue #1944): its inline write endpoints are
+  # blocked with a warning rather than silently ignored. The full-form `update` is
+  # handled separately (it keeps comments/communications editable).
+  before_action :block_locked_registration, only: [ :update_onboarding, :toggle_certificate_issued, :update_attendance ]
 
   def index
     authorize!
@@ -85,15 +89,22 @@ class EventRegistrationsController < ApplicationController
 
   def update
     authorize! @event_registration
+    warn_if_locked_fields_submitted
     @event_registration.assign_attributes(event_registration_update_params)
     @event_registration.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
     @event_registration.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
 
-    # Inline-logged notifications are addressed to the registrant.
-    recipient_email = @event_registration.registrant&.preferred_email.presence || "n/a"
-    @event_registration.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
-
     if @event_registration.save
+      # Marking transferred out — from the edit-form save OR the inline roster/
+      # onboarding status chip (Turbo) — with no destination yet sends the admin
+      # to the transfer screen to create/link the incoming registration. Handled
+      # before respond_to so both the HTML and Turbo paths redirect (issue #1944).
+      if @event_registration.saved_change_to_status? &&
+         @event_registration.transfer_destination_pending? &&
+         allowed_to?(:transfer?, @event_registration)
+        return redirect_to transfer_event_registration_path(@event_registration, return_to: params[:return_to]), status: :see_other
+      end
+
       notice = "Registration was successfully updated."
       respond_to do |format|
         format.turbo_stream
@@ -195,6 +206,118 @@ class EventRegistrationsController < ApplicationController
     redirect_to attendance_report_path(date, reopen: true), status: :see_other
   end
 
+  # Follow-up screen shown after a registration is marked "transferred out":
+  # pick the destination event so the incoming registration is created/linked
+  # and the transfer trail is preserved (issue #1944).
+  def transfer
+    authorize! @event_registration, to: :transfer?
+    @return_to = params[:return_to]
+    @events = transfer_destination_events
+  end
+
+  def process_transfer
+    authorize! @event_registration, to: :transfer?
+    destination_event = Event.find(params[:destination_event_id])
+
+    # Enforce the same-format rule server-side, not just in the picker: an event
+    # only transfers to another of its own format (on-demand ↔ on-demand). (#1944)
+    unless transfer_destination_events.exists?(destination_event.id)
+      redirect_to transfer_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+        alert: "You can only transfer to another #{@event_registration.event.on_demand? ? "on-demand" : "scheduled"} event.",
+        status: :see_other
+      return
+    end
+
+    # The registrant may already be registered for the destination event, which
+    # would collide with the (registrant, event) uniqueness rule — link that
+    # record as the transfer target instead of creating a duplicate.
+    destination = EventRegistration.find_or_initialize_by(
+      registrant_id: @event_registration.registrant_id,
+      event_id: destination_event.id
+    )
+    # Collapse a double transfer (A→B→C) to two live regs: when the reg being
+    # transferred out is itself a transfer-in, its predecessor is the real origin,
+    # so the new reg points straight there and the middle stop is dropped. (#1944)
+    source = @event_registration.transferred_from_registration || @event_registration
+
+    if destination == source
+      # Transferring back to the origin event undoes the whole chain: restore the
+      # origin to the status it held before it was transferred out, instead of
+      # linking it to itself.
+      destination.status = destination.status_before_transfer.presence || "registered"
+      destination.status_before_transfer = nil
+    else
+      destination.transferred_from_registration = source
+      # Copy the registrant's progress/profile state forward so the new reg reflects
+      # where they left off (money & CE resolve separately). Days attended, expected
+      # payment method, buddy-pay, and the recipients-page feature/shout-out flag. (#1944)
+      copied = {
+        expected_payment_method: @event_registration.expected_payment_method,
+        someone_else_will_pay: @event_registration.someone_else_will_pay,
+        shoutout: @event_registration.shoutout
+      }
+      EventRegistration::DAY_FIELDS.each { |field| copied[field] = @event_registration[field] }
+      destination.assign_attributes(copied)
+    end
+
+    saved = ActiveRecord::Base.transaction do
+      # Re-pointing a completed transfer to a different event: unlink the previously
+      # recorded destination (it becomes a standalone reg) and re-merge its CE back
+      # to the source before re-splitting to the newly chosen event. (#1944)
+      previous = @event_registration.transferred_to_registration
+      if previous && previous.event_id != destination_event.id
+        EventRegistrationServices::TransferContinuingEducation.new(
+          transferred_out: @event_registration, destination: previous
+        ).revert
+        previous.update!(transferred_from_registration: nil)
+      end
+      next false unless destination.save
+      # Carry the transferring reg's org links onto the destination so the new reg
+      # shares the same linked organizations — copied, not moved, so the source
+      # keeps its own. Read before the middle reg is dropped below. (#1944)
+      @event_registration.organizations.each do |organization|
+        destination.event_registration_organizations.find_or_create_by!(organization: organization)
+      end
+      # Split/relocate CE before dropping a collapsing middle reg, so its record
+      # moves forward instead of being cascade-destroyed with the reg. (#1944)
+      EventRegistrationServices::TransferContinuingEducation.new(
+        transferred_out: @event_registration, destination: destination
+      ).call
+      @event_registration.destroy! if @event_registration.transferred_in?
+      true
+    end
+
+    if saved
+      redirect_to edit_event_registration_path(destination, return_to: params[:return_to].presence),
+        notice: "Transfer recorded — #{source.registrant.full_name} is now registered for #{destination_event.title}.",
+        status: :see_other
+    else
+      @return_to = params[:return_to]
+      @events = transfer_destination_events
+      flash.now[:alert] = destination.errors.full_messages.to_sentence
+      render :transfer, status: :unprocessable_content
+    end
+  rescue ActiveRecord::RecordNotFound
+    redirect_to transfer_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+      alert: "Select a destination event to transfer to.", status: :see_other
+  end
+
+  # Undo a transfer-out: restore the reg to its pre-transfer status, and (when a
+  # destination was already recorded) unlink that destination and re-merge its CE
+  # back to the source. (#1944)
+  def revert_transfer
+    authorize! @event_registration, to: :transfer?
+    unless EventRegistrationServices::RevertTransfer.call(registration: @event_registration)
+      redirect_to edit_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+        alert: "This registration isn't transferred out.", status: :see_other
+      return
+    end
+
+    redirect_to edit_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+      notice: "Transfer undone — #{@event_registration.registrant.full_name} is back to #{@event_registration.attendance_status_label.downcase} on #{@event_registration.event.title}.",
+      status: :see_other
+  end
+
   def confirm
     @event_registration = EventRegistration.includes(registrant: :user, event: :location).find(params[:id])
     authorize! @event_registration, to: :confirm?
@@ -271,8 +394,13 @@ class EventRegistrationsController < ApplicationController
   def select_organization
     @event_registration = EventRegistration.find(params[:id])
     authorize! @event_registration, to: :select_organization?
+    return deny_locked_org_edit if @event_registration.editing_locked?
     @person = @event_registration.registrant
-    organization = Organization.find(params[:organization_id])
+    organization = Organization.find_by(id: params[:organization_id])
+    if organization.nil?
+      redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), alert: "Choose an organization to link."
+      return
+    end
 
     notice = link_and_report(organization, verb: "linked", record_fills: true)
 
@@ -282,6 +410,7 @@ class EventRegistrationsController < ApplicationController
   def create_organization
     @event_registration = EventRegistration.find(params[:id])
     authorize! @event_registration, to: :create_organization?
+    return deny_locked_org_edit if @event_registration.editing_locked?
     @person = @event_registration.registrant
     # Build the org from a name the registrant actually typed on the form, so the
     # button can't be used to create an arbitrary org — it only resolves a pending
@@ -310,6 +439,7 @@ class EventRegistrationsController < ApplicationController
   def unlink_organization
     @event_registration = EventRegistration.find(params[:id])
     authorize! @event_registration, to: :unlink_organization?
+    return deny_locked_org_edit if @event_registration.editing_locked?
     organization = Organization.find(params[:organization_id])
 
     # Intentional UX choice: "Unlink" only removes the org from this registration and
@@ -382,6 +512,16 @@ class EventRegistrationsController < ApplicationController
       edit: (cell if reopen), anchor: cell)
   end
 
+  # Events a registrant can be transferred into: published events of the same
+  # format as the one they're leaving — an on-demand event only transfers to
+  # another on-demand event, and a scheduled (non-on-demand) event only to
+  # another scheduled event — excluding the source event, most recent first.
+  def transfer_destination_events
+    Event.where(published: true, on_demand: @event_registration.event.on_demand)
+         .where.not(id: @event_registration.event_id)
+         .order(start_date: :desc)
+  end
+
   # Creates the audited completion row for a checklist step (recording who/when),
   # or removes it — so an unchecked step leaves no trace.
   def toggle_checklist_step(step, completed)
@@ -412,11 +552,43 @@ class EventRegistrationsController < ApplicationController
   end
 
   def event_registration_update_params
+    return locked_editable_params if @event_registration.editing_locked?
     if allowed_to?(:manage?, with: EventRegistrationPolicy)
       event_registration_params
     else
       params.require(:event_registration).permit(:status)
     end
+  end
+
+  # A transferred-out reg keeps only comments and communications editable (#1944).
+  LOCKED_EDITABLE_KEYS = %w[ comments_attributes notifications_attributes ].freeze
+
+  def locked_editable_params
+    params.fetch(:event_registration, {}).permit(
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ]
+    )
+  end
+
+  # Warn rather than silently swallow: if a locked reg's form somehow submits fields
+  # beyond comments/communications, tell the admin they were ignored.
+  def warn_if_locked_fields_submitted
+    return unless @event_registration.editing_locked?
+    ignored = params.fetch(:event_registration, {}).keys.map(&:to_s) - LOCKED_EDITABLE_KEYS
+    return if ignored.empty?
+    flash[:alert] = "This registration was transferred out and is locked — only comments and communications were saved. Undo the transfer to edit anything else."
+  end
+
+  def block_locked_registration
+    return unless @event_registration.editing_locked?
+    redirect_to(request.referer.presence || edit_event_registration_path(@event_registration),
+      alert: "#{@event_registration.registrant&.full_name} was transferred out — this registration is locked. Undo the transfer to make changes.",
+      status: :see_other)
+  end
+
+  def deny_locked_org_edit
+    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+      alert: "This registration was transferred out and is locked. Undo the transfer to change linked organizations."
   end
 
   def csv_export(registrations)
@@ -433,7 +605,7 @@ class EventRegistrationsController < ApplicationController
           r&.preferred_email.to_s,
           r&.phone_number.to_s,
           e&.title.to_s,
-          er.attendance_status_label,
+          er.attendance_status_report_label,
           er.scholarships.any? ? "Yes" : "No",
           er.scholarships.any?(&:tasks_completed?) ? "Yes" : "No",
           cost_required ? er.payment_status_label : "",
@@ -460,8 +632,13 @@ class EventRegistrationsController < ApplicationController
     form = registration.event.registration_form
     return [] unless form
 
+    organization_identifiers = %w[
+      organization_name organization_position organization_website organization_type
+      organization_street organization_city organization_state organization_zip organization_country
+    ]
+    accepted = organization_identifiers.flat_map { |identifier| FormField.aliased_identifiers(identifier) }
     field_ids = form.form_fields
-      .where(field_identifier: %w[agency_name agency_position agency_website agency_type agency_street agency_city agency_state agency_zip agency_country])
+      .where(field_identifier: accepted)
       .pluck(:field_identifier, :id).to_h
 
     entries = registration.registrant.form_submissions
@@ -470,19 +647,24 @@ class EventRegistrationsController < ApplicationController
       .includes(:form_answers)
       .map do |submission|
         answers = submission.form_answers.index_by(&:form_field_id)
-        answer = ->(identifier) { (id = field_ids[identifier]) && answers[id]&.submitted_answer }
+        # Resolve the canonical identifier to whichever spelling this form used
+        # (canonical or legacy "agency_*"), then read its answer.
+        answer = ->(identifier) do
+          id = FormField.aliased_identifiers(identifier).lazy.filter_map { |name| field_ids[name] }.first
+          id && answers[id]&.submitted_answer
+        end
         {
           submission: submission,
-          org_name: answer.call("agency_name"),
-          position: answer.call("agency_position"),
-          website: answer.call("agency_website"),
-          agency_type: answer.call("agency_type"),
+          org_name: answer.call("organization_name"),
+          position: answer.call("organization_position"),
+          website: answer.call("organization_website"),
+          agency_type: answer.call("organization_type"),
           address: {
-            street_address: answer.call("agency_street"),
-            city: answer.call("agency_city"),
-            state: answer.call("agency_state"),
-            zip_code: answer.call("agency_zip"),
-            country: answer.call("agency_country")
+            street_address: answer.call("organization_street"),
+            city: answer.call("organization_city"),
+            state: answer.call("organization_state"),
+            zip_code: answer.call("organization_zip"),
+            country: answer.call("organization_country")
           }
         }
       end
@@ -505,15 +687,6 @@ class EventRegistrationsController < ApplicationController
       .uniq { |name| name.downcase }
   end
 
-  # The job title the registrant typed on the submission that describes this org.
-  # Nil when no submission describes it, so an extra org an admin linked by hand
-  # doesn't inherit the title the registrant wrote about a different one — the
-  # affiliation is created untitled (just "Facilitator") instead.
-  def submitted_position(registration, organization)
-    entry = submission_entry_for(registration, organization)
-    entry && entry[:position]
-  end
-
   # The submission entry whose answers describe `organization`: the one pinned on
   # the link when it was made, else the one whose typed org name matches, else —
   # only when the pairing is unambiguous, i.e. a single submission and a single
@@ -521,8 +694,8 @@ class EventRegistrationsController < ApplicationController
   # admin resolving a typo'd "Acme Inc" to the saved "Acme Corporation". Nil
   # otherwise: an extra org an admin linked by hand isn't the one the registrant
   # wrote about, so none of the submitted answers apply to it.
-  # Memoized per org: each linking action asks five times (profile, address,
-  # position, notice, warning) and the fallback counts the registration's linked orgs.
+  # Memoized per org: a linking action asks for the entry and then again for the
+  # conflict note, and the fallback counts the registration's linked orgs.
   def submission_entry_for(registration, organization, linked_count: nil)
     @submission_entries_by_org ||= {}
     return @submission_entries_by_org[organization.id] if @submission_entries_by_org.key?(organization.id)
@@ -552,14 +725,6 @@ class EventRegistrationsController < ApplicationController
       .pluck(:organization_id, :form_submission_id).to_h
   end
 
-  # The address fields the registrant typed on the submission that describes this
-  # org, as attrs for OrganizationServices::UpsertAddress. Empty when no submission
-  # describes it, so another org's address is never written onto it.
-  def submitted_agency_address(registration, organization)
-    entry = submission_entry_for(registration, organization)
-    (entry && entry[:address]) || {}
-  end
-
   # The submitted answers for this org that differ from a value already on it, for
   # the linking flash and the per-card note. Empty when no submission describes it,
   # so one org's answers are never reported against another.
@@ -577,89 +742,43 @@ class EventRegistrationsController < ApplicationController
 
   # Link the org to the registration, fill what it's missing from the submission
   # that names it (blanks only — curated values are kept and reported as
-  # discrepancies instead), and build the flash notice. The link is created first
-  # so submission_entry_for counts it when deciding whether the pairing is
+  # discrepancies instead), and build the flash notice — via the linking core
+  # shared with the form submission editor. The link row is created first so
+  # submission_entry_for counts it when deciding whether the pairing is
   # unambiguous. `record_fills` keeps a persistent note of what the form changed.
   def link_and_report(organization, verb:, record_fills:)
     link = @event_registration.event_registration_organizations.find_or_create_by!(organization: organization)
     entry = submission_entry_for(@event_registration, organization)
-    profile_changes = sync_org_profile(organization)
-    address_result = link_affiliations_for(@event_registration, organization)
 
-    saved = profile_changes + address_result.changes
+    result = OrganizationServices::LinkSubmittedOrganization.call(
+      person: @event_registration.registrant,
+      organization: organization,
+      entry: entry,
+      scenario: event_linking_scenario(@event_registration.event),
+      training_date: @event_registration.event.start_date,
+      event_registration: @event_registration
+    )
+
     # Pin the pairing even when nothing was filled — an org whose every answer
     # conflicts fills nothing, and that's exactly the one whose note has to survive.
     link.record_form_submission(entry[:submission]) if entry
-    link.record_autofill(saved) if record_fills
-    link_result_notice(organization, verb, saved)
+    # Back-apply the resolution onto the submission itself, so the form
+    # submissions side reads it as linked too (even under a name mismatch).
+    entry[:submission].link_organization!(organization.id) if entry
+    link.record_autofill(result.saved) if record_fills
+
+    warning = result.warning(organization: organization)
+    flash[:warning] = warning if warning
+    result.notice(organization: organization, verb: verb)
   end
 
-  # Fill the linked org's blank type/website from the submission that names it,
-  # and return what was written.
-  def sync_org_profile(organization)
-    entry = submission_entry_for(@event_registration, organization)
-    return [] unless entry
+  # Which linking scenario this registration's event maps to (ADR-0002 D2): an
+  # on-demand facilitator training shares the agreement path's "on_demand"
+  # scenario, a scheduled one is "facilitator_training", and anything else
+  # confers no Facilitator affiliation. Event scenarios never end-date.
+  def event_linking_scenario(event)
+    return "non_facilitator_training" unless event.facilitator_training
 
-    OrganizationServices::SyncProfile.call(
-      organization: organization, overwrite: false, website: entry[:website], agency_type: entry[:agency_type]
-    ).changes
-  end
-
-  # Build the flash notice after linking, and stage a flash warning for any
-  # submitted answer (type/website/address) that differs from a value already on
-  # the org so the admin can reconcile it by hand. Computed after the sync +
-  # address upsert have run, so only the genuinely-kept discrepancies remain.
-  # `verb` is the notice's past tense ("linked" / "created and linked").
-  def link_result_notice(organization, verb, saved)
-    conflicts = profile_diff_for(organization)
-    if conflicts.any?
-      descriptions = conflicts.map { |conflict| "#{conflict.label} (form: “#{flash_safe(conflict.submitted)}”, saved: “#{flash_safe(conflict.saved)}”)" }
-      flash[:warning] = "Some form answers differ from #{flash_safe(organization.name)}’s saved profile and were not applied: #{descriptions.to_sentence}. Edit the organization if they should change."
-    end
-
-    notice = "#{flash_safe(organization.name)} #{verb}."
-    # The flash names what changed; the values go on the linking page's card note,
-    # which has room for them and is still there after the flash has gone.
-    notice += " Saved from the form: #{saved.map { |change| flash_safe(change.description) }.to_sentence}." if saved.any?
-    notice
-  end
-
-  # Flash messages are rendered with `html_safe` (shared/_flash_messages), so
-  # anything a registrant typed has to be escaped before it goes into one.
-  def flash_safe(text)
-    ERB::Util.html_escape(text)
-  end
-
-  # Upsert the linked org's work address from the registrant's submission (filling
-  # blanks only, so a conflicting saved address is kept and flagged rather than
-  # overwritten) and create the job + facilitator affiliations linked to it. When
-  # the submission carried no address, fall back to the org's sole address so the
-  # affiliation is still anchored. Returns the upsert result so the caller can
-  # report what was actually saved. Shared by the org-linking actions.
-  def link_affiliations_for(registration, organization)
-    address_result = OrganizationServices::UpsertAddress.call(
-      organization: organization,
-      overwrite: false,
-      **submitted_agency_address(registration, organization)
-    )
-
-    AffiliationServices::CreateFromRegistration.call(
-      person: registration.registrant,
-      organization: organization,
-      job_title: submitted_position(registration, organization),
-      training_date: registration.event.start_date,
-      organization_address: address_result.address || sole_address(organization),
-      facilitator_training: registration.event.facilitator_training,
-      event_registration: registration
-    )
-
-    address_result
-  end
-
-  # The org's single address, when it has exactly one — so a linked affiliation
-  # can be anchored to it even if the registrant submitted no address.
-  def sole_address(organization)
-    addresses = organization.addresses.active
-    addresses.first if addresses.count == 1
+    event.on_demand ? "on_demand" : "facilitator_training"
   end
 end

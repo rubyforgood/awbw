@@ -1,5 +1,10 @@
 class WorkshopLog < ApplicationRecord
+  include AuthorCreditable
+  # The facilitator who logged the workshop is its author when none is named.
+  credits_creator
+
   belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :author, class_name: "Person", optional: true
   belongs_to :organization, optional: true
   belongs_to :windows_type, optional: true
   belongs_to :workshop, optional: true
@@ -65,6 +70,7 @@ class WorkshopLog < ApplicationRecord
   def self.search(params)
     logs = is_a?(ActiveRecord::Relation) ? self : all
     logs = logs.created_by_id(params[:created_by_id]) if params[:created_by_id].present?
+    logs = logs.where(id: by_credited_person_name(params[:author_name]).select("workshop_logs.id")) if params[:author_name].present?
     logs = logs.month_and_year(params[:month_and_year]) if params[:month_and_year].present?
     logs = logs.year(params[:year]) if params[:year].present?
     logs = logs.workshop_id(params[:workshop_id]) if params[:workshop_id].present?

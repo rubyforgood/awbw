@@ -1,7 +1,15 @@
 require 'rails_helper'
 
 RSpec.describe Story, type: :model do
-  it_behaves_like "author_creditable", factory: :story
+  it_behaves_like "author_creditable", factory: :story, org_credited: false
+
+  describe "#missing_author_label" do
+    it "credits unattributed stories to AWBW Facilitator" do
+      story = create(:story, author: nil, created_by: create(:user, person: nil))
+      expect(story.missing_author_label).to eq("AWBW Facilitator")
+      expect(story.author_credit).to eq("AWBW Facilitator")
+    end
+  end
 
   describe "#author_person" do
     let(:creator) { create(:user, :with_person) }
@@ -171,10 +179,21 @@ RSpec.describe Story, type: :model do
         expect(results).not_to include(published_story)
       end
 
-      it "finds stories by the creating user's person name" do
+      it "does not find stories by the name of whoever entered them" do
         created_story = create(:story, :published, title: 'Creator Only', created_by: creator)
         results = Story.search_by_params(query: 'Zephyrina')
-        expect(results).to include(created_story)
+        expect(results).not_to include(created_story)
+      end
+    end
+
+    context 'when filtering by the author_name field' do
+      let(:facilitator) { create(:person, first_name: 'Bartholomew', last_name: 'Snazzlepants') }
+      let!(:authored_story) { create(:story, :published, title: 'No Name Match', author: facilitator) }
+
+      it 'filters to stories whose credited author name matches' do
+        results = Story.search_by_params(author_name: 'Bartholomew')
+        expect(results).to include(authored_story)
+        expect(results).not_to include(published_story)
       end
     end
   end

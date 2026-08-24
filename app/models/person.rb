@@ -1,5 +1,5 @@
 class Person < ApplicationRecord
-  include AgeGroupTaggable, HasTimeline, RemoteSearchable, SectorsTaggable, TagFilterable, Timelineable, Trendable, WindowsTypeFilterable
+  include Communicable, HasTimeLine, RemoteSearchable, TagFilterable, Timelineable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable, StaffTaggable
 
   def timeline_label
     name
@@ -24,7 +24,6 @@ class Person < ApplicationRecord
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :contact_methods, as: :contactable, dependent: :destroy
   has_many :categorizable_items, inverse_of: :categorizable, as: :categorizable, dependent: :destroy
-  has_many :notifications, as: :noticeable, dependent: :nullify
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :other_responses, as: :owner, dependent: :destroy
   has_many :stories_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "Story",
@@ -38,6 +37,16 @@ class Person < ApplicationRecord
   has_many :community_news_as_author, inverse_of: :author, class_name: "CommunityNews", foreign_key: :author_id,
            dependent: :restrict_with_error
   has_many :resources_as_author, inverse_of: :author, class_name: "Resource", foreign_key: :author_id,
+           dependent: :restrict_with_error
+  has_many :story_ideas_as_author, inverse_of: :author, class_name: "StoryIdea", foreign_key: :author_id,
+           dependent: :restrict_with_error
+  has_many :workshop_ideas_as_author, inverse_of: :author, class_name: "WorkshopIdea", foreign_key: :author_id,
+           dependent: :restrict_with_error
+  has_many :workshop_variation_ideas_as_author, inverse_of: :author, class_name: "WorkshopVariationIdea",
+           foreign_key: :author_id, dependent: :restrict_with_error
+  has_many :workshop_logs_as_author, inverse_of: :author, class_name: "WorkshopLog", foreign_key: :author_id,
+           dependent: :restrict_with_error
+  has_many :monthly_reports_as_author, inverse_of: :author, class_name: "MonthlyReport", foreign_key: :author_id,
            dependent: :restrict_with_error
   # has_many through
   has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
@@ -66,15 +75,38 @@ class Person < ApplicationRecord
             content_type: %w[image/png image/jpeg image/webp],
             size: { less_than: 5.megabytes },
             unless: -> { Rails.env.test? }
-  validates :first_name, presence: true
-  validates :last_name, presence: true
-  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
-  validates :email_2, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
+  validates :first_name, presence: true, length: { maximum: 255 }
+  validates :last_name, presence: true, length: { maximum: 255 }
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
+  validates :email_2, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
+  validates :legal_first_name, length: { maximum: 255 }
+  validates :pronouns, length: { maximum: 255 }
+  validates :pronunciation, length: { maximum: 255 }
+  validates :best_time_to_call, length: { maximum: 255 }
+  validates :racial_ethnic_identity, length: { maximum: 255 }
+  validates :linked_in_url, length: { maximum: 255 }
+  validates :facebook_url, length: { maximum: 255 }
+  validates :instagram_url, length: { maximum: 255 }
+  validates :youtube_url, length: { maximum: 255 }
+  validates :twitter_url, length: { maximum: 255 }
   validate :unique_name_and_email_combination
 
   CONTACT_TYPES = [ "work", "personal" ].freeze
   validates :email_type, inclusion: { in: %w[work personal] }, allow_blank: true
   validates :email_2_type, inclusion: { in: %w[work personal] }, allow_blank: true
+
+  # Anonymity isn't one of these — it's the separate `anonymous_contributions` flag,
+  # since a person still has to be listed somehow on the people index.
+  DISPLAY_NAME_PREFERENCES = %w[full_name first_name_last_initial first_name_only last_name_only].freeze
+
+  DISPLAY_NAME_PREFERENCE_LABELS = {
+    "full_name" => "First and last name",
+    "first_name_last_initial" => "First name and last initial",
+    "first_name_only" => "First name only",
+    "last_name_only" => "Last name only"
+  }.freeze
+
+  validates :display_name_preference, inclusion: { in: DISPLAY_NAME_PREFERENCES }, allow_blank: true
   # Mirrors SectorsTaggable's single-primary rule for age ranges — the chip
   # editor's single-star JS is the first line of defense, this guards imports,
   # the console, and bad form posts. Person-only: organizations aggregate
@@ -107,7 +139,6 @@ class Person < ApplicationRecord
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
     reject_if: proc { |attrs| attrs["organization_id"].blank? }
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
-  accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
   # A blank row (number + kind + state + expiry all empty) is ignored rather than
   # creating an empty license.
   accepts_nested_attributes_for :professional_licenses, allow_destroy: true,
@@ -163,15 +194,137 @@ class Person < ApplicationRecord
       .distinct }
   scope :sector_leaders, -> {
     joins(:sectorable_items).where(sectorable_items: { is_leader: true }).distinct }
+  scope :staff_tagged_with, ->(ids) {
+    tag_ids = Array(ids).reject(&:blank?)
+    return all if tag_ids.empty?
+    joins(:staff_taggings).where(staff_taggings: { staff_tag_id: tag_ids }).distinct }
+  scope :story_authors, -> { joins(:stories_as_author).distinct }
+  scope :blog_contributors, -> { where(blog_contributor: true) }
+  scope :workshop_authors, -> { credited_on(Workshop) }
+  scope :workshop_variation_authors, -> { credited_on(WorkshopVariation) }
+  scope :workshop_log_authors, -> { credited_on(WorkshopLog) }
+  # Everyone a model credits, mirroring what the record itself displays: its named
+  # authors, plus — where the model credits its submitter (`credits_creator`) — the
+  # person behind the account that entered a row naming no author.
+  scope :credited_on, ->(model) {
+    named = where(id: model.where.not(author_id: nil).select(:author_id))
+    next named unless model.creator_credited
+    named.or(where(id: User.where(id: model.where(author_id: nil).select(:created_by_id))
+                           .where.not(person_id: nil).select(:person_id))) }
+  # People with at least one currently-active facilitator affiliation.
+  scope :facilitators_active, -> {
+    where(id: Affiliation.facilitators.active.select(:person_id)) }
+  # People with facilitator affiliation(s) but none currently active.
+  scope :facilitators_inactive, -> {
+    where(id: Affiliation.facilitators.select(:person_id))
+      .where.not(id: Affiliation.facilitators.active.select(:person_id)) }
+  # Not currently active, but a past facilitator term genuinely ended (real end
+  # date in the past) — distinguishes "used to facilitate" from merely flagged inactive.
+  scope :facilitators_formerly_active, -> {
+    ended = Affiliation.facilitators.where.not(end_date: nil)
+      .where("affiliations.end_date < ?", Date.current).select(:person_id)
+    where(id: ended).where.not(id: Affiliation.facilitators.active.select(:person_id)) }
+  # True returnees: a currently-active facilitator term that began after an earlier
+  # facilitator term had genuinely ended — "left and came back", not merely serving
+  # two orgs at once (both of which the old count-based definition matched;
+  # rubyforgood/awbw#2327). The self-join pairs each active term with a prior term of
+  # the same person that ended before the active one started.
+  scope :boomerang_facilitators, -> {
+    returnees = Affiliation.facilitators.active.where.not(start_date: nil)
+      .joins("INNER JOIN affiliations prior_terms " \
+             "ON prior_terms.person_id = affiliations.person_id " \
+             "AND prior_terms.title = BINARY '#{Affiliation::FACILITATOR_TITLE}' " \
+             "AND prior_terms.end_date IS NOT NULL " \
+             "AND prior_terms.end_date < affiliations.start_date")
+      .select(:person_id)
+    where(id: returnees) }
+  scope :by_facilitator_status, ->(status) {
+    case status
+    when "active" then facilitators_active
+    when "inactive" then facilitators_inactive
+    when "boomerang" then boomerang_facilitators
+    when "formerly_active" then facilitators_formerly_active
+    else all
+    end }
+  scope :subscribed_to_topic, ->(topic_subscription_type_id) {
+    joins(:topic_subscriptions)
+      .where(topic_subscriptions: { topic_subscription_type_id: topic_subscription_type_id, unsubscribed_at: nil })
+      .distinct }
+  scope :age_range_names_all, ->(name) {
+    return all if name.blank?
+    joins(categories: :category_type)
+      .where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE })
+      .where("LOWER(categories.name) = ?", name.to_s.strip.downcase)
+      .distinct }
+  scope :by_role, ->(role) {
+    case role
+    when "story_author" then story_authors
+    when "blog_contributor" then blog_contributors
+    when "workshop_author" then workshop_authors
+    when "workshop_variation_author" then workshop_variation_authors
+    when "workshop_log_author" then workshop_log_authors
+    when "sector_leader" then sector_leaders
+    else all
+    end }
+  # People whose membership/current invoice is in the given state.
+  scope :membership_active, -> { where(id: Membership.not_cancelled.select(:person_id)) }
+  scope :membership_inactive, -> {
+    where(id: Membership.select(:person_id))
+      .where.not(id: Membership.not_cancelled.select(:person_id)) }
+  scope :membership_paid, -> {
+    where(id: MembershipInvoice.active_on.paid_in_full.joins(:membership).select("memberships.person_id")) }
+  scope :membership_due, -> {
+    where(id: MembershipInvoice.active_on.not_paid_in_full.paid_or_within_grace
+      .joins(:membership).select("memberships.person_id")) }
+  scope :membership_overdue, -> {
+    where(id: MembershipInvoice.active_on.overdue.joins(:membership).select("memberships.person_id")) }
+  scope :by_membership_status, ->(status) {
+    case status
+    when "active" then membership_active
+    when "inactive" then membership_inactive
+    when "paid" then membership_paid
+    when "due" then membership_due
+    when "overdue" then membership_overdue
+    else all
+    end }
+
+  ROLE_FILTER_OPTIONS = [
+    [ "Blog contributors", "blog_contributor" ],
+    [ "Sector leaders", "sector_leader" ],
+    [ "Story authors", "story_author" ],
+    [ "Workshop authors", "workshop_author" ],
+    [ "Workshop log authors", "workshop_log_author" ],
+    [ "Workshop variation authors", "workshop_variation_author" ]
+  ].freeze
+
+  MEMBERSHIP_STATUS_FILTER_OPTIONS = [
+    [ "Active", "active" ],
+    [ "Inactive", "inactive" ],
+    [ "Paid", "paid" ],
+    [ "Due", "due" ],
+    [ "Overdue", "overdue" ]
+  ].freeze
+
+  FACILITATOR_STATUS_FILTER_OPTIONS = [
+    [ "Active", "active" ],
+    [ "Inactive", "inactive" ],
+    [ "Boomerang (left, then active again)", "boomerang" ],
+    [ "Formerly active", "formerly_active" ]
+  ].freeze
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:contact_info]) if params[:contact_info].present?
-    results = results.sector_leaders if ActiveModel::Type::Boolean.new.cast(params[:sector_leaders_only])
+    results = results.by_role(params[:role]) if params[:role].present?
+    results = results.by_facilitator_status(params[:facilitator_status]) if params[:facilitator_status].present?
+    results = results.by_membership_status(params[:membership_status]) if params[:membership_status].present?
+    results = results.subscribed_to_topic(params[:topic_subscription_type_id]) if params[:topic_subscription_type_id].present?
     results = results.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    results = results.age_range_names_all(params[:age_range_names_all]) if params[:age_range_names_all].present?
     results = results.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     results = results.organization_name(params[:organization_name]) if params[:organization_name].present?
     results = results.organization_id(params[:organization_id]) if params[:organization_id].present?
+    results = results.staff_tagged_with(params[:staff_tag_ids]) if params[:staff_tag_ids].present?
     results = results.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     results
   end
@@ -188,41 +341,33 @@ class Person < ApplicationRecord
     sectors.pluck(:name)
   end
 
-  # Virtual checkbox for the admin person form. Presence of a consent timestamp is
-  # the source of truth; this lets an admin grant or withdraw consent. Withdrawing
-  # clears both the timestamp and its source; granting (when none is on file)
-  # stamps the time and records that an admin did it. Re-checking an existing
-  # consent leaves the original timestamp/source intact.
-  def mailing_list_consented
-    mailing_list_consent_at.present?
-  end
-
-  def mailing_list_consented=(value)
-    consented = ActiveModel::Type::Boolean.new.cast(value)
-
-    if consented
-      return if mailing_list_consent_at.present?
-      self.mailing_list_consent_at = Time.current
-      self.mailing_list_consent_source = "Admin update"
-    else
-      self.mailing_list_consent_at = nil
-      self.mailing_list_consent_source = nil
-    end
-  end
-
+  # Drives the people index and the profile header. Author credits pass an explicit
+  # preference (the record's own, which outranks the profile) through `name_for`.
   def name
-    case display_name_preference
-    when "full_name"
-      full_name
+    name_for(display_name_preference)
+  end
+
+  # Formats the name by a given preference rather than the profile's, so a record
+  # that stored its own credit preference can win over the profile.
+  def name_for(preference)
+    case preference
     when "first_name_last_initial"
-      "#{first_name} #{last_name.first}"
+      initial = last_name&.first
+      initial.present? ? "#{first_name} #{initial}." : first_name.to_s
     when "first_name_only"
       first_name
     when "last_name_only"
       last_name
-    else
+    else # full_name — the default, and the fallback for any unknown value
       full_name
     end
+  end
+
+  # Anonymity is a separate axis from the name format: it suppresses author credits
+  # without affecting how they're listed on the people index.
+  def effective_author_credit_preference
+    return "anonymous" if anonymous_contributions?
+    display_name_preference.presence || "full_name"
   end
 
   def full_name
@@ -234,6 +379,13 @@ class Person < ApplicationRecord
   # credentials field). Nil when no licensed types are on file.
   def license_credentials
     professional_licenses.filter_map { |license| license.kind.presence&.strip }.uniq.join(", ").presence
+  end
+
+  # Monthly reports are deprecated. Only surface the profile section and its
+  # visibility toggle for people who already have some (explicit author, or the
+  # legacy fallback to their user's creations) — newer users never see it.
+  def any_monthly_reports?
+    MonthlyReport.credited_to_person(self).exists?
   end
 
   def full_name_with_email
@@ -262,10 +414,6 @@ class Person < ApplicationRecord
       end
 
     (phones.find(&:primary?) || phones.first)&.value
-  end
-
-  def has_liasion_position_for?(organization_id)
-    !affiliations.where(organization_id: organization_id, position: 1).first.nil?
   end
 
   def primary_organization
@@ -300,10 +448,18 @@ class Person < ApplicationRecord
     user&.email.presence || email.presence || email_2.presence
   end
 
-  # Email the communications box matches notifications against. Uniform accessor
-  # so the shared notifications/_communications partial works across records.
   def communications_email
     preferred_email
+  end
+
+  # A person's own page shows their entire communication history — every
+  # notification to any of their addresses (user login, email, email_2). Every
+  # other record instead scopes to comms filed against itself (its `notifications`).
+  def communications_scope
+    emails = [ user&.email, email, email_2 ].compact_blank.uniq
+    return Notification.none if emails.empty?
+
+    emails.map { |address| Notification.email(address) }.reduce(:or)
   end
 
   remote_searchable_by :first_name, :last_name, :email, :legal_first_name, :email_2
@@ -319,7 +475,7 @@ class Person < ApplicationRecord
 
   # Field identifiers whose "Other" free text maps onto the category-backed
   # profile fields shown on the edit page.
-  OTHER_WORKSHOP_SETTING_IDENTIFIERS = %w[primary_age_group additional_age_group].freeze
+  OTHER_WORKSHOP_SETTING_IDENTIFIERS = FormField::AGE_GROUP_FIELD_IDENTIFIERS
 
   # Free-text "Other" sectors the person typed on registration forms, captured
   # as OtherResponse records (see EventRegistrationServices::PublicRegistration).

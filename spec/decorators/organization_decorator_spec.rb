@@ -39,6 +39,29 @@ RSpec.describe OrganizationDecorator do
     end
   end
 
+  describe "#affiliated_since_note" do
+    let(:organization) { create(:organization) }
+
+    it "surfaces the affiliation start when it differs from the facilitator start" do
+      create(:affiliation, organization: organization, person: create(:person), title: "Volunteer", start_date: Date.new(2010, 3, 1))
+      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: Date.new(2015, 8, 1))
+
+      expect(organization.reload.decorate.affiliated_since_note).to eq("Affiliated since Mar 2010")
+    end
+
+    it "is nil when the affiliation and facilitator starts share a month and year" do
+      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: Date.new(2015, 8, 1))
+
+      expect(organization.reload.decorate.affiliated_since_note).to be_nil
+    end
+
+    it "is nil when there is no affiliation start date" do
+      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: nil)
+
+      expect(organization.reload.decorate.affiliated_since_note).to be_nil
+    end
+  end
+
   describe "#organization_status_label" do
     # Every stored status reads "Never active" here: with no facilitator affiliation
     # there is no program, whatever the legacy column says.
@@ -133,7 +156,7 @@ RSpec.describe OrganizationDecorator do
       expect(described_class.program_status_classes(:new)).to include("indigo")
       expect(described_class.program_status_classes(:ongoing)).to include("blue")
       expect(described_class.program_status_classes(:reinstated)).to include("purple")
-      # Organization#program_status returns "Reinstate" (no trailing d).
+      # Tolerates either spelling of the word, however a caller phrases it.
       expect(described_class.program_status_classes("Reinstate")).to include("purple")
     end
 
@@ -157,11 +180,12 @@ RSpec.describe OrganizationDecorator do
       expect(badge).to have_css("span[title='Ongoing']", text: "O")
     end
 
-    it "defaults to the organization's own program status" do
-      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator")
+    it "defaults to the organization's own year-anchored program status" do
+      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator",
+                           start_date: 3.years.ago.to_date)
 
       badge = Capybara.string(organization.reload.decorate.program_status_badge)
-      expect(badge).to have_css("span[title='Ongoing']", text: "O")
+      expect(badge).to have_css("span[title^='Ongoing']", text: "O")
     end
 
     it "is nil for a blank status" do

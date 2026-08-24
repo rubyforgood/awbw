@@ -18,17 +18,7 @@
 
   <%# === Render each message === %>
   <% notices_and_alerts.each do |type, msg| %>
-    <% bg_class, text_class =
-         case type.to_s
-         when "notice", "info"
-           %w[bg-blue-50 text-blue-800]
-         when "warning"
-           %w[bg-yellow-50 text-yellow-800]
-         when "alert", "error"
-           %w[bg-red-50 text-red-800]
-         else
-           %w[bg-gray-50 text-gray-800]
-         end %>
+    <% classes = flash_status_classes(type) %>
 
     <%# === Detect reset-password–style messages === %>
     <% persistent = msg.to_s.match?(/reset your password|password instructions|set your password|registration is not complete/i) %>
@@ -40,7 +30,7 @@
       data-controller="dismiss"
       data-dismiss-timeout-value="<%= timeout %>"
       data-dismiss-disable-outside-click-value="<%= disable_outside_click %>">
-      <div class="flex items-center justify-between px-4 py-3 rounded shadow-md <%= bg_class %> <%= text_class %>">
+      <div class="flex items-center justify-between px-4 py-3 rounded shadow-md <%= classes[:surface] %> <%= classes[:text] %>">
         <div class="flex-1 text-center font-medium">
           <p class="<%= type %>">
             <%= msg.html_safe %>

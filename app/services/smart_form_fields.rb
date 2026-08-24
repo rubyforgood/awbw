@@ -84,19 +84,22 @@ class SmartFormFields
       title: "The registrant's organization",
       summary: "The organization name is looked up by exact name — the registration never creates an " \
                "organization by itself. When it matches, the organization is linked to the registration, " \
-               "the registrant gets a job affiliation and a facilitator affiliation, and the answers " \
-               "below fill in the organization's profile. When it doesn't match, nothing is written and " \
-               "an admin resolves it on the registration's Link organization page.",
+               "the registrant gets a Job Affiliation and a Facilitator Affiliation, and the answers " \
+               "below fill in the organization's profile. Both affiliations are connected to the " \
+               "organization's address when it has exactly one; with several addresses the address is " \
+               "left blank for an admin to set. When it doesn't match, nothing is written and " \
+               "an admin resolves it on the event registration's Link organization page. Older forms " \
+               "may carry the legacy \"agency_\" names for these questions; both spellings still work.",
       fields: [
-        [ "agency_name", "Organization name", "Looked up against existing organizations by exact name. A match is linked to the registration; no match leaves the registration unlinked for an admin to resolve." ],
-        [ "agency_position", "Position / title", "Becomes the job title on the registrant's affiliation with that organization." ],
-        [ "agency_website", "Organization website", "Sets the organization's website. Replaces what is on file when the registrant submits it; when an admin links the organization by hand it only fills a blank, and a conflicting answer is flagged instead." ],
-        [ "agency_type", "Organization type", "Sets the organization's type. An \"Other\" choice stores the typed text separately and adds it to the Other responses review queue." ],
-        [ "agency_street", "Organization street address", "Sets the street of the organization's work address." ],
-        [ "agency_city", "Organization city", "Sets the city, and decides whether an organization address is saved at all — no city answered means no address." ],
-        [ "agency_state", "Organization state / province", "Sets the state. Without it, no new address can be saved (an address requires a state), though an address already on file is still updated." ],
-        [ "agency_zip", "Organization zip / postal code", "Sets the postal code. Also used to recognize an address already on file whose city is spelled differently." ],
-        [ "agency_country", "Organization country", "Sets the country of the organization's work address." ]
+        [ "organization_name", "Organization name", "Looked up against existing organizations by exact name. A match is linked to the registration; no match leaves the registration unlinked for an admin to resolve." ],
+        [ "organization_position", "Position / title", "Becomes the job title on the registrant's Job Affiliation with that organization." ],
+        [ "organization_website", "Organization website", "Sets the organization's website. Replaces what is on file when the registrant submits it; when an admin links it by hand (Link or Create and link) it only fills a blank, and a conflicting answer is flagged instead. Note: a raw URL is saved exactly as entered, so it may not be clickable if it isn't a properly formed URL." ],
+        [ "organization_type", "Organization type", "Sets the organization's type. An \"Other\" choice stores the typed text separately and adds it to the Other responses review queue." ],
+        [ "organization_street", "Organization street address", "Sets the street of the organization's work address." ],
+        [ "organization_city", "Organization city", "Sets the city, and decides whether an organization address is saved at all — no city answered means no address." ],
+        [ "organization_state", "Organization state / province", "Sets the state. Without it, no new address can be saved (an address requires a state), though an address already on file is still updated." ],
+        [ "organization_zip", "Organization zip / postal code", "Sets the postal code. Also used to recognize an address already on file whose city is spelled differently." ],
+        [ "organization_country", "Organization country", "Sets the country of the organization's work address." ]
       ]
     },
     {
@@ -106,13 +109,12 @@ class SmartFormFields
                "records rather than from options typed into the form editor. The tags are applied to " \
                "the registrant and to their linked organization.",
       fields: [
-        [ "primary_sector_single", "Primary sector", "Tags the person and organization with one primary sector. Offers no \"Other\" — a primary sector must be a real sector." ],
+        [ "primary_sector", "Primary sector", "Tags the person and organization with one primary sector. Offers no \"Other\" — a primary sector must be a real sector." ],
         [ "additional_sectors", "Additional sectors", "Tags the person and organization with any number of additional sectors. An \"Other\" answer goes to the Other responses review queue, where it can be promoted into a real sector." ],
         [ "primary_age_group", "Primary age group(s) served", "Tags the person and organization with the primary age range served." ],
-        [ "additional_age_group", "Additional age group(s) served", "Tags the person and organization with additional age ranges served." ],
-        [ "primary_sector", "Additional sectors (legacy)", "Older name for the additional sectors question. Still honored so existing forms keep working; use additional_sectors on new forms." ],
-        [ "primary_service_area", "Additional sectors (legacy)", "Older name for the additional sectors question. Still honored; use additional_sectors on new forms." ],
-        [ "primary_service_area_single", "Primary sector (legacy)", "Older name for the primary sector question. Still honored; use primary_sector_single on new forms." ]
+        [ "additional_age_groups", "Additional age group(s) served", "Tags the person and organization with additional age ranges served." ],
+        [ "primary_sector_single", "Primary sector (legacy)", "Older name for the primary sector question. Still honored; use primary_sector on new forms." ],
+        [ "additional_age_group", "Additional age group(s) served (legacy)", "Older singular name for the additional age groups question. Still honored; use additional_age_groups on new forms." ]
       ]
     },
     {
@@ -127,13 +129,28 @@ class SmartFormFields
       ]
     },
     {
+      key: :quotes,
+      title: "Quotes",
+      summary: "Turns a submission's answers into a quote automatically. \"quote\" (or \"quote_body\") holds the " \
+               "quote text; add \"quote_speaker_name\" and \"quote_age_range\" to capture who said it and their " \
+               "age. On submission this becomes an unpublished Quote — credited to the speaker name, or " \
+               "\"Anonymous\" when none is given — with the submitter recorded as its creator and the submission " \
+               "kept as the quote's source. An admin then reviews, refines, and publishes it from the Quotes " \
+               "admin — nothing appears publicly until they do.",
+      fields: [
+        [ "quote", "Quote", "The quote text (simple, single-question forms). Saved as an unpublished Quote on submission, linked back to the submission. Review and publish it from the Quotes admin." ],
+        [ "quote_body", "Quote text", "The quote text when the form splits the quote across questions. Takes precedence over \"quote\" if both are present." ],
+        [ "quote_speaker_name", "Quote speaker name", "Who said the quote. Becomes the quote's credited speaker; with none given the quote credits \"Anonymous\"." ],
+        [ "quote_age_range", "Quote speaker age", "The speaker's age or age range. Stored on the quote's age field." ]
+      ]
+    },
+    {
       key: :consent,
       title: "Consent",
-      summary: "Consent is opt-in and recorded once. An affirmative answer stamps the time and names the " \
-               "event it came from. It is never cleared from here — withdrawal is a separate, deliberate " \
-               "action — and a registrant who already consented is not re-stamped.",
+      summary: "Asks registrants to opt in to email communication. An affirmative answer subscribes " \
+               "the person to the News (mailing-list) topic, with the event or form recorded as its source.",
       fields: [
-        [ "communication_consent", "Email communication consent", "Any non-blank answer records mailing list consent, with the event as its source." ]
+        [ "communication_consent", "Email communication consent", "Any non-blank answer creates an active News topic subscription, sourced to this event or form." ]
       ]
     },
     {

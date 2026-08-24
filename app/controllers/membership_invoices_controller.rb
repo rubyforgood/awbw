@@ -6,6 +6,7 @@ class MembershipInvoicesController < ApplicationController
     authorize!
     @membership_invoices = MembershipInvoice
       .includes(:allocations, membership: :person)
+      .by_person_name(params[:person_name])
       .order(start_date: :desc)
       .paginate(page: params[:page], per_page: params[:number_of_items_per_page].presence || 25)
 

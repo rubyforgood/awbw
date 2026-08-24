@@ -94,6 +94,7 @@ class EventRegistrationReadiness
   # A decline outranks the payment gap it creates: zeroing the allocation is what
   # reopens the balance, so the admin's next step is answering the decline.
   EVENT_READY_CHECKS = [
+    [ :transfer_incomplete?, "Transfer incomplete", "Transfer out has no destination recorded" ],
     [ :scholarship_declined?, "Award declined", "Scholarship declined — respond to the decline" ],
     [ :payment_due?, "Payment due", "Payment due" ],
     [ :organization_missing?, "Org validation", "No organization linked" ],
@@ -141,7 +142,18 @@ class EventRegistrationReadiness
     @failed_event_ready_checks ||= EVENT_READY_CHECKS.select { |predicate, _, _| send(predicate) }
   end
 
+  # A reg marked transferred-out but with no destination recorded yet is an
+  # unfinished admin task — the top pre-event issue. This is the one check that
+  # reads the reverse transfer link (not roster-preloaded), so it can query for a
+  # transferred-out row; active rows short-circuit on the status and never touch it.
+  def transfer_incomplete?
+    registration.transfer_destination_pending?
+  end
+
   def payment_due?
+    # A transferred-in reg's balance is tracked on its source registration, so it
+    # owes nothing for this event and never reads as "Payment due" here.
+    return false if registration.transferred_in?
     registration.event.cost_cents.to_i > 0 && !registration.paid_in_full?
   end
 
@@ -173,7 +185,7 @@ class EventRegistrationReadiness
   end
 
   def ce_certificate_pending?
-    registration.ce_registered? && !ce_certificate_sent?
+    certifiable_ce.any? && !ce_certificate_sent?
   end
 
   # Post-event criteria are only met by a full "attended". "incomplete_attendance"
@@ -183,9 +195,17 @@ class EventRegistrationReadiness
     registration.status == "incomplete_attendance" ? "Attendance incomplete" : "Did not attend"
   end
 
-  # The admin-created CE billing records for this registration (preloaded on the
-  # roster). Their payment + certificate state drives the CE readiness checks.
+  # The admin-created CE billing records homed on this registration (preloaded on
+  # the roster). Their PAYMENT + license state drives the CE money/license checks;
+  # these stay on the home reg after a transfer.
   def ce_registrations
+    registration.continuing_education_registrations
+  end
+
+  # The CE this registration certifies — its own records. After a transfer the
+  # hours ride on the destination reg's own record, so each reg certifies exactly
+  # what it holds. (issue #1944)
+  def certifiable_ce
     registration.continuing_education_registrations
   end
 
@@ -201,9 +221,9 @@ class EventRegistrationReadiness
     registration.certificate_sent?
   end
 
-  # CE certificates are sent once every CE registration's certificate has been
-  # sent. No CE registration yet means nothing has been issued.
+  # CE certificates are sent once every CE registration this reg certifies has
+  # been sent. No certifiable CE means nothing has been issued.
   def ce_certificate_sent?
-    ce_registrations.any? && ce_registrations.all?(&:certificate_sent?)
+    certifiable_ce.any? && certifiable_ce.all?(&:certificate_sent?)
   end
 end

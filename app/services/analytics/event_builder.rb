@@ -20,7 +20,13 @@ module Analytics
 
       resource.decorate.title
     rescue
-      resource.try(:title) || resource.try(:name) || resource.id
+      fallback_title(resource)
+    end
+
+    def self.fallback_title(resource)
+      resource.try(:title).presence || resource.try(:name).presence || resource.id
+    rescue StandardError
+      resource.id
     end
   end
 end

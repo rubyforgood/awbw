@@ -43,7 +43,7 @@
                                file: story_idea.display_image %>
                   </div>
                 </td>
-                <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.created_by.name %></td>
+                <td class="px-4 py-2 text-sm text-gray-800"><%= credited_author_link(story_idea, class: eyebrow_link_class) %></td>
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <%= link_to story_idea.name, story_idea_path(story_idea),
                               class: "font-bold hover:text-indigo-800 hover:underline" %>

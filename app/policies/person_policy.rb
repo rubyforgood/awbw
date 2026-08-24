@@ -9,6 +9,13 @@ class PersonPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  # Admin, or the profile's own person. The narrow rule for owner-only content
+  # (submitted ideas, workshop logs) — kept separate from `show?` so opening
+  # `show?` up to public profile viewing later can't expose it.
+  def own_record?
+    admin? || owner?
+  end
+
   def workshop_logs?
     admin? || owner?
   end
@@ -25,6 +32,8 @@ class PersonPolicy < ApplicationPolicy
     admin?
   end
 
+  # Admin-only for now; flips to `admin? || owner?` at profile launch, when the
+  # owner read-only affiliation view on the edit form goes live.
   def edit?
     admin?
   end
@@ -38,6 +47,10 @@ class PersonPolicy < ApplicationPolicy
   end
 
   def search?
+    admin?
+  end
+
+  def send_form_link?
     admin?
   end
 

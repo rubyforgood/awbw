@@ -42,6 +42,22 @@ class EventDecorator < ApplicationDecorator
     start_date.strftime("%B %d, %Y")
   end
 
+  # Month + year alone (e.g. "October 2026"), to disambiguate same-titled events.
+  def month_year
+    start_date&.strftime("%B %Y")
+  end
+
+  # The canonical "which occurrence" label: title with its month and year
+  # appended (e.g. "AWBW Facilitator Training (October 2026)"). Falls back to
+  # the bare title when the event has no start date — and for on-demand events,
+  # whose year-long span makes a start month meaningless (their titles carry
+  # the year themselves, e.g. "On-Demand Training 2026").
+  def title_with_month_year
+    return title if start_date.blank? || on_demand?
+
+    "#{title} (#{month_year})"
+  end
+
   # Subject pre-filled on the bulk reminder page and used as the send-time
   # fallback, so the preview and the delivered email always agree. An on-demand
   # event's start date bounds enrollment rather than naming a session, so putting

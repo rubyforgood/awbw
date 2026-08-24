@@ -45,22 +45,22 @@
     <div class="mb-3 flex items-center justify-end text-sm">
       <%= link_to "View all communications",
                   notifications_path(email: @person.communications_email, return_to_type: "Person", return_to_id: @person.id),
-                  class: "inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
+                  class: "inline-flex items-center gap-1.5 text-xs font-medium #{eyebrow_link_class} hover:underline",
                   target: "_blank", rel: "noopener" %>
     </div>
   <% end %>
 
   <!-- Activities Table -->
-  <div class="blur-on-submit bg-white border border-gray-200 rounded-xl shadow-sm overflow-x-auto">
+  <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm blur-on-submit">
     <table class="responsive-table min-w-full divide-y divide-gray-200 text-sm">
-      <thead class="bg-gray-50 text-gray-600 uppercase tracking-wider text-xs">
+      <thead class="bg-gray-50 text-xs tracking-wider text-gray-600 uppercase">
       <tr>
-        <th class="px-4 py-3 text-left rounded-tl-xl">Time</th>
+        <th class="rounded-tl-xl px-4 py-3 text-left">Time</th>
         <th class="px-4 py-3 text-left">Activity</th>
         <th class="px-4 py-3 text-left">Resource</th>
         <th class="px-4 py-3 text-left">User</th>
         <th class="px-4 py-3 text-left">Visit ID</th>
-        <th class="px-4 py-3 text-left rounded-tr-xl">Properties</th>
+        <th class="rounded-tr-xl px-4 py-3 text-left">Details</th>
       </tr>
       </thead>
 
@@ -70,12 +70,12 @@
           <% if entry.communication? %>
             <%= render "communication_row", notification: entry.record %>
           <% else %>
-            <%= render "activity_row", event: entry.record %>
+            <%= render "activity_row", event: entry.record, record_cache: @record_cache %>
           <% end %>
         <% end %>
       <% else %>
         <% @events.each do |event| %>
-          <%= render "activity_row", event: event %>
+          <%= render "activity_row", event: event, record_cache: @record_cache %>
         <% end %>
       <% end %>
       </tbody>
@@ -83,7 +83,7 @@
   </div>
 
   <!-- Pagination -->
-  <div class="flex justify-center mt-8">
+  <div class="mt-8 flex justify-center">
     <%= tailwind_paginate(@person ? @timeline : @events) %>
   </div>
 <% end %>

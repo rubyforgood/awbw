@@ -2,15 +2,21 @@
 
 <div class="form-submissions-index mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:forms) %> rounded-xl border border-gray-200 p-6 shadow">
   <div class="w-full">
-    <% if params[:return_to] == "forms" && @form %>
+    <% if params[:return_to] == "form_results" && @form %>
       <div class="mb-4">
-        <%= link_to forms_path(anchor: "form_#{@form.id}"), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700" do %>
+        <%= link_to results_form_path(@form), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class}" do %>
+          <i class="fa-solid fa-arrow-left text-xs"></i> <%= @form.display_name %> results
+        <% end %>
+      </div>
+    <% elsif params[:return_to] == "forms" && @form %>
+      <div class="mb-4">
+        <%= link_to forms_path(anchor: "form_#{@form.id}"), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
           <i class="fa-solid fa-arrow-left text-xs"></i> Forms
         <% end %>
       </div>
     <% elsif @person %>
       <div class="mb-4">
-        <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700" do %>
+        <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
           <i class="fa-solid fa-arrow-left text-xs"></i> Edit <%= @person.name %>
         <% end %>
       </div>
@@ -32,21 +38,105 @@
       </div>
     </div>
 
-    <%# Filter by form. Auto-submits into the results frame on change. %>
-    <%= form_with url: form_submissions_path, method: :get, data: { controller: "collection", turbo_frame: "form_submissions_results" } do |f| %>
-      <% if @person %><%= hidden_field_tag :person_id, @person.id %><% end %>
+    <%# Filters. Auto-submit into the results frame on change. %>
+    <%= form_with url: form_submissions_path, method: :get, autocomplete: "off",
+          data: { controller: "collection", turbo_frame: "form_submissions_results" } do |f| %>
       <%# Carried so a filter change keeps the eyebrow, and the View links keep their origin. %>
       <% if params[:return_to].present? %><%= hidden_field_tag :return_to, params[:return_to] %><% end %>
-      <div class="mb-6 flex flex-wrap items-end gap-3">
-        <div class="min-w-64">
+      <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div>
+          <%= label_tag :search, "Search", class: search_label_class %>
+          <%= text_field_tag :search, params[:search], placeholder: "Name or email", class: search_field_class %>
+        </div>
+
+        <div>
           <%= f.label :form_id, "Form", class: search_label_class %>
           <%= f.select :form_id,
                 options_from_collection_for_select(@forms, :id, :display_name, params[:form_id].to_i),
                 { include_blank: "All forms" },
                 class: search_field_class(extra: "search-select-placeholder") %>
         </div>
-        <% if params[:form_id].present? %>
-          <%= render "shared/search_clear", url: form_submissions_path(person_id: @person&.id, return_to: params[:return_to].presence) %>
+
+        <div>
+          <%= f.label :role, "Role", class: search_label_class %>
+          <%= f.select :role,
+                options_for_select(@roles.map { |role| [ role.humanize, role ] }, params[:role]),
+                { include_blank: "All roles" },
+                class: search_field_class(extra: "search-select-placeholder") %>
+        </div>
+
+        <div>
+          <%= label_tag :event_id, "Event", class: search_label_class %>
+          <%= select_tag :event_id,
+                options_for_select(Event.where(id: params[:event_id]).map { |event| [ event.name, event.id ] }, params[:event_id]),
+                include_blank: true,
+                prompt: "Search for an event",
+                class: search_field_class,
+                data: { controller: "remote-select", remote_select_model_value: "event" } %>
+        </div>
+
+        <div>
+          <%= label_tag :person_id, "Person", class: search_label_class %>
+          <%= select_tag :person_id,
+                options_for_select(Person.where(id: params[:person_id]).map { |person| [ person.full_name, person.id ] }, params[:person_id]),
+                include_blank: true,
+                prompt: "Search for a person",
+                class: search_field_class,
+                data: { controller: "remote-select", remote_select_model_value: "person" } %>
+        </div>
+
+        <div>
+          <%= label_tag :organization_id, "Organization", class: search_label_class %>
+          <%= select_tag :organization_id,
+                options_for_select(Organization.where(id: params[:organization_id]).map { |org| [ org.name, org.id ] }, params[:organization_id]),
+                include_blank: true,
+                prompt: "Search for an organization",
+                class: search_field_class,
+                data: { controller: "remote-select", remote_select_model_value: "organization" } %>
+        </div>
+
+        <div>
+          <%= label_tag :org_status, "Organization linking", class: search_label_class %>
+          <%= select_tag :org_status,
+                options_for_select(FormSubmission::ORG_LINK_STATUS_FILTER_OPTIONS, params[:org_status]),
+                include_blank: "Any linking",
+                class: search_field_class(extra: "search-select-placeholder") %>
+        </div>
+
+        <%# Same vocabulary as the registrants roster's User account filter. %>
+        <div>
+          <%= label_tag :account_status, "User account", class: search_label_class %>
+          <%= select_tag :account_status,
+                options_for_select(EventRegistration::ACCOUNT_STATUS_FILTER_OPTIONS, params[:account_status]),
+                include_blank: "Any account status",
+                class: search_field_class(extra: "search-select-placeholder") %>
+        </div>
+
+        <div>
+          <%= label_tag :scenario, "Agreement scenario", class: search_label_class %>
+          <%= select_tag :scenario,
+                options_for_select([ [ "Any agreement scenario", "any" ] ] + FormSubmission::LINKING_SCENARIOS.map { |value, label| [ label, value ] }, params[:scenario]),
+                include_blank: "All submissions",
+                class: search_field_class(extra: "search-select-placeholder") %>
+        </div>
+
+        <div>
+          <%= label_tag :start_date, "Submitted from", class: search_label_class %>
+          <%= date_field_tag :start_date, params[:start_date], class: search_field_class %>
+        </div>
+
+        <div>
+          <%= label_tag :end_date, "Submitted to", class: search_label_class %>
+          <%= date_field_tag :end_date, params[:end_date], class: search_field_class %>
+        </div>
+
+        <% if form_submission_filters_active?(params) %>
+          <div class="flex flex-col items-start">
+            <span class="<%= search_label_class %>" aria-hidden="true">&nbsp;</span>
+            <%# Plain navigation to the unfiltered index — a reset that never depends
+                on JS clearing each remote-select field. %>
+            <%= link_to "Clear filters", form_submissions_path(return_to: params[:return_to].presence), class: "btn btn-utility whitespace-nowrap" %>
+          </div>
         <% end %>
       </div>
     <% end %>

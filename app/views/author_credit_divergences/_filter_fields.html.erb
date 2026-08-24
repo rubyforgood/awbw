@@ -1,0 +1,5 @@
+<%# Carries the active filters through a save so the admin lands back on the same list. %>
+<% AuthorCreditDivergencesController::FILTER_KEYS.each do |key| %>
+  <% next if params[key].blank? %>
+  <%= hidden_field_tag key, params[key], id: nil %>
+<% end %>

@@ -21,6 +21,7 @@ class ContinuingEducationRegistrationsController < ApplicationController
 
   def new
     authorize!
+
     @ce_registration = @event_registration.continuing_education_registrations.build(
       professional_license: @event_registration.registrant.professional_licenses.first,
       hours: @event_registration.event.ce_hours_offered,
@@ -107,12 +108,18 @@ class ContinuingEducationRegistrationsController < ApplicationController
                                    expires_on: params.dig(:continuing_education_registration, :license_expires_on),
                                    license_id: params.dig(:continuing_education_registration, :professional_license_id))
     ce_registration.hours = params.dig(:continuing_education_registration, :hours)
-    cost = params.dig(:continuing_education_registration, :cost_dollars)
-    ce_registration.cost_cents = (cost.to_d * 100).round if cost.present?
+    # A transfer-created record's cost is snapshotted from the source's outstanding
+    # balance and admin-locked, so ignore any submitted cost for it. (#1944)
+    unless ce_registration.transfer_created?
+      cost = params.dig(:continuing_education_registration, :cost_dollars)
+      ce_registration.cost_cents = (cost.to_d * 100).round if cost.present?
+    end
 
-    comments = params.fetch(:continuing_education_registration, {})
-      .permit(comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ])[:comments_attributes]
-    ce_registration.comments_attributes = comments if comments.present?
+    nested = params.fetch(:continuing_education_registration, {})
+      .permit(comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+              notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ])
+    ce_registration.comments_attributes = nested[:comments_attributes] if nested[:comments_attributes].present?
+    ce_registration.notifications_attributes = nested[:notifications_attributes] if nested[:notifications_attributes].present?
   end
 
   # Staff corrections to the registrant's attendance times, submitted alongside the

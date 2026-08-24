@@ -10,7 +10,7 @@
     </span>
     <h2 class="text-sm font-semibold text-gray-700">CE payments and allocations</h2>
     <%= link_to allocations_path(allocatable_sgid: ce_registration.to_sgid.to_s, return_to: "ce_registration"),
-                class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
+                class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium #{eyebrow_link_class} hover:underline",
                 target: "_blank", rel: "noopener" do %>
       View all
       <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
@@ -21,7 +21,7 @@
     <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <div class="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3">
         <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">CE cost</dt>
-        <% if params[:admin] == "true" %>
+        <% if params[:admin] == "true" && !ce_registration.transfer_created? %>
           <dd class="mt-1">
             <%= number_field_tag "continuing_education_registration[cost_dollars]",
                   (ce_registration.cost_cents.to_d / 100),
@@ -30,6 +30,15 @@
           </dd>
         <% else %>
           <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(cost_cents) %></dd>
+          <%# A transfer-created record's cost is the balance carried from the source
+              and can't be edited here; it links back to the paid original. (#1944) %>
+          <% if ce_registration.transfer_created? && (origin = ce_registration.origin_ce_registration) %>
+            <dd class="mt-1 text-xs text-teal-700">
+              <i class="fa-solid fa-right-to-bracket"></i>
+              <%= link_to "From original registration", edit_continuing_education_registration_path(origin, return_to: "ce_registration"),
+                          class: "font-medium underline", target: "_blank", rel: "noopener" %>
+            </dd>
+          <% end %>
         <% end %>
       </div>
       <%= link_to allocations_path(allocatable_sgid: ce_registration.to_sgid.to_s, return_to: "ce_registration"),

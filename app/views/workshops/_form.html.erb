@@ -1,4 +1,4 @@
-<div class="w-full mx-auto" data-controller="timeframe">
+<div class="mx-auto w-full" data-controller="timeframe">
   <%= simple_form_for @workshop, data: { turbo: false } do |f| %>
     <!-- Errors -->
     <% if @workshop.errors.any? %>
@@ -6,7 +6,7 @@
     <% end %>
 
     <!-- Row 1 -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-3">
       <div>
         <%= f.input :title,
                     as: :text,
@@ -30,21 +30,21 @@
       </div>
 
       <div>
-        <label class="block text-md font-medium text-gray-700 mb-1">Timeframe / Duration</label>
+        <label class="mb-1 block text-md font-medium text-gray-700">Timeframe / Duration</label>
 
-        <div class="flex gap-x-2 font-bold text-xl items-center">
-          <span data-timeframe-target="output" class="text-gray-900 font-medium"><%= f.object.time_frame_total %></span>
+        <div class="flex items-center gap-x-2 text-xl font-bold">
+          <span data-timeframe-target="output" class="font-medium text-gray-900"><%= f.object.time_frame_total %></span>
         </div>
 
-        <p class="text-sm text-gray-500 mt-1">
+        <p class="mt-1 text-sm text-gray-500">
           Automatic total time, in 15min increments
         </p>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-3">
       <% if allowed_to?(:manage?, Workshop) %>
-        <div class="admin-only bg-blue-100 p-3 space-y-4">
+        <div class="admin-only space-y-4 bg-blue-100 p-3">
           <% if f.object.full_name.present? && params[:admin] == "true" %>
             <%= f.input :full_name, as: :text,
                         label: "Author's name",
@@ -62,24 +62,20 @@
                           link_to "Author",
                                   person_path(f.object.author),
                                   class: "hover:underline") : "Author").html_safe,
-                        collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
-                        selected: (f.object.author_person&.id || current_user.person_id),
-                        hint: "Credited author — any person, not just active users. Defaults to the creator; change to credit someone else.",
+                        collection: author_picker_person(f.object).present? ? [[ author_picker_person(f.object).remote_search_label[:label], author_picker_person(f.object).id ]] : [],
+                        selected: author_picker_person(f.object)&.id,
+                        hint: "Credited author — any person, not just active users. Defaults to the creator on a new workshop; change to credit someone else.",
                         input_html: {
                           class: "block w-full rounded-md border-gray-300 shadow-sm
                           focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
                           data: { controller: "remote-select",
                                   remote_select_model_value: "person" } } %>
+            <%= render "shared/author_credit_note", record: f.object %>
           </div>
-          <%= f.input :author_credit_preference,
-                      as: :select,
-                      collection: AuthorCreditable::ADMIN_FORM_OPTIONS,
-                      include_blank: "Select a preference",
-                      selected: f.object.author_credit_preference,
-                      label: "Author credit preference",
-                      hint: "Controls how the author's name is displayed" %>
+          <%= render "shared/author_credit_field", f: f %>
+          <%= render "shared/author_credit_warning", record: f.object %>
         </div>
-        <div class="admin-only bg-blue-100 p-3 space-y-4">
+        <div class="admin-only space-y-4 bg-blue-100 p-3">
           <%= f.input :workshop_idea_id,
                       as: :select,
                       label: "Workshop Idea parent",
@@ -90,7 +86,7 @@
                       input_html: { value: f.object.workshop_idea_id,
                                     class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
           <div class="mt-4">
-            <label class="block font-medium text-gray-700 mb-1">Workshop created</label>
+            <label class="mb-1 block font-medium text-gray-700">Workshop created</label>
             <div class="flex gap-x-2">
               <%= f.input :month, as: :select,
                           collection: Date::MONTHNAMES.compact.each_with_index.map { |m, i| [m, i + 1] },
@@ -253,15 +249,13 @@
         <button
           type="button"
           id="tags_button"
-          class="
-            flex items-center justify-between cursor-pointer w-full
-            bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
+          class="flex w-full cursor-pointer items-center justify-between rounded-md bg-gray-500 px-3 py-2 text-white hover:bg-gray-300"
           data-action="dropdown#toggle"
           data-dropdown-payload-param='[{"tags":"hidden"}, {"tags_arrow":"rotate-180"}, {"tags_button":"rounded-md rounded-t-md"}]'>
           Tags
           <svg
             id="tags_arrow"
-            class="w-6 h-6 shrink-0"
+            class="h-6 w-6 shrink-0"
             fill="currentColor"
             viewBox="0 0 20 20"
             xmlns="http://www.w3.org/2000/svg">
@@ -273,10 +267,10 @@
           </svg>
         </button>
 
-        <div id="tags" class="hidden border border-gray-300 p-4 rounded-b-md">
-          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
+        <div id="tags" class="hidden rounded-b-md border border-gray-300 p-4">
+          <div class="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
             <!-- Header -->
-            <h3 class="text-base font-semibold text-gray-800 mb-3">
+            <h3 class="mb-3 text-base font-semibold text-gray-800">
               Sectors
             </h3>
 
@@ -287,9 +281,7 @@
 
                 <label
                   for="<%= id %>"
-                  class="
-                    flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
-                    rounded-lg shadow-sm hover:bg-gray-100 transition">
+                  class="flex w-auto min-w-[180px] cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition hover:bg-gray-100">
                   <%= hidden_field_tag "workshop[sector_ids][]", "" %>
                   <!-- # To ensure unchecked boxes are submitted -->
                   <%= check_box_tag "workshop[sector_ids][]",
@@ -298,7 +290,7 @@
                                     id: id,
                                     class: "h-4 w-4 text-blue-600 rounded" %>
 
-                  <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
+                  <span class="text-sm whitespace-nowrap text-gray-700"><%= sector.name %></span>
                 </label>
               <% end %>
             </div>
@@ -308,19 +300,19 @@
             <% @categories_grouped.each do |type, cats| %>
               <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
                 <!-- Header -->
-                <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.name.underscore.humanize %></h3>
+                <h3 class="mb-3 text-base font-semibold text-gray-800"><%= type.name.underscore.humanize %></h3>
 
                 <% if type.name == "AgeRange" && @age_range_comments.present? %>
-                  <div class="flex flex-wrap gap-2 mb-2">
+                  <div class="mb-2 flex flex-wrap gap-2">
                     <% @age_range_comments.each do |comment| %>
                       <a href="#comments-section"
-                         class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1 hover:bg-amber-100 transition">
+                         class="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-700 transition hover:bg-amber-100">
                         <%= comment.body %>
                       </a>
                     <% end %>
                   </div>
                   <a href="#comments-section"
-                     class="block text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1 mb-3 hover:bg-amber-100 transition">
+                     class="mb-3 block rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-700 transition hover:bg-amber-100">
                     <i class="fa-solid fa-triangle-exclamation"></i>
                     Apply the correct tags to satisfy the comments, then delete the comments below once resolved.
                   </a>
@@ -333,9 +325,7 @@
 
                     <label
                       for="<%= id %>"
-                      class="
-                        flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
-                        border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+                      class="flex w-auto min-w-[180px] cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition hover:bg-gray-100">
                       <%= hidden_field_tag "workshop[category_ids][]", "" %>
                       <!-- # To ensure unchecked boxes are submitted -->
                       <%= check_box_tag "workshop[category_ids][]",
@@ -344,7 +334,7 @@
                                         id: id,
                                         class: "h-4 w-4 text-blue-600 rounded" %>
 
-                      <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
+                      <span class="text-sm whitespace-nowrap text-gray-700"><%= category.name %></span>
                     </label>
                   <% end %>
                 </div>
@@ -358,17 +348,14 @@
         <button
           type="button"
           id="translations_button"
-          class="
-            flex items-center justify-between cursor-pointer w-full
-            bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
-          "
+          class="flex w-full cursor-pointer items-center justify-between rounded-md bg-gray-500 px-3 py-2 text-white hover:bg-gray-300"
           data-action="dropdown#toggle"
           data-dropdown-payload-param='[{"translations":"hidden"}, {"translations_arrow":"rotate-180"}, {"translations_button":"rounded-md rounded-t-md"}]'
         >
           Spanish Translations
           <svg
             id="translations_arrow"
-            class="w-6 h-6 shrink-0"
+            class="h-6 w-6 shrink-0"
             fill="currentColor"
             viewBox="0 0 20 20"
             xmlns="http://www.w3.org/2000/svg"
@@ -381,8 +368,8 @@
           </svg>
         </button>
 
-        <div id="translations" class="hidden border border-gray-300 p-4 rounded-b-md">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div id="translations" class="hidden rounded-b-md border border-gray-300 p-4">
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <% @workshop.decorate.display_spanish_fields.each do |field| %>
               <%= rhino_editor(f, field, label: field.to_s.humanize) %>
             <% end %>
@@ -395,17 +382,14 @@
           <button
             type="button"
             id="series_button"
-            class="
-              flex items-center justify-between cursor-pointer w-full
-              bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
-            "
+            class="flex w-full cursor-pointer items-center justify-between rounded-md bg-gray-500 px-3 py-2 text-white hover:bg-gray-300"
             data-action="dropdown#toggle"
             data-dropdown-payload-param='[{"series":"hidden"}, {"series_arrow":"rotate-180"}, {"series_button":"rounded-md rounded-t-md"}]'
           >
             Series workshops
             <svg
               id="series_arrow"
-              class="w-6 h-6 shrink-0"
+              class="h-6 w-6 shrink-0"
               fill="currentColor"
               viewBox="0 0 20 20"
               xmlns="http://www.w3.org/2000/svg"
@@ -420,7 +404,7 @@
 
           <div
             id="series"
-            class="<%= "hidden" unless f.object.workshop_series_children.any? %> border border-gray-300 p-4 rounded-b-md"
+            class="<%= "hidden" unless f.object.workshop_series_children.any? %> rounded-b-md border border-gray-300 p-4"
           >
             <p class="mb-2 text-sm text-gray-600">
               If this Workshop is a series, add the other "series workshops" below. You can also add a series-specific
@@ -443,17 +427,14 @@
         <button
           type="button"
           id="images_button"
-          class="
-            flex items-center justify-between cursor-pointer w-full
-            bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-t-md
-          "
+          class="flex w-full cursor-pointer items-center justify-between rounded-t-md bg-gray-500 px-3 py-2 text-white hover:bg-gray-300"
           data-action="dropdown#toggle"
           data-dropdown-payload-param='[{"images":"hidden"}, {"images_arrow":"rotate-180"}, {"images_button":"rounded-md rounded-t-md"}]'
         >
           Images/attachments
           <svg
             id="images_arrow"
-            class="w-6 h-6 shrink-0 rotate-180"
+            class="h-6 w-6 shrink-0 rotate-180"
             fill="currentColor"
             viewBox="0 0 20 20"
             xmlns="http://www.w3.org/2000/svg"
@@ -466,41 +447,14 @@
           </svg>
         </button>
 
-        <div id="images" class="border border-gray-300 p-4 rounded-b-md">
+        <div id="images" class="rounded-b-md border border-gray-300 p-4">
           <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
         </div>
       </div>
     </div>
 
     <% if f.object.persisted? %>
-      <% if allowed_to?(:manage?, Comment) %>
-        <div class="admin-only bg-blue-100 form-group p-3 space-y-4 mt-6 rounded-md" id="comments-section">
-          <div class="font-semibold text-gray-700 mb-2">Comments</div>
-
-          <div class="admin-only bg-blue-100 rounded-lg border border-gray-200 p-4 mb-4 shadow-sm"
-              data-controller="paginated-fields edit-toggle"
-              data-paginated-fields-per-page-value="5">
-            <%= f.simple_fields_for :comments do |cf| %>
-              <%= render "comments/comment_fields", f: cf %>
-            <% end %>
-
-            <div data-paginated-fields-target="nav"></div>
-
-            <button type="button"
-                    class="text-sm text-gray-400 hover:text-blue-600 underline cursor-pointer whitespace-nowrap"
-                    style="float:right"
-                    data-action="edit-toggle#toggle">
-              <span data-edit-toggle-target="editLabel">Edit Comments</span>
-              <span data-edit-toggle-target="viewLabel" class="hidden">Done Editing</span>
-            </button>
-            <%= link_to_add_association "➕ Add Comment",
-                                        f,
-                                        :comments,
-                                        partial: "comments/comment_fields",
-                                        class: "btn btn-secondary-outline" %>
-          </div>
-        </div>
-      <% end %>
+      <%= render "shared/comments_and_communications", f: f, view_all_person: f.object.author %>
     <% end %>
 
     <div class="action-buttons mt-8 flex justify-center gap-3">
@@ -520,11 +474,11 @@
           <%= check_box_tag :promote_idea_assets, true, false, class: "mt-1 h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" %>
 
           <div class="ml-2 flex flex-col">
-            <span class="text-gray-900 font-medium">
+            <span class="font-medium text-gray-900">
               If the workshop idea was submitted with attachments, check this box to transfer them to this new workshop.
             </span>
 
-            <p class="text-gray-500 text-sm mt-1">
+            <p class="mt-1 text-sm text-gray-500">
               (This will override any attachments uploaded in the form below once you click submit.)
             </p>
           </div>

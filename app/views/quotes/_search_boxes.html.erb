@@ -1,11 +1,11 @@
 <!-- Filters -->
-<div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
+<div class="mb-6 rounded-lg border border-gray-200 bg-white p-4">
   <%= form_with url: quotes_path,
                 method: :get,
                 data: {controller: "collection"},
                       autocomplete: "off",
                 class: "flex flex-wrap gap-4" do |f| %>
-    <div class="flex-grow min-w-[200px]">
+    <div class="min-w-[200px] flex-grow">
       <%= f.label :query, "Keywords",
                   class: search_label_class %>
 
@@ -16,9 +16,24 @@
                        oninput: "this.form.requestSubmit()" %>
     </div>
 
+    <!-- SOURCE -->
+    <div class="min-w-[180px]">
+      <label for="source_type" class="<%= search_label_class %>">
+        Source
+      </label>
+
+      <%= select_tag :source_type,
+                     options_for_select(
+                       [ [ "All sources", "" ] ] + @source_type_options,
+                       params[:source_type]
+                     ),
+                     class: search_field_class(extra: "search-select-placeholder bg-white"),
+                     onchange: "this.form.requestSubmit()" %>
+    </div>
+
     <% if allowed_to?(:manage?, Quote) %>
       <!-- PUBLISHED -->
-      <div class="min-w-[150px] admin-only bg-blue-100 p-2 rounded-md">
+      <div class="admin-only min-w-[150px] rounded-md bg-blue-100 p-2">
         <label for="published" class="<%= search_label_class %>">
           Published
         </label>
@@ -27,6 +42,21 @@
                        options_for_select(
                          [["All", ""], ["Published", "true"], ["Unpublished", "false"]],
                          params[:published]
+                       ),
+                       class: search_field_class(extra: "search-select-placeholder"),
+                       onchange: "this.form.requestSubmit()" %>
+      </div>
+
+      <!-- STANDOUT -->
+      <div class="admin-only min-w-[150px] rounded-md bg-blue-100 p-2">
+        <label for="standout" class="<%= search_label_class %>">
+          Standout
+        </label>
+
+        <%= select_tag :standout,
+                       options_for_select(
+                         [["All", ""], ["Standout", "true"], ["Not standout", "false"]],
+                         params[:standout]
                        ),
                        class: search_field_class(extra: "search-select-placeholder"),
                        onchange: "this.form.requestSubmit()" %>

@@ -69,6 +69,20 @@ RSpec.describe "Allocations", type: :request do
       expect(response.body).to include(ce.registrant.full_name)
     end
 
+    it "warns with a caution banner when the registration was transferred out (#1944)" do
+      reg.update!(status: "transferred_out")
+
+      get allocations_path(allocatable_sgid: reg.to_sgid.to_s)
+
+      expect(response.body).to include("transferred-out registration")
+    end
+
+    it "does not warn for an active registration" do
+      get allocations_path(allocatable_sgid: reg.to_sgid.to_s)
+
+      expect(response.body).not_to include("transferred-out registration")
+    end
+
     it "renders the results turbo frame" do
       get allocations_path, headers: { "Turbo-Frame" => "allocations_results" }
 

@@ -89,6 +89,15 @@ RSpec.describe RegistrationTicketCallout, type: :model do
       expect(handouts.behavioral_builtin?).to be(false)
       expect(certificate.behavioral_builtin?).to be(true)
     end
+
+    it "marks financial/credit records, but not participation or custom callouts" do
+      event = create(:event)
+      %w[ payment scholarship ce_hours certificate ].each do |key|
+        expect(create(:registration_ticket_callout, event:, builtin_key: key)).to be_financial_record
+      end
+      expect(create(:registration_ticket_callout, event:, builtin_key: "videoconference")).not_to be_financial_record
+      expect(create(:registration_ticket_callout, event:, builtin_key: nil)).not_to be_financial_record
+    end
   end
 
   describe "#published (inverse of hidden)" do

@@ -5,7 +5,7 @@
 <div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:continuing_education) %> rounded-xl border border-gray-200 p-4 shadow sm:p-6">
   <%# Top bar: back link + secondary links, matching the scholarship edit page %>
   <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
-    <%= link_to ce_registration_return_path(registration), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+    <%= link_to ce_registration_return_path(registration), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> <%= ce_registration_return_label %>
     <% end %>
     <div class="flex items-center gap-3">
@@ -18,7 +18,7 @@
             icon: "fa-solid fa-id-card text-2xs",
             href: registration_ce_path(registration.slug, return_to: "ce_registration"),
             target: "_blank", rel: "noopener" %>
-      <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+      <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     </div>
   </div>
 
@@ -28,6 +28,24 @@
              color: :continuing_education,
              event: registration.event,
              person: registration.registrant %>
+
+  <%= render "event_registrations/transferred_out_caution", registration: registration %>
+
+  <%# Transferred-in CE: a prominent in-frame card mirroring the transferred-out
+      caution, linking back to the paid original record. (#1944) %>
+  <% if @ce_registration.transfer_created? && (origin_ce = @ce_registration.origin_ce_registration) %>
+    <div class="mb-6 flex items-start gap-3 rounded-xl border border-teal-200 bg-teal-50 p-4 text-sm text-teal-900">
+      <i class="fa-solid fa-right-to-bracket mt-0.5 shrink-0 text-teal-600"></i>
+      <div>
+        <p class="font-semibold">These CE hours transferred in from <%= registration.transferred_from_registration.event.title %>.</p>
+        <p class="mt-0.5 text-teal-800">
+          The cost is the balance carried from the
+          <%= link_to "paid original record", edit_continuing_education_registration_path(origin_ce, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>;
+          new payments and the certificate are handled here.
+        </p>
+      </div>
+    </div>
+  <% end %>
 
   <div class="space-y-6">
     <%= simple_form_for @ce_registration, url: continuing_education_registration_path(@ce_registration, return_to: params[:return_to].presence),
@@ -39,50 +57,7 @@
       </div>
 
       <%# ---- Comments (saved with the CE registration, like the other forms) ---- %>
-      <section class="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="edit-toggle">
-        <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
-            <i class="fa-solid fa-comments"></i>
-          </span>
-          <h2 class="text-sm font-semibold text-gray-700">CE comments</h2>
-          <% if registration.registrant %>
-            <%= link_to all_comments_person_path(registration.registrant),
-                        class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
-                        target: "_blank", rel: "noopener" do %>
-              View all
-              <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
-            <% end %>
-          <% end %>
-        </div>
-
-        <div class="space-y-4 p-4" data-controller="paginated-fields" data-paginated-fields-per-page-value="5">
-          <div id="comment-list" class="space-y-4">
-            <%= f.simple_fields_for :comments do |cf| %>
-              <%= render "comments/comment_fields", f: cf %>
-            <% end %>
-          </div>
-
-          <div data-paginated-fields-target="nav"></div>
-
-          <div class="flex items-center justify-between gap-2">
-            <%= link_to_add_association f, :comments,
-                  partial: "comments/comment_fields",
-                  data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
-                  class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
-              <i class="fa-solid fa-plus text-2xs"></i>
-              Add comment
-            <% end %>
-
-            <button type="button"
-                    class="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                    data-action="edit-toggle#toggle">
-              <i class="fa-solid fa-pen text-2xs"></i>
-              <span data-edit-toggle-target="editLabel">Edit comments</span>
-              <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
-            </button>
-          </div>
-        </div>
-      </section>
+      <%= render "shared/comments_and_communications", f: f, view_all_person: f.object.registrant %>
     <% end %>
 
     <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -102,7 +77,7 @@
           <% end %>
         </p>
         <%= button_to toggle_certificate_continuing_education_registration_path(@ce_registration, return_to: params[:return_to].presence),
-              method: :patch, class: "rounded-lg border px-3 py-1.5 text-sm font-medium #{@ce_registration.certificate_sent_at.present? ? "border-gray-300 text-gray-600 hover:bg-gray-50" : "border-teal-300 bg-teal-50 text-teal-700 hover:bg-teal-100"} cursor-pointer" do %>
+              method: :patch, class: "rounded-lg border px-3 py-1.5 text-sm font-medium #{@ce_registration.certificate_sent_at.present? ? "border-gray-300 text-gray-600 hover:bg-gray-50" : "#{DomainTheme.border_class_for(:continuing_education_registrations)} #{DomainTheme.bg_class_for(:continuing_education_registrations)} #{DomainTheme.text_class_for(:continuing_education_registrations, intensity: 700)} #{DomainTheme.bg_class_for(:continuing_education_registrations, hover: true)}"} cursor-pointer" do %>
           <%= @ce_registration.certificate_sent_at.present? ? "Mark not issued" : "Mark certificate issued" %>
         <% end %>
       </div>
@@ -126,4 +101,9 @@
   </div>
 
   <%= render "shared/audit_info", resource: @ce_registration %>
+  <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+    <div class="mt-4 flex justify-end">
+      <%= render "application/activity_log", record: @ce_registration %>
+    </div>
+  <% end %>
 </div>

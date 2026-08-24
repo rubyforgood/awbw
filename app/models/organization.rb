@@ -1,5 +1,6 @@
 class Organization < ApplicationRecord
   include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable # Publishable
+  include Communicable
   belongs_to :organization_status
   belongs_to :organization_obligation, optional: true
   belongs_to :location, optional: true # TODO - remove Location if unused
@@ -13,6 +14,11 @@ class Organization < ApplicationRecord
   has_many :people, through: :affiliations
   has_many :users, through: :people
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  # An organization is its own correspondent — there is no person behind it.
+  def communications_email
+    email
+  end
   has_many :reports
   has_many :workshop_logs
   has_many :grants, as: :funder, dependent: :destroy
@@ -53,9 +59,12 @@ class Organization < ApplicationRecord
   validates :logo,
             content_type: %w[image/png image/jpeg image/webp],
             size: { less_than: 5.megabytes }
-  validates :name, presence: true
+  validates :name, presence: true, length: { maximum: 255 }
   validates :organization_status_id, presence: true
-  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
+  validates :agency_type_other, length: { maximum: 255 }
+  validates :website_url, length: { maximum: 255 }
+  validates :mission_vision_values, length: { maximum: 255 }
   validate :affiliation_dates_locked, if: -> { affiliations.any? && !Current.user&.super_user? }
 
   # Nested attributes
@@ -183,12 +192,6 @@ class Organization < ApplicationRecord
     facilitator_program_status(as_of: reference_date).status
   end
 
-  # Methods
-  def led_by?(user)
-    return false unless leader
-    leader.user == user
-  end
-
   def state
     addresses.active.first&.state
   end
@@ -214,19 +217,6 @@ class Organization < ApplicationRecord
     return unless first_active
 
     [ first_active.city, first_active.state ].compact_blank.join(", ").presence
-  end
-
-  # This org's program status relative to a scholarship recipient (the
-  # New/Ongoing/Reinstate column on the scholarship index): Reinstate = lapsed,
-  # Ongoing = has facilitators beyond this recipient, New = none prior. In-memory
-  # facilitator-affiliation heuristic, to reuse a preloaded association.
-  def program_status(recipient = nil)
-    facilitators = affiliations.select(&:facilitator?)
-    return "New" if facilitators.empty?
-    return "Reinstate" if facilitators.none?(&:active?)
-
-    prior = recipient ? facilitators.reject { |a| a.person_id == recipient.id } : facilitators
-    prior.any? ? "Ongoing" : "New"
   end
 
   def type_name
@@ -327,10 +317,6 @@ class Organization < ApplicationRecord
     if end_date_changed?
       errors.add(:end_date, "is managed automatically by affiliations")
     end
-  end
-
-  def leader
-    affiliations.find_by(position: 2)
   end
 
   def remove_duplicate_sectorable_items

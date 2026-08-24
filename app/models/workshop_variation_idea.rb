@@ -1,7 +1,8 @@
 class WorkshopVariationIdea < ApplicationRecord
   include AuthorCreditable
-  # Public submission: the submitter must choose how they're credited.
-  require_author_credit_preference
+  # The submitter is the author when none is named.
+  credits_creator
+
   include SearchCop
   search_scope :search do
     attributes :name, :body
@@ -10,12 +11,14 @@ class WorkshopVariationIdea < ApplicationRecord
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:query]) if params[:query].present?
+    results = results.where(id: by_credited_person_name(params[:author_name]).select("workshop_variation_ideas.id")) if params[:author_name].present?
     results = results.created_by_person(params[:created_by_person_id]) if params[:created_by_person_id].present?
     results
   end
 
   has_rich_text :rhino_body
 
+  belongs_to :author, class_name: "Person", inverse_of: :workshop_variation_ideas_as_author, optional: true
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :workshop
@@ -33,7 +36,8 @@ class WorkshopVariationIdea < ApplicationRecord
   has_many :assets, as: :owner, dependent: :destroy
 
   # Validations
-  validates :name, presence: true, uniqueness: { scope: :workshop_id, case_sensitive: false }
+  validates :name, presence: true, uniqueness: { scope: :workshop_id, case_sensitive: false }, length: { maximum: 255 }
+  validates :youtube_url, length: { maximum: 255 }
   validates :created_by_id, presence: true
   validates :updated_by_id, presence: true
   validates :organization_id, presence: true

@@ -5,7 +5,8 @@ class CategoryType < ApplicationRecord
   has_many :categorizable_items, through: :categories, dependent: :destroy
 
   # Validations
-  validates :name, presence: true, uniqueness: { case_sensitive: false }
+  validates :name, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
+  validates :display_text, length: { maximum: 255 }
 
   # Scopes
   # See Publishable

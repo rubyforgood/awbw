@@ -1,5 +1,9 @@
 class WorkshopVariation < ApplicationRecord
   include AuthorCreditable
+  # No explicit author → credit the creator's person by name, else "Anonymous".
+  self.unattributed_author_label = "Anonymous"
+  credits_creator
+
   include Publishable, Trendable, RichTextSearchable
   include SearchCop
   search_scope :search do
@@ -17,6 +21,10 @@ class WorkshopVariation < ApplicationRecord
       by_text = results.search(params[:query]).select("workshop_variations.id")
       by_person = results.by_credited_person_name(params[:query]).select("workshop_variations.id")
       results = results.where(id: by_text).or(results.where(id: by_person))
+    end
+    if params[:author_name].present?
+      by_name = results.by_credited_person_name(params[:author_name]).select("workshop_variations.id")
+      results = results.where(id: by_name)
     end
     results = results.authored_by(params[:author_id])
     results
@@ -42,9 +50,10 @@ class WorkshopVariation < ApplicationRecord
          as: :owner, class_name: "RichTextAsset", dependent: :destroy
   has_many :assets, as: :owner, dependent: :destroy
 
-  validates :name, presence: true, uniqueness: { scope: :workshop_id, case_sensitive: false }
+  validates :name, presence: true, uniqueness: { scope: :workshop_id, case_sensitive: false }, length: { maximum: 255 }
   validates :windows_type_id, presence: true
   validates :rhino_body, presence: true
+  validates :youtube_url, length: { maximum: 255 }
 
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
@@ -54,11 +63,6 @@ class WorkshopVariation < ApplicationRecord
 
   def description
     rhino_body.to_plain_text
-  end
-
-  # Unattributed workshop variations are credited to the generic facilitator.
-  def missing_author_label
-    "AWBW Facilitator"
   end
 
   def title

@@ -68,16 +68,23 @@ RSpec.describe "Forms", type: :request do
         get smart_form_settings_forms_path
 
         expect(response).to have_http_status(:success)
-        expect(response.body).to include("Smart form settings")
-        expect(response.body).to include("agency_name")
+        expect(response.body).to include("Smart field settings")
+        expect(response.body).to include("organization_name")
         expect(response.body).to include("Looked up against existing organizations by exact name")
+      end
+
+      it "links the Other responses review queue phrase to that page" do
+        get smart_form_settings_forms_path
+
+        expect(response.body).to include(other_responses_path)
+        expect(response.body).to match(/href="#{Regexp.escape(other_responses_path)}"[^>]*>Other responses review queue</)
       end
 
       it "lists the identifiers that only store an answer" do
         get smart_form_settings_forms_path
 
         expect(response.body).to include("referral_source")
-        expect(response.body).to include("Identifiers that do nothing extra")
+        expect(response.body).to include("Smart fields that do nothing extra")
       end
 
       # Reached from a form editor, so it has to offer a way back to that editor
@@ -95,6 +102,17 @@ RSpec.describe "Forms", type: :request do
         get smart_form_settings_forms_path
 
         expect(response.body).not_to include("Back to")
+      end
+
+      # Opened in a new tab from a field's "What's this?" hint, so the back link
+      # must anchor to that exact field's row, not just the editor.
+      it "anchors the back link to the field it was opened from" do
+        form = create(:form, :standalone, name: "Reg form")
+        field = create(:form_field, form: form)
+
+        get smart_form_settings_forms_path(form_id: form.id, field_id: field.id)
+
+        expect(response.body).to include("#{edit_form_path(form)}#form_field_#{field.id}")
       end
     end
 
@@ -264,6 +282,16 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).not_to match(/payment_method.{0,600}\+ Add option/m)
       # A note explains why they're locked.
       expect(response.body).to include("tied to system logic")
+    end
+
+    it "shows the smart field name input without the admin override, with a link to the reference page" do
+      form = FormBuilderService.new(name: "Test", sections: %i[person_identifier]).call
+
+      get edit_form_path(form)
+
+      expect(response.body).to include("Smart field")
+      expect(response.body).to include("[field_identifier]")
+      expect(response.body).to include(smart_form_settings_forms_path(form_id: form.id))
     end
 
     it "renders payment-method options as editable inputs with ?admin=true" do
@@ -684,6 +712,34 @@ RSpec.describe "Forms", type: :request do
     end
   end
 
+  describe "POST /forms/:id/copy" do
+    context "as admin" do
+      before { sign_in admin }
+
+      it "creates a full copy named \"COPY of [name]\" and redirects to its editor" do
+        form = create(:form, :standalone, name: "Volunteer")
+        create(:form_field, form: form, name: "First name")
+
+        expect { post copy_form_path(form) }.to change(Form, :count).by(1)
+
+        copy = Form.find_by(name: "COPY of Volunteer")
+        expect(copy.name).to eq("COPY of Volunteer")
+        expect(copy.form_fields.map(&:name)).to eq([ "First name" ])
+        expect(response).to redirect_to(edit_form_path(copy))
+      end
+    end
+
+    context "as a non-admin" do
+      before { sign_in user }
+
+      it "denies access and copies nothing" do
+        form = create(:form, :standalone)
+        expect { post copy_form_path(form) }.not_to change(Form, :count)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
   describe "GET /forms/:id" do
     before { sign_in admin }
 
@@ -713,6 +769,48 @@ RSpec.describe "Forms", type: :request do
       get form_path(form)
 
       expect(response.body).to include("Answers on file")
+    end
+  end
+
+  describe "GET /forms/:id/results" do
+    context "as admin" do
+      before { sign_in admin }
+
+      it "renders the results page with the aggregated select answers and text responses" do
+        form = create(:form, :standalone, name: "Survey")
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+
+        blue = create(:form_submission, form: form)
+        create(:form_answer, form_submission: blue, form_field: color, submitted_answer: "Blue")
+        create(:form_answer, form_submission: blue, form_field: thoughts, submitted_answer: "Loved it")
+
+        red = create(:form_submission, form: form)
+        create(:form_answer, form_submission: red, form_field: color, submitted_answer: "Red")
+
+        get results_form_path(form)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("Favorite color")
+        expect(response.body).to include("Any thoughts")
+        expect(response.body).to include("Loved it")
+      end
+
+      it "shows an empty state when the form has no submissions" do
+        form = create(:form, :standalone, name: "Untouched")
+        get results_form_path(form)
+        expect(response.body).to include("No submissions to this form yet")
+      end
+    end
+
+    context "as a regular user" do
+      before { sign_in user }
+
+      it "denies access" do
+        form = create(:form, :standalone)
+        get results_form_path(form)
+        expect(response).to redirect_to(root_path)
+      end
     end
   end
 

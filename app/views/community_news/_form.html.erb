@@ -50,24 +50,21 @@
                 selected: f.object.organization_id,
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
+    <%# Optional on the model, so the form has to allow no author — the credit then
+        falls to `missing_author_label` when there's no author. %>
     <%= f.input :author_id,
                 as: :select,
                 label: "Author",
-                required: true,
-                collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
-                selected: f.object.author_id || current_user&.person_id,
-                input_html: { required: true,
-                              class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
+                collection: author_picker_person(f.object).present? ? [[ author_picker_person(f.object).remote_search_label[:label], author_picker_person(f.object).id ]] : [],
+                selected: author_picker_person(f.object)&.id,
+                include_blank: "Select an author",
+                input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
                               data: { controller: "remote-select",
                                       remote_select_model_value: "person" } } %>
+    <%= render "shared/author_credit_note", record: f.object %>
 
-    <%= f.input :author_credit_preference,
-                as: :select,
-                label: "Author credit preference",
-                hint: "Controls how the author's name is displayed",
-                collection: AuthorCreditable::ADMIN_FORM_OPTIONS,
-                selected: f.object.author_credit_preference,
-                input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+    <%= render "shared/author_credit_field", f: f %>
+    <%= render "shared/author_credit_warning", record: f.object %>
   </div>
   <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
 

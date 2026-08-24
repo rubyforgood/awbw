@@ -37,6 +37,7 @@
           <%= render "assets/display_image",
                      resource: item.object,
                      width: "full", height: "full",
+                     image_variant: :thumbnail,
                      link: false,
                      link_to_object: false,
                      file: item.display_image %>
@@ -54,6 +55,14 @@
 
     <!-- RIGHT SIDE -->
     <div class="flex-1 min-w-0 pl-4 pr-8 pb-4 mt-2 relative">
+
+      <!-- STANDOUT BADGE (admin-only) -->
+      <% if item.class == QuoteDecorator && item.standout? && allowed_to?(:manage?, Quote) %>
+        <span class="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-yellow-800 mt-3">
+          <i class="fa-solid fa-star mr-1"></i>
+          Standout
+        </span>
+      <% end %>
 
       <!-- TITLE -->
       <div class="mt-3 mb-2">

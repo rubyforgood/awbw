@@ -1,0 +1,49 @@
+<%# Inline change log for one record, read from its Ahoy lifecycle events
+    (create/update/destroy tracked for every model by AhoyTrackable). Renders the
+    same details partial as the admin activities table, so a change reads
+    identically wherever it's shown; that page remains the filterable full
+    history, linked from shared/_audit_info. %>
+<%# Pages hand over decorated records as readily as models — resolve to the model
+    the events were recorded against, the same way shared/_audit_info does. %>
+<% model = record.respond_to?(:object) ? record.object : record %>
+<% events = Ahoy::Event.mutations.where(resource_type: model.class.name, resource_id: model.id)
+                       .includes(:user).order(time: :desc).to_a %>
+<%# Resolve every record the events reference up front, one query per type, the
+    same way the admin activities table does — otherwise each reference on each
+    event costs its own lookup. %>
+<% record_cache = Analytics::EventReferenceLoader.new(events).records %>
+<% if events.empty? %>
+  <%# Said plainly rather than left out: an absent log reads as "this page hasn't
+      got one", which is a different thing from "nothing has happened yet". %>
+  <span class="text-sm font-medium text-gray-400">Change log empty</span>
+<% else %>
+  <div data-controller="dropdown" class="relative">
+    <button type="button"
+            data-action="dropdown#toggle"
+            data-dropdown-payload-param='[{"<%= dom_id(model, :activity) %>":"hidden"}]'
+            class="inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-700">
+      Change log
+      <i class="fa-solid fa-chevron-down h-3 w-3 text-gray-400"></i>
+    </button>
+    <div id="<%= dom_id(model, :activity) %>"
+         data-dropdown-target="content"
+         class="mt-2 hidden space-y-2">
+      <% events.each do |event| %>
+        <% action = event.name.split(".").first %>
+        <div class="rounded-lg border border-gray-200 p-3 <%= { "create" => "bg-green-50", "destroy" => "bg-red-50" }.fetch(action, "bg-gray-50") %>">
+          <div class="mb-1 flex items-center gap-2">
+            <span class="rounded-full px-2 py-0.5 text-xs font-medium <%= { "create" => "bg-green-100 text-green-700", "destroy" => "bg-red-100 text-red-700" }.fetch(action, "bg-blue-100 text-blue-700") %>">
+              <%= action.humanize %>
+            </span>
+            <span class="text-xs text-gray-500"><%= event.time&.in_time_zone&.strftime("%B %d, %Y at %I:%M %p") %></span>
+            <span class="text-xs text-gray-400">
+              by <%= event.user&.full_name.presence || event.properties["source"] || "Unknown" %>
+            </span>
+          </div>
+          <%= render "admin/ahoy_activities/event_details",
+                     activity: event.decorate(context: { record_cache: record_cache }) %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

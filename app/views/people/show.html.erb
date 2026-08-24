@@ -4,7 +4,7 @@
 <% if params[:return_to] == "registrants" && params[:event_id].present? %>
   <% back_registration = @person.event_registrations.find_by(event_id: params[:event_id]) %>
   <div class="mb-3">
-    <%= link_to(back_registration ? registrants_event_row_path(params[:event_id], back_registration.id) : registrants_event_path(params[:event_id]), class: "text-sm text-gray-500 hover:text-gray-700") do %>
+    <%= link_to(back_registration ? registrants_event_row_path(params[:event_id], back_registration.id) : registrants_event_path(params[:event_id]), class: "text-sm #{eyebrow_link_class} px-2 py-1") do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Back to registrants
     <% end %>
   </div>
@@ -24,11 +24,11 @@
     <div class="mb-4 flex flex-wrap justify-end gap-2">
       <% if params[:return_to] == "bulk_payments" && params[:event_id].present? %>
         <%# Returned from a bulk payment tray: mr-auto pins this back link left while the rest stay right. %>
-        <%= link_to bulk_payments_return_path(params[:event_id]), class: "mr-auto text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+        <%= link_to bulk_payments_return_path(params[:event_id]), class: "mr-auto text-sm #{eyebrow_link_class} px-2 py-1" do %>
           <i class="fa-solid fa-arrow-left text-xs"></i> Bulk payments
         <% end %>
       <% end %>
-      <% unless @person.user %>
+      <% if @person.user.nil? && allowed_to?(:create?, User) %>
         <div class="admin-only bg-blue-100 p-2">
           No user!
           <%= link_to "Create user",
@@ -36,13 +36,13 @@
                         class: "btn btn-warning px-2 py-1" %>
         </div>
       <% end %>
-      <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+      <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% if allowed_to?(:index?, Person) %>
-        <%= link_to "People", people_path, class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+        <%= link_to "People", people_path, class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% end %>
       <% if allowed_to?(:edit?, @person) %>
         <%= link_to "Edit", edit_person_path(@person),
-                      class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+                      class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% end %>
 
       <span class="inline-block text-sm">
@@ -297,7 +297,7 @@
       </div>
     <% end %>
     <!-- SUBMITTED SECTION -->
-    <% if allowed_to?(:show?, @person) %>
+    <% if allowed_to?(:own_record?, @person) %>
       <div class="user-only <%= DomainTheme.bg_class_for(:user_only) %>
             border <%= DomainTheme.border_class_for(:user_only) %> rounded-lg shadow-sm"
            data-controller="expandable-card"
@@ -350,6 +350,15 @@
               <h2 class="mb-3 text-lg font-semibold text-gray-800">Workshop logs submitted</h2>
               <%= turbo_frame_tag "person_workshop_logs_section", src: person_path(@person, section: "workshop_logs"), loading: :lazy do %>
                 <p class="text-gray-500 italic">Loading workshop logs...</p>
+              <% end %>
+            </div>
+          <% end %>
+          <!-- Monthly reports (admin/owner only; deprecated — only for people who have some) -->
+          <% if @person.profile_show_monthly_reports? && @person.any_monthly_reports? %>
+            <div id="monthly_reports" class="admin-or-owner p-3">
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Monthly reports submitted</h2>
+              <%= turbo_frame_tag "person_monthly_reports_section", src: person_path(@person, section: "monthly_reports"), loading: :lazy do %>
+                <p class="text-gray-500 italic">Loading monthly reports...</p>
               <% end %>
             </div>
           <% end %>

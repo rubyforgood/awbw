@@ -56,7 +56,7 @@ class Sector < ApplicationRecord
   has_many :quotes, through: :workshops
 
   # Validations
-  validates :name, presence: true, uniqueness: { case_sensitive: false }
+  validates :name, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
 
   # Cache expiration
   after_save :expire_sectors_cache

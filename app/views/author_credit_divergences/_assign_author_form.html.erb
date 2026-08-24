@@ -1,0 +1,16 @@
+<%# Locals: record (required), suggested (optional Person to preselect). %>
+<% suggested = local_assigns[:suggested] %>
+<%= form_with url: assign_author_author_credit_divergences_path, method: :patch,
+              class: "flex items-center gap-2" do %>
+  <%= hidden_field_tag :record_type, record.class.name, id: nil %>
+  <%= hidden_field_tag :record_id, record.id, id: nil %>
+  <%= render "filter_fields" %>
+  <%= select_tag :author_id,
+                 options_for_select(suggested ? [ [ suggested.full_name, suggested.id ] ] : [], suggested&.id),
+                 include_blank: "Select a person",
+                 class: "rounded-md border-gray-300 text-sm",
+                 id: nil,
+                 data: { controller: "remote-select", remote_select_model_value: "person" } %>
+  <%= submit_tag "Credit",
+                 class: "rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer" %>
+<% end %>

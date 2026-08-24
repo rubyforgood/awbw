@@ -12,7 +12,9 @@
       clear_to     – optional value "Clear filters" resets this select to. Only
                      needed when the select renders pre-selected (blank: nil), so
                      its first option is a real value rather than a neutral
-                     placeholder — see collection#clearAndSubmit. %>
+                     placeholder — see collection#clearAndSubmit.
+      hint         – optional HTML rendered as muted help text under the select
+                     (e.g. a link to manage the underlying records). %>
 <div class="<%= local_assigns.fetch(:wrapper_class, "w-full md:w-44") %>">
   <%= label_tag param, label, class: search_label_class %>
   <%= select_tag param,
@@ -20,4 +22,7 @@
                  include_blank: blank,
                  data: { clear_to: local_assigns[:clear_to] },
                  class: "#{field_class} search-select-placeholder" %>
+  <% if local_assigns[:hint].present? %>
+    <p class="mt-1 text-xs text-gray-500"><%= local_assigns[:hint] %></p>
+  <% end %>
 </div>

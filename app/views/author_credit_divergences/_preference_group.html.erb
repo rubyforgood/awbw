@@ -1,0 +1,97 @@
+<% person = group.person %>
+<% highlighted = params[:highlight].to_s == person.id.to_s %>
+<div id="<%= dom_id(person, :divergence) %>" class="overflow-hidden rounded-lg border shadow-sm scroll-mt-4 transition-colors duration-150 <%= highlighted ? "border-yellow-400 bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "border-gray-200 bg-white" %>">
+  <div class="border-b border-gray-200 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+    <%= link_to person.full_name, person_path(person),
+                target: "_blank", rel: "noopener", title: "Opens in a new tab",
+                class: "font-semibold text-gray-900 hover:underline" %>
+    <% if person.author_credit_reconciled_at.present? %>
+      <%= render "shared/badge",
+            label: "Reconciled #{person.author_credit_reconciled_at.strftime('%b %-d, %Y')}",
+            classes: "bg-gray-50 text-gray-600 border-gray-200",
+            icon: "fa-solid fa-circle-info" %>
+    <% end %>
+  </div>
+
+  <table class="w-full text-sm">
+    <thead class="text-left text-xs uppercase text-gray-500 bg-gray-50">
+      <tr>
+        <th class="px-4 py-2 font-medium">Content</th>
+        <th class="px-4 py-2 font-medium">Type</th>
+        <th class="px-4 py-2 font-medium">Credit display</th>
+        <th class="px-4 py-2 font-medium">Stored consent</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      <% group.records.each do |record| %>
+        <tr>
+          <td class="px-4 py-2"><%= divergence_record_link(record) %></td>
+          <td class="px-4 py-2 text-gray-600"><%= record.class.name.underscore.humanize %></td>
+          <td class="px-4 py-2 text-gray-800"><%= record.author_credit %></td>
+          <td class="px-4 py-2">
+            <%= form_with url: update_item_author_credit_divergences_path, method: :patch,
+                          class: "flex items-center gap-2" do %>
+              <%= hidden_field_tag :record_type, record.class.name, id: nil %>
+              <%= hidden_field_tag :record_id, record.id, id: nil %>
+              <%= render "filter_fields" %>
+              <%# "None" clears the snapshot so the item follows the profile. %>
+              <%= select_tag "author_credit_preference",
+                             options_for_select(AuthorCreditable::ADMIN_FORM_OPTIONS.to_a, record.author_credit_preference),
+                             include_blank: "None (follow profile)",
+                             id: nil,
+                             class: "rounded-md border-gray-300 text-sm" %>
+              <%= submit_tag "Save",
+                             class: "rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer" %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
+    <%= form_with url: update_person_author_credit_divergences_path, method: :patch,
+                  class: "flex flex-wrap items-end gap-3" do %>
+      <%= hidden_field_tag :id, person.id, id: nil %>
+      <%= render "filter_fields" %>
+
+      <%# Read-only current state on the left, so the row reads current → new. Only
+          the fields to its right are applied. %>
+      <div class="pb-2 whitespace-nowrap sm:min-w-[11rem]">
+        <span class="block text-xs font-medium text-gray-500">Current Display name preference</span>
+        <span class="mt-1 block text-sm font-medium text-gray-800">
+          <%= Person::DISPLAY_NAME_PREFERENCE_LABELS[person.display_name_preference.presence || "full_name"] %>
+        </span>
+        <span class="mt-0.5 block text-xs text-gray-500">
+          Anonymous: <%= person.anonymous_contributions? ? "on" : "off" %>
+        </span>
+      </div>
+
+      <span class="pb-3 text-gray-400" aria-hidden="true">&rarr;</span>
+
+      <div class="pb-2">
+        <%= label_tag "person_display_name_preference_#{person.id}", "Set profile to",
+                      class: "block text-xs font-medium text-gray-700" %>
+        <div class="mt-1 flex flex-wrap items-center gap-4">
+          <%= select_tag "person[display_name_preference]",
+                         options_for_select(Person::DISPLAY_NAME_PREFERENCE_LABELS.invert.to_a,
+                                            suggested_display_name_preference(group)),
+                         id: "person_display_name_preference_#{person.id}",
+                         class: "rounded-md border-gray-300 text-sm" %>
+          <label class="flex items-center gap-2 text-sm text-gray-700">
+            <%= hidden_field_tag "person[anonymous_contributions]", "0", id: nil %>
+            <%= check_box_tag "person[anonymous_contributions]", "1",
+                              group.suggested_preference == AuthorCreditable::ANONYMOUS || person.anonymous_contributions?,
+                              id: "person_anonymous_contributions_#{person.id}",
+                              class: "rounded border-gray-300" %>
+            Anonymous contributions
+          </label>
+        </div>
+        <p class="mt-0.5 text-xs text-gray-500">Hides your name on content, but not People/Profile</p>
+      </div>
+
+      <%= submit_tag "Apply to profile",
+                     class: "btn btn-primary cursor-pointer" %>
+    <% end %>
+  </div>
+</div>

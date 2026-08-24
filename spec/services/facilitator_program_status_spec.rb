@@ -34,6 +34,24 @@ RSpec.describe FacilitatorProgramStatus do
       expect(status_on.status).to eq(:ongoing)
     end
 
+    it "is :new for a same-day (start == end) facilitation dated to the anchor" do
+      # start == end == the event date is the affiliation this training mints (D8),
+      # so a first-time org still reads New — not Ongoing.
+      facilitator(start_date: anchor, end_date: anchor)
+      expect(status_on.status).to eq(:new)
+    end
+
+    it "is :new for an affiliation that starts on the anchor with a later end date" do
+      # Still the minted affiliation (starts on the event), just not open-ended.
+      facilitator(start_date: anchor, end_date: anchor + 30)
+      expect(status_on.status).to eq(:new)
+    end
+
+    it "is :reinstated for a same-day facilitation that ran before the anchor" do
+      facilitator(start_date: Date.new(2020, 1, 1), end_date: Date.new(2020, 1, 1))
+      expect(status_on.status).to eq(:reinstated)
+    end
+
     it "is :reinstated when every earlier facilitator affiliation has ended" do
       facilitator(start_date: Date.new(2015, 8, 1), end_date: Date.new(2018, 6, 1))
       expect(status_on.status).to eq(:reinstated)
@@ -41,6 +59,36 @@ RSpec.describe FacilitatorProgramStatus do
 
     it "ignores non-facilitator affiliations" do
       facilitator(start_date: Date.new(2010, 1, 1), title: "Volunteer")
+      expect(status_on.status).to eq(:new)
+    end
+  end
+
+  # Status is per-organization over ALL its facilitator affiliations (ADR-0001 D5),
+  # so a freshly-minted affiliation never downgrades a program that other affiliations
+  # already make Ongoing or Reinstated.
+  describe "combining multiple facilitator affiliations" do
+    it "is :ongoing when a prior active affiliation coexists with one minted at the anchor" do
+      facilitator(start_date: Date.new(2019, 3, 1))                 # prior, still active
+      facilitator(start_date: anchor)                              # minted at this training
+      expect(status_on.status).to eq(:ongoing)
+    end
+
+    it "is :reinstated when only lapsed history coexists with one minted at the anchor" do
+      facilitator(start_date: Date.new(2015, 1, 1), end_date: Date.new(2017, 1, 1))  # lapsed
+      facilitator(start_date: anchor)                                                # minted
+      expect(status_on.status).to eq(:reinstated)
+    end
+
+    it "is :ongoing when an active affiliation coexists with a lapsed one" do
+      facilitator(start_date: Date.new(2015, 1, 1), end_date: Date.new(2017, 1, 1))  # lapsed
+      facilitator(start_date: Date.new(2023, 1, 1))                                  # active
+      expect(status_on.status).to eq(:ongoing)
+    end
+
+    it "is :new only when every facilitator affiliation is dated on/after the anchor" do
+      facilitator(start_date: anchor)                     # minted, open-ended
+      facilitator(start_date: anchor, end_date: anchor)   # minted, same-day
+      facilitator(start_date: anchor + 5)                 # starts after the event
       expect(status_on.status).to eq(:new)
     end
   end

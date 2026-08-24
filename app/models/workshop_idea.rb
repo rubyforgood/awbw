@@ -1,8 +1,9 @@
 class WorkshopIdea < ApplicationRecord
   include AuthorCreditable
-  # Public submission: the submitter must choose how they're credited.
-  require_author_credit_preference
+  # The submitter is the author when none is named.
+  credits_creator
 
+  belongs_to :author, class_name: "Person", inverse_of: :workshop_ideas_as_author, optional: true
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :windows_type
@@ -30,7 +31,7 @@ class WorkshopIdea < ApplicationRecord
 
   before_save :set_time_frame
 
-  validates :title, presence: true, uniqueness: { case_sensitive: false }
+  validates :title, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
@@ -75,14 +76,13 @@ class WorkshopIdea < ApplicationRecord
 
   # Scopes
   scope :title, ->(title) { where("workshop_ideas.title like ?", "%#{ title }%") }
-  scope :author_name, ->(author_name) { joins(:created_by).
-    where("users.first_name like ? or users.last_name like ? or users.email like ?",
-          "%#{author_name}%", "%#{author_name}%", "%#{author_name}%") }
+  scope :author_name, ->(author_name) {
+    where(id: by_credited_person_name(author_name).select("workshop_ideas.id"))
+  }
 
   def self.search(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.title(params[:title]) if params[:title].present?
-    results = results.where(created_by_id: params[:created_by_id]) if params[:created_by_id].present?
     results = results.author_name(params[:author_name]) if params[:author_name].present?
     results
   end

@@ -5,15 +5,15 @@
 <% payment = ce.payment_status_badge %>
 <% certificate = ce.certificate_badge %>
 
-<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:continuing_education) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:continuing_education) %> rounded-xl border border-gray-200 p-4 shadow sm:p-6">
   <%# Top bar: back to the CE registrations index + Edit / Home. %>
-  <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
-    <%= link_to continuing_education_registrations_path, class: "text-sm text-gray-500 hover:text-gray-700" do %>
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+    <%= link_to continuing_education_registrations_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> CE registrations
     <% end %>
     <div class="flex items-center gap-3">
-      <%= link_to "Edit", edit_continuing_education_registration_path(@ce_registration, return_to: "ce_index"), class: "text-sm text-gray-500 hover:text-gray-700" %>
-      <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+      <%= link_to "Edit", edit_continuing_education_registration_path(@ce_registration, return_to: "ce_index"), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+      <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     </div>
   </div>
 
@@ -35,27 +35,27 @@
 
       <dl class="grid grid-cols-1 gap-px bg-gray-100 sm:grid-cols-2">
         <div class="bg-white px-4 py-3">
-          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">License</dt>
+          <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">License</dt>
           <dd class="mt-1 text-sm font-medium text-gray-900"><%= ce.license_label %></dd>
         </div>
         <div class="bg-white px-4 py-3">
-          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Issuing state</dt>
+          <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Issuing state</dt>
           <dd class="mt-1 text-sm text-gray-900"><%= license&.issuing_state.presence || "—" %></dd>
         </div>
         <div class="bg-white px-4 py-3">
-          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">License expires</dt>
+          <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">License expires</dt>
           <dd class="mt-1 text-sm text-gray-900"><%= license&.expires_on&.to_fs(:long) || "—" %></dd>
         </div>
         <div class="bg-white px-4 py-3">
-          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Hours</dt>
+          <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Hours</dt>
           <dd class="mt-1 text-sm text-gray-900 tabular-nums"><%= number_with_precision(@ce_registration.hours, precision: 1, strip_insignificant_zeros: true) %></dd>
         </div>
         <div class="bg-white px-4 py-3">
-          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Payment</dt>
+          <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Payment</dt>
           <dd class="mt-1"><%= render "shared/badge", label: payment.label, classes: payment.classes, icon: payment.icon %></dd>
         </div>
         <div class="bg-white px-4 py-3">
-          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Certificate</dt>
+          <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Certificate</dt>
           <dd class="mt-1"><%= render "shared/badge", label: certificate.label, classes: certificate.classes, icon: certificate.icon %></dd>
         </div>
       </dl>
@@ -75,9 +75,9 @@
           <% @ce_registration.comments.each do |comment| %>
             <li class="px-4 py-3">
               <% if comment.topic.present? %>
-                <p class="text-xs font-semibold uppercase tracking-wide text-gray-400"><%= comment.topic %></p>
+                <p class="text-xs font-semibold tracking-wide text-gray-400 uppercase"><%= comment.topic %></p>
               <% end %>
-              <p class="text-sm text-gray-700 whitespace-pre-line"><%= comment.body %></p>
+              <p class="text-sm whitespace-pre-line text-gray-700"><%= comment.body %></p>
             </li>
           <% end %>
         </ul>
@@ -86,4 +86,9 @@
   </div>
 
   <%= render "shared/audit_info", resource: @ce_registration %>
+  <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+    <div class="mt-4 flex justify-end">
+      <%= render "application/activity_log", record: @ce_registration %>
+    </div>
+  <% end %>
 </div>

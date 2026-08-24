@@ -25,6 +25,25 @@ class Comment < ApplicationRecord
     where("comments.created_by_id = :id OR comments.updated_by_id = :id", id: user_id)
   }
 
+  # Topic-only match. The counterpart of a communication's subject line, so one
+  # box can search both in the combined feed (`query` searches the body too).
+  scope :topic_matching, ->(term) {
+    pattern = "%#{sanitize_sql_like(term.to_s.strip.downcase)}%"
+    where("LOWER(comments.topic) LIKE :pattern", pattern: pattern)
+  }
+
+  # A comment's follow-up axis is its flag, which lines up with a communication's
+  # responded flag: "needed" is an open item on either side. Nothing on a comment
+  # records that a reply was sent, so "responded" matches no comment.
+  scope :follow_up_status, ->(status) {
+    case status.to_s
+    when "needed" then flagged
+    when "none" then where(flagged: false)
+    when "responded" then none
+    else all
+    end
+  }
+
   scope :created_on_or_after, ->(value) {
     date = parse_date(value)
     date ? where("comments.created_at >= ?", date.beginning_of_day) : all
@@ -61,7 +80,9 @@ class Comment < ApplicationRecord
     scope = is_a?(ActiveRecord::Relation) ? self : all
     scope = scope.where(commentable_type: params[:source]) if params[:source].present?
     scope = scope.flagged if params[:flagged] == "1"
+    scope = scope.follow_up_status(params[:follow_up]) if params[:follow_up].present?
     scope = scope.matching(params[:query]) if params[:query].present?
+    scope = scope.topic_matching(params[:subject]) if params[:subject].present?
     scope = scope.authored_by_user(params[:author_id]) if params[:author_id].present?
     scope = scope.created_on_or_after(params[:from]) if params[:from].present?
     scope = scope.created_on_or_before(params[:to]) if params[:to].present?

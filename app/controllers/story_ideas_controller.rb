@@ -5,7 +5,8 @@ class StoryIdeasController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(StoryIdea.includes(:windows_type, :organization, :workshop, :created_by, :updated_by))
+    base_scope = authorized_scope(StoryIdea.includes(:windows_type, :organization, :workshop, :author, :updated_by,
+                                                     created_by: :person))
     filtered = base_scope.search_by_params(params)
     @story_ideas = filtered.order(created_at: :desc)
                            .paginate(page: params[:page], per_page: per_page)
@@ -39,6 +40,9 @@ class StoryIdeasController < ApplicationController
     @story_idea = StoryIdea.new(story_idea_params.except(:category_ids, :sector_ids))
     @story_idea.created_by = current_user
     @story_idea.updated_by = current_user
+    # Credit the submitter as the author, so the idea lists on their profile by
+    # authorship like every other content type. An admin can reassign it later.
+    @story_idea.author ||= current_user.person
     authorize! @story_idea
 
     success = false
@@ -89,7 +93,6 @@ class StoryIdeasController < ApplicationController
     StoryIdea.transaction do
       @story_idea.assign_attributes(story_idea_params.except(:images, :category_ids, :sector_ids))
       attribute_comment_authorship
-      stamp_new_notification_recipients
       if @story_idea.save
         assign_associations(@story_idea)
         success = true
@@ -133,11 +136,6 @@ class StoryIdeasController < ApplicationController
     end
   end
 
-  # Inline-logged communications are addressed to the idea's submitter.
-  def stamp_new_notification_recipients
-    recipient_email = @story_idea.communications_email.presence || "n/a"
-    @story_idea.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
-  end
 
   def set_story_idea
     @story_idea = StoryIdea.find(params[:id])
@@ -146,7 +144,7 @@ class StoryIdeasController < ApplicationController
   def story_idea_params
     params.require(:story_idea).permit(
       :title, :rhino_body, :youtube_url,
-      :permission_given, :author_credit_preference, :promoted_to_story,
+      :permission_given, :author_credit_preference,
       :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id,
       category_ids: [],

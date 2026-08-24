@@ -114,7 +114,7 @@ RSpec.describe "organizations/edit", type: :view do
     end
   end
 
-  describe "art program since" do
+  describe "facilitators since" do
     before(:each) { assign(:organization_statuses, OrganizationStatus.all) }
 
     around { |ex| travel_to(Date.new(2026, 8, 3)) { ex.run } }
@@ -132,7 +132,7 @@ RSpec.describe "organizations/edit", type: :view do
       assert_select "[data-affiliation-dates-target='facilitatorSince']", text: /Sep 2026/, count: 0
     end
 
-    # This form and the profile used to render "Art program since" two different
+    # This form and the profile used to render "Facilitators since" two different
     # ways — the profile as merged periods, this form as one earliest→latest span,
     # which silently swallowed the gap. Both now render the one decorator value.
     it "renders a lapse and a return as separate periods, matching the profile" do
@@ -151,7 +151,7 @@ RSpec.describe "organizations/edit", type: :view do
   end
 
   describe "program status" do
-    it "renders a 'date · status · event' chip for each event the org is represented at" do
+    it "renders a 'status · date · event' chip for each event the org is represented at" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
       person = create(:person)
       create(:affiliation, organization: org, person: person, title: "Facilitator",
@@ -163,13 +163,74 @@ RSpec.describe "organizations/edit", type: :view do
       assign(:organization_events, Event.where(id: event.id))
       render
 
-      expect(rendered).to include("Aug 2026 · Ongoing · PES205")
+      expect(rendered).to include("Ongoing · Aug 2026 · PES205")
       # Opens in a new tab, so the report needs the route back to this form —
       # and the block needs the id that back-link anchors to.
       expect(rendered).to include(CGI.escapeHTML(
         participation_events_path(event_id: event.id, return_organization_id: org.id, return_to: "organization_edit")
       ))
       expect(rendered).to include("id=\"#{EventParticipationHelper::PROGRAM_STATUS_ANCHOR}\"")
+    end
+
+    it "labels a same-day facilitation dated to the event as New, not Ongoing (ADR-0001 D8)" do
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+                           start_date: Date.new(2026, 8, 1), end_date: Date.new(2026, 8, 1))
+      event = create(:event, title: "August Training", abbreviation: "PES205", start_date: Date.new(2026, 8, 1))
+
+      assign(:organization, org.reload)
+      assign(:organization_statuses, OrganizationStatus.all)
+      assign(:organization_events, Event.where(id: event.id))
+      render
+
+      expect(rendered).to include("New · Aug 2026 · PES205")
+      expect(rendered).not_to include("Ongoing · Aug 2026 · PES205")
+    end
+
+    it "labels a lapsed program as Reinstated" do
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+                           start_date: Date.new(2015, 1, 1), end_date: Date.new(2018, 1, 1))
+      event = create(:event, title: "August Training", abbreviation: "PES205", start_date: Date.new(2026, 8, 1))
+
+      assign(:organization, org.reload)
+      assign(:organization_statuses, OrganizationStatus.all)
+      assign(:organization_events, Event.where(id: event.id))
+      render
+
+      expect(rendered).to include("Reinstated · Aug 2026 · PES205")
+    end
+
+    it "labels an org Ongoing when a prior active facilitator coexists with one minted at the event" do
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+                           start_date: Date.new(2019, 5, 1), end_date: nil)              # prior, still active
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+                           start_date: Date.new(2026, 8, 1), end_date: nil)              # minted at this training
+      event = create(:event, title: "August Training", abbreviation: "PES205", start_date: Date.new(2026, 8, 1))
+
+      assign(:organization, org.reload)
+      assign(:organization_statuses, OrganizationStatus.all)
+      assign(:organization_events, Event.where(id: event.id))
+      render
+
+      expect(rendered).to include("Ongoing · Aug 2026 · PES205")
+      expect(rendered).not_to include("New · Aug 2026 · PES205")
+    end
+
+    it "orders the event chips newest event first" do
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+                           start_date: Date.new(2019, 5, 1), end_date: nil)
+      older = create(:event, title: "Older Training", abbreviation: "OLD101", start_date: Date.new(2026, 3, 1))
+      newer = create(:event, title: "Newer Training", abbreviation: "NEW202", start_date: Date.new(2026, 9, 1))
+
+      assign(:organization, org.reload)
+      assign(:organization_statuses, OrganizationStatus.all)
+      assign(:organization_events, Event.where(id: [ older.id, newer.id ]))
+      render
+
+      expect(rendered.index("NEW202")).to be < rendered.index("OLD101")
     end
 
     it "always shows the general status chip, even with no events" do

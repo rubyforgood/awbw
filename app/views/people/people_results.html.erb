@@ -95,7 +95,7 @@
                           <% if allowed_to?(:show?, person) %>
                             <%= link_to "+#{affiliations.size - 3} more", person_path(person),
                                 data: { turbo_frame: "_top" },
-                                class: "text-xs text-gray-500 hover:text-gray-700" %>
+                                class: "text-xs #{eyebrow_link_class}" %>
                           <% else %>
                             <span class="text-xs text-gray-500">+<%= affiliations.size - 3 %> more</span>
                           <% end %>

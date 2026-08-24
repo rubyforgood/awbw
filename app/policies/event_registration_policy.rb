@@ -11,6 +11,8 @@ class EventRegistrationPolicy < ApplicationPolicy
   def show_public? = true
   def confirm? = admin?
   def process_confirm? = admin?
+  def transfer? = admin?
+  def process_transfer? = admin?
   def link_organization? = admin?
   def select_organization? = admin?
   def create_organization? = admin?

@@ -35,7 +35,6 @@ FactoryBot.define do
     # legacy { false }
     # legacy_id { 1 }
     # super_user { false }
-    # agency_id { 1 }
     # person_id { "" }
     # created_by_id { 1 }
     # updated_by_id { 1 }

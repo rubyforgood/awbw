@@ -6,7 +6,7 @@
 <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
   <%# Top bar: back link + sub-nav, matching the other event pages %>
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6 print:hidden">
-    <%= link_to "← Events", events_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <%= link_to "← Events", events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <%= render "events/subnav", event: @event, current: :dashboard %>
   </div>
   <%# Title block with the action buttons pinned top-right so they share the
@@ -331,17 +331,27 @@
              [ "incomplete_attendance", "fa-circle-half-stroke", "text-amber-500" ],
              [ "no_show", "fa-circle-xmark", "text-red-500" ],
              [ "cancelled", "fa-ban", nil ],
-             [ "transferred_in", "fa-arrow-right-to-bracket", nil ],
              [ "transferred_out", "fa-arrow-right-from-bracket", nil ],
+             [ "transferred_in", "fa-arrow-right-to-bracket", "text-teal-600" ],
              [ "registered", "fa-hourglass-half", nil ]
            ].each do |status, icon, active_color| %>
-          <% count = @dashboard.attendance_count_for(status) %>
+          <%# Transferred in is FK-based (an incoming reg keeps its own status), so
+              it's counted via the transfer link, not the status column. %>
+          <% if status == EventRegistration::TRANSFERRED_IN_FILTER %>
+            <% count = @dashboard.transferred_in_count %>
+            <% registrants = @dashboard.transferred_in_registrants %>
+            <% label = "Transferred in" %>
+          <% else %>
+            <% count = @dashboard.attendance_count_for(status) %>
+            <% registrants = @dashboard.attendance_registrants(status) %>
+            <% label = EventRegistration::ATTENDANCE_STATUS_LABELS.fetch(status) %>
+          <% end %>
           <%= render "attendance_stat_row",
-                label: EventRegistration::ATTENDANCE_STATUS_LABELS.fetch(status),
+                label: label,
                 icon: icon,
                 icon_color: (count.positive? && active_color) || "text-gray-400",
                 count: count,
-                registrants: @dashboard.attendance_registrants(status),
+                registrants: registrants,
                 filter_path: registrants_event_path(@event, attendance_status: status) %>
         <% end %>
       </div>

@@ -12,6 +12,66 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
   describe "as an admin" do
     before { sign_in admin }
 
+    it_behaves_like "a page with a change log" do
+      let(:record) { ce_registration }
+      let(:page_path) { edit_continuing_education_registration_path(ce_registration) }
+    end
+
+    it_behaves_like "a page with a change log" do
+      let(:record) { ce_registration }
+      let(:page_path) { continuing_education_registration_path(ce_registration) }
+    end
+
+    describe "a transferred-in registration (two-record CE model, #1944)" do
+      let(:source) { create(:event_registration, event: event) }
+      let(:transferred_in) do
+        create(:event_registration, event: create(:event, ce_hours_offered: 6),
+          registrant: source.registrant, transferred_from_registration: source)
+      end
+
+      it "allows the manual new form so CE can be added at the new event" do
+        get new_continuing_education_registration_path(allocatable_sgid: transferred_in.to_sgid.to_s)
+
+        expect(response).to have_http_status(:success)
+      end
+
+      it "allows a manual create at the new event" do
+        expect {
+          post continuing_education_registrations_path,
+               params: { allocatable_sgid: transferred_in.to_sgid.to_s,
+                         continuing_education_registration: { hours: "6", cost_dollars: "50",
+                           license_kind: "LCSW", license_number: "123" } }
+        }.to change(ContinuingEducationRegistration, :count).by(1)
+      end
+
+      it "ignores a submitted cost when updating a transfer-carried record (cost is locked)" do
+        license = create(:professional_license, person: source.registrant)
+        # A genuine transfer-carried record: the source holds the matching stub.
+        source.continuing_education_registrations.create!(
+          professional_license: license, hours: 0, cost_cents: 4_000, skip_event_defaults: true)
+        ce = transferred_in.continuing_education_registrations.create!(
+          professional_license: license, hours: 6, cost_cents: 6_000, skip_event_defaults: true)
+
+        patch continuing_education_registration_path(ce),
+              params: { continuing_education_registration: { hours: "6", cost_dollars: "999",
+                        license_kind: license.kind, license_number: license.number } }
+
+        expect(ce.reload.cost_cents).to eq(6_000)
+      end
+
+      it "lets an admin edit the cost of a CE added fresh at the new event (no source stub)" do
+        license = create(:professional_license, person: source.registrant)
+        ce = transferred_in.continuing_education_registrations.create!(
+          professional_license: license, hours: 6, cost_cents: 6_000, skip_event_defaults: true)
+
+        patch continuing_education_registration_path(ce),
+              params: { continuing_education_registration: { hours: "6", cost_dollars: "999",
+                        license_kind: license.kind, license_number: license.number } }
+
+        expect(ce.reload.cost_cents).to eq(99_900)
+      end
+    end
+
     it "renders the index shell with the CE sign-ins menu" do
       ce_registration
       get continuing_education_registrations_path
@@ -77,10 +137,11 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
         issuing_state: "CA", expires_on: Date.new(2027, 1, 31))
     end
 
-    it "renders a comments box on the edit page" do
+    it "renders the combined comments and communications section on the edit page" do
       get edit_continuing_education_registration_path(ce_registration)
-      expect(response.body).to include("CE comments")
-      expect(response.body).to include("comment-list")
+      expect(response.body).to include("Comments &amp; communications")
+      expect(response.body).to include("continuing_education_registration-activity-list")
+      expect(response.body).to include("Add communication")
     end
 
     it "saves a comment added on the CE form (with the record)" do
@@ -151,6 +212,14 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       get new_continuing_education_registration_path(allocatable_sgid: registration.to_sgid.to_s)
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Add CE registration")
+    end
+
+    it "shows a caution banner when the registration was transferred out (#1944)" do
+      registration.update!(status: "transferred_out")
+
+      get new_continuing_education_registration_path(allocatable_sgid: registration.to_sgid.to_s)
+
+      expect(response.body).to include("transferred-out registration")
     end
 
     it "creates a CE registration with license, hours, and cost, and sets the flag" do

@@ -23,12 +23,12 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.credited_author_link(workshop)).to eq("Ada Lovelace")
     end
 
-    it "never links an anonymous credit, even to a searchable person" do
+    it "never links a suppressed credit, even to a searchable person" do
       allow(person).to receive(:profile_is_searchable).and_return(true)
       workshop = create(:workshop, author_credit_preference: "anonymous")
       allow(workshop).to receive(:author).and_return(person)
 
-      expect(helper.credited_author_link(workshop)).to eq("Anonymous")
+      expect(helper.credited_author_link(workshop)).to eq("AWBW Staff")
     end
 
     it "renders a legacy free-text author as plain text with no link" do
@@ -38,7 +38,7 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.credited_author_link(workshop)).to eq("Jane Legacy")
     end
 
-    it "shows a creator-fallback credit as plain text, never linking the creator's profile" do
+    it "credits the org, not the creator, when no author is named" do
       creator_person = create(:person, first_name: "Cara", last_name: "Creator")
       allow(creator_person).to receive(:profile_is_searchable).and_return(true)
       creator = create(:user)
@@ -48,7 +48,7 @@ RSpec.describe ApplicationHelper, type: :helper do
       allow(workshop).to receive(:created_by).and_return(creator)
 
       result = helper.credited_author_link(workshop)
-      expect(result).to eq("Cara Creator")
+      expect(result).to eq("AWBW Staff")
       expect(result).not_to include("<a")
     end
   end
@@ -587,19 +587,19 @@ RSpec.describe ApplicationHelper, type: :helper do
   describe "#dynamic_form_field_options" do
     let(:form) { create(:form) }
 
-    it "omits the Other sector for the primary service-area dropdown" do
+    it "omits the Other sector for the primary sector dropdown" do
       create(:sector, :published, name: "Domestic Violence")
       create(:sector, :published, name: "Other")
-      field = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_service_area_single")
+      field = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_sector")
 
       labels = helper.dynamic_form_field_options(field).map(&:first)
       expect(labels).to include("Domestic Violence")
       expect(labels).not_to include("Other")
     end
 
-    it "includes the Other sector for the additional service-areas field" do
+    it "includes the Other sector for the additional sectors field" do
       create(:sector, :published, name: "Other")
-      field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_service_area")
+      field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_sectors")
 
       labels = helper.dynamic_form_field_options(field).map(&:first)
       expect(labels).to include("Other")
@@ -608,7 +608,7 @@ RSpec.describe ApplicationHelper, type: :helper do
     it "carries each sector's description as the third tuple element" do
       create(:sector, :published, name: "Domestic Violence", description: "DV services")
       create(:sector, :published, name: "Mental Health", description: nil)
-      field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_service_area")
+      field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_sectors")
 
       descriptions = helper.dynamic_form_field_options(field).to_h { |name, _id, desc| [ name, desc ] }
       expect(descriptions["Domestic Violence"]).to eq("DV services")

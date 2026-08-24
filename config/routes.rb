@@ -66,6 +66,8 @@ Rails.application.routes.draw do
     end
   end
   resources :category_types
+  resources :staff_tags
+  resources :staff_taggings, only: [ :edit, :update ]
   resources :categories do
     collection do
       get :dedupe_index
@@ -109,6 +111,9 @@ Rails.application.routes.draw do
     member do
       get :confirm
       post :process_confirm
+      get :transfer
+      post :process_transfer
+      patch :revert_transfer
       get :link_organization
       post :select_organization
       post :create_organization
@@ -140,13 +145,22 @@ Rails.application.routes.draw do
       get :smart_form_settings
     end
     member do
+      get :results
+      post :copy
       patch :reorder_field
       put :reorder_fields
       get :edit_sections
       patch :update_sections
     end
   end
-  resources :form_submissions, only: [ :index, :show ]
+  resources :form_submissions, only: [ :index, :show ] do
+    member do
+      get :link_organization
+      post :select_organization
+      post :create_organization
+    end
+  end
+  resources :form_answers, only: [ :index ]
   resources :grants
   resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
     member do
@@ -216,20 +230,31 @@ Rails.application.routes.draw do
     resource :invoice, only: [ :show ], module: :events
     get "form_submissions/:person_id", to: "events/form_submissions#show", as: :registrant_submissions
   end
+  resources :author_credit_divergences, only: :index do
+    collection do
+      patch :update_person
+      patch :update_item
+      patch :assign_author
+    end
+  end
   resources :people do
     collection do
       get :check_duplicates
+      get :email_addresses
     end
     member do
       get :workshop_logs
       get :checkout
       get :bio
       get :all_comments
+      get :comments_and_communications
+      post :send_form_link
     end
     resources :comments, only: [ :create, :update ]
     resources :memberships, only: [ :index, :new, :create ]
   end
   resources :faqs
+  get "transfer_guide", to: "transfer_guide#show", as: :transfer_guide
   resources :features do
     collection do
       post :import
@@ -279,7 +304,11 @@ Rails.application.routes.draw do
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
-  resources :affiliations, only: [ :edit, :update, :destroy ]
+  resources :affiliations, only: [ :edit, :update, :destroy ] do
+    member do
+      post :end, to: "affiliations#end_affiliation"
+    end
+  end
   resources :quotes
 
   resources :monthly_reports, only: [ :index, :show ], constraints: { id: /\d+/ }

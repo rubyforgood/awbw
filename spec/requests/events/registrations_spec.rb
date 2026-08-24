@@ -18,6 +18,45 @@ RSpec.describe "Events::Registrations", type: :request do
         get registration_ticket_path(registration.slug)
         expect(response).to have_http_status(:success)
       end
+
+      it "notes a transfer out and links to the new registration's ticket" do
+        destination = create(:event_registration, event: create(:event), registrant: user.person)
+        registration.update!(status: "transferred_out")
+        destination.update!(transferred_from_registration: registration)
+
+        get registration_ticket_path(registration.slug)
+
+        expect(response.body).to include("You transferred out")
+        expect(response.body).to include(registration_ticket_path(destination.slug))
+      end
+
+      it "removes the Pay button on a transferred-out ticket (a normal unpaid reg keeps it) (#1944)" do
+        paid_event = create(:event, cost_cents: 10_000)
+        reg = create(:event_registration, event: paid_event, registrant: user.person)
+
+        # A normal unpaid reg shows the Pay button.
+        get registration_ticket_path(reg.slug)
+        expect(response.body).to include("Pay with Credit Card")
+
+        destination = create(:event_registration, event: create(:event), registrant: user.person)
+        reg.update!(status: "transferred_out")
+        destination.update!(transferred_from_registration: reg)
+
+        get registration_ticket_path(reg.slug)
+        expect(response.body).not_to include("Pay with Credit Card")
+        # …but still points them to the new registration.
+        expect(response.body).to include(registration_ticket_path(destination.slug))
+      end
+
+      it "notes a transfer in and links back to the original registration's ticket" do
+        source = create(:event_registration, event: create(:event), registrant: user.person, status: "transferred_out")
+        registration.update!(transferred_from_registration: source)
+
+        get registration_ticket_path(registration.slug)
+
+        expect(response.body).to include("You transferred into")
+        expect(response.body).to include(registration_ticket_path(source.slug))
+      end
     end
 
     context "as an admin" do

@@ -13,7 +13,7 @@
 <% if back_path %>
   <div class="<%= container_width %> mx-auto px-4 pt-4">
     <%= link_to back_path,
-                class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+                class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> <%= back_label %>
     <% end %>
   </div>
@@ -41,6 +41,13 @@
     </div>
 
     <div class="px-6 sm:px-8 py-7">
+      <%# Transfer banner (issue #1944) — one place covers every callout page that
+          uses this wrapper, so a transferred in/out registrant is re-oriented to
+          the paired registration wherever they land. Guarded: the generic
+          custom-callout page renders this wrapper with no @event_registration. %>
+      <% if @event_registration %>
+        <%= render "event_registrations/transfer_notice", event_registration: @event_registration %>
+      <% end %>
       <%# Optional admin action at the top-right of the body, above the callout
           page text (e.g. the staff page's "Edit staff" link). %>
       <% body_action = local_assigns[:body_action] %>

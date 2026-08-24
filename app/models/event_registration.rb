@@ -2,6 +2,7 @@ class EventRegistration < ApplicationRecord
   include RemoteSearchable
   include Registerable
   include Certifiable
+  include Communicable
   include Timelineable
 
   def timeline_label
@@ -17,7 +18,6 @@ class EventRegistration < ApplicationRecord
   belongs_to :event
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :event_registration_organizations, dependent: :destroy
-  has_many :notifications, as: :noticeable, dependent: :nullify
   has_many :organizations, through: :event_registration_organizations
   has_many :allocations, as: :allocatable
   has_many :continuing_education_registrations, dependent: :destroy
@@ -29,8 +29,15 @@ class EventRegistration < ApplicationRecord
   # registration is deleted (mirrors the FK's on_delete: :nullify).
   has_many :affiliations, dependent: :nullify, inverse_of: :event_registration
 
+  # Event-transfer trail (issue #1944). The FK lives on the incoming record: an
+  # "in" points back at the "out" it came from, so an in is identifiable directly
+  # (transferred_from_registration_id present) without scanning other rows. The
+  # in keeps its own real attendance status; only the out is marked
+  # "transferred_out". Chained transfers form a linked list back to the original.
+  belongs_to :transferred_from_registration, class_name: "EventRegistration", optional: true
+  has_one :transferred_to_registration, class_name: "EventRegistration",
+    foreign_key: :transferred_from_registration_id, inverse_of: :transferred_from_registration, dependent: :nullify
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
-  accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
   # Staff correct/add attendance times on the CE edit form; a row with no sign-in
   # time is an untouched blank and dropped.
   accepts_nested_attributes_for :event_attendance_time_entries, allow_destroy: true,
@@ -40,10 +47,11 @@ class EventRegistration < ApplicationRecord
   accepts_nested_attributes_for :registrant
 
   before_create :generate_slug
+  before_save :capture_pre_transfer_status, if: :becoming_transferred_out?
   after_update :release_scholarships, if: :status_changed_to_cancelled?
   after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?
 
-  ACTIVE_STATUSES = %w[ registered attended incomplete_attendance transferred_in ].freeze
+  ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
   INACTIVE_STATUSES = %w[ cancelled no_show transferred_out ].freeze
   ATTENDANCE_STATUSES = (ACTIVE_STATUSES + INACTIVE_STATUSES).freeze
   # Attendance outcomes surfaced as their own participation buckets; every other
@@ -53,11 +61,15 @@ class EventRegistration < ApplicationRecord
   # that defaults to something specific (the attendees index defaults to attended
   # registrations on trainings, so it needs a way to say "all of them").
   FILTER_ALL = "all".freeze
-  # Attendance-outcome filter options, shared by the registrations index and the
-  # attendees index so the vocabulary can't drift between them.
+  # Sentinel filter value for the FK-backed "transferred in" dimension — an
+  # incoming reg keeps its own real status, so "transferred in" is a filter (routed
+  # through the attendance_status scope to the transfer FK), not a status. (#1944)
+  TRANSFERRED_IN_FILTER = "transferred_in".freeze
+  # Attendance-outcome filter options, shared by the registrations index, the
+  # attendees index, and the registrant roster so the vocabulary can't drift.
   ATTENDANCE_FILTER_OPTIONS = (
     ATTENDANCE_STATUSES.map { |status| [ status.humanize, status ] } +
-    [ [ "Other (registered, transfers, cancellations)", "other" ] ]
+    [ [ "Transferred in", TRANSFERRED_IN_FILTER ], [ "Other (registered, transfers, cancellations)", "other" ] ]
   ).freeze
   # Event-type filter options, matching the .event_type scope's vocabulary and the
   # report suite's Event type select (events/_event_type_filter), so the same value
@@ -127,7 +139,6 @@ class EventRegistration < ApplicationRecord
     "registered" => "Registered",
     "attended" => "Attended",
     "incomplete_attendance" => "Incomplete attendance",
-    "transferred_in" => "Transferred in",
     "cancelled" => "Cancelled",
     "no_show" => "No show",
     "transferred_out" => "Transferred out"
@@ -166,8 +177,20 @@ class EventRegistration < ApplicationRecord
   scope :inactive, -> { where(status: INACTIVE_STATUSES) }
   scope :attended, -> { where(status: "attended") }
   scope :registrant_ids, ->(ids) { where(registrant_id: ids.to_s.split("-").map(&:to_i)) }
+  scope :transferred_in, -> { where.not(transferred_from_registration_id: nil) }
+  # The billable basis for an event's financial reporting: a transferred-in reg's
+  # money lives on its source registration, so it owes nothing here and is
+  # excluded from this event's totals (issue #1944).
+  scope :not_transferred_in, -> { where(transferred_from_registration_id: nil) }
+  # "other" = any status outside the named attendance outcomes; the virtual
+  # "transferred_in" (an FK-backed dimension, not a status) routes to the
+  # transfer scope; every real value filters the status column.
   scope :attendance_status, ->(status) {
-    status == "other" ? where.not(status: NAMED_OUTCOME_STATUSES) : where(status: status)
+    case status.to_s
+    when "other" then where.not(status: NAMED_OUTCOME_STATUSES)
+    when TRANSFERRED_IN_FILTER then transferred_in
+    else where(status: status)
+    end
   }
   # Registrations on facilitator-training events ("trainings", narrowable to the
   # "live"/"on_demand" delivery formats) vs everything else ("other"); any other
@@ -184,6 +207,19 @@ class EventRegistration < ApplicationRecord
   # Registrations whose event falls in the given calendar year. Uses a subquery
   # (via Event.in_year) so it composes with the other filters without extra joins.
   scope :in_event_year, ->(year) { where(event_id: Event.in_year(year.to_i)) }
+  # Registration date range, matched on when the registration was created. Accepts
+  # raw "YYYY-MM-DD" filter strings and no-ops on either end when blank/unparseable,
+  # so callers can pass params straight through.
+  scope :registered_between, ->(start_date, end_date) {
+    scope = all
+    if (from = parse_filter_date(start_date))
+      scope = scope.where(created_at: from.beginning_of_day..)
+    end
+    if (to = parse_filter_date(end_date))
+      scope = scope.where(created_at: ..to.end_of_day)
+    end
+    scope
+  }
   scope :registrant_state, ->(state) {
     joins(registrant: :addresses)
       .where(addresses: { inactive: false, state: state })
@@ -282,6 +318,13 @@ class EventRegistration < ApplicationRecord
       .where(allocatable_type: "EventRegistration", source_type: "Scholarship", source_id: scholarships.select(:id))
       .select(:allocatable_id)
   end
+
+  def self.parse_filter_date(value)
+    return if value.blank?
+    Date.parse(value.to_s)
+  rescue ArgumentError, TypeError
+    nil
+  end
   # Funding source of a registrant's scholarship. "awbw" = org-subsidized (no
   # grant, or a grant AWBW funded itself); "external" = grant-funded (drawn from an
   # external funder's grant).
@@ -318,30 +361,30 @@ class EventRegistration < ApplicationRecord
       )
     SQL
   }
+  # Payment-status filters evaluate the "billing" registration: a transferred-in
+  # reg carries no money of its own, so its paid status is the source reg's (they
+  # paid at the old event). For a normal reg the billing reg is itself. Both the
+  # amount applied and the cost owed are read from that billing reg. (#1944)
+  BILLING_REGISTRATION_ID_SQL = "COALESCE(event_registrations.transferred_from_registration_id, event_registrations.id)".freeze
+  BILLING_ALLOCATIONS_SUM_SQL = <<~SQL.squish.freeze
+    COALESCE((
+      SELECT SUM(allocations.amount) FROM allocations
+      WHERE allocations.allocatable_type = 'EventRegistration'
+        AND allocations.allocatable_id = #{BILLING_REGISTRATION_ID_SQL}
+    ), 0)
+  SQL
+  BILLING_COST_CENTS_SQL = <<~SQL.squish.freeze
+    COALESCE((
+      SELECT events.cost_cents FROM events
+      INNER JOIN event_registrations billing_reg ON billing_reg.id = #{BILLING_REGISTRATION_ID_SQL}
+      WHERE events.id = billing_reg.event_id
+    ), 0)
+  SQL
   scope :paid_in_full, -> {
-    where(<<~SQL.squish)
-      COALESCE((
-        SELECT SUM(allocations.amount) FROM allocations
-        WHERE allocations.allocatable_type = 'EventRegistration'
-          AND allocations.allocatable_id = event_registrations.id
-      ), 0) >= COALESCE((
-        SELECT events.cost_cents FROM events WHERE events.id = event_registrations.event_id
-      ), 0)
-    SQL
+    where("#{BILLING_ALLOCATIONS_SUM_SQL} >= #{BILLING_COST_CENTS_SQL}")
   }
   scope :not_paid_in_full, -> {
-    where(<<~SQL.squish)
-      COALESCE((
-        SELECT events.cost_cents FROM events WHERE events.id = event_registrations.event_id
-      ), 0) > 0
-      AND COALESCE((
-        SELECT SUM(allocations.amount) FROM allocations
-        WHERE allocations.allocatable_type = 'EventRegistration'
-          AND allocations.allocatable_id = event_registrations.id
-      ), 0) < COALESCE((
-        SELECT events.cost_cents FROM events WHERE events.id = event_registrations.event_id
-      ), 0)
-    SQL
+    where("#{BILLING_COST_CENTS_SQL} > 0 AND #{BILLING_ALLOCATIONS_SUM_SQL} < #{BILLING_COST_CENTS_SQL}")
   }
   scope :payment_status, ->(value) {
     case value
@@ -435,15 +478,16 @@ class EventRegistration < ApplicationRecord
   }
   # The registrant's organization-LINKING status, not the org's own
   # OrganizationStatus: "linked" = at least one org linked; "unlinked" = none;
-  # "pending" = an agency name was submitted but nothing is linked yet (the Pending
-  # chip on the roster). Needs the event to resolve its agency_name field.
+  # "pending" = an organization name was submitted but nothing is linked yet (the
+  # Pending chip on the roster). Needs the event to resolve its organization-name
+  # field (canonical "organization_name" or the legacy "agency_name").
   scope :organization_linking_status, ->(value, event) {
     linked = EventRegistrationOrganization.select(:event_registration_id)
     case value
     when "linked" then where(id: linked)
     when "unlinked" then where.not(id: linked)
     when "pending"
-      field = event.registration_form&.form_fields&.find_by(field_identifier: "agency_name")
+      field = event.registration_form&.form_fields&.find_by(field_identifier: FormField.aliased_identifiers("organization_name"))
       next none unless field
       submitted = FormAnswer.joins(:form_submission)
         .where(form_field_id: field.id, form_submissions: { form_id: event.registration_form.id })
@@ -545,8 +589,6 @@ class EventRegistration < ApplicationRecord
     "(#{ registrant&.full_name }) #{ event.start_date.strftime("%Y-%m-%d @ %I:%M %p") }: #{ event.title }"
   end
 
-  # Email the communications box matches notifications against. Uniform accessor
-  # so the shared notifications/_communications partial works across records.
   def communications_email
     registrant&.preferred_email
   end
@@ -570,12 +612,32 @@ class EventRegistration < ApplicationRecord
     status.in?(%w[ attended incomplete_attendance no_show ])
   end
 
-  # Transferred out to another event. The trail to where the registrant went is
-  # history worth keeping, so it blocks deletion. Transferred_in is deliberately
-  # excluded: it's an ordinary active registration here, and the source event's
-  # transferred_out record already preserves the transfer trail.
+  # Transferred out to another event. Terminal status, so an out is always
+  # identifiable from its status alone. The trail to where the registrant went is
+  # history worth keeping, so it blocks deletion.
   def transferred_out?
     status == "transferred_out"
+  end
+
+  # Transferred in from another event's registration. Identified by the presence
+  # of the back-link (not by status), so an in keeps recording its own real
+  # attendance (registered/attended/…) without losing the transfer history.
+  def transferred_in?
+    transferred_from_registration_id.present?
+  end
+
+  # A transferred-out registration whose destination hasn't been recorded yet.
+  # Drives the follow-up prompt to create/link the incoming registration.
+  def transfer_destination_pending?
+    transferred_out? && transferred_to_registration.nil?
+  end
+
+  # A transferred-out reg is frozen: its status, attendance, financials, orgs, and
+  # shout-out are historical and shouldn't be edited here — only comments and
+  # communications stay open. Undo happens through the Manage-transfer flow, not by
+  # editing fields. Enforced server-side (params + guards) and surfaced in the UI. (#1944)
+  def editing_locked?
+    transferred_out?
   end
 
   # Safe to delete only when removing the record would not orphan financial data
@@ -600,12 +662,18 @@ class EventRegistration < ApplicationRecord
   # Reporting surfaces (rosters, CSV exports, dashboard metrics) must keep using
   # `paid_in_full?` so they still reflect the real balance owed.
   def payment_access_granted?
+    # A transferred-in reg's payment lives on its source, so access to this
+    # event's paid content follows whatever the source registration grants.
+    return transferred_from_registration.payment_access_granted? if transferred_in?
     paid_in_full? || intends_to_pay?
   end
 
   # Human-readable payment status for rosters and CSV exports. Assumes the event
   # has a cost — callers show nothing for free events.
   def payment_status_label
+    # A transferred-in reg owes nothing here — its balance is tracked on the
+    # source registration — so it never reads as Paid/Due for this event.
+    return "Transferred in" if transferred_in?
     return "Paid" if paid_in_full?
     return "Intends to pay" if intends_to_pay?
     "Due"
@@ -615,6 +683,19 @@ class EventRegistration < ApplicationRecord
     # any? (not exists?) so a preloaded :scholarships association is reused
     # instead of firing a per-row query on the registrants roster.
     scholarships.any?
+  end
+
+  # The scholarship that designates this registrant a recipient at THIS event: its
+  # own award, or — for a transferred-in reg — the award on the source
+  # registration it came from (walking the transfer chain). The dollars stay on
+  # the source (see EventDashboard's billable basis); this is recognition only, so
+  # a transferred-in registrant still "gets the hat" at the event they attend. (#1944)
+  def effective_scholarship
+    scholarships.first || transferred_from_registration&.effective_scholarship
+  end
+
+  def scholarship_recipient?
+    effective_scholarship.present?
   end
 
   # Noun phrase distinguishing a scholarship-requested registration from a
@@ -664,6 +745,7 @@ class EventRegistration < ApplicationRecord
   # An invoice (and receipt) only make sense for a paid event — free events have
   # nothing to bill or receipt.
   def invoice_available?
+    return transferred_from_registration.invoice_available? if transferred_in?
     event.cost_cents.to_i.positive?
   end
 
@@ -685,6 +767,27 @@ class EventRegistration < ApplicationRecord
   # Cost source for the Registerable payment interface: the event's price.
   def cost_cents
     event.cost_cents
+  end
+
+  # A transferred-in reg carries no money of its own — its balance and payments
+  # live on the source registration (the old event, where they actually paid). Its
+  # remaining balance, paid status, and payment-on-file therefore mirror the
+  # source, so the ticket never re-bills a paid transfer and the invoice/receipt
+  # (built from the source) reflect the old cost. Reached through this ticket, but
+  # the money is the source's. (#1944)
+  def remaining_cost
+    return transferred_from_registration.remaining_cost if transferred_in?
+    super
+  end
+
+  def paid_in_full?
+    return transferred_from_registration.paid_in_full? if transferred_in?
+    super
+  end
+
+  def payment_received?
+    return transferred_from_registration.payment_received? if transferred_in?
+    super
   end
 
   # The registrant's currently-open attendance entry (signed in, not yet out) for
@@ -797,25 +900,28 @@ class EventRegistration < ApplicationRecord
   end
 
   # True when CE is registered and every CE registration's certificate has been
-  # issued (sent) — the terminal state of the CE lifecycle.
+  # issued (sent) — the terminal state of the CE lifecycle. Each reg certifies its
+  # own CE records now; after a transfer the hours ride on the destination reg's
+  # own record, so there's no cross-reg set to consult. (#1944)
   def ce_certificate_issued?
-    return false unless ce_registered?
+    return false unless continuing_education_registrations.any?
 
     continuing_education_registrations.all? { |c| c.certificate_sent_at.present? }
   end
 
   # The registration's completion certificate, as shown by the registrants-roster
-  # toggle. For a CE-eligible registration that's the CE certificate
+  # toggle. For a registration that has CE that's the CE certificate
   # (certificate_sent_at on its CE registrations, so it stays in sync with the CE
-  # edit page); otherwise the registration's own certificate_sent_at (Certifiable).
+  # edit page); otherwise the registration's own certificate_sent_at.
   def certificate_issued?
-    ce_registered? ? ce_certificate_issued? : certificate_sent?
+    continuing_education_registrations.any? ? ce_certificate_issued? : certificate_sent?
   end
 
   def mark_certificate_issued!(issued)
     at = issued ? Time.current : nil
-    if ce_registered?
-      continuing_education_registrations.each { |c| c.update!(certificate_sent_at: at) }
+    ce = continuing_education_registrations
+    if ce.any?
+      ce.each { |c| c.update!(certificate_sent_at: at) }
     else
       update!(certificate_sent_at: at)
     end
@@ -879,6 +985,14 @@ class EventRegistration < ApplicationRecord
   def attendance_status_label
     return "—" if status.blank?
     ATTENDANCE_STATUS_LABELS.fetch(status, status.humanize)
+  end
+
+  # Status label for reporting (CSV exports), annotated when the registration
+  # transferred in — an incoming reg keeps its own status, so the transfer trail
+  # would otherwise be invisible in exports.
+  def attendance_status_report_label
+    return attendance_status_label unless transferred_in?
+    "#{attendance_status_label} (transferred in)"
   end
 
   # The completion record for a checklist step, or nil. Reads from the loaded
@@ -973,6 +1087,16 @@ class EventRegistration < ApplicationRecord
 
   def status_changed_to_cancelled?
     saved_change_to_status? && status == "cancelled"
+  end
+
+  def becoming_transferred_out?
+    will_save_change_to_status? && status == "transferred_out"
+  end
+
+  # Remember the status held just before a reg is transferred out, so a later
+  # transfer back to this event can restore it rather than leaving it "out". (#1944)
+  def capture_pre_transfer_status
+    self.status_before_transfer = status_was
   end
 
   # On cancellation, release any awarded scholarship back to its grant by zeroing

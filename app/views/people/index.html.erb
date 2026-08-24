@@ -1,15 +1,35 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
-<div class="community-news-index max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:people) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="community-news-index mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:people) %> rounded-xl border border-gray-200 p-6 shadow">
   <div class="w-full">
-    <div class="flex items-start justify-between mb-6">
-      <div id="people_count" class="pr-6">
-        <h2 class="text-2xl font-semibold mb-2">People</h2>
+    <% back_label, back_path =
+         case params[:return_to]
+         when "staff_tags"
+           [ "Staff tags", staff_tags_path ]
+         when "staff_tag"
+           staff_tag = StaffTag.find_by(id: params[:staff_tag_ids]) if allowed_to?(:index?, StaffTag)
+           [ staff_tag&.name || "Staff tags", staff_tag ? staff_tag_path(staff_tag) : staff_tags_path ]
+         when "tags"
+           [ "Tags", tags_path ]
+         when "taggings"
+           [ "Taggings", taggings_path ]
+         end %>
+    <% if back_path %>
+      <div class="mb-4">
+        <%= link_to "← #{back_label}", back_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       </div>
-      <div class="text-right flex items-center gap-2">
+    <% end %>
+    <div class="mb-6 flex items-start justify-between">
+      <div id="people_count" class="pr-6">
+        <h2 class="mb-2 text-2xl font-semibold">People</h2>
+      </div>
+      <div class="flex flex-wrap items-center justify-end gap-2 text-right">
         <% if allowed_to?(:index?, TopicSubscription) %>
-          <%= link_to "Subscriptions",
-                      topic_subscriptions_path,
-                      class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+          <%= link_to "Subscriptions", topic_subscriptions_path,
+                      class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <% end %>
+        <% if allowed_to?(:index?, Person) %>
+          <%= link_to "Email addresses", email_addresses_people_path(request.query_parameters),
+                      class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
         <% end %>
         <% if allowed_to?(:new?, Person) %>
           <%= link_to "New Person",

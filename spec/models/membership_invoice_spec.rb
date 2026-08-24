@@ -285,4 +285,21 @@ RSpec.describe MembershipInvoice, type: :model do
       expect(create(:membership_invoice, membership: subscription).person).to eq(subscription.person)
     end
   end
+
+  describe ".by_person_name" do
+    it "filters to invoices whose person's name matches" do
+      named = create(:person, first_name: "Bartholomew", last_name: "Snazzlepants")
+      matching = create(:membership_invoice, membership: create(:membership, person: named))
+      other = create(:membership_invoice)
+
+      expect(described_class.by_person_name("Bartholomew")).to include(matching)
+      expect(described_class.by_person_name("Bartholomew")).not_to include(other)
+    end
+
+    it "is a no-op when the query is blank" do
+      invoice = create(:membership_invoice)
+      expect(described_class.by_person_name("")).to include(invoice)
+      expect(described_class.by_person_name(nil)).to include(invoice)
+    end
+  end
 end

@@ -19,5 +19,6 @@ Location: <%= event_location_label(@event.object) %>
 <% end %><% if event_platform_label(@event.object).present? %>
 <%= event_platform_label(@event.object) %>
 <% end %><% end %>
-
+<% unless @hide_ticket_button %>
 Each registrant also received a personalized "View ticket" link.
+<% end %>

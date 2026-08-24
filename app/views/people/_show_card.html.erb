@@ -2,8 +2,9 @@
 <% record_title ||= record.title %>
 <% title_font_size ||= nil %>
 <% bookmarkable ||= record.object %>
+<% anonymous ||= false %>
 
-<div class="relative h-full">
+<div class="relative h-full <%= "opacity-70" if anonymous %>">
   <!-- BOOKMARK ICON -->
   <div class="absolute top-3 right-3 z-30">
     <%= render "bookmarks/editable_bookmark_icon", resource: bookmarkable %>
@@ -27,6 +28,7 @@
           <%= render "assets/display_image",
                      resource: record.object,
                      width: "full", height: "full",
+                     image_variant: :thumbnail,
                      link: false,
                      link_to_object: false,
                      file: record.display_image %>
@@ -36,6 +38,15 @@
 
     <!-- RIGHT SIDE -->
     <div class="flex-1 min-w-0 pl-4 pr-10 py-1 flex flex-col justify-between">
+      <% if anonymous %>
+        <%# Admin/owner-only marker: this credit renders "Anonymous" publicly, so
+            the item is hidden from everyone else. %>
+        <span class="inline-flex items-center pl-2 pr-3 py-0.5 mt-2 rounded-full text-xs font-medium bg-blue-100 text-gray-600 whitespace-nowrap"
+              title="Credited as Anonymous — hidden from public author credit">
+          <span class="inline-flex justify-center w-5"><i class="fa-solid fa-eye-slash"></i></span>
+          <span class="ml-1">Anonymous</span>
+        </span>
+      <% end %>
       <div class="my-2">
         <%= link_to record.link_target,
                     data: { turbo_frame: "_top"},

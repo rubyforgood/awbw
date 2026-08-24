@@ -209,18 +209,8 @@
 
   <div class="flex flex-col md:flex-row md:space-x-4 mt-4">
     <div class="flex-1 mb-4 md:mb-0">
-      <%= f.input :author_credit_preference,
-                  as: :select,
-                  collection: AuthorCreditable::ADMIN_FORM_OPTIONS,
-                  prompt: "Select a preference",
-                  selected: f.object.author_credit_preference || story_idea&.author_credit_preference,
-                  label: "Author credit preference",
-                  hint: "Controls how the author's name is displayed",
-                  input_html: {
-                    class: select_caret_class(blank: f.object.author_credit_preference.blank?),
-                    style: custom_caret_style,
-                    onchange: select_caret_onchange
-                  } %>
+      <%= render "shared/author_credit_field", f: f %>
+      <%= render "shared/author_credit_warning", record: f.object %>
     </div>
 
     <div class="flex-1 mb-4 md:mb-0">
@@ -243,27 +233,20 @@
       <div class="flex-1 mb-4 md:mb-0">
         Story idea author credit:
         <br>
-        <% if story_idea.created_by.person %>
-          <%= person_profile_button(story_idea.created_by.person, display_name: story_idea.author_credit, subtitle: story_idea.created_by.person.full_name) %>
-        <% else %>
-          <%= story_idea.author_credit %>
-        <% end %>
-        <br>
-        Story idea "author credit preference":
-        <br>
-        <div class="italic"><%= link_to story_idea.author_credit_preference, edit_story_idea_path(story_idea, anchor: "publish-preferences"), class: "hover:underline hover:text-blue-600" %></div>
+        <%= credited_author_link(story_idea) %>
+        <%= render "shared/author_credit_warning", record: story_idea %>
       </div>
     </div>
   <% end %>
 
   <div class="flex flex-col md:flex-row md:space-x-4">
     <div class="flex-1 mb-4 md:mb-0">
-      <% story_author_id = f.object.author_person&.id || current_user.person_id %>
+      <% story_author = author_picker_person(f.object) %>
       <%= f.input :author_id,
-                  collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
+                  collection: story_author.present? ? [[ story_author.remote_search_label[:label], story_author.id ]] : [],
                   prompt: "Select an author",
-                  selected: story_author_id,
-                  hint: "Defaults to the creator; change to credit someone else.",
+                  selected: story_author&.id,
+                  hint: "Defaults to the creator on a new story; change to credit someone else.",
                   label: (f.object.author ? (
                     link_to "Story author",
                             person_path(f.object.author),
@@ -273,6 +256,7 @@
                     data: { controller: "remote-select",
                             remote_select_model_value: "person" }
                   } %>
+      <%= render "shared/author_credit_note", record: f.object %>
     </div>
 
     <div class="flex-1 mb-4 md:mb-0">
@@ -374,61 +358,10 @@
   <%= f.hidden_field :updated_by_id, value: current_user.id %>
 
   <% if f.object.persisted? %>
-    <%# ---- Communications + comments — same boxes as the registration edit page,
-        shown once the story exists so there's a record to attach them to. ---- %>
+    <%# ---- Combined comments & communications — shown once the story exists so
+        there's a record to attach them to. ---- %>
     <div class="space-y-6 mt-8">
-      <% if allowed_to?(:index?, with: NotificationPolicy) %>
-        <%= render "notifications/communications", f: f,
-              title_key: "communications.story_title", none_key: "communications.none_for_story" %>
-      <% end %>
-
-      <%# ---- Comments ---- %>
-      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="edit-toggle">
-        <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:comments, f.object.comments.any?) %>">
-            <i class="fa-solid fa-comments"></i>
-          </span>
-          <h2 class="text-sm font-semibold text-gray-700">Story comments</h2>
-          <% if f.object.author_person %>
-            <%= link_to all_comments_person_path(f.object.author_person),
-                        class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
-                        target: "_blank", rel: "noopener" do %>
-              View all
-              <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
-            <% end %>
-          <% end %>
-        </div>
-
-        <div class="space-y-4 p-4" data-controller="paginated-fields" data-paginated-fields-per-page-value="5">
-          <div id="comment-list" class="space-y-4">
-            <%= f.simple_fields_for :comments do |cf| %>
-              <%= render "comments/comment_fields", f: cf %>
-            <% end %>
-          </div>
-
-          <div data-paginated-fields-target="nav"></div>
-
-          <div class="flex items-center justify-between gap-2">
-            <%= link_to_add_association f, :comments,
-                  partial: "comments/comment_fields",
-                  data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
-                  class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
-              <i class="fa-solid fa-plus text-2xs"></i>
-              Add comment
-            <% end %>
-
-            <button
-              type="button"
-              class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
-              data-action="edit-toggle#toggle"
-            >
-              <i class="fa-solid fa-pen text-2xs"></i>
-              <span data-edit-toggle-target="editLabel">Edit comments</span>
-              <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
-            </button>
-          </div>
-        </div>
-      </section>
+      <%= render "shared/comments_and_communications", f: f, view_all_person: f.object.author_person %>
     </div>
   <% end %>
 

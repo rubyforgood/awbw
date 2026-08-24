@@ -1,11 +1,14 @@
 module NotificationsHelper
-  # Records that embed the communications box and can link into the index with a
-  # "View all". A fixed name→class map (rather than constantizing the param) so a
-  # hostile return_to_type can never be turned into an arbitrary class.
+  # Records that link into a communications feed with a "View all". A fixed
+  # name→class map (rather than constantizing the param) so a hostile
+  # return_to_type can never be turned into an arbitrary class.
   RETURN_TO_MODELS = {
     "Person" => Person,
+    "User" => User,
     "EventRegistration" => EventRegistration,
+    "ContinuingEducationRegistration" => ContinuingEducationRegistration,
     "Scholarship" => Scholarship,
+    "TopicSubscription" => TopicSubscription,
     "Story" => Story,
     "StoryIdea" => StoryIdea
   }.freeze

@@ -1,10 +1,10 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<div class="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
+<div class="mx-auto max-w-2xl rounded-xl border border-gray-200 bg-white p-6 shadow">
   <div class="mb-6">
-    <%= link_to "← Subscription topics", topic_subscription_types_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <%= link_to "← Subscription topics", topic_subscription_types_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
-  <h1 class="text-2xl font-semibold text-gray-900 mb-6">Edit topic</h1>
+  <h1 class="mb-6 text-2xl font-semibold text-gray-900">Edit topic</h1>
   <%= render "form", submit_label: "Save changes" %>
 
   <%# Archive/restore and delete moved off the index — the topic's actions live on
@@ -39,4 +39,10 @@
       <p class="mt-2 text-xs text-gray-500">Topics with subscriptions can't be deleted — archive to retire without losing them.</p>
     <% end %>
   </div>
+  <%= render "shared/audit_info", resource: @topic_subscription_type %>
+  <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+    <div class="mt-4 flex justify-end">
+      <%= render "application/activity_log", record: @topic_subscription_type %>
+    </div>
+  <% end %>
 </div>

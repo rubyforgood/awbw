@@ -1,12 +1,20 @@
 class TopicSubscription < ApplicationRecord
+  include Communicable
   belongs_to :person
   belongs_to :topic_subscription_type
   # Optional narrowing to a specific event (e.g. one training). Null = the topic
   # broadly.
   belongs_to :interested_event, class_name: "Event", optional: true
+  # Optional narrowing to a specific organization. Null = the topic isn't tied
+  # to any organization.
+  belongs_to :organization, optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  def communications_email
+    person&.preferred_email
+  end
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   # Lets the new-subscription form create a brand-new person inline instead of
@@ -23,6 +31,10 @@ class TopicSubscription < ApplicationRecord
   scope :active, -> { where(unsubscribed_at: nil) }
   scope :unsubscribed, -> { where.not(unsubscribed_at: nil) }
   scope :for_topic_type, ->(type) { where(topic_subscription_type: type) }
+  scope :by_organization_name, ->(name) {
+    next all if name.blank?
+    joins(:organization).where("organizations.name LIKE ?", "%#{sanitize_sql_like(name)}%")
+  }
   scope :newest_first, -> { order(subscribed_at: :desc) }
   scope :comment_status, ->(value) {
     commented = Comment.where(commentable_type: "TopicSubscription").select(:commentable_id)
@@ -34,13 +46,14 @@ class TopicSubscription < ApplicationRecord
     end
   }
 
-  # Drives the subscriptions index filters: person, topic type, and status
-  # ("active"/"unsubscribed" — the two the segmented toggle emits). The person
-  # filter is an exact id — the index picks people through the remote-select
-  # search, so there's no free-text name matching to do here.
+  # Drives the subscriptions index filters: person, organization, topic type, and
+  # status ("active"/"unsubscribed" — the two the segmented toggle emits). The
+  # person filter is an exact id (picked through the remote-select search), while
+  # organization is a free-text name match against the linked org.
   def self.search_by_params(params)
     scope = all
     scope = scope.where(person_id: params[:person_id]) if params[:person_id].present?
+    scope = scope.by_organization_name(params[:organization_name]) if params[:organization_name].present?
     scope = scope.for_topic_type(params[:topic_subscription_type_id]) if params[:topic_subscription_type_id].present?
     scope = scope.comment_status(params[:comment_status]) if params[:comment_status].present?
 

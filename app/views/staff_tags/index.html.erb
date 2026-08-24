@@ -1,0 +1,81 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="min-h-screen py-8">
+  <div class="mx-auto max-w-full px-4 sm:px-6 lg:px-8">
+    <div class="admin-only rounded bg-blue-100 p-6">
+      <div class="mx-auto max-w-7xl rounded-xl border border-gray-200 bg-white p-6 shadow-lg transition-shadow duration-200 hover:shadow-xl">
+      <div class="space-y-6">
+        <!-- Header -->
+        <div class="mb-6 flex items-start justify-between">
+          <div>
+            <h1 class="text-2xl font-semibold text-gray-900">
+              Staff tags (<%= @count_display %>)
+            </h1>
+            <p class="mt-1 max-w-2xl text-sm text-gray-600">
+              Internal, admin-only labels for people. Never shown publicly.
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <%= link_to "New staff tag",
+                        new_staff_tag_path,
+                        class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Name</th>
+                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Description</th>
+                <th class="px-4 py-2 text-center text-sm font-medium text-gray-700">Status</th>
+                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">People tagged</th>
+              </tr>
+            </thead>
+
+            <tbody class="divide-y divide-gray-100">
+              <% @staff_tags.each do |staff_tag| %>
+              <tr class="<%= "opacity-60" unless staff_tag.published? %>">
+                <td class="px-4 py-2 text-base font-bold">
+                  <%= link_to staff_tag.name, edit_staff_tag_path(staff_tag),
+                              class: "text-gray-900 hover:underline" %>
+                </td>
+
+                <td class="max-w-md px-4 py-2 text-sm text-gray-700">
+                  <%= truncate(staff_tag.description, length: 120) %>
+                </td>
+
+                <td class="px-4 py-2 text-center text-gray-700">
+                  <% if staff_tag.published? %>
+                    <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">Published</span>
+                  <% else %>
+                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Unpublished</span>
+                  <% end %>
+                </td>
+
+                <td class="px-4 py-2 text-gray-700">
+                  <%= link_to @tagged_people_counts.fetch(staff_tag.id, 0),
+                              people_path(staff_tag_ids: staff_tag.id, return_to: "staff_tags"),
+                              class: "btn btn-secondary-default" %>
+                </td>
+              </tr>
+            <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty state -->
+        <% unless @staff_tags.any? %>
+          <p class="py-6 text-center text-gray-500">
+            No staff tags yet. Create one to start marking people for pipelines and rosters.
+          </p>
+        <% end %>
+
+        <!-- Pagination -->
+        <div class="pagination mt-12 flex justify-center">
+          <%= tailwind_paginate @staff_tags %>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>

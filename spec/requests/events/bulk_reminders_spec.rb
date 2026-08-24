@@ -78,7 +78,7 @@ RSpec.describe "Events::BulkReminders", type: :request do
     it "redirects back to the picker when nothing is selected" do
       post confirm_reminder_event_path(event), params: { registration_ids: [] }
 
-      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: "", custom_subject: "", hide_event_card: "0"))
+      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: "", custom_subject: "", hide_event_card: "0", hide_ticket_button: "0"))
       expect(flash[:alert]).to be_present
     end
 
@@ -183,6 +183,32 @@ RSpec.describe "Events::BulkReminders", type: :request do
       reminder = ActionMailer::Base.deliveries.find { |m| m.to == [ jane.registrant.preferred_email ] }
       expect(reminder.html_part.body.encoded).to include("#166534")
     end
+
+    it "records the hide-ticket-button choice on each reminder when checked" do
+      post send_reminder_event_path(event), params: { registration_ids: [ jane.id, sam.id ], hide_ticket_button: "1" }
+
+      reminders = Notification.where(kind: "event_registration_reminder")
+      expect(reminders.count).to eq(2)
+      expect(reminders.map(&:hide_ticket_button)).to all(be(true))
+    end
+
+    it "defaults hide_ticket_button to false when the box is left unchecked" do
+      post send_reminder_event_path(event), params: { registration_ids: [ jane.id ] }
+
+      expect(Notification.where(kind: "event_registration_reminder").map(&:hide_ticket_button)).to all(be(false))
+    end
+
+    # End-to-end: checking the box on the page must carry through the async delivery
+    # job into the email that actually lands in the registrant's inbox.
+    it "hides the View ticket button in the delivered email when the box is checked" do
+      perform_enqueued_jobs do
+        post send_reminder_event_path(event), params: { registration_ids: [ jane.id ], hide_ticket_button: "1" }
+      end
+
+      reminder = ActionMailer::Base.deliveries.find { |m| m.to == [ jane.registrant.preferred_email ] }
+      expect(reminder).to be_present
+      expect(reminder.html_part.body.encoded).not_to include("View ticket")
+    end
   end
 
   describe "the compose page" do
@@ -192,6 +218,25 @@ RSpec.describe "Events::BulkReminders", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("hide_event_card")
       expect(response.body).to include("Hide the event details")
+    end
+
+    it "offers a checkbox to hide the View ticket button" do
+      get preview_reminder_event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("hide_ticket_button")
+      expect(response.body).to include("Hide the \"View ticket\" button")
+    end
+
+    it "reflects a carried-over hidden ticket-button choice: checkbox ticked and the button pre-hidden in the live preview" do
+      get preview_reminder_event_path(event, hide_ticket_button: "1")
+
+      expect(response).to have_http_status(:ok)
+      html = Nokogiri::HTML(response.body)
+      expect(html.at_css("#hide_ticket_button")["checked"]).to be_present
+      button = html.at_css("#reminder-ticket-button")
+      expect(button).to be_present
+      expect(button["style"]).to include("display: none")
     end
 
     it "reflects a carried-over hidden choice: checkbox ticked and the card pre-hidden in the live preview" do
@@ -217,6 +262,18 @@ RSpec.describe "Events::BulkReminders", type: :request do
       post confirm_reminder_event_path(event), params: { registration_ids: [ jane.id ] }
 
       expect(response.body).not_to include("Event details box hidden")
+    end
+
+    it "says on the confirm page when the View ticket button is hidden" do
+      post confirm_reminder_event_path(event), params: { registration_ids: [ jane.id ], hide_ticket_button: "1" }
+
+      expect(response.body).to include("\"View ticket\" button hidden")
+    end
+
+    it "says nothing about the ticket button on the confirm page when it is shown" do
+      post confirm_reminder_event_path(event), params: { registration_ids: [ jane.id ] }
+
+      expect(response.body).not_to include("button hidden")
     end
 
     # Gated on the event carrying a deadline, not on it being on-demand.
