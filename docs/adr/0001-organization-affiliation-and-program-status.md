@@ -90,15 +90,20 @@ was maintained by hand and drifted; an org is "active" because someone is
 facilitating there, not because a column says so. The same rule backs the index
 filter (`Organization.program_status`), so the filter and the chip agree.
 
-**The "Inactive" filter is a not-active umbrella.** On both the organization
-index and the people directory, the facilitator-status filter offers **Upcoming**
-as its own option, **and** its **Inactive** option returns everyone/every org
-that is not a currently-active facilitator — Formerly active, Never active (no
+**The filter dropdown has one more option than the chip.** The chip is only ever
+one of the four buckets above; **Inactive is a filter option, never a chip**. Both
+the organization index and the people directory offer five, in this order —
+**Active / Inactive / Upcoming / Formerly active / Never active**
+(`Organization::PROGRAM_STATUS_FILTER_OPTIONS`,
+`Person::FACILITATOR_STATUS_FILTER_OPTIONS`).
+
+**"Inactive" is the not-active umbrella.** It returns everyone/every org that is
+not a currently-active facilitator — Formerly active, Never active (no
 facilitator affiliation at all), **and Upcoming** — because none of them are
 active right now
 (`Organization.program_status("formerly_or_never")`, `Person.facilitators_inactive`).
-So an upcoming org/person shows an *Upcoming* chip but is still found when you
-filter by Inactive.
+Upcoming and Formerly active are the narrower options inside it. So an upcoming
+org/person shows an *Upcoming* chip but is still found when you filter by Inactive.
 
 On the edit form this chip **live-updates** from the visible facilitator rows.
 
