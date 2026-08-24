@@ -1386,14 +1386,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_120000) do
 
   create_table "timeline_entries", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.bigint "owner_id", null: false
+    t.string "owner_type", null: false
     t.bigint "timeline_event_id", null: false
-    t.bigint "timeline_id", null: false
-    t.string "timeline_type", null: false
     t.datetime "updated_at", null: false
-    t.index ["timeline_event_id", "timeline_type", "timeline_id"], name: "index_timeline_entries_on_event_and_timeline_unique", unique: true
+    t.index ["owner_type", "owner_id", "created_at"], name: "idx_on_owner_type_owner_id_created_at_bcce77e0a0"
+    t.index ["owner_type", "owner_id"], name: "index_timeline_entries_on_owner"
+    t.index ["timeline_event_id", "owner_type", "owner_id"], name: "index_timeline_entries_on_event_and_owner_unique", unique: true
     t.index ["timeline_event_id"], name: "index_timeline_entries_on_timeline_event_id"
-    t.index ["timeline_type", "timeline_id", "created_at"], name: "idx_on_timeline_type_timeline_id_created_at_95ab45ec78"
-    t.index ["timeline_type", "timeline_id"], name: "index_timeline_entries_on_timeline"
   end
 
   create_table "timeline_events", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|

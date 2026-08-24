@@ -15,12 +15,12 @@ class CreateTimelineTables < ActiveRecord::Migration[8.1]
     add_index :timeline_events, [ :actor_type, :actor_id, :created_at ]
 
     create_table :timeline_entries do |t|
-      t.belongs_to :timeline, polymorphic: true, null: false
+      t.belongs_to :owner, polymorphic: true, null: false
       t.belongs_to :timeline_event, null: false, foreign_key: true
       t.timestamps
     end
 
-    add_index :timeline_entries, [ :timeline_type, :timeline_id, :created_at ]
-    add_index :timeline_entries, [ :timeline_event_id, :timeline_type, :timeline_id ], unique: true, name: "index_timeline_entries_on_event_and_timeline_unique"
+    add_index :timeline_entries, [ :owner_type, :owner_id, :created_at ]
+    add_index :timeline_entries, [ :timeline_event_id, :owner_type, :owner_id ], unique: true, name: "index_timeline_entries_on_event_and_owner_unique"
   end
 end
