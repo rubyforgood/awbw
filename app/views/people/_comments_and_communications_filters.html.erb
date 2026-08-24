@@ -44,22 +44,22 @@
   </div>
 
   <div class="flex flex-wrap items-end gap-3">
-    <div class="w-44">
+    <div class="w-40">
       <label for="kind" class="<%= search_label_class %>">Show</label>
       <%= f.select :kind,
                    options_for_select([ [ "Comments & communications", "" ], [ "Comments only", "comments" ], [ "Communications only", "communications" ] ], params[:kind]), {},
-                   class: search_field_class(extra: "bg-white search-select-placeholder"),
+                   class: search_field_class(extra: "truncate bg-white search-select-placeholder"),
                    onchange: "this.form.requestSubmit()" %>
     </div>
 
-    <div class="w-44">
+    <div class="w-40">
       <label for="source" class="<%= search_label_class %>">Attached to</label>
       <%= f.select :source, options_for_select(attached_to_options, params[:source]), { include_blank: "All records" },
                    class: search_field_class(extra: "bg-white search-select-placeholder"),
                    onchange: "this.form.requestSubmit()" %>
     </div>
 
-    <div class="w-44">
+    <div class="w-32">
       <label for="follow_up" class="<%= search_label_class %>">Follow-up</label>
       <%= f.select :follow_up,
                    options_for_select([ [ "Needed", "needed" ], [ "Responded", "responded" ], [ "None needed", "none" ] ], params[:follow_up]),
@@ -84,7 +84,7 @@
 
     <%# Canned email-subject phrases — the one filter no comment can answer, so
         picking one shows communications only. %>
-    <div class="w-36">
+    <div class="w-32">
       <label for="email_topic" class="<%= search_label_class %>">Email topic</label>
       <%= f.select :email_topic,
                    options_for_select(Notification::EMAIL_TOPICS.map(&:first), params[:email_topic]),
@@ -93,7 +93,7 @@
                    onchange: "this.form.requestSubmit()" %>
     </div>
 
-    <div class="pb-1">
+    <div class="shrink-0 pb-1">
       <%= render "shared/search_clear", url: clear_path %>
     </div>
   </div>
