@@ -202,13 +202,24 @@ module AhoyTrackable
         assoc: :"#{name}_attachment",
         type: "ActiveStorage::Attachment",
         action: removal ? "removed" : "added",
-        filename: (attachment_filenames(change) unless removal)
+        filename: removal ? removed_attachment_filenames(name) : attachment_filenames(change)
       }.compact
     end
   end
 
   def attachment_filenames(change)
-    blobs = change.try(:blobs) || Array(change.try(:blob))
+    blob_names(change.try(:blobs) || Array(change.try(:blob)))
+  end
+
+  # A staged delete carries no blob of its own, so read what is still attached:
+  # the outgoing file stays on the record until the save applies the change, and
+  # its name is all the log can keep once the blob is gone.
+  def removed_attachment_filenames(name)
+    attached = try(:"#{name}_attachments") || try(:"#{name}_attachment")
+    blob_names(Array(attached).filter_map(&:blob))
+  end
+
+  def blob_names(blobs)
     blobs.filter_map { |blob| blob.filename.to_s.presence }.join(", ").presence
   end
 

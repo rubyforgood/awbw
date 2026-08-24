@@ -248,7 +248,17 @@ RSpec.describe Ahoy::EventDecorator do
       expect(rows.map { |row| row[:value] }).not_to include(a_string_including("ActiveStorage"))
     end
 
-    it "reads a removed attachment as the removal, the file being gone" do
+    it "reads a removed attachment as its name" do
+      rows = event_with(avatar_attachment: [ {
+        action: "removed", type: "ActiveStorage::Attachment", filename: "headshot.png"
+      } ]).detail_rows
+
+      attachment = rows.last
+      expect(attachment[:action]).to eq("removed")
+      expect(attachment[:value]).to eq("headshot.png")
+    end
+
+    it "falls back to the action alone for an older entry with no filename" do
       rows = event_with(avatar_attachment: [ {
         action: "removed", type: "ActiveStorage::Attachment"
       } ]).detail_rows

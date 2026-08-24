@@ -115,8 +115,8 @@ module Ahoy
         item["action"].present? && item["id"].blank? && item["record_id"].blank?
     end
 
-    # A file has no page to link to, so it reads as its name. A removal keeps only
-    # the action — the blob is gone by the time anyone reads this.
+    # A file has no page to link to, so it reads as its name — kept on a removal
+    # too, since the blob it named is gone by the time anyone reads this.
     def attachment_row(label, item, depth)
       { label: label, depth: depth, action: item["action"], value: item["filename"].presence }
     end

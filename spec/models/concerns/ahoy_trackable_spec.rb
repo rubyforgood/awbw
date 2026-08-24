@@ -194,7 +194,18 @@ RSpec.describe AhoyTrackable do
       person.update!(avatar: Rack::Test::UploadedFile.new(Rails.root.join("app/assets/images/missing.png"), "image/png"))
 
       attached = event_named("update.person")[:properties][:association_changes][:avatar_attachment].first
-      expect(attached).to include(action: "added", type: "ActiveStorage::Attachment")
+      expect(attached).to include(action: "added", type: "ActiveStorage::Attachment", filename: "missing.png")
+    end
+
+    it "keeps the name of a removed attachment, the blob being gone afterwards" do
+      person = create(:person)
+      person.update!(avatar: Rack::Test::UploadedFile.new(Rails.root.join("app/assets/images/missing.png"), "image/png"))
+      Analytics::LifecycleBuffer.store.clear
+
+      person.update!(avatar: nil)
+
+      removed = event_named("update.person")[:properties][:association_changes][:avatar_attachment].first
+      expect(removed).to include(action: "removed", filename: "missing.png")
     end
   end
 end
