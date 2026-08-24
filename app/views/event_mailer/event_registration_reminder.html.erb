@@ -42,16 +42,10 @@
 <% if @event_registration.persisted? && @event_registration.slug.present? %>
   <% if @preview %>
     <div id="reminder-ticket-button" data-reminder-preview-target="ticketButton" style="<%= "display: none;" if @hide_ticket_button %>">
-      <p>
-        View your ticket for everything you need to attend, plus a calendar link:
-      </p>
-      <p><a href="<%= registration_ticket_url(@event_registration.slug) %>" class="button">View ticket</a></p>
+      <%= render "ticket_button", event_registration: @event_registration %>
     </div>
   <% elsif !@hide_ticket_button %>
-    <p>
-      View your ticket for everything you need to attend, plus a calendar link:
-    </p>
-    <p><a href="<%= registration_ticket_url(@event_registration.slug) %>" class="button">View ticket</a></p>
+    <%= render "ticket_button", event_registration: @event_registration %>
   <% end %>
 <% end %>
 

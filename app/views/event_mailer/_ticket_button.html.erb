@@ -1,0 +1,7 @@
+<%# The "View ticket" call to action. Rendered from both branches of the
+    reminder's preview/real-send split, so the copy lives in one place.
+    Locals: event_registration. %>
+<p>
+  View your ticket for everything you need to attend, plus a calendar link:
+</p>
+<p><a href="<%= registration_ticket_url(event_registration.slug) %>" class="button">View ticket</a></p>
