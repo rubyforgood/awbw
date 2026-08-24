@@ -64,10 +64,11 @@
           </span>
           <h2 class="text-sm font-semibold text-gray-700">CE comments</h2>
           <% if registration.registrant %>
-            <%= link_to all_comments_person_path(registration.registrant),
-                        class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
+            <%# Carry the origin so the feed can show a back eyebrow to this record. %>
+            <%= link_to comments_and_communications_person_path(registration.registrant, return_to_type: "ContinuingEducationRegistration", return_to_id: registration.id),
+                        class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium #{eyebrow_link_class} hover:underline",
                         target: "_blank", rel: "noopener" do %>
-              View all
+              <%= t("communications.view_all") %>
               <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
             <% end %>
           <% end %>

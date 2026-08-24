@@ -48,14 +48,15 @@
   action_path: "/people/1/comments_and_communications"
   pr_number: 2355
   summary: >-
-    The "All comments & communications" link on any record's combined section opens one
-    filterable page merging everything from the old All comments page and the communications
-    index for that person — same cards as the section, with full bodies instead of one-line
-    truncation.
+    One filterable page per person merging every comment and every communication, reached
+    from the "All comments & communications" link on any record. Same cards as the section
+    but with full bodies, plus composers for adding either against any of their records.
   pro_tips:
     - "Most filters search both kinds at once: \"Subject or topic\" matches a comment's topic and an email's subject line, \"From or author\" matches who wrote the comment and who sent (or sent in) the message, and \"Attached to\" matches the record either one hangs off."
     - "\"Follow-up: Needed\" gathers flagged comments and incoming messages nobody has answered yet."
     - "\"Responded\" and \"Email topic\" return communications only — a comment records no reply and has no email subject."
+    - "Add comment / Add communication at the top right each open a composer with a picker for which of the person's records to file it against."
+    - "Every row's chip opens that record's edit page; a communication's subject opens the communication itself."
     - "The back link returns to whichever record you opened the feed from."
 
 - name: "Copy email addresses from the people list"

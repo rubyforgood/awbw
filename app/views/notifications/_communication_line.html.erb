@@ -1,9 +1,11 @@
 <%# One communication row, styled to match a comment card (locals: notification,
     admin:, mark_admin_only:, truncate:, trailing:). The combined section keeps a
-    row to one line; the standalone All comments & communications page passes
-    truncate: false, which leaves channel/badges/subject on the headline row and
-    drops the full body onto its own line underneath. `trailing` closes the
-    headline row (e.g. the attached-record chip). %>
+    row to one line and links the whole card to the communication; the standalone
+    All comments & communications page passes truncate: false, which leaves
+    channel/badges/subject on the headline row, drops the full body onto its own
+    line underneath, and — since a card-wide link can hold no other links — makes
+    the subject the link to the communication so `trailing` can be a link too (the
+    attached-record chip, pointing at that record's edit page). %>
 <% admin = local_assigns.fetch(:admin, true) %>
 <% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
 <% truncate_body = local_assigns.fetch(:truncate, true) %>
@@ -39,7 +41,12 @@
       <span>
         <%= decorated.channel_chip %>
         <%= decorated.flag_badges %>
-        <span class="font-semibold text-gray-900"><%= subject %></span>
+        <% if truncate_body || !admin %>
+          <span class="font-semibold text-gray-900"><%= subject %></span>
+        <% else %>
+          <%= link_to subject, notification_path(notification), target: "_blank", rel: "noopener",
+                      class: "font-semibold text-gray-900 hover:underline" %>
+        <% end %>
         <% if truncate_body && body.present? %>
           <span class="<%= body_class %>" title="<%= body %>"><%= body %></span>
         <% end %>
@@ -51,7 +58,7 @@
     <%= trailing %>
   </div>
 <% end %>
-<% if admin %>
+<% if admin && truncate_body %>
   <%= link_to row, notification_path(notification), target: "_blank", rel: "noopener",
               class: "block #{card} transition-colors #{DomainTheme.bg_class_for(:notifications, intensity: 50, hover: true)}" %>
 <% else %>

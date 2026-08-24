@@ -55,6 +55,56 @@ RSpec.describe "Person comments and communications", type: :request do
       expect(chip.path < body.path).to be(true)
     end
 
+    it "links a communication's chip to its noticeable and names the record" do
+      registration = create(:event_registration, registrant: person)
+      notification = create(:notification, noticeable: registration, recipient_email: "primary@example.com",
+                                           email_subject: "About the registration", kind: "manual_log",
+                                           channel: "email", recipient_role: "person", notification_type: 0)
+
+      get comments_and_communications_person_path(person), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      doc = Nokogiri::HTML(response.body)
+      chip = doc.at_css("a[href='#{edit_event_registration_path(registration)}']")
+      expect(chip).to be_present
+      # The record's own label, not a bare "##{registration.id}" fallback.
+      expect(chip.text.strip).to start_with("Registration ·")
+      # The subject still reaches the communication itself.
+      expect(doc.at_css("a[href='#{notification_path(notification)}']")&.text.to_s).to include("About the registration")
+    end
+
+    it "offers composers that file a note or a communication against a chosen record" do
+      registration = create(:event_registration, registrant: person)
+
+      get comments_and_communications_person_path(person)
+
+      doc = Nokogiri::HTML(response.body)
+      # Both composers list the person's records; each submits a signed GlobalID.
+      expect(doc.at_css("select#commentable_sgid")).to be_present
+      expect(doc.at_css("select#noticeable_sgid")).to be_present
+      labels = doc.css("select#noticeable_sgid option").map(&:text)
+      expect(labels).to include("Profile")
+      expect(labels.any? { |label| label.start_with?("Registration ·") }).to be(true)
+      expect(registration).to be_persisted
+    end
+
+    it "logs a communication against the picked record and returns to the feed" do
+      registration = create(:event_registration, registrant: person)
+
+      expect {
+        post notifications_path, params: {
+          person_id: person.id,
+          for_person_id: person.id,
+          noticeable_sgid: registration.to_sgid.to_s,
+          notification: { channel: "phone", email_subject: "Called about the registration" }
+        }
+      }.to change(Notification, :count).by(1)
+
+      logged = Notification.order(:created_at).last
+      expect(logged.noticeable).to eq(registration)
+      expect(logged.recipient_email).to eq(person.communications_email)
+      expect(response).to redirect_to(comments_and_communications_person_path(person))
+    end
+
     it "denies a non-admin" do
       sign_in create(:user)
 

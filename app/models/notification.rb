@@ -64,12 +64,15 @@ class Notification < ApplicationRecord
   ].freeze
 
   NOTICEABLE_TYPES = %w[
+    ContinuingEducationRegistration
     EventRegistration
     FormSubmission
     Person
     Report
+    Scholarship
     Story
     StoryIdea
+    TopicSubscription
     User
     WorkshopLog
     WorkshopIdea

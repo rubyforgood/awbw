@@ -46,10 +46,16 @@ RSpec.describe CommentDecorator do
   end
 
   describe "#source_path" do
-    it "points a profile comment at the person page" do
+    it "points a comment at its commentable's edit page, where it can be changed" do
       person = create(:person)
       comment = create(:comment, commentable: person)
-      expect(comment.decorate.source_path).to eq(Rails.application.routes.url_helpers.person_path(person))
+      expect(comment.decorate.source_path).to eq(Rails.application.routes.url_helpers.edit_person_path(person))
+    end
+
+    it "points a scholarship comment at the scholarship's edit page" do
+      scholarship = create(:scholarship)
+      comment = create(:comment, commentable: scholarship)
+      expect(comment.decorate.source_path).to eq(Rails.application.routes.url_helpers.edit_scholarship_path(scholarship))
     end
   end
 

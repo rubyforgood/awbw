@@ -130,7 +130,7 @@ class PeopleController < ApplicationController
       @total_count = base.count
       @flagged_count = base.flagged.count
       @new_comment = Comment.new
-      @comment_targets = helpers.person_comment_targets(@person)
+      @comment_targets = helpers.person_record_targets(@person)
       track_view("person_all_comments", { person_id: @person.id })
     end
   end
@@ -154,6 +154,9 @@ class PeopleController < ApplicationController
       feed = PersonCommentAndCommunicationAggregator.new(@person)
       @total_count = feed.total_count
       @flagged_count = feed.flagged_count
+      @new_comment = Comment.new
+      @new_notification = Notification.new
+      @record_targets = helpers.person_record_targets(@person)
       track_view("person_comments_and_communications", { person_id: @person.id })
     end
   end
