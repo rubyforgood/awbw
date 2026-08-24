@@ -29,7 +29,7 @@ Event reminder Hello<%= @person.full_name %>,
 <% end %>
 <% end %>
 <%= render "ce_deadlines", event: @event %>
-<% if @event_registration.slug.present? %>
+<% if @event_registration.slug.present? && !@hide_ticket_button %>
   View your ticket for everything you need to attend, plus a calendar link:
   <%= registration_ticket_url(@event_registration.slug) %>
 <% end %>

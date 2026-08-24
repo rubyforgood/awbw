@@ -44,7 +44,7 @@ class EventMailer < ApplicationMailer
     )
   end
 
-  def event_registration_reminder(event_registration, custom_message: nil, custom_subject: nil, hide_event_card: false, preview: false)
+  def event_registration_reminder(event_registration, custom_message: nil, custom_subject: nil, hide_event_card: false, hide_ticket_button: false, preview: false)
     @event_registration = event_registration
     @event = event_registration.event.decorate
     @person = event_registration.registrant
@@ -53,6 +53,9 @@ class EventMailer < ApplicationMailer
     # When true, the grey event-details card is dropped from the email — the admin
     # chose to send a plainer message on the bulk-reminder page.
     @hide_event_card = hide_event_card
+    # When true, the "View ticket" button (and its lead-in line) is dropped — the
+    # admin chose a plain informational email with no link to the registrant's ticket.
+    @hide_ticket_button = hide_ticket_button
     # When true, the HTML body always renders the custom-message container (even
     # when blank) with hooks the on-page preview's Stimulus controller fills in
     # live. Never set on a real send.
@@ -80,12 +83,14 @@ class EventMailer < ApplicationMailer
   # is passed as "Name <email>" labels (not records), so the job that delivers
   # this needs no extra lookups. The per-recipient reminders are tracked
   # notifications; this is just an at-a-glance heads-up for the team.
-  def event_registration_reminder_fyi(event, recipient_labels, custom_message: nil, hide_event_card: false)
+  def event_registration_reminder_fyi(event, recipient_labels, custom_message: nil, hide_event_card: false, hide_ticket_button: false)
     @event = event.decorate
     @recipient_labels = Array(recipient_labels)
     @custom_message = custom_message.presence
     # Mirror what registrants received: drop the card from the admin copy too.
     @hide_event_card = hide_event_card
+    # Mirror what registrants received: note the ticket link only when it was sent.
+    @hide_ticket_button = hide_ticket_button
     @notification_type = "Event registration reminder"
     @time_zone = Time.zone.name
     @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
