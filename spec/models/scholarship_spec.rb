@@ -7,6 +7,23 @@ RSpec.describe Scholarship, type: :model do
     it { is_expected.to have_one(:allocation).dependent(:destroy) }
   end
 
+  describe "#event" do
+    let(:person) { create(:person) }
+
+    it "is the event behind the registration the allocation funds" do
+      training = create(:event, title: "TAC251", facilitator_training: true)
+      registration = create(:event_registration, event: training, registrant: person)
+      scholarship = create(:scholarship, recipient: person)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 0)
+
+      expect(scholarship.reload.event).to eq(training)
+    end
+
+    it "is nil for an award with no allocation behind it" do
+      expect(create(:scholarship, recipient: person).event).to be_nil
+    end
+  end
+
   describe "validations" do
     it { is_expected.to validate_numericality_of(:amount_cents).is_greater_than_or_equal_to(0) }
 

@@ -213,19 +213,6 @@ class Organization < ApplicationRecord
     [ first_active.city, first_active.state ].compact_blank.join(", ").presence
   end
 
-  # This org's program status relative to a scholarship recipient (the
-  # New/Ongoing/Reinstate column on the scholarship index): Reinstate = lapsed,
-  # Ongoing = has facilitators beyond this recipient, New = none prior. In-memory
-  # facilitator-affiliation heuristic, to reuse a preloaded association.
-  def program_status(recipient = nil)
-    facilitators = affiliations.select(&:facilitator?)
-    return "New" if facilitators.empty?
-    return "Reinstate" if facilitators.none?(&:active?)
-
-    prior = recipient ? facilitators.reject { |a| a.person_id == recipient.id } : facilitators
-    prior.any? ? "Ongoing" : "New"
-  end
-
   def type_name
     "#{name} #{ " (#{windows_type.short_name})" if windows_type}"
   end

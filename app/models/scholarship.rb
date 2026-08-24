@@ -30,6 +30,19 @@ class Scholarship < ApplicationRecord
   # Declined awards drop out of every total.
   scope :not_declined, -> { where.not(agreement_response_status: "declined") }
 
+  # The training this award paid for: the event behind the registration its
+  # allocation funds. Nil for a grant-first award (no allocation yet) or one
+  # funding a CE registration / membership invoice instead of a training.
+  # Resolved through the recipient's own registrations (guaranteed to include this
+  # one by recipient_must_match_allocation_registrant) so a list page that preloads
+  # event_registrations → event pays no per-row query; walking allocatable.event
+  # would, since a polymorphic preload can't reach the event.
+  def event
+    return nil unless allocation&.allocatable_type == "EventRegistration"
+
+    recipient&.event_registrations&.find { |registration| registration.id == allocation.allocatable_id }&.event
+  end
+
   # Funding split (the app-wide convention, mirrored by EventDashboard and
   # EventRevenueFigures): externally funded = backed by a grant whose funder isn't
   # the org itself; org-subsidized = no grant, or a grant AWBW funded itself.

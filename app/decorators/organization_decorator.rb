@@ -33,9 +33,9 @@ class OrganizationDecorator < ApplicationDecorator
   end
 
   # Compact single-letter program-status badge (N / O / R) with the full label as
-  # a tooltip. Defaults to this org's own #program_status; pass a precomputed
+  # a tooltip. Defaults to this org's own year-anchored status; pass a precomputed
   # status on list pages (index / dashboard) to avoid loading affiliations per row.
-  def program_status_badge(status = object.program_status)
+  def program_status_badge(status = object.facilitator_program_status)
     key = self.class.program_status_key(status)
     return unless key
 

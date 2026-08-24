@@ -408,34 +408,6 @@ RSpec.describe Organization, "scholarship index helpers" do
     end
   end
 
-  describe "#program_status" do
-    let(:org) { create(:organization) }
-    let(:recipient) { create(:person) }
-
-    it "is New when the recipient is the org's only facilitator" do
-      create(:affiliation, person: recipient, organization: org, title: "Facilitator")
-
-      expect(org.reload.program_status(recipient)).to eq("New")
-    end
-
-    it "is Ongoing when another facilitator already serves the org" do
-      create(:affiliation, person: recipient, organization: org, title: "Facilitator")
-      create(:affiliation, person: create(:person), organization: org, title: "Facilitator")
-
-      expect(org.reload.program_status(recipient)).to eq("Ongoing")
-    end
-
-    it "is Reinstate when the org's facilitator affiliations have all lapsed" do
-      create(:affiliation, person: recipient, organization: org, title: "Facilitator", end_date: 1.year.ago.to_date)
-
-      expect(org.reload.program_status(recipient)).to eq("Reinstate")
-    end
-
-    it "is New when the org has no facilitator affiliations" do
-      expect(org.program_status(recipient)).to eq("New")
-    end
-  end
-
   describe ".awbw" do
     it "finds the org named by ORGANIZATION_NAME" do
       awbw = create(:organization, name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))

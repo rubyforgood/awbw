@@ -156,7 +156,7 @@ RSpec.describe OrganizationDecorator do
       expect(described_class.program_status_classes(:new)).to include("indigo")
       expect(described_class.program_status_classes(:ongoing)).to include("blue")
       expect(described_class.program_status_classes(:reinstated)).to include("purple")
-      # Organization#program_status returns "Reinstate" (no trailing d).
+      # Tolerates either spelling of the word, however a caller phrases it.
       expect(described_class.program_status_classes("Reinstate")).to include("purple")
     end
 
@@ -180,11 +180,12 @@ RSpec.describe OrganizationDecorator do
       expect(badge).to have_css("span[title='Ongoing']", text: "O")
     end
 
-    it "defaults to the organization's own program status" do
-      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator")
+    it "defaults to the organization's own year-anchored program status" do
+      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator",
+                           start_date: 3.years.ago.to_date)
 
       badge = Capybara.string(organization.reload.decorate.program_status_badge)
-      expect(badge).to have_css("span[title='Ongoing']", text: "O")
+      expect(badge).to have_css("span[title^='Ongoing']", text: "O")
     end
 
     it "is nil for a blank status" do
