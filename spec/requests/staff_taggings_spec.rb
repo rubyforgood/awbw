@@ -1,16 +1,78 @@
 require "rails_helper"
 
-RSpec.describe "StaffTaggings", type: :request do
-  let(:admin)         { create(:user, :with_person, super_user: true) }
-  let(:staff_tag)     { create(:staff_tag, name: "VIP") }
-  let(:staff_tagging) { create(:staff_tagging, staff_tag: staff_tag) }
-  let(:person)        { staff_tagging.staff_taggable }
+RSpec.describe "/staff_taggings", type: :request do
+  let(:admin) { create(:user, :admin, :with_person) }
+  let(:turbo_headers) { { "Turbo-Frame" => "staff_taggings_results", "Accept" => "text/html" } }
 
-  describe "GET /staff_taggings/:id/edit" do
+  describe "GET /staff_taggings (index)" do
     context "as an admin" do
       before { sign_in admin }
 
-      it "renders the combined comments and communications section for the tagging" do
+      it "lists staff taggings" do
+        tag = create(:staff_tag, name: "Highlight roster")
+        person = create(:person, first_name: "Ada", last_name: "Tagged")
+        create(:staff_tagging, staff_tag: tag, staff_taggable: person)
+
+        get staff_taggings_path, headers: turbo_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Ada Tagged")
+        expect(response.body).to include("Highlight roster")
+      end
+
+      it "filters by staff tag" do
+        wanted = create(:staff_tag, name: "Wanted")
+        other = create(:staff_tag, name: "Other")
+        create(:staff_tagging, staff_tag: wanted, staff_taggable: create(:person, first_name: "Keep", last_name: "Me"))
+        create(:staff_tagging, staff_tag: other, staff_taggable: create(:person, first_name: "Drop", last_name: "Me"))
+
+        get staff_taggings_path, params: { staff_tag_ids: wanted.id }, headers: turbo_headers
+
+        expect(response.body).to include("Keep Me")
+        expect(response.body).not_to include("Drop Me")
+      end
+
+      it "searches by person name" do
+        create(:staff_tagging, staff_taggable: create(:person, first_name: "Alice", last_name: "Xylophone"))
+        create(:staff_tagging, staff_taggable: create(:person, first_name: "Bob", last_name: "Quartz"))
+
+        get staff_taggings_path, params: { query: "Xylophone" }, headers: turbo_headers
+
+        expect(response.body).to include("Alice Xylophone")
+        expect(response.body).not_to include("Bob Quartz")
+      end
+
+      it "searches by affiliated organization name" do
+        person = create(:person, first_name: "Org", last_name: "Member")
+        org = create(:organization, name: "Distinctive Org")
+        create(:affiliation, person: person, organization: org)
+        create(:staff_tagging, staff_taggable: person)
+        create(:staff_tagging, staff_taggable: create(:person, first_name: "No", last_name: "Org"))
+
+        get staff_taggings_path, params: { query: "Distinctive Org" }, headers: turbo_headers
+
+        expect(response.body).to include("Org Member")
+        expect(response.body).not_to include("No Org")
+      end
+    end
+
+    context "as a non-admin" do
+      it "forbids the index" do
+        sign_in create(:user, super_user: false)
+        get staff_taggings_path
+        expect(response).not_to have_http_status(:ok)
+      end
+    end
+  end
+
+  describe "GET /staff_taggings/:id/edit" do
+    let(:staff_tag)     { create(:staff_tag, name: "VIP") }
+    let(:staff_tagging) { create(:staff_tagging, staff_tag: staff_tag) }
+
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "renders the tag select plus the combined comments and communications section" do
         get edit_staff_tagging_path(staff_tagging)
 
         expect(response).to have_http_status(:ok)
@@ -33,6 +95,10 @@ RSpec.describe "StaffTaggings", type: :request do
   end
 
   describe "PATCH /staff_taggings/:id" do
+    let(:staff_tag)     { create(:staff_tag, name: "VIP") }
+    let(:staff_tagging) { create(:staff_tagging, staff_tag: staff_tag) }
+    let(:person)        { staff_tagging.staff_taggable }
+
     before { sign_in admin }
 
     it "saves a new comment authored by the current user" do
@@ -58,6 +124,45 @@ RSpec.describe "StaffTaggings", type: :request do
       expect(note.noticeable).to eq(staff_tagging)
       expect(note.email_subject).to eq("Called about VIP status")
       expect(note.recipient_email).to eq(person.preferred_email.presence || "n/a")
+    end
+
+    it "changes which tag the tagging carries" do
+      person = create(:person)
+      new_tag = create(:staff_tag)
+      tagging = create(:staff_tagging, staff_tag: create(:staff_tag), staff_taggable: person)
+
+      patch staff_tagging_path(tagging), params: {
+        return_to: "staff_taggings", staff_tagging: { staff_tag_id: new_tag.id }
+      }
+
+      expect(response).to redirect_to(staff_taggings_path)
+      expect(tagging.reload.staff_tag).to eq(new_tag)
+    end
+
+    it "rejects moving a tagging onto a tag the person already carries" do
+      person = create(:person)
+      tag_a = create(:staff_tag)
+      tag_b = create(:staff_tag)
+      create(:staff_tagging, staff_tag: tag_b, staff_taggable: person)
+      tagging = create(:staff_tagging, staff_tag: tag_a, staff_taggable: person)
+
+      patch staff_tagging_path(tagging), params: { staff_tagging: { staff_tag_id: tag_b.id } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(tagging.reload.staff_tag).to eq(tag_a)
+    end
+  end
+
+  describe "DELETE /staff_taggings/:id" do
+    before { sign_in admin }
+
+    it "removes a tagging" do
+      tagging = create(:staff_tagging)
+
+      expect {
+        delete staff_tagging_path(tagging)
+      }.to change(StaffTagging, :count).by(-1)
+      expect(response).to redirect_to(staff_taggings_path)
     end
   end
 end

@@ -2262,3 +2262,18 @@
   pro_tips:
     - "Only mutations show: opening or printing a record never clutters its log."
     - "Deleting a child or attachment is recorded too — the entry keeps the name even after the file is gone."
+
+- name: "Staff taggings directory"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-24
+  action_path: "/staff_taggings"
+  summary: >-
+    A searchable list of everyone carrying a staff tag. Filter by tag, or search
+    by person or organization name in one box, and change or remove a person's
+    tag from the row.
+  pro_tips:
+    - "The name box also matches a person's email, phone, address, and their affiliated organization."
+    - "Each staff tag on the staff tags page now has a \"View taggings\" link straight into this list, pre-filtered to that tag."
+    - "Editing a tagging lets you switch its tag and record comments or communications about it, all on one page."
+    - "Reach it from the admin home page under \"Staff taggings\"."

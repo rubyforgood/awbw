@@ -32,4 +32,39 @@ RSpec.describe StaffTagging, type: :model do
   ensure
     Current.user = nil
   end
+
+  describe ".search_by_params" do
+    it "filters by staff tag" do
+      wanted = create(:staff_tag)
+      kept = create(:staff_tagging, staff_tag: wanted)
+      dropped = create(:staff_tagging, staff_tag: create(:staff_tag))
+
+      results = described_class.search_by_params(staff_tag_ids: wanted.id)
+
+      expect(results).to include(kept)
+      expect(results).not_to include(dropped)
+    end
+
+    it "matches the tagged person by name" do
+      hit = create(:staff_tagging, staff_taggable: create(:person, first_name: "Zelda", last_name: "Match"))
+      miss = create(:staff_tagging, staff_taggable: create(:person, first_name: "Other", last_name: "Person"))
+
+      results = described_class.search_by_params(query: "Zelda")
+
+      expect(results).to include(hit)
+      expect(results).not_to include(miss)
+    end
+
+    it "matches the tagged person by affiliated organization name" do
+      person = create(:person)
+      create(:affiliation, person: person, organization: create(:organization, name: "Rare Org"))
+      hit = create(:staff_tagging, staff_taggable: person)
+      miss = create(:staff_tagging, staff_taggable: create(:person))
+
+      results = described_class.search_by_params(query: "Rare Org")
+
+      expect(results).to include(hit)
+      expect(results).not_to include(miss)
+    end
+  end
 end

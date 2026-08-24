@@ -21,6 +21,32 @@ class StaffTagging < ApplicationRecord
   before_create :stamp_created_by
   before_save :stamp_updated_by
 
+  scope :for_staff_tag, ->(ids) {
+    tag_ids = Array(ids).reject(&:blank?)
+    return all if tag_ids.empty?
+    where(staff_tag_id: tag_ids) }
+
+  # Free-text match on the tagged person: their own searchable fields (name,
+  # email, phone, address — Person's SearchCop) plus their affiliated
+  # organization's name. Taggings are Person-only today, so other taggable types
+  # never match. Comment/communication text is unioned in via matching_person_ids.
+  scope :matching_text, ->(query) {
+    return all if query.blank?
+    where(staff_taggable_type: "Person", staff_taggable_id: matching_person_ids(query)) }
+
+  # Seam for the single search field. Each source contributes person ids; add
+  # comment/communication matches here so they join the same OR.
+  def self.matching_person_ids(query)
+    Person.search(query).ids | Person.organization_name(query).ids
+  end
+
+  def self.search_by_params(params)
+    results = all
+    results = results.for_staff_tag(params[:staff_tag_ids]) if params[:staff_tag_ids].present?
+    results = results.matching_text(params[:query]) if params[:query].present?
+    results
+  end
+
   private
 
   def stamp_created_by

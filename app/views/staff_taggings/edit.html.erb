@@ -3,6 +3,9 @@
 <% if params[:return_to] == "staff_tag" %>
   <% back_path = staff_tag_path(@staff_tagging.staff_tag) %>
   <% back_label = "← Staff tag: #{@staff_tagging.staff_tag.name}" %>
+<% elsif params[:return_to] == "staff_taggings" %>
+  <% back_path = staff_taggings_path %>
+  <% back_label = "← Staff taggings" %>
 <% elsif taggable.is_a?(Person) %>
   <% back_path = edit_person_path(params[:origin_id].presence || taggable, anchor: dom_id(@staff_tagging), admin: params[:admin].presence) %>
   <% back_label = "← #{taggable.name}" %>
@@ -10,6 +13,7 @@
   <% back_path = staff_tags_path %>
   <% back_label = "← Staff tags" %>
 <% end %>
+<% tag_options = (StaffTag.published.ordered.to_a | [ @staff_tagging.staff_tag ]).compact %>
 <div class="min-h-screen py-8">
   <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
     <div class="mb-4">
@@ -27,6 +31,14 @@
           url: staff_tagging_path(@staff_tagging, return_to: params[:return_to].presence, origin_id: params[:origin_id].presence, admin: params[:admin].presence),
           method: :patch,
           html: { data: { turbo: false } } do |f| %>
+      <div class="mb-6 max-w-sm">
+        <%= f.input :staff_tag_id,
+                    label: "Staff tag",
+                    collection: tag_options.map { |t| [ t.name, t.id ] },
+                    include_blank: false,
+                    input_html: { class: "form-control" } %>
+      </div>
+
       <%= render "shared/comments_and_communications", f: f, view_all_person: (taggable.is_a?(Person) ? taggable : nil) %>
 
       <div class="mt-8 flex justify-center gap-3">
