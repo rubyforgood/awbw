@@ -77,6 +77,17 @@ RSpec.describe DisplayImagePresenter do
         expect(result.renderable.variation.transformations[:resize_to_limit]).to eq([ 1200, 1200 ])
       end
 
+      it "serves the named image_variant, overriding the width-based size inference" do
+        result = described_class.call(file: file, variant: :gallery, width: "full", height: "full", image_variant: :thumbnail, view_context: view_context)
+        expect(result.renderable).to be_a(ActiveStorage::VariantWithRecord)
+        expect(result.renderable.variation.transformations[:resize_to_limit]).to eq([ 256, 256 ])
+      end
+
+      it "ignores an image_variant the attachment does not declare and falls back to inference" do
+        result = described_class.call(file: file, variant: :index, width: "full", height: "full", image_variant: :nonexistent, view_context: view_context)
+        expect(result.renderable.variation.transformations[:resize_to_limit]).to eq([ 1200, 1200 ])
+      end
+
       it "builds alt text with filename" do
         result = described_class.call(file: file, idx: 0, item_type: "Main", view_context: view_context)
         expect(result.alt_text).to include("missing.png")
