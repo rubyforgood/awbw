@@ -120,6 +120,14 @@ class Affiliation < ApplicationRecord
     status_on == "Upcoming"
   end
 
+  # Ended or flagged, as of a date — the in-memory twin of status_on == "Inactive".
+  # Prefer this to the raw `inactive` column when judging a row for display: the
+  # column is only re-derived on save (set_inactive_from_dates), so a term that
+  # simply lapsed still reads `inactive: false` until something touches it.
+  def inactive_on?(date = Date.current)
+    status_on(date) == "Inactive"
+  end
+
   # This affiliation's status as of a date: Inactive (flagged or ended), Upcoming
   # (future start), otherwise Active. The in-memory twin of the .with_status scope.
   def status_on(date = Date.current)
