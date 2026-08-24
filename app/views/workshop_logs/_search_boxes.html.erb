@@ -30,12 +30,12 @@
                      onchange: "this.form.requestSubmit()" %>
     </div>
 
-    <!-- Person -->
+    <!-- Submitted by -->
     <div class="flex w-full flex-col sm:w-1/2 md:w-1/4 lg:w-1/5" data-controller="searchable-select" data-searchable-select-mode-value="person">
-      <%= label_tag :created_by_id, "Person", class: search_label_class %>
+      <%= label_tag :created_by_id, "Submitted by", class: search_label_class %>
       <%= select_tag :created_by_id,
                      options_from_collection_for_select(@users, :id, :full_name_with_email, params[:created_by_id]),
-                     include_blank: "All people",
+                     include_blank: "Anyone",
                      class: search_field_class,
                      data: { searchable_select_target: "select", action: "change->searchable-select#submit" } %>
     </div>

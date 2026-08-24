@@ -51,13 +51,14 @@
     carried an author, are still findable under the submitter's name. It follows the same
     credit and anonymity rules as the rest of the site: a name someone's profile hides
     from their credit won't surface their content, and anonymous work isn't findable by
-    name. Workshop logs keep their separate "Person" filter for who logged the workshop.
-    Two pages now show the credit they match: the story ideas list credits the author
-    rather than the account that entered the idea, and a workshop log's page shows its
-    author credit alongside who submitted it.
+    name. Workshop variations search the same way now. Lists show the credit they match:
+    the story ideas list credits the author rather than the account that entered the idea,
+    the workshop logs list swaps its "Person" column for "Author", and a workshop log's
+    page shows its author credit. The workshop log filter for who turned the log in is
+    still there, now labeled "Submitted by".
   pro_tips:
-    - "The Author name box searches the credited author — on a workshop log that can differ from whoever logged it."
-    - "The people list's \"Workshop log authors\" role covers anyone credited on a log, including logs that only record who submitted them."
+    - "The Author name box searches the credited author — on a workshop log that can differ from whoever submitted it."
+    - "The people list's \"Workshop log authors\" and \"Workshop variation authors\" roles cover anyone credited, including records that only name who submitted them."
 
 - name: "Hide the View ticket button in a bulk email"
   area: communications

@@ -1,13 +1,11 @@
-RSpec.shared_examples "author_creditable" do |factory:, org_credited:, credits_creator_legacy: false, credits_creator: false|
+RSpec.shared_examples "author_creditable" do |factory:, org_credited:, credits_creator: false, anonymous_when_unattributed: false|
   model = factory.to_s.camelize.constantize
   names_author = model.column_names.include?("author_id")
-  # What an unattributed record credits to. Most models fall to a generic label
-  # ("AWBW Staff" for org-produced content, otherwise the facilitator label).
-  # A creator-legacy model (workshop variation, monthly report) instead credits
-  # the creator's person by name, and reads "Anonymous" only when there is none.
-  # `credits_creator` is the declared form of the same fallback — the creator is
-  # credited by name, and the generic label only shows once nobody is left.
-  unattributed_label = if credits_creator_legacy
+  # What a record with nobody left to credit falls to: a generic label ("AWBW Staff"
+  # for org-produced content, otherwise the facilitator label), or "Anonymous" on the
+  # models that say so. A `credits_creator` model only gets here once the creator is
+  # gone or hidden too — otherwise it credits them by name.
+  unattributed_label = if anonymous_when_unattributed
     "Anonymous"
   else
     org_credited ? "AWBW Staff" : "AWBW Facilitator"
@@ -110,7 +108,7 @@ RSpec.shared_examples "author_creditable" do |factory:, org_credited:, credits_c
           expect(record.missing_author_label).to eq(unattributed_label)
         end
 
-        if credits_creator_legacy || credits_creator
+        if credits_creator
           it "credits the creator's person by name instead of the generic label" do
             expect(record.author_credit).to eq(person.name)
           end

@@ -564,6 +564,15 @@ RSpec.describe Person, type: :model do
         expect(results).to include(person_bob)
         expect(results).not_to include(person_alice)
       end
+
+      it "credits the submitter on a variation that names no author" do
+        create(:workshop_variation, author: nil, created_by: create(:user, person: person_bob))
+
+        results = Person.search_by_params(role: "workshop_variation_author")
+
+        expect(results).to include(person_bob)
+        expect(results).not_to include(person_alice)
+      end
     end
 
     context "role: workshop_log_author" do

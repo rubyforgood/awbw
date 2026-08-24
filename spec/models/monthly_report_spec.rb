@@ -1,7 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe MonthlyReport do
-  it_behaves_like "author_creditable", factory: :monthly_report, org_credited: false, credits_creator_legacy: true
+  it_behaves_like "author_creditable", factory: :monthly_report, org_credited: false, credits_creator: true,
+                                      anonymous_when_unattributed: true
 
   describe "#author_credit" do
     it "credits an unauthored report to the creator's person by name" do
