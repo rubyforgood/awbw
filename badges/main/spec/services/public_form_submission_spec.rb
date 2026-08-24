@@ -110,15 +110,16 @@ RSpec.describe PublicFormSubmission do
     expect(confirmation.recipient_role).to eq("person")
   end
 
-  it "records mailing-list consent once when the consent question is answered" do
+  it "subscribes the submitter to News, sourced to the form, when the consent question is answered" do
+    news = create(:topic_subscription_type, name: "News")
     consent_field = create(:form_field, form: form, name: "Email me updates",
                            answer_type: :multi_select_checkbox, field_identifier: "communication_consent")
     params = params_for.merge(consent_field.id.to_s => [ "Yes, keep me posted" ])
 
     result = described_class.call(form: form, form_params: params)
 
-    expect(result.person.mailing_list_consent_at).to be_present
-    expect(result.person.mailing_list_consent_source).to include(form.display_name)
+    subscription = result.person.topic_subscriptions.active.for_topic_type(news).sole
+    expect(subscription.source).to include(form.display_name)
   end
 
   it "captures a sector 'Other' answer as an OtherResponse, like the other submission paths" do

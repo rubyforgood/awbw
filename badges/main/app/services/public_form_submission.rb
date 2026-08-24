@@ -25,7 +25,7 @@ class PublicFormSubmission
       person = find_or_create_person
       return Result.new(success?: false, errors: [ IDENTITY_MISSING_MESSAGE ]) unless person
 
-      record_mailing_list_consent(person)
+      record_news_subscription(person)
 
       submission = FormSubmission.create!(person: person, form: @form, role: ROLE)
       save_form_answers(submission)
@@ -93,15 +93,12 @@ class PublicFormSubmission
       .first
   end
 
-  # Opt-in, recorded once — never re-stamped or cleared from here.
-  def record_mailing_list_consent(person)
-    return if person.mailing_list_consent_at.present?
+  # An affirmative communication-consent answer subscribes the person to the
+  # News (mailing-list) topic, recording the form as its source.
+  def record_news_subscription(person)
     return unless Array(field_value("communication_consent")).any? { |value| value.to_s.strip.present? }
 
-    person.update!(
-      mailing_list_consent_at: Time.current,
-      mailing_list_consent_source: "#{@form.display_name} (public form)"
-    )
+    NewsSubscriptionCapture.call(person: person, source: "#{@form.display_name} (public form)")
   end
 
   def save_form_answers(submission)
