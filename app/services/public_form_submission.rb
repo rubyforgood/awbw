@@ -30,6 +30,7 @@ class PublicFormSubmission
       submission = FormSubmission.create!(person: person, form: @form, role: ROLE)
       save_form_answers(submission)
       OtherResponses::CaptureFromSubmission.call(submission)
+      Quotes::CaptureFromSubmission.call(submission)
       register_for_on_demand_training(submission)
       send_notifications(submission)
 

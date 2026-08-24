@@ -126,6 +126,19 @@
     person's News subscriptions, where mailing-list interest is tracked. Registration and
     public form consent answers now create a News subscription, sourced to the event or form.
 
+- name: "Turn form answers into quotes automatically"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/quotes"
+  summary: >-
+    Give a question the "quote" smart field and its answer becomes an unpublished quote on
+    submission, sourced from the submission. Optional "quote_speaker_name" and "quote_age_range"
+    fields fill in the speaker and age; with no speaker the quote credits "Anonymous".
+  pro_tips:
+    - "Set a question's smart field to \"quote\" (the text), plus optional \"quote_speaker_name\" and \"quote_age_range\"."
+    - "New quotes start unpublished, so nothing appears publicly until you review and publish it."
+
 - name: "Affiliation editor: FileMaker code"
   area: people
   display_status: admin_facing

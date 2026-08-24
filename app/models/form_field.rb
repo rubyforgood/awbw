@@ -89,6 +89,20 @@ class FormField < ApplicationRecord
   # admin override is present.
   PAYMENT_METHOD_FIELD_IDENTIFIER = "payment_method"
 
+  # Quote smart fields. When a submission carries these, its answers are captured
+  # as a Quote (see Quotes::CaptureFromSubmission): "quote_body" or the simpler
+  # "quote" is the quote text (either is accepted; "quote_body" wins when both are
+  # present), while "quote_speaker_name" and "quote_age_range" flesh out the
+  # speaker and age when the form collects them.
+  QUOTE_FIELD_IDENTIFIER = "quote"
+  QUOTE_BODY_FIELD_IDENTIFIER = "quote_body"
+  QUOTE_SPEAKER_NAME_FIELD_IDENTIFIER = "quote_speaker_name"
+  QUOTE_AGE_RANGE_FIELD_IDENTIFIER = "quote_age_range"
+  # Body sources in precedence order (explicit "quote_body" first, simple "quote" second).
+  QUOTE_BODY_FIELD_IDENTIFIERS = [ QUOTE_BODY_FIELD_IDENTIFIER, QUOTE_FIELD_IDENTIFIER ].freeze
+  QUOTE_FIELD_IDENTIFIERS = (QUOTE_BODY_FIELD_IDENTIFIERS +
+    [ QUOTE_SPEAKER_NAME_FIELD_IDENTIFIER, QUOTE_AGE_RANGE_FIELD_IDENTIFIER ]).freeze
+
   # The generic free-text option label that lets a respondent supply their own
   # value; a chosen "Other" answer is stored as "Other" or "Other: <text>".
   OTHER_OPTION_PREFIX = "Other"
@@ -263,6 +277,18 @@ class FormField < ApplicationRecord
 
   def email_field?
     field_identifier.in?(EMAIL_FIELD_IDENTIFIERS)
+  end
+
+  # A quote smart field — its answer helps build a Quote on submission.
+  def quote_field?
+    field_identifier.in?(QUOTE_FIELD_IDENTIFIERS)
+  end
+
+  # Whether the admin form preview should flag this field as quote-related: either
+  # it carries a quote identifier, or its name mentions "quote" (a hint for older
+  # fields that predate the identifiers).
+  def quote_related?
+    quote_field? || name.to_s.downcase.include?("quote")
   end
 
   # Counts whitespace-separated tokens. Uses the Unicode-aware [[:space:]] class

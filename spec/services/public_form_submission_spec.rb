@@ -122,6 +122,19 @@ RSpec.describe PublicFormSubmission do
     expect(subscription.source).to include(form.display_name)
   end
 
+  it "saves a quote-field answer as an unpublished quote sourced from the submission" do
+    quote_field = create(:form_field, form: form, name: "Share a quote", field_identifier: "quote")
+    params = params_for.merge(quote_field.id.to_s => "This place changed my life")
+
+    expect { described_class.call(form: form, form_params: params) }.to change(Quote, :count).by(1)
+
+    submission = FormSubmission.last
+    quote = submission.quotes.sole
+    expect(quote.body).to eq("This place changed my life")
+    expect(quote).not_to be_published
+    expect(quote.author_credit).to eq("Anonymous")
+  end
+
   it "captures a sector 'Other' answer as an OtherResponse, like the other submission paths" do
     sector_field = create(:form_field, form: form, name: "Who do you serve?",
                           answer_type: :multi_select_checkbox, field_identifier: "additional_sectors")
