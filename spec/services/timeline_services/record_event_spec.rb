@@ -7,7 +7,7 @@ RSpec.describe TimelineServices::RecordEvent do
     stub_const("SpecTimelineHolder", Class.new(ApplicationRecord) do
       self.table_name = "people"
       include HasTimeline
-      include TimelineSubject
+      include Timelineable
 
       def timeline_label
         "#{first_name} #{last_name}"
@@ -51,19 +51,19 @@ RSpec.describe TimelineServices::RecordEvent do
       }.to raise_error(ActiveRecord::RecordNotUnique)
     end
 
-    it "records once when fired from an after_create callback" do
-      tracked_class = stub_const("SpecTrackedSubject", Class.new(ApplicationRecord) do
-        self.table_name = "people"
-        include HasTimeline
-        include TimelineSubject
+    it "records timeline events from both concern and model after_create callbacks" do
+          tracked_class = stub_const("SpecTrackedSubject", Class.new(ApplicationRecord) do
+            self.table_name = "people"
+            include HasTimeline
+            include Timelineable
 
-        after_create -> { TimelineServices::RecordEvent.call(subject: self, action: "created") }
-      end)
+            after_create -> { TimelineServices::RecordEvent.call(subject: self, action: "created") }
+          end)
 
-      record = tracked_class.create!(first_name: "Once", last_name: "Only")
+          record = tracked_class.create!(first_name: "Once", last_name: "Only")
 
-      expect(record.timeline_entries.count).to eq(1)
-    end
+          expect(record.timeline_entries.count).to eq(2)
+        end
 
     it "freezes the subject label into the snapshot" do
       event = described_class.call(subject: holder, action: "created")
@@ -113,7 +113,7 @@ RSpec.describe TimelineServices::RecordEvent do
     it "raises when no target exists for the subject" do
       bare_subject_class = stub_const("SpecBareTimelineSubject", Class.new(ApplicationRecord) do
         self.table_name = "people"
-        include TimelineSubject
+        include Timelineable
       end)
       bare_subject = bare_subject_class.find(create(:person).id)
 

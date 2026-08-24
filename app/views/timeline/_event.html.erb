@@ -10,7 +10,14 @@
       <span class="font-medium text-gray-900"><%= event.actor_label %></span>
       <span class="text-gray-500"><%= event.action.humanize.downcase %></span>
       <span class="text-gray-400">·</span>
-      <% if event.subject&.persisted? %>
+      <% if event.subject_type == "Comment" && event.subject&.persisted? %>
+        <% commentable = event.subject.commentable %>
+        <% if commentable&.persisted? %>
+          <%= link_to event.subject_label, commentable, data: { turbo: false }, class: "text-sm text-blue-600 hover:underline" %>
+        <% else %>
+          <span class="text-sm text-gray-700"><%= event.subject_label %></span>
+        <% end %>
+      <% elsif event.subject&.persisted? %>
         <%= link_to event.subject_label, event.subject, data: { turbo: false }, class: "text-sm text-blue-600 hover:underline" %>
       <% else %>
         <span class="text-sm text-gray-700"><%= event.subject_label %></span>

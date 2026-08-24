@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe TimelineTracked do
+RSpec.describe Timelineable do
   let(:admin) { create(:user, :admin) }
 
   before do

@@ -1,4 +1,6 @@
-module TimelineTracked
+# frozen_string_literal: true
+
+module Timelineable
   extend ActiveSupport::Concern
 
   SENSITIVE_ATTRIBUTE_PATTERN = /password|token|secret|key|digest|salt|otp/i
@@ -7,8 +9,6 @@ module TimelineTracked
     after_create -> { record_timeline_event("created") }
     after_update -> { record_timeline_event("updated") if timeline_changes.any? }
   end
-
-  private
 
   def record_timeline_event(action)
     TimelineServices::RecordEvent.call(
@@ -24,4 +24,10 @@ module TimelineTracked
                  .reject { |_, (old_value, new_value)| old_value.to_s == new_value.to_s }
                  .transform_values { |(old_value, new_value)| [ old_value.to_s, new_value.to_s ] }
   end
+
+  def timeline_label
+    model_name.human
+  end
+
+  private
 end

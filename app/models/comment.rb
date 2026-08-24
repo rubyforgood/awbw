@@ -1,4 +1,6 @@
 class Comment < ApplicationRecord
+  include Timelineable
+
   belongs_to :commentable, polymorphic: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
@@ -72,5 +74,20 @@ class Comment < ApplicationRecord
     Date.iso8601(value.to_s)
   rescue ArgumentError
     nil
+  end
+
+  private
+
+  def timeline_changes
+    super.except("commentable_id", "commentable_type")
+  end
+
+  def record_timeline_event(action)
+    return unless action == "created"
+
+    targets = TimelineServices::Router.targets_for(self)
+    return if targets.empty?
+
+    TimelineServices::RecordEvent.call(subject: self, action: action, snapshot: { "changes" => timeline_changes })
   end
 end

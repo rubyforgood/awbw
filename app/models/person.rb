@@ -1,5 +1,9 @@
 class Person < ApplicationRecord
-  include AgeGroupTaggable, HasTimeline, RemoteSearchable, SectorsTaggable, TagFilterable, TimelineSubject, TimelineTracked, Trendable, WindowsTypeFilterable
+  include AgeGroupTaggable, HasTimeline, RemoteSearchable, SectorsTaggable, TagFilterable, Timelineable, Trendable, WindowsTypeFilterable
+
+  def timeline_label
+    name
+  end
 
   pay_customer default_payment_processor: :stripe
 
@@ -219,10 +223,6 @@ class Person < ApplicationRecord
     else
       full_name
     end
-  end
-
-  def timeline_label
-    name
   end
 
   def full_name
