@@ -1,6 +1,7 @@
 class ContinuingEducationRegistration < ApplicationRecord
   include Registerable
   include Certifiable
+  include Communicable
 
   # AWBW's continuing-education accreditation, referenced by the CE callout copy
   # and the completion certificate's CE clause. Kept here as the single source of
@@ -21,6 +22,10 @@ class ContinuingEducationRegistration < ApplicationRecord
   has_many :allocations, as: :allocatable, dependent: :destroy
   has_many :payments, through: :allocations, source: :source, source_type: "Payment"
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  def communications_email
+    registrant&.preferred_email
+  end
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 

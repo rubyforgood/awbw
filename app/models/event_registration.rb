@@ -2,6 +2,7 @@ class EventRegistration < ApplicationRecord
   include RemoteSearchable
   include Registerable
   include Certifiable
+  include Communicable
 
   # Sentinel for the roster's Payment method filter that matches buddy-system
   # registrations (someone_else_will_pay), which isn't an expected_payment_method
@@ -12,7 +13,6 @@ class EventRegistration < ApplicationRecord
   belongs_to :event
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :event_registration_organizations, dependent: :destroy
-  has_many :notifications, as: :noticeable, dependent: :nullify
   has_many :organizations, through: :event_registration_organizations
   has_many :allocations, as: :allocatable
   has_many :continuing_education_registrations, dependent: :destroy
@@ -33,7 +33,6 @@ class EventRegistration < ApplicationRecord
   has_one :transferred_to_registration, class_name: "EventRegistration",
     foreign_key: :transferred_from_registration_id, inverse_of: :transferred_from_registration, dependent: :nullify
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
-  accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
   # Staff correct/add attendance times on the CE edit form; a row with no sign-in
   # time is an untouched blank and dropped.
   accepts_nested_attributes_for :event_attendance_time_entries, allow_destroy: true,
@@ -585,9 +584,8 @@ class EventRegistration < ApplicationRecord
     "(#{ registrant&.full_name }) #{ event.start_date.strftime("%Y-%m-%d @ %I:%M %p") }: #{ event.title }"
   end
 
-  # Only comms filed against this registration, not the registrant's whole history.
-  def communications_scope
-    notifications
+  def communications_email
+    registrant&.preferred_email
   end
 
   def active?

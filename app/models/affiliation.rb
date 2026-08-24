@@ -1,4 +1,5 @@
 class Affiliation < ApplicationRecord
+  include Communicable
   # Standing title given to the "facilitator affiliation" we create on registration
   # and org linking. Matches the `facilitators` scope / `facilitator?` predicate
   # (both treat exactly "Facilitator" as canonical).
@@ -22,6 +23,11 @@ class Affiliation < ApplicationRecord
   belongs_to :event_registration, optional: true, inverse_of: :affiliations
 
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  # A communication logged on an affiliation is addressed to the affiliated person.
+  def communications_email
+    person&.preferred_email
+  end
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
   # Validations

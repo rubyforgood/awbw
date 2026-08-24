@@ -1,15 +1,14 @@
 class Scholarship < ApplicationRecord
+  include Communicable
   belongs_to :recipient, class_name: "Person"
   belongs_to :grant, optional: true
   has_one :allocation, as: :source, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
-  has_many :notifications, as: :noticeable, dependent: :nullify
   has_many :agreement_responses, -> { chronological }, class_name: "ScholarshipAgreementResponse", dependent: :destroy
 
   AGREEMENT_RESPONSE_STATUSES = %w[pending accepted declined].freeze
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
-  accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
 
   validates :amount_cents, numericality: { greater_than_or_equal_to: 0 }
   validates :agreement_response_status, inclusion: { in: AGREEMENT_RESPONSE_STATUSES }
@@ -127,9 +126,8 @@ class Scholarship < ApplicationRecord
     self.amount_cents = (value.to_d * 100).to_i if value.present?
   end
 
-  # Only comms filed against this scholarship, not the recipient's whole history.
-  def communications_scope
-    notifications
+  def communications_email
+    recipient&.preferred_email
   end
 
   private

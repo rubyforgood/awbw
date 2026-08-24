@@ -115,9 +115,11 @@ class ContinuingEducationRegistrationsController < ApplicationController
       ce_registration.cost_cents = (cost.to_d * 100).round if cost.present?
     end
 
-    comments = params.fetch(:continuing_education_registration, {})
-      .permit(comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ])[:comments_attributes]
-    ce_registration.comments_attributes = comments if comments.present?
+    nested = params.fetch(:continuing_education_registration, {})
+      .permit(comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+              notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ])
+    ce_registration.comments_attributes = nested[:comments_attributes] if nested[:comments_attributes].present?
+    ce_registration.notifications_attributes = nested[:notifications_attributes] if nested[:notifications_attributes].present?
   end
 
   # Staff corrections to the registrant's attendance times, submitted alongside the

@@ -76,10 +76,6 @@ class ScholarshipsController < ApplicationController
     @scholarship.assign_attributes(scholarship_params)
     attribute_comment_authorship
 
-    # Inline-logged notifications are addressed to the scholarship recipient.
-    recipient_email = @scholarship.recipient&.preferred_email.presence || "n/a"
-    @scholarship.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
-
     if @scholarship.save
       redirect_to scholarship_save_path, notice: "Scholarship updated."
     else
