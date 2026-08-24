@@ -93,7 +93,6 @@ class StoryIdeasController < ApplicationController
     StoryIdea.transaction do
       @story_idea.assign_attributes(story_idea_params.except(:images, :category_ids, :sector_ids))
       attribute_comment_authorship
-      stamp_new_notification_recipients
       if @story_idea.save
         assign_associations(@story_idea)
         success = true
@@ -137,11 +136,6 @@ class StoryIdeasController < ApplicationController
     end
   end
 
-  # Inline-logged communications are addressed to the idea's submitter.
-  def stamp_new_notification_recipients
-    recipient_email = @story_idea.communications_email.presence || "n/a"
-    @story_idea.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
-  end
 
   def set_story_idea
     @story_idea = StoryIdea.find(params[:id])

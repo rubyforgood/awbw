@@ -1,5 +1,6 @@
 class Organization < ApplicationRecord
   include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable # Publishable
+  include Communicable
   belongs_to :organization_status
   belongs_to :organization_obligation, optional: true
   belongs_to :location, optional: true # TODO - remove Location if unused
@@ -13,6 +14,11 @@ class Organization < ApplicationRecord
   has_many :people, through: :affiliations
   has_many :users, through: :people
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  # An organization is its own correspondent — there is no person behind it.
+  def communications_email
+    email
+  end
   has_many :reports
   has_many :workshop_logs
   has_many :grants, as: :funder, dependent: :destroy

@@ -20,11 +20,11 @@ RSpec.describe "users/edit", type: :view do
     end
   end
 
-  it "renders the comments section" do
+  it "renders the combined comments and communications section" do
     render
 
     assert_select "#comments-section" do
-      assert_select ".font-semibold", text: "Comments"
+      assert_select ".font-semibold", text: "Comments & communications"
     end
   end
 

@@ -125,6 +125,7 @@ class TopicSubscriptionsController < ApplicationController
   def topic_subscription_params
     permitted = params.require(:topic_subscription).permit(:person_id, :topic_subscription_type_id, :interested_event_id, :organization_id, :source,
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ],
       person_attributes: [ :first_name, :last_name, :email ])
 
     # The new-person toggle is CSS-only, so both the person select and the new
