@@ -70,6 +70,7 @@ class Event < ApplicationRecord
   validates :hint_dates, length: { maximum: 255 }
   validates :hint_times, length: { maximum: 255 }
   validates :hint_registration_cost, length: { maximum: 255 }
+  validate :end_date_not_before_start_date
   validate :registration_form_required_when_publicly_registerable, on: :update
   validate :staff_members_are_unique, on: :update
 
@@ -458,6 +459,15 @@ class Event < ApplicationRecord
     return Time.zone.parse(date_str) if date_str.present? && time_str.blank?
     return Time.zone.parse("2000-01-01 #{time_str}") if date_str.blank? && time_str.present?
     Time.zone.parse("#{date_str} #{time_str}")
+  end
+
+  # Compared by calendar day so an event that starts and ends the same day passes
+  # even when no end time was entered (end_date lands at midnight, before the start).
+  def end_date_not_before_start_date
+    return if start_date.blank? || end_date.blank?
+    return if end_date.to_date >= start_date.to_date
+
+    errors.add(:end_date, "can't be before the start date")
   end
 
   def registration_form_required_when_publicly_registerable
