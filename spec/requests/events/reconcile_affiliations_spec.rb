@@ -27,7 +27,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(person.name)
-      expect(response.body).to include("Will be deleted")
+      expect(response.body).to include("Delete")
     end
 
     it "previews an older hand-entered row as an end-date, not a deletion" do
@@ -50,7 +50,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
 
       get reconcile_affiliations_event_path(upcoming)
 
-      expect(response.body).to include("Will be created")
+      expect(response.body).to include("Create new")
     end
 
     it "previews a facilitator affiliation on a non-training event as a deletion" do
@@ -58,12 +58,12 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       person = create(:person)
       reg = create(:event_registration, event: non_training, registrant: person, status: "attended")
       create(:event_registration_organization, event_registration: reg, organization: organization)
-      create(:affiliation, person: person, organization: organization, title: "Facilitator",
-             start_date: 1.month.ago.to_date, event_registration: reg)
+      affiliation = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+                           start_date: 1.month.ago.to_date, event_registration: reg)
 
       get reconcile_affiliations_event_path(non_training)
 
-      expect(response.body).to include("Will be deleted")
+      expect(response.body).to include("outcome_aff:#{affiliation.id}_delete")
     end
 
     it "lists a no-action registrant under Not reconciled with the reason and attendance status" do
@@ -95,7 +95,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
 
       expect(response.body).to include(person.name)
       expect(response.body).to include("Attendance never recorded")
-      expect(response.body).not_to include("Will be deleted")
+      expect(response.body).not_to include("outcome_aff:#{affiliation.id}_")
       expect(Affiliation.exists?(affiliation.id)).to be(true)
     end
 
@@ -138,8 +138,8 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
 
       get reconcile_affiliations_event_path(event)
 
-      expect(response.body).to include("Will be reactivated")
-      expect(response.body).to include("Create a new one instead")
+      expect(response.body).to include("Reactivate")
+      expect(response.body).to include("Create new")
       expect(response.body).to include("Leave inactive")
       expect(older.reload).not_to be_active
     end

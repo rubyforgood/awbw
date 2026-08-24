@@ -58,10 +58,10 @@
          gray: "has-[:checked]:bg-gray-100 has-[:checked]:text-gray-800 has-[:checked]:border-gray-400"
        } %>
     <% outcome_options = {
-         create: [ [ "create", "Will be created", :blue ], [ "keep", "Skip", :gray ] ],
+         create: [ [ "create", "Create new", :blue ], [ "keep", "Skip", :gray ] ],
          deactivate: [ [ "keep", "Keep active", :green ], [ "delete", "Delete affiliation", :red ], [ "deactivate", "Deactivate affiliation", :red ] ],
-         delete: [ [ "delete", "Will be deleted", :red ], [ "keep", "Keep", :gray ] ],
-         reactivate: [ [ "reactivate", "Will be reactivated", :green ], [ "create", "Create a new one instead", :blue ], [ "keep", "Leave inactive", :gray ] ],
+         delete: [ [ "delete", "Delete", :red ], [ "keep", "Keep", :gray ] ],
+         reactivate: [ [ "reactivate", "Reactivate", :green ], [ "create", "Create new", :blue ], [ "keep", "Leave inactive", :gray ] ],
          retarget: [ [ "retarget", "Move to the new event", :blue ], [ "keep", "Leave as is", :gray ] ]
        } %>
     <% button_base = "group relative inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm cursor-pointer hover:bg-gray-50" %>

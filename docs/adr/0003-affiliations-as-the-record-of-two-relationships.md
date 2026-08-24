@@ -250,6 +250,12 @@ Two endings look alike in the data and mean opposite things:
   record — ADR-0001 D2 renders exactly that shape, and `CreateFromRegistration` has
   always minted a second row rather than extending an ended one.
 
+**A reopen is tied to the training whose attendance changed, and only that one.**
+Correcting the attendance for training A reopens the row A's reconciliation ended.
+Attending a *later* training B while A's ending stands does not: the stretch really
+did finish at A and restart at B, so B adds a row. Reconciling B never reaches back
+into A's ending.
+
 **Telling them apart takes two signals, both required.** The row's `end_date` is
 exactly what reconciling this training would write (`deactivation_end_date`), **and**
 it carries a D6b reconciliation comment. The date alone is not enough — an admin who
