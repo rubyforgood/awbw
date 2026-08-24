@@ -98,6 +98,7 @@ class Comment < ApplicationRecord
   end
 
   def timeline_label
+    return "Comment" unless commentable.present?
     "Comment on #{commentable.timeline_label}"
   end
 

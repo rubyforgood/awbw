@@ -65,20 +65,19 @@ RSpec.describe TimelineServices::RecordEvent do
           expect(record.timeline_entries.count).to eq(2)
         end
 
-    it "freezes the subject label into the snapshot" do
+    it "generates the subject label on the fly" do
       event = described_class.call(subject: holder, action: "created")
 
-      expect(event.snapshot["subject_label"]).to eq(holder.timeline_label)
+      expect(event.subject&.timeline_label).to eq(holder.timeline_label)
     end
 
     it "lets caller snapshot fields win over generated ones" do
       event = described_class.call(
         subject: holder,
         action: "reminder_sent",
-        snapshot: { "subject_label" => "Summer Intensive", "count" => 40 }
+        snapshot: { "count" => 40 }
       )
 
-      expect(event.snapshot["subject_label"]).to eq("Summer Intensive")
       expect(event.snapshot["count"]).to eq(40)
     end
 
@@ -97,7 +96,7 @@ RSpec.describe TimelineServices::RecordEvent do
       event = described_class.call(subject: holder, action: "created", actor: nil)
 
       expect(event.actor).to be_nil
-      expect(event.actor_label).to eq("Registrant")
+      expect(event.actor_label).to eq("Registration")
     end
 
     it "adds also_log targets without duplicating any timeline" do

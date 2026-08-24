@@ -9,8 +9,4 @@ class TimelineEvent < ApplicationRecord
   def actor_label
     actor&.full_name || snapshot["actor_label"] || "System"
   end
-
-  def subject_label
-    snapshot["subject_label"]
-  end
 end

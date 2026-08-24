@@ -21,7 +21,7 @@ RSpec.describe Timelineable do
       expect(event.action).to eq("created")
       expect(event.actor).to eq(admin)
       expect(event.timeline_entries.sole.owner).to eq(person)
-      expect(event.subject_label).to eq(person.name)
+      expect(event.subject&.timeline_label).to eq(person.name)
     end
 
     it "labels a userless actor from Current.source" do
@@ -32,7 +32,7 @@ RSpec.describe Timelineable do
 
       event = person.timeline_events.sole
       expect(event.actor).to be_nil
-      expect(event.actor_label).to eq("Registrant")
+      expect(event.actor_label).to eq("Registration")
     end
   end
 

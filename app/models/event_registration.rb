@@ -1074,6 +1074,7 @@ class EventRegistration < ApplicationRecord
   end
 
   def timeline_label
+    return "Event Registration" unless event.present?
     "Event Registration: #{event.name}"
   end
 

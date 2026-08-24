@@ -35,7 +35,7 @@ module TimelineServices
     end
 
     def self.build_snapshot(subject, actor, snapshot)
-      generated = { "subject_label" => subject.timeline_label }
+      generated = { "changes" => {} }
       if actor.nil? && Current.source
         generated["actor_label"] = ACTOR_LABELS_BY_SOURCE[Current.source]
       end
