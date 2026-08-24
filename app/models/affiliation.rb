@@ -212,10 +212,15 @@ class Affiliation < ApplicationRecord
 
   # Org status tracks active *Facilitator* affiliations specifically (mirroring the
   # form's status indicator) — a non-facilitator affiliation does not keep an org active.
+  # An upcoming-only program is left alone in both directions: a facilitator dated
+  # to a future training must not stamp the org Inactive (nothing re-runs this when
+  # the start date arrives), but it hasn't started, so it must not stamp it Active
+  # either — either way the stored value would read as drift on the edit form.
   def sync_organization_status_with_affiliations
-    if organization.affiliations.facilitators.active.exists?
+    facilitators = organization.affiliations.facilitators
+    if facilitators.active.exists?
       reactivate_organization_if_inactive
-    else
+    elsif facilitators.with_status("Upcoming").none?
       deactivate_organization_if_no_active_people
     end
   end

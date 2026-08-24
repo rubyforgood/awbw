@@ -231,6 +231,22 @@ RSpec.describe Affiliation, type: :model do
       expect(org.reload.organization_status).to eq(inactive_status)
     end
 
+    it 'leaves an organization alone when its only facilitator is dated to a future training' do
+      org = create(:organization, organization_status: active_status)
+
+      create(:affiliation, organization: org, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+
+      expect(org.reload.organization_status).to eq(active_status)
+    end
+
+    it 'leaves an Inactive organization alone when its new facilitator has not started yet' do
+      org = create(:organization, organization_status: inactive_status)
+
+      create(:affiliation, organization: org, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+
+      expect(org.reload.organization_status).to eq(inactive_status)
+    end
+
     %w[Pending Reinstate Unknown].each do |status_name|
       it "leaves a #{status_name} organization untouched when it regains an active affiliation" do
         status = OrganizationStatus.find_or_create_by!(name: status_name)
