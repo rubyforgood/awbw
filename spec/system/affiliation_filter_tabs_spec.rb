@@ -49,9 +49,18 @@ RSpec.describe "Affiliation Active/Inactive tabs", type: :system do
 
     expect(all(".fa-comment").size).to eq(2)
 
-    all(".fa-comment").first.hover
+    # Hover is a one-shot mouse move, so unlike an assertion it doesn't retry: if
+    # the element shifts under the cursor while Stimulus settles the row styling,
+    # the move lands on nothing and no amount of waiting recovers it. Scroll it
+    # under the cursor, then re-hover if the first attempt missed.
+    icon = all(".fa-comment").first
+    page.execute_script("arguments[0].scrollIntoView({ block: 'center' })", icon)
+    3.times do
+      icon.hover
+      break if page.has_text?("Note about the first", wait: 1)
+    end
 
-    expect(page).to have_text("Note about the first", wait: 2)
+    expect(page).to have_text("Note about the first")
     expect(page).to have_no_text("Note about the second")
   end
 
