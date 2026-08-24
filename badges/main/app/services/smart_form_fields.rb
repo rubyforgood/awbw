@@ -129,6 +129,22 @@ class SmartFormFields
       ]
     },
     {
+      key: :quotes,
+      title: "Quotes",
+      summary: "Turns a submission's answers into a quote automatically. \"quote\" (or \"quote_body\") holds the " \
+               "quote text; add \"quote_speaker_name\" and \"quote_age_range\" to capture who said it and their " \
+               "age. On submission this becomes an unpublished Quote — credited to the speaker name, or " \
+               "\"Anonymous\" when none is given — with the submitter recorded as its creator and the submission " \
+               "kept as the quote's source. An admin then reviews, refines, and publishes it from the Quotes " \
+               "admin — nothing appears publicly until they do.",
+      fields: [
+        [ "quote", "Quote", "The quote text (simple, single-question forms). Saved as an unpublished Quote on submission, linked back to the submission. Review and publish it from the Quotes admin." ],
+        [ "quote_body", "Quote text", "The quote text when the form splits the quote across questions. Takes precedence over \"quote\" if both are present." ],
+        [ "quote_speaker_name", "Quote speaker name", "Who said the quote. Becomes the quote's credited speaker; with none given the quote credits \"Anonymous\"." ],
+        [ "quote_age_range", "Quote speaker age", "The speaker's age or age range. Stored on the quote's age field." ]
+      ]
+    },
+    {
       key: :consent,
       title: "Consent",
       summary: "Asks registrants to opt in to email communication. An affirmative answer subscribes " \

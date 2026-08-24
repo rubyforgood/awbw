@@ -16,17 +16,17 @@ RSpec.describe QuoteDecorator do
       expect(quote.attribution).to eq("Sam Rivera")
     end
 
-    it "reads as Participant when the linked author opted out of being credited" do
+    it "reads as Anonymous when the linked author opted out of being credited" do
       author = create(:person, :anonymous_contributions, first_name: "Jane", last_name: "Doe")
       quote = create(:quote, author: author, speaker_name: nil, age: nil, gender: nil).decorate
 
-      expect(quote.attribution).to eq("Participant")
+      expect(quote.attribution).to eq("Anonymous")
     end
 
-    it "reads as Participant when there is no author and no speaker name" do
+    it "reads as Anonymous when there is no author and no speaker name" do
       quote = create(:quote, author: nil, speaker_name: nil, age: nil, gender: nil).decorate
 
-      expect(quote.attribution).to eq("Participant")
+      expect(quote.attribution).to eq("Anonymous")
     end
 
     it "appends age and gender details when present" do

@@ -32,14 +32,14 @@ RSpec.describe Quote do
       expect(quote.speaker).to eq("John Doe")
     end
 
-    it 'returns "Participant" if speaker_name is nil' do
+    it 'returns "Anonymous" if speaker_name is nil' do
       quote = build(:quote, speaker_name: nil)
-      expect(quote.speaker).to eq("Participant")
+      expect(quote.speaker).to eq("Anonymous")
     end
 
-    it 'returns "Participant" if speaker_name is empty' do
+    it 'returns "Anonymous" if speaker_name is empty' do
       quote = build(:quote, speaker_name: "")
-      expect(quote.speaker).to eq("Participant")
+      expect(quote.speaker).to eq("Anonymous")
     end
   end
 
