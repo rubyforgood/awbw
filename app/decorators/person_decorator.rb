@@ -78,11 +78,15 @@ class PersonDecorator < ApplicationDecorator
   end
 
   # Facilitator-since year for list pages — the Ruby (no per-row query) twin of
-  # facilitator_since_date, falling back to the legacy member_since like the edit
-  # form. Computed from the eager-loaded affiliations.
+  # facilitator_since_date. Nil for someone who has never held a facilitator
+  # affiliation, so the column can't show an unrelated affiliation/membership year
+  # under a "Facilitator since" heading. For an actual facilitator whose rows carry
+  # no start date, falls back to the legacy member_since like the edit form.
   def facilitator_since_year
-    earliest = affiliations.select(&:facilitator?).filter_map(&:start_date).min
-    (earliest || member_since)&.year
+    facilitator_affiliations = affiliations.select(&:facilitator?)
+    return nil if facilitator_affiliations.none?
+
+    (facilitator_affiliations.filter_map(&:start_date).min || member_since)&.year
   end
 
   # The person's facilitator standing for list display: Active if any facilitator

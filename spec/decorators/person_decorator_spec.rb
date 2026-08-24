@@ -81,9 +81,21 @@ RSpec.describe PersonDecorator do
       expect(person.decorate.facilitator_since_year).to eq(2020)
     end
 
-    it "falls back to member_since when there is no facilitator start date" do
+    it "falls back to member_since for a facilitator affiliation with no start date" do
       person.update!(member_since: Date.new(2018, 3, 1))
+      create(:affiliation, person: person, title: "Facilitator", start_date: nil)
       expect(person.decorate.facilitator_since_year).to eq(2018)
+    end
+
+    it "is nil when the person has never held a facilitator affiliation" do
+      person.update!(member_since: Date.new(2018, 3, 1))
+      create(:affiliation, person: person, title: "Counselor", start_date: Date.new(2015, 1, 1))
+      expect(person.decorate.facilitator_since_year).to be_nil
+    end
+
+    it "is nil when the person has no affiliations at all" do
+      person.update!(member_since: Date.new(2018, 3, 1))
+      expect(person.decorate.facilitator_since_year).to be_nil
     end
   end
 
