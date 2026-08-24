@@ -8,10 +8,6 @@ class PersonDecorator < ApplicationDecorator
     length ? text&.truncate(length) : text
   end
 
-  def default_display_image
-    "missing.png"
-  end
-
   def primary_asset
     avatar
   end
