@@ -6,7 +6,7 @@ module TimelineServices
         case subject.commentable
         when Person then [ subject.commentable ].compact
         when User then [ subject.commentable.person ].compact
-        when EventRegistration then [ subject.commentable.registrant ].compact
+        when EventRegistration then [ subject.commentable, subject.commentable.registrant ].compact.uniq
         when ContinuingEducationRegistration then [ subject.commentable.event_registration&.registrant ].compact
         when Scholarship then [ subject.commentable.recipient ].compact
         when TopicSubscription then [ subject.commentable.person ].compact

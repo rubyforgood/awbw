@@ -3,6 +3,7 @@ class EventRegistration < ApplicationRecord
   include Registerable
   include Certifiable
   include Communicable
+  include HasTimeline
   include Timelineable
 
   # Sentinel for the roster's Payment method filter that matches buddy-system
@@ -1074,6 +1075,10 @@ class EventRegistration < ApplicationRecord
 
   def timeline_label
     "Event Registration: #{event.name}"
+  end
+
+  def timeline_also_log
+    [ registrant ].compact
   end
 
   private

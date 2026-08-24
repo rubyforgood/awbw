@@ -64,6 +64,11 @@ class EventRegistrationsController < ApplicationController
        stripe_session = Stripe::Checkout::Session.retrieve(@event_registration.checkout_session_id)
       @checkout_payment_status = stripe_session.payment_status
     end
+
+    @timeline_events = @event_registration.timeline_events
+      .includes(:actor)
+      .order(created_at: :desc)
+      .paginate(page: params[:page], per_page: 25)
   end
 
   def create

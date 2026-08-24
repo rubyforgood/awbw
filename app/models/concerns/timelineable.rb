@@ -12,12 +12,17 @@ module Timelineable
     TimelineServices::RecordEvent.call(
       subject: self,
       action: action,
-      snapshot: { "changes" => timeline_changes }
+      snapshot: { "changes" => timeline_changes },
+      also_log: timeline_also_log
     )
   end
 
+  def timeline_also_log
+    []
+  end
+
   def timeline_changes
-    saved_changes.except("id", "created_at", "updated_at", "created_by_id", "updated_by_id")
+    saved_changes.except("id", "created_at", "updated_at", "created_by_id", "updated_by_id", "slug")
                  .reject { |attribute, _| attribute.match?(SENSITIVE_ATTRIBUTE_PATTERN) }
                  .transform_values { |(old_value, new_value)| [ old_value.to_s, new_value.to_s ] }
   end
