@@ -47,10 +47,15 @@ RSpec.describe Ahoy::EventDecorator do
       expect(event.changes_summary).to match_array(
         [
           { field: "Display name", before: "Old", after: "New" },
-          { field: "Active", before: "No", after: "Yes" },
-          { field: "Note", before: "(empty)", after: "(empty)" }
+          { field: "Active", before: "No", after: "Yes" }
         ]
       )
+    end
+
+    it "leaves out a field that was blank before and after" do
+      event = decorate("changes" => { "note" => { "before" => nil, "after" => "" } })
+
+      expect(event.changes_summary).to eq([])
     end
 
     it "is empty when the event has no changes" do
@@ -158,6 +163,109 @@ RSpec.describe Ahoy::EventDecorator do
 
       expect(link_row[:link][:text]).to eq(workshop.title)
       expect(queries).to eq(0)
+    end
+  end
+
+  describe "a reference whose record has a broken label" do
+    it "falls back to the type and id instead of raising" do
+      organization = create(:organization)
+      tagging = create(:sectorable_item, sectorable: organization, sector: create(:sector))
+      allow_any_instance_of(SectorableItem).to receive(:title).and_raise(NoMethodError)
+      event = create(
+        :ahoy_event,
+        name: "update.organization",
+        resource_type: "Organization",
+        resource_id: organization.id,
+        properties: {
+          resource_type: "Organization", resource_id: organization.id,
+          association_changes: { sectorable_items: [ { action: "added", type: "SectorableItem", id: tagging.id } ] }
+        }
+      )
+
+      rows = event.decorate.detail_rows
+
+      expect(rows.map { |row| row[:link] }.compact.first[:text]).to eq("SectorableItem ##{tagging.id}")
+    end
+  end
+
+  describe "detail rows for a nested record" do
+    let(:organization) { create(:organization) }
+
+    def event_with(association_changes)
+      create(
+        :ahoy_event,
+        name: "update.organization",
+        resource_type: "Organization",
+        resource_id: organization.id,
+        properties: {
+          resource_type: "Organization", resource_id: organization.id,
+          association_changes: association_changes
+        }
+      ).decorate
+    end
+
+    it "reads the topic first and marks it as the heading" do
+      rows = event_with(comments: [ {
+        action: "added", type: "Comment", id: 1,
+        attributes: { "body" => "Left a voicemail", "topic" => "Payment" }
+      } ]).detail_rows
+
+      labelled = rows.select { |row| row[:value].present? }
+      expect(labelled.map { |row| row[:label] }).to eq([ "Topic", "Body" ])
+      expect(labelled.first[:emphasis]).to be(true)
+      expect(labelled.last[:emphasis]).to be_nil
+    end
+
+    it "renders a diff as before then after, whatever order it was stored in" do
+      rows = event_with(addresses: [ {
+        action: "updated", type: "Address", id: 1,
+        changes: { "city" => { "after" => "Long Beach", "before" => "Lake Lamar" } }
+      } ]).detail_rows
+
+      change = rows.find { |row| row[:change] }
+      expect(change[:label]).to eq("City")
+      expect(change[:change]).to eq({ before: "Lake Lamar", after: "Long Beach" })
+    end
+
+    it "leaves out a field that was blank before and after" do
+      rows = event_with(addresses: [ {
+        action: "updated", type: "Address", id: 1,
+        changes: { "phone" => { "before" => nil, "after" => "" },
+                   "city" => { "before" => "Lake Lamar", "after" => "Long Beach" } }
+      } ]).detail_rows
+
+      expect(rows.filter_map { |row| row[:label] if row[:change] }).to eq([ "City" ])
+    end
+
+    it "reads an added attachment as its filename" do
+      rows = event_with(avatar_attachment: [ {
+        action: "added", type: "ActiveStorage::Attachment", filename: "headshot.png"
+      } ]).detail_rows
+
+      attachment = rows.last
+      expect(attachment[:action]).to eq("added")
+      expect(attachment[:value]).to eq("headshot.png")
+      expect(rows.map { |row| row[:value] }).not_to include(a_string_including("ActiveStorage"))
+    end
+
+    it "reads a removed attachment as its name" do
+      rows = event_with(avatar_attachment: [ {
+        action: "removed", type: "ActiveStorage::Attachment", filename: "headshot.png"
+      } ]).detail_rows
+
+      attachment = rows.last
+      expect(attachment[:action]).to eq("removed")
+      expect(attachment[:value]).to eq("headshot.png")
+    end
+
+    it "falls back to the action alone for an older entry with no filename" do
+      rows = event_with(avatar_attachment: [ {
+        action: "removed", type: "ActiveStorage::Attachment"
+      } ]).detail_rows
+
+      attachment = rows.last
+      expect(attachment[:action]).to eq("removed")
+      expect(attachment[:value]).to be_nil
     end
   end
 end

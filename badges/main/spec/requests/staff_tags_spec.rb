@@ -6,6 +6,11 @@ RSpec.describe "/staff_tags", type: :request do
   describe "as an admin" do
     before { sign_in admin }
 
+    it_behaves_like "a page with a change log" do
+      let(:record) { create(:staff_tag) }
+      let(:page_path) { staff_tag_path(record) }
+    end
+
     it "lists staff tags" do
       tag = create(:staff_tag, name: "Highlight roster")
       get staff_tags_path

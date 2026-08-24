@@ -462,6 +462,52 @@ RSpec.describe "EventRegistrations", type: :request do
         )
       end
 
+      it "shows the record's tracked changes in a change log" do
+        create(
+          :ahoy_event,
+          name: "update.event_registration",
+          resource_type: "EventRegistration",
+          resource_id: existing_registration.id,
+          properties: {
+            resource_type: "EventRegistration", resource_id: existing_registration.id,
+            changes: { "status" => { "before" => "registered", "after" => "attended" } }
+          }
+        )
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Change log")
+        # Rendered by the shared details partial: humanized field, before → after.
+        expect(response.body).to include("Status")
+        expect(response.body).to include("registered")
+        expect(response.body).to include("attended")
+      end
+
+      it "shows what a nested record said, not just that one changed" do
+        create(
+          :ahoy_event,
+          name: "update.event_registration",
+          resource_type: "EventRegistration",
+          resource_id: existing_registration.id,
+          properties: {
+            resource_type: "EventRegistration", resource_id: existing_registration.id,
+            association_changes: {
+              comments: [ { action: "added", type: "Comment", id: 1, attributes: { "body" => "Left a voicemail" } } ]
+            }
+          }
+        )
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Left a voicemail")
+      end
+
+      it "says the log is empty rather than disappearing when the record has no tracked activity" do
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Change log empty")
+      end
+
       it "shows a Delete button for a deletable registration" do
         get edit_event_registration_path(existing_registration)
 

@@ -3,6 +3,9 @@ module Ahoy
     # Already surfaced in their own table columns, so redundant inside the details cell.
     REDUNDANT_KEYS = %w[resource_type resource_id resource_title].freeze
 
+    # Fields that title the record they belong to, in the order they should lead.
+    HEADING_KEYS = %w[topic title name subject].freeze
+
     # Everything the dedicated columns don't already show.
     def extra_properties
       properties_hash.except(*REDUNDANT_KEYS)
@@ -21,8 +24,10 @@ module Ahoy
     def changes_summary
       return [] unless changes?
 
-      change_diffs.map do |field, diff|
+      change_diffs.filter_map do |field, diff|
         diff = {} unless diff.is_a?(Hash)
+        next if blank_change?(diff)
+
         {
           field: field.to_s.humanize,
           before: display_value(diff["before"]),
@@ -64,13 +69,23 @@ module Ahoy
     end
 
     def hash_rows(hash, label, depth)
-      return [ reference_row(label, hash, depth) ] if reference?(hash)
+      return reference_rows(label, hash, depth) if reference?(hash)
       return [ { label: label, value: "(empty)", depth: depth } ] if hash.empty?
 
       rows = label ? [ { label: label, value: nil, depth: depth } ] : []
       child_depth = label ? depth + 1 : depth
-      hash.each { |key, val| rows.concat(flatten_rows(val, humanize_key(key), child_depth)) }
+      heading_first(hash).each do |key, val|
+        child_rows = flatten_rows(val, humanize_key(key), child_depth)
+        child_rows.first[:emphasis] = true if HEADING_KEYS.include?(key.to_s) && child_rows.one?
+        rows.concat(child_rows)
+      end
       rows
+    end
+
+    # A comment's topic titles its body rather than sitting beside it, so it leads.
+    def heading_first(hash)
+      headings, rest = hash.partition { |key, _| HEADING_KEYS.include?(key.to_s) }
+      headings.sort_by { |key, _| HEADING_KEYS.index(key.to_s) } + rest
     end
 
     def array_rows(array, label, depth)
@@ -81,7 +96,9 @@ module Ahoy
       elsif array.all? { |item| reference?(item) }
         header = label ? [ { label: label, value: nil, depth: depth } ] : []
         child_depth = label ? depth + 1 : depth
-        header + array.map { |item| reference_row(nil, item, child_depth) }
+        header + array.flat_map { |item| reference_rows(nil, item, child_depth) }
+      elsif array.all? { |item| attachment_change?(item) }
+        array.map { |item| attachment_row(label, item, depth) }
       else
         [ { label: label, value: array.map { |item| display_value(item) }.join(", "), depth: depth } ]
       end
@@ -89,6 +106,19 @@ module Ahoy
 
     def reference?(item)
       Analytics::EventReferenceLoader.reference?(item)
+    end
+
+    # An attachment is staged on the record and has no id until the save lands,
+    # so it travels as a filename rather than as a reference to look up.
+    def attachment_change?(item)
+      item.is_a?(Hash) && item["type"] == "ActiveStorage::Attachment" &&
+        item["action"].present? && item["id"].blank? && item["record_id"].blank?
+    end
+
+    # A file has no page to link to, so it reads as its name — kept on a removal
+    # too, since the blob it named is gone by the time anyone reads this.
+    def attachment_row(label, item, depth)
+      { label: label, depth: depth, action: item["action"], value: item["filename"].presence }
     end
 
     def named_entity?(item)
@@ -101,13 +131,50 @@ module Ahoy
       type.present? ? "#{name} (#{type.to_s.underscore.humanize})" : name
     end
 
+    # The link, then what the record actually said — a comment's body reads better
+    # than "a comment was added".
+    def reference_rows(label, item, depth)
+      rows = [ reference_row(label, item, depth) ]
+      rows += change_rows(item["changes"], depth + 1)
+      rows += flatten_rows(item["attributes"], nil, depth + 1) if item["attributes"].present?
+      rows
+    end
+
+    # A nested record's diffs read like the record's own: field, then before, then
+    # after. The order comes from here rather than the payload — MySQL reorders
+    # the keys of a JSON object.
+    def change_rows(diffs, depth)
+      return [] unless diffs.is_a?(Hash)
+
+      diffs.filter_map do |field, diff|
+        diff = {} unless diff.is_a?(Hash)
+        next if blank_change?(diff)
+
+        { label: humanize_key(field), depth: depth,
+          change: { before: display_value(diff["before"]), after: display_value(diff["after"]) } }
+      end
+    end
+
+    def blank_change?(diff)
+      diff["before"].blank? && diff["after"].blank?
+    end
+
     def reference_row(label, item, depth)
       type = item["type"] || item["record_type"]
       id = item["id"] || item["record_id"]
       record = find_referenced_record(type, id)
-      text = record.try(:title).presence || record.try(:name).presence || "#{type} ##{id}"
+      text = safe_label(record) || "#{type} ##{id}"
       { label: label, depth: depth, action: item["action"],
         link: { text: text, path: show_path_for(record) } }
+    end
+
+    # A model's own title/name can raise on records it wasn't written for, and a
+    # change log is not the place to find out.
+    def safe_label(record)
+      label = record.try(:title).presence || record.try(:name).presence
+      label.is_a?(String) ? label : label&.to_s
+    rescue StandardError
+      nil
     end
 
     # Prefer the page-level cache (one query per type, built by

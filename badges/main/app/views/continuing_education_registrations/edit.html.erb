@@ -145,4 +145,9 @@
   </div>
 
   <%= render "shared/audit_info", resource: @ce_registration %>
+  <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+    <div class="mt-4 flex justify-end">
+      <%= render "application/activity_log", record: @ce_registration %>
+    </div>
+  <% end %>
 </div>

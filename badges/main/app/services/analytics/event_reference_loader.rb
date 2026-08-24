@@ -7,7 +7,7 @@ module Analytics
     # A referenced record inside event properties: a type + id and nothing but
     # reference bookkeeping — no name/title (those render as a plain label) and
     # no snapshot columns.
-    REFERENCE_KEYS = %w[type id record_type record_id action blob_id changes].freeze
+    REFERENCE_KEYS = %w[type id record_type record_id action blob_id changes attributes].freeze
 
     def self.reference?(item)
       return false unless item.is_a?(Hash)
