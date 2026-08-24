@@ -1,4 +1,6 @@
 class Notification < ApplicationRecord
+  include Timelineable
+
   belongs_to :sender, class_name: "User", optional: true
   belongs_to :noticeable, polymorphic: true, optional: true
   belongs_to :parent_notification, class_name: "Notification", optional: true
@@ -177,6 +179,30 @@ class Notification < ApplicationRecord
 
   def timeline_activity_name
     TIMELINE_NAMES_BY_DIRECTION.fetch(direction)
+  end
+
+  def timeline_label
+    subject_text = custom_subject.presence || email_subject.presence
+    label = "#{channel.titleize} #{direction.humanize}"
+    label += ": #{subject_text}" if subject_text.present?
+    label
+  end
+
+  def record_timeline_event(action)
+    return unless action == "created"
+    return unless noticeable.present?
+
+    TimelineServices::RecordEvent.call(
+      subject: self,
+      action: action,
+      snapshot: { "changes" => timeline_changes },
+      also_log: timeline_also_log
+    )
+  end
+
+  def timeline_also_log
+    return [] unless noticeable.is_a?(EventRegistration)
+    [ noticeable.registrant ].compact
   end
 
   # Scopes

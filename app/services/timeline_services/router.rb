@@ -12,6 +12,9 @@ module TimelineServices
         when TopicSubscription then [ subject.commentable.person ].compact
         else []
         end
+      when Notification
+        return [] unless subject.noticeable.present?
+        [ subject.noticeable ].compact
       else
         return [ subject ] if subject.is_a?(HasTimeline)
 

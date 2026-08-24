@@ -25,5 +25,18 @@ RSpec.describe TimelineServices::Router do
 
       expect(described_class.targets_for(plain_record)).to eq([])
     end
+
+    it "routes a Notification to its noticeable record" do
+      person = create(:person)
+      notification = build(:notification, noticeable: person)
+
+      expect(described_class.targets_for(notification)).to eq([ person ])
+    end
+
+    it "routes a Notification with nil noticeable nowhere" do
+      notification = build(:notification, noticeable: nil)
+
+      expect(described_class.targets_for(notification)).to eq([])
+    end
   end
 end

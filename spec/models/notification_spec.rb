@@ -551,4 +551,75 @@ RSpec.describe Notification do
       expect(build(:notification, :incoming).timeline_activity_name).to eq("communication.received")
     end
   end
+
+  describe "timeline" do
+    describe "#timeline_label" do
+      it "uses channel and direction with custom_subject" do
+        notification = build(:notification, channel: "email", direction: "outgoing", custom_subject: "Reminder about deadline")
+        expect(notification.timeline_label).to eq("Email Outgoing: Reminder about deadline")
+      end
+
+      it "uses channel and direction with email_subject when no custom_subject" do
+        notification = build(:notification, channel: "phone", direction: "incoming", email_subject: "Left voicemail")
+        expect(notification.timeline_label).to eq("Phone Incoming: Left voicemail")
+      end
+
+      it "omits subject when neither custom_subject nor email_subject" do
+        notification = build(:notification, channel: "text", direction: "outgoing", custom_subject: nil, email_subject: nil)
+        expect(notification.timeline_label).to eq("Text Outgoing")
+      end
+
+      it "prefers custom_subject over email_subject" do
+        notification = build(:notification, channel: "video", direction: "incoming", custom_subject: "Custom", email_subject: "Rendered")
+        expect(notification.timeline_label).to eq("Video Incoming: Custom")
+      end
+    end
+
+    describe "#record_timeline_event" do
+      it "creates a timeline event on create" do
+        person = create(:person)
+        expect {
+          create(:notification, noticeable: person)
+        }.to change(TimelineEvent, :count).by(1)
+      end
+
+      it "does not create a timeline event on update" do
+        notification = create(:notification)
+        expect {
+          notification.update!(custom_subject: "Updated subject")
+        }.not_to change(TimelineEvent, :count)
+      end
+
+      it "does not create a timeline event when noticeable is nil" do
+        expect {
+          create(:notification, noticeable: nil)
+        }.not_to change(TimelineEvent, :count)
+      end
+
+      it "routes to the noticeable record" do
+        person = create(:person)
+        notification = create(:notification, noticeable: person)
+        event = TimelineEvent.last
+        expect(event.timeline_entries.pluck(:owner_id, :owner_type)).to contain_exactly([ person.id, "Person" ])
+      end
+    end
+
+    describe "#timeline_also_log" do
+      it "fans out to registrant when noticeable is EventRegistration" do
+        registration = create(:event_registration)
+        notification = create(:notification, noticeable: registration)
+        event = TimelineEvent.last
+        owner_ids = event.timeline_entries.pluck(:owner_id, :owner_type)
+        expect(owner_ids).to include([ registration.id, "EventRegistration" ])
+        expect(owner_ids).to include([ registration.registrant.id, "Person" ])
+      end
+
+      it "does not fan out when noticeable is Person" do
+        person = create(:person)
+        notification = create(:notification, noticeable: person)
+        event = TimelineEvent.last
+        expect(event.timeline_entries.pluck(:owner_type)).to eq([ "Person" ])
+      end
+    end
+  end
 end
