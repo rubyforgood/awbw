@@ -2,6 +2,11 @@ class EventRegistration < ApplicationRecord
   include RemoteSearchable
   include Registerable
   include Certifiable
+  include Timelineable
+
+  def timeline_label
+    "Event Registration: #{event.name}"
+  end
 
   # Sentinel for the roster's Payment method filter that matches buddy-system
   # registrations (someone_else_will_pay), which isn't an expected_payment_method

@@ -76,6 +76,10 @@ class Comment < ApplicationRecord
     nil
   end
 
+  def timeline_label
+    "Comment on #{commentable.timeline_label}"
+  end
+
   private
 
   def timeline_changes
