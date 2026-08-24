@@ -1,7 +1,8 @@
 require "rails_helper"
 
 RSpec.describe WorkshopVariation do
-  it_behaves_like "author_creditable", factory: :workshop_variation, org_credited: false, credits_creator_legacy: true
+  it_behaves_like "author_creditable", factory: :workshop_variation, org_credited: false, credits_creator: true,
+                                      anonymous_when_unattributed: true
 
   describe "associations" do
     it { should belong_to(:workshop).optional }
@@ -178,6 +179,16 @@ RSpec.describe WorkshopVariation do
 
       results = WorkshopVariation.search_by_params(author_name: "Bartholomew")
       expect(results).to include(authored)
+      expect(results).not_to include(variation_a, variation_b)
+    end
+
+    it "filters by author_name matching the submitter when no author is named" do
+      facilitator = create(:person, first_name: "Bartholomew", last_name: "Snazzlepants")
+      submitted = create(:workshop_variation, name: "Submitted", author: nil,
+                                              created_by: create(:user, person: facilitator))
+
+      results = WorkshopVariation.search_by_params(author_name: "Bartholomew")
+      expect(results).to include(submitted)
       expect(results).not_to include(variation_a, variation_b)
     end
   end

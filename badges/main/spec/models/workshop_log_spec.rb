@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe WorkshopLog do
-  it_behaves_like "author_creditable", factory: :workshop_log, org_credited: false
+  it_behaves_like "author_creditable", factory: :workshop_log, org_credited: false, credits_creator: true
 
   describe "associations" do
     it { should belong_to(:created_by).optional }
@@ -135,6 +135,26 @@ RSpec.describe WorkshopLog do
         other_log = create(:workshop_log)
 
         results = WorkshopLog.search(created_by_id: user.id)
+        expect(results).to include(log)
+        expect(results).not_to include(other_log)
+      end
+
+      it "filters by author_name matching the credited author" do
+        author = create(:person, first_name: "Bartholomew", last_name: "Snazzlepants")
+        log = create(:workshop_log, author: author)
+        other_log = create(:workshop_log)
+
+        results = WorkshopLog.search(author_name: "Bartholomew")
+        expect(results).to include(log)
+        expect(results).not_to include(other_log)
+      end
+
+      it "filters by author_name matching the logger when no author is named" do
+        logger = create(:person, first_name: "Bartholomew", last_name: "Snazzlepants")
+        log = create(:workshop_log, author: nil, created_by: create(:user, person: logger))
+        other_log = create(:workshop_log)
+
+        results = WorkshopLog.search(author_name: "Bartholomew")
         expect(results).to include(log)
         expect(results).not_to include(other_log)
       end

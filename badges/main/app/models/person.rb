@@ -198,15 +198,17 @@ class Person < ApplicationRecord
     joins(:staff_taggings).where(staff_taggings: { staff_tag_id: tag_ids }).distinct }
   scope :story_authors, -> { joins(:stories_as_author).distinct }
   scope :blog_contributors, -> { where(blog_contributor: true) }
-  scope :workshop_authors, -> { joins(:workshops_as_author).distinct }
-  scope :workshop_variation_authors, -> { joins(:workshop_variations_as_author).distinct }
-  # WorkshopLog has no author column — it is created_by a User, so "author" here
-  # means the person whose linked user account created the log. Confirmed intended
-  # (rubyforgood/awbw#2326): the logger is the author; we deliberately don't add an
-  # author_id column, since created_by.person already carries that meaning.
-  scope :workshop_log_authors, -> {
-    creator_user_ids = WorkshopLog.where.not(created_by_id: nil).select(:created_by_id)
-    where(id: User.where(id: creator_user_ids).where.not(person_id: nil).select(:person_id)) }
+  scope :workshop_authors, -> { credited_on(Workshop) }
+  scope :workshop_variation_authors, -> { credited_on(WorkshopVariation) }
+  scope :workshop_log_authors, -> { credited_on(WorkshopLog) }
+  # Everyone a model credits, mirroring what the record itself displays: its named
+  # authors, plus — where the model credits its submitter (`credits_creator`) — the
+  # person behind the account that entered a row naming no author.
+  scope :credited_on, ->(model) {
+    named = where(id: model.where.not(author_id: nil).select(:author_id))
+    next named unless model.creator_credited
+    named.or(where(id: User.where(id: model.where(author_id: nil).select(:created_by_id))
+                           .where.not(person_id: nil).select(:person_id))) }
   # People with at least one currently-active facilitator affiliation.
   scope :facilitators_active, -> {
     where(id: Affiliation.facilitators.active.select(:person_id)) }

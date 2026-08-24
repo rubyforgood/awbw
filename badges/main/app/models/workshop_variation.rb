@@ -2,6 +2,7 @@ class WorkshopVariation < ApplicationRecord
   include AuthorCreditable
   # No explicit author → credit the creator's person by name, else "Anonymous".
   self.unattributed_author_label = "Anonymous"
+  credits_creator
 
   include Publishable, Trendable, RichTextSearchable
   include SearchCop
@@ -66,14 +67,6 @@ class WorkshopVariation < ApplicationRecord
 
   def title
     name
-  end
-
-  # The legacy (pre-Person-author) credit for a variation: the creator's person
-  # by name, honoring their credit preference — suppressed when the person opted
-  # out. Nil (no creator/person, or opted out) reads "Anonymous".
-  def legacy_author_name_text
-    person = created_by&.person
-    person.name unless person.nil? || person.anonymous_contributions?
   end
 
   def attach_assets_from_idea!
