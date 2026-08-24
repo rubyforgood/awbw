@@ -1,7 +1,10 @@
 require "rails_helper"
 
 RSpec.describe "Affiliation status badges", type: :system do
-  let(:admin) { create(:user, :admin) }
+  # Requests render in the signed-in user's zone (ApplicationController
+  # #set_time_zone_from_user), so pin it to the spec process's own zone —
+  # otherwise "starts today" straddles a date boundary depending on the hour.
+  let(:admin) { create(:user, :admin, time_zone: Time.zone.name) }
   let!(:person) { create(:person, user: admin) }
   let!(:org) { create(:organization, name: "Zeta Test Center") }
 

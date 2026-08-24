@@ -8,7 +8,7 @@ import { isFacilitatorTitle } from "../lib/affiliation";
 // ended) additionally shows an "Upcoming" badge.
 export default class extends Controller {
   static targets = ["endDate", "title", "row", "accentBar", "valueField", "startDate", "upcomingBadge", "inactiveBadge"]
-  static values = { expired: Boolean }
+  static values = { expired: Boolean, today: String }
 
   connect() {
     if (this.hasTitleTarget) this.updateBorder();
@@ -57,10 +57,16 @@ export default class extends Controller {
     return value > this.todayISO();
   }
 
-  // Local "today" as YYYY-MM-DD, compared against the date inputs' own
-  // YYYY-MM-DD values as strings — no cross-timezone Date parsing (a UTC-parsed
-  // date input vs a local "today" would misjudge a start/end that equals today).
+  // "Today" as YYYY-MM-DD, compared against the date inputs' own YYYY-MM-DD values
+  // as strings — no cross-timezone Date parsing. It comes from the server, because
+  // the ERB badges are rendered against the app's Date.current: a browser whose
+  // local date is a day behind (e.g. US evening under a UTC app zone) would
+  // otherwise call a row starting today "Upcoming" while the server didn't.
   todayISO() {
+    return this.todayValue || this.browserToday();
+  }
+
+  browserToday() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }

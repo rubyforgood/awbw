@@ -37,7 +37,8 @@
      end %>
   <% record = person_side ? f.object.person : f.object.organization %>
   <% label = person_side ? "Person" : "Organization" %>
-  <div data-controller="inactive-toggle" data-inactive-toggle-expired-value="<%= expired %>" class="relative mb-2">
+  <div data-controller="inactive-toggle" data-inactive-toggle-expired-value="<%= expired %>"
+       data-inactive-toggle-today-value="<%= Date.current.iso8601 %>" class="relative mb-2">
     <%# Left accent rendered outside the row so it keeps full color regardless of the row's border. %>
     <span class="absolute inset-y-0 left-0 w-1 rounded-l-lg <%= accent %>"
           data-inactive-toggle-target="accentBar"></span>
