@@ -78,10 +78,8 @@
   summary: >-
     The New / Ongoing / Reinstated column on the scholarship index is now judged
     as of the training each award paid for, so two awards on the same page can
-    read differently. Previously every row was judged against today, so a past
-    award drifted as the program's affiliations changed. It uses the same rule as
-    the event reports and org profile chips, and hovering explains the verdict and
-    the date it was judged on.
+    read differently. It uses the same rule as the event reports and org profile
+    chips, and hovering explains the verdict and the date it judged.
   pro_tips:
     - "An award with no registration behind it falls back to the start of the current year — the hover text says so."
 
