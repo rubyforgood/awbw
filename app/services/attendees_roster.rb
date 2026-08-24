@@ -115,10 +115,13 @@ class AttendeesRoster
     end
   end
 
-  # Distinct program statuses of each person's affiliated organizations.
+  # Distinct program statuses of each person's affiliated organizations, each
+  # judged at the start date of the event whose registration linked it — the
+  # roster spans events but every row knows its own, so nothing falls back to the
+  # year anchor. An org linked at two trainings is judged separately at each.
   def program_statuses_by_registrant
-    @program_statuses_by_registrant ||= organization_ids_by_registrant.transform_values do |organization_ids|
-      organization_ids.filter_map { |organization_id| program_status_by_organization[organization_id] }.uniq(&:status)
+    @program_statuses_by_registrant ||= linked_org_anchors_by_registrant.transform_values do |anchors|
+      anchors.filter_map { |organization_id, anchor| program_status_for(organization_id, anchor) }.uniq(&:status)
     end
   end
 
@@ -191,27 +194,42 @@ class AttendeesRoster
       .transform_values(&:first)
   end
 
-  # Organization ids linked on each person's in-scope registrations
-  # (EventRegistrationOrganization), uniqued per person.
-  def linked_org_ids_by_registrant
-    @linked_org_ids_by_registrant ||= EventRegistrationOrganization
-      .joins(:event_registration)
+  # [ organization_id, event start date ] pairs per person, from the in-scope
+  # registrations (EventRegistrationOrganization) that linked each org. The event
+  # comes along because it is what each org's program status is anchored on.
+  def linked_org_anchors_by_registrant
+    @linked_org_anchors_by_registrant ||= EventRegistrationOrganization
+      .joins(event_registration: :event)
       .where(event_registration_id: registration_ids)
-      .pluck(Arel.sql("event_registrations.registrant_id"), :organization_id)
-      .each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |(registrant_id, organization_id), map|
-        map[registrant_id] << organization_id unless map[registrant_id].include?(organization_id)
+      .pluck(Arel.sql("event_registrations.registrant_id"), :organization_id, Arel.sql("events.start_date"))
+      .each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |(registrant_id, organization_id, start_date), map|
+        anchor = [ organization_id, start_date&.to_date ]
+        map[registrant_id] << anchor unless map[registrant_id].include?(anchor)
       end
+  end
+
+  # Organization ids linked on each person's in-scope registrations, uniqued per
+  # person — the roster's Organization column, which doesn't care which event.
+  def linked_org_ids_by_registrant
+    @linked_org_ids_by_registrant ||= linked_org_anchors_by_registrant
+      .transform_values { |anchors| anchors.map(&:first).uniq }
+  end
+
+  def organizations_by_id
+    @organizations_by_id ||= organizations.index_by(&:id)
+  end
+
+  # Memoized per (organization, anchor) so an org linked on several people's
+  # registrations at the same event is classified once.
+  def program_status_for(organization_id, anchor)
+    organization = organizations_by_id[organization_id]
+    return nil unless organization
+
+    @program_status_for ||= {}
+    @program_status_for[[ organization_id, anchor ]] ||= organization.facilitator_program_status(as_of: anchor)
   end
 
   def affiliation_status(affiliation)
     affiliation.status_on
-  end
-
-  # No event to anchor on (the index spans them), so the status falls back to the
-  # start of the current year and flags itself `year_anchored?` for the caveat.
-  def program_status_by_organization
-    @program_status_by_organization ||= organizations.to_h do |organization|
-      [ organization.id, organization.facilitator_program_status ]
-    end
   end
 end

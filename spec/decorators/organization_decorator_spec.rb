@@ -102,7 +102,7 @@ RSpec.describe OrganizationDecorator do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
       create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
       expect(org.reload.decorate.organization_status_bucket).to eq(:upcoming)
-      expect(org.reload.decorate.organization_status_label).to eq("Upcoming")
+      expect(org.reload.decorate.organization_status_label(admin: true)).to eq("Upcoming")
     end
 
     it "prefers :active over :upcoming when a facilitator is active and another is upcoming" do
@@ -119,6 +119,43 @@ RSpec.describe OrganizationDecorator do
       create(:affiliation, organization: org, person: person, title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
       create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
       expect(org.reload.decorate.organization_status_bucket).to eq(:upcoming)
+    end
+  end
+
+  describe "who sees the Upcoming chip" do
+    let(:org) do
+      organization = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Pending"))
+      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator",
+                           start_date: 1.month.from_now, end_date: nil)
+      organization.reload.decorate
+    end
+
+    it "shows admins the Upcoming label and its blue theme" do
+      expect(org.organization_status_label(admin: true)).to eq("Upcoming")
+      expect(org.organization_status_classes(admin: true)).to include("blue")
+    end
+
+    it "shows everyone else plain Inactive, coloured like Never active" do
+      expect(org.organization_status_label).to eq("Inactive")
+      expect(org.organization_status_classes).to eq(described_class.status_classes_for_bucket(:never_active))
+    end
+
+    it "leaves the other buckets alone for both audiences" do
+      active = create(:organization)
+      create(:affiliation, organization: active, person: create(:person), title: "Facilitator", start_date: 1.year.ago)
+
+      expect(active.reload.decorate.organization_status_label).to eq("Active")
+      expect(active.decorate.organization_status_label(admin: true)).to eq("Active")
+    end
+
+    # The edit form is admin-or-owner, so its live-updating chip has to collapse
+    # Upcoming for a non-admin owner exactly the way the server render does.
+    it "collapses Upcoming in the styles the edit form hands to Stimulus" do
+      expect(described_class.status_bucket_styles(admin: true)[:upcoming][:label]).to eq("Upcoming")
+
+      public_styles = described_class.status_bucket_styles
+      expect(public_styles[:upcoming][:label]).to eq("Inactive")
+      expect(public_styles[:upcoming][:classes]).to eq(public_styles[:never_active][:classes])
     end
   end
 

@@ -10,7 +10,8 @@ that are easy to confuse with one another:
 
 - **Affiliated since**
 - **Facilitators since**
-- an org-wide **status chip** (Active / Upcoming / Formerly active / Never active)
+- an org-wide **status chip** (Active / Upcoming / Formerly active / Never
+  active; non-admins see Upcoming as "Inactive")
 - per-event **program-status chips** (New / Ongoing / Reinstate)
 
 Several code paths compute overlapping-but-distinct classifications with subtle
@@ -90,9 +91,11 @@ was maintained by hand and drifted; an org is "active" because someone is
 facilitating there, not because a column says so. The same rule backs the index
 filter (`Organization.program_status`), so the filter and the chip agree.
 
-**The filter dropdown has one more option than the chip.** The chip is only ever
-one of the four buckets above; **Inactive is a filter option, never a chip**. Both
-the organization index and the people directory offer five, in this order —
+**The filter dropdown has one more option than the chip.** For an admin the chip
+is only ever one of the four buckets above, so **Inactive is a filter option, not
+an admin chip value** (non-admins are the exception — see the audience rule
+below). Both the organization index and the people directory offer five, in this
+order —
 **Active / Inactive / Upcoming / Formerly active / Never active**
 (`Organization::PROGRAM_STATUS_FILTER_OPTIONS`,
 `Person::FACILITATOR_STATUS_FILTER_OPTIONS`).
@@ -103,7 +106,18 @@ facilitator affiliation at all), **and Upcoming** — because none of them are
 active right now
 (`Organization.program_status("formerly_or_never")`, `Person.facilitators_inactive`).
 Upcoming and Formerly active are the narrower options inside it. So an upcoming
-org/person shows an *Upcoming* chip but is still found when you filter by Inactive.
+org/person shows an *Upcoming* chip to an admin and is still found when you filter
+by Inactive.
+
+**Upcoming is an admin-only chip.** Non-admins see a not-yet-started program as
+plain **"Inactive"**, coloured neutrally like Never active (it has never
+facilitated) — the org index is becoming more than admin-facing and must reflect
+the state of the world *today*, not a scheduled future one. Admins keep the
+Upcoming chip, which is the operationally useful distinction. The bucket itself
+is unchanged; only the label and colour collapse
+(`OrganizationDecorator#organization_status_label(admin:)`), and
+`.status_bucket_styles(admin:)` takes the same flag so the edit form's live chip
+can't disagree with the server render for a non-admin owner.
 
 On the edit form this chip **live-updates** from the visible facilitator rows.
 
