@@ -38,9 +38,13 @@
               <li class="flex flex-wrap items-baseline justify-between gap-2 rounded-md border border-gray-200 bg-gray-50 px-4 py-2">
                 <%= link_to taggable.name, polymorphic_path(taggable),
                             class: "font-medium #{DomainTheme.text_class_for(:people)} hover:underline" %>
-                <span class="text-xs text-gray-500">
-                  Tagged<% if tagging.created_by&.person %> by <%= tagging.created_by.full_name %><% end %>
-                  on <%= tagging.created_at.strftime("%b %-d, %Y") %>
+                <span class="flex items-baseline gap-3 text-xs text-gray-500">
+                  <span>
+                    Tagged<% if tagging.created_by&.person %> by <%= tagging.created_by.full_name %><% end %>
+                    on <%= tagging.created_at.strftime("%b %-d, %Y") %>
+                  </span>
+                  <%= link_to "Comments", edit_staff_tagging_path(tagging, return_to: "staff_tag"),
+                              class: "#{eyebrow_link_class} hover:underline" %>
                 </span>
               </li>
             <% end %>

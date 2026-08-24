@@ -15,6 +15,7 @@ module CommentsHelper
     when Story then "Story · #{record.title}"
     when StoryIdea then "Story idea · #{record.title.presence || "##{record.id}"}"
     when Affiliation then "Affiliation · #{record.person&.full_name} @ #{record.organization&.name}"
+    when StaffTagging then "Staff tag · #{record.staff_tag&.name}"
     else record.class.name.underscore.humanize
     end
   end
@@ -33,6 +34,7 @@ module CommentsHelper
     when Story then edit_story_path(record)
     when StoryIdea then edit_story_idea_path(record)
     when Affiliation then edit_affiliation_path(record)
+    when StaffTagging then edit_staff_tagging_path(record)
     end
   end
 
@@ -49,6 +51,7 @@ module CommentsHelper
     when Story then :stories
     when StoryIdea then :story_ideas
     when Affiliation then :organizations
+    when StaffTagging then :people
     else :comments
     end
   end

@@ -27,6 +27,15 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Comments & communications on a staff tag"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-24
+  summary: >-
+    Each staff tag on a person now opens its own page (the gear on the tag chip, or "Comments"
+    from the staff tag's people list) with the combined "Comments & communications" section, so
+    you can record why someone carries a tag and log calls or emails about it.
+
 - name: "Comments & communications on every record that had comments"
   area: communications
   display_status: admin_facing
