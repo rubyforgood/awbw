@@ -835,6 +835,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_184624) do
     t.string "error_class"
     t.text "error_message"
     t.boolean "hide_event_card", default: false, null: false
+    t.boolean "hide_ticket_button", default: false, null: false
     t.string "kind", null: false
     t.integer "noticeable_id"
     t.string "noticeable_type"

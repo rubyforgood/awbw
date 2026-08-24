@@ -85,6 +85,7 @@ class NotificationsController < ApplicationController
       custom_message: @notification.custom_message,
       custom_subject: @notification.custom_subject,
       hide_event_card: @notification.hide_event_card,
+      hide_ticket_button: @notification.hide_ticket_button,
       sender: current_user, # a resend is an admin action — attribute it to them
       deliver: true,
       persist_delivered_email: true
