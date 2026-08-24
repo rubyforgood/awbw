@@ -57,11 +57,12 @@
          blue: "has-[:checked]:bg-blue-50 has-[:checked]:text-blue-700 has-[:checked]:border-blue-300",
          gray: "has-[:checked]:bg-gray-100 has-[:checked]:text-gray-800 has-[:checked]:border-gray-400"
        } %>
+    <% fa_hint = "facilitator affiliation (FA)" %>
     <% outcome_options = {
-         create: [ [ "create", "Create new", :blue ], [ "keep", "Skip", :gray ] ],
+         create: [ [ "create", "Create new FA", :blue, fa_hint ], [ "keep", "Skip", :gray ] ],
          deactivate: [ [ "keep", "Keep active", :green ], [ "delete", "Delete affiliation", :red ], [ "deactivate", "Deactivate affiliation", :red ] ],
          delete: [ [ "delete", "Delete", :red ], [ "keep", "Keep", :gray ] ],
-         reactivate: [ [ "reactivate", "Reactivate", :green ], [ "create", "Create new", :blue ], [ "keep", "Leave inactive", :gray ] ],
+         reactivate: [ [ "reactivate", "Reactivate", :green ], [ "create", "Create new FA", :blue, fa_hint ], [ "keep", "Leave inactive", :gray ] ],
          retarget: [ [ "retarget", "Move to the new event", :blue ], [ "keep", "Leave as is", :gray ] ]
        } %>
     <% button_base = "group relative inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm cursor-pointer hover:bg-gray-50" %>
@@ -69,7 +70,7 @@
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
       <h2 class="text-base font-bold text-gray-900">To reconcile <span class="text-gray-400 font-normal">(<%= actionable_count %>)</span></h2>
       <span class="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">
-        <i class="fa-solid fa-triangle-exclamation"></i> These buttons change facilitator affiliations
+        <i class="fa-solid fa-triangle-exclamation"></i> May change affiliations — preview to confirm.
       </span>
     </div>
 
@@ -111,8 +112,8 @@
                   <span class="flex-1 min-w-0 text-sm text-gray-800"><%= row.organization.name %></span>
                 <% end %>
                 <div class="flex shrink-0 items-center gap-2">
-                  <% outcome_options[row.action].each do |value, label, color| %>
-                    <label class="<%= button_base %> <%= color_class[color] %>">
+                  <% outcome_options[row.action].each do |value, label, color, hint| %>
+                    <label class="<%= button_base %> <%= color_class[color] %>" <%= tag.attributes(title: hint) %>>
                       <%= radio_button_tag "outcome[#{row.key}]", value, chosen == value, id: "outcome_#{row.key}_#{value}", class: "h-4 w-4 border-gray-300", form: "reconcile_form" %>
                       <%= label %>
                       <%= render "tooltip", kind: value.to_sym %>
@@ -141,6 +142,7 @@
                 class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-normal text-blue-600 hover:underline">Collapse all</button>
       </summary>
       <div class="border-t border-gray-100 px-4 py-4 space-y-6">
+        <% ticked = Set.new %>
         <% @skipped_sections.each do |reason, rows| %>
           <details open class="rounded-lg border border-gray-200 overflow-hidden">
             <summary class="cursor-pointer select-none px-3 py-2 bg-gray-100 border-b border-gray-200 text-sm font-semibold text-gray-700 tracking-wide hover:bg-gray-200">
@@ -159,6 +161,9 @@
                       <span class="text-gray-400"><%= row.organization.name %></span>
                     <% end %>
                   </span>
+                  <% if reason == AffiliationServices::ReconcilePerson::ATTENDANCE_NOT_RECORDED && ticked.add?(row.registration&.id) %>
+                    <%= render "attendance_day_ticks", registration: row.registration, event: @event %>
+                  <% end %>
                   <%= render "event_registrations/attendance_status_badge", registration: row.registration, return_to: "reconcile_affiliations" %>
                   <% if row.registration&.status == "incomplete_attendance" %>
                     <div class="w-full"><%= render "attendance_days", registration: row.registration, event: @event %></div>

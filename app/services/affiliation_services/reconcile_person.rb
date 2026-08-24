@@ -20,7 +20,7 @@ module AffiliationServices
     ACTIVE_ATTENDED = "Active — attended".freeze
     TRAINING_PENDING = "Training hasn't ended yet".freeze
     ALREADY_DEACTIVATED = "Already deactivated — didn't attend".freeze
-    ALREADY_ENDED = "Already ended — not by reconciliation".freeze
+    ALREADY_ENDED = "FA end date is in the past — not reconciled".freeze
     LAPSED = "Ended — a return is recorded as a new affiliation".freeze
     # Topic on the comment reconciliation leaves behind, so a row can say why it
     # ended without a dedicated column (ADR-0003 D6b).

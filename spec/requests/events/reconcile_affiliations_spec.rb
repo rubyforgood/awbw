@@ -88,6 +88,26 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       expect(response.body).to include("Deactivate affiliation")
     end
 
+    it "offers day ticks beside the chip when attendance was never recorded" do
+      person, _affiliation = registrant_with_affiliation(status: "registered")
+      registration = person.event_registrations.first
+
+      get reconcile_affiliations_event_path(event)
+
+      expect(response.body).to include("Day 1")
+      expect(response.body).to include("completed_day_1_event_registration_#{registration.id}")
+    end
+
+    it "renders one set of day ticks for a registrant who linked two organizations" do
+      person, _affiliation = registrant_with_affiliation(status: "registered")
+      registration = person.event_registrations.first
+      create(:event_registration_organization, event_registration: registration, organization: create(:organization))
+
+      get reconcile_affiliations_event_path(event)
+
+      expect(response.body.scan("completed_day_1_event_registration_#{registration.id}").size).to eq(1)
+    end
+
     it "asks for an outcome instead of acting when attendance was never recorded" do
       person, affiliation = registrant_with_affiliation(status: "registered")
 
