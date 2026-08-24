@@ -5,10 +5,6 @@ class EventRegistration < ApplicationRecord
   include Communicable
   include Timelineable
 
-  def timeline_label
-    "Event Registration: #{event.name}"
-  end
-
   # Sentinel for the roster's Payment method filter that matches buddy-system
   # registrations (someone_else_will_pay), which isn't an expected_payment_method
   # value. Equals the column name so the meaning is self-evident.
@@ -1074,6 +1070,10 @@ class EventRegistration < ApplicationRecord
       id: id,
       label: "#{registrant.full_name} - #{event.title} (##{id})"
     }
+  end
+
+  def timeline_label
+    "Event Registration: #{event.name}"
   end
 
   private

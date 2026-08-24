@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module Timelineable
   extend ActiveSupport::Concern
 
@@ -21,7 +19,6 @@ module Timelineable
   def timeline_changes
     saved_changes.except("id", "created_at", "updated_at", "created_by_id", "updated_by_id")
                  .reject { |attribute, _| attribute.match?(SENSITIVE_ATTRIBUTE_PATTERN) }
-                 .reject { |_, (old_value, new_value)| old_value.to_s == new_value.to_s }
                  .transform_values { |(old_value, new_value)| [ old_value.to_s, new_value.to_s ] }
   end
 
