@@ -103,6 +103,17 @@
     informational message with no link to a registrant's ticket — the same way you can
     already hide the event details box.
 
+- name: "Mailing-list interest moved to topic subscriptions"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-23
+  action_path: "/people/1"
+  pr_number: 2358
+  summary: >-
+    The person editor's old "mailing list consent" checkbox is gone; it now links to that
+    person's News subscriptions, where mailing-list interest is tracked. Registration and
+    public form consent answers now create a News subscription, sourced to the event or form.
+
 - name: "Affiliation editor: FileMaker code"
   area: people
   display_status: admin_facing
@@ -1403,7 +1414,7 @@
   action_path: "/people/1"
   pr_number: 1882
   summary: >-
-    Contact info, organization details, mailing consent, and racial/ethnic identity
+    Contact info, organization details, and racial/ethnic identity
     submitted on registration are stored as structured profile data.
 
 - name: "Racial and ethnic identity on profiles"

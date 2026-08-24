@@ -16,6 +16,12 @@ class PersonDecorator < ApplicationDecorator
     avatar
   end
 
+  # The subscriptions index filtered to this person's News (mailing-list) topic —
+  # where mailing-list interest now lives since the person-level consent flag retired.
+  def news_subscriptions_path
+    h.topic_subscriptions_path(person_id: id, topic_subscription_type_id: TopicSubscriptionType.news&.id)
+  end
+
   def pronouns_display
     profile_show_pronouns ? pronouns : nil
   end

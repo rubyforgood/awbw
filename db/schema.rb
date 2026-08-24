@@ -1071,8 +1071,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_184624) do
     t.string "last_name", null: false
     t.string "legal_first_name"
     t.string "linked_in_url"
-    t.datetime "mailing_list_consent_at"
-    t.string "mailing_list_consent_source"
     t.date "member_since"
     t.text "notes"
     t.boolean "profile_is_searchable", default: true, null: false
