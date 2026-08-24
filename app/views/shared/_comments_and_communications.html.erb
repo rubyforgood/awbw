@@ -1,14 +1,18 @@
 <%# Combined comments + communications section (locals: f:, and optional
-    mark_admin_only:, comments_all_path:, communications_all_email:). %>
+    mark_admin_only:, view_all_person:). %>
 <% record = f.object %>
 <% can_manage_comments = allowed_to?(:manage?, Comment) %>
 <% admin = allowed_to?(:index?, with: NotificationPolicy) %>
 <% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
-<% comments_all_path = local_assigns[:comments_all_path] %>
-<% communications_all_email = local_assigns[:communications_all_email] %>
+<%# The person this record's comments and communications belong to — links the
+    header to their full, filterable feed. Nil when the record has no person yet. %>
+<% view_all_person = local_assigns[:view_all_person] %>
 <%# `record` may be a Draper decorator — read the type via model_name, not class.name. %>
 <% record_type = record.model_name.name %>
 <% list_id = "#{record.model_name.param_key}-activity-list" %>
+<%# On a page non-admins can view, everything in this section is staff-only — flag
+    it with the app's admin-only blue wash. %>
+<% admin_marker = mark_admin_only ? "admin-only bg-blue-100 rounded px-1.5 py-0.5" : "" %>
 
 <% notifications = record.communications_scope.order(created_at: :desc).to_a %>
 <% new_notifications = admin ? record.notifications.select(&:new_record?) : [] %>
@@ -31,19 +35,12 @@
     </span>
     <h2 class="text-sm font-semibold text-gray-700"><%= can_manage_comments ? t("communications.section_title") : t("communications.title") %></h2>
     <div class="ml-auto flex items-center gap-3">
-      <% if comments_all_path.present? && can_manage_comments %>
-        <%= link_to comments_all_path, target: "_blank", rel: "noopener",
-                    class: "inline-flex items-center gap-1.5 text-xs font-medium #{eyebrow_link_class} hover:underline" do %>
-          All comments
-          <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
-        <% end %>
-      <% end %>
-      <% if communications_all_email.present? && admin %>
-        <% view_all_marker = mark_admin_only ? "admin-only bg-blue-100 rounded px-1.5 py-0.5" : "" %>
-        <%= link_to notifications_path(email: communications_all_email, return_to_type: record_type, return_to_id: record.id),
-                    class: "inline-flex items-center gap-1.5 text-xs font-medium #{eyebrow_link_class} hover:underline #{view_all_marker}",
+      <%# Carry the origin so the feed can show a back eyebrow to this record. %>
+      <% if view_all_person && can_manage_comments && admin %>
+        <%= link_to comments_and_communications_person_path(view_all_person, return_to_type: record_type, return_to_id: record.id),
+                    class: "inline-flex items-center gap-1.5 text-xs font-medium #{eyebrow_link_class} hover:underline #{admin_marker}",
                     target: "_blank", rel: "noopener" do %>
-          All communications
+          <%= t("communications.view_all") %>
           <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
         <% end %>
       <% end %>
@@ -55,7 +52,7 @@
       <% entries.each do |entry| %>
         <% if entry.is_a?(Comment) %>
           <%= f.simple_fields_for :comments, entry do |cf| %>
-            <%= render "comments/comment_fields", f: cf %>
+            <%= render "comments/comment_fields", f: cf, mark_admin_only: mark_admin_only %>
           <% end %>
         <% elsif editable_notifications.include?(entry) %>
           <%= f.simple_fields_for :notifications, own_notifications_by_id.fetch(entry.id, entry) do |nf| %>
@@ -70,7 +67,7 @@
 
       <% if can_manage_comments %>
         <%= f.simple_fields_for :comments, new_comments do |cf| %>
-          <%= render "comments/comment_fields", f: cf %>
+          <%= render "comments/comment_fields", f: cf, mark_admin_only: mark_admin_only %>
         <% end %>
       <% end %>
       <% if admin %>
@@ -88,24 +85,25 @@
 
     <% if can_manage_comments || admin %>
       <% button_base = "inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 cursor-pointer" %>
+      <% admin_marked_button = mark_admin_only ? "#{button_base} admin-only bg-blue-100" : button_base %>
       <div class="mt-3 flex items-center justify-between gap-2">
         <div class="flex items-center gap-2">
           <% if can_manage_comments %>
             <%= link_to_add_association f, :comments,
                   partial: "comments/comment_fields",
+                  render_options: { locals: { mark_admin_only: mark_admin_only } },
                   data: { association_insertion_node: "##{list_id}", association_insertion_method: "append" },
-                  class: button_base do %>
+                  class: admin_marked_button do %>
               <i class="fa-solid fa-plus text-2xs"></i>
               <%= t("communications.add_comment") %>
             <% end %>
           <% end %>
           <% if admin %>
-            <% comm_button_class = mark_admin_only ? "#{button_base} admin-only bg-blue-100" : button_base %>
             <%= link_to_add_association f, :notifications,
                   partial: "notifications/notification_fields",
                   render_options: { locals: { record: record, mark_admin_only: mark_admin_only } },
                   data: { association_insertion_node: "##{list_id}", association_insertion_method: "append" },
-                  class: comm_button_class do %>
+                  class: admin_marked_button do %>
               <i class="fa-solid fa-plus text-2xs"></i>
               <%= t("communications.add") %>
             <% end %>
@@ -114,7 +112,7 @@
 
         <% if (can_manage_comments && comments.any?) || editable_notifications.any? %>
           <button type="button"
-                  class="cursor-pointer text-sm whitespace-nowrap text-gray-400 underline hover:text-gray-600"
+                  class="cursor-pointer text-sm whitespace-nowrap text-gray-400 underline hover:text-gray-600 <%= admin_marker %>"
                   data-action="edit-toggle#toggle">
             <span data-edit-toggle-target="editLabel"><%= t("communications.section_edit") %></span>
             <span data-edit-toggle-target="viewLabel" class="hidden"><%= t("communications.done_editing") %></span>

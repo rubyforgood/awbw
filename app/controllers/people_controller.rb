@@ -1,6 +1,6 @@
 class PeopleController < ApplicationController
   include AhoyTracking, TagAssignable
-  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments send_form_link ]
+  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments comments_and_communications send_form_link ]
 
   # The profile's "Submitted content" sections — private to the person and admins,
   # not part of the public profile even after profile viewing opens up.
@@ -132,6 +132,29 @@ class PeopleController < ApplicationController
       @new_comment = Comment.new
       @comment_targets = helpers.person_comment_targets(@person)
       track_view("person_all_comments", { person_id: @person.id })
+    end
+  end
+
+  # One newest-first feed of everything said to or about this person — the
+  # aggregated comments and the communications addressed to any of their email
+  # addresses, filterable with the union of what the two standalone pages offer.
+  def comments_and_communications
+    authorize! @person, to: :manage?, with: CommentPolicy
+    authorize! Notification, to: :index?
+    @person = @person.decorate
+
+    if turbo_frame_request?
+      feed = PersonCommentAndCommunicationAggregator.new(@person, params)
+      entries = feed.entries
+      @total_count = feed.total_count
+      @count_display = entries.size == @total_count ? @total_count : "#{entries.size}/#{@total_count}"
+      @entries = entries.paginate(page: params[:page], per_page: 20)
+      render :comments_and_communications_results
+    else
+      feed = PersonCommentAndCommunicationAggregator.new(@person)
+      @total_count = feed.total_count
+      @flagged_count = feed.flagged_count
+      track_view("person_comments_and_communications", { person_id: @person.id })
     end
   end
 

@@ -184,6 +184,30 @@ class Notification < ApplicationRecord
   scope :record_type, ->(record_type) { where(noticeable_type: record_type.to_s.camelize.titleize.gsub(" ", "")) }
   scope :subject_line, ->(subject) { where("notifications.email_subject LIKE ?", "%#{subject}%") }
   scope :email_topic, ->(topic) { where("notifications.email_subject LIKE ?", "%#{topic}%") }
+  # Subject/body keyword match — mirrors Comment.matching so one keyword box can
+  # filter the combined comments + communications feed.
+  scope :matching, ->(term) {
+    pattern = "%#{sanitize_sql_like(term.to_s.strip.downcase)}%"
+    where("LOWER(notifications.email_subject) LIKE :pattern OR LOWER(notifications.email_body_text) LIKE :pattern", pattern: pattern)
+  }
+  scope :created_on_or_after, ->(value) {
+    date = parse_date(value)
+    date ? where("notifications.created_at >= ?", date.beginning_of_day) : all
+  }
+  scope :created_on_or_before, ->(value) {
+    date = parse_date(value)
+    date ? where("notifications.created_at <= ?", date.end_of_day) : all
+  }
+  # The staff user on the sending side, plus the person's own incoming messages
+  # when that user is the contact — the counterpart of a comment's author, so one
+  # picker can search both in the combined feed.
+  scope :from_user, ->(user_id) {
+    user = User.find_by(id: user_id)
+    next none unless user
+
+    where(sender_id: user.id).or(where(direction: "incoming", recipient_email: user.email))
+  }
+
   # contact_us_fyi is included explicitly for historical rows predating #mark_incoming.
   scope :requires_response, -> { where(direction: "incoming").or(where(kind: "contact_us_fyi")) }
   scope :no_response_needed, -> { where.not(direction: "incoming").where.not(kind: "contact_us_fyi") }
@@ -195,6 +219,23 @@ class Notification < ApplicationRecord
     else all
     end
   }
+
+  # Shared follow-up axis with Comment#follow_up_status: "needed" is an open item
+  # on either side ("responded" and "none" only a communication can be).
+  scope :follow_up_status, ->(status) {
+    case status.to_s
+    when "needed" then requires_response.where(responded: false)
+    when "responded" then requires_response.where(responded: true)
+    when "none" then no_response_needed
+    else all
+    end
+  }
+
+  def self.parse_date(value)
+    Date.iso8601(value.to_s)
+  rescue ArgumentError
+    nil
+  end
 
   def self.email_topic_phrase(label)
     EMAIL_TOPICS.assoc(label)&.last
@@ -209,6 +250,15 @@ class Notification < ApplicationRecord
     stories = stories.email_topic(topic_phrase) if topic_phrase.present?
     stories = stories.record_type(params[:record_type]) if params[:record_type].present?
     stories = stories.responded_status(params[:responded_status]) if params[:responded_status].present?
+    stories = stories.matching(params[:query]) if params[:query].present?
+    stories = stories.created_on_or_after(params[:from]) if params[:from].present?
+    stories = stories.created_on_or_before(params[:to]) if params[:to].present?
+    # Shared names with Comment.search_by_params, so the combined person feed can
+    # hand both models the same filter params.
+    stories = stories.subject_line(params[:subject]) if params[:subject].present?
+    stories = stories.from_user(params[:author_id]) if params[:author_id].present?
+    stories = stories.where(noticeable_type: params[:source]) if params[:source].present?
+    stories = stories.follow_up_status(params[:follow_up]) if params[:follow_up].present?
     stories
   end
 

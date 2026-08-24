@@ -132,5 +132,15 @@ RSpec.describe "Person notifications", type: :request do
       expect(id_fields).to include(hand_noted.id.to_s)
       expect(id_fields).not_to include(autoemail.id.to_s)
     end
+
+    it "flags the comment cards admin-only, since the person can view this page" do
+      create(:comment, commentable: person, body: "Internal staff note", created_by: admin)
+
+      get edit_person_path(person)
+
+      card = Nokogiri::HTML(response.body).at_css("#comments-section .nested-fields > div")
+      expect(card["class"]).to include("admin-only")
+      expect(response.body).to include("Internal staff note")
+    end
   end
 end

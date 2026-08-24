@@ -321,8 +321,7 @@
       <%# ---- Combined comments & communications — shown once the story idea
           exists so there's a record to attach them to. ---- %>
       <div class="space-y-6 mt-8">
-        <%= render "shared/comments_and_communications", f: f,
-              comments_all_path: (f.object.created_by&.person ? all_comments_person_path(f.object.created_by.person) : nil) %>
+        <%= render "shared/comments_and_communications", f: f, view_all_person: f.object.created_by&.person %>
       </div>
     <% end %>
 

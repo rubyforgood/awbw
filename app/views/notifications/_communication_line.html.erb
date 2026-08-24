@@ -1,6 +1,13 @@
-<%# One communication row in the combined section (locals: notification, admin:, mark_admin_only:). %>
+<%# One communication row, styled to match a comment card (locals: notification,
+    admin:, mark_admin_only:, truncate:, trailing:). The combined section keeps a
+    row to one line; the standalone All comments & communications page passes
+    truncate: false, which leaves channel/badges/subject on the headline row and
+    drops the full body onto its own line underneath. `trailing` closes the
+    headline row (e.g. the attached-record chip). %>
 <% admin = local_assigns.fetch(:admin, true) %>
 <% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
+<% truncate_body = local_assigns.fetch(:truncate, true) %>
+<% trailing = local_assigns[:trailing] %>
 <% decorated = notification.decorate %>
 <% body_admin_only = notification.channel != "autoemail" %>
 <% show_body = admin || !body_admin_only %>
@@ -9,9 +16,16 @@
 <% from_name = decorated.from_name %>
 <% from_first = from_name.to_s.split.first.presence || from_name %>
 <% chip = chip_color(notification.incoming? ? decorated.contact_person&.id : notification.sender_id) %>
-<% card = "rounded-md border #{DomainTheme.border_class_for(:notifications, intensity: 200)} #{DomainTheme.bg_class_for(:notifications, intensity: 50)} px-3 py-2" %>
+<% card = "rounded-md border #{communication_card_class} px-3 py-2" %>
+<% body_class = if body_admin_only && mark_admin_only
+                  "admin-only rounded bg-blue-100 px-1 text-gray-700"
+                elsif body_admin_only
+                  "text-gray-900"
+                else
+                  "text-gray-500"
+                end %>
 <% row = capture do %>
-  <div class="flex items-center gap-x-1">
+  <div class="flex flex-wrap gap-x-1 gap-y-1 <%= truncate_body ? "items-center" : "items-start" %>">
     <%# Flag column left empty — communications have no follow-up flag. %>
     <span class="w-4 shrink-0"></span>
     <span class="shrink-0 text-xs whitespace-nowrap text-gray-400">
@@ -20,20 +34,21 @@
     <span class="inline-flex w-20 shrink-0 items-center">
       <span class="<%= chip[0] %> <%= chip[1] %> max-w-full truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= decorated.from_title.presence || from_name %>"><%= truncate(from_first.to_s, length: 10, omission: "..") %></span>
     </span>
-    <span class="min-w-0 flex-1 truncate text-sm">
-      <%= decorated.channel_chip %>
-      <%= decorated.flag_badges %>
-      <span class="font-semibold text-gray-900"><%= subject %></span>
-      <% if body.present? %>
-        <% if body_admin_only && mark_admin_only %>
-          <span class="admin-only rounded bg-blue-100 px-1 text-gray-700" title="<%= body %>"><%= body %></span>
-        <% elsif body_admin_only %>
-          <span class="text-gray-900" title="<%= body %>"><%= body %></span>
-        <% else %>
-          <span class="text-gray-500" title="<%= body %>"><%= body %></span>
+    <%# Subject and body share one column so the body starts flush with the subject. %>
+    <div class="min-w-0 flex-1 text-sm <%= "truncate" if truncate_body %>">
+      <span>
+        <%= decorated.channel_chip %>
+        <%= decorated.flag_badges %>
+        <span class="font-semibold text-gray-900"><%= subject %></span>
+        <% if truncate_body && body.present? %>
+          <span class="<%= body_class %>" title="<%= body %>"><%= body %></span>
         <% end %>
+      </span>
+      <% if !truncate_body && body.present? %>
+        <div class="pt-1 whitespace-pre-line <%= body_class %>"><%= body %></div>
       <% end %>
-    </span>
+    </div>
+    <%= trailing %>
   </div>
 <% end %>
 <% if admin %>

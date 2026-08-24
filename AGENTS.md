@@ -230,6 +230,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `TaggingSearchService` — Search and filter tagging data
 - `PersonFromUserService` — Create Person from User account
 - `PersonCommentAggregator` — Unifies every comment connected to a person (their profile, event registrations, scholarships, CE registrations, topic subscriptions, and user account) into one newest-first `Comment` relation for the aggregated `/people/:id/all_comments` page
+- `PersonCommentAndCommunicationAggregator` — Merges `PersonCommentAggregator`'s comments with `Person#communications_scope`'s communications into one newest-first list for `/people/:id/comments_and_communications`, applying one shared filter set that each model answers on its own columns (author/sender, topic/subject, commentable/noticeable, flagged/responded)
 - `BulkInviteService` — Bulk send welcome instructions and reset created_at for users
 - `PersonInviter` — Invites a single person to the portal: creates a user account if they have none, then sends the welcome/invite email attributed to the sender. Backs the bulk "Send Portal invite emails" flow on the reminders page (`?mode=invite`)
 - `FormBuilderService` — Builds configurable forms from composable sections with per-field visibility

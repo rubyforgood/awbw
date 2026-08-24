@@ -274,7 +274,7 @@ RSpec.describe "Event registration edit page", type: :system do
         expect(page).to have_text("Event registration confirmed")
         # The whole row links through to the communication's detail page.
         expect(page).to have_link("Event registration confirmed", href: notification_path(notification))
-        expect(page).to have_link("All comments")
+        expect(page).to have_link("All comments & communications")
       end
     end
 

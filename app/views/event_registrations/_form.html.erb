@@ -359,8 +359,7 @@
       <% end %>
 
       <%# ---- Combined comments & communications ---- %>
-      <%= render "shared/comments_and_communications", f: f,
-            comments_all_path: (f.object.registrant ? all_comments_person_path(f.object.registrant) : nil) %>
+      <%= render "shared/comments_and_communications", f: f, view_all_person: f.object.registrant %>
 
       <%# ---- Shout out — admin opts this registrant into the recipients page
           shout-out block and edits the text shown there. The text lives on the

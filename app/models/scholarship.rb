@@ -114,10 +114,6 @@ class Scholarship < ApplicationRecord
     self.amount_cents = (value.to_d * 100).to_i if value.present?
   end
 
-  def communications_email
-    recipient&.preferred_email
-  end
-
   # Only comms filed against this scholarship, not the recipient's whole history.
   def communications_scope
     notifications

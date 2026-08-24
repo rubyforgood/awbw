@@ -1,0 +1,46 @@
+<%= turbo_frame_tag "comments_and_communications_results" do %>
+  <div class="mb-3 border-t border-gray-100 pt-4">
+    <h2 class="text-sm font-semibold text-gray-700">
+      <%= t("communications.all_section_title") %>
+      <span class="font-normal text-gray-400">· <%= @count_display %> shown</span>
+    </h2>
+  </div>
+
+  <%# Each card leads with a headline row — flag, date, from, subject/topic, and a
+      chip for the record it hangs off — then drops the body onto its own line. %>
+  <% chip_class = "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-xs font-medium" %>
+  <div class="space-y-2">
+    <% if @entries.any? %>
+      <% @entries.each do |entry| %>
+        <% if entry.is_a?(Comment) %>
+          <% comment = entry.decorate %>
+          <% record_chip = link_to comment.source_label, comment.source_path, target: "_blank", rel: "noopener",
+                                   class: "ml-auto #{chip_class} #{DomainTheme.border_class_for(comment.source_theme)} #{DomainTheme.bg_class_for(comment.source_theme, intensity: 100)} #{DomainTheme.text_class_for(comment.source_theme, intensity: 800)}" %>
+          <div class="rounded-md border <%= comment_card_class(warning: entry.body&.include?("[AGE_RANGE_DATA]")) %> px-3 py-2">
+            <div class="flex flex-wrap items-start gap-x-1 gap-y-1">
+              <span class="inline-flex w-4 shrink-0 justify-center leading-none" title="<%= entry.flagged? ? "Flagged for follow-up" : "Not flagged" %>">
+                <i class="fa-flag <%= entry.flagged? ? "fa-solid text-orange-500" : "fa-regular text-gray-400" %>"></i>
+              </span>
+              <%= render "comments/comment_line", comment: entry, truncate: false, trailing: record_chip %>
+            </div>
+          </div>
+        <% else %>
+          <% noticeable = entry.noticeable %>
+          <% record_chip = if noticeable
+               content_tag(:span, noticeable_label(noticeable),
+                           class: "ml-auto #{chip_class} #{DomainTheme.border_class_for(:notifications)} #{DomainTheme.bg_class_for(:notifications, intensity: 100)} #{DomainTheme.text_class_for(:notifications, intensity: 800)}")
+             end %>
+          <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false, trailing: record_chip %>
+        <% end %>
+      <% end %>
+    <% else %>
+      <p class="py-6 text-center text-sm text-gray-500"><%= t("communications.all_section_none") %></p>
+    <% end %>
+  </div>
+
+  <% if @entries.total_pages > 1 %>
+    <div class="mt-4 flex justify-center">
+      <%= tailwind_paginate @entries, params: params.slice(:query, :subject, :author_id, :kind, :source, :follow_up, :from, :to, :email_topic).permit! %>
+    </div>
+  <% end %>
+<% end %>

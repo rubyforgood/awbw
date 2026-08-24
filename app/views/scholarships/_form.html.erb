@@ -194,8 +194,7 @@
 <% if f.object.persisted? %>
   <%# ---- Combined comments & communications — shown once the scholarship exists
       so there's a record to attach them to. ---- %>
-  <%= render "shared/comments_and_communications", f: f,
-        comments_all_path: (f.object.recipient ? all_comments_person_path(f.object.recipient) : nil) %>
+  <%= render "shared/comments_and_communications", f: f, view_all_person: f.object.recipient %>
 <% end %>
 
 <%# ---- Footer actions ---- %>
