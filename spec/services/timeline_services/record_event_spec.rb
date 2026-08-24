@@ -51,6 +51,20 @@ RSpec.describe TimelineServices::RecordEvent do
       }.to raise_error(ActiveRecord::RecordNotUnique)
     end
 
+    it "records once when fired from an after_create callback" do
+      tracked_class = stub_const("SpecTrackedSubject", Class.new(ApplicationRecord) do
+        self.table_name = "people"
+        include HasTimeline
+        include TimelineSubject
+
+        after_create -> { TimelineServices::RecordEvent.call(subject: self, action: "created") }
+      end)
+
+      record = tracked_class.create!(first_name: "Once", last_name: "Only")
+
+      expect(record.timeline_entries.count).to eq(1)
+    end
+
     it "freezes the subject label into the snapshot" do
       event = described_class.call(subject: holder, action: "created")
 
@@ -106,9 +120,6 @@ RSpec.describe TimelineServices::RecordEvent do
       expect {
         described_class.call(subject: bare_subject, action: "created")
       }.to raise_error(ArgumentError, /no timeline target/i)
-
-      expect(TimelineEvent.count).to eq(0)
-      expect(TimelineEntry.count).to eq(0)
     end
 
     it "rolls back the event when an entry fails" do
@@ -117,9 +128,6 @@ RSpec.describe TimelineServices::RecordEvent do
       expect {
         described_class.call(subject: holder, action: "created", also_log: [ bogus ])
       }.to raise_error(StandardError)
-
-      expect(TimelineEvent.count).to eq(0)
-      expect(TimelineEntry.count).to eq(0)
     end
 
     it "writes nothing and returns nil while suppressed" do

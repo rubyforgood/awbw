@@ -1,0 +1,38 @@
+<div class="flex items-start gap-3 rounded-lg border border-gray-100 bg-gray-50 p-3 transition-colors hover:bg-gray-100">
+  <div class="mt-0.5 shrink-0">
+    <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+      <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+    </span>
+  </div>
+
+  <div class="min-w-0 flex-1">
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="font-medium text-gray-900"><%= event.actor_label %></span>
+      <span class="text-gray-500"><%= event.action.humanize.downcase %></span>
+      <span class="text-gray-400">·</span>
+      <% if event.subject&.persisted? %>
+        <%= link_to event.subject_label, event.subject, data: { turbo: false }, class: "text-sm text-blue-600 hover:underline" %>
+      <% else %>
+        <span class="text-sm text-gray-700"><%= event.subject_label %></span>
+      <% end %>
+    </div>
+
+    <% changes = event.snapshot["changes"] %>
+    <% if changes.present? %>
+      <div class="mt-1.5 flex flex-wrap gap-1.5">
+        <% changes.each do |attribute, (old_value, new_value)| %>
+          <span class="inline-flex items-center gap-1 rounded border border-gray-200 bg-white px-2 py-0.5 text-xs text-gray-600">
+            <span class="font-medium text-gray-700"><%= attribute.humanize %></span>
+            <% if old_value.present? %>
+              <span class="text-gray-400 line-through"><%= old_value %></span>
+              <i class="fa-solid fa-arrow-right text-2xs text-gray-300"></i>
+            <% end %>
+            <span class="text-gray-700"><%= new_value.presence || "—" %></span>
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="shrink-0 whitespace-nowrap text-xs text-gray-400"><%= event.created_at.strftime("%b %d, %Y %l:%M %p") %></div>
+</div>

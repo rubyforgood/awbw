@@ -18,9 +18,12 @@ RSpec.describe TimelineServices::Router do
     end
 
     it "routes records without timelines nowhere" do
-      person = create(:person)
+      plain_class = stub_const("SpecPlainRecord", Class.new(ApplicationRecord) do
+        self.table_name = "people"
+      end)
+      plain_record = plain_class.find(create(:person).id)
 
-      expect(described_class.targets_for(person)).to eq([])
+      expect(described_class.targets_for(plain_record)).to eq([])
     end
   end
 end

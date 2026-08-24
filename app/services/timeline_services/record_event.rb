@@ -16,7 +16,7 @@ module TimelineServices
           snapshot: build_snapshot(subject, actor, snapshot)
         )
         targets_for(subject, also_log).each do |target|
-          target.timeline_events << event
+          event.timeline_entries.create!(owner: target)
         end
         event
       end

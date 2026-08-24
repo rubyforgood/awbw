@@ -89,6 +89,9 @@ class PeopleController < ApplicationController
       when "affiliations"
         @affiliations = @person.affiliations.active.includes(organization: :logo_attachment).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/affiliations", locals: { person: @person, affiliations: @affiliations }
+      when "timeline"
+        @timeline_events = @person.timeline_events.includes(:actor).order(created_at: :desc).paginate(page: params[:page], per_page: 25)
+        render partial: "people/sections/timeline", locals: { person: @person, timeline_events: @timeline_events }
       end
     end
   end
