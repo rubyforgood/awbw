@@ -145,10 +145,15 @@ class ScholarshipsController < ApplicationController
   # filters (which resolve to the events a scholarship was awarded at).
   def filtered_scholarships
     # Eager-load everything the grid derives so each row's funder, program,
-    # location, training, and status cells add no per-row queries.
+    # location, training, and status cells add no per-row queries. The program's
+    # own affiliations back the status column (FacilitatorProgramStatus reads the
+    # loaded association); the allocation is loaded for its allocatable_type/_id
+    # alone, since Scholarship#event resolves the training through the recipient's
+    # already-loaded registrations rather than the allocatable itself.
     scope = authorized_scope(Scholarship.all).includes(
       { grant: :funder },
-      { recipient: [ { affiliations: { organization: :addresses } }, { event_registrations: :event } ] }
+      :allocation,
+      { recipient: [ { affiliations: { organization: [ :addresses, :affiliations ] } }, { event_registrations: :event } ] }
     )
     if params[:recipient_id].present?
       scope = scope.where(recipient_id: params[:recipient_id])
