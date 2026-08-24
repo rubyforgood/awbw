@@ -9,6 +9,10 @@ module AuthorCreditable
 
   ANONYMOUS = "anonymous"
 
+  # Join aliases for the people a record credits, in display precedence order.
+  CREDITED_AUTHOR_ALIAS = "credited_author".freeze
+  CREATOR_PERSON_ALIAS = "creator_person".freeze
+
   # The generic credit AWBW puts on content with no named credit. Content AWBW produces
   # itself — news, workshops, resources — reads as "AWBW Staff"; everything else,
   # including facilitator submissions and the idea forms, reads as "AWBW Facilitator".
@@ -41,6 +45,11 @@ module AuthorCreditable
     # content follows the facilitator label; org-produced models flip it to the org
     # label with `credits_to_org`.
     class_attribute :unattributed_author_label, instance_writer: false, default: FACILITATOR_AUTHOR_LABEL
+
+    # Whether the submitting account's person is credited when no explicit author is
+    # on file. Off by default — on most models the creator entered the content rather
+    # than writing it. Turn it on with `credits_creator`.
+    class_attribute :creator_credited, instance_writer: false, default: false
 
     before_create :snapshot_author_credit_preference
     # Blank means "follow the profile"; nil keeps it off the divergence worklist.
@@ -89,6 +98,13 @@ module AuthorCreditable
     author if respond_to?(:author)
   end
 
+  # The creator's person, on models where the submitter is the author
+  # (`credits_creator`). Rows that predate the author column carry no author_id, so
+  # the account that entered them is their only authorship signal.
+  def creator_credit_person
+    created_by&.person if creator_credited
+  end
+
   # Free-text author name with no linkable person. Overridden by Workshop, Resource.
   def legacy_author_name_text
     nil
@@ -100,13 +116,17 @@ module AuthorCreditable
     return credit_for(person) if person
     # Anonymous suppresses a legacy name too; with no person behind it, nothing is left.
     return legacy_author_name_text if legacy_author_name_text.present? && author_credit_preference != ANONYMOUS
+    # Nobody named the author, so the submitter is it (see `credits_creator`).
+    creator = creator_credit_person
+    return credit_for(creator) if creator
     # No author at all, so it reads as the org's own content.
     missing_author_label
   end
 
-  # Only an explicit author links — a creator fallback never declared authorship.
+  # Only a credited person links, and only where they aren't hidden — the explicit
+  # author, or the submitter on a model that credits them.
   def author_credit_person
-    person = primary_author_person
+    person = primary_author_person || creator_credit_person
     person && !credit_anonymous?(person) ? person : nil
   end
 
@@ -116,7 +136,8 @@ module AuthorCreditable
   end
 
   # Only an explicit author has a governing profile. A legacy name follows nobody's,
-  # and an unattributed record credits nobody, so neither has a governing person.
+  # and a creator credit reads the live profile with no snapshot taken against it,
+  # so neither has a governing person.
   def credit_governing_person
     primary_author_person
   end
@@ -162,6 +183,14 @@ module AuthorCreditable
       self.unattributed_author_label = ORG_AUTHOR_LABEL
     end
 
+    # Content whose submitter is its author — the idea forms and workshop logs. An
+    # author-less row (anything predating the author column) then credits, links,
+    # searches and sorts under the creating account's person, through that person's
+    # own credit preference.
+    def credits_creator
+      self.creator_credited = true
+    end
+
     # Fully-qualified legacy name columns, e.g. "resources.legacy_author_name".
     def legacy_author_name_columns
       []
@@ -194,16 +223,26 @@ module AuthorCreditable
 
     private
 
-    # Only an explicit author is ever credited, so search and sort reach that person
-    # alone — and nobody at all on the idea models, which have no author_id.
+    # The people a credit can reach, in display precedence order: the explicit
+    # author, then the submitter where the model credits them.
     def credited_person_aliases
-      explicit_author? ? [ "credited_author" ] : []
+      aliases = []
+      aliases << CREDITED_AUTHOR_ALIAS if explicit_author?
+      aliases << CREATOR_PERSON_ALIAS if creator_credited
+      aliases
     end
 
     def credited_person_join_sql
-      return [] if credited_person_aliases.empty?
-
-      [ "LEFT OUTER JOIN people credited_author ON credited_author.id = #{table_name}.author_id" ]
+      joins = []
+      if explicit_author?
+        joins << "LEFT OUTER JOIN people #{CREDITED_AUTHOR_ALIAS} " \
+                 "ON #{CREDITED_AUTHOR_ALIAS}.id = #{table_name}.author_id"
+      end
+      if creator_credited
+        joins << "LEFT OUTER JOIN users creator_account ON creator_account.id = #{table_name}.created_by_id"
+        joins << "LEFT OUTER JOIN people #{CREATOR_PERSON_ALIAS} ON #{CREATOR_PERSON_ALIAS}.id = creator_account.person_id"
+      end
+      joins
     end
 
     def explicit_author?
@@ -238,7 +277,11 @@ module AuthorCreditable
         "(#{preference} = '#{value}' AND (#{expressions.map { |e| name_like(e) }.join(' OR ')}))"
       end
 
-      "(#{sql_alias}.anonymous_contributions = FALSE AND #{not_anonymous_sql} AND (#{by_preference.join(' OR ')}))"
+      # The creator only stands in for an author nobody named, matching what displays.
+      outranked = sql_alias == CREATOR_PERSON_ALIAS ? "#{no_person_author_sql} AND " : ""
+
+      "(#{outranked}#{sql_alias}.anonymous_contributions = FALSE AND " \
+        "#{not_anonymous_sql} AND (#{by_preference.join(' OR ')}))"
     end
 
     # A legacy name only displays when no person author outranks it, so it's only

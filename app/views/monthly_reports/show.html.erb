@@ -32,6 +32,10 @@
           <% end %>
         </div>
         <div>
+          <span class="font-semibold text-gray-700">Author credit:</span>
+          <%= credited_author_link(@monthly_report) %>
+        </div>
+        <div>
           <span class="font-semibold text-gray-700">Organization:</span>
           <% if @monthly_report.organization && allowed_to?(:show?, @monthly_report.organization) %>
             <%= link_to @monthly_report.organization.name,

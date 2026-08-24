@@ -169,6 +169,11 @@ RSpec.describe AuthorCreditDivergenceQuery do
       expect(described_class.new.call.creator.flat_map(&:records)).to include(idea)
     end
 
+    it "includes a variation with a creator but no author, whose credit now names them" do
+      variation = create(:workshop_variation, created_by: author_user, author: nil)
+      expect(described_class.new.call.creator.flat_map(&:records)).to include(variation)
+    end
+
     it "excludes records covered by the legacy section instead" do
       workshop = create(:workshop, created_by: author_user, author: nil, full_name: "Legacy Name")
       expect(described_class.new.call.creator.flat_map(&:records)).not_to include(workshop)

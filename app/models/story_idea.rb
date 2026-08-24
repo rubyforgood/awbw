@@ -1,5 +1,8 @@
 class StoryIdea < ApplicationRecord
   include AuthorCreditable
+  # The submitter is the author when none is named.
+  credits_creator
+
   include SearchCop
   search_scope :search do
     attributes :title, :body
@@ -8,6 +11,7 @@ class StoryIdea < ApplicationRecord
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:query]) if params[:query].present?
+    results = results.where(id: by_credited_person_name(params[:author_name]).select("story_ideas.id")) if params[:author_name].present?
     results = results.where(organization_id: params[:organization_id]) if params[:organization_id].present?
     results = results.created_by_person(params[:created_by_person_id]) if params[:created_by_person_id].present?
     results

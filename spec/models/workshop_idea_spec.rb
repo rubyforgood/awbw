@@ -1,51 +1,53 @@
 require 'rails_helper'
 
 RSpec.describe WorkshopIdea, type: :model do
-  it_behaves_like "author_creditable", factory: :workshop_idea, org_credited: false
+  it_behaves_like "author_creditable", factory: :workshop_idea, org_credited: false, credits_creator: true
 
-  # With no author set the creator never claims authorship, so the idea falls to the
-  # generic label rather than crediting whoever entered it.
+  # An idea nobody named an author on still credits its submitter, who filled the form in.
   describe "#author_credit" do
-    it "credits the generic label, not the creating user's person" do
+    it "credits the creating user's person, not the generic label" do
       creator = create(:user, :with_person)
       idea = create(:workshop_idea, created_by: creator)
 
+      expect(idea.author_credit).to eq(creator.person.name)
+      expect(WorkshopIdea.by_credited_person_name(creator.person.first_name)).to include(idea)
+    end
+
+    it "falls back to the generic label when the creator has no person" do
+      idea = create(:workshop_idea, created_by: create(:user, person: nil))
+
       expect(idea.author_credit).to eq("AWBW Facilitator")
-      expect(WorkshopIdea.by_credited_person_name(creator.person.first_name)).to be_empty
     end
   end
 
-  # An idea usually names no author, so `by_credited_person_name` can't reach the
-  # submitter — the admin filter matches the submitting account directly instead.
   describe ".author_name" do
-    let(:creator) { create(:user, :with_person) }
-
-    before { creator.person.update!(first_name: "Marguerite", last_name: "Enterer") }
-
-    it "finds an idea by its submitter's first name" do
-      idea = create(:workshop_idea, created_by: creator)
+    it "finds an idea by its credited author's first name" do
+      idea = create(:workshop_idea, author: create(:person, first_name: "Marguerite", last_name: "Enterer"))
 
       expect(WorkshopIdea.author_name("Marguerite")).to include(idea)
     end
 
-    it "finds an idea by its submitter's full name" do
-      idea = create(:workshop_idea, created_by: creator)
+    it "finds an idea by its credited author's full name" do
+      idea = create(:workshop_idea, author: create(:person, first_name: "Marguerite", last_name: "Enterer"))
 
       expect(WorkshopIdea.author_name("Marguerite Enterer")).to include(idea)
     end
 
-    it "finds an idea by the submitter's account email" do
-      idea = create(:workshop_idea, created_by: creator)
+    it "finds an idea by its submitter's name when no author is named" do
+      idea = create(:workshop_idea, title: "Unnamed author", author: nil,
+                                    created_by: create(:user, person: create(:person, first_name: "Marguerite", last_name: "Enterer")))
 
-      expect(WorkshopIdea.author_name(creator.email)).to include(idea)
+      expect(WorkshopIdea.author_name("Marguerite")).to include(idea)
     end
 
-    it "excludes ideas submitted by someone else" do
-      other = create(:user, :with_person)
-      other.person.update!(first_name: "Bartholomew", last_name: "Elsewhere")
-      create(:workshop_idea, created_by: other)
+    it "excludes ideas credited to someone else" do
+      idea = create(:workshop_idea, title: "Marguerite's idea", author: create(:person, first_name: "Marguerite", last_name: "Enterer"))
+      other = create(:workshop_idea, title: "Bartholomew's idea", author: create(:person, first_name: "Bartholomew", last_name: "Elsewhere"))
 
-      expect(WorkshopIdea.author_name("Marguerite")).to be_empty
+      results = WorkshopIdea.author_name("Marguerite")
+
+      expect(results).to include(idea)
+      expect(results).not_to include(other)
     end
   end
 end

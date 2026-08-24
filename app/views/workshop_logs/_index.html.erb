@@ -50,7 +50,7 @@
             <tr class="bg-gray-100">
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Date</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Workshop</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Person</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Author</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 bg-purple-200">Participants</th>
 
               <!-- Ongoing -->
@@ -100,7 +100,7 @@
                     <% end %>
                   </td>
                   <td class="px-2 text-left text-xs">
-                    <%= log.created_by ? link_to(log.created_by.name, log.created_by.person ? person_path(log.created_by.person) : user_path(log.created_by)) : "—" %>
+                    <%= credited_author_link(log) %>
                   </td>
 
                   <td class="text-center font-bold text-lg bg-purple-100"><%= display_count(log.total_attendance) %></td>
