@@ -97,6 +97,8 @@ module Ahoy
         header = label ? [ { label: label, value: nil, depth: depth } ] : []
         child_depth = label ? depth + 1 : depth
         header + array.flat_map { |item| reference_rows(nil, item, child_depth) }
+      elsif array.all? { |item| attachment_change?(item) }
+        array.map { |item| attachment_row(label, item, depth) }
       else
         [ { label: label, value: array.map { |item| display_value(item) }.join(", "), depth: depth } ]
       end
@@ -104,6 +106,19 @@ module Ahoy
 
     def reference?(item)
       Analytics::EventReferenceLoader.reference?(item)
+    end
+
+    # An attachment is staged on the record and has no id until the save lands,
+    # so it travels as a filename rather than as a reference to look up.
+    def attachment_change?(item)
+      item.is_a?(Hash) && item["type"] == "ActiveStorage::Attachment" &&
+        item["action"].present? && item["id"].blank? && item["record_id"].blank?
+    end
+
+    # A file has no page to link to, so it reads as its name. A removal keeps only
+    # the action — the blob is gone by the time anyone reads this.
+    def attachment_row(label, item, depth)
+      { label: label, depth: depth, action: item["action"], value: item["filename"].presence }
     end
 
     def named_entity?(item)

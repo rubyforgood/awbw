@@ -14,12 +14,13 @@
           <%= render "form" %>
         </div>
       </div>
+
+      <%= render "shared/audit_info", resource: @category_type %>
+      <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+        <div class="mt-4 flex justify-end">
+          <%= render "application/activity_log", record: @category_type %>
+        </div>
+      <% end %>
     </div>
   </div>
-  <%= render "shared/audit_info", resource: @category_type %>
-  <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-    <div class="mt-4 flex justify-end">
-      <%= render "application/activity_log", record: @category_type %>
-    </div>
-  <% end %>
 </div>

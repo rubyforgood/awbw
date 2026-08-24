@@ -9,7 +9,7 @@ class Ahoy::Event < ApplicationRecord
   # Reading a record isn't a change to it. A record's change log asks what
   # happened to it, so these stay on the admin activities index, which is where
   # browsing belongs.
-  NON_MUTATION_PREFIXES = %w[view search filter download].freeze
+  NON_MUTATION_PREFIXES = %w[view print search filter download].freeze
 
   scope :mutations, -> {
     NON_MUTATION_PREFIXES.reduce(all) { |scope, prefix| scope.where.not(arel_table[:name].matches("#{prefix}.%")) }

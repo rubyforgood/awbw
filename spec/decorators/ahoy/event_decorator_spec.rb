@@ -236,5 +236,26 @@ RSpec.describe Ahoy::EventDecorator do
 
       expect(rows.filter_map { |row| row[:label] if row[:change] }).to eq([ "City" ])
     end
+
+    it "reads an added attachment as its filename" do
+      rows = event_with(avatar_attachment: [ {
+        action: "added", type: "ActiveStorage::Attachment", filename: "headshot.png"
+      } ]).detail_rows
+
+      attachment = rows.last
+      expect(attachment[:action]).to eq("added")
+      expect(attachment[:value]).to eq("headshot.png")
+      expect(rows.map { |row| row[:value] }).not_to include(a_string_including("ActiveStorage"))
+    end
+
+    it "reads a removed attachment as the removal, the file being gone" do
+      rows = event_with(avatar_attachment: [ {
+        action: "removed", type: "ActiveStorage::Attachment"
+      } ]).detail_rows
+
+      attachment = rows.last
+      expect(attachment[:action]).to eq("removed")
+      expect(attachment[:value]).to be_nil
+    end
   end
 end

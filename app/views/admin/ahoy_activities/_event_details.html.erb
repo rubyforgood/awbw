@@ -27,8 +27,8 @@
         <% if row[:label] %>
           <span class="font-medium text-gray-700"><%= row[:label] %><%= ":" if row[:value] || row[:link] %></span>
         <% end %>
+        <% if row[:action] %><span class="text-gray-400"><%= row[:action] %></span><% end %>
         <% if row[:link] %>
-          <% if row[:action] %><span class="text-gray-400"><%= row[:action] %></span><% end %>
           <% if row[:link][:path] %>
             <%= link_to row[:link][:text], row[:link][:path], class: "text-indigo-600 hover:underline" %>
           <% else %>
