@@ -235,9 +235,9 @@ RSpec.describe NotificationDecorator, type: :decorator do
   end
 
   describe "#flag_badges" do
-    it "shows a sky Incoming pill for an incoming communication" do
+    it "shows a dark comms-blue Incoming pill for an incoming communication" do
       html = build_stubbed(:notification, :incoming).decorate.flag_badges
-      expect(html).to include("bg-sky-100")
+      expect(html).to include("bg-sky-600")
       expect(html).to include("Incoming")
     end
 
@@ -274,7 +274,7 @@ RSpec.describe NotificationDecorator, type: :decorator do
     it "appends a caller-supplied class to each pill" do
       html = build_stubbed(:notification, :incoming).decorate.flag_badges(class: "mr-1")
       expect(html).to include("mr-1")
-      expect(html).to include("bg-sky-100")
+      expect(html).to include("bg-sky-600")
     end
   end
 end

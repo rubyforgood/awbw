@@ -1,11 +1,17 @@
-<%# Add-a-note composer for the aggregated person-comments page. One static form:
-    the "Add a note to…" picker submits the chosen record's signed GlobalID
+<%# Add-a-note composer for a person's aggregated pages. One static form: the
+    "Add a note to…" picker submits the chosen record's signed GlobalID
     (commentable_sgid), which the controller resolves — no JS needed to repoint
-    the action. `for_person_id` tells the controller whose feed to refresh. %>
+    the action. `for_person_id` tells the controller whose feed to refresh.
+
+    The all-comments page streams the new note into its list, so it takes the
+    default. The combined comments & communications feed interleaves comments with
+    communications by date and re-applies its filters, which a prepend can't do —
+    it passes stream: false for a plain redirect back to a freshly rendered page. %>
+<% stream = local_assigns.fetch(:stream, true) %>
 <div id="aggregated_comment_composer"
      class="rounded-lg border <%= DomainTheme.border_class_for(:comments) %> <%= DomainTheme.bg_class_for(:comments, intensity: 50) %> p-4 shadow-sm">
-  <%= simple_form_for comment, url: person_comments_path(person) do |f| %>
-    <%= hidden_field_tag :aggregated, 1 %>
+  <%= simple_form_for comment, url: person_comments_path(person), data: ({ turbo: false } unless stream) do |f| %>
+    <%= hidden_field_tag :aggregated, 1 if stream %>
     <%= hidden_field_tag :for_person_id, person.id %>
 
     <div class="flex flex-col gap-3 sm:flex-row sm:items-start">

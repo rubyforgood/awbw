@@ -1,0 +1,51 @@
+<%# One comment's read-only row, emitted as bare flex children so the caller owns
+    the row container. Shared by the view mode of an editable comment in the
+    combined section and by the full-height rows on the All comments &
+    communications page.
+
+    Locals: comment. Optional: truncate (default true — the section keeps a row to
+    one line, so the body rides along in the headline; the standalone page passes
+    false, which leaves the topic alone on the headline row and drops the full
+    body onto its own line underneath), body_target (default false — the section
+    marks the headline so edit-toggle can sync unsaved edits into it), trailing
+    (HTML to close the headline row with, e.g. the attached-record chip). %>
+<% truncate_body = local_assigns.fetch(:truncate, true) %>
+<% body_target = local_assigns.fetch(:body_target, false) %>
+<% trailing = local_assigns[:trailing] %>
+<% created_user = comment.created_by %>
+<% updated_user = comment.updated_by %>
+<% show_updated = updated_user.present? && updated_user != created_user %>
+<% created_name = created_user&.person&.name || created_user&.name %>
+<% created_first_name = created_user&.person&.first_name || created_user&.name.to_s.split.first %>
+<% created_color = chip_color(created_user&.id) %>
+<% is_age_range_data = comment.body&.include?("[AGE_RANGE_DATA]") %>
+<% body_class = is_age_range_data ? "text-amber-700" : "text-gray-900" %>
+<span class="shrink-0 text-xs whitespace-nowrap text-gray-400">
+  <%= comment.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
+</span>
+<span class="inline-flex w-20 shrink-0 items-center gap-x-1">
+  <% if show_updated %>
+    <% updated_color = chip_color(updated_user.id) %>
+    <span class="<%= created_color[0] %> <%= created_color[1] %> w-1/2 cursor-default truncate rounded px-1.5 py-0.5 text-center text-xs" title="<%= created_name %>"><%= created_user&.decorate&.initials.presence || "--" %></span>
+    <span class="<%= updated_color[0] %> <%= updated_color[1] %> w-1/2 cursor-default truncate rounded px-1.5 py-0.5 text-center text-xs" title="Edited by <%= updated_user.person&.name || updated_user.name %>"><%= updated_user.decorate.initials.presence || "--" %></span>
+  <% else %>
+    <span class="<%= created_color[0] %> <%= created_color[1] %> max-w-full cursor-default truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= created_name %>"><%= truncate(created_first_name.presence || "--", length: 10, omission: "..") %></span>
+  <% end %>
+</span>
+<% if truncate_body %>
+  <span class="min-w-0 flex-1 truncate text-sm <%= body_class %>"
+        <% if body_target %>data-edit-toggle-target="body"<% end %>
+        title="<%= [ comment.topic, comment.body ].compact_blank.join(" — ") %>">
+    <% if is_age_range_data %><i class="fa-solid fa-triangle-exclamation"></i><% end %>
+    <% if comment.topic.present? %><span class="font-bold tracking-wide uppercase"><%= comment.topic %></span> <% end %><%= comment.body %>
+  </span>
+<% else %>
+  <%# Topic and body share one column so the body starts flush with the topic. %>
+  <div class="min-w-0 flex-1 text-sm <%= body_class %>">
+    <% if comment.topic.present? || is_age_range_data %>
+      <span><% if is_age_range_data %><i class="fa-solid fa-triangle-exclamation"></i> <% end %><span class="font-bold tracking-wide uppercase"><%= comment.topic %></span></span>
+    <% end %>
+    <div class="pt-1 whitespace-pre-line"><%= comment.body %></div>
+  </div>
+<% end %>
+<%= trailing %>

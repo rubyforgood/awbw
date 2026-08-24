@@ -880,4 +880,23 @@ RSpec.describe Person, "scholarship index helpers" do
       expect(person.completed_facilitator_trainings).to contain_exactly(training)
     end
   end
+
+  describe "#communications_scope" do
+    it "includes communications to any of the person's addresses (login, email, email_2)" do
+      person = create(:person, email: "primary@example.com", email_2: "secondary@example.com")
+      to_login = create(:notification, recipient_email: person.user.email)
+      to_primary = create(:notification, recipient_email: "primary@example.com")
+      to_secondary = create(:notification, recipient_email: "secondary@example.com")
+      create(:notification, recipient_email: "unrelated@example.com")
+
+      expect(person.communications_scope).to contain_exactly(to_login, to_primary, to_secondary)
+    end
+
+    it "returns none when the person has no addresses on file" do
+      person = create(:person, user: nil, email: nil, email_2: nil)
+      create(:notification, recipient_email: "someone@example.com")
+
+      expect(person.communications_scope).to be_empty
+    end
+  end
 end
