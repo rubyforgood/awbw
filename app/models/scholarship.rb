@@ -132,7 +132,7 @@ class Scholarship < ApplicationRecord
     "Scholarship: #{recipient.timeline_label}"
   end
 
-  def timeline_renderer_class
+  def self.timeline_renderer_class
     ScholarshipTimelineRenderer
   end
 

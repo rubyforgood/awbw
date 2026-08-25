@@ -1078,7 +1078,7 @@ class EventRegistration < ApplicationRecord
     "Event Registration: #{event.name}"
   end
 
-  def timeline_renderer_class
+  def self.timeline_renderer_class
     EventRegistrationTimelineRenderer
   end
 

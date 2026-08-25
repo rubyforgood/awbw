@@ -102,7 +102,7 @@ class Comment < ApplicationRecord
     "Comment on #{commentable.timeline_label}"
   end
 
-  def timeline_renderer_class
+  def self.timeline_renderer_class
     CommentTimelineRenderer
   end
 

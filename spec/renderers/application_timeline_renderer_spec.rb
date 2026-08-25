@@ -20,5 +20,35 @@ RSpec.describe ApplicationTimelineRenderer do
 
       expect(renderer.label).to be_nil
     end
+
+    it "renders snapshot label when subject is nil" do
+      event = TimelineEvent.new(subject: nil, action: "destroyed", snapshot: { "label" => "Person: Alice" })
+      renderer = described_class.new(event)
+
+      output = renderer.label
+      expect(output).to include("Person: Alice")
+      expect(output).not_to include("href")
+    end
+
+    it "renders snapshot label for a deleted model whose class has a custom renderer" do
+      scholarship = create(:scholarship)
+      event = TimelineServices::RecordEvent.call(subject: scholarship, action: "created")
+
+      snapshot_label = event.snapshot["label"]
+      expect(snapshot_label).to include("Scholarship")
+
+      scholarship.destroy!
+      event.reload
+
+      renderer = described_class.new(event)
+      output = renderer.label
+
+      expect(output).to include(snapshot_label)
+      expect(output).not_to include("href")
+    end
+
+    it "uses ApplicationTimelineRenderer for a model without a custom renderer" do
+      expect(Person.timeline_renderer_class).to eq(ApplicationTimelineRenderer)
+    end
   end
 end

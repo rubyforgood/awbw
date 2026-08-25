@@ -9,6 +9,10 @@ module Timelineable
     # before_destroy, not after: dependent associations (e.g. a scholarship's
     # allocation) are already gone by after_destroy, and routing needs them.
     before_destroy -> { record_timeline_event("destroyed") }
+
+    def self.timeline_renderer_class
+      ApplicationTimelineRenderer
+    end
   end
 
   def record_timeline_event(action)
@@ -32,10 +36,6 @@ module Timelineable
 
   def timeline_label
     model_name.human
-  end
-
-  def timeline_renderer_class
-    ApplicationTimelineRenderer
   end
 
   private
