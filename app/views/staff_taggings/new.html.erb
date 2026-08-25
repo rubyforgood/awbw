@@ -23,6 +23,7 @@
 
           <%= f.input :staff_tag_id,
                       label: "Staff tag",
+                      label_html: { class: search_label_class },
                       collection: StaffTag.published.ordered.map { |t| [ t.name, t.id ] },
                       include_blank: "Select a tag",
                       input_html: { class: "form-control" } %>
