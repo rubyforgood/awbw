@@ -26,9 +26,7 @@
     </div>
     <% if event && @form_submission.role == "bulk_payment" %>
       <%# Deep-link to this submission's card on its event's bulk payments page (scrolls + highlights). %>
-      <%= link_to event_bulk_payment_row_path(event, @form_submission), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
-        Bulk payments <i class="fa-solid fa-arrow-right text-xs"></i>
-      <% end %>
+      <%= link_to "Bulk payments", event_bulk_payment_row_path(event, @form_submission), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" %>
     <% end %>
   </div>
 </div>
