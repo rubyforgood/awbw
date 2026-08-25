@@ -77,7 +77,7 @@ module AdminCardsHelper
     [
       custom_card("Allocations", allocations_path, icon: "📤", color: :sky, intensity: 100),
       custom_card("Author credit divergences", author_credit_divergences_path, icon: "✍️", color: :sky, intensity: 100),
-      disabled_card("Bulk payments", icon: "💳"),
+      custom_card("Bulk payments", bulk_payments_path, icon: "💳", color: :sky, intensity: 100),
       custom_card("Event registrations", event_registrations_path, icon: "🎟️", color: :sky, intensity: 100),
       custom_card("Features & tips", features_path, icon: "⭐", color: :sky, intensity: 100),
       custom_card("Forms", forms_path, icon: "📋", color: :sky, intensity: 100),

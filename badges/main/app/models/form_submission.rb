@@ -34,6 +34,26 @@ class FormSubmission < ApplicationRecord
 
   scope :bulk_payment, -> { where(role: "bulk_payment") }
 
+  # The bulk payments index "Payment status" filter vocabulary, keyed on the
+  # submission's payment (see the payment badge):
+  #   unpaid               — no payment recorded yet ("No payment yet").
+  #   partially_allocated  — a payment exists with some amount unallocated.
+  #   fully_allocated      — a payment exists with everything allocated.
+  PAYMENT_STATUS_FILTER_OPTIONS = [
+    [ "No payment yet", "unpaid" ],
+    [ "Not fully allocated", "partially_allocated" ],
+    [ "Fully allocated", "fully_allocated" ]
+  ].freeze
+
+  scope :payment_status, ->(value) {
+    case value
+    when "unpaid" then where.missing(:payment)
+    when "partially_allocated" then joins(:payment).where("payments.amount_cents_remaining > 0")
+    when "fully_allocated" then joins(:payment).where(payments: { amount_cents_remaining: 0 })
+    else all
+    end
+  }
+
   # Submitted on `created_at` — there is no separate submitted_at column.
   scope :submitted_between, ->(start_date, end_date) {
     scope = all

@@ -9,6 +9,11 @@
   # allocate/create turbo stream also forces it open via `expanded: true`.
   expanded = local_assigns.fetch(:expanded) { params[:expand].to_i == submission.id }
 
+  # Yellow ring when arrived here via a link that names this submission in
+  # `highlight` (e.g. the global bulk payments index) — same cue as the
+  # registrants roster's highlighted row.
+  highlighted = params[:highlight].to_i == submission.id
+
   # Shared across every card so attendee matching and allocated totals don't
   # re-query per registration per card (preloaded by the controller).
   event_registrations ||= @event_registrations || @event.event_registrations.active.includes(:registrant)
@@ -18,7 +23,7 @@
   linked_regs = event_registrations.select { |r| linked_ids.include?(r.id) }
   attendee_matches = submission.matched_attendees(event_registrations) %>
 
-<div id="payment-card-<%= submission.id %>" data-controller="dropdown" class="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow scroll-mt-4">
+<div id="payment-card-<%= submission.id %>" data-controller="dropdown" class="bg-white border rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow transition-colors duration-150 scroll-mt-4 <%= highlighted ? "border-yellow-500 bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "border-gray-200" %>">
   <%#
     Fixed column template (shared by every card so columns align row-to-row):
     name | email | method | amount | badge | date | submission | chevron.

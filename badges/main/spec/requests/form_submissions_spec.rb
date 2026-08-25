@@ -78,6 +78,19 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).not_to include(form_submission_path(elsewhere))
       end
 
+      it "links a bulk payment submission to its event's bulk payments row" do
+        event = create(:event)
+        bulk = create(:form_submission, role: "bulk_payment", event: event)
+        registration = create(:form_submission, role: "registration", event: event)
+
+        get form_submissions_path(event_id: event.id), headers: frame_headers
+
+        expect(response.body).to include(bulk_payments_event_path(event))
+        expect(response.body).to include("highlight=#{bulk.id}")
+        expect(response.body).to include("return_to=bulk_payments_index")
+        expect(response.body).not_to include("highlight=#{registration.id}")
+      end
+
       it "filters by submission date range" do
         old = create(:form_submission, created_at: 1.year.ago)
         recent = create(:form_submission, created_at: Date.current)
