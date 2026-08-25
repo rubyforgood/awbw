@@ -2283,6 +2283,22 @@
     - "Only mutations show: opening or printing a record never clutters its log."
     - "Deleting a child or attachment is recorded too — the entry keeps the name even after the file is gone."
 
+- name: "Import registrants from a spreadsheet"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-25
+  action_path: "/event_registrations/import"
+  summary: >-
+    Bulk-add attended registrants to an event from an .xlsx or .csv roster. Pick the
+    event, upload the file, and every row is added as an attended registration —
+    people already in the portal are matched by email and last name, so no duplicates
+    are created.
+  pro_tips:
+    - "Expected columns: FirstName, LastName, Organization, EMail."
+    - "You get a full preview — new vs. matched people, new vs. promoted registrations, unmatched organizations — before anything is saved."
+    - "Organizations are matched by name and linked to the registration, but never created; an unrecognized name is flagged, not invented."
+    - "Reach it from the \"Import registrants\" button on the registrants page."
+
 - name: "Staff taggings directory"
   area: people
   display_status: admin_facing

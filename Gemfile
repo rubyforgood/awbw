@@ -118,3 +118,5 @@ gem "opentelemetry-instrumentation-all"
 
 # Error monitoring (production-only via initializer guard)
 gem "honeybadger", "~> 6.4"
+
+gem "roo", "~> 2.10"

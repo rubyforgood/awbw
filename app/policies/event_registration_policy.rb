@@ -9,6 +9,8 @@ class EventRegistrationPolicy < ApplicationPolicy
   def destroy? = record.persisted? && (admin? || owner?)
   def show? = admin?
   def show_public? = true
+  # Bulk-importing attended registrants from a spreadsheet — admins only.
+  def import? = admin?
   def confirm? = admin?
   def process_confirm? = admin?
   def transfer? = admin?
