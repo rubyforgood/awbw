@@ -1,8 +1,8 @@
 module TimelineServices
   module RecordEvent
     ACTOR_LABELS_BY_SOURCE = {
-      "public_registration" => "Registration",
-      "public_form" => "Form Submission"
+      "public_registration" => "A Registration Form Submission",
+      "public_form" => "A Public Form Submission"
     }.freeze
 
     def self.call(subject:, action:, actor: Current.user, snapshot: {}, also_log: [])

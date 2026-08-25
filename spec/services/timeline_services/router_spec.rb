@@ -53,5 +53,28 @@ RSpec.describe TimelineServices::Router do
         ce_reg.event_registration
       )
     end
+
+    it "routes a FormSubmission to its person" do
+      submission = create(:form_submission)
+
+      expect(described_class.targets_for(submission)).to eq([ submission.person ])
+    end
+
+    it "routes an event-linked FormSubmission to its person and matching registration" do
+      event = create(:event)
+      person = create(:person)
+      registration = create(:event_registration, event: event, registrant: person)
+      submission = create(:form_submission, :with_event, person: person, event: event)
+
+      expect(described_class.targets_for(submission)).to contain_exactly(person, registration)
+    end
+
+    it "routes an event-linked FormSubmission to person only when no matching registration exists" do
+      event = create(:event)
+      person = create(:person)
+      submission = create(:form_submission, :with_event, person: person, event: event)
+
+      expect(described_class.targets_for(submission)).to eq([ person ])
+    end
   end
 end

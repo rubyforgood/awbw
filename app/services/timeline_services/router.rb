@@ -19,6 +19,13 @@ module TimelineServices
         [ subject.recipient, subject.allocation&.allocatable ].compact.uniq
       when ContinuingEducationRegistration
         [ subject.event_registration&.registrant, subject.event_registration ].compact.uniq
+      when FormSubmission
+        targets = [ subject.person ].compact
+        if subject.event_id.present?
+          registration = EventRegistration.find_by(event_id: subject.event_id, registrant_id: subject.person_id)
+          targets << registration if registration
+        end
+        targets.uniq
       else
         return [ subject ] if subject.is_a?(HasTimeline)
 

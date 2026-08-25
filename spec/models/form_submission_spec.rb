@@ -323,4 +323,22 @@ RSpec.describe FormSubmission do
         .to raise_error(FormSubmission::UnreadableUpload)
     end
   end
+
+  describe "timeline" do
+    it "records a timeline event on create" do
+      submission = create(:form_submission)
+
+      event = TimelineEvent.find_by(subject: submission, action: "created")
+      expect(event).to be_present
+      expect(event.snapshot["label"]).to eq("Form Submission: #{submission.form.name}")
+    end
+
+    it "creates a timeline entry on the person" do
+      submission = create(:form_submission)
+
+      event = TimelineEvent.find_by(subject: submission, action: "created")
+      entry = event.timeline_entries.find_by(owner: submission.person)
+      expect(entry).to be_present
+    end
+  end
 end
