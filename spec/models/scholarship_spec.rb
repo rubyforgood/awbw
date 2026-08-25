@@ -305,4 +305,28 @@ RSpec.describe Scholarship, type: :model do
       expect(Scholarship.from_funder(funder).event_ids).to contain_exactly(event.id)
     end
   end
+
+  describe "timeline" do
+    it "labels itself with the recipient" do
+      scholarship = create(:scholarship)
+      expect(scholarship.timeline_label).to eq("Scholarship: #{scholarship.recipient.name}")
+    end
+
+    it "labels itself without a recipient" do
+      scholarship = build(:scholarship, recipient: nil)
+      expect(scholarship.timeline_label).to eq("Scholarship")
+    end
+
+    it "places created and updated events on the recipient's timeline" do
+      person = create(:person)
+      scholarship = create(:scholarship, recipient: person, amount_cents: 1000)
+
+      expect {
+        scholarship.update!(amount_cents: 2000)
+      }.to change { person.timeline_events.where(subject: scholarship).count }.by(1)
+
+      scholarship_events = person.timeline_events.where(subject: scholarship).order(:created_at)
+      expect(scholarship_events.map(&:action)).to eq(%w[created updated])
+    end
+  end
 end

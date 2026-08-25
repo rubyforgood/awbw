@@ -15,6 +15,10 @@ module TimelineServices
       when Notification
         return [] unless subject.noticeable.present?
         [ subject.noticeable ].compact
+      when Scholarship
+        [ subject.recipient, subject.allocation&.allocatable ].compact.uniq
+      when ContinuingEducationRegistration
+        [ subject.event_registration&.registrant, subject.event_registration ].compact.uniq
       else
         return [ subject ] if subject.is_a?(HasTimeline)
 

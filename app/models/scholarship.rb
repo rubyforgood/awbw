@@ -1,5 +1,6 @@
 class Scholarship < ApplicationRecord
   include Communicable
+  include Timelineable
   belongs_to :recipient, class_name: "Person"
   belongs_to :grant, optional: true
   has_one :allocation, as: :source, dependent: :destroy
@@ -124,6 +125,11 @@ class Scholarship < ApplicationRecord
 
   def amount_dollars=(value)
     self.amount_cents = (value.to_d * 100).to_i if value.present?
+  end
+
+  def timeline_label
+    return "Scholarship" unless recipient.present?
+    "Scholarship: #{recipient.timeline_label}"
   end
 
   def communications_email

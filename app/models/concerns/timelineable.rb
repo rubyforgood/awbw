@@ -6,6 +6,9 @@ module Timelineable
   included do
     after_create -> { record_timeline_event("created") }
     after_update -> { record_timeline_event("updated") if timeline_changes.any? }
+    # before_destroy, not after: dependent associations (e.g. a scholarship's
+    # allocation) are already gone by after_destroy, and routing needs them.
+    before_destroy -> { record_timeline_event("destroyed") }
   end
 
   def record_timeline_event(action)

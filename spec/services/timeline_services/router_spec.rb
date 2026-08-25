@@ -38,5 +38,20 @@ RSpec.describe TimelineServices::Router do
 
       expect(described_class.targets_for(notification)).to eq([])
     end
+
+    it "routes a Scholarship to its recipient" do
+      scholarship = build(:scholarship)
+
+      expect(described_class.targets_for(scholarship)).to eq([ scholarship.recipient ])
+    end
+
+    it "routes a ContinuingEducationRegistration to its registrant and registration" do
+      ce_reg = create(:continuing_education_registration)
+
+      expect(described_class.targets_for(ce_reg)).to contain_exactly(
+        ce_reg.event_registration.registrant,
+        ce_reg.event_registration
+      )
+    end
   end
 end

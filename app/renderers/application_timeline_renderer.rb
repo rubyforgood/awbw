@@ -8,7 +8,8 @@ class ApplicationTimelineRenderer
 
   def label
     subject = @event.subject
-    return unless subject&.persisted?
+    return content_tag(:span, @event.snapshot["label"], class: "text-sm text-gray-700") if subject.nil?
+    return unless subject.persisted?
 
     link_to(
       subject.timeline_label,

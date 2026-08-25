@@ -39,6 +39,7 @@ module TimelineServices
       if actor.nil? && Current.source
         generated["actor_label"] = ACTOR_LABELS_BY_SOURCE[Current.source]
       end
+      generated["label"] = subject.timeline_label if subject.respond_to?(:timeline_label)
       generated.merge(snapshot)
     end
 

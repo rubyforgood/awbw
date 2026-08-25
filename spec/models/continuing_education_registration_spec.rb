@@ -11,6 +11,34 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
     end
   end
 
+  describe "timeline" do
+    it "labels itself with the registrant" do
+      ce_reg = create(:continuing_education_registration)
+      expect(ce_reg.timeline_label).to eq("CE Registration: #{ce_reg.event_registration.registrant.name}")
+    end
+
+    it "places created events on both the registrant's and the registration's timelines" do
+      ce_reg = create(:continuing_education_registration)
+      registration = ce_reg.event_registration
+      registrant = registration.registrant
+
+      event = TimelineEvent.order(:created_at).last
+      expect(event.subject).to eq(ce_reg)
+      owners = event.timeline_entries.map { |entry| [ entry.owner_type, entry.owner_id ] }
+      expect(owners).to contain_exactly(
+        [ "Person", registrant.id ],
+        [ "EventRegistration", registration.id ]
+      )
+    end
+
+    it "records updates that change tracked columns" do
+      ce_reg = create(:continuing_education_registration)
+      expect {
+        ce_reg.update!(hours: 3)
+      }.to change(TimelineEvent, :count).by(1)
+    end
+  end
+
   describe "#registrant" do
     it "is its event registration's registrant" do
       ce = create(:continuing_education_registration)
