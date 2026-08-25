@@ -29,17 +29,19 @@ class EventRegistrationImportsController < ApplicationController
 
     @filename = file.original_filename
     @extension = extension_for(file)
-    @blob = ActiveStorage::Blob.create_and_upload!(
-      io: file.open, filename: @filename,
-      content_type: file.content_type.presence || "application/octet-stream"
-    )
-    @result = run_import(file.path, dry_run: true)
+    begin
+      @blob = ActiveStorage::Blob.create_and_upload!(
+        io: file.open, filename: @filename,
+        content_type: file.content_type.presence || "application/octet-stream"
+      )
+      @result = run_import(file.path, dry_run: true)
+    rescue => e
+      @blob&.purge
+      return render_new_error("Could not read that file: #{e.message}")
+    end
     # Rendering (not redirecting) on a POST: Turbo only displays non-redirect form
     # responses when the status is 4xx/5xx, so the preview needs 422.
     render :create, status: :unprocessable_content
-  rescue => e
-    @blob&.purge
-    render_new_error("Could not read that file: #{e.message}")
   end
 
   def confirm

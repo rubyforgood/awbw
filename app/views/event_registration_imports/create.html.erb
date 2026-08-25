@@ -1,19 +1,19 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="max-w-5xl mx-auto <%= DomainTheme.bg_class_for(:event_registrations) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex flex-wrap justify-end gap-2 mb-4">
+<div class="mx-auto max-w-5xl <%= DomainTheme.bg_class_for(:event_registrations) %> rounded-xl border border-gray-200 p-6 shadow">
+  <div class="mb-4 flex flex-wrap justify-end gap-2">
     <%= link_to "← Choose a different file", new_event_registration_import_path(event_id: @event.id),
                 class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
-  <h1 class="text-3xl font-semibold text-gray-900 tracking-tight mb-1">
+  <h1 class="mb-1 text-3xl font-semibold tracking-tight text-gray-900">
     Preview import
   </h1>
-  <p class="text-gray-600 mb-6">
+  <p class="mb-6 text-gray-600">
     <span class="font-medium"><%= @filename %></span> → <span class="font-medium"><%= @event.time_title %></span>.
     Nothing has been saved yet.
   </p>
 
-  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+  <div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
     <% [
       [ "Rows", @result.rows_processed ],
       [ "New people", @result.people_created ],
@@ -22,17 +22,17 @@
       [ "Promoted", @result.registrations_promoted ],
       [ "Skipped", @result.skipped.size ]
     ].each do |label, count| %>
-      <div class="bg-white rounded-lg border border-gray-200 p-3 text-center">
+      <div class="rounded-lg border border-gray-200 bg-white p-3 text-center">
         <div class="text-2xl font-semibold text-gray-900"><%= count %></div>
         <div class="text-xs text-gray-500"><%= label %></div>
       </div>
     <% end %>
   </div>
 
-  <div class="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
+  <div class="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
     <div class="overflow-x-auto">
       <table class="min-w-full text-sm">
-        <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+        <thead class="bg-gray-50 text-xs tracking-wide text-gray-500 uppercase">
           <tr>
             <th class="px-3 py-2 text-left">#</th>
             <th class="px-3 py-2 text-left">Name</th>
@@ -50,34 +50,34 @@
               <td class="px-3 py-2 text-gray-600"><%= row.email.presence || "—" %></td>
               <% if row.skipped_reason %>
                 <td class="px-3 py-2" colspan="3">
-                  <span class="inline-flex items-center rounded-full bg-red-100 text-red-700 px-2 py-0.5 text-xs">
+                  <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">
                     Skipped — <%= row.skipped_reason %>
                   </span>
                 </td>
               <% else %>
                 <td class="px-3 py-2">
                   <% if row.person_status == :new %>
-                    <span class="inline-flex items-center rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 text-xs">New person</span>
+                    <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">New person</span>
                   <% else %>
-                    <span class="inline-flex items-center rounded-full bg-green-100 text-green-800 px-2 py-0.5 text-xs">Matched</span>
+                    <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800">Matched</span>
                   <% end %>
                 </td>
                 <td class="px-3 py-2">
                   <% case row.registration_status %>
                   <% when :created %>
-                    <span class="inline-flex items-center rounded-full bg-green-100 text-green-800 px-2 py-0.5 text-xs">Will add as attended</span>
+                    <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800">Will add as attended</span>
                   <% when :promoted %>
-                    <span class="inline-flex items-center rounded-full bg-blue-100 text-blue-800 px-2 py-0.5 text-xs">Promote to attended</span>
+                    <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800">Promote to attended</span>
                   <% when :already_attended %>
-                    <span class="inline-flex items-center rounded-full bg-gray-100 text-gray-600 px-2 py-0.5 text-xs">Already attended</span>
+                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Already attended</span>
                   <% end %>
                 </td>
                 <td class="px-3 py-2">
                   <% case row.organization_status %>
                   <% when :linked %>
-                    <span class="inline-flex items-center rounded-full bg-teal-100 text-teal-800 px-2 py-0.5 text-xs"><%= row.organization_name %></span>
+                    <span class="inline-flex items-center rounded-full bg-teal-100 px-2 py-0.5 text-xs text-teal-800"><%= row.organization_name %></span>
                   <% when :unmatched %>
-                    <span class="inline-flex items-center rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 text-xs" title="No organization by this name — it won't be linked or created">
+                    <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800" title="No organization by this name — it won't be linked or created">
                       Not found: <%= row.organization_name %>
                     </span>
                   <% else %>
@@ -92,7 +92,7 @@
     </div>
   </div>
 
-  <div class="bg-white rounded-lg border border-gray-200 p-6">
+  <div class="rounded-lg border border-gray-200 bg-white p-6">
     <%= form_with url: confirm_event_registration_import_path, method: :post do |f| %>
       <%= f.hidden_field :signed_id, value: @blob.signed_id %>
       <%= f.hidden_field :event_id, value: @event.id %>

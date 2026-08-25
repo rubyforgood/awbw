@@ -1,29 +1,29 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="max-w-3xl mx-auto <%= DomainTheme.bg_class_for(:event_registrations) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex flex-wrap justify-end gap-2 mb-4">
+<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:event_registrations) %> rounded-xl border border-gray-200 p-6 shadow">
+  <div class="mb-4 flex flex-wrap justify-end gap-2">
     <%= link_to "← Registrants", event_registrations_path(event_id: @event&.id, admin: true),
                 class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
-  <h1 class="text-3xl font-semibold text-gray-900 tracking-tight mb-3">
+  <h1 class="mb-3 text-3xl font-semibold tracking-tight text-gray-900">
     Import registrants
   </h1>
-  <p class="text-gray-600 mb-6">
+  <p class="mb-6 text-gray-600">
     Upload a spreadsheet of people who attended a training and we'll add each one to the
     event as an <strong>attended</strong> registration. People already in the portal are
     matched by email and last name — no duplicates are created. You'll see a preview of
     exactly what will happen before anything is saved.
   </p>
-  <p class="text-gray-600 mb-6 text-sm">
+  <p class="mb-6 text-sm text-gray-600">
     Expected columns: <span class="font-medium">FirstName</span>,
     <span class="font-medium">LastName</span>,
     <span class="font-medium">Organization</span>,
     <span class="font-medium">EMail</span>. Accepts .xlsx, .csv, or .xls.
   </p>
 
-  <div class="bg-white rounded p-6">
+  <div class="rounded bg-white p-6">
     <% if flash.now[:alert].present? %>
-      <div class="mb-4 rounded border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm">
+      <div class="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
         <%= flash.now[:alert] %>
       </div>
     <% end %>
