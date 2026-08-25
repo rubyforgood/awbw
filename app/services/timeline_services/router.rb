@@ -26,6 +26,8 @@ module TimelineServices
           targets << registration if registration
         end
         targets.uniq
+      when Affiliation
+        [ subject.person ].compact
       else
         return [ subject ] if subject.is_a?(HasTimeline)
 

@@ -360,4 +360,22 @@ RSpec.describe Affiliation, type: :model do
       expect(affiliation.reload.event_registration).to eq(registration)
     end
   end
+
+  describe "timeline" do
+    it "records a timeline event on create" do
+      affiliation = create(:affiliation)
+
+      event = TimelineEvent.find_by(subject: affiliation, action: "created")
+      expect(event).to be_present
+      expect(event.snapshot["label"]).to eq("Affiliation: #{affiliation.person.name} at #{affiliation.organization.name}")
+    end
+
+    it "creates a timeline entry on the person" do
+      affiliation = create(:affiliation)
+
+      event = TimelineEvent.find_by(subject: affiliation, action: "created")
+      entry = event.timeline_entries.find_by(owner: affiliation.person)
+      expect(entry).to be_present
+    end
+  end
 end

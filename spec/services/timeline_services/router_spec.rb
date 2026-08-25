@@ -76,5 +76,11 @@ RSpec.describe TimelineServices::Router do
 
       expect(described_class.targets_for(submission)).to eq([ person ])
     end
+
+    it "routes an Affiliation to its person" do
+      affiliation = create(:affiliation)
+
+      expect(described_class.targets_for(affiliation)).to eq([ affiliation.person ])
+    end
   end
 end
