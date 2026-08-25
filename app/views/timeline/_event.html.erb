@@ -6,25 +6,7 @@
   </div>
 
   <div class="min-w-0 flex-1">
-    <div class="flex flex-wrap items-center gap-2">
-      <span class="font-medium text-gray-900"><%= event.actor_label %></span>
-      <span class="text-gray-500"><%= event.action.humanize.downcase %></span>
-
-      <% if event.subject&.persisted? %>
-        <% if event.subject_type == "Comment" %>
-          <% commentable = event.subject.commentable %>
-          <% if commentable&.persisted? %>
-            <%= link_to event.subject&.timeline_label, commentable, data: { turbo: false }, class: "text-sm text-blue-600 hover:underline" %>
-          <% else %>
-            <span class="text-sm text-gray-700"><%= event.subject&.timeline_label %></span>
-          <% end %>
-        <% else %>
-          <%= link_to event.subject&.timeline_label, event.subject, data: { turbo: false }, class: "text-sm text-blue-600 hover:underline" %>
-        <% end %>
-      <% else %>
-        <span class="text-sm text-gray-700"><%= event.subject&.timeline_label %></span>
-      <% end %>
-    </div>
+    <div class="flex flex-wrap items-center gap-2"><span class="font-medium text-gray-900"><%= event.actor_label %></span><span class="text-gray-500"><%= event.action.humanize.downcase %></span><% renderer = event.subject.timeline_renderer_class.new(event) %><%= renderer.label %></div>
 
     <% changes = event.snapshot["changes"] %>
 

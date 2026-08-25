@@ -188,6 +188,10 @@ class Notification < ApplicationRecord
     label
   end
 
+  def timeline_renderer_class
+    NotificationTimelineRenderer
+  end
+
   def record_timeline_event(action)
     return unless action == "created"
     return unless noticeable.present?

@@ -31,5 +31,9 @@ module Timelineable
     model_name.human
   end
 
+  def timeline_renderer_class
+    ApplicationTimelineRenderer
+  end
+
   private
 end
