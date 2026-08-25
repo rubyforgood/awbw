@@ -11,7 +11,7 @@
   <% if @form_submissions.any? %>
     <div data-column-toggle-root data-column-toggle-scope="form-submissions">
     <div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-      <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Columns</span>
+      <span class="text-xs font-semibold tracking-wide text-gray-400 uppercase">Columns</span>
       <%= render "shared/column_toggle_switch", group: "role", label: "Role", on: true %>
       <%= render "shared/column_toggle_switch", group: "event", label: "Event", on: true %>
       <%= render "shared/column_toggle_switch", group: "submitted", label: "Submitted date", on: true %>
@@ -26,7 +26,7 @@
             <th class="px-4 py-3" data-column-toggle-col="event">Event</th>
             <% unless @person %><th class="px-4 py-3">Person</th><% end %>
             <th class="px-4 py-3">Organization</th>
-            <th class="px-4 py-3 hidden" data-column-toggle-col="user_account">User account</th>
+            <th class="hidden px-4 py-3" data-column-toggle-col="user_account">User account</th>
             <th class="px-4 py-3" data-column-toggle-col="submitted">Submitted</th>
             <th class="px-4 py-3"></th>
           </tr>
@@ -103,8 +103,14 @@
               </td>
               <td class="px-4 py-3 whitespace-nowrap" data-column-toggle-col="submitted"><%= submission.created_at.to_fs(:long) %></td>
               <td class="px-4 py-3 text-right">
-                <%# origin: where this index itself was reached from, so the detail page can hand it back and the eyebrow survives the round trip. person_id/form_id are carried only when they were active filters — the back-link anchors to this row via highlight, so it need not re-scope to this submission's person. %>
-                <%= link_to "View", form_submission_path(submission, return_to: "form_submissions", origin: params[:return_to].presence, person_id: params[:person_id].presence, form_id: @form&.id, **form_submission_carryover_params(params)), data: { turbo_frame: "_top" }, class: "text-blue-600 hover:underline" %>
+                <div class="flex items-center justify-end gap-3 whitespace-nowrap">
+                  <% if submission.bulk_payment? && submission.resolved_event %>
+                    <%# Same deep-link as the bulk payments index: scroll to and highlight this submission's card on its event's bulk payments page. %>
+                    <%= link_to "Bulk payments", event_bulk_payment_row_path(submission.resolved_event, submission), data: { turbo_frame: "_top" }, class: "text-blue-600 hover:underline" %>
+                  <% end %>
+                  <%# origin: where this index itself was reached from, so the detail page can hand it back and the eyebrow survives the round trip. person_id/form_id are carried only when they were active filters — the back-link anchors to this row via highlight, so it need not re-scope to this submission's person. %>
+                  <%= link_to "View", form_submission_path(submission, return_to: "form_submissions", origin: params[:return_to].presence, person_id: params[:person_id].presence, form_id: @form&.id, **form_submission_carryover_params(params)), data: { turbo_frame: "_top" }, class: "text-blue-600 hover:underline" %>
+                </div>
               </td>
             </tr>
           <% end %>
