@@ -12,7 +12,7 @@ RSpec.describe "BulkPayments", type: :request do
         get bulk_payments_path
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Bulk payments")
+        expect(response.body).to include("Bulk payment form submissions")
       end
 
       it "lists only bulk payment submissions" do
