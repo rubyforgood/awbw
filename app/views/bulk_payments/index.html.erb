@@ -1,0 +1,69 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:events) %> rounded-xl border border-gray-200 p-6 shadow">
+  <div class="w-full">
+    <div class="mb-4">
+      <%= link_to admin_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Admin home
+      <% end %>
+    </div>
+
+    <div class="mb-6 flex items-start gap-4">
+      <span class="hidden h-12 w-12 shrink-0 items-center justify-center rounded-xl sm:flex <%= DomainTheme.bg_class_for(:events) %> <%= DomainTheme.text_class_for(:events, intensity: 700) %> border <%= DomainTheme.border_class_for(:events, intensity: 200) %> shadow-sm">
+        <i class="fa-solid fa-credit-card text-xl" aria-hidden="true"></i>
+      </span>
+      <div>
+        <h2 class="text-2xl font-semibold text-gray-900">Bulk payments</h2>
+        <p class="mt-1 text-gray-600">
+          Every "Pay for Other(s)" submission across events. Open one to allocate it on its event's bulk payments page.
+        </p>
+      </div>
+    </div>
+
+    <%# Filters. Auto-submit into the results frame on change. %>
+    <%= form_with url: bulk_payments_path, method: :get, autocomplete: "off",
+          data: { controller: "collection", turbo_frame: "bulk_payments_results" } do %>
+      <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div>
+          <%= label_tag :search, "Search", class: search_label_class %>
+          <%= text_field_tag :search, params[:search], placeholder: "Name or email", class: search_field_class %>
+        </div>
+
+        <div>
+          <%= label_tag :event_id, "Event", class: search_label_class %>
+          <%= select_tag :event_id,
+                options_for_select(Event.where(id: params[:event_id]).map { |event| [ event.name, event.id ] }, params[:event_id]),
+                include_blank: true,
+                prompt: "Search for an event",
+                class: search_field_class,
+                data: { controller: "remote-select", remote_select_model_value: "event" } %>
+        </div>
+
+        <div>
+          <%= label_tag :start_date, "Submitted from", class: search_label_class %>
+          <%= date_field_tag :start_date, params[:start_date], class: search_field_class %>
+        </div>
+
+        <div>
+          <%= label_tag :end_date, "Submitted to", class: search_label_class %>
+          <%= date_field_tag :end_date, params[:end_date], class: search_field_class %>
+        </div>
+
+        <% if bulk_payment_filters_active?(params) %>
+          <div class="flex flex-col items-start">
+            <span class="<%= search_label_class %>" aria-hidden="true">&nbsp;</span>
+            <%= link_to "Clear filters", bulk_payments_path, class: "btn btn-utility whitespace-nowrap" %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% result_src = bulk_payments_path(request.query_parameters) %>
+    <%= turbo_frame_tag :bulk_payments_results, src: result_src, data: { turbo: "temporary" } do %>
+      <div class="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-400 shadow-sm">
+        <i class="fa-solid fa-spinner fa-spin text-2xl" aria-hidden="true"></i>
+        <p class="mt-2 text-sm">Loading submissions…</p>
+      </div>
+    <% end %>
+  </div>
+</div>

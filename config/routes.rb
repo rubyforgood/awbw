@@ -160,6 +160,7 @@ Rails.application.routes.draw do
       post :create_organization
     end
   end
+  resources :bulk_payments, only: [ :index ]
   resources :form_answers, only: [ :index ]
   resources :grants
   resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do

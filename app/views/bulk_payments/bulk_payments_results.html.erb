@@ -1,0 +1,69 @@
+<%= turbo_frame_tag :bulk_payments_results do %>
+  <div class="mb-3 text-sm text-gray-600">
+    <span class="inline-flex items-center rounded-full <%= DomainTheme.bg_class_for(:events) %> <%= DomainTheme.text_class_for(:events, intensity: 700) %> border <%= DomainTheme.border_class_for(:events, intensity: 200) %> px-2.5 py-0.5 font-semibold">
+      <%= pluralize(@submissions.total_entries, "submission") %>
+    </span>
+  </div>
+
+  <% if @submissions.any? %>
+    <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="border-b border-gray-200 bg-gray-50 text-left text-sm text-gray-600">
+            <th class="px-4 py-3">Payer</th>
+            <th class="px-4 py-3">Event</th>
+            <th class="px-4 py-3">Amount</th>
+            <th class="px-4 py-3">Status</th>
+            <th class="px-4 py-3">Submitted</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @submissions.each do |submission| %>
+            <% event = submission.resolved_event %>
+            <% highlighted = params[:highlight].to_s == submission.id.to_s %>
+            <tr id="<%= form_submission_row_id(submission) %>" class="scroll-mt-24 border-b border-gray-100 text-sm text-gray-800 transition-colors duration-150 last:border-0 <%= highlighted ? "bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "" %>">
+              <td class="px-4 py-3">
+                <div class="font-medium text-gray-900"><%= submission.person&.name %></div>
+                <div class="text-gray-500 break-all"><%= submission.person&.email %></div>
+              </td>
+              <td class="px-4 py-3">
+                <% if event %>
+                  <span class="font-medium text-gray-900"><%= event.name %></span>
+                  <% if event.decorate.month_year %>
+                    <span class="text-gray-400">·</span>
+                    <span class="whitespace-nowrap text-gray-500"><%= event.decorate.month_year %></span>
+                  <% end %>
+                <% else %>
+                  <span class="text-gray-300">—</span>
+                <% end %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap tabular-nums">
+                <% amount_cents = submission.payment&.amount_cents || (event && submission.bulk_payment_amount_cents(event)) %>
+                <%= amount_cents ? dollars_from_cents(amount_cents) : content_tag(:span, "—", class: "text-gray-300") %>
+              </td>
+              <td class="px-4 py-3"><%= render "events/payment_badge", payment: submission.payment %></td>
+              <td class="px-4 py-3 whitespace-nowrap"><%= submission.created_at.to_fs(:long) %></td>
+              <td class="px-4 py-3 text-right">
+                <% if event %>
+                  <%= link_to event_bulk_payment_row_path(event, submission), data: { turbo_frame: "_top" }, class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors whitespace-nowrap" do %>
+                    <i class="fa-solid fa-credit-card text-xs"></i> Bulk payments
+                  <% end %>
+                <% else %>
+                  <span class="text-gray-300">—</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination mt-6 flex w-full justify-center"><%= tailwind_paginate @submissions %></div>
+  <% else %>
+    <div class="rounded-xl border border-dashed border-gray-300 bg-white py-12 text-center">
+      <i class="fa-regular fa-receipt text-3xl text-gray-300" aria-hidden="true"></i>
+      <p class="mt-3 text-gray-500">No bulk payment submissions found.</p>
+    </div>
+  <% end %>
+<% end %>
