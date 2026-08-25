@@ -48,6 +48,129 @@ class ModelDeduper
     end
   end
 
+  # Like #reassignment_counts, but also a few sample record names per association
+  # so the preview can show *what* moves, not just how many. Each entry is
+  # { label:, count:, names: [ up to SAMPLE_SIZE display strings ] }.
+  SAMPLE_SIZE = 3
+
+  def reassignment_preview(record)
+    reassignable_joins.filter_map do |join|
+      scope = join[:join_class].where(join[:foreign_key] => record.id)
+      count = scope.count
+      next if count.zero?
+
+      {
+        label: join_label(join[:join_class]),
+        count: count,
+        names: scope.limit(SAMPLE_SIZE).map { |related| record_display(related) }
+      }
+    end.sort_by { |entry| entry[:label] }
+  end
+
+  # A best-effort human name for an associated record: its own name/title, else a
+  # named parent (e.g. an affiliation's person), else its id.
+  def record_display(record)
+    own = display_string(record)
+    return own if own
+
+    record.class.reflect_on_all_associations(:belongs_to).each do |assoc|
+      next if assoc.polymorphic?
+
+      related = record.try(assoc.name)
+      parent = display_string(related)
+      return parent if parent
+    end
+    "##{record.id}"
+  end
+
+  def display_string(record)
+    return unless record
+
+    %i[name title full_name].filter_map { |method| record.try(method).presence }.first
+  end
+
+  # Polymorphic references the merge repoints to the kept record (type stays, id
+  # moves) so analytics and audit history follow the survivor instead of orphaning.
+  # table => [ type_column, id_column ].
+  REASSIGNED_POLYMORPHIC_REFERENCES = {
+    "ahoy_events" => %w[resource_type resource_id],
+    "versions" => %w[item_type item_id]
+  }.freeze
+
+  # References that are lost with the deleted record (its own attached files purge)
+  # rather than moved — surfaced on the preview so an admin sees the loss.
+  LOST_POLYMORPHIC_REFERENCES = { "active_storage_attachments" => %w[record_type record_id] }.freeze
+
+  # Billing links between orgs need a deliberate decision (rubyforgood/awbw#2378);
+  # skipped here so they neither block nor silently move.
+  DEFERRED_REFERENCE_TABLES = %w[
+    pay_customers pay_merchants pay_subscriptions pay_charges pay_payment_methods pay_webhooks
+  ].freeze
+
+  # Framework internals that purge with the record and aren't worth surfacing.
+  IGNORED_REFERENCE_TABLES = %w[
+    action_text_rich_texts action_text_mentions ckeditor_assets
+    active_storage_blobs active_storage_variant_records ahoy_visits
+  ].freeze
+
+  HANDLED_ELSEWHERE_TABLES = (
+    REASSIGNED_POLYMORPHIC_REFERENCES.keys + LOST_POLYMORPHIC_REFERENCES.keys +
+    DEFERRED_REFERENCE_TABLES + IGNORED_REFERENCE_TABLES
+  ).freeze
+
+  # Attached files (e.g. the logo) that are deleted with the record, not moved.
+  # Each entry is { label:, count: } — drives the preview's "will be lost" note.
+  def lost_references(record)
+    LOST_POLYMORPHIC_REFERENCES.filter_map do |table, (type_column, id_column)|
+      next unless reference_table_present?(table)
+
+      klass = model_for_table(table)
+      next unless klass.column_names.include?(id_column)
+
+      count = klass.where(type_column => model_class.polymorphic_name, id_column => record.id).count
+      next if count.zero?
+
+      { label: "Attached files (e.g. logo)", count: count }
+    end
+  end
+
+  # Defensive safeguard: tables that still reference `record` but that the merge
+  # would NOT reassign — e.g. a new association added to the model that this flow
+  # doesn't yet account for. Data-driven (it checks the actual record) and
+  # independent of any `dependent:` option, so a future association can't silently
+  # orphan rows or break referential integrity. Each entry is { table:, column: }.
+  def unhandled_references(record)
+    covered = reassignable_joins.map { |join| [ join[:join_class].table_name, join[:foreign_key].to_s ] }.to_set
+    connection = model_class.connection
+    convention_fk = "#{model_class.model_name.singular}_id"
+    polymorphic_name = model_class.polymorphic_name
+
+    connection.tables.flat_map do |table|
+      next [] if table == model_class.table_name || HANDLED_ELSEWHERE_TABLES.include?(table)
+
+      column_names = connection.columns(table).map(&:name)
+      gaps = []
+
+      if column_names.include?(convention_fk) && !covered.include?([ table, convention_fk ]) &&
+          model_for_table(table).where(convention_fk => record.id).exists?
+        gaps << { table: table, column: convention_fk }
+      end
+
+      column_names.each do |column|
+        next unless column.end_with?("_type")
+
+        id_column = column.sub(/_type\z/, "_id")
+        next unless column_names.include?(id_column)
+        next if covered.include?([ table, id_column ])
+        next unless model_for_table(table).where(column => polymorphic_name, id_column => record.id).exists?
+
+        gaps << { table: table, column: id_column }
+      end
+
+      gaps.uniq
+    end.uniq
+  end
+
   private
 
   # Every association that references this model by a foreign key — whether a
@@ -196,9 +319,30 @@ class ModelDeduper
         merge_join(primary, dupe, join)
       end
 
+      reassign_polymorphic_references(primary, dupe)
+
       dupe.reload.destroy!
       logger.info "  deleted #{model_label} #{dupe.id}"
     end
+  end
+
+  # Repoint analytics/audit rows (ahoy events, versions) from the dupe to the kept
+  # record so its history survives the merge. Type column stays; only the id moves.
+  def reassign_polymorphic_references(primary, dupe)
+    REASSIGNED_POLYMORPHIC_REFERENCES.each do |table, (type_column, id_column)|
+      next unless reference_table_present?(table)
+
+      klass = model_for_table(table)
+      next unless klass.column_names.include?(id_column)
+
+      moved = klass.where(type_column => model_class.polymorphic_name, id_column => dupe.id)
+                   .update_all(id_column => primary.id)
+      logger.info "  moved #{moved} #{table} to primary" if moved > 0
+    end
+  end
+
+  def reference_table_present?(table)
+    model_class.connection.data_source_exists?(table)
   end
 
   def merge_join(primary, dupe, join)

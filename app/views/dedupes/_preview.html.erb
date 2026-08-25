@@ -111,6 +111,6 @@
   <% end %>
 
   <!-- Reassignment summary -->
-  <%= render "dedupes/reassignment_summary", border: border, title: "Records that will move", counts: reassignment_delete, empty: "Nothing to move" %>
-  <%= render "dedupes/reassignment_summary", border: border, title: "Records already here", counts: reassignment_keep, empty: "None yet" %>
+  <%= render "dedupes/reassignment_summary", border: border, title: "Records that will move", entries: reassignment_delete, empty: "Nothing to move" %>
+  <%= render "dedupes/reassignment_summary", border: border, title: "Records already here", entries: reassignment_keep, empty: "None yet" %>
 </div>

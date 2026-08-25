@@ -179,4 +179,77 @@ RSpec.describe ModelDeduper do
       expect(story.reload.organization_id).to eq(keep.id)
     end
   end
+
+  describe "#unhandled_references (coverage safeguard)" do
+    subject(:service) { described_class.new(model_class: Organization) }
+
+    let(:org) { create(:organization, name: "Solo Org") }
+
+    it "is empty when every reference is reassignable" do
+      create(:affiliation, organization: org)
+      create(:report, organization: org)
+
+      expect(service.unhandled_references(org)).to eq([])
+    end
+
+    it "flags a polymorphic reference the deduper does not reassign" do
+      # OtherResponse#owner is covered, but #promotable is not — a promotable
+      # pointing at the org would be orphaned on merge.
+      create(:other_response, promotable: org)
+
+      expect(service.unhandled_references(org))
+        .to include(a_hash_including(table: "other_responses", column: "promotable_id"))
+    end
+
+    it "ignores gem-managed infrastructure that references the org" do
+      blob = ActiveStorage::Blob.create_before_direct_upload!(
+        filename: "logo.png", byte_size: 1, checksum: "x", content_type: "image/png"
+      )
+      ActiveStorage::Attachment.create!(name: "logo", record: org, blob: blob)
+
+      tables = service.unhandled_references(org).map { |ref| ref[:table] }
+      expect(tables).not_to include("active_storage_attachments")
+    end
+  end
+
+  describe "analytics/audit reassignment" do
+    subject(:service) { described_class.new(model_class: Organization, logger: logger, dry_run: false) }
+
+    let!(:keep) { create(:organization, name: "Keep Org") }
+    let!(:dupe) { create(:organization, name: "Dupe Org") }
+    let(:ahoy_events) { Class.new(ActiveRecord::Base) { self.table_name = "ahoy_events" } }
+    let(:versions) { Class.new(ActiveRecord::Base) { self.table_name = "versions" } }
+
+    it "repoints ahoy events to the kept organization" do
+      event = ahoy_events.create!(name: "view", resource_type: "Organization", resource_id: dupe.id, time: Time.current)
+
+      service.merge(keep, dupe)
+      expect(event.reload.resource_id).to eq(keep.id)
+    end
+
+    it "repoints paper_trail versions to the kept organization" do
+      version = versions.create!(event: "update", item_type: "Organization", item_id: dupe.id)
+
+      service.merge(keep, dupe)
+      expect(version.reload.item_id).to eq(keep.id)
+    end
+  end
+
+  describe "#lost_references" do
+    subject(:service) { described_class.new(model_class: Organization) }
+
+    it "reports attached files that are deleted with the record" do
+      org = create(:organization)
+      blob = ActiveStorage::Blob.create_before_direct_upload!(
+        filename: "logo.png", byte_size: 1, checksum: "x", content_type: "image/png"
+      )
+      ActiveStorage::Attachment.create!(name: "logo", record: org, blob: blob)
+
+      expect(service.lost_references(org)).to include(a_hash_including(count: 1))
+    end
+
+    it "is empty when the record has no attached files" do
+      expect(service.lost_references(create(:organization))).to eq([])
+    end
+  end
 end

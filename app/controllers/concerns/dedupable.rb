@@ -40,8 +40,10 @@ module Dedupable
         alert: "#{mc.model_name.human} not found (ID: #{missing.join(', ')})."
     end
     deduper = ModelDeduper.new(model_class: mc)
-    @reassignment_delete = deduper.reassignment_counts(@record_to_delete)
-    @reassignment_keep = deduper.reassignment_counts(@record_to_keep)
+    @reassignment_delete = deduper.reassignment_preview(@record_to_delete)
+    @reassignment_keep = deduper.reassignment_preview(@record_to_keep)
+    @lost_references = deduper.lost_references(@record_to_delete)
+    @unhandled_references = deduper.unhandled_references(@record_to_delete)
     @dedupe = build_dedupe_vars(config)
 
     render "dedupes/preview"
@@ -76,6 +78,13 @@ module Dedupable
 
     record_to_delete = mc.find(params["#{mn}_to_delete_id"])
     record_to_keep = mc.find(params["#{mn}_to_keep_id"])
+
+    unhandled = ModelDeduper.new(model_class: mc).unhandled_references(record_to_delete)
+    if unhandled.any?
+      tables = unhandled.map { |ref| ref[:table] }.uniq.join(", ")
+      return redirect_to url_for(action: :dedupe_index),
+        alert: "Can't merge: #{tables} still reference this #{mc.model_name.human.downcase} and the deduper doesn't reassign them. A developer needs to teach ModelDeduper about them before merging."
+    end
 
     keep_param_key = "#{mn}_to_keep"
     if params[keep_param_key].present?

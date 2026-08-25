@@ -370,6 +370,25 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(keep.reload.name).to eq("Canonical Org")
       end
 
+      it "blocks the merge when an association would be orphaned" do
+        create(:other_response, promotable: delete_rec)
+
+        get dedupe_preview_organizations_path(
+          organization_to_delete_id: delete_rec.id,
+          organization_to_keep_id: keep.id
+        )
+        expect(response.body).to include("Merge blocked")
+
+        expect {
+          post dedupe_perform_organizations_path, params: {
+            organization_to_delete_id: delete_rec.id,
+            organization_to_keep_id: keep.id
+          }
+        }.not_to change(Organization, :count)
+        expect(response).to redirect_to(dedupe_index_organizations_path)
+        expect(Organization.exists?(delete_rec.id)).to be true
+      end
+
       it "combines both organizations' FileMaker codes onto the keeper" do
         keep.update!(filemaker_code: "FM-100")
         delete_rec.update!(filemaker_code: "FM-273")
