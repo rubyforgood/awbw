@@ -5,7 +5,10 @@ class FormSubmissionsController < ApplicationController
     authorize! FormSubmission
 
     @person = Person.find_by(id: params[:person_id]) if params[:person_id].present?
-    @form = Form.find_by(id: params[:form_id]) if params[:form_id].present?
+    # The eyebrow/heading only names a single form; when several are selected the
+    # results say "across N forms" instead, so @form stays nil.
+    @form_ids = Array(params[:form_id]).reject(&:blank?)
+    @form = Form.find_by(id: @form_ids.first) if @form_ids.one?
 
     if turbo_frame_request?
       @form_submissions = FormSubmission.search_by_params(params)
