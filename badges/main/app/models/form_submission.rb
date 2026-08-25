@@ -159,7 +159,8 @@ class FormSubmission < ApplicationRecord
   def self.search_by_params(params)
     results = all
     results = results.where(person_id: params[:person_id]) if params[:person_id].present?
-    results = results.where(form_id: params[:form_id]) if params[:form_id].present?
+    form_ids = Array(params[:form_id]).reject(&:blank?)
+    results = results.where(form_id: form_ids) if form_ids.any?
     results = results.where(event_id: params[:event_id]) if params[:event_id].present?
     results = results.where(role: params[:role]) if params[:role].present?
     results = results.for_organization(params[:organization_id]) if params[:organization_id].present?

@@ -37,6 +37,16 @@
     submission across events. Search by payer or event, then jump straight to that submission's row
     on its event's bulk payments page — it scrolls to and highlights the card, ready to allocate.
 
+- name: "Filter form submissions by several forms at once"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-08-25
+  action_path: /form_submissions
+  summary: >-
+    The Form filter on the form submissions list is now multi-select, so you can view submissions
+    across several forms together — e.g. a collaboration agreement alongside its new-job and
+    reinstatement copies.
+
 - name: "Comments & communications on a staff tag"
   area: people
   display_status: admin_facing

@@ -75,14 +75,14 @@
         <label for="start_date" class="<%= label_class %>">Created from</label>
 
         <%= date_field_tag "start_date", params[:start_date],
-          class: field_class %>
+          class: date_filter_class(field_class, params[:start_date]) %>
       </div>
 
       <div class="md:col-span-2">
         <label for="end_date" class="<%= label_class %>">Created to</label>
 
         <%= date_field_tag "end_date", params[:end_date],
-          class: field_class %>
+          class: date_filter_class(field_class, params[:end_date]) %>
       </div>
 
       <div class="md:col-span-2">

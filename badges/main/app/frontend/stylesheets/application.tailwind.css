@@ -147,6 +147,7 @@
    real date still renders in the normal text color. */
 input.date-filter-empty::-webkit-datetime-edit {
   color: var(--color-gray-400);
+  font-size: 0.875rem;   /* text-sm, to match the neighboring placeholders */
 }
 
 /* Tom Select "flat" variant: the wrapper inherits the field's bordered box,
@@ -162,7 +163,9 @@ input.date-filter-empty::-webkit-datetime-edit {
   background: transparent;
   border: 0;
   box-shadow: none;
-  padding: 0;
+  /* !important beats the searchable-checkbox controller's `!py-2` on the control,
+     so a flat multiselect stays height-matched to the sibling fields. */
+  padding: 0 !important;
   min-height: 1.5rem;
 }
 

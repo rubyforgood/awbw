@@ -28,6 +28,25 @@ RSpec.describe FormSubmission do
                                              event_id: event.id, person_id: person.id)).to contain_exactly(wanted)
     end
 
+    it "filters by several forms at once when form_id is an array" do
+      agreement = create(:form)
+      new_job = create(:form)
+      on_agreement = create(:form_submission, form: agreement)
+      on_new_job = create(:form_submission, form: new_job)
+      create(:form_submission)
+
+      expect(FormSubmission.search_by_params(form_id: [ agreement.id, new_job.id ]))
+        .to contain_exactly(on_agreement, on_new_job)
+    end
+
+    it "ignores blank entries in a multi-form filter" do
+      form = create(:form)
+      wanted = create(:form_submission, form: form)
+      create(:form_submission)
+
+      expect(FormSubmission.search_by_params(form_id: [ "", form.id.to_s ])).to contain_exactly(wanted)
+    end
+
     it "filters by submission date range on created_at, ignoring unparseable dates" do
       old = create(:form_submission, created_at: 2.years.ago)
       recent = create(:form_submission, created_at: Date.current)
