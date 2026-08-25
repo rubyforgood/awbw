@@ -12,9 +12,12 @@ class ApplicationTimelineRenderer
     return content_tag(:span, @event.snapshot["label"], class: "text-sm text-gray-700") if subject.nil?
     return unless subject.persisted?
 
+    url = path_for(subject)
+    return content_tag(:span, subject.timeline_label, class: "text-sm text-gray-700") if url.nil?
+
     link_to(
       subject.timeline_label,
-      path_for(subject),
+      url,
       data: { turbo: false },
       class: "text-sm text-blue-600 hover:underline"
     )
