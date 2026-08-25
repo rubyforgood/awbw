@@ -91,7 +91,7 @@
               </label>
               <%= date_field_tag :from,
                                  params[:from],
-                                 class: search_field_class %>
+                                 class: date_filter_class(search_field_class, params[:from]) %>
             </div>
 
             <div class="flex-1 min-w-0">
@@ -100,7 +100,7 @@
               </label>
               <%= date_field_tag :to,
                                  params[:to],
-                                 class: search_field_class %>
+                                 class: date_filter_class(search_field_class, params[:to]) %>
             </div>
 
             <div class="flex-none w-24">

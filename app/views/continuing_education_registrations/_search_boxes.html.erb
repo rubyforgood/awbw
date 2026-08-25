@@ -48,12 +48,12 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
         <label for="issued_from" class="<%= label_class %>">Issued from</label>
-        <%= date_field_tag "issued_from", params[:issued_from], class: field_class %>
+        <%= date_field_tag "issued_from", params[:issued_from], class: date_filter_class(field_class, params[:issued_from]) %>
       </div>
 
       <div>
         <label for="issued_to" class="<%= label_class %>">Issued to</label>
-        <%= date_field_tag "issued_to", params[:issued_to], class: field_class %>
+        <%= date_field_tag "issued_to", params[:issued_to], class: date_filter_class(field_class, params[:issued_to]) %>
       </div>
     </div>
 

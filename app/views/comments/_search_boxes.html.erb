@@ -43,14 +43,14 @@
     <div class="w-36">
       <label for="from" class="<%= search_label_class %>">From</label>
       <%= f.date_field :from, value: params[:from],
-                       class: search_field_class(extra: "bg-white"),
+                       class: date_filter_class(search_field_class(extra: "bg-white"), params[:from]),
                        onchange: "this.form.requestSubmit()" %>
     </div>
 
     <div class="w-36">
       <label for="to" class="<%= search_label_class %>">To</label>
       <%= f.date_field :to, value: params[:to],
-                       class: search_field_class(extra: "bg-white"),
+                       class: date_filter_class(search_field_class(extra: "bg-white"), params[:to]),
                        onchange: "this.form.requestSubmit()" %>
     </div>
 

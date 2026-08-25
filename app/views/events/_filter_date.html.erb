@@ -10,8 +10,7 @@
     the stylesheet can grey that hint to match the text/select placeholders next
     to it; the class drops once a date is set (server-rendered), so a real value
     stays dark. %>
-<% input_class = params[param].present? ? field_class : "#{field_class} date-filter-empty" %>
 <div class="<%= local_assigns.fetch(:wrapper_class, "w-full md:w-48") %>">
   <%= label_tag param, label, class: search_label_class %>
-  <%= date_field_tag param, params[param], class: input_class %>
+  <%= date_field_tag param, params[param], class: date_filter_class(field_class, params[param]) %>
 </div>

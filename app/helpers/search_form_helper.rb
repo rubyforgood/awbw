@@ -19,4 +19,12 @@ module SearchFormHelper
   def search_label_class(extra: nil)
     [ SEARCH_LABEL_CLASSES, extra ].compact.join(" ")
   end
+
+  # Tag a date FILTER input `date-filter-empty` while its param is blank, so the
+  # stylesheet greys and shrinks its mm/dd/yyyy hint to match the neighboring
+  # placeholders; a real value keeps the normal dark, full-size rendering. See
+  # application.tailwind.css (input.date-filter-empty::-webkit-datetime-edit).
+  def date_filter_class(base_class, value)
+    value.present? ? base_class : "#{base_class} date-filter-empty"
+  end
 end

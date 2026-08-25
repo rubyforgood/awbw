@@ -5,6 +5,8 @@
     </span>
     <% if @form %>
       for <span class="font-medium text-gray-900"><%= @form.display_name %></span>
+    <% elsif @form_ids.many? %>
+      across <span class="font-medium text-gray-900"><%= @form_ids.size %> forms</span>
     <% end %>
   </div>
 
