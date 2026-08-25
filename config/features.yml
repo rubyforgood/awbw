@@ -2314,15 +2314,16 @@
     shared address), then previews exactly what will move before merging.
   description: >-
     Reach it from the Dedupe link on the Organizations page. It clusters likely
-    duplicates and flags why each was grouped — same name, a matching FileMaker
-    code, or a shared address. Because FileMaker is the source of truth, two
-    records with different FileMaker codes are surfaced as a conflict to resolve by
-    hand rather than merged automatically. The preview shows a side-by-side of both
-    records with the kept record's key fields editable, plus a summary of every
-    associated record (affiliations, event registrations, reports, payments,
-    workshop logs, tags, and more) that moves to the kept organization. The merge
-    reassigns all of them and deletes the duplicate. It can't be undone. Admin-only.
+    duplicates and flags why each was grouped — same name, a shared FileMaker
+    code, or a shared address. FileMaker is the source of truth, and a record can
+    carry more than one code (a trimmed, comma-separated list); when two records
+    have different codes, merging keeps all of them so no FileMaker link is lost.
+    The preview shows a side-by-side of both records with the kept record's key
+    fields editable, plus a summary of every associated record (affiliations,
+    event registrations, reports, payments, workshop logs, tags, and more) that
+    moves to the kept organization. The merge reassigns all of them and deletes
+    the duplicate. It can't be undone. Admin-only.
   pro_tips:
     - "Edit the kept organization's fields right in the preview before you merge."
     - "Use Swap if you picked the wrong record to keep."
-    - "A different FileMaker code on each record is a warning — decide which one is correct first."
+    - "Both records' FileMaker codes are kept on the merged organization — a field flagged 'Kept on merge' is combined, not dropped."
