@@ -132,6 +132,10 @@ class Scholarship < ApplicationRecord
     "Scholarship: #{recipient.timeline_label}"
   end
 
+  def timeline_renderer_class
+    ScholarshipTimelineRenderer
+  end
+
   def communications_email
     recipient&.preferred_email
   end

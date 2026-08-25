@@ -13,9 +13,15 @@ class ApplicationTimelineRenderer
 
     link_to(
       subject.timeline_label,
-      Rails.application.routes.url_helpers.polymorphic_path(subject),
+      subject_path(subject),
       data: { turbo: false },
       class: "text-sm text-blue-600 hover:underline"
     )
+  end
+
+  private
+
+  def subject_path(subject)
+    Rails.application.routes.url_helpers.polymorphic_path(subject)
   end
 end
