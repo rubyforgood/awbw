@@ -422,4 +422,24 @@ RSpec.describe Organization, "scholarship index helpers" do
       expect(Organization.awbw).to be_nil
     end
   end
+
+  describe "FileMaker codes" do
+    it "parses a trimmed, de-duplicated list from the column" do
+      org = build(:organization, filemaker_code: " FM1 , FM2,FM1 ")
+
+      expect(org.filemaker_codes).to eq(%w[FM1 FM2])
+    end
+
+    it "is empty when the column is blank" do
+      expect(build(:organization, filemaker_code: nil).filemaker_codes).to eq([])
+    end
+
+    it "combines mixed strings and lists into one sorted normalized value" do
+      expect(Organization.join_filemaker_codes("FM2, FM1", " FM3 ", nil, "FM1")).to eq("FM1, FM2, FM3")
+    end
+
+    it "returns nil when there is nothing to combine" do
+      expect(Organization.join_filemaker_codes(nil, "")).to be_nil
+    end
+  end
 end

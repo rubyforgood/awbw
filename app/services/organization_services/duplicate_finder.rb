@@ -8,7 +8,6 @@ module OrganizationServices
   # cluster whose members carry different FileMaker codes is surfaced as a
   # conflict for an admin to resolve, never silently treated as a clean merge.
   class DuplicateFinder
-    SOURCE_OF_TRUTH_FIELD = :filemaker_code
     LEGAL_SUFFIX = /\b(?:incorporated|inc|llc|l\.l\.c|corporation|corp|company|co|limited|ltd)\b\.?/i
 
     Group = Struct.new(:key, :label, :records, :reasons, keyword_init: true)
@@ -21,7 +20,7 @@ module OrganizationServices
       union = UnionFind.new(@organizations.map(&:id))
       cluster(union) { |org| [ normalized_name(org).presence ].compact }
       cluster(union) { |org| [ suffixless_name(org).presence ].compact }
-      cluster(union) { |org| [ org.public_send(SOURCE_OF_TRUTH_FIELD).presence ].compact }
+      cluster(union) { |org| org.filemaker_codes }
       cluster(union) { |org| address_keys(org) }
 
       by_id = @organizations.index_by(&:id)
@@ -63,11 +62,11 @@ module OrganizationServices
     end
 
     def filemaker_reasons(records)
-      codes = records.map { |org| org.public_send(SOURCE_OF_TRUTH_FIELD).presence }
-      present = codes.compact.uniq
-      return [ "⚠ Different FileMaker codes (#{present.join(", ")}) — choose which to keep" ] if present.size > 1
+      code_sets = records.map(&:filemaker_codes)
+      present = code_sets.flatten.uniq.sort
       return [] if present.empty?
-      return [ "FileMaker code on only one record" ] if codes.any?(&:blank?)
+      return [ "⚠ Multiple FileMaker codes (#{present.join(", ")}) — merging keeps all of them" ] if present.size > 1
+      return [ "FileMaker code on only one record" ] if code_sets.any?(&:empty?)
 
       [ "Same FileMaker code (#{present.first})" ]
     end

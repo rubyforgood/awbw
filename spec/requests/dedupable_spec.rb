@@ -369,6 +369,18 @@ RSpec.describe "Dedupable concern", type: :request do
 
         expect(keep.reload.name).to eq("Canonical Org")
       end
+
+      it "combines both organizations' FileMaker codes onto the keeper" do
+        keep.update!(filemaker_code: "FM-100")
+        delete_rec.update!(filemaker_code: "FM-273")
+
+        post dedupe_perform_organizations_path, params: {
+          organization_to_delete_id: delete_rec.id,
+          organization_to_keep_id: keep.id
+        }
+
+        expect(keep.reload.filemaker_code).to eq("FM-100, FM-273")
+      end
     end
   end
 end

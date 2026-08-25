@@ -37,12 +37,22 @@ RSpec.describe OrganizationServices::DuplicateFinder do
       expect(described_class.new.groups.first.reasons).to include("FileMaker code on only one record")
     end
 
-    it "surfaces conflicting FileMaker codes as a choose-which conflict" do
+    it "surfaces multiple FileMaker codes as a keep-all conflict" do
       org(name: "Rivertown", filemaker_code: "FM1")
       org(name: "Rivertown", filemaker_code: "FM2")
 
       expect(described_class.new.groups.first.reasons)
-        .to include(a_string_matching(/Different FileMaker codes/))
+        .to include(a_string_matching(/Multiple FileMaker codes.*merging keeps all/))
+    end
+
+    it "groups records that share one code in a comma-separated list" do
+      a = org(name: "Lakeside A", filemaker_code: "FM1, FM2")
+      b = org(name: "Lakeside B", filemaker_code: " FM2 ")
+
+      group = described_class.new.groups.first
+
+      expect(group.records).to contain_exactly(a, b)
+      expect(group.reasons).to include(a_string_matching(/Multiple FileMaker codes \(FM1, FM2\)/))
     end
 
     it "groups organizations that share an address" do

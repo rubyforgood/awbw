@@ -8,6 +8,7 @@
     model_label:         Human label (e.g. "Organization")
     keep_param_key:      Param key for keep fields (e.g. :organization_to_keep)
     editable_columns:    Optional allowlist of column names to show/edit; nil shows all
+    union_columns:       Column names whose values are combined into the keeper (not replaced)
     form_builder:        The parent form builder (f)
     belongs_to_options:  Hash of { column_name => collection } for select fields
 %>
@@ -16,6 +17,7 @@
   border = DomainTheme.border_class_for(domain, intensity: 200)
   header_bg = DomainTheme.bg_class_for(domain, intensity: 50)
   model_class = record_to_delete.class
+  union_columns ||= []
   skip_columns = %w[id created_at updated_at legacy_id]
   columns =
     if editable_columns.present?
@@ -69,14 +71,18 @@
           else
             delete_val.presence || "—"
           end
-        is_different = delete_val != keep_val
+        union_column = union_columns.include?(col.name)
+        merged_in = union_column && delete_val.to_s.split(",").map(&:strip).reject(&:blank?).difference(keep_val.to_s.split(",").map(&:strip)).any?
+        is_different = !union_column && delete_val != keep_val
       %>
 
       <!-- Left: read-only -->
       <div class="border-x border-b <%= border %> flex flex-wrap items-start gap-x-2 bg-white px-5 py-3 text-sm">
         <span class="w-full text-gray-400 sm:w-auto"><%= label %></span>
         <span class="text-gray-900 <%= "font-semibold" if col.name == "name" %>"><%= display_val %></span>
-        <% if is_different %>
+        <% if merged_in %>
+          <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-semibold text-emerald-800">Kept on merge</span>
+        <% elsif is_different %>
           <span class="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-800">Will be dropped</span>
         <% end %>
       </div>

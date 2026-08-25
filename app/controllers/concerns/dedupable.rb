@@ -83,6 +83,13 @@ module Dedupable
       record_to_keep.update!(params.require(keep_param_key).permit(editable))
     end
 
+    # Combine values that must survive the merge rather than be replaced wholesale
+    # (e.g. an org's FileMaker codes), so the kept record keeps both records' links.
+    if (hook = config[:merge_keeper])
+      hook.call(record_to_keep, record_to_delete)
+      record_to_keep.save!
+    end
+
     deduper = ModelDeduper.new(model_class: mc, logger: Rails.logger, dry_run: false, min_usage: 0)
 
     if respond_to?(:track_event, true)
@@ -146,6 +153,7 @@ module Dedupable
       keep_id_param: "#{mn}_to_keep_id",
       keep_param_key: "#{mn}_to_keep".to_sym,
       editable_columns: config[:editable_columns],
+      union_columns: Array(config[:union_columns]).map(&:to_s),
       belongs_to_options: opts.is_a?(Proc) ? opts.call : (opts || {}),
       record_extras: config[:record_extras]
     }

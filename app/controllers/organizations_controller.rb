@@ -292,6 +292,10 @@ class OrganizationsController < ApplicationController
         name filemaker_code email website_url agency_type description
         mission_vision_values notes organization_status_id organization_obligation_id
       ],
+      union_columns: %w[filemaker_code],
+      merge_keeper: ->(keep, delete) {
+        keep.filemaker_code = Organization.join_filemaker_codes(keep.filemaker_code, delete.filemaker_code)
+      },
       belongs_to_options: -> {
         {
           "organization_status_id" => OrganizationStatus.order(:name),
