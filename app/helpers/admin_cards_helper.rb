@@ -66,7 +66,8 @@ module AdminCardsHelper
   # -----------------------------
   def deprecated_data_cards
     [
-      custom_card("Organization statuses", organization_statuses_path, icon: "🧮", color: :emerald, intensity: 100)
+      custom_card("Organization statuses", organization_statuses_path, icon: "🧮", color: :emerald, intensity: 100),
+      custom_card("Dedupe organizations", dedupe_index_organizations_path, icon: "🧹", color: :emerald, intensity: 100)
     ]
   end
 

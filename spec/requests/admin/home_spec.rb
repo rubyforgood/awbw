@@ -18,4 +18,11 @@ RSpec.describe "Admin home", type: :request do
     expect(response.body).to include("Form submissions")
     expect(response.body).to include(%(href="#{form_submissions_path}"))
   end
+
+  it "links to the organization deduper under deprecated data" do
+    get "/admin"
+
+    expect(response.body).to include("Dedupe organizations")
+    expect(response.body).to include(%(href="#{dedupe_index_organizations_path}"))
+  end
 end
