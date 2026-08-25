@@ -3,13 +3,14 @@
 module Dedupable
   extend ActiveSupport::Concern
 
+  CandidateGroup = Struct.new(:label, :records, :reasons, keyword_init: true)
+
   def dedupe_index
     authorize!
     config = dedupe_config
     mc = config[:model_class]
 
-    groups = mc.all.group_by { |r| r.name.to_s.strip.downcase }
-    @possible_duplicates = groups.select { |_name, records| records.size > 1 }
+    @possible_duplicate_groups = dedupe_candidate_groups(config)
     @records_for_select = mc.order(:name).map { |r| [ r.name, r.id ] }
     @dedupe = build_dedupe_vars(config)
 
@@ -114,6 +115,20 @@ module Dedupable
   #   record_extras:      Lambda(record) returning extra detail string for index listing (optional)
   def dedupe_config
     raise NotImplementedError, "#{self.class} must implement #dedupe_config"
+  end
+
+  # Candidate duplicate groups for the index. A config may supply a
+  # :candidate_finder (a callable returning objects that respond to #label,
+  # #records, and #reasons — e.g. OrganizationServices::DuplicateFinder); without
+  # one, fall back to exact normalized-name grouping.
+  def dedupe_candidate_groups(config)
+    finder = config[:candidate_finder]
+    return Array(finder.call) if finder
+
+    config[:model_class].all
+      .group_by { |record| record.name.to_s.strip.downcase }
+      .select { |_name, records| records.size > 1 }
+      .map { |name, records| CandidateGroup.new(label: name, records: records, reasons: []) }
   end
 
   # Returns [association_name, includes_name] for the primary polymorphic join.

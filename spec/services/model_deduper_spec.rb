@@ -117,4 +117,66 @@ RSpec.describe ModelDeduper do
       join_factory: :sectorable_item,
       join_fk: :sector_id
   end
+
+  # Organizations are referenced by plain organization_id foreign keys rather than
+  # polymorphic joins, so they exercise the reflection-driven FK reassignment pass.
+  describe "foreign-key reassignment (Organization)" do
+    subject(:service) do
+      described_class.new(model_class: Organization, logger: logger, dry_run: false)
+    end
+
+    let!(:keep) { create(:organization, name: "Keep Org") }
+    let!(:dupe) { create(:organization, name: "Dupe Org") }
+
+    it "reassigns plain FK associations to the kept organization" do
+      report = create(:report, organization: dupe)
+      service.merge(keep, dupe)
+      expect(report.reload.organization_id).to eq(keep.id)
+    end
+
+    it "reassigns restrict_with_error associations and still deletes the duplicate" do
+      affiliation = create(:affiliation, organization: dupe)
+
+      expect { service.merge(keep, dupe) }
+        .to change { Organization.exists?(dupe.id) }.from(true).to(false)
+      expect(affiliation.reload.organization_id).to eq(keep.id)
+    end
+
+    it "moves a non-colliding event registration link to the kept organization" do
+      registration = create(:event_registration)
+      link = create(:event_registration_organization, organization: dupe, event_registration: registration)
+
+      service.merge(keep, dupe)
+      expect(link.reload.organization_id).to eq(keep.id)
+    end
+
+    it "collapses a natural-key collision instead of violating the unique index" do
+      registration = create(:event_registration)
+      create(:event_registration_organization, organization: keep, event_registration: registration)
+      colliding = create(:event_registration_organization, organization: dupe, event_registration: registration)
+
+      expect { service.merge(keep, dupe) }
+        .to change(EventRegistrationOrganization, :count).by(-1)
+      expect(EventRegistrationOrganization.exists?(colliding.id)).to be false
+      expect(EventRegistrationOrganization.where(organization_id: keep.id, event_registration_id: registration.id).count).to eq(1)
+    end
+
+    it "reassigns polymorphic joins alongside FK associations" do
+      bookmark = create(:bookmark, bookmarkable: dupe)
+      service.merge(keep, dupe)
+      expect(bookmark.reload.bookmarkable).to eq(keep)
+    end
+
+    # Payment/Story reference organizations by FK but Organization declares no
+    # inverse has_many, so they are only reachable via the belongs_to scan. Their
+    # DB foreign keys would otherwise block the destroy.
+    it "reassigns FK children that have no inverse has_many on the model" do
+      news = create(:community_news, organization: dupe)
+      story = create(:story, organization: dupe)
+
+      expect { service.merge(keep, dupe) }.not_to raise_error
+      expect(news.reload.organization_id).to eq(keep.id)
+      expect(story.reload.organization_id).to eq(keep.id)
+    end
+  end
 end

@@ -1,5 +1,5 @@
 class OrganizationsController < ApplicationController
-  include AhoyTracking, TagAssignable
+  include AhoyTracking, TagAssignable, Dedupable
   before_action :set_organization, only: [ :show, :edit, :update, :destroy, :populations_served ]
 
   def index
@@ -281,6 +281,23 @@ class OrganizationsController < ApplicationController
         :_destroy
       ]
     )
+  end
+
+  def dedupe_config
+    {
+      model_class: Organization,
+      domain: :organizations,
+      candidate_finder: -> { OrganizationServices::DuplicateFinder.new.groups },
+      belongs_to_options: -> {
+        {
+          "organization_status_id" => OrganizationStatus.order(:name),
+          "organization_obligation_id" => OrganizationObligation.order(:name)
+        }
+      },
+      record_extras: ->(org) {
+        [ org.filemaker_code.presence && "FileMaker #{org.filemaker_code}", org.program_location ].compact.join(", ").presence
+      }
+    }
   end
 
   def find_duplicate_organizations(name)

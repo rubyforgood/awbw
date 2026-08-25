@@ -61,27 +61,49 @@
           <% end %>
 
           <!-- Possible Duplicates List -->
-          <% if @possible_duplicates.any? %>
+          <% if @possible_duplicate_groups.any? %>
             <div class="mt-8">
               <h2 class="text-xl font-semibold text-gray-900 mb-4">
-                Possible Duplicate Groups (<%= @possible_duplicates.count %>)
+                Possible Duplicate Groups (<%= @possible_duplicate_groups.count %>)
               </h2>
               <div class="space-y-4">
-                <% @possible_duplicates.each do |normalized_name, records| %>
+                <% @possible_duplicate_groups.each do |group| %>
+                  <% keep_record = group.records.first %>
                   <div class="<%= DomainTheme.bg_class_for(@dedupe[:domain]) %> border border-gray-200 rounded-lg p-4">
-                    <h3 class="font-semibold text-gray-900 mb-2">
-                      "<%= normalized_name %>" (<%= records.count %> <%= @dedupe[:model_label_plural].downcase %>)
-                    </h3>
-                    <ul class="list-disc list-inside space-y-1 text-gray-700">
-                      <% records.each do |record| %>
-                        <li>
-                          <%= record.name %>
-                          <span class="text-gray-500 text-sm">
-                            (ID: <%= record.id %>,
-                            <% if @dedupe[:record_extras] %><%= @dedupe[:record_extras].call(record) %>, <% end %>
-                            <%= record.published? ? 'Published' : 'Unpublished' %>,
-                            <%= record.public_send(@dedupe[:join_association]).count %> taggings)
+                    <div class="flex items-start justify-between gap-4 mb-2">
+                      <h3 class="font-semibold text-gray-900">
+                        "<%= group.label %>" (<%= group.records.count %> <%= @dedupe[:model_label_plural].downcase %>)
+                      </h3>
+                    </div>
+                    <% if group.reasons.any? %>
+                      <div class="flex flex-wrap gap-1.5 mb-3">
+                        <% group.reasons.each do |reason| %>
+                          <span class="text-xs font-medium text-gray-700 bg-white border border-gray-200 px-2 py-0.5 rounded-full">
+                            <%= reason %>
                           </span>
+                        <% end %>
+                      </div>
+                    <% end %>
+                    <ul class="space-y-1 text-gray-700">
+                      <% group.records.each do |record| %>
+                        <li class="flex items-center gap-2">
+                          <span>
+                            <%= record.name %>
+                            <span class="text-gray-500 text-sm">
+                              (ID: <%= record.id %>,
+                              <% if @dedupe[:record_extras] %><%= @dedupe[:record_extras].call(record) %>, <% end %>
+                              <%= record.published? ? 'Published' : 'Unpublished' %>,
+                              <%= record.public_send(@dedupe[:join_association]).count %> taggings)
+                            </span>
+                          </span>
+                          <% if record != keep_record %>
+                            <%= link_to "Preview merge →",
+                                        url_for(action: :dedupe_preview,
+                                                @dedupe[:delete_id_param] => record.id,
+                                                @dedupe[:keep_id_param] => keep_record.id),
+                                        data: { turbo: false },
+                                        class: "text-sm #{DomainTheme.text_class_for(@dedupe[:domain], intensity: 700)} hover:underline whitespace-nowrap" %>
+                          <% end %>
                         </li>
                       <% end %>
                     </ul>

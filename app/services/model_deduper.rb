@@ -38,28 +38,100 @@ class ModelDeduper
 
   private
 
-  # Auto-detect all polymorphic join associations on the model.
-  # Returns an array of hashes, each with :join_class, :foreign_key,
-  # :polymorphic_type_column, and :polymorphic_id_column.
-  def polymorphic_joins
-    @polymorphic_joins ||= model_class.reflect_on_all_associations(:has_many).filter_map do |assoc|
-      next if assoc.options[:through] # skip has_many :through
+  # Every association that references this model by a foreign key — whether a
+  # plain FK child (affiliations, reports), a polymorphic child (addresses via
+  # as: :addressable), or a tagging join (categorizable_items). Each is reassigned
+  # from the duplicate to the kept record on merge. Reflection-driven, so any
+  # FK-based model works with no bespoke config.
+  #
+  # Sources are unioned: this model's own has_many/:as declarations, plus a scan
+  # of every model for a non-polymorphic belongs_to pointing back here — so a
+  # child with an organization_id but no inverse has_many (payments, stories, …)
+  # is still reassigned rather than orphaned or blocked by its FK constraint.
+  #
+  # Collisions are resolved by DB *unique indexes*, not by guessing: the columns
+  # of a unique index that includes the FK are the scope in which only one row may
+  # exist (e.g. [category_id, categorizable_type, categorizable_id] →
+  # [category_id, categorizable_type]), so a row the kept record already has is
+  # deleted instead of violating the index.
+  def reassignable_joins
+    @reassignable_joins ||= begin
+      seen = Set.new
+      (has_many_joins + belongs_to_joins).select do |join|
+        seen.add?([ join[:join_class].table_name, join[:foreign_key] ])
+      end
+    end
+  end
+
+  def has_many_joins
+    model_class.reflect_on_all_associations(:has_many).filter_map do |assoc|
+      next if assoc.options[:through]
       begin
         join_klass = assoc.klass
       rescue NameError
         next
       end
 
-      poly = join_klass.reflect_on_all_associations(:belongs_to).find(&:polymorphic?)
-      next unless poly
+      fk = assoc.foreign_key.to_s
+      next unless join_klass.column_names.include?(fk)
 
-      {
-        join_class: join_klass,
-        foreign_key: assoc.foreign_key.to_sym,
-        polymorphic_type_column: poly.foreign_type.to_sym,
-        polymorphic_id_column: poly.foreign_key.to_sym
-      }
+      join_for(join_klass, fk)
     end
+  end
+
+  # Schema-driven: every DB foreign key pointing at this model's table, so a child
+  # with an organization_id but no inverse has_many (payments, stories, …) is still
+  # reassigned. Reading the schema avoids eager-loading every model (which would
+  # touch databases not configured in every environment).
+  def belongs_to_joins
+    connection = model_class.connection
+    connection.tables.flat_map do |table|
+      next [] if table == model_class.table_name
+
+      connection.foreign_keys(table).filter_map do |fk_def|
+        next unless fk_def.to_table == model_class.table_name
+
+        join_for(model_for_table(table), fk_def.column.to_s)
+      end
+    end
+  rescue NotImplementedError
+    []
+  end
+
+  # The model backing a table, or an anonymous one bound to it. Guards against a
+  # name that resolves to a class mapped elsewhere (e.g. an STI child of another
+  # table), which would reassign the wrong table.
+  def model_for_table(table)
+    klass = table.classify.constantize
+    return klass if klass.table_name == table
+
+    anonymous_model_for(table)
+  rescue NameError
+    anonymous_model_for(table)
+  end
+
+  def anonymous_model_for(table)
+    klass = Class.new(ApplicationRecord)
+    klass.table_name = table
+    klass
+  end
+
+  def join_for(join_klass, fk)
+    {
+      join_class: join_klass,
+      foreign_key: fk.to_sym,
+      natural_key: natural_key_columns(join_klass, fk)
+    }
+  end
+
+  # Columns (other than the FK) of a unique index that includes the FK.
+  def natural_key_columns(join_klass, fk)
+    join_klass.connection.indexes(join_klass.table_name)
+      .select(&:unique)
+      .map { |index| Array(index.columns) }
+      .select { |cols| cols.include?(fk) }
+      .map { |cols| (cols - [ fk ]).map(&:to_sym) }
+      .find(&:present?) || []
   end
 
   def model_label
@@ -68,7 +140,7 @@ class ModelDeduper
 
   def usage_counts
     counts = Hash.new(0)
-    polymorphic_joins.each do |join|
+    reassignable_joins.each do |join|
       join[:join_class].where(join[:foreign_key] => model_class.pluck(:id))
         .group(join[:foreign_key]).count
         .each { |id, count| counts[id] += count }
@@ -104,11 +176,11 @@ class ModelDeduper
     return if dry_run
 
     ActiveRecord::Base.transaction do
-      polymorphic_joins.each do |join|
+      reassignable_joins.each do |join|
         merge_join(primary, dupe, join)
       end
 
-      dupe.destroy!
+      dupe.reload.destroy!
       logger.info "  deleted #{model_label} #{dupe.id}"
     end
   end
@@ -116,25 +188,24 @@ class ModelDeduper
   def merge_join(primary, dupe, join)
     jc = join[:join_class]
     fk = join[:foreign_key]
-    type_col = join[:polymorphic_type_column]
-    id_col = join[:polymorphic_id_column]
+    natural_key = join[:natural_key]
 
-    existing_taggings = jc
-      .where(fk => primary.id)
-      .pluck(type_col, id_col)
-      .map { |type, id| "#{type}_#{id}" }
-      .to_set
+    if natural_key.empty?
+      moved = jc.where(fk => dupe.id).update_all(fk => primary.id)
+      logger.info "  moved #{moved} #{jc.name} to primary" if moved > 0
+      return
+    end
 
-    items_to_move = jc.where(fk => dupe.id)
+    existing = jc.where(fk => primary.id).pluck(*natural_key).map { |values| Array(values) }.to_set
 
-    items_to_move.find_each do |item|
-      tagging_key = "#{item.public_send(type_col)}_#{item.public_send(id_col)}"
-
-      if existing_taggings.include?(tagging_key)
+    jc.where(fk => dupe.id).find_each do |item|
+      key = natural_key.map { |col| item.public_send(col) }
+      if existing.include?(key)
         item.destroy!
         logger.info "  deleted duplicate #{jc.name} #{item.id} (primary already has it)"
       else
         item.update!(fk => primary.id)
+        existing << key
         logger.info "  moved #{jc.name} #{item.id} to primary"
       end
     end
