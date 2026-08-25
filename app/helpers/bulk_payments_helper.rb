@@ -12,9 +12,4 @@ module BulkPaymentsHelper
       return_to: "bulk_payments_index"
     )
   end
-
-  # True when any index filter is active — drives whether "Clear filters" shows.
-  def bulk_payment_filters_active?(params)
-    params.values_at(:search, :event_id, :start_date, :end_date).any?(&:present?)
-  end
 end

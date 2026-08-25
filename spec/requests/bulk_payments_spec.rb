@@ -52,10 +52,42 @@ RSpec.describe "BulkPayments", type: :request do
         expect(response.body).not_to include("form-submission-row-#{theirs.id}")
       end
 
-      it "offers a Clear filters link when a filter is active" do
-        get bulk_payments_path(search: "Priya")
+      it "filters by payment status" do
+        event = create(:event)
+        unpaid = create(:form_submission, role: "bulk_payment", event: event)
+        allocated = create(:form_submission, role: "bulk_payment", event: event)
+        create(:payment, form_submission: allocated, amount_cents: 1000, amount_cents_remaining: 0)
+        unallocated = create(:form_submission, role: "bulk_payment", event: event)
+        create(:payment, form_submission: unallocated, amount_cents: 1000, amount_cents_remaining: 500)
+
+        get bulk_payments_path(payment_status: "unpaid"), headers: frame_headers
+        expect(response.body).to include("form-submission-row-#{unpaid.id}")
+        expect(response.body).not_to include("form-submission-row-#{allocated.id}")
+        expect(response.body).not_to include("form-submission-row-#{unallocated.id}")
+
+        get bulk_payments_path(payment_status: "fully_allocated"), headers: frame_headers
+        expect(response.body).to include("form-submission-row-#{allocated.id}")
+        expect(response.body).not_to include("form-submission-row-#{unpaid.id}")
+
+        get bulk_payments_path(payment_status: "partially_allocated"), headers: frame_headers
+        expect(response.body).to include("form-submission-row-#{unallocated.id}")
+        expect(response.body).not_to include("form-submission-row-#{allocated.id}")
+      end
+
+      it "offers a Clear filters link" do
+        get bulk_payments_path
 
         expect(response.body).to include("Clear filters")
+      end
+
+      it "tracks a view event on the full page" do
+        expect(Analytics::AhoyTracker).to receive(:track_event).with(anything, "view.bulk_payments", {})
+        get bulk_payments_path
+      end
+
+      it "does not track on the results frame request" do
+        expect(Analytics::AhoyTracker).not_to receive(:track_event)
+        get bulk_payments_path, headers: frame_headers
       end
     end
 
