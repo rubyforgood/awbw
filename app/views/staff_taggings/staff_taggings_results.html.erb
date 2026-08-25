@@ -20,14 +20,14 @@
               <tr class="transition-colors duration-150 hover:bg-gray-50">
                 <td class="px-4 py-2 text-sm">
                   <%# The person card is itself the link to edit this tagging, mirroring the
-                      topic subscriptions index. Carries return_to so the edit page's
-                      eyebrow, Cancel, and post-save redirect return to this list. %>
-                  <% card_classes = "#{DomainTheme.border_class_for(:people)} #{DomainTheme.bg_class_for(:people, intensity: 100)} #{DomainTheme.bg_class_for(:people, intensity: 100, hover: true)} #{DomainTheme.text_class_for(:people, intensity: 600)}" %>
+                      topic subscriptions index. Deliberately grey (not the people tint) so it
+                      doesn't read as a link to the person's profile. Carries return_to so the
+                      edit page's eyebrow, Cancel, and post-save redirect return to this list. %>
                   <%= link_to edit_staff_tagging_path(tagging, return_to: "staff_taggings"),
                               title: [ person&.name, person.try(:preferred_email) ].compact_blank.join(" — "),
-                              class: "group flex w-56 max-w-full items-center gap-2 overflow-hidden rounded-lg border px-2 py-1 leading-tight shadow-sm transition-colors duration-200 #{card_classes}",
+                              class: "group flex w-56 max-w-full items-center gap-2 overflow-hidden rounded-lg border border-gray-300 bg-gray-100 px-2 py-1 leading-tight text-gray-700 shadow-sm transition-colors duration-200 hover:bg-gray-200",
                               data: { turbo_frame: "_top", turbo_prefetch: false } do %>
-                    <i class="fa-solid fa-user-tag flex-shrink-0 <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i>
+                    <i class="fa-solid fa-user-tag flex-shrink-0 text-gray-500"></i>
                     <div class="flex min-w-0 flex-col justify-center">
                       <span class="truncate text-xs font-semibold"><%= truncate(person&.name.to_s, length: 30) %></span>
                       <% if person.try(:preferred_email).present? %>
