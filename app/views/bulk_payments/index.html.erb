@@ -52,15 +52,9 @@
                 class: search_field_class(extra: "search-select-placeholder") %>
         </div>
 
-        <div class="w-40">
-          <%= label_tag :start_date, "Submitted from", class: search_label_class %>
-          <%= date_field_tag :start_date, params[:start_date], class: search_field_class %>
-        </div>
+        <%= render "events/filter_date", param: :start_date, label: "Submitted from", field_class: search_field_class, wrapper_class: "w-40" %>
 
-        <div class="w-40">
-          <%= label_tag :end_date, "Submitted to", class: search_label_class %>
-          <%= date_field_tag :end_date, params[:end_date], class: search_field_class %>
-        </div>
+        <%= render "events/filter_date", param: :end_date, label: "Submitted to", field_class: search_field_class, wrapper_class: "w-40" %>
 
         <div class="flex items-end">
           <%= render "shared/search_clear", url: bulk_payments_path %>
