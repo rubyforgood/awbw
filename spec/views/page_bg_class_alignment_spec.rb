@@ -121,6 +121,8 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/staff_tags/show.html.erb"               => "admin-only bg-blue-100",
     "app/views/staff_tags/new.html.erb"                => "admin-only bg-blue-100",
     "app/views/staff_tags/edit.html.erb"               => "admin-only bg-blue-100",
+    "app/views/staff_taggings/index.html.erb"          => "admin-only bg-blue-100",
+    "app/views/staff_taggings/new.html.erb"            => "admin-only bg-blue-100",
     "app/views/staff_taggings/edit.html.erb"           => "admin-only bg-blue-100",
     "app/views/events/dashboard.html.erb"              => "admin-or-owner bg-blue-100",
     "app/views/events/attendance.html.erb"             => "admin-or-owner bg-blue-100",
