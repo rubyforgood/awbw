@@ -9,31 +9,36 @@
     <div class="flex flex-wrap items-center gap-2">
       <span class="font-medium text-gray-900"><%= event.actor_label %></span>
       <span class="text-gray-500"><%= event.action.humanize.downcase %></span>
-      <span class="text-gray-400">·</span>
-      <% if event.subject_type == "Comment" && event.subject&.persisted? %>
-        <% commentable = event.subject.commentable %>
-        <% if commentable&.persisted? %>
-          <%= link_to event.subject&.timeline_label, commentable, data: { turbo: false }, class: "text-sm text-blue-600 hover:underline" %>
+
+      <% if event.subject&.persisted? %>
+        <% if event.subject_type == "Comment" %>
+          <% commentable = event.subject.commentable %>
+          <% if commentable&.persisted? %>
+            <%= link_to event.subject&.timeline_label, commentable, data: { turbo: false }, class: "text-sm text-blue-600 hover:underline" %>
+          <% else %>
+            <span class="text-sm text-gray-700"><%= event.subject&.timeline_label %></span>
+          <% end %>
         <% else %>
-          <span class="text-sm text-gray-700"><%= event.subject&.timeline_label %></span>
+          <%= link_to event.subject&.timeline_label, event.subject, data: { turbo: false }, class: "text-sm text-blue-600 hover:underline" %>
         <% end %>
-      <% elsif event.subject&.persisted? %>
-        <%= link_to event.subject&.timeline_label, event.subject, data: { turbo: false }, class: "text-sm text-blue-600 hover:underline" %>
       <% else %>
         <span class="text-sm text-gray-700"><%= event.subject&.timeline_label %></span>
       <% end %>
     </div>
 
     <% changes = event.snapshot["changes"] %>
+
     <% if changes.present? %>
       <div class="mt-1.5 flex flex-wrap gap-1.5">
         <% changes.each do |attribute, (old_value, new_value)| %>
           <span class="inline-flex items-center gap-1 rounded border border-gray-200 bg-white px-2 py-0.5 text-xs text-gray-600">
             <span class="font-medium text-gray-700"><%= attribute.humanize %></span>
+
             <% if old_value.present? %>
               <span class="text-gray-400 line-through"><%= old_value %></span>
               <i class="fa-solid fa-arrow-right text-2xs text-gray-300"></i>
             <% end %>
+
             <span class="text-gray-700"><%= new_value.presence || "—" %></span>
           </span>
         <% end %>
