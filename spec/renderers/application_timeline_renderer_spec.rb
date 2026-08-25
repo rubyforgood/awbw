@@ -50,5 +50,15 @@ RSpec.describe ApplicationTimelineRenderer do
     it "uses ApplicationTimelineRenderer for a model without a custom renderer" do
       expect(Person.timeline_renderer_class).to eq(ApplicationTimelineRenderer)
     end
+
+    it "resolves renderer class to ApplicationTimelineRenderer when subject is nil" do
+      event = TimelineEvent.new(subject: nil, action: "destroyed", snapshot: { "label" => "Scholarship: Test" })
+
+      renderer_class = event.subject&.class&.timeline_renderer_class || ApplicationTimelineRenderer
+      expect(renderer_class).to eq(ApplicationTimelineRenderer)
+
+      renderer = renderer_class.new(event)
+      expect(renderer.label).to include("Scholarship: Test")
+    end
   end
 end
