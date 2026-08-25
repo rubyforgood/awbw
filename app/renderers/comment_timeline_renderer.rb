@@ -1,13 +1,12 @@
 class CommentTimelineRenderer < ApplicationTimelineRenderer
   def label
-    commentable = @event.subject&.commentable
-    return @event.subject&.timeline_label unless commentable&.persisted?
+    subject = @event.subject
+    commentable = subject&.commentable
 
-    link_to(
-      @event.subject.timeline_label,
-      Rails.application.routes.url_helpers.polymorphic_path(commentable),
-      data: { turbo: false },
-      class: "text-sm text-blue-600 hover:underline"
-    )
+    text = subject&.timeline_label
+    return unless text
+    return content_tag(:span, text, class: "text-sm text-gray-700") unless commentable&.persisted?
+
+    link_to(text, path_for(commentable), data: { turbo: false }, class: "text-sm text-blue-600 hover:underline")
   end
 end

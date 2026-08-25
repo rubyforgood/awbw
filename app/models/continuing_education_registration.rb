@@ -194,6 +194,10 @@ class ContinuingEducationRegistration < ApplicationRecord
     "CE Registration: #{event_registration.registrant.timeline_label}"
   end
 
+  def timeline_renderer_class
+    ContinuingEducationRegistrationTimelineRenderer
+  end
+
   private
 
   # Snapshot the hours offered and total cost from the event when they aren't set

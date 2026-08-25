@@ -1078,6 +1078,10 @@ class EventRegistration < ApplicationRecord
     "Event Registration: #{event.name}"
   end
 
+  def timeline_renderer_class
+    EventRegistrationTimelineRenderer
+  end
+
   def timeline_also_log
     [ registrant ].compact
   end

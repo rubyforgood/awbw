@@ -1,13 +1,12 @@
 class NotificationTimelineRenderer < ApplicationTimelineRenderer
   def label
-    noticeable = @event.subject&.noticeable
-    return @event.subject&.timeline_label unless noticeable&.persisted?
+    subject = @event.subject
+    noticeable = subject&.noticeable
 
-    link_to(
-      @event.subject.timeline_label,
-      Rails.application.routes.url_helpers.polymorphic_path(noticeable),
-      data: { turbo: false },
-      class: "text-sm text-blue-600 hover:underline"
-    )
+    text = subject&.timeline_label
+    return unless text
+    return content_tag(:span, text, class: "text-sm text-gray-700") unless noticeable&.persisted?
+
+    link_to(text, path_for(noticeable), data: { turbo: false }, class: "text-sm text-blue-600 hover:underline")
   end
 end
