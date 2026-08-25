@@ -1,8 +1,8 @@
 <%= form_tag(staff_taggings_path, method: :get,
-  data: { controller: "collection", turbo_frame: "staff_taggings_results" },
+  data: { controller: "collection searchable-checkbox", turbo_frame: "staff_taggings_results" },
   autocomplete: "off",
   class: "space-y-4") do |f| %>
-  <div class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end">
+  <div class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-start">
     <!-- Person or organization name -->
     <div class="w-full md:flex-1">
       <%= label_tag :query, "Person or organization name", class: search_label_class %>
@@ -14,16 +14,36 @@
       </div>
     </div>
 
-    <!-- Staff tag -->
-    <%= render "events/filter_select", param: :staff_tag_ids, label: "Staff tag",
-          options: StaffTag.published.ordered.map { |t| [ t.name, t.id ] },
-          selected: params[:staff_tag_ids], blank: "Any tag",
-          field_class: search_field_class, wrapper_class: "w-full md:w-64",
-          hint: link_to("Manage staff tags", staff_tags_path, class: eyebrow_link_class, target: "_blank", rel: "noopener") %>
+    <!-- Comments & communications content -->
+    <div class="w-full md:flex-1">
+      <%= label_tag :content, "Comments & communications", class: search_label_class %>
+      <div class="relative">
+        <%= text_field_tag :content, params[:content],
+                           class: search_field_class(extra: "pr-10"),
+                           placeholder: "" %>
+        <%= render "shared/search_submit" %>
+      </div>
+    </div>
+
+    <!-- Staff tag (multiselect) -->
+    <div class="w-full md:w-64">
+      <%= label_tag :staff_tag_ids, "Staff tag", class: search_label_class %>
+      <%= select_tag "staff_tag_ids[]",
+            options_for_select(StaffTag.published.ordered.map { |t| [ t.name, t.id ] }, Array(params[:staff_tag_ids]).map(&:to_i)),
+            multiple: true,
+            include_blank: false,
+            class: "w-full",
+            data: { searchable_checkbox_target: "select" } %>
+      <p class="mt-1 text-xs text-gray-500">
+        <%= link_to "Manage staff tags", staff_tags_path, class: eyebrow_link_class, target: "_blank", rel: "noopener" %>
+      </p>
+    </div>
 
     <!-- Clear filters -->
     <div class="w-full md:ml-auto md:w-auto">
-      <%= render "shared/search_clear", url: staff_taggings_path %>
+      <span class="<%= search_label_class(extra: "invisible") %>" aria-hidden="true">Clear</span>
+      <%= render "shared/search_clear", url: staff_taggings_path,
+            action: "searchable-checkbox#clear collection#clearAndSubmit" %>
     </div>
   </div>
 <% end %>

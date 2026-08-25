@@ -40,10 +40,24 @@ class StaffTagging < ApplicationRecord
     Person.search(query).ids | Person.organization_name(query).ids
   end
 
+  # Matches the tagging's own logged comments and communications (notifications)
+  # by their text — the content recorded on the edit page.
+  scope :matching_content, ->(query) {
+    return all if query.blank?
+    like = "%#{sanitize_sql_like(query)}%"
+    comment_ids = Comment.where(commentable_type: name)
+                         .where("comments.body LIKE :q OR comments.topic LIKE :q", q: like)
+                         .select(:commentable_id)
+    communication_ids = Notification.where(noticeable_type: name)
+                                    .where("notifications.email_subject LIKE :q OR notifications.email_body_text LIKE :q OR notifications.custom_subject LIKE :q OR notifications.custom_message LIKE :q", q: like)
+                                    .select(:noticeable_id)
+    where(id: comment_ids).or(where(id: communication_ids)) }
+
   def self.search_by_params(params)
     results = all
     results = results.for_staff_tag(params[:staff_tag_ids]) if params[:staff_tag_ids].present?
     results = results.matching_text(params[:query]) if params[:query].present?
+    results = results.matching_content(params[:content]) if params[:content].present?
     results
   end
 

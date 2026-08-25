@@ -8,10 +8,14 @@
       <div id="staff_taggings_count" class="pr-6">
         <h2 class="mb-2 text-2xl font-semibold">Staff taggings</h2>
       </div>
+      <% if allowed_to?(:new?, StaffTagging) %>
+        <%= link_to "New tagging", new_staff_tagging_path,
+                    class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+      <% end %>
     </div>
     <p class="mb-4 max-w-2xl text-sm text-gray-600">
-      Every person carrying a staff tag. Filter by tag, or search by person or
-      organization name.
+      Every person carrying a staff tag. Filter by tag, search by person or
+      organization name, or search comments &amp; communications content.
     </p>
     <%= render "search_boxes" %>
 

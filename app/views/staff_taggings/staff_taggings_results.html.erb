@@ -1,3 +1,5 @@
+<% sort_base = params.permit(:query, :content, :number_of_items_per_page, staff_tag_ids: []).to_h.symbolize_keys %>
+<% sort_link = sort_header_link(frame: "staff_taggings_results", path: ->(p) { staff_taggings_path(p) }, base: sort_base) %>
 <%= turbo_frame_tag :staff_taggings_results do %>
   <%= turbo_stream.replace("staff_taggings_count", partial: "staff_taggings_count") %>
 
@@ -7,9 +9,9 @@
         <table class="w-full border-collapse border border-gray-200">
           <thead class="bg-gray-100">
             <tr>
-              <th class="w-1/3 px-4 py-2 text-left text-sm font-semibold text-gray-700">Person</th>
-              <th class="w-1/4 px-4 py-2 text-left text-sm font-semibold text-gray-700">Staff tag</th>
-              <th class="w-1/4 px-4 py-2 text-left text-sm font-semibold text-gray-700">Tagged</th>
+              <th class="w-1/3 px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("person", "Person") %></th>
+              <th class="w-1/4 px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("staff_tag", "Staff tag") %></th>
+              <th class="w-1/4 px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("created_at", "Tagged") %></th>
               <th class="w-[120px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
             </tr>
           </thead>

@@ -54,6 +54,34 @@ RSpec.describe "/staff_taggings", type: :request do
         expect(response.body).to include("Org Member")
         expect(response.body).not_to include("No Org")
       end
+
+      it "searches comments and communications content" do
+        commented = create(:staff_tagging, staff_taggable: create(:person, first_name: "Has", last_name: "Comment"))
+        create(:comment, commentable: commented, body: "escalated after a phone call")
+        messaged = create(:staff_tagging, staff_taggable: create(:person, first_name: "Has", last_name: "Message"))
+        create(:notification, noticeable: messaged, email_subject: "escalated follow-up")
+        create(:staff_tagging, staff_taggable: create(:person, first_name: "No", last_name: "Content"))
+
+        get staff_taggings_path, params: { content: "escalated" }, headers: turbo_headers
+
+        expect(response.body).to include("Has Comment")
+        expect(response.body).to include("Has Message")
+        expect(response.body).not_to include("No Content")
+      end
+
+      it "filters by multiple staff tags at once" do
+        tag_a = create(:staff_tag, name: "Alpha")
+        tag_b = create(:staff_tag, name: "Bravo")
+        create(:staff_tagging, staff_tag: tag_a, staff_taggable: create(:person, first_name: "In", last_name: "Alpha"))
+        create(:staff_tagging, staff_tag: tag_b, staff_taggable: create(:person, first_name: "In", last_name: "Bravo"))
+        create(:staff_tagging, staff_tag: create(:staff_tag, name: "Other"), staff_taggable: create(:person, first_name: "In", last_name: "Other"))
+
+        get staff_taggings_path, params: { staff_tag_ids: [ tag_a.id, tag_b.id ] }, headers: turbo_headers
+
+        expect(response.body).to include("In Alpha")
+        expect(response.body).to include("In Bravo")
+        expect(response.body).not_to include("In Other")
+      end
     end
 
     context "as a non-admin" do
@@ -62,6 +90,32 @@ RSpec.describe "/staff_taggings", type: :request do
         get staff_taggings_path
         expect(response).not_to have_http_status(:ok)
       end
+    end
+  end
+
+  describe "POST /staff_taggings (create)" do
+    before { sign_in admin }
+
+    it "tags a person with a staff tag" do
+      person = create(:person)
+      tag = create(:staff_tag)
+
+      expect {
+        post staff_taggings_path, params: { staff_tagging: { person_id: person.id, staff_tag_id: tag.id } }
+      }.to change(StaffTagging, :count).by(1)
+
+      expect(response).to redirect_to(staff_taggings_path)
+      expect(StaffTagging.last.staff_taggable).to eq(person)
+      expect(StaffTagging.last.staff_tag).to eq(tag)
+    end
+
+    it "rejects a tagging with no person" do
+      tag = create(:staff_tag)
+
+      expect {
+        post staff_taggings_path, params: { staff_tagging: { person_id: "", staff_tag_id: tag.id } }
+      }.not_to change(StaffTagging, :count)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 

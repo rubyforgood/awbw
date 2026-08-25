@@ -6,6 +6,14 @@ RSpec.describe StaffTaggingsController, type: :routing do
       expect(get: "/staff_taggings").to route_to("staff_taggings#index")
     end
 
+    it "routes to #new" do
+      expect(get: "/staff_taggings/new").to route_to("staff_taggings#new")
+    end
+
+    it "routes to #create via POST" do
+      expect(post: "/staff_taggings").to route_to("staff_taggings#create")
+    end
+
     it "routes to #edit" do
       expect(get: "/staff_taggings/1/edit").to route_to("staff_taggings#edit", id: "1")
     end

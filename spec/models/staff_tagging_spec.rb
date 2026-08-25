@@ -66,5 +66,27 @@ RSpec.describe StaffTagging, type: :model do
       expect(results).to include(hit)
       expect(results).not_to include(miss)
     end
+
+    it "matches on comment content" do
+      hit = create(:staff_tagging)
+      create(:comment, commentable: hit, body: "needs a follow-up call")
+      miss = create(:staff_tagging)
+
+      results = described_class.search_by_params(content: "follow-up")
+
+      expect(results).to include(hit)
+      expect(results).not_to include(miss)
+    end
+
+    it "matches on communication content" do
+      hit = create(:staff_tagging)
+      create(:notification, noticeable: hit, email_subject: "quarterly outreach")
+      miss = create(:staff_tagging)
+
+      results = described_class.search_by_params(content: "quarterly")
+
+      expect(results).to include(hit)
+      expect(results).not_to include(miss)
+    end
   end
 end

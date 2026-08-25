@@ -9,7 +9,7 @@ RSpec.describe StaffTaggingPolicy, type: :policy do
     described_class.new(record, user: user)
   end
 
-  %i[index? edit? update? destroy?].each do |rule|
+  %i[index? new? create? edit? update? destroy?].each do |rule|
     describe "##{rule}" do
       it { expect(policy_for(user: admin_user)).to be_allowed_to(rule) }
       it { expect(policy_for(user: regular_user)).not_to be_allowed_to(rule) }

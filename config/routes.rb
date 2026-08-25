@@ -67,7 +67,7 @@ Rails.application.routes.draw do
   end
   resources :category_types
   resources :staff_tags
-  resources :staff_taggings, only: [ :index, :edit, :update, :destroy ]
+  resources :staff_taggings, only: [ :index, :new, :create, :edit, :update, :destroy ]
   resources :categories do
     collection do
       get :dedupe_index

@@ -2,6 +2,10 @@ class StaffTaggingPolicy < ApplicationPolicy
   # Staff taggings are internal, admin-only — mirrors StaffTagPolicy.
   def index? = admin?
 
+  def new? = admin?
+
+  def create? = admin?
+
   def edit?
     record.persisted? && admin?
   end
