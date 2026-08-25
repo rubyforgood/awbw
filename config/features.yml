@@ -2301,3 +2301,28 @@
     - "\"New tagging\" tags a person in one step; each staff tag on the staff tags page also has a \"View taggings\" link, pre-filtered to that tag."
     - "Editing a tagging lets you switch its tag and record comments or communications about it, all on one page."
     - "Reach it from the admin home page under \"Staff taggings\"."
+
+- name: "Merge duplicate organizations"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-08-25
+  pr_number: 2374
+  action_path: "/organizations/dedupe_index"
+  summary: >-
+    Admins can now merge two duplicate organizations into one. The deduper
+    suggests likely duplicates (by name, name minus Inc/LLC, FileMaker code, and
+    shared address), then previews exactly what will move before merging.
+  description: >-
+    Reach it from the Dedupe link on the Organizations page. It clusters likely
+    duplicates and flags why each was grouped — same name, a matching FileMaker
+    code, or a shared address. Because FileMaker is the source of truth, two
+    records with different FileMaker codes are surfaced as a conflict to resolve by
+    hand rather than merged automatically. The preview shows a side-by-side of both
+    records with the kept record's key fields editable, plus a summary of every
+    associated record (affiliations, event registrations, reports, payments,
+    workshop logs, tags, and more) that moves to the kept organization. The merge
+    reassigns all of them and deletes the duplicate. It can't be undone. Admin-only.
+  pro_tips:
+    - "Edit the kept organization's fields right in the preview before you merge."
+    - "Use Swap if you picked the wrong record to keep."
+    - "A different FileMaker code on each record is a warning — decide which one is correct first."

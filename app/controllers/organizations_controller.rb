@@ -288,6 +288,10 @@ class OrganizationsController < ApplicationController
       model_class: Organization,
       domain: :organizations,
       candidate_finder: -> { OrganizationServices::DuplicateFinder.new.groups },
+      editable_columns: %w[
+        name filemaker_code email website_url agency_type description
+        mission_vision_values notes organization_status_id organization_obligation_id
+      ],
       belongs_to_options: -> {
         {
           "organization_status_id" => OrganizationStatus.order(:name),
@@ -295,7 +299,7 @@ class OrganizationsController < ApplicationController
         }
       },
       record_extras: ->(org) {
-        [ org.filemaker_code.presence && "FileMaker #{org.filemaker_code}", org.program_location ].compact.join(", ").presence
+        [ org.filemaker_code.presence && "FileMaker #{org.filemaker_code}", org.program_location ].compact.join(" · ").presence
       }
     }
   end

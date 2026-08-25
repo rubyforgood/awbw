@@ -39,9 +39,9 @@ module Dedupable
       return redirect_to url_for(action: :dedupe_index),
         alert: "#{mc.model_name.human} not found (ID: #{missing.join(', ')})."
     end
-    join_assoc, join_incl = dedupe_primary_join(mc)
-    @delete_items = @record_to_delete.public_send(join_assoc).includes(join_incl)
-    @keep_items = @record_to_keep.public_send(join_assoc).includes(join_incl)
+    deduper = ModelDeduper.new(model_class: mc)
+    @reassignment_delete = deduper.reassignment_counts(@record_to_delete)
+    @reassignment_keep = deduper.reassignment_counts(@record_to_keep)
     @dedupe = build_dedupe_vars(config)
 
     render "dedupes/preview"
@@ -83,17 +83,18 @@ module Dedupable
       record_to_keep.update!(params.require(keep_param_key).permit(editable))
     end
 
+    deduper = ModelDeduper.new(model_class: mc, logger: Rails.logger, dry_run: false, min_usage: 0)
+
     if respond_to?(:track_event, true)
       track_event("dedupe.#{mn}", {
         resource_type: mc.name,
         resource_id: record_to_keep.id,
         deleted_record: record_to_delete.attributes,
         kept_record: { id: record_to_keep.id, name: record_to_keep.name },
-        associations_moved: record_to_delete.public_send(dedupe_primary_join(mc).first).count
+        associations_moved: deduper.reassignment_counts(record_to_delete).values.sum
       })
     end
 
-    deduper = ModelDeduper.new(model_class: mc, logger: Rails.logger, dry_run: false, min_usage: 0)
     deduper.merge(record_to_keep, record_to_delete)
 
     label = mc.model_name.human.pluralize
@@ -131,27 +132,9 @@ module Dedupable
       .map { |name, records| CandidateGroup.new(label: name, records: records, reasons: []) }
   end
 
-  # Returns [association_name, includes_name] for the primary polymorphic join.
-  # e.g. [:categorizable_items, :categorizable]
-  def dedupe_primary_join(mc)
-    assoc = mc.reflect_on_all_associations(:has_many).find do |a|
-      next if a.options[:through]
-      begin
-        a.klass.reflect_on_all_associations(:belongs_to).any?(&:polymorphic?)
-      rescue NameError
-        false
-      end
-    end
-    raise "No polymorphic join found for #{mc.name}" unless assoc
-
-    poly = assoc.klass.reflect_on_all_associations(:belongs_to).find(&:polymorphic?)
-    [ assoc.name, poly.name ]
-  end
-
   def build_dedupe_vars(config)
     mc = config[:model_class]
     mn = mc.model_name.singular
-    join_assoc, join_incl = dedupe_primary_join(mc)
     opts = config[:belongs_to_options]
 
     {
@@ -162,9 +145,7 @@ module Dedupable
       delete_id_param: "#{mn}_to_delete_id",
       keep_id_param: "#{mn}_to_keep_id",
       keep_param_key: "#{mn}_to_keep".to_sym,
-      item_type_col: "#{join_incl}_type".to_sym,
-      item_id_col: "#{join_incl}_id".to_sym,
-      join_association: join_assoc,
+      editable_columns: config[:editable_columns],
       belongs_to_options: opts.is_a?(Proc) ? opts.call : (opts || {}),
       record_extras: config[:record_extras]
     }

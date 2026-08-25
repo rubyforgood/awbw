@@ -1,0 +1,15 @@
+<%# One column of the reassignment summary. Locals: border, title, counts (hash), empty (string). %>
+<div class="border-x border-b <%= border %> rounded-b-xl bg-white px-5 py-3">
+  <h3 class="text-sm font-semibold text-gray-700 mb-2"><%= title %></h3>
+  <% if counts.any? %>
+    <div class="flex flex-wrap gap-1.5">
+      <% counts.sort_by { |label, _count| label }.each do |label, count| %>
+        <span class="text-xs text-gray-700 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-full">
+          <%= label %> <span class="font-semibold"><%= count %></span>
+        </span>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="text-sm text-gray-400"><%= empty %></p>
+  <% end %>
+</div>

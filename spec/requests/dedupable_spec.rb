@@ -326,16 +326,19 @@ RSpec.describe "Dedupable concern", type: :request do
     describe "GET dedupe_preview" do
       let!(:keep) { create(:organization, name: "Keep Org") }
       let!(:delete_rec) { create(:organization, name: "Delete Org") }
+      before { create(:affiliation, organization: delete_rec) }
 
-      it "renders the preview page" do
+      it "renders the preview with a reassignment summary and curated fields" do
         get dedupe_preview_organizations_path(
           organization_to_keep_id: keep.id,
           organization_to_delete_id: delete_rec.id
         )
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Keep Org")
-        expect(response.body).to include("Delete Org")
+        expect(response.body).to include("Keep Org", "Delete Org")
+        expect(response.body).to include("Records that will move", "Affiliations")
+        expect(response.body).to include("Website url")
+        expect(response.body).not_to include("Profile show age ranges")
       end
     end
 

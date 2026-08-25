@@ -36,6 +36,18 @@ class ModelDeduper
     merge_duplicate(record_to_keep, record_to_delete, usage_counts)
   end
 
+  # A { human label => count } of the records that would be reassigned off this
+  # record on merge, skipping empty associations. Drives the preview so an admin
+  # sees exactly what moves (affiliations, event registrations, reports, …).
+  def reassignment_counts(record)
+    reassignable_joins.each_with_object({}) do |join, counts|
+      count = join[:join_class].where(join[:foreign_key] => record.id).count
+      next if count.zero?
+
+      counts[join_label(join[:join_class])] = count
+    end
+  end
+
   private
 
   # Every association that references this model by a foreign key — whether a
@@ -136,6 +148,10 @@ class ModelDeduper
 
   def model_label
     model_class.name.underscore.humanize.downcase
+  end
+
+  def join_label(join_class)
+    (join_class.name || join_class.table_name.classify).underscore.humanize.pluralize
   end
 
   def usage_counts

@@ -1,75 +1,64 @@
-<% color = DomainTheme.color_for(@dedupe[:domain]) %>
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(color) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(@dedupe[:domain]) %> rounded-xl border border-gray-200 p-6 shadow">
+  <div class="space-y-6">
 
-        <!-- Header -->
-        <div class="flex items-start justify-between mb-6">
-          <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">
-              Preview <%= @dedupe[:model_label] %> Deduplication
-            </h1>
-            <p class="text-gray-500 mt-6">
-              Review the differences before merging.
-            </p>
-            <p class="text-gray-500 mt-1">
-              The <%= @dedupe[:model_label].downcase %> on the left will be deleted and its associations reassigned to the right.
-            </p>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <%= link_to url_for(action: :dedupe_preview, @dedupe[:delete_id_param] => @record_to_keep.id, @dedupe[:keep_id_param] => @record_to_delete.id),
-                        class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors inline-flex items-center gap-2 text-sm font-medium" do %>
-              <i class="fa-solid fa-arrows-rotate"></i> Swap
-            <% end %>
-            <%= link_to url_for(action: :dedupe_index),
-                        class: "px-4 py-2 bg-#{color}-600 text-white rounded hover:bg-#{color}-700 transition-colors inline-flex items-center gap-2 text-sm font-medium" do %>
-              <i class="fa-solid fa-arrow-left"></i> Back to Dedupe
-            <% end %>
-          </div>
-        </div>
-
-        <!-- Perform Form wraps comparison + warning + buttons -->
-        <%= form_with url: url_for(action: :dedupe_perform), method: :post,
-                      data: { turbo: false,
-                              turbo_confirm: "Are you sure you want to merge these #{@dedupe[:model_label_plural].downcase}? This action cannot be undone!" } do |f| %>
-          <%= f.hidden_field @dedupe[:delete_id_param].to_sym, value: @record_to_delete.id %>
-          <%= f.hidden_field @dedupe[:keep_id_param].to_sym, value: @record_to_keep.id %>
-
-          <%= render "dedupes/preview",
-                     domain: @dedupe[:domain],
-                     record_to_delete: @record_to_delete,
-                     record_to_keep: @record_to_keep,
-                     delete_items: @delete_items,
-                     keep_items: @keep_items,
-                     item_type_col: @dedupe[:item_type_col],
-                     item_id_col: @dedupe[:item_id_col],
-                     model_label: @dedupe[:model_label],
-                     keep_param_key: @dedupe[:keep_param_key],
-                     form_builder: f,
-                     belongs_to_options: @dedupe[:belongs_to_options] %>
-
-          <!-- Warning -->
-          <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-            <div class="flex items-start gap-3">
-              <i class="fa-solid fa-triangle-exclamation text-red-400 mt-0.5"></i>
-              <p class="text-sm text-red-700">
-                <strong class="text-red-900">Danger:</strong> This action cannot be undone.
-                "<%= @record_to_delete.name %>" (ID: <%= @record_to_delete.id %>) will be permanently deleted
-                and its <%= @delete_items.count %> associations moved to
-                "<%= @record_to_keep.name %>" (ID: <%= @record_to_keep.id %>).
-              </p>
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex gap-4 justify-center">
-            <%= f.submit "Perform merge",
-                        class: "px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold" %>
-
-            <%= link_to "Cancel",
-                        url_for(action: :dedupe_index),
-                        class: "px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-semibold" %>
-          </div>
-        <% end %>
-
+    <!-- Eyebrow + header -->
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <%= link_to "← Back to dedupe", url_for(action: :dedupe_index),
+                    class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <h1 class="mt-2 text-2xl font-semibold text-gray-900">
+          Preview <%= @dedupe[:model_label].downcase %> merge
+        </h1>
+        <p class="mt-1 text-gray-500">
+          The <%= @dedupe[:model_label].downcase %> on the left is deleted; its records
+          move to the one on the right. Edit the keeper's fields before merging.
+        </p>
       </div>
+      <%= link_to url_for(action: :dedupe_preview, @dedupe[:delete_id_param] => @record_to_keep.id, @dedupe[:keep_id_param] => @record_to_delete.id),
+                  class: "btn btn-secondary-outline btn-sm shrink-0" do %>
+        <i class="fa-solid fa-arrows-rotate"></i> Swap
+      <% end %>
+    </div>
+
+    <%= form_with url: url_for(action: :dedupe_perform), method: :post,
+                  data: { turbo: false,
+                          turbo_confirm: "Merge these #{@dedupe[:model_label_plural].downcase}? This can't be undone." } do |f| %>
+      <%= f.hidden_field @dedupe[:delete_id_param].to_sym, value: @record_to_delete.id %>
+      <%= f.hidden_field @dedupe[:keep_id_param].to_sym, value: @record_to_keep.id %>
+
+      <%= render "dedupes/preview",
+                 domain: @dedupe[:domain],
+                 record_to_delete: @record_to_delete,
+                 record_to_keep: @record_to_keep,
+                 reassignment_delete: @reassignment_delete,
+                 reassignment_keep: @reassignment_keep,
+                 model_label: @dedupe[:model_label],
+                 keep_param_key: @dedupe[:keep_param_key],
+                 editable_columns: @dedupe[:editable_columns],
+                 form_builder: f,
+                 belongs_to_options: @dedupe[:belongs_to_options] %>
+
+      <!-- Warning -->
+      <div class="rounded-xl border border-red-200 bg-red-50 p-4">
+        <div class="flex items-start gap-3">
+          <i class="fa-solid fa-triangle-exclamation mt-0.5 text-red-400"></i>
+          <p class="text-sm text-red-700">
+            <strong class="text-red-900">This can't be undone.</strong>
+            "<%= @record_to_delete.name %>" (ID <%= @record_to_delete.id %>) will be deleted and
+            <%= @reassignment_delete.values.sum %> associated
+            <%= "record".pluralize(@reassignment_delete.values.sum) %> moved to
+            "<%= @record_to_keep.name %>" (ID <%= @record_to_keep.id %>).
+          </p>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex justify-end gap-3">
+        <%= link_to "Cancel", url_for(action: :dedupe_index), class: "btn btn-secondary-outline" %>
+        <%= f.submit "Merge #{@dedupe[:model_label_plural].downcase}", class: "btn btn-danger" %>
+      </div>
+    <% end %>
+
+  </div>
 </div>
