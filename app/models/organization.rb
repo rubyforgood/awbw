@@ -1,6 +1,6 @@
 class Organization < ApplicationRecord
   include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable # Publishable
-  include Communicable
+  include Communicable, HasTimeline, Timelineable
   belongs_to :organization_status
   belongs_to :organization_obligation, optional: true
   belongs_to :location, optional: true # TODO - remove Location if unused
@@ -18,6 +18,10 @@ class Organization < ApplicationRecord
   # An organization is its own correspondent — there is no person behind it.
   def communications_email
     email
+  end
+
+  def timeline_label
+    "Organization: #{name}"
   end
   has_many :reports
   has_many :workshop_logs

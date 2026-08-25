@@ -10,6 +10,7 @@ module TimelineServices
         when ContinuingEducationRegistration then [ subject.commentable.event_registration&.registrant ].compact
         when Scholarship then [ subject.commentable.recipient ].compact
         when TopicSubscription then [ subject.commentable.person ].compact
+        when Organization then [ subject.commentable ].compact
         else []
         end
       when Notification
@@ -27,7 +28,7 @@ module TimelineServices
         end
         targets.uniq
       when Affiliation
-        [ subject.person ].compact
+        [ subject.person, subject.organization ].compact.uniq
       else
         return [ subject ] if subject.is_a?(HasTimeline)
 

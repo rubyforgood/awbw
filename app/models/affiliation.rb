@@ -29,6 +29,10 @@ class Affiliation < ApplicationRecord
   def communications_email
     person&.preferred_email
   end
+
+  def self.timeline_renderer_class
+    AffiliationTimelineRenderer
+  end
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
   # Validations

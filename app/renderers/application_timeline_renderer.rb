@@ -2,8 +2,9 @@ class ApplicationTimelineRenderer
   include ActionView::Helpers::UrlHelper
   include ActionView::Helpers::TagHelper
 
-  def initialize(event)
+  def initialize(event, owner: nil)
     @event = event
+    @owner = owner
   end
 
   def label
@@ -21,7 +22,11 @@ class ApplicationTimelineRenderer
 
   private
 
+  def routes
+    Rails.application.routes.url_helpers
+  end
+
   def path_for(record)
-    Rails.application.routes.url_helpers.polymorphic_path(record)
+    routes.polymorphic_path(record)
   end
 end

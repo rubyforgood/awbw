@@ -1,0 +1,12 @@
+<%= turbo_frame_tag "organization_timeline_section" do %>
+  <% if timeline_events.any? %>
+    <div class="space-y-3">
+      <%= render partial: "timeline/event", collection: timeline_events, as: :event, locals: { owner: organization } %>
+    </div>
+    <div class="mt-6 flex justify-center">
+      <%= tailwind_paginate timeline_events, params: { section: "timeline" } %>
+    </div>
+  <% else %>
+    <p class="italic text-gray-500">No activity recorded yet.</p>
+  <% end %>
+<% end %>
