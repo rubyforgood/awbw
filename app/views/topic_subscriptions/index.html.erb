@@ -4,6 +4,12 @@
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
     <%= link_to "← Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <div class="flex items-center gap-4">
+      <% if allowed_to?(:index?, Person) %>
+        <%= link_to "People", people_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+      <% end %>
+      <% if allowed_to?(:index?, StaffTagging) %>
+        <%= link_to "Staff taggings", staff_taggings_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+      <% end %>
       <%= link_to "Email addresses", email_addresses_topic_subscriptions_path(request.query_parameters), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <%= link_to "Manage topics", topic_subscription_types_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     </div>

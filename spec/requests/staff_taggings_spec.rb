@@ -130,7 +130,8 @@ RSpec.describe "/staff_taggings", type: :request do
         get edit_staff_tagging_path(staff_tagging)
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Staff tag: VIP")
+        expect(response.body).to include("Edit staff tagging")
+        expect(response.body).to include("VIP")
         expect(response.body).to include("Comments &amp; communications")
         expect(response.body).to include("Add comment")
         expect(response.body).to include("Add communication")
