@@ -50,7 +50,7 @@ class EventRegistrationImportsController < ApplicationController
     end
     blob.purge
 
-    redirect_to event_registrations_path(event_id: @event.id, admin: true), notice: import_notice(result)
+    redirect_to registrants_event_path(@event), notice: import_notice(result)
   rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
     redirect_to new_event_registration_import_path,
                 alert: "That upload is no longer available — please choose the file again."

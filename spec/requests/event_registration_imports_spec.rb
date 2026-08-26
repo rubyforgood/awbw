@@ -93,7 +93,7 @@ RSpec.describe "Event registration imports", type: :request do
       }.to change(Person, :count).by(3).and change { event.event_registrations.count }.by(3)
 
       expect(event.event_registrations.pluck(:status).uniq).to eq([ "attended" ])
-      expect(response).to redirect_to(event_registrations_path(event_id: event.id, admin: true))
+      expect(response).to redirect_to(registrants_event_path(event))
       expect(flash[:notice]).to match(/3 attended registrations created/)
     end
 

@@ -1,7 +1,7 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:event_registrations) %> rounded-xl border border-gray-200 p-6 shadow">
   <div class="mb-4 flex flex-wrap justify-end gap-2">
-    <%= link_to "← Registrants", event_registrations_path(event_id: @event&.id, admin: true),
+    <%= link_to "← Registrants", (@event ? registrants_event_path(@event) : events_path),
                 class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
@@ -45,7 +45,7 @@
       </div>
       <div class="flex items-center gap-2">
         <%= f.submit "Preview import", class: "btn btn-primary-outline bg-blue-100" %>
-        <%= link_to "Cancel", event_registrations_path(event_id: @event&.id, admin: true),
+        <%= link_to "Cancel", (@event ? registrants_event_path(@event) : events_path),
                     class: "btn btn-secondary-outline" %>
       </div>
     <% end %>

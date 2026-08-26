@@ -18,11 +18,6 @@
                             event_registrations_path(request.query_parameters.merge(format: :csv)),
                             class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
               <% end %>
-              <% if allowed_to?(:import?, EventRegistration) %>
-                <%= link_to "Import registrants",
-                            new_event_registration_import_path(event_id: @filtered_event&.id),
-                            class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
-              <% end %>
               <% if allowed_to?(:new?, EventRegistration) %>
                 <%= link_to "New #{EventRegistration.model_name.human.downcase}",
                             new_event_registration_path(return_to: "index"),
