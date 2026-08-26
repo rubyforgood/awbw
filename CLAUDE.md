@@ -390,15 +390,17 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 - **Do not rename branches after creating a PR** — deleting the old remote branch auto-closes the PR on GitHub, and the head ref cannot be changed after creation
 - Use `docs/pull_request_template.md` for PR description structure
 - **Remove the `Closes …` line when there's no ticket** — it's a template placeholder. Keep it (with a real issue link) only when the PR closes a tracked ticket; otherwise drop the line entirely rather than leaving the placeholder.
-- **Keep descriptions as short as possible** — a few terse bullets, not paragraphs. Cut anything a reviewer can see from the diff; only keep what explains *why*.
-  - **Bullets over prose, always.** Never write a paragraph where a bullet works. One idea per bullet; if a bullet needs a comma-spliced second clause, split it into two bullets instead.
-  - **Short sentences.** Aim for one clause per bullet. Drop filler ("this PR", "in order to", "as well as"), hedging, and restating the ticket. Prefer sentence fragments over full sentences when they're clear.
-  - **Group with headers** once the description covers more than one topic — a `##`/`###` header per section, bullets underneath — instead of a long undifferentiated list or run of paragraphs.
+- **Lead with one plain-language sentence** — right after the review-depth tag, write a single sentence a non-dev could read that says what changes and, when you know it, *why it matters* (the user problem or business reason it solves). This is the one line that must land; everything below it is supporting detail. Write it like you're telling a colleague, not filing a report.
+  - **Say the business reason when it's available, skip it when it isn't.** If the change fixes a pain point, unblocks a workflow, or was asked for, name that in plain terms ("facilitators couldn't tell which registrants had paid"). If no reason is known, don't invent one or pad — just describe the change plainly and move on.
+- **Keep the whole thing short enough to read in one glance** — the lead sentence plus at most a handful of bullets. If it's longer than a short screenful, cut. A reviewer skims first; make the main point impossible to miss.
+  - **Cut anything the diff already shows.** Only keep what a reader can't get from reading the code — the why, a non-obvious trade-off, a gotcha. Don't narrate the changes file by file.
+  - **Bullets over prose, always.** Never write a paragraph where a bullet works. One idea per bullet; if a bullet needs a comma-spliced second clause, split it into two.
+  - **Short, plain sentences.** One clause per bullet. Drop filler ("this PR", "in order to", "as well as"), hedging, and restating the ticket. Sentence fragments are fine when they're clear.
+  - **Group with headers only when you truly need them** — a `##`/`###` header per section once the description genuinely spans more than one topic. Don't reach for headers on a small PR; they add scaffolding that makes a short description feel long.
 - **Start the description with a review-depth tag** on its own single line, in the form `🤖 suggested review level: <N> <Name> <icon> <reason>`, followed by a blank line, then the rest of the description. The tag is the prefix, the level number, the level name, its icon, and a short reason — e.g. `🤖 suggested review level: 5 Inspect 🔬 substantive logic across 13 admin pages incl. filter behavior`. Always spell out the reason inline; never post the number/name/icon alone. The number is a 1–5 scale with three named levels (2 and 4 are unused in-betweens). The tag tells the reviewer how closely to look (depth of review, not how risky/good the change is):
   - **1 Skim 👀** — view-only: markup/copy/styling, no logic or data changes
   - **3 Read 📖** — light-logic: small, contained logic changes with low blast radius
   - **5 Inspect 🔬** — big change: substantive logic, migrations that rename or transform data (backfills), or wide-reaching changes that warrant careful review
-- Description must explain why the change was made, not just what
 - Include screenshots for UI changes
 - **On every push**, update the PR title and content to reflect the current diff — preserve any existing images/screenshots in the description
 - **On every push**, update AI instruction files if the diff adds, removes, or renames anything tracked in AGENTS.md — specifically: Stimulus controllers, services, model/controller concerns, mailers, rake tasks, and directory file counts
