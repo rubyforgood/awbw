@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="mx-auto max-w-5xl <%= DomainTheme.bg_class_for(:event_registrations) %> rounded-xl border border-gray-200 p-6 shadow">
-  <div class="mb-4 flex flex-wrap justify-end gap-2">
+  <div class="mb-4 flex flex-wrap justify-start gap-2">
     <%= link_to "← Choose a different file", new_event_registration_import_path(event_id: @event.id),
                 class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
@@ -59,36 +59,36 @@
               <td class="px-3 py-2 text-gray-600"><%= row.email.presence || "—" %></td>
               <% if row.skipped_reason %>
                 <td class="px-3 py-2" colspan="3">
-                  <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">
+                  <span class="inline-flex items-center rounded-md bg-red-100 px-2 py-1 text-xs text-red-700">
                     Skipped — <%= row.skipped_reason %>
                   </span>
                 </td>
               <% else %>
                 <td class="px-3 py-2">
                   <% if row.person_status == :new %>
-                    <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">New person</span>
+                    <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-800">New person</span>
                   <% else %>
-                    <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800">Matched</span>
+                    <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs text-green-800">Matched</span>
                   <% end %>
                 </td>
                 <td class="px-3 py-2">
                   <% case row.registration_status %>
                   <% when :created %>
-                    <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800">Will add as attended</span>
+                    <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs text-green-800">Will add as attended</span>
                   <% when :promoted %>
-                    <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800">Promote to attended</span>
+                    <span class="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs text-blue-800">Promote to attended</span>
                   <% when :already_attended %>
-                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Already attended</span>
+                    <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-600">Already attended</span>
                   <% end %>
                 </td>
                 <td class="px-3 py-2">
                   <% case row.organization_status %>
                   <% when :linked %>
-                    <span class="inline-flex items-center rounded-full bg-teal-100 px-2 py-0.5 text-xs text-teal-800" title="Matched — linked to the registration">
+                    <span class="inline-flex items-center rounded-md bg-teal-100 px-2 py-1 text-xs text-teal-800" title="Matched — linked to the registration">
                       Link: <%= row.organization_name %>
                     </span>
                   <% when :to_reconcile %>
-                    <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800" title="No organization by this name yet — queued for the link-organization reconciliation page">
+                    <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-800" title="No organization by this name yet — queued for the link-organization reconciliation page">
                       Reconcile: <%= row.organization_name %>
                     </span>
                   <% else %>

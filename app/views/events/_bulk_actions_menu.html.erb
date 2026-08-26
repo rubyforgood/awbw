@@ -26,7 +26,7 @@
     <% end %>
     <% if allowed_to?(:import?, EventRegistration) %>
       <%= link_to new_event_registration_import_path(event_id: @event.id), class: item_class do %>
-        Import registrants CSV <i class="fa-solid fa-upload text-gray-400 ml-1"></i>
+        Import registrants <i class="fa-solid fa-upload text-gray-400 ml-1"></i>
       <% end %>
     <% end %>
     <%= link_to registrants_event_path(@event, format: :csv), class: item_class, data: { turbo_frame: "_top" } do %>
