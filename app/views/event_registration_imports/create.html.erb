@@ -13,13 +13,15 @@
     Nothing has been saved yet.
   </p>
 
-  <div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+  <div class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
     <% [
-      [ "Rows", @result.rows_processed ],
       [ "New people", @result.people_created ],
       [ "Matched people", @result.people_matched ],
       [ "New registrations", @result.registrations_created ],
-      [ "Promoted", @result.registrations_promoted ],
+      [ "Promoted to attended", @result.registrations_promoted ],
+      [ "Orgs to link", @result.organizations_linked ],
+      [ "Orgs to reconcile", @result.organizations_to_reconcile ],
+      [ "Rows", @result.rows_processed ],
       [ "Skipped", @result.skipped.size ]
     ].each do |label, count| %>
       <div class="rounded-lg border border-gray-200 bg-white p-3 text-center">
@@ -28,6 +30,13 @@
       </div>
     <% end %>
   </div>
+
+  <p class="mb-6 text-sm text-gray-600">
+    Matched organizations are linked to each registration<%= " and add a facilitator affiliation" if @event.facilitator_training %>.
+    Unmatched names are queued on each registrant's
+    <span class="font-medium">link organization</span> page for reconciliation — no organizations are created here.
+    No emails are sent.
+  </p>
 
   <div class="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
     <div class="overflow-x-auto">
@@ -75,10 +84,12 @@
                 <td class="px-3 py-2">
                   <% case row.organization_status %>
                   <% when :linked %>
-                    <span class="inline-flex items-center rounded-full bg-teal-100 px-2 py-0.5 text-xs text-teal-800"><%= row.organization_name %></span>
-                  <% when :unmatched %>
-                    <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800" title="No organization by this name — it won't be linked or created">
-                      Not found: <%= row.organization_name %>
+                    <span class="inline-flex items-center rounded-full bg-teal-100 px-2 py-0.5 text-xs text-teal-800" title="Matched — linked to the registration">
+                      Link: <%= row.organization_name %>
+                    </span>
+                  <% when :to_reconcile %>
+                    <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800" title="No organization by this name yet — queued for the link-organization reconciliation page">
+                      Reconcile: <%= row.organization_name %>
                     </span>
                   <% else %>
                     <span class="text-gray-400">—</span>

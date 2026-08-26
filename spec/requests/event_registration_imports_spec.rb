@@ -5,7 +5,14 @@ RSpec.describe "Event registration imports", type: :request do
   let(:regular_user) { create(:user) }
   let(:event) { create(:event) }
 
-  before { create(:organization, name: "A New Leaf") }
+  before do
+    create(:organization, name: "A New Leaf")
+    form = create(:form, name: "Registration form")
+    create(:event_form, event: event, form: form, role: "registration")
+    %w[first_name last_name primary_email organization_name].each do |identifier|
+      create(:form_field, form: form, field_identifier: identifier)
+    end
+  end
 
   let(:csv) { fixture_file_upload("spec/fixtures/files/event_registrants_import.csv", "text/csv") }
 
@@ -58,6 +65,14 @@ RSpec.describe "Event registration imports", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Choose a spreadsheet file")
+    end
+
+    it "blocks an event with no registration form" do
+      formless = create(:event)
+      post event_registration_import_path, params: { event_id: formless.id, file: csv }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("no registration form")
     end
 
     it "is forbidden for non-admins" do

@@ -2,18 +2,41 @@ require "roo"
 
 # Bulk-imports event registrants into one existing event from an uploaded
 # spreadsheet (.xlsx / .csv / .xls) whose columns are FirstName, LastName,
-# Organization, EMail. Every row becomes an "attended" EventRegistration on the
-# chosen event — the sheet is a roster of people who have already completed the
-# training (e.g. the on-demand facilitator training export).
+# Organization, EMail. Every row is treated as someone who ATTENDED, so it
+# simulates the registration a real submission would create and then lets the
+# same reconciliation flow take over:
 #
-# A row's person is matched (never duplicated) on lower(email) + lower(last_name)
-# — the same rule PublicRegistration uses — and only created when no one matches.
-# Organizations are matched by name and linked to the registration, but never
-# created: an unrecognized org name is reported, not invented. Runs in a
-# transaction with a dry_run mode that rolls back so the controller can show a
-# per-row preview before anything is written.
+#   * Person — matched (never duplicated) on the PublicRegistration rule
+#     (email + last name, tolerant of a first-name/legal-name swap); created,
+#     attributed to the importing admin, only on a miss.
+#   * EventRegistration — found or created, forced to "attended" (a real
+#     submission would be "registered"; these people already attended).
+#   * FormSubmission (role "registration") + FormAnswers for the name, email and
+#     organization the row carries — but ONLY when the person has no registration
+#     submission for this event yet, so a real registrant's own answers are never
+#     overwritten. This is what makes an unmatched organization appear in the
+#     admin "link organization" reconciliation queue exactly like a live reg.
+#   * Organization — matched by name → linked to the registration (pinned to the
+#     submission) and, on a facilitator-training event, a "Facilitator" affiliation
+#     is minted (AffiliationServices::CreateFromRegistration). An unmatched name is
+#     left for reconciliation; it is never invented here.
+#
+# No emails are sent, no mailing-list subscription, tags, addresses, or CE are
+# created — the sheet carries none of that, and this is a historical backfill.
+# Runs in a transaction with a dry_run mode that rolls back for the preview.
 class EventRegistrationImporter
   IMPORTED_STATUS = "attended".freeze
+
+  # Registration-form field_identifier → the row field whose value we mirror into
+  # a FormAnswer, so the simulated submission reads back like a real one.
+  ANSWER_IDENTIFIERS = {
+    "first_name" => :first_name,
+    "last_name" => :last_name,
+    "primary_email" => :email,
+    "organization_name" => :organization
+  }.freeze
+
+  ORGANIZATION_NAME_IDENTIFIER = "organization_name".freeze
 
   # Header label (lowercased, whitespace-collapsed) → the field we read from the
   # row, tolerant of the common spellings staff export.
@@ -33,10 +56,20 @@ class EventRegistrationImporter
 
   SUPPORTED_EXTENSIONS = %w[xlsx csv xls].freeze
 
+  # An event can be imported into only when it has a registration form carrying an
+  # organization-name field — without it the typed org has nowhere to live and the
+  # reconciliation queue would never see it.
+  def self.importable?(event)
+    form = event.registration_form
+    return false unless form
+
+    form.form_fields.exists?(field_identifier: FormField.aliased_identifiers(ORGANIZATION_NAME_IDENTIFIER))
+  end
+
   Result = Struct.new(
     :rows_processed, :people_created, :people_matched,
     :registrations_created, :registrations_promoted, :registrations_already_attended,
-    :organizations_linked, :organizations_unmatched,
+    :organizations_linked, :organizations_to_reconcile,
     :skipped, :rows,
     keyword_init: true
   ) do
@@ -50,7 +83,7 @@ class EventRegistrationImporter
         "people matched: #{people_matched}, created: #{people_created}",
         "registrations created: #{registrations_created}, promoted to attended: #{registrations_promoted}, " \
           "already attended: #{registrations_already_attended}",
-        "organizations linked: #{organizations_linked}, unmatched: #{organizations_unmatched}",
+        "organizations linked: #{organizations_linked}, to reconcile: #{organizations_to_reconcile}",
         "skipped: #{skipped.size}"
       ].join("\n")
     end
@@ -74,16 +107,18 @@ class EventRegistrationImporter
   def initialize(file_path:, event:, extension:, import_user: nil, dry_run: false)
     @file_path = file_path
     @event = event
+    @registration_form = event.registration_form
     @extension = extension.to_s.downcase
     @import_user = import_user
     @dry_run = dry_run
     @result = Result.new(
       rows_processed: 0, people_created: 0, people_matched: 0,
       registrations_created: 0, registrations_promoted: 0, registrations_already_attended: 0,
-      organizations_linked: 0, organizations_unmatched: 0,
+      organizations_linked: 0, organizations_to_reconcile: 0,
       skipped: [], rows: []
     )
     @organization_cache = {}
+    @form_field_cache = {}
     @seen_person_keys = {}
   end
 
@@ -120,40 +155,45 @@ class EventRegistrationImporter
 
   def process_row(row, number)
     @result.rows_processed += 1
-    first_name = clean(row[:first_name])
-    last_name = clean(row[:last_name])
-    email = clean(row[:email])&.downcase
-    organization_name = clean(row[:organization])
-
+    values = {
+      first_name: clean(row[:first_name]),
+      last_name: clean(row[:last_name]),
+      email: clean(row[:email])&.downcase,
+      organization: clean(row[:organization])
+    }
     preview = RowPreview.new(
-      number: number, first_name: first_name, last_name: last_name,
-      email: email, organization_name: organization_name
+      number: number, first_name: values[:first_name], last_name: values[:last_name],
+      email: values[:email], organization_name: values[:organization]
     )
 
-    missing = missing_required(first_name: first_name, last_name: last_name, email: email)
+    missing = missing_required(values)
     return skip(preview, "missing #{missing.join(", ")}") if missing.any?
 
-    key = "#{email} #{last_name.downcase}"
+    key = "#{values[:email]} #{values[:last_name].downcase}"
     if @seen_person_keys.key?(key)
       return skip(preview, "duplicate of row #{@seen_person_keys[key]} in this file")
     end
     @seen_person_keys[key] = number
 
-    person = resolve_person(first_name: first_name, last_name: last_name, email: email, preview: preview)
+    person = resolve_person(values, preview)
     registration = resolve_registration(person, preview)
-    link_organization(registration, organization_name, preview)
+    set_organization_preview(values[:organization], preview)
+
+    persist_registration(person, registration, values) unless @dry_run
 
     @result.rows << preview
   end
 
-  def missing_required(first_name:, last_name:, email:)
+  def missing_required(values)
     [
-      [ "first name", first_name ], [ "last name", last_name ], [ "email", email ]
+      [ "first name", values[:first_name] ], [ "last name", values[:last_name] ], [ "email", values[:email] ]
     ].select { |_label, value| value.blank? }.map(&:first)
   end
 
-  def resolve_person(first_name:, last_name:, email:, preview:)
-    existing = Person.where("LOWER(email) = ? AND LOWER(last_name) = ?", email, last_name.downcase).first
+  # Mirrors PublicRegistration#find_matching_person: email + last name, accepting
+  # the typed first name against either the stored first_name or legal_first_name.
+  def resolve_person(values, preview)
+    existing = find_matching_person(values)
     if existing
       @result.people_matched += 1
       preview.person_status = :matched
@@ -163,10 +203,21 @@ class EventRegistrationImporter
 
     @result.people_created += 1
     preview.person_status = :new
-    preview.person_label = "#{first_name} #{last_name}"
-    person = Person.new(first_name: first_name, last_name: last_name, email: email)
+    preview.person_label = "#{values[:first_name]} #{values[:last_name]}"
+    person = Person.new(
+      first_name: values[:first_name], last_name: values[:last_name], email: values[:email],
+      created_by: @import_user, updated_by: @import_user
+    )
     person.save! unless @dry_run
     person
+  end
+
+  def find_matching_person(values)
+    first_name = values[:first_name].downcase
+    Person
+      .where("LOWER(last_name) = ? AND LOWER(email) = ?", values[:last_name].downcase, values[:email])
+      .where("LOWER(first_name) = ? OR LOWER(COALESCE(legal_first_name, '')) = ?", first_name, first_name)
+      .first
   end
 
   def resolve_registration(person, preview)
@@ -190,24 +241,59 @@ class EventRegistrationImporter
     end
   end
 
-  def link_organization(registration, name, preview)
+  def set_organization_preview(name, preview)
     if name.blank?
       preview.organization_status = :none
-      return
+    elsif find_organization(name)
+      @result.organizations_linked += 1
+      preview.organization_status = :linked
+    else
+      @result.organizations_to_reconcile += 1
+      preview.organization_status = :to_reconcile
     end
+  end
 
-    organization = find_organization(name)
-    unless organization
-      @result.organizations_unmatched += 1
-      preview.organization_status = :unmatched
-      return
+  # Simulate the registration submission a real form would leave, then link a
+  # matched org (with its facilitator affiliation). Skipped for a registration that
+  # already carries its own submission — never overwrite a real registrant.
+  def persist_registration(person, registration, values)
+    return if registration.nil?
+
+    submission = ensure_submission(person, values)
+    organization = values[:organization].present? ? find_organization(values[:organization]) : nil
+    return unless organization
+
+    link = registration.event_registration_organizations.find_or_create_by!(organization: organization)
+    link.record_form_submission(submission)
+    AffiliationServices::CreateFromRegistration.call(
+      person: person,
+      organization: organization,
+      training_date: @event.start_date,
+      facilitator_training: @event.facilitator_training,
+      event_registration: registration
+    )
+  end
+
+  def ensure_submission(person, values)
+    existing = person.form_submissions.find_by(form: @registration_form, role: "registration", event: @event)
+    return existing if existing
+
+    submission = FormSubmission.create!(person: person, form: @registration_form, event: @event, role: "registration")
+    ANSWER_IDENTIFIERS.each do |identifier, key|
+      value = values[key]
+      field = form_field_for(identifier)
+      next if value.blank? || field.nil?
+
+      submission.persist_answer(field, value)
     end
+    submission
+  end
 
-    @result.organizations_linked += 1
-    preview.organization_status = :linked
-    return if @dry_run || registration.nil?
+  def form_field_for(identifier)
+    return @form_field_cache[identifier] if @form_field_cache.key?(identifier)
 
-    registration.event_registration_organizations.find_or_create_by!(organization: organization)
+    @form_field_cache[identifier] =
+      @registration_form.form_fields.find_by(field_identifier: FormField.aliased_identifiers(identifier))
   end
 
   def find_organization(name)

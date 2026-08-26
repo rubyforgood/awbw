@@ -24,6 +24,7 @@ class EventRegistrationImportsController < ApplicationController
     file = params[:file]
 
     return render_new_error("Choose an event to import into.") if @event.nil?
+    return render_new_error(missing_form_message) unless EventRegistrationImporter.importable?(@event)
     return render_new_error("Choose a spreadsheet file to import.") if file.blank?
     return render_new_error("That file must be a .xlsx, .csv, or .xls.") unless supported?(file)
 
@@ -85,10 +86,16 @@ class EventRegistrationImportsController < ApplicationController
     render :new, status: :unprocessable_content
   end
 
+  def missing_form_message
+    "“#{@event.title}” has no registration form with an organization field, so imported " \
+      "registrants couldn't be reconciled. Add one to the event first."
+  end
+
   def import_notice(result)
     "Import complete — #{result.registrations_created} attended registrations created " \
       "(#{result.people_created} new people, #{result.people_matched} matched)" \
       "#{", #{result.registrations_promoted} promoted to attended" if result.registrations_promoted.positive?}" \
+      "#{", #{result.organizations_to_reconcile} orgs to reconcile" if result.organizations_to_reconcile.positive?}" \
       "#{", #{result.skipped.size} rows skipped" if result.skipped.any?}."
   end
 end
