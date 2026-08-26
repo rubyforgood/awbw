@@ -31,10 +31,7 @@ class EventRegistrationImportsController < ApplicationController
     @filename = file.original_filename
     @extension = extension_for(file)
     begin
-      @blob = ActiveStorage::Blob.create_and_upload!(
-        io: file.open, filename: @filename,
-        content_type: file.content_type.presence || "application/octet-stream"
-      )
+      @blob = ActiveStorage::Blob.create_and_upload!(io: file.open, filename: @filename)
       @result = run_import(file.path, dry_run: true)
     rescue => e
       @blob&.purge
