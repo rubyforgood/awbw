@@ -27,8 +27,7 @@ require "csv"
 class EventRegistrationImporter
   IMPORTED_STATUS = "attended".freeze
 
-  # Registration-form field_identifier → the row field whose value we mirror into
-  # a FormAnswer, so the simulated submission reads back like a real one.
+  # Registration-form field_identifier → row field, mirrored into the submission's answers.
   ANSWER_IDENTIFIERS = {
     "first_name" => :first_name,
     "last_name" => :last_name,
@@ -42,8 +41,7 @@ class EventRegistrationImporter
   # own submission on a re-run (idempotency) without ever matching a real one.
   IMPORT_SOURCE_KEY = "imported_from".freeze
 
-  # Header label (lowercased, whitespace-collapsed) → the field we read from the
-  # row, tolerant of the common spellings staff export.
+  # Keys are normalized header labels (see #normalize_header) → the field they map to.
   HEADER_ALIASES = {
     "firstname" => :first_name,
     "first name" => :first_name,
@@ -93,9 +91,7 @@ class EventRegistrationImporter
     end
   end
 
-  # A row-level summary for the preview interstitial: what the row would create,
-  # match, or skip. person_status/registration_status/organization_status are the
-  # symbols the preview view renders as badges.
+  # One row's preview outcome; the *_status symbols render as badges in the view.
   RowPreview = Struct.new(
     :number, :first_name, :last_name, :email, :organization_name,
     :person_status, :person_label,
