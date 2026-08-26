@@ -1010,6 +1010,22 @@ class EventRegistration < ApplicationRecord
     DAY_FIELDS.first(event.day_count).count { |field| public_send(field) }
   end
 
+  # The completed_day_* flags to set on a destination registration when this
+  # registration transfers into an event with `dest_day_count` days. Normally a
+  # straight per-day carry (day N here → day N there). When this event had more
+  # days than the destination, its later completed days have no matching day
+  # there, so they compress to the front: the destination is marked from day 1 up
+  # to however many were complete here, capped at its own day count — no
+  # completion falls off the end. (#2384)
+  def day_completion_carried_to(dest_day_count)
+    overflow = event.day_count > dest_day_count
+    filled = [ completed_day_count, dest_day_count ].min
+    DAY_FIELDS.each_with_index.to_h do |field, index|
+      completed = index < dest_day_count && (overflow ? index < filled : self[field])
+      [ field, completed ]
+    end
+  end
+
   # The attendance status implied purely by how many days are marked complete:
   # none → registered, all → attended, some-but-not-all → incomplete_attendance.
   # (A one-day event has no partial state: 0 → registered, 1 → attended.)

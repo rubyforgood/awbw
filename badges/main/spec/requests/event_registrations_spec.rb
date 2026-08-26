@@ -967,6 +967,23 @@ RSpec.describe "EventRegistrations", type: :request do
           )
         end
 
+        it "compresses carried days and flags the mismatch when the source had more days than the destination" do
+          three_day = create(:event, published: true, start_date: 12.days.from_now, end_date: 14.days.from_now)
+          one_day = create(:event, published: true, start_date: 12.days.from_now, end_date: 12.days.from_now)
+          big_source = create(:event_registration, event: three_day, status: "transferred_out",
+            completed_day_1: true, completed_day_2: true, completed_day_3: true)
+
+          post process_transfer_event_registration_path(big_source),
+               params: { destination_event_id: one_day.id }
+
+          incoming = EventRegistration.find_by(registrant: big_source.registrant, event: one_day)
+          expect(incoming.completed_day_1).to be(true)
+
+          get edit_event_registration_path(incoming)
+          expect(response.body).to include("had more days than this event")
+          expect(response.body).to include(three_day.decorate.month_year)
+        end
+
         it "collapses a double transfer, pointing the new reg at the original and dropping the middle" do
           original = create(:event_registration, status: "transferred_out")
           middle = create(:event_registration, registrant: original.registrant,

@@ -251,12 +251,14 @@ class EventRegistrationsController < ApplicationController
       # Copy the registrant's progress/profile state forward so the new reg reflects
       # where they left off (money & CE resolve separately). Days attended, expected
       # payment method, buddy-pay, and the recipients-page feature/shout-out flag. (#1944)
+      # Days attended carry per-day, compressing when the source had more days than
+      # the destination so no completion is lost off the end.
       copied = {
         expected_payment_method: @event_registration.expected_payment_method,
         someone_else_will_pay: @event_registration.someone_else_will_pay,
         shoutout: @event_registration.shoutout
       }
-      EventRegistration::DAY_FIELDS.each { |field| copied[field] = @event_registration[field] }
+      copied.merge!(@event_registration.day_completion_carried_to(destination_event.day_count))
       destination.assign_attributes(copied)
     end
 
