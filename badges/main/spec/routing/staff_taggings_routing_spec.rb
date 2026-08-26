@@ -2,6 +2,18 @@ require "rails_helper"
 
 RSpec.describe StaffTaggingsController, type: :routing do
   describe "routing" do
+    it "routes to #index" do
+      expect(get: "/staff_taggings").to route_to("staff_taggings#index")
+    end
+
+    it "routes to #new" do
+      expect(get: "/staff_taggings/new").to route_to("staff_taggings#new")
+    end
+
+    it "routes to #create via POST" do
+      expect(post: "/staff_taggings").to route_to("staff_taggings#create")
+    end
+
     it "routes to #edit" do
       expect(get: "/staff_taggings/1/edit").to route_to("staff_taggings#edit", id: "1")
     end
@@ -10,8 +22,8 @@ RSpec.describe StaffTaggingsController, type: :routing do
       expect(patch: "/staff_taggings/1").to route_to("staff_taggings#update", id: "1")
     end
 
-    it "does not route to #index" do
-      expect(get: "/staff_taggings").not_to be_routable
+    it "routes to #destroy via DELETE" do
+      expect(delete: "/staff_taggings/1").to route_to("staff_taggings#destroy", id: "1")
     end
   end
 end
