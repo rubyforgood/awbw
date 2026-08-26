@@ -145,6 +145,19 @@ RSpec.describe Analytics::PersonActivityEvents do
       end
     end
 
+    # Most mapped types have no dedicated inclusion example above, so a typo or
+    # model rename in a key would silently drop that type from the history. This
+    # guard derives from the map itself and fails loudly instead.
+    it "keys the map only on real trackable model classes" do
+      map = described_class.new(person).send(:resource_ids_by_type)
+
+      map.each_key do |resource_type|
+        klass = resource_type.safe_constantize
+        expect(klass).to be_present, "#{resource_type} is not a real constant"
+        expect(klass).to be < ApplicationRecord
+      end
+    end
+
     it "excludes events unrelated to the person" do
       unrelated_person = create(:person)
       other = event(resource_type: "Person", resource_id: unrelated_person.id, name: "update.person")
