@@ -1,7 +1,7 @@
-require "roo"
+require "csv"
 
 # Bulk-imports event registrants into one existing event from an uploaded
-# spreadsheet (.xlsx or .csv) whose columns are FirstName, LastName,
+# CSV whose columns are FirstName, LastName,
 # Organization, EMail. Every row is treated as someone who ATTENDED, so it
 # simulates the registration a real submission would create and then lets the
 # same reconciliation flow take over:
@@ -59,9 +59,7 @@ class EventRegistrationImporter
     "email address" => :email
   }.freeze
 
-  # roo parses .xlsx and .csv out of the box; legacy binary .xls would need the
-  # separate roo-xls gem, so it's not offered.
-  SUPPORTED_EXTENSIONS = %w[xlsx csv].freeze
+  SUPPORTED_EXTENSIONS = %w[csv].freeze
 
   # An event can be imported into only when it has a registration form carrying an
   # organization-name field — without it the typed org has nowhere to live and the
@@ -111,11 +109,10 @@ class EventRegistrationImporter
     new(...).call
   end
 
-  def initialize(file_path:, event:, extension:, import_user: nil, source: nil, dry_run: false)
+  def initialize(file_path:, event:, import_user: nil, source: nil, dry_run: false)
     @file_path = file_path
     @event = event
     @registration_form = event.registration_form
-    @extension = extension.to_s.downcase
     @import_user = import_user
     @source = source.presence || "spreadsheet import"
     @dry_run = dry_run
@@ -141,20 +138,19 @@ class EventRegistrationImporter
   private
 
   def each_row
-    sheet = open_spreadsheet
-    header = sheet.row(sheet.first_row).map { |label| HEADER_ALIASES[normalize_header(label)] }
+    header = nil
     number = 0
-    (sheet.first_row + 1..sheet.last_row).each do |index|
-      values = sheet.row(index)
+    # bom|utf-8 strips the byte-order mark Excel prepends to the first header cell.
+    CSV.foreach(@file_path, encoding: "bom|utf-8") do |values|
+      if header.nil?
+        header = values.map { |label| HEADER_ALIASES[normalize_header(label)] }
+        next
+      end
       next if values.all?(&:blank?)
 
       number += 1
       yield header.zip(values).to_h, number
     end
-  end
-
-  def open_spreadsheet
-    Roo::Spreadsheet.open(@file_path, extension: @extension)
   end
 
   def normalize_header(label)

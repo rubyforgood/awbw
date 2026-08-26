@@ -19,7 +19,7 @@ RSpec.describe EventRegistrationImporter do
   end
 
   def import(dry_run:)
-    described_class.call(file_path: csv_path, event: event, extension: "csv", dry_run: dry_run)
+    described_class.call(file_path: csv_path, event: event, dry_run: dry_run)
   end
 
   describe ".importable?" do
@@ -128,7 +128,7 @@ RSpec.describe EventRegistrationImporter do
 
     it "attributes new people to the importing admin" do
       admin = create(:user)
-      described_class.call(file_path: csv_path, event: event, extension: "csv", import_user: admin, dry_run: false)
+      described_class.call(file_path: csv_path, event: event, import_user: admin, dry_run: false)
       expect(Person.find_by(email: "kadams@rcoe.us").created_by).to eq(admin)
     end
 

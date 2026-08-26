@@ -64,7 +64,7 @@ RSpec.describe "Event registration imports", type: :request do
       post event_registration_import_path, params: { event_id: event.id }
 
       expect(response).to have_http_status(:unprocessable_content)
-      expect(response.body).to include("Choose a spreadsheet file")
+      expect(response.body).to include("Choose a CSV file")
     end
 
     it "blocks an event with no registration form" do
@@ -89,7 +89,7 @@ RSpec.describe "Event registration imports", type: :request do
     it "creates attended registrations and redirects with a notice" do
       expect {
         post confirm_event_registration_import_path,
-             params: { signed_id: signed_blob, event_id: event.id, extension: "csv" }
+             params: { signed_id: signed_blob, event_id: event.id }
       }.to change(Person, :count).by(3).and change { event.event_registrations.count }.by(3)
 
       expect(event.event_registrations.pluck(:status).uniq).to eq([ "attended" ])
@@ -99,7 +99,7 @@ RSpec.describe "Event registration imports", type: :request do
 
     it "redirects with an alert when the upload is gone" do
       post confirm_event_registration_import_path,
-           params: { signed_id: "bogus", event_id: event.id, extension: "csv" }
+           params: { signed_id: "bogus", event_id: event.id }
 
       expect(response).to redirect_to(new_event_registration_import_path)
       expect(flash[:alert]).to match(/no longer available/i)
@@ -108,7 +108,7 @@ RSpec.describe "Event registration imports", type: :request do
     it "is forbidden for non-admins" do
       sign_in regular_user
       post confirm_event_registration_import_path,
-           params: { signed_id: signed_blob, event_id: event.id, extension: "csv" }
+           params: { signed_id: signed_blob, event_id: event.id }
 
       expect(response).to redirect_to(root_path)
     end

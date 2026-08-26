@@ -1,6 +1,6 @@
 class EventRegistrationImportsController < ApplicationController
   # Admin-only flow for bulk-importing attended registrants into one event from a
-  # spreadsheet (.xlsx / .csv).
+  # CSV.
   #
   #   new     → pick the event + upload form
   #   create  → dry-run preview of what would be created (nothing written)
@@ -8,8 +8,8 @@ class EventRegistrationImportsController < ApplicationController
   #
   # The uploaded file is stashed as an ActiveStorage blob between the preview and
   # confirm steps (too large for the cookie session), and purged once the import
-  # runs. The chosen event id and the file extension travel through the preview's
-  # hidden fields so confirm can reopen the extension-less blob with Roo.
+  # runs. The chosen event id travels through the preview's hidden fields so
+  # confirm can reopen the blob.
 
   def new
     authorize! EventRegistration, to: :import?
@@ -25,11 +25,10 @@ class EventRegistrationImportsController < ApplicationController
 
     return render_new_error("Choose an event to import into.") if @event.nil?
     return render_new_error(missing_form_message) unless EventRegistrationImporter.importable?(@event)
-    return render_new_error("Choose a spreadsheet file to import.") if file.blank?
-    return render_new_error("That file must be a .xlsx or .csv.") unless supported?(file)
+    return render_new_error("Choose a CSV file to import.") if file.blank?
+    return render_new_error("That file must be a .csv.") unless supported?(file)
 
     @filename = file.original_filename
-    @extension = extension_for(file)
     begin
       @blob = ActiveStorage::Blob.create_and_upload!(io: file.open, filename: @filename)
       @result = run_import(file.path, dry_run: true)
@@ -47,7 +46,7 @@ class EventRegistrationImportsController < ApplicationController
     @event = Event.find(params[:event_id])
     blob = ActiveStorage::Blob.find_signed!(params[:signed_id])
     result = blob.open do |tempfile|
-      run_import(tempfile.path, dry_run: false, extension: params[:extension], source: blob.filename.to_s)
+      run_import(tempfile.path, dry_run: false, source: blob.filename.to_s)
     end
     blob.purge
 
@@ -59,9 +58,9 @@ class EventRegistrationImportsController < ApplicationController
 
   private
 
-  def run_import(path, dry_run:, extension: @extension, source: @filename)
+  def run_import(path, dry_run:, source: @filename)
     EventRegistrationImporter.call(
-      file_path: path, event: @event, extension: extension,
+      file_path: path, event: @event,
       import_user: current_user, source: source, dry_run: dry_run
     )
   end

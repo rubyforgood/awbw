@@ -2289,12 +2289,12 @@
   released_on: 2026-08-25
   action_path: "/event_registrations/import"
   summary: >-
-    Bulk-add attended registrants to an event from an .xlsx or .csv roster. Every row
-    becomes an attended registration, exactly as if the person had registered — matched
-    to an existing person by email and name (no duplicates), with the organization
-    linked when we recognize it.
+    Bulk-add attended registrants to an event from a CSV roster. Every row becomes an
+    attended registration, exactly as if the person had registered — matched to an
+    existing person by email and name (no duplicates), with the organization linked
+    when we recognize it.
   pro_tips:
-    - "Expected columns: FirstName, LastName, Organization, EMail."
+    - "Expected columns: FirstName, LastName, Organization, EMail. Export your spreadsheet as a .csv first."
     - "You get a full preview — new vs. matched people, new vs. promoted registrations, and which orgs will link vs. need reconciling — before anything is saved."
     - "Organizations we don't recognize aren't created; they're queued on each registrant's \"link organization\" page so you can reconcile them the same way as a normal registration."
     - "On facilitator trainings, a linked organization also adds the person's facilitator affiliation."
