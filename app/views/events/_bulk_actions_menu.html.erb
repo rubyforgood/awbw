@@ -12,9 +12,6 @@
   <div id="<%= dropdown_id %>"
        data-dropdown-target="content"
        class="hidden absolute right-0 z-10 mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[180px]">
-    <% if allowed_to?(:import?, EventRegistration) %>
-      <%= link_to "Import registrants", new_event_registration_import_path(event_id: @event.id), class: item_class %>
-    <% end %>
     <%= link_to "Onboarding tracker", onboarding_event_path(@event), class: item_class %>
     <% reminder_filters = reminder_recipient_filters %>
     <%= link_to reminder_filters.any? ? "Send bulk emails (filtered)" : "Send bulk emails",
@@ -26,6 +23,11 @@
       <%= link_to "CE sign-ins", attendance_event_path(@event, ce: "true", return_to: "registrants"), class: item_class %>
     <% else %>
       <%= link_to "Sign-ins", attendance_event_path(@event, return_to: "registrants"), class: item_class %>
+    <% end %>
+    <% if allowed_to?(:import?, EventRegistration) %>
+      <%= link_to new_event_registration_import_path(event_id: @event.id), class: item_class do %>
+        Import registrants CSV <i class="fa-solid fa-upload text-gray-400 ml-1"></i>
+      <% end %>
     <% end %>
     <%= link_to registrants_event_path(@event, format: :csv), class: item_class, data: { turbo_frame: "_top" } do %>
       Download CSV <i class="fa-solid fa-download text-gray-400 ml-1"></i>
