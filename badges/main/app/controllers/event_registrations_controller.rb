@@ -703,6 +703,24 @@ class EventRegistrationsController < ApplicationController
     @submission_entries_by_org[organization.id] = find_submission_entry(registration, organization, linked_count)
   end
 
+  # Every submission entry whose answers describe `organization` (not just the
+  # first): the pinned one, plus every one whose typed org name matches. Falls
+  # back to the sole entry only when the pairing is unambiguous (one submission,
+  # one linked org) — the same rule as find_submission_entry. Used to back-apply
+  # the metadata link to all of a registrant's submissions that named this org.
+  def submission_entries_for(registration, organization)
+    entries = registration_submission_entries(registration)
+    pinned = pinned_submission_ids(registration)[organization.id]
+    matches = entries.select do |entry|
+      entry[:submission].id == pinned ||
+        (entry[:org_name].present? && entry[:org_name].strip.casecmp?(organization.name.to_s.strip))
+    end
+    return matches if matches.any?
+    return [] unless entries.one?
+
+    registration.organizations.count == 1 ? entries : []
+  end
+
   def find_submission_entry(registration, organization, linked_count)
     entries = registration_submission_entries(registration)
     # The pinned submission wins: the name and sole-org rules below are re-derived
@@ -762,9 +780,14 @@ class EventRegistrationsController < ApplicationController
     # Pin the pairing even when nothing was filled — an org whose every answer
     # conflicts fills nothing, and that's exactly the one whose note has to survive.
     link.record_form_submission(entry[:submission]) if entry
-    # Back-apply the resolution onto the submission itself, so the form
-    # submissions side reads it as linked too (even under a name mismatch).
-    entry[:submission].link_organization!(organization.id) if entry
+    # Back-apply the resolution onto every submission this org describes, so each
+    # reads as linked in its own editor too (even under a name mismatch). A
+    # registrant can have several submissions naming the same org; the pin and
+    # profile note above stay on the single primary entry, but the metadata link
+    # fans out to all of them.
+    submission_entries_for(@event_registration, organization).each do |describing|
+      describing[:submission].link_organization!(organization.id)
+    end
     link.record_autofill(result.saved) if record_fills
 
     warning = result.warning(organization: organization)

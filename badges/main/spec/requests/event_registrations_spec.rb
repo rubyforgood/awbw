@@ -1704,6 +1704,42 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(submission.reload.linked_organization_ids).to eq([ organization.id ])
         end
 
+        it "back-applies the link to every submission that names the org, pinning one" do
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          sub1 = create(:form_submission, person: regular_user.person, form: reg_form)
+          sub2 = create(:form_submission, person: regular_user.person, form: reg_form)
+          [ sub1, sub2 ].each do |submission|
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Helping Hands")
+          end
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(sub1.reload.linked_organization_ids).to include(organization.id)
+          expect(sub2.reload.linked_organization_ids).to include(organization.id)
+          # The link row still pins a single submission — only the metadata link fans out.
+          link = existing_registration.event_registration_organizations.find_by(organization: organization)
+          expect([ sub1.id, sub2.id ]).to include(link.form_submission_id)
+        end
+
+        it "leaves a submission that named a different org unlinked" do
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          matching = create(:form_submission, person: regular_user.person, form: reg_form)
+          other = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: matching, form_field: field, submitted_answer: "Helping Hands")
+          create(:form_answer, form_submission: other, form_field: field, submitted_answer: "Beta Agency")
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(matching.reload.linked_organization_ids).to include(organization.id)
+          expect(other.reload.linked_organization_ids).to be_empty
+        end
+
         it "records the linking registration on the created affiliations" do
           post select_organization_event_registration_path(existing_registration),
             params: { organization_id: organization.id }
