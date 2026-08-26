@@ -12,10 +12,11 @@ require "roo"
 #   * EventRegistration — found or created, forced to "attended" (a real
 #     submission would be "registered"; these people already attended).
 #   * FormSubmission (role "registration") + FormAnswers for the name, email and
-#     organization the row carries — but ONLY when the person has no registration
-#     submission for this event yet, so a real registrant's own answers are never
-#     overwritten. This is what makes an unmatched organization appear in the
-#     admin "link organization" reconciliation queue exactly like a live reg.
+#     organization the row carries — the import's OWN submission, marked
+#     `imported_from` in metadata and created alongside (never in place of) a real
+#     registrant's submission, so genuine answers are left untouched and the
+#     import's data is never dropped. This is what makes an unmatched organization
+#     appear in the admin "link organization" reconciliation queue like a live reg.
 #   * Organization — matched by name → linked to the registration (pinned to the
 #     submission) and, on a facilitator-training event, a "Facilitator" affiliation
 #     is minted (AffiliationServices::CreateFromRegistration). An unmatched name is
@@ -37,6 +38,10 @@ class EventRegistrationImporter
   }.freeze
 
   ORGANIZATION_NAME_IDENTIFIER = "organization_name".freeze
+
+  # metadata key stamped on the submission the import creates, so we can find our
+  # own submission on a re-run (idempotency) without ever matching a real one.
+  IMPORT_SOURCE_KEY = "imported_from".freeze
 
   # Header label (lowercased, whitespace-collapsed) → the field we read from the
   # row, tolerant of the common spellings staff export.
@@ -104,12 +109,13 @@ class EventRegistrationImporter
     new(...).call
   end
 
-  def initialize(file_path:, event:, extension:, import_user: nil, dry_run: false)
+  def initialize(file_path:, event:, extension:, import_user: nil, source: nil, dry_run: false)
     @file_path = file_path
     @event = event
     @registration_form = event.registration_form
     @extension = extension.to_s.downcase
     @import_user = import_user
+    @source = source.presence || "spreadsheet import"
     @dry_run = dry_run
     @result = Result.new(
       rows_processed: 0, people_created: 0, people_matched: 0,
@@ -253,18 +259,18 @@ class EventRegistrationImporter
     end
   end
 
-  # Simulate the registration submission a real form would leave, then link a
-  # matched org (with its facilitator affiliation). Skipped for a registration that
-  # already carries its own submission — never overwrite a real registrant.
+  # Leave the import's own registration submission, then link a matched org (with
+  # its facilitator affiliation). An existing org link (a real registrant already
+  # linked it) keeps its own submission pin — we only pin one we just created.
   def persist_registration(person, registration, values)
     return if registration.nil?
 
-    submission = ensure_submission(person, values)
+    submission = import_submission(person, values)
     organization = values[:organization].present? ? find_organization(values[:organization]) : nil
     return unless organization
 
     link = registration.event_registration_organizations.find_or_create_by!(organization: organization)
-    link.record_form_submission(submission)
+    link.record_form_submission(submission) if link.previously_new_record?
     AffiliationServices::CreateFromRegistration.call(
       person: person,
       organization: organization,
@@ -274,11 +280,18 @@ class EventRegistrationImporter
     )
   end
 
-  def ensure_submission(person, values)
-    existing = person.form_submissions.find_by(form: @registration_form, role: "registration", event: @event)
-    return existing if existing
-
-    submission = FormSubmission.create!(person: person, form: @registration_form, event: @event, role: "registration")
+  # The import's OWN registration submission — created alongside, never in place
+  # of, a real registrant's. Found only among import-marked submissions, so a
+  # genuine submission is left untouched; re-running the same import reuses (and
+  # re-saves) this one rather than piling up duplicates.
+  def import_submission(person, values)
+    submission = person.form_submissions
+      .where(form: @registration_form, event: @event, role: "registration")
+      .detect { |candidate| candidate.metadata&.key?(IMPORT_SOURCE_KEY) }
+    submission ||= FormSubmission.create!(
+      person: person, form: @registration_form, event: @event, role: "registration",
+      metadata: { IMPORT_SOURCE_KEY => @source }
+    )
     ANSWER_IDENTIFIERS.each do |identifier, key|
       value = values[key]
       field = form_field_for(identifier)

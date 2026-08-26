@@ -47,7 +47,7 @@ class EventRegistrationImportsController < ApplicationController
     @event = Event.find(params[:event_id])
     blob = ActiveStorage::Blob.find_signed!(params[:signed_id])
     result = blob.open do |tempfile|
-      run_import(tempfile.path, dry_run: false, extension: params[:extension])
+      run_import(tempfile.path, dry_run: false, extension: params[:extension], source: blob.filename.to_s)
     end
     blob.purge
 
@@ -59,10 +59,10 @@ class EventRegistrationImportsController < ApplicationController
 
   private
 
-  def run_import(path, dry_run:, extension: @extension)
+  def run_import(path, dry_run:, extension: @extension, source: @filename)
     EventRegistrationImporter.call(
       file_path: path, event: @event, extension: extension,
-      import_user: current_user, dry_run: dry_run
+      import_user: current_user, source: source, dry_run: dry_run
     )
   end
 

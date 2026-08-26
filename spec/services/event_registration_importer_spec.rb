@@ -142,14 +142,26 @@ RSpec.describe EventRegistrationImporter do
       expect(result.registrations_promoted).to eq(1)
     end
 
-    it "does not overwrite a real registrant's existing submission" do
+    it "marks its own submission as imported" do
+      import(dry_run: false)
+      submission = Person.find_by(email: "kadams@rcoe.us").form_submissions.find_by(event: event, role: "registration")
+      expect(submission.metadata).to include("imported_from")
+    end
+
+    it "adds its own submission alongside a real registrant's, leaving theirs untouched" do
       person = create(:person, first_name: "Cidney", last_name: "Acosta", email: "cacosta@turnanewleaf.org")
       create(:event_registration, event: event, registrant: person, status: "registered")
       real = FormSubmission.create!(person: person, form: event.registration_form, event: event, role: "registration")
 
       expect { import(dry_run: false) }
-        .not_to change { person.form_submissions.where(event: event, role: "registration").count }
-      expect(real.form_answers).to be_empty
+        .to change { person.form_submissions.where(event: event, role: "registration").count }.by(1)
+      expect(real.reload.form_answers).to be_empty
+      expect(real.reload.metadata).to be_blank
+    end
+
+    it "is idempotent — re-running does not pile up submissions" do
+      import(dry_run: false)
+      expect { import(dry_run: false) }.not_to change(FormSubmission, :count)
     end
 
     context "on a non-facilitator-training event" do
