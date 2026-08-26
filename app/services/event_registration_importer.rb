@@ -1,10 +1,9 @@
 require "csv"
 
-# Bulk-imports event registrants into one existing event from an uploaded
-# CSV whose columns are FirstName, LastName,
-# Organization, EMail. Every row is treated as someone who ATTENDED, so it
-# simulates the registration a real submission would create and then lets the
-# same reconciliation flow take over:
+# Bulk-imports event registrants into one existing event from an uploaded CSV
+# (columns FirstName, LastName, Organization, EMail). Every row is treated as
+# someone who ATTENDED, so it simulates the registration a real submission would
+# create and then lets the same reconciliation flow take over:
 #
 #   * Person — matched (never duplicated) on the PublicRegistration rule
 #     (email + last name, tolerant of a first-name/legal-name swap); created,
@@ -194,8 +193,6 @@ class EventRegistrationImporter
     ].select { |_label, value| value.blank? }.map(&:first)
   end
 
-  # Mirrors PublicRegistration#find_matching_person: email + last name, accepting
-  # the typed first name against either the stored first_name or legal_first_name.
   def resolve_person(values, preview)
     existing = find_matching_person(values)
     if existing
@@ -216,6 +213,8 @@ class EventRegistrationImporter
     person
   end
 
+  # PublicRegistration's rule, so imports dedupe identically: email + last name,
+  # first name against either the stored first_name or legal_first_name.
   def find_matching_person(values)
     first_name = values[:first_name].downcase
     Person
@@ -257,9 +256,6 @@ class EventRegistrationImporter
     end
   end
 
-  # Leave the import's own registration submission, then link a matched org (with
-  # its facilitator affiliation). An existing org link (a real registrant already
-  # linked it) keeps its own submission pin — we only pin one we just created.
   def persist_registration(person, registration, values)
     return if registration.nil?
 
@@ -268,6 +264,8 @@ class EventRegistrationImporter
     return unless organization
 
     link = registration.event_registration_organizations.find_or_create_by!(organization: organization)
+    # Only pin our submission on a link we created — an org a real registrant
+    # already linked keeps its own pin.
     link.record_form_submission(submission) if link.previously_new_record?
     AffiliationServices::CreateFromRegistration.call(
       person: person,
