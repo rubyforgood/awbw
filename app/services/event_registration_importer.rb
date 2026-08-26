@@ -1,7 +1,7 @@
 require "roo"
 
 # Bulk-imports event registrants into one existing event from an uploaded
-# spreadsheet (.xlsx / .csv / .xls) whose columns are FirstName, LastName,
+# spreadsheet (.xlsx or .csv) whose columns are FirstName, LastName,
 # Organization, EMail. Every row is treated as someone who ATTENDED, so it
 # simulates the registration a real submission would create and then lets the
 # same reconciliation flow take over:
@@ -59,7 +59,9 @@ class EventRegistrationImporter
     "email address" => :email
   }.freeze
 
-  SUPPORTED_EXTENSIONS = %w[xlsx csv xls].freeze
+  # roo parses .xlsx and .csv out of the box; legacy binary .xls would need the
+  # separate roo-xls gem, so it's not offered.
+  SUPPORTED_EXTENSIONS = %w[xlsx csv].freeze
 
   # An event can be imported into only when it has a registration form carrying an
   # organization-name field — without it the typed org has nowhere to live and the

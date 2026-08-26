@@ -26,7 +26,7 @@ class EventRegistrationImportsController < ApplicationController
     return render_new_error("Choose an event to import into.") if @event.nil?
     return render_new_error(missing_form_message) unless EventRegistrationImporter.importable?(@event)
     return render_new_error("Choose a spreadsheet file to import.") if file.blank?
-    return render_new_error("That file must be a .xlsx, .csv, or .xls.") unless supported?(file)
+    return render_new_error("That file must be a .xlsx or .csv.") unless supported?(file)
 
     @filename = file.original_filename
     @extension = extension_for(file)

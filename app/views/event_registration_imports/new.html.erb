@@ -20,7 +20,7 @@
     Expected columns: <span class="font-medium">FirstName</span>,
     <span class="font-medium">LastName</span>,
     <span class="font-medium">Organization</span>,
-    <span class="font-medium">EMail</span>. Accepts .xlsx, .csv, or .xls.
+    <span class="font-medium">EMail</span>. Accepts .xlsx or .csv.
   </p>
 
   <div class="rounded bg-white p-6">
@@ -40,7 +40,7 @@
       </div>
       <div class="mb-4">
         <%= f.label :file, "Spreadsheet file", class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <%= f.file_field :file, accept: ".xlsx,.csv,.xls",
+        <%= f.file_field :file, accept: ".xlsx,.csv",
                          class: "block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer focus:outline-none p-2" %>
       </div>
       <div class="flex items-center gap-2">
