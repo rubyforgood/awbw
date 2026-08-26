@@ -110,7 +110,29 @@
     <% end %>
   <% end %>
 
-  <!-- Reassignment summary -->
-  <%= render "dedupes/reassignment_summary", border: border, title: "Records that will move", entries: reassignment_delete, empty: "Nothing to move" %>
-  <%= render "dedupes/reassignment_summary", border: border, title: "Records already here", entries: reassignment_keep, empty: "None yet" %>
+  <!-- Reassignment summary — aligned rows: the same association appears on both sides -->
+  <%
+    delete_by_label = reassignment_delete.index_by { |entry| entry[:label] }
+    keep_by_label = reassignment_keep.index_by { |entry| entry[:label] }
+    labels = (reassignment_delete + reassignment_keep).map { |entry| entry[:label] }.uniq.sort
+    delete_total = reassignment_delete.sum { |entry| entry[:count] }
+    keep_total = reassignment_keep.sum { |entry| entry[:count] }
+  %>
+  <div class="border-x border-b <%= border %> bg-white px-5 py-3">
+    <h3 class="text-sm font-semibold text-gray-700">Records that will move <span class="font-normal text-gray-400">(<%= delete_total %>)</span></h3>
+  </div>
+  <div class="border-x border-b <%= border %> bg-white px-5 py-3">
+    <h3 class="text-sm font-semibold text-gray-700">Records already here <span class="font-normal text-gray-400">(<%= keep_total %>)</span></h3>
+  </div>
+
+  <% if labels.empty? %>
+    <div class="border-x border-b <%= border %> rounded-bl-xl bg-white px-5 py-3 text-sm text-gray-400">Nothing to move</div>
+    <div class="border-x border-b <%= border %> rounded-br-xl bg-white px-5 py-3 text-sm text-gray-400">None yet</div>
+  <% else %>
+    <% labels.each_with_index do |label, index| %>
+      <% last = index == labels.size - 1 %>
+      <%= render "dedupes/reassignment_entry", entry: delete_by_label[label], border: border, round: (last ? "rounded-bl-xl" : "") %>
+      <%= render "dedupes/reassignment_entry", entry: keep_by_label[label], border: border, round: (last ? "rounded-br-xl" : "") %>
+    <% end %>
+  <% end %>
 </div>

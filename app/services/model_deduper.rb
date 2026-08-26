@@ -48,10 +48,11 @@ class ModelDeduper
     end
   end
 
-  # Like #reassignment_counts, but also a few sample record names per association
-  # so the preview can show *what* moves, not just how many. Each entry is
-  # { label:, count:, names: [ up to SAMPLE_SIZE display strings ] }.
-  SAMPLE_SIZE = 3
+  # Like #reassignment_counts, but also the record names per association so the
+  # preview can show *what* moves, not just how many. Names are capped so a huge
+  # association can't bloat the page; anything past the cap is reported as a count.
+  # Each entry is { label:, count:, names: [ up to NAME_LIMIT display strings ] }.
+  NAME_LIMIT = 50
 
   def reassignment_preview(record)
     reassignable_joins.filter_map do |join|
@@ -62,7 +63,7 @@ class ModelDeduper
       {
         label: join_label(join[:join_class]),
         count: count,
-        names: scope.limit(SAMPLE_SIZE).map { |related| record_display(related) }
+        names: scope.limit(NAME_LIMIT).map { |related| record_display(related) }
       }
     end.sort_by { |entry| entry[:label] }
   end
