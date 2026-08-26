@@ -55,3 +55,15 @@ run = "docker compose exec web"
 [tasks.docker-spec]
 description = "Run RSpec tests in Docker. Exclude system specs because they use ChromeDriver which is not available in the dev docker container."
 run = "docker compose exec -e RAILS_ENV=test web bundle exec rspec --tag ~type:system"
+
+[tasks.audit]
+description = "Pre-PR check: sort Tailwind classes + security scan"
+depends = ["tw-sort", "security"]
+
+[tasks.security]
+description = "Security scan: Brakeman + bundler-audit"
+run = "bin/brakeman --no-pager && bin/bundler-audit"
+
+[tasks.tw-sort]
+description = "Sort Tailwind utility classes (changed files vs origin/main)"
+run = "bin/tw-sort"
