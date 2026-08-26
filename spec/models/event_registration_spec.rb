@@ -292,6 +292,33 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#day_completion_carried_to" do
+    let(:three_day) { create(:event, start_date: 12.days.from_now, end_date: 14.days.from_now) }  # day_count == 3
+    let(:two_day)   { create(:event, start_date: 12.days.from_now, end_date: 13.days.from_now) }   # day_count == 2
+
+    it "carries each day forward per-index when the destination has at least as many days" do
+      reg = create(:event_registration, event: two_day, completed_day_1: true, completed_day_2: false)
+      carried = reg.day_completion_carried_to(three_day.day_count)
+      expect(carried).to include("completed_day_1" => true, "completed_day_2" => false, "completed_day_3" => false)
+    end
+
+    it "compresses to the front so no completion is lost when the source had more days than the destination" do
+      reg = create(:event_registration, event: three_day,
+        completed_day_1: true, completed_day_2: true, completed_day_3: true)
+      carried = reg.day_completion_carried_to(two_day.day_count)
+      # Three complete days, only two slots → both destination days marked.
+      expect(carried).to include("completed_day_1" => true, "completed_day_2" => true, "completed_day_3" => false)
+    end
+
+    it "compresses the completed count even when the source's completed days had gaps" do
+      reg = create(:event_registration, event: three_day,
+        completed_day_1: false, completed_day_2: true, completed_day_3: true)
+      carried = reg.day_completion_carried_to(two_day.day_count)
+      # Two complete days out of three → the destination's two days both fill.
+      expect(carried).to include("completed_day_1" => true, "completed_day_2" => true, "completed_day_3" => false)
+    end
+  end
+
   describe "#deletable?" do
     it "returns true for a plain registration with no allocations or attendance" do
       reg = create(:event_registration, status: "registered")

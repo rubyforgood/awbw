@@ -24,7 +24,7 @@
         <div class="flex items-start gap-3 rounded-xl border border-teal-200 bg-teal-50 p-4 text-sm text-teal-900">
           <i class="fa-solid fa-right-to-bracket mt-0.5 shrink-0 text-teal-600"></i>
           <div>
-            <p class="font-semibold">This registration was transferred in from <%= transfer_source.event.title %>.</p>
+            <p class="font-semibold">This registration was transferred in from <%= transfer_source.event.decorate.title_with_month_year %>.</p>
             <p class="mt-0.5 text-teal-800">
               Their payment, scholarship, and continuing-education records live on the
               <%= link_to "original registration", edit_event_registration_path(transfer_source, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>;
@@ -156,7 +156,7 @@
               <p class="mt-1.5 text-xs text-teal-700">
                 <i class="fa-solid fa-right-to-bracket"></i>
                 Transferred in from
-                <%= link_to f.object.transferred_from_registration.event.title, edit_event_registration_path(f.object.transferred_from_registration, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>
+                <%= link_to f.object.transferred_from_registration.event.decorate.title_with_month_year, edit_event_registration_path(f.object.transferred_from_registration, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>
                 ·
                 <%= link_to "Manage transfer", transfer_event_registration_path(f.object.transferred_from_registration, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>
               </p>
@@ -220,6 +220,12 @@
                 <p class="text-2xs mt-1 text-teal-700">
                   <i class="fa-solid fa-right-to-bracket"></i>
                   <%= "Day".pluralize(prior_days.size) %> <%= prior_days.to_sentence %> completed in prior training.
+                </p>
+              <% end %>
+              <% if prior.event.day_count != f.object.event.day_count %>
+                <p class="text-2xs mt-0.5 text-amber-600">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  The prior training had <%= prior.event.day_count > f.object.event.day_count ? "more" : "fewer" %> days than this event.
                 </p>
               <% end %>
             <% end %>
