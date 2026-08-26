@@ -11,7 +11,6 @@ module Dedupable
     mc = config[:model_class]
 
     @possible_duplicate_groups = dedupe_candidate_groups(config)
-    @records_for_select = mc.order(:name).map { |r| [ r.name, r.id ] }
     @dedupe = build_dedupe_vars(config)
 
     render "dedupes/index"
@@ -161,6 +160,7 @@ module Dedupable
       delete_id_param: "#{mn}_to_delete_id",
       keep_id_param: "#{mn}_to_keep_id",
       keep_param_key: "#{mn}_to_keep".to_sym,
+      search_model: mn,
       editable_columns: config[:editable_columns],
       union_columns: Array(config[:union_columns]).map(&:to_s),
       belongs_to_options: opts.is_a?(Proc) ? opts.call : (opts || {}),
