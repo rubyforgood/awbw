@@ -8,7 +8,7 @@
         <div class="flex items-center gap-3">
           <% if allowed_to?(:manage?, Organization) %>
             <%= link_to "Dedupe", dedupe_index_organizations_path,
-                        class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+                        class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
           <% end %>
           <% if allowed_to?(:new?, Organization) %>
             <%= link_to "New Organization",
