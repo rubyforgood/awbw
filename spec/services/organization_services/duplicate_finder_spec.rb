@@ -30,6 +30,26 @@ RSpec.describe OrganizationServices::DuplicateFinder do
       expect(group.reasons).to include("Same name aside from Inc/LLC/etc.")
     end
 
+    it "groups names that differ only by a trailing audience word" do
+      a = org(name: "Bright Futures Children's")
+      b = org(name: "Bright Futures Adult")
+      c = org(name: "Bright Futures Combined")
+      org(name: "Bright Futures Adult Programs") # trailing word isn't an audience word
+
+      group = described_class.new.groups.first
+
+      expect(group.records).to contain_exactly(a, b, c)
+      expect(group.reasons).to include("Same name aside from audience (children's/adult/etc.)")
+    end
+
+    it "ignores the audience word regardless of apostrophe or plural form" do
+      a = org(name: "Harbor House Adults")
+      b = org(name: "Harbor House Adult's")
+      c = org(name: "Harbor House Childrens")
+
+      expect(described_class.new.groups.first.records).to contain_exactly(a, b, c)
+    end
+
     it "flags a FileMaker code present on only one record" do
       org(name: "Sunrise", filemaker_code: "FM123")
       org(name: "Sunrise", filemaker_code: nil)
