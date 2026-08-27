@@ -236,6 +236,15 @@
           </summary>
 
           <div class="mt-1">
+            <div class="mb-3">
+              <%= f.label :form_id, "Inline form", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+              <%= f.select :form_id,
+                    options_from_collection_for_select(@callout_forms, :id, :name, f.object.form_id),
+                    { include_blank: "No form" },
+                    class: "w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm" %>
+              <p class="text-xs text-gray-500 mt-0.5">Delivered inline on this callout's page (drips with the display date above).</p>
+            </div>
+
             <p class="text-xs text-gray-500 mb-1">Optional. Each resource links to its own callout page. <strong>Subtitle</strong> shows on the callout card; <strong>page content</strong> shows under the resource title on its callout page.</p>
 
             <div class="space-y-2">

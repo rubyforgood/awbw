@@ -158,6 +158,16 @@ RSpec.describe RegistrationTicketCallout, type: :model do
     end
   end
 
+  describe "linked form" do
+    it "optionally delivers a form and defaults to none" do
+      form = create(:form)
+      callout = create(:registration_ticket_callout, form:)
+
+      expect(callout.reload.form).to eq(form)
+      expect(create(:registration_ticket_callout).form).to be_nil
+    end
+  end
+
   describe "positioning" do
     it "assigns sequential positions in creation order" do
       event = create(:event)

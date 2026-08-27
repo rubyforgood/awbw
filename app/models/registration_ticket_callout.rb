@@ -54,6 +54,8 @@ class RegistrationTicketCallout < ApplicationRecord
 
   belongs_to :event
 
+  belongs_to :form, optional: true
+
   # A callout can link many resources, shown in order on its detail page (PDF
   # previews + download buttons) beneath its own title/subtitle/content — e.g.
   # the Handouts card's worksheets, or a custom callout's supporting documents.

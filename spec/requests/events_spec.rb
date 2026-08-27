@@ -1236,6 +1236,15 @@ RSpec.describe "Events", type: :request do
         expect(pacific.strftime("%Y-%m-%d %H:%M")).to eq("2026-08-15 09:00")
       end
 
+      it "links a form to a callout via nested attributes" do
+        callout = create(:registration_ticket_callout, event:)
+        form = create(:form)
+        patch event_path(event), params: { event: {
+          registration_ticket_callouts_attributes: { "0" => { id: callout.id, form_id: form.id } }
+        } }
+        expect(callout.reload.form).to eq(form)
+      end
+
       it "adds event staff via nested attributes" do
         person = create(:person)
         patch event_path(event), params: { event: {
