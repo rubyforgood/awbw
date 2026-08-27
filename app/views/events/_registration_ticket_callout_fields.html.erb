@@ -200,7 +200,7 @@
             built-in, which the app shows/hides from live balance status.
           %>
           <% unless f.object.payment? %>
-            <details class="group" <%= "open" if f.object.display_from.present? || f.object.payment_access_gated? %>>
+            <details class="group" <%= "open" if f.object.display_from.present? || f.object.payment_access_gated? || f.object.ce_payment_access_gated? %>>
               <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
                 <i class="fa-solid fa-chevron-right text-2xs text-gray-400 transition-transform group-open:rotate-90"></i>
                 Visibility
@@ -220,6 +220,8 @@
                   <%= f.label :payment_access_gated, "Payment-gated", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
 
                   <label class="flex items-center gap-2 text-sm text-gray-600"><%= f.check_box :payment_access_gated, class: "rounded border-gray-300 text-purple-600" %> Only show if paid or intends to pay</label>
+
+                  <label class="flex items-center gap-2 text-sm text-gray-600 mt-1"><%= f.check_box :ce_payment_access_gated, class: "rounded border-gray-300 text-purple-600" %> Only show if CE hours are paid</label>
                 </div>
               </div>
             </details>

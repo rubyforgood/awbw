@@ -109,6 +109,22 @@ RSpec.describe "Event registration show page", type: :system do
       expect(page).to have_link("Your workbook",
         href: event_registration_ticket_callout_path(event, gated_callout, reg: registration.slug))
     end
+
+    it "hides a CE-payment-gated callout until CE hours are paid in full" do
+      gated_callout = create(:registration_ticket_callout, :ce_payment_access_gated, event: event, title: "CE evaluation")
+      ce_registration = create(:continuing_education_registration, event_registration: registration, cost_cents: 15_000)
+
+      sign_in(user)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_no_link("CE evaluation")
+
+      create(:allocation, source: create(:payment), allocatable: ce_registration, amount: ce_registration.cost_cents)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_link("CE evaluation",
+        href: event_registration_ticket_callout_path(event, gated_callout, reg: registration.slug))
+    end
   end
 
   describe "view registration form link" do
