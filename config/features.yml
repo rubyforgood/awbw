@@ -27,6 +27,48 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Person profile in the new AWBW brand"
+  area: people
+  display_status: user_facing
+  released_on: 2026-08-28
+  action_path: "/people/1"
+  pr_number: 2386
+  summary: >-
+    A person's profile is restyled to match the new awbw.org brand — a navy hero with the
+    rainbow accent, serif headings, and a warm cream body of colored-border cards for
+    published content, participation history, and submitted content — so the portal matches
+    the wider organization.
+  pro_tips:
+    - "Presentation only — every section, badge, and permission on the profile works exactly as before."
+
+- name: "Transferred-in attendance days are preserved"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-26
+  action_path: "/transfer_guide"
+  pr_number: 2383
+  summary: >-
+    When a registrant transfers in from a longer multi-day training, their completed
+    attendance days are kept instead of dropping off the end, and the registration form
+    flags when the source and destination events have different day counts.
+  pro_tips:
+    - "Applies to new transfers going forward; already-transferred records are unchanged."
+    - "The \"transferred in from …\" notes now show the source event's month and year, so same-titled trainings are easy to tell apart."
+
+- name: "A person's history reaches more records that hang off them"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-26
+  action_path: "/people/1"
+  pr_number: 2354
+  summary: >-
+    A person's History now surfaces activity that only reaches them through a related
+    record — payments and allocations, onboarding steps, attendance times, form answers
+    and uploads, staffing, refunds, membership invoices, and scholarship agreements — so
+    the timeline is complete.
+  pro_tips:
+    - "It's read at request time, so it already covers everything on record — nothing needed backfilling."
+
 - name: "W-9 linked to every event by default"
   area: payments
   display_status: admin_facing
