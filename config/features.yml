@@ -35,9 +35,9 @@
   pr_number: 2386
   summary: >-
     A person's profile is restyled to match the new awbw.org brand — a navy hero with the
-    rainbow accent strip, serif display headings, and a warm cream body of colored-border
-    cards for published content, participation history, and submitted content — so the
-    portal looks like part of the same organization.
+    rainbow accent, serif headings, and a warm cream body of colored-border cards for
+    published content, participation history, and submitted content — so the portal matches
+    the wider organization.
   pro_tips:
     - "Presentation only — every section, badge, and permission on the profile works exactly as before."
 
@@ -62,10 +62,10 @@
   action_path: "/people/1"
   pr_number: 2354
   summary: >-
-    The History on a person now surfaces activity that only connects to them through a
-    related record — payments and allocations, onboarding checklist steps, attendance
-    times, form answers and their uploads, event staffing, refunds, membership invoices,
-    and scholarship agreement responses — so the timeline is complete.
+    A person's History now surfaces activity that only reaches them through a related
+    record — payments and allocations, onboarding steps, attendance times, form answers
+    and uploads, staffing, refunds, membership invoices, and scholarship agreements — so
+    the timeline is complete.
   pro_tips:
     - "It's read at request time, so it already covers everything on record — nothing needed backfilling."
 
