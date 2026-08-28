@@ -249,7 +249,7 @@ RSpec.describe Scholarship, type: :model do
       scholarship.decline_agreement!("no")
       expect(scholarship.allocation.reload.amount).to eq(0)
 
-      # The admin "Agreement signed" toggle routes through agreement_signed=.
+      # The admin "Accepted" toggle routes through agreement_signed=.
       scholarship.update!(agreement_signed: true)
 
       expect(scholarship.agreement_signed?).to be(true)

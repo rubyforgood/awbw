@@ -73,9 +73,9 @@ class ScholarshipDecorator < ApplicationDecorator
 
   AGREEMENT_STATUS_LABELS = {
     "declined" => "Declined",
-    "accepted" => "Signed",
-    "pending" => "Pending",
-    "support_requested" => "Support requested"
+    "accepted" => "Accepted",
+    "pending" => "Offered",
+    "support_requested" => "Requested"
   }.freeze
 
   AGREEMENT_STATUS_CLASSES = {
@@ -97,11 +97,11 @@ class ScholarshipDecorator < ApplicationDecorator
   def agreement_status_icon = AGREEMENT_STATUS_ICONS.fetch(object.agreement_response_status)
 
   # The agreement-status pill every surface that lists a scholarship renders, so
-  # the states read the same everywhere: Declined (red), Signed (fuchsia),
-  # Pending (amber), Support requested (sky). Compact surfaces only flag the
-  # states that need follow-up, so pending/signed render nothing unless
-  # `all_states:` while declined and support-requested always show. `prefix:`
-  # reads it as "Agreement declined" where the pill sits next to a tasks pill.
+  # the states read the same everywhere: Declined (red), Accepted (fuchsia),
+  # Offered (amber), Requested (sky). Compact surfaces only flag the states that
+  # need follow-up, so offered/accepted render nothing unless `all_states:` while
+  # declined and requested always show. `prefix:` reads it as "Agreement declined"
+  # where the pill sits next to a tasks pill.
   def agreement_status_badge(all_states: false, prefix: false, icon_size: "text-xs")
     return unless all_states || object.agreement_declined? || object.agreement_support_requested?
 

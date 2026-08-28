@@ -15,18 +15,18 @@ RSpec.describe ScholarshipDecorator, type: :decorator do
   end
 
   describe "agreement status pill" do
-    it "labels and colours each of the three states" do
+    it "labels and colours each of the four states" do
       scholarship = create(:scholarship, recipient: recipient)
-      expect(scholarship.decorate).to have_attributes(agreement_status_label: "Pending", agreement_status_classes: a_string_including("amber"))
+      expect(scholarship.decorate).to have_attributes(agreement_status_label: "Offered", agreement_status_classes: a_string_including("amber"))
 
       scholarship.update!(agreement_signed: true)
-      expect(scholarship.decorate).to have_attributes(agreement_status_label: "Signed", agreement_status_classes: a_string_including("fuchsia"))
+      expect(scholarship.decorate).to have_attributes(agreement_status_label: "Accepted", agreement_status_classes: a_string_including("fuchsia"))
 
       scholarship.decline_agreement!("Timing no longer works")
       expect(scholarship.decorate).to have_attributes(agreement_status_label: "Declined", agreement_status_classes: a_string_including("red"))
 
       scholarship.request_additional_support!(contribution_cents: 5_000)
-      expect(scholarship.decorate).to have_attributes(agreement_status_label: "Support requested", agreement_status_classes: a_string_including("sky"))
+      expect(scholarship.decorate).to have_attributes(agreement_status_label: "Requested", agreement_status_classes: a_string_including("sky"))
     end
 
     it "renders the badge only for a declined award by default" do
@@ -41,13 +41,13 @@ RSpec.describe ScholarshipDecorator, type: :decorator do
       scholarship = create(:scholarship, recipient: recipient)
       scholarship.request_additional_support!(contribution_cents: 5_000)
 
-      expect(scholarship.decorate.agreement_status_badge).to include("Support requested")
+      expect(scholarship.decorate.agreement_status_badge).to include("Requested")
     end
 
     it "renders every state, prefixed, when asked" do
       scholarship = create(:scholarship, recipient: recipient)
 
-      expect(scholarship.decorate.agreement_status_badge(all_states: true, prefix: true)).to include("Agreement pending")
+      expect(scholarship.decorate.agreement_status_badge(all_states: true, prefix: true)).to include("Agreement offered")
     end
   end
 

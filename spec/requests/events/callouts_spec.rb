@@ -621,7 +621,7 @@ RSpec.describe "Events::Callouts", type: :request do
         get registration_scholarship_path(registration.slug)
 
         expect(response.body).to include("Amount awarded")
-        expect(response.body).to include("Agreement signed")
+        expect(response.body).to include("Agreement accepted")
         expect(response.body).not_to include("Pending agreement")
       end
 

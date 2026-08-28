@@ -24,7 +24,7 @@
     </summary>
     <ol class="<%= list_class %>">
       <% responses.reverse_each do |response| %>
-        <% status_label = { "support_requested" => "Requested", "pending" => "Offered" }.fetch(response.status, response.status.capitalize) %>
+        <% status_label = ScholarshipDecorator::AGREEMENT_STATUS_LABELS.fetch(response.status, response.status.humanize) %>
         <li class="<%= row_class %>">
           <div class="w-28 shrink-0">
             <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= status_classes[response.status] %>"><%= status_label %></span>

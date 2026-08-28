@@ -536,12 +536,12 @@ RSpec.describe "EventRegistrations", type: :request do
         scholarship.save!
 
         get edit_event_registration_path(existing_registration)
-        expect(response.body).to include("Agreement pending")
+        expect(response.body).to include("Agreement offered")
 
         scholarship.update!(agreement_signed: true)
         get edit_event_registration_path(existing_registration)
-        expect(response.body).to include("Agreement signed")
-        expect(response.body).not_to include("Agreement pending")
+        expect(response.body).to include("Agreement accepted")
+        expect(response.body).not_to include("Agreement offered")
       end
 
       it "hides Delete and explains why for a registration with payment records" do

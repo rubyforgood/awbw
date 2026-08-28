@@ -183,7 +183,7 @@ RSpec.describe "Scholarships", type: :request do
       scholarship.update!(agreement_signed: true)
       get scholarship_path(scholarship)
 
-      expect(response.body).to include("Agreement signed")
+      expect(response.body).to include("Agreement accepted")
     end
   end
 
