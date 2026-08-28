@@ -1,11 +1,11 @@
 <% content_for(:full_width, true) %>
 <%= render "shared/public_welcome_banner" %>
 
-<%# Each section keeps its own colour, drawn from the AWBW brand palette rather
-    than Tailwind's stock hues — see DomainTheme::BRAND_SURFACES. %>
-<%= render "home/workshops", title: "Featured Workshops", surface: DomainTheme.brand_surface_for(:workshops) %>
-<%= render "home/community_news", surface: DomainTheme.brand_surface_for(:community_news) %>
-<%= render "home/resources", title: "Popular Resources", surface: DomainTheme.brand_surface_for(:resources) %>
-<%= render "home/events", surface: DomainTheme.brand_surface_for(:events) %>
-<%= render "home/stories", surface: DomainTheme.brand_surface_for(:stories) %>
-<%= render "home/video_recordings", surface: DomainTheme.brand_surface_for(:video_recordings) %>
+<%# Each section keeps its own colour, resolved through DomainTheme like
+    everywhere else in the app — these six domains sit on the brand palette. %>
+<%= render "home/workshops", title: "Featured Workshops", surface: DomainTheme.bg_class_for(:workshops, intensity: 100) %>
+<%= render "home/community_news", surface: DomainTheme.bg_class_for(:community_news, intensity: 100) %>
+<%= render "home/resources", title: "Popular Resources", surface: DomainTheme.bg_class_for(:resources, intensity: 100) %>
+<%= render "home/events", surface: DomainTheme.bg_class_for(:events, intensity: 100) %>
+<%= render "home/stories", surface: DomainTheme.bg_class_for(:stories, intensity: 100) %>
+<%= render "home/video_recordings", surface: DomainTheme.bg_class_for(:video_recordings, intensity: 100) %>

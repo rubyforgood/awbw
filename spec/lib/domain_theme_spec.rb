@@ -15,19 +15,26 @@ RSpec.describe DomainTheme do
         .to eq("bg-gray-50")
     end
 
+    it "builds the same class shape for a brand-palette domain" do
+      expect(DomainTheme.bg_class_for(:workshops)).to eq("bg-brand-navy-50")
+      expect(DomainTheme.bg_class_for(:workshops, intensity: 700)).to eq("bg-brand-navy-700")
+      expect(DomainTheme.text_class_for(:stories, intensity: 700)).to eq("text-brand-magenta-700")
+      expect(DomainTheme.border_class_for(:events)).to eq("border-brand-teal-300")
+    end
+
     it "supports intensity overrides" do
-      expect(DomainTheme.bg_class_for(:events, intensity: 100))
-        .to eq("bg-teal-100")
+      expect(DomainTheme.bg_class_for(:people, intensity: 100))
+        .to eq("bg-cyan-100")
     end
 
     it "supports hover classes for 100's" do
-      expect(DomainTheme.bg_class_for(:stories, intensity: 200, hover: true))
-        .to eq("hover:bg-fuchsia-300")
+      expect(DomainTheme.bg_class_for(:people, intensity: 200, hover: true))
+        .to eq("hover:bg-cyan-300")
     end
 
     it "supports hover classes for 50" do
-      expect(DomainTheme.bg_class_for(:stories, intensity: 50, hover: true))
-        .to eq("hover:bg-fuchsia-100")
+      expect(DomainTheme.bg_class_for(:people, intensity: 50, hover: true))
+        .to eq("hover:bg-cyan-100")
     end
 
     it "defines a color for every taggable home type" do
@@ -39,7 +46,7 @@ RSpec.describe DomainTheme do
 
   describe ".text_class_for" do
     it "returns the correct Tailwind text class for a domain" do
-      expect(DomainTheme.text_class_for(:workshops)).to eq("text-indigo-800")
+      expect(DomainTheme.text_class_for(:organizations)).to eq("text-emerald-800")
     end
 
     it "supports intensity overrides" do
@@ -59,7 +66,7 @@ RSpec.describe DomainTheme do
 
   describe ".color_for" do
     it "returns configured color symbols" do
-      expect(DomainTheme.color_for(:workshops)).to eq(:indigo)
+      expect(DomainTheme.color_for(:people)).to eq(:cyan)
     end
 
     it "symbolizes string keys" do

@@ -1,14 +1,17 @@
 module DomainTheme
   # New colors must be added to the inline source in `application.tailwind.css`
   # for tailwind to generate the classes
+  # Domains on the AWBW brand palette use a `brand-*` scale (defined in
+  # application.tailwind.css); the rest still use Tailwind's stock hues. Both
+  # work the same way here — the helpers below just interpolate the name.
   COLORS = {
-    workshops:                :indigo,
+    workshops:                :"brand-navy",
     workshop_variations:      :purple,
     workshop_logs:            :teal,
-    resources:                :violet,
-    community_news:           :orange,
-    stories:                  :fuchsia,
-    events:                   :teal,
+    resources:                :"brand-purple",
+    community_news:           :"brand-orange",
+    stories:                  :"brand-magenta",
+    events:                   :"brand-teal",
     people:                   :cyan,
     organizations:            :emerald,
     quotes:                   :slate,
@@ -21,7 +24,7 @@ module DomainTheme
 
     forms:                    :purple,
     faqs:                     :pink,
-    video_recordings:         :sky,
+    video_recordings:         :"brand-yellow",
 
     workshop_ideas:           :indigo,
     workshop_variation_ideas: :purple,
@@ -73,19 +76,6 @@ module DomainTheme
     affiliated_person:        :slate
   }
 
-  # Pale AWBW-brand surfaces for pages that tint a whole band per domain (the
-  # home page's sections). Tailwind's stock palette doesn't reach the brand
-  # hues, so these are theme tokens from `application.tailwind.css` rather than
-  # palette steps — add any new one to that file's `@source inline` safelist too.
-  BRAND_SURFACES = {
-    workshops:        "bg-brand-tint-navy",
-    community_news:   "bg-brand-tint-peach",
-    resources:        "bg-brand-tint-purple",
-    events:           "bg-brand-tint-green",
-    stories:          "bg-brand-tint-magenta",
-    video_recordings: "bg-brand-tint-yellow"
-  }.freeze
-
   # Ordered palette of colours offered as user-pickable swatches (e.g. the
   # callout colour dropdown). A curated subset of the full theme palette that
   # reads well as tinted boxes — add a colour here once and every picker updates.
@@ -108,11 +98,6 @@ module DomainTheme
 
   def self.color_for(key)
     COLORS[key.to_sym] || :gray
-  end
-
-  # Pale brand surface for a domain, falling back to the cream page surface.
-  def self.brand_surface_for(key)
-    BRAND_SURFACES[key.to_sym] || "bg-brand-cream"
   end
 
   # Full colour swatch (role => Tailwind class) for a raw base colour.

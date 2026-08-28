@@ -24,22 +24,105 @@
      `primary`, green is `success`, orange is `accent`. These add the rest, the
      cream page surface, and the display serif used for headlines. */
   --color-brand-cream: #fcfaeb;
-  --color-brand-gold: #ffcb05;
-  --color-brand-gold-dark: #e0b205;
-  --color-brand-magenta: #992a5b;
-  --color-brand-purple: #41006c;
-  --color-brand-teal: #008d80;
   --font-display: "Fraunces", "Lato", serif;
 
-  /* Pale surfaces for per-domain sections. Green, yellow and peach are the
-     guide's own background swatches; navy, magenta and purple are matched to
-     them in lightness off the corresponding brand colour. */
-  --color-brand-tint-green: #e7f0c6;
-  --color-brand-tint-yellow: #ffefc7;
-  --color-brand-tint-peach: #ffddcf;
-  --color-brand-tint-navy: #dde5f6;
-  --color-brand-tint-magenta: #f7dde8;
-  --color-brand-tint-purple: #e9def3;
+  /* Each brand colour as a full 50–950 scale, so it is used exactly like a
+     stock Tailwind colour: `bg-brand-navy-50`, `text-brand-navy-700`,
+     `border-brand-navy-300`. Generated off Tailwind's own OKLCH curve for the
+     nearest hue family, re-hued to the brand colour and rescaled so the brand
+     hex lands exactly on the step noted above each ramp. Chroma is never
+     pushed past the reference family, which keeps the very dark purple from
+     going neon in its mid tones. */
+  /* Navy — brand #24479e sits at 800. */
+  --color-brand-navy-50: #f2f5fc;
+  --color-brand-navy-100: #e1e9f9;
+  --color-brand-navy-200: #cad9f6;
+  --color-brand-navy-300: #a8c1f4;
+  --color-brand-navy-400: #7a9fed;
+  --color-brand-navy-500: #5682e6;
+  --color-brand-navy-600: #3967d9;
+  --color-brand-navy-700: #2a55c4;
+  --color-brand-navy-800: #24479e;
+  --color-brand-navy-900: #253f7b;
+  --color-brand-navy-950: #19284b;
+
+  /* Yellow — brand #ffcb05 sits at 400. */
+  --color-brand-yellow-50: #fffbea;
+  --color-brand-yellow-100: #fff5c7;
+  --color-brand-yellow-200: #ffea91;
+  --color-brand-yellow-300: #ffda4c;
+  --color-brand-yellow-400: #ffcb05;
+  --color-brand-yellow-500: #e6b704;
+  --color-brand-yellow-600: #bd9500;
+  --color-brand-yellow-700: #907000;
+  --color-brand-yellow-800: #755b00;
+  --color-brand-yellow-900: #624d08;
+  --color-brand-yellow-950: #392b02;
+
+  /* Green — brand #4e8324 sits at 700. */
+  --color-brand-green-50: #f3ffed;
+  --color-brand-green-100: #e4fed6;
+  --color-brand-green-200: #ccfcb0;
+  --color-brand-green-300: #adf67c;
+  --color-brand-green-400: #8fe849;
+  --color-brand-green-500: #7ad030;
+  --color-brand-green-600: #60a722;
+  --color-brand-green-700: #4e8324;
+  --color-brand-green-800: #3f6722;
+  --color-brand-green-900: #385822;
+  --color-brand-green-950: #1f3310;
+
+  /* Magenta — brand #992a5b sits at 800. */
+  --color-brand-magenta-50: #fcf2f5;
+  --color-brand-magenta-100: #fce8ee;
+  --color-brand-magenta-200: #fbd1de;
+  --color-brand-magenta-300: #faabc6;
+  --color-brand-magenta-400: #f474a5;
+  --color-brand-magenta-500: #eb5293;
+  --color-brand-magenta-600: #d73880;
+  --color-brand-magenta-700: #b82d6c;
+  --color-brand-magenta-800: #992a5b;
+  --color-brand-magenta-900: #7e284c;
+  --color-brand-magenta-950: #4d152d;
+
+  /* Orange — brand #d56027 sits at 600. */
+  --color-brand-orange-50: #fff6f2;
+  --color-brand-orange-100: #ffeae1;
+  --color-brand-orange-200: #ffd3c1;
+  --color-brand-orange-300: #fdb597;
+  --color-brand-orange-400: #f18e63;
+  --color-brand-orange-500: #eb7946;
+  --color-brand-orange-600: #d56027;
+  --color-brand-orange-700: #b04d1c;
+  --color-brand-orange-800: #893d19;
+  --color-brand-orange-900: #6c3319;
+  --color-brand-orange-950: #371607;
+
+  /* Purple — brand #41006c sits at 950. */
+  --color-brand-purple-50: #f9f5ff;
+  --color-brand-purple-100: #f2e8ff;
+  --color-brand-purple-200: #e8d5ff;
+  --color-brand-purple-300: #d8b4ff;
+  --color-brand-purple-400: #c17dff;
+  --color-brand-purple-500: #af48ff;
+  --color-brand-purple-600: #9e11fa;
+  --color-brand-purple-700: #8800da;
+  --color-brand-purple-800: #7116b3;
+  --color-brand-purple-900: #5b1b8f;
+  --color-brand-purple-950: #41006c;
+
+  /* Teal — brand #008d80 sits at 600. */
+  --color-brand-teal-50: #f1fdfb;
+  --color-brand-teal-100: #cffaf2;
+  --color-brand-teal-200: #a0f3e6;
+  --color-brand-teal-300: #62e8d6;
+  --color-brand-teal-400: #20cfbd;
+  --color-brand-teal-500: #0eb5a5;
+  --color-brand-teal-600: #008d80;
+  --color-brand-teal-700: #127167;
+  --color-brand-teal-800: #135951;
+  --color-brand-teal-900: #154842;
+  --color-brand-teal-950: #062925;
 
   /* Social network brand colors, used for the hover fill on share/follow
      buttons. Instagram is a three-stop gradient rather than a single fill. */
@@ -73,14 +156,10 @@
 
 /* Used to generate classes from `domain_theme.rb`*/
 
-@source inline("{hover:,}bg-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink}-{50,{100..900..100},950}");
-@source inline("{hover:,}border-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink}-{200,300}");
-@source inline("ring-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink}-{200,300,400,500}");
-@source inline("{hover:,}text-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink}-{50,{100..900..100},950}");
-
-/* Per-domain brand surfaces (generated from DomainTheme::BRAND_SURFACES, which
-   lives in lib/ and is not scanned) */
-@source inline("bg-brand-tint-{green,yellow,peach,navy,magenta,purple}");
+@source inline("{hover:,}bg-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink,brand-navy,brand-yellow,brand-green,brand-magenta,brand-orange,brand-purple,brand-teal}-{50,{100..900..100},950}");
+@source inline("{hover:,}border-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink,brand-navy,brand-yellow,brand-green,brand-magenta,brand-orange,brand-purple,brand-teal}-{200,300}");
+@source inline("ring-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink,brand-navy,brand-yellow,brand-green,brand-magenta,brand-orange,brand-purple,brand-teal}-{200,300,400,500}");
+@source inline("{hover:,}text-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink,brand-navy,brand-yellow,brand-green,brand-magenta,brand-orange,brand-purple,brand-teal}-{50,{100..900..100},950}");
 
 /* Per-field form layout widths (generated from FormField::WIDTH_GRID_SPANS, which
    lives in a model file Tailwind does not scan) */
