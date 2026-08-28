@@ -2,6 +2,13 @@ module EventRegistrationServices
   class PublicRegistration
     Result = Struct.new(:success?, :event_registration, :form_submission, :errors, keyword_init: true)
 
+    # This public form runs one large, multi-table transaction. Two concurrent
+    # submissions from the same registrant (a double-click or browser retry) can
+    # deadlock in InnoDB. A deadlock fully rolls back the losing transaction, so
+    # retrying from the top is safe — the retry sees the winner's committed
+    # registration and takes the idempotent "existing" path.
+    MAX_DEADLOCK_RETRIES = 2
+
     # Well-known field_identifier of the "magic" CE question seeded onto the
     # registration form. Answering it "Yes" creates a ContinuingEducationRegistration
     # (hours come from the event). Kept here so the seed, service, and specs agree.
@@ -68,6 +75,33 @@ module EventRegistrationServices
     end
 
     def call
+      attempt = 0
+      begin
+        run
+      rescue ActiveRecord::Deadlocked
+        attempt += 1
+        retry if attempt <= MAX_DEADLOCK_RETRIES
+        Result.new(success?: false, event_registration: nil,
+                   errors: [ "We hit a temporary conflict saving your registration. Please try again." ])
+      end
+    rescue FormSubmission::UnreadableUpload => e
+      Result.new(success?: false, event_registration: nil, errors: [ e.message ])
+    rescue ActiveRecord::ValueTooLong => e
+      Result.new(success?: false, event_registration: nil, errors: [ too_long_message(e) ])
+    rescue ActiveRecord::RecordInvalid => e
+      Result.new(success?: false, event_registration: nil, errors: [ e.message ])
+    rescue ActiveRecord::RecordNotUnique => e
+      if e.message.include?("registrant_id")
+        Result.new(success?: false, event_registration: nil,
+                   errors: [ "You are already registered for this event." ])
+      else
+        Result.new(success?: false, event_registration: nil, errors: [ e.message ])
+      end
+    end
+
+    private
+
+    def run
       ActiveRecord::Base.transaction do
         person = find_or_create_person
         sync_person_profile(person)
@@ -127,22 +161,7 @@ module EventRegistrationServices
 
         Result.new(success?: true, event_registration: event_registration, form_submission: submission, errors: [])
       end
-    rescue FormSubmission::UnreadableUpload => e
-      Result.new(success?: false, event_registration: nil, errors: [ e.message ])
-    rescue ActiveRecord::ValueTooLong => e
-      Result.new(success?: false, event_registration: nil, errors: [ too_long_message(e) ])
-    rescue ActiveRecord::RecordInvalid => e
-      Result.new(success?: false, event_registration: nil, errors: [ e.message ])
-    rescue ActiveRecord::RecordNotUnique => e
-      if e.message.include?("registrant_id")
-        Result.new(success?: false, event_registration: nil,
-                   errors: [ "You are already registered for this event." ])
-      else
-        Result.new(success?: false, event_registration: nil, errors: [ e.message ])
-      end
     end
-
-    private
 
     # Turn a database "Data too long for column 'city'" failure into a friendly,
     # form-level message. We can't always map the column back to a single form

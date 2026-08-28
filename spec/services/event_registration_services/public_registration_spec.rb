@@ -1185,4 +1185,39 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(organization.addresses.find_by(city: "Reno")).to be_present
     end
   end
+
+  describe "deadlock retries" do
+    let(:params) { base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com") }
+
+    def service
+      described_class.new(event: event, registration_form: form, form_params: params)
+    end
+
+    it "retries the transaction and succeeds after a transient deadlock" do
+      subject = service
+      attempts = 0
+      allow(subject).to receive(:run).and_wrap_original do |original|
+        attempts += 1
+        raise ActiveRecord::Deadlocked, "deadlock" if attempts == 1
+        original.call
+      end
+
+      result = subject.call
+
+      expect(result.success?).to be true
+      expect(attempts).to eq(2)
+      expect(Person.find_by(email: "sam@example.com")).to be_present
+    end
+
+    it "gives up after the retry limit and returns a friendly failure" do
+      subject = service
+      allow(subject).to receive(:run).and_raise(ActiveRecord::Deadlocked.new("deadlock"))
+
+      result = subject.call
+
+      expect(result.success?).to be false
+      expect(result.errors.first).to match(/temporary conflict/i)
+      expect(subject).to have_received(:run).exactly(described_class::MAX_DEADLOCK_RETRIES + 1).times
+    end
+  end
 end
