@@ -27,17 +27,6 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
-- name: "W-9 linked to every event by default"
-  area: payments
-  display_status: admin_facing
-  released_on: 2026-08-27
-  action_path: "/registration/sample"
-  pr_number: 2388
-  summary: >-
-    The W-9 is now linked to every event's payment callout by default, so it shows
-    on the ticket automatically once the event has a cost — even for events created
-    free and priced later. Remove it per event when it doesn't apply.
-
 - name: "Bulk payments index across all events"
   area: payments
   display_status: admin_facing
