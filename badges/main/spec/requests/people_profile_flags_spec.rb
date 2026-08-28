@@ -21,12 +21,12 @@ RSpec.describe "Person profile flag visibility", type: :request do
     profile_show_member_since: "Facilitator since",
     profile_show_phone: "555-123-4567",
     profile_show_affiliations: "Affiliations",
-    profile_show_sectors: "mb-3\">Sectors</h2>",
-    profile_show_bio: "mb-3\">Bio</h2>",
-    profile_show_workshops: "mb-3\">Workshops authored</h2>",
+    profile_show_sectors: "\">Sectors</h2>",
+    profile_show_bio: "\">Bio</h2>",
+    profile_show_workshops: "\">Workshops authored</h3>",
     profile_show_workshop_variations: "Workshop variations authored",
     profile_show_stories: "Stories authored/featured",
-    profile_show_resources: "mb-3\">Resources authored</h2>",
+    profile_show_resources: "\">Resources authored</h3>",
     profile_show_events_registered: "Participation history"
   }.each do |flag, marker|
     describe "##{flag}" do

@@ -290,11 +290,11 @@ RSpec.describe "Memberships", type: :request do
       expect(response.body).to include(allocations_path(allocatable_sgid: invoice.to_sgid.to_s))
     end
 
-    it "is not a link on the profile card, which stays read-only" do
+    it "is not a link on the edit-page card, which stays read-only" do
       subscription = create(:membership, person: person)
       invoice = membership_invoice_for(subscription: subscription)
 
-      get person_path(person)
+      get edit_person_path(person)
 
       expect(response.body).to include(invoice.decorate.status_badge.label)
       expect(response.body).not_to include(allocations_path(allocatable_sgid: invoice.to_sgid.to_s))

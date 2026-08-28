@@ -285,6 +285,23 @@ class Organization < ApplicationRecord
 
   remote_searchable_by :name
 
+  # FileMaker is the source of truth, and a record can carry more than one
+  # FileMaker code (e.g. when two orgs that each mapped to a FileMaker record are
+  # merged). The `filemaker_code` column holds them as a trimmed, comma-separated
+  # list; these are the seam for reading and combining them.
+  def filemaker_codes
+    Organization.split_filemaker_codes(filemaker_code)
+  end
+
+  def self.split_filemaker_codes(value)
+    value.to_s.split(",").map(&:strip).reject(&:blank?).uniq
+  end
+
+  # A single normalized column value from any mix of code strings/lists.
+  def self.join_filemaker_codes(*values)
+    values.flatten.flat_map { |value| split_filemaker_codes(value) }.uniq.sort.join(", ").presence
+  end
+
   # Returns the website as a clickable, scheme-qualified URL — prepending
   # https:// to a bare domain like "awbw.org" — or nil when the value is blank or
   # not a usable web address. Drives the external links on the org profile and
