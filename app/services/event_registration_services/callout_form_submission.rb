@@ -31,6 +31,7 @@ module EventRegistrationServices
           person: @registration.registrant, form: form, event: @registration.event,
           role: self.class.role_for(@callout)
         )
+        submission.record_callout_collection!(@callout)
         @form_params.each do |field_id, raw_value|
           field = form.form_fields.find_by(id: field_id)
           next unless field

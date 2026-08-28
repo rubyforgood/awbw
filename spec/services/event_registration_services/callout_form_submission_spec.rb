@@ -26,6 +26,13 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
     expect(submission.role).to eq("post_event_survey")
   end
 
+  it "records in metadata that the submission was collected via a callout" do
+    submission = described_class.call(registration:, callout:, form_params: { field.id.to_s => "Great" })
+
+    expect(submission.collected_via_callout?).to be(true)
+    expect(submission.metadata["collected_via_callout_id"]).to eq(callout.id)
+  end
+
   it "guards a reserved event-form role, falling back to the callout role" do
     form.update!(role: "scholarship")
 
