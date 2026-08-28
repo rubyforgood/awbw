@@ -24,6 +24,9 @@
           <% if response.amount_cents.present? %>
             <span class="text-gray-400">· <%= dollars_from_cents(response.amount_cents) %></span>
           <% end %>
+          <% if response.contribution_cents.present? %>
+            <span class="text-gray-400">· can contribute <%= dollars_from_cents(response.contribution_cents) %></span>
+          <% end %>
           <% if response.reason.present? %>
             <p class="w-full text-gray-700">“<%= response.reason %>”</p>
           <% end %>

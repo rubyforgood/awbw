@@ -258,6 +258,34 @@ RSpec.describe Scholarship, type: :model do
     end
   end
 
+  describe "requesting additional support" do
+    it "#request_additional_support! records the status, contribution, reason, and time" do
+      scholarship = create(:scholarship)
+
+      scholarship.request_additional_support!(contribution_cents: 12_000, reason: "Employer can help")
+
+      expect(scholarship.agreement_support_requested?).to be(true)
+      response = scholarship.latest_agreement_response
+      expect(response).to have_attributes(status: "support_requested", contribution_cents: 12_000,
+                                          reason: "Employer can help", responder: "recipient")
+      expect(response.responded_at).to be_present
+    end
+
+    it "keeps the award live — not declined, allocation untouched, still in .not_declined" do
+      event = create(:event, cost_cents: 10_000)
+      registration = create(:event_registration, event:)
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 5_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 5_000)
+      scholarship.reload
+
+      scholarship.request_additional_support!(contribution_cents: 2_000)
+
+      expect(scholarship.agreement_declined?).to be(false)
+      expect(scholarship.allocation.reload.amount).to eq(5_000)
+      expect(Scholarship.not_declined).to include(scholarship)
+    end
+  end
+
   describe "agreement response history" do
     it "appends a row on each transition, capturing status, reason, responder, and amount" do
       scholarship = create(:scholarship, amount_cents: 5_000)

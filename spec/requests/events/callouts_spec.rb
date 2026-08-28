@@ -757,6 +757,53 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(response).to redirect_to(registration_scholarship_path(other.slug))
       end
     end
+
+    describe "POST /registration/:slug/scholarship/request-support" do
+      it "records the request with the contribution amount and note" do
+        post registration_scholarship_request_support_path(registration.slug),
+          params: { contribution_amount: "$1,200.50", support_reason: "Employer can chip in" }
+
+        expect(response).to redirect_to(registration_scholarship_path(registration.slug))
+        scholarship.reload
+        expect(scholarship.agreement_support_requested?).to be(true)
+        response_row = scholarship.latest_agreement_response
+        expect(response_row.contribution_cents).to eq(120_050)
+        expect(response_row.reason).to eq("Employer can chip in")
+      end
+
+      it "leaves the award live so it keeps covering the balance (not a decline)" do
+        expect(registration.reload.remaining_cost).to eq(5_000)
+
+        post registration_scholarship_request_support_path(registration.slug), params: { contribution_amount: "50" }
+
+        expect(scholarship.reload.agreement_declined?).to be(false)
+        expect(allocation.reload.amount).to eq(5_000)
+        expect(registration.reload.remaining_cost).to eq(5_000)
+      end
+
+      it "emails the trainings team" do
+        expect {
+          post registration_scholarship_request_support_path(registration.slug), params: { contribution_amount: "50" }
+        }.to have_enqueued_mail(ScholarshipMailer, :additional_support_requested_fyi)
+      end
+
+      it "rejects a blank amount without recording a request" do
+        expect {
+          post registration_scholarship_request_support_path(registration.slug), params: { contribution_amount: "" }
+        }.not_to change { scholarship.reload.agreement_response_status }
+
+        expect(response).to redirect_to(registration_scholarship_path(registration.slug))
+        expect(flash[:alert]).to be_present
+      end
+
+      it "redirects to the scholarship page when there is no awarded scholarship" do
+        other = create(:event_registration, event: event, scholarship_requested: true)
+
+        post registration_scholarship_request_support_path(other.slug), params: { contribution_amount: "50" }
+
+        expect(response).to redirect_to(registration_scholarship_path(other.slug))
+      end
+    end
   end
 
   describe "GET /registration/:slug/certificate" do

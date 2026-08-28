@@ -74,19 +74,22 @@ class ScholarshipDecorator < ApplicationDecorator
   AGREEMENT_STATUS_LABELS = {
     "declined" => "Declined",
     "accepted" => "Signed",
-    "pending" => "Pending"
+    "pending" => "Pending",
+    "support_requested" => "Support requested"
   }.freeze
 
   AGREEMENT_STATUS_CLASSES = {
     "declined" => "bg-red-50 text-red-700 border-red-200",
     "accepted" => "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200",
-    "pending" => "bg-amber-50 text-amber-700 border-amber-200"
+    "pending" => "bg-amber-50 text-amber-700 border-amber-200",
+    "support_requested" => "bg-sky-50 text-sky-700 border-sky-200"
   }.freeze
 
   AGREEMENT_STATUS_ICONS = {
     "declined" => "fa-solid fa-circle-xmark",
     "accepted" => "fa-solid fa-file-signature",
-    "pending" => "fa-solid fa-file-signature"
+    "pending" => "fa-solid fa-file-signature",
+    "support_requested" => "fa-solid fa-hand-holding-dollar"
   }.freeze
 
   def agreement_status_label = AGREEMENT_STATUS_LABELS.fetch(object.agreement_response_status)
@@ -94,12 +97,13 @@ class ScholarshipDecorator < ApplicationDecorator
   def agreement_status_icon = AGREEMENT_STATUS_ICONS.fetch(object.agreement_response_status)
 
   # The agreement-status pill every surface that lists a scholarship renders, so
-  # the three states read the same everywhere: Declined (red), Signed (fuchsia),
-  # Pending (amber). Compact surfaces only need to flag the exception, so
-  # pending/signed render nothing unless `all_states:`. `prefix:` reads it as
-  # "Agreement declined" where the pill sits next to a tasks pill.
+  # the states read the same everywhere: Declined (red), Signed (fuchsia),
+  # Pending (amber), Support requested (sky). Compact surfaces only flag the
+  # states that need follow-up, so pending/signed render nothing unless
+  # `all_states:` while declined and support-requested always show. `prefix:`
+  # reads it as "Agreement declined" where the pill sits next to a tasks pill.
   def agreement_status_badge(all_states: false, prefix: false, icon_size: "text-xs")
-    return unless all_states || object.agreement_declined?
+    return unless all_states || object.agreement_declined? || object.agreement_support_requested?
 
     label = prefix ? "Agreement #{agreement_status_label.downcase}" : agreement_status_label
     h.render "shared/badge", label: label, classes: agreement_status_classes,

@@ -24,6 +24,9 @@ RSpec.describe ScholarshipDecorator, type: :decorator do
 
       scholarship.decline_agreement!("Timing no longer works")
       expect(scholarship.decorate).to have_attributes(agreement_status_label: "Declined", agreement_status_classes: a_string_including("red"))
+
+      scholarship.request_additional_support!(contribution_cents: 5_000)
+      expect(scholarship.decorate).to have_attributes(agreement_status_label: "Support requested", agreement_status_classes: a_string_including("sky"))
     end
 
     it "renders the badge only for a declined award by default" do
@@ -32,6 +35,13 @@ RSpec.describe ScholarshipDecorator, type: :decorator do
 
       scholarship.decline_agreement!("Timing no longer works")
       expect(scholarship.decorate.agreement_status_badge).to include("Declined", "fa-circle-xmark")
+    end
+
+    it "renders the badge for a support-requested award by default (needs follow-up)" do
+      scholarship = create(:scholarship, recipient: recipient)
+      scholarship.request_additional_support!(contribution_cents: 5_000)
+
+      expect(scholarship.decorate.agreement_status_badge).to include("Support requested")
     end
 
     it "renders every state, prefixed, when asked" do
