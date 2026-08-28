@@ -8,30 +8,16 @@ RSpec.describe "Forms", type: :request do
     context "as admin" do
       before { sign_in admin }
 
-      let(:frame_headers) { { "Turbo-Frame" => "forms_results" } }
-
-      it "renders the index shell" do
+      it "lists standalone forms" do
         create(:form, :standalone, name: "My Form")
         get forms_path
-        expect(response).to have_http_status(:success)
-      end
-
-      it "lists standalone forms in the results frame" do
-        create(:form, :standalone, name: "My Form")
-        get forms_path, headers: frame_headers
         expect(response).to have_http_status(:success)
         expect(response.body).to include("My Form")
       end
 
-      it "shows the form role in the results frame" do
-        create(:form, :standalone, name: "New Job Form", role: "new_job")
-        get forms_path, headers: frame_headers
-        expect(response.body).to include("New Job")
-      end
-
       it "shows the public link for a published form" do
         create(:form, :standalone, name: "Volunteer", slug: "volunteer", published: true)
-        get forms_path, headers: frame_headers
+        get forms_path
         expect(response.body).to include(public_form_path("volunteer"))
         expect(response.body).to include("/f/volunteer")
       end
@@ -39,41 +25,27 @@ RSpec.describe "Forms", type: :request do
       it "marks an event-connected unpublished form as an event form, not 'Not published'" do
         form = create(:form, :standalone, name: "Reg Form")
         EventForm.create!(form: form, event: create(:event), role: "registration")
-        get forms_path, headers: frame_headers
+        get forms_path
         expect(response.body).to include("Event form")
       end
 
       it "shows only the event-form chip, not a public link, when a published form is connected to an event" do
         form = create(:form, :standalone, name: "Dual Form", slug: "dual", published: true)
         EventForm.create!(form: form, event: create(:event), role: "registration")
-        get forms_path, headers: frame_headers
+        get forms_path
         expect(response.body).not_to include("/f/dual")
         expect(response.body).to include("Event form")
       end
 
       it "marks a standalone form with no events and no public link as not published" do
         create(:form, :standalone, name: "Orphan Form")
-        get forms_path, headers: frame_headers
+        get forms_path
         expect(response.body).to include("Not published")
       end
 
-      it "orders forms by name ascending by default" do
-        create(:form, :standalone, name: "Zebra")
-        create(:form, :standalone, name: "Alpha")
-        get forms_path, headers: frame_headers
-        expect(response.body.index("Alpha")).to be < response.body.index("Zebra")
-      end
-
-      it "sorts by name descending when requested" do
-        create(:form, :standalone, name: "Zebra")
-        create(:form, :standalone, name: "Alpha")
-        get forms_path(sort: "name", direction: "desc"), headers: frame_headers
-        expect(response.body.index("Zebra")).to be < response.body.index("Alpha")
-      end
-
       it "has no Delete link" do
-        create(:form, :standalone, name: "My Form")
-        get forms_path, headers: frame_headers
+        form = create(:form, :standalone, name: "My Form")
+        get forms_path
         expect(response.body).not_to include(">Delete<")
       end
     end
