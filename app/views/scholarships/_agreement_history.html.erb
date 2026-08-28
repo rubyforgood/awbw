@@ -4,7 +4,7 @@
 <% responses = scholarship.agreement_responses.to_a %>
 <% if responses.any? %>
   <% status_classes = ScholarshipDecorator::AGREEMENT_STATUS_CLASSES %>
-  <details class="group mt-6 overflow-hidden rounded-xl border shadow-sm <%= admin ? "border-sky-200 bg-sky-50" : "border-gray-200 bg-white" %>">
+  <details class="group overflow-hidden rounded-xl border shadow-sm <%= admin ? "border-sky-200 bg-sky-50" : "border-gray-200 bg-white" %>">
     <summary class="flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-700 [&::-webkit-details-marker]:hidden">
       <i class="fa-solid fa-clock-rotate-left text-gray-400"></i>
       Agreement history

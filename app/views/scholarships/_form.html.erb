@@ -99,6 +99,10 @@
       </div>
     </div>
 
+    <%# Agreement response timeline, right below the agreement toggle it documents
+        (renders nothing until the recipient has responded). %>
+    <%= render "agreement_history", scholarship: f.object %>
+
     <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
       <div>
         <p class="text-xs font-medium text-gray-600">Tasks completed</p>
