@@ -147,21 +147,25 @@ class FormsController < ApplicationController
 
   private
 
-  # Sorts the standalone forms for the index frame. Direction is whitelisted to
-  # "asc"/"desc", so it's safe to interpolate into the order clause. Count
-  # columns join their association and order by the aggregate.
+  # Sorts the standalone forms for the index frame. Count columns join their
+  # association and order by the aggregate; direction is a symbol resolved from
+  # the whitelisted param, never interpolated into raw SQL.
   def sorted_forms
-    scope = Form.standalone
+    direction = @sort_direction == "desc" ? :desc : :asc
     case @sort
     when "role"
-      scope.reorder(Arel.sql("role #{@sort_direction}")).order(:name)
+      Form.standalone.reorder(role: direction, name: :asc)
     when "fields"
-      scope.left_joins(:form_fields).group(:id).reorder(Arel.sql("COUNT(form_fields.id) #{@sort_direction}"))
+      order_by_count(Form.standalone.left_joins(:form_fields), Arel.sql("COUNT(form_fields.id)"), direction)
     when "submissions"
-      scope.left_joins(:form_submissions).group(:id).reorder(Arel.sql("COUNT(form_submissions.id) #{@sort_direction}"))
+      order_by_count(Form.standalone.left_joins(:form_submissions), Arel.sql("COUNT(form_submissions.id)"), direction)
     else
-      scope.reorder(Arel.sql("name #{@sort_direction}"))
+      Form.standalone.reorder(name: direction)
     end
+  end
+
+  def order_by_count(scope, count_expr, direction)
+    scope.group(:id).reorder(direction == :desc ? count_expr.desc : count_expr.asc)
   end
 
   # Custom section header ids that were present on the page but left unchecked,
