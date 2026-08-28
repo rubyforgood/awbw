@@ -1,0 +1,32 @@
+<% verb = { "declined" => "Declined", "accepted" => "Accepted", "support_requested" => "Requested" }[@response&.status] || "Updated" %>
+<%= heading %>
+==========================
+
+<%= @recipient&.full_name %><% if @recipient&.preferred_email.present? %> (<%= @recipient.preferred_email %>)<% end %>
+
+<% if @response&.responded_at %>
+<%= verb %> on
+<%= @response.responded_at
+             .in_time_zone("Pacific Time (US & Canada)")
+             .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+<% end %>
+
+------------------------------------------------------------
+
+<% if @event %>
+Training: <%= @event.title %>
+<% end %>
+Award amount: <%= dollars_from_cents(@scholarship.amount_cents) %>
+<% if @response&.contribution_cents.present? %>
+They/their employer can contribute: <%= dollars_from_cents(@response.contribution_cents) %>
+<% end %>
+
+<% if @response&.reason.present? %>
+<%= @response.status == "declined" ? "Reason" : "Their note" %>:
+"<%= @response.reason %>"
+<% end %>
+
+------------------------------------------------------------
+
+View scholarship:
+<%= edit_scholarship_url(@scholarship) %>

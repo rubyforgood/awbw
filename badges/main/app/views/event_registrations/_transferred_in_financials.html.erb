@@ -75,7 +75,7 @@
         </span>
         <p class="text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(source_scholarship.amount_cents) %></p>
         <p class="mt-1 text-xs text-gray-500">
-          <%= source_scholarship.agreement_signed? ? "Agreement signed" : "Agreement pending" %> ·
+          Agreement <%= source_scholarship.decorate.agreement_status_label.downcase %> ·
           <%= source_scholarship.tasks_completed? ? "Tasks complete" : "Tasks outstanding" %>
         </p>
         <%= link_to "View scholarship record", edit_scholarship_path(source_scholarship, return_to: "registrants"),
