@@ -1,13 +1,9 @@
 <% title ||= "Popular Resources" %>
-
-<section class="<%# mt-6 %> py-10 <%= DomainTheme.bg_class_for(:resources) %>">
-  <div class="max-w-6xl mx-auto px-4">
-    <%= render "home/home_section_header",
-               title: title,
-               subtitle: "Tools to support your work" %>
-
-    <%= turbo_frame_tag "home_resources", src: home_resources_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
-      <%= render "resources_cards_skeleton" %>
-    <% end %>
-  </div>
-</section>
+<%= render layout: "home/section",
+           locals: { title: title,
+                     subtitle: "Tools to support your work",
+                     surface: local_assigns[:surface] } do %>
+  <%= turbo_frame_tag "home_resources", src: home_resources_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
+    <%= render "resources_cards_skeleton" %>
+  <% end %>
+<% end %>

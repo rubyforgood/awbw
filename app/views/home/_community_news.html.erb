@@ -1,13 +1,9 @@
 <% title ||= "Community News" %>
-
-<section class="<%# mt-6 %> py-10 <%= DomainTheme.bg_class_for(:community_news) %>">
-  <div class="max-w-6xl mx-auto px-4">
-    <%= render "home/home_section_header",
-               title: title,
-               subtitle: "Announcements and updates" %>
-
-    <%= turbo_frame_tag "home_community_news", src: home_community_news_index_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
-      <%= render "community_news_cards_skeleton" %>
-    <% end %>
-  </div>
-</section>
+<%= render layout: "home/section",
+           locals: { title: title,
+                     subtitle: "Announcements and updates",
+                     surface: local_assigns[:surface] } do %>
+  <%= turbo_frame_tag "home_community_news", src: home_community_news_index_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
+    <%= render "community_news_cards_skeleton" %>
+  <% end %>
+<% end %>

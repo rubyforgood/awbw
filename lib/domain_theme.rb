@@ -1,14 +1,17 @@
 module DomainTheme
   # New colors must be added to the inline source in `application.tailwind.css`
   # for tailwind to generate the classes
+  # Domains on the AWBW brand palette use a `brand-*` scale (defined in
+  # application.tailwind.css); the rest still use Tailwind's stock hues. Both
+  # work the same way here — the helpers below just interpolate the name.
   COLORS = {
-    workshops:                :indigo,
+    workshops:                :"brand-navy",
     workshop_variations:      :purple,
     workshop_logs:            :teal,
-    resources:                :violet,
-    community_news:           :orange,
-    stories:                  :fuchsia,
-    events:                   :teal,
+    resources:                :"brand-purple",
+    community_news:           :"brand-orange",
+    stories:                  :"brand-magenta",
+    events:                   :"brand-teal",
     people:                   :cyan,
     organizations:            :emerald,
     quotes:                   :slate,
@@ -21,7 +24,7 @@ module DomainTheme
 
     forms:                    :purple,
     faqs:                     :pink,
-    video_recordings:         :sky,
+    video_recordings:         :"brand-yellow",
 
     workshop_ideas:           :indigo,
     workshop_variation_ideas: :purple,
