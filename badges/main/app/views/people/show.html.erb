@@ -30,7 +30,7 @@
             No user!
             <%= link_to "Create user",
                           new_user_path(person_id: @person.id),
-                          class: "rounded-full bg-brand-gold hover:bg-brand-gold-dark text-primary px-3 py-1" %>
+                          class: "rounded-full bg-brand-yellow-400 hover:bg-brand-yellow-500 text-primary px-3 py-1" %>
           </div>
         <% end %>
         <%= link_to "Home", root_path, class: "text-sm text-white/80 hover:text-white px-2 py-1" %>
@@ -39,7 +39,7 @@
         <% end %>
         <% if allowed_to?(:edit?, @person) %>
           <%= link_to edit_person_path(@person),
-                        class: "admin-only inline-flex items-center gap-1.5 text-sm font-semibold rounded-full bg-brand-gold hover:bg-brand-gold-dark text-primary px-4 py-1.5 shadow-sm transition" do %>
+                        class: "admin-only inline-flex items-center gap-1.5 text-sm font-semibold rounded-full bg-brand-yellow-400 hover:bg-brand-yellow-500 text-primary px-4 py-1.5 shadow-sm transition" do %>
             <i class="fa-solid fa-pen text-xs"></i> Edit
           <% end %>
         <% end %>
@@ -72,12 +72,12 @@
           <% if @person.facilitator_since_date.present? %>
             <p class="mt-1 text-sm text-white/70">
               Facilitator since
-              <span class="text-brand-gold font-semibold"><%= @person.facilitator_since_date.strftime("%B %Y") %></span>
+              <span class="text-brand-yellow-400 font-semibold"><%= @person.facilitator_since_date.strftime("%B %Y") %></span>
             </p>
           <% elsif @person.affiliated_since_date.present? %>
             <p class="mt-1 text-sm text-white/70">
               Affiliated since
-              <span class="text-brand-gold font-semibold"><%= @person.affiliated_since_date.strftime("%B %Y") %></span>
+              <span class="text-brand-yellow-400 font-semibold"><%= @person.affiliated_since_date.strftime("%B %Y") %></span>
             </p>
           <% end %>
         <% end %>
@@ -87,11 +87,11 @@
           <% if email.present? %>
             <% if @person.profile_show_email? %>
               <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-white/90">
-                <i class="fa-solid fa-envelope text-xs text-white/60"></i> <!--email_off--><%= mail_to email, email, class: "hover:text-brand-gold" %><!--email_on-->
+                <i class="fa-solid fa-envelope text-xs text-white/60"></i> <!--email_off--><%= mail_to email, email, class: "hover:text-brand-yellow-400" %><!--email_on-->
               </span>
             <% elsif allowed_to?(:manage?, Person) %>
               <span class="admin-only inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-white/90">
-                <i class="fa-solid fa-envelope text-xs text-white/60"></i> <!--email_off--><%= mail_to email, email, class: "hover:text-brand-gold" %><!--email_on-->
+                <i class="fa-solid fa-envelope text-xs text-white/60"></i> <!--email_off--><%= mail_to email, email, class: "hover:text-brand-yellow-400" %><!--email_on-->
               </span>
             <% end %>
             <% if @person.user&.unconfirmed_email.present? && allowed_to?(:show_email_change?, @person) %>
@@ -110,7 +110,7 @@
           <% phone = @person.phone_number || @person.user&.phone %>
           <% if @person.profile_show_phone? && phone.present? %>
             <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-white/90">
-              <i class="fa-solid fa-phone text-xs text-white/60"></i> <%= link_to phone, "tel:#{phone}", class: "hover:text-brand-gold" %>
+              <i class="fa-solid fa-phone text-xs text-white/60"></i> <%= link_to phone, "tel:#{phone}", class: "hover:text-brand-yellow-400" %>
             </span>
           <% end %>
           <% if @person.profile_show_social_media? %>

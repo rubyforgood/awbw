@@ -7,9 +7,7 @@ RSpec.describe "Home", type: :request do
 
       expect(response).to have_http_status(:ok)
 
-      section_titles = response.body
-        .scan(%r{<h2 class="text-3xl font-semibold text-gray-900">(.*?)</h2>}m)
-        .flatten.map(&:strip)
+      section_titles = Nokogiri::HTML(response.body).css("section h2").map { |h2| h2.text.strip }
       expect(section_titles).not_to be_empty, "Expected to find section titles in h2 tags"
 
       section_titles.each do |title|
