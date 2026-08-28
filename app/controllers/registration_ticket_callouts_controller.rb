@@ -82,8 +82,8 @@ class RegistrationTicketCalloutsController < ApplicationController
 
   def callout_submission_for(registration)
     return unless registration
-    FormSubmission.find_by(person: registration.registrant, form: @callout.form,
-                           event: @event, role: EventRegistrationServices::CalloutFormSubmission::ROLE)
+    FormSubmission.find_by(person: registration.registrant, form: @callout.form, event: @event,
+                           role: EventRegistrationServices::CalloutFormSubmission.role_for(@callout))
   end
 
   def callout_form_params
