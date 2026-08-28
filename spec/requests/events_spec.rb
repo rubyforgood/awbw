@@ -1393,6 +1393,23 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "Ticket forms columns" do
+      it "shows a completion column per form callout and links the submitter to their responses" do
+        form = create(:form, name: "Feedback")
+        field = create(:form_field, form:, name: "How was it?")
+        callout = create(:registration_ticket_callout, event:, form:, title: "Post-event survey")
+        EventRegistrationServices::CalloutFormSubmission.call(
+          registration:, callout:, form_params: { field.id.to_s => "Great" }
+        )
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Post-event survey")
+        expect(response.body).to include("Ticket forms")
+        expect(response.body).to include(registration_callout_form_path(registration.slug, callout))
+      end
+    end
+
     context "Send bulk emails link" do
       it "reads 'Send bulk emails' with no filters and links without filter params" do
         get registrants_event_path(event)
