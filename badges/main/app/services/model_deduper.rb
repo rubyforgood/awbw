@@ -36,251 +36,39 @@ class ModelDeduper
     merge_duplicate(record_to_keep, record_to_delete, usage_counts)
   end
 
-  # A { human label => count } of the records that would be reassigned off this
-  # record on merge, skipping empty associations. Drives the preview so an admin
-  # sees exactly what moves (affiliations, event registrations, reports, …).
-  def reassignment_counts(record)
-    reassignable_joins.each_with_object({}) do |join, counts|
-      count = join[:join_class].where(join[:foreign_key] => record.id).count
-      next if count.zero?
-
-      counts[join_label(join[:join_class])] = count
-    end
-  end
-
-  # Like #reassignment_counts, but also the record names per association so the
-  # preview can show *what* moves, not just how many. Names are capped so a huge
-  # association can't bloat the page; anything past the cap is reported as a count.
-  # Each entry is { label:, count:, names: [ up to NAME_LIMIT display strings ] }.
-  NAME_LIMIT = 50
-
-  def reassignment_preview(record)
-    reassignable_joins.filter_map do |join|
-      scope = join[:join_class].where(join[:foreign_key] => record.id)
-      count = scope.count
-      next if count.zero?
-
-      {
-        label: join_label(join[:join_class]),
-        count: count,
-        names: scope.limit(NAME_LIMIT).map { |related| record_display(related) }
-      }
-    end.sort_by { |entry| entry[:label] }
-  end
-
-  # A best-effort human name for an associated record: its own name/title, else a
-  # named parent (e.g. an affiliation's person), else its id.
-  def record_display(record)
-    own = display_string(record)
-    return own if own
-
-    record.class.reflect_on_all_associations(:belongs_to).each do |assoc|
-      next if assoc.polymorphic?
-
-      related = record.try(assoc.name)
-      parent = display_string(related)
-      return parent if parent
-    end
-    "##{record.id}"
-  end
-
-  def display_string(record)
-    return unless record
-
-    %i[name title full_name].filter_map { |method| record.try(method).presence }.first
-  end
-
-  # Polymorphic references the merge repoints to the kept record (type stays, id
-  # moves) so analytics and audit history follow the survivor instead of orphaning.
-  # table => [ type_column, id_column ].
-  REASSIGNED_POLYMORPHIC_REFERENCES = {
-    "ahoy_events" => %w[resource_type resource_id],
-    "versions" => %w[item_type item_id]
-  }.freeze
-
-  # References that are lost with the deleted record (its own attached files purge)
-  # rather than moved — surfaced on the preview so an admin sees the loss.
-  LOST_POLYMORPHIC_REFERENCES = { "active_storage_attachments" => %w[record_type record_id] }.freeze
-
-  # Billing links between orgs need a deliberate decision (rubyforgood/awbw#2378);
-  # skipped here so they neither block nor silently move.
-  DEFERRED_REFERENCE_TABLES = %w[
-    pay_customers pay_merchants pay_subscriptions pay_charges pay_payment_methods pay_webhooks
-  ].freeze
-
-  # Framework internals that purge with the record and aren't worth surfacing.
-  IGNORED_REFERENCE_TABLES = %w[
-    action_text_rich_texts action_text_mentions ckeditor_assets
-    active_storage_blobs active_storage_variant_records ahoy_visits
-  ].freeze
-
-  HANDLED_ELSEWHERE_TABLES = (
-    REASSIGNED_POLYMORPHIC_REFERENCES.keys + LOST_POLYMORPHIC_REFERENCES.keys +
-    DEFERRED_REFERENCE_TABLES + IGNORED_REFERENCE_TABLES
-  ).freeze
-
-  # Attached files (e.g. the logo) that are deleted with the record, not moved.
-  # Each entry is { label:, count: } — drives the preview's "will be lost" note.
-  def lost_references(record)
-    LOST_POLYMORPHIC_REFERENCES.filter_map do |table, (type_column, id_column)|
-      next unless reference_table_present?(table)
-
-      klass = model_for_table(table)
-      next unless klass.column_names.include?(id_column)
-
-      count = klass.where(type_column => model_class.polymorphic_name, id_column => record.id).count
-      next if count.zero?
-
-      { label: "Attached files (e.g. logo)", count: count }
-    end
-  end
-
-  # Defensive safeguard: tables that still reference `record` but that the merge
-  # would NOT reassign — e.g. a new association added to the model that this flow
-  # doesn't yet account for. Data-driven (it checks the actual record) and
-  # independent of any `dependent:` option, so a future association can't silently
-  # orphan rows or break referential integrity. Each entry is { table:, column: }.
-  def unhandled_references(record)
-    covered = reassignable_joins.map { |join| [ join[:join_class].table_name, join[:foreign_key].to_s ] }.to_set
-    connection = model_class.connection
-    convention_fk = "#{model_class.model_name.singular}_id"
-    polymorphic_name = model_class.polymorphic_name
-
-    connection.tables.flat_map do |table|
-      next [] if table == model_class.table_name || HANDLED_ELSEWHERE_TABLES.include?(table)
-
-      column_names = connection.columns(table).map(&:name)
-      gaps = []
-
-      if column_names.include?(convention_fk) && !covered.include?([ table, convention_fk ]) &&
-          model_for_table(table).where(convention_fk => record.id).exists?
-        gaps << { table: table, column: convention_fk }
-      end
-
-      column_names.each do |column|
-        next unless column.end_with?("_type")
-
-        id_column = column.sub(/_type\z/, "_id")
-        next unless column_names.include?(id_column)
-        next if covered.include?([ table, id_column ])
-        next unless model_for_table(table).where(column => polymorphic_name, id_column => record.id).exists?
-
-        gaps << { table: table, column: id_column }
-      end
-
-      gaps.uniq
-    end.uniq
-  end
-
   private
 
-  # Every association that references this model by a foreign key — whether a
-  # plain FK child (affiliations, reports), a polymorphic child (addresses via
-  # as: :addressable), or a tagging join (categorizable_items). Each is reassigned
-  # from the duplicate to the kept record on merge. Reflection-driven, so any
-  # FK-based model works with no bespoke config.
-  #
-  # Sources are unioned: this model's own has_many/:as declarations, plus a scan
-  # of every model for a non-polymorphic belongs_to pointing back here — so a
-  # child with an organization_id but no inverse has_many (payments, stories, …)
-  # is still reassigned rather than orphaned or blocked by its FK constraint.
-  #
-  # Collisions are resolved by DB *unique indexes*, not by guessing: the columns
-  # of a unique index that includes the FK are the scope in which only one row may
-  # exist (e.g. [category_id, categorizable_type, categorizable_id] →
-  # [category_id, categorizable_type]), so a row the kept record already has is
-  # deleted instead of violating the index.
-  def reassignable_joins
-    @reassignable_joins ||= begin
-      seen = Set.new
-      (has_many_joins + belongs_to_joins).select do |join|
-        seen.add?([ join[:join_class].table_name, join[:foreign_key] ])
-      end
-    end
-  end
-
-  def has_many_joins
-    model_class.reflect_on_all_associations(:has_many).filter_map do |assoc|
-      next if assoc.options[:through]
+  # Auto-detect all polymorphic join associations on the model.
+  # Returns an array of hashes, each with :join_class, :foreign_key,
+  # :polymorphic_type_column, and :polymorphic_id_column.
+  def polymorphic_joins
+    @polymorphic_joins ||= model_class.reflect_on_all_associations(:has_many).filter_map do |assoc|
+      next if assoc.options[:through] # skip has_many :through
       begin
         join_klass = assoc.klass
       rescue NameError
         next
       end
 
-      fk = assoc.foreign_key.to_s
-      next unless join_klass.column_names.include?(fk)
+      poly = join_klass.reflect_on_all_associations(:belongs_to).find(&:polymorphic?)
+      next unless poly
 
-      join_for(join_klass, fk)
+      {
+        join_class: join_klass,
+        foreign_key: assoc.foreign_key.to_sym,
+        polymorphic_type_column: poly.foreign_type.to_sym,
+        polymorphic_id_column: poly.foreign_key.to_sym
+      }
     end
-  end
-
-  # Schema-driven: every DB foreign key pointing at this model's table, so a child
-  # with an organization_id but no inverse has_many (payments, stories, …) is still
-  # reassigned. Reading the schema avoids eager-loading every model (which would
-  # touch databases not configured in every environment).
-  def belongs_to_joins
-    connection = model_class.connection
-    connection.tables.flat_map do |table|
-      next [] if table == model_class.table_name
-
-      connection.foreign_keys(table).filter_map do |fk_def|
-        next unless fk_def.to_table == model_class.table_name
-
-        join_for(model_for_table(table), fk_def.column.to_s)
-      end
-    end
-  rescue NotImplementedError
-    []
-  end
-
-  # The model backing a table, or an anonymous one bound to it. Guards against a
-  # name that resolves to a class mapped elsewhere (e.g. an STI child of another
-  # table), which would reassign the wrong table.
-  def model_for_table(table)
-    klass = table.classify.constantize
-    return klass if klass.table_name == table
-
-    anonymous_model_for(table)
-  rescue NameError
-    anonymous_model_for(table)
-  end
-
-  def anonymous_model_for(table)
-    klass = Class.new(ApplicationRecord)
-    klass.table_name = table
-    klass
-  end
-
-  def join_for(join_klass, fk)
-    {
-      join_class: join_klass,
-      foreign_key: fk.to_sym,
-      natural_key: natural_key_columns(join_klass, fk)
-    }
-  end
-
-  # Columns (other than the FK) of a unique index that includes the FK.
-  def natural_key_columns(join_klass, fk)
-    join_klass.connection.indexes(join_klass.table_name)
-      .select(&:unique)
-      .map { |index| Array(index.columns) }
-      .select { |cols| cols.include?(fk) }
-      .map { |cols| (cols - [ fk ]).map(&:to_sym) }
-      .find(&:present?) || []
   end
 
   def model_label
     model_class.name.underscore.humanize.downcase
   end
 
-  def join_label(join_class)
-    (join_class.name || join_class.table_name.classify).underscore.humanize.pluralize
-  end
-
   def usage_counts
     counts = Hash.new(0)
-    reassignable_joins.each do |join|
+    polymorphic_joins.each do |join|
       join[:join_class].where(join[:foreign_key] => model_class.pluck(:id))
         .group(join[:foreign_key]).count
         .each { |id, count| counts[id] += count }
@@ -316,57 +104,37 @@ class ModelDeduper
     return if dry_run
 
     ActiveRecord::Base.transaction do
-      reassignable_joins.each do |join|
+      polymorphic_joins.each do |join|
         merge_join(primary, dupe, join)
       end
 
-      reassign_polymorphic_references(primary, dupe)
-
-      dupe.reload.destroy!
+      dupe.destroy!
       logger.info "  deleted #{model_label} #{dupe.id}"
     end
-  end
-
-  # Repoint analytics/audit rows (ahoy events, versions) from the dupe to the kept
-  # record so its history survives the merge. Type column stays; only the id moves.
-  def reassign_polymorphic_references(primary, dupe)
-    REASSIGNED_POLYMORPHIC_REFERENCES.each do |table, (type_column, id_column)|
-      next unless reference_table_present?(table)
-
-      klass = model_for_table(table)
-      next unless klass.column_names.include?(id_column)
-
-      moved = klass.where(type_column => model_class.polymorphic_name, id_column => dupe.id)
-                   .update_all(id_column => primary.id)
-      logger.info "  moved #{moved} #{table} to primary" if moved > 0
-    end
-  end
-
-  def reference_table_present?(table)
-    model_class.connection.data_source_exists?(table)
   end
 
   def merge_join(primary, dupe, join)
     jc = join[:join_class]
     fk = join[:foreign_key]
-    natural_key = join[:natural_key]
+    type_col = join[:polymorphic_type_column]
+    id_col = join[:polymorphic_id_column]
 
-    if natural_key.empty?
-      moved = jc.where(fk => dupe.id).update_all(fk => primary.id)
-      logger.info "  moved #{moved} #{jc.name} to primary" if moved > 0
-      return
-    end
+    existing_taggings = jc
+      .where(fk => primary.id)
+      .pluck(type_col, id_col)
+      .map { |type, id| "#{type}_#{id}" }
+      .to_set
 
-    existing = jc.where(fk => primary.id).pluck(*natural_key).map { |values| Array(values) }.to_set
+    items_to_move = jc.where(fk => dupe.id)
 
-    jc.where(fk => dupe.id).find_each do |item|
-      key = natural_key.map { |col| item.public_send(col) }
-      if existing.include?(key)
+    items_to_move.find_each do |item|
+      tagging_key = "#{item.public_send(type_col)}_#{item.public_send(id_col)}"
+
+      if existing_taggings.include?(tagging_key)
         item.destroy!
         logger.info "  deleted duplicate #{jc.name} #{item.id} (primary already has it)"
       else
         item.update!(fk => primary.id)
-        existing << key
         logger.info "  moved #{jc.name} #{item.id} to primary"
       end
     end

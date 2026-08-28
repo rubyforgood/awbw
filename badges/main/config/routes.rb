@@ -282,10 +282,6 @@ Rails.application.routes.draw do
   resources :organizations do
     collection do
       get :check_duplicates
-      get :dedupe_index
-      get :dedupe_preview
-      post :dedupe_perform
-      patch :dedupe_update_keep
     end
     member do
       get :populations_served
