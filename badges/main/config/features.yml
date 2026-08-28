@@ -2423,3 +2423,16 @@
     - "Find it under a callout's Visibility section: tick \"Only show if CE hours are paid\"."
     - "Combine it with a display date to reveal CE-only material on a set day for paid CE registrants."
     - "The registration-payment and CE-payment gates are independent — set either or both."
+
+- name: "Registration ticket and callout pages in the AWBW brand"
+  area: registration
+  display_status: public_facing
+  released_on: 2026-08-28
+  pr_number: 2393
+  summary: >-
+    The registration ticket and every callout page it links to (payment, CE,
+    certificate, scholarship, handouts, FAQ, and the rest) now carry the awbw.org
+    look — navy header topped by the rainbow rule, serif headings, and a warm
+    cream ticket body. Nothing moved; only the styling changed.
+  pro_tips:
+    - "Registrants see this, so it's the most public-facing page in the portal — preview it from an event's dashboard with \"Sample ticket\"."
