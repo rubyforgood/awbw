@@ -63,6 +63,9 @@ application.register("field-required", FieldRequiredController)
 import DirtyFormController from "./dirty_form_controller"
 application.register("dirty-form", DirtyFormController)
 
+import DisclosureController from "./disclosure_controller"
+application.register("disclosure", DisclosureController)
+
 import DismissController from "./dismiss_controller"
 application.register("dismiss", DismissController)
 
