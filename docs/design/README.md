@@ -12,4 +12,4 @@ Resized to 1600px wide and saved as JPEG (reference only, not shipped in the UI)
 - `awbw-home-hero-review-markup` — the home hero captured with the Pastel
   review toolbar visible.
 
-Brand fundamentals live alongside in `../awbw-brand-guide.pdf`.
+Brand fundamentals live in `app/assets/images/brand/awbw-brand-guide.pdf`.
