@@ -878,6 +878,14 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).not_to include("<option value=\"#{other_format.id}\"")
         end
 
+        it "offers same-format events even when they aren't published" do
+          unpublished = create(:event, title: "Unpublished Destination", published: false, on_demand: false)
+
+          get transfer_event_registration_path(source)
+
+          expect(response.body).to include("<option value=\"#{unpublished.id}\"")
+        end
+
         it "offers only other on-demand events when transferring out of one" do
           on_demand = create(:event, title: "Source On-Demand", on_demand: true)
           on_demand_source = create(:event_registration, event: on_demand, status: "transferred_out")
