@@ -124,14 +124,28 @@ class Organization < ApplicationRecord
   scope :program_status, ->(bucket) {
     fac_ids = Affiliation.facilitators.select(:organization_id)
     active_fac_ids = Affiliation.facilitators.active.select(:organization_id)
+    upcoming_fac_ids = Affiliation.facilitators.with_status("Upcoming").select(:organization_id)
     case bucket.to_s
     when "active"            then where(id: active_fac_ids)
-    when "formerly_active"   then where(id: fac_ids).where.not(id: active_fac_ids)
+    when "upcoming"          then where(id: upcoming_fac_ids).where.not(id: active_fac_ids)
+    when "formerly_active"   then where(id: fac_ids).where.not(id: active_fac_ids).where.not(id: upcoming_fac_ids)
     when "never_active"      then where.not(id: fac_ids)
     when "formerly_or_never" then where.not(id: active_fac_ids)
     else all
     end
   }
+
+  # The index's Program status dropdown, in display order. "Inactive" is the
+  # not-active umbrella (formerly + never + upcoming) with the two narrower
+  # buckets after it, mirroring Person::FACILITATOR_STATUS_FILTER_OPTIONS so the
+  # two indexes read the same way.
+  PROGRAM_STATUS_FILTER_OPTIONS = [
+    [ "Active", "active" ],
+    [ "Inactive", "formerly_or_never" ],
+    [ "Upcoming", "upcoming" ],
+    [ "Formerly active", "formerly_active" ],
+    [ "Never active", "never_active" ]
+  ].freeze
 
   # Matches a tag on the org itself OR an affiliated person's PRIMARY tag —
   # mirroring the aggregate the index/profile columns show.
@@ -288,6 +302,23 @@ class Organization < ApplicationRecord
   end
 
   remote_searchable_by :name
+
+  # FileMaker is the source of truth, and a record can carry more than one
+  # FileMaker code (e.g. when two orgs that each mapped to a FileMaker record are
+  # merged). The `filemaker_code` column holds them as a trimmed, comma-separated
+  # list; these are the seam for reading and combining them.
+  def filemaker_codes
+    Organization.split_filemaker_codes(filemaker_code)
+  end
+
+  def self.split_filemaker_codes(value)
+    value.to_s.split(",").map(&:strip).reject(&:blank?).uniq
+  end
+
+  # A single normalized column value from any mix of code strings/lists.
+  def self.join_filemaker_codes(*values)
+    values.flatten.flat_map { |value| split_filemaker_codes(value) }.uniq.sort.join(", ").presence
+  end
 
   # Returns the website as a clickable, scheme-qualified URL — prepending
   # https:// to a bare domain like "awbw.org" — or nil when the value is blank or

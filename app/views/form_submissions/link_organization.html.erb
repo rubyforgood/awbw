@@ -36,7 +36,7 @@
                     data: { turbo_frame: "_top" } do %>
           <i class="fa-solid fa-file-lines text-green-600 group-hover:text-green-800 mt-1 shrink-0"></i>
           <div class="min-w-0">
-            <p class="text-base text-gray-800">Organization: <strong><%= @submitted_org_name.presence || "—" %></strong><% if @submitted_org_name.present? && @matched_organization.nil? %> <%= render "shared/badge", label: "Pending", classes: "bg-amber-50 text-amber-700 border-amber-200", icon: "fa-solid fa-circle-exclamation text-2xs", extra: "ml-1", title: "The person submitted this organization, but they have no active affiliation with it yet." %><% end %></p>
+            <p class="text-base text-gray-800">Organization: <strong><%= @submitted_org_name.presence || "—" %></strong><% if @submitted_org_name.present? && @matched_organization.nil? %> <%= render "shared/badge", label: "Pending", classes: "bg-amber-50 text-amber-700 border-amber-200", icon: "fa-solid fa-circle-exclamation text-2xs", extra: "ml-1", title: "The person submitted this organization, but it isn't linked to this submission or their registration yet." %><% end %></p>
             <p class="text-base text-gray-800">Position / title: <strong><%= @submitted_position.presence || "—" %></strong></p>
           </div>
         <% end %>
@@ -47,7 +47,8 @@
       <% end %>
     </div>
 
-    <%# === The linked (affiliation-matched) organization + add actions — tinted
+    <%# === The linked organization (an explicit link, or the registration-org row
+        this submission is pinned to) + add actions — tinted
         green to stand apart, like the registration editor's linked cards. %>
     <% org_swatch = DomainTheme.swatch(:green) %>
     <h2 class="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">Linked organization</h2>

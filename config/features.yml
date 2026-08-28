@@ -27,6 +27,102 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Person profile in the new AWBW brand"
+  area: people
+  display_status: user_facing
+  released_on: 2026-08-28
+  action_path: "/people/1"
+  pr_number: 2386
+  summary: >-
+    A person's profile is restyled to match the new awbw.org brand — a navy hero with the
+    rainbow accent, serif headings, and a warm cream body of colored-border cards for
+    published content, participation history, and submitted content — so the portal matches
+    the wider organization.
+  pro_tips:
+    - "Presentation only — every section, badge, and permission on the profile works exactly as before."
+
+- name: "Transfer registrants into unpublished events"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-28
+  summary: >-
+    The transfer-out destination list now includes same-format events that aren't
+    published yet, so a registrant can be moved into an event that's still being set up.
+
+- name: "Request additional scholarship support"
+  area: scholarships
+  display_status: public_facing
+  released_on: 2026-08-27
+  action_path: /registration/sample
+  summary: >-
+    Scholarship recipients now have a third option on their award page, next to Agree and Decline:
+    "Request additional support." They enter the amount they or their employer can contribute toward
+    the training fee instead of declining, and the trainings team is emailed so we can revisit the award.
+  pro_tips:
+    - The award stays live — a support request never zeroes it out or drops it from totals.
+    - The requested contribution and any note show in the scholarship's agreement history.
+    - Respond by changing the award amount — that re-offers it, so the recipient sees Agree / Request / Decline again.
+    - The trainings team is emailed on every response — accept, decline, or support request.
+
+- name: "Transferred-in attendance days are preserved"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-26
+  action_path: "/transfer_guide"
+  pr_number: 2383
+  summary: >-
+    When a registrant transfers in from a longer multi-day training, their completed
+    attendance days are kept instead of dropping off the end, and the registration form
+    flags when the source and destination events have different day counts.
+  pro_tips:
+    - "Applies to new transfers going forward; already-transferred records are unchanged."
+    - "The \"transferred in from …\" notes now show the source event's month and year, so same-titled trainings are easy to tell apart."
+
+- name: "A person's history reaches more records that hang off them"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-26
+  action_path: "/people/1"
+  pr_number: 2354
+  summary: >-
+    A person's History now surfaces activity that only reaches them through a related
+    record — payments and allocations, onboarding steps, attendance times, form answers
+    and uploads, staffing, refunds, membership invoices, and scholarship agreements — so
+    the timeline is complete.
+  pro_tips:
+    - "It's read at request time, so it already covers everything on record — nothing needed backfilling."
+
+- name: "W-9 linked to every event by default"
+  area: payments
+  display_status: admin_facing
+  released_on: 2026-08-27
+  action_path: "/registration/sample"
+  pr_number: 2388
+  summary: >-
+    The W-9 is now linked to every event's payment callout by default, so it shows
+    on the ticket automatically once the event has a cost — even for events created
+    free and priced later. Remove it per event when it doesn't apply.
+
+- name: "Bulk payments index across all events"
+  area: payments
+  display_status: admin_facing
+  released_on: 2026-08-25
+  action_path: /bulk_payments
+  summary: >-
+    The "Bulk payments" card on Admin home now opens a filterable list of every "Pay for Other(s)"
+    submission across events. Search by payer or event, then jump straight to that submission's row
+    on its event's bulk payments page — it scrolls to and highlights the card, ready to allocate.
+
+- name: "Filter form submissions by several forms at once"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-08-25
+  action_path: /form_submissions
+  summary: >-
+    The Form filter on the form submissions list is now multi-select, so you can view submissions
+    across several forms together — e.g. a collaboration agreement alongside its new-job and
+    reinstatement copies.
+
 - name: "Comments & communications on a staff tag"
   area: people
   display_status: admin_facing
@@ -169,6 +265,21 @@
   pro_tips:
     - "Add ?admin=true to the affiliation editor URL to reveal the registration picker."
 
+- name: "\"Linked\" means a real organization link, everywhere"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-28
+  action_path: "/form_submissions"
+  pr_number: 2336
+  summary: >-
+    A submission reads as linked when an organization is really linked to it or to
+    the registration behind it, not because the person has a same-named
+    affiliation. Public registrations now read as Linked instead of waiting in the
+    Pending queue.
+  pro_tips:
+    - "Pending now means what it says: an organization was typed on the form and nobody has linked it yet."
+    - "The registrants roster gains a \"No org provided\" filter, matching the submissions index."
+
 - name: "Scholarship program status is judged at its own training"
   area: scholarships
   display_status: admin_facing
@@ -181,6 +292,19 @@
     chips, and hovering explains the verdict and the date it judged.
   pro_tips:
     - "An award with no registration behind it falls back to the start of the current year — the hover text says so."
+
+- name: "Upcoming facilitators read as their own status, not Active"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-22
+  action_path: "/people"
+  pr_number: 2336
+  summary: >-
+    A facilitator affiliation with a future start date now reads as "Upcoming"
+    rather than Active — for people and organizations. The people and organization
+    indexes each gain an "Upcoming" status filter, and orgs show an Upcoming badge.
+  pro_tips:
+    - "Active means started and not ended; a future start reads as Upcoming until that date arrives. Upcoming orgs also still appear under the Inactive filter."
 
 - name: "Activity log: readable details column"
   area: reporting
@@ -2262,3 +2386,104 @@
   pro_tips:
     - "Only mutations show: opening or printing a record never clutters its log."
     - "Deleting a child or attachment is recorded too — the entry keeps the name even after the file is gone."
+
+- name: "Import registrants from a spreadsheet"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-25
+  action_path: "/event_registrations/import"
+  summary: >-
+    Bulk-add attended registrants to an event from a CSV roster. Every row becomes an
+    attended registration, exactly as if the person had registered — matched to an
+    existing person by email and name (no duplicates), with the organization linked
+    when we recognize it.
+  pro_tips:
+    - "Expected columns: FirstName, LastName, Organization, EMail. Export your spreadsheet as a .csv first."
+    - "You get a full preview — new vs. matched people, new vs. promoted registrations, and which orgs will link vs. need reconciling — before anything is saved."
+    - "Organizations we don't recognize aren't created; they're queued on each registrant's \"link organization\" page so you can reconcile them the same way as a normal registration."
+    - "On facilitator trainings, a linked organization also adds the person's facilitator affiliation."
+    - "No emails are sent, so it's safe for historical rosters. Reach it from the \"Import registrants\" button on the registrants page."
+
+- name: "Staff taggings directory"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-24
+  action_path: "/staff_taggings"
+  summary: >-
+    A searchable list of everyone carrying a staff tag. Filter by one or more tags,
+    search by person or organization name, search the text of comments and
+    communications, sort the columns, and add, change, or remove taggings from the
+    page.
+  pro_tips:
+    - "The name box also matches a person's email, phone, address, and their affiliated organization."
+    - "The comments & communications box searches the notes and logged calls/emails recorded on each tagging."
+    - "The staff tag filter is a multi-select — pick several tags to see everyone carrying any of them."
+    - "Click a column header (Person, Staff tag, Tagged) to sort; click again to flip the direction."
+    - "\"New tagging\" tags a person in one step; each staff tag on the staff tags page also has a \"View taggings\" link, pre-filtered to that tag."
+    - "Editing a tagging lets you switch its tag and record comments or communications about it, all on one page."
+    - "Reach it from the admin home page under \"Staff taggings\"."
+
+- name: "Merge duplicate organizations"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-08-25
+  pr_number: 2374
+  action_path: "/organizations/dedupe_index"
+  summary: >-
+    Admins can now merge two duplicate organizations into one. The deduper
+    suggests likely duplicates (by name, name minus Inc/LLC, FileMaker code, and
+    shared address), then previews exactly what will move before merging.
+  description: >-
+    Reach it from the Dedupe link on the Organizations page. It clusters likely
+    duplicates and flags why each was grouped — same name, a shared FileMaker
+    code, or a shared address. FileMaker is the source of truth, and a record can
+    carry more than one code (a trimmed, comma-separated list); when two records
+    have different codes, merging keeps all of them so no FileMaker link is lost.
+    The preview shows a side-by-side of both records with the kept record's key
+    fields editable, plus a summary of every associated record (affiliations,
+    event registrations, reports, payments, workshop logs, tags, and more) that
+    moves to the kept organization. The merge reassigns all of them and deletes
+    the duplicate. It can't be undone. Admin-only.
+  pro_tips:
+    - "Edit the kept organization's fields right in the preview before you merge."
+    - "Use Swap if you picked the wrong record to keep."
+    - "Both records' FileMaker codes are kept on the merged organization — a field flagged 'Kept on merge' is combined, not dropped."
+
+- name: "People and Organizations lists in the AWBW brand"
+  area: people
+  display_status: user_facing
+  released_on: 2026-08-27
+  pr_number: 2391
+  action_path: "/people"
+  summary: >-
+    The People and Organizations directories now carry the awbw.org look — a cream
+    page card topped by the rainbow accent strip, a serif page title, and the
+    results table in its own bordered card. Filters, columns, and counts are
+    unchanged.
+
+- name: "Gate a callout on CE-hour payment"
+  area: registration
+  display_status: user_facing
+  released_on: 2026-08-26
+  action_path: "/registration/sample"
+  summary: >-
+    A ticket callout can now be set to show only after a registrant has paid for
+    their CE hours — a CE-payment gate alongside the existing registration-payment
+    gate and display date.
+  pro_tips:
+    - "Find it under a callout's Visibility section: tick \"Only show if CE hours are paid\"."
+    - "Combine it with a display date to reveal CE-only material on a set day for paid CE registrants."
+    - "The registration-payment and CE-payment gates are independent — set either or both."
+
+- name: "Registration ticket and callout pages in the AWBW brand"
+  area: registration
+  display_status: public_facing
+  released_on: 2026-08-28
+  pr_number: 2393
+  summary: >-
+    The registration ticket and every callout page it links to (payment, CE,
+    certificate, scholarship, handouts, FAQ, and the rest) now carry the awbw.org
+    look — navy header topped by the rainbow rule, serif headings, and a warm
+    cream ticket body. Nothing moved; only the styling changed.
+  pro_tips:
+    - "Registrants see this, so it's the most public-facing page in the portal — preview it from an event's dashboard with \"Sample ticket\"."

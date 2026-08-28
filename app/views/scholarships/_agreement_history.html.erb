@@ -1,32 +1,52 @@
-<%# Newest-first timeline of agreement responses. `admin: true` adds the sky
-    "admin only" styling for the registrant-facing callout page. %>
+<%# Newest-first timeline of agreement responses. Two looks, same data:
+    - default: a standalone bordered card (the registrant callout page).
+    - embedded: borderless, folded under a divider inside a host card (the admin
+      edit form's agreement box), so it reads as part of that card.
+    `admin: true` adds the sky "admin only" styling to the standalone card. %>
 <% admin = local_assigns.fetch(:admin, false) %>
+<% embedded = local_assigns.fetch(:embedded, false) %>
 <% responses = scholarship.agreement_responses.to_a %>
 <% if responses.any? %>
   <% status_classes = ScholarshipDecorator::AGREEMENT_STATUS_CLASSES %>
-  <details class="mt-6 overflow-hidden rounded-xl border shadow-sm <%= admin ? "border-sky-200 bg-sky-50" : "border-gray-200 bg-white" %>">
-    <summary class="flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-700 [&::-webkit-details-marker]:hidden">
+  <% wrapper_class = embedded ? "group mt-3 border-t border-gray-200 pt-3" : "group overflow-hidden rounded-xl border shadow-sm #{admin ? "border-sky-200 bg-sky-50" : "border-gray-200 bg-white"}" %>
+  <% summary_class = embedded ? "flex cursor-pointer items-center gap-2 text-xs font-medium text-gray-600 [&::-webkit-details-marker]:hidden" : "flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-700 [&::-webkit-details-marker]:hidden" %>
+  <% list_class = embedded ? "mt-2 divide-y divide-gray-200" : "divide-y divide-gray-100 border-t border-gray-100" %>
+  <% row_class = embedded ? "flex items-start gap-3 py-2 text-sm" : "flex items-start gap-3 px-4 py-3 text-sm" %>
+  <details class="<%= wrapper_class %>">
+    <summary class="<%= summary_class %>">
       <i class="fa-solid fa-clock-rotate-left text-gray-400"></i>
       Agreement history
       <% if admin %>
         <span class="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700"><i class="fa-solid fa-user-shield text-2xs"></i> Admin only</span>
       <% end %>
-      <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500"><%= responses.size %></span>
+      <span class="rounded-full <%= embedded ? "bg-gray-200" : "bg-gray-100" %> px-2 py-0.5 text-xs font-medium text-gray-500"><%= responses.size %></span>
+      <i class="fa-solid fa-chevron-down ml-auto text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
     </summary>
-    <ol class="divide-y divide-gray-100 border-t border-gray-100">
+    <ol class="<%= list_class %>">
       <% responses.reverse_each do |response| %>
-        <li class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-sm">
-          <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= status_classes[response.status] %>"><%= response.status.capitalize %></span>
-          <span class="text-gray-500"><%= response.responded_at.strftime("%B %-d, %Y at %-l:%M %p") %></span>
-          <% if response.responder.present? %>
-            <span class="text-gray-400">· by <%= response.responder %></span>
-          <% end %>
-          <% if response.amount_cents.present? %>
-            <span class="text-gray-400">· <%= dollars_from_cents(response.amount_cents) %></span>
-          <% end %>
-          <% if response.reason.present? %>
-            <p class="w-full text-gray-700">“<%= response.reason %>”</p>
-          <% end %>
+        <% status_label = ScholarshipDecorator::AGREEMENT_STATUS_LABELS.fetch(response.status, response.status.humanize) %>
+        <li class="<%= row_class %>">
+          <div class="w-28 shrink-0">
+            <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= status_classes[response.status] %>"><%= status_label %></span>
+          </div>
+          <%# For a support request the headline figure is what they can contribute;
+              every other event's is the award amount at that point. %>
+          <% row_amount_cents = response.contribution_cents || response.amount_cents %>
+          <span class="w-16 shrink-0 font-medium text-gray-700 tabular-nums"><%= dollars_from_cents(row_amount_cents) if row_amount_cents.present? %></span>
+          <div class="min-w-0 flex-1 space-y-1">
+            <div class="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-gray-500">
+              <span><%= response.responded_at.strftime("%B %-d, %Y at %-l:%M %p") %></span>
+              <%# Name the staff member who acted; stay silent when the recipient acted on their own award. %>
+              <% actor = response.responded_by %>
+              <% if actor && actor.person_id != scholarship.recipient_id %>
+                <span class="text-gray-300">·</span>
+                <span class="text-gray-400">by <%= actor.full_name %></span>
+              <% end %>
+            </div>
+            <% if response.reason.present? %>
+              <p class="text-gray-400"><span class="font-medium">NOTE:</span> <%= response.reason %></p>
+            <% end %>
+          </div>
         </li>
       <% end %>
     </ol>

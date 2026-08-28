@@ -8,6 +8,9 @@
           </div>
         <% end %>
         <div class="mb-4 flex flex-wrap justify-end gap-2">
+          <% if params[:admin] == "true" && @organization.filemaker_code.present? && FmProject.exists?(fm_id: @organization.filemaker_code) %>
+            <%= link_to "FM Project", fm_archive_path(@organization.filemaker_code, table: "projects"), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+          <% end %>
           <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
           <%= link_to "Organizations", organizations_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
           <%= link_to "Profile", organization_path(@organization), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>

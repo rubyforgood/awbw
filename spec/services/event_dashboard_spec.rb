@@ -596,6 +596,30 @@ RSpec.describe EventDashboard do
         expect(shoutout.organization).to eq(org)
       end
 
+      # `inactive` is only re-derived on save, so a term that simply lapsed still
+      # reads inactive: false — judging on the flag alone credited the shout-out to
+      # an org the person had already left.
+      it "skips an organization whose affiliation ended, even with a stale inactive flag" do
+        opt_in(embedded_applicant, text: "Thank you.")
+        lapsed = create(:organization, name: "Lapsed Org")
+        ended = create(:affiliation, person: embedded_applicant, organization: lapsed,
+                                     start_date: 3.years.ago.to_date, end_date: 1.year.ago.to_date)
+        ended.update_column(:inactive, false)
+
+        shoutout = dashboard.shoutouts.find { |s| s.recipient == embedded_applicant }
+        expect(shoutout.organization).to be_nil
+      end
+
+      it "keeps an organization the registrant is about to start facilitating for" do
+        opt_in(embedded_applicant, text: "Excited to begin.")
+        upcoming_org = create(:organization, name: "Starting Soon Org")
+        create(:affiliation, person: embedded_applicant, organization: upcoming_org,
+                             title: "Facilitator", start_date: 1.month.from_now.to_date, end_date: nil)
+
+        shoutout = dashboard.shoutouts.find { |s| s.recipient == embedded_applicant }
+        expect(shoutout.organization).to eq(upcoming_org)
+      end
+
       it "exposes the registrant's primary sector and age group" do
         age_range = create(:category_type, name: "AgeRange")
         embedded_applicant.sectorable_items.create!(sector: create(:sector, name: "Sexual Assault"), is_primary: true)

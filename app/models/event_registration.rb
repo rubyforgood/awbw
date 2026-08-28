@@ -483,17 +483,31 @@ class EventRegistration < ApplicationRecord
     case value
     when "linked" then where(id: linked)
     when "unlinked" then where.not(id: linked)
-    when "pending"
-      field = event.registration_form&.form_fields&.find_by(field_identifier: FormField.aliased_identifiers("organization_name"))
-      next none unless field
-      submitted = FormAnswer.joins(:form_submission)
-        .where(form_field_id: field.id, form_submissions: { form_id: event.registration_form.id })
-        .where.not(submitted_answer: [ nil, "" ])
-        .select(Arel.sql("form_submissions.person_id"))
-      where(registrant_id: submitted).where.not(id: linked)
+    when "pending", "none"
+      answered = org_name_answer_person_ids(event)
+      # No organization field on the registration form: nobody could answer it,
+      # so every unlinked registration is "No org provided" and none is Pending.
+      next(value == "pending" ? none : where.not(id: linked)) if answered.nil?
+
+      scope = value == "pending" ? where(registrant_id: answered) : where.not(registrant_id: answered)
+      scope.where.not(id: linked)
     else all
     end
   }
+
+  # People who answered this event's registration form's organization-name field.
+  # Nil (not empty) when the form has no such field, so the caller can tell
+  # "nobody answered" from "there was nothing to answer".
+  def self.org_name_answer_person_ids(event)
+    form = event.registration_form
+    field = form&.form_fields&.find_by(field_identifier: FormField.aliased_identifiers("organization_name"))
+    return nil unless field
+
+    FormAnswer.joins(:form_submission)
+      .where(form_field_id: field.id, form_submissions: { form_id: form.id })
+      .where.not(submitted_answer: [ nil, "" ])
+      .select(Arel.sql("form_submissions.person_id"))
+  end
   # Filter by how many form submissions the registrant made for this event:
   # none, at least one, or more than one.
   scope :submission_status, ->(value, event) {
@@ -924,11 +938,14 @@ class EventRegistration < ApplicationRecord
     end
   end
 
-  # True when a CE registration exists and every one is fully paid.
+  # True when the full CE amount due is paid across the whole transfer chain — every
+  # CE registration on this reg and on the reg(s) it transferred in from. After a
+  # transfer the money splits (the origin keeps a paid stub, this reg's live record
+  # carries the remaining balance), so a partly-paid balance riding forward still
+  # reads as unpaid. A chain with no CE anywhere isn't CE-registered, so it's not paid.
   def ce_paid_in_full?
-    return false unless ce_registered?
-
-    continuing_education_registrations.all?(&:paid_in_full?)
+    chain = continuing_education_registrations_across_transfers
+    chain.any? && chain.all?(&:paid_in_full?)
   end
 
   # Whether the attendance sign-in sheet is open to this registrant. Deliberately
@@ -943,6 +960,16 @@ class EventRegistration < ApplicationRecord
   # License numbers on file across this registration's CE registrations.
   def ce_license_numbers
     continuing_education_registrations.filter_map { |c| c.professional_license&.number }
+  end
+
+  # This reg's CE registrations plus those of every reg it transferred in from, so
+  # CE money can be read across the whole transfer chain — the origin's paid stub
+  # and this reg's live record together (see TransferContinuingEducation, #1944).
+  def continuing_education_registrations_across_transfers
+    own = continuing_education_registrations.to_a
+    return own unless transferred_in?
+
+    own + transferred_from_registration.continuing_education_registrations_across_transfers
   end
 
   # Read CE registrations from the in-memory collection rather than the DB when
@@ -1010,6 +1037,22 @@ class EventRegistration < ApplicationRecord
   # marked complete on this registration.
   def completed_day_count
     DAY_FIELDS.first(event.day_count).count { |field| public_send(field) }
+  end
+
+  # The completed_day_* flags to set on a destination registration when this
+  # registration transfers into an event with `dest_day_count` days. Normally a
+  # straight per-day carry (day N here → day N there). When this event had more
+  # days than the destination, its later completed days have no matching day
+  # there, so they compress to the front: the destination is marked from day 1 up
+  # to however many were complete here, capped at its own day count — no
+  # completion falls off the end. (#2384)
+  def day_completion_carried_to(dest_day_count)
+    overflow = event.day_count > dest_day_count
+    filled = [ completed_day_count, dest_day_count ].min
+    DAY_FIELDS.each_with_index.to_h do |field, index|
+      completed = index < dest_day_count && (overflow ? index < filled : self[field])
+      [ field, completed ]
+    end
   end
 
   # The attendance status implied purely by how many days are marked complete:

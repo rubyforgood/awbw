@@ -41,7 +41,7 @@
           </h1>
           <% if allowed_to?(:manage?, @organization) %>
             <span id="program-status" class="admin-only scroll-mt-20 rounded-lg bg-blue-100 px-2 py-1">
-              <%= org_decorated.organization_status_chip %>
+              <%= org_decorated.organization_status_chip(admin: allowed_to?(:manage?, Organization)) %>
             </span>
           <% end %>
         </div>

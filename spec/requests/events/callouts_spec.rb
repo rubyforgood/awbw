@@ -253,6 +253,23 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).not_to include("AWBW's W-9 tax form for your records")
     end
 
+    it "keeps the W-9 dormant on a free event (linked, but no document renders)" do
+      free_event = create(:event, cost_cents: 0)
+      callout = create(:registration_ticket_callout, event: free_event, builtin_key: "payment")
+      w9 = create(:resource, title: "W-9")
+      create(:registration_ticket_callout_resource, registration_ticket_callout: callout,
+             resource: w9, subtitle: "AWBW's W-9 tax form for your records")
+      free_registration = create(:event_registration, event: free_event)
+
+      get registration_payment_path(free_registration.slug)
+
+      expect(response).to have_http_status(:success)
+      # The link exists, but the payment surface only shows documents once the
+      # event has a cost, so neither the W-9 nor the invoice renders.
+      expect(response.body).not_to include("AWBW's W-9 tax form for your records")
+      expect(response.body).not_to include("Itemized invoice for this registration")
+    end
+
     it "shows the ticket payment deadline while a balance is due" do
       event.update!(payment_due_deadline: Time.zone.local(2026, 4, 9, 17, 0))
 
@@ -595,7 +612,7 @@ RSpec.describe "Events::Callouts", type: :request do
 
         expect(response).to have_http_status(:success)
         expect(response.body).to include("Amount offered")
-        expect(response.body).to include("Pending agreement")
+        expect(response.body).to include("Offered")
         expect(response.body).to match(/name="agreement" value="yes"/)
       end
 
@@ -604,8 +621,8 @@ RSpec.describe "Events::Callouts", type: :request do
         get registration_scholarship_path(registration.slug)
 
         expect(response.body).to include("Amount awarded")
-        expect(response.body).to include("Agreement signed")
-        expect(response.body).not_to include("Pending agreement")
+        expect(response.body).to include("Agreement accepted")
+        expect(response.body).to include("Tasks outstanding")
       end
 
       it "frames the balance as the accept/decline choice while unsigned" do
@@ -652,6 +669,20 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(response.body).not_to match(/name="agreement" value="yes"/)
       end
 
+      it "re-offers all three options once the admin changes the amount after a support request" do
+        scholarship.request_additional_support!(contribution_cents: 2_000)
+        get registration_scholarship_path(registration.slug)
+        expect(response.body).to include("You requested additional support")
+        expect(response.body).not_to match(/name="agreement" value="yes"/)
+
+        scholarship.update!(amount_cents: 7_000)
+        get registration_scholarship_path(registration.slug)
+
+        expect(response.body).to match(/name="agreement" value="yes"/)
+        expect(response.body).to match(/name="contribution_amount"/)
+        expect(response.body).to match(/name="decline_reason"/)
+      end
+
       it "hides the agreement history from a registrant (public view)" do
         scholarship.decline_agreement!("Timing no longer works")
         get registration_scholarship_path(registration.slug)
@@ -691,6 +722,16 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(scholarship.reload.agreement_signed?).to be(false)
       end
 
+      it "emails the trainings team on a fresh acceptance, but not on a repeat" do
+        expect {
+          post registration_scholarship_agreement_path(registration.slug), params: { agreement: "yes" }
+        }.to have_enqueued_mail(ScholarshipMailer, :accepted_fyi)
+
+        expect {
+          post registration_scholarship_agreement_path(registration.slug), params: { agreement: "yes" }
+        }.not_to have_enqueued_mail(ScholarshipMailer, :accepted_fyi)
+      end
+
       it "redirects to the scholarship page when there is no awarded scholarship" do
         other = create(:event_registration, event: event, scholarship_requested: true)
 
@@ -711,6 +752,12 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(scholarship.agreement_declined?).to be(true)
         expect(scholarship.latest_agreement_response.reason).to eq("Timing no longer works")
         expect(scholarship.agreement_signed?).to be(false)
+      end
+
+      it "emails the trainings team about the decline" do
+        expect {
+          post registration_scholarship_decline_path(registration.slug), params: { decline_reason: "No longer available" }
+        }.to have_enqueued_mail(ScholarshipMailer, :declined_fyi)
       end
 
       it "zeroes the scholarship allocation so it stops counting toward the balance" do
@@ -736,6 +783,53 @@ RSpec.describe "Events::Callouts", type: :request do
         other = create(:event_registration, event: event, scholarship_requested: true)
 
         post registration_scholarship_decline_path(other.slug), params: { decline_reason: "n/a" }
+
+        expect(response).to redirect_to(registration_scholarship_path(other.slug))
+      end
+    end
+
+    describe "POST /registration/:slug/scholarship/request-support" do
+      it "records the request with the contribution amount and note" do
+        post registration_scholarship_request_support_path(registration.slug),
+          params: { contribution_amount: "$1,200.50", support_reason: "Employer can chip in" }
+
+        expect(response).to redirect_to(registration_scholarship_path(registration.slug))
+        scholarship.reload
+        expect(scholarship.agreement_support_requested?).to be(true)
+        response_row = scholarship.latest_agreement_response
+        expect(response_row.contribution_cents).to eq(120_050)
+        expect(response_row.reason).to eq("Employer can chip in")
+      end
+
+      it "leaves the award live so it keeps covering the balance (not a decline)" do
+        expect(registration.reload.remaining_cost).to eq(5_000)
+
+        post registration_scholarship_request_support_path(registration.slug), params: { contribution_amount: "50" }
+
+        expect(scholarship.reload.agreement_declined?).to be(false)
+        expect(allocation.reload.amount).to eq(5_000)
+        expect(registration.reload.remaining_cost).to eq(5_000)
+      end
+
+      it "emails the trainings team" do
+        expect {
+          post registration_scholarship_request_support_path(registration.slug), params: { contribution_amount: "50" }
+        }.to have_enqueued_mail(ScholarshipMailer, :additional_support_requested_fyi)
+      end
+
+      it "rejects a blank amount without recording a request" do
+        expect {
+          post registration_scholarship_request_support_path(registration.slug), params: { contribution_amount: "" }
+        }.not_to change { scholarship.reload.agreement_response_status }
+
+        expect(response).to redirect_to(registration_scholarship_path(registration.slug))
+        expect(flash[:alert]).to be_present
+      end
+
+      it "redirects to the scholarship page when there is no awarded scholarship" do
+        other = create(:event_registration, event: event, scholarship_requested: true)
+
+        post registration_scholarship_request_support_path(other.slug), params: { contribution_amount: "50" }
 
         expect(response).to redirect_to(registration_scholarship_path(other.slug))
       end

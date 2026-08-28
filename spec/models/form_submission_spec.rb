@@ -28,6 +28,25 @@ RSpec.describe FormSubmission do
                                              event_id: event.id, person_id: person.id)).to contain_exactly(wanted)
     end
 
+    it "filters by several forms at once when form_id is an array" do
+      agreement = create(:form)
+      new_job = create(:form)
+      on_agreement = create(:form_submission, form: agreement)
+      on_new_job = create(:form_submission, form: new_job)
+      create(:form_submission)
+
+      expect(FormSubmission.search_by_params(form_id: [ agreement.id, new_job.id ]))
+        .to contain_exactly(on_agreement, on_new_job)
+    end
+
+    it "ignores blank entries in a multi-form filter" do
+      form = create(:form)
+      wanted = create(:form_submission, form: form)
+      create(:form_submission)
+
+      expect(FormSubmission.search_by_params(form_id: [ "", form.id.to_s ])).to contain_exactly(wanted)
+    end
+
     it "filters by submission date range on created_at, ignoring unparseable dates" do
       old = create(:form_submission, created_at: 2.years.ago)
       recent = create(:form_submission, created_at: Date.current)
@@ -102,6 +121,23 @@ RSpec.describe FormSubmission do
       end
     end
 
+    describe ".for_organization" do
+      it "matches a metadata link and a pinned registration-org row alike" do
+        organization = create(:organization)
+        by_metadata = create(:form_submission)
+        by_metadata.link_organization!(organization.id)
+        by_pin = create(:form_submission)
+        create(:event_registration_organization, form_submission: by_pin, organization: organization,
+               event_registration: create(:event_registration, registrant: by_pin.person))
+        unrelated = create(:form_submission)
+
+        results = described_class.for_organization(organization.id)
+
+        expect(results).to contain_exactly(by_metadata, by_pin)
+        expect(results).not_to include(unrelated)
+      end
+    end
+
     describe ".org_link_status" do
       it "separates linked, pending, none, and unlinked by the direct submission link" do
         linked = submission_with_org_answer("Harbor Family Shelter")
@@ -125,6 +161,19 @@ RSpec.describe FormSubmission do
         # Still needs processing — nothing has been linked to the submission.
         expect(described_class.org_link_status("linked")).to be_empty
         expect(described_class.org_link_status("pending")).to contain_exactly(submission)
+      end
+
+      it "counts the registration-org row the submission is pinned to, with no metadata link" do
+        submission = submission_with_org_answer("Harbor Family Shelter")
+        create(:event_registration_organization, form_submission: submission,
+               organization: create(:organization, name: "Harbor Family Shelter"),
+               event_registration: create(:event_registration, registrant: submission.person))
+
+        # Public registration pins the submission instead of writing metadata, so
+        # this org is linked and the submission is out of the actionable queue.
+        expect(described_class.org_link_status("linked")).to contain_exactly(submission)
+        expect(described_class.org_link_status("pending")).to be_empty
+        expect(described_class.org_link_status("unlinked")).to be_empty
       end
 
       it "counts an explicitly linked org even when the submitted name doesn't match it" do

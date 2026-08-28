@@ -106,6 +106,8 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/story_share_admin/show.html.erb"        => "admin-only bg-blue-100",
     "app/views/story_imports/new.html.erb"             => "admin-only bg-blue-100",
     "app/views/story_imports/create.html.erb"          => "admin-only bg-blue-100",
+    "app/views/event_registration_imports/new.html.erb"    => "admin-only bg-blue-100",
+    "app/views/event_registration_imports/create.html.erb" => "admin-only bg-blue-100",
     # index
     "app/views/allocations/index.html.erb"             => "admin-only bg-blue-100",
     "app/views/other_responses/index.html.erb"         => "admin-only bg-blue-100",
@@ -121,6 +123,8 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/staff_tags/show.html.erb"               => "admin-only bg-blue-100",
     "app/views/staff_tags/new.html.erb"                => "admin-only bg-blue-100",
     "app/views/staff_tags/edit.html.erb"               => "admin-only bg-blue-100",
+    "app/views/staff_taggings/index.html.erb"          => "admin-only bg-blue-100",
+    "app/views/staff_taggings/new.html.erb"            => "admin-only bg-blue-100",
     "app/views/staff_taggings/edit.html.erb"           => "admin-only bg-blue-100",
     "app/views/events/dashboard.html.erb"              => "admin-or-owner bg-blue-100",
     "app/views/events/attendance.html.erb"             => "admin-or-owner bg-blue-100",
@@ -171,6 +175,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/topic_subscription_types/new.html.erb"  => "admin-only bg-blue-100",
     "app/views/topic_subscription_types/edit.html.erb" => "admin-only bg-blue-100",
     "app/views/form_submissions/index.html.erb"        => "admin-only bg-blue-100",
+    "app/views/bulk_payments/index.html.erb"           => "admin-only bg-blue-100",
     "app/views/form_answers/index.html.erb"            => "admin-only bg-blue-100",
     "app/views/form_submissions/link_organization.html.erb" => "admin-only bg-blue-100",
     # show
@@ -281,7 +286,11 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/event_registrations/transfer.html.erb"    => "admin-only bg-blue-100",
     "app/views/event_registrations/link_organization.html.erb" => "admin-only bg-blue-100",
     "app/views/users/confirm_email_change.html.erb"      => "admin-only bg-blue-100",
-    "app/views/users/confirm_email_manual.html.erb"      => "admin-only bg-blue-100"
+    "app/views/users/confirm_email_manual.html.erb"      => "admin-only bg-blue-100",
+
+    # ─── FileMaker archive viewer (FmArchivePolicy: admin-only) ───
+    "app/views/fm_archives/index.html.erb"               => "admin-only bg-blue-100",
+    "app/views/fm_archives/show.html.erb"                => "admin-only bg-blue-100"
   }.freeze
 
   EXPECTED_MAPPINGS.each do |view_path, expected_bg_class|

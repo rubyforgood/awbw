@@ -32,10 +32,52 @@ class StaffTagging < ApplicationRecord
     "Tag: #{staff_tag.name}"
   end
 
+  # Only the tag assignment itself is a timeline-worthy change; reassigning the
+  # taggable or relying on the default `all saved_changes` would log noise.
   def timeline_changes
     saved_changes
       .slice(*STAFF_TAGGING_TIMELINE_ATTRIBUTES)
-      .transform_values { |(old_value, new_value)| [old_value.to_s, new_value.to_s] }
+      .transform_values { |(old_value, new_value)| [ old_value.to_s, new_value.to_s ] }
+  end
+
+  scope :for_staff_tag, ->(ids) {
+    tag_ids = Array(ids).reject(&:blank?)
+    return all if tag_ids.empty?
+    where(staff_tag_id: tag_ids) }
+
+  # Free-text match on the tagged person: their own searchable fields (name,
+  # email, phone, address — Person's SearchCop) plus their affiliated
+  # organization's name. Taggings are Person-only today, so other taggable types
+  # never match. Comment/communication text is unioned in via matching_person_ids.
+  scope :matching_text, ->(query) {
+    return all if query.blank?
+    where(staff_taggable_type: "Person", staff_taggable_id: matching_person_ids(query)) }
+
+  # Seam for the single search field. Each source contributes person ids; add
+  # comment/communication matches here so they join the same OR.
+  def self.matching_person_ids(query)
+    Person.search(query).ids | Person.organization_name(query).ids
+  end
+
+  # Matches the tagging's own logged comments and communications (notifications)
+  # by their text — the content recorded on the edit page.
+  scope :matching_content, ->(query) {
+    return all if query.blank?
+    like = "%#{sanitize_sql_like(query)}%"
+    comment_ids = Comment.where(commentable_type: name)
+                         .where("comments.body LIKE :q OR comments.topic LIKE :q", q: like)
+                         .select(:commentable_id)
+    communication_ids = Notification.where(noticeable_type: name)
+                                    .where("notifications.email_subject LIKE :q OR notifications.email_body_text LIKE :q OR notifications.custom_subject LIKE :q OR notifications.custom_message LIKE :q", q: like)
+                                    .select(:noticeable_id)
+    where(id: comment_ids).or(where(id: communication_ids)) }
+
+  def self.search_by_params(params)
+    results = all
+    results = results.for_staff_tag(params[:staff_tag_ids]) if params[:staff_tag_ids].present?
+    results = results.matching_text(params[:query]) if params[:query].present?
+    results = results.matching_content(params[:content]) if params[:content].present?
+    results
   end
 
   private

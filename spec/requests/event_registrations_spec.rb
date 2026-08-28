@@ -536,12 +536,12 @@ RSpec.describe "EventRegistrations", type: :request do
         scholarship.save!
 
         get edit_event_registration_path(existing_registration)
-        expect(response.body).to include("Agreement pending")
+        expect(response.body).to include("Agreement offered")
 
         scholarship.update!(agreement_signed: true)
         get edit_event_registration_path(existing_registration)
-        expect(response.body).to include("Agreement signed")
-        expect(response.body).not_to include("Agreement pending")
+        expect(response.body).to include("Agreement accepted")
+        expect(response.body).not_to include("Agreement offered")
       end
 
       it "hides Delete and explains why for a registration with payment records" do
@@ -878,6 +878,14 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).not_to include("<option value=\"#{other_format.id}\"")
         end
 
+        it "offers same-format events even when they aren't published" do
+          unpublished = create(:event, title: "Unpublished Destination", published: false, on_demand: false)
+
+          get transfer_event_registration_path(source)
+
+          expect(response.body).to include("<option value=\"#{unpublished.id}\"")
+        end
+
         it "offers only other on-demand events when transferring out of one" do
           on_demand = create(:event, title: "Source On-Demand", on_demand: true)
           on_demand_source = create(:event_registration, event: on_demand, status: "transferred_out")
@@ -965,6 +973,23 @@ RSpec.describe "EventRegistrations", type: :request do
             completed_day_1: true, expected_payment_method: "Check",
             someone_else_will_pay: true, shoutout: true
           )
+        end
+
+        it "compresses carried days and flags the mismatch when the source had more days than the destination" do
+          three_day = create(:event, published: true, start_date: 12.days.from_now, end_date: 14.days.from_now)
+          one_day = create(:event, published: true, start_date: 12.days.from_now, end_date: 12.days.from_now)
+          big_source = create(:event_registration, event: three_day, status: "transferred_out",
+            completed_day_1: true, completed_day_2: true, completed_day_3: true)
+
+          post process_transfer_event_registration_path(big_source),
+               params: { destination_event_id: one_day.id }
+
+          incoming = EventRegistration.find_by(registrant: big_source.registrant, event: one_day)
+          expect(incoming.completed_day_1).to be(true)
+
+          get edit_event_registration_path(incoming)
+          expect(response.body).to include("had more days than this event")
+          expect(response.body).to include(three_day.decorate.month_year)
         end
 
         it "collapses a double transfer, pointing the new reg at the original and dropping the middle" do
@@ -1702,6 +1727,42 @@ RSpec.describe "EventRegistrations", type: :request do
             params: { organization_id: organization.id }
 
           expect(submission.reload.linked_organization_ids).to eq([ organization.id ])
+        end
+
+        it "back-applies the link to every submission that names the org, pinning one" do
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          sub1 = create(:form_submission, person: regular_user.person, form: reg_form)
+          sub2 = create(:form_submission, person: regular_user.person, form: reg_form)
+          [ sub1, sub2 ].each do |submission|
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Helping Hands")
+          end
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(sub1.reload.linked_organization_ids).to include(organization.id)
+          expect(sub2.reload.linked_organization_ids).to include(organization.id)
+          # The link row still pins a single submission — only the metadata link fans out.
+          link = existing_registration.event_registration_organizations.find_by(organization: organization)
+          expect([ sub1.id, sub2.id ]).to include(link.form_submission_id)
+        end
+
+        it "leaves a submission that named a different org unlinked" do
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          matching = create(:form_submission, person: regular_user.person, form: reg_form)
+          other = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: matching, form_field: field, submitted_answer: "Helping Hands")
+          create(:form_answer, form_submission: other, form_field: field, submitted_answer: "Beta Agency")
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(matching.reload.linked_organization_ids).to include(organization.id)
+          expect(other.reload.linked_organization_ids).to be_empty
         end
 
         it "records the linking registration on the created affiliations" do

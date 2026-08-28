@@ -78,6 +78,19 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).not_to include(form_submission_path(elsewhere))
       end
 
+      it "links a bulk payment submission to its event's bulk payments row" do
+        event = create(:event)
+        bulk = create(:form_submission, role: "bulk_payment", event: event)
+        registration = create(:form_submission, role: "registration", event: event)
+
+        get form_submissions_path(event_id: event.id), headers: frame_headers
+
+        expect(response.body).to include(bulk_payments_event_path(event))
+        expect(response.body).to include("highlight=#{bulk.id}")
+        expect(response.body).to include("return_to=bulk_payments_index")
+        expect(response.body).not_to include("highlight=#{registration.id}")
+      end
+
       it "filters by submission date range" do
         old = create(:form_submission, created_at: 1.year.ago)
         recent = create(:form_submission, created_at: Date.current)
@@ -403,6 +416,18 @@ RSpec.describe "FormSubmissions", type: :request do
         )
       end
 
+      it "offers the End button for a not-yet-started affiliation too" do
+        affiliation = create(:affiliation, person: person, start_date: 1.month.from_now,
+                             organization: create(:organization, name: "Old Org"))
+
+        get form_submission_path(submission)
+
+        expect(response.body).to include(
+          CGI.escapeHTML(end_affiliation_path(affiliation, form_submission_id: submission.id,
+                                              end_date: (submission.created_at.to_date - 1.day).iso8601))
+        )
+      end
+
       it "offers no End button outside the new-job scenario" do
         reinstatement = create(:form_submission, person: person,
                                form: create(:form, role: "reinstatement"))
@@ -454,22 +479,35 @@ RSpec.describe "FormSubmissions", type: :request do
           expect(response.body).to include(CGI.escapeHTML(create_organization_form_submission_path(submission)))
         end
 
-        it "shows the matched organization when an active affiliation matches the submitted name" do
+        it "shows the matched organization for the registration-org link this submission is pinned to" do
+          add_answer("organization_name", "Harbor Family Shelter")
+          organization = create(:organization, name: "Harbor Family Shelter")
+          registration = create(:event_registration, registrant: person)
+          create(:event_registration_organization, event_registration: registration,
+                 organization: organization, form_submission: submission)
+
+          get link_organization_form_submission_path(submission)
+
+          expect(response.body).to include(CGI.escapeHTML("Edit #{person.first_name}'s affiliations"))
+          expect(response.body).not_to include("linked to this submission or their registration yet")
+        end
+
+        it "does not treat a name-matching affiliation as a link" do
           add_answer("organization_name", "Harbor Family Shelter")
           create(:affiliation, person: person, organization: create(:organization, name: "Harbor Family Shelter"))
 
           get link_organization_form_submission_path(submission)
 
-          expect(response.body).to include("Harbor Family Shelter")
-          expect(response.body).not_to include("Create and link")
-          expect(response.body).to include("Affiliations:")
+          expect(response.body).to include("linked to this submission or their registration yet")
+          expect(response.body).not_to include(CGI.escapeHTML("Edit #{person.first_name}'s affiliations"))
         end
 
         it "leaves the already-linked org out of the suggested matches" do
           add_answer("organization_name", "Harbor Family Shelter")
           matched = create(:organization, name: "Harbor Family Shelter")
           other = create(:organization, name: "Harbor Family Shelter East")
-          create(:affiliation, person: person, organization: matched)
+          create(:event_registration_organization, organization: matched, form_submission: submission,
+                 event_registration: create(:event_registration, registrant: person))
 
           get link_organization_form_submission_path(submission)
 

@@ -88,11 +88,17 @@ export default class extends Controller {
 
     // Mirrors OrganizationDecorator#organization_status_bucket.
     if (this.hasProgramStatusTarget) {
+      const started = a => !a.startDate || new Date(a.startDate) <= today
+      const notEnded = a => !a.endDate || new Date(a.endDate) >= today
       let bucket
       if (facilitatorAffiliations.length === 0) {
         bucket = "never_active"
+      } else if (facilitatorAffiliations.some(a => started(a) && notEnded(a))) {
+        bucket = "active"
+      } else if (facilitatorAffiliations.some(a => !started(a) && notEnded(a))) {
+        bucket = "upcoming"
       } else {
-        bucket = allFacInactive ? "formerly_active" : "active"
+        bucket = "formerly_active"
       }
       this.updateProgramStatus(bucket)
     }
@@ -208,7 +214,7 @@ export default class extends Controller {
     if (!target) return
     let html = ""
     if (endDate) {
-      html += '<i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active affiliations"></i>'
+      html += '<i class="fa-solid fa-circle-xmark mr-1 text-red-400" title="No active affiliations"></i>'
     }
     html += sinceDate ? this.formatDate(sinceDate) : "—"
     if (endDate) html += ` – ${this.formatDate(endDate)}`

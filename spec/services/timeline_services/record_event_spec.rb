@@ -96,7 +96,7 @@ RSpec.describe TimelineServices::RecordEvent do
       event = described_class.call(subject: holder, action: "created", actor: nil)
 
       expect(event.actor).to be_nil
-      expect(event.actor_label).to eq("Registration")
+      expect(event.actor_label).to eq("A Registration Form Submission")
     end
 
     it "adds also_log targets without duplicating any timeline" do

@@ -32,6 +32,9 @@
             <% if @person.user %>
               <%= link_to "User account", edit_user_path(@person.user), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
             <% end %>
+            <% if params[:admin] == "true" && @person.filemaker_code.present? && FmRolodex.exists?(fm_id: @person.filemaker_code) %>
+              <%= link_to "Rolodex", fm_archive_path(@person.filemaker_code, table: "rolodexes"), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+            <% end %>
             <%= link_to "Change password", change_password_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
             <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
             <%= link_to "People", people_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
@@ -59,5 +62,16 @@
               <%= render "associated_records", person: @person %>
             </div>
           </div>
+          <div class="rounded bg-white p-6">
+            <div class="mb-2 font-semibold text-gray-700">Timeline</div>
+            <%= turbo_frame_tag "person_timeline_section",
+                src: edit_person_path(@person, section: "timeline"),
+                loading: :lazy do %>
+              <p class="text-gray-500 italic">Loading timeline...</p>
+            <% end %>
+          </div>
+          <% if allowed_to?(:index?, MembershipInvoice) %>
+            <%= render "people/membership", person: @person, membership: @membership %>
+          <% end %>
         </div>
 </div>

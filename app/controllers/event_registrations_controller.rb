@@ -256,12 +256,14 @@ class EventRegistrationsController < ApplicationController
       # Copy the registrant's progress/profile state forward so the new reg reflects
       # where they left off (money & CE resolve separately). Days attended, expected
       # payment method, buddy-pay, and the recipients-page feature/shout-out flag. (#1944)
+      # Days attended carry per-day, compressing when the source had more days than
+      # the destination so no completion is lost off the end.
       copied = {
         expected_payment_method: @event_registration.expected_payment_method,
         someone_else_will_pay: @event_registration.someone_else_will_pay,
         shoutout: @event_registration.shoutout
       }
-      EventRegistration::DAY_FIELDS.each { |field| copied[field] = @event_registration[field] }
+      copied.merge!(@event_registration.day_completion_carried_to(destination_event.day_count))
       destination.assign_attributes(copied)
     end
 
@@ -517,12 +519,13 @@ class EventRegistrationsController < ApplicationController
       edit: (cell if reopen), anchor: cell)
   end
 
-  # Events a registrant can be transferred into: published events of the same
-  # format as the one they're leaving — an on-demand event only transfers to
-  # another on-demand event, and a scheduled (non-on-demand) event only to
-  # another scheduled event — excluding the source event, most recent first.
+  # Events a registrant can be transferred into: events of the same format as
+  # the one they're leaving — an on-demand event only transfers to another
+  # on-demand event, and a scheduled (non-on-demand) event only to another
+  # scheduled event — whether or not they're published, excluding the source
+  # event, most recent first.
   def transfer_destination_events
-    Event.where(published: true, on_demand: @event_registration.event.on_demand)
+    Event.where(on_demand: @event_registration.event.on_demand)
          .where.not(id: @event_registration.event_id)
          .order(start_date: :desc)
   end
@@ -708,6 +711,24 @@ class EventRegistrationsController < ApplicationController
     @submission_entries_by_org[organization.id] = find_submission_entry(registration, organization, linked_count)
   end
 
+  # Every submission entry whose answers describe `organization` (not just the
+  # first): the pinned one, plus every one whose typed org name matches. Falls
+  # back to the sole entry only when the pairing is unambiguous (one submission,
+  # one linked org) — the same rule as find_submission_entry. Used to back-apply
+  # the metadata link to all of a registrant's submissions that named this org.
+  def submission_entries_for(registration, organization)
+    entries = registration_submission_entries(registration)
+    pinned = pinned_submission_ids(registration)[organization.id]
+    matches = entries.select do |entry|
+      entry[:submission].id == pinned ||
+        (entry[:org_name].present? && entry[:org_name].strip.casecmp?(organization.name.to_s.strip))
+    end
+    return matches if matches.any?
+    return [] unless entries.one?
+
+    registration.organizations.count == 1 ? entries : []
+  end
+
   def find_submission_entry(registration, organization, linked_count)
     entries = registration_submission_entries(registration)
     # The pinned submission wins: the name and sole-org rules below are re-derived
@@ -767,9 +788,14 @@ class EventRegistrationsController < ApplicationController
     # Pin the pairing even when nothing was filled — an org whose every answer
     # conflicts fills nothing, and that's exactly the one whose note has to survive.
     link.record_form_submission(entry[:submission]) if entry
-    # Back-apply the resolution onto the submission itself, so the form
-    # submissions side reads it as linked too (even under a name mismatch).
-    entry[:submission].link_organization!(organization.id) if entry
+    # Back-apply the resolution onto every submission this org describes, so each
+    # reads as linked in its own editor too (even under a name mismatch). A
+    # registrant can have several submissions naming the same org; the pin and
+    # profile note above stay on the single primary entry, but the metadata link
+    # fans out to all of them.
+    submission_entries_for(@event_registration, organization).each do |describing|
+      describing[:submission].link_organization!(organization.id)
+    end
     link.record_autofill(result.saved) if record_fills
 
     warning = result.warning(organization: organization)

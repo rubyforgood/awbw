@@ -104,11 +104,8 @@ class PeopleController < ApplicationController
         @workshop_variation_ideas = WorkshopVariationIdea.credited_to_person(@person).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshop_variation_ideas", locals: { person: @person, workshop_variation_ideas: @workshop_variation_ideas }
       when "affiliations"
-        @affiliations = @person.affiliations.active.includes(organization: :logo_attachment).paginate(page: params[:page], per_page: per_page)
+        @affiliations = @person.affiliations.active_or_pending.includes(organization: :logo_attachment).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/affiliations", locals: { person: @person, affiliations: @affiliations }
-      when "timeline"
-        @timeline_events = @person.timeline_events.includes(:actor, :subject).order(created_at: :desc).paginate(page: params[:page], per_page: 25)
-        render partial: "people/sections/timeline", locals: { person: @person, timeline_events: @timeline_events }
       end
     end
   end
@@ -244,6 +241,13 @@ class PeopleController < ApplicationController
       affiliations: { organization: [ :logo_attachment, :addresses ] }
     ).find(params[:id]).decorate
     authorize! @person
+
+    if turbo_frame_request? && params[:section] == "timeline"
+      @timeline_events = @person.timeline_events.includes(:actor, :subject).order(created_at: :desc).paginate(page: params[:page], per_page: 25)
+      return render partial: "people/sections/timeline", locals: { person: @person, timeline_events: @timeline_events }
+    end
+
+    @membership = membership_for(@person)
     set_form_variables
   end
 

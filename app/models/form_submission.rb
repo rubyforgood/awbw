@@ -22,7 +22,7 @@ class FormSubmission < ApplicationRecord
   UNREADABLE_UPLOAD_MESSAGE = "We couldn't read one of your uploaded files. Please choose it again.".freeze
 
   # The index's "Organization linking" filter vocabulary, keyed on whether an org
-  # is linked directly to the submission (see #link_organization!):
+  # is linked directly to the submission (see DIRECT_ORG_LINK_SQL):
   #   pending  — gave an org answer, not linked yet (the actionable queue).
   #   linked   — an org was linked (processed).
   #   unlinked — not linked, either kind: pending or no-org-answer.
@@ -36,6 +36,26 @@ class FormSubmission < ApplicationRecord
 
   scope :bulk_payment, -> { where(role: "bulk_payment") }
 
+  # The bulk payments index "Payment status" filter vocabulary, keyed on the
+  # submission's payment (see the payment badge):
+  #   unpaid               — no payment recorded yet ("No payment yet").
+  #   partially_allocated  — a payment exists with some amount unallocated.
+  #   fully_allocated      — a payment exists with everything allocated.
+  PAYMENT_STATUS_FILTER_OPTIONS = [
+    [ "No payment yet", "unpaid" ],
+    [ "Not fully allocated", "partially_allocated" ],
+    [ "Fully allocated", "fully_allocated" ]
+  ].freeze
+
+  scope :payment_status, ->(value) {
+    case value
+    when "unpaid" then where.missing(:payment)
+    when "partially_allocated" then joins(:payment).where("payments.amount_cents_remaining > 0")
+    when "fully_allocated" then joins(:payment).where(payments: { amount_cents_remaining: 0 })
+    else all
+    end
+  }
+
   # Submitted on `created_at` — there is no separate submitted_at column.
   scope :submitted_between, ->(start_date, end_date) {
     scope = all
@@ -44,14 +64,15 @@ class FormSubmission < ApplicationRecord
     scope
   }
 
-  # Submissions with the organization linked directly to them — the explicit link
-  # an admin makes in the org-linking editor, recorded in metadata (see
-  # #link_organization!). Nothing else counts: a matching affiliation or an org on
-  # the submission's event registration doesn't make the submission match.
+  # Submissions this organization is directly linked to, by either link
+  # (ADR-0002 D5). A matching affiliation the person happens to hold is not a
+  # link and does not make the submission match.
   scope :for_organization, ->(organization_id) {
+    id = organization_id.to_i
     where(
-      "JSON_CONTAINS(JSON_EXTRACT(form_submissions.metadata, '$.linked_organization_ids'), CAST(? AS JSON))",
-      organization_id.to_i
+      "JSON_CONTAINS(JSON_EXTRACT(form_submissions.metadata, '$.linked_organization_ids'), CAST(? AS JSON)) " \
+      "OR EXISTS (#{PINNED_ORG_LINK_SQL} AND event_registration_organizations.organization_id = ?)",
+      id, id
     )
   }
 
@@ -70,13 +91,22 @@ class FormSubmission < ApplicationRecord
       .where.not(submitted_answer: [ nil, "" ])
   end
 
-  # SQL test for an explicit admin link recorded in metadata (see
-  # #link_organization!). COALESCE: metadata (or the key) may be absent.
-  EXPLICIT_ORG_LINK_SQL = "COALESCE(JSON_LENGTH(JSON_EXTRACT(form_submissions.metadata, '$.linked_organization_ids')), 0) > 0".freeze
+  # The registration-org row a submission is pinned to — the link public
+  # registration records (EventRegistrationOrganization#form_submission_id)
+  # instead of writing metadata. Fragment, so callers can add their own AND.
+  PINNED_ORG_LINK_SQL = "SELECT 1 FROM event_registration_organizations " \
+    "WHERE event_registration_organizations.form_submission_id = form_submissions.id".freeze
+
+  # SQL test for either direct link (ADR-0002 D5): the explicit one an admin
+  # records in metadata, or the registration-org row this submission is pinned
+  # to. COALESCE: metadata (or the key) may be absent.
+  DIRECT_ORG_LINK_SQL = "(COALESCE(JSON_LENGTH(JSON_EXTRACT(form_submissions.metadata, " \
+    "'$.linked_organization_ids')), 0) > 0 OR EXISTS (#{PINNED_ORG_LINK_SQL}))".freeze
 
   # Linking status keyed on whether an org is *directly linked to the submission*
-  # (the metadata link an admin sets in the editor) — a matching affiliation the
-  # person happens to hold does NOT count. Mirrors the registrants roster:
+  # — a matching affiliation the person happens to hold does NOT count. Same
+  # vocabulary and the same join-backed answer as the registrants roster
+  # (EventRegistration.organization_linking_status):
   #   linked   — an org was linked (processed).
   #   unlinked — no org linked, whichever kind: pending or no org answer (broad).
   #   pending  — gave an org answer but nothing linked yet — the actionable queue.
@@ -84,10 +114,10 @@ class FormSubmission < ApplicationRecord
   scope :org_link_status, ->(value) {
     answered = org_name_answers.select(:form_submission_id)
     case value
-    when "linked" then where(EXPLICIT_ORG_LINK_SQL)
-    when "unlinked" then where.not(EXPLICIT_ORG_LINK_SQL)
-    when "pending" then where(id: answered).where.not(EXPLICIT_ORG_LINK_SQL)
-    when "none" then where.not(id: answered).where.not(EXPLICIT_ORG_LINK_SQL)
+    when "linked" then where(DIRECT_ORG_LINK_SQL)
+    when "unlinked" then where.not(DIRECT_ORG_LINK_SQL)
+    when "pending" then where(id: answered).where.not(DIRECT_ORG_LINK_SQL)
+    when "none" then where.not(id: answered).where.not(DIRECT_ORG_LINK_SQL)
     else all
     end
   }
@@ -141,7 +171,8 @@ class FormSubmission < ApplicationRecord
   def self.search_by_params(params)
     results = all
     results = results.where(person_id: params[:person_id]) if params[:person_id].present?
-    results = results.where(form_id: params[:form_id]) if params[:form_id].present?
+    form_ids = Array(params[:form_id]).reject(&:blank?)
+    results = results.where(form_id: form_ids) if form_ids.any?
     results = results.where(event_id: params[:event_id]) if params[:event_id].present?
     results = results.where(role: params[:role]) if params[:role].present?
     results = results.for_organization(params[:organization_id]) if params[:organization_id].present?
@@ -247,7 +278,7 @@ class FormSubmission < ApplicationRecord
   # submission's own org-linking editor, or back-applied by the event
   # registration editor when this submission's answers describe the org. Keeps
   # a submitted name that was resolved to a differently-named org reading as
-  # linked, where the affiliation-name match alone would not.
+  # linked (ADR-0002 D5).
 
   def linked_organization_ids
     (metadata || {}).fetch("linked_organization_ids", [])

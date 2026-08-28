@@ -363,8 +363,9 @@
                     <% if linked_orgs.none? && !needs_linking %>
                       <%= render "shared/badge",
                             label: "None",
-                            classes: "bg-gray-50 text-gray-500 border-gray-200",
-                            href: editor_path %>
+                            classes: "bg-red-50 text-red-700 border-red-200",
+                            href: editor_path,
+                            title: "No organization on this registration" %>
                     <% end %>
                   </div>
                 </td>

@@ -55,6 +55,8 @@ Rails.application.routes.draw do
     post "activities/counts/print",  to: "analytics#print", as: "analytics_print"
   end
 
+  resources :fm_archives, only: [ :index, :show ]
+
   resources :comments, only: [ :index ]
 
   resources :banners
@@ -67,7 +69,7 @@ Rails.application.routes.draw do
   end
   resources :category_types
   resources :staff_tags
-  resources :staff_taggings, only: [ :edit, :update ]
+  resources :staff_taggings, only: [ :index, :new, :create, :edit, :update, :destroy ]
   resources :categories do
     collection do
       get :dedupe_index
@@ -89,6 +91,7 @@ Rails.application.routes.draw do
   get "registration/:slug/scholarship", to: "events/callouts#scholarship", as: :registration_scholarship
   post "registration/:slug/scholarship/agreement", to: "events/callouts#sign_agreement", as: :registration_scholarship_agreement
   post "registration/:slug/scholarship/decline", to: "events/callouts#decline_agreement", as: :registration_scholarship_decline
+  post "registration/:slug/scholarship/request-support", to: "events/callouts#request_scholarship_support", as: :registration_scholarship_request_support
   get "registration/:slug/faq", to: "events/callouts#faq", as: :registration_faq
   get "registration/:slug/payment", to: "events/callouts#payment", as: :registration_payment
   get "registration/:slug/certificate", to: "events/callouts#certificate", as: :registration_certificate
@@ -107,6 +110,10 @@ Rails.application.routes.draw do
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate
   post "registration/:slug/pay", to: "events/registrations#pay", as: :registration_pay
+  resource :event_registration_import, only: %i[new create], path: "event_registrations/import",
+                                       controller: "event_registration_imports" do
+    post :confirm
+  end
   resources :event_registrations do
     member do
       get :confirm
@@ -160,6 +167,7 @@ Rails.application.routes.draw do
       post :create_organization
     end
   end
+  resources :bulk_payments, only: [ :index ]
   resources :form_answers, only: [ :index ]
   resources :grants
   resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
@@ -277,6 +285,10 @@ Rails.application.routes.draw do
   resources :organizations do
     collection do
       get :check_duplicates
+      get :dedupe_index
+      get :dedupe_preview
+      post :dedupe_perform
+      patch :dedupe_update_keep
     end
     member do
       get :populations_served

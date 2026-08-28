@@ -9,6 +9,7 @@ class EventRegistrationPolicy < ApplicationPolicy
   def destroy? = record.persisted? && (admin? || owner?)
   def show? = admin?
   def show_public? = true
+  def import? = admin?
   def confirm? = admin?
   def process_confirm? = admin?
   def transfer? = admin?

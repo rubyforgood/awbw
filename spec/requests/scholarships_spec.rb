@@ -183,7 +183,7 @@ RSpec.describe "Scholarships", type: :request do
       scholarship.update!(agreement_signed: true)
       get scholarship_path(scholarship)
 
-      expect(response.body).to include("Agreement signed")
+      expect(response.body).to include("Agreement accepted")
     end
   end
 
@@ -205,6 +205,34 @@ RSpec.describe "Scholarships", type: :request do
       expect(response).to redirect_to(edit_scholarship_path(scholarship))
       expect(scholarship.reload.agreement_pending?).to be(true)
       expect(allocation.reload.amount).to eq(5_000)
+    end
+  end
+
+  describe "agreement history attribution" do
+    it "names the signed-in admin who recorded an action" do
+      patch scholarship_path(scholarship), params: { scholarship: { agreement_signed: true } }
+      get edit_scholarship_path(scholarship)
+
+      expect(response.body).to include("by #{admin.full_name}")
+    end
+
+    it "does not name an actor who is the scholarship's own recipient" do
+      recipient_user = create(:user, super_user: true, person: registration.registrant)
+      sign_in recipient_user
+
+      patch scholarship_path(scholarship), params: { scholarship: { agreement_signed: true } }
+      get edit_scholarship_path(scholarship)
+
+      expect(response.body).to include("Agreement history")
+      expect(response.body).not_to include("by #{recipient_user.full_name}")
+    end
+
+    it "shows no actor for a recipient's own self-service response (no signed-in user)" do
+      scholarship.decline_agreement!("No longer available")
+      get edit_scholarship_path(scholarship)
+
+      expect(response.body).to include("Agreement history")
+      expect(response.body).not_to include("by #{admin.full_name}")
     end
   end
 

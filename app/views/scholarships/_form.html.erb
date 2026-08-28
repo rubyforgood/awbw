@@ -14,6 +14,8 @@
       <i class="fa-solid fa-graduation-cap"></i>
     </span>
     <h2 class="text-sm font-semibold text-gray-700">Scholarship details</h2>
+    <%# Current lifecycle status, matching the recipient's ticket callout. %>
+    <%= f.object.decorate.lifecycle_status_badge %>
   </div>
 
   <div class="space-y-6 p-4">
@@ -27,7 +29,7 @@
             amount (the input, tinted by allocation state), Still owed (amber). %>
         <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
-            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Event cost</dt>
+            <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Event cost</dt>
             <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@allocatable.event.cost_cents) %></dd>
           </div>
           <%# The amount cell reads neutral grey until "Tasks completed" is on; amber
@@ -36,12 +38,12 @@
           <div data-scholarship-preview-target="amountBox" class="rounded-lg border px-4 py-3 <%= allocated_cents > 0 ? "border-fuchsia-300 bg-fuchsia-50" : "border-gray-100 bg-gray-50" %>">
             <%= f.label :amount_dollars, "Scholarship amount", class: "block text-xs font-medium uppercase tracking-wide text-gray-400" %>
             <div class="relative mt-1">
-              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-sm">$</span>
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-gray-500">$</span>
               <%= f.number_field :amount_dollars, step: 0.01, min: 0, autocomplete: "off", class: "w-full rounded-lg border border-gray-300 bg-white pl-7 pr-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none", data: { "scholarship-preview-target": "amount", action: "input->scholarship-preview#update", lpignore: "true", "1p-ignore": "true", bwignore: "true", "form-type": "other" } %>
             </div>
           </div>
           <div data-scholarship-preview-target="owed" class="rounded-lg border px-4 py-3 <%= paid ? "border-gray-300 bg-gray-50" : "border-amber-300 bg-amber-50" %>">
-            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Still owed</dt>
+            <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Still owed</dt>
             <dd class="mt-1 flex items-center gap-1.5 text-sm font-semibold tabular-nums <%= paid ? "text-gray-500" : "text-amber-700" %>">
               <% if paid %>
                 <i class="fa-solid fa-thumbs-up"></i>
@@ -75,7 +77,7 @@
         <div>
           <%= f.label :amount_dollars, "Scholarship amount", class: "block text-sm font-medium text-gray-700 mb-1" %>
           <div class="relative w-48">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-sm">$</span>
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-gray-500">$</span>
             <%= f.number_field :amount_dollars, step: 0.01, min: 0, autocomplete: "off", class: "w-full rounded-lg border border-gray-300 pl-7 pr-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none", data: { "scholarship-preview-target": "amount", action: "input->scholarship-preview#update", lpignore: "true", "1p-ignore": "true", bwignore: "true", "form-type": "other" } %>
           </div>
         </div>
@@ -88,15 +90,18 @@
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p class="text-xs font-medium text-gray-600">Scholarship agreement</p>
-          <p class="text-xs text-gray-400">Signed agreement on file from the recipient</p>
+          <p class="text-xs text-gray-400">Recipient has accepted the scholarship agreement</p>
         </div>
-        <label class="flex items-center gap-2.5 cursor-pointer">
+        <label class="flex cursor-pointer items-center gap-2.5">
           <%= f.check_box :agreement_signed, class: "sr-only peer" %>
-          <span class="text-sm text-gray-400 peer-checked:hidden">Not signed</span>
-          <span class="hidden text-sm font-medium text-fuchsia-700 peer-checked:inline">Signed</span>
-          <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
+          <span class="text-sm text-gray-400 peer-checked:hidden">Not accepted</span>
+          <span class="hidden text-sm font-medium text-fuchsia-700 peer-checked:inline">Accepted</span>
+          <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors peer-checked:bg-fuchsia-500 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300 after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5"></span>
         </label>
       </div>
+      <%# Agreement response timeline, folded into the agreement card below its
+          toggle (renders nothing until the recipient has responded). %>
+      <%= render "agreement_history", scholarship: f.object, embedded: true %>
     </div>
 
     <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
@@ -104,11 +109,11 @@
         <p class="text-xs font-medium text-gray-600">Tasks completed</p>
         <p class="text-xs text-gray-400">Recipient has completed their scholarship tasks</p>
       </div>
-      <label class="flex items-center gap-2.5 cursor-pointer">
+      <label class="flex cursor-pointer items-center gap-2.5">
         <%= f.check_box :tasks_completed, class: "sr-only peer" %>
         <span class="text-sm text-gray-400 peer-checked:hidden">Not yet</span>
         <span class="hidden text-sm font-medium text-fuchsia-700 peer-checked:inline">Completed</span>
-        <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
+        <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors peer-checked:bg-fuchsia-500 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300 after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5"></span>
       </label>
     </div>
   </div>

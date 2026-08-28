@@ -10,7 +10,8 @@ that are easy to confuse with one another:
 
 - **Affiliated since**
 - **Facilitators since**
-- an org-wide **status chip** (Active / Formerly active / Never active)
+- an org-wide **status chip** (Active / Upcoming / Formerly active / Never
+  active; non-admins see Upcoming as "Inactive")
 - per-event **program-status chips** (New / Ongoing / Reinstate)
 
 Several code paths compute overlapping-but-distinct classifications with subtle
@@ -28,10 +29,17 @@ decisions that resolve the ambiguities so they're written down once.
   `"Facilitator"`** (trimmed, case-sensitive). No fuzzy/`LIKE` matching; "Lead
   Facilitator" and "facilitator" do **not** count. See `Affiliation#facilitator?`
   and the `.facilitators` scope.
-- **Active affiliation** — `inactive == false` **and** (`end_date` is null or
-  `>= today`). `inactive` is a cached column derived from the dates on save
-  (`set_inactive_from_dates`: `inactive = end_date.present? && end_date < today`),
-  so in practice "active" reduces to **no end date, or end date ≥ today**.
+- **Active affiliation** — `inactive == false`, **started** (`start_date` is null
+  or `<= today`), **and** not ended (`end_date` is null or `>= today`). A row whose
+  `start_date` is still in the future is **Upcoming**, not Active. `inactive` is a
+  cached column derived from the end date on save (`set_inactive_from_dates`:
+  `inactive = end_date.present? && end_date < today`). See `Affiliation#active?` /
+  `#status_on` and the `.active` scope.
+- **Upcoming affiliation** — `inactive == false` and `start_date > today` (a
+  facilitator scheduled but not yet started, e.g. dated to a future training). See
+  `Affiliation#upcoming?`. The looser `.active_or_pending` scope counts Active
+  **and** Upcoming together (used for registration dedup); `.active` counts Active
+  only.
 - **Facilitator-training event** — `events.facilitator_training == true`. The
   only events for which per-event program status is meaningful.
 
@@ -62,19 +70,54 @@ previously rendered its own earliest-start→latest-end span, which collapsed a
 lapse-and-return into a single unbroken range and hid the gap; that is why this
 is a single decorator method rather than per-page view logic.
 
-### D3 — Org-wide status chip: Active / Formerly active / Never active
+### D3 — Org-wide status chip: Active / Upcoming / Formerly active / Never active
 
-Three display buckets (`OrganizationDecorator#organization_status_bucket`), **not
-event-relative**, derived from **facilitator affiliations only**:
+Four display buckets (`OrganizationDecorator#organization_status_bucket`), **not
+event-relative**, derived from **facilitator affiliations only** and checked in
+precedence order:
 
 - Any **active** facilitator affiliation → **Active**
+- Otherwise any **upcoming** (future-start, not yet started) facilitator
+  affiliation → **Upcoming**
 - Facilitator affiliation(s), but **all ended** → **Formerly active**
 - **No** facilitator affiliation → **Never active**
+
+Upcoming is distinct from Formerly active: an org whose only facilitator is
+scheduled for a future training was never active, so it must not read as
+"Formerly active".
 
 The stored `OrganizationStatus` column plays **no part**. It is legacy data that
 was maintained by hand and drifted; an org is "active" because someone is
 facilitating there, not because a column says so. The same rule backs the index
-filter (`Organization.program_status`), so the filter and the chip can't disagree.
+filter (`Organization.program_status`), so the filter and the chip agree.
+
+**The filter dropdown has one more option than the chip.** For an admin the chip
+is only ever one of the four buckets above, so **Inactive is a filter option, not
+an admin chip value** (non-admins are the exception — see the audience rule
+below). Both the organization index and the people directory offer five, in this
+order —
+**Active / Inactive / Upcoming / Formerly active / Never active**
+(`Organization::PROGRAM_STATUS_FILTER_OPTIONS`,
+`Person::FACILITATOR_STATUS_FILTER_OPTIONS`).
+
+**"Inactive" is the not-active umbrella.** It returns everyone/every org that is
+not a currently-active facilitator — Formerly active, Never active (no
+facilitator affiliation at all), **and Upcoming** — because none of them are
+active right now
+(`Organization.program_status("formerly_or_never")`, `Person.facilitators_inactive`).
+Upcoming and Formerly active are the narrower options inside it. So an upcoming
+org/person shows an *Upcoming* chip to an admin and is still found when you filter
+by Inactive.
+
+**Upcoming is an admin-only chip.** Non-admins see a not-yet-started program as
+plain **"Inactive"**, coloured neutrally like Never active (it has never
+facilitated) — the org index is becoming more than admin-facing and must reflect
+the state of the world *today*, not a scheduled future one. Admins keep the
+Upcoming chip, which is the operationally useful distinction. The bucket itself
+is unchanged; only the label and colour collapse
+(`OrganizationDecorator#organization_status_label(admin:)`), and
+`.status_bucket_styles(admin:)` takes the same flag so the edit form's live chip
+can't disagree with the server render for a non-admin owner.
 
 On the edit form this chip **live-updates** from the visible facilitator rows.
 
@@ -86,6 +129,11 @@ active, `Pending`/`Unknown`/missing → never active) so the **org edit form** c
 show a warning where it contradicts the affiliations
 (`OrganizationDecorator#legacy_status_mismatch?`). Nothing else reads it. Expect
 the warning on a fair number of orgs — that is the drift it exists to surface.
+
+The column has no **Upcoming** of its own, so a derived `:upcoming` is compared
+as `:never_active`: a scheduled-but-not-started program is fairly recorded as
+`Pending` (or blank/`Unknown`, which bucket with it), and only a stored
+`Active`/`Reinstate` or `Inactive`/`Suspended` counts as drift.
 
 ### D4 — Program status: New / Ongoing / Reinstate, judged on one anchor date
 

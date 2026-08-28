@@ -57,13 +57,13 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/controllers/` | Rails controllers (admin/, events/, home/) | ~91 files |
+| `app/controllers/` | Rails controllers (admin/, events/, home/) | ~92 files |
 | `app/views/` | ERB templates | ~824 files |
 | `app/decorators/` | Draper decorators for view logic | ~50 files |
 | `app/policies/` | ActionPolicy authorization rules | ~63 files |
 | `app/presenters/` | Presentation objects | 6 files |
-| `app/helpers/` | View helpers | ~36 files |
-| `app/mailers/` | ActionMailer classes | 5 files |
+| `app/helpers/` | View helpers | ~37 files |
+| `app/mailers/` | ActionMailer classes | 6 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
 ### Frontend
@@ -104,7 +104,7 @@ This codebase (Rails 8.1)
 | `Resource` | Handouts, toolkits, templates with downloadable assets |
 | `Person` | Organization affiliates with contacts, addresses, sectors |
 | `StaffTag` | Internal, admin-only label for people (talent pipeline / roster / outreach — "Potential future trainer", "DV Leadership Cohort"). Admin-CRUD'd; `Publishable` (`published` flag) retires a tag from the pickers without deleting; never shown publicly (`StaffTagPolicy` gates every action + relation scope). Applied via the polymorphic `StaffTagging` join (`StaffTaggable` concern, Person today). Starter set seeded in db/seeds.rb |
-| `StaffTagging` | Polymorphic join linking a `StaffTag` to the record it tags (`staff_taggable`); `created_by`/`updated_by` (stamped from `Current.user`) record which admin applied and last touched it. Has its own admin edit page (`StaffTaggingsController`, `/staff_taggings/:id/edit`) rendering the shared comments & communications section (`Communicable` + `commentable`), with communications keyed on the taggable person's email |
+| `StaffTagging` | Polymorphic join linking a `StaffTag` to the record it tags (`staff_taggable`); `created_by`/`updated_by` (stamped from `Current.user`) record which admin applied and last touched it. Has its own admin edit page (`StaffTaggingsController`, `/staff_taggings/:id/edit`) rendering the shared comments & communications section (`Communicable` + `commentable`) and a tag reassignment select, with communications keyed on the taggable person's email; plus a searchable/filterable index (`/staff_taggings`, `search_by_params` over tag + tagged person's name/email/org) |
 | `OtherResponse` | A free-text "Other" typed on a form question, captured at submission time (registration, scholarship, bulk payment). Polymorphic `owner`: a **sector** "Other" is owned by the `Person` (promotable into a `Sector`, shown on their profile/edit chip); an **organization_type** "Other" is owned by the `Organization` (stored now, not promotable until `OrganizationType` is a model). `generic` questions aren't captured — that stays searchable in the form answers. `field_identifier` records the question; `kind` is derived. Curated at `/other_responses` (grouped by kind/question): `promote` (sectors only), `keep`, `dismiss`. `dismissed` hides the chip from the profile but stays in the review queue (still promotable later); only `promoted` leaves the queue. Admins deep-link there from a person's chip. |
 | `Organization` | Groups with affiliations, addresses, logos via ActiveStorage |
 | `Grant` | Funds (polymorphic `funder`: Organization or Person) with eligibility criteria, tasks, deadlines; parent of `Scholarship`. Scholarship totals cannot exceed the grant amount |
@@ -238,6 +238,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `FormResponseAggregator` — Rolls up every submission to one form into a per-question report for the `/forms/:id/results` page (`FormsController#results`): selectable questions become chartable `[ label, count ]` tallies (sector/age-group ids resolved to names, `Other: <text>` write-ins split into their own list), geographic fields (`mailing_state`/`organization_state`/`ce_license_issuing_state` → US map, `mailing_country`/`organization_country` → world map) become choropleths, free-text questions become newest-first answer lists, file questions a count. Returns `FieldReport` structs in form order; rendered via the shared `events/_breakdown_card` partial (pie/bar/map/world_map) plus `forms/_text_responses_card`
 - `ModelDeduper` — Deduplication logic
 - `RichTextMigrator` — Rich text migration utility
+- `EventRegistrationImporter` — Bulk-imports attended registrants into one existing event from an uploaded CSV (stdlib `csv`, columns FirstName/LastName/Organization/EMail). Simulates the registration a real submission would create: matches the person on PublicRegistration's rule (email + last name + first/legal-name tolerance) — created (attributed to the importing admin) only on a miss; finds-or-creates the EventRegistration and forces it to `attended`; and leaves the import's OWN `FormSubmission` (role registration, marked `imported_from` in metadata) + FormAnswers for the name/email/organization — created alongside, never in place of, a real registrant's submission — so an **unmatched** org lands in the same admin "link organization" reconciliation queue as a live reg. Idempotent: re-running reuses that marked submission instead of duplicating it. A **matched** org is linked (EventRegistrationOrganization, pinned to the submission) and, on a facilitator-training event, gets a `AffiliationServices::CreateFromRegistration` facilitator affiliation. Sends **no emails** and never creates organizations. Requires the event to have a registration form with an org field (`.importable?`). Runs in a transaction with a `dry_run` mode that rolls back for the preview; returns a `Result` + per-row `RowPreview`s. Drives `EventRegistrationImportsController` (`event_registrations/import`, admin-only via `EventRegistrationPolicy#import?`)
 - `StoryImporter` — Imports stories from a WordPress Posts Export CSV. Every row becomes a Story (published per the WP Status); a non-AWBW author's story also gets a promoted StoryIdea. Resolves the author Person from the facilitator name (unresolvable names kept as a Comment), converts content via wpautop, translates Categories/Tags/User Categories/who_is_your_story_about into Sectors + Categories via `config/story_import_sector_mapping.yml`, resolves orgs via `config/story_import_organization_mapping.yml`, links grant-tagged stories through the author's Scholarship, enqueues a `StoryAssetImportJob` per story to download its "Image URL" images in the background, and returns a row-by-row preview for the dry-run interstitial
 - `AssetUrlImporter` — Downloads a remote file URL and attaches the bytes to ActiveStorage on the given owner as an Asset (open-uri → attach); the subclass's content-type validation still applies
 - `FeatureCatalog` — Syncs the checked-in feature seed (`config/features.yml`) into the `Feature` table behind the `/features` page (the "Sync latest updates" button). `#import!` (matched by `name`) creates missing features, re-aligns catalog-owned classification (`CATALOG_FIELDS` — area, display_status, released_on, action_path, pr_number, so seed corrections propagate), and fills blank admin content (`CONTENT_FIELDS` — summary, pro_tips, external_url, rhino_description) without overwriting it; returns a `Result` (`created`/`updated`)
@@ -352,6 +353,7 @@ end
 - `EventMailer` — Event registration confirmations
 - `NotificationMailer` — Notification delivery
 - `ContactUsMailer` — Contact form submissions
+- `ScholarshipMailer` — Trainings-team FYI on a recipient's agreement response (accept / decline / request additional support)
 - All use premailer-rails for inline CSS
 - **Previews** live in `test/mailers/previews/` (viewable at `/rails/mailers/` in development)
 
@@ -440,14 +442,14 @@ Tailwind only scans the paths listed in the `@source` directives at the top of t
 
 | Directory | Count | Purpose |
 |---|---|---|
-| `spec/models/` | ~71 | Model unit tests |
-| `spec/views/` | ~77 | View template tests |
-| `spec/requests/` | ~91 | HTTP request/integration tests |
-| `spec/system/` | ~20 | End-to-end browser tests (Capybara) |
-| `spec/routing/` | ~15 | Route definition tests |
-| `spec/policies/` | ~15 | Authorization policy tests |
-| `spec/decorators/` | ~15 | Decorator tests |
-| `spec/services/` | ~25 | Service object tests |
+| `spec/models/` | ~86 | Model unit tests |
+| `spec/views/` | ~82 | View template tests |
+| `spec/requests/` | ~137 | HTTP request/integration tests |
+| `spec/system/` | ~25 | End-to-end browser tests (Capybara) |
+| `spec/routing/` | ~18 | Route definition tests |
+| `spec/policies/` | ~19 | Authorization policy tests |
+| `spec/decorators/` | ~29 | Decorator tests |
+| `spec/services/` | ~68 | Service object tests |
 | `spec/mailers/` | ~5 | Mailer tests |
 | `spec/helpers/` | ~5 | Helper tests |
 | `spec/factories/` | ~67 | FactoryBot factory definitions |

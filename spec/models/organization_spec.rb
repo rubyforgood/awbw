@@ -248,6 +248,7 @@ RSpec.describe Organization do
     end
 
     let!(:active_fac) { org_with("Suspended", start_date: 1.year.ago, end_date: nil) }
+    let!(:upcoming_fac) { org_with("Active", start_date: 1.month.from_now, end_date: nil) }
     let!(:lapsed_fac) { org_with("Active", start_date: 3.years.ago, end_date: 1.year.ago) }
     let!(:no_fac) { org_with("Active") }
     let!(:non_fac_only) do
@@ -260,7 +261,11 @@ RSpec.describe Organization do
       expect(Organization.program_status("active")).to contain_exactly(active_fac)
     end
 
-    it "buckets only-lapsed facilitator affiliations as formerly_active" do
+    it "buckets a not-yet-started facilitator affiliation as upcoming" do
+      expect(Organization.program_status("upcoming")).to contain_exactly(upcoming_fac)
+    end
+
+    it "buckets only-lapsed facilitator affiliations as formerly_active (excludes upcoming)" do
       expect(Organization.program_status("formerly_active")).to contain_exactly(lapsed_fac)
     end
 
@@ -268,8 +273,8 @@ RSpec.describe Organization do
       expect(Organization.program_status("never_active")).to contain_exactly(no_fac, non_fac_only)
     end
 
-    it "combines formerly + never" do
-      expect(Organization.program_status("formerly_or_never")).to contain_exactly(lapsed_fac, no_fac, non_fac_only)
+    it "combines formerly + never + upcoming under the Inactive (not-active) umbrella" do
+      expect(Organization.program_status("formerly_or_never")).to contain_exactly(lapsed_fac, no_fac, non_fac_only, upcoming_fac)
     end
   end
 
@@ -438,6 +443,26 @@ RSpec.describe Organization, "scholarship index helpers" do
       event = TimelineEvent.find_by(subject: organization, action: "created")
       entry = event.timeline_entries.find_by(owner: organization)
       expect(entry).to be_present
+    end
+  end
+
+  describe "FileMaker codes" do
+    it "parses a trimmed, de-duplicated list from the column" do
+      org = build(:organization, filemaker_code: " FM1 , FM2,FM1 ")
+
+      expect(org.filemaker_codes).to eq(%w[FM1 FM2])
+    end
+
+    it "is empty when the column is blank" do
+      expect(build(:organization, filemaker_code: nil).filemaker_codes).to eq([])
+    end
+
+    it "combines mixed strings and lists into one sorted normalized value" do
+      expect(Organization.join_filemaker_codes("FM2, FM1", " FM3 ", nil, "FM1")).to eq("FM1, FM2, FM3")
+    end
+
+    it "returns nil when there is nothing to combine" do
+      expect(Organization.join_filemaker_codes(nil, "")).to be_nil
     end
   end
 end

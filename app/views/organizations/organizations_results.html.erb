@@ -1,7 +1,7 @@
 <%= turbo_frame_tag :organizations_results do %>
   <%= turbo_stream.replace("organizations_count", partial: "organizations_count") %>
 
-  <div class="rounded bg-white p-6 animate-fade blur-on-submit">
+  <div class="border-primary/10 animate-fade blur-on-submit rounded-2xl border bg-white p-6">
     <% if @organizations.any? %>
       <div class="overflow-x-auto">
         <table class="min-w-full border border-gray-200 rounded divide-y divide-gray-200">
@@ -49,7 +49,7 @@
               </td>
 
               <td class="px-4 py-2 text-sm text-gray-700 whitespace-nowrap">
-                <%= organization.decorate.program_since_chip(@program_since_display[organization.id]) %>
+                <%= organization.decorate.program_since_chip(@program_since_display[organization.id], admin: allowed_to?(:manage?, Organization)) %>
               </td>
 
               <td class="px-4 py-2 text-center text-sm">

@@ -5,7 +5,10 @@ class FormSubmissionsController < ApplicationController
     authorize! FormSubmission
 
     @person = Person.find_by(id: params[:person_id]) if params[:person_id].present?
-    @form = Form.find_by(id: params[:form_id]) if params[:form_id].present?
+    # The eyebrow/heading only names a single form; when several are selected the
+    # results say "across N forms" instead, so @form stays nil.
+    @form_ids = Array(params[:form_id]).reject(&:blank?)
+    @form = Form.find_by(id: @form_ids.first) if @form_ids.one?
 
     if turbo_frame_request?
       @form_submissions = FormSubmission.search_by_params(params)
@@ -92,8 +95,13 @@ class FormSubmissionsController < ApplicationController
   # {submission_id => [Organization]} for the directly-linked orgs across the page,
   # in one query, so the index can show the linked org chips without an N+1 over
   # each submission's metadata id list.
+  # Both direct links per submission (ADR-0002 D5): the metadata ids, plus the
+  # registration-org rows pinned to these submissions — one query for the page.
   def linked_orgs_for(submissions)
     ids_by_submission = submissions.to_h { |submission| [ submission.id, submission.linked_organization_ids ] }
+    EventRegistrationOrganization.where(form_submission_id: ids_by_submission.keys)
+      .pluck(:form_submission_id, :organization_id)
+      .each { |submission_id, organization_id| ids_by_submission[submission_id] |= [ organization_id ] }
     all_ids = ids_by_submission.values.flatten.uniq
     orgs = all_ids.any? ? Organization.where(id: all_ids).index_by(&:id) : {}
     ids_by_submission.transform_values { |ids| ids.filter_map { |id| orgs[id] } }
@@ -129,17 +137,30 @@ class FormSubmissionsController < ApplicationController
     Organization.where("LOWER(name) = ?", name.downcase).exists? ? [] : [ name ]
   end
 
-  # The org this submission resolves to: an explicitly linked one first (an
-  # admin's resolution, which survives a submitted name that doesn't match the
-  # org), else the org whose name matches the submitted answer among the
-  # person's active affiliations — the same rule as the index's Linked chip.
+  # The org this submission resolves to, by direct link only — an affiliation the
+  # person happens to hold under the submitted name is not a link. Two links
+  # carry it: the explicit one an admin recorded on the submission (which
+  # survives a submitted name that doesn't match the org it resolved to), and
+  # the registration-org row this submission is pinned to (public registration
+  # pins the submission as it creates the link).
   def matched_organization
-    explicit = @form_submission.linked_organizations.first
-    return explicit if explicit
-    return if @submitted_org_name.blank?
+    @form_submission.linked_organizations.first || registration_linked_organization
+  end
 
-    @person.affiliations.select { |a| a.active? && a.organization.name.casecmp?(@submitted_org_name.strip) }
-           .map(&:organization).first
+  # The org on the registration-org link pinned to this submission. Rows created
+  # before that pin existed fall back to the registration's sole linked org — the
+  # same single-org rule the registration editor pairs submitted answers by.
+  def registration_linked_organization
+    return if @form_submission.person_id.blank?
+
+    pinned = EventRegistrationOrganization.find_by(form_submission_id: @form_submission.id)
+    return pinned.organization if pinned
+    return if @form_submission.event_id.blank?
+
+    links = EventRegistrationOrganization.joins(:event_registration).where(
+      event_registrations: { event_id: @form_submission.event_id, registrant_id: @form_submission.person_id }
+    )
+    links.sole.organization if links.count == 1
   end
 
   def profile_diff_for(organization)
