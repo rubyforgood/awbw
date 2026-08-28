@@ -1,0 +1,26 @@
+<%# Shared shell for an index page: the brand card (rainbow rule, rounded corners,
+    soft domain border) over the domain's own tint, then the serif title with an
+    optional eyebrow, subtitle and right-hand actions, and the page body as a block.
+    locals: domain (a DomainTheme key), title; optional eyebrow, subtitle,
+    actions (captured markup), surface (defaults to the domain's 50 tint). %>
+<% surface = local_assigns[:surface].presence || DomainTheme.bg_class_for(domain, intensity: 50) %>
+<div class="<%= surface %> <%= DomainTheme.border_class_for(domain, intensity: 200) %> mx-auto w-full max-w-7xl overflow-hidden rounded-2xl border shadow-sm">
+  <%= render "shared/brand_accent_strip" %>
+  <div class="w-full p-6">
+    <div class="mb-6 flex items-start justify-between gap-4">
+      <div class="pr-6">
+        <% if local_assigns[:eyebrow].present? %>
+          <span class="text-2xs font-semibold tracking-widest uppercase <%= DomainTheme.text_class_for(domain, intensity: 700) %>"><%= eyebrow %></span>
+        <% end %>
+        <h1 class="text-primary font-display text-3xl"><%= title %></h1>
+        <% if local_assigns[:subtitle].present? %>
+          <div class="mt-2 max-w-3xl text-gray-600"><%= subtitle %></div>
+        <% end %>
+      </div>
+      <% if local_assigns[:actions].present? %>
+        <div class="flex flex-wrap items-center justify-end gap-3 text-right"><%= actions %></div>
+      <% end %>
+    </div>
+    <%= yield %>
+  </div>
+</div>

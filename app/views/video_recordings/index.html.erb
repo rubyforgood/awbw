@@ -1,53 +1,36 @@
 <% content_for(:page_bg_class, "public") %>
 <%= render "shared/public_welcome_banner" %>
 
-<div class="w-full max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:video_recordings, intensity: @video_type == "instructional" ? 100 : 50) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="w-full">
-    <div class="flex items-start justify-between mb-6">
-      <div class="pr-6">
-        <h2 class="text-2xl font-semibold mb-2">
-          <% if @video_type == "instructional" %>
-            Instructional videos
-          <% else %>
-            Videos
-          <% end %>
-        </h2>
+<% instructional = @video_type == "instructional" %>
+<% actions = capture do %>
+  <% if instructional %>
+    <%= link_to "See all Videos", video_recordings_path(video_type: "all"), class: "block text-sm #{eyebrow_link_class} px-2 py-1" %>
+  <% end %>
+  <% if allowed_to?(:new?, VideoRecording) %>
+    <%= link_to "New #{VideoRecording.model_name.human.downcase}",
+                 new_video_recording_path,
+                 class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+  <% end %>
+<% end %>
+<% subtitle = if instructional
+     user_signed_in? ?
+       "Our library of step-by-step instructional videos designed to support your journey" :
+       "Step-by-step instructional videos to help you get the most out of our platform"
+   else
+     user_signed_in? ?
+       "Explore videos from the community showcasing impact and inspiring stories" :
+       "A library of videos designed to introduce you to our work and the real-world impact shared by the community we serve"
+   end %>
+<%= render layout: "shared/index_page",
+           locals: { domain: :video_recordings, eyebrow: "Library",
+                     title: instructional ? "Instructional videos" : "Videos",
+                     subtitle: subtitle, actions: actions,
+                     surface: DomainTheme.bg_class_for(:video_recordings, intensity: instructional ? 100 : 50) } do %>
+  <%= render "search_boxes" %>
 
-        <p class="text-gray-600 max-w-4xl">
-          <% if @video_type == "instructional" %>
-            <% if user_signed_in? %>
-              Our library of step-by-step instructional videos designed to support your journey
-            <% else %>
-              Step-by-step instructional videos to help you get the most out of our platform
-            <% end %>
-          <% else %>
-            <% if user_signed_in? %>
-              Explore videos from the community showcasing impact and inspiring stories
-            <% else %>
-              A library of videos designed to introduce you to our work and the real-world impact shared&nbsp;by the community we serve
-            <% end %>
-          <% end %>
-        </p>
-      </div>
+  <% result_src = video_recordings_path + "?" + request.query_string %>
 
-      <div class="text-right space-y-2">
-        <% if @video_type == "instructional" %>
-          <%= link_to "See all Videos", video_recordings_path(video_type: "all"), class: "block text-sm #{eyebrow_link_class} px-2 py-1" %>
-        <% end %>
-        <% if allowed_to?(:new?, VideoRecording) %>
-          <%= link_to "New #{VideoRecording.model_name.human.downcase}",
-                       new_video_recording_path,
-                       class: "admin-only bg-blue-100 btn btn-primary-outline" %>
-        <% end %>
-      </div>
-    </div>
-
-    <%= render "search_boxes" %>
-
-    <% result_src = video_recordings_path + "?" + request.query_string %>
-
-    <%= turbo_frame_tag "video_recordings_results", src: result_src do %>
-      <%= render "results_skeleton" %>
-    <% end %>
-  </div>
-</div>
+  <%= turbo_frame_tag "video_recordings_results", src: result_src do %>
+    <%= render "results_skeleton" %>
+  <% end %>
+<% end %>

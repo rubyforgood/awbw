@@ -2513,3 +2513,14 @@
     buttons across the whole portal are brand navy instead of a generic blue.
   pro_tips:
     - "Every form's submit button was being forced to a non-brand blue by a leftover setting; they now use the brand button the views already asked for."
+
+- name: "Public pages in the AWBW brand"
+  area: content
+  display_status: public_facing
+  released_on: 2026-08-28
+  summary: >-
+    Every public listing page — workshops, resources, stories, news, events,
+    videos, FAQs — now carries the awbw.org look, and each keeps its own colour
+    drawn from the AWBW brand palette. Filters, columns and content are unchanged.
+  pro_tips:
+    - "FAQs and workshop variations join the brand palette, so every public listing now uses an official AWBW colour."
