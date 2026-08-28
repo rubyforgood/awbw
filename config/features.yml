@@ -2492,6 +2492,7 @@
   area: content
   display_status: public_facing
   released_on: 2026-08-28
+  pr_number: 2394
   action_path: "/"
   summary: >-
     The portal home page now reads like awbw.org: sections alternate cream and
