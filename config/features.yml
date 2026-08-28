@@ -242,6 +242,21 @@
   pro_tips:
     - "Add ?admin=true to the affiliation editor URL to reveal the registration picker."
 
+- name: "\"Linked\" means a real organization link, everywhere"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-28
+  action_path: "/form_submissions"
+  pr_number: 2336
+  summary: >-
+    A submission reads as linked when an organization is really linked to it or to
+    the registration behind it, not because the person has a same-named
+    affiliation. Public registrations now read as Linked instead of waiting in the
+    Pending queue.
+  pro_tips:
+    - "Pending now means what it says: an organization was typed on the form and nobody has linked it yet."
+    - "The registrants roster gains a \"No org provided\" filter, matching the submissions index."
+
 - name: "Scholarship program status is judged at its own training"
   area: scholarships
   display_status: admin_facing
