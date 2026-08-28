@@ -2306,6 +2306,7 @@
   area: people
   display_status: user_facing
   released_on: 2026-08-27
+  pr_number: 2387
   summary: >-
     The organization profile has been restyled to match awbw.org: a navy hero
     carrying the logo, name, location, and contact details, and the rest of the
