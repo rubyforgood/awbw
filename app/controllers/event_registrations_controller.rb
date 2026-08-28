@@ -514,12 +514,13 @@ class EventRegistrationsController < ApplicationController
       edit: (cell if reopen), anchor: cell)
   end
 
-  # Events a registrant can be transferred into: published events of the same
-  # format as the one they're leaving — an on-demand event only transfers to
-  # another on-demand event, and a scheduled (non-on-demand) event only to
-  # another scheduled event — excluding the source event, most recent first.
+  # Events a registrant can be transferred into: events of the same format as
+  # the one they're leaving — an on-demand event only transfers to another
+  # on-demand event, and a scheduled (non-on-demand) event only to another
+  # scheduled event — whether or not they're published, excluding the source
+  # event, most recent first.
   def transfer_destination_events
-    Event.where(published: true, on_demand: @event_registration.event.on_demand)
+    Event.where(on_demand: @event_registration.event.on_demand)
          .where.not(id: @event_registration.event_id)
          .order(start_date: :desc)
   end

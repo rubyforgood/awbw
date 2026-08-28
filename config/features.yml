@@ -41,6 +41,14 @@
   pro_tips:
     - "Presentation only — every section, badge, and permission on the profile works exactly as before."
 
+- name: "Transfer registrants into unpublished events"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-28
+  summary: >-
+    The transfer-out destination list now includes same-format events that aren't
+    published yet, so a registrant can be moved into an event that's still being set up.
+
 - name: "Transferred-in attendance days are preserved"
   area: registration
   display_status: admin_facing
