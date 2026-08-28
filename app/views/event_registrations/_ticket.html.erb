@@ -4,21 +4,20 @@
   <%= render "event_registrations/transfer_notice", event_registration: event_registration %>
   <!-- Ticket Container -->
   <div class="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
+    <%= render "shared/brand_accent_strip" %>
     <!-- Ticket Header -->
-    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 px-6 py-5 text-white sm:px-8">
+    <div class="bg-primary px-6 py-5 text-white sm:px-8">
       <div class="flex items-center gap-5">
         <div class="shrink-0"><%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %></div>
 
         <div class="flex-1">
-          <h1 class="text-xl leading-tight font-semibold tracking-wide">Registration ticket</h1>
+          <h1 class="font-display text-2xl leading-tight font-semibold tracking-tight">Registration ticket</h1>
         </div>
       </div>
-
-      <div class="from-accent to-accent absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r via-amber-400"></div>
     </div>
 
     <!-- Ticket Body -->
-    <div class="space-y-5 bg-gray-50 px-6 py-6">
+    <div class="bg-brand-cream space-y-5 px-6 py-6">
       <!-- Event thumbnail + title -->
       <div class="flex items-center justify-center gap-4">
         <%= render "assets/display_image",
@@ -30,12 +29,12 @@
 
         <div class="min-w-0 text-left">
           <% if event_registration.event.respond_to?(:pre_title) && event_registration.event.pre_title.present? %>
-            <p class="mb-0.5 text-sm font-semibold text-gray-700" style="font-family: 'Telefon Bold', sans-serif"><%= event_registration.event.pre_title %></p>
+            <p class="mb-0.5 font-telefon text-sm font-semibold text-gray-700"><%= event_registration.event.pre_title %></p>
           <% end %>
 
-          <h2 class="text-2xl leading-tight font-bold text-green-800" style="font-family: Lato, sans-serif"><%= link_to event_registration.event.title, event_path(event_registration.event, reg: event_registration.slug), class: "hover:underline" %></h2>
+          <h2 class="text-primary font-display text-2xl leading-tight"><%= link_to event_registration.event.title, event_path(event_registration.event, reg: event_registration.slug), class: "hover:underline" %></h2>
 
-          <p class="mt-0.5 text-sm font-semibold text-blue-900" style="font-family: Lato, sans-serif"><%= event_registration.event.decorate.times(display_day: true, display_date: true) %></p>
+          <p class="text-primary mt-0.5 text-sm font-semibold"><%= event_registration.event.decorate.times(display_day: true, display_date: true) %></p>
 
           <%
             venue = if event_registration.event.autoshow_videoconference_label && event_registration.event.videoconference_label.present?
@@ -54,8 +53,8 @@
       <!-- Divider (perforation style) -->
       <div class="relative my-6">
         <div class="border-t border-dashed border-gray-300"></div>
-        <div class="absolute top-1/2 -left-3 h-6 w-6 -translate-y-1/2 rounded-full bg-gray-100"></div>
-        <div class="absolute top-1/2 -right-3 h-6 w-6 -translate-y-1/2 rounded-full bg-gray-100"></div>
+        <div class="absolute top-1/2 -left-3 h-6 w-6 -translate-y-1/2 rounded-full bg-white"></div>
+        <div class="absolute top-1/2 -right-3 h-6 w-6 -translate-y-1/2 rounded-full bg-white"></div>
       </div>
 
       <!-- Registrant -->
@@ -162,7 +161,7 @@
       <% end %>
 
       <!-- Divider -->
-      <div class="border-t border-gray-200"></div>
+      <div class="border-primary/10 border-t"></div>
 
       <!-- Status -->
       <div class="space-y-2 text-center">
@@ -204,7 +203,7 @@
         </div>
 
         <!-- Add to calendar (secondary utility, kept at the bottom) -->
-        <div class="flex flex-col items-center border-t border-gray-100 pt-5">
+        <div class="border-primary/10 flex flex-col items-center border-t pt-5">
           <div class="mb-2 flex items-center gap-1">
             <p class="text-xs font-bold tracking-wide text-gray-400 uppercase">
               Add to your calendar
