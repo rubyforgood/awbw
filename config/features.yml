@@ -2518,9 +2518,11 @@
   area: content
   display_status: public_facing
   released_on: 2026-08-28
+  pr_number: 2398
   summary: >-
-    Every public listing page — workshops, resources, stories, news, events,
-    videos, FAQs — now carries the awbw.org look, and each keeps its own colour
-    drawn from the AWBW brand palette. Filters, columns and content are unchanged.
+    The public pages now carry the awbw.org look: every listing keeps its own
+    colour from the AWBW brand palette, and the registration and payment pages
+    get the same navy header the ticket has. Content and filters are unchanged.
   pro_tips:
     - "FAQs and workshop variations join the brand palette, so every public listing now uses an official AWBW colour."
+    - "The public event page, registration form and bulk payment pages lose the old purple header and green headline."
