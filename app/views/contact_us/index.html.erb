@@ -2,7 +2,6 @@
 <%= render "shared/public_welcome_banner" unless @from_story_share %>
 
 <% profile_return_path = (edit_person_path(current_user.person, anchor: "affiliations") if @return_to == "person_edit" && current_user&.person) %>
-<div class="px-4 py-8 sm:px-6 lg:px-8">
 <div class="border-primary/10 mx-auto w-full max-w-7xl overflow-hidden rounded-2xl border bg-white shadow-sm" id="contact-us-container">
   <%= render "shared/brand_accent_strip" %>
   <div class="p-6">
@@ -307,4 +306,3 @@
       <% end %>
   </div>
     </div>
-</div>
