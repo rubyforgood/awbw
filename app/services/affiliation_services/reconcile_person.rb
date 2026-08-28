@@ -138,13 +138,19 @@ module AffiliationServices
       affiliation.comments.any? { |comment| comment.topic == COMMENT_TOPIC }
     end
 
-    # This row is ended, and ended exactly where reconciling THIS training would end
-    # it. So the ending is ours and rests on the attendance we are now re-reading —
-    # not on a real lapse, which is the only thing a second row should record.
+    # This row is ended where reconciling THIS training would end it. So the ending is
+    # ours and rests on the attendance we are now re-reading — not on a real lapse,
+    # which is the only thing a second row should record.
+    #
+    # Within a day, not exactly: the stored date was derived from the event's
+    # timestamp in whichever zone the admin who ran reconciliation was in, and this
+    # comparison usually runs in a different one (ApplicationController sets the zone
+    # per user). No pair of zones differs by more than a calendar day, and an earlier
+    # training's ending is years away, so the window stays unambiguous.
     def ended_for_this_training?(affiliation)
-      return false if affiliation.end_date.nil?
+      return false unless affiliation.end_date && ended_by_reconciliation?(affiliation)
 
-      affiliation.end_date == deactivation_end_date(affiliation) && ended_by_reconciliation?(affiliation)
+      (affiliation.end_date - deactivation_end_date(affiliation)).abs <= 1
     end
 
     # The event is over and nobody said what happened. Distinct from cancelled or

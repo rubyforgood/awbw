@@ -363,6 +363,30 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       expect(person.affiliations.facilitators.active.where(organization: organization).count).to eq(1)
     end
 
+    # The end date is derived from the event's timestamp in the ambient zone, and a
+    # request runs in the signed-in user's — so the writer and the reader routinely
+    # disagree by a calendar day.
+    it "still recognises its own ending when read back in another time zone" do
+      event = create(:event, facilitator_training: true, start_date: 14.days.ago.change(hour: 5),
+                             end_date: 12.days.ago.change(hour: 17), registration_close_date: 20.days.ago)
+      reg = create(:event_registration, registrant: person, event: event, status: "no_show")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+      create(:affiliation, person: person, organization: organization, title: "Facilitator",
+                           start_date: 2.years.ago.to_date)
+      described_class.call(person: person, organization: organization, event: event,
+                           registration: reg, include_unowned: true)
+      reg.update!(status: "attended")
+
+      # Loaded inside the zone: an already-materialized timestamp keeps the zone it
+      # was first read in, which is not how a request sees it.
+      plan = Time.use_zone("Hawaii") do
+        described_class.new(person: person, organization: organization, event: Event.find(event.id),
+                            registration: reg, include_unowned: true).plan
+      end
+
+      expect(plan.map(&:action)).to eq([ :reactivate ])
+    end
+
     it "plans that reopen as :reactivate, with no create alongside it" do
       reg = training_registration(status: "no_show")
       create(:affiliation, person: person, organization: organization, title: "Facilitator",

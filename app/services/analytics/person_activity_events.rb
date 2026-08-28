@@ -7,7 +7,9 @@ module Analytics
   # their uploads, agreement responses). Powers the person edit "History" card
   # and the `person_id` filter on the admin Ahoy activities index.
   class PersonActivityEvents
-    PAYMENT_TYPES = %w[ Payment FilemakerPayment ExternalProcessorPayment CheckPayment CashPayment ].freeze
+    # A lifecycle event records the STI subclass it was fired on ("CashPayment"),
+    # never the base class, so each subclass needs its own key against the same ids.
+    PAYMENT_SUBCLASSES = %w[ FilemakerPayment ExternalProcessorPayment CheckPayment CashPayment ].freeze
 
     def initialize(person)
       @person = person
@@ -56,8 +58,7 @@ module Analytics
         # Uploads only reach a person through the form answer that owns them.
         "Asset" => Asset.where(owner_type: "FormAnswer", owner_id: answer_ids).select(:id),
         "Grant" => @person.grants.select(:id),
-        # Lifecycle events record the STI subclass ("CashPayment", …), not "Payment".
-        PAYMENT_TYPES => payment_ids,
+        "Payment" => payment_ids,
         "Allocation" => allocation_ids,
         "Refund" => refund_ids,
         "MembershipInvoice" => @person.membership_invoices.select(:id),
@@ -73,6 +74,7 @@ module Analytics
         "WorkshopVariation" => @person.workshop_variations_as_author.select(:id),
         "WorkshopVariationIdea" => WorkshopVariationIdea.created_by_person(@person.id).select(:id)
       }
+      PAYMENT_SUBCLASSES.each { |type| map[type] = payment_ids }
       if (user = @person.user)
         map["User"] = [ user.id ]
         map["WorkshopLog"] = user.workshop_logs.select(:id)
