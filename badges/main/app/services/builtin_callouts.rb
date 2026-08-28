@@ -201,10 +201,11 @@ class BuiltinCallouts
         icon_class: "fa-solid fa-credit-card",
         color_class: "orange",
         hidden: ->(_event) { true },
-        # The W-9 is a removable linked resource, included by default only on paid
-        # events (where a tax form applies); the invoice/receipt stay dynamic on
-        # the payment page. Admins add/remove it per event.
-        resources: -> { @event.cost_cents.to_i.positive? ? [ Resource.find_by(title: "W-9") ].compact : [] },
+        # The W-9 is a removable linked resource, always linked so free→paid needs
+        # no backfill. It stays dormant on a free event — the payment surface (and
+        # its documents) only renders once the event has a cost. Admins add/remove
+        # it per event; the invoice/receipt stay dynamic on the payment page.
+        resources: -> { [ Resource.find_by(title: "W-9") ].compact },
         # Its card subtitle is materialized here (admin-editable), not hard-coded in the view.
         resource_content: {
           "W-9" => { subtitle: "AWBW's W-9 tax form for your records" }
