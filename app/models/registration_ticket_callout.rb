@@ -154,7 +154,11 @@ class RegistrationTicketCallout < ApplicationRecord
   # linked resources. Drives whether the ticket card links to a page and shows the
   # trailing "go to page" arrow.
   def page_content?
-    description.present? || resources.any?
+    description.present? || resources.any? || delivers_form?
+  end
+
+  def delivers_form?
+    form_id.present?
   end
 
   # The Payment built-in's visibility is driven entirely by live balance status,

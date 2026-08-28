@@ -29,5 +29,47 @@
         <% end %>
       </div>
     <% end %>
+
+    <% if @callout.delivers_form? %>
+      <div class="mt-6">
+        <% if @registration.nil? %>
+          <p class="rounded-lg bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-gray-600">
+            Registrants see <strong><%= @form.name %></strong> here to fill out.
+          </p>
+
+        <% elsif @submission && !@editing %>
+          <div class="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800 mb-5">
+            <i class="fa-solid fa-check mr-1"></i> Thanks — your responses are recorded.
+          </div>
+          <dl class="space-y-4">
+            <% @submission.form_answers.includes(:form_field).order(:id).each do |answer| %>
+              <div>
+                <dt class="text-sm font-semibold text-gray-900"><%= answer.question_name_when_answered.presence || answer.form_field&.name %></dt>
+                <dd class="text-sm text-gray-700 whitespace-pre-line"><%= answer.submitted_answer.presence || "—" %></dd>
+              </div>
+            <% end %>
+          </dl>
+          <div class="mt-6">
+            <%= link_to "Edit responses", event_registration_ticket_callout_path(@event, @callout, reg: @registration.slug, edit: 1),
+                  class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+          </div>
+
+        <% else %>
+          <%= form_with url: submit_form_event_registration_ticket_callout_path(@event, @callout, reg: @registration.slug), method: :post do %>
+            <div class="space-y-2">
+              <% @form.form_fields.order(:position).each do |field| %>
+                <% if field.group_header? %>
+                  <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-400 border-b border-gray-100 pb-1 pt-2"><%= field.name %></h2>
+                <% else %>
+                  <%= render "events/public_registrations/form_field", field: field, param_scope: "callout_form",
+                        value: @submission&.form_answers&.find_by(form_field: field)&.submitted_answer %>
+                <% end %>
+              <% end %>
+            </div>
+            <%= submit_tag "Submit", class: "mt-2 rounded-lg #{DomainTheme.bg_class_for(:forms, intensity: 600)} #{DomainTheme.bg_class_for(:forms, intensity: 600, hover: true)} px-4 py-2 text-sm font-semibold text-white cursor-pointer" %>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
   <% end %>
 <% end %>

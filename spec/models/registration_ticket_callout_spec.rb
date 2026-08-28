@@ -126,6 +126,12 @@ RSpec.describe RegistrationTicketCallout, type: :model do
       expect(persisted.page_content?).to be(true)
     end
 
+    it "is true with an attached form" do
+      callout.description = ""
+      callout.form = create(:form)
+      expect(callout.page_content?).to be(true)
+    end
+
     it "is false with no description and no resources" do
       callout.description = ""
       expect(callout.page_content?).to be(false)
