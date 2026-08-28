@@ -3,7 +3,7 @@
     supplied as a block. Mirrors `shared/_index_page` for the listing pages.
     locals: domain (a DomainTheme key); optional surface, extra_class. %>
 <% surface = local_assigns[:surface].presence || DomainTheme.bg_class_for(domain, intensity: 50) %>
-<div class="<%= surface %> <%= DomainTheme.border_class_for(domain, intensity: 200) %> <%= local_assigns[:extra_class] %> mx-auto w-full max-w-7xl overflow-hidden rounded-2xl border shadow-sm">
-  <%= render "shared/brand_accent_strip" %>
+<div class="<%= surface %> <%= DomainTheme.border_class_for(domain, intensity: 200) %> <%= local_assigns[:extra_class] %> mx-auto w-full max-w-7xl rounded-2xl border shadow-sm">
+  <%= render "shared/brand_accent_strip", rounded: true %>
   <div class="p-6"><%= yield %></div>
 </div>

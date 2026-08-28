@@ -4,8 +4,8 @@
     locals: domain (a DomainTheme key), title; optional eyebrow, subtitle,
     actions (captured markup), surface (defaults to the domain's 50 tint). %>
 <% surface = local_assigns[:surface].presence || DomainTheme.bg_class_for(domain, intensity: 50) %>
-<div class="<%= surface %> <%= DomainTheme.border_class_for(domain, intensity: 200) %> mx-auto w-full max-w-7xl overflow-hidden rounded-2xl border shadow-sm">
-  <%= render "shared/brand_accent_strip" %>
+<div class="<%= surface %> <%= DomainTheme.border_class_for(domain, intensity: 200) %> mx-auto w-full max-w-7xl rounded-2xl border shadow-sm">
+  <%= render "shared/brand_accent_strip", rounded: true %>
   <div class="w-full p-6">
     <div class="mb-6 flex items-start justify-between gap-4">
       <div class="pr-6">
