@@ -45,11 +45,6 @@ class OrganizationsController < ApplicationController
       return render partial: "organizations/sections/events", locals: { organization: @organization, events: events }
     end
 
-    if turbo_frame_request? && params[:section] == "timeline"
-      @timeline_events = @organization.timeline_events.includes(:actor, :subject).order(created_at: :desc).paginate(page: params[:page], per_page: 25)
-      return render partial: "organizations/sections/timeline", locals: { organization: @organization, timeline_events: @timeline_events }
-    end
-
     track_view(@organization)
 
     workshop_logs = WorkshopLog.where(organization_id: @organization.id)
@@ -99,6 +94,12 @@ class OrganizationsController < ApplicationController
 
   def edit
     authorize! @organization
+
+    if turbo_frame_request? && params[:section] == "timeline"
+      @timeline_events = @organization.timeline_events.includes(:actor, :subject).order(created_at: :desc).paginate(page: params[:page], per_page: 25)
+      return render partial: "organizations/sections/timeline", locals: { organization: @organization, timeline_events: @timeline_events }
+    end
+
     set_form_variables
   end
 

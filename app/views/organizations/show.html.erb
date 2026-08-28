@@ -237,17 +237,6 @@
         <% end %>
       </div>
     <% end %>
-    <!-- Timeline -->
-    <% if allowed_to?(:manage?, @organization) %>
-      <div class="mt-10">
-        <h2 class="mb-2 text-lg font-semibold text-gray-800">
-          Activity timeline
-        </h2>
-        <%= turbo_frame_tag "organization_timeline_section", src: organization_path(@organization, section: "timeline"), loading: :lazy do %>
-          <p class="text-gray-500 italic">Loading timeline...</p>
-        <% end %>
-      </div>
-    <% end %>
     <hr class="my-8 border-gray-200">
     <% if allowed_to?(:show_workshop_logs?, @organization) %>
         <div class="organization-only <%= DomainTheme.bg_class_for(:user_only) %>
