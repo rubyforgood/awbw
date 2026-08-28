@@ -32,7 +32,7 @@
             <p class="mb-0.5 font-telefon text-sm font-semibold text-gray-700"><%= event_registration.event.pre_title %></p>
           <% end %>
 
-          <h2 class="text-primary font-display text-2xl leading-tight"><%= link_to event_registration.event.title, event_path(event_registration.event, reg: event_registration.slug), class: "hover:underline" %></h2>
+          <h2 class="text-primary text-2xl leading-tight font-bold"><%= link_to event_registration.event.title, event_path(event_registration.event, reg: event_registration.slug), class: "hover:underline" %></h2>
 
           <p class="text-primary mt-0.5 text-sm font-semibold"><%= event_registration.event.decorate.times(display_day: true, display_date: true) %></p>
 
