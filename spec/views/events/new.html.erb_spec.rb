@@ -12,6 +12,7 @@ RSpec.describe "events/new", type: :view do
     assign(:registration_forms, [])
     assign(:scholarship_forms, [])
     assign(:bulk_payment_forms, [])
+    assign(:callout_forms, [])
     allow(view).to receive(:current_user).and_return(build_stubbed(:user, :admin))
     allow(view).to receive(:allowed_to?).and_return(true)
   end
