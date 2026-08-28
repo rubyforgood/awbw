@@ -112,6 +112,20 @@ RSpec.describe WorkshopSearchService, type: :service do
       end
     end
 
+    context "sorting by popularity while searching" do
+      # with_bookmarks_count adds a multi-column select; the id subqueries must
+      # emit a single column or MySQL raises "Operand should contain 1 column(s)".
+      it "counts results without a multi-column subquery error" do
+        service = WorkshopSearchService.new({ sort: "popularity", query: "Keyword" }, user: user).call
+        expect { service.workshops.unscope(:select, :order).count }.not_to raise_error
+      end
+
+      it "does not error when combining popularity sort with an author-name search" do
+        service = WorkshopSearchService.new({ sort: "popularity", author_name: "Keyword" }, user: user).call
+        expect { service.workshops.unscope(:select, :order).count }.not_to raise_error
+      end
+    end
+
     context "sorting by author" do
       let!(:workshop_aaron) do
         person = create(:person, first_name: "Aaron", last_name: "Adams")
