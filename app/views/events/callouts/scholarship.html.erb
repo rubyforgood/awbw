@@ -26,28 +26,8 @@
           <p class="text-xs font-medium uppercase tracking-wide text-gray-400"><%= @scholarship.agreement_signed? ? "Amount awarded" : "Amount offered" %></p>
           <p class="mt-1 text-3xl font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@scholarship.amount_cents) %></p>
         </div>
-        <%# Status chip: declined, else pending until the agreement is accepted, then the tasks state. %>
-        <% if @scholarship.agreement_declined? %>
-          <span class="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-sm font-medium text-red-700">
-            <i class="fa-solid fa-circle-xmark"></i> Declined
-          </span>
-        <% elsif @scholarship.agreement_support_requested? %>
-          <span class="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">
-            <i class="fa-solid fa-hand-holding-dollar"></i> Support requested
-          </span>
-        <% elsif !@scholarship.agreement_signed? %>
-          <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">
-            <i class="fa-solid fa-file-signature"></i> Pending agreement
-          </span>
-        <% elsif @scholarship.tasks_completed? %>
-          <span class="inline-flex items-center gap-1 rounded-full border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> px-3 py-1 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
-            <i class="fa-solid fa-circle-check"></i> Tasks completed
-          </span>
-        <% else %>
-          <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">
-            <i class="fa-solid fa-clock"></i> Tasks outstanding
-          </span>
-        <% end %>
+        <%# Lifecycle status chip — the same one the admin sees in the Scholarship details header. %>
+        <%= @scholarship.decorate.lifecycle_status_badge %>
       </div>
 
       <%# What the registrant owes. The award is allocated before it's accepted, so

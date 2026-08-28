@@ -109,4 +109,33 @@ class ScholarshipDecorator < ApplicationDecorator
     h.render "shared/badge", label: label, classes: agreement_status_classes,
              icon: [ agreement_status_icon, icon_size ].compact_blank.join(" ")
   end
+
+  # One lifecycle status chip shared by the admin "Scholarship details" header and
+  # the recipient ticket callout, so both read the same: Declined → Support
+  # requested → Offered → (once accepted) Tasks outstanding → Tasks completed. The
+  # per-event agreement history timeline uses the shorter agreement_status_label.
+  def lifecycle_status_badge(icon_size: "text-xs")
+    label, classes, icon =
+      if object.agreement_declined?
+        [ "Declined", AGREEMENT_STATUS_CLASSES["declined"], "fa-solid fa-circle-xmark" ]
+      elsif object.agreement_support_requested?
+        [ "Support requested", AGREEMENT_STATUS_CLASSES["support_requested"], "fa-solid fa-hand-holding-dollar" ]
+      elsif !object.agreement_signed?
+        [ "Offered", AGREEMENT_STATUS_CLASSES["pending"], "fa-solid fa-file-signature" ]
+      elsif object.tasks_completed?
+        [ "Tasks completed", tasks_completed_classes, "fa-solid fa-circle-check" ]
+      else
+        [ "Tasks outstanding", AGREEMENT_STATUS_CLASSES["pending"], "fa-solid fa-clock" ]
+      end
+    h.render "shared/badge", label: label, classes: classes,
+             icon: [ icon, icon_size ].compact_blank.join(" ")
+  end
+
+  private
+
+  def tasks_completed_classes
+    [ DomainTheme.bg_class_for(:scholarships, intensity: 50),
+      DomainTheme.text_class_for(:scholarships, intensity: 700),
+      DomainTheme.border_class_for(:scholarships, intensity: 200) ].join(" ")
+  end
 end

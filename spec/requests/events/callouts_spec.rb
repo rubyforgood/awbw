@@ -612,7 +612,7 @@ RSpec.describe "Events::Callouts", type: :request do
 
         expect(response).to have_http_status(:success)
         expect(response.body).to include("Amount offered")
-        expect(response.body).to include("Pending agreement")
+        expect(response.body).to include("Offered")
         expect(response.body).to match(/name="agreement" value="yes"/)
       end
 
@@ -622,7 +622,7 @@ RSpec.describe "Events::Callouts", type: :request do
 
         expect(response.body).to include("Amount awarded")
         expect(response.body).to include("Agreement accepted")
-        expect(response.body).not_to include("Pending agreement")
+        expect(response.body).to include("Tasks outstanding")
       end
 
       it "frames the balance as the accept/decline choice while unsigned" do
