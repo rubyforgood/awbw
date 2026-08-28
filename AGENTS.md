@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (78) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (77) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -375,7 +375,6 @@ end
 - `chart_tooltip_footer` — Appends footer lines to a chartkick stacked tooltip (a summed Total and/or per-x pre-formatted lines), configuring the Chart.js callback that can't be passed through the ERB helper
 - `confirm_email` — Email confirmation UI
 - `dirty_form` — Unsaved changes detection
-- `disclosure` — Closes a native `<details>` from a child Cancel button
 - `dismiss` — Dismissable elements
 - `dropdown` — Dropdown menus with keyboard/click-outside handling
 - `edit_toggle` — Inline view/edit toggle for the comments and communications boxes (configurable view/edit CSS classes)
