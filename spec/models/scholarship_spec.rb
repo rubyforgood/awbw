@@ -284,6 +284,30 @@ RSpec.describe Scholarship, type: :model do
       expect(scholarship.allocation.reload.amount).to eq(5_000)
       expect(Scholarship.not_declined).to include(scholarship)
     end
+
+    it "reactivates to pending (re-offering) when the admin changes the amount" do
+      event = create(:event, cost_cents: 10_000)
+      registration = create(:event_registration, event:)
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 5_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 5_000)
+      scholarship.reload
+      scholarship.request_additional_support!(contribution_cents: 2_000)
+
+      scholarship.update!(amount_cents: 7_000)
+
+      expect(scholarship.reload.agreement_pending?).to be(true)
+      expect(scholarship.allocation.reload.amount).to eq(7_000)
+      expect(scholarship.latest_agreement_response).to have_attributes(status: "pending", responder: "admin")
+    end
+
+    it "stays support-requested when an edit doesn't touch the amount" do
+      scholarship = create(:scholarship, amount_cents: 5_000)
+      scholarship.request_additional_support!(contribution_cents: 2_000)
+
+      scholarship.update!(tasks_completed: true)
+
+      expect(scholarship.reload.agreement_support_requested?).to be(true)
+    end
   end
 
   describe "agreement response history" do

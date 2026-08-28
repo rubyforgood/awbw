@@ -61,6 +61,7 @@
   pro_tips:
     - The award stays live — a support request never zeroes it out or drops it from totals.
     - The requested contribution and any note show in the scholarship's agreement history.
+    - Respond by changing the award amount — that re-offers it, so the recipient sees Agree / Request / Decline again.
 
 - name: "Transferred-in attendance days are preserved"
   area: registration

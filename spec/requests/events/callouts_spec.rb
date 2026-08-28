@@ -669,6 +669,20 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(response.body).not_to match(/name="agreement" value="yes"/)
       end
 
+      it "re-offers all three options once the admin changes the amount after a support request" do
+        scholarship.request_additional_support!(contribution_cents: 2_000)
+        get registration_scholarship_path(registration.slug)
+        expect(response.body).to include("You requested additional support")
+        expect(response.body).not_to match(/name="agreement" value="yes"/)
+
+        scholarship.update!(amount_cents: 7_000)
+        get registration_scholarship_path(registration.slug)
+
+        expect(response.body).to match(/name="agreement" value="yes"/)
+        expect(response.body).to match(/name="contribution_amount"/)
+        expect(response.body).to match(/name="decline_reason"/)
+      end
+
       it "hides the agreement history from a registrant (public view)" do
         scholarship.decline_agreement!("Timing no longer works")
         get registration_scholarship_path(registration.slug)

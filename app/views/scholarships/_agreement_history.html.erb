@@ -27,7 +27,8 @@
         <li class="<%= row_class %>">
           <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= status_classes[response.status] %>"><%= response.status.capitalize %></span>
           <span class="text-gray-500"><%= response.responded_at.strftime("%B %-d, %Y at %-l:%M %p") %></span>
-          <% if response.responder.present? %>
+          <%# Recipient self-service is the default; only flag when staff acted for them. %>
+          <% if response.responder.present? && response.responder != "recipient" %>
             <span class="text-gray-400">· by <%= response.responder %></span>
           <% end %>
           <% if response.amount_cents.present? %>

@@ -19,6 +19,11 @@ class Scholarship < ApplicationRecord
   validate :allocation_must_be_valid
   validate :within_grant_budget, if: -> { grant && !agreement_declined? }
 
+  # A support request is really "please revisit my amount," so an admin changing
+  # the amount IS the response: reactivate the offer (back to pending) so the
+  # recipient sees Agree / Request / Decline again. A decline, by contrast, only
+  # reactivates via the explicit Re-offer action.
+  before_update :reoffer_support_request_on_amount_change
   # Allocation is zero while declined, else the amount — keeps allocation-based totals correct.
   after_update :sync_allocation_amount, if: -> { saved_change_to_amount_cents? || saved_change_to_agreement_response_status? }
   after_update :log_agreement_response, if: -> { saved_change_to_agreement_response_status? }
@@ -182,6 +187,17 @@ class Scholarship < ApplicationRecord
     self.agreement_response_status = status
     @agreement_response_reason = (REASON_BEARING_STATUSES.include?(status) ? reason.presence : nil)
     @agreement_response_by = by
+  end
+
+  # Only when the amount alone moves on a still-support-requested award — an
+  # explicit status change in the same save (accept/decline toggle) wins. The
+  # resulting status change logs a "pending" history row via the after_update.
+  def reoffer_support_request_on_amount_change
+    return unless amount_cents_changed?
+    return if agreement_response_status_changed?
+    return unless agreement_support_requested?
+
+    self.agreement_response_status = "pending"
   end
 
   def sync_allocation_amount
