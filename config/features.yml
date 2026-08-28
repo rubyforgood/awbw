@@ -2505,6 +2505,7 @@
   area: people
   display_status: public_facing
   released_on: 2026-08-28
+  pr_number: 2399
   action_path: "/users/sign_in"
   summary: >-
     Signing in, resetting a password, and the confirmation and unlock pages now
