@@ -543,6 +543,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_160913) do
 
   create_table "events", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "abbreviation"
+    t.datetime "affiliations_reconciled_at"
     t.boolean "autoshow_cost", default: true, null: false
     t.boolean "autoshow_date", default: true, null: false
     t.boolean "autoshow_location", default: true, null: false
