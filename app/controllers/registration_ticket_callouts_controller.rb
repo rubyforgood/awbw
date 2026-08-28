@@ -1,5 +1,5 @@
 class RegistrationTicketCalloutsController < ApplicationController
-  skip_before_action :authenticate_user!, only: [ :show, :submit_form ]
+  skip_before_action :authenticate_user!, only: [ :show ]
   before_action :set_event
 
   # Public detail page for a single registration ticket callout, linked from the
@@ -23,36 +23,7 @@ class RegistrationTicketCalloutsController < ApplicationController
     end
 
     @resource_cards = @callout.decorate.resource_cards(registrant_slug: params[:reg].presence, return_to: "callout")
-
-    if @callout.delivers_form? && !@callout.dripping?
-      @registration = registrant_from_reg_slug
-      @form = @callout.form
-      @submission = callout_submission_for(@registration)
-      @editing = @submission.nil? || params[:edit].present?
-    end
-
     @event = @event.decorate
-  end
-
-  # A registrant submits the form their ticket callout delivers inline. The reg
-  # slug is the authorization, mirroring the other public callout pages.
-  def submit_form
-    @callout = @event.registration_ticket_callouts.find(params[:id])
-    @registration = registrant_from_reg_slug
-
-    if @registration.nil? || !@callout.delivers_form? || @callout.hidden? || @callout.dripping?
-      redirect_to event_registration_ticket_callout_path(@event, @callout, reg: params[:reg].presence)
-      return
-    end
-
-    authorize! @registration, to: :show_public?
-
-    EventRegistrationServices::CalloutFormSubmission.call(
-      registration: @registration, callout: @callout, form_params: callout_form_params
-    )
-
-    redirect_to event_registration_ticket_callout_path(@event, @callout, reg: @registration.slug),
-                notice: "Thanks! Your responses have been submitted."
   end
 
   # Drag-reorder persistence. The shared `sortable` Stimulus controller PUTs the
@@ -73,21 +44,6 @@ class RegistrationTicketCalloutsController < ApplicationController
 
   def set_event
     @event = Event.find(params[:event_id])
-  end
-
-  def registrant_from_reg_slug
-    slug = params[:reg].presence
-    @event.event_registrations.find_by(slug: slug) if slug
-  end
-
-  def callout_submission_for(registration)
-    return unless registration
-    FormSubmission.find_by(person: registration.registrant, form: @callout.form, event: @event,
-                           role: EventRegistrationServices::CalloutFormSubmission.role_for(@callout))
-  end
-
-  def callout_form_params
-    params.dig(:callout_form, :form_fields)&.to_unsafe_h || {}
   end
 
   def callout_params

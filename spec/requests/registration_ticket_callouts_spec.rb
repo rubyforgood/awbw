@@ -1,32 +1,32 @@
 require "rails_helper"
 
-RSpec.describe "RegistrationTicketCallouts", type: :request do
+RSpec.describe "Callout inline form", type: :request do
   let(:event) { create(:event, published: true) }
   let(:registration) { create(:event_registration, event:) }
   let(:form) { create(:form, name: "Feedback") }
   let!(:field) { create(:form_field, form:, name: "How was it?") }
   let(:callout) { create(:registration_ticket_callout, event:, form:, description: "") }
 
-  describe "GET /show with an attached form" do
+  describe "GET /registration/:slug/forms/:callout_id" do
     it "renders the form for the registrant" do
-      get event_registration_ticket_callout_path(event, callout, reg: registration.slug)
+      get registration_callout_form_path(registration.slug, callout)
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("callout_form[form_fields][#{field.id}]")
     end
 
-    it "shows a preview note when viewed without a registrant" do
-      get event_registration_ticket_callout_path(event, callout)
+    it "redirects to the ticket when the callout has no form" do
+      plain = create(:registration_ticket_callout, event:, description: "<p>Hi</p>")
+      get registration_callout_form_path(registration.slug, plain)
 
-      expect(response.body).to include("Registrants see")
-      expect(response.body).not_to include("callout_form[form_fields]")
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
     end
   end
 
-  describe "POST /submit_form" do
+  describe "POST /registration/:slug/forms/:callout_id" do
     it "records the submission and shows the answers back" do
       expect {
-        post submit_form_event_registration_ticket_callout_path(event, callout, reg: registration.slug),
+        post registration_callout_form_submit_path(registration.slug, callout),
              params: { callout_form: { form_fields: { field.id.to_s => "Loved it" } } }
       }.to change(FormSubmission, :count).by(1)
 
@@ -36,6 +36,15 @@ RSpec.describe "RegistrationTicketCallouts", type: :request do
 
       follow_redirect!
       expect(response.body).to include("your responses are recorded")
+    end
+  end
+
+  describe "the generic event-scoped page" do
+    it "shows a preview note instead of the interactive form" do
+      get event_registration_ticket_callout_path(event, callout, reg: registration.slug)
+
+      expect(response.body).to include("Registrants fill out")
+      expect(response.body).not_to include("callout_form[form_fields]")
     end
   end
 end

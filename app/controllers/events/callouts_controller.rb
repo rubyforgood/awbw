@@ -305,6 +305,34 @@ module Events
       @faq_content = callout&.description
     end
 
+    # A callout that delivers a form inline: the registrant fills it out here and
+    # sees their responses on return. The reg slug is the authorization.
+    def callout
+      @callout = @event.registration_ticket_callouts.find(params[:callout_id])
+      return redirect_to registration_ticket_path(@event_registration.slug) if @callout.hidden? || !@callout.delivers_form?
+
+      @form = @callout.form
+      unless @callout.dripping?
+        @submission = callout_submission
+        @editing = @submission.nil? || params[:edit].present?
+      end
+    end
+
+    def submit_callout
+      @callout = @event.registration_ticket_callouts.find(params[:callout_id])
+      if @callout.hidden? || !@callout.delivers_form? || @callout.dripping?
+        redirect_to registration_callout_form_path(@event_registration.slug, @callout)
+        return
+      end
+
+      EventRegistrationServices::CalloutFormSubmission.call(
+        registration: @event_registration, callout: @callout, form_params: callout_form_params
+      )
+
+      redirect_to registration_callout_form_path(@event_registration.slug, @callout),
+                  notice: "Thanks! Your responses have been submitted."
+    end
+
     private
 
     # A dollar amount typed into the support-request box ("$1,200", "1200.50") as
@@ -322,6 +350,15 @@ module Events
       return if amount.nil? || amount.negative?
 
       (amount * 100).to_i
+    end
+
+    def callout_submission
+      FormSubmission.find_by(person: @event_registration.registrant, form: @callout.form, event: @event,
+                             role: EventRegistrationServices::CalloutFormSubmission.role_for(@callout))
+    end
+
+    def callout_form_params
+      params.dig(:callout_form, :form_fields)&.to_unsafe_h || {}
     end
 
     # Attendance sign-in/out follows the CE payment — it's the CE sign-in sheet. Any-of

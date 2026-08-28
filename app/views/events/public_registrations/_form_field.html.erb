@@ -7,7 +7,7 @@
 <% input_classes = "w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition focus:outline-none focus:ring-2 #{error_border}" %>
 
 <div class="mb-7">
-  <div class="mb-1.5 flex flex-wrap items-center gap-2">
+  <div class="flex flex-wrap items-center gap-2 mb-1.5">
     <label class="rich-label text-sm font-semibold text-gray-700" for="<%= param_scope %>_form_fields_<%= field.id %>">
       <%= form_label_html(label || field.name) %>
       <% if field.required %>
@@ -20,7 +20,7 @@
   </div>
 
   <% if field.subtitle.present? %>
-    <p class="rich-label mb-1.5 text-xs text-gray-500"><%= form_label_html(field.subtitle) %></p>
+    <p class="rich-label text-xs text-gray-500 mb-1.5"><%= form_label_html(field.subtitle) %></p>
   <% end %>
 
   <%# Author-only guidance, shown as part of the dropdown's hint area so it sits
@@ -88,7 +88,7 @@
       <% radio_options.each do |option_label, option_value, option_description| %>
         <% placeholder = specify_placeholder(option_label) %>
         <% is_specify = placeholder.present? %>
-        <label class="flex cursor-pointer flex-col gap-1 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:font-medium has-[:checked]:text-blue-900">
+        <label class="flex flex-col gap-1 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
           <span class="flex items-center gap-2">
             <input type="radio"
                    name="<%= field_name %>"
@@ -108,7 +108,7 @@
                    value="<%= specify_option_text(option_label, value) %>"
                    data-specify-option-target="text"
                    data-action="input->specify-option#typed"
-                   class="mt-1 w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none <%= "hidden" unless specify_option_selected?(option_label, value) %>">
+                   class="mt-1 w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 <%= "hidden" unless specify_option_selected?(option_label, value) %>">
           <% end %>
         </label>
       <% end %>
@@ -150,7 +150,7 @@
       <% checkbox_options.each do |option_label, option_value, option_description| %>
         <% placeholder = specify_placeholder(option_label) %>
         <% is_specify = placeholder.present? %>
-        <label class="mb-2.5 flex cursor-pointer break-inside-avoid flex-col gap-1 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:font-medium has-[:checked]:text-blue-900">
+        <label class="flex flex-col gap-1 mb-2.5 break-inside-avoid rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
           <span class="flex items-center gap-2">
             <input type="checkbox"
                    name="<%= checkbox_name %>"
@@ -169,7 +169,7 @@
                    value="<%= specify_option_text(option_label, value) %>"
                    data-specify-option-target="text"
                    data-action="input->specify-option#typed"
-                   class="mt-1 w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none <%= "hidden" unless specify_option_selected?(option_label, value) %>">
+                   class="mt-1 w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 <%= "hidden" unless specify_option_selected?(option_label, value) %>">
           <% end %>
         </label>
       <% end %>
@@ -202,31 +202,31 @@
              data-direct-upload-url="<%= rails_direct_uploads_path %>"
              data-file-preview-target="input"
              data-action="change->file-preview#update"
-             class="block w-full rounded-lg border text-sm text-gray-700 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 <%= error_border %> bg-white px-2 py-2"
+             class="block w-full text-sm text-gray-700 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 rounded-lg border <%= error_border %> bg-white px-2 py-2"
              <%= "required" if field.required && retained_upload.nil? %>>
       <p data-file-preview-target="filename" class="mt-1.5 text-xs font-medium text-gray-600"></p>
       <p class="mt-1 text-xs text-gray-400">Accepted: <%= FormUploadAsset.accepted_types_label %> (max <%= FormUploadAsset.max_file_size_label %>)</p>
       <img data-file-preview-target="preview"
-           class="mt-3 hidden max-h-48 w-auto rounded-lg border border-gray-200 shadow-sm"
+           class="hidden mt-3 max-h-48 w-auto rounded-lg border border-gray-200 shadow-sm"
            alt="Selected file preview">
     </div>
 
   <% end %>
 
   <% if field.hint_text.present? %>
-    <p class="rich-label mt-1.5 text-xs text-gray-500"><%= form_label_html(field.hint_text) %></p>
+    <p class="rich-label text-xs text-gray-500 mt-1.5"><%= form_label_html(field.hint_text) %></p>
   <% end %>
 
   <% if field.free_form_text? && field.min_words.to_i.positive? %>
-    <p class="mt-1.5 text-left text-xs text-gray-500">Minimum of <%= field.min_words %> <%= "word".pluralize(field.min_words) %>.</p>
+    <p class="text-left text-xs text-gray-500 mt-1.5">Minimum of <%= field.min_words %> <%= "word".pluralize(field.min_words) %>.</p>
   <% end %>
 
   <% if field.free_form_text? && field.max_characters.to_i.positive? %>
-    <p class="mt-1.5 text-left text-xs text-gray-500">Maximum of <%= field.max_characters %> <%= "character".pluralize(field.max_characters) %>.</p>
+    <p class="text-left text-xs text-gray-500 mt-1.5">Maximum of <%= field.max_characters %> <%= "character".pluralize(field.max_characters) %>.</p>
   <% end %>
 
   <% if error %>
-    <p class="mt-1.5 flex items-center gap-1.5 text-xs text-red-600">
+    <p class="flex items-center gap-1.5 text-xs text-red-600 mt-1.5">
       <i class="fa-solid fa-circle-exclamation"></i><%= strip_tags(field.name) %> <%= error %>
     </p>
   <% end %>

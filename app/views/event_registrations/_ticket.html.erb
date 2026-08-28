@@ -151,11 +151,17 @@
                        href: sample_href, linked: sample_href.present? %>
           <% end %>
         <% else %>
+          <%# A form-bearing callout opens its own person-first page where the
+              registrant fills the form out; other custom callouts use the generic
+              event-scoped content page. Preview always uses the event-scoped page. %>
+          <% real_href = callout.delivers_form? ?
+               registration_callout_form_path(event_registration.slug, callout) :
+               event_registration_ticket_callout_path(event_registration.event, callout, reg: event_registration.slug) %>
           <%= render "event_registrations/callout_card",
                      callout: callout,
                      href: preview ?
                        event_registration_ticket_callout_path(event_registration.event, callout, return_to: "sample_ticket") :
-                       event_registration_ticket_callout_path(event_registration.event, callout, reg: event_registration.slug),
+                       real_href,
                      linked: preview ? callout.page_content? : true %>
         <% end %>
       <% end %>
