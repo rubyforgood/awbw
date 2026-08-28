@@ -11,7 +11,7 @@
   <% wrapper_class = embedded ? "group mt-3 border-t border-gray-200 pt-3" : "group overflow-hidden rounded-xl border shadow-sm #{admin ? "border-sky-200 bg-sky-50" : "border-gray-200 bg-white"}" %>
   <% summary_class = embedded ? "flex cursor-pointer items-center gap-2 text-xs font-medium text-gray-600 [&::-webkit-details-marker]:hidden" : "flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-700 [&::-webkit-details-marker]:hidden" %>
   <% list_class = embedded ? "mt-2 divide-y divide-gray-200" : "divide-y divide-gray-100 border-t border-gray-100" %>
-  <% row_class = embedded ? "flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm" : "flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-sm" %>
+  <% row_class = embedded ? "flex items-start gap-3 py-2 text-sm" : "flex items-start gap-3 px-4 py-3 text-sm" %>
   <details class="<%= wrapper_class %>">
     <summary class="<%= summary_class %>">
       <i class="fa-solid fa-clock-rotate-left text-gray-400"></i>
@@ -24,22 +24,29 @@
     </summary>
     <ol class="<%= list_class %>">
       <% responses.reverse_each do |response| %>
+        <% status_label = response.status == "support_requested" ? "Requested" : response.status.capitalize %>
         <li class="<%= row_class %>">
-          <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= status_classes[response.status] %>"><%= response.status.capitalize %></span>
-          <span class="text-gray-500"><%= response.responded_at.strftime("%B %-d, %Y at %-l:%M %p") %></span>
-          <%# Recipient self-service is the default; only flag when staff acted for them. %>
-          <% if response.responder.present? && response.responder != "recipient" %>
-            <span class="text-gray-400">· by <%= response.responder %></span>
-          <% end %>
-          <% if response.amount_cents.present? %>
-            <span class="text-gray-400">· <%= dollars_from_cents(response.amount_cents) %></span>
-          <% end %>
-          <% if response.contribution_cents.present? %>
-            <span class="text-gray-400">· can contribute <%= dollars_from_cents(response.contribution_cents) %></span>
-          <% end %>
-          <% if response.reason.present? %>
-            <p class="w-full text-gray-700">“<%= response.reason %>”</p>
-          <% end %>
+          <div class="w-28 shrink-0">
+            <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= status_classes[response.status] %>"><%= status_label %></span>
+          </div>
+          <div class="min-w-0 flex-1 space-y-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <% if response.amount_cents.present? %>
+                <span class="font-medium text-gray-700 tabular-nums"><%= dollars_from_cents(response.amount_cents) %></span>
+              <% end %>
+              <% if response.contribution_cents.present? %>
+                <span class="text-gray-500">· can contribute <%= dollars_from_cents(response.contribution_cents) %></span>
+              <% end %>
+              <span class="text-gray-500">· <%= response.responded_at.strftime("%B %-d, %Y at %-l:%M %p") %></span>
+              <%# Recipient self-service is the default; only flag when staff acted for them. %>
+              <% if response.responder.present? && response.responder != "recipient" %>
+                <span class="text-gray-400">· by <%= response.responder %></span>
+              <% end %>
+            </div>
+            <% if response.reason.present? %>
+              <p class="text-gray-700">“<%= response.reason %>”</p>
+            <% end %>
+          </div>
         </li>
       <% end %>
     </ol>
