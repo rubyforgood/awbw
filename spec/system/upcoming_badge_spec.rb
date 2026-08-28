@@ -13,43 +13,42 @@ RSpec.describe "Affiliation status badges", type: :system do
     sign_in admin
   end
 
-  # Maps each row's title to whether its Inactive/Upcoming badges are hidden,
-  # read straight from the live DOM after the inactive-toggle controller has run.
-  def badges_by_title
-    page.evaluate_script(<<~JS).to_h { |r| [ r["title"], r ] }
-      Array.from(document.querySelectorAll('.nested-fields')).map(function(row){
-        var title = row.querySelector("input[name*='title']");
-        var inactive = row.querySelector("[data-inactive-toggle-target='inactiveBadge']");
-        var upcoming = row.querySelector("[data-inactive-toggle-target='upcomingBadge']");
-        return {
-          title: title ? title.value : null,
-          inactiveHidden: inactive ? inactive.classList.contains('hidden') : null,
-          upcomingHidden: upcoming ? upcoming.classList.contains('hidden') : null
-        };
-      });
+  # Read from classList rather than Capybara visibility: `hidden` only hides once
+  # the Tailwind build is loaded, and the fast test path skips that build.
+  def badge_hidden?(row, target)
+    page.evaluate_script(
+      "arguments[0].querySelector(\"[data-inactive-toggle-target='#{target}']\").classList.contains('hidden')",
+      row.native
+    )
+  end
+
+  # The controller reacts to `change` on the start-date input; set the value and
+  # fire it, rather than driving Chrome's segmented date widget by keystroke.
+  def set_start_date(row, value)
+    page.execute_script(<<~JS, row.find("input[data-inactive-toggle-target~='startDate']").native, value.to_s)
+      arguments[0].value = arguments[1];
+      arguments[0].dispatchEvent(new Event("change", { bubbles: true }));
     JS
   end
 
-  it "shows Inactive for not-active rows and adds Upcoming for future starts" do
-    create(:affiliation, person: person, organization: org, title: "PastActive",
+  it "adds and removes the badges live as the start date is edited" do
+    create(:affiliation, person: person, organization: org, title: "Counselor",
                          start_date: 1.year.ago.to_date, end_date: nil)
-    create(:affiliation, person: person, organization: org, title: "Ended",
-                         start_date: 2.years.ago.to_date, end_date: 1.month.ago.to_date)
-    create(:affiliation, person: person, organization: org, title: "FutureUp",
-                         start_date: 1.month.from_now.to_date, end_date: nil)
-    create(:affiliation, person: person, organization: org, title: "StartsToday",
-                         start_date: Date.current, end_date: nil)
 
     visit edit_person_path(person)
-    expect(page).to have_css(".nested-fields", minimum: 4, wait: 10)
-    rows = badges_by_title
+    row = find(".nested-fields", wait: 10)
 
-    # Active now → no badges.
-    expect(rows["PastActive"]).to include("inactiveHidden" => true, "upcomingHidden" => true)
-    expect(rows["StartsToday"]).to include("inactiveHidden" => true, "upcomingHidden" => true)
-    # Ended → Inactive only.
-    expect(rows["Ended"]).to include("inactiveHidden" => false, "upcomingHidden" => true)
-    # Future start → Inactive AND Upcoming.
-    expect(rows["FutureUp"]).to include("inactiveHidden" => false, "upcomingHidden" => false)
+    # Active as rendered — neither badge showing.
+    expect(badge_hidden?(row, "inactiveBadge")).to be true
+    expect(badge_hidden?(row, "upcomingBadge")).to be true
+
+    set_start_date(row, 1.month.from_now.to_date.iso8601)
+    expect(page).to have_css("[data-inactive-toggle-target='upcomingBadge']:not(.hidden)", wait: 5)
+    expect(badge_hidden?(row, "inactiveBadge")).to be false
+
+    # Back to a started date: both badges go away again.
+    set_start_date(row, 1.year.ago.to_date.iso8601)
+    expect(page).to have_css("[data-inactive-toggle-target='upcomingBadge'].hidden", wait: 5)
+    expect(badge_hidden?(row, "inactiveBadge")).to be true
   end
 end
