@@ -154,10 +154,10 @@ class WorkshopSearchService
       .joins("LEFT JOIN action_text_rich_texts ON action_text_rich_texts.record_id = workshops.id " \
              "AND action_text_rich_texts.record_type = 'Workshop'")
       .where(conditions, spaced: "%#{spaced}%", spaceless: "%#{spaceless}%")
-      .select("workshops.id")
+      .reselect("workshops.id")
 
     # Isolated in an id subquery so the person joins don't collide with the text joins.
-    by_person = search_by_author_name(@workshops, params[:query]).select("workshops.id")
+    by_person = search_by_author_name(@workshops, params[:query]).reselect("workshops.id")
 
     @workshops = @workshops.where(id: by_text).or(@workshops.where(id: by_person)).distinct
   end
@@ -170,7 +170,7 @@ class WorkshopSearchService
     # Credited-author name match (explicit author + legacy full_name + creator),
     # shared via AuthorCreditable#by_credited_person_name. Isolated in an id
     # subquery so its person joins don't collide with the current scope's joins.
-    workshops.where(id: workshops.by_credited_person_name(author_name).select("workshops.id"))
+    workshops.where(id: workshops.by_credited_person_name(author_name).reselect("workshops.id"))
   end
 
   def search_by_categories(workshops, categories)
