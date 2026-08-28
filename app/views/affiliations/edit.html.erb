@@ -140,7 +140,8 @@
         </div>
       <% end %>
 
-      <div data-controller="inactive-toggle" data-inactive-toggle-expired-value="<%= expired %>">
+      <div data-controller="inactive-toggle" data-inactive-toggle-expired-value="<%= expired %>"
+           data-inactive-toggle-today-value="<%= Date.current.iso8601 %>">
         <div class="flex flex-wrap items-start gap-4 rounded-lg border p-3 <%= row_bg %> <%= 'aff-ended' if expired %>"
              data-inactive-toggle-target="row">
           <div class="min-w-[200px] flex-1">

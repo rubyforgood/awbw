@@ -49,7 +49,7 @@
               </td>
 
               <td class="px-4 py-2 text-sm text-gray-700 whitespace-nowrap">
-                <%= organization.decorate.program_since_chip(@program_since_display[organization.id]) %>
+                <%= organization.decorate.program_since_chip(@program_since_display[organization.id], admin: allowed_to?(:manage?, Organization)) %>
               </td>
 
               <td class="px-4 py-2 text-center text-sm">

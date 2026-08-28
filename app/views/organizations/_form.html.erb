@@ -1,7 +1,7 @@
 <%= simple_form_for(@organization, html: { data: {
       controller: "affiliation-dates affiliation-facilitator-warning",
       affiliation_dates_merged_periods_value: true,
-      affiliation_dates_status_buckets_value: OrganizationDecorator.status_bucket_styles.to_json
+      affiliation_dates_status_buckets_value: OrganizationDecorator.status_bucket_styles(admin: allowed_to?(:manage?, Organization)).to_json
     } }) do |f| %>
   <%= render 'shared/errors', resource: @organization if @organization.errors.any? %>
   <%= render "duplicate_organizations_warning" %>
@@ -325,7 +325,7 @@
                 • <span class="font-medium">Reinstated</span> — new again, but formerly active (all prior facilitations had ended).</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 pt-1">
-              <%= org_decorated.organization_status_chip(data: { affiliation_dates_target: "programStatus" }) %>
+              <%= org_decorated.organization_status_chip(data: { affiliation_dates_target: "programStatus" }, admin: allowed_to?(:manage?, Organization)) %>
               <%= render "organizations/program_status_event_chips",
                          organization: f.object, events: org_events, return_to: "organization_edit" %>
             </div>

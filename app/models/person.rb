@@ -168,11 +168,15 @@ class Person < ApplicationRecord
 
   scope :organization_ids, ->(organization_ids)  { joins(:affiliations)
                                                      .where(affiliations: { organization_id: organization_ids }) }
-  scope :published, -> { searchable.with_active_affiliations }
+  scope :published, -> { searchable.with_active_facilitator_affiliations }
   scope :searchable, ->(searchable = nil) { searchable ? where(profile_is_searchable: searchable) : where(profile_is_searchable: true) }
-  scope :with_active_affiliations, -> {
+  # The public people directory is a directory of *active facilitators*, so only
+  # a currently-active Facilitator affiliation makes a person publicly visible —
+  # a non-facilitator role (Counselor, Board Member) or a lapsed/upcoming
+  # facilitator does not. Non-admins see only these; everyone else is admin-only.
+  scope :with_active_facilitator_affiliations, -> {
     joins(:affiliations)
-      .merge(Affiliation.active)
+      .merge(Affiliation.facilitators.active)
       .distinct
   }
   scope :where_user_not_locked, -> {
@@ -211,10 +215,18 @@ class Person < ApplicationRecord
   # People with at least one currently-active facilitator affiliation.
   scope :facilitators_active, -> {
     where(id: Affiliation.facilitators.active.select(:person_id)) }
-  # People with facilitator affiliation(s) but none currently active.
+  # People with a facilitator affiliation that hasn't started yet (future start,
+  # not ended). Independent of the Active filter — someone active at one org and
+  # scheduled at another is returned by both.
+  scope :facilitators_upcoming, -> {
+    where(id: Affiliation.facilitators.with_status("Upcoming").select(:person_id)) }
+  # Everyone who is not a currently-active facilitator — the not-active umbrella:
+  # people whose facilitator affiliation has ended/is flagged or is upcoming, AND
+  # people with no facilitator affiliation at all. Mirrors the org index's
+  # "Inactive" (formerly_or_never) filter; Upcoming and Formerly active are
+  # narrower options within this set (ADR-0001 D3).
   scope :facilitators_inactive, -> {
-    where(id: Affiliation.facilitators.select(:person_id))
-      .where.not(id: Affiliation.facilitators.active.select(:person_id)) }
+    where.not(id: Affiliation.facilitators.active.select(:person_id)) }
   # Not currently active, but a past facilitator term genuinely ended (real end
   # date in the past) — distinguishes "used to facilitate" from merely flagged inactive.
   scope :facilitators_formerly_active, -> {
@@ -238,6 +250,7 @@ class Person < ApplicationRecord
   scope :by_facilitator_status, ->(status) {
     case status
     when "active" then facilitators_active
+    when "upcoming" then facilitators_upcoming
     when "inactive" then facilitators_inactive
     when "boomerang" then boomerang_facilitators
     when "formerly_active" then facilitators_formerly_active
@@ -305,6 +318,7 @@ class Person < ApplicationRecord
   FACILITATOR_STATUS_FILTER_OPTIONS = [
     [ "Active", "active" ],
     [ "Inactive", "inactive" ],
+    [ "Upcoming", "upcoming" ],
     [ "Boomerang (left, then active again)", "boomerang" ],
     [ "Formerly active", "formerly_active" ]
   ].freeze
@@ -326,8 +340,12 @@ class Person < ApplicationRecord
     results
   end
 
+  # Publicly visible = searchable and a currently-active *facilitator*. The
+  # in-memory twin of the `published` scope; computed from the (eager-loaded)
+  # affiliations so the people index pays no per-row query. A non-facilitator
+  # role or a lapsed/upcoming facilitator is not published (admin-only).
   def published?
-    profile_is_searchable? && affiliations.active.exists?
+    profile_is_searchable? && affiliations.any? { |a| a.facilitator? && a.active? }
   end
 
   def membership_current?(as_of: Date.current)

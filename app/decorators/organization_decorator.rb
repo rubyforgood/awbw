@@ -117,19 +117,21 @@ class OrganizationDecorator < ApplicationDecorator
   end
 
   ORG_STATUS_BUCKET_LABELS = {
-    active: "Active", formerly_active: "Formerly active", never_active: "Never active"
+    active: "Active", upcoming: "Upcoming", formerly_active: "Formerly active", never_active: "Never active"
   }.freeze
   ORG_STATUS_BUCKET_THEMES = {
-    active: :org_active, formerly_active: :org_formerly_active, never_active: :org_never_active
+    active: :org_active, upcoming: :org_upcoming, formerly_active: :org_formerly_active, never_active: :org_never_active
   }.freeze
 
   # Derived purely from facilitator affiliations; the stored organization_status
-  # never feeds into this (ADR-0001 D3).
+  # never feeds into this (ADR-0001 D3). Upcoming (a facilitator scheduled but not
+  # started) is distinct from Active and from a lapsed Formerly active.
   def organization_status_bucket
     facilitators = object.affiliations.select(&:facilitator?)
     return :never_active if facilitators.none?
-
-    facilitators.any?(&:active?) ? :active : :formerly_active
+    return :active if facilitators.any?(&:active?)
+    return :upcoming if facilitators.any?(&:upcoming?)
+    :formerly_active
   end
 
   # Only used to flag where the legacy column disagrees with the affiliations.
@@ -138,12 +140,31 @@ class OrganizationDecorator < ApplicationDecorator
   end
 
   # E.g. a stored "Active" on an org that never had a facilitator affiliation.
+  # The legacy column has no Upcoming of its own, so a scheduled-but-not-started
+  # program is fairly recorded as Pending (or blank/Unknown, which bucket with it).
   def legacy_status_mismatch?
+    return stored_status_bucket != :never_active if organization_status_bucket == :upcoming
+
     organization_status_bucket != stored_status_bucket
   end
 
-  def organization_status_label
-    ORG_STATUS_BUCKET_LABELS.fetch(organization_status_bucket)
+  # Upcoming is an admin-only distinction. Everyone else sees a program that
+  # hasn't started as plain "Inactive", neutral like Never active (it has never
+  # facilitated), so a public-facing index reflects the state of the world today
+  # rather than a scheduled future one. See ADR-0001 D3.
+  PUBLIC_UPCOMING = { label: "Inactive", bucket: :never_active }.freeze
+
+  def self.display_bucket(bucket, admin:)
+    bucket == :upcoming && !admin ? PUBLIC_UPCOMING[:bucket] : bucket
+  end
+
+  def self.display_label(bucket, admin:)
+    return PUBLIC_UPCOMING[:label] if bucket == :upcoming && !admin
+    ORG_STATUS_BUCKET_LABELS.fetch(bucket)
+  end
+
+  def organization_status_label(admin: false)
+    self.class.display_label(organization_status_bucket, admin: admin)
   end
 
   def self.status_classes_for_bucket(bucket)
@@ -156,28 +177,30 @@ class OrganizationDecorator < ApplicationDecorator
   end
 
   # Lets the edit form's Stimulus controller re-render the chip live without
-  # hard-coding theme classes in JS.
-  def self.status_bucket_styles
+  # hard-coding theme classes in JS. Takes the same admin flag as the server-side
+  # chip so the live value can't disagree with the rendered one.
+  def self.status_bucket_styles(admin: false)
     ORG_STATUS_BUCKET_LABELS.each_key.to_h do |bucket|
-      [ bucket, { label: ORG_STATUS_BUCKET_LABELS.fetch(bucket), classes: status_classes_for_bucket(bucket) } ]
+      [ bucket, { label: display_label(bucket, admin: admin),
+                  classes: status_classes_for_bucket(display_bucket(bucket, admin: admin)) } ]
     end
   end
 
-  def organization_status_classes
-    self.class.status_classes_for_bucket(organization_status_bucket)
+  def organization_status_classes(admin: false)
+    self.class.status_classes_for_bucket(self.class.display_bucket(organization_status_bucket, admin: admin))
   end
 
-  def organization_status_chip(data: {})
-    h.content_tag(:span, organization_status_label,
+  def organization_status_chip(data: {}, admin: false)
+    h.content_tag(:span, organization_status_label(admin: admin),
                   data: data,
-                  class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{organization_status_classes}")
+                  class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{organization_status_classes(admin: admin)}")
   end
 
   # Facilitator years, coloured by the org's status; falls back to the status
   # label when there are no facilitator years to show.
-  def program_since_chip(years = program_since_display)
-    h.content_tag(:span, years.presence || organization_status_label,
-                  class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{organization_status_classes}")
+  def program_since_chip(years = program_since_display, admin: false)
+    h.content_tag(:span, years.presence || organization_status_label(admin: admin),
+                  class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{organization_status_classes(admin: admin)}")
   end
 
   # Reads the already-loaded affiliations, so a profile classifies many events

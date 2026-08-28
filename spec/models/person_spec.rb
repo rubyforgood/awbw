@@ -341,28 +341,42 @@ RSpec.describe Person, type: :model do
         expect(person.published?).to be false
       end
     end
+
+    context "when the only active affiliation is a non-facilitator role" do
+      before { create(:affiliation, person: person, title: "Counselor", inactive: false, end_date: nil) }
+
+      it "returns false — only active facilitators are published" do
+        expect(person.published?).to be false
+      end
+    end
   end
 
-  describe ".with_active_affiliations" do
+  describe ".with_active_facilitator_affiliations" do
     let!(:person_with_active) { create(:person) }
     let!(:person_with_inactive) { create(:person) }
+    let!(:person_non_facilitator) { create(:person) }
     let!(:person_without) { create(:person) }
 
     before do
       create(:affiliation, person: person_with_active, inactive: false, end_date: nil)
       create(:affiliation, person: person_with_inactive, inactive: true, end_date: nil)
+      create(:affiliation, person: person_non_facilitator, title: "Counselor", inactive: false, end_date: nil)
     end
 
-    it "includes people with active affiliations" do
-      expect(Person.with_active_affiliations).to include(person_with_active)
+    it "includes people with an active facilitator affiliation" do
+      expect(Person.with_active_facilitator_affiliations).to include(person_with_active)
     end
 
     it "excludes people with only inactive affiliations" do
-      expect(Person.with_active_affiliations).not_to include(person_with_inactive)
+      expect(Person.with_active_facilitator_affiliations).not_to include(person_with_inactive)
+    end
+
+    it "excludes people whose only active affiliation is a non-facilitator role" do
+      expect(Person.with_active_facilitator_affiliations).not_to include(person_non_facilitator)
     end
 
     it "excludes people with no affiliations" do
-      expect(Person.with_active_affiliations).not_to include(person_without)
+      expect(Person.with_active_facilitator_affiliations).not_to include(person_without)
     end
   end
 
@@ -498,9 +512,9 @@ RSpec.describe Person, type: :model do
       expect(results).not_to include(person_bob)
     end
 
-    it 'chains with_active_affiliations and organization_name without an ambiguous end_date error' do
+    it 'chains with_active_facilitator_affiliations and organization_name without an ambiguous end_date error' do
       expect {
-        Person.with_active_affiliations.search_by_params(organization_name: 'Alpha').to_a
+        Person.with_active_facilitator_affiliations.search_by_params(organization_name: 'Alpha').to_a
       }.not_to raise_error
     end
 
@@ -658,6 +672,32 @@ RSpec.describe Person, type: :model do
         expect(results).to include(person_alice, person_bob)
       end
 
+      it "active: excludes people whose only facilitator affiliation starts in the future" do
+        upcoming = create(:person, first_name: "Upcoming", last_name: "Fac")
+        create(:affiliation, person: upcoming, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+
+        results = Person.search_by_params(facilitator_status: "active")
+        expect(results).not_to include(upcoming)
+      end
+
+      it "upcoming: includes people whose facilitator affiliation has not yet started" do
+        upcoming = create(:person, first_name: "Upcoming", last_name: "Fac")
+        create(:affiliation, person: upcoming, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+
+        results = Person.search_by_params(facilitator_status: "upcoming")
+        expect(results).to include(upcoming)
+        expect(results).not_to include(person_alice)
+      end
+
+      it "upcoming and active both include someone active at one org and upcoming at another" do
+        both = create(:person, first_name: "Both", last_name: "Fac")
+        create(:affiliation, person: both, title: "Facilitator", start_date: 1.year.ago, end_date: nil)
+        create(:affiliation, person: both, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+
+        expect(Person.search_by_params(facilitator_status: "upcoming")).to include(both)
+        expect(Person.search_by_params(facilitator_status: "active")).to include(both)
+      end
+
       it "inactive: includes people whose facilitator affiliations are all inactive" do
         lapsed = create(:person, first_name: "Lapsed", last_name: "Fac")
         create(:affiliation, person: lapsed, title: "Facilitator", end_date: 1.year.ago)
@@ -665,6 +705,24 @@ RSpec.describe Person, type: :model do
         results = Person.search_by_params(facilitator_status: "inactive")
         expect(results).to include(lapsed)
         expect(results).not_to include(person_alice)
+      end
+
+      it "inactive: includes people with no facilitator affiliation (never active)" do
+        member = create(:person, first_name: "Member", last_name: "Only")
+        create(:affiliation, person: member, title: "Counselor", end_date: nil)
+        never_affiliated = create(:person, first_name: "Never", last_name: "Affiliated")
+
+        results = Person.search_by_params(facilitator_status: "inactive")
+        expect(results).to include(member, never_affiliated)
+        expect(results).not_to include(person_alice)
+      end
+
+      it "inactive: includes an upcoming (not-yet-started) facilitator — the not-active umbrella" do
+        upcoming = create(:person, first_name: "Upcoming", last_name: "Fac")
+        create(:affiliation, person: upcoming, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+
+        results = Person.search_by_params(facilitator_status: "inactive")
+        expect(results).to include(upcoming)
       end
 
       it "boomerang: includes people whose active term began after an earlier term ended" do

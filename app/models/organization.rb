@@ -120,14 +120,28 @@ class Organization < ApplicationRecord
   scope :program_status, ->(bucket) {
     fac_ids = Affiliation.facilitators.select(:organization_id)
     active_fac_ids = Affiliation.facilitators.active.select(:organization_id)
+    upcoming_fac_ids = Affiliation.facilitators.with_status("Upcoming").select(:organization_id)
     case bucket.to_s
     when "active"            then where(id: active_fac_ids)
-    when "formerly_active"   then where(id: fac_ids).where.not(id: active_fac_ids)
+    when "upcoming"          then where(id: upcoming_fac_ids).where.not(id: active_fac_ids)
+    when "formerly_active"   then where(id: fac_ids).where.not(id: active_fac_ids).where.not(id: upcoming_fac_ids)
     when "never_active"      then where.not(id: fac_ids)
     when "formerly_or_never" then where.not(id: active_fac_ids)
     else all
     end
   }
+
+  # The index's Program status dropdown, in display order. "Inactive" is the
+  # not-active umbrella (formerly + never + upcoming) with the two narrower
+  # buckets after it, mirroring Person::FACILITATOR_STATUS_FILTER_OPTIONS so the
+  # two indexes read the same way.
+  PROGRAM_STATUS_FILTER_OPTIONS = [
+    [ "Active", "active" ],
+    [ "Inactive", "formerly_or_never" ],
+    [ "Upcoming", "upcoming" ],
+    [ "Formerly active", "formerly_active" ],
+    [ "Never active", "never_active" ]
+  ].freeze
 
   # Matches a tag on the org itself OR an affiliated person's PRIMARY tag —
   # mirroring the aggregate the index/profile columns show.

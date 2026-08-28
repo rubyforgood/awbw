@@ -261,14 +261,17 @@ class EventDashboard
 
   # Shout outs for the recipients page: each active registrant the admin flagged
   # for a shout-out who also has shout-out text on their profile, paired with that
-  # text, their first active affiliated organization (if any), and their primary
-  # sector / age group (from their profile) for the parenthetical after their name.
+  # text, their first still-standing affiliated organization (if any), and their
+  # primary sector / age group (from their profile) for the parenthetical after
+  # their name. "Still standing" is judged on the dates as well as the cached flag,
+  # and keeps a not-yet-started affiliation — a registrant here to be trained is
+  # credited to the org they're about to facilitate for.
   # Flagged registrants with blank shout-out text are omitted; org/sector/age are optional.
   def shoutouts
     @shoutouts ||= shoutout_registrants.filter_map do |person|
       text = person.shoutout_text.to_s.strip.presence
       next unless text
-      organization = person.affiliations.reject(&:inactive?).filter_map(&:organization).first
+      organization = person.affiliations.reject(&:inactive_on?).filter_map(&:organization).first
       Shoutout.new(
         recipient: person,
         organization: organization,
