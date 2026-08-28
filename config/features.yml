@@ -2301,3 +2301,16 @@
     - "\"New tagging\" tags a person in one step; each staff tag on the staff tags page also has a \"View taggings\" link, pre-filtered to that tag."
     - "Editing a tagging lets you switch its tag and record comments or communications about it, all on one page."
     - "Reach it from the admin home page under \"Staff taggings\"."
+
+- name: "Organization profile in the AWBW brand"
+  area: people
+  display_status: user_facing
+  released_on: 2026-08-27
+  pr_number: 2387
+  summary: >-
+    The organization profile has been restyled to match awbw.org: a navy hero
+    carrying the logo, name, location, and contact details, and the rest of the
+    page grouped into labelled cards on a warm cream background.
+  pro_tips:
+    - "Everything that was on the page is still there — description, affiliations, sectors, age groups, workshops, and events attended — just grouped into cards."
+    - "The organization's status chip still sits beside the name for admins."
