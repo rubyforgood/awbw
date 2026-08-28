@@ -29,22 +29,22 @@
           <div class="w-28 shrink-0">
             <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= status_classes[response.status] %>"><%= status_label %></span>
           </div>
+          <span class="w-16 shrink-0 font-medium text-gray-700 tabular-nums"><%= dollars_from_cents(response.amount_cents) if response.amount_cents.present? %></span>
           <div class="min-w-0 flex-1 space-y-1">
-            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <% if response.amount_cents.present? %>
-                <span class="font-medium text-gray-700 tabular-nums"><%= dollars_from_cents(response.amount_cents) %></span>
-              <% end %>
+            <div class="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-gray-500">
+              <span><%= response.responded_at.strftime("%B %-d, %Y at %-l:%M %p") %></span>
               <% if response.contribution_cents.present? %>
-                <span class="text-gray-500">· can contribute <%= dollars_from_cents(response.contribution_cents) %></span>
+                <span class="text-gray-300">·</span>
+                <span>can contribute <span class="font-medium text-gray-700 tabular-nums"><%= dollars_from_cents(response.contribution_cents) %></span></span>
               <% end %>
-              <span class="text-gray-500">· <%= response.responded_at.strftime("%B %-d, %Y at %-l:%M %p") %></span>
               <%# Recipient self-service is the default; only flag when staff acted for them. %>
               <% if response.responder.present? && response.responder != "recipient" %>
-                <span class="text-gray-400">· by <%= response.responder %></span>
+                <span class="text-gray-300">·</span>
+                <span class="text-gray-400">by <%= response.responder %></span>
               <% end %>
             </div>
             <% if response.reason.present? %>
-              <p class="text-gray-700">“<%= response.reason %>”</p>
+              <p class="text-gray-400"><span class="font-medium">NOTE:</span> <%= response.reason %></p>
             <% end %>
           </div>
         </li>
