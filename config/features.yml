@@ -2495,9 +2495,10 @@
   pr_number: 2394
   action_path: "/"
   summary: >-
-    The portal home page now reads like awbw.org: sections alternate cream and
-    white with the rainbow rule marking each boundary, and section headings are
-    in the brand serif. The sections, their order, and the cards inside them are
+    The portal home page now reads like awbw.org: each section keeps its own
+    colour, but drawn from the official AWBW brand palette instead of stock
+    web colours, with the rainbow rule marking each boundary and headings in
+    the brand serif. The sections, their order, and the cards inside them are
     unchanged.
   pro_tips:
-    - "The colour that used to tint each whole band now lives in the cards, which is how the marketing site handles it."
+    - "The section colours, the cream page background, and the rainbow rule now use the exact values from the AWBW brand guide."

@@ -1,11 +1,11 @@
 <% content_for(:full_width, true) %>
 <%= render "shared/public_welcome_banner" %>
 
-<%# Sections alternate cream and white, the way awbw.org does — the colour lives
-    in the cards, not the band behind them. %>
-<%= render "home/workshops", title: "Featured Workshops", surface: "bg-brand-cream" %>
-<%= render "home/community_news", surface: "bg-white" %>
-<%= render "home/resources", title: "Popular Resources", surface: "bg-brand-cream" %>
-<%= render "home/events", surface: "bg-white" %>
-<%= render "home/stories", surface: "bg-brand-cream" %>
-<%= render "home/video_recordings", surface: "bg-white" %>
+<%# Each section keeps its own colour, drawn from the AWBW brand palette rather
+    than Tailwind's stock hues — see DomainTheme::BRAND_SURFACES. %>
+<%= render "home/workshops", title: "Featured Workshops", surface: DomainTheme.brand_surface_for(:workshops) %>
+<%= render "home/community_news", surface: DomainTheme.brand_surface_for(:community_news) %>
+<%= render "home/resources", title: "Popular Resources", surface: DomainTheme.brand_surface_for(:resources) %>
+<%= render "home/events", surface: DomainTheme.brand_surface_for(:events) %>
+<%= render "home/stories", surface: DomainTheme.brand_surface_for(:stories) %>
+<%= render "home/video_recordings", surface: DomainTheme.brand_surface_for(:video_recordings) %>

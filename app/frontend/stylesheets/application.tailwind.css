@@ -19,13 +19,27 @@
   --color-transparent: transparent;
   --font-telefon: "Telefon Bold", sans-serif;
 
-  /* AWBW marketing brand tokens (matches awbw.org). The navy is `primary`; these
-     add the warm cream surface, gold call-to-action, and the display serif used
-     for headlines. Themed pages (e.g. the person profile) build on these. */
-  --color-brand-cream: #faf6ea;
-  --color-brand-gold: #f6c445;
-  --color-brand-gold-dark: #e7ad25;
+  /* AWBW brand palette, taken from app/assets/images/brand/awbw-brand-guide.pdf.
+     Three of the guide's six brand colours already exist above: navy is
+     `primary`, green is `success`, orange is `accent`. These add the rest, the
+     cream page surface, and the display serif used for headlines. */
+  --color-brand-cream: #fcfaeb;
+  --color-brand-gold: #ffcb05;
+  --color-brand-gold-dark: #e0b205;
+  --color-brand-magenta: #992a5b;
+  --color-brand-purple: #41006c;
+  --color-brand-teal: #008d80;
   --font-display: "Fraunces", "Lato", serif;
+
+  /* Pale surfaces for per-domain sections. Green, yellow and peach are the
+     guide's own background swatches; navy, magenta and purple are matched to
+     them in lightness off the corresponding brand colour. */
+  --color-brand-tint-green: #e7f0c6;
+  --color-brand-tint-yellow: #ffefc7;
+  --color-brand-tint-peach: #ffddcf;
+  --color-brand-tint-navy: #dde5f6;
+  --color-brand-tint-magenta: #f7dde8;
+  --color-brand-tint-purple: #e9def3;
 
   /* Social network brand colors, used for the hover fill on share/follow
      buttons. Instagram is a three-stop gradient rather than a single fill. */
@@ -63,6 +77,10 @@
 @source inline("{hover:,}border-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink}-{200,300}");
 @source inline("ring-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink}-{200,300,400,500}");
 @source inline("{hover:,}text-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink}-{50,{100..900..100},950}");
+
+/* Per-domain brand surfaces (generated from DomainTheme::BRAND_SURFACES, which
+   lives in lib/ and is not scanned) */
+@source inline("bg-brand-tint-{green,yellow,peach,navy,magenta,purple}");
 
 /* Per-field form layout widths (generated from FormField::WIDTH_GRID_SPANS, which
    lives in a model file Tailwind does not scan) */
