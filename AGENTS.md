@@ -353,7 +353,7 @@ end
 - `EventMailer` — Event registration confirmations
 - `NotificationMailer` — Notification delivery
 - `ContactUsMailer` — Contact form submissions
-- `ScholarshipMailer` — Trainings-team FYI when a recipient requests additional support
+- `ScholarshipMailer` — Trainings-team FYI on a recipient's agreement response (accept / decline / request additional support)
 - All use premailer-rails for inline CSS
 - **Previews** live in `test/mailers/previews/` (viewable at `/rails/mailers/` in development)
 

@@ -722,6 +722,16 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(scholarship.reload.agreement_signed?).to be(false)
       end
 
+      it "emails the trainings team on a fresh acceptance, but not on a repeat" do
+        expect {
+          post registration_scholarship_agreement_path(registration.slug), params: { agreement: "yes" }
+        }.to have_enqueued_mail(ScholarshipMailer, :accepted_fyi)
+
+        expect {
+          post registration_scholarship_agreement_path(registration.slug), params: { agreement: "yes" }
+        }.not_to have_enqueued_mail(ScholarshipMailer, :accepted_fyi)
+      end
+
       it "redirects to the scholarship page when there is no awarded scholarship" do
         other = create(:event_registration, event: event, scholarship_requested: true)
 
@@ -742,6 +752,12 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(scholarship.agreement_declined?).to be(true)
         expect(scholarship.latest_agreement_response.reason).to eq("Timing no longer works")
         expect(scholarship.agreement_signed?).to be(false)
+      end
+
+      it "emails the trainings team about the decline" do
+        expect {
+          post registration_scholarship_decline_path(registration.slug), params: { decline_reason: "No longer available" }
+        }.to have_enqueued_mail(ScholarshipMailer, :declined_fyi)
       end
 
       it "zeroes the scholarship allocation so it stops counting toward the balance" do
