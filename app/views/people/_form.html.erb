@@ -425,13 +425,15 @@
           <div class="w-full sm:w-64">
             <%= f.input :filemaker_code,
                         label: "FileMaker code",
-                        hint: if params[:admin] == "true" && f.object.filemaker_code.present? && FmRolodex.exists?(fm_id: f.object.filemaker_code)
-                          link_to("View filemaker archive",
-                                  fm_archive_path(f.object.filemaker_code, table: "rolodexes"),
-                                  class: "text-blue-600 hover:text-blue-800 underline")
-                        end,
                         input_html: { class: "w-full" },
                         wrapper_html: { class: "w-full" } %>
+            <%- if params[:admin] == "true" && f.object.filemaker_code.present? && FmRolodex.exists?(fm_id: f.object.filemaker_code) %>
+              <p class="mt-1 text-xs">
+                <%= link_to "View filemaker archive",
+                            fm_archive_path(f.object.filemaker_code, table: "rolodexes"),
+                            class: "text-blue-600 hover:text-blue-800 underline" %>
+              </p>
+            <% end %>
           </div>
         </div>
 
