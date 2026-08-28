@@ -2344,3 +2344,15 @@
     - "Edit the kept organization's fields right in the preview before you merge."
     - "Use Swap if you picked the wrong record to keep."
     - "Both records' FileMaker codes are kept on the merged organization — a field flagged 'Kept on merge' is combined, not dropped."
+
+- name: "People and Organizations lists in the AWBW brand"
+  area: people
+  display_status: user_facing
+  released_on: 2026-08-27
+  pr_number: 2391
+  action_path: "/people"
+  summary: >-
+    The People and Organizations directories now carry the awbw.org look — a cream
+    page card topped by the rainbow accent strip, a serif page title, and the
+    results table in its own bordered card. Filters, columns, and counts are
+    unchanged.

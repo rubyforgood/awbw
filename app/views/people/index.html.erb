@@ -1,6 +1,8 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
-<div class="community-news-index mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:people) %> rounded-xl border border-gray-200 p-6 shadow">
-  <div class="w-full">
+<div class="border-primary/10 bg-brand-cream mx-auto max-w-7xl overflow-hidden rounded-2xl border shadow-sm">
+  <!-- Rainbow accent strip (AWBW brand) -->
+  <div class="h-1.5 w-full bg-[linear-gradient(to_right,#4e8324,#d56027,#e0b528,#9b2c5e,#24479e,#3aa0a0)]"></div>
+  <div class="w-full p-6">
     <% back_label, back_path =
          case params[:return_to]
          when "staff_tags"
@@ -19,8 +21,11 @@
       </div>
     <% end %>
     <div class="mb-6 flex items-start justify-between">
-      <div id="people_count" class="pr-6">
-        <h2 class="mb-2 text-2xl font-semibold">People</h2>
+      <div class="pr-6">
+        <span class="text-2xs font-semibold tracking-widest uppercase <%= DomainTheme.text_class_for(:people, intensity: 700) %>">Directory</span>
+        <div id="people_count">
+          <h1 class="text-primary font-display text-3xl">People</h1>
+        </div>
       </div>
       <div class="flex flex-wrap items-center justify-end gap-2 text-right">
         <% if allowed_to?(:index?, TopicSubscription) %>
