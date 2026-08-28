@@ -155,6 +155,11 @@
       <div class="admin-only bg-blue-100">
         <%= f.input :filemaker_code,
                     label: "FileMaker Project ID",
+                    hint: if params[:admin] == "true" && f.object.filemaker_code.present? && FmProject.exists?(fm_id: f.object.filemaker_code)
+                      link_to("View filemaker archive",
+                              fm_archive_path(f.object.filemaker_code, table: "projects"),
+                              class: "text-blue-600 hover:text-blue-800 underline")
+                    end,
                     input_html: {
                       class: "rounded-md border-gray-300 bg-blue-100 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     } %>
