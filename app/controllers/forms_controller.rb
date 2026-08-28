@@ -2,9 +2,18 @@ class FormsController < ApplicationController
   before_action :set_form, only: %i[show results edit update destroy copy reorder_field reorder_fields edit_sections update_sections]
   before_action :set_dashboard_event, only: %i[show edit edit_sections update update_sections]
 
+  SORTABLE_COLUMNS = %w[name role fields submissions].freeze
+
   def index
     authorize!
-    @forms = Form.standalone.order(:name)
+    if turbo_frame_request?
+      @sort = SORTABLE_COLUMNS.include?(params[:sort]) ? params[:sort] : "name"
+      @sort_direction = params[:direction] == "desc" ? "desc" : "asc"
+      @forms = sorted_forms
+      render :forms_results
+    else
+      render :index
+    end
   end
 
   # Reference page for the field identifiers that wire a question to backend
@@ -137,6 +146,23 @@ class FormsController < ApplicationController
   end
 
   private
+
+  # Sorts the standalone forms for the index frame. Direction is whitelisted to
+  # "asc"/"desc", so it's safe to interpolate into the order clause. Count
+  # columns join their association and order by the aggregate.
+  def sorted_forms
+    scope = Form.standalone
+    case @sort
+    when "role"
+      scope.reorder(Arel.sql("role #{@sort_direction}")).order(:name)
+    when "fields"
+      scope.left_joins(:form_fields).group(:id).reorder(Arel.sql("COUNT(form_fields.id) #{@sort_direction}"))
+    when "submissions"
+      scope.left_joins(:form_submissions).group(:id).reorder(Arel.sql("COUNT(form_submissions.id) #{@sort_direction}"))
+    else
+      scope.reorder(Arel.sql("name #{@sort_direction}"))
+    end
+  end
 
   # Custom section header ids that were present on the page but left unchecked,
   # i.e. the custom sections the user chose to remove.
