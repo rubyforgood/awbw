@@ -105,7 +105,7 @@ module AffiliationServices
     # destination recognises it as the row that training minted (ADR-0003 D2a).
     # With no open row to move, the destination mints a fresh one.
     def retarget(affiliation)
-      starts_on = transfer_destination.event&.start_date&.to_date || Date.current
+      starts_on = transfer_destination.event&.starts_on || Date.current
       return create_at_destination(starts_on) if affiliation.nil?
 
       affiliation.update!(start_date: starts_on, event_registration: transfer_destination)
@@ -181,7 +181,7 @@ module AffiliationServices
     # on the same day another starts counts on both, which double-counts the person
     # in any report that totals a date. Never before the row's own start date.
     def deactivation_end_date(affiliation)
-      ends_on = (@event.start_date&.to_date || Date.current) - 1.day
+      ends_on = (@event.starts_on || Date.current) - 1.day
       [ ends_on, affiliation.start_date ].compact.max
     end
 
@@ -288,7 +288,7 @@ module AffiliationServices
     def create_affiliation
       CreateFromRegistration.call(
         person: @person, organization: @organization, facilitator_training: true,
-        training_date: @event.start_date, event_registration: @registration
+        training_date: @event.starts_on, event_registration: @registration
       )
     end
 

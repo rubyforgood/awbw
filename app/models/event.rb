@@ -227,6 +227,26 @@ class Event < ApplicationRecord
     !ended? && (registration_close_date.nil? || registration_close_date >= Time.current)
   end
 
+  # The calendar day a training happens on belongs to the event, not to whoever is
+  # reading it. Timestamps are stored in UTC, but projecting one onto a day needs a
+  # zone, and requests run in the signed-in user's
+  # (ApplicationController#set_time_zone_from_user) — so two admins would otherwise
+  # derive dates a day apart from the same event. Pinned, for the same reason
+  # Membership::TIME_ZONE is.
+  #
+  # Use these wherever a date is STORED or a verdict ANCHORED (affiliation dates,
+  # program status). #event_dates and the sign-in windows deliberately still read in
+  # the viewer's zone, since those answer "is it that day for me right now".
+  PROGRAM_ZONE = "Pacific Time (US & Canada)".freeze
+
+  def starts_on
+    start_date&.in_time_zone(PROGRAM_ZONE)&.to_date
+  end
+
+  def ends_on
+    end_date&.in_time_zone(PROGRAM_ZONE)&.to_date
+  end
+
   # How many calendar days the event spans (inclusive), clamped to 1..5 — drives
   # how many per-day attendance columns the Onboarding tab shows.
   def day_count

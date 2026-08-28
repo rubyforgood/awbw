@@ -1060,7 +1060,7 @@ class EventDashboard
   # event has no anchor, and the annual report reads it year-anchored too — the
   # two must not diverge.
   def program_status_for(organization)
-    organization.facilitator_program_status(as_of: event.start_date&.to_date)
+    organization.facilitator_program_status(as_of: event.starts_on)
   end
 
   # The fixed point in time the organization breakdown is reported as of: the
