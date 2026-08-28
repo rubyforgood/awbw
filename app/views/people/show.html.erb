@@ -275,10 +275,8 @@
         </div>
       </div>
     <% end %>
-    <!-- MEMBERSHIP SECTION -->
-    <% if allowed_to?(:index?, MembershipInvoice) %>
-      <%= render "people/membership", person: @person, membership: @membership %>
-    <% end %>
+    <%# The person's own membership view. The admin membership card lives on the
+        edit page (Membership section there), not on the public-facing profile. %>
     <% if allowed_to?(:own_membership?, @person) %>
       <%= render "people/my_membership", membership: @membership, autopay: @membership_autopay %>
     <% end %>
