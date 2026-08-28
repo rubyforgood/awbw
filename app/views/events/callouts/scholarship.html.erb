@@ -55,7 +55,9 @@
           buttons below are asking for rather than asserting the accepted one. %>
       <% if @event.cost_cents.to_i.positive? && !@scholarship.agreement_declined? %>
         <% owed = @event_registration.remaining_cost %>
-        <% undecided = !@scholarship.agreement_signed? %>
+        <%# Support-requested is waiting on us, not an open accept/decline choice, so
+            state the balance plainly rather than framing it as the buttons' question. %>
+        <% undecided = !@scholarship.agreement_signed? && !@scholarship.agreement_support_requested? %>
         <% owed_if_declined = undecided ? @event_registration.remaining_cost_without(@scholarship) : owed %>
         <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-700">
           <% if owed.zero? %>
