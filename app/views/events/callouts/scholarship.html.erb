@@ -96,14 +96,14 @@
         <% else %>
           <p class="text-sm text-gray-600">Agree to complete your scholarship tasks to accept this award.</p>
           <%# Native <details>; while it's open :has() hides Agree so the decline form stands alone. %>
-          <div class="group mt-3 flex flex-wrap items-center gap-3">
+          <div class="group mt-3 flex flex-wrap items-start gap-3">
             <%= form_with url: registration_scholarship_agreement_path(@event_registration.slug), method: :post, class: "group-has-[[open]]:hidden" do %>
               <button type="submit" name="agreement" value="yes" class="btn btn-success">
                 <i class="fa-solid fa-check"></i> Agree
               </button>
             <% end %>
 
-            <details class="group/details w-full">
+            <details class="group/details">
               <summary class="btn btn-secondary-outline cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                 <i class="fa-solid fa-hand-holding-dollar"></i> Request additional support
               </summary>
