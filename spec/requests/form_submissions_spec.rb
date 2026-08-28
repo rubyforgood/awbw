@@ -416,6 +416,18 @@ RSpec.describe "FormSubmissions", type: :request do
         )
       end
 
+      it "offers the End button for a not-yet-started affiliation too" do
+        affiliation = create(:affiliation, person: person, start_date: 1.month.from_now,
+                             organization: create(:organization, name: "Old Org"))
+
+        get form_submission_path(submission)
+
+        expect(response.body).to include(
+          CGI.escapeHTML(end_affiliation_path(affiliation, form_submission_id: submission.id,
+                                              end_date: (submission.created_at.to_date - 1.day).iso8601))
+        )
+      end
+
       it "offers no End button outside the new-job scenario" do
         reinstatement = create(:form_submission, person: person,
                                form: create(:form, role: "reinstatement"))

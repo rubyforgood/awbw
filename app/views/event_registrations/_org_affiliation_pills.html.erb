@@ -2,14 +2,13 @@
     when the person has no affiliation for the org.
     Locals: org, affiliations, submitted_org_name, submitted_position, neutral (optional) %>
 <% if affiliations.any? %>
-  <% active = ->(a) { !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) } %>
   <% position = submitted_position.to_s.strip %>
   <% is_submitted_org = submitted_org_name.to_s.strip.present? && org.name.to_s.strip.casecmp?(submitted_org_name.to_s.strip) %>
   <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
     <span class="text-2xs font-semibold uppercase tracking-wide text-gray-400">Affiliations:</span>
     <% affiliations.each do |a| %>
-      <% a_active = active.call(a) %>
-      <% color = a_active && !local_assigns[:neutral] ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200" %>
+      <% status = a.status_on %>
+      <% color = status == "Active" && !local_assigns[:neutral] ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200" %>
       <% start_month = a.start_date&.strftime("%B %Y") %>
       <% end_month = a.end_date&.strftime("%B %Y") %>
       <% dates =
@@ -22,7 +21,7 @@
            else
              "no dates"
            end %>
-      <% label = "#{a.facilitator? ? "Facilitator" : (a.title.presence || "No title")} (#{dates})#{" — inactive" unless a_active}" %>
+      <% label = "#{a.facilitator? ? "Facilitator" : (a.title.presence || "No title")} (#{dates})#{" — #{status.downcase}" unless status == "Active"}" %>
       <% title_attr = a.facilitator? ? "Facilitator role — determines whether the org is active with AWBW" : nil %>
       <%= render "shared/badge", label: label, classes: color, title: title_attr %>
     <% end %>
