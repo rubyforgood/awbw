@@ -49,6 +49,21 @@
     The transfer-out destination list now includes same-format events that aren't
     published yet, so a registrant can be moved into an event that's still being set up.
 
+- name: "Request additional scholarship support"
+  area: scholarships
+  display_status: public_facing
+  released_on: 2026-08-27
+  action_path: /registration/sample
+  summary: >-
+    Scholarship recipients now have a third option on their award page, next to Agree and Decline:
+    "Request additional support." They enter the amount they or their employer can contribute toward
+    the training fee instead of declining, and the trainings team is emailed so we can revisit the award.
+  pro_tips:
+    - The award stays live — a support request never zeroes it out or drops it from totals.
+    - The requested contribution and any note show in the scholarship's agreement history.
+    - Respond by changing the award amount — that re-offers it, so the recipient sees Agree / Request / Decline again.
+    - The trainings team is emailed on every response — accept, decline, or support request.
+
 - name: "Transferred-in attendance days are preserved"
   area: registration
   display_status: admin_facing

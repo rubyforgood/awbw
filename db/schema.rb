@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_27_000453) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_28_160913) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -116,14 +116,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_27_000453) do
     t.boolean "primary_contact", default: false, null: false
     t.date "start_date"
     t.string "title"
-    t.string "type"
     t.datetime "updated_at", precision: nil, null: false
     t.index ["event_registration_id"], name: "index_affiliations_on_event_registration_id"
     t.index ["organization_address_id"], name: "index_affiliations_on_organization_address_id"
     t.index ["organization_id"], name: "index_affiliations_on_organization_id"
     t.index ["person_id"], name: "index_affiliations_on_person_id"
     t.index ["title"], name: "index_affiliations_on_title"
-    t.index ["type"], name: "index_affiliations_on_type"
   end
 
   create_table "age_ranges", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -545,7 +543,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_27_000453) do
 
   create_table "events", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "abbreviation"
-    t.datetime "affiliations_reconciled_at"
     t.boolean "autoshow_cost", default: true, null: false
     t.boolean "autoshow_date", default: true, null: false
     t.boolean "autoshow_location", default: true, null: false
@@ -1303,13 +1300,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_27_000453) do
 
   create_table "scholarship_agreement_responses", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "amount_cents"
+    t.integer "contribution_cents"
     t.datetime "created_at", null: false
     t.text "reason"
     t.datetime "responded_at", null: false
+    t.integer "responded_by_id"
     t.string "responder"
     t.bigint "scholarship_id", null: false
     t.string "status", null: false
     t.datetime "updated_at", null: false
+    t.index ["responded_by_id"], name: "index_scholarship_agreement_responses_on_responded_by_id"
     t.index ["scholarship_id"], name: "index_scholarship_agreement_responses_on_scholarship_id"
   end
 
@@ -1976,6 +1976,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_27_000453) do
   add_foreign_key "resources", "windows_types"
   add_foreign_key "resources", "workshops"
   add_foreign_key "scholarship_agreement_responses", "scholarships"
+  add_foreign_key "scholarship_agreement_responses", "users", column: "responded_by_id"
   add_foreign_key "scholarships", "grants"
   add_foreign_key "scholarships", "people", column: "recipient_id"
   add_foreign_key "sectorable_items", "sectors"

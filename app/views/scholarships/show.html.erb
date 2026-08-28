@@ -20,7 +20,7 @@
     </div>
     <% latest_response = @scholarship.latest_agreement_response %>
     <div>
-      <dt class="text-sm font-medium text-gray-500">Agreement signed</dt>
+      <dt class="text-sm font-medium text-gray-500">Agreement accepted</dt>
       <dd class="mt-1 text-sm text-gray-900">
         <%= @scholarship.agreement_signed? ? "Yes" : "No" %>
         <% if @scholarship.agreement_signed? && latest_response&.responded_at %>

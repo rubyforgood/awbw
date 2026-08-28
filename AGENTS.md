@@ -63,7 +63,7 @@ This codebase (Rails 8.1)
 | `app/policies/` | ActionPolicy authorization rules | ~63 files |
 | `app/presenters/` | Presentation objects | 6 files |
 | `app/helpers/` | View helpers | ~37 files |
-| `app/mailers/` | ActionMailer classes | 5 files |
+| `app/mailers/` | ActionMailer classes | 6 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
 ### Frontend
@@ -353,6 +353,7 @@ end
 - `EventMailer` — Event registration confirmations
 - `NotificationMailer` — Notification delivery
 - `ContactUsMailer` — Contact form submissions
+- `ScholarshipMailer` — Trainings-team FYI on a recipient's agreement response (accept / decline / request additional support)
 - All use premailer-rails for inline CSS
 - **Previews** live in `test/mailers/previews/` (viewable at `/rails/mailers/` in development)
 
