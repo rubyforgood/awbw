@@ -14,6 +14,8 @@
       <i class="fa-solid fa-graduation-cap"></i>
     </span>
     <h2 class="text-sm font-semibold text-gray-700">Scholarship details</h2>
+    <%# Current agreement status, so the card leads with where the award stands. %>
+    <%= f.object.decorate.agreement_status_badge(all_states: true) %>
   </div>
 
   <div class="space-y-6 p-4">
