@@ -1,0 +1,30 @@
+<div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+  <table class="w-full border-collapse">
+    <thead class="bg-gray-100 animate-pulse">
+      <tr>
+        <% 5.times do %>
+          <th class="px-4 py-2 text-left">
+            <div class="h-4 w-20 rounded bg-gray-200"></div>
+          </th>
+        <% end %>
+        <th class="px-4 py-2">
+          <div class="h-4 w-6 ml-auto rounded bg-gray-200"></div>
+        </th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200 animate-pulse">
+      <% 3.times do %>
+        <tr>
+          <% 5.times do %>
+            <td class="px-4 py-3">
+              <div class="h-4 w-16 rounded bg-gray-200"></div>
+            </td>
+          <% end %>
+          <td class="px-4 py-3 text-right">
+            <div class="h-6 w-6 ml-auto rounded bg-gray-200"></div>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
