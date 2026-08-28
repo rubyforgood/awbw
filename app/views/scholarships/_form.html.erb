@@ -97,11 +97,10 @@
           <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
         </label>
       </div>
+      <%# Agreement response timeline, folded into the agreement card below its
+          toggle (renders nothing until the recipient has responded). %>
+      <%= render "agreement_history", scholarship: f.object, embedded: true %>
     </div>
-
-    <%# Agreement response timeline, right below the agreement toggle it documents
-        (renders nothing until the recipient has responded). %>
-    <%= render "agreement_history", scholarship: f.object %>
 
     <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
       <div>

@@ -1,22 +1,30 @@
-<%# Newest-first timeline of agreement responses. `admin: true` adds the sky
-    "admin only" styling for the registrant-facing callout page. %>
+<%# Newest-first timeline of agreement responses. Two looks, same data:
+    - default: a standalone bordered card (the registrant callout page).
+    - embedded: borderless, folded under a divider inside a host card (the admin
+      edit form's agreement box), so it reads as part of that card.
+    `admin: true` adds the sky "admin only" styling to the standalone card. %>
 <% admin = local_assigns.fetch(:admin, false) %>
+<% embedded = local_assigns.fetch(:embedded, false) %>
 <% responses = scholarship.agreement_responses.to_a %>
 <% if responses.any? %>
   <% status_classes = ScholarshipDecorator::AGREEMENT_STATUS_CLASSES %>
-  <details class="group overflow-hidden rounded-xl border shadow-sm <%= admin ? "border-sky-200 bg-sky-50" : "border-gray-200 bg-white" %>">
-    <summary class="flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-700 [&::-webkit-details-marker]:hidden">
+  <% wrapper_class = embedded ? "group mt-3 border-t border-gray-200 pt-3" : "group overflow-hidden rounded-xl border shadow-sm #{admin ? "border-sky-200 bg-sky-50" : "border-gray-200 bg-white"}" %>
+  <% summary_class = embedded ? "flex cursor-pointer items-center gap-2 text-xs font-medium text-gray-600 [&::-webkit-details-marker]:hidden" : "flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-700 [&::-webkit-details-marker]:hidden" %>
+  <% list_class = embedded ? "mt-2 divide-y divide-gray-200" : "divide-y divide-gray-100 border-t border-gray-100" %>
+  <% row_class = embedded ? "flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm" : "flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-sm" %>
+  <details class="<%= wrapper_class %>">
+    <summary class="<%= summary_class %>">
       <i class="fa-solid fa-clock-rotate-left text-gray-400"></i>
       Agreement history
       <% if admin %>
         <span class="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700"><i class="fa-solid fa-user-shield text-2xs"></i> Admin only</span>
       <% end %>
-      <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500"><%= responses.size %></span>
+      <span class="rounded-full <%= embedded ? "bg-gray-200" : "bg-gray-100" %> px-2 py-0.5 text-xs font-medium text-gray-500"><%= responses.size %></span>
       <i class="fa-solid fa-chevron-down ml-auto text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
     </summary>
-    <ol class="divide-y divide-gray-100 border-t border-gray-100">
+    <ol class="<%= list_class %>">
       <% responses.reverse_each do |response| %>
-        <li class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-sm">
+        <li class="<%= row_class %>">
           <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= status_classes[response.status] %>"><%= response.status.capitalize %></span>
           <span class="text-gray-500"><%= response.responded_at.strftime("%B %-d, %Y at %-l:%M %p") %></span>
           <% if response.responder.present? %>
