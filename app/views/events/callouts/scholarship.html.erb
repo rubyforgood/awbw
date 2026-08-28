@@ -163,6 +163,14 @@
         <% end %>
       </div>
 
+      <%# Admin-only agreement history (registrants never see it), shown only when
+          there's history to show. %>
+      <% if allowed_to?(:edit?, @scholarship) && @scholarship.agreement_responses.exists? %>
+        <div class="border-t border-gray-100 pt-5">
+          <%= render "scholarships/agreement_history", scholarship: @scholarship, admin: true %>
+        </div>
+      <% end %>
+
       <% if grant %>
         <div class="border-t border-gray-100 pt-5">
           <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Funder</p>
@@ -172,13 +180,6 @@
 
         <div class="border-t border-gray-100 pt-5">
           <%= render "scholarships/grant_criteria_tasks", grant: %>
-        </div>
-      <% end %>
-
-      <%# Admin-only agreement history (registrants never see it). %>
-      <% if allowed_to?(:edit?, @scholarship) && @scholarship.agreement_responses.exists? %>
-        <div class="border-t border-gray-100 pt-5">
-          <%= render "scholarships/agreement_history", scholarship: @scholarship, admin: true %>
         </div>
       <% end %>
     <% else %>
