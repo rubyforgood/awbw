@@ -2349,6 +2349,7 @@
   area: people
   display_status: user_facing
   released_on: 2026-08-27
+  pr_number: 2391
   action_path: "/people"
   summary: >-
     The People and Organizations directories now carry the awbw.org look — a cream
