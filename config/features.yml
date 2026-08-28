@@ -2409,3 +2409,17 @@
     page card topped by the rainbow accent strip, a serif page title, and the
     results table in its own bordered card. Filters, columns, and counts are
     unchanged.
+
+- name: "Gate a callout on CE-hour payment"
+  area: registration
+  display_status: user_facing
+  released_on: 2026-08-26
+  action_path: "/registration/sample"
+  summary: >-
+    A ticket callout can now be set to show only after a registrant has paid for
+    their CE hours — a CE-payment gate alongside the existing registration-payment
+    gate and display date.
+  pro_tips:
+    - "Find it under a callout's Visibility section: tick \"Only show if CE hours are paid\"."
+    - "Combine it with a display date to reveal CE-only material on a set day for paid CE registrants."
+    - "The registration-payment and CE-payment gates are independent — set either or both."
