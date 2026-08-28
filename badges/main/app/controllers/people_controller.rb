@@ -104,7 +104,7 @@ class PeopleController < ApplicationController
         @workshop_variation_ideas = WorkshopVariationIdea.credited_to_person(@person).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshop_variation_ideas", locals: { person: @person, workshop_variation_ideas: @workshop_variation_ideas }
       when "affiliations"
-        @affiliations = @person.affiliations.active.includes(organization: :logo_attachment).paginate(page: params[:page], per_page: per_page)
+        @affiliations = @person.affiliations.active_or_pending.includes(organization: :logo_attachment).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/affiliations", locals: { person: @person, affiliations: @affiliations }
       end
     end

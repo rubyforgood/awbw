@@ -991,8 +991,9 @@ class EventsController < ApplicationController
       .select(:registrant_id)
   end
 
-  # Person ids with at least one affiliation in the given status (Active / Pending
-  # / Inactive).
+  # Person ids with at least one affiliation in the given status (Affiliation::
+  # STATUSES — Active / Upcoming / Inactive), judged as of today to match the
+  # roster's Affiliation status column.
   def person_affiliation_status_ids(status)
     Affiliation.with_status(status).select(:person_id)
   end

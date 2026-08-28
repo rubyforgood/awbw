@@ -481,17 +481,31 @@ class EventRegistration < ApplicationRecord
     case value
     when "linked" then where(id: linked)
     when "unlinked" then where.not(id: linked)
-    when "pending"
-      field = event.registration_form&.form_fields&.find_by(field_identifier: FormField.aliased_identifiers("organization_name"))
-      next none unless field
-      submitted = FormAnswer.joins(:form_submission)
-        .where(form_field_id: field.id, form_submissions: { form_id: event.registration_form.id })
-        .where.not(submitted_answer: [ nil, "" ])
-        .select(Arel.sql("form_submissions.person_id"))
-      where(registrant_id: submitted).where.not(id: linked)
+    when "pending", "none"
+      answered = org_name_answer_person_ids(event)
+      # No organization field on the registration form: nobody could answer it,
+      # so every unlinked registration is "No org provided" and none is Pending.
+      next(value == "pending" ? none : where.not(id: linked)) if answered.nil?
+
+      scope = value == "pending" ? where(registrant_id: answered) : where.not(registrant_id: answered)
+      scope.where.not(id: linked)
     else all
     end
   }
+
+  # People who answered this event's registration form's organization-name field.
+  # Nil (not empty) when the form has no such field, so the caller can tell
+  # "nobody answered" from "there was nothing to answer".
+  def self.org_name_answer_person_ids(event)
+    form = event.registration_form
+    field = form&.form_fields&.find_by(field_identifier: FormField.aliased_identifiers("organization_name"))
+    return nil unless field
+
+    FormAnswer.joins(:form_submission)
+      .where(form_field_id: field.id, form_submissions: { form_id: form.id })
+      .where.not(submitted_answer: [ nil, "" ])
+      .select(Arel.sql("form_submissions.person_id"))
+  end
   # Filter by how many form submissions the registrant made for this event:
   # none, at least one, or more than one.
   scope :submission_status, ->(value, event) {

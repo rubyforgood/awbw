@@ -103,16 +103,35 @@ the same date. Every affiliation a scenario ends is recorded on the submission
 new job is deliberately blunt, and the flag is how a wrongly-ended row (a
 multi-org facilitator changing only one job) gets corrected.
 
-### D5 — "Linked" on the submission side is explicit-link OR name-match; no join table
+### D5 — "Linked" on the submission side is a direct link only; no join table
 
-A submission reads as linked when an org was explicitly linked to it, or when
-an active affiliation matches the submitted name. The explicit link is an id
+A submission reads as linked only through a real link to an org — never because
+the person happens to hold an affiliation whose org name matches what they
+typed. Two links carry it: the explicit one in `form_submissions.metadata`, and
+the `EventRegistrationOrganization` row this submission is pinned to
+(`form_submission_id`, set by public registration and by the event editor).
+**Both count everywhere** — the index's "Organization linking" filter and org
+chip, `for_organization`, and the linking editor's matched org — because public
+registration records only the pin, and counting the metadata alone left those
+submissions in the "Pending" queue with nothing to action while the registrants
+roster already called the same registration Linked
+(`FormSubmission::DIRECT_ORG_LINK_SQL`). On the editor page only, rows predating
+the pin fall back to the registration's **sole** linked org, the same single-org
+rule the event editor pairs submitted answers by. An affiliation is
+downstream of linking, not evidence of it: every path that links an org also
+mints the affiliation, so the affiliation match only ever restated the link less
+precisely — and it wrongly claimed a link for a name collision with an org the
+person is affiliated with for unrelated reasons. The explicit link is an id
 array in `form_submissions.metadata` (the `linked_registration_ids` pattern),
 **not** a submission↔org join model — the event side already has
 `EventRegistrationOrganization` for its richer needs (pin, autofill notes), and
 a second join for the rarer standalone case wasn't worth the schema. Event
 linking **back-applies** the explicit link onto the submission its pinning
 rules pair with the org, so a typo'd name resolved to a differently-named org
-reads as linked everywhere. Event-page **Unlink** deliberately does *not*
+reads as linked everywhere. Both indexes offer the same four values — Linked /
+Unlinked / Pending / No org provided (`FormSubmission.org_link_status`,
+`EventRegistration.organization_linking_status`) — so a registration and the
+submission behind it can't be filed under different words.
+Event-page **Unlink** deliberately does *not*
 retract the back-applied link (it can't be told apart from one made directly in
 the submission editor, and Unlink is scoped to the registration join only).

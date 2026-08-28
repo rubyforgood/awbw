@@ -37,13 +37,19 @@ class Affiliation < ApplicationRecord
 
   # Not flagged inactive and not past its end date. Includes affiliations whose
   # start_date is still in the future (e.g. a Facilitator affiliation dated to an
-  # upcoming training) — they are "pending" but counted here.
+  # upcoming training) — they are "pending" but counted here. Use this for
+  # "active or not-yet-started" checks (e.g. registration dedup); use `active` for
+  # genuinely-current rows.
   scope :active_or_pending, -> {
     where(inactive: false)
       .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", Date.current)
   }
 
-  scope :active, -> { active_or_pending }
+  # Genuinely active *now*: not flagged inactive, already started (no future
+  # start), and not past its end date. A future-start row is Upcoming, not Active.
+  # Delegates to with_status so the SQL lives in one place, the way #active?
+  # delegates to #status_on.
+  scope :active, -> { with_status("Active") }
 
   # Affiliations that overlapped a given date, judged purely by their start/end
   # dates rather than the cached `inactive` flag (which reflects "now"). Use this
@@ -100,11 +106,26 @@ class Affiliation < ApplicationRecord
     title.to_s.strip == FACILITATOR_TITLE
   end
 
-  # Current: not flagged inactive and not past its end date. Mirrors the `active`
-  # scope so already-loaded affiliations can be filtered in Ruby without another
-  # query (e.g. on list pages that preload affiliations).
+  # Genuinely active now — the in-memory twin of the `active` scope and of
+  # status_on == "Active", so already-loaded affiliations can be filtered in Ruby
+  # without another query (e.g. on list pages that preload affiliations). A
+  # future-start row is Upcoming, not Active.
   def active?
-    !inactive? && (end_date.nil? || end_date >= Date.current)
+    status_on == "Active"
+  end
+
+  # Not yet started: a future start date, not flagged inactive and not ended.
+  # The in-memory twin of status_on == "Upcoming".
+  def upcoming?
+    status_on == "Upcoming"
+  end
+
+  # Ended or flagged, as of a date — the in-memory twin of status_on == "Inactive".
+  # Prefer this to the raw `inactive` column when judging a row for display: the
+  # column is only re-derived on save (set_inactive_from_dates), so a term that
+  # simply lapsed still reads `inactive: false` until something touches it.
+  def inactive_on?(date = Date.current)
+    status_on(date) == "Inactive"
   end
 
   # This affiliation's status as of a date: Inactive (flagged or ended), Upcoming
@@ -199,10 +220,15 @@ class Affiliation < ApplicationRecord
 
   # Org status tracks active *Facilitator* affiliations specifically (mirroring the
   # form's status indicator) — a non-facilitator affiliation does not keep an org active.
+  # An upcoming-only program is left alone in both directions: a facilitator dated
+  # to a future training must not stamp the org Inactive (nothing re-runs this when
+  # the start date arrives), but it hasn't started, so it must not stamp it Active
+  # either — either way the stored value would read as drift on the edit form.
   def sync_organization_status_with_affiliations
-    if organization.affiliations.facilitators.active.exists?
+    facilitators = organization.affiliations.facilitators
+    if facilitators.active.exists?
       reactivate_organization_if_inactive
-    else
+    elsif facilitators.with_status("Upcoming").none?
       deactivate_organization_if_no_active_people
     end
   end

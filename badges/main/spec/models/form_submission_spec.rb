@@ -121,6 +121,23 @@ RSpec.describe FormSubmission do
       end
     end
 
+    describe ".for_organization" do
+      it "matches a metadata link and a pinned registration-org row alike" do
+        organization = create(:organization)
+        by_metadata = create(:form_submission)
+        by_metadata.link_organization!(organization.id)
+        by_pin = create(:form_submission)
+        create(:event_registration_organization, form_submission: by_pin, organization: organization,
+               event_registration: create(:event_registration, registrant: by_pin.person))
+        unrelated = create(:form_submission)
+
+        results = described_class.for_organization(organization.id)
+
+        expect(results).to contain_exactly(by_metadata, by_pin)
+        expect(results).not_to include(unrelated)
+      end
+    end
+
     describe ".org_link_status" do
       it "separates linked, pending, none, and unlinked by the direct submission link" do
         linked = submission_with_org_answer("Harbor Family Shelter")
@@ -144,6 +161,19 @@ RSpec.describe FormSubmission do
         # Still needs processing — nothing has been linked to the submission.
         expect(described_class.org_link_status("linked")).to be_empty
         expect(described_class.org_link_status("pending")).to contain_exactly(submission)
+      end
+
+      it "counts the registration-org row the submission is pinned to, with no metadata link" do
+        submission = submission_with_org_answer("Harbor Family Shelter")
+        create(:event_registration_organization, form_submission: submission,
+               organization: create(:organization, name: "Harbor Family Shelter"),
+               event_registration: create(:event_registration, registrant: submission.person))
+
+        # Public registration pins the submission instead of writing metadata, so
+        # this org is linked and the submission is out of the actionable queue.
+        expect(described_class.org_link_status("linked")).to contain_exactly(submission)
+        expect(described_class.org_link_status("pending")).to be_empty
+        expect(described_class.org_link_status("unlinked")).to be_empty
       end
 
       it "counts an explicitly linked org even when the submitted name doesn't match it" do

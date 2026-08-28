@@ -59,7 +59,7 @@ class PersonPolicy < ApplicationPolicy
 
   relation_scope do |relation|
     next relation if admin?
-    relation.searchable.with_active_affiliations.where_user_not_locked
+    relation.searchable.with_active_facilitator_affiliations.where_user_not_locked
   end
 
   private
