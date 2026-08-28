@@ -2428,6 +2428,7 @@
   area: registration
   display_status: public_facing
   released_on: 2026-08-28
+  pr_number: 2393
   summary: >-
     The registration ticket and every callout page it links to (payment, CE,
     certificate, scholarship, handouts, FAQ, and the rest) now carry the awbw.org
