@@ -116,14 +116,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_27_000453) do
     t.boolean "primary_contact", default: false, null: false
     t.date "start_date"
     t.string "title"
-    t.string "type"
     t.datetime "updated_at", precision: nil, null: false
     t.index ["event_registration_id"], name: "index_affiliations_on_event_registration_id"
     t.index ["organization_address_id"], name: "index_affiliations_on_organization_address_id"
     t.index ["organization_id"], name: "index_affiliations_on_organization_id"
     t.index ["person_id"], name: "index_affiliations_on_person_id"
     t.index ["title"], name: "index_affiliations_on_title"
-    t.index ["type"], name: "index_affiliations_on_type"
   end
 
   create_table "age_ranges", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -545,7 +543,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_27_000453) do
 
   create_table "events", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "abbreviation"
-    t.datetime "affiliations_reconciled_at"
     t.boolean "autoshow_cost", default: true, null: false
     t.boolean "autoshow_date", default: true, null: false
     t.boolean "autoshow_location", default: true, null: false
