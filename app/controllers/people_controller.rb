@@ -241,6 +241,7 @@ class PeopleController < ApplicationController
       affiliations: { organization: [ :logo_attachment, :addresses ] }
     ).find(params[:id]).decorate
     authorize! @person
+    @membership = membership_for(@person)
     set_form_variables
   end
 

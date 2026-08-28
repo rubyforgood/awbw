@@ -19,6 +19,14 @@
   --color-transparent: transparent;
   --font-telefon: "Telefon Bold", sans-serif;
 
+  /* AWBW marketing brand tokens (matches awbw.org). The navy is `primary`; these
+     add the warm cream surface, gold call-to-action, and the display serif used
+     for headlines. Themed pages (e.g. the person profile) build on these. */
+  --color-brand-cream: #faf6ea;
+  --color-brand-gold: #f6c445;
+  --color-brand-gold-dark: #e7ad25;
+  --font-display: "Fraunces", "Lato", serif;
+
   /* Social network brand colors, used for the hover fill on share/follow
      buttons. Instagram is a three-stop gradient rather than a single fill. */
   --color-linkedin: #0a66c2;
