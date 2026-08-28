@@ -279,7 +279,7 @@ RSpec.describe EventRegistration, type: :model do
         transfer!
       end
 
-      it "reads the destination reg as CE-paid (its live record carries no balance)" do
+      it "reads the destination reg as CE-paid (the amount due is settled across the chain)" do
         expect(destination.reload.ce_paid_in_full?).to be(true)
       end
 
@@ -298,7 +298,7 @@ RSpec.describe EventRegistration, type: :model do
         transfer!
       end
 
-      it "reads the destination reg as not CE-paid (the balance rides forward to the new event)" do
+      it "reads the destination reg as not CE-paid — the origin's partial payment does not settle the remaining balance that rode forward" do
         expect(destination.reload.ce_paid_in_full?).to be(false)
       end
     end
@@ -314,7 +314,7 @@ RSpec.describe EventRegistration, type: :model do
     context "when the transferred-in reg holds no CE record of its own but the source paid CE" do
       before { pay_ce(15_000) }
 
-      it "counts the destination as CE-paid via the source (its CE credit lives on the origin)" do
+      it "counts the destination as CE-paid — the chain's only CE record (on the origin) is settled" do
         expect(destination.reload.ce_registered?).to be(false)
         expect(destination.ce_paid_in_full?).to be(true)
       end
