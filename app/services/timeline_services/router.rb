@@ -29,6 +29,18 @@ module TimelineServices
         targets.uniq
       when Affiliation
         [ subject.person, subject.organization ].compact.uniq
+      when Address
+        [ subject.addressable ].compact
+      when ContactMethod
+        [ subject.contactable ].compact
+      when ProfessionalLicense
+        [ subject.person ].compact
+      when StaffTagging
+        [ subject.staff_taggable ].compact
+      when SectorableItem
+        [ subject.sectorable ].compact
+      when CategorizableItem
+        [ subject.categorizable ].compact
       else
         return [ subject ] if subject.is_a?(HasTimeline)
 

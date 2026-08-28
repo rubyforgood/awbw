@@ -1,4 +1,15 @@
 class Address < ApplicationRecord
+  include Timelineable
+
+  def self.timeline_renderer_class
+    NestedRecordTimelineRenderer
+  end
+
+  ADDRESS_TIMELINE_ATTRIBUTES = %w[
+    street_address city state zip_code phone county country
+    address_type locality district
+  ].freeze
+
   LOCALITIES = [ "LA City", "LA County", "Southern CA", "Northern CA",
                 "Central CA", "Orange County", "Outside CA", "Outside USA", "Unknown" ]
   CONTACT_TYPES = [ nil, "work", "personal", "mailing", "unknown" ].freeze
@@ -31,5 +42,15 @@ class Address < ApplicationRecord
 
   def name
     "#{street_address}, #{city}, #{state} #{zip_code}"
+  end
+
+  def timeline_label
+    "Address: #{name}"
+  end
+
+  def timeline_changes
+    saved_changes
+      .slice(*ADDRESS_TIMELINE_ATTRIBUTES)
+      .transform_values { |(old_value, new_value)| [old_value.to_s, new_value.to_s] }
   end
 end

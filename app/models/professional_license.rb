@@ -1,5 +1,13 @@
 class ProfessionalLicense < ApplicationRecord
+  include Timelineable
+
+  def self.timeline_renderer_class
+    NestedRecordTimelineRenderer
+  end
+
   has_paper_trail
+
+  LICENSE_TIMELINE_ATTRIBUTES = %w[ number kind issuing_state expires_on ].freeze
 
   belongs_to :person
   belongs_to :created_by, class_name: "User", optional: true
@@ -69,6 +77,16 @@ class ProfessionalLicense < ApplicationRecord
   # any CE registration is locked to admins (see ProfessionalLicensePolicy).
   def used_for_ce?
     continuing_education_registrations.exists?
+  end
+
+  def timeline_label
+    name
+  end
+
+  def timeline_changes
+    saved_changes
+      .slice(*LICENSE_TIMELINE_ATTRIBUTES)
+      .transform_values { |(old_value, new_value)| [old_value.to_s, new_value.to_s] }
   end
 
   private
