@@ -1,6 +1,9 @@
 module TitleDisplayHelper
+  # `display: true` sets the title in the brand serif — for a page's own heading.
+  # Card and row titles keep the sans so dense lists stay readable.
   def title_with_badges(record, font_size: "text-lg", record_title: nil,
-                        show_hidden_badge: true, display_windows_type: false)
+                        show_hidden_badge: true, display_windows_type: false,
+                        display: false)
     fragments = []
     home_page = controller_name == "home" || controller_path.start_with?("home/")
 
@@ -98,7 +101,7 @@ module TitleDisplayHelper
     title_row = content_tag(
       :span,
       title_content.html_safe,
-      class: "#{font_size} font-semibold text-gray-900 leading-tight"
+      class: "#{font_size} leading-tight #{display ? "font-display text-primary" : "font-semibold text-gray-900"}"
     )
 
     # ---- Combine rows intelligently ----

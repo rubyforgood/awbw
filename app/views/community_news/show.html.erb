@@ -1,9 +1,9 @@
 <% content_for(:page_bg_class, "admin-or-public-or-authpublished") %>
 <% community_news_url   = community_news_url(@community_news) %>
 <% community_news_title = ERB::Util.url_encode(@community_news.title) %>
-<div class="<%= DomainTheme.bg_class_for(:community_news) %> border border-gray-200 rounded-xl shadow p-6">
+<%= render layout: "shared/show_page", locals: { domain: :community_news } do %>
       <!-- Top Right Utility Links -->
-      <div class="flex flex-wrap justify-end gap-2 mb-4">
+      <div class="mb-4 flex flex-wrap justify-end gap-2">
         <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <%= link_to "Community news", community_news_index_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <% if allowed_to?(:edit?, @community_news) %>
@@ -17,16 +17,16 @@
       </div>
 
       <!-- Header Row -->
-      <div class="w-full bg-white rounded-lg shadow-md p-6 space-y-6">
-        <div class="max-w-3xl mx-auto px-4 py-10 text-gray-800">
+      <div class="w-full space-y-6 rounded-lg bg-white p-6 shadow-md">
+        <div class="mx-auto max-w-3xl px-4 py-10 text-gray-800">
 
           <!-- Title -->
-          <div class="font-bold my-6 text-gray-900 leading-tight">
-            <%= title_with_badges(@community_news, font_size: "text-3xl") %>
+          <div class="my-6 leading-tight font-bold text-gray-900">
+            <%= title_with_badges(@community_news, font_size: "text-3xl", display: true) %>
           </div>
 
           <!-- Meta Data (exact screenshot style) -->
-          <div class="text-sm text-gray-600 space-y-0.5 mb-6">
+          <div class="mb-6 space-y-0.5 text-sm text-gray-600">
             <p><strong>By:</strong>
               <%= credited_author_link(@community_news) %>
             </p>
@@ -42,9 +42,9 @@
           </div>
 
           <!-- Share Section -->
-          <h3 class="font-semibold text-lg mb-3">Share this news:</h3>
+          <h3 class="mb-3 text-lg font-semibold">Share this news:</h3>
 
-          <div class="flex space-x-4 mb-6">
+          <div class="mb-6 flex space-x-4">
 
             <!-- Facebook -->
             <%= link_to "https://www.facebook.com/sharer/sharer.php?u=#{community_news_url}",
@@ -77,9 +77,9 @@
           </div>
 
           <!-- Footer Copy (matches screenshot) -->
-          <div class="text-sm text-gray-500 leading-relaxed border-t border-gray-300 pt-6">
+          <div class="border-t border-gray-300 pt-6 text-sm leading-relaxed text-gray-500">
             <%= render "shared/organization_footer" %>
           </div>
         </div>
       </div>
-</div>
+<% end %>

@@ -17,7 +17,7 @@ module DomainTheme
     quotes:                   :slate,
     grants:                   :green,
 
-    tags:                     :lime,
+    tags:                     :"brand-green",
     sectors:                  :lime,
     categories:               :lime,
     category_types:            :lime,
