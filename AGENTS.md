@@ -441,14 +441,14 @@ Tailwind only scans the paths listed in the `@source` directives at the top of t
 
 | Directory | Count | Purpose |
 |---|---|---|
-| `spec/models/` | ~71 | Model unit tests |
-| `spec/views/` | ~77 | View template tests |
-| `spec/requests/` | ~91 | HTTP request/integration tests |
-| `spec/system/` | ~20 | End-to-end browser tests (Capybara) |
-| `spec/routing/` | ~15 | Route definition tests |
-| `spec/policies/` | ~15 | Authorization policy tests |
-| `spec/decorators/` | ~15 | Decorator tests |
-| `spec/services/` | ~25 | Service object tests |
+| `spec/models/` | ~86 | Model unit tests |
+| `spec/views/` | ~82 | View template tests |
+| `spec/requests/` | ~137 | HTTP request/integration tests |
+| `spec/system/` | ~25 | End-to-end browser tests (Capybara) |
+| `spec/routing/` | ~18 | Route definition tests |
+| `spec/policies/` | ~19 | Authorization policy tests |
+| `spec/decorators/` | ~29 | Decorator tests |
+| `spec/services/` | ~68 | Service object tests |
 | `spec/mailers/` | ~5 | Mailer tests |
 | `spec/helpers/` | ~5 | Helper tests |
 | `spec/factories/` | ~67 | FactoryBot factory definitions |
