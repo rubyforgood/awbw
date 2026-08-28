@@ -1,38 +1,31 @@
 <%= render "shared/public_welcome_banner" %>
 
 <% content_for(:page_bg_class, "public") %>
-<div class="community-news-index max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:stories) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="w-full">
-    <div class="flex items-start justify-between mb-6">
-      <div class="pr-6">
-        <h2 class="text-2xl font-semibold mb-2">Stories</h2>
-        <p class="text-gray-600">Check out stories from Windows Facilitators around the world and the healing they make possible through art</p>
-      </div>
+<% actions = capture do %>
+  <% if allowed_to?(:import?, Story) %>
+    <%= link_to "Import",
+                new_story_import_path,
+                class: "admin-only font-medium text-blue-700 hover:text-blue-900 hover:underline" %>
+  <% end %>
+  <% if allowed_to?(:new?, Story) %>
+    <%= link_to "New Story",
+                new_story_path,
+                class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+  <% end %>
+<% end %>
+<%= render layout: "shared/index_page",
+           locals: { domain: :stories, eyebrow: "Community", title: "Stories",
+                     subtitle: "Check out stories from Windows Facilitators around the world and the healing they make possible through art",
+                     actions: actions } do %>
+  <%= render "search_boxes" %>
 
-      <div class="text-right text-end flex flex-wrap items-center justify-end gap-3">
-        <% if allowed_to?(:import?, Story) %>
-          <%= link_to "Import",
-                      new_story_import_path,
-                      class: "admin-only font-medium text-blue-700 hover:text-blue-900 hover:underline" %>
-        <% end %>
-        <% if allowed_to?(:new?, Story) %>
-          <%= link_to "New Story",
-                      new_story_path,
-                      class: "admin-only bg-blue-100 btn btn-primary-outline" %>
-        <% end %>
-      </div>
-    </div>
+  <%= render "shared/filtered_to", record: @author, clear_path: stories_path %>
 
-    <%= render "search_boxes" %>
+  <%= render "stories_count" %>
 
-    <%= render "shared/filtered_to", record: @author, clear_path: stories_path %>
+  <% result_src = stories_path + "?" + request.query_string %>
 
-    <%= render "stories_count" %>
-
-    <% result_src = stories_path + "?" + request.query_string %>
-
-    <%= turbo_frame_tag "stories_results", src: result_src do %>
-      <%= render "results_skeleton" %>
-    <% end %>
-  </div>
-</div>
+  <%= turbo_frame_tag "stories_results", src: result_src do %>
+    <%= render "results_skeleton" %>
+  <% end %>
+<% end %>

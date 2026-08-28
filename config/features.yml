@@ -2513,3 +2513,16 @@
     buttons across the whole portal are brand navy instead of a generic blue.
   pro_tips:
     - "Every form's submit button was being forced to a non-brand blue by a leftover setting; they now use the brand button the views already asked for."
+
+- name: "Public pages in the AWBW brand"
+  area: content
+  display_status: public_facing
+  released_on: 2026-08-28
+  pr_number: 2398
+  summary: >-
+    The public pages now carry the awbw.org look: every listing keeps its own
+    colour from the AWBW brand palette, and the registration and payment pages
+    get the same navy header the ticket has. Content and filters are unchanged.
+  pro_tips:
+    - "FAQs and workshop variations join the brand palette, so every public listing now uses an official AWBW colour."
+    - "The public event page, registration form and bulk payment pages lose the old purple header and green headline."

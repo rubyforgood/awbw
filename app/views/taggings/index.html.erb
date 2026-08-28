@@ -9,19 +9,12 @@
      filtered_categories.map { |c| "#{c.category_type&.name&.titleize}: #{c.name}" }.join(", ").presence
 %>
 
-<div class="taggings-index mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:tags) %> rounded-xl border border-gray-200 p-6 shadow">
+<%= render layout: "shared/index_page",
+           locals: { domain: :tags, eyebrow: "Browse", title: "Taggings",
+                     subtitle: "Content tagged by sector or thematic category." } do %>
 
   <!-- HEADER -->
   <div class="mb-10 w-full">
-    <div class="mb-6">
-      <h1 class="mb-2 text-3xl font-semibold text-gray-900">
-        Taggings
-      </h1>
-
-      <p class="max-w-2xl text-gray-600">
-        Content tagged by sector or thematic category.
-      </p>
-    </div>
 
     <!-- ACTIVE FILTERS -->
     <% if sector_names.present? || category_full_names.present? || @category_names_all.present? %>
@@ -118,7 +111,7 @@
     <% end %>
 
   </div>
-</div>
+<% end %>
 
 <!-- STAFF TAGS (internal, admin-only) -->
 <% if allowed_to?(:index?, StaffTag) && @staff_tags.present? %>
