@@ -43,7 +43,7 @@ RSpec.describe Asset do
     end
 
     it "labels the maximum for display" do
-      expect(Asset.max_file_size_label).to eq("25 MB")
+      expect(Asset.max_file_size_label).to eq("40 MB")
     end
   end
 
