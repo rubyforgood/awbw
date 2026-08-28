@@ -38,7 +38,8 @@
   <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
 
     <%# Card Header %>
-    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
+    <%= render "shared/brand_accent_strip" %>
+    <div class="bg-primary text-white px-6 sm:px-8 py-5">
       <div class="flex items-center gap-5">
         <div class="shrink-0">
           <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
@@ -48,7 +49,6 @@
           <p class="text-sm text-blue-200"><%= @event.title %></p>
         </div>
       </div>
-      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
     </div>
 
     <%# Card Body %>
@@ -89,7 +89,8 @@
     <div id="scholarship-application" class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden mt-8 scroll-mt-24">
 
       <%# Card Header %>
-      <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
+      <%= render "shared/brand_accent_strip" %>
+      <div class="bg-primary text-white px-6 sm:px-8 py-5">
         <div class="flex items-center gap-3">
           <i class="fa-solid fa-hand-holding-heart text-accent text-xl"></i>
           <div class="flex-1">
@@ -97,7 +98,6 @@
             <p class="text-sm text-blue-200"><%= @scholarship_form.display_name %></p>
           </div>
         </div>
-        <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
       </div>
 
       <%# Card Body %>

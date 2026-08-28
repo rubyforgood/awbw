@@ -12,7 +12,8 @@
   </div>
 
   <div class="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
-    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 px-6 py-5 text-white sm:px-8">
+    <%= render "shared/brand_accent_strip" %>
+    <div class="bg-primary px-6 py-5 text-white sm:px-8">
       <h1 class="text-xl leading-tight font-semibold tracking-wide"><%= @form.display_name %></h1>
       <div class="from-accent to-accent absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r via-amber-400"></div>
     </div>
