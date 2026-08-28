@@ -1,0 +1,28 @@
+<%# Shared shell for the sign-in / password / confirmation pages: the AWBW logo
+    over a white card topped by the brand rule, with a serif heading and the
+    form supplied as a block. Keeps every auth screen on one layout.
+    locals: title; optional subtitle, and links: false for pages served outside a
+    Devise controller, where `devise_mapping` is not defined. %>
+<div class="flex items-center justify-center px-4">
+  <div class="border-primary/10 mt-8 w-full max-w-md overflow-hidden rounded-2xl border bg-white shadow-lg">
+    <%= render "shared/brand_accent_strip" %>
+    <div class="p-8">
+      <%= render "layouts/mailer/logo" %>
+
+      <h1 class="text-primary font-display mb-2 text-center text-3xl"><%= title %></h1>
+      <% if local_assigns[:subtitle].present? %>
+        <p class="mb-6 text-center text-gray-600"><%= subtitle %></p>
+      <% else %>
+        <div class="mb-6"></div>
+      <% end %>
+
+      <%= yield %>
+
+      <% if local_assigns.fetch(:links, true) %>
+        <div class="border-primary/10 mt-6 border-t pt-5 text-center">
+          <%= render "devise/shared/links" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
