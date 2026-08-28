@@ -1,13 +1,9 @@
 <% title ||= "Video Gallery" %>
-
-<section class="py-10 <%= DomainTheme.bg_class_for(:video_recordings) %>">
-  <div class="max-w-6xl mx-auto px-4">
-    <%= render "home/home_section_header",
-               title: title,
-               subtitle: "Inspiration in motion" %>
-
-    <%= turbo_frame_tag "home_video_gallery", src: home_video_recordings_path, loading: :lazy, data: { controller: "prefetch-lazy" } do %>
-      <%= render "video_gallery_skeleton" %>
-    <% end %>
-  </div>
-</section>
+<%= render layout: "home/section",
+           locals: { title: title,
+                     subtitle: "Inspiration in motion",
+                     surface: local_assigns[:surface] } do %>
+  <%= turbo_frame_tag "home_video_gallery", src: home_video_recordings_path, loading: :lazy, data: { controller: "prefetch-lazy" } do %>
+    <%= render "video_gallery_skeleton" %>
+  <% end %>
+<% end %>

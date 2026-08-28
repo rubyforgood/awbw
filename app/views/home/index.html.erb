@@ -1,9 +1,11 @@
 <% content_for(:full_width, true) %>
 <%= render "shared/public_welcome_banner" %>
 
-<%= render "home/workshops", title: "Featured Workshops" %>
-<%= render "home/community_news" %>
-<%= render "home/resources", title: "Popular Resources" %>
-<%= render "home/events" %>
-<%= render "home/stories" %>
-<%= render "home/video_recordings" %>
+<%# Sections alternate cream and white, the way awbw.org does — the colour lives
+    in the cards, not the band behind them. %>
+<%= render "home/workshops", title: "Featured Workshops", surface: "bg-brand-cream" %>
+<%= render "home/community_news", surface: "bg-white" %>
+<%= render "home/resources", title: "Popular Resources", surface: "bg-brand-cream" %>
+<%= render "home/events", surface: "bg-white" %>
+<%= render "home/stories", surface: "bg-brand-cream" %>
+<%= render "home/video_recordings", surface: "bg-white" %>

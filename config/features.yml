@@ -2487,3 +2487,16 @@
     cream ticket body. Nothing moved; only the styling changed.
   pro_tips:
     - "Registrants see this, so it's the most public-facing page in the portal — preview it from an event's dashboard with \"Sample ticket\"."
+
+- name: "Home page in the AWBW brand"
+  area: content
+  display_status: public_facing
+  released_on: 2026-08-28
+  action_path: "/"
+  summary: >-
+    The portal home page now reads like awbw.org: sections alternate cream and
+    white with the rainbow rule marking each boundary, and section headings are
+    in the brand serif. The sections, their order, and the cards inside them are
+    unchanged.
+  pro_tips:
+    - "The colour that used to tint each whole band now lives in the cards, which is how the marketing site handles it."
