@@ -2283,6 +2283,23 @@
     - "Only mutations show: opening or printing a record never clutters its log."
     - "Deleting a child or attachment is recorded too — the entry keeps the name even after the file is gone."
 
+- name: "Import registrants from a spreadsheet"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-25
+  action_path: "/event_registrations/import"
+  summary: >-
+    Bulk-add attended registrants to an event from a CSV roster. Every row becomes an
+    attended registration, exactly as if the person had registered — matched to an
+    existing person by email and name (no duplicates), with the organization linked
+    when we recognize it.
+  pro_tips:
+    - "Expected columns: FirstName, LastName, Organization, EMail. Export your spreadsheet as a .csv first."
+    - "You get a full preview — new vs. matched people, new vs. promoted registrations, and which orgs will link vs. need reconciling — before anything is saved."
+    - "Organizations we don't recognize aren't created; they're queued on each registrant's \"link organization\" page so you can reconcile them the same way as a normal registration."
+    - "On facilitator trainings, a linked organization also adds the person's facilitator affiliation."
+    - "No emails are sent, so it's safe for historical rosters. Reach it from the \"Import registrants\" button on the registrants page."
+
 - name: "Staff taggings directory"
   area: people
   display_status: admin_facing
@@ -2301,3 +2318,29 @@
     - "\"New tagging\" tags a person in one step; each staff tag on the staff tags page also has a \"View taggings\" link, pre-filtered to that tag."
     - "Editing a tagging lets you switch its tag and record comments or communications about it, all on one page."
     - "Reach it from the admin home page under \"Staff taggings\"."
+
+- name: "Merge duplicate organizations"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-08-25
+  pr_number: 2374
+  action_path: "/organizations/dedupe_index"
+  summary: >-
+    Admins can now merge two duplicate organizations into one. The deduper
+    suggests likely duplicates (by name, name minus Inc/LLC, FileMaker code, and
+    shared address), then previews exactly what will move before merging.
+  description: >-
+    Reach it from the Dedupe link on the Organizations page. It clusters likely
+    duplicates and flags why each was grouped — same name, a shared FileMaker
+    code, or a shared address. FileMaker is the source of truth, and a record can
+    carry more than one code (a trimmed, comma-separated list); when two records
+    have different codes, merging keeps all of them so no FileMaker link is lost.
+    The preview shows a side-by-side of both records with the kept record's key
+    fields editable, plus a summary of every associated record (affiliations,
+    event registrations, reports, payments, workshop logs, tags, and more) that
+    moves to the kept organization. The merge reassigns all of them and deletes
+    the duplicate. It can't be undone. Admin-only.
+  pro_tips:
+    - "Edit the kept organization's fields right in the preview before you merge."
+    - "Use Swap if you picked the wrong record to keep."
+    - "Both records' FileMaker codes are kept on the merged organization — a field flagged 'Kept on merge' is combined, not dropped."

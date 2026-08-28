@@ -107,6 +107,10 @@ Rails.application.routes.draw do
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate
   post "registration/:slug/pay", to: "events/registrations#pay", as: :registration_pay
+  resource :event_registration_import, only: %i[new create], path: "event_registrations/import",
+                                       controller: "event_registration_imports" do
+    post :confirm
+  end
   resources :event_registrations do
     member do
       get :confirm
@@ -278,6 +282,10 @@ Rails.application.routes.draw do
   resources :organizations do
     collection do
       get :check_duplicates
+      get :dedupe_index
+      get :dedupe_preview
+      post :dedupe_perform
+      patch :dedupe_update_keep
     end
     member do
       get :populations_served

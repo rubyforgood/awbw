@@ -1,15 +1,21 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:organizations) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:organizations) %> rounded-xl border border-gray-200 p-6 shadow">
       <!-- Header -->
-      <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
+      <div class="mb-6 flex flex-col items-center justify-between gap-3 sm:flex-row">
         <div id="organizations_count">
           <h1 class="text-2xl font-semibold text-gray-900">Organizations</h1>
         </div>
-        <% if allowed_to?(:new?, Organization) %>
-          <%= link_to "New Organization",
-                      new_organization_path,
-                      class: "admin-only bg-blue-100 btn btn-primary-outline" %>
-        <% end %>
+        <div class="flex items-center gap-3">
+          <% if allowed_to?(:manage?, Organization) %>
+            <%= link_to "Dedupe", dedupe_index_organizations_path,
+                        class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+          <% end %>
+          <% if allowed_to?(:new?, Organization) %>
+            <%= link_to "New Organization",
+                        new_organization_path,
+                        class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+          <% end %>
+        </div>
       </div>
 
       <!-- Optional filters -->
