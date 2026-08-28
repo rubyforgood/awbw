@@ -2500,3 +2500,15 @@
     headings are in the brand serif. Sections, order and cards are unchanged.
   pro_tips:
     - "The section colours, the cream page background, and the rainbow rule now use the exact values from the AWBW brand guide."
+
+- name: "Sign-in and password pages in the AWBW brand"
+  area: people
+  display_status: public_facing
+  released_on: 2026-08-28
+  action_path: "/users/sign_in"
+  summary: >-
+    Signing in, resetting a password, and the confirmation and unlock pages now
+    share one branded card — AWBW logo, rainbow rule, serif heading. Form submit
+    buttons across the whole portal are brand navy instead of a generic blue.
+  pro_tips:
+    - "Every form's submit button was being forced to a non-brand blue by a leftover setting; they now use the brand button the views already asked for."
