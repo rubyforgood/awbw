@@ -31,11 +31,11 @@
   </head>
 
   <body class="<%= controller.controller_name %> <%= controller.action_name %>
-      flex flex-col min-h-screen bg-white">
+      flex min-h-screen flex-col bg-white">
     <%= yield :body_start %>
     <%= render "shared/svg_symbols" %>
-    <div class="flex-grow flex flex-col" id="main">
-      <div class="sticky top-0 left-0 w-full z-50 print:hidden">
+    <div class="flex flex-grow flex-col" id="main">
+      <div class="sticky top-0 left-0 z-50 w-full print:hidden">
         <!-- Navbar -->
         <nav class="<%= navbar_bg_class %> text-white">
           <%= render "shared/navbar" %>
