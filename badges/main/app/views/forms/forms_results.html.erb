@@ -1,0 +1,83 @@
+<%= turbo_frame_tag :forms_results do %>
+  <% sort_link = sort_header_link(frame: "forms_results", path: ->(p) { forms_path(p) }) %>
+  <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+    <table class="w-full border-collapse">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("name", "Name") %></th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("role", "Role") %></th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Availability</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("fields", "Fields") %></th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("submissions", "Submissions") %></th>
+          <th class="px-4 py-2"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% @forms.each do |form| %>
+          <tr id="form_<%= form.id %>" class="scroll-mt-24 hover:bg-gray-50">
+            <td class="px-4 py-2 text-sm font-medium text-gray-900">
+              <%= form.display_name %>
+            </td>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= form_role_label(form) %></td>
+            <%# A public link and an event form are mutually exclusive — an
+                event-connected form is never offered publicly — so at most one
+                chip applies. %>
+            <td class="px-4 py-2 text-sm text-gray-600">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <% if form.publicly_fillable? %>
+                  <%= link_to public_form_path(form.slug), target: "_blank", rel: "noopener",
+                              class: "inline-flex items-center gap-1.5 rounded-md bg-green-50 px-2 py-0.5 text-green-700 font-medium hover:bg-green-100" do %>
+                    <i class="fa-solid fa-link text-xs"></i>/f/<%= form.slug %>
+                  <% end %>
+                <% end %>
+                <% if form.events.size.positive? %>
+                  <span class="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-2 py-0.5 text-xs text-gray-500">
+                    <i class="fa-solid fa-calendar-day"></i>Event form
+                  </span>
+                  <%= link_to pluralize(form.events.size, "event"), events_path(form_id: form.id), class: "inline-flex items-center rounded-md #{DomainTheme.bg_class_for(:forms)} px-2 py-0.5 #{DomainTheme.text_class_for(:forms, intensity: 700)} font-medium #{DomainTheme.bg_class_for(:forms, hover: true)}" %>
+                <% end %>
+                <% unless form.publicly_fillable? || form.events.size.positive? %>
+                  <span class="inline-flex items-center rounded-md border border-gray-200 px-2 py-0.5 text-xs text-gray-500">Not published</span>
+                <% end %>
+              </div>
+            </td>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= form.form_fields.size %></td>
+            <td class="px-4 py-2 text-sm text-gray-600">
+              <% submissions_count = form.form_submissions.size %>
+              <% if submissions_count.positive? %>
+                <%= link_to submissions_count, form_submissions_path(form_id: form.id, return_to: "forms"),
+                            class: "inline-flex items-center rounded-md #{DomainTheme.bg_class_for(:forms)} px-2 py-0.5 #{DomainTheme.text_class_for(:forms, intensity: 700)} font-medium #{DomainTheme.bg_class_for(:forms, hover: true)}" %>
+              <% else %>
+                0
+              <% end %>
+            </td>
+            <td class="px-4 py-2 text-right text-sm">
+              <% dropdown_id = "form-actions-menu-#{form.id}" %>
+              <% item_class = "block whitespace-nowrap px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
+              <div data-controller="dropdown" class="relative inline-block text-left">
+                <button type="button"
+                        data-action="dropdown#toggle"
+                        data-dropdown-payload-param='[{"<%= dropdown_id %>":"hidden"}]'
+                        class="rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                        aria-label="Form actions">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div id="<%= dropdown_id %>"
+                     data-dropdown-target="content"
+                     class="hidden absolute right-0 z-10 mt-1 min-w-[160px] rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                  <%= link_to "Results", results_form_path(form), class: item_class %>
+                  <%= link_to "View", form_path(form), class: item_class %>
+                  <%= link_to "Edit", edit_form_path(form), class: item_class %>
+                  <% if allowed_to?(:copy?, form) %>
+                    <%= link_to "Copy", copy_form_path(form), class: item_class,
+                                data: { turbo_method: :post, turbo_confirm: "Make a full copy of \"#{form.display_name}\"?" } %>
+                  <% end %>
+                </div>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
