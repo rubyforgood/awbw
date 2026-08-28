@@ -1,0 +1,50 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="border border-gray-200 rounded-xl shadow p-6">
+  <div class="space-y-6">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-semibold text-gray-900">FileMaker Archive</h1>
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+      <% @tables.each do |key, config| %>
+        <%= link_to config[:label], fm_archives_path(table: key),
+              class: ["btn", key == @selected ? "btn-primary" : "btn-primary-outline"] %>
+      <% end %>
+    </div>
+
+    <% if @records %>
+      <div class="rounded-xl bg-white p-6 overflow-x-auto">
+        <table class="w-full border-collapse border border-gray-200 text-sm">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="border border-gray-200 px-3 py-2 text-left">FM ID</th>
+              <th class="border border-gray-200 px-3 py-2 text-left">Key</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @records.each do |record| %>
+              <tr class="divide-y hover:bg-gray-50">
+                <td class="border border-gray-200 px-3 py-2 font-mono text-xs">
+                  <%= link_to record.fm_id, fm_archive_path(record.fm_id, table: @selected), class: "text-primary hover:underline" %>
+                </td>
+                <td class="border border-gray-200 px-3 py-2"><%= record.fm_key_name %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+
+        <div class="pagination flex justify-center mt-8">
+          <%= tailwind_paginate @records, params: { table: @selected } %>
+        </div>
+      </div>
+    <% elsif @selected %>
+      <div class="rounded-xl bg-white p-6">
+        <p class="text-gray-500">No records found.</p>
+      </div>
+    <% else %>
+      <div class="rounded-xl bg-white p-6">
+        <p class="text-gray-500">Select a table above to view its records.</p>
+      </div>
+    <% end %>
+  </div>
+</div>

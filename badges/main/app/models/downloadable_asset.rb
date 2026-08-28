@@ -9,6 +9,7 @@ class DownloadableAsset < Asset
     "application/pdf",
     "application/msword", # Word .doc
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document", # Word .docx
-    "application/vnd.oasis.opendocument.text" # Word document .odt
+    "application/vnd.oasis.opendocument.text", # Word document .odt
+    "text/csv"
   ].freeze
 end
