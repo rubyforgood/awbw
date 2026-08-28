@@ -7,8 +7,14 @@ class TimelineEvent < ApplicationRecord
   validates :snapshot, presence: true
   validate :subject_must_be_timelineable
 
+  ACTION_LABELS = { "destroyed" => "removed" }.freeze
+
   def actor_label
     actor&.full_name || snapshot["actor_label"] || "System"
+  end
+
+  def action_label
+    ACTION_LABELS.fetch(action, action.humanize.downcase)
   end
 
   private

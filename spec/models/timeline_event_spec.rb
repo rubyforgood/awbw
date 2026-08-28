@@ -3,6 +3,18 @@
 require "rails_helper"
 
 RSpec.describe TimelineEvent do
+  describe "action_label" do
+    it "renders destroyed as removed" do
+      event = described_class.new(action: "destroyed", snapshot: { "changes" => {} })
+      expect(event.action_label).to eq("removed")
+    end
+
+    it "humanizes other actions" do
+      event = described_class.new(action: "created", snapshot: { "changes" => {} })
+      expect(event.action_label).to eq("created")
+    end
+  end
+
   describe "subject validation" do
     it "accepts a Timelineable subject" do
       person = build(:person)

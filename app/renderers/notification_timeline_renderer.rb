@@ -3,7 +3,7 @@ class NotificationTimelineRenderer < ApplicationTimelineRenderer
     subject = @event.subject
     noticeable = subject&.noticeable
 
-    text = subject&.timeline_label
+    text = @event.subject&.timeline_label || @event.snapshot["label"]
     return unless text
     return content_tag(:span, text, class: "text-sm text-gray-700") unless noticeable&.persisted?
 
