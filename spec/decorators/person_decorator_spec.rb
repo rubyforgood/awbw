@@ -1,6 +1,25 @@
 require "rails_helper"
 
 RSpec.describe PersonDecorator do
+  describe "#news_subscriptions_path" do
+    let(:person) { create(:person) }
+
+    it "links to the subscriptions index filtered to this person and the News topic" do
+      news = create(:topic_subscription_type, name: "News")
+
+      path = person.decorate.news_subscriptions_path
+
+      expect(path).to include("person_id=#{person.id}")
+      expect(path).to include("topic_subscription_type_id=#{news.id}")
+    end
+
+    it "still filters by person when no News topic exists" do
+      path = person.decorate.news_subscriptions_path
+
+      expect(path).to include("person_id=#{person.id}")
+    end
+  end
+
   describe "#active_facilitator_organization_names" do
     let(:person) { create(:person) }
 
@@ -50,6 +69,29 @@ RSpec.describe PersonDecorator do
       create(:affiliation, person: person, start_date: nil)
 
       expect(person.decorate.affiliated_since_date).to be_nil
+    end
+  end
+
+  describe "#affiliated_since_note" do
+    let(:person) { create(:person) }
+
+    it "surfaces the affiliation start when it differs from the facilitator start" do
+      create(:affiliation, person: person, title: "Board Member", start_date: Date.new(2015, 3, 1))
+      create(:affiliation, person: person, title: "Facilitator", start_date: Date.new(2018, 8, 1))
+
+      expect(person.decorate.affiliated_since_note).to eq("Affiliated since Mar 2015")
+    end
+
+    it "is nil when the affiliation and facilitator starts share a month and year" do
+      create(:affiliation, person: person, title: "Facilitator", start_date: Date.new(2018, 8, 1))
+
+      expect(person.decorate.affiliated_since_note).to be_nil
+    end
+
+    it "is nil when there is no affiliation start date" do
+      create(:affiliation, person: person, start_date: nil)
+
+      expect(person.decorate.affiliated_since_note).to be_nil
     end
   end
 end

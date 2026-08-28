@@ -3,7 +3,7 @@
 
       <div class="flex flex-wrap items-center gap-y-2 mb-2">
         <% if allowed_to?(:index?, with: Admin::HomePolicy) %>
-          <%= link_to admin_path, class: "inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700" do %>
+          <%= link_to admin_path, class: "inline-flex items-center gap-1 text-sm #{eyebrow_link_class} px-2 py-1" do %>
             <i class="fas fa-arrow-left"></i>
             <span>Admin</span>
           <% end %>
@@ -63,7 +63,7 @@
                 From
               </label>
               <%= date_field_tag :from, params[:from],
-                                 class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm" %>
+                                 class: date_filter_class("w-full px-3 py-2 border-gray-300 rounded-md shadow-sm", params[:from]) %>
             </div>
 
             <!-- Date To -->
@@ -72,7 +72,7 @@
                 To
               </label>
               <%= date_field_tag :to, params[:to],
-                                 class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm" %>
+                                 class: date_filter_class("w-full px-3 py-2 border-gray-300 rounded-md shadow-sm", params[:to]) %>
             </div>
 
           </div>

@@ -7,7 +7,7 @@ import { Controller } from "@hotwired/stimulus"
 // above the rendered email. The actual send re-sanitizes the message server-side,
 // so injecting the raw values here is only for the on-page preview.
 export default class extends Controller {
-  static targets = ["input", "message", "subjectInput", "subjectPreview", "eventCard", "eventCardToggle", "cardStatus"]
+  static targets = ["input", "message", "subjectInput", "subjectPreview", "eventCard", "eventCardToggle", "cardStatus", "ticketButton", "ticketButtonToggle", "ticketStatus"]
 
   inputTargetConnected() {
     this.update()
@@ -31,6 +31,14 @@ export default class extends Controller {
 
   eventCardToggleTargetConnected() {
     this.syncEventCard()
+  }
+
+  ticketButtonTargetConnected() {
+    this.syncTicketButton()
+  }
+
+  ticketButtonToggleTargetConnected() {
+    this.syncTicketButton()
   }
 
   update() {
@@ -63,5 +71,23 @@ export default class extends Controller {
     if (!this.hasEventCardTarget || !this.hasEventCardToggleTarget) return
 
     this.eventCardTarget.style.display = this.eventCardToggleTarget.checked ? "none" : ""
+  }
+
+  // Action handler. Announces as well as syncing — the connect callbacks use
+  // syncTicketButton directly so the live region stays silent on page load.
+  toggleTicketButton() {
+    this.syncTicketButton()
+
+    if (!this.hasTicketStatusTarget || !this.hasTicketButtonToggleTarget) return
+
+    this.ticketStatusTarget.textContent = this.ticketButtonToggleTarget.checked
+      ? "View ticket button hidden from the email."
+      : "View ticket button shown in the email."
+  }
+
+  syncTicketButton() {
+    if (!this.hasTicketButtonTarget || !this.hasTicketButtonToggleTarget) return
+
+    this.ticketButtonTarget.style.display = this.ticketButtonToggleTarget.checked ? "none" : ""
   }
 }

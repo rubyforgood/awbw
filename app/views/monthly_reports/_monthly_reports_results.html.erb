@@ -5,7 +5,7 @@
     <thead class="bg-gray-50">
       <tr>
         <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
-        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Submitter</th>
+        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Author</th>
         <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Organization</th>
         <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Windows type</th>
         <th class="px-4 py-3 text-center text-sm font-semibold text-white bg-blue-500"># On-going</th>
@@ -29,7 +29,7 @@
                           class: "font-bold text-gray-800 hover:text-indigo-800 hover:underline" %>
             </td>
 
-            <td class="px-6 py-4 text-sm text-gray-800"><%= report.created_by&.name || "—" %></td>
+            <td class="px-6 py-4 text-sm text-gray-800"><%= credited_author_link(report, class: eyebrow_link_class) %></td>
 
             <td class="px-6 py-4 text-sm text-gray-600"><%= report.organization&.name || "—" %></td>
 

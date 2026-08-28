@@ -1,15 +1,14 @@
 class Scholarship < ApplicationRecord
+  include Communicable
   belongs_to :recipient, class_name: "Person"
   belongs_to :grant, optional: true
   has_one :allocation, as: :source, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
-  has_many :notifications, as: :noticeable, dependent: :nullify
   has_many :agreement_responses, -> { chronological }, class_name: "ScholarshipAgreementResponse", dependent: :destroy
 
   AGREEMENT_RESPONSE_STATUSES = %w[pending accepted declined].freeze
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
-  accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
 
   validates :amount_cents, numericality: { greater_than_or_equal_to: 0 }
   validates :agreement_response_status, inclusion: { in: AGREEMENT_RESPONSE_STATUSES }
@@ -29,6 +28,19 @@ class Scholarship < ApplicationRecord
   scope :agreement_declined, -> { where(agreement_response_status: "declined") }
   # Declined awards drop out of every total.
   scope :not_declined, -> { where.not(agreement_response_status: "declined") }
+
+  # The training this award paid for: the event behind the registration its
+  # allocation funds. Nil for a grant-first award (no allocation yet) or one
+  # funding a CE registration / membership invoice instead of a training.
+  # Resolved through the recipient's own registrations (guaranteed to include this
+  # one by recipient_must_match_allocation_registrant) so a list page that preloads
+  # event_registrations → event pays no per-row query; walking allocatable.event
+  # would, since a polymorphic preload can't reach the event.
+  def event
+    return nil unless allocation&.allocatable_type == "EventRegistration"
+
+    recipient&.event_registrations&.find { |registration| registration.id == allocation.allocatable_id }&.event
+  end
 
   # Funding split (the app-wide convention, mirrored by EventDashboard and
   # EventRevenueFigures): externally funded = backed by a grant whose funder isn't
@@ -114,8 +126,6 @@ class Scholarship < ApplicationRecord
     self.amount_cents = (value.to_d * 100).to_i if value.present?
   end
 
-  # Email the communications box matches notifications against. Uniform accessor
-  # so the shared notifications/_communications partial works across records.
   def communications_email
     recipient&.preferred_email
   end

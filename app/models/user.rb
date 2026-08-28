@@ -1,4 +1,5 @@
 class User < ApplicationRecord
+  include Communicable
   # Include default devise modules. Others available are:
   # :confirmable, :timeoutable and :omniauthable
   devise :database_authenticatable, :recoverable, :confirmable,
@@ -34,8 +35,12 @@ class User < ApplicationRecord
   belongs_to :favorite_event, class_name: "Event", optional: true
   has_many :bookmarks, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  # A user account's communications are addressed to its login email.
+  def communications_email
+    email
+  end
   has_many :event_registrations, through: :person
-  has_many :notifications, as: :noticeable, dependent: :nullify
 
   has_many :reports, foreign_key: :created_by_id, inverse_of: :created_by
   has_many :resources, foreign_key: :created_by_id, inverse_of: :created_by

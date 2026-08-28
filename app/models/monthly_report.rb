@@ -1,4 +1,9 @@
 class MonthlyReport < Report
+  include AuthorCreditable
+  # No explicit author → credit the creator's person by name, else "Anonymous".
+  self.unattributed_author_label = "Anonymous"
+  credits_creator
+
   PARTICIPANT_ONGOING_QUESTION = "Total # On-going Participants"
   PARTICIPANT_FIRST_TIME_QUESTION = "Total # First-Time Participants"
 
@@ -9,6 +14,7 @@ class MonthlyReport < Report
   # Associations (override Report's)
   belongs_to :owner, polymorphic: true, optional: true
   belongs_to :created_by, class_name: "User"
+  belongs_to :author, class_name: "Person", optional: true
   belongs_to :organization
   belongs_to :windows_type
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -73,6 +79,7 @@ class MonthlyReport < Report
   def self.search(params)
     logs = is_a?(ActiveRecord::Relation) ? self : all
     logs = logs.created_by_id(params[:created_by_id]) if params[:created_by_id].present?
+    logs = logs.where(id: by_credited_person_name(params[:author_name]).select("reports.id")) if params[:author_name].present?
     logs = logs.month_and_year(params[:month_and_year]) if params[:month_and_year].present?
     logs = logs.year(params[:year]) if params[:year].present?
     logs = logs.organization_id(params[:organization_id]) if params[:organization_id].present?

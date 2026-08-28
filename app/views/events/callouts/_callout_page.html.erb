@@ -13,31 +13,31 @@
 <% if back_path %>
   <div class="<%= container_width %> mx-auto px-4 pt-4">
     <%= link_to back_path,
-                class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+                class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> <%= back_label %>
     <% end %>
   </div>
 <% end %>
 
-<div class="<%= container_width %> mx-auto pb-12 pt-6 px-4">
-  <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
-    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
+<div class="<%= container_width %> mx-auto px-4 pt-6 pb-12">
+  <div class="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
+    <%= render "shared/brand_accent_strip" %>
+    <div class="bg-primary px-6 py-5 text-white sm:px-8">
       <div class="flex items-center gap-5">
         <div class="shrink-0">
           <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
         </div>
         <div class="flex-1">
-          <h1 class="text-xl font-semibold tracking-wide leading-tight"><%= title %></h1>
+          <h1 class="font-display text-2xl leading-tight font-semibold tracking-tight"><%= title %></h1>
           <%# @event is decorated in some callout actions and raw in others; the date
               range lives on the decorator, so decorate only when it isn't already. %>
           <% event = @event.respond_to?(:short_date_range) ? @event : @event.decorate %>
-          <p class="text-sm text-blue-200"><%= event.title %></p>
+          <p class="text-sm text-white/70"><%= event.title %></p>
           <% if event.start_date.present? %>
-            <p class="text-sm text-blue-200"><%= event.short_date_range %> · <%= event.times %></p>
+            <p class="text-sm text-white/70"><%= event.short_date_range %> · <%= event.times %></p>
           <% end %>
         </div>
       </div>
-      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
     </div>
 
     <div class="px-6 sm:px-8 py-7">

@@ -46,11 +46,11 @@ class FormBuilderService
     person_contact_info: %w[
       primary_email_type nickname pronouns secondary_email secondary_email_type
       mailing_street mailing_address_type mailing_city mailing_state mailing_zip mailing_country
-      phone phone_type agency_name agency_position agency_website agency_type
-      agency_street agency_city agency_state agency_zip agency_country
+      phone phone_type organization_name organization_position organization_website organization_type
+      organization_street organization_city organization_state organization_zip organization_country
     ],
     person_background: %w[racial_ethnic_identity],
-    professional_info: %w[primary_sector_single additional_sectors primary_age_group additional_age_group],
+    professional_info: %w[primary_sector additional_sectors primary_age_group additional_age_groups],
     marketing: %w[referral_source training_motivation interested_in_more],
     continuing_education: %w[ce_credit_interest ce_license_number],
     scholarship: %w[scholarship_eligibility scholarship_contribution impact_description implementation_plan additional_comments],
@@ -412,24 +412,24 @@ class FormBuilderService
 
     position = add_header(form, position, "Organization Information", group: "person_contact_info")
     position = add_field(form, position, "Organization Name", :free_form_input_one_line,
-                         key: "agency_name", group: "person_contact_info", required: false, width: :half)
+                         key: "organization_name", group: "person_contact_info", required: false, width: :half)
     position = add_field(form, position, "Position / Title", :free_form_input_one_line,
-                         key: "agency_position", group: "person_contact_info", required: false, width: :half)
+                         key: "organization_position", group: "person_contact_info", required: false, width: :half)
     position = add_field(form, position, "Organization Website", :free_form_input_one_line,
-                         key: "agency_website", group: "person_contact_info", required: false)
+                         key: "organization_website", group: "person_contact_info", required: false)
     position = add_field(form, position, "Organization Type", :single_select_radio,
-                         key: "agency_type", group: "person_contact_info", required: false,
+                         key: "organization_type", group: "person_contact_info", required: false,
                          options: Organization::AGENCY_TYPES)
     position = add_field(form, position, "Organization Street Address", :free_form_input_one_line,
-                         key: "agency_street", group: "person_contact_info", required: false)
+                         key: "organization_street", group: "person_contact_info", required: false)
     position = add_field(form, position, "Organization City", :free_form_input_one_line,
-                         key: "agency_city", group: "person_contact_info", required: false, width: :third)
+                         key: "organization_city", group: "person_contact_info", required: false, width: :third)
     position = add_field(form, position, "Organization State / Province", :free_form_input_one_line,
-                         key: "agency_state", group: "person_contact_info", required: false, width: :third)
+                         key: "organization_state", group: "person_contact_info", required: false, width: :third)
     position = add_field(form, position, "Organization Zip / Postal Code", :free_form_input_one_line,
-                         key: "agency_zip", group: "person_contact_info", required: false, width: :third)
+                         key: "organization_zip", group: "person_contact_info", required: false, width: :third)
     position = add_field(form, position, "Organization Country", :free_form_input_one_line,
-                         key: "agency_country", group: "person_contact_info", required: false)
+                         key: "organization_country", group: "person_contact_info", required: false)
     position
   end
 
@@ -455,7 +455,7 @@ class FormBuilderService
     position = add_header(form, position, "Professional Information", group: "professional")
 
     position = add_field(form, position, "Primary sector", :single_select_dropdown,
-                         key: "primary_sector_single", group: "professional", required: false,
+                         key: "primary_sector", group: "professional", required: false,
                          subtitle: "Select the option that best represents those you primarily intend to serve through the art workshops")
     position = add_field(form, position, "Additional sectors", :multi_select_checkbox,
                          key: "additional_sectors", group: "professional", required: false,
@@ -464,7 +464,7 @@ class FormBuilderService
                          key: "primary_age_group", group: "professional", required: false,
                          subtitle: "Select the age group you primarily intend to serve through the art workshops")
     position = add_field(form, position, "Additional Age Group(s) Served", :multi_select_checkbox,
-                         key: "additional_age_group", group: "professional", required: false,
+                         key: "additional_age_groups", group: "professional", required: false,
                          subtitle: "Select all additional age groups you may serve through the art workshops (check all that apply)")
     position
   end

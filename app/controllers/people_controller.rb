@@ -1,10 +1,10 @@
 class PeopleController < ApplicationController
   include AhoyTracking, TagAssignable
-  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments ]
+  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments comments_and_communications send_form_link ]
 
   # The profile's "Submitted content" sections — private to the person and admins,
   # not part of the public profile even after profile viewing opens up.
-  PRIVATE_SECTIONS = %w[ workshop_ideas story_ideas workshop_variation_ideas workshop_logs ].freeze
+  PRIVATE_SECTIONS = %w[ workshop_ideas story_ideas workshop_variation_ideas workshop_logs monthly_reports ].freeze
 
   def index
     authorize!
@@ -27,6 +27,12 @@ class PeopleController < ApplicationController
     else
       render :index
     end
+  end
+
+  def email_addresses
+    authorize! Person, to: :index?
+    people = authorized_scope(Person.includes(:user)).search_by_params(params.to_unsafe_h)
+    @email_addresses = people.filter_map { |person| person.preferred_email.presence }.uniq.sort
   end
 
   def show
@@ -59,42 +65,43 @@ class PeopleController < ApplicationController
 
       case section
       when "workshops"
-        # Credit the person for workshops they authored — not ones their user
-        # merely created (created_by is a pure audit trail).
-        @workshops = visible_authored_content(@person.workshops_as_author).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        # Credit the person for workshops they authored, or — the legacy fallback —
+        # that their user account created (AuthorCreditable#author_person).
+        @workshops = visible_authored_content(Workshop.credited_to_person(@person)).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshops", locals: { person: @person, workshops: @workshops }
       when "workshop_variations"
-        # Credit the person for variations they authored — not ones their user
-        # merely entered (created_by is a pure audit trail).
-        @workshop_variations = visible_authored_content(@person.workshop_variations_as_author).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        # Author, or the legacy fallback to their user's creations (author_person).
+        @workshop_variations = visible_authored_content(WorkshopVariation.credited_to_person(@person)).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshop_variations", locals: { person: @person, workshop_variations: @workshop_variations }
       when "stories"
-        # Credit the person for stories they authored or were spotlighted in —
-        # not ones their user merely entered (created_by is a pure audit trail).
-        # The spotlight is a separate credit from authorship, so anonymity doesn't apply.
-        story_ids = visible_authored_content(@person.stories_as_author).pluck(:id) +
+        # Author (or legacy creator) plus stories they were spotlighted in. The
+        # spotlight is a separate credit from authorship, so anonymity doesn't apply.
+        story_ids = visible_authored_content(Story.credited_to_person(@person)).pluck(:id) +
           @person.stories_as_spotlighted_facilitator.pluck(:id)
         @stories = Story.where(id: story_ids).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/stories", locals: { person: @person, stories: @stories }
       when "resources"
-        # Credit the person for resources they authored — not ones their user
-        # merely entered (created_by is a pure audit trail).
-        @resources = visible_authored_content(@person.resources_as_author).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        # Author, or the legacy fallback to their user's creations (author_person).
+        @resources = visible_authored_content(Resource.credited_to_person(@person)).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/resources", locals: { person: @person, resources: @resources }
       when "events"
         @event_registrations = @person.event_registrations.active.includes(:event).order("events.start_date DESC").references(:events).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/events", locals: { person: @person, event_registrations: @event_registrations }
       when "workshop_ideas"
-        @workshop_ideas = @person.user&.workshop_ideas_as_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        # Author, or the legacy fallback to their user's creations (author_person).
+        @workshop_ideas = WorkshopIdea.credited_to_person(@person).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshop_ideas", locals: { person: @person, workshop_ideas: @workshop_ideas }
       when "story_ideas"
-        @story_ideas = @person.user&.story_ideas_as_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        @story_ideas = StoryIdea.credited_to_person(@person).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/story_ideas", locals: { person: @person, story_ideas: @story_ideas }
       when "workshop_logs"
-        @workshop_logs = @person.user&.workshop_logs&.includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets)&.order(workshop_held_on: :desc, created_at: :desc) || WorkshopLog.none
+        @workshop_logs = WorkshopLog.credited_to_person(@person).includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets).order(workshop_held_on: :desc, created_at: :desc)
         render partial: "people/sections/workshop_logs", locals: { person: @person, workshop_logs: @workshop_logs }
+      when "monthly_reports"
+        @monthly_reports = MonthlyReport.credited_to_person(@person).order(Arel.sql("COALESCE(reports.date, reports.created_at) DESC")).paginate(page: params[:page], per_page: per_page)
+        render partial: "people/sections/monthly_reports", locals: { person: @person, monthly_reports: @monthly_reports }
       when "workshop_variation_ideas"
-        @workshop_variation_ideas = @person.user&.workshop_variation_ideas_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        @workshop_variation_ideas = WorkshopVariationIdea.credited_to_person(@person).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshop_variation_ideas", locals: { person: @person, workshop_variation_ideas: @workshop_variation_ideas }
       when "affiliations"
         @affiliations = @person.affiliations.active.includes(organization: :logo_attachment).paginate(page: params[:page], per_page: per_page)
@@ -123,15 +130,41 @@ class PeopleController < ApplicationController
       @total_count = base.count
       @flagged_count = base.flagged.count
       @new_comment = Comment.new
-      @comment_targets = helpers.person_comment_targets(@person)
+      @comment_targets = helpers.person_record_targets(@person)
       track_view("person_all_comments", { person_id: @person.id })
+    end
+  end
+
+  # One newest-first feed of everything said to or about this person — the
+  # aggregated comments and the communications addressed to any of their email
+  # addresses, filterable with the union of what the two standalone pages offer.
+  def comments_and_communications
+    authorize! @person, to: :manage?, with: CommentPolicy
+    authorize! Notification, to: :index?
+    @person = @person.decorate
+
+    if turbo_frame_request?
+      feed = PersonCommentAndCommunicationAggregator.new(@person, params)
+      entries = feed.entries
+      @total_count = feed.total_count
+      @count_display = entries.size == @total_count ? @total_count : "#{entries.size}/#{@total_count}"
+      @entries = entries.paginate(page: params[:page], per_page: 20)
+      render :comments_and_communications_results
+    else
+      feed = PersonCommentAndCommunicationAggregator.new(@person)
+      @total_count = feed.total_count
+      @flagged_count = feed.flagged_count
+      @new_comment = Comment.new
+      @new_notification = Notification.new
+      @record_targets = helpers.person_record_targets(@person)
+      track_view("person_comments_and_communications", { person_id: @person.id })
     end
   end
 
   def workshop_logs
     authorize! @person
     @person = @person.decorate
-    all_logs = @person.user&.workshop_logs&.includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets)&.order(workshop_held_on: :desc, created_at: :desc) || WorkshopLog.none
+    all_logs = WorkshopLog.credited_to_person(@person).includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets).order(workshop_held_on: :desc, created_at: :desc)
     @grouped_logs = all_logs.group_by { |log| log.workshop_id || log.external_workshop_title }.sort_by { |_key, logs|
       dates = logs.first(10).map { |l| -(l.workshop_held_on || l.created_at.to_date).to_time.to_i }
       dates.fill(0, dates.size...10)
@@ -208,6 +241,7 @@ class PeopleController < ApplicationController
       affiliations: { organization: [ :logo_attachment, :addresses ] }
     ).find(params[:id]).decorate
     authorize! @person
+    @membership = membership_for(@person)
     set_form_variables
   end
 
@@ -268,10 +302,6 @@ class PeopleController < ApplicationController
     @person.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
     @person.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
 
-    # Inline-logged notifications are addressed to the person.
-    recipient_email = @person.preferred_email.presence || "n/a"
-    @person.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
-
     if @person.save
       assign_associations(@person) if params.dig(:person, :category_ids)
       redirect_to person_update_return_path, notice: "Person was successfully updated."
@@ -288,6 +318,46 @@ class PeopleController < ApplicationController
     respond_to do |format|
       format.html { redirect_to people_path, status: :see_other, notice: "Person was successfully destroyed." }
     end
+  end
+
+  # Email this person the public link to one of the agreement scenario forms
+  # (Form.agreement_forms), recording the send so staff can see who was contacted for
+  # which scenario. The notification stores what was sent: the form name in
+  # custom_subject and the public form URL in custom_message. `agreement_links`
+  # reopens the collapsed panel on the way back.
+  def send_form_link
+    authorize! @person
+
+    # Either an agreement form's public link, or an upcoming facilitator
+    # training's public registration form (the panel's nested event rows).
+    if params[:event_id].present?
+      event = Event.where(published: true).facilitator_trainings.find(params[:event_id])
+      link_name = "#{event.decorate.title_with_month_year} registration"
+      link_url = new_event_public_registration_url(event)
+    else
+      form = Form.agreement_forms.find(params[:form_id])
+      link_name = form.display_name
+      link_url = public_form_url(form.slug)
+    end
+
+    email = @person.preferred_email
+    if email.blank?
+      redirect_to edit_person_path(@person, agreement_links: 1, anchor: "agreement-links"), alert: "#{@person.name} has no email address on file."
+      return
+    end
+
+    NotificationServices::CreateNotification.call(
+      noticeable: @person,
+      kind: :form_link_request,
+      recipient_role: :person,
+      recipient_email: email,
+      notification_type: 0,
+      custom_subject: link_name,
+      custom_message: link_url,
+      sender: current_user
+    )
+
+    redirect_to edit_person_path(@person, agreement_links: 1, anchor: "agreement-links"), notice: "Sent the #{link_name} link to #{email}."
   end
 
   def check_duplicates
@@ -374,6 +444,9 @@ class PeopleController < ApplicationController
     # of any other type (age ranges included, handled by nested attributes), so
     # saving the form can't drop a person's other category connections.
     @managed_category_type_ids = @person_categories_grouped.map { |type, _| type.id }
+
+    @staff_tags_collection = StaffTag.published.ordered.pluck(:name, :id)
+    @current_staff_tag_ids = @person.staff_tag_ids
   end
 
   def find_duplicate_people(first_name, last_name, email, legal_first_name: nil, email_2: nil)
@@ -539,10 +612,11 @@ class PeopleController < ApplicationController
       :date_of_birth,
       :racial_ethnic_identity,
       :filemaker_code,
-      :mailing_list_consented,
+      :blog_contributor,
       :bio, :shoutout_text, :notes,
       :display_name_preference,
       :anonymous_contributions,
+      :pronunciation,
       :pronouns,
       :profile_is_searchable,
       :profile_show_pronouns,
@@ -563,6 +637,7 @@ class PeopleController < ApplicationController
       :profile_show_workshops,
       :profile_show_workshop_ideas,
       :profile_show_workshop_logs,
+      :profile_show_monthly_reports,
       :profile_show_resources,
       :member_since,
       :linked_in_url,
@@ -572,6 +647,7 @@ class PeopleController < ApplicationController
       :twitter_url,
       :created_by_id, :updated_by_id,
       sectorable_items_attributes: [ :id, :sector_id, :is_leader, :is_primary, :_destroy ],
+      staff_taggings_attributes: [ :id, :staff_tag_id, :_destroy ],
       age_range_categorizable_items_attributes: [ :id, :category_id, :is_primary, :_destroy ],
       addresses_attributes: [
         :id,

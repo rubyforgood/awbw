@@ -7,12 +7,12 @@
       slugless submissions, which have no public ticket. %>
   <div class="flex flex-col items-start gap-1">
     <% if @submission.slug.present? %>
-      <%= link_to bulk_payment_ticket_path(@submission.slug, return_to: params[:return_to], expand: params[:expand]), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+      <%= link_to bulk_payment_ticket_path(@submission.slug, return_to: params[:return_to], expand: params[:expand]), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Back to ticket
       <% end %>
     <% end %>
     <% if params[:return_to] == "bulk_payments" %>
-      <%= link_to bulk_payments_return_path(@event), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+      <%= link_to bulk_payments_return_path(@event), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Back to bulk payments
       <% end %>
     <% end %>

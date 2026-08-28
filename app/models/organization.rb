@@ -1,5 +1,6 @@
 class Organization < ApplicationRecord
   include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable # Publishable
+  include Communicable
   belongs_to :organization_status
   belongs_to :organization_obligation, optional: true
   belongs_to :location, optional: true # TODO - remove Location if unused
@@ -13,6 +14,11 @@ class Organization < ApplicationRecord
   has_many :people, through: :affiliations
   has_many :users, through: :people
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  # An organization is its own correspondent — there is no person behind it.
+  def communications_email
+    email
+  end
   has_many :reports
   has_many :workshop_logs
   has_many :grants, as: :funder, dependent: :destroy
@@ -186,12 +192,6 @@ class Organization < ApplicationRecord
     facilitator_program_status(as_of: reference_date).status
   end
 
-  # Methods
-  def led_by?(user)
-    return false unless leader
-    leader.user == user
-  end
-
   def state
     addresses.active.first&.state
   end
@@ -217,19 +217,6 @@ class Organization < ApplicationRecord
     return unless first_active
 
     [ first_active.city, first_active.state ].compact_blank.join(", ").presence
-  end
-
-  # This org's program status relative to a scholarship recipient (the
-  # New/Ongoing/Reinstate column on the scholarship index): Reinstate = lapsed,
-  # Ongoing = has facilitators beyond this recipient, New = none prior. In-memory
-  # facilitator-affiliation heuristic, to reuse a preloaded association.
-  def program_status(recipient = nil)
-    facilitators = affiliations.select(&:facilitator?)
-    return "New" if facilitators.empty?
-    return "Reinstate" if facilitators.none?(&:active?)
-
-    prior = recipient ? facilitators.reject { |a| a.person_id == recipient.id } : facilitators
-    prior.any? ? "Ongoing" : "New"
   end
 
   def type_name
@@ -298,6 +285,23 @@ class Organization < ApplicationRecord
 
   remote_searchable_by :name
 
+  # FileMaker is the source of truth, and a record can carry more than one
+  # FileMaker code (e.g. when two orgs that each mapped to a FileMaker record are
+  # merged). The `filemaker_code` column holds them as a trimmed, comma-separated
+  # list; these are the seam for reading and combining them.
+  def filemaker_codes
+    Organization.split_filemaker_codes(filemaker_code)
+  end
+
+  def self.split_filemaker_codes(value)
+    value.to_s.split(",").map(&:strip).reject(&:blank?).uniq
+  end
+
+  # A single normalized column value from any mix of code strings/lists.
+  def self.join_filemaker_codes(*values)
+    values.flatten.flat_map { |value| split_filemaker_codes(value) }.uniq.sort.join(", ").presence
+  end
+
   # Returns the website as a clickable, scheme-qualified URL — prepending
   # https:// to a bare domain like "awbw.org" — or nil when the value is blank or
   # not a usable web address. Drives the external links on the org profile and
@@ -330,10 +334,6 @@ class Organization < ApplicationRecord
     if end_date_changed?
       errors.add(:end_date, "is managed automatically by affiliations")
     end
-  end
-
-  def leader
-    affiliations.find_by(position: 2)
   end
 
   def remove_duplicate_sectorable_items

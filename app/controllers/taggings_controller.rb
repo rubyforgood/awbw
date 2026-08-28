@@ -35,6 +35,7 @@ class TaggingsController < ApplicationController
                     .select("categories.*, category_types.name AS category_type_name")
                     .distinct
                     .order("category_type_name ASC, categories.name ASC")
+    @staff_tags = authorized_scope(StaffTag.all).published.ordered
 
     track_view("taggings")
     track_tagging_browse(@grouped_tagged_items) if browsing_intentionally?

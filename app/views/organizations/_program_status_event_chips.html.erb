@@ -2,12 +2,12 @@
     open in a new tab, where the back button is no help, so return_to names which of
     the two the participation report should return to. %>
 <% decorated = organization.decorate %>
-<% events.each do |event| %>
+<% events.sort_by { |event| event.start_date || Date.new(1900, 1, 1) }.reverse.each do |event| %>
   <% status = decorated.facilitator_status_as_of(event.start_date) %>
   <%= link_to participation_events_path(event_id: event.id, return_organization_id: organization.id, return_to: return_to),
               target: "_blank", rel: "noopener noreferrer",
               title: "#{event.title} — #{status.explanation}",
               class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{OrganizationDecorator.program_status_classes(status.status)}" do %>
-    <%= "#{event.start_date.strftime('%b %Y')} · " if event.start_date %><%= status.label %> · <%= event.decorate.compact_label.truncate(24) %>
+    <%= status.label %><%= " · #{event.start_date.strftime('%b %Y')}" if event.start_date %> · <%= event.decorate.compact_label.truncate(40) %>
   <% end %>
 <% end %>

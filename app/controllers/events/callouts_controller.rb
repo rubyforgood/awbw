@@ -45,12 +45,14 @@ module Events
     # scholarship exists, or a pending state while it is only requested. Nothing
     # to show when neither requested nor received.
     def scholarship
-      unless @event_registration.scholarship_requested? || @event_registration.scholarship?
+      # A transferred-in recipient's award lives on the source registration, so
+      # resolve through the transfer and still show the callout here. (#1944)
+      unless @event_registration.scholarship_requested? || @event_registration.scholarship_recipient?
         redirect_to registration_ticket_path(@event_registration.slug)
         return
       end
 
-      @scholarship = @event_registration.scholarships.first
+      @scholarship = @event_registration.effective_scholarship
       @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
     end
 
@@ -403,24 +405,24 @@ module Events
     # The payment page's Documents section as grey callout cards, rendered through
     # the shared card partial like every other callout surface: the dynamic
     # invoice/receipt first, then the payment callout's linked resources (the W-9
-    # by default on paid events), each reading its admin-editable subtitle from the
-    # materialized join row.
+    # by default), each reading its admin-editable subtitle from the materialized
+    # join row. All are payment-event documents, so nothing renders on a free event
+    # — the W-9 is always linked but stays dormant until the event has a cost.
     def payment_document_cards
+      return [] unless @event_registration.invoice_available?
+
       slug = @event_registration.slug
-      cards = []
-      if @event_registration.invoice_available?
-        cards << document_card(title: "Invoice", subtitle: "Itemized invoice for this registration",
-          icon: "fa-solid fa-file-invoice-dollar", href: registration_invoice_path(slug, return_to: "payment"))
-        # The receipt is proof money changed hands, so it links once an actual
-        # payment settles the balance in full; until then (balance owing, or a
-        # balance cleared only by scholarship/discount) it's a locked card.
-        if @event_registration.receipt_available?
-          cards << document_card(title: "Receipt", subtitle: "Paid-in-full receipt for this registration",
-            icon: "fa-solid fa-receipt", href: registration_receipt_path(slug, return_to: "payment"))
-        else
-          cards << locked_document_card(title: "Receipt", icon: "fa-solid fa-receipt",
-            subtitle: "Available once your payment is received in full")
-        end
+      cards = [ document_card(title: "Invoice", subtitle: "Itemized invoice for this registration",
+        icon: "fa-solid fa-file-invoice-dollar", href: registration_invoice_path(slug, return_to: "payment")) ]
+      # The receipt is proof money changed hands, so it links once an actual
+      # payment settles the balance in full; until then (balance owing, or a
+      # balance cleared only by scholarship/discount) it's a locked card.
+      if @event_registration.receipt_available?
+        cards << document_card(title: "Receipt", subtitle: "Paid-in-full receipt for this registration",
+          icon: "fa-solid fa-receipt", href: registration_receipt_path(slug, return_to: "payment"))
+      else
+        cards << locked_document_card(title: "Receipt", icon: "fa-solid fa-receipt",
+          subtitle: "Available once your payment is received in full")
       end
       cards + payment_document_resources.map { |link| payment_resource_card(link, slug) }
     end
@@ -437,9 +439,10 @@ module Events
                             icon: "fa-solid fa-file-pdf", color: "gray")
     end
 
-    # The payment callout's linked resource join rows (the W-9 by default on paid
-    # events). Uses the materialized Payment row's links when present (so admins
-    # can add/remove them), else transient links for the W-9 on paid events not
+    # The payment callout's linked resource join rows (the W-9 by default). Only
+    # reached for a paid registration (the caller gates on invoice_available?).
+    # Uses the materialized Payment row's links when present (so admins can
+    # add/remove them), else transient links for the W-9 on a payment callout not
     # yet materialized.
     def payment_document_resources
       payment_callout = @event.registration_ticket_callouts.find_by(builtin_key: "payment")

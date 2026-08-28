@@ -40,7 +40,7 @@ When changing a model or controller, check whether these related files need upda
 | Decorator | Decorator spec |
 | Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
 | Add/remove model, concern, service, or gem | AGENTS.md |
-| Ship a user-facing feature | `config/features.yml` (the Features & tips seed — see below) |
+| Ship a user-facing feature **or improvement/change** | `config/features.yml` (the Features & tips seed — see below) |
 
 ## Code Style
 
@@ -138,6 +138,53 @@ picker), use `MoneyFormatter.compact_from_cents(cents)` (`$12.5k`, `$1.2m`) — 
   `scholarship_preview_controller.js`). Keep the server-rendered initial value and the JS-updated value
   formatted identically.
 
+## Domain colors (DomainTheme)
+
+Each domain (workshops, organizations, events, forms, sectors, scholarships, …) has one
+canonical Tailwind color, mapped in **`DomainTheme::COLORS`** (`lib/domain_theme.rb`). The
+point is single-source theming: re-coloring a whole domain is a one-line change in `COLORS`.
+
+- **Never hard-code a domain's own identity color.** When a panel, badge, chip, button, link,
+  or icon is themed to a domain, resolve the class through `DomainTheme`, not a literal like
+  `bg-emerald-50` / `text-indigo-700` / `hover:text-purple-800`.
+- **Helpers** (all take a domain key symbol, e.g. `:organizations`):
+  - `DomainTheme.bg_class_for(key, intensity: 50, hover: false)` → `"bg-emerald-50"` (`hover: true`
+    prefixes `hover:bg-` and bumps one step).
+  - `DomainTheme.text_class_for(key, intensity: 800, hover: false)` → `"text-emerald-800"`
+    (**`hover: true` prefixes `hover:text-`** at the intensity you pass — use it for link hover
+    states instead of a literal `hover:text-*`).
+  - `DomainTheme.border_class_for(key, intensity: 300)` → `"border-emerald-300"`.
+  - `DomainTheme.color_for(key)` → the raw color symbol (e.g. `:emerald`); unknown keys fall back
+    to `:gray`.
+- **In views** interpolate the helper into the class list (`<%= DomainTheme.bg_class_for(:forms) %>`);
+  **in decorators/POROs** (no helper access) call `DomainTheme.…` directly — it's a plain module.
+- **New color?** Add the key → color to `DomainTheme::COLORS` **and** add the color to the
+  `@source inline(...)` safelist in `app/frontend/stylesheets/application.tailwind.css`, or Tailwind
+  won't generate the dynamically-built class and it renders unstyled.
+- **Leave genuinely non-domain colors literal** — don't force these through `DomainTheme`: the
+  `bg-blue-100` `page_bg_class` marker, the global `focus:border-blue-500 focus:ring-blue-200`
+  form-focus convention, status colors (green = success, amber/yellow = warning, red = error),
+  multi-color pickers/swatches, and classes a Stimulus controller also toggles (keep ERB and JS in
+  sync as literals). Convert only a domain's *own identity* color.
+
+## Sharing repeated Tailwind (avoid `@apply`)
+
+When the same utility string is repeated across many views, **unify it with a Rails view
+helper or a shared partial — not `@apply`.** `@apply` hides the utilities inside a CSS rule
+and creates the indirection the tailwind-best-practices guidance warns against; a helper
+keeps the utilities scannable (Tailwind already scans `app/helpers`) and reads as a real
+template abstraction.
+
+- **Helper returning a class string** — the same shape as the `DomainTheme.*_class_for`
+  helpers. Return only the *shared* fragment (e.g. a color pair) and let each caller keep its
+  own context-specific layout classes. Example: `eyebrow_link_class` returns the muted gray for
+  page eyebrows / back-nav links; views interpolate it
+  (`class: "text-sm #{eyebrow_link_class} px-2 py-1"`).
+- **Shared partial** — when the repeated thing is markup (icon + text + structure), not just a
+  class list.
+- **`@apply` is reserved** for genuine element/base styles (e.g. `.btn` in
+  `components/buttons.css`), not for extracting repeated utility clusters.
+
 ## HTML/ERB Formatting
 
 ### Tag Attributes
@@ -233,9 +280,21 @@ The login-gated **Features & tips** page lists shipped, user-facing features
 (`Feature` model) and edited in-app by super-admins — the rich `description` uses
 the Rhino WYSIWYG (for screenshots), plus an optional external process-doc link.
 
-**Keep it current as you ship.** When you add a user-facing feature, append an
-entry to `config/features.yml` (the checked-in **seed**):
+**Keep it current as you ship.** When you ship anything a facilitator or admin
+would want to know about, append an entry to `config/features.yml` (the checked-in
+**seed**). This is **not just brand-new features** — a user-facing *improvement,
+change, or enhancement* to something that already exists (a new filter, an extra
+column, a reworked flow) belongs here too. If in doubt whether a change is "big
+enough," add it: a short entry is cheap and the page is where non-devs discover
+what changed.
 
+- **There is no separate "feature vs. update" flag** — every entry is just a
+  `Feature` row, and audience is the only axis (`display_status`). Signal that an
+  entry is a smaller update through its `summary`/`name` wording (e.g. "Filter
+  registrants by registration date"), not a schema field. (If we ever want the UI
+  to visually separate launches from tweaks, that's a `kind:` column on `Feature` +
+  `CATALOG_FIELDS` + a decorator badge — a deliberate change, not something to
+  fake with `area`/`display_status`.)
 - Fields: `name`, `area` (a `Feature::AREA_KEYS` value), `display_status`
   (`public_facing` / `user_facing` / `admin_facing`), `summary` (1–2 plain
   sentences), `released_on` (ship date), plus optional `pro_tips` (list),
@@ -313,15 +372,17 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 - **Do not rename branches after creating a PR** — deleting the old remote branch auto-closes the PR on GitHub, and the head ref cannot be changed after creation
 - Use `docs/pull_request_template.md` for PR description structure
 - **Remove the `Closes …` line when there's no ticket** — it's a template placeholder. Keep it (with a real issue link) only when the PR closes a tracked ticket; otherwise drop the line entirely rather than leaving the placeholder.
-- **Keep descriptions as short as possible** — a few terse bullets, not paragraphs. Cut anything a reviewer can see from the diff; only keep what explains *why*.
-  - **Bullets over prose, always.** Never write a paragraph where a bullet works. One idea per bullet; if a bullet needs a comma-spliced second clause, split it into two bullets instead.
-  - **Short sentences.** Aim for one clause per bullet. Drop filler ("this PR", "in order to", "as well as"), hedging, and restating the ticket. Prefer sentence fragments over full sentences when they're clear.
-  - **Group with headers** once the description covers more than one topic — a `##`/`###` header per section, bullets underneath — instead of a long undifferentiated list or run of paragraphs.
+- **Lead with one plain-language sentence** — right after the review-depth tag, write a single sentence a non-dev could read that says what changes and, when you know it, *why it matters* (the user problem or business reason it solves). This is the one line that must land; everything below it is supporting detail. Write it like you're telling a colleague, not filing a report.
+  - **Say the business reason when it's available, skip it when it isn't.** If the change fixes a pain point, unblocks a workflow, or was asked for, name that in plain terms ("facilitators couldn't tell which registrants had paid"). If no reason is known, don't invent one or pad — just describe the change plainly and move on.
+- **Keep the whole thing short enough to read in one glance** — the lead sentence plus at most a handful of bullets. If it's longer than a short screenful, cut. A reviewer skims first; make the main point impossible to miss.
+  - **Cut anything the diff already shows.** Only keep what a reader can't get from reading the code — the why, a non-obvious trade-off, a gotcha. Don't narrate the changes file by file.
+  - **Bullets over prose, always.** Never write a paragraph where a bullet works. One idea per bullet; if a bullet needs a comma-spliced second clause, split it into two.
+  - **Short, plain sentences.** One clause per bullet. Drop filler ("this PR", "in order to", "as well as"), hedging, and restating the ticket. Sentence fragments are fine when they're clear.
+  - **Group with headers only when you truly need them** — a `##`/`###` header per section once the description genuinely spans more than one topic. Don't reach for headers on a small PR; they add scaffolding that makes a short description feel long.
 - **Start the description with a review-depth tag** on its own single line, in the form `🤖 suggested review level: <N> <Name> <icon> <reason>`, followed by a blank line, then the rest of the description. The tag is the prefix, the level number, the level name, its icon, and a short reason — e.g. `🤖 suggested review level: 5 Inspect 🔬 substantive logic across 13 admin pages incl. filter behavior`. Always spell out the reason inline; never post the number/name/icon alone. The number is a 1–5 scale with three named levels (2 and 4 are unused in-betweens). The tag tells the reviewer how closely to look (depth of review, not how risky/good the change is):
   - **1 Skim 👀** — view-only: markup/copy/styling, no logic or data changes
   - **3 Read 📖** — light-logic: small, contained logic changes with low blast radius
   - **5 Inspect 🔬** — big change: substantive logic, migrations that rename or transform data (backfills), or wide-reaching changes that warrant careful review
-- Description must explain why the change was made, not just what
 - Include screenshots for UI changes
 - **On every push**, update the PR title and content to reflect the current diff — preserve any existing images/screenshots in the description
 - **On every push**, update AI instruction files if the diff adds, removes, or renames anything tracked in AGENTS.md — specifically: Stimulus controllers, services, model/controller concerns, mailers, rake tasks, and directory file counts

@@ -504,7 +504,7 @@ RSpec.describe Person, type: :model do
       }.not_to raise_error
     end
 
-    context 'sector_leaders_only' do
+    context "role: sector_leader" do
       let(:sector) { create(:sector) }
 
       before do
@@ -512,21 +512,243 @@ RSpec.describe Person, type: :model do
         person_bob.sectorable_items.create!(sector: sector, is_leader: false)
       end
 
-      it 'returns only people who lead a sector when truthy' do
-        results = Person.search_by_params(sector_leaders_only: '1')
+      it "returns only people who lead a sector" do
+        results = Person.search_by_params(role: "sector_leader")
         expect(results).to include(person_alice)
         expect(results).not_to include(person_bob)
       end
 
-      it 'returns a person once even when they lead several sectors' do
+      it "returns a person once even when they lead several sectors" do
         person_alice.sectorable_items.create!(sector: create(:sector), is_leader: true)
-        results = Person.search_by_params(sector_leaders_only: '1')
+        results = Person.search_by_params(role: "sector_leader")
         expect(results.to_a.count(person_alice)).to eq(1)
       end
 
-      it 'ignores the filter when unchecked' do
-        results = Person.search_by_params(sector_leaders_only: '0')
+      it "ignores the filter when role is blank" do
+        results = Person.search_by_params(role: "")
         expect(results).to include(person_alice, person_bob)
+      end
+    end
+
+    context "role: story_author" do
+      it "returns only people who authored a story" do
+        create(:story, author: person_alice)
+        results = Person.search_by_params(role: "story_author")
+        expect(results).to include(person_alice)
+        expect(results).not_to include(person_bob)
+      end
+    end
+
+    context "role: blog_contributor" do
+      it "returns only people flagged as blog contributors" do
+        person_bob.update!(blog_contributor: true)
+        results = Person.search_by_params(role: "blog_contributor")
+        expect(results).to include(person_bob)
+        expect(results).not_to include(person_alice)
+      end
+    end
+
+    context "role: workshop_author" do
+      it "returns only people who authored a workshop" do
+        create(:workshop, author: person_alice)
+        results = Person.search_by_params(role: "workshop_author")
+        expect(results).to include(person_alice)
+        expect(results).not_to include(person_bob)
+      end
+    end
+
+    context "role: workshop_variation_author" do
+      it "returns only people who authored a workshop variation" do
+        create(:workshop_variation, author: person_bob)
+        results = Person.search_by_params(role: "workshop_variation_author")
+        expect(results).to include(person_bob)
+        expect(results).not_to include(person_alice)
+      end
+
+      it "credits the submitter on a variation that names no author" do
+        create(:workshop_variation, author: nil, created_by: create(:user, person: person_bob))
+
+        results = Person.search_by_params(role: "workshop_variation_author")
+
+        expect(results).to include(person_bob)
+        expect(results).not_to include(person_alice)
+      end
+    end
+
+    context "role: workshop_log_author" do
+      it "returns only people credited as a workshop log author" do
+        create(:workshop_log, author: person_alice)
+        results = Person.search_by_params(role: "workshop_log_author")
+        expect(results).to include(person_alice)
+        expect(results).not_to include(person_bob)
+      end
+
+      it "matches the credited author, not whoever logged it" do
+        logger = create(:user, person: person_bob)
+        create(:workshop_log, created_by: logger, author: person_alice)
+
+        results = Person.search_by_params(role: "workshop_log_author")
+
+        expect(results).to include(person_alice)
+        expect(results).not_to include(person_bob)
+      end
+
+      it "credits the logger on a log that names no author (predates author_id)" do
+        create(:workshop_log, created_by: create(:user, person: person_bob), author: nil)
+
+        results = Person.search_by_params(role: "workshop_log_author")
+
+        expect(results).to include(person_bob)
+        expect(results).not_to include(person_alice)
+      end
+
+      it "ignores logs with neither an author nor a person behind the account" do
+        create(:workshop_log, author: nil, created_by: create(:user, person: nil))
+        results = Person.search_by_params(role: "workshop_log_author")
+        expect(results).not_to include(person_alice, person_bob)
+      end
+    end
+
+    context "membership_status" do
+      it "active: includes people with a non-cancelled membership" do
+        member = create(:person, first_name: "Member", last_name: "Active")
+        create(:membership, person: member)
+        results = Person.search_by_params(membership_status: "active")
+        expect(results).to include(member)
+        expect(results).not_to include(person_alice)
+      end
+
+      it "inactive: includes people whose only membership is cancelled" do
+        former = create(:person, first_name: "Former", last_name: "Member")
+        create(:membership, :cancelled, person: former)
+        results = Person.search_by_params(membership_status: "inactive")
+        expect(results).to include(former)
+        expect(results).not_to include(person_alice)
+      end
+
+      it "paid: includes people with a covered current invoice" do
+        member = create(:person, first_name: "Paid", last_name: "Member")
+        create(:membership_invoice, :comped, membership: create(:membership, person: member))
+        results = Person.search_by_params(membership_status: "paid")
+        expect(results).to include(member)
+      end
+
+      it "due: includes people owing on a current invoice still within grace" do
+        member = create(:person, first_name: "Due", last_name: "Member")
+        create(:membership_invoice, membership: create(:membership, person: member),
+                                    start_date: Date.current)
+        results = Person.search_by_params(membership_status: "due")
+        expect(results).to include(member)
+      end
+
+      it "overdue: includes people owing past the grace period" do
+        member = create(:person, first_name: "Overdue", last_name: "Member")
+        create(:membership_invoice, membership: create(:membership, person: member),
+                                    start_date: 60.days.ago, end_date: 305.days.from_now)
+        results = Person.search_by_params(membership_status: "overdue")
+        expect(results).to include(member)
+      end
+    end
+
+    context "facilitator_status" do
+      # person_alice and person_bob each already have one active facilitator affiliation.
+
+      it "active: includes people with a currently-active facilitator affiliation" do
+        results = Person.search_by_params(facilitator_status: "active")
+        expect(results).to include(person_alice, person_bob)
+      end
+
+      it "inactive: includes people whose facilitator affiliations are all inactive" do
+        lapsed = create(:person, first_name: "Lapsed", last_name: "Fac")
+        create(:affiliation, person: lapsed, title: "Facilitator", end_date: 1.year.ago)
+
+        results = Person.search_by_params(facilitator_status: "inactive")
+        expect(results).to include(lapsed)
+        expect(results).not_to include(person_alice)
+      end
+
+      it "boomerang: includes people whose active term began after an earlier term ended" do
+        returnee = create(:person, first_name: "Returnee", last_name: "Fac")
+        create(:affiliation, person: returnee, title: "Facilitator",
+                             start_date: 5.years.ago, end_date: 3.years.ago)
+        create(:affiliation, person: returnee, title: "Facilitator",
+                             start_date: 1.year.ago, end_date: nil)
+
+        results = Person.search_by_params(facilitator_status: "boomerang")
+        expect(results).to include(returnee)
+        expect(results).not_to include(person_alice)
+      end
+
+      it "boomerang: excludes people serving two orgs concurrently who never left" do
+        concurrent = create(:person, first_name: "Concurrent", last_name: "Fac")
+        create(:affiliation, person: concurrent, title: "Facilitator",
+                             start_date: 5.years.ago, end_date: nil)
+        create(:affiliation, person: concurrent, title: "Facilitator",
+                             start_date: 1.year.ago, end_date: nil)
+
+        results = Person.search_by_params(facilitator_status: "boomerang")
+        expect(results).not_to include(concurrent)
+      end
+
+      it "boomerang: excludes a continuous term overlapping a since-ended second org" do
+        overlapper = create(:person, first_name: "Overlap", last_name: "Fac")
+        create(:affiliation, person: overlapper, title: "Facilitator",
+                             start_date: 5.years.ago, end_date: nil)
+        create(:affiliation, person: overlapper, title: "Facilitator",
+                             start_date: 3.years.ago, end_date: 1.year.ago)
+
+        results = Person.search_by_params(facilitator_status: "boomerang")
+        expect(results).not_to include(overlapper)
+      end
+
+      it "formerly_active: includes people whose facilitator term ended and none is active" do
+        former = create(:person, first_name: "Former", last_name: "Fac")
+        create(:affiliation, person: former, title: "Facilitator", end_date: 1.year.ago)
+
+        results = Person.search_by_params(facilitator_status: "formerly_active")
+        expect(results).to include(former)
+        expect(results).not_to include(person_alice)
+      end
+    end
+
+    context "topic_subscription_type_id" do
+      let(:topic) { create(:topic_subscription_type) }
+
+      it "returns people with an active subscription to the topic" do
+        create(:topic_subscription, person: person_alice, topic_subscription_type: topic)
+        results = Person.search_by_params(topic_subscription_type_id: topic.id)
+        expect(results).to include(person_alice)
+        expect(results).not_to include(person_bob)
+      end
+
+      it "excludes people whose subscription to the topic is unsubscribed" do
+        create(:topic_subscription, :unsubscribed, person: person_bob, topic_subscription_type: topic)
+        results = Person.search_by_params(topic_subscription_type_id: topic.id)
+        expect(results).not_to include(person_bob)
+      end
+    end
+
+    context "age_range_names_all" do
+      let(:age_type) { create(:category_type, name: "AgeRange", published: true) }
+      let(:teens) { create(:category, :published, name: "Teens", category_type: age_type) }
+      let(:seniors) { create(:category, :published, name: "Seniors", category_type: age_type) }
+
+      it "returns only people tagged with the named age range" do
+        person_alice.categorizable_items.create!(category: teens)
+        person_bob.categorizable_items.create!(category: seniors)
+
+        results = Person.search_by_params(age_range_names_all: "Teens")
+        expect(results).to include(person_alice)
+        expect(results).not_to include(person_bob)
+      end
+
+      it "does not match a same-named category from another category type" do
+        other_type = create(:category_type, name: "Setting", published: true)
+        other_teens = create(:category, :published, name: "Teens", category_type: other_type)
+        person_bob.categorizable_items.create!(category: other_teens)
+
+        results = Person.search_by_params(age_range_names_all: "Teens")
+        expect(results).not_to include(person_bob)
       end
     end
   end
@@ -596,41 +818,11 @@ RSpec.describe Person, type: :model do
           .to contain_exactly("Toddlers")
       end
 
-      it "does not pull from the service area fields" do
-        answer("primary_service_area", "Other: Equine therapy")
+      it "does not pull from the sector fields" do
+        answer("additional_sectors", "Other: Equine therapy")
 
         expect(person.other_workshop_setting_responses).to be_empty
       end
-    end
-  end
-
-  describe "#mailing_list_consented=" do
-    it "stamps consent and a source when granted with none on file" do
-      person = build(:person, mailing_list_consent_at: nil)
-
-      person.mailing_list_consented = "1"
-
-      expect(person.mailing_list_consent_at).to be_present
-      expect(person.mailing_list_consent_source).to eq("Admin update")
-    end
-
-    it "preserves the original timestamp and source when re-checked" do
-      original = 1.year.ago
-      person = build(:person, mailing_list_consent_at: original, mailing_list_consent_source: "Registration: X")
-
-      person.mailing_list_consented = "1"
-
-      expect(person.mailing_list_consent_at).to be_within(1.second).of(original)
-      expect(person.mailing_list_consent_source).to eq("Registration: X")
-    end
-
-    it "clears the timestamp and source when withdrawn" do
-      person = build(:person, mailing_list_consent_at: Time.current, mailing_list_consent_source: "Registration: X")
-
-      person.mailing_list_consented = "0"
-
-      expect(person.mailing_list_consent_at).to be_nil
-      expect(person.mailing_list_consent_source).to be_nil
     end
   end
 end
@@ -672,6 +864,25 @@ RSpec.describe Person, "scholarship index helpers" do
       create(:event_registration, registrant: person, event: non_training, status: "attended")
 
       expect(person.completed_facilitator_trainings).to contain_exactly(training)
+    end
+  end
+
+  describe "#communications_scope" do
+    it "includes communications to any of the person's addresses (login, email, email_2)" do
+      person = create(:person, email: "primary@example.com", email_2: "secondary@example.com")
+      to_login = create(:notification, recipient_email: person.user.email)
+      to_primary = create(:notification, recipient_email: "primary@example.com")
+      to_secondary = create(:notification, recipient_email: "secondary@example.com")
+      create(:notification, recipient_email: "unrelated@example.com")
+
+      expect(person.communications_scope).to contain_exactly(to_login, to_primary, to_secondary)
+    end
+
+    it "returns none when the person has no addresses on file" do
+      person = create(:person, user: nil, email: nil, email_2: nil)
+      create(:notification, recipient_email: "someone@example.com")
+
+      expect(person.communications_scope).to be_empty
     end
   end
 end

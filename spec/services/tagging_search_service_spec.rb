@@ -138,6 +138,37 @@ RSpec.describe TaggingSearchService do
       end
     end
 
+    context "with people (People-index-only)" do
+      let!(:admin) { create(:user, :admin) }
+      let!(:person) { create(:person, first_name: "Tagged", last_name: "Facilitator") }
+
+      before { create(:sectorable_item, sector: sector, sectorable: person) }
+
+      it "returns matching people for a viewer allowed to see the People index" do
+        results = described_class.new(user: admin).call(
+          sector_names_all: "Youth", category_names_all: nil, pages: {}, number_of_items_per_page: 9
+        )
+
+        expect(results[:people].map(&:title)).to include("Tagged Facilitator")
+      end
+
+      it "hides people from viewers who cannot see the People index" do
+        results = described_class.new(user: user).call(
+          sector_names_all: "Youth", category_names_all: nil, pages: {}, number_of_items_per_page: 9
+        )
+
+        expect(results[:people]).to be_empty
+      end
+
+      it "hides people from guests" do
+        results = described_class.new(user: nil).call(
+          sector_names_all: "Youth", category_names_all: nil, pages: {}, number_of_items_per_page: 9
+        )
+
+        expect(results[:people]).to be_empty
+      end
+    end
+
     context "as a guest (nil user)" do
       it "returns only publicly visible results" do
         results = described_class.new(user: nil).call(

@@ -1,23 +1,35 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:organizations) %> border border-gray-200 rounded-xl shadow p-6">
-      <!-- Header -->
-      <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
+<div class="border-primary/10 bg-brand-cream mx-auto max-w-7xl overflow-hidden rounded-2xl border shadow-sm">
+  <%= render "shared/brand_accent_strip" %>
+  <div class="p-6">
+    <!-- Header -->
+    <div class="mb-6 flex flex-col items-center justify-between gap-3 sm:flex-row sm:items-start">
+      <div class="pr-6">
+        <span class="text-2xs font-semibold tracking-widest uppercase <%= DomainTheme.text_class_for(:organizations, intensity: 700) %>">Directory</span>
         <div id="organizations_count">
-          <h1 class="text-2xl font-semibold text-gray-900">Organizations</h1>
+          <h1 class="text-primary font-display text-3xl">Organizations</h1>
         </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <% if allowed_to?(:manage?, Organization) %>
+          <%= link_to "Dedupe", dedupe_index_organizations_path,
+                      class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <% end %>
         <% if allowed_to?(:new?, Organization) %>
           <%= link_to "New Organization",
                       new_organization_path,
                       class: "admin-only bg-blue-100 btn btn-primary-outline" %>
         <% end %>
       </div>
+    </div>
 
-      <!-- Optional filters -->
-      <%= render "search_boxes" %>
+    <!-- Optional filters -->
+    <%= render "search_boxes" %>
 
-      <% result_src = organizations_path + "?" + request.query_string %>
+    <% result_src = organizations_path + "?" + request.query_string %>
 
-      <%= turbo_frame_tag :organizations_results, src: result_src, data: {turbo: "temporary"} do %>
-        <%= render "results_skeleton" %>
-      <% end %>
+    <%= turbo_frame_tag :organizations_results, src: result_src, data: {turbo: "temporary"} do %>
+      <%= render "results_skeleton" %>
+    <% end %>
+  </div>
 </div>

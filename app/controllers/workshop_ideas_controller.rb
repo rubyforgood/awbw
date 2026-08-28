@@ -5,11 +5,10 @@ class WorkshopIdeasController < ApplicationController
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     base_scope = authorized_scope(WorkshopIdea.includes(:workshops))
-    filtered = base_scope.search(params.slice(:title, :created_by_id, :author_name))
+    filtered = base_scope.search(params.slice(:title, :author_name))
     filtered = filtered.created_by_person(params[:created_by_person_id]) if params[:created_by_person_id].present?
     @workshop_ideas_count = filtered.size
     @workshop_ideas = filtered.paginate(page: params[:page], per_page: per_page).decorate
-    @users = User.has_access.includes(:person).references(:person).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)"))
   end
 
   def show
@@ -24,6 +23,9 @@ class WorkshopIdeasController < ApplicationController
 
   def create
     @workshop_idea = WorkshopIdea.new(workshop_idea_params)
+    # Credit the submitting account's person as the author, so the idea lists on
+    # their profile by authorship like every other content type.
+    @workshop_idea.author ||= @workshop_idea.created_by&.person
     authorize! @workshop_idea
 
     if @workshop_idea.save

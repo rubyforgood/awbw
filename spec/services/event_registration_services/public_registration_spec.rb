@@ -11,8 +11,11 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     f
   end
 
+  # Resolve a field by identifier, tolerating the organization rename: the seeded
+  # form carries the canonical "organization_*" names, but specs may reference
+  # either spelling (see FormField.aliased_identifiers).
   def field_id(key)
-    form.form_fields.find_by!(field_identifier: key).id.to_s
+    form.form_fields.find_by!(field_identifier: FormField.aliased_identifiers(key)).id.to_s
   end
 
   def base_form_params(first_name:, last_name:, email:)
@@ -22,6 +25,25 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       field_id("primary_email") => email,
       field_id("primary_email_type") => "personal"
     }
+  end
+
+  describe "registration status" do
+    it "flips an on-demand facilitator-training registration straight to attended" do
+      on_demand = create(:event, :published, :publicly_visible, facilitator_training: true, on_demand: true)
+      on_demand.event_forms.create!(form: form, role: "registration")
+
+      result = described_class.call(event: on_demand, registration_form: form,
+                                    form_params: base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com"))
+
+      expect(result.event_registration.status).to eq("attended")
+    end
+
+    it "leaves a scheduled event's registration as registered" do
+      result = described_class.call(event: event, registration_form: form,
+                                    form_params: base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com"))
+
+      expect(result.event_registration.status).to eq("registered")
+    end
   end
 
   describe "affiliation creation" do
@@ -259,8 +281,10 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
-  describe "mailing list consent" do
-    it "stamps the consent time and source when the registrant opts in" do
+  describe "News subscription capture" do
+    let!(:news) { create(:topic_subscription_type, name: "News") }
+
+    it "subscribes the registrant to News with the event as the source when they opt in" do
       params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
         field_id("communication_consent") => [ "Yes" ]
       )
@@ -268,33 +292,30 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       described_class.call(event: event, registration_form: form, form_params: params)
       person = Person.find_by!(email: "coco@example.com")
 
-      expect(person.mailing_list_consent_at).to be_present
-      expect(person.mailing_list_consent_source).to eq("#{event.start_date.to_date.iso8601} #{event.title} registration")
+      subscription = person.topic_subscriptions.active.for_topic_type(news).sole
+      expect(subscription.source).to eq("#{event.start_date.to_date.iso8601} #{event.title} registration")
     end
 
-    it "does not record consent when the box is left unchecked" do
+    it "does not subscribe when the consent box is left unchecked" do
       params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
         field_id("communication_consent") => [ "" ]
       )
 
       described_class.call(event: event, registration_form: form, form_params: params)
 
-      expect(Person.find_by!(email: "coco@example.com").mailing_list_consent_at).to be_nil
+      expect(Person.find_by!(email: "coco@example.com").topic_subscriptions).to be_empty
     end
 
-    it "never re-stamps or clears consent already on file" do
-      original = 1.year.ago
-      create(:person, first_name: "Coco", last_name: "Lee", email: "coco@example.com",
-                      mailing_list_consent_at: original, mailing_list_consent_source: "Earlier")
+    it "does not add a second active subscription when one already exists" do
+      person = create(:person, first_name: "Coco", last_name: "Lee", email: "coco@example.com")
+      create(:topic_subscription, person: person, topic_subscription_type: news, source: "Earlier")
       params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
         field_id("communication_consent") => [ "Yes" ]
       )
 
       described_class.call(event: event, registration_form: form, form_params: params)
-      person = Person.find_by!(email: "coco@example.com")
 
-      expect(person.mailing_list_consent_at).to be_within(1.second).of(original)
-      expect(person.mailing_list_consent_source).to eq("Earlier")
+      expect(person.topic_subscriptions.active.for_topic_type(news).sole.source).to eq("Earlier")
     end
   end
 
@@ -459,7 +480,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       register_with_agency_type("Other: Equine therapy")
 
       answer = FormAnswer.joins(:form_field)
-        .find_by(form_fields: { field_identifier: "agency_type" })
+        .find_by(form_fields: { field_identifier: FormField.aliased_identifiers("organization_type") })
       expect(answer.submitted_answer).to eq("Other: Equine therapy")
     end
 
@@ -582,7 +603,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         event: event,
         registration_form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
-          field_id("primary_sector_single") => primary_sector.id.to_s,
+          field_id("primary_sector") => primary_sector.id.to_s,
           field_id("additional_sectors") => [ additional_sector.id.to_s ]
         )
       )
@@ -601,7 +622,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         event: event,
         registration_form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
-          field_id("primary_sector_single") => primary_sector.id.to_s
+          field_id("primary_sector") => primary_sector.id.to_s
         )
       )
 
@@ -616,7 +637,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         event: event,
         registration_form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
-          field_id("primary_sector_single") => primary_sector.id.to_s
+          field_id("primary_sector") => primary_sector.id.to_s
         )
       )
 
@@ -637,7 +658,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         registration_form: form,
         form_params: base_form_params(first_name: "Al", last_name: "Ng", email: "al@example.com").merge(
           field_id("primary_age_group") => [ young.id.to_s ],
-          field_id("additional_age_group") => [ teen.id.to_s ]
+          field_id("additional_age_groups") => [ teen.id.to_s ]
         )
       )
 
@@ -1110,6 +1131,58 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       answer = result.form_submission.form_answers.find_by(form_field: upload_field)
       expect(answer.uploaded_file).to be_attached
       expect(answer.submitted_answer).to eq("sample.png")
+    end
+  end
+
+  # Guards the rename: forms built before the "agency_" -> "organization_" rename
+  # still carry the legacy identifiers, and the pipeline must keep reading them.
+  describe "legacy agency_ organization identifiers" do
+    let!(:organization) { create(:organization, name: "Legacy Org") }
+
+    let(:legacy_form) do
+      f = FormBuilderService.new(name: "Legacy", sections: %i[person_identifier]).call
+      {
+        "agency_name" => "Organization name",
+        "agency_position" => "Position",
+        "agency_website" => "Website",
+        "agency_type" => "Type",
+        "agency_street" => "Street",
+        "agency_city" => "City",
+        "agency_state" => "State",
+        "agency_zip" => "Zip",
+        "agency_country" => "Country"
+      }.each_with_index do |(identifier, name), index|
+        f.form_fields.create!(name: name, answer_type: :free_form_input_one_line, status: :active,
+                              position: 101 + index, field_identifier: identifier)
+      end
+      event.event_forms.create!(form: f, role: "registration")
+      f
+    end
+
+    def legacy_field_id(identifier)
+      legacy_form.form_fields.find_by!(field_identifier: identifier).id.to_s
+    end
+
+    it "links the organization and fills its profile from the legacy identifiers" do
+      params = {
+        legacy_field_id("first_name") => "Lee",
+        legacy_field_id("last_name") => "Legacy",
+        legacy_field_id("primary_email") => "lee@example.com",
+        legacy_field_id("agency_name") => "Legacy Org",
+        legacy_field_id("agency_website") => "legacy.org",
+        legacy_field_id("agency_type") => "501c3/nonprofit",
+        legacy_field_id("agency_city") => "Reno",
+        legacy_field_id("agency_state") => "NV"
+      }
+
+      result = described_class.call(event: event, registration_form: legacy_form, form_params: params)
+      organization.reload
+
+      expect(result.success?).to be true
+      expect(result.event_registration.organizations).to include(organization)
+      expect(organization.agency_type).to eq("501c3/nonprofit")
+      expect(organization.website_url).to include("legacy.org")
+      expect(organization.addresses.find_by(city: "Reno")).to be_present
     end
   end
 end

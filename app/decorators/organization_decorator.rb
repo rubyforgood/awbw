@@ -33,9 +33,9 @@ class OrganizationDecorator < ApplicationDecorator
   end
 
   # Compact single-letter program-status badge (N / O / R) with the full label as
-  # a tooltip. Defaults to this org's own #program_status; pass a precomputed
+  # a tooltip. Defaults to this org's own year-anchored status; pass a precomputed
   # status on list pages (index / dashboard) to avoid loading affiliations per row.
-  def program_status_badge(status = object.program_status)
+  def program_status_badge(status = object.facilitator_program_status)
     key = self.class.program_status_key(status)
     return unless key
 
@@ -96,10 +96,24 @@ class OrganizationDecorator < ApplicationDecorator
     AffiliationPeriods.label(affiliations) || object.start_date&.strftime("%b %Y") || ""
   end
 
-  # "Art program since" — facilitators only, at month precision, since the exact
+  # "Facilitators since" — facilitators only, at month precision, since the exact
   # start/lapse month is the point. Blank when the org has never facilitated.
   def program_since_display(affiliations = object.affiliations)
     AffiliationPeriods.label(affiliations.select(&:facilitator?), precision: :month) || ""
+  end
+
+  def program_since_date
+    @program_since_date ||= object.affiliations.select(&:facilitator?).filter_map(&:start_date).min
+  end
+
+  # A grey secondary line under "Facilitators since", shown only when the earliest
+  # affiliation start differs (by month/year) from the facilitator start — so the
+  # two aren't redundant. Nil when they match or there's no affiliation date.
+  def affiliated_since_note
+    date = affiliated_since_date
+    return nil if date.nil?
+    return nil if program_since_date && date.beginning_of_month == program_since_date.beginning_of_month
+    "Affiliated since #{date.strftime('%b %Y')}"
   end
 
   ORG_STATUS_BUCKET_LABELS = {

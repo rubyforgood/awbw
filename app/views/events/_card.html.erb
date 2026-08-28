@@ -55,8 +55,7 @@
       <% if registration&.slug.present? %>
       <%= link_to "View ticket", registration_ticket_path(registration.slug),
                   data: { turbo_frame: "_top" },
-                  class: "btn px-3 py-2 text-xs uppercase leading-tight text-white hover:bg-white event-view-registration-btn",
-                  style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(22, 101, 52); border: 2px solid rgb(22, 101, 52);" %>
+                  class: "btn btn-success px-3 py-2 text-xs uppercase leading-tight font-telefon" %>
       <% end %>
     <% elsif event.ended? %>
       <span class="text-sm text-gray-500 italic">Event ended</span>
@@ -68,18 +67,18 @@
           <%= button_to "Register",
                       event_registrant_registration_path(event_id: event),
                       data: { turbo: !event.object.cost_cents.to_i.positive? },
-                      class: "btn px-3 py-2 text-xs uppercase leading-tight font-telefon text-accent border-2 border-accent hover:text-white hover:bg-orange-700" %>
+                      class: "btn btn-accent-outline px-3 py-2 text-xs uppercase leading-tight font-telefon" %>
         <% else %>
           <%= link_to "Register",
                       new_event_public_registration_path(event),
                       data: { turbo_frame: "_top" },
-                      class: "btn px-3 py-2 text-xs uppercase leading-tight font-telefon text-accent border-2 border-accent hover:text-white hover:bg-orange-700" %>
+                      class: "btn btn-accent-outline px-3 py-2 text-xs uppercase leading-tight font-telefon" %>
         <% end %>
       <% elsif event.object.public_registration_enabled? && event.object.event_forms.registration.exists? %>
         <%= link_to "Register",
                     new_event_public_registration_path(event),
                     data: { turbo_frame: "_top" },
-                    class: "btn px-3 py-2 text-xs uppercase leading-tight font-telefon text-accent border-2 border-accent hover:text-white hover:bg-orange-700" %>
+                    class: "btn btn-accent-outline px-3 py-2 text-xs uppercase leading-tight font-telefon" %>
       <% end %>
     <% else %>
       <span class="text-sm text-gray-500 italic">Registration closed</span>
@@ -90,7 +89,7 @@
       <%= link_to "Dashboard",
                 dashboard_event_path(event),
                 data: { turbo_frame: "_top" },
-                class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1 ml-auto" %>
+                class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1 ml-auto" %>
     <% end %>
     </div>
   </div>

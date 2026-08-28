@@ -1,0 +1,122 @@
+<%# Admin aid for processing an agreement scenario submission (ADR-0002):
+    what the person submitted for their organization, their current affiliations
+    with scenario-specific actions, and their portal account status. %>
+<% scenario = submission.linking_scenario %>
+<% person = submission.person %>
+<% answers = submission.answers_by_identifier %>
+<% submitted_org = FormField.aliased_identifiers("organization_name").filter_map { |key| answers[key].presence }.first %>
+<% submitted_position = FormField.aliased_identifiers("organization_position").filter_map { |key| answers[key].presence }.first %>
+<% affiliations = person.affiliations.includes(:organization).order(Arel.sql("end_date IS NOT NULL, end_date DESC, start_date DESC")) %>
+<% guidance = {
+     "on_demand" => "New facilitator from the on-demand training — link their organization below, then invite them to the portal.",
+     "reinstatement" => "Returning facilitator — link their organization below: linking adds a fresh Facilitator affiliation dated to this submission unless an active one already exists. Then invite or re-invite them to the portal.",
+     "new_job" => "Facilitator starting at a new organization — link it below: linking ends their affiliations at other organizations automatically (or end one by hand here first) and starts the new ones on the submission date. Check that their login email still reaches them."
+   }[scenario] %>
+
+<div class="mt-6 rounded-2xl border <%= DomainTheme.border_class_for(:forms, intensity: 200) %> <%= DomainTheme.bg_class_for(:forms) %> p-6 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <span class="inline-flex items-center rounded-md bg-white px-2 py-0.5 text-xs font-medium <%= DomainTheme.text_class_for(:forms, intensity: 700) %> border <%= DomainTheme.border_class_for(:forms, intensity: 200) %>"><%= FormSubmission::LINKING_SCENARIOS[scenario] %></span>
+    <h2 class="text-base font-semibold text-gray-900">Processing</h2>
+  </div>
+  <p class="mt-2 text-sm text-gray-700"><%= guidance %></p>
+
+  <div class="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h3 class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Submitted organization</h3>
+      <% if submitted_org %>
+        <%= link_to link_organization_form_submission_path(submission), class: "text-sm text-blue-600 hover:underline" do %>
+          <i class="fa-solid fa-link text-xs"></i> Link organization
+        <% end %>
+      <% end %>
+    </div>
+    <% if submitted_org %>
+      <p class="mt-1 text-sm font-medium text-gray-900">
+        <%= submitted_org %>
+        <% if submitted_position.present? %><span class="font-normal text-gray-600">— <%= submitted_position %></span><% end %>
+      </p>
+    <% else %>
+      <p class="mt-1 text-sm text-gray-400">No organization question answered on this submission.</p>
+    <% end %>
+  </div>
+
+  <div class="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h3 class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Current affiliations</h3>
+      <%= link_to edit_person_path(person, return_to: "form_submission", form_submission_id: submission.id, anchor: "affiliations"),
+                  class: "text-sm text-blue-600 hover:underline" do %>
+        <i class="fa-solid fa-pen-to-square text-xs"></i> Edit person & affiliations
+      <% end %>
+    </div>
+    <% if affiliations.any? %>
+      <table class="mt-2 w-full border-collapse text-sm">
+        <thead>
+          <tr class="border-b border-gray-200 text-left text-xs text-gray-500">
+            <th class="py-1.5 pr-3">Organization</th>
+            <th class="py-1.5 pr-3">Title</th>
+            <th class="py-1.5 pr-3">Start</th>
+            <th class="py-1.5 pr-3">End</th>
+            <th class="py-1.5 pr-3">Status</th>
+            <th class="py-1.5"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% affiliations.each do |affiliation| %>
+            <%# Name match, or the org an admin explicitly linked to this submission. %>
+            <% matches_submitted = (submitted_org.present? && affiliation.organization.name.casecmp?(submitted_org)) ||
+                 submission.linked_organization_ids.include?(affiliation.organization_id) %>
+            <tr class="border-b border-gray-100 last:border-0">
+              <td class="py-2 pr-3 font-medium text-gray-900">
+                <%= link_to affiliation.organization.name, edit_organization_path(affiliation.organization), class: "hover:underline" %>
+                <% if matches_submitted %>
+                  <span class="ml-1 inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700"><i class="fa-solid fa-check text-3xs"></i>Matches submission</span>
+                <% end %>
+              </td>
+              <td class="py-2 pr-3 text-gray-700"><%= affiliation.title.presence || "—" %></td>
+              <td class="py-2 pr-3 whitespace-nowrap text-gray-600"><%= affiliation.start_date&.to_fs(:long) || "—" %></td>
+              <td class="py-2 pr-3 whitespace-nowrap text-gray-600"><%= affiliation.end_date&.to_fs(:long) || "—" %></td>
+              <td class="py-2 pr-3">
+                <% if affiliation.active? %>
+                  <span class="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">Active</span>
+                <% else %>
+                  <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">Inactive</span>
+                <% end %>
+                <% if submission.scenario_ended_affiliation_ids.include?(affiliation.id) %>
+                  <span class="ml-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700"
+                        title="End-dated automatically when the submitted organization was linked — edit the affiliation if this was wrong (e.g. they stayed at this organization too)."><i class="fa-solid fa-wand-magic-sparkles text-3xs"></i>Ended by this agreement</span>
+                <% end %>
+              </td>
+              <td class="py-2 text-right">
+                <%# Ends the day before the agreement takes effect, matching the
+                    automatic scenario end-dating (see ADR-0002 D4). %>
+                <% end_on = submission.created_at.to_date - 1.day %>
+                <% if scenario == "new_job" && affiliation.active? && !matches_submitted %>
+                  <%= button_to "End", end_affiliation_path(affiliation, form_submission_id: submission.id, end_date: end_on.iso8601),
+                                class: "btn btn-secondary-outline whitespace-nowrap",
+                                form: { data: { turbo_confirm: "End #{person.name}'s affiliation with #{affiliation.organization.name} as of #{end_on.to_fs(:long)} (the day before this agreement)?" } } %>
+                <% elsif submission.scenario_ended_affiliation_ids.include?(affiliation.id) %>
+                  <%= link_to "Edit", edit_affiliation_path(affiliation), class: "text-sm text-blue-600 hover:underline" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="mt-1 text-sm text-gray-400">No affiliations yet — add one from the person's edit page.</p>
+    <% end %>
+  </div>
+
+  <div class="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+    <div class="flex flex-wrap items-center gap-3">
+      <h3 class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Portal account</h3>
+      <% if person.user %>
+        <%= render "users/confirmed_status", user: person.user,
+                    invite_params: { return_to: "form_submission", form_submission_id: submission.id },
+                    return_params: { return_to: "form_submission", form_submission_id: submission.id } %>
+      <% else %>
+        <span class="text-sm text-gray-500">No account yet.</span>
+        <%= link_to "Create user", new_user_path(person_id: person.id), class: "btn btn-secondary-outline whitespace-nowrap" %>
+      <% end %>
+    </div>
+  </div>
+</div>

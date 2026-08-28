@@ -1,4 +1,5 @@
 class Affiliation < ApplicationRecord
+  include Communicable
   # Standing title given to the "facilitator affiliation" we create on registration
   # and org linking. Matches the `facilitators` scope / `facilitator?` predicate
   # (both treat exactly "Facilitator" as canonical).
@@ -22,6 +23,11 @@ class Affiliation < ApplicationRecord
   belongs_to :event_registration, optional: true, inverse_of: :affiliations
 
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  # A communication logged on an affiliation is addressed to the affiliated person.
+  def communications_email
+    person&.preferred_email
+  end
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
   # Validations
@@ -49,11 +55,9 @@ class Affiliation < ApplicationRecord
       .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", date)
   }
 
-  # Only the exact, case-sensitive title "Facilitator" counts — variants like
-  # "Lead Facilitator" or "facilitator" are deliberately excluded. BINARY forces
-  # a case-sensitive comparison under MySQL's default case-insensitive collation;
-  # TRIM mirrors the in-memory #facilitator? strip so stray whitespace still matches.
-  scope :facilitators, -> { where("BINARY TRIM(title) = ?", "Facilitator") }
+  # Exactly "Facilitator" (case-sensitive; BINARY on the literal keeps the plain
+  # title index usable). Titles are normalized on write, so no TRIM is needed.
+  scope :facilitators, -> { where("affiliations.title = BINARY ?", FACILITATOR_TITLE) }
 
   # Affiliations whose #status_on(date) equals the given status, expressed in SQL
   # so it composes as a subquery (e.g. person-id narrowing). Kept in lock-step with
@@ -78,6 +82,7 @@ class Affiliation < ApplicationRecord
     end
   }
 
+  before_validation :normalize_title
   before_validation :skip_if_duplicate
   # Runs before validation so a reassigned org drops its stale organization_address_id
   # before organization_address_belongs_to_organization would reject it.
@@ -89,12 +94,10 @@ class Affiliation < ApplicationRecord
   after_destroy :sync_organization_affiliation_dates
 
   # Methods
-  # A facilitator affiliation is one whose title is *exactly* "Facilitator"
-  # (trimmed, case-sensitive). Variants like "Lead Facilitator" or "facilitator"
-  # are deliberately excluded. Mirrors the .facilitators scope so in-memory and
-  # SQL checks agree.
+  # In-memory twin of the .facilitators scope: exactly "Facilitator", case-sensitive.
+  # An executable agreement spec locks the two together.
   def facilitator?
-    title.to_s.strip == "Facilitator"
+    title.to_s.strip == FACILITATOR_TITLE
   end
 
   # Current: not flagged inactive and not past its end date. Mirrors the `active`
@@ -126,6 +129,12 @@ class Affiliation < ApplicationRecord
     valid = organization_address.addressable_type == "Organization" &&
             organization_address.addressable_id == organization_id
     errors.add(:organization_address_id, "must be an address of this organization") unless valid
+  end
+
+  # Store titles trimmed (blank → nil) so the .facilitators scope matches the bare
+  # column and uses the title index without a TRIM wrapper.
+  def normalize_title
+    self.title = title&.strip.presence
   end
 
   def skip_if_duplicate

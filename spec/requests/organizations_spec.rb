@@ -109,8 +109,8 @@ RSpec.describe "/organizations", type: :request do
       org = create(:organization, organization_status: organization_status)
       create(:sectorable_item, sector: create(:sector, name: "Direct Sector 1"), sectorable: org)
       create(:sectorable_item, sector: create(:sector, name: "Direct Sector 2"), sectorable: org)
-      create(:affiliation, organization: org, person: person_1, position: :default)
-      create(:affiliation, organization: org, person: person_2, position: :default)
+      create(:affiliation, organization: org, person: person_1)
+      create(:affiliation, organization: org, person: person_2)
       org
     end
 
@@ -175,16 +175,16 @@ RSpec.describe "/organizations", type: :request do
       expect(response.body).to include("Monthly reports")
     end
 
-    it "renders affiliated-since as merged year-based periods (server-side)" do
+    it "surfaces the affiliated-since note when it predates the facilitator start" do
       organization = Organization.create!(valid_attributes)
       create(:affiliation, organization: organization, person: create(:person),
-                           start_date: Date.new(2010, 1, 1), end_date: Date.new(2012, 6, 1))
+                           title: "Volunteer", start_date: Date.new(2010, 1, 1))
       create(:affiliation, organization: organization, person: create(:person),
-                           start_date: Date.new(2013, 1, 1), end_date: Date.new(2015, 6, 1))
+                           title: "Facilitator", start_date: Date.new(2015, 3, 1))
 
       get edit_organization_url(organization)
 
-      expect(response.body).to include("2010-2012, 2013-2015")
+      expect(response.body).to include("Affiliated since Jan 2010")
     end
 
     it "renders per-event program-status chips only for facilitator-training events" do

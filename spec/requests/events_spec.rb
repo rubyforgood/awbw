@@ -1691,12 +1691,12 @@ RSpec.describe "Events", type: :request do
           .at_css("tr#registrant-row-#{registration.id} td[data-column-toggle-col='organization']")&.text&.squish
       end
 
-      # Stores a submitted "agency_name" answer for the registrant, mirroring what
-      # public registration captures, so the Pending/None chip logic has data.
+      # Stores a submitted "organization_name" answer for the registrant, mirroring
+      # what public registration captures, so the Pending/None chip logic has data.
       def submit_agency_name(name)
         registration_form = Form.find_by(name: "Registration") || create(:form, name: "Registration")
-        field = registration_form.form_fields.find_by(field_identifier: "agency_name") ||
-          create(:form_field, form: registration_form, field_identifier: "agency_name")
+        field = registration_form.form_fields.find_by(field_identifier: "organization_name") ||
+          create(:form_field, form: registration_form, field_identifier: "organization_name")
         create(:event_form, :registration, event: event, form: registration_form) unless event.registration_form
         submission = create(:form_submission, person: person, form: registration_form)
         create(:form_answer, form_submission: submission, form_field: field, submitted_answer: name)
@@ -2848,7 +2848,7 @@ RSpec.describe "Events", type: :request do
           submission = create(:form_submission, person: person, form: registration_form)
 
           sector = create(:sector, name: "Sexual Assault")
-          sector_field = create(:form_field, form: registration_form, field_identifier: "primary_sector_single")
+          sector_field = create(:form_field, form: registration_form, field_identifier: "primary_sector")
           create(:form_answer, form_submission: submission, form_field: sector_field, submitted_answer: sector.id.to_s)
 
           age_range = create(:category_type, name: "AgeRange")
@@ -4034,7 +4034,7 @@ RSpec.describe "Events", type: :request do
         post send_reminder_event_path(event), params: { registration_ids: [] }
       }.not_to change(Notification, :count)
 
-      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: "", custom_subject: "", hide_event_card: "0"))
+      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: "", custom_subject: "", hide_event_card: "0", hide_ticket_button: "0"))
     end
 
     it "logs an Ahoy event with the recipient count on a successful send" do

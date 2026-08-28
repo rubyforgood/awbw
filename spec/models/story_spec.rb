@@ -185,6 +185,17 @@ RSpec.describe Story, type: :model do
         expect(results).not_to include(created_story)
       end
     end
+
+    context 'when filtering by the author_name field' do
+      let(:facilitator) { create(:person, first_name: 'Bartholomew', last_name: 'Snazzlepants') }
+      let!(:authored_story) { create(:story, :published, title: 'No Name Match', author: facilitator) }
+
+      it 'filters to stories whose credited author name matches' do
+        results = Story.search_by_params(author_name: 'Bartholomew')
+        expect(results).to include(authored_story)
+        expect(results).not_to include(published_story)
+      end
+    end
   end
 
   describe "#to_param" do

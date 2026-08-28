@@ -38,6 +38,65 @@ RSpec.describe "People search", type: :request do
       expect(response.body).to include("Alice")
       expect(response.body).not_to include("Bob")
     end
+
+    it "filters by role" do
+      create(:story, author: person_alice)
+
+      get people_path, params: { role: "story_author" }, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Alice")
+      expect(response.body).not_to include("Bob")
+    end
+
+    it "filters by facilitator status" do
+      create(:affiliation, person: person_alice, title: "Facilitator", end_date: nil)
+      create(:affiliation, person: person_bob, title: "Facilitator", end_date: 1.year.ago)
+
+      get people_path, params: { facilitator_status: "active" }, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Alice")
+      expect(response.body).not_to include("Bob")
+    end
+
+    it "filters by topic subscription" do
+      topic = create(:topic_subscription_type)
+      create(:topic_subscription, person: person_bob, topic_subscription_type: topic)
+
+      get people_path, params: { topic_subscription_type_id: topic.id }, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Bob")
+      expect(response.body).not_to include("Alice")
+    end
+
+    it "filters by staff tag" do
+      tag = create(:staff_tag)
+      create(:staff_tagging, staff_tag: tag, staff_taggable: person_alice)
+
+      get people_path, params: { staff_tag_ids: tag.id }, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Alice")
+      expect(response.body).not_to include("Bob")
+    end
+  end
+
+  describe "GET /people (full page) admin filters" do
+    it "always renders the staff tag filter with a manage link, even when none are published" do
+      expect(StaffTag.published).to be_empty
+
+      get people_path
+      page = Capybara.string(response.body)
+      expect(page).to have_css("select[name=staff_tag_ids]")
+      expect(page).to have_link("Manage staff tags", href: staff_tags_path)
+    end
+
+    it "always renders the topic subscription filter with a manage link, even when none exist" do
+      expect(TopicSubscriptionType.active).to be_empty
+
+      get people_path
+      page = Capybara.string(response.body)
+      expect(page).to have_css("select[name=topic_subscription_type_id]")
+      expect(page).to have_link("Manage topics", href: topic_subscription_types_path)
+    end
   end
 
   describe "GET /people?organization_id=X (full page)" do

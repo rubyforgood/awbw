@@ -451,6 +451,63 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("A Window Between Worlds")
       end
 
+      it "renders a hidden fallback so unchecking the last org still submits an empty set" do
+        organization = create(:organization, name: "A Window Between Worlds")
+        existing_registration.organizations << organization
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include(
+          "<input type=\"hidden\" name=\"event_registration[organization_ids][]\" value=\"\""
+        )
+      end
+
+      it "shows the record's tracked changes in a change log" do
+        create(
+          :ahoy_event,
+          name: "update.event_registration",
+          resource_type: "EventRegistration",
+          resource_id: existing_registration.id,
+          properties: {
+            resource_type: "EventRegistration", resource_id: existing_registration.id,
+            changes: { "status" => { "before" => "registered", "after" => "attended" } }
+          }
+        )
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Change log")
+        # Rendered by the shared details partial: humanized field, before → after.
+        expect(response.body).to include("Status")
+        expect(response.body).to include("registered")
+        expect(response.body).to include("attended")
+      end
+
+      it "shows what a nested record said, not just that one changed" do
+        create(
+          :ahoy_event,
+          name: "update.event_registration",
+          resource_type: "EventRegistration",
+          resource_id: existing_registration.id,
+          properties: {
+            resource_type: "EventRegistration", resource_id: existing_registration.id,
+            association_changes: {
+              comments: [ { action: "added", type: "Comment", id: 1, attributes: { "body" => "Left a voicemail" } } ]
+            }
+          }
+        )
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Left a voicemail")
+      end
+
+      it "says the log is empty rather than disappearing when the record has no tracked activity" do
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Change log empty")
+      end
+
       it "shows a Delete button for a deletable registration" do
         get edit_event_registration_path(existing_registration)
 
@@ -525,8 +582,13 @@ RSpec.describe "EventRegistrations", type: :request do
         source = create(:event_registration, event: source_event, status: "transferred_out")
         incoming = create(:event_registration, event: create(:event, ce_hours_offered: 6),
           registrant: source.registrant, transferred_from_registration: source)
-        incoming.continuing_education_registrations.create!(hours: 6, cost_cents: 0, skip_event_defaults: true,
-          professional_license: create(:professional_license, person: source.registrant))
+        license = create(:professional_license, person: source.registrant)
+        # A real transfer leaves a matching stub on the source; that's what marks
+        # the destination record as transfer-carried.
+        source.continuing_education_registrations.create!(hours: 0, cost_cents: 4_000,
+          skip_event_defaults: true, professional_license: license)
+        incoming.continuing_education_registrations.create!(hours: 6, cost_cents: 0,
+          skip_event_defaults: true, professional_license: license)
 
         get edit_event_registration_path(incoming)
 
@@ -638,6 +700,16 @@ RSpec.describe "EventRegistrations", type: :request do
           registrants_event_path(new_event, anchor: "registrant-row-#{existing_registration.id}", highlight: existing_registration.id)
         )
         expect(existing_registration.reload.event_id).to eq(new_event.id)
+      end
+
+      it "removes a linked organization when the last chip is unchecked" do
+        organization = create(:organization)
+        existing_registration.organizations << organization
+
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { organization_ids: [ "" ] } }
+
+        expect(existing_registration.reload.organizations).to be_empty
       end
 
       it "returns to the attendance report after saving when opened from it" do
@@ -893,6 +965,23 @@ RSpec.describe "EventRegistrations", type: :request do
             completed_day_1: true, expected_payment_method: "Check",
             someone_else_will_pay: true, shoutout: true
           )
+        end
+
+        it "compresses carried days and flags the mismatch when the source had more days than the destination" do
+          three_day = create(:event, published: true, start_date: 12.days.from_now, end_date: 14.days.from_now)
+          one_day = create(:event, published: true, start_date: 12.days.from_now, end_date: 12.days.from_now)
+          big_source = create(:event_registration, event: three_day, status: "transferred_out",
+            completed_day_1: true, completed_day_2: true, completed_day_3: true)
+
+          post process_transfer_event_registration_path(big_source),
+               params: { destination_event_id: one_day.id }
+
+          incoming = EventRegistration.find_by(registrant: big_source.registrant, event: one_day)
+          expect(incoming.completed_day_1).to be(true)
+
+          get edit_event_registration_path(incoming)
+          expect(response.body).to include("had more days than this event")
+          expect(response.body).to include(three_day.decorate.month_year)
         end
 
         it "collapses a double transfer, pointing the new reg at the original and dropping the middle" do
@@ -1582,6 +1671,13 @@ RSpec.describe "EventRegistrations", type: :request do
         # off a facilitator-training event.
         let(:event) { create(:event, title: "Test Event", facilitator_training: true) }
 
+        it "redirects with an alert when submitted without choosing an organization" do
+          post select_organization_event_registration_path(existing_registration), params: { organization_id: "" }
+
+          expect(response).to redirect_to(link_organization_event_registration_path(existing_registration))
+          expect(flash[:alert]).to be_present
+        end
+
         it "links the org to the registration and the person, then returns to the edit page" do
           expect {
             post select_organization_event_registration_path(existing_registration),
@@ -1612,6 +1708,53 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
             .to contain_exactly("Facilitator")
+        end
+
+        it "back-applies the org link onto the submission that describes it" do
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(submission.reload.linked_organization_ids).to eq([ organization.id ])
+        end
+
+        it "back-applies the link to every submission that names the org, pinning one" do
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          sub1 = create(:form_submission, person: regular_user.person, form: reg_form)
+          sub2 = create(:form_submission, person: regular_user.person, form: reg_form)
+          [ sub1, sub2 ].each do |submission|
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Helping Hands")
+          end
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(sub1.reload.linked_organization_ids).to include(organization.id)
+          expect(sub2.reload.linked_organization_ids).to include(organization.id)
+          # The link row still pins a single submission — only the metadata link fans out.
+          link = existing_registration.event_registration_organizations.find_by(organization: organization)
+          expect([ sub1.id, sub2.id ]).to include(link.form_submission_id)
+        end
+
+        it "leaves a submission that named a different org unlinked" do
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          matching = create(:form_submission, person: regular_user.person, form: reg_form)
+          other = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: matching, form_field: field, submitted_answer: "Helping Hands")
+          create(:form_answer, form_submission: other, form_field: field, submitted_answer: "Beta Agency")
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(matching.reload.linked_organization_ids).to include(organization.id)
+          expect(other.reload.linked_organization_ids).to be_empty
         end
 
         it "records the linking registration on the created affiliations" do

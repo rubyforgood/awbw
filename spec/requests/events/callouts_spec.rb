@@ -253,6 +253,23 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).not_to include("AWBW's W-9 tax form for your records")
     end
 
+    it "keeps the W-9 dormant on a free event (linked, but no document renders)" do
+      free_event = create(:event, cost_cents: 0)
+      callout = create(:registration_ticket_callout, event: free_event, builtin_key: "payment")
+      w9 = create(:resource, title: "W-9")
+      create(:registration_ticket_callout_resource, registration_ticket_callout: callout,
+             resource: w9, subtitle: "AWBW's W-9 tax form for your records")
+      free_registration = create(:event_registration, event: free_event)
+
+      get registration_payment_path(free_registration.slug)
+
+      expect(response).to have_http_status(:success)
+      # The link exists, but the payment surface only shows documents once the
+      # event has a cost, so neither the W-9 nor the invoice renders.
+      expect(response.body).not_to include("AWBW's W-9 tax form for your records")
+      expect(response.body).not_to include("Itemized invoice for this registration")
+    end
+
     it "shows the ticket payment deadline while a balance is due" do
       event.update!(payment_due_deadline: Time.zone.local(2026, 4, 9, 17, 0))
 
@@ -743,7 +760,7 @@ RSpec.describe "Events::Callouts", type: :request do
   end
 
   describe "GET /registration/:slug/certificate" do
-    let(:event) { create(:event, end_date: 2.days.ago) }
+    let(:event) { create(:event, :ended) }
     let(:registration) { create(:event_registration, event: event, status: "attended") }
 
     it "renders the certificate once it is unlocked" do

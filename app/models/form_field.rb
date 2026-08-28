@@ -15,45 +15,93 @@ class FormField < ApplicationRecord
   # "required" flag is meaningless for them (nothing to fill in).
   NON_INPUT_ANSWER_TYPES = %w[no_user_input group_header].freeze
 
-  # Multi-select "additional sectors" field identifiers. "additional_sectors" is
-  # the canonical name new forms are built with; the older "primary_sector" name
-  # (a misnomer — it was always the multi-select additional field) and the legacy
-  # "service area" name are both still accepted so existing form data keeps
-  # resolving.
-  ADDITIONAL_SECTOR_FIELD_IDENTIFIERS = %w[additional_sectors primary_sector primary_service_area].freeze
+  # Multi-select "additional sectors" field identifier.
+  ADDITIONAL_SECTOR_FIELD_IDENTIFIERS = %w[additional_sectors].freeze
 
-  # Single-select "primary sector" field identifiers (current + legacy). Unlike
-  # the multi-select "additional" field, these omit the catch-all "Other" sector
-  # — a respondent's primary sector must be a concrete sector.
-  PRIMARY_SECTOR_FIELD_IDENTIFIERS = %w[primary_sector_single primary_service_area_single].freeze
+  # Single-select "primary sector" field identifiers. "primary_sector" is the
+  # canonical name; the legacy "primary_sector_single" is still accepted so
+  # existing forms keep resolving. Unlike the multi-select "additional" field,
+  # these omit the catch-all "Other" sector — a respondent's primary sector must
+  # be a concrete sector.
+  PRIMARY_SECTOR_FIELD_IDENTIFIERS = %w[primary_sector primary_sector_single].freeze
 
   # Field identifiers whose selectable options are sourced dynamically from
   # Sector records rather than the field's own stored answer options. The
   # submitted value for these is a Sector id (as a string).
   SECTOR_FIELD_IDENTIFIERS = (ADDITIONAL_SECTOR_FIELD_IDENTIFIERS + PRIMARY_SECTOR_FIELD_IDENTIFIERS).freeze
 
+  # Single-select "primary age group" field identifier.
+  PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS = %w[primary_age_group].freeze
+
+  # Multi-select "additional age groups" field identifiers. "additional_age_groups"
+  # is the canonical name new forms are built with; the legacy singular
+  # "additional_age_group" is still accepted so existing forms keep resolving.
+  ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS = %w[additional_age_groups additional_age_group].freeze
+
+  # Both age group fields (the single-select "primary" and the multi-select
+  # "additional"), backing the "All age groups" breakdown. The primary field
+  # alone backs the "Primary age group" chart.
+  AGE_GROUP_FIELD_IDENTIFIERS = (PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS + ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS).freeze
+
   # Field identifiers whose selectable options are sourced dynamically from a
   # CategoryType's published categories. The submitted value is a Category id
   # (as a string). Maps the field identifier to its backing CategoryType name.
-  # Both the "primary" and "additional" age group fields are backed by the
-  # published AgeRange categories. Unlike the sector fields, age groups have no
-  # catch-all option — the additional sector field keeps "Other", but neither age
+  # Every age group field (primary + additional, canonical and legacy) is backed
+  # by the published AgeRange categories. Unlike the sector fields, age groups have
+  # no catch-all option — the additional sector field keeps "Other", but no age
   # field offers one.
-  DYNAMIC_FIELD_CATEGORY_TYPES = {
-    "primary_age_group" => "AgeRange",
-    "additional_age_group" => "AgeRange"
+  DYNAMIC_FIELD_CATEGORY_TYPES = AGE_GROUP_FIELD_IDENTIFIERS.index_with { "AgeRange" }.freeze
+
+  # Organization ("agency") contact-info field identifiers. New forms are built
+  # with the canonical "organization_" names; the legacy "agency_" names stay
+  # valid so existing forms — and the submissions already stored against them —
+  # keep resolving. Maps each canonical identifier to every identifier accepted
+  # for it (canonical first, legacy second). This is the single source of truth
+  # for the rename: a lookup keyed on either spelling matches a field carrying
+  # either one.
+  ORGANIZATION_FIELD_ALIASES = {
+    "organization_name" => %w[organization_name agency_name],
+    "organization_position" => %w[organization_position agency_position],
+    "organization_website" => %w[organization_website agency_website],
+    "organization_type" => %w[organization_type agency_type],
+    "organization_street" => %w[organization_street agency_street],
+    "organization_city" => %w[organization_city agency_city],
+    "organization_state" => %w[organization_state agency_state],
+    "organization_zip" => %w[organization_zip agency_zip],
+    "organization_country" => %w[organization_country agency_country]
   }.freeze
 
-  # Both age group fields (the single-select "primary" and the multi-select
-  # "additional"), backing the "All age groups" breakdown. The "primary_age_group"
-  # field alone backs the "Primary age group" chart.
-  AGE_GROUP_FIELD_IDENTIFIERS = %w[primary_age_group additional_age_group].freeze
+  # Every identifier that should match a field for the given identifier — a
+  # renamed organization field's canonical name plus its legacy "agency_" alias,
+  # or just the identifier itself for everything else. Accepts either spelling as
+  # input, so callers can key on the canonical name and still match legacy data
+  # (or pass a legacy literal and still match a new form). Use it to build the
+  # `field_identifier IN (…)` set for a lookup, or to compare an identifier.
+  def self.aliased_identifiers(identifier)
+    ORGANIZATION_FIELD_ALIASES[identifier] ||
+      ORGANIZATION_FIELD_ALIASES.values.find { |names| names.include?(identifier) } ||
+      [ identifier ]
+  end
 
   # The payment-method field. Its answer options ("Credit card (now)", etc.) are
   # wired to Stripe charge logic in the controllers, so they must not be edited
   # casually from the form builder — the editor shows them read-only unless the
   # admin override is present.
   PAYMENT_METHOD_FIELD_IDENTIFIER = "payment_method"
+
+  # Quote smart fields. When a submission carries these, its answers are captured
+  # as a Quote (see Quotes::CaptureFromSubmission): "quote_body" or the simpler
+  # "quote" is the quote text (either is accepted; "quote_body" wins when both are
+  # present), while "quote_speaker_name" and "quote_age_range" flesh out the
+  # speaker and age when the form collects them.
+  QUOTE_FIELD_IDENTIFIER = "quote"
+  QUOTE_BODY_FIELD_IDENTIFIER = "quote_body"
+  QUOTE_SPEAKER_NAME_FIELD_IDENTIFIER = "quote_speaker_name"
+  QUOTE_AGE_RANGE_FIELD_IDENTIFIER = "quote_age_range"
+  # Body sources in precedence order (explicit "quote_body" first, simple "quote" second).
+  QUOTE_BODY_FIELD_IDENTIFIERS = [ QUOTE_BODY_FIELD_IDENTIFIER, QUOTE_FIELD_IDENTIFIER ].freeze
+  QUOTE_FIELD_IDENTIFIERS = (QUOTE_BODY_FIELD_IDENTIFIERS +
+    [ QUOTE_SPEAKER_NAME_FIELD_IDENTIFIER, QUOTE_AGE_RANGE_FIELD_IDENTIFIER ]).freeze
 
   # The generic free-text option label that lets a respondent supply their own
   # value; a chosen "Other" answer is stored as "Other" or "Other: <text>".
@@ -91,7 +139,7 @@ class FormField < ApplicationRecord
   # Keeps an over-long name as a friendly validation error instead of a
   # database ValueTooLong exception (the column is text, this is the UX cap).
   validates :name, length: { maximum: 1000 }
-  # A field_identifier wires a field to backend logic (Stripe, service areas,
+  # A field_identifier wires a field to backend logic (Stripe, sectors,
   # email checks, etc.), so the same identifier must not appear twice on one form
   # or that logic would target an ambiguous field. Ordinary fields carry no
   # identifier, so blanks are exempt — any number of them may coexist.
@@ -174,6 +222,14 @@ class FormField < ApplicationRecord
     answer_type.in?(SELECTABLE_ANSWER_TYPES)
   end
 
+  # True when this field's identifier matches the given identifier, treating a
+  # renamed organization field's canonical and legacy "agency_" spellings as
+  # equivalent (see ORGANIZATION_FIELD_ALIASES). Lets a caller compare against the
+  # canonical name and still match a field seeded under the legacy one.
+  def matches_identifier?(identifier)
+    field_identifier.in?(FormField.aliased_identifiers(identifier))
+  end
+
   # True for fields whose answer options are tied to backend logic (currently the
   # payment-method field's Stripe wiring) and so should be shown read-only in the
   # form builder rather than freely edited.
@@ -221,6 +277,18 @@ class FormField < ApplicationRecord
 
   def email_field?
     field_identifier.in?(EMAIL_FIELD_IDENTIFIERS)
+  end
+
+  # A quote smart field — its answer helps build a Quote on submission.
+  def quote_field?
+    field_identifier.in?(QUOTE_FIELD_IDENTIFIERS)
+  end
+
+  # Whether the admin form preview should flag this field as quote-related: either
+  # it carries a quote identifier, or its name mentions "quote" (a hint for older
+  # fields that predate the identifiers).
+  def quote_related?
+    quote_field? || name.to_s.downcase.include?("quote")
   end
 
   # Counts whitespace-separated tokens. Uses the Unicode-aware [[:space:]] class

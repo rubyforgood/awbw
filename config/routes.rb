@@ -68,6 +68,8 @@ Rails.application.routes.draw do
     end
   end
   resources :category_types
+  resources :staff_tags
+  resources :staff_taggings, only: [ :index, :new, :create, :edit, :update, :destroy ]
   resources :categories do
     collection do
       get :dedupe_index
@@ -107,6 +109,10 @@ Rails.application.routes.draw do
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate
   post "registration/:slug/pay", to: "events/registrations#pay", as: :registration_pay
+  resource :event_registration_import, only: %i[new create], path: "event_registrations/import",
+                                       controller: "event_registration_imports" do
+    post :confirm
+  end
   resources :event_registrations do
     member do
       get :confirm
@@ -145,6 +151,7 @@ Rails.application.routes.draw do
       get :smart_form_settings
     end
     member do
+      get :results
       post :copy
       patch :reorder_field
       put :reorder_fields
@@ -152,7 +159,15 @@ Rails.application.routes.draw do
       patch :update_sections
     end
   end
-  resources :form_submissions, only: [ :index, :show ]
+  resources :form_submissions, only: [ :index, :show ] do
+    member do
+      get :link_organization
+      post :select_organization
+      post :create_organization
+    end
+  end
+  resources :bulk_payments, only: [ :index ]
+  resources :form_answers, only: [ :index ]
   resources :grants
   resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
     member do
@@ -232,17 +247,21 @@ Rails.application.routes.draw do
   resources :people do
     collection do
       get :check_duplicates
+      get :email_addresses
     end
     member do
       get :workshop_logs
       get :checkout
       get :bio
       get :all_comments
+      get :comments_and_communications
+      post :send_form_link
     end
     resources :comments, only: [ :create, :update ]
     resources :memberships, only: [ :index, :new, :create ]
   end
   resources :faqs
+  get "transfer_guide", to: "transfer_guide#show", as: :transfer_guide
   resources :features do
     collection do
       post :import
@@ -265,6 +284,10 @@ Rails.application.routes.draw do
   resources :organizations do
     collection do
       get :check_duplicates
+      get :dedupe_index
+      get :dedupe_preview
+      post :dedupe_perform
+      patch :dedupe_update_keep
     end
     member do
       get :populations_served
@@ -292,7 +315,11 @@ Rails.application.routes.draw do
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
-  resources :affiliations, only: [ :edit, :update, :destroy ]
+  resources :affiliations, only: [ :edit, :update, :destroy ] do
+    member do
+      post :end, to: "affiliations#end_affiliation"
+    end
+  end
   resources :quotes
 
   resources :monthly_reports, only: [ :index, :show ], constraints: { id: /\d+/ }

@@ -1,0 +1,64 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% taggable = @staff_tagging.staff_taggable %>
+<% if params[:return_to] == "staff_tag" %>
+  <% back_path = staff_tag_path(@staff_tagging.staff_tag) %>
+  <% back_label = "← Staff tag: #{@staff_tagging.staff_tag.name}" %>
+<% elsif params[:return_to] == "staff_taggings" %>
+  <% back_path = staff_taggings_path %>
+  <% back_label = "← Staff taggings" %>
+<% elsif taggable.is_a?(Person) %>
+  <% back_path = edit_person_path(params[:origin_id].presence || taggable, anchor: dom_id(@staff_tagging), admin: params[:admin].presence) %>
+  <% back_label = "← #{taggable.name}" %>
+<% else %>
+  <% back_path = staff_tags_path %>
+  <% back_label = "← Staff tags" %>
+<% end %>
+<% tag_options = (StaffTag.published.ordered.to_a | [ @staff_tagging.staff_tag ]).compact %>
+<div class="min-h-screen py-8">
+  <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+    <div class="mb-4">
+      <%= link_to back_label, back_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    </div>
+
+    <h1 class="mb-6 text-2xl font-semibold text-gray-900">Edit staff tagging</h1>
+
+    <%= simple_form_for @staff_tagging,
+          url: staff_tagging_path(@staff_tagging, return_to: params[:return_to].presence, origin_id: params[:origin_id].presence, admin: params[:admin].presence),
+          method: :patch,
+          html: { data: { turbo: false } } do |f| %>
+      <div class="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
+        <div class="flex flex-col gap-4 md:flex-row md:items-start">
+          <div class="md:w-72">
+            <span class="<%= search_label_class %>">Person</span>
+            <% if taggable.is_a?(Person) %>
+              <%= person_profile_button(taggable, subtitle: taggable.preferred_email, data: { turbo_frame: "_top" }, width_class: "w-full") %>
+            <% else %>
+              <span class="font-semibold text-gray-800"><%= taggable&.name %></span>
+            <% end %>
+          </div>
+          <div class="md:w-72">
+            <%= f.input :staff_tag_id,
+                        label: "Staff tag",
+                        label_html: { class: search_label_class },
+                        collection: tag_options.map { |t| [ t.name, t.id ] },
+                        include_blank: false,
+                        input_html: { class: "form-control" } %>
+          </div>
+        </div>
+      </div>
+
+      <%= render "shared/comments_and_communications", f: f, view_all_person: (taggable.is_a?(Person) ? taggable : nil) %>
+
+      <div class="mt-8 flex flex-wrap justify-center gap-3">
+        <% if allowed_to?(:destroy?, @staff_tagging) %>
+          <%= link_to "Remove tagging", staff_tagging_path(@staff_tagging), class: "btn btn-danger-outline",
+                      data: { turbo_method: :delete, turbo_confirm: "Remove this tag from #{taggable&.name}?" } %>
+        <% end %>
+        <%= link_to "Cancel", back_path, class: "btn btn-secondary-outline" %>
+        <%= f.button :submit, "Save changes", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+
+    <%= render "shared/audit_info", resource: @staff_tagging %>
+  </div>
+</div>

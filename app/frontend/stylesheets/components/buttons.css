@@ -6,6 +6,11 @@
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
+  /* Compact size modifier — pair with .btn (e.g. `btn btn-sm btn-primary`). */
+  .btn-sm {
+    @apply px-3 py-1 text-xs;
+  }
+
   /* solid */
   .btn-primary {
     @apply border border-primary bg-primary text-white
@@ -17,6 +22,13 @@
   .btn-accent {
     @apply border-2 border-accent bg-accent text-white
            hover:bg-white hover:text-accent;
+  }
+
+  /* The brand-green "registered / view ticket" action button — the confirmed-
+     state counterpart to btn-accent's register CTA, so it shares its border-2. */
+  .btn-success {
+    @apply border-2 border-success bg-success text-white
+           hover:bg-white hover:text-success;
   }
 
   .btn-secondary {
@@ -48,6 +60,16 @@
   .btn-primary-outline {
     @apply border border-primary text-primary
            hover:bg-primary hover:text-white;
+  }
+
+  .btn-accent-outline {
+    @apply border-2 border-accent text-accent
+           hover:bg-accent hover:text-white;
+  }
+
+  .btn-success-outline {
+    @apply border-2 border-success text-success
+           hover:bg-success hover:text-white;
   }
 
   .btn-secondary-outline {

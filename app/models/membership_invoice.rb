@@ -10,6 +10,15 @@ class MembershipInvoice < ApplicationRecord
   delegate :person, to: :membership
   alias_method :registrant, :person
 
+  scope :by_person_name, ->(query) {
+    return all if query.blank?
+    needle = "%#{sanitize_sql_like(query.to_s.strip.downcase)}%"
+    joins(membership: :person).where(
+      "LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :needle " \
+      "OR LOWER(people.first_name) LIKE :needle OR LOWER(people.last_name) LIKE :needle",
+      needle: needle)
+  }
+
   scope :active_on, ->(date = Date.current) { where(start_date: ..date, end_date: date..) }
   scope :expiring_between, ->(from, to) { where(end_date: from..to) }
 

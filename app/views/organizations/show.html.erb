@@ -1,30 +1,30 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
-<div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+<div class="overflow-hidden rounded-xl border border-gray-200 shadow">
     <!-- Organization header banner -->
     <div class="<%= DomainTheme.bg_class_for(:organizations, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:organizations, intensity: 300) %> px-8 py-3">
       <div class="flex items-center gap-2">
-        <svg class="w-5 h-5 <%= DomainTheme.text_class_for(:organizations, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="h-5 w-5 <%= DomainTheme.text_class_for(:organizations, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
         </svg>
-        <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:organizations, intensity: 900) %> uppercase tracking-wide">Organization Profile</span>
+        <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:organizations, intensity: 900) %> tracking-wide uppercase">Organization Profile</span>
       </div>
     </div>
     <div class="p-8">
     <!-- Header actions -->
-    <div class="flex flex-wrap justify-end gap-2 mb-4">
-      <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-      <%= link_to "Organizations", organizations_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <div class="mb-4 flex flex-wrap justify-end gap-2">
+      <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+      <%= link_to "Organizations", organizations_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% if allowed_to?(:edit?, @organization) %>
         <%= link_to "Edit", edit_organization_path(@organization),
-                    class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+                    class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% end %>
       <span class="inline-block text-sm">
         <%= render "bookmarks/editable_bookmark_button", resource: @organization %>
       </span>
     </div>
     <!-- Header: logo + name + badges -->
-    <div class="flex flex-col md:flex-row md:items-center gap-6 mb-8">
-      <div class="flex-shrink-0 flex justify-center md:justify-start">
+    <div class="mb-8 flex flex-col gap-6 md:flex-row md:items-center">
+      <div class="flex flex-shrink-0 justify-center md:justify-start">
         <% if @organization.logo&.attached? %>
           <%= image_tag @organization.logo,
                         class: "w-28 h-28 rounded-full object-cover border-2 border-gray-200 shadow" %>
@@ -34,36 +34,43 @@
         <% end %>
       </div>
       <div class="flex-1 text-center md:text-left">
-        <h1 class="text-3xl font-bold text-gray-900">
-          <%= @organization.name %>
-        </h1>
+        <% org_decorated = @organization.decorate %>
+        <div class="flex flex-wrap items-center justify-center gap-3 md:justify-start">
+          <h1 class="text-3xl font-bold text-gray-900">
+            <%= @organization.name %>
+          </h1>
+          <% if allowed_to?(:manage?, @organization) %>
+            <span id="program-status" class="admin-only scroll-mt-20 rounded-lg bg-blue-100 px-2 py-1">
+              <%= org_decorated.organization_status_chip %>
+            </span>
+          <% end %>
+        </div>
         <% address = if @organization.addresses.loaded?
                        @organization.addresses.find { |a| !a.inactive? }
                      else
                        @organization.addresses.active.first
                      end %>
         <% if address %>
-          <p class="mt-1 text-gray-500 text-sm">
+          <p class="mt-1 text-sm text-gray-500">
             <%= [address.locality, [address.city, address.state].compact_blank.join(", "), address.district].compact_blank.join(" · ") %>
           </p>
         <% end %>
-        <% org_decorated = @organization.decorate %>
         <% affiliated_since = org_decorated.affiliated_since_display %>
         <% if affiliated_since.present? %>
-          <p class="text-gray-500 text-sm mt-1">
+          <p class="mt-1 text-sm text-gray-500">
             Affiliated since
             <span class="font-medium"><%= affiliated_since %></span>
           </p>
         <% end %>
         <% program_since = org_decorated.program_since_display %>
         <% if program_since.present? %>
-          <p class="text-gray-500 text-sm mt-1">
-            Art program since
+          <p class="mt-1 text-sm text-gray-500">
+            Facilitators since
             <span class="font-medium"><%= program_since %></span>
           </p>
         <% end %>
         <!-- Contact info -->
-        <div class="mt-3 flex flex-wrap justify-center md:justify-start items-center gap-x-4 gap-y-2 text-sm">
+        <div class="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm md:justify-start">
           <% if @organization.profile_show_email? && @organization.email.present? %>
             <span class="text-gray-600">
               📧 <%= mail_to @organization.email, @organization.email, class: "text-blue-600 hover:underline" %>
@@ -91,7 +98,7 @@
               </span>
             <% elsif allowed_to?(:edit?, @organization) %>
               <span class="admin-only bg-blue-100 p-3">
-                <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">
+                <span class="rounded bg-red-100 px-2 py-1 text-xs text-red-700">
                   Bad URL: "<%= link_to @organization.website_url, edit_organization_path(@organization, anchor: "website-url-field") %>"
                 </span>
               </span>
@@ -101,7 +108,7 @@
         <!-- Badges -->
         <% badges = @organization.decorate.badges %>
         <% if badges.any? %>
-          <div class="mt-3 flex flex-wrap justify-center md:justify-start gap-1.5">
+          <div class="mt-3 flex flex-wrap justify-center gap-1.5 md:justify-start">
             <% badges.each do |badge| %>
               <%= render "shared/badge", label: badge[:label], classes: "#{badge[:bg]} #{badge[:text]} #{badge[:border]}" %>
             <% end %>
@@ -109,22 +116,12 @@
         <% end %>
       </div>
     </div>
-    <% if allowed_to?(:manage?, @organization) %>
-      <div id="program-status" class="admin-only bg-blue-100 rounded-lg p-3 mb-6 scroll-mt-20">
-        <p class="text-xs font-semibold text-gray-600 mb-2">Program status</p>
-        <div class="flex flex-wrap items-center gap-2">
-          <%= org_decorated.organization_status_chip %>
-          <%= render "organizations/program_status_event_chips",
-                     organization: @organization, events: @organization_events, return_to: "organization" %>
-        </div>
-      </div>
-    <% end %>
     <hr class="my-8 border-gray-200">
     <!-- Info grid -->
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
+    <div class="grid grid-cols-1 gap-8 md:grid-cols-5">
         <!-- Organization affiliations -->
-        <div id="affiliations" class="md:col-span-3 scroll-mt-4" data-controller="paginated-fields" data-paginated-fields-per-page-value="9">
-          <h2 class="text-lg font-semibold text-gray-800 mb-2">
+        <div id="affiliations" class="scroll-mt-4 md:col-span-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="9">
+          <h2 class="mb-2 text-lg font-semibold text-gray-800">
             Affiliations
           </h2>
           <% active_affiliations = @organization.affiliations
@@ -132,7 +129,7 @@
                .sort_by { |a| [a.person.first_name.to_s.downcase, a.person.last_name.to_s.downcase] } %>
           <% grouped = active_affiliations.group_by(&:person) %>
           <% if grouped.any? %>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
               <% grouped.each do |person, person_affiliations| %>
                 <div data-paginated-fields-target="item">
                   <% titles = person_affiliations.filter_map { |a| a.title.presence }.uniq %>
@@ -153,11 +150,11 @@
         <% additional_age_groups = @organization.profile_show_age_ranges? ? @organization.all_additional_age_groups : [] %>
         <% show_age = primary_age_groups.any? || additional_age_groups.any? %>
         <% if show_sectors || show_age %>
-          <div class="md:col-span-2 p-3">
-            <div class="flex flex-col sm:flex-row gap-4 items-start">
+          <div class="p-3 md:col-span-2">
+            <div class="flex flex-col items-start gap-4 sm:flex-row">
               <% if show_sectors %>
-                <div class="flex-1 min-w-0">
-                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
+                <div class="min-w-0 flex-1">
+                  <h2 class="mb-3 text-lg font-semibold text-gray-800">Sectors</h2>
                   <% if sectors.any? %>
                     <div class="flex flex-wrap gap-2">
                       <% sectors.first(3).each do |sector| %>
@@ -166,7 +163,7 @@
                                    display_leader: true %>
                       <% end %>
                       <% if sectors.length > 3 %>
-                        <span class="text-gray-500 px-2">...</span>
+                        <span class="px-2 text-gray-500">...</span>
                       <% end %>
                     </div>
                   <% else %>
@@ -175,13 +172,13 @@
                   <div class="mt-4">
                     <%= link_to "Explore sector data",
                                 populations_served_organization_path(@organization),
-                                class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+                                class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
                   </div>
                 </div>
               <% end %>
               <% if show_age %>
-                <div class="flex-1 min-w-0">
-                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Age groups served</h2>
+                <div class="min-w-0 flex-1">
+                  <h2 class="mb-3 text-lg font-semibold text-gray-800">Age groups served</h2>
                   <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups %>
                 </div>
               <% end %>
@@ -192,7 +189,7 @@
     <hr class="my-8 border-gray-200">
     <!-- Workshops authored -->
     <% if @organization.profile_show_description? && @organization.description.present? %>
-        <h2 class="text-lg font-semibold text-gray-800 mb-2">
+        <h2 class="mb-2 text-lg font-semibold text-gray-800">
           Description
         </h2>
         <%= sanitize(@organization.description, tags: %w[p br strong em a ul ol li b i], attributes: %w[href]) %>
@@ -201,7 +198,7 @@
     <!-- Workshops authored -->
     <% if @organization.profile_show_workshops? %>
         <div>
-          <h2 class="text-lg font-semibold text-gray-800 mb-2">
+          <h2 class="mb-2 text-lg font-semibold text-gray-800">
             Workshops authored
           </h2>
           <% if @organization.workshops.any? %>
@@ -216,7 +213,7 @@
     <!-- Stories authored -->
     <% if @organization.profile_show_stories? %>
       <div class="mt-10">
-        <h2 class="text-lg font-semibold text-gray-800 mb-2">
+        <h2 class="mb-2 text-lg font-semibold text-gray-800">
           Stories
         </h2>
         <%# stories = @organization.stories_as_creator + @organization.stories_as_spotlighted_organization %>
@@ -232,7 +229,7 @@
       <!-- Events attended -->
     <% if @organization.profile_show_events_registered? %>
       <div class="mt-10">
-        <h2 class="text-lg font-semibold text-gray-800 mb-2">
+        <h2 class="mb-2 text-lg font-semibold text-gray-800">
           Events attended
         </h2>
         <%= turbo_frame_tag "organization_events_section", src: organization_path(@organization, section: "events"), loading: :lazy do %>
@@ -245,15 +242,14 @@
         <div class="organization-only <%= DomainTheme.bg_class_for(:user_only) %>
           border <%= DomainTheme.border_class_for(:user_only) %> rounded-lg shadow-sm">
           <!-- Header -->
-          <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3
-            border-b <%= DomainTheme.border_class_for(:user_only) %>">
+          <div class="section-header flex flex-col justify-between gap-2 border-b px-6 py-3 sm:flex-row sm:items-center sm:px-7 <%= DomainTheme.border_class_for(:user_only) %>">
             <h2 class="text-xl font-semibold text-gray-800">
               Associated records
             </h2>
             <span class="text-sm text-amber-700 italic">Only visible to you</span>
           </div>
           <!-- Content -->
-          <div class="section-content px-6 sm:px-7 py-4 sm:py-6">
+          <div class="section-content px-6 py-4 sm:px-7 sm:py-6">
             <%= render "associated_records", organization: @organization %>
           </div>
         </div>

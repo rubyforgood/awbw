@@ -297,15 +297,15 @@ RSpec.describe EventDashboard do
         # single-select dropdown. Both also carry sector1 as a tag, so sector1 is
         # primary for person1 AND an additional sector for person2 — the counts
         # overlap (don't partition).
-        service_field = create(:form_field, form: registration_form, field_identifier: "primary_service_area_single",
-                                            answer_type: :single_select_dropdown)
-        create(:form_answer, form_field: service_field, submitted_answer: sector1.id.to_s,
+        primary_field = create(:form_field, form: registration_form, field_identifier: "primary_sector",
+                                             answer_type: :single_select_dropdown)
+        create(:form_answer, form_field: primary_field, submitted_answer: sector1.id.to_s,
                              form_submission: FormSubmission.find_by!(person: person1, form: registration_form))
-        create(:form_answer, form_field: service_field, submitted_answer: sector2.id.to_s,
+        create(:form_answer, form_field: primary_field, submitted_answer: sector2.id.to_s,
                              form_submission: FormSubmission.find_by!(person: person2, form: registration_form))
       end
 
-      it "counts distinct sectors named as a primary service area" do
+      it "counts distinct sectors named as a primary sector" do
         expect(dashboard.primary_sector_count).to eq(2)
       end
 
@@ -569,11 +569,9 @@ RSpec.describe EventDashboard do
     end
 
     it "gathers header (sector / age group) answers keyed by applicant, sector answers under the normalized sector key" do
-      # Use a legacy "service area" identifier to confirm it still resolves under
-      # the normalized sector key alongside the current "sector" identifiers.
-      service_field = create(:form_field, form: registration_form, name: "Primary sector", field_identifier: "primary_service_area")
+      sector_field = create(:form_field, form: registration_form, name: "Additional sectors", field_identifier: "additional_sectors")
       reg_submission = FormSubmission.find_by(person: embedded_applicant, form: registration_form)
-      create(:form_answer, form_submission: reg_submission, form_field: service_field, submitted_answer: "5")
+      create(:form_answer, form_submission: reg_submission, form_field: sector_field, submitted_answer: "5")
 
       header = dashboard.header_answers_by_applicant
 
@@ -980,6 +978,42 @@ RSpec.describe EventDashboard do
       expect(ids[:new]).to contain_exactly(new_facilitator.id)
       expect(ids[:ongoing]).to contain_exactly(ongoing_facilitator.id)
       expect(ids[:reinstated]).to contain_exactly(reinstated_facilitator.id)
+    end
+  end
+
+  context "same-day facilitation dated to the event start (ADR-0001 D8)" do
+    let(:event) { create(:event) }
+
+    it "reads New — the affiliation the training mints is not prior history" do
+      org = create(:organization, name: "One Day Program")
+      facilitator = create(:person)
+      # start == end == the event date: the minted affiliation, not a prior program,
+      # so this must NOT read Ongoing.
+      create(:affiliation, organization: org, person: facilitator, title: "Facilitator",
+             start_date: event.start_date.to_date, end_date: event.start_date.to_date)
+      create(:event_registration, event: event, registrant: facilitator, status: "registered")
+
+      expect(dashboard.program_status_counts).to eq(new: 1, ongoing: 0, reinstated: 0)
+      expect(dashboard.program_statuses_by_registrant[facilitator.id].map(&:status)).to eq([ :new ])
+    end
+  end
+
+  context "an organization with both a prior facilitator and one minted at the event" do
+    let(:event) { create(:event) }
+
+    it "reads Ongoing — a prior active facilitator outweighs the training-minted one (D5)" do
+      org = create(:organization, name: "Mixed Program")
+      registrant = create(:person)
+      # A facilitator already active before this training…
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+             start_date: Date.new(2023, 1, 1), end_date: nil)
+      # …plus the registrant's own affiliation minted at the training itself.
+      create(:affiliation, organization: org, person: registrant, title: "Facilitator",
+             start_date: event.start_date.to_date)
+      create(:event_registration, event: event, registrant: registrant, status: "registered")
+
+      expect(dashboard.program_status_counts).to eq(new: 0, ongoing: 1, reinstated: 0)
+      expect(dashboard.program_statuses_by_registrant[registrant.id].map(&:status)).to eq([ :ongoing ])
     end
   end
 

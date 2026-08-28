@@ -1,33 +1,53 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <% back_path = case params[:return_to]
-   when "person" then edit_person_path(params[:origin_id], anchor: dom_id(@affiliation))
-   when "organization" then edit_organization_path(params[:origin_id], anchor: dom_id(@affiliation))
+   when "person" then edit_person_path(params[:origin_id], anchor: dom_id(@affiliation), admin: params[:admin].presence)
+   when "organization" then edit_organization_path(params[:origin_id], anchor: dom_id(@affiliation), admin: params[:admin].presence)
    end %>
 
-<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:organizations) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
-  <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+<%# Live field tinting mirrors the inline editor (affiliations/_fields): role is the
+    hue (facilitator = purple, else blue), status the saturation (active = full,
+    past = light). Kept in sync as you type by the inactive-toggle controller. A
+    blank title displays and saves as "Facilitator", so treat it as one here too. %>
+<% expired = @affiliation.inactive? || (@affiliation.end_date.present? && @affiliation.end_date < Date.current) %>
+<% displayed_title = @affiliation.title.presence || Affiliation::FACILITATOR_TITLE %>
+<% facilitator = displayed_title.strip == Affiliation::FACILITATOR_TITLE %>
+<% row_bg = facilitator ? "bg-purple-50 border-purple-200" : "bg-blue-50 border-blue-200" %>
+<% fill_color = if facilitator
+     expired ? "bg-purple-50!" : "bg-purple-100!"
+   else
+     expired ? "bg-blue-50!" : "bg-blue-100!"
+   end %>
+<% field_bg = ->(present) { present ? fill_color : "bg-transparent!" } %>
+<% title_class = if facilitator
+     expired ? "bg-purple-50! text-purple-500! border-purple-200!" : "bg-purple-100! text-purple-700! font-semibold border-purple-300!"
+   else
+     expired ? "bg-blue-50! text-blue-500! border-blue-200!" : "bg-blue-100! text-blue-700! font-semibold border-blue-300!"
+   end %>
+
+<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:organizations) %> rounded-xl border border-gray-200 p-4 shadow sm:p-6">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
     <% if back_path %>
-      <%= link_to back_path, class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <%= link_to back_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i>
         <%= params[:return_to] == "person" ? @affiliation.person&.full_name : @affiliation.organization&.name %>
       <% end %>
     <% else %>
       <span></span>
     <% end %>
-    <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
-  <h1 class="text-2xl font-semibold text-gray-900 tracking-tight mb-1">Edit affiliation</h1>
-  <p class="text-sm text-gray-500 mb-6">
+  <h1 class="mb-1 text-2xl font-semibold tracking-tight text-gray-900">Edit affiliation</h1>
+  <p class="mb-6 text-sm text-gray-500">
     <%= @affiliation.person&.full_name %> at <%= @affiliation.organization&.name %>
   </p>
 
   <%= simple_form_for @affiliation,
-        url: affiliation_path(@affiliation, return_to: params[:return_to].presence, origin_id: params[:origin_id].presence),
+        url: affiliation_path(@affiliation, return_to: params[:return_to].presence, origin_id: params[:origin_id].presence, admin: params[:admin].presence),
         method: :patch,
         html: { id: "affiliation_form", data: { turbo: false } } do |f| %>
-    <div class="bg-white rounded-lg p-6 space-y-5">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="space-y-5 rounded-lg bg-white p-6">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <%= f.input :person_id,
               collection: @affiliation.person ? [ [ @affiliation.person.full_name, @affiliation.person.id ] ] : [],
               selected: @affiliation.person_id,
@@ -39,13 +59,24 @@
                 data: { controller: "remote-select", remote_select_model_value: "person" }
               } %>
 
-        <div>
-          <span class="block text-sm font-medium text-gray-700 mb-1">Primary organization contact</span>
-          <%= render "affiliations/primary_contact_toggle", f: f %>
+        <div class="flex items-start gap-4">
+          <div>
+            <span class="mb-1 block text-sm font-medium text-gray-700">Primary contact</span>
+            <%= render "affiliations/primary_contact_toggle", f: f %>
+            <p class="mt-1 text-xs text-gray-500">Main contact for this org</p>
+          </div>
+          <% if allowed_to?(:manage?, @affiliation) %>
+            <div class="admin-only ml-auto w-40 rounded-md bg-blue-100 p-2">
+              <%= f.input :filemaker_code,
+                    label: "FileMaker code",
+                    label_html: { class: "block text-xs font-medium text-gray-700 mb-1" },
+                    input_html: { class: "w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-blue-500 focus:ring-blue-200 text-sm" } %>
+            </div>
+          <% end %>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <%= f.input :organization_id,
                 collection: @affiliation.organization ? [ [ @affiliation.organization.name, @affiliation.organization.id ] ] : [],
@@ -59,7 +90,7 @@
                 } %>
           <p class="mt-1 text-xs text-amber-700">
             <i class="fa-solid fa-triangle-exclamation mr-1"></i>
-            Changing the organization affects this org's Art Program status.
+            Changing the organization affects this org's Program status.
           </p>
         </div>
 
@@ -68,11 +99,32 @@
           <p class="mt-1 text-xs text-amber-700">
             <i class="fa-solid fa-triangle-exclamation mr-1"></i>
             Reassigning the organization links the new organization's address automatically only if it has exactly one — otherwise set the address after saving.
+            <% if @affiliation.organization %>
+              <%= link_to "Add or edit this organization's addresses",
+                    edit_organization_path(@affiliation.organization, anchor: "addresses"),
+                    class: "underline font-medium", target: "_blank", rel: "noopener" %>.
+            <% end %>
           </p>
         </div>
       </div>
 
-      <% if @affiliation.event_registration.present? %>
+      <% if params[:admin] == "true" && allowed_to?(:manage?, @affiliation) %>
+        <div class="admin-only rounded-md bg-blue-100 p-3">
+          <%= f.input :event_registration_id,
+                collection: @registration_choices.map { |er| [ er.decorate.affiliation_choice_label, er.id ] },
+                selected: @affiliation.event_registration_id,
+                include_blank: "— Not linked to a registration —",
+                label: "Linked registration",
+                label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
+                hint: "This person's registrations, labelled with the linked organization. Clearing the link marks the row as manually created, so reconciliation leaves it alone. Reassigning the organization clears it automatically." %>
+          <% if @affiliation.event_registration.present? %>
+            <%= link_to edit_event_registration_path(@affiliation.event_registration),
+                  class: "mt-1 inline-block text-xs underline font-medium text-gray-600", target: "_blank", rel: "noopener" do %>
+              <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>Open the linked registration
+            <% end %>
+          <% end %>
+        </div>
+      <% elsif @affiliation.event_registration.present? %>
         <% er = @affiliation.event_registration %>
         <div class="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
           <p class="font-medium"><i class="fa-solid fa-link mr-1"></i>Linked to a registration</p>
@@ -82,80 +134,64 @@
                   edit_event_registration_path(er), class: "underline font-medium", target: "_blank", rel: "noopener" %><%= " — #{er.event.title}" if er.event %>.
             Reassigning the organization here unlinks that registration from this affiliation; update the organization in the
             <%= link_to "registration's organization-linking step",
-                  link_organization_event_registration_path(er), class: "underline font-medium", target: "_blank", rel: "noopener" %> as well.
+                  link_organization_event_registration_path(er),
+                  class: "underline font-medium", target: "_blank", rel: "noopener" %> as well.
           </p>
         </div>
       <% end %>
 
-      <div class="flex flex-wrap items-start gap-4">
-        <div class="flex-1 min-w-[200px]">
-          <%= f.input :title,
-                label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
-                hint: "\"Facilitator\" = AWBW Art Program Facilitator." %>
-        </div>
-        <div class="w-40">
-          <%= f.input :start_date,
-                as: :string,
-                label: "Start",
-                label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
-                input_html: { type: "date", value: @affiliation.start_date&.strftime("%Y-%m-%d") } %>
-        </div>
-        <div class="w-40">
-          <%= f.input :end_date,
-                as: :string,
-                label: "End",
-                label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
-                input_html: { type: "date", value: @affiliation.end_date&.strftime("%Y-%m-%d") } %>
+      <div data-controller="inactive-toggle" data-inactive-toggle-expired-value="<%= expired %>">
+        <div class="flex flex-wrap items-start gap-4 rounded-lg border p-3 <%= row_bg %> <%= 'aff-ended' if expired %>"
+             data-inactive-toggle-target="row">
+          <div class="min-w-[200px] flex-1">
+            <%= f.input :title,
+                  as: :string,
+                  label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
+                  hint: "\"Facilitator\" = AWBW Facilitator.",
+                  input_html: {
+                    value: displayed_title,
+                    class: title_class,
+                    data: { inactive_toggle_target: "title", action: "inactive-toggle#updateBorder" }
+                  } %>
+          </div>
+          <div class="w-40">
+            <%= f.input :start_date,
+                  as: :string,
+                  label: "Start",
+                  label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
+                  input_html: {
+                    type: "date",
+                    value: @affiliation.start_date&.strftime("%Y-%m-%d"),
+                    class: field_bg.call(@affiliation.start_date.present?),
+                    data: { inactive_toggle_target: "valueField", action: "change->inactive-toggle#paintFields" }
+                  } %>
+          </div>
+          <div class="w-40">
+            <%= f.input :end_date,
+                  as: :string,
+                  label: "End",
+                  label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
+                  input_html: {
+                    type: "date",
+                    value: @affiliation.end_date&.strftime("%Y-%m-%d"),
+                    class: field_bg.call(@affiliation.end_date.present?),
+                    data: { inactive_toggle_target: "endDate valueField", action: "change->inactive-toggle#toggle" }
+                  } %>
+          </div>
         </div>
       </div>
     </div>
 
-    <%# ---- Comments (saved with the affiliation, like the other forms) ---- %>
-    <section class="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="edit-toggle">
-      <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:comments, intensity: 100) %> <%= DomainTheme.text_class_for(:comments, intensity: 600) %>">
-          <i class="fa-solid fa-comments"></i>
-        </span>
-        <h2 class="text-sm font-semibold text-gray-700">Comments</h2>
-      </div>
-
-      <div class="space-y-4 p-4" data-controller="paginated-fields" data-paginated-fields-per-page-value="5">
-        <div id="comment-list" class="space-y-4">
-          <%= f.simple_fields_for :comments do |cf| %>
-            <%= render "comments/comment_fields", f: cf %>
-          <% end %>
-        </div>
-
-        <div data-paginated-fields-target="nav"></div>
-
-        <div class="flex items-center justify-between gap-2">
-          <%= link_to_add_association f, :comments,
-                partial: "comments/comment_fields",
-                data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
-                class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
-            <i class="fa-solid fa-plus text-2xs"></i>
-            Add comment
-          <% end %>
-
-          <button type="button"
-                  class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
-                  data-action="edit-toggle#toggle">
-            <i class="fa-solid fa-pen text-2xs"></i>
-            <span data-edit-toggle-target="editLabel">Edit comments</span>
-            <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
-          </button>
-        </div>
-      </div>
-    </section>
+    <%= render "shared/comments_and_communications", f: f, view_all_person: f.object.person %>
 
   <% end %>
 
   <% delete_confirm = @affiliation.facilitator? ?
        "Removing this facilitator affiliation affects the organization's status with AWBW, which is calculated from facilitator affiliations and their start and end dates. Remove it?" :
        "Remove this affiliation?" %>
-  <div class="flex items-center gap-3 border-t border-gray-200 pt-6 mt-6">
+  <div class="mt-6 flex items-center gap-3 border-t border-gray-200 pt-6">
     <%= button_to "Delete",
-          affiliation_path(@affiliation, return_to: params[:return_to].presence, origin_id: params[:origin_id].presence),
+          affiliation_path(@affiliation, return_to: params[:return_to].presence, origin_id: params[:origin_id].presence, admin: params[:admin].presence),
           method: :delete,
           form: { data: { turbo_confirm: delete_confirm } },
           class: "btn btn-danger-outline" %>
@@ -168,4 +204,9 @@
   </div>
 
   <%= render "shared/audit_info", resource: @affiliation %>
+  <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+    <div class="mt-4 flex justify-end">
+      <%= render "application/activity_log", record: @affiliation %>
+    </div>
+  <% end %>
 </div>

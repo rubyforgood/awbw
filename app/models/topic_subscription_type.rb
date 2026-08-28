@@ -10,6 +10,9 @@ class TopicSubscriptionType < ApplicationRecord
   # The type the registration form's `interested_in_more` answer maps to when we
   # backfill/auto-capture subscriptions (see follow-up).
   INTERESTED_IN_MORE_KEY = "facilitator_trainings"
+  # The general mailing-list topic the form's `communication_consent` question
+  # feeds — the successor to the retired person-level mailing-list consent flag.
+  NEWS_KEY = "news"
 
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
@@ -31,6 +34,10 @@ class TopicSubscriptionType < ApplicationRecord
 
   def self.interested_in_more
     find_by(key: INTERESTED_IN_MORE_KEY)
+  end
+
+  def self.news
+    find_by(key: NEWS_KEY)
   end
 
   def archived?

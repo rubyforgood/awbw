@@ -62,8 +62,8 @@ module OrganizationHelper
       else
         content_tag(:span, organization.name.first.upcase,
                     class: "#{avatar_size} rounded-full flex items-center justify-center
-                            bg-emerald-200 text-emerald-700 font-bold #{initial_text_size}
-                            border border-emerald-300 shadow-sm flex-shrink-0")
+                            #{DomainTheme.bg_class_for(:organizations, intensity: 200)} #{DomainTheme.text_class_for(:organizations, intensity: 700)} font-bold #{initial_text_size}
+                            border #{DomainTheme.border_class_for(:organizations, intensity: 300)} shadow-sm flex-shrink-0")
       end
 
       display_name = truncate_at ? truncate(organization.name.to_s, length: truncate_at) : organization.name.to_s

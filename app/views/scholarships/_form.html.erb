@@ -126,7 +126,7 @@
     <h2 class="text-sm font-semibold text-gray-700">Grant</h2>
     <%# from_scholarship lets the grants index show a "← Scholarship" back link
         returning here (omitted for an unsaved scholarship, which has no id yet). %>
-    <%= link_to grants_path(from_scholarship: f.object.id), class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline", target: "_blank", rel: "noopener" do %>
+    <%= link_to grants_path(from_scholarship: f.object.id), class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium #{eyebrow_link_class} hover:underline", target: "_blank", rel: "noopener" do %>
       View all
       <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
     <% end %>
@@ -192,60 +192,9 @@
 </section>
 
 <% if f.object.persisted? %>
-  <%# ---- Communications + comments — same boxes as the registration edit page,
-      shown once the scholarship exists so there's a record to attach them to. ---- %>
-  <% if allowed_to?(:index?, with: NotificationPolicy) %>
-    <%= render "notifications/communications", f: f,
-          title_key: "communications.scholarship_title", none_key: "communications.none_for_scholarship" %>
-  <% end %>
-
-  <%# ---- Comments ---- %>
-  <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="edit-toggle">
-    <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:quotes, intensity: 100) %> <%= DomainTheme.text_class_for(:quotes, intensity: 600) %>">
-        <i class="fa-solid fa-comments"></i>
-      </span>
-      <h2 class="text-sm font-semibold text-gray-700">Scholarship comments</h2>
-      <% if f.object.recipient %>
-        <%= link_to all_comments_person_path(f.object.recipient),
-                    class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
-                    target: "_blank", rel: "noopener" do %>
-          View all
-          <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
-        <% end %>
-      <% end %>
-    </div>
-
-    <div class="space-y-4 p-4" data-controller="paginated-fields" data-paginated-fields-per-page-value="5">
-      <div id="comment-list" class="space-y-4">
-        <%= f.simple_fields_for :comments do |cf| %>
-          <%= render "comments/comment_fields", f: cf %>
-        <% end %>
-      </div>
-
-      <div data-paginated-fields-target="nav"></div>
-
-      <div class="flex items-center justify-between gap-2">
-        <%= link_to_add_association f, :comments,
-              partial: "comments/comment_fields",
-              data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
-              class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
-          <i class="fa-solid fa-plus text-2xs"></i>
-          Add comment
-        <% end %>
-
-        <button
-          type="button"
-          class="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-          data-action="edit-toggle#toggle"
-        >
-          <i class="fa-solid fa-pen text-2xs"></i>
-          <span data-edit-toggle-target="editLabel">Edit comments</span>
-          <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
-        </button>
-      </div>
-    </div>
-  </section>
+  <%# ---- Combined comments & communications — shown once the scholarship exists
+      so there's a record to attach them to. ---- %>
+  <%= render "shared/comments_and_communications", f: f, view_all_person: f.object.recipient %>
 <% end %>
 
 <%# ---- Footer actions ---- %>

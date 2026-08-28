@@ -1,4 +1,10 @@
 module ApplicationHelper
+  # Single source of truth for the muted gray on page eyebrows / back-nav links.
+  # Callers keep their own size/padding; interpolate this for the color.
+  def eyebrow_link_class
+    "text-gray-500 hover:text-gray-700"
+  end
+
   # Byline for an AuthorCreditable record. Links to the credited author's person
   # profile when the credit resolves to a searchable person; otherwise renders
   # plain text. The text always honors the credit preference (author_credit), so
@@ -457,9 +463,8 @@ module ApplicationHelper
   # Training (August 2026)") so a registration reads as which occurrence it's for.
   def event_title_with_month_year(event)
     return if event.blank?
-    return event.title if event.start_date.blank?
 
-    "#{event.title} (#{event.start_date.strftime('%B %Y')})"
+    event.decorate.title_with_month_year
   end
 
   def search_page(params)

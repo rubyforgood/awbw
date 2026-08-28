@@ -3,6 +3,7 @@ FactoryBot.define do
     association :person
     topic_subscription_type
     interested_event { nil }
+    organization { nil }
     source { "Facilitator Training registration" }
 
     trait :for_event do

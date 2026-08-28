@@ -247,6 +247,85 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#ce_paid_in_full? across a transfer (#1944 split model)" do
+    let(:person) { create(:person) }
+    let(:license) { create(:professional_license, person: person) }
+    let(:origin_event) { create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 15_000) }
+    let(:dest_event) { create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 15_000) }
+    let!(:source) { create(:event_registration, event: origin_event, registrant: person, status: "transferred_out") }
+    let!(:ce) do
+      create(:continuing_education_registration, event_registration: source,
+        professional_license: license, hours: 6, cost_cents: 15_000)
+    end
+    let!(:destination) do
+      create(:event_registration, event: dest_event, registrant: person,
+        status: "registered", transferred_from_registration: source)
+    end
+
+    def pay_ce(cents)
+      create(:allocation, allocatable: ce, amount: cents,
+        source: create(:payment, person: person, amount_cents: cents, amount_cents_remaining: nil))
+    end
+
+    def transfer!
+      EventRegistrationServices::TransferContinuingEducation.new(
+        transferred_out: source, destination: destination
+      ).call
+    end
+
+    context "when CE was paid in full at the origin before transferring" do
+      before do
+        pay_ce(15_000)
+        transfer!
+      end
+
+      it "reads the destination reg as CE-paid (the amount due is settled across the chain)" do
+        expect(destination.reload.ce_paid_in_full?).to be(true)
+      end
+
+      it "offers attendance sign-in on the destination reg" do
+        expect(destination.reload.ce_attendance_offered?).to be(true)
+      end
+
+      it "keeps the paid stub on the source reg CE-paid too" do
+        expect(source.reload.ce_paid_in_full?).to be(true)
+      end
+    end
+
+    context "when only part of the CE cost was paid at the origin" do
+      before do
+        pay_ce(5_000)
+        transfer!
+      end
+
+      it "reads the destination reg as not CE-paid — the origin's partial payment does not settle the remaining balance that rode forward" do
+        expect(destination.reload.ce_paid_in_full?).to be(false)
+      end
+    end
+
+    context "when no CE was paid at the origin" do
+      before { transfer! }
+
+      it "reads the destination reg as not CE-paid" do
+        expect(destination.reload.ce_paid_in_full?).to be(false)
+      end
+    end
+
+    context "when the transferred-in reg holds no CE record of its own but the source paid CE" do
+      before { pay_ce(15_000) }
+
+      it "counts the destination as CE-paid — the chain's only CE record (on the origin) is settled" do
+        expect(destination.reload.ce_registered?).to be(false)
+        expect(destination.ce_paid_in_full?).to be(true)
+      end
+
+      it "does not count it paid when the source's CE is unpaid" do
+        ce.allocations.destroy_all
+        expect(destination.reload.ce_paid_in_full?).to be(false)
+      end
+    end
+  end
+
   describe "#sync_attendance_status_to_days!" do
     # A two-day event: start and end one day apart → day_count == 2.
     let(:event) { create(:event, start_date: 12.days.from_now, end_date: 13.days.from_now) }
@@ -289,6 +368,33 @@ RSpec.describe EventRegistration, type: :model do
         expect(reg.sync_attendance_status_to_days!).to be(false)
         expect(reg.reload.status).to eq(inactive)
       end
+    end
+  end
+
+  describe "#day_completion_carried_to" do
+    let(:three_day) { create(:event, start_date: 12.days.from_now, end_date: 14.days.from_now) }  # day_count == 3
+    let(:two_day)   { create(:event, start_date: 12.days.from_now, end_date: 13.days.from_now) }   # day_count == 2
+
+    it "carries each day forward per-index when the destination has at least as many days" do
+      reg = create(:event_registration, event: two_day, completed_day_1: true, completed_day_2: false)
+      carried = reg.day_completion_carried_to(three_day.day_count)
+      expect(carried).to include("completed_day_1" => true, "completed_day_2" => false, "completed_day_3" => false)
+    end
+
+    it "compresses to the front so no completion is lost when the source had more days than the destination" do
+      reg = create(:event_registration, event: three_day,
+        completed_day_1: true, completed_day_2: true, completed_day_3: true)
+      carried = reg.day_completion_carried_to(two_day.day_count)
+      # Three complete days, only two slots → both destination days marked.
+      expect(carried).to include("completed_day_1" => true, "completed_day_2" => true, "completed_day_3" => false)
+    end
+
+    it "compresses the completed count even when the source's completed days had gaps" do
+      reg = create(:event_registration, event: three_day,
+        completed_day_1: false, completed_day_2: true, completed_day_3: true)
+      carried = reg.day_completion_carried_to(two_day.day_count)
+      # Two complete days out of three → the destination's two days both fill.
+      expect(carried).to include("completed_day_1" => true, "completed_day_2" => true, "completed_day_3" => false)
     end
   end
 
@@ -484,6 +590,27 @@ RSpec.describe EventRegistration, type: :model do
       results = EventRegistration.registrant_city("santa")
       expect(results).to include(reg_in)
       expect(results).not_to include(reg_out)
+    end
+  end
+
+  describe ".registered_between" do
+    let!(:early) { create(:event_registration).tap { |r| r.update_column(:created_at, Time.zone.parse("2026-01-10 09:00")) } }
+    let!(:mid) { create(:event_registration).tap { |r| r.update_column(:created_at, Time.zone.parse("2026-02-15 09:00")) } }
+    let!(:late) { create(:event_registration).tap { |r| r.update_column(:created_at, Time.zone.parse("2026-03-20 09:00")) } }
+
+    it "filters to registrations created within an inclusive date range" do
+      results = EventRegistration.registered_between("2026-02-01", "2026-02-28")
+      expect(results).to contain_exactly(mid)
+    end
+
+    it "includes registrations created on the end date (end of day)" do
+      results = EventRegistration.registered_between(nil, "2026-02-15")
+      expect(results).to contain_exactly(early, mid)
+    end
+
+    it "treats a blank or unparseable bound as open-ended" do
+      expect(EventRegistration.registered_between("2026-02-01", "")).to contain_exactly(mid, late)
+      expect(EventRegistration.registered_between("not-a-date", "not-a-date")).to contain_exactly(early, mid, late)
     end
   end
 
@@ -1164,6 +1291,25 @@ RSpec.describe EventRegistration, type: :model do
 
       expect(EventRegistration.organization_linking_status("linked", event)).to contain_exactly(linked)
       expect(EventRegistration.organization_linking_status("unlinked", event)).to contain_exactly(unlinked)
+    end
+
+    it "filters pending: a submitted organization name with nothing linked yet" do
+      form = create(:form)
+      create(:event_form, :registration, event: event, form: form)
+      field = create(:form_field, form: form, field_identifier: "organization_name")
+
+      pending = create(:event_registration, event: event)
+      pending_submission = create(:form_submission, person: pending.registrant, form: form)
+      create(:form_answer, form_submission: pending_submission, form_field: field, submitted_answer: "Unlisted Org")
+
+      linked = create(:event_registration, event: event)
+      linked_submission = create(:form_submission, person: linked.registrant, form: form)
+      create(:form_answer, form_submission: linked_submission, form_field: field, submitted_answer: "Linked Org")
+      create(:event_registration_organization, event_registration: linked)
+
+      create(:event_registration, event: event)
+
+      expect(EventRegistration.organization_linking_status("pending", event)).to contain_exactly(pending)
     end
   end
 

@@ -12,6 +12,16 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
   describe "as an admin" do
     before { sign_in admin }
 
+    it_behaves_like "a page with a change log" do
+      let(:record) { ce_registration }
+      let(:page_path) { edit_continuing_education_registration_path(ce_registration) }
+    end
+
+    it_behaves_like "a page with a change log" do
+      let(:record) { ce_registration }
+      let(:page_path) { continuing_education_registration_path(ce_registration) }
+    end
+
     describe "a transferred-in registration (two-record CE model, #1944)" do
       let(:source) { create(:event_registration, event: event) }
       let(:transferred_in) do
@@ -19,25 +29,26 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
           registrant: source.registrant, transferred_from_registration: source)
       end
 
-      it "blocks the manual new form, redirecting to the source registration" do
+      it "allows the manual new form so CE can be added at the new event" do
         get new_continuing_education_registration_path(allocatable_sgid: transferred_in.to_sgid.to_s)
 
-        expect(response).to redirect_to(edit_event_registration_path(source))
+        expect(response).to have_http_status(:success)
       end
 
-      it "blocks manual create, redirecting to the source registration" do
+      it "allows a manual create at the new event" do
         expect {
           post continuing_education_registrations_path,
                params: { allocatable_sgid: transferred_in.to_sgid.to_s,
                          continuing_education_registration: { hours: "6", cost_dollars: "50",
                            license_kind: "LCSW", license_number: "123" } }
-        }.not_to change(ContinuingEducationRegistration, :count)
-
-        expect(response).to redirect_to(edit_event_registration_path(source))
+        }.to change(ContinuingEducationRegistration, :count).by(1)
       end
 
-      it "ignores a submitted cost when updating a transfer-created record (cost is locked)" do
+      it "ignores a submitted cost when updating a transfer-carried record (cost is locked)" do
         license = create(:professional_license, person: source.registrant)
+        # A genuine transfer-carried record: the source holds the matching stub.
+        source.continuing_education_registrations.create!(
+          professional_license: license, hours: 0, cost_cents: 4_000, skip_event_defaults: true)
         ce = transferred_in.continuing_education_registrations.create!(
           professional_license: license, hours: 6, cost_cents: 6_000, skip_event_defaults: true)
 
@@ -46,6 +57,18 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
                         license_kind: license.kind, license_number: license.number } }
 
         expect(ce.reload.cost_cents).to eq(6_000)
+      end
+
+      it "lets an admin edit the cost of a CE added fresh at the new event (no source stub)" do
+        license = create(:professional_license, person: source.registrant)
+        ce = transferred_in.continuing_education_registrations.create!(
+          professional_license: license, hours: 6, cost_cents: 6_000, skip_event_defaults: true)
+
+        patch continuing_education_registration_path(ce),
+              params: { continuing_education_registration: { hours: "6", cost_dollars: "999",
+                        license_kind: license.kind, license_number: license.number } }
+
+        expect(ce.reload.cost_cents).to eq(99_900)
       end
     end
 
@@ -114,10 +137,11 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
         issuing_state: "CA", expires_on: Date.new(2027, 1, 31))
     end
 
-    it "renders a comments box on the edit page" do
+    it "renders the combined comments and communications section on the edit page" do
       get edit_continuing_education_registration_path(ce_registration)
-      expect(response.body).to include("CE comments")
-      expect(response.body).to include("comment-list")
+      expect(response.body).to include("Comments &amp; communications")
+      expect(response.body).to include("continuing_education_registration-activity-list")
+      expect(response.body).to include("Add communication")
     end
 
     it "saves a comment added on the CE form (with the record)" do

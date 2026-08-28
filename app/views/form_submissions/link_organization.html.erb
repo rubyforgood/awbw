@@ -1,0 +1,132 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<%# Org-linking editor for a standalone form submission, styled after the event
+    registration one (event_registrations/link_organization). "Linked" means an
+    org was explicitly linked to this submission (metadata, also back-applied by
+    the event registration editor) or an active affiliation matches the submitted
+    name; linking creates the affiliations — so there is no Unlink here;
+    affiliations are managed on the person record. %>
+<% edit_affiliations_path = edit_person_path(@person, anchor: "affiliations", return_to: "form_submission", form_submission_id: @form_submission.id) %>
+<div class="max-w-2xl mx-auto py-8 px-4">
+  <div class="mb-4">
+    <% if params[:return_to] == "form_submissions" %>
+      <%= link_to "← Back to form submissions", form_submissions_path(highlight: @form_submission.id, anchor: form_submission_row_id(@form_submission)), class: "text-sm #{eyebrow_link_class}" %>
+    <% else %>
+      <%= link_to "← Back to submission", form_submission_path(@form_submission), class: "text-sm #{eyebrow_link_class}" %>
+    <% end %>
+  </div>
+  <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+    <div class="flex items-start justify-between gap-3 mb-2">
+      <h1 class="text-2xl font-bold text-gray-900">Linked organization &amp; affiliations</h1>
+      <%= link_to edit_affiliations_path, data: { turbo_frame: "_top" },
+                  class: "inline-flex items-center gap-1 text-sm text-gray-500 underline hover:text-gray-700 shrink-0 mt-1.5" do %>
+        Edit <%= @person.first_name.presence || @person.full_name %>'s affiliations
+      <% end %>
+    </div>
+    <p class="text-gray-600 mb-6">Person: <strong><%= @person.full_name %></strong></p>
+
+    <%# === What the person submitted — the source answer admins reconcile
+        against, rendered grey/neutral like the registration editor. %>
+    <h2 class="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3"><%= @form_submission.form.display_name %> submission</h2>
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-8">
+      <% if @submitted_org_name.present? || @submitted_position.present? %>
+        <%= link_to form_submission_path(@form_submission),
+                    target: "_blank", rel: "noopener",
+                    class: "flex items-start gap-2 group hover:text-green-800",
+                    title: "View form submission",
+                    data: { turbo_frame: "_top" } do %>
+          <i class="fa-solid fa-file-lines text-green-600 group-hover:text-green-800 mt-1 shrink-0"></i>
+          <div class="min-w-0">
+            <p class="text-base text-gray-800">Organization: <strong><%= @submitted_org_name.presence || "—" %></strong><% if @submitted_org_name.present? && @matched_organization.nil? %> <%= render "shared/badge", label: "Pending", classes: "bg-amber-50 text-amber-700 border-amber-200", icon: "fa-solid fa-circle-exclamation text-2xs", extra: "ml-1", title: "The person submitted this organization, but they have no active affiliation with it yet." %><% end %></p>
+            <p class="text-base text-gray-800">Position / title: <strong><%= @submitted_position.presence || "—" %></strong></p>
+          </div>
+        <% end %>
+      <% else %>
+        <p class="text-sm text-gray-500">
+          No organization was submitted on this <%= link_to "form submission", form_submission_path(@form_submission), target: "_blank", class: "text-blue-600 hover:underline", data: { turbo_frame: "_top" } %>.
+        </p>
+      <% end %>
+    </div>
+
+    <%# === The linked (affiliation-matched) organization + add actions — tinted
+        green to stand apart, like the registration editor's linked cards. %>
+    <% org_swatch = DomainTheme.swatch(:green) %>
+    <h2 class="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">Linked organization</h2>
+    <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-8">
+      <% if @matched_organization %>
+        <ul class="space-y-2 mb-4">
+          <li class="relative flex items-start justify-between gap-3 <%= org_swatch[:bg] %> border <%= org_swatch[:border] %> rounded-lg p-3 transition hover:border-green-300 hover:shadow-sm">
+            <div class="min-w-0">
+              <p class="font-medium text-gray-800"><%= link_to @matched_organization.name, edit_affiliations_path,
+                          title: "Edit #{@person.first_name.presence || @person.full_name}'s affiliations",
+                          class: "after:absolute after:inset-0 hover:underline focus-visible:underline focus:outline-none",
+                          data: { turbo_frame: "_top" } %><% if @matched_organization.city_state.present? %> <span class="text-xs text-gray-500">· <%= @matched_organization.city_state %></span><% end %></p>
+              <%= render "event_registrations/org_affiliation_pills", org: @matched_organization,
+                          affiliations: (@affiliations_by_org[@matched_organization.id] || []),
+                          submitted_org_name: @submitted_org_name, submitted_position: @submitted_position %>
+              <%# Persistent flag: submitted type/website/address answers that differ
+                  from this org's saved profile, so the fill-blanks sync left them unapplied. %>
+              <% if @profile_conflicts.any? %>
+                <div class="relative z-10 mt-2 rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
+                  <p class="flex items-center gap-1.5 font-semibold">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Form answers differ from this organization's profile — not applied:
+                  </p>
+                  <ul class="mt-1 space-y-0.5">
+                    <% @profile_conflicts.each do |conflict| %>
+                      <li><span class="font-medium"><%= conflict.label %></span> — form: “<%= conflict.submitted %>”, saved: “<%= conflict.saved %>”</li>
+                    <% end %>
+                  </ul>
+                </div>
+              <% end %>
+            </div>
+          </li>
+        </ul>
+      <% else %>
+        <p class="text-gray-500 mb-4">No organization linked — the person has no active affiliation matching the submitted name.</p>
+      <% end %>
+
+      <%= render "shared/link_organization_actions",
+                 select_url: select_organization_form_submission_path(@form_submission),
+                 create_url: create_organization_form_submission_path(@form_submission),
+                 creatable_org_names: @creatable_org_names,
+                 potential_matches: @potential_matches,
+                 submitter_noun: "person",
+                 return_to: params[:return_to] %>
+    </div>
+
+    <%# === The person's affiliations to other orgs — grey/neutral; managed on
+        the person record. %>
+    <% other_affiliations = @affiliations_by_org.reject { |org_id, _| org_id == @matched_organization&.id } %>
+    <details open>
+      <summary class="flex items-center justify-between gap-3 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden mb-3">
+        <h2 class="text-sm font-bold uppercase tracking-wide text-gray-500"><%= @person.first_name.presence || @person.full_name %>'s other affiliations</h2>
+        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+      </summary>
+      <%= link_to edit_affiliations_path, data: { turbo_frame: "_top" },
+                  title: "Edit affiliations on #{@person.first_name.presence || @person.full_name}'s profile",
+                  class: "group relative block bg-gray-50 border border-gray-200 rounded-xl p-4 hover:bg-gray-100 transition-colors" do %>
+        <% if other_affiliations.any? %>
+          <ul class="list-disc list-inside space-y-2 text-gray-800 marker:text-gray-400">
+            <% other_affiliations.values.sort_by { |affs| affs.first.organization&.name.to_s.downcase }.each do |affs| %>
+              <% org = affs.first.organization %>
+              <% next unless org %>
+              <li>
+                <span class="font-medium"><%= org.name %></span>
+                <% if org.city_state.present? %>
+                  <span class="text-xs text-gray-500">· <%= org.city_state %></span>
+                <% end %>
+                <div class="pl-6">
+                  <%= render "event_registrations/org_affiliation_pills", org: org, affiliations: affs,
+                              submitted_org_name: @submitted_org_name, submitted_position: @submitted_position,
+                              neutral: true %>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="text-gray-500">No other affiliations on record.</p>
+        <% end %>
+      <% end %>
+    </details>
+  </div>
+</div>

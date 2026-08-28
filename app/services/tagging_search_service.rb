@@ -55,13 +55,19 @@ class TaggingSearchService
                  .paginate(page: pages[:stories] || 1, per_page: number_of_items_per_page)
                  .decorate,
 
-      people: authorized_scope(Person.all)
-                .includes(:sectors)
-                .sector_names_all(sector_names_all)
-                .category_names_all(category_names_all)
-                .order(:first_name, :last_name)
-                .paginate(page: pages[:people] || 1, per_page: number_of_items_per_page)
-                .decorate,
+      # People surface here only for viewers who may see the People index
+      # (admins); otherwise the group is empty so no avatar/name is exposed.
+      people: if allowed_to?(:index?, Person)
+                authorized_scope(Person.all)
+                  .includes(:sectors)
+                  .sector_names_all(sector_names_all)
+                  .category_names_all(category_names_all)
+                  .order(:first_name, :last_name)
+                  .paginate(page: pages[:people] || 1, per_page: number_of_items_per_page)
+                  .decorate
+              else
+                empty_page(number_of_items_per_page)
+              end,
 
       organizations: authorized_scope(Organization.all)
                   .includes(:sectors)
@@ -75,7 +81,7 @@ class TaggingSearchService
                 .includes(:sectors, :primary_asset, :gallery_assets)
                 .sector_names_all(sector_names_all)
                 .category_names_all(category_names_all)
-                .order(:quote)
+                .order(:body)
                 .paginate(page: pages[:quotes] || 1, per_page: number_of_items_per_page)
                 .decorate,
 
@@ -103,5 +109,11 @@ class TaggingSearchService
     Tag::TAGGABLE_META.keys.index_with do
       WillPaginate::Collection.create(1, per_page || 9, 0) { |pager| pager.replace([]) }
     end
+  end
+
+  private
+
+  def empty_page(per_page)
+    WillPaginate::Collection.create(1, per_page || 9, 0) { |pager| pager.replace([]) }
   end
 end

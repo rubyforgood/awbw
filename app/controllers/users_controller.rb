@@ -307,6 +307,19 @@ class UsersController < ApplicationController
     @user.update(welcome_instructions_sent_at: Time.current, welcome_instructions_sent_by: current_user)
     @user.send_confirmation_instructions(sender: current_user)
 
+    # Back to the form submissions index with the row highlighted, when invited
+    # from there; back to the submission itself when invited from its processing
+    # panel; the users index otherwise.
+    if params[:return_to] == "form_submissions" && params[:form_submission_id].present?
+      redirect_to form_submissions_path(anchor: helpers.form_submission_row_id(params[:form_submission_id]), highlight: params[:form_submission_id]), notice: "Invitation sent to #{@user.email}."
+      return
+    end
+
+    if params[:return_to] == "form_submission" && params[:form_submission_id].present?
+      redirect_to form_submission_path(params[:form_submission_id]), notice: "Invitation sent to #{@user.email}."
+      return
+    end
+
     redirect_to users_path(search: params[:search],
                            super_user: params[:super_user],
                            inactive: params[:inactive],
@@ -423,13 +436,14 @@ class UsersController < ApplicationController
       :email, :comment, :person_id, :inactive, :locked, :primary_address, :time_zone, :super_user, :favorite_event_id,
 
       ##### legacy to remove later
-      :agency_id, :legacy, :legacy_id, :subscribecode, :first_name, :last_name, # legacy to remove later
+      :legacy, :legacy_id, :subscribecode, :first_name, :last_name, # legacy to remove later
       :address, :address2, :city, :city2, :state, :state2, :zip, :zip2, # legacy to remove later
       :phone, :phone2, :phone3, :birthday, :best_time_to_call, :notes, # legacy to remove later
       #####
 
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
-      affiliations_attributes: [ :id, :organization_id, :position, :title, :inactive, :primary_contact, :start_date, :end_date, :_destroy ],
+      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ],
+      affiliations_attributes: [ :id, :organization_id, :title, :inactive, :primary_contact, :start_date, :end_date, :_destroy ],
     )
   end
 end

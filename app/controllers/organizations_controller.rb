@@ -1,5 +1,5 @@
 class OrganizationsController < ApplicationController
-  include AhoyTracking, TagAssignable
+  include AhoyTracking, TagAssignable, Dedupable
   before_action :set_organization, only: [ :show, :edit, :update, :destroy, :populations_served ]
 
   def index
@@ -46,14 +46,6 @@ class OrganizationsController < ApplicationController
     end
 
     track_view(@organization)
-
-    # The admin-only "Program status" block. Trainings only — program status is
-    # meaningless for other events (ADR-0001 D6).
-    @organization_events = authorized_scope(
-      Event.where(id: @organization.event_registrations.active.select(:event_id))
-           .where(facilitator_training: true)
-           .order(start_date: :desc)
-    )
 
     workshop_logs = WorkshopLog.where(organization_id: @organization.id)
     @month_year_options = workshop_logs.group("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m')")
@@ -268,6 +260,7 @@ class OrganizationsController < ApplicationController
         :_destroy
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ],
       addresses_attributes: [
         :id,
         :address_type,
@@ -288,6 +281,31 @@ class OrganizationsController < ApplicationController
         :_destroy
       ]
     )
+  end
+
+  def dedupe_config
+    {
+      model_class: Organization,
+      domain: :organizations,
+      candidate_finder: -> { OrganizationServices::DuplicateFinder.new.groups },
+      editable_columns: %w[
+        name filemaker_code email website_url agency_type description
+        mission_vision_values notes organization_status_id organization_obligation_id
+      ],
+      union_columns: %w[filemaker_code],
+      merge_keeper: ->(keep, delete) {
+        keep.filemaker_code = Organization.join_filemaker_codes(keep.filemaker_code, delete.filemaker_code)
+      },
+      belongs_to_options: -> {
+        {
+          "organization_status_id" => OrganizationStatus.order(:name),
+          "organization_obligation_id" => OrganizationObligation.order(:name)
+        }
+      },
+      record_extras: ->(org) {
+        [ org.filemaker_code.presence && "FileMaker #{org.filemaker_code}", org.program_location ].compact.join(" · ").presence
+      }
+    }
   end
 
   def find_duplicate_organizations(name)

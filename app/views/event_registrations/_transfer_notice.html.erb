@@ -7,7 +7,7 @@
   <div class="mb-4 flex items-start gap-3 rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-900">
     <i class="fa-solid fa-right-to-bracket mt-0.5 text-teal-600"></i>
     <div>
-      You transferred into <strong><%= event_registration.event.title %></strong>. Your payment,
+      You transferred into <strong><%= event_registration.event.decorate.title_with_month_year %></strong>. Your payment,
       scholarship, and continuing-education records stay on your
       <%= link_to "original registration", registration_ticket_path(source.slug), class: "font-semibold underline" %>
       — your attendance here and your certificate for these hours are earned at this event.
@@ -17,7 +17,7 @@
   <div class="mb-4 flex items-start gap-3 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3 text-sm text-purple-900">
     <i class="fa-solid fa-right-from-bracket mt-0.5 text-purple-600"></i>
     <div>
-      You transferred out of <strong><%= event_registration.event.title %></strong> to
+      You transferred out of <strong><%= event_registration.event.decorate.title_with_month_year %></strong> to
       <%= link_to "your new registration", registration_ticket_path(destination.slug), class: "font-semibold underline" %>.
       Attend there and earn your certificate at that event; your payment, scholarship, and
       continuing-education records remain here.

@@ -26,20 +26,30 @@ class ScholarshipDecorator < ApplicationDecorator
     program&.program_location.presence || "—"
   end
 
-  # New / Ongoing / Reinstate relative to this recipient; blank when there's no
-  # program to assess.
+  # The program's New / Ongoing / Reinstated verdict, anchored on the start date of
+  # the training this award paid for — so each row is judged at its own event
+  # rather than at one page-wide date. Falls back to the year anchor when the award
+  # has no registration behind it. One rule for every surface (ADR-0001 D4).
+  def facilitator_program_status
+    return @facilitator_program_status if defined?(@facilitator_program_status)
+
+    @facilitator_program_status = program&.facilitator_program_status(as_of: object.event&.start_date)
+  end
+
   def program_status
-    program&.program_status(object.recipient).presence || "—"
+    facilitator_program_status&.label.presence || "—"
   end
 
   # Tailwind pill classes for the program-status badge.
   def program_status_classes
-    case program&.program_status(object.recipient)
-    when "Ongoing"   then "bg-blue-50 text-blue-700 border-blue-200"
-    when "New"       then "bg-indigo-50 text-indigo-700 border-indigo-200"
-    when "Reinstate" then "bg-purple-50 text-purple-700 border-purple-200"
-    else "bg-gray-50 text-gray-500 border-gray-200"
-    end
+    OrganizationDecorator.program_status_classes(facilitator_program_status&.status) ||
+      "bg-gray-50 text-gray-500 border-gray-200"
+  end
+
+  # Hover text naming the anchor date and the reasoning, worded exactly like the
+  # org profile's per-event chips.
+  def program_status_explanation
+    facilitator_program_status&.explanation
   end
 
   # The facilitator-training event(s) the recipient attended ("TAC"); titles

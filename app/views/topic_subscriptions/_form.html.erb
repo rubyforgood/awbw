@@ -24,7 +24,7 @@
 
   <% if @topic_subscription.errors.any? %>
     <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-      <ul class="list-disc list-inside space-y-1">
+      <ul class="list-inside list-disc space-y-1">
         <% @topic_subscription.errors.full_messages.each do |message| %>
           <li><%= message %></li>
         <% end %>
@@ -55,9 +55,9 @@
 
       <div class="mb-2 flex w-fit text-sm">
         <label for="person-source-existing"
-               class="cursor-pointer rounded-l-lg border border-gray-300 px-3 py-1.5 font-medium text-gray-600 peer-checked/existing:border-blue-600 peer-checked/existing:bg-blue-600 peer-checked/existing:text-white">Existing person</label>
+               class="peer-checked/existing:border-primary peer-checked/existing:bg-primary cursor-pointer rounded-l-lg border border-gray-300 px-3 py-1.5 font-medium text-gray-600 peer-checked/existing:text-white">Existing person</label>
         <label for="person-source-new"
-               class="cursor-pointer rounded-r-lg border border-l-0 border-gray-300 px-3 py-1.5 font-medium text-gray-600 peer-checked/new:border-blue-600 peer-checked/new:bg-blue-600 peer-checked/new:text-white">New person</label>
+               class="peer-checked/new:border-primary peer-checked/new:bg-primary cursor-pointer rounded-r-lg border border-l-0 border-gray-300 px-3 py-1.5 font-medium text-gray-600 peer-checked/new:text-white">New person</label>
       </div>
 
       <div class="hidden peer-checked/existing:block"><%= person_select %></div>
@@ -130,59 +130,26 @@
     <p class="mt-1 text-xs text-gray-500">Choose a specific upcoming event, or “All upcoming events”.</p>
   </div>
 
+  <%# Organization — optional narrowing to a specific org, unrelated to the topic's
+      event dimension, so it's always shown (not gated on the topic like Event). %>
+  <div>
+    <%= f.label :organization_id, "Organization", class: label_class %>
+    <%= f.select :organization_id,
+      options_for_select(Organization.where(id: @topic_subscription.organization_id).map { |o| [ o.name, o.id ] }, @topic_subscription.organization_id),
+      { include_blank: true, prompt: "Search for an organization" },
+      class: field_class,
+      data: { controller: "remote-select", remote_select_model_value: "organization" } %>
+    <p class="mt-1 text-xs text-gray-500">Optional — narrow this subscription to a specific organization.</p>
+  </div>
+
   <div>
     <%= f.label :source, class: label_class %>
     <%= f.text_field :source, class: field_class, placeholder: "e.g. Facilitator Training registration, admin" %>
   </div>
 
-  <%# ---- Comments (saved with the subscription; shown on the person's aggregated
-      comments page). Replaces the old free-text note field. ---- %>
-  <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="edit-toggle">
-    <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:topic_subscriptions, intensity: 100) %> <%= DomainTheme.text_class_for(:topic_subscriptions, intensity: 600) %>">
-        <i class="fa-solid fa-comments"></i>
-      </span>
-      <h2 class="text-sm font-semibold text-gray-700">Comments</h2>
-      <% if @topic_subscription.person&.persisted? %>
-        <%= link_to all_comments_person_path(@topic_subscription.person),
-                    class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
-                    target: "_blank", rel: "noopener" do %>
-          View all
-          <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
-        <% end %>
-      <% end %>
-    </div>
+  <%= render "shared/comments_and_communications", f: f, view_all_person: f.object.person %>
 
-    <div class="space-y-4 p-4" data-controller="paginated-fields" data-paginated-fields-per-page-value="5">
-      <div id="comment-list" class="space-y-4">
-        <%= f.simple_fields_for :comments do |cf| %>
-          <%= render "comments/comment_fields", f: cf %>
-        <% end %>
-      </div>
-
-      <div data-paginated-fields-target="nav"></div>
-
-      <div class="flex items-center justify-between gap-2">
-        <%= link_to_add_association f, :comments,
-              partial: "comments/comment_fields",
-              data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
-              class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
-          <i class="fa-solid fa-plus text-2xs"></i>
-          Add comment
-        <% end %>
-
-        <button type="button"
-                class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
-                data-action="edit-toggle#toggle">
-          <i class="fa-solid fa-pen text-2xs"></i>
-          <span data-edit-toggle-target="editLabel">Edit comments</span>
-          <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
-        </button>
-      </div>
-    </div>
-  </section>
-
-  <div class="flex gap-2 justify-end">
+  <div class="flex justify-end gap-2">
     <%= link_to "Cancel", cancel_path, class: "btn btn-utility-outline", data: { action: "dirty-form#confirmCancel" } %>
     <%= f.submit submit_label, class: "btn btn-primary" %>
   </div>

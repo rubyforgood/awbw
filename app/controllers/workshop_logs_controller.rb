@@ -5,7 +5,8 @@ class WorkshopLogsController < ApplicationController
     authorize!
     @per_page = params[:number_of_items_per_page].presence || 10
     params[:workshop_id] ||= @workshop&.id
-    base_scope = authorized_scope(WorkshopLog.includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets, created_by: :person))
+    base_scope = authorized_scope(WorkshopLog.includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets,
+                                                       :author, created_by: :person))
     filtered = base_scope.search(params)
     @workshop_logs_unpaginated = filtered
     @workshop_logs = filtered.paginate(page: params[:page], per_page: @per_page)
@@ -24,8 +25,10 @@ class WorkshopLogsController < ApplicationController
     set_default_values
     @workshop_log = WorkshopLog.find(params[:id])
     authorize! @workshop_log
+    @workshop_log.assign_attributes(workshop_log_params)
+    credit_new_quotes_to_current_user
 
-    if @workshop_log.update(workshop_log_params)
+    if @workshop_log.save
       redirect_to @workshop_log, notice: "Thanks for reporting on a workshop."
     else
       flash.now[:alert] = "Failed to update workshop log."
@@ -38,6 +41,8 @@ class WorkshopLogsController < ApplicationController
     set_default_values
     @workshop_log = WorkshopLog.new(workshop_log_params)
     authorize! @workshop_log
+    @workshop_log.author ||= @workshop_log.created_by&.person
+    credit_new_quotes_to_current_user
 
     if @workshop_log.save
       NotificationServices::CreateNotification.call(
@@ -68,7 +73,7 @@ class WorkshopLogsController < ApplicationController
 
   def show
     @workshop_log = WorkshopLog.includes(
-      :organization, :windows_type, { created_by: :person },
+      :organization, :windows_type, :author, { created_by: :person },
       { quotes: :workshop },
       { gallery_assets: { file_attachment: :blob } }
     ).find(params[:id]).decorate
@@ -178,6 +183,16 @@ class WorkshopLogsController < ApplicationController
     @organization_id = organization.id if organization
   end
 
+  # Credit new quotes to the facilitator submitting the log — the speaker (the
+  # quote's `author` Person) is left unset, since it's the participant, not the
+  # submitter. Only new records, so editing a log never re-credits existing quotes.
+  def credit_new_quotes_to_current_user
+    @workshop_log.all_quotable_item_quotes.each do |qiq|
+      quote = qiq.quote
+      quote.created_by = current_user if quote&.new_record?
+    end
+  end
+
   def set_default_values
     workshop_log = params[:workshop_log]
     workshop_log.to_unsafe_h.map do |k, v|
@@ -202,10 +217,10 @@ class WorkshopLogsController < ApplicationController
       :workshop_id, :windows_type_id, :external_workshop_title,
       quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,
-        quote_attributes: [ :id, :quote, :age, :workshop_id, :_destroy ] ],
+        quote_attributes: [ :id, :body, :age, :workshop_id, :_destroy ] ],
       all_quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,
-        quote_attributes: [ :id, :quote, :age, :workshop_id, :_destroy ] ],
+        quote_attributes: [ :id, :body, :age, :workshop_id, :_destroy ] ],
       report_form_field_answers_attributes: [ :id, :form_field_id, :answer_option_id,
                                              :answer, :workshop_log_id, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ])

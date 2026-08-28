@@ -1,5 +1,8 @@
 class WorkshopVariationIdea < ApplicationRecord
   include AuthorCreditable
+  # The submitter is the author when none is named.
+  credits_creator
+
   include SearchCop
   search_scope :search do
     attributes :name, :body
@@ -8,12 +11,14 @@ class WorkshopVariationIdea < ApplicationRecord
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:query]) if params[:query].present?
+    results = results.where(id: by_credited_person_name(params[:author_name]).select("workshop_variation_ideas.id")) if params[:author_name].present?
     results = results.created_by_person(params[:created_by_person_id]) if params[:created_by_person_id].present?
     results
   end
 
   has_rich_text :rhino_body
 
+  belongs_to :author, class_name: "Person", inverse_of: :workshop_variation_ideas_as_author, optional: true
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :workshop

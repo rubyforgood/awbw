@@ -94,10 +94,11 @@ RSpec.describe "/story_ideas", type: :request do
     describe "comments and communications on the edit page" do
       let(:story_idea) { create(:story_idea, created_by: regular_user) }
 
-      it "renders the comments section" do
+      it "renders the combined comments and communications section" do
         get edit_story_idea_url(story_idea)
-        expect(response.body).to include("Story idea comments")
+        expect(response.body).to include("Comments &amp; communications")
         expect(response.body).to include("Add comment")
+        expect(response.body).to include("Add communication")
       end
 
       it "saves a new comment with its topic, authored by the current user" do

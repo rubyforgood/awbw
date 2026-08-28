@@ -105,10 +105,14 @@ module Admin
         ).entries
         @timeline = entries.paginate(page: page, per_page: per_page)
         @total_count = @timeline.total_entries
+        activity_events = @timeline.reject(&:communication?).map(&:record)
       else
         @events = scope.paginate(page: page, per_page: per_page)
         @total_count = @events.total_entries
+        activity_events = @events
       end
+
+      @record_cache = Analytics::EventReferenceLoader.new(activity_events).records
 
       render :activity_results
     end

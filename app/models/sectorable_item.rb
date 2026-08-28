@@ -9,10 +9,13 @@ class SectorableItem < ApplicationRecord
 
   before_create :skip_if_duplicate
 
-  # Methods
+  # A tagging reads as the sector it applied. Only a workshop log carries a title
+  # and a windows type to compose with it — an organization or a person doesn't,
+  # and asking for one raised.
   def title
-    return id unless sectorable && sectorable.class != WorkshopLog
-    "#{sectorable.title} - #{sectorable.windows_type.name if sectorable.windows_type}"
+    return sector&.name.to_s unless sectorable.is_a?(WorkshopLog)
+
+    "#{sectorable.title} - #{sectorable.windows_type&.name}"
   end
 
   private

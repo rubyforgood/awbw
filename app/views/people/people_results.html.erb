@@ -1,27 +1,27 @@
 <%= turbo_frame_tag :people_results do %>
   <%= turbo_stream.replace("people_count", partial: "people_count") %>
 
-  <div class="rounded-xl bg-white overflow-hidden animate-fade blur-on-submit">
+  <div class="border-primary/10 animate-fade overflow-hidden rounded-2xl border bg-white blur-on-submit">
     <% if @people.any? %>
       <div class="overflow-x-auto">
         <table class="w-full border-collapse border border-gray-200">
           <thead class="bg-gray-100">
             <tr>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Name</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/6">Affiliated since</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/5">Primary sector</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Primary age range</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/4">Affiliation(s)</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Socials</th>
+              <th class="w-1/6 px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
+              <th class="w-1/6 px-4 py-2 text-center text-sm font-semibold text-gray-700">Affiliated since</th>
+              <th class="w-1/5 px-4 py-2 text-left text-sm font-semibold text-gray-700">Primary sector</th>
+              <th class="w-1/6 px-4 py-2 text-left text-sm font-semibold text-gray-700">Primary age range</th>
+              <th class="w-1/4 px-4 py-2 text-left text-sm font-semibold text-gray-700">Affiliation(s)</th>
+              <th class="w-1/6 px-4 py-2 text-left text-sm font-semibold text-gray-700">Socials</th>
               <% if allowed_to?(:manage?, Person) %>
-                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[80px]">Actions</th>
+                <th class="w-[80px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
               <% end %>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
             <% @people.each do |person| %>
               <% cache [ person, current_user.super_user?, current_user.person_id == person.id ] do %>
-              <tr class="hover:bg-gray-50 transition-colors duration-150 <%= "admin-only bg-blue-100" unless person.published? %>">
+              <tr class="transition-colors duration-150 hover:bg-gray-50 <%= "admin-only bg-blue-100" unless person.published? %>">
                 <td class="px-4 py-2">
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
                   <% if allowed_to?(:show?, person) %>
@@ -95,7 +95,7 @@
                           <% if allowed_to?(:show?, person) %>
                             <%= link_to "+#{affiliations.size - 3} more", person_path(person),
                                 data: { turbo_frame: "_top" },
-                                class: "text-xs text-gray-500 hover:text-gray-700" %>
+                                class: "text-xs #{eyebrow_link_class}" %>
                           <% else %>
                             <span class="text-xs text-gray-500">+<%= affiliations.size - 3 %> more</span>
                           <% end %>
@@ -107,12 +107,12 @@
                   <% end %>
                 </td>
                 <!-- Socials -->
-                <td class="px-4 py-2 text-sm text-gray-800 whitespace-nowrap">
+                <td class="px-4 py-2 text-sm whitespace-nowrap text-gray-800">
                   <%= render "social_media_buttons", person: person %>
                 </td>
                 <!-- Actions -->
                 <% if allowed_to?(:manage?, Person) %>
-                  <td class="px-4 py-2 justify-center gap-2">
+                  <td class="justify-center gap-2 px-4 py-2">
                     <%= link_to "User", user_path(person.user),
                             data: { turbo_frame: "_top" },
                             class: "admin-only bg-blue-100 btn btn-secondary-outline px-2.5 py-1 text-xs" if person.user %>
@@ -128,7 +128,7 @@
         </table>
       </div>
     <% else %>
-      <p class="text-gray-500 text-center px-6 py-6">
+      <p class="px-6 py-6 text-center text-gray-500">
         No <%= Person.model_name.human.pluralize.downcase %> found.
       </p>
     <% end %>

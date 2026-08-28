@@ -6,6 +6,24 @@ RSpec.describe Event, type: :model do
     it { should validate_presence_of(:start_date) }
     it { should validate_presence_of(:end_date) }
     it { should validate_numericality_of(:cost_cents).is_greater_than_or_equal_to(0).allow_nil }
+
+    describe "end date not before start date" do
+      it "is invalid when the end date is before the start date" do
+        event = build(:event, start_date: Time.zone.parse("2026-09-14 09:00"), end_date: Time.zone.parse("2026-09-13 17:00"))
+        expect(event).not_to be_valid
+        expect(event.errors[:end_date]).to include("can't be before the start date")
+      end
+
+      it "is valid when the end date is on the same day as the start date" do
+        event = build(:event, start_date: Time.zone.parse("2026-09-14 09:00"), end_date: Time.zone.parse("2026-09-14 00:00"))
+        expect(event).to be_valid
+      end
+
+      it "is valid when the end date is after the start date" do
+        event = build(:event, start_date: Time.zone.parse("2026-09-14 09:00"), end_date: Time.zone.parse("2026-09-15 17:00"))
+        expect(event).to be_valid
+      end
+    end
   end
 
   describe "destroying with form submissions" do

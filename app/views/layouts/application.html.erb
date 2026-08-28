@@ -12,7 +12,7 @@
     <link rel="shortcut icon" type="image/png" href="<%= asset_path(favicon_file) %>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&display=swap" rel="stylesheet">
 
     <%= vite_stylesheet_tag "application.css" %>
     <%= vite_client_tag %>
@@ -31,11 +31,11 @@
   </head>
 
   <body class="<%= controller.controller_name %> <%= controller.action_name %>
-      flex flex-col min-h-screen bg-white">
+      flex min-h-screen flex-col bg-white">
     <%= yield :body_start %>
     <%= render "shared/svg_symbols" %>
-    <div class="flex-grow flex flex-col" id="main">
-      <div class="sticky top-0 left-0 w-full z-50 print:hidden">
+    <div class="flex flex-grow flex-col" id="main">
+      <div class="sticky top-0 left-0 z-50 w-full print:hidden">
         <!-- Navbar -->
         <nav class="<%= navbar_bg_class %> text-white">
           <%= render "shared/navbar" %>

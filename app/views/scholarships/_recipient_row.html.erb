@@ -15,7 +15,8 @@
     <% else %>
       <%= render "shared/badge",
                  label: scholarship.program_status,
-                 classes: scholarship.program_status_classes %>
+                 classes: scholarship.program_status_classes,
+                 title: scholarship.program_status_explanation %>
     <% end %>
   </td>
   <td class="px-4 py-2 text-sm text-gray-600 whitespace-nowrap"><%= scholarship.training_label %></td>
