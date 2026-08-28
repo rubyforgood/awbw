@@ -36,10 +36,11 @@
           <div class="min-w-0 flex-1 space-y-1">
             <div class="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-gray-500">
               <span><%= response.responded_at.strftime("%B %-d, %Y at %-l:%M %p") %></span>
-              <%# Recipient self-service is the default; only flag when staff acted for them. %>
-              <% if response.responder.present? && response.responder != "recipient" %>
+              <%# Name the staff member who acted; stay silent when the recipient acted on their own award. %>
+              <% actor = response.responded_by %>
+              <% if actor && actor.person_id != scholarship.recipient_id %>
                 <span class="text-gray-300">·</span>
-                <span class="text-gray-400">by <%= response.responder %></span>
+                <span class="text-gray-400">by <%= actor.full_name %></span>
               <% end %>
             </div>
             <% if response.reason.present? %>

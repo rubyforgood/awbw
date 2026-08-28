@@ -213,6 +213,7 @@ class Scholarship < ApplicationRecord
       reason: @agreement_response_reason,
       responded_at: Time.current,
       responder: @agreement_response_by.presence || "admin",
+      responded_by: Current.user,
       amount_cents: amount_cents,
       contribution_cents: @agreement_response_contribution_cents
     )
