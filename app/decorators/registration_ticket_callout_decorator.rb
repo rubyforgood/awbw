@@ -19,7 +19,7 @@ class RegistrationTicketCalloutDecorator < ApplicationDecorator
     registration_ticket_callout_resources.ordered.includes(:resource).filter_map do |link|
       next unless link.resource
       link.decorate.to_card(registrant_slug:, return_to:, icon:,
-                            callout_id: (id if return_to == "callout"))
+                            callout_id: (id if return_to.in?(%w[ callout callout_form ])))
     end
   end
 end

@@ -12,6 +12,15 @@
     </div>
   <% end %>
 
+  <%# Any linked resources sit above the form, like reference material for it. %>
+  <% if @resource_cards.any? %>
+    <div class="mb-6 space-y-3">
+      <% @resource_cards.each do |card| %>
+        <%= render "event_registrations/callout_card", callout: card %>
+      <% end %>
+    </div>
+  <% end %>
+
   <% if @callout.dripping? %>
     <div class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
       This survey will open on <%= @callout.display_from.to_date.strftime("%B %-d, %Y") %>. Check back then.

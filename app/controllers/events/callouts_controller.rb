@@ -312,6 +312,7 @@ module Events
       return redirect_to registration_ticket_path(@event_registration.slug) if @callout.hidden? || !@callout.delivers_form?
 
       @form = @callout.form
+      @resource_cards = @callout.decorate.resource_cards(registrant_slug: @event_registration.slug, return_to: "callout_form")
       unless @callout.dripping?
         @submission = callout_submission
         @editing = @submission.nil? || params[:edit].present?

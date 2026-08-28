@@ -21,6 +21,19 @@ RSpec.describe "Callout inline form", type: :request do
 
       expect(response).to redirect_to(registration_ticket_path(registration.slug))
     end
+
+    it "shows linked resources above the form, returning to the form page" do
+      resource = create(:resource, title: "Worksheet")
+      callout.resources << resource
+
+      get registration_callout_form_path(registration.slug, callout)
+
+      expect(response.body).to include("Worksheet")
+      expect(response.body.index("Worksheet")).to be < response.body.index("callout_form[form_fields]")
+      expect(response.body).to include(CGI.escapeHTML(
+        registration_resource_path(registration.slug, resource, return_to: "callout_form", callout_id: callout.id)
+      ))
+    end
   end
 
   describe "POST /registration/:slug/forms/:callout_id" do
