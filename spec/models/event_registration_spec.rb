@@ -247,6 +247,85 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#ce_paid_in_full? across a transfer (#1944 split model)" do
+    let(:person) { create(:person) }
+    let(:license) { create(:professional_license, person: person) }
+    let(:origin_event) { create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 15_000) }
+    let(:dest_event) { create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 15_000) }
+    let!(:source) { create(:event_registration, event: origin_event, registrant: person, status: "transferred_out") }
+    let!(:ce) do
+      create(:continuing_education_registration, event_registration: source,
+        professional_license: license, hours: 6, cost_cents: 15_000)
+    end
+    let!(:destination) do
+      create(:event_registration, event: dest_event, registrant: person,
+        status: "registered", transferred_from_registration: source)
+    end
+
+    def pay_ce(cents)
+      create(:allocation, allocatable: ce, amount: cents,
+        source: create(:payment, person: person, amount_cents: cents, amount_cents_remaining: nil))
+    end
+
+    def transfer!
+      EventRegistrationServices::TransferContinuingEducation.new(
+        transferred_out: source, destination: destination
+      ).call
+    end
+
+    context "when CE was paid in full at the origin before transferring" do
+      before do
+        pay_ce(15_000)
+        transfer!
+      end
+
+      it "reads the destination reg as CE-paid (its live record carries no balance)" do
+        expect(destination.reload.ce_paid_in_full?).to be(true)
+      end
+
+      it "offers attendance sign-in on the destination reg" do
+        expect(destination.reload.ce_attendance_offered?).to be(true)
+      end
+
+      it "keeps the paid stub on the source reg CE-paid too" do
+        expect(source.reload.ce_paid_in_full?).to be(true)
+      end
+    end
+
+    context "when only part of the CE cost was paid at the origin" do
+      before do
+        pay_ce(5_000)
+        transfer!
+      end
+
+      it "reads the destination reg as not CE-paid (the balance rides forward to the new event)" do
+        expect(destination.reload.ce_paid_in_full?).to be(false)
+      end
+    end
+
+    context "when no CE was paid at the origin" do
+      before { transfer! }
+
+      it "reads the destination reg as not CE-paid" do
+        expect(destination.reload.ce_paid_in_full?).to be(false)
+      end
+    end
+
+    context "when the transferred-in reg holds no CE record of its own but the source paid CE" do
+      before { pay_ce(15_000) }
+
+      it "counts the destination as CE-paid via the source (its CE credit lives on the origin)" do
+        expect(destination.reload.ce_registered?).to be(false)
+        expect(destination.ce_paid_in_full?).to be(true)
+      end
+
+      it "does not count it paid when the source's CE is unpaid" do
+        ce.allocations.destroy_all
+        expect(destination.reload.ce_paid_in_full?).to be(false)
+      end
+    end
+  end
+
   describe "#sync_attendance_status_to_days!" do
     # A two-day event: start and end one day apart → day_count == 2.
     let(:event) { create(:event, start_date: 12.days.from_now, end_date: 13.days.from_now) }

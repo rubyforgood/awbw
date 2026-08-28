@@ -125,6 +125,28 @@ RSpec.describe "Event registration show page", type: :system do
       expect(page).to have_link("CE evaluation",
         href: event_registration_ticket_callout_path(event, gated_callout, reg: registration.slug))
     end
+
+    it "shows both payment- and CE-payment-gated callouts on a transferred-in ticket when the source paid" do
+      origin_event = create(:event, :published, cost_cents: 10_000, ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
+      source = create(:event_registration, event: origin_event, registrant: user.person, status: "transferred_out")
+      create(:allocation, source: create(:payment), allocatable: source, amount: origin_event.cost_cents)
+      source_ce = create(:continuing_education_registration, event_registration: source, cost_cents: 15_000)
+      create(:allocation, source: create(:payment), allocatable: source_ce, amount: source_ce.cost_cents)
+
+      dest_event = create(:event, :published, cost_cents: 10_000, ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
+      destination = create(:event_registration, event: dest_event, registrant: user.person,
+        status: "registered", transferred_from_registration: source)
+      pay_gated = create(:registration_ticket_callout, :payment_access_gated, event: dest_event, title: "Your workbook")
+      ce_gated = create(:registration_ticket_callout, :ce_payment_access_gated, event: dest_event, title: "CE evaluation")
+
+      sign_in(user)
+      visit registration_ticket_path(destination.slug)
+
+      expect(page).to have_link("Your workbook",
+        href: event_registration_ticket_callout_path(dest_event, pay_gated, reg: destination.slug))
+      expect(page).to have_link("CE evaluation",
+        href: event_registration_ticket_callout_path(dest_event, ce_gated, reg: destination.slug))
+    end
   end
 
   describe "view registration form link" do

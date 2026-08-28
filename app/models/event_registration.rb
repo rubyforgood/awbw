@@ -922,8 +922,12 @@ class EventRegistration < ApplicationRecord
     end
   end
 
-  # True when a CE registration exists and every one is fully paid.
+  # True when a CE registration exists and every one is fully paid. A transferred-in
+  # reg whose CE didn't split down to a record here (its CE credit and payment stayed
+  # on the origin) follows the source, mirroring #payment_access_granted?. When the CE
+  # did split, its own live record carries any remaining balance, so we read that.
   def ce_paid_in_full?
+    return transferred_from_registration.ce_paid_in_full? if !ce_registered? && transferred_in?
     return false unless ce_registered?
 
     continuing_education_registrations.all?(&:paid_in_full?)
