@@ -41,6 +41,11 @@ RSpec.describe "page_bg_class alignment with policies" do
 
     # ─── admin-or-auth (policy: authenticated?) ───
     "app/views/organizations/index.html.erb"           => "admin-or-auth",
+    "app/views/devise/sessions/new.html.erb"            => "public",
+    "app/views/devise/passwords/new.html.erb"           => "public",
+    "app/views/devise/passwords/edit.html.erb"          => "public",
+    "app/views/devise/confirmations/new.html.erb"       => "public",
+    "app/views/devise/unlocks/new.html.erb"             => "public",
     "app/views/people/index.html.erb"                  => "admin-or-auth",
     "app/views/workshop_logs/index.html.erb"           => "admin-or-auth",
     "app/views/features/index.html.erb"                => "admin-or-auth",

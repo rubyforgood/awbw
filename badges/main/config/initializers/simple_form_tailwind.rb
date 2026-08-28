@@ -2,7 +2,7 @@
 
 SimpleForm.setup do |config|
   # Default button class
-  config.button_class = "px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:ring focus:ring-blue-300 focus:outline-none"
+  config.button_class = "btn btn-primary"
 
   # Default wrapper for Tailwind
   config.wrappers :tailwind_form, class: "mb-4" do |b|
