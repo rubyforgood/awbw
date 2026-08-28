@@ -303,4 +303,103 @@ RSpec.describe "Dedupable concern", type: :request do
       end
     end
   end
+
+  # ============================================================
+  # ORGANIZATIONS — FK-based model with a custom candidate finder
+  # ============================================================
+
+  describe "Organizations" do
+    before { sign_in admin }
+
+    describe "GET dedupe_index" do
+      it "renders and surfaces candidate groups from the duplicate finder" do
+        create(:organization, name: "Hope Center")
+        create(:organization, name: "hope center")
+
+        get dedupe_index_organizations_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Same name")
+      end
+    end
+
+    describe "GET dedupe_preview" do
+      let!(:keep) { create(:organization, name: "Keep Org") }
+      let!(:delete_rec) { create(:organization, name: "Delete Org") }
+      before { create(:affiliation, organization: delete_rec) }
+
+      it "renders the preview with a reassignment summary and curated fields" do
+        get dedupe_preview_organizations_path(
+          organization_to_keep_id: keep.id,
+          organization_to_delete_id: delete_rec.id
+        )
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Keep Org", "Delete Org")
+        expect(response.body).to include("Records that will move", "Affiliations")
+        expect(response.body).to include("Website url")
+        expect(response.body).not_to include("Profile show age ranges")
+      end
+    end
+
+    describe "POST dedupe_perform" do
+      let!(:keep) { create(:organization, name: "Keeper Org") }
+      let!(:delete_rec) { create(:organization, name: "Duplicate Org") }
+      let!(:report) { create(:report, organization: delete_rec) }
+
+      it "merges, reassigns FK associations, and deletes the duplicate" do
+        expect {
+          post dedupe_perform_organizations_path, params: {
+            organization_to_delete_id: delete_rec.id,
+            organization_to_keep_id: keep.id
+          }
+        }.to change(Organization, :count).by(-1)
+
+        expect(response).to redirect_to(organizations_path)
+        expect(Organization.exists?(delete_rec.id)).to be false
+        expect(report.reload.organization_id).to eq(keep.id)
+      end
+
+      it "applies keep-field edits before merging" do
+        post dedupe_perform_organizations_path, params: {
+          organization_to_delete_id: delete_rec.id,
+          organization_to_keep_id: keep.id,
+          organization_to_keep: { name: "Canonical Org" }
+        }
+
+        expect(keep.reload.name).to eq("Canonical Org")
+      end
+
+      it "blocks the merge when an association would be orphaned" do
+        create(:other_response, promotable: delete_rec)
+
+        get dedupe_preview_organizations_path(
+          organization_to_delete_id: delete_rec.id,
+          organization_to_keep_id: keep.id
+        )
+        expect(response.body).to include("Merge blocked")
+
+        expect {
+          post dedupe_perform_organizations_path, params: {
+            organization_to_delete_id: delete_rec.id,
+            organization_to_keep_id: keep.id
+          }
+        }.not_to change(Organization, :count)
+        expect(response).to redirect_to(dedupe_index_organizations_path)
+        expect(Organization.exists?(delete_rec.id)).to be true
+      end
+
+      it "combines both organizations' FileMaker codes onto the keeper" do
+        keep.update!(filemaker_code: "FM-100")
+        delete_rec.update!(filemaker_code: "FM-273")
+
+        post dedupe_perform_organizations_path, params: {
+          organization_to_delete_id: delete_rec.id,
+          organization_to_keep_id: keep.id
+        }
+
+        expect(keep.reload.filemaker_code).to eq("FM-100, FM-273")
+      end
+    end
+  end
 end
