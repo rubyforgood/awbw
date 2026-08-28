@@ -32,7 +32,7 @@ RSpec.describe Timelineable do
 
       event = person.timeline_events.sole
       expect(event.actor).to be_nil
-      expect(event.actor_label).to eq("Registration")
+      expect(event.actor_label).to eq("A Registration Form Submission")
     end
   end
 

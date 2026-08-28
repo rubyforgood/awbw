@@ -16,5 +16,15 @@ RSpec.describe TimelineEvent do
       expect(event).not_to be_valid
       expect(event.errors[:subject]).to include("must include Timelineable")
     end
+
+    it "accepts a subject marked for destruction (nested _destroy during an autosave)" do
+      person = create(:person)
+      item = create(:categorizable_item, categorizable: person)
+      item.mark_for_destruction
+
+      event = described_class.new(subject: item, action: "destroyed", snapshot: { "changes" => {} })
+
+      expect(event).to be_valid
+    end
   end
 end

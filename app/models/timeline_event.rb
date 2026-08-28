@@ -1,5 +1,5 @@
 class TimelineEvent < ApplicationRecord
-  belongs_to :subject, polymorphic: true
+  belongs_to :subject, polymorphic: true, optional: true
   belongs_to :actor, polymorphic: true, optional: true
   has_many :timeline_entries, dependent: :destroy
 
