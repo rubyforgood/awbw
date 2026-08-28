@@ -922,11 +922,14 @@ class EventRegistration < ApplicationRecord
     end
   end
 
-  # True when a CE registration exists and every one is fully paid.
+  # True when the full CE amount due is paid across the whole transfer chain — every
+  # CE registration on this reg and on the reg(s) it transferred in from. After a
+  # transfer the money splits (the origin keeps a paid stub, this reg's live record
+  # carries the remaining balance), so a partly-paid balance riding forward still
+  # reads as unpaid. A chain with no CE anywhere isn't CE-registered, so it's not paid.
   def ce_paid_in_full?
-    return false unless ce_registered?
-
-    continuing_education_registrations.all?(&:paid_in_full?)
+    chain = continuing_education_registrations_across_transfers
+    chain.any? && chain.all?(&:paid_in_full?)
   end
 
   # Whether the attendance sign-in sheet is open to this registrant. Deliberately
@@ -941,6 +944,16 @@ class EventRegistration < ApplicationRecord
   # License numbers on file across this registration's CE registrations.
   def ce_license_numbers
     continuing_education_registrations.filter_map { |c| c.professional_license&.number }
+  end
+
+  # This reg's CE registrations plus those of every reg it transferred in from, so
+  # CE money can be read across the whole transfer chain — the origin's paid stub
+  # and this reg's live record together (see TransferContinuingEducation, #1944).
+  def continuing_education_registrations_across_transfers
+    own = continuing_education_registrations.to_a
+    return own unless transferred_in?
+
+    own + transferred_from_registration.continuing_education_registrations_across_transfers
   end
 
   # Read CE registrations from the in-memory collection rather than the DB when

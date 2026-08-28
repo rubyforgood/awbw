@@ -6,6 +6,7 @@ FactoryBot.define do
     description { "<p>Details for this callout.</p>" }
     callout_type { "reference" }
     payment_access_gated { false }
+    ce_payment_access_gated { false }
     hidden { false }
     # position is assigned by the positioning gem on save (appended within the event)
 
@@ -27,6 +28,10 @@ FactoryBot.define do
 
     trait :payment_access_gated do
       payment_access_gated { true }
+    end
+
+    trait :ce_payment_access_gated do
+      ce_payment_access_gated { true }
     end
 
     trait :hidden do
