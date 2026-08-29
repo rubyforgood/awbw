@@ -1243,6 +1243,7 @@ class EventsController < ApplicationController
     @scholarship_forms = Form.standalone.where(role: "scholarship").order(:name)
     @bulk_payment_forms = Form.standalone.where(role: "bulk_payment").order(:name)
     @continuing_education_forms = Form.standalone.where(role: "continuing_education").order(:name)
+    @callout_forms = Form.standalone.order(:name)
     @categories_grouped =
       Category
         .includes(:category_type)

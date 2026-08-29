@@ -2,6 +2,17 @@
 <%= render "shared/public_welcome_banner" %>
 
 <% actions = capture do %>
+  <% if allowed_to?(:manage?, Faq) %>
+    <% if faq_admin_mode? %>
+      <%= link_to "Exit admin mode",
+                  faqs_path(request.query_parameters.except("admin")),
+                  class: "text-sm #{eyebrow_link_class}" %>
+    <% else %>
+      <%= link_to "Admin mode",
+                  faqs_path(request.query_parameters.merge(admin: 1)),
+                  class: "text-sm #{eyebrow_link_class}" %>
+    <% end %>
+  <% end %>
   <% if allowed_to?(:new?, Faq) %>
     <%= link_to "New FAQ",
                 new_faq_path,

@@ -17,7 +17,7 @@
 <% intro = capture do %>
   An optional tool to track data from your art workshops. If you don't see the workshop you facilitated listed in the dropdown menu, you can type in a new title in the field below.
 <% end %>
-<%= render layout: "shared/create_page",
+<%= render layout: "shared/form_page",
            locals: { domain: :workshop_logs, icon: "fas fa-clipboard-list",
                      title: "New #{@workshop_log.class.model_name.human.downcase}",
                      intro: intro, notice: notice } do %>

@@ -16,7 +16,7 @@
       will be published to the site, but may still be used in other places.
     </span>
 <% end %>
-<%= render layout: "shared/create_page",
+<%= render layout: "shared/form_page",
            locals: { domain: :story_ideas, icon: "fas fa-book-open",
                      title: "New #{@story_idea.class.model_name.human.downcase}", intro: intro } do %>
   <%= render "form", story_idea: @story_idea %>

@@ -326,6 +326,23 @@ class FormSubmission < ApplicationRecord
     EventRegistration.where(id: linked_registration_ids)
   end
 
+  # --- Provenance: how the submission was collected ---
+  # A callout submission carries the form's own role (so it aggregates with any
+  # other submission of that form), so this metadata flag — not the role — is what
+  # records that the registrant filled it out inline on a ticket callout.
+
+  def collected_via
+    (metadata || {})["collected_via"]
+  end
+
+  def collected_via_callout?
+    collected_via == "callout"
+  end
+
+  def record_callout_collection!(callout)
+    update!(metadata: (metadata || {}).merge("collected_via" => "callout", "collected_via_callout_id" => callout.id))
+  end
+
   # A quotable's display label + link target: the quotes show page renders each
   # source via `quotable.title` and `polymorphic_path(quotable)`.
   def title

@@ -126,6 +126,12 @@ RSpec.describe RegistrationTicketCallout, type: :model do
       expect(persisted.page_content?).to be(true)
     end
 
+    it "is true with an attached form" do
+      callout.description = ""
+      callout.form = create(:form)
+      expect(callout.page_content?).to be(true)
+    end
+
     it "is false with no description and no resources" do
       callout.description = ""
       expect(callout.page_content?).to be(false)
@@ -155,6 +161,16 @@ RSpec.describe RegistrationTicketCallout, type: :model do
 
       expect(callout.reload.resources).to eq([ a, b ])
       expect { callout.destroy }.to change(RegistrationTicketCalloutResource, :count).by(-2)
+    end
+  end
+
+  describe "linked form" do
+    it "optionally delivers a form and defaults to none" do
+      form = create(:form)
+      callout = create(:registration_ticket_callout, form:)
+
+      expect(callout.reload.form).to eq(form)
+      expect(create(:registration_ticket_callout).form).to be_nil
     end
   end
 

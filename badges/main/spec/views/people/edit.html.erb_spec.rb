@@ -14,7 +14,7 @@ RSpec.describe "people/edit", type: :view do
   end
 
   it "displays the edit heading" do
-    expect(rendered).to match(/Edit Person/)
+    expect(rendered).to match(/Edit person/)
   end
 
   it "has a form with the person fields" do

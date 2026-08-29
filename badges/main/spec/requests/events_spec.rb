@@ -1236,6 +1236,15 @@ RSpec.describe "Events", type: :request do
         expect(pacific.strftime("%Y-%m-%d %H:%M")).to eq("2026-08-15 09:00")
       end
 
+      it "links a form to a callout via nested attributes" do
+        callout = create(:registration_ticket_callout, event:)
+        form = create(:form)
+        patch event_path(event), params: { event: {
+          registration_ticket_callouts_attributes: { "0" => { id: callout.id, form_id: form.id } }
+        } }
+        expect(callout.reload.form).to eq(form)
+      end
+
       it "adds event staff via nested attributes" do
         person = create(:person)
         patch event_path(event), params: { event: {
@@ -1381,6 +1390,23 @@ RSpec.describe "Events", type: :request do
         get registrants_event_path(event)
 
         expect(response.body).to include(edit_continuing_education_registration_path(ce, return_to: "registrants"))
+      end
+    end
+
+    context "Ticket forms columns" do
+      it "shows a completion column per form callout and links the submitter to their responses" do
+        form = create(:form, name: "Feedback")
+        field = create(:form_field, form:, name: "How was it?")
+        callout = create(:registration_ticket_callout, event:, form:, title: "Post-event survey")
+        EventRegistrationServices::CalloutFormSubmission.call(
+          registration:, callout:, form_params: { field.id.to_s => "Great" }
+        )
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Post-event survey")
+        expect(response.body).to include("Ticket forms")
+        expect(response.body).to include(registration_callout_form_path(registration.slug, callout))
       end
     end
 
