@@ -99,9 +99,9 @@ build_submission = ->(payer:, method:, attendees:) do
   # event_id (see EventsController#bulk_payments), so an event-less submission
   # would never show up there.
   submission = FormSubmission.create!(person: payer, form: bulk_form, event: event, role: "bulk_payment")
-  set_answer.(submission, "payer_first_name", payer.first_name)
-  set_answer.(submission, "payer_last_name", payer.last_name)
-  set_answer.(submission, "payer_email", payer.email)
+  set_answer.(submission, "first_name", payer.first_name)
+  set_answer.(submission, "last_name", payer.last_name)
+  set_answer.(submission, "primary_email", payer.email)
   set_answer.(submission, "number_of_attendees", attendees.size)
   set_answer.(submission, "payment_method", method)
   attendee_json = attendees.map do |first, last, email|

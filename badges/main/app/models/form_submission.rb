@@ -223,12 +223,20 @@ class FormSubmission < ApplicationRecord
 
   # Answers keyed by their field's identifier. Bulk payment (and similar) forms
   # address fields by identifier rather than position. Reuses an already-loaded
-  # association so per-row calls on a preloaded index don't requery.
+  # association so per-row calls on a preloaded index don't requery. Each answer
+  # is also indexed under its canonical identifier, so a consumer keying on the
+  # canonical name (e.g. "organization_name") finds an answer stored under a
+  # legacy spelling (e.g. "payer_organization") without every call site knowing
+  # both.
   def answers_by_identifier
     answers = form_answers.loaded? ? form_answers : form_answers.includes(:form_field)
     answers.each_with_object({}) do |answer, map|
       identifier = answer.form_field&.field_identifier
-      map[identifier] = answer.submitted_answer if identifier.present?
+      next if identifier.blank?
+
+      map[identifier] = answer.submitted_answer
+      canonical = FormField.canonical_identifier(identifier)
+      map[canonical] = answer.submitted_answer unless canonical == identifier
     end
   end
 

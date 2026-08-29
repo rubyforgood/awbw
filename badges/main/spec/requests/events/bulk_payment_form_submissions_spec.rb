@@ -4,11 +4,11 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:event) { create(:event, cost_cents: 0) }
   let(:form) { create(:form) }
-  # The bulk payment view only renders a known set of "payer" fields, so the
-  # min-word rule is exercised through payer_organization (a free-form text field).
+  # The bulk payment view only renders a known set of payer fields, so the
+  # min-word rule is exercised through the organization field (free-form text).
   let!(:org_field) do
     create(:form_field, form: form, answer_type: :free_form_input_one_line,
-           field_identifier: "payer_organization", name: "Organization",
+           field_identifier: "organization_name", name: "Organization",
            required: true, min_words: 5)
   end
   let!(:payment_method_field) do
@@ -22,17 +22,17 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
   end
   let!(:payer_first_name_field) do
     create(:form_field, form: form, answer_type: :free_form_input_one_line,
-           field_identifier: "payer_first_name", name: "Payer first name",
+           field_identifier: "first_name", name: "Payer first name",
            required: false)
   end
   let!(:payer_last_name_field) do
     create(:form_field, form: form, answer_type: :free_form_input_one_line,
-           field_identifier: "payer_last_name", name: "Payer last name",
+           field_identifier: "last_name", name: "Payer last name",
            required: false)
   end
   let!(:payer_email_field) do
     create(:form_field, form: form, answer_type: :free_form_input_one_line,
-           field_identifier: "payer_email", name: "Payer email",
+           field_identifier: "primary_email", name: "Payer email",
            required: false)
   end
 

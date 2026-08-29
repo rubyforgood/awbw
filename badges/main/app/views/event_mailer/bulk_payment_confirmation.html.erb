@@ -40,10 +40,10 @@
   <% end %>
 
   <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
-    <% if @answers["payer_organization"].present? %>
+    <% if @answers["organization_name"].present? %>
       <tr>
         <td style="padding: 6px 0; color: #6b7280; font-size: 14px;">Organization</td>
-        <td style="padding: 6px 0; text-align: right; font-weight: 600;"><%= @answers["payer_organization"] %></td>
+        <td style="padding: 6px 0; text-align: right; font-weight: 600;"><%= @answers["organization_name"] %></td>
       </tr>
     <% end %>
     <% if @answers["number_of_attendees"].present? %>

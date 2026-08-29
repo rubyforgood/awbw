@@ -71,7 +71,7 @@
 
         <%
           fields_by_identifier = @form_fields.select(&:field_identifier).index_by(&:field_identifier)
-          payer_fields = %w[payer_first_name payer_last_name payer_email payer_phone payer_organization number_of_attendees]
+          payer_fields = %w[first_name last_name primary_email phone organization_name number_of_attendees]
         %>
 
         <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
@@ -84,7 +84,7 @@
                   <span class="<%= form_section_bar_class %>"></span><%= form_label_html(field.name) %>
                 </h3>
               </div>
-            <% elsif payer_fields.include?(field.field_identifier) %>
+            <% elsif payer_fields.include?(field.canonical_identifier) %>
               <%
                 submitted_value = @form_params&.dig(field.id.to_s)
                 error = @field_errors&.dig(field.id)
@@ -103,9 +103,9 @@
                     <p class="rich-label mb-1.5 text-xs text-gray-500"><%= form_label_html(field.subtitle) %></p>
                   <% end %>
                   <%
-                    html_type = case field.field_identifier
-                                when "payer_email" then "email"
-                                when "payer_phone" then "tel"
+                    html_type = case field.canonical_identifier
+                                when "primary_email" then "email"
+                                when "phone" then "tel"
                                 else field.number_integer? ? "number" : "text"
                                 end
                     extra_attrs = []

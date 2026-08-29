@@ -173,8 +173,7 @@ class SmartFormFields
                "drive the invoice, the confirmation email, and the Stripe charge metadata.",
       fields: [
         [ "bulk_payment_attendees", "Attendees", "The list of attendees being paid for. Read by the invoice, the confirmation email, and the payment record." ],
-        [ "number_of_attendees", "Number of attendees", "The attendee count charged for. Falls back to the length of the attendee list when unanswered." ],
-        [ "payer_email", "Payer email", "The payer's email, validated as an email address." ]
+        [ "number_of_attendees", "Number of attendees", "The attendee count charged for. Falls back to the length of the attendee list when unanswered." ]
       ]
     }
   ].freeze
@@ -188,7 +187,6 @@ class SmartFormFields
     scholarship_eligibility scholarship_contribution impact_description
     implementation_plan additional_comments
     event_rating most_valuable improvement_suggestions
-    payer_first_name payer_last_name payer_phone payer_organization
   ].freeze
 
   def self.groups
