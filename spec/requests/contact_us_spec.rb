@@ -138,8 +138,8 @@ RSpec.describe "ContactUs", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("info@awbw.org")
       expect(response.body).to include("1029 1/2 W 24th Street")
-      # Rendered inside the story_shares layout
-      expect(response.body).to include("Get involved!")
+      # Rendered inside the story_shares layout (the get-involved band)
+      expect(response.body).to include("There's a place for you at AWBW")
       # Subject preset picker posts straight through as contact_us[subject]
       expect(response.body).to include('<select name="contact_us[subject]"')
       expect(response.body).to include("Interest in Windows Facilitator trainings")
