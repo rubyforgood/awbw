@@ -27,7 +27,7 @@ class SectorableItem < ApplicationRecord
   end
 
   def timeline_label
-    "sector'#{sector.name}'"
+    "sector '#{sector.name}'"
   end
 
   def timeline_changes

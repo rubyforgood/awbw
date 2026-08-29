@@ -45,7 +45,7 @@ class Address < ApplicationRecord
   end
 
   def timeline_label
-    "address"
+    "Address"
   end
 
   def timeline_changes
