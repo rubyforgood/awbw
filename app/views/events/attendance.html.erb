@@ -14,7 +14,7 @@
       <% when "registrants" %>
         <%= link_to "← Registrants", registrants_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% when "signins" %>
-        <%= link_to "← All sign-ins", signins_events_path(report_to_hub_params.except(:period)), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <%= link_to "← All timesheets", signins_events_path(report_to_hub_params.except(:period)), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% else %>
         <%= link_to "← Events participation", participation_events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% end %>

@@ -370,7 +370,7 @@ RSpec.describe "Events", type: :request do
 
       # The four angles on this population sit on the eyebrow's row, each carrying the
       # report's own filters so switching angle keeps the same events in scope.
-      it "offers Details / Attendees / Scholarships / Sign-ins carrying the filters" do
+      it "offers Details / Attendees / Scholarships / Timesheets carrying the filters" do
         sign_in admin
         get participation_events_path(event_id: training_2026.id, event_type: "trainings")
 
@@ -378,7 +378,7 @@ RSpec.describe "Events", type: :request do
         expect(nav).to have_text("Details")
         expect(nav).to have_link("Attendees")
         expect(nav).to have_link("Scholarships")
-        expect(nav).to have_link("Sign-ins", href: signins_events_path(event_id: training_2026.id, event_type: "trainings"))
+        expect(nav).to have_link("Timesheets", href: signins_events_path(event_id: training_2026.id, event_type: "trainings"))
         # Details is the current page, so it isn't a link.
         expect(nav).to have_no_link("Details")
       end
@@ -390,7 +390,7 @@ RSpec.describe "Events", type: :request do
 
           nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
           expect(nav).to have_link("Details")
-          expect(nav).to have_link("Sign-ins")
+          expect(nav).to have_link("Timesheets")
           expect(nav).to have_link("Scholarships")
           expect(nav).to have_no_link("Attendees")
         end
@@ -450,7 +450,7 @@ RSpec.describe "Events", type: :request do
           payment_status: "unpaid", funder: "external", search: "TAC")
 
         nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
-        %w[ Attendees Scholarships Sign-ins ].each do |label|
+        %w[ Attendees Scholarships Timesheets ].each do |label|
           href = nav.find_link(label)[:href]
           expect(href).to include("scholarship=agreed", "payment_status=unpaid", "funder=external", "search=TAC")
         end

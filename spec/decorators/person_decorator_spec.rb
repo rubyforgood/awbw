@@ -145,4 +145,19 @@ RSpec.describe PersonDecorator do
       expect(person.decorate.affiliated_since_note).to be_nil
     end
   end
+
+  describe "#full_name_with_display_name" do
+    it "shows just the full name when that is how the person is displayed" do
+      person = build(:person, first_name: "Mariana", last_name: "Lopez", display_name_preference: "full_name")
+
+      expect(person.decorate.full_name_with_display_name).to eq("Mariana Lopez")
+    end
+
+    it "adds the display name in parens when it differs" do
+      person = build(:person, first_name: "Mariana", last_name: "Lopez",
+                              display_name_preference: "first_name_last_initial")
+
+      expect(person.decorate.full_name_with_display_name).to eq("Mariana Lopez (Mariana L.)")
+    end
+  end
 end

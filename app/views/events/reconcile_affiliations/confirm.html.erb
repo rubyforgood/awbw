@@ -30,7 +30,7 @@
         <ul class="divide-y divide-gray-100 bg-white">
           <% action_changes.each do |change| %>
             <li class="px-4 py-2 text-sm">
-              <span class="font-medium text-gray-900"><%= change.person.name %></span>
+              <span class="font-medium text-gray-900"><%= change.person.decorate.full_name_with_display_name %></span>
               <span class="text-gray-500">— <%= change.organization.name %></span>
               <% if change.affiliation %>
                 <span class="text-gray-400">· <%= change.affiliation.decorate.period_label %></span>

@@ -119,7 +119,7 @@ class EventsController < ApplicationController
     @report = EventAttendanceReport.new(@event, ce_only: params[:ce] == "true")
   end
 
-  # Cross-event sign-ins: the totals table for each event the report filters reach,
+  # Cross-event timesheets: the totals table for each event the report filters reach,
   # so staff can read a training's logged hours without opening it, and compare
   # across a year. Sibling of the revenue/participation/scholarship reports, sharing
   # their filter bar. CE columns switch on when any event in scope grants CE —

@@ -121,9 +121,11 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       page = Nokogiri::HTML(response.body)
 
       expect(response.body).to include("completed_day_1_event_registration_#{reg.id}")
-      # Ended by default, not deleted — Delete is still offered as an override.
-      expect(page.at_css("#outcome_aff\\:#{affiliation_id}_deactivate")["checked"]).to be_present
-      expect(page.at_css("#outcome_aff\\:#{affiliation_id}_delete")["checked"]).to be_nil
+      # This training created the row, so Delete leads and Deactivate is shown but
+      # can't be picked — it only means something for an affiliation with history.
+      expect(page.at_css("#outcome_aff\\:#{affiliation_id}_delete")["checked"]).to be_present
+      expect(page.at_css("#outcome_aff\\:#{affiliation_id}_deactivate")["disabled"]).to be_present
+      expect(page.at_css("#outcome_aff\\:#{affiliation_id}_deactivate")["checked"]).to be_nil
     end
 
     it "asks for an outcome instead of acting when attendance was never recorded" do

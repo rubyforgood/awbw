@@ -11,7 +11,7 @@ module AffiliationServices
   # `include_unowned: false` (the default) touches only rows the registration flow
   # minted, leaving hand-created ones alone; the bulk page passes true.
   class ReconcilePerson
-    Decision = Struct.new(:affiliation, :action, :reason, keyword_init: true) do
+    Decision = Struct.new(:affiliation, :action, :reason, :minted_here, keyword_init: true) do
       def actionable?
         action != :noop
       end
@@ -264,7 +264,8 @@ module AffiliationServices
         # Deletion is only for a row whose training never happened for this person.
         # Anything that did happen — an older row, or a partial attendance here —
         # is ended instead, so the record keeps it (ADR-0003 D6).
-        Decision.new(affiliation:, action: discardable?(affiliation) ? :delete : :deactivate)
+        Decision.new(affiliation:, action: discardable?(affiliation) ? :delete : :deactivate,
+                     minted_here: minted_here?(affiliation))
       else
         Decision.new(affiliation:, action: :noop, reason: TRAINING_PENDING)
       end

@@ -77,11 +77,11 @@ RSpec.describe "Events sign-ins report", type: :request do
     log_time!(ce_event, name: "Carol", ce: true)
 
     get signins_events_path
-    expect(response.body).to include("CE sign-ins")
+    expect(response.body).to include("CE timesheets")
     expect(response.body).to include("LIC-Carol")
 
     get signins_events_path(event_id: plain.id)
-    expect(response.body).not_to include("CE sign-ins")
+    expect(response.body).not_to include("CE timesheets")
   end
 
   it "says so when nothing in scope has logged time" do
@@ -100,7 +100,7 @@ RSpec.describe "Events sign-ins report", type: :request do
     expect(nav).to have_link("Details")
     expect(nav).to have_link("Attendees")
     expect(nav).to have_link("Scholarships")
-    expect(nav).to have_no_link("Sign-ins")
+    expect(nav).to have_no_link("Timesheets")
   end
 
   it "forbids a non-admin with no events of their own" do

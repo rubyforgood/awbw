@@ -4,7 +4,8 @@ module AffiliationServices
   # into individually-selectable rows. Every rule lives there; keys, grouping and
   # the timestamp live here. Job affiliations are never touched.
   class ReconcileEvent
-    Row = Struct.new(:person, :registration, :organization, :affiliation, :action, :reason, :key, keyword_init: true) do
+    Row = Struct.new(:person, :registration, :organization, :affiliation, :action, :reason, :key,
+                     :minted_here, keyword_init: true) do
       def actionable?
         action != :noop
       end
@@ -87,7 +88,7 @@ module AffiliationServices
 
     def row_for(person, registration, organization, decision)
       Row.new(person:, registration:, organization:, affiliation: decision.affiliation,
-              action: decision.action, reason: decision.reason,
+              action: decision.action, reason: decision.reason, minted_here: decision.minted_here,
               key: row_key(person, organization, decision))
     end
 
