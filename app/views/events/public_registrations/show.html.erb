@@ -53,19 +53,8 @@
 
     <%# Card Body %>
     <div class="px-6 sm:px-8 py-7">
-      <%# Admin-only jump to the audit of the values this submission overwrote —
-          shown only to admins, and only when it actually overwrote something. %>
-      <% submission_changes = FormSubmissionChanges.new(@form_submission) %>
-      <% if allowed_to?(:changes?, @form_submission) && submission_changes.edited? %>
-        <%= link_to changes_form_submission_path(@form_submission, return_to: "public_registration"),
-                    class: "group mb-5 flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-blue-100" do %>
-          <i class="fa-solid fa-circle-info text-blue-500"></i>
-          What this submission changed
-          <span class="rounded-full bg-blue-200 px-1.5 text-2xs"><%= submission_changes.edited_count %></span>
-          <span class="ml-1 rounded-full bg-white/70 text-blue-700 px-1.5 py-0.5 text-2xs font-normal border border-blue-200"><i class="fa-solid fa-lock text-2xs mr-0.5"></i>admin</span>
-          <i class="fa-solid fa-arrow-right text-xs ml-auto text-blue-400 transition-transform group-hover:translate-x-0.5"></i>
-        <% end %>
-      <% end %>
+      <%# Admin-only jump to the audit of the values this submission overwrote. %>
+      <%= render "form_submissions/changes_link", submission: @form_submission, return_to: "public_registration", badge: true %>
       <%= render "forms/header", form: @registration_form, event: @event %>
 
       <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
