@@ -2669,6 +2669,7 @@
   area: registration
   display_status: user_facing
   released_on: 2026-08-29
+  pr_number: 2413
   summary: >-
     The form builder pages lose the heavy purple banner for the same light
     identity band the rest of the portal uses, and the public form and its
