@@ -99,7 +99,7 @@ class FormsController < ApplicationController
     authorize! @form
 
     copy = FormCopyService.new(@form).call
-    redirect_to edit_form_path(copy), notice: "Form copied. Now editing \"#{copy.display_name}\"."
+    redirect_to edit_form_path(copy), notice: "Form duplicated. Now editing \"#{copy.display_name}\"."
   end
 
   def edit_sections

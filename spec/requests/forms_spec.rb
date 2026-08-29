@@ -76,6 +76,24 @@ RSpec.describe "Forms", type: :request do
         get forms_path, headers: frame_headers
         expect(response.body).not_to include(">Delete<")
       end
+
+      it "links the form name to its editor, breaking out of the lazy frame" do
+        form = create(:form, :standalone, name: "My Form")
+        get forms_path, headers: frame_headers
+        link = Nokogiri::HTML(response.body).css("a").find { |a| a.text.strip == "My Form" }
+        expect(link&.[]("href")).to eq(edit_form_path(form))
+        expect(link["data-turbo-frame"]).to eq("_top")
+      end
+
+      it "targets the top frame from the row action links so they navigate the whole page" do
+        create(:form, :standalone, name: "My Form")
+        get forms_path, headers: frame_headers
+        doc = Nokogiri::HTML(response.body)
+        %w[Results View Edit].each do |label|
+          link = doc.css("a").find { |a| a.text.strip == label }
+          expect(link&.[]("data-turbo-frame")).to eq("_top"), "expected #{label} link to target _top"
+        end
+      end
     end
 
     context "as regular user" do
@@ -232,18 +250,17 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).not_to include("Dashboard")
     end
 
-    it "offers only the standalone Preview link when no event is known" do
+    it "offers the preview (View) subnav tab but no live-form link when no event is known" do
       get edit_form_path(form)
-      expect(response.body).to include(">Preview<")
-      expect(response.body).not_to include(">View<")
+      expect(response.body).to include(">View<")
+      expect(response.body).not_to include(">Live form<")
     end
 
-    it "adds a View link to the live registration form when the event is known" do
+    it "adds a Live form link to the registration page when the event is known" do
       create(:event_form, form: form, event: event)
       get edit_form_path(form, event_id: event.id)
-      expect(response.body).to include(">View<")
+      expect(response.body).to include(">Live form<")
       expect(response.body).to include(new_event_public_registration_path(event))
-      expect(response.body).to include(">Preview<")
     end
   end
 
@@ -255,6 +272,15 @@ RSpec.describe "Forms", type: :request do
       get edit_form_path(form)
       expect(response).to have_http_status(:success)
       expect(response.body).to include("First Name")
+    end
+
+    it "shows the Duplicate form button posting to the copy action" do
+      form = create(:form, :standalone, name: "Test")
+      get edit_form_path(form)
+      doc = Nokogiri::HTML(response.body)
+      button = doc.css("a").find { |a| a.text.strip == "Duplicate form" }
+      expect(button&.[]("href")).to eq(copy_form_path(form))
+      expect(button["data-turbo-method"]).to eq("post")
     end
 
     it "renders the collapsible per-field options controls" do
@@ -744,14 +770,14 @@ RSpec.describe "Forms", type: :request do
     context "as admin" do
       before { sign_in admin }
 
-      it "creates a full copy named \"COPY of [name]\" and redirects to its editor" do
+      it "creates a full copy named \"DUPLICATE of [name]\" and redirects to its editor" do
         form = create(:form, :standalone, name: "Volunteer")
         create(:form_field, form: form, name: "First name")
 
         expect { post copy_form_path(form) }.to change(Form, :count).by(1)
 
-        copy = Form.find_by(name: "COPY of Volunteer")
-        expect(copy.name).to eq("COPY of Volunteer")
+        copy = Form.find_by(name: "DUPLICATE of Volunteer")
+        expect(copy.name).to eq("DUPLICATE of Volunteer")
         expect(copy.form_fields.map(&:name)).to eq([ "First name" ])
         expect(response).to redirect_to(edit_form_path(copy))
       end
@@ -828,6 +854,28 @@ RSpec.describe "Forms", type: :request do
         form = create(:form, :standalone, name: "Untouched")
         get results_form_path(form)
         expect(response.body).to include("No submissions to this form yet")
+      end
+
+      it "shows the shared page subnav linking to the form's sibling pages" do
+        form = create(:form, :standalone, name: "Survey")
+        get results_form_path(form)
+        doc = Nokogiri::HTML(response.body)
+        nav = doc.at_css("nav[aria-label='Form pages']")
+        expect(nav).to be_present
+        hrefs = nav.css("a").map { |a| a["href"] }
+        expect(hrefs).to include(
+          form_path(form), edit_form_path(form), edit_sections_form_path(form)
+        )
+        expect(hrefs.any? { |h| h.start_with?(form_submissions_path) }).to be(true)
+        expect(hrefs).not_to include(copy_form_path(form))
+        active = nav.at_css("[aria-current='page']")
+        expect(active&.text&.strip).to eq("Results")
+      end
+
+      it "does not show the Duplicate form button on the results page" do
+        form = create(:form, :standalone, name: "Survey")
+        get results_form_path(form)
+        expect(response.body).not_to include("Duplicate form")
       end
     end
 

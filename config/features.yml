@@ -27,6 +27,19 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Navigate a form's pages, and fix the forms list actions"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-08-29
+  action_path: /forms
+  pr_number: 2410
+  summary: >-
+    On the forms list, a form's name now opens its editor and the "⋮" menu actions work again
+    (they were breaking the page). A form's Results, Submissions, View, Edit, and Edit sections
+    pages now share a subnav, so you can move between them like tabs.
+  pro_tips:
+    - "Duplicate form makes a full copy of the form and drops you into editing the duplicate."
+
 - name: "Person profile in the new AWBW brand"
   area: people
   display_status: user_facing
@@ -2170,9 +2183,9 @@
   action_path: "/forms"
   pr_number: 2258
   summary: >-
-    Duplicate any form with one click. The copy ("COPY of ...") carries over
-    every field and answer option so you can tweak a near-identical form instead
-    of rebuilding it from scratch.
+    Duplicate any form with one click (the "Duplicate form" action). The copy
+    ("DUPLICATE of ...") carries over every field and answer option so you can
+    tweak a near-identical form instead of rebuilding it from scratch.
   pro_tips:
     - The copy starts unpublished with no public link — set those on the new form
       when you're ready.
