@@ -1,6 +1,14 @@
 require "rails_helper"
 
 RSpec.describe Analytics::LifecycleBuffer do
+  # The buffer is a thread-local shared across the worker, so an event another
+  # test left unflushed would otherwise bleed into these assertions. Start and
+  # end each example from a clean buffer.
+  before do
+    described_class.store.clear
+    Current.form_submission_id = nil
+  end
+
   after do
     described_class.store.clear
     Current.form_submission_id = nil
