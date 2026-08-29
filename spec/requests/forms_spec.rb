@@ -76,6 +76,24 @@ RSpec.describe "Forms", type: :request do
         get forms_path, headers: frame_headers
         expect(response.body).not_to include(">Delete<")
       end
+
+      it "links the form name to its editor, breaking out of the lazy frame" do
+        form = create(:form, :standalone, name: "My Form")
+        get forms_path, headers: frame_headers
+        link = Nokogiri::HTML(response.body).css("a").find { |a| a.text.strip == "My Form" }
+        expect(link&.[]("href")).to eq(edit_form_path(form))
+        expect(link["data-turbo-frame"]).to eq("_top")
+      end
+
+      it "targets the top frame from the row action links so they navigate the whole page" do
+        create(:form, :standalone, name: "My Form")
+        get forms_path, headers: frame_headers
+        doc = Nokogiri::HTML(response.body)
+        %w[Results View Edit].each do |label|
+          link = doc.css("a").find { |a| a.text.strip == label }
+          expect(link&.[]("data-turbo-frame")).to eq("_top"), "expected #{label} link to target _top"
+        end
+      end
     end
 
     context "as regular user" do
