@@ -25,15 +25,6 @@ class ContactMethod < ApplicationRecord
     kind.humanize
   end
 
-  def record_timeline_event(action)
-    TimelineServices::RecordEvent.call(
-      subject: self,
-      action: action,
-      snapshot: { "changes" => {} },
-      also_log: timeline_also_log
-    )
-  end
-
   def timeline_changes
     saved_changes
       .slice(*CONTACT_METHOD_TIMELINE_ATTRIBUTES)

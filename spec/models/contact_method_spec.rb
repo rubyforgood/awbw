@@ -29,17 +29,17 @@ RSpec.describe ContactMethod do
 
       event = person.timeline_events.where(subject_type: "ContactMethod", action: "created").sole
       expect(event.snapshot["label"]).to eq("Phone")
-      expect(event.snapshot["changes"]).to eq({})
     end
 
-    it "records an updated event without the change details" do
+    it "keeps per-field change details while the label stays generic" do
       contact_method
 
-      contact_method.update!(value: "555-020-2020")
+      expect { contact_method.update!(value: "555-020-2020") }
+        .to change { person.timeline_events.where(subject_type: "ContactMethod", action: "updated").count }.by(1)
 
       event = person.timeline_events.where(subject_type: "ContactMethod", action: "updated").sole
-      expect(event.subject&.timeline_label).to eq("Phone")
-      expect(event.snapshot["changes"]).to eq({})
+      expect(event.snapshot["label"]).to eq("Phone")
+      expect(event.snapshot["changes"]["value"]).to eq([ "555-010-1010", "555-020-2020" ])
     end
   end
 end
