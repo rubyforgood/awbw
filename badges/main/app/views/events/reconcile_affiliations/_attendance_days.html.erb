@@ -1,0 +1,42 @@
+<%# Locals: registration, event.
+
+    Shown for a partial attendance: "incomplete" is a judgement someone made, so
+    this shows what it rests on — which days are ticked as attended, and the
+    sign-in times behind them. The ticks are editable (shared onboarding cell), so
+    correcting the record here rolls the status forward without leaving the page. %>
+<% dates = event.event_dates %>
+<% if dates.any? %>
+  <div class="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+    <p class="mb-1 text-xs font-medium text-amber-900">
+      Partial attendance — days attended and logged time
+    </p>
+    <ul class="space-y-0.5 text-xs text-amber-900">
+      <% dates.each_with_index do |date, index| %>
+        <% entries = registration.attendance_entries_on(date) %>
+        <li class="flex flex-wrap items-center gap-x-2">
+          <%= render "events/onboarding/cell", registration: registration,
+                     field: EventRegistration::DAY_FIELDS[index] %>
+          <span class="font-medium whitespace-nowrap">Day <%= index + 1 %></span>
+          <span class="text-amber-700"><%= date.strftime("%b %-d") %></span>
+          <% if entries.any? %>
+            <% minutes = entries.sum { |entry| entry.duration_minutes.to_i } %>
+            <span class="font-medium"><%= minutes.positive? ? distance_of_time_in_words(minutes.minutes) : "—" %></span>
+            <span class="text-amber-700">
+              <%= entries.map { |entry|
+                    finish = entry.open? ? "still signed in" : entry.signed_out_at.in_time_zone.strftime("%-l:%M %p")
+                    "#{entry.signed_in_at.in_time_zone.strftime('%-l:%M %p')}–#{finish}"
+                  }.join(", ") %>
+            </span>
+          <% else %>
+            <span class="text-amber-600 italic">no sign-in recorded</span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+    <% if event.event_dates_truncated? %>
+      <p class="mt-1 text-xs text-amber-700">
+        This event runs past the days shown — only the first <%= dates.size %> have a sign-in window.
+      </p>
+    <% end %>
+  </div>
+<% end %>

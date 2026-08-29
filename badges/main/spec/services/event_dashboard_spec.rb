@@ -991,7 +991,7 @@ RSpec.describe EventDashboard do
     it "anchors every verdict on the event's start date, for the hover to explain" do
       status = dashboard.program_statuses_by_registrant[ongoing_facilitator.id].first
 
-      expect(status.as_of).to eq(event.start_date.to_date)
+      expect(status.as_of).to eq(event.starts_on)
       expect(status).not_to be_year_anchored
       expect(status.explanation).to include("Ongoing as of", "event start date", "Jan 2023")
     end

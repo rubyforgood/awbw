@@ -1,7 +1,7 @@
 <%# Sub-navigation across the participation report and the pages that read the same
     population from a different angle: the year-by-year Details, the people behind
     them (Attendees), the awards they received (Scholarships), and their logged time
-    (Sign-ins). Sits on the eyebrow's row, so the tabs read as siblings of the back
+    (Timesheets). Sits on the eyebrow's row, so the tabs read as siblings of the back
     link rather than of the page title. Breakdowns isn't here — it's a panel on the
     attendees index, not a page of its own.
 
@@ -31,7 +31,7 @@
        { key: :attendees, label: "Attendees", path: attendees_events_path(attendee_filters) },
        { key: :scholarships, label: "Scholarships", path: scholarships_events_path(carried) },
        { key: :program_statuses, label: "Program status", path: program_statuses_events_path(carried) },
-       { key: :signins, label: "Sign-ins", path: signins_events_path(carried) }
+       { key: :signins, label: "Timesheets", path: signins_events_path(carried) }
      ] %>
   <% tabs.each do |tab| %>
     <% if tab[:key] == current %>

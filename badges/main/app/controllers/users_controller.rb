@@ -443,7 +443,7 @@ class UsersController < ApplicationController
 
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ],
-      affiliations_attributes: [ :id, :organization_id, :title, :inactive, :primary_contact, :start_date, :end_date, :_destroy ],
+      affiliations_attributes: [ :id, :organization_id, :title, :inactive, :inactive_supplied, :primary_contact, :start_date, :end_date, :_destroy ],
     )
   end
 end

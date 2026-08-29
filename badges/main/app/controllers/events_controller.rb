@@ -119,7 +119,7 @@ class EventsController < ApplicationController
     @report = EventAttendanceReport.new(@event, ce_only: params[:ce] == "true")
   end
 
-  # Cross-event sign-ins: the totals table for each event the report filters reach,
+  # Cross-event timesheets: the totals table for each event the report filters reach,
   # so staff can read a training's logged hours without opening it, and compare
   # across a year. Sibling of the revenue/participation/scholarship reports, sharing
   # their filter bar. CE columns switch on when any event in scope grants CE —
@@ -1109,7 +1109,7 @@ class EventsController < ApplicationController
   def event_registration_csv_row(registration, cost_required, include_ce = false)
     person = registration.registrant
     orgs = person.affiliations
-      .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }
+      .select(&:active?)
       .map(&:organization).compact.uniq
     org_names = orgs.map(&:name).join("; ")
     total_cents = registration.allocations_sum

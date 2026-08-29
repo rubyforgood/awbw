@@ -57,6 +57,10 @@
     <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-start xl:grid xl:grid-cols-[280px_150px_150px_150px_120px_auto] rounded-lg border px-3 py-2 scroll-mt-24 <%= row_bg %> <%= 'aff-ended' if expired %>"
          <% if f.object.persisted? %>id="<%= dom_id(f.object) %>"<% end %>
          data-inactive-toggle-target="row">
+      <%# Carries the inactive flag the row's end date implies. `inactive_supplied`
+          tells the model this value is deliberate, so it isn't re-derived away. %>
+      <%= f.hidden_field :inactive, data: { inactive_toggle_target: "inactiveField" } %>
+      <%= f.hidden_field :inactive_supplied, value: "0", data: { inactive_toggle_target: "suppliedField" } %>
       <div class="w-full sm:w-[280px] xl:w-auto min-w-0">
         <% if f.object.persisted? && record.present? %>
           <label class="block text-sm font-medium text-gray-700 mb-1 xl:hidden"><%= label %></label>
@@ -140,7 +144,7 @@
                       style: "height: 42px;",
                       data: {
                         inactive_toggle_target: "endDate valueField",
-                        action: "change->inactive-toggle#toggle change->affiliation-dates#recalculate"
+                        action: "change->inactive-toggle#endDateChanged change->affiliation-dates#recalculate"
                       }
                     } %>
       </div>
@@ -157,13 +161,22 @@
           <%= render "affiliations/primary_contact_toggle", f: f %>
           <% affiliation_comments = f.object.comments.to_a %>
           <% if affiliation_comments.any? %>
-            <span class="group relative inline-flex items-center">
-              <i class="fa-solid fa-comment text-sm cursor-help <%= facilitator ? 'text-purple-500' : 'text-blue-500' %>"></i>
+            <%# Opens in a new tab like the gear above it — this row sits in an
+                unsaved form, so navigating away in place would drop the edits. %>
+            <%= link_to edit_affiliation_path(f.object,
+                          return_to: person_side ? "organization" : "person",
+                          origin_id: person_side ? f.object.organization_id : f.object.person_id,
+                          anchor: "comments-section"),
+                        target: "_blank", rel: "noopener",
+                        title: "Read and edit these comments (opens in a new tab)",
+                        class: "group relative inline-flex items-center" do %>
+              <i class="fa-solid fa-comment cursor-pointer text-sm <%= facilitator ? 'text-purple-500' : 'text-blue-500' %>"></i>
               <span class="hidden group-hover:block absolute right-0 top-full z-50 mt-1 w-64 whitespace-normal rounded-lg bg-white p-3 text-left text-xs text-gray-700 shadow-lg ring-1 ring-gray-200">
                 <span class="block font-semibold text-gray-900"><%= pluralize(affiliation_comments.size, "comment") %></span>
                 <span class="mt-1 block text-gray-600"><%= truncate(affiliation_comments.first.body.to_s, length: 140) %></span>
+                <span class="mt-1.5 block font-medium text-indigo-600">Open to read them all →</span>
               </span>
-            </span>
+            <% end %>
           <% end %>
         </div>
       </div>

@@ -18,7 +18,7 @@ class EventProgramStatusReport
     def label = event.compact_label
     def date_label = event.start_date? ? event.short_date_range : nil
     def year = event.start_date&.year
-    def anchor_date = event.start_date&.to_date
+    def anchor_date = event.starts_on
 
     def count_of(status) = statuses.count { |_id, program_status| program_status.status == status }
   end
@@ -83,7 +83,7 @@ class EventProgramStatusReport
       organizations = Organization.where(id: links.values.flatten.uniq).includes(:affiliations).index_by(&:id)
       @events.map do |event|
         statuses = (links[event.id] || []).to_h do |organization_id|
-          [ organization_id, organizations.fetch(organization_id).facilitator_program_status(as_of: event.start_date&.to_date) ]
+          [ organization_id, organizations.fetch(organization_id).facilitator_program_status(as_of: event.starts_on) ]
         end
         Column.new(event: event, statuses: statuses)
       end

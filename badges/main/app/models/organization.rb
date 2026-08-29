@@ -85,11 +85,9 @@ class Organization < ApplicationRecord
 
   # Scopes
   # See TagFilterable, Trendable, WindowsTypeFilterable
-  scope :active, -> {
-    status_active = joins(:organization_status).where(organization_statuses: { name: "Active" })
-    affiliation_active = where(id: Affiliation.active.select(:organization_id))
-    status_active.or(affiliation_active)
-  }
+  # An org is active because someone is affiliated there, not because the legacy
+  # status column says so (ADR-0001 D3, ADR-0003 D4).
+  scope :active, -> { where(id: Affiliation.active.select(:organization_id)) }
   scope :address, ->(address) do
     return all if address.blank?
     terms = address.to_s.strip.split(/[\s,]+/).reject(&:blank?)
@@ -250,10 +248,11 @@ class Organization < ApplicationRecord
     end
   end
 
-  def published? # needed for my_bookmarks
-    return true if organization_status&.name == "Active"
-    # #active? is the in-memory twin of the `active` scope, so a list page that
-    # preloaded affiliations doesn't query once per row.
+  # Needed for my_bookmarks. Keys off affiliations only — the stored
+  # organization_status has drifted and is never consulted (ADR-0003 D4).
+  # The loaded branch is the in-memory twin of the `active` scope, so a list page
+  # that preloaded affiliations doesn't query once per row.
+  def published?
     return affiliations.any?(&:active?) if affiliations.loaded?
 
     affiliations.active.exists?

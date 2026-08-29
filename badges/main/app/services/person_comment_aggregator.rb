@@ -1,13 +1,13 @@
 # Gathers every comment connected to a person into a single newest-first feed —
 # their own profile comments plus the comments left on the records that hang off
-# them: event registrations, scholarships, CE registrations, the stories and
-# story ideas they're credited on, and their login account. Returns one
+# them: affiliations, event registrations, scholarships, CE registrations, the
+# stories and story ideas they're credited on, and their login account. Returns one
 # ActiveRecord::Relation of Comment so callers can filter, paginate, and preload
 # uniformly. Payments carry no comments, so they never appear here.
 class PersonCommentAggregator
   # commentable_type => class, in the order sources are surfaced. Kept as strings
   # so the query never has to instantiate the classes.
-  SOURCE_TYPES = %w[ Person EventRegistration Scholarship ContinuingEducationRegistration TopicSubscription Story StoryIdea User ].freeze
+  SOURCE_TYPES = %w[ Person Affiliation EventRegistration Scholarship ContinuingEducationRegistration TopicSubscription Story StoryIdea User ].freeze
 
   def initialize(person)
     @person = person
@@ -16,6 +16,7 @@ class PersonCommentAggregator
   def comments
     scopes = [
       scope_for("Person", [ @person.id ]),
+      scope_for("Affiliation", affiliation_ids),
       scope_for("EventRegistration", registration_ids),
       scope_for("Scholarship", scholarship_ids),
       scope_for("ContinuingEducationRegistration", ce_registration_ids),
@@ -35,6 +36,10 @@ class PersonCommentAggregator
 
   def scope_for(type, ids)
     Comment.where(commentable_type: type, commentable_id: ids)
+  end
+
+  def affiliation_ids
+    person.affiliations.ids
   end
 
   def registration_ids

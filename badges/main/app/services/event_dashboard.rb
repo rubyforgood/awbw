@@ -580,7 +580,7 @@ class EventDashboard
         .joins(:event_registration)
         .where(event_registration_id: active_registration_ids)
         .pluck(:organization_id, "event_registrations.registrant_id")
-      affiliated = Affiliation.active_on(reference_date)
+      affiliated = Affiliation.active_by_date_on(reference_date)
         .where(person_id: registrant_ids)
         .pluck(:organization_id, :person_id)
       (snapshot + affiliated).each_with_object(Hash.new { |hash, key| hash[key] = Set.new }) do |(organization_id, person_id), map|
@@ -1060,7 +1060,7 @@ class EventDashboard
   # event has no anchor, and the annual report reads it year-anchored too — the
   # two must not diverge.
   def program_status_for(organization)
-    organization.facilitator_program_status(as_of: event.start_date&.to_date)
+    organization.facilitator_program_status(as_of: event.starts_on)
   end
 
   # The fixed point in time the organization breakdown is reported as of: the
@@ -1392,7 +1392,7 @@ class EventDashboard
       snapshot_ids = EventRegistrationOrganization
         .where(event_registration_id: active_registration_ids)
         .pluck(:organization_id)
-      affiliated_ids = Affiliation.active_on(reference_date)
+      affiliated_ids = Affiliation.active_by_date_on(reference_date)
         .where(person_id: registrant_ids)
         .pluck(:organization_id)
       (snapshot_ids + affiliated_ids).compact.uniq

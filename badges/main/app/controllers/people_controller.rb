@@ -407,8 +407,7 @@ class PeopleController < ApplicationController
       affiliations = affiliations.includes(:organization) unless affiliations.loaded?
       sorted = affiliations.to_a
                       .sort_by { |affiliation|
-                        expired = affiliation.inactive? || (affiliation.end_date.present? && affiliation.end_date < Date.current)
-                        [ expired ? 1 : 0,
+                        [ affiliation.active? ? 0 : 1,
                           affiliation.organization&.name.to_s.downcase ]
                       }
       @person.affiliations.proxy_association.target.replace(sorted)
@@ -705,6 +704,7 @@ class PeopleController < ApplicationController
         :organization_id,
         :title,
         :inactive,
+        :inactive_supplied,
         :primary_contact,
         :start_date,
         :end_date,

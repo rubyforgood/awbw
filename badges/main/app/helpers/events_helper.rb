@@ -245,11 +245,11 @@ module EventsHelper
     params.permit(*REPORT_SUBNAV_PARAMS).to_h.symbolize_keys.compact_blank
   end
 
-  # How many events the sign-ins header names before trailing off — enough to read
+  # How many events the timesheets header names before trailing off — enough to read
   # the scope at a glance without running the header onto three lines.
   SIGNINS_LABEL_LIMIT = 6
 
-  # What the cross-event sign-ins page is scoped to, for the header's event slot.
+  # What the cross-event timesheets page is scoped to, for the header's event slot.
   # With no filter applied it reads "All events"; a narrowed set names its events by
   # abbreviation (falling back to the title), so the scope is legible without counting
   # the sections below. The single-event case never reaches here — the header's own

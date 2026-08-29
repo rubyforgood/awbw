@@ -18,6 +18,14 @@ class PersonDecorator < ApplicationDecorator
     h.topic_subscriptions_path(person_id: id, topic_subscription_type_id: TopicSubscriptionType.news&.id)
   end
 
+  # Their name on the record, plus what the app calls them elsewhere when the two
+  # differ — an admin reconciling a roster needs to recognise both.
+  def full_name_with_display_name
+    return full_name.to_s.strip if name.to_s.strip == full_name.to_s.strip
+
+    "#{full_name.to_s.strip} (#{name})"
+  end
+
   def pronouns_display
     profile_show_pronouns ? pronouns : nil
   end

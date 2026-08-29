@@ -1,7 +1,10 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<%# An ended row sits on the Inactive tab, so a back link lands on the section
+    rather than a row the destination isn't showing. %>
+<% anchor = @affiliation.decorate.return_anchor %>
 <% back_path = case params[:return_to]
-   when "person" then edit_person_path(params[:origin_id], anchor: dom_id(@affiliation), admin: params[:admin].presence)
-   when "organization" then edit_organization_path(params[:origin_id], anchor: dom_id(@affiliation), admin: params[:admin].presence)
+   when "person" then edit_person_path(params[:origin_id], anchor: anchor, admin: params[:admin].presence)
+   when "organization" then edit_organization_path(params[:origin_id], anchor: anchor, admin: params[:admin].presence)
    end %>
 
 <%# Live field tinting mirrors the inline editor (affiliations/_fields): role is the
@@ -176,9 +179,18 @@
                     type: "date",
                     value: @affiliation.end_date&.strftime("%Y-%m-%d"),
                     class: field_bg.call(@affiliation.end_date.present?),
-                    data: { inactive_toggle_target: "endDate valueField", action: "change->inactive-toggle#toggle" }
+                    data: { inactive_toggle_target: "endDate valueField", action: "change->inactive-toggle#endDateChanged" }
                   } %>
           </div>
+        </div>
+        <div class="w-40 self-center">
+          <%= f.input :inactive,
+                as: :boolean,
+                label: "Inactive",
+                hint: "Overrides the dates — tick to end an affiliation the dates still call active.",
+                input_html: { class: "mr-2 rounded focus:ring-blue-500 text-blue-600",
+                              data: { inactive_toggle_target: "inactiveCheckbox",
+                                      action: "inactive-toggle#toggle" } } %>
         </div>
       </div>
     </div>
