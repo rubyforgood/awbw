@@ -306,6 +306,23 @@ RSpec.describe FormSubmission do
       end
     end
 
+    describe "#record_callout_collection!" do
+      let(:callout) { create(:registration_ticket_callout) }
+
+      it "flags the submission as callout-collected without touching other metadata" do
+        submission.update!(metadata: { "other_key" => "value" })
+        submission.record_callout_collection!(callout)
+
+        expect(submission.reload.collected_via_callout?).to be(true)
+        expect(submission.metadata["collected_via_callout_id"]).to eq(callout.id)
+        expect(submission.metadata["other_key"]).to eq("value")
+      end
+
+      it "reads false when nothing recorded it" do
+        expect(submission.collected_via_callout?).to be(false)
+      end
+    end
+
     describe "#unlink_registration!" do
       it "removes a registration id from metadata" do
         submission.link_registration!(reg1.id)

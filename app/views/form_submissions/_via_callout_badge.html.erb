@@ -1,0 +1,8 @@
+<%# A small badge marking a submission a registrant filled out inline via a ticket
+    callout — the provenance the role no longer carries (it holds the form's role). %>
+<% if submission.collected_via_callout? %>
+  <span class="ml-1.5 inline-flex items-center rounded-full <%= DomainTheme.bg_class_for(:forms, intensity: 50) %> px-1.5 py-0.5 text-2xs font-medium <%= DomainTheme.text_class_for(:forms, intensity: 700) %>"
+        title="Submitted via a ticket callout">
+    <i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>
+  </span>
+<% end %>

@@ -106,6 +106,8 @@ Rails.application.routes.draw do
   get "registration/:slug/resource/:resource_id", to: "events/callouts#resource", as: :registration_resource
   get "registration/:slug/videoconference", to: "events/callouts#videoconference", as: :registration_videoconference
   get "registration/:slug/staff", to: "events/callouts#staff", as: :registration_staff
+  get "registration/:slug/forms/:callout_id", to: "events/callouts#callout", as: :registration_callout_form
+  post "registration/:slug/forms/:callout_id", to: "events/callouts#submit_callout", as: :registration_callout_form_submit
   post "registration/:slug/resend_confirmation", to: "events/registrations#resend_confirmation", as: :registration_resend_confirmation
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate
@@ -231,7 +233,11 @@ Rails.application.routes.draw do
       post :link_bulk_payment, to: "events/bulk_payments#link"
       delete :unlink_bulk_payment, to: "events/bulk_payments#unlink"
     end
-    resources :registration_ticket_callouts, only: [ :show, :update ]
+    resources :registration_ticket_callouts, only: [ :show, :update ] do
+      member do
+        post :submit_form
+      end
+    end
     resource :registrations, only: %i[ create ], module: :events, as: :registrant_registration
     resource :public_registration, only: [ :new, :create, :show ], module: :events
     resource :bulk_payment, only: [ :new, :create, :show ], controller: "events/bulk_payment_form_submissions"

@@ -16,7 +16,7 @@
     <div>
       <div class="mb-5 border-b-2 border-gray-300 pb-1.5">
         <h2 class="text-lg font-semibold text-gray-900"><%= submission.form.name %></h2>
-        <p class="text-xs text-gray-500">Submitted <%= submission.created_at.strftime("%B %d, %Y at %l:%M %P") %></p>
+        <p class="text-xs text-gray-500">Submitted <%= submission.created_at.strftime("%B %d, %Y at %l:%M %P") %><%= render "form_submissions/via_callout_badge", submission: submission %></p>
       </div>
 
       <% sections = [] %>

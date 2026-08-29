@@ -1,4 +1,5 @@
-<%# locals: (field:, value: nil, label: nil, show_option_source: false, show_dropdown_warning: false) %>
+<%# locals: (field:, value: nil, label: nil, show_option_source: false, show_dropdown_warning: false, param_scope: "public_registration") %>
+<% param_scope = local_assigns.fetch(:param_scope, "public_registration") %>
 <% return if field.group_header? %>
 
 <% error = @field_errors&.dig(field.id) %>
@@ -7,7 +8,7 @@
 
 <div class="mb-7">
   <div class="flex flex-wrap items-center gap-2 mb-1.5">
-    <label class="rich-label text-sm font-semibold text-gray-700" for="public_registration_form_fields_<%= field.id %>">
+    <label class="rich-label text-sm font-semibold text-gray-700" for="<%= param_scope %>_form_fields_<%= field.id %>">
       <%= form_label_html(label || field.name) %>
       <% if field.required %>
         <span class="text-red-500">*</span>
@@ -28,8 +29,8 @@
     <%= render "forms/dropdown_other_warning", field: field %>
   <% end %>
 
-  <% field_name = "public_registration[form_fields][#{field.id}]" %>
-  <% field_id = "public_registration_form_fields_#{field.id}" %>
+  <% field_name = "#{param_scope}[form_fields][#{field.id}]" %>
+  <% field_id = "#{param_scope}_form_fields_#{field.id}" %>
 
   <% case field.answer_type %>
   <% when "free_form_input_one_line" %>
@@ -135,7 +136,7 @@
     </select>
 
   <% when "multi_select_checkbox" %>
-    <% checkbox_name = "public_registration[form_fields][#{field.id}][]" %>
+    <% checkbox_name = "#{param_scope}[form_fields][#{field.id}][]" %>
     <% selected_values = Array(value) %>
     <%# Dynamic fields (e.g. additional_sectors) source options from Sector/Category
         data; everything else uses the field's own stored answer options. Sector and
@@ -188,7 +189,7 @@
           duplicate keys — and let the controller fall back to it. %>
       <% if retained_upload %>
         <input type="hidden"
-               name="public_registration[retained_uploads][<%= field.id %>]"
+               name="<%= param_scope %>[retained_uploads][<%= field.id %>]"
                value="<%= value %>">
         <p class="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-600">
           <i class="fa-solid fa-paperclip"></i><%= retained_upload.filename %> already uploaded — choose another file to replace it.

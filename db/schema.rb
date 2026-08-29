@@ -1364,6 +1364,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_160913) do
     t.text "description"
     t.datetime "display_from"
     t.bigint "event_id", null: false
+    t.integer "form_id"
     t.boolean "hidden", default: false, null: false
     t.string "icon_class"
     t.boolean "payment_access_gated", default: false, null: false
@@ -1374,6 +1375,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_160913) do
     t.index ["event_id", "builtin_key"], name: "index_registration_ticket_callouts_on_event_id_and_builtin_key", unique: true
     t.index ["event_id", "position"], name: "index_registration_ticket_callouts_on_event_id_and_position"
     t.index ["event_id"], name: "index_registration_ticket_callouts_on_event_id"
+    t.index ["form_id"], name: "index_registration_ticket_callouts_on_form_id"
   end
 
   create_table "report_form_field_answers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -2125,6 +2127,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_160913) do
   add_foreign_key "registration_ticket_callout_resources", "registration_ticket_callouts", on_delete: :cascade
   add_foreign_key "registration_ticket_callout_resources", "resources", on_delete: :cascade
   add_foreign_key "registration_ticket_callouts", "events"
+  add_foreign_key "registration_ticket_callouts", "forms"
   add_foreign_key "report_form_field_answers", "answer_options"
   add_foreign_key "report_form_field_answers", "form_fields"
   add_foreign_key "report_form_field_answers", "reports"
