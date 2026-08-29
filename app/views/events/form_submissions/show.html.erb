@@ -6,6 +6,14 @@
   <h1 class="text-primary mt-3 font-display text-lg font-semibold">
     <%= @person.name %> &mdash; <%= @event.title %>
   </h1>
+
+  <%# Jump to the registrant's own (public) view of this registration — what they
+      see from their ticket. Opens in a new tab so the admin keeps their place. %>
+  <%= link_to event_public_registration_path(@event, person_id: @person.id),
+              target: "_blank", rel: "noopener",
+              class: "mt-2 inline-flex items-center gap-1.5 text-sm text-blue-700 hover:text-blue-900 px-2 py-1" do %>
+    <i class="fa-solid fa-up-right-from-square text-xs"></i> View the registrant's public version
+  <% end %>
 </div>
 
 <div class="mx-auto max-w-5xl space-y-10 px-4 pt-4 pb-12">

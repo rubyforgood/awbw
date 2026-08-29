@@ -47,6 +47,21 @@
       <% end %>
     </div>
 
+    <%# Admin-only jump to the audit of the values this submission overwrote —
+        shown only once it has overwritten something (e.g. after linking an org
+        that wasn't a clean match writes onto it). %>
+    <% submission_changes = FormSubmissionChanges.new(@form_submission) %>
+    <% if submission_changes.edited? && allowed_to?(:changes?, @form_submission) %>
+      <%= link_to changes_form_submission_path(@form_submission, return_to: "form_submission_link_organization"),
+                  data: { turbo_frame: "_top" },
+                  class: "group -mt-4 mb-8 flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-blue-100" do %>
+        <i class="fa-solid fa-circle-info text-blue-500"></i>
+        What this submission changed
+        <span class="rounded-full bg-blue-200 px-1.5 text-2xs"><%= submission_changes.edited_count %></span>
+        <i class="fa-solid fa-arrow-right text-xs ml-auto text-blue-400 transition-transform group-hover:translate-x-0.5"></i>
+      <% end %>
+    <% end %>
+
     <%# === The linked organization (an explicit link, or the registration-org row
         this submission is pinned to) + add actions — tinted
         green to stand apart, like the registration editor's linked cards. %>

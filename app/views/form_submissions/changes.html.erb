@@ -5,9 +5,16 @@
   back_link = case params[:return_to]
   when "link_organization"
     { label: "← Back to linked organizations", path: link_organization_event_registration_path(params[:event_registration_id]) } if params[:event_registration_id].present?
+  when "form_submission_link_organization"
+    { label: "← Back to linked organizations", path: link_organization_form_submission_path(@form_submission) }
   when "event_registrant_submissions"
     event = @form_submission.resolved_event
     { label: "← Back to submissions", path: event_registrant_submissions_path(event, person_id: @form_submission.person_id) } if event
+  when "event_registration"
+    { label: "← Back to registration", path: edit_event_registration_path(params[:event_registration_id]) } if params[:event_registration_id].present?
+  when "public_registration"
+    event = @form_submission.resolved_event
+    { label: "← Back to registration confirmation", path: event_public_registration_path(event, person_id: @form_submission.person_id) } if event
   end
   back_link ||= { label: "← Back to submission", path: form_submission_path(@form_submission) }
 

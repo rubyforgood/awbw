@@ -62,6 +62,19 @@
              event: @event_registration.event,
              event_url: dashboard_event_path(@event_registration.event) %>
 
+  <%# Admin-only jump to the audit of the values this registration's form overwrote —
+      shown only once it has overwritten something on existing records. %>
+  <% submission_changes = @form_submission && FormSubmissionChanges.new(@form_submission) %>
+  <% if submission_changes&.edited? && allowed_to?(:changes?, @form_submission) %>
+    <%= link_to changes_form_submission_path(@form_submission, return_to: "event_registration", event_registration_id: @event_registration.id),
+                class: "group mt-4 flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-blue-100" do %>
+      <i class="fa-solid fa-circle-info text-blue-500"></i>
+      What this registration's form changed
+      <span class="rounded-full bg-blue-200 px-1.5 text-2xs"><%= submission_changes.edited_count %></span>
+      <i class="fa-solid fa-arrow-right text-xs ml-auto text-blue-400 transition-transform group-hover:translate-x-0.5"></i>
+    <% end %>
+  <% end %>
+
   <%= render "form", event_registration: @event_registration %>
   <%= render "shared/audit_info", resource: @event_registration %>
   <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>

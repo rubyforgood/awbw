@@ -2648,3 +2648,19 @@
       against a person.
     - Anonymous responses send the team the usual FYI email but no confirmation
       goes back (there's no email to send it to).
+
+- name: "See what a form submission changed"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-29
+  pr_number: 2303
+  summary: >-
+    A "What this submission changed" page shows admins what a form submission
+    overwrote on existing records — profile, address, phone, org — plus an org it
+    created through the linking flow. A counted blue bar links to it wherever the
+    submission appears.
+  pro_tips:
+    - "Reach it from the submission page, the registrant's submissions, the linked-organizations editor, the registration edit page, and the registrant's own public confirmation."
+    - "Counts edits to records that already existed, plus an org created through linking; a submitter's own brand-new records and tags aren't counted."
+    - "Each row links to that record's edit page at the changed field."
+    - "The admin submission view now links straight to the registrant's own public version of the form (opens in a new tab)."
