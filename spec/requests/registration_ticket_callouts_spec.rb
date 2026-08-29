@@ -45,7 +45,8 @@ RSpec.describe "Callout inline form", type: :request do
       }.to change(FormSubmission, :count).by(1)
 
       submission = FormSubmission.last
-      expect(submission).to have_attributes(person: registration.registrant, form:, event:, role: "callout")
+      expect(submission).to have_attributes(person: registration.registrant, form:, event:, role: nil)
+      expect(submission.collected_via_callout?).to be(true)
       expect(submission.form_answers.find_by(form_field: field).submitted_answer).to eq("Loved it")
 
       follow_redirect!

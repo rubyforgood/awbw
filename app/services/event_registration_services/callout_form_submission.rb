@@ -2,20 +2,15 @@ module EventRegistrationServices
   # Records a registrant's answers to the form a ticket callout delivers inline.
   # One submission per (registrant, form, event) so re-submitting edits in place.
   class CalloutFormSubmission
-    # Fallback when the form carries no role, or one reserved for a dedicated
-    # event-form flow (which the callout picker excludes but a console/seed could set).
-    FALLBACK_ROLE = "callout".freeze
-
     def self.call(registration:, callout:, form_params:)
       new(registration:, callout:, form_params:).call
     end
 
-    # Mirror the form's own role so a callout submission looks like any other
-    # submission of that form (uniform stats/lookups), guarding the reserved roles.
+    # The submission carries the form's own role — indistinguishable from the same
+    # form submitted elsewhere. That a callout collected it is recorded separately,
+    # in metadata (see FormSubmission#collected_via_callout?).
     def self.role_for(callout)
-      role = callout.form&.role&.presence
-      return FALLBACK_ROLE if role.nil? || EventForm::ROLES.include?(role)
-      role
+      callout.form&.role
     end
 
     def initialize(registration:, callout:, form_params:)

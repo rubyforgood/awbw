@@ -45,6 +45,15 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).not_to include(form_submission_path(theirs))
       end
 
+      it "badges a callout-collected submission by its submitted time" do
+        submission = create(:form_submission)
+        submission.record_callout_collection!(create(:registration_ticket_callout))
+
+        get form_submissions_path, headers: frame_headers
+
+        expect(response.body).to include("Submitted via a ticket callout")
+      end
+
       it "filters by form" do
         wanted = create(:form, name: "Volunteer interest")
         other = create(:form, name: "Something else")
