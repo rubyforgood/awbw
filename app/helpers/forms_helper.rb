@@ -1,15 +1,39 @@
 module FormsHelper
-  # The form editor's top-right links. The standalone "Preview form" is always
-  # available. When we also know which event the admin came from, we add a
-  # "View form" link to the real public-facing registration page — the preview
-  # can't fill header tokens or run conditional logic without an event.
-  def form_editor_view_links(form, event)
-    link_class = "text-sm #{eyebrow_link_class} px-2 py-1"
-    preview = link_to "Preview", form_path(form), class: link_class
-    return preview unless event
+  # Sibling-page subnav shared across a form's Results / View / Edit / Copy
+  # pages so each reads like a set of tabs linking to the others. `current`
+  # renders the active page as plain text instead of a link; pass `:none` (e.g.
+  # from the sub-pages like Edit sections) to keep every tab clickable.
+  def form_page_subnav(form, current:, event: nil)
+    tabs = [
+      form_subnav_tab("Results", results_form_path(form), active: current == :results),
+      form_subnav_tab("View", form_path(form), active: current == :view),
+      form_subnav_tab("Edit", edit_form_path(form, event_id: event&.id), active: current == :edit)
+    ]
+    if allowed_to?(:copy?, form)
+      tabs << form_subnav_tab("Copy", copy_form_path(form), active: false,
+        data: { turbo_method: :post, turbo_confirm: %(Make a full copy of "#{form.display_name}"?) })
+    end
+    content_tag :nav, safe_join(tabs), aria: { label: "Form pages" },
+      class: "inline-flex flex-wrap items-center gap-0.5 rounded-lg border #{DomainTheme.border_class_for(:forms, intensity: 200)} #{DomainTheme.bg_class_for(:forms)} p-0.5"
+  end
 
-    view = link_to "View", new_event_public_registration_path(event), class: link_class
-    safe_join([ view, preview ])
+  def form_subnav_tab(label, path, active:, **link_opts)
+    return content_tag(:span, label, aria: { current: "page" },
+      class: "rounded-md bg-white px-2.5 py-1 text-sm font-semibold shadow-sm #{DomainTheme.text_class_for(:forms, intensity: 700)}") if active
+
+    link_to label, path,
+      class: "rounded-md px-2.5 py-1 text-sm #{DomainTheme.text_class_for(:forms, intensity: 700)} #{DomainTheme.bg_class_for(:forms, hover: true)}", **link_opts
+  end
+
+  # The live public registration page for this form, shown on the editor pages.
+  # Only available when we know the event the admin came from — the preview
+  # (the subnav's "View") can't fill header tokens or run conditional logic
+  # without an event.
+  def form_live_view_link(event)
+    return unless event
+
+    link_to "Live form", new_event_public_registration_path(event),
+      class: "text-sm #{eyebrow_link_class} px-2 py-1"
   end
 
   # Human-readable role for a form: "Registration", "Bulk Payment", etc.,

@@ -1,14 +1,14 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="py-8 px-4">
   <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
+    <%= form_page_subnav(@form, current: :none, event: @dashboard_event) %>
     <% if @dashboard_event %>
       <%= link_to "Dashboard", dashboard_event_path(@dashboard_event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <% end %>
     <%= link_to "Forms", forms_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-    <%= link_to "Edit questions", edit_form_path(@form, event_id: @dashboard_event&.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <%= link_to "Smart field settings", smart_form_settings_forms_path(form_id: @form.id, event_id: @dashboard_event&.id),
                 class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-    <%= form_editor_view_links(@form, @dashboard_event) %>
+    <%= form_live_view_link(@dashboard_event) %>
   </div>
 
   <%# Colored hero banner so the page reads at a glance instead of all-white %>

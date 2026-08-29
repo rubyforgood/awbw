@@ -250,18 +250,17 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).not_to include("Dashboard")
     end
 
-    it "offers only the standalone Preview link when no event is known" do
+    it "offers the preview (View) subnav tab but no live-form link when no event is known" do
       get edit_form_path(form)
-      expect(response.body).to include(">Preview<")
-      expect(response.body).not_to include(">View<")
+      expect(response.body).to include(">View<")
+      expect(response.body).not_to include(">Live form<")
     end
 
-    it "adds a View link to the live registration form when the event is known" do
+    it "adds a Live form link to the registration page when the event is known" do
       create(:event_form, form: form, event: event)
       get edit_form_path(form, event_id: event.id)
-      expect(response.body).to include(">View<")
+      expect(response.body).to include(">Live form<")
       expect(response.body).to include(new_event_public_registration_path(event))
-      expect(response.body).to include(">Preview<")
     end
   end
 
@@ -846,6 +845,19 @@ RSpec.describe "Forms", type: :request do
         form = create(:form, :standalone, name: "Untouched")
         get results_form_path(form)
         expect(response.body).to include("No submissions to this form yet")
+      end
+
+      it "shows the shared page subnav linking to the form's sibling pages" do
+        form = create(:form, :standalone, name: "Survey")
+        get results_form_path(form)
+        doc = Nokogiri::HTML(response.body)
+        nav = doc.at_css("nav[aria-label='Form pages']")
+        expect(nav).to be_present
+        expect(nav.css("a").map { |a| a["href"] }).to include(
+          form_path(form), edit_form_path(form), copy_form_path(form)
+        )
+        active = nav.at_css("[aria-current='page']")
+        expect(active&.text&.strip).to eq("Results")
       end
     end
 
