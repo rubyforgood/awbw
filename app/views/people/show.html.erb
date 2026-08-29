@@ -12,30 +12,30 @@
 <div class="admin-or-owner bg-brand-cream border-primary/10 overflow-hidden rounded-2xl border shadow-sm">
   <%= render "shared/brand_accent_strip" %>
   <!-- Person hero -->
-  <div class="bg-primary px-4 pt-5 pb-8 text-white sm:px-8">
+  <div class="<%= DomainTheme.bg_class_for(:people, intensity: 50) %> px-4 pt-5 pb-8 sm:px-8">
     <!-- Eyebrow + header actions -->
     <div class="mb-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-      <span class="text-2xs inline-flex items-center gap-2 font-semibold tracking-widest text-white/70 uppercase">
+      <span class="text-2xs <%= DomainTheme.text_class_for(:people, intensity: 700) %> inline-flex items-center gap-2 font-semibold tracking-widest uppercase">
         <i class="fa-solid fa-user"></i> Individual profile
       </span>
       <div class="flex flex-wrap items-center justify-end gap-2">
         <% if params[:return_to] == "bulk_payments" && params[:event_id].present? %>
           <%# Returned from a bulk payment tray: mr-auto pins this back link left while the rest stay right. %>
-          <%= link_to bulk_payments_return_path(params[:event_id]), class: "mr-auto inline-flex items-center gap-1 text-sm text-white/80 hover:text-white px-2 py-1" do %>
+          <%= link_to bulk_payments_return_path(params[:event_id]), class: "mr-auto inline-flex items-center gap-1 text-sm text-gray-600 hover:text-primary px-2 py-1" do %>
             <i class="fa-solid fa-arrow-left text-xs"></i> Bulk payments
           <% end %>
         <% end %>
         <% if @person.user.nil? && allowed_to?(:create?, User) %>
-          <div class="admin-only text-2xs inline-flex items-center gap-2 rounded-full bg-white/10 py-1 pr-1 pl-3 font-semibold tracking-wide text-white uppercase">
+          <div class="admin-only text-2xs inline-flex items-center gap-2 rounded-full border border-black/5 bg-white py-1 pr-1 pl-3 font-semibold tracking-wide text-gray-700 uppercase">
             No user!
             <%= link_to "Create user",
                           new_user_path(person_id: @person.id),
                           class: "rounded-full bg-brand-yellow-400 hover:bg-brand-yellow-500 text-primary px-3 py-1" %>
           </div>
         <% end %>
-        <%= link_to "Home", root_path, class: "text-sm text-white/80 hover:text-white px-2 py-1" %>
+        <%= link_to "Home", root_path, class: "text-sm text-gray-600 hover:text-primary px-2 py-1" %>
         <% if allowed_to?(:index?, Person) %>
-          <%= link_to "People", people_path, class: "admin-only text-sm text-white/80 hover:text-white px-2 py-1" %>
+          <%= link_to "People", people_path, class: "admin-only text-sm text-gray-600 hover:text-primary px-2 py-1" %>
         <% end %>
         <% if allowed_to?(:edit?, @person) %>
           <%= link_to edit_person_path(@person),
@@ -54,30 +54,30 @@
         <% if @person.avatar&.attached? %>
           <%= image_tag @person.avatar.variant(:thumbnail),
                           id: "person_#{@person.id}_avatar_image",
-                          class: "w-28 h-28 rounded-full object-cover ring-4 ring-white/25 shadow-lg" %>
+                          class: "w-28 h-28 rounded-full object-cover ring-4 ring-white shadow-md" %>
         <% else %>
           <%= image_tag "missing.png",
                           id: "person_#{@person.id}_avatar_image",
-                          class: "w-28 h-28 rounded-full object-cover ring-4 ring-white/20 opacity-90" %>
+                          class: "w-28 h-28 rounded-full object-cover ring-4 ring-white opacity-90" %>
         <% end %>
       </div>
       <div class="flex-1 text-center md:text-left">
-        <h1 class="font-display text-4xl font-semibold tracking-tight text-white">
-          <%= @person.name %><% if @person.profile_show_credentials? && @person.license_credentials.present? %><span class="font-normal text-white/80">, <%= @person.license_credentials %></span><% end %>
+        <h1 class="font-display text-primary text-4xl font-semibold tracking-tight">
+          <%= @person.name %><% if @person.profile_show_credentials? && @person.license_credentials.present? %><span class="font-normal text-gray-600">, <%= @person.license_credentials %></span><% end %>
           <% if @person.pronouns.present? && @person.profile_show_pronouns? %>
-            <span class="font-sans text-base font-normal text-white/60 italic">(<%= @person.pronouns %>)</span>
+            <span class="font-sans text-base font-normal text-gray-500 italic">(<%= @person.pronouns %>)</span>
           <% end %>
         </h1>
         <% if @person.profile_show_member_since? %>
           <% if @person.facilitator_since_date.present? %>
-            <p class="mt-1 text-sm text-white/70">
+            <p class="mt-1 text-sm text-gray-600">
               Facilitator since
-              <span class="text-brand-yellow-400 font-semibold"><%= @person.facilitator_since_date.strftime("%B %Y") %></span>
+              <span class="text-primary font-semibold"><%= @person.facilitator_since_date.strftime("%B %Y") %></span>
             </p>
           <% elsif @person.affiliated_since_date.present? %>
-            <p class="mt-1 text-sm text-white/70">
+            <p class="mt-1 text-sm text-gray-600">
               Affiliated since
-              <span class="text-brand-yellow-400 font-semibold"><%= @person.affiliated_since_date.strftime("%B %Y") %></span>
+              <span class="text-primary font-semibold"><%= @person.affiliated_since_date.strftime("%B %Y") %></span>
             </p>
           <% end %>
         <% end %>
@@ -86,12 +86,12 @@
           <% email = @person.user&.email || @person.email %>
           <% if email.present? %>
             <% if @person.profile_show_email? %>
-              <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-white/90">
-                <i class="fa-solid fa-envelope text-xs text-white/60"></i> <!--email_off--><%= mail_to email, email, class: "hover:text-brand-yellow-400" %><!--email_on-->
+              <span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
+                <i class="fa-solid fa-envelope text-xs <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i> <!--email_off--><%= mail_to email, email, class: "hover:text-primary" %><!--email_on-->
               </span>
             <% elsif allowed_to?(:manage?, Person) %>
-              <span class="admin-only inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-white/90">
-                <i class="fa-solid fa-envelope text-xs text-white/60"></i> <!--email_off--><%= mail_to email, email, class: "hover:text-brand-yellow-400" %><!--email_on-->
+              <span class="admin-only inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
+                <i class="fa-solid fa-envelope text-xs <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i> <!--email_off--><%= mail_to email, email, class: "hover:text-primary" %><!--email_on-->
               </span>
             <% end %>
             <% if @person.user&.unconfirmed_email.present? && allowed_to?(:show_email_change?, @person) %>
@@ -109,8 +109,8 @@
           <% end %>
           <% phone = @person.phone_number || @person.user&.phone %>
           <% if @person.profile_show_phone? && phone.present? %>
-            <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-white/90">
-              <i class="fa-solid fa-phone text-xs text-white/60"></i> <%= link_to phone, "tel:#{phone}", class: "hover:text-brand-yellow-400" %>
+            <span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
+              <i class="fa-solid fa-phone text-xs <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i> <%= link_to phone, "tel:#{phone}", class: "hover:text-primary" %>
             </span>
           <% end %>
           <% if @person.profile_show_social_media? %>

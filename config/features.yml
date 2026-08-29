@@ -2563,3 +2563,14 @@
   pro_tips:
     - "The icon on the page matches the one in the Create menu, so you can see at a glance which form you landed on."
     - "The intro explaining why a submission matters now sits above the form instead of beside the heading."
+
+- name: "Lighter person and organization profiles"
+  area: people
+  display_status: user_facing
+  released_on: 2026-08-29
+  summary: >-
+    The person and organization profiles swap their heavy navy banner for a light
+    tint in the record's own colour, so a profile now matches the People or
+    Organizations list it came from. Nothing moved on the page.
+  pro_tips:
+    - "People and Organizations now use official AWBW brand colours, so their lists, chips and profiles all match."

@@ -23,18 +23,21 @@ RSpec.describe DomainTheme do
     end
 
     it "supports intensity overrides" do
+      color = DomainTheme.color_for(:people)
       expect(DomainTheme.bg_class_for(:people, intensity: 100))
-        .to eq("bg-cyan-100")
+        .to eq("bg-#{color}-100")
     end
 
     it "supports hover classes for 100's" do
+      color = DomainTheme.color_for(:people)
       expect(DomainTheme.bg_class_for(:people, intensity: 200, hover: true))
-        .to eq("hover:bg-cyan-300")
+        .to eq("hover:bg-#{color}-300")
     end
 
     it "supports hover classes for 50" do
+      color = DomainTheme.color_for(:people)
       expect(DomainTheme.bg_class_for(:people, intensity: 50, hover: true))
-        .to eq("hover:bg-cyan-100")
+        .to eq("hover:bg-#{color}-100")
     end
 
     it "defines a color for every taggable home type" do
@@ -46,7 +49,8 @@ RSpec.describe DomainTheme do
 
   describe ".text_class_for" do
     it "returns the correct Tailwind text class for a domain" do
-      expect(DomainTheme.text_class_for(:organizations)).to eq("text-emerald-800")
+      color = DomainTheme.color_for(:organizations)
+      expect(DomainTheme.text_class_for(:organizations)).to eq("text-#{color}-800")
     end
 
     it "supports intensity overrides" do
@@ -66,11 +70,11 @@ RSpec.describe DomainTheme do
 
   describe ".color_for" do
     it "returns configured color symbols" do
-      expect(DomainTheme.color_for(:people)).to eq(:cyan)
+      expect(DomainTheme.color_for(:people)).to eq(:"brand-navy")
     end
 
     it "symbolizes string keys" do
-      expect(DomainTheme.color_for("organizations")).to eq(:emerald)
+      expect(DomainTheme.color_for("organizations")).to eq(:"brand-teal")
     end
 
     it "returns gray for unknown keys" do
