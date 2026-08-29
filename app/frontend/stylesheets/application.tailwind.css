@@ -124,6 +124,58 @@
   --color-brand-teal-900: #154842;
   --color-brand-teal-950: #062925;
 
+  /* Coral — brand #ff5757 sits at 400. */
+  --color-brand-coral-50: #fef2f1;
+  --color-brand-coral-100: #ffe2df;
+  --color-brand-coral-200: #ffc9c4;
+  --color-brand-coral-300: #ffa19b;
+  --color-brand-coral-400: #ff5757;
+  --color-brand-coral-500: #f72638;
+  --color-brand-coral-600: #e3001e;
+  --color-brand-coral-700: #bc0017;
+  --color-brand-coral-800: #9a0016;
+  --color-brand-coral-900: #7d1018;
+  --color-brand-coral-950: #400207;
+
+  /* Olive — brand #87a61b sits at 600. */
+  --color-brand-olive-50: #f7fdec;
+  --color-brand-olive-100: #eefbd4;
+  --color-brand-olive-200: #dff7ab;
+  --color-brand-olive-300: #ccee74;
+  --color-brand-olive-400: #b8df3a;
+  --color-brand-olive-500: #a2c81b;
+  --color-brand-olive-600: #87a61b;
+  --color-brand-olive-700: #657d1a;
+  --color-brand-olive-800: #53651e;
+  --color-brand-olive-900: #485621;
+  --color-brand-olive-950: #2a3310;
+
+  /* Pink — brand #e6035c sits at 600. */
+  --color-brand-pink-50: #fef1f2;
+  --color-brand-pink-100: #fee4e7;
+  --color-brand-pink-200: #fdced3;
+  --color-brand-pink-300: #ffa4b1;
+  --color-brand-pink-400: #fd6a88;
+  --color-brand-pink-500: #f8346d;
+  --color-brand-pink-600: #e6035c;
+  --color-brand-pink-700: #c1014c;
+  --color-brand-pink-800: #a11040;
+  --color-brand-pink-900: #891738;
+  --color-brand-pink-950: #4d091c;
+
+  /* Amber — brand #faa519 sits at 500. */
+  --color-brand-amber-50: #fff9ed;
+  --color-brand-amber-100: #ffeece;
+  --color-brand-amber-200: #ffdb97;
+  --color-brand-amber-300: #ffc65f;
+  --color-brand-amber-400: #ffb331;
+  --color-brand-amber-500: #faa519;
+  --color-brand-amber-600: #d18300;
+  --color-brand-amber-700: #a96400;
+  --color-brand-amber-800: #885100;
+  --color-brand-amber-900: #704400;
+  --color-brand-amber-950: #422600;
+
   /* Social network brand colors, used for the hover fill on share/follow
      buttons. Instagram is a three-stop gradient rather than a single fill. */
   --color-linkedin: #0a66c2;
@@ -156,10 +208,10 @@
 
 /* Used to generate classes from `domain_theme.rb`*/
 
-@source inline("{hover:,}bg-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink,brand-navy,brand-yellow,brand-green,brand-magenta,brand-orange,brand-purple,brand-teal}-{50,{100..900..100},950}");
-@source inline("{hover:,}border-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink,brand-navy,brand-yellow,brand-green,brand-magenta,brand-orange,brand-purple,brand-teal}-{200,300}");
-@source inline("ring-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink,brand-navy,brand-yellow,brand-green,brand-magenta,brand-orange,brand-purple,brand-teal}-{200,300,400,500}");
-@source inline("{hover:,}text-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink,brand-navy,brand-yellow,brand-green,brand-magenta,brand-orange,brand-purple,brand-teal}-{50,{100..900..100},950}");
+@source inline("{hover:,}bg-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink,brand-navy,brand-yellow,brand-green,brand-magenta,brand-orange,brand-purple,brand-teal,brand-coral,brand-olive,brand-pink,brand-amber}-{50,{100..900..100},950}");
+@source inline("{hover:,}border-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink,brand-navy,brand-yellow,brand-green,brand-magenta,brand-orange,brand-purple,brand-teal,brand-coral,brand-olive,brand-pink,brand-amber}-{200,300}");
+@source inline("ring-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink,brand-navy,brand-yellow,brand-green,brand-magenta,brand-orange,brand-purple,brand-teal,brand-coral,brand-olive,brand-pink,brand-amber}-{200,300,400,500}");
+@source inline("{hover:,}text-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink,brand-navy,brand-yellow,brand-green,brand-magenta,brand-orange,brand-purple,brand-teal,brand-coral,brand-olive,brand-pink,brand-amber}-{50,{100..900..100},950}");
 
 /* Per-field form layout widths (generated from FormField::WIDTH_GRID_SPANS, which
    lives in a model file Tailwind does not scan) */

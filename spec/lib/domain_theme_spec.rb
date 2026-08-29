@@ -68,13 +68,24 @@ RSpec.describe DomainTheme do
     end
   end
 
+  describe "the brand palette" do
+    it "gives each domain on it a colour of its own" do
+      brand = DomainTheme::COLORS.select { |_, colour| colour.to_s.start_with?("brand-") }
+      shared = brand.group_by { |_, colour| colour }.select { |_, pairs| pairs.size > 1 }
+
+      expect(shared).to be_empty,
+        "domains sharing a brand colour: " +
+        shared.map { |colour, pairs| "#{colour} -> #{pairs.map(&:first).join(', ')}" }.join("; ")
+    end
+  end
+
   describe ".color_for" do
     it "returns configured color symbols" do
-      expect(DomainTheme.color_for(:people)).to eq(:"brand-navy")
+      expect(DomainTheme.color_for(:quotes)).to eq(:slate)
     end
 
     it "symbolizes string keys" do
-      expect(DomainTheme.color_for("organizations")).to eq(:"brand-teal")
+      expect(DomainTheme.color_for("users")).to eq(:rose)
     end
 
     it "returns gray for unknown keys" do

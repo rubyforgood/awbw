@@ -6,18 +6,18 @@ module DomainTheme
   # work the same way here — the helpers below just interpolate the name.
   COLORS = {
     workshops:                :"brand-navy",
-    workshop_variations:      :"brand-navy",
+    workshop_variations:      :"brand-pink",
     workshop_logs:            :teal,
     resources:                :"brand-purple",
     community_news:           :"brand-orange",
     stories:                  :"brand-magenta",
     events:                   :"brand-teal",
-    people:                   :"brand-navy",
-    organizations:            :"brand-teal",
+    people:                   :"brand-coral",
+    organizations:            :"brand-olive",
     quotes:                   :slate,
     grants:                   :green,
 
-    tags:                     :"brand-green",
+    tags:                     :"brand-amber",
     sectors:                  :lime,
     categories:               :lime,
     category_types:            :lime,
