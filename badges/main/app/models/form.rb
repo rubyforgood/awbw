@@ -12,6 +12,9 @@ class Form < ApplicationRecord
   # submissions index scenario filter.
   AGREEMENT_ROLES = %w[registration new_job reinstatement].freeze
 
+  # The questions that identify a public respondent (used to build their Person).
+  IDENTITY_IDENTIFIERS = %w[first_name last_name primary_email].freeze
+
   belongs_to :owner, polymorphic: true, optional: true
   has_many :form_fields, dependent: :destroy, inverse_of: :form
   has_many :event_forms, dependent: :destroy
@@ -56,6 +59,31 @@ class Form < ApplicationRecord
   # event-connected form stays tied to its event and is never offered publicly.
   def publicly_fillable?
     standalone? && !event_connected? && published? && slug.present?
+  end
+
+  # An agreement form (registration / new job / reinstatement) processes its
+  # submission against a Person — minting a registration, reconciling
+  # affiliations — so it always requires the full name/email identity and never
+  # accepts anonymous responses, however its identity questions are flagged.
+  def requires_identity?
+    role.in?(AGREEMENT_ROLES)
+  end
+
+  # Derived, not stored: a public form invites anonymous responses when it asks
+  # for name/email but requires none of them, so a respondent can skip
+  # identifying themselves and still submit (see PublicFormSubmission). A form
+  # with required identity questions forces an identified submission instead.
+  def accepts_anonymous_submissions?
+    return false if requires_identity?
+
+    identity_fields = form_fields.select { |field| field.field_identifier.in?(IDENTITY_IDENTIFIERS) }
+    identity_fields.any? && identity_fields.none?(&:required?)
+  end
+
+  # Whether a submission must carry an answer for this field: the field's own
+  # required flag, plus the identity questions a registration form always needs.
+  def requires_answer?(field)
+    field.required? || (requires_identity? && field.field_identifier.in?(IDENTITY_IDENTIFIERS))
   end
 
   private

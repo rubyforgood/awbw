@@ -1,5 +1,7 @@
 class FormSubmission < ApplicationRecord
-  belongs_to :person
+  # Optional so a public form whose name/email questions are not required can
+  # record an anonymous submission with no identity (see PublicFormSubmission).
+  belongs_to :person, optional: true
   belongs_to :form
   belongs_to :event, optional: true
   has_many :form_answers, dependent: :destroy
@@ -212,6 +214,10 @@ class FormSubmission < ApplicationRecord
 
   def bulk_payment?
     role == "bulk_payment"
+  end
+
+  def anonymous?
+    person_id.nil?
   end
 
   # The event this submission belongs to: the directly stored one, or — for

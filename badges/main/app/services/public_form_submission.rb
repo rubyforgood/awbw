@@ -1,15 +1,20 @@
 # Records a submission to a standalone, published form filled out at its public
 # pretty URL (see PublicFormsController). Unlike event registration there is no
 # event, role, or account — the respondent is find-or-created as a Person from
-# the form's name/email answers. Answers persist via FormSubmission#persist_answer.
+# the form's name/email answers. When those questions are optional and left
+# blank the submission stands anonymously (person: nil); a required-but-blank
+# identity question is already blocked upstream by the form's field validation.
+# Answers persist via FormSubmission#persist_answer.
 class PublicFormSubmission
   Result = Struct.new(:success?, :form_submission, :person, :errors, keyword_init: true)
 
   ROLE = "public".freeze
 
-  # Shown when the form lacks the name/email questions needed to build a Person.
-  IDENTITY_MISSING_MESSAGE =
-    "This form can't accept submissions yet — it needs a name and email question. Please contact us.".freeze
+  # An agreement form (registration / new job / reinstatement) can't do its job
+  # — process the submission against a Person — without one, so it's rejected
+  # rather than recorded anonymously.
+  IDENTITY_REQUIRED_MESSAGE =
+    "This form needs your name and email to complete your submission.".freeze
 
   def self.call(form:, form_params:)
     new(form:, form_params:).call
@@ -23,9 +28,9 @@ class PublicFormSubmission
   def call
     ActiveRecord::Base.transaction do
       person = find_or_create_person
-      return Result.new(success?: false, errors: [ IDENTITY_MISSING_MESSAGE ]) unless person
+      return Result.new(success?: false, errors: [ IDENTITY_REQUIRED_MESSAGE ]) if @form.requires_identity? && person.nil?
 
-      record_news_subscription(person)
+      record_news_subscription(person) if person
 
       submission = FormSubmission.create!(person: person, form: @form, role: ROLE)
       save_form_answers(submission)
@@ -53,6 +58,9 @@ class PublicFormSubmission
   # no-op when no current on-demand training exists.
   def register_for_on_demand_training(submission)
     return unless @form.role == "registration"
+    # Registration mints a facilitator event registration — impossible without an
+    # identified person, so an anonymous submission skips it.
+    return unless submission.person
 
     event = Event.current_on_demand_facilitator_training
     return unless event
@@ -115,13 +123,16 @@ class PublicFormSubmission
   # A confirmation to the submitter and an FYI to the AWBW team, mirroring the
   # event-registration flow.
   def send_notifications(submission)
-    NotificationServices::CreateNotification.call(
-      noticeable: submission,
-      kind: :form_submission_confirmation,
-      recipient_role: :person,
-      recipient_email: submission.person.preferred_email,
-      notification_type: 0
-    )
+    # An anonymous submission has no submitter to confirm to; only the team FYI goes out.
+    if submission.person
+      NotificationServices::CreateNotification.call(
+        noticeable: submission,
+        kind: :form_submission_confirmation,
+        recipient_role: :person,
+        recipient_email: submission.person.preferred_email,
+        notification_type: 0
+      )
+    end
 
     NotificationServices::CreateNotification.call(
       noticeable: submission,
