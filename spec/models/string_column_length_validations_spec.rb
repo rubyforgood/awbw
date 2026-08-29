@@ -16,7 +16,7 @@ RSpec.describe "varchar(255) length validations" do
     Event => %i[title abbreviation pre_title pre_date_text videoconference_url
                 videoconference_label videoconference_passcode hint_dates hint_times
                 hint_registration_cost],
-    Organization => %i[name email agency_type_other website_url mission_vision_values],
+    Organization => %i[name email organization_type_other website_url mission_vision_values],
     Affiliation => %i[title],
     Workshop => %i[title full_name],
     WorkshopVariation => %i[name youtube_url],

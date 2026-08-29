@@ -236,7 +236,7 @@ class OrganizationsController < ApplicationController
   def organization_params
     params.require(:organization).permit(
       :name, :description, :start_date, :end_date, :mission_vision_values,
-      :agency_type, :agency_type_other, :filemaker_code, :logo, :notes, :email, :website_url,
+      :organization_type, :organization_type_other, :filemaker_code, :logo, :notes, :email, :website_url,
       :organization_status_id, :location_id, :windows_type_id, :high_profile,
       :profile_show_sectors, :profile_show_age_ranges, :profile_show_email, :profile_show_phone,
       :profile_show_website, :profile_show_description, :profile_show_workshops,
@@ -289,7 +289,7 @@ class OrganizationsController < ApplicationController
       domain: :organizations,
       candidate_finder: -> { OrganizationServices::DuplicateFinder.new.groups },
       editable_columns: %w[
-        name filemaker_code email website_url agency_type description
+        name filemaker_code email website_url organization_type description
         mission_vision_values notes organization_status_id organization_obligation_id
       ],
       union_columns: %w[filemaker_code],

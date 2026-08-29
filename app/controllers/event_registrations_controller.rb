@@ -663,7 +663,7 @@ class EventRegistrationsController < ApplicationController
           org_name: answer.call("organization_name"),
           position: answer.call("organization_position"),
           website: answer.call("organization_website"),
-          agency_type: answer.call("organization_type"),
+          organization_type: answer.call("organization_type"),
           address: {
             street_address: answer.call("organization_street"),
             city: answer.call("organization_city"),
@@ -758,7 +758,7 @@ class EventRegistrationsController < ApplicationController
     OrganizationServices::ProfileDiff.call(
       organization: organization,
       website: entry[:website],
-      agency_type: entry[:agency_type],
+      organization_type: entry[:organization_type],
       address: entry[:address] || {}
     )
   end

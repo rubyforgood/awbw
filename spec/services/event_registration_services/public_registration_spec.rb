@@ -354,7 +354,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         )
         organization.reload
 
-        expect(organization.agency_type).to eq("501c3/nonprofit")
+        expect(organization.organization_type).to eq("501c3/nonprofit")
         expect(organization.website_url).to include("helpinghands.org")
         expect(organization.addresses.find_by(primary: true).country).to eq("USA")
       end
@@ -457,7 +457,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
   describe "organization type sync" do
     let!(:organization) { create(:organization, name: "Helping Hands") }
 
-    def register_with_agency_type(value)
+    def register_with_organization_type(value)
       params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
         field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands",
         field_id("organization_type") => value
@@ -466,15 +466,15 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       organization.reload
     end
 
-    it "folds an 'Other' answer into agency_type and the stripped free text into agency_type_other" do
-      register_with_agency_type("Other: Equine therapy")
+    it "folds an 'Other' answer into organization_type and the stripped free text into organization_type_other" do
+      register_with_organization_type("Other: Equine therapy")
 
-      expect(organization.agency_type).to eq("Other")
-      expect(organization.agency_type_other).to eq("Equine therapy")
+      expect(organization.organization_type).to eq("Other")
+      expect(organization.organization_type_other).to eq("Equine therapy")
     end
 
     it "stores the answer as 'Other: <text>' on the form submission, like other specify options" do
-      register_with_agency_type("Other: Equine therapy")
+      register_with_organization_type("Other: Equine therapy")
 
       answer = FormAnswer.joins(:form_field)
         .find_by(form_fields: { field_identifier: "organization_type" })
@@ -482,7 +482,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
 
     it "captures the org-type 'Other' as an OtherResponse owned by the organization" do
-      register_with_agency_type("Other: Equine therapy")
+      register_with_organization_type("Other: Equine therapy")
 
       response = organization.other_responses.sole
       expect([ response.text, response.kind, response.promotable? ])
@@ -490,34 +490,34 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
 
     it "does not capture an OtherResponse for a non-'Other' classification" do
-      register_with_agency_type("501c3/nonprofit")
+      register_with_organization_type("501c3/nonprofit")
 
       expect(organization.other_responses).to be_empty
     end
 
-    it "stores a non-'Other' classification with no agency_type_other" do
-      register_with_agency_type("501c3/nonprofit")
+    it "stores a non-'Other' classification with no organization_type_other" do
+      register_with_organization_type("501c3/nonprofit")
 
-      expect(organization.agency_type).to eq("501c3/nonprofit")
-      expect(organization.agency_type_other).to be_nil
+      expect(organization.organization_type).to eq("501c3/nonprofit")
+      expect(organization.organization_type_other).to be_nil
     end
 
     it "overwrites a previously stored type with the latest registrant's answer" do
-      organization.update!(agency_type: "501c3/nonprofit", agency_type_other: nil)
+      organization.update!(organization_type: "501c3/nonprofit", organization_type_other: nil)
 
-      register_with_agency_type("Other: Equine therapy")
+      register_with_organization_type("Other: Equine therapy")
 
-      expect(organization.agency_type).to eq("Other")
-      expect(organization.agency_type_other).to eq("Equine therapy")
+      expect(organization.organization_type).to eq("Other")
+      expect(organization.organization_type_other).to eq("Equine therapy")
     end
 
-    it "clears a stale agency_type_other when the latest answer is no longer 'Other'" do
-      organization.update!(agency_type: "Other", agency_type_other: "Equine therapy")
+    it "clears a stale organization_type_other when the latest answer is no longer 'Other'" do
+      organization.update!(organization_type: "Other", organization_type_other: "Equine therapy")
 
-      register_with_agency_type("Government agency")
+      register_with_organization_type("Government agency")
 
-      expect(organization.agency_type).to eq("Government agency")
-      expect(organization.agency_type_other).to be_nil
+      expect(organization.organization_type).to eq("Government agency")
+      expect(organization.organization_type_other).to be_nil
     end
   end
 

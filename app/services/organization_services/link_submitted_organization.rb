@@ -1,7 +1,7 @@
 module OrganizationServices
   # The shared core of the two org-linking editors (event registration and form
   # submission): given the org-related answers a person submitted (an "entry" —
-  # org_name/position/website/agency_type/address), fill the organization's
+  # org_name/position/website/organization_type/address), fill the organization's
   # blank profile fields and work address from them (curated values are kept and
   # reported as conflicts instead), create the job + facilitator affiliations,
   # and report what was saved and what conflicted. The callers keep their
@@ -102,7 +102,7 @@ module OrganizationServices
       return [] unless @entry
 
       OrganizationServices::SyncProfile.call(
-        organization: @organization, overwrite: false, website: @entry[:website], agency_type: @entry[:agency_type]
+        organization: @organization, overwrite: false, website: @entry[:website], organization_type: @entry[:organization_type]
       ).changes
     end
 
@@ -120,7 +120,7 @@ module OrganizationServices
       OrganizationServices::ProfileDiff.call(
         organization: @organization,
         website: @entry[:website],
-        agency_type: @entry[:agency_type],
+        organization_type: @entry[:organization_type],
         address: submitted_address
       )
     end
