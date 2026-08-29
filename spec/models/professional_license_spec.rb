@@ -108,4 +108,27 @@ RSpec.describe ProfessionalLicense, type: :model do
       expect(license.reload).to be_used_for_ce
     end
   end
+
+  describe "timeline" do
+    it "labels events generically without the number" do
+      license = create(:professional_license, person: person, kind: "LCSW", number: "1123")
+
+      event = TimelineEvent.where(subject: license).sole
+
+      expect(event.snapshot["label"]).to eq("Professional license")
+      expect(event.snapshot["label"]).not_to include("1123")
+    end
+
+    it "keeps per-field change details while the label stays generic" do
+      license = create(:professional_license, person: person, kind: "LMFT", number: "1123")
+
+      expect { license.update!(kind: "LCSW", number: "1124") }
+        .to change { TimelineEvent.where(subject: license).where(action: "updated").count }.by(1)
+
+      event = TimelineEvent.where(subject: license).where(action: "updated").sole
+      expect(event.snapshot["changes"]["kind"]).to eq([ "LMFT", "LCSW" ])
+      expect(event.snapshot["changes"]["number"]).to eq([ "1123", "1124" ])
+      expect(event.snapshot["label"]).to eq("Professional license")
+    end
+  end
 end

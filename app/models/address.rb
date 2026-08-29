@@ -45,12 +45,12 @@ class Address < ApplicationRecord
   end
 
   def timeline_label
-    "Address: #{name}"
+    "address"
   end
 
   def timeline_changes
     saved_changes
       .slice(*ADDRESS_TIMELINE_ATTRIBUTES)
-      .transform_values { |(old_value, new_value)| [old_value.to_s, new_value.to_s] }
+      .transform_values { |(old_value, new_value)| [ old_value.to_s, new_value.to_s ] }
   end
 end
