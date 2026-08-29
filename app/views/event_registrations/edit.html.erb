@@ -67,7 +67,7 @@
 
   <% if @timeline_events.any? %>
     <div class="mt-8">
-      <h3 class="text-lg font-medium text-gray-900 mb-4">Timeline</h3>
+      <h3 class="mb-4 text-lg font-medium text-gray-900">Timeline</h3>
       <div class="space-y-3">
         <%= render partial: "timeline/event", collection: @timeline_events, as: :event, locals: { owner: @event_registration } %>
       </div>
