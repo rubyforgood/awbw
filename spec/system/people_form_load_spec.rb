@@ -15,6 +15,6 @@ RSpec.describe "People form loads", type: :system do
   scenario "edit person page loads" do
     visit edit_person_path(person)
 
-    expect(page).to have_content("Edit Person: Jane Doe")
+    expect(page).to have_content("Edit person: Jane Doe")
   end
 end

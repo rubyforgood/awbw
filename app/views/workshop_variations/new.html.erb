@@ -1,5 +1,5 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<%= render layout: "shared/create_page",
+<%= render layout: "shared/form_page",
            locals: { domain: :workshop_variations, icon: "fas fa-swatchbook",
                      title: "New workshop variation" } do %>
   <%= render "form" %>
