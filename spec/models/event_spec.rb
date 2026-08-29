@@ -67,6 +67,25 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#starts_on" do
+    # A training's date is a fact about the training, not about who's looking: an
+    # admin in Hawaii and one in New York have to agree, or the dates they store and
+    # the verdicts they anchor drift apart.
+    it "reads the same calendar day whatever zone the reader is in" do
+      event = create(:event, start_date: Time.utc(2026, 8, 14, 5, 0), end_date: Time.utc(2026, 8, 14, 17, 0))
+
+      hawaii = Time.use_zone("Hawaii") { Event.find(event.id).starts_on }
+      sydney = Time.use_zone("Sydney") { Event.find(event.id).starts_on }
+
+      expect(hawaii).to eq(sydney)
+      expect(hawaii).to eq(Date.new(2026, 8, 13))
+    end
+
+    it "is nil without a start date" do
+      expect(build(:event, start_date: nil).starts_on).to be_nil
+    end
+  end
+
   describe "#date_title" do
     it "labels the event by date and title, without the time or parens" do
       event = build(:event, title: "Youth Creativity Day", start_date: Time.zone.local(2026, 9, 14, 14, 9))

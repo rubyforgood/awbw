@@ -8,6 +8,8 @@ class AffiliationsController < ApplicationController
 
   def update
     authorize! @affiliation
+    # This form always posts the Inactive checkbox, so whatever it sends is deliberate.
+    @affiliation.inactive_supplied = affiliation_params.key?(:inactive)
     @affiliation.assign_attributes(affiliation_params)
     @affiliation.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
     @affiliation.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
@@ -100,7 +102,7 @@ class AffiliationsController < ApplicationController
 
   def affiliation_params
     params.require(:affiliation).permit(
-      :person_id, :organization_id, :title, :start_date, :end_date, :primary_contact,
+      :person_id, :organization_id, :title, :start_date, :end_date, :inactive, :primary_contact,
       :organization_address_id, :filemaker_code, :event_registration_id,
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ]
@@ -119,7 +121,7 @@ class AffiliationsController < ApplicationController
 
   # Return to whichever edit page the gear was clicked from, scrolled to the row
   # (or the affiliations section after a delete removes the row).
-  def affiliation_return_path(anchor: helpers.dom_id(@affiliation))
+  def affiliation_return_path(anchor: @affiliation.decorate.return_anchor)
     case params[:return_to]
     when "person"
       edit_person_path(params[:origin_id], anchor: anchor, admin: params[:admin].presence)

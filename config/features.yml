@@ -711,6 +711,19 @@
   pro_tips:
     - "Super-admins can edit any feature in place (rich descriptions with screenshots) and click \"Sync latest updates\" to pull in newly-shipped ones."
 
+- name: "Reconcile affiliations after a training"
+  area: events
+  display_status: admin_facing
+  released_on: 2026-08-18
+  action_path: "/events/1/reconcile_affiliations"
+  pr_number: 2195
+  summary: >-
+    A bulk action on an event that brings facilitator affiliations in line with who
+    attended — creating missing ones, ending them for people who didn't attend, and
+    reactivating anyone later marked attended. Preview every change before applying it.
+  pro_tips:
+    - "Job affiliations are never touched, and any row can be left as-is."
+
 - name: "Edit an affiliation's details and comments"
   area: people
   display_status: admin_facing
@@ -2689,3 +2702,18 @@
     preview now share one header so what you preview is what registrants see.
   pro_tips:
     - "The preview page and the live public form use the same header now, so the preview is a true likeness."
+
+- name: "Data health checks for admins"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-08-21
+  action_path: "/admin/data_health"
+  summary: >-
+    A page listing consistency checks that span every record rather than one page
+    at a time — each shows a count, the rows it found, and a button to fix them
+    where a correct fix exists.
+  pro_tips:
+    - "Checks with nothing to report stay quiet, so an empty page is the healthy state."
+    - >-
+      Not every check can be fixed automatically. Ones marked "Review by hand"
+      report only, because the right answer is a judgement call rather than a rule.

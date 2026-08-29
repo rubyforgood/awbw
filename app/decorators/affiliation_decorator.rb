@@ -23,4 +23,11 @@ class AffiliationDecorator < ApplicationDecorator
     end
     "Dates not recorded"
   end
+
+  # Where a back link should land on the person/organization editor. An inactive
+  # row sits on the Inactive tab, so jumping to the row itself would scroll to
+  # something the page isn't showing — land on the section instead.
+  def return_anchor
+    active? ? h.dom_id(object) : "affiliations"
+  end
 end

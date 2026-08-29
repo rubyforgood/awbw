@@ -161,10 +161,10 @@
                       <%= link_to "Open event dashboard →", dashboard_event_path(row.event),
                             class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
                       <% if row.event.ce_eligible? %>
-                        <%= link_to "CE sign-ins →", attendance_event_path(row.event, ce: "true", return_to: "participation"),
+                        <%= link_to "CE timesheets →", attendance_event_path(row.event, ce: "true", return_to: "participation"),
                               class: "text-xs font-medium text-teal-700 hover:underline" %>
                       <% else %>
-                        <%= link_to "Sign-ins →", attendance_event_path(row.event, return_to: "participation"),
+                        <%= link_to "Timesheets →", attendance_event_path(row.event, return_to: "participation"),
                               class: "text-xs font-medium text-teal-700 hover:underline" %>
                       <% end %>
                     </div>

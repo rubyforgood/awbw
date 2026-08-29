@@ -22,6 +22,17 @@ class Affiliation < ApplicationRecord
   # have this link.
   belongs_to :event_registration, optional: true, inverse_of: :affiliations
 
+  # Set by a caller that supplied `inactive` deliberately (the standalone editor's
+  # checkbox, or a nested row whose end date the admin just changed). Re-submitting
+  # the value it already holds isn't a change, so without this the date rule below
+  # would quietly undo a hand-set flag on the next date edit. Cast because it
+  # arrives from a form as "0"/"1", and "0" is truthy in Ruby.
+  attr_reader :inactive_supplied
+
+  def inactive_supplied=(value)
+    @inactive_supplied = ActiveModel::Type::Boolean.new.cast(value)
+  end
+
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
 
   # A communication logged on an affiliation is addressed to the affiliated person.
@@ -56,7 +67,7 @@ class Affiliation < ApplicationRecord
   # when a view must reflect a fixed point in time — e.g. the event dashboard
   # reporting organizations as they stood at the time of the event, so the
   # numbers don't drift as affiliations end after the fact.
-  scope :active_on, ->(date) {
+  scope :active_by_date_on, ->(date) {
     where("affiliations.start_date IS NULL OR affiliations.start_date <= ?", date)
       .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", date)
   }
@@ -193,7 +204,10 @@ class Affiliation < ApplicationRecord
     addresses.first.id if addresses&.one?
   end
 
+  # An explicit assignment wins: the date rule alone still reads a row ending today
+  # or later as active.
   def set_inactive_from_dates
+    return if inactive_changed? || inactive_supplied
     return unless end_date_changed? || start_date_changed?
 
     self.inactive = end_date.present? && end_date < Date.current

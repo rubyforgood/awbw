@@ -44,6 +44,18 @@ RSpec.describe Analytics::PersonActivityEvents do
       expect(described_class.new(person).relation).to include(target)
     end
 
+    it "includes payment events recorded under the STI subclass the tracker writes" do
+      payment = create(:payment, person: person, type: "CashPayment")
+      target = event(resource_type: "CashPayment", resource_id: payment.id, name: "create.payment")
+      expect(described_class.new(person).relation).to include(target)
+    end
+
+    it "includes events about comments on the person's affiliations" do
+      comment = create(:comment, commentable: create(:affiliation, person: person))
+      target = event(resource_type: "Comment", resource_id: comment.id, name: "create.comment")
+      expect(described_class.new(person).relation).to include(target)
+    end
+
     it "includes events about the person's continuing education registrations" do
       registration = create(:event_registration, registrant: person)
       ce = create(:continuing_education_registration, event_registration: registration)

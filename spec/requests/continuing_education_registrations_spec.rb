@@ -72,12 +72,12 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       end
     end
 
-    it "renders the index shell with the CE sign-ins menu" do
+    it "renders the index shell with the CE timesheets menu" do
       ce_registration
       get continuing_education_registrations_path
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("CE registrations")
-      expect(response.body).to include("CE sign-ins")
+      expect(response.body).to include("CE timesheets")
     end
 
     it "renders the results turbo frame with only the matching event's registrations" do
@@ -181,10 +181,10 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(ce_registration.reload.professional_license).to eq(other)
     end
 
-    describe "opened from the CE sign-ins (return_to=attendance)" do
+    describe "opened from the CE timesheets (return_to=attendance)" do
       it "points the back and cancel links at the report" do
         get edit_continuing_education_registration_path(ce_registration, return_to: "attendance")
-        expect(response.body).to include("CE sign-ins")
+        expect(response.body).to include("CE timesheets")
         expect(response.body).to include(attendance_event_path(event, ce: "true", anchor: "totals"))
       end
 

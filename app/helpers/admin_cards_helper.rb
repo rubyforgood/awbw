@@ -28,6 +28,7 @@ module AdminCardsHelper
   def user_content_cards
     [
       custom_card("Portal activity", admin_activities_counts_path, icon: "📊"),
+      custom_card("Data health", admin_data_health_path, icon: "🩺", color: :sky, intensity: 100),
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
       model_card(:notifications, icon: "🔔", title: t("communications.title")),
       custom_card("Event reports", reports_events_path, icon: "📊", color: :blue),

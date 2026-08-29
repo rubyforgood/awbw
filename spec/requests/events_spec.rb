@@ -370,7 +370,7 @@ RSpec.describe "Events", type: :request do
 
       # The four angles on this population sit on the eyebrow's row, each carrying the
       # report's own filters so switching angle keeps the same events in scope.
-      it "offers Details / Attendees / Scholarships / Sign-ins carrying the filters" do
+      it "offers Details / Attendees / Scholarships / Timesheets carrying the filters" do
         sign_in admin
         get participation_events_path(event_id: training_2026.id, event_type: "trainings")
 
@@ -378,7 +378,7 @@ RSpec.describe "Events", type: :request do
         expect(nav).to have_text("Details")
         expect(nav).to have_link("Attendees")
         expect(nav).to have_link("Scholarships")
-        expect(nav).to have_link("Sign-ins", href: signins_events_path(event_id: training_2026.id, event_type: "trainings"))
+        expect(nav).to have_link("Timesheets", href: signins_events_path(event_id: training_2026.id, event_type: "trainings"))
         # Details is the current page, so it isn't a link.
         expect(nav).to have_no_link("Details")
       end
@@ -390,7 +390,7 @@ RSpec.describe "Events", type: :request do
 
           nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
           expect(nav).to have_link("Details")
-          expect(nav).to have_link("Sign-ins")
+          expect(nav).to have_link("Timesheets")
           expect(nav).to have_link("Scholarships")
           expect(nav).to have_no_link("Attendees")
         end
@@ -450,19 +450,19 @@ RSpec.describe "Events", type: :request do
           payment_status: "unpaid", funder: "external", search: "TAC")
 
         nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
-        %w[ Attendees Scholarships Sign-ins ].each do |label|
+        %w[ Attendees Scholarships Timesheets ].each do |label|
           href = nav.find_link(label)[:href]
           expect(href).to include("scholarship=agreed", "payment_status=unpaid", "funder=external", "search=TAC")
         end
       end
 
-      it "links each event to its sign-ins, CE-scoped only when CE is enabled" do
+      it "links each event to its timesheets, CE-scoped only when CE is enabled" do
         training_2026.update!(ce_hours_offered: 6)
         sign_in admin
         get participation_events_path
-        expect(response.body).to include("CE sign-ins")
+        expect(response.body).to include("CE timesheets")
         expect(response.body).to include(attendance_event_path(training_2026))
-        expect(response.body).to include("Sign-ins →")
+        expect(response.body).to include("Timesheets →")
         expect(response.body).to include(attendance_event_path(webinar_2025))
       end
 
@@ -1518,21 +1518,21 @@ RSpec.describe "Events", type: :request do
       expect(response.body).not_to include("Any status")
     end
 
-    context "CE sign-ins link in bulk actions" do
+    context "CE timesheets link in bulk actions" do
       it "links to the CE attendance report for a CE-eligible event" do
         event.update!(ce_hours_offered: 6)
         get registrants_event_path(event)
 
-        expect(response.body).to include("CE sign-ins")
+        expect(response.body).to include("CE timesheets")
         expect(response.body).to include(attendance_event_path(event))
       end
 
-      it "links the generic sign-ins when the event offers no CE" do
+      it "links the generic timesheets when the event offers no CE" do
         event.update!(ce_hours_offered: 0)
         get registrants_event_path(event)
 
-        expect(response.body).not_to include("CE sign-ins")
-        expect(response.body).to include("Sign-ins")
+        expect(response.body).not_to include("CE timesheets")
+        expect(response.body).to include("Timesheets")
         expect(response.body).to include(attendance_event_path(event))
       end
     end

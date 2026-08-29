@@ -1,0 +1,24 @@
+<span class="pointer-events-none absolute top-full right-0 z-20 mt-1 hidden w-64 rounded-md bg-gray-900 px-3 py-2 text-xs font-normal text-white shadow-lg group-hover:block">
+  <% case kind %>
+  <% when :deactivate %>
+    <p class="mb-1">Ends this facilitator affiliation and marks it inactive, so it no longer counts as active. The record is kept — if the person is later marked attended, the return is recorded as a new affiliation rather than by reopening this one.</p>
+    <p class="mb-1">Offered for <strong>older</strong> affiliations only — ones this training didn't create. The end date is set to the day before this training, so the years they did facilitate stay on the record.</p>
+    <p>A row this training created is deleted instead: it recorded an assumption that never came true.</p>
+  <% when :delete %>
+    <p class="mb-1">Permanently deletes <strong>this</strong> facilitator affiliation. Everything else stays as-is:</p>
+    <ul class="list-disc space-y-0.5 pl-4">
+      <li>Job affiliations for this org</li>
+      <li>Facilitator affiliations for other orgs</li>
+    </ul>
+  <% when :retarget %>
+    <p class="mb-1">They transferred to another event, so the affiliation follows them: its start date becomes the new event's, and it re-points at that registration.</p>
+    <p>Nothing is ended or deleted. If their only affiliation here has already ended, a new one is created at the new event instead.</p>
+  <% when :reactivate %>
+    <p class="mb-1">Clears the end date this reconciliation set for this training, because the person is now recorded as having attended it. No lapse happened, so nothing is lost by reopening.</p>
+    <p>Pick <strong>Create new</strong> if this really is a fresh engagement that should sit alongside the old one.</p>
+  <% when :create %>
+    Creates the facilitator affiliation for this organization.
+  <% when :keep %>
+    Leaves this facilitator affiliation exactly as it is — no change.
+  <% end %>
+</span>

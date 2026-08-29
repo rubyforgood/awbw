@@ -120,6 +120,10 @@ class EventPolicy < ApplicationPolicy
     manage?
   end
 
+  def reconcile_affiliations?
+    manage?
+  end
+
   def invoice?
     manage?
   end

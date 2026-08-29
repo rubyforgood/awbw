@@ -34,4 +34,28 @@ RSpec.describe AffiliationDecorator do
       expect(affiliation.period_label).to eq("Dates not recorded")
     end
   end
+
+  # An inactive row sits on the Inactive tab, so a back link must land on the
+  # section rather than a row the page isn't showing.
+  describe "#return_anchor" do
+    it "points at the row itself when the affiliation is active" do
+      affiliation = create(:affiliation, start_date: 1.year.ago.to_date, end_date: nil)
+
+      expect(affiliation.decorate.return_anchor).to eq("affiliation_#{affiliation.id}")
+    end
+
+    it "points at the affiliations section when the row has ended" do
+      affiliation = create(:affiliation, start_date: 2.years.ago.to_date, end_date: 1.year.ago.to_date)
+
+      expect(affiliation.decorate.return_anchor).to eq("affiliations")
+    end
+
+    it "points at the section when the flag ended it, not the dates" do
+      affiliation = create(:affiliation, start_date: 1.year.ago.to_date, end_date: nil)
+      affiliation.inactive_supplied = true
+      affiliation.update!(inactive: true)
+
+      expect(affiliation.decorate.return_anchor).to eq("affiliations")
+    end
+  end
 end

@@ -179,6 +179,12 @@ RSpec.describe Affiliation, type: :model do
     it 'includes only the exact, case-sensitive title "Facilitator" (whitespace-trimmed)' do
       expect(described_class.facilitators).to contain_exactly(exact, whitespace)
     end
+
+    it 'qualifies title when joined with events (which also has title)' do
+      expect {
+        described_class.facilitators.joins(event_registration: :event).to_a
+      }.not_to raise_error
+    end
   end
 
   describe 'title normalization on write' do
@@ -259,7 +265,7 @@ RSpec.describe Affiliation, type: :model do
     end
   end
 
-  describe '.active_on' do
+  describe '.active_by_date_on' do
     let(:date) { Date.new(2024, 6, 1) }
     let!(:spanning) { create(:affiliation, start_date: Date.new(2023, 1, 1), end_date: Date.new(2025, 1, 1)) }
     let!(:open_ended) { create(:affiliation, start_date: Date.new(2023, 1, 1), end_date: nil) }
@@ -268,24 +274,24 @@ RSpec.describe Affiliation, type: :model do
     let!(:no_dates) { create(:affiliation, start_date: nil, end_date: nil) }
 
     it 'includes affiliations whose span covers the date' do
-      expect(described_class.active_on(date)).to include(spanning, open_ended)
+      expect(described_class.active_by_date_on(date)).to include(spanning, open_ended)
     end
 
     it 'excludes affiliations that ended before the date' do
-      expect(described_class.active_on(date)).not_to include(ended_before)
+      expect(described_class.active_by_date_on(date)).not_to include(ended_before)
     end
 
     it 'excludes affiliations that start after the date' do
-      expect(described_class.active_on(date)).not_to include(starts_after)
+      expect(described_class.active_by_date_on(date)).not_to include(starts_after)
     end
 
     it 'includes affiliations with no dates on record' do
-      expect(described_class.active_on(date)).to include(no_dates)
+      expect(described_class.active_by_date_on(date)).to include(no_dates)
     end
 
     it 'ignores the cached inactive flag, judging purely by dates' do
       flagged = create(:affiliation, start_date: Date.new(2023, 1, 1), end_date: nil, inactive: true)
-      expect(described_class.active_on(date)).to include(flagged)
+      expect(described_class.active_by_date_on(date)).to include(flagged)
     end
   end
 
@@ -356,6 +362,36 @@ RSpec.describe Affiliation, type: :model do
     it 'does not change inactive when unrelated fields change' do
       op.update!(inactive: true)
       op.update!(title: "New Title")
+      expect(op.reload.inactive).to be true
+    end
+
+    it 'keeps an explicitly set flag the dates would not derive' do
+      op.update!(start_date: Date.current, end_date: Date.current, inactive: true)
+
+      expect(op.reload.inactive).to be true
+      expect(op).not_to be_active
+    end
+
+    it 'treats a form\'s "0" as not supplied, so the dates still derive' do
+      op.inactive_supplied = "0"
+      op.update!(end_date: 1.day.ago.to_date)
+
+      expect(op.reload.inactive).to be true
+    end
+
+    it 'honours an end date of today when the form supplies the flag' do
+      op.inactive_supplied = "1"
+      op.update!(end_date: Date.current, inactive: "1")
+
+      expect(op.reload).not_to be_active
+    end
+
+    it 'keeps a hand-set flag when a later edit resubmits it alongside a new date' do
+      op.update!(start_date: Date.current, inactive: true)
+
+      op.inactive_supplied = true
+      op.update!(start_date: 1.month.ago.to_date, inactive: true)
+
       expect(op.reload.inactive).to be true
     end
   end

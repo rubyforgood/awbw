@@ -170,8 +170,7 @@ class OrganizationsController < ApplicationController
       affiliations = affiliations.includes(:person) unless affiliations.loaded?
       sorted = affiliations.to_a
                              .sort_by { |affiliation|
-                               expired = affiliation.inactive? || (affiliation.end_date.present? && affiliation.end_date < Date.current)
-                               [ expired ? 1 : 0,
+                               [ affiliation.active? ? 0 : 1,
                                  affiliation.person&.first_name.to_s.downcase,
                                  affiliation.person&.last_name.to_s.downcase ]
                              }
@@ -252,6 +251,7 @@ class OrganizationsController < ApplicationController
         :id,
         :person_id,
         :inactive,
+        :inactive_supplied,
         :primary_contact,
         :title,
         :start_date,
