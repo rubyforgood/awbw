@@ -849,6 +849,23 @@ class EventRegistration < ApplicationRecord
     event_attendance_time_entries.sum { |entry| entry.duration_minutes.to_i }
   end
 
+  # Whether the training's sign-in/out phase is finished for this registrant: the
+  # event has ended and no attendance entry is still open. Gates when the CE
+  # callout's post-training form surfaces (see RegistrantCeForm) so it's filled at
+  # the end of the training rather than earlier.
+  def ce_signouts_complete?
+    event.ended? && event_attendance_time_entries.none?(&:open?)
+  end
+
+  # Whether the CE callout's post-training form requirement is satisfied: no form
+  # is attached to the CE callout, or the attached form has been completed. A
+  # completed form is a prerequisite for the CE certificate (see
+  # ContinuingEducationRegistration#certificate_available?).
+  def ce_form_requirement_met?
+    ce_form = RegistrantCeForm.new(self)
+    ce_form.form.nil? || ce_form.complete?
+  end
+
   # CE is now tracked as one or more ContinuingEducationRegistration records,
   # each against a professional license. These aggregate across them so callers
   # (callouts, onboarding, CSV) read a single registration-level figure.

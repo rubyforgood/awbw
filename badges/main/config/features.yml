@@ -39,6 +39,19 @@
     pages now share a subnav, so you can move between them like tabs.
   pro_tips:
     - "Duplicate form makes a full copy of the form and drops you into editing the duplicate."
+- name: "Post-training form on the CE callout"
+  area: events
+  display_status: user_facing
+  released_on: 2026-08-29
+  action_path: "/registration/sample"
+  summary: >-
+    Attach a form to a training's CE callout and it appears on the registrant's
+    CE page once they've finished signing out — so a post-training form like an
+    evaluation is filled at the end, not at registration. Completing it is
+    required before the CE certificate is issued.
+  pro_tips:
+    - "Pick the form on the CE callout in the event editor. Leave it blank and the step never shows."
+    - "It only appears once the training has ended and no sign-in is left open, and the certificate stays locked until it's completed."
 
 - name: "Person profile in the new AWBW brand"
   area: people

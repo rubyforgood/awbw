@@ -122,6 +122,7 @@ module Events
     # requirements copy live on the materialized ce_hours callout row now.
     def ce
       @ce_callout = @event.registration_ticket_callouts.find_by(builtin_key: "ce_hours")
+      @ce_form = RegistrantCeForm.new(@event_registration)
       case params[:checkout]
       when "success"
         flash.now[:notice] = "Your CE payment was successful."
@@ -310,6 +311,9 @@ module Events
     def callout
       @callout = @event.registration_ticket_callouts.find(params[:callout_id])
       return redirect_to registration_ticket_path(@event_registration.slug) if @callout.hidden? || !@callout.delivers_form?
+      # The CE callout's form is a post-training step — it opens only once the
+      # registrant's sign-outs are complete, and it lives on the CE page.
+      return redirect_to registration_ce_path(@event_registration.slug) if ce_form_locked?(@callout)
 
       @form = @callout.form
       @resource_cards = @callout.decorate.resource_cards(registrant_slug: @event_registration.slug, return_to: "callout_form")
@@ -325,6 +329,7 @@ module Events
         redirect_to registration_callout_form_path(@event_registration.slug, @callout)
         return
       end
+      return redirect_to registration_ce_path(@event_registration.slug) if ce_form_locked?(@callout)
 
       EventRegistrationServices::CalloutFormSubmission.call(
         registration: @event_registration, callout: @callout, form_params: callout_form_params
@@ -356,6 +361,15 @@ module Events
     def callout_submission
       FormSubmission.find_by(person: @event_registration.registrant, form: @callout.form, event: @event,
                              role: EventRegistrationServices::CalloutFormSubmission.role_for(@callout))
+    end
+
+    # The CE callout's form is a post-training step gated on sign-out completion —
+    # it opens only after the registrant has finished signing out (and is reached
+    # from the CE page). Only the CE callout is gated this way; every other callout
+    # form follows its own drip date. The sample preview bypasses it so an admin can
+    # see the form on the sample ticket.
+    def ce_form_locked?(callout)
+      callout.ce_config? && !sample_preview? && !@event_registration.ce_signouts_complete?
     end
 
     def callout_form_params
