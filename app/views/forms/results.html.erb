@@ -12,20 +12,14 @@
     <%= form_page_subnav(@form, current: :results) %>
   </div>
 
-  <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
-    <div class="flex items-start gap-4">
-      <span class="hidden h-12 w-12 shrink-0 items-center justify-center rounded-xl sm:flex <%= DomainTheme.bg_class_for(:forms) %> <%= DomainTheme.text_class_for(:forms, intensity: 700) %> border <%= DomainTheme.border_class_for(:forms, intensity: 200) %> shadow-sm">
-        <i class="fa-solid fa-chart-pie text-xl" aria-hidden="true"></i>
-      </span>
-      <div>
-        <h1 class="text-primary font-display text-2xl font-semibold"><%= @form.display_name %> — results</h1>
-        <p class="mt-1 text-gray-600">Every submission to this form, rolled up question by question.</p>
-      </div>
+  <div class="mb-6 flex items-start gap-4">
+    <span class="hidden h-12 w-12 shrink-0 items-center justify-center rounded-xl sm:flex <%= DomainTheme.bg_class_for(:forms) %> <%= DomainTheme.text_class_for(:forms, intensity: 700) %> border <%= DomainTheme.border_class_for(:forms, intensity: 200) %> shadow-sm">
+      <i class="fa-solid fa-chart-pie text-xl" aria-hidden="true"></i>
+    </span>
+    <div>
+      <h1 class="text-primary font-display text-2xl font-semibold"><%= @form.display_name %> — results</h1>
+      <p class="mt-1 text-gray-600">Every submission to this form, rolled up question by question.</p>
     </div>
-    <%= link_to form_submissions_path(form_id: @form.id, return_to: "form_results"),
-                class: "inline-flex items-center whitespace-nowrap text-sm font-medium #{DomainTheme.text_class_for(:forms, intensity: 700)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} hover:underline" do %>
-      <i class="fa-solid fa-table-list mr-1.5"></i>View submissions
-    <% end %>
   </div>
 
   <% unless @aggregator.any_submissions? %>

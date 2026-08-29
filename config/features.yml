@@ -27,6 +27,19 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Navigate a form's pages, and fix the forms list actions"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-08-29
+  action_path: /forms
+  pr_number: 2410
+  summary: >-
+    On the forms list, a form's name now opens its editor and the "⋮" menu actions work again
+    (they were breaking the page). A form's Results, View, Edit, and Copy pages now share a subnav,
+    so you can move between them like tabs.
+  pro_tips:
+    - "Copy makes a full duplicate of the form and drops you into editing the copy."
+
 - name: "Person profile in the new AWBW brand"
   area: people
   display_status: user_facing

@@ -853,9 +853,11 @@ RSpec.describe "Forms", type: :request do
         doc = Nokogiri::HTML(response.body)
         nav = doc.at_css("nav[aria-label='Form pages']")
         expect(nav).to be_present
-        expect(nav.css("a").map { |a| a["href"] }).to include(
-          form_path(form), edit_form_path(form), copy_form_path(form)
+        hrefs = nav.css("a").map { |a| a["href"] }
+        expect(hrefs).to include(
+          form_path(form), edit_form_path(form), edit_sections_form_path(form), copy_form_path(form)
         )
+        expect(hrefs.any? { |h| h.start_with?(form_submissions_path) }).to be(true)
         active = nav.at_css("[aria-current='page']")
         expect(active&.text&.strip).to eq("Results")
       end
