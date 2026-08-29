@@ -90,6 +90,38 @@ RSpec.describe FormSubmissionChanges do
       expect(changes.edited_count).to eq(0)
       expect(changes.edited_groups).to be_empty
     end
+
+    it "surfaces an organization created through the linking process, alongside any fills on it" do
+      org = create(:organization, name: "Haven Hills")
+      stamp("create.organization", resource_type: "Organization", resource_id: org.id,
+            properties: { "resource_title" => org.name })
+      stamp("update.organization", resource_type: "Organization", resource_id: org.id,
+            properties: { "resource_title" => org.name,
+                          "changes" => { "website_url" => { "before" => nil, "after" => "haven.org" } } })
+
+      changes = described_class.new(submission)
+      expect(changes.edited?).to be(true)
+      expect(changes.edited_count).to eq(2)
+      group = changes.edited_groups.find { |g| g.record_type == "Organization" }
+      expect(group.changes.map(&:outcome)).to contain_exactly("Added", "Filled")
+    end
+  end
+
+  describe "field anchors for deep-linking to the record's edit page" do
+    it "carries the owner id and anchors own fields to their input, sub-records to their section" do
+      person = create(:person)
+      stamp("update.person", resource_type: "Person", resource_id: person.id,
+            properties: { "changes" => { "racial_ethnic_identity" => { "before" => "a", "after" => "b" } } })
+      stamp("update.address", resource_type: "Address", resource_id: 1,
+            properties: { "attributes" => { "addressable_type" => "Person", "addressable_id" => person.id },
+                          "changes" => { "zip_code" => { "before" => "1", "after" => "2" } } })
+
+      group = described_class.new(submission).groups.find { |g| g.record_type == "Person" }
+      expect(group.record_id).to eq(person.id)
+      anchors = group.changes.to_h { |c| [ c.label, c.anchor ] }
+      expect(anchors["Racial / ethnic identity"]).to eq("person_racial_ethnic_identity")
+      expect(anchors["ZIP"]).to eq("addresses")
+    end
   end
 
   it "only reads events stamped with this submission" do

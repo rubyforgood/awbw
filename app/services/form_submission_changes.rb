@@ -16,8 +16,13 @@ class FormSubmissionChanges
     "street_address" => "Street address"
   }.freeze
 
-  Change = Struct.new(:outcome, :label, :value, :previous_value, keyword_init: true)
-  Group = Struct.new(:record_type, :title, :changes, keyword_init: true)
+  # Sub-record attributes edit a section of the owner's edit page rather than a
+  # single input; own-record columns anchor to their form input (person_<attr> /
+  # organization_<attr>), so a change row can deep-link to where it's edited.
+  SECTION_ANCHORS = { "Address" => "addresses", "ContactMethod" => "phones" }.freeze
+
+  Change = Struct.new(:outcome, :label, :value, :previous_value, :anchor, keyword_init: true)
+  Group = Struct.new(:record_type, :record_id, :title, :changes, keyword_init: true)
 
   def initialize(form_submission)
     @form_submission = form_submission
@@ -31,22 +36,24 @@ class FormSubmissionChanges
       .sort_by { |group| [ GROUP_ORDER.index(group.record_type) || GROUP_ORDER.size, group.title.to_s ] }
   end
 
-  # A submission "changed" a value only when it edited a record that already
-  # existed — a value replaced, or a blank filled, on that record (both come from
-  # an update event). Creating new records and adding tags are a new submission's
-  # own data, not edits, so they don't count. (This is why linking an org that
-  # wasn't a clean match can raise the count: the fill lands on the existing org.)
+  # A submission "changed" a value when it edited a record that already existed —
+  # a value replaced, or a blank filled, on that record (both come from an update
+  # event) — or when it added an organization to the database through the linking
+  # flow (a created org). A person's own new records and added tags are the
+  # submission's own data, not edits, so they stay out. (This is why linking an
+  # org that wasn't a clean match can raise the count: the fill lands on the org,
+  # and creating one shows the org itself.)
   EDIT_OUTCOMES = %w[Replaced Filled].freeze
 
   def edited_groups
     groups.filter_map do |group|
-      edits = group.changes.select { |change| EDIT_OUTCOMES.include?(change.outcome) }
-      Group.new(record_type: group.record_type, title: group.title, changes: edits) if edits.any?
+      edits = group.changes.select { |change| edit?(change, group) }
+      Group.new(record_type: group.record_type, record_id: group.record_id, title: group.title, changes: edits) if edits.any?
     end
   end
 
   def edited_count
-    relevant_events.sum { |event| attribute_changes(event.properties["changes"] || {}).size }
+    edited_groups.sum { |group| group.changes.size }
   end
 
   def edited?
@@ -76,21 +83,27 @@ class FormSubmissionChanges
 
   def build_group(type, id, events)
     changes = events.flat_map { |event| changes_for(event) }.compact
-    Group.new(record_type: type, title: owner_title(type, id), changes: changes)
+    Group.new(record_type: type, record_id: id, title: owner_title(type, id), changes: changes)
+  end
+
+  # A created org (or the fill on an existing one) reads as a change; a new
+  # person/record or a tag is the submission's own data, not an edit.
+  def edit?(change, group)
+    EDIT_OUTCOMES.include?(change.outcome) || (change.outcome == "Added" && group.record_type == "Organization")
   end
 
   def changes_for(event)
     action = event.name.split(".").first
     props = event.properties
 
-    return attribute_changes(props["changes"]) if props["changes"].present?
+    return attribute_changes(props["changes"], props["resource_type"]) if props["changes"].present?
     return [ tag_change(action, event) ] if props["resource_type"].in?(%w[SectorableItem CategorizableItem])
     return [ record_change(action, event) ] if action.in?(%w[create destroy])
 
     []
   end
 
-  def attribute_changes(changes)
+  def attribute_changes(changes, resource_type)
     changes.except(*IGNORED_ATTRIBUTES).filter_map do |attribute, before_after|
       before, after = before_after.values_at("before", "after")
       next if after.blank? && before.blank?
@@ -99,9 +112,17 @@ class FormSubmissionChanges
         outcome: before.present? ? "Replaced" : "Filled",
         label: ATTRIBUTE_LABELS[attribute] || attribute.humanize,
         value: display_value(after),
-        previous_value: display_value(before)
+        previous_value: display_value(before),
+        anchor: anchor_for(resource_type, attribute)
       )
     end
+  end
+
+  # Own-record columns anchor to their form input (person_racial_ethnic_identity,
+  # organization_website_url); sub-records anchor to their section on the owner's
+  # edit page (addresses, contact-methods).
+  def anchor_for(resource_type, attribute)
+    SECTION_ANCHORS[resource_type] || "#{resource_type.underscore}_#{attribute}"
   end
 
   def tag_change(action, event)

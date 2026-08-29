@@ -28,13 +28,13 @@
     "Person" => "fa-user", "Organization" => "fa-building", "Affiliation" => "fa-link"
   }
 %>
-<div class="max-w-3xl mx-auto py-8 px-4">
+<div class="mx-auto max-w-3xl px-4 py-8">
   <div class="mb-4">
     <%= link_to back_link[:label], back_link[:path], class: "text-sm text-gray-500 hover:text-gray-700" %>
   </div>
 
-  <div class="rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5 bg-white">
-    <div class="px-6 pt-5 pb-5 border-b border-gray-100">
+  <div class="overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-black/5">
+    <div class="border-b border-gray-100 px-6 pt-5 pb-5">
       <div class="flex items-center gap-3">
         <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-900 text-white">
           <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -42,7 +42,7 @@
         <div class="min-w-0">
           <div class="flex items-center gap-2">
             <h1 class="text-2xl font-bold tracking-tight text-gray-900">What this form submission changed</h1>
-            <span class="inline-flex items-center gap-1 rounded-full bg-blue-100 text-blue-900 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide"><i class="fa-solid fa-lock text-2xs"></i> Admin</span>
+            <span class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold tracking-wide text-blue-900 uppercase"><i class="fa-solid fa-lock text-2xs"></i> Admin</span>
           </div>
           <p class="text-sm text-gray-500">
             <%= @form_submission.person&.full_name %> · <%= @form_submission.form&.display_name || @form_submission.form&.name %> · <%= @form_submission.created_at.to_date.to_fs(:long) %>
@@ -51,11 +51,16 @@
       </div>
     </div>
 
-    <div class="px-6 py-6 space-y-5">
+    <div class="space-y-5 px-6 py-6">
       <% if @change_groups.any? %>
-        <p class="text-xs text-gray-500"><strong><%= pluralize(@changed_count, "value") %></strong> this submission changed on records that already existed — a value replaced or a blank filled. A replaced value keeps its previous entry so it can be put back. (Brand-new records and added tags aren't shown — they're new data, not changes.)</p>
+        <p class="text-xs text-gray-500"><strong><%= pluralize(@changed_count, "change") %></strong> from this submission — values replaced or filled on records that already existed, plus any organization it added through the linking flow. A replaced value keeps its previous entry so it can be put back. (The submitter's own new records and tags aren't shown.) Each row opens that record's edit page at the field.</p>
 
         <% @change_groups.each do |group| %>
+          <%# Each row deep-links to the owner record's edit page at the changed field. %>
+          <% edit_at = case group.record_type
+             when "Person" then ->(anchor) { edit_person_path(group.record_id, anchor: anchor) }
+             when "Organization" then ->(anchor) { edit_organization_path(group.record_id, anchor: anchor) }
+             end %>
           <section class="rounded-xl border border-gray-200 overflow-hidden">
             <div class="flex items-center gap-2 px-5 py-3 bg-gray-50 border-b border-gray-200">
               <i class="fa-solid <%= group_icon.fetch(group.record_type, "fa-database") %> text-gray-500"></i>
@@ -63,15 +68,22 @@
             </div>
             <ul class="divide-y divide-gray-100">
               <% group.changes.each do |change| %>
-                <li class="px-5 py-3 flex items-start justify-between gap-3 text-sm">
+                <% row = capture do %>
                   <div class="min-w-0">
-                    <p class="text-gray-500"><%= change.label %></p>
+                    <p class="text-gray-500 flex items-center gap-1.5"><%= change.label %><% if edit_at %> <i class="fa-solid fa-pen text-2xs text-gray-300 group-hover/row:text-blue-500"></i><% end %></p>
                     <p class="text-gray-800">
                       <span class="font-medium"><%= change.value.presence || "—" %></span><%
                       %><% if change.outcome == "Replaced" && change.previous_value.present? %> <span class="text-rose-600">(replaced “<%= change.previous_value %>”)</span><% end %>
                     </p>
                   </div>
                   <span class="shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold <%= outcome_chip.fetch(change.outcome, "bg-gray-100 text-gray-700 border-gray-200") %>"><%= change.outcome %></span>
+                <% end %>
+                <li>
+                  <% if edit_at %>
+                    <%= link_to edit_at.call(change.anchor), class: "group/row flex items-start justify-between gap-3 px-5 py-3 text-sm hover:bg-blue-50 transition-colors" do %><%= row %><% end %>
+                  <% else %>
+                    <div class="flex items-start justify-between gap-3 px-5 py-3 text-sm"><%= row %></div>
+                  <% end %>
                 </li>
               <% end %>
             </ul>
