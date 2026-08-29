@@ -236,7 +236,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       reg = create(:event_registration, event: same_day, registrant: person, status: "no_show")
       create(:event_registration_organization, event_registration: reg, organization: organization)
       affiliation = create(:affiliation, person: person, organization: organization, title: "Facilitator",
-                           start_date: Date.current, event_registration: reg)
+                           start_date: same_day.starts_on, event_registration: reg)
 
       post perform_reconcile_affiliations_event_path(same_day), params: { outcome: { "aff:#{affiliation.id}" => "deactivate" } }
 

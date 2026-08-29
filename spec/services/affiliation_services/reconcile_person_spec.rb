@@ -20,7 +20,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
            person: person,
            organization: organization,
            title: "Facilitator",
-           start_date: start_date || registration.event.start_date.to_date,
+           start_date: start_date || registration.event.starts_on,
            event_registration: registration)
   end
 
@@ -150,7 +150,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
 
       reconcile(reg, include_unowned: true)
 
-      expect(hand_created.reload.end_date).to eq(reg.event.start_date.to_date - 1.day)
+      expect(hand_created.reload.end_date).to eq(reg.event.starts_on - 1.day)
       expect(hand_created.start_date).to eq(started_on)
     end
 
@@ -253,7 +253,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
                            registration: source, include_unowned: true)
 
       affiliation.reload
-      expect(affiliation.start_date).to eq(destination_event.start_date.to_date)
+      expect(affiliation.start_date).to eq(destination_event.starts_on)
       expect(affiliation.event_registration_id).to eq(destination.id)
       expect(affiliation.end_date).to be_nil
     end
@@ -270,7 +270,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
 
       expect(ended.reload.end_date).to eq(2.years.ago.to_date)
       fresh = person.affiliations.facilitators.where(organization: organization).order(:start_date).last
-      expect(fresh.start_date).to eq(destination_event.start_date.to_date)
+      expect(fresh.start_date).to eq(destination_event.starts_on)
       expect(fresh.event_registration_id).to eq(destination.id)
     end
 
@@ -293,7 +293,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       described_class.call(person: person, organization: organization, event: source.event,
                            registration: source, include_unowned: true)
 
-      expect(affiliation.reload.start_date).to eq(source.event.start_date.to_date)
+      expect(affiliation.reload.start_date).to eq(source.event.starts_on)
       expect(affiliation.event_registration_id).to eq(source.id)
     end
 
@@ -407,7 +407,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       reg = training_registration(status: "attended")
       create(:affiliation, person: person, organization: organization, title: "Facilitator",
                            start_date: 3.years.ago.to_date,
-                           end_date: reg.event.start_date.to_date - 1.day)
+                           end_date: reg.event.starts_on - 1.day)
 
       plan = described_class.new(person: person, organization: organization, event: reg.event,
                                  registration: reg, include_unowned: true).plan
