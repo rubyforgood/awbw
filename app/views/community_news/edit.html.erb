@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:community_news) %> border border-gray-200 rounded-xl shadow p-6">
-          <div class="flex flex-wrap justify-end gap-2 mb-4">
+<div class="<%= DomainTheme.bg_class_for(:community_news) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+          <div class="mb-4 flex flex-wrap justify-end gap-2">
             <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
             <%= link_to "Community News", community_news_index_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
             <% if @community_news.reference_url.present? %>
@@ -10,7 +10,7 @@
             <%= link_to "View", community_news_path(@community_news, no_redirect: true),
                         class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
           </div>
-          <h1 class="text-2xl font-semibold text-gray-900 mb-6">Edit <%= @community_news.class.model_name.human.downcase %></h1>
+          <h1 class="text-primary mb-6 font-display text-2xl font-semibold">Edit <%= @community_news.class.model_name.human.downcase %></h1>
 
           <div class="space-y-6">
             <div class="mt-4">

@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<div class="mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:events) %> rounded-xl border border-gray-200 p-6 shadow">
+<div class="mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:events) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="w-full">
     <div class="mb-4">
       <%= link_to admin_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
@@ -64,7 +64,7 @@
 
     <% result_src = bulk_payments_path(request.query_parameters) %>
     <%= turbo_frame_tag :bulk_payments_results, src: result_src, data: { turbo: "temporary" } do %>
-      <div class="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-400 shadow-sm">
+      <div class="border-primary/10 rounded-2xl border bg-white py-16 text-center text-gray-400 shadow-sm">
         <i class="fa-solid fa-spinner fa-spin text-2xl" aria-hidden="true"></i>
         <p class="mt-2 text-sm">Loading submissions…</p>
       </div>

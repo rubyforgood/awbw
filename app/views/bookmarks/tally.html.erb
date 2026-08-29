@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
-      <h1 class="text-2xl font-bold mb-4">Bookmarks tally</h1>
+<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+      <h1 class="text-primary mb-4 font-display text-2xl font-bold">Bookmarks tally</h1>
 
       <!-- Filter form -->
       <%= form_tag('/bookmarks/tally', method: :get, class: "space-y-4", data: { controller: "collection" }) do %>
@@ -10,7 +10,7 @@
       <div class="rounded-xl bg-white p-6">
       <div class="flex gap-4">
         <div class="flex-1 bg-gray-100 p-4">
-          <table class="w-full border border-gray-200 rounded-lg shadow-sm">
+          <table class="w-full rounded-lg border border-gray-200 shadow-sm">
             <thead>
               <tr>
                 <th colspan="2" class="bg-gray-400 px-4 py-2 text-white">Bookmarks</th>
@@ -45,7 +45,7 @@
           </table>
         </div>
         <div class="flex-1 p-4">
-          <table class="w-full border border-gray-200 bg-gray-300 rounded-lg shadow-sm">
+          <table class="w-full rounded-lg border border-gray-200 bg-gray-300 shadow-sm">
             <thead>
               <tr>
                 <th colspan="2" class="bg-gray-400 px-4 py-2 text-white">Workshops led (via logs)</th>

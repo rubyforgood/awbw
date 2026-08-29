@@ -1,7 +1,7 @@
 <% sort_base = params.permit(:person_query, :kind, :expired).to_h.symbolize_keys %>
 <% sort_link = sort_header_link(frame: "professional_licenses_results", path: ->(p) { professional_licenses_path(p) }, base: sort_base) %>
 <%= turbo_frame_tag :professional_licenses_results do %>
-  <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm blur-on-submit">
+  <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm blur-on-submit">
     <% if @professional_licenses.any? %>
       <% total = @professional_licenses.respond_to?(:total_entries) ? @professional_licenses.total_entries : @professional_licenses.size %>
       <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">

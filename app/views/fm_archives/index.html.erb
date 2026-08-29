@@ -1,8 +1,8 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="border border-gray-200 rounded-xl shadow p-6">
+<div class="border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="space-y-6">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-semibold text-gray-900">FileMaker Archive</h1>
+    <div class="mb-6 flex items-center justify-between">
+      <h1 class="text-primary font-display text-2xl font-semibold">FileMaker Archive</h1>
     </div>
 
     <div class="flex flex-wrap gap-2">
@@ -13,7 +13,7 @@
     </div>
 
     <% if @records %>
-      <div class="rounded-xl bg-white p-6 overflow-x-auto">
+      <div class="overflow-x-auto rounded-xl bg-white p-6">
         <table class="w-full border-collapse border border-gray-200 text-sm">
           <thead>
             <tr class="bg-gray-100">
@@ -33,7 +33,7 @@
           </tbody>
         </table>
 
-        <div class="pagination flex justify-center mt-8">
+        <div class="pagination mt-8 flex justify-center">
           <%= tailwind_paginate @records, params: { table: @selected } %>
         </div>
       </div>

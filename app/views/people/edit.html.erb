@@ -1,5 +1,5 @@
 <% content_for(:page_bg_class, "admin-or-owner") %>
-<div class="<%= DomainTheme.bg_class_for(:people) %> rounded-xl border border-gray-200 p-6 shadow">
+<div class="<%= DomainTheme.bg_class_for(:people) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
         <div class="sticky top-0 z-10 <%= DomainTheme.bg_class_for(:people) %> pb-3">
           <% if params[:return_to] == "onboarding" && params[:event_id].present? %>
             <div class="mb-2">
@@ -40,7 +40,7 @@
             <%= link_to "People", people_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
             <%= link_to "Profile", person_path(@person), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
           </div>
-          <h1 class="text-3xl font-semibold tracking-tight text-gray-900">
+          <h1 class="text-primary font-display text-3xl font-semibold tracking-tight">
             Edit Person: <%= truncate(@person.name, length: 30) %>
           </h1>
         </div>
@@ -58,7 +58,7 @@
             <div class="mb-2 font-semibold text-gray-700">
               Associated records
             </div>
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+            <div class="border-primary/10 rounded-2xl border bg-gray-50 p-4 shadow-sm">
               <%= render "associated_records", person: @person %>
             </div>
           </div>

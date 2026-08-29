@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<div class="form-submissions-index mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:forms) %> rounded-xl border border-gray-200 p-6 shadow">
+<div class="form-submissions-index mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:forms) %> rounded-2xl border border-primary/10 p-6 shadow-sm">
   <div class="w-full">
     <% if params[:return_to] == "form_results" && @form %>
       <div class="mb-4">
@@ -157,7 +157,7 @@
 
     <% result_src = form_submissions_path(request.query_parameters) %>
     <%= turbo_frame_tag :form_submissions_results, src: result_src, data: { turbo: "temporary" } do %>
-      <div class="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-400 shadow-sm">
+      <div class="rounded-2xl border border-primary/10 bg-white py-16 text-center text-gray-400 shadow-sm">
         <i class="fa-solid fa-spinner fa-spin text-2xl" aria-hidden="true"></i>
         <p class="mt-2 text-sm">Loading submissions…</p>
       </div>

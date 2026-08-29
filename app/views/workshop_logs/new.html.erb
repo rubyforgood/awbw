@@ -1,17 +1,17 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
-<div class="<%= DomainTheme.bg_class_for(:workshop_logs) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:workshop_logs) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
 
       <!-- Header -->
       <div class="mb-8 space-y-4">
         <!-- Alert -->
         <div id="notification_monthly"
-             class="hidden relative rounded-md border border-green-300 bg-green-50 text-green-800 px-4 py-3 text-sm flex items-start justify-between">
+             class="relative flex hidden items-start justify-between rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-800">
           <span>
             A monthly report has already been submitted for this month.
             To submit an additional workshop log, please contact your program manager.
           </span>
           <button type="button"
-                  class="text-green-700 hover:text-green-900 font-semibold ml-4"
+                  class="ml-4 font-semibold text-green-700 hover:text-green-900"
                   data-dismiss="alert"
                   aria-label="Close">
             &times;
@@ -19,18 +19,18 @@
         </div>
 
         <!-- Title -->
-        <h1 class="text-2xl font-semibold text-gray-900">
+        <h1 class="text-primary font-display text-2xl font-semibold">
           New <%= @workshop_log.class.model_name.human.downcase %>
         </h1>
 
         <!-- Description -->
-        <p class="text-gray-700 leading-relaxed">
+        <p class="leading-relaxed text-gray-700">
           An optional tool to track data from your art workshops. If you don't see the workshop you facilitated listed in the dropdown menu, you can type in a new title in the field below.
         </p>
       </div>
 
       <div class="space-y-6">
-        <div class="bg-white rounded mt-4 p-6">
+        <div class="mt-4 rounded bg-white p-6">
           <%= render "form" %>
         </div>
       </div>

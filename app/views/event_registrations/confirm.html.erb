@@ -1,19 +1,19 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:event_registrations) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="max-w-2xl mx-auto">
-    <div class="flex items-center mb-6">
-      <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-green-100">
+<div class="<%= DomainTheme.bg_class_for(:event_registrations) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+  <div class="mx-auto max-w-2xl">
+    <div class="mb-6 flex items-center">
+      <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
         <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
         </svg>
       </div>
-      <h1 class="ml-3 text-xl font-semibold text-gray-900">Registration created</h1>
+      <h1 class="text-primary ml-3 font-display text-xl font-semibold">Registration created</h1>
     </div>
 
-    <div class="bg-white rounded-lg p-4 mb-6">
+    <div class="mb-6 rounded-lg bg-white p-4">
       <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
         <dt class="text-gray-500">Registrant</dt>
-        <dd class="text-gray-900 font-medium"><%= @person.full_name %></dd>
+        <dd class="font-medium text-gray-900"><%= @person.full_name %></dd>
         <dt class="text-gray-500">Email</dt>
         <dd class="text-gray-900"><%= @person.preferred_email.presence || "No email on file" %></dd>
         <dt class="text-gray-500">Event</dt>
@@ -21,11 +21,11 @@
         <dt class="text-gray-500">Account status</dt>
         <dd>
           <% if @user.nil? %>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">No user account</span>
+            <span class="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">No user account</span>
           <% elsif @user.confirmed_at.present? %>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Confirmed</span>
+            <span class="inline-flex items-center rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">Confirmed</span>
           <% else %>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">Unconfirmed</span>
+            <span class="inline-flex items-center rounded bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700">Unconfirmed</span>
           <% end %>
         </dd>
       </dl>
@@ -40,7 +40,7 @@
       <p class="text-sm font-medium text-gray-700">Optional follow-up actions:</p>
 
       <% if @user.nil? && @person.preferred_email.present? %>
-        <label class="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+        <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 hover:bg-gray-50">
           <%= check_box_tag :create_user, "1", false, class: "mt-0.5" %>
           <div>
             <span class="text-sm font-medium text-gray-900">Create user account</span>
@@ -50,7 +50,7 @@
       <% end %>
 
       <% if @user.nil? || @user&.confirmed_at.nil? %>
-        <label class="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+        <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 hover:bg-gray-50">
           <%= check_box_tag :send_invite, "1", false, class: "mt-0.5" %>
           <div>
             <span class="text-sm font-medium text-gray-900">Send system invite email</span>
@@ -66,7 +66,7 @@
       <% end %>
 
       <% if @person.preferred_email.present? %>
-        <label class="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+        <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 hover:bg-gray-50">
           <%= check_box_tag :send_confirmation_email, "1", false, class: "mt-0.5" %>
           <div>
             <span class="text-sm font-medium text-gray-900">Send registration confirmation email</span>
@@ -75,7 +75,7 @@
         </label>
       <% end %>
 
-      <label class="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+      <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 hover:bg-gray-50">
         <%= check_box_tag :send_admin_fyi, "1", false, class: "mt-0.5" %>
         <div>
           <span class="text-sm font-medium text-gray-900">Send admin notification email</span>
@@ -83,7 +83,7 @@
         </div>
       </label>
 
-      <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+      <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
         <% skip_path = @return_to == "registrants" ? registrants_event_row_path(@event_registration.event, @event_registration.id) : registration_ticket_path(@event_registration.slug) %>
         <%= link_to "Skip", skip_path, class: "btn btn-secondary-outline" %>
         <button type="submit" class="btn btn-primary">Send selected</button>

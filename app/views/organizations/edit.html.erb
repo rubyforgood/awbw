@@ -1,5 +1,5 @@
 <% content_for(:page_bg_class, "admin-or-owner") %>
-<div class="<%= DomainTheme.bg_class_for(:organizations) %> rounded-xl border border-gray-200 p-6 shadow">
+<div class="<%= DomainTheme.bg_class_for(:organizations) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
         <% if params[:return_to] == "onboarding" && params[:event_id].present? %>
           <div class="mb-2">
             <%= link_to onboarding_event_row_path(params[:event_id], params[:highlight]), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
@@ -15,7 +15,7 @@
           <%= link_to "Organizations", organizations_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
           <%= link_to "Profile", organization_path(@organization), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         </div>
-        <h1 class="mb-3 text-3xl font-semibold tracking-tight text-gray-900">
+        <h1 class="text-primary mb-3 font-display text-3xl font-semibold tracking-tight">
           Edit Organization: <%= truncate(@organization.name, length: 40) %>
         </h1>
         <div class="space-y-6">

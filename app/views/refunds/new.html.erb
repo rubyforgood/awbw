@@ -1,21 +1,21 @@
-<div class="max-w-2xl mx-auto" data-controller="search-type-select">
-  <h1 class="text-2xl font-bold mb-6">New Refund</h1>
+<div class="mx-auto max-w-2xl" data-controller="search-type-select">
+  <h1 class="text-primary mb-6 font-display text-2xl font-bold">New Refund</h1>
   <%= simple_form_for @refund, url: refunds_path do |f| %>
     <%= f.hidden_field :refundable_type %>
     <%= f.hidden_field :refundable_id %>
     <% if @payment.present? %>
-      <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+      <div class="mb-4 rounded-lg bg-gray-50 p-4">
         <p class="text-sm font-medium text-gray-700">For Payment</p>
         <p class="text-lg text-gray-900"><%= dollars_from_cents(@payment.amount_cents) %></p>
         <p class="text-sm text-gray-500">Remaining: <%= dollars_from_cents(@payment.amount_cents_remaining) %></p>
       </div>
     <% else %>
-      <div class="mb-4 p-4 bg-red-50 rounded-lg">
+      <div class="mb-4 rounded-lg bg-red-50 p-4">
         <p class="text-sm font-medium text-red-700">Error: No payment found</p>
       </div>
     <% end %>
     <% if @payment.is_a?(ExternalProcessorPayment) %>
-      <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+      <div class="mb-4 rounded-lg bg-blue-50 p-4">
         <p class="text-sm text-blue-700">This refund will be processed via Stripe and returned to the original payment method.</p>
       </div>
     <% end %>
@@ -50,8 +50,8 @@
       </template>
       <div data-search-type-select-target="pickerContainer">
         <div>
-          <label class="text-sm font-medium text-gray-500 mb-1 block italic">Select Recipient Type</label>
-          <div class="w-full bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 cursor-not-allowed min-h-[2.2rem]"></div>
+          <label class="mb-1 block text-sm font-medium text-gray-500 italic">Select Recipient Type</label>
+          <div class="min-h-[2.2rem] w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 px-3 py-2"></div>
         </div>
       </div>
       <div class="mb-4">

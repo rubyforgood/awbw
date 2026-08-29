@@ -1,7 +1,7 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <% grant = @grant.decorate %>
 
-<div class="max-w-4xl mx-auto <%= DomainTheme.bg_class_for(:grants) %> border border-gray-200 rounded-xl shadow p-6 space-y-6">
+<div class="mx-auto max-w-4xl <%= DomainTheme.bg_class_for(:grants) %> border-primary/10 space-y-6 rounded-2xl border p-6 shadow-sm">
   <div>
     <%# Eyebrow returns to wherever the grant was opened from: the scholarships
         index (when linked from a grant group there) or the grants index. %>
@@ -16,11 +16,11 @@
     <% end %>
     <div class="flex items-start justify-between">
       <div>
-        <div class="flex items-center gap-2 flex-wrap">
-          <h1 class="text-2xl font-semibold text-gray-900"><%= grant.name %></h1>
+        <div class="flex flex-wrap items-center gap-2">
+          <h1 class="text-primary font-display text-2xl font-semibold"><%= grant.name %></h1>
           <%= grant.legacy_scholarship_badge %>
         </div>
-        <p class="text-gray-600 mt-1"><%= grant_funder_badge(grant) %></p>
+        <p class="mt-1 text-gray-600"><%= grant_funder_badge(grant) %></p>
       </div>
       <% if allowed_to?(:edit?, @grant) %>
         <%= link_to "Edit", edit_grant_path(@grant), class: "btn btn-primary-outline" %>
@@ -30,14 +30,14 @@
 
   <!-- Photos -->
   <% if @grant.primary_asset&.file&.attached? || @grant.gallery_assets.any? { |asset| asset.file.attached? } %>
-    <div class="bg-white rounded-lg shadow p-5">
+    <div class="rounded-lg bg-white p-5 shadow">
       <%= render "assets/display_assets", resource: @grant, link: true %>
     </div>
   <% end %>
 
   <!-- Budget summary -->
-  <div class="bg-white rounded-lg shadow p-5">
-    <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+  <div class="rounded-lg bg-white p-5 shadow">
+    <dl class="grid grid-cols-1 gap-4 text-center sm:grid-cols-3">
       <div>
         <dt class="text-sm font-medium text-gray-500">Funding amount</dt>
         <dd class="mt-1 text-xl font-semibold text-gray-900"><%= grant.amount %></dd>
@@ -56,8 +56,8 @@
   </div>
 
   <!-- Details -->
-  <div class="bg-white rounded-lg shadow p-5">
-    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <div class="rounded-lg bg-white p-5 shadow">
+    <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <div>
         <dt class="text-sm font-medium text-gray-500">Funds allocation deadline</dt>
         <dd class="mt-1 text-sm text-gray-900"><%= grant.funds_allocation_deadline %></dd>
@@ -71,7 +71,7 @@
     <% if @grant.description.present? %>
       <div class="mt-4">
         <dt class="text-sm font-medium text-gray-500">Description</dt>
-        <dd class="mt-1 text-sm text-gray-900 whitespace-pre-line"><%= @grant.description %></dd>
+        <dd class="mt-1 text-sm whitespace-pre-line text-gray-900"><%= @grant.description %></dd>
       </div>
     <% end %>
   </div>
@@ -81,9 +81,9 @@
   <% grant_categories = @grant.categories.includes(:category_type).order(Arel.sql("category_types.name, categories.position, categories.name")) %>
   <% if grant_sectors.any? || grant_categories.any? %>
     <% tag_count = grant_sectors.size + grant_categories.size %>
-    <div class="bg-white rounded-lg shadow p-5" data-controller="dropdown">
+    <div class="rounded-lg bg-white p-5 shadow" data-controller="dropdown">
       <button type="button"
-              class="inline-flex items-center gap-2 text-lg font-semibold text-gray-900 hover:text-gray-700 cursor-pointer transition"
+              class="inline-flex cursor-pointer items-center gap-2 text-lg font-semibold text-gray-900 transition hover:text-gray-700"
               data-action="dropdown#toggle"
               data-dropdown-payload-param='[{"grant_tags_content":"hidden"}, {"grant_tags_show_label":"hidden"}, {"grant_tags_hide_label":"hidden"}, {"grant_tags_chevron":"rotate-180"}]'>
         <i id="grant_tags_chevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
@@ -91,7 +91,7 @@
         <span id="grant_tags_hide_label" class="hidden">Hide tags (<%= tag_count %>)</span>
       </button>
 
-      <div id="grant_tags_content" class="hidden mt-4 flex flex-wrap gap-2">
+      <div id="grant_tags_content" class="mt-4 flex hidden flex-wrap gap-2">
         <% grant_sectors.each do |sector| %>
           <%= render "sectors/tagging_label", sector: sector %>
         <% end %>
@@ -103,10 +103,10 @@
   <% end %>
 
   <!-- Eligibility criteria -->
-  <div class="bg-white rounded-lg shadow p-5">
-    <h2 class="text-lg font-semibold text-gray-900 mb-2">Eligibility criteria</h2>
+  <div class="rounded-lg bg-white p-5 shadow">
+    <h2 class="mb-2 text-lg font-semibold text-gray-900">Eligibility criteria</h2>
     <% if @grant.eligibility_criteria_list.any? %>
-      <ul class="list-disc pl-5 space-y-1 text-sm text-gray-800">
+      <ul class="list-disc space-y-1 pl-5 text-sm text-gray-800">
         <% @grant.eligibility_criteria_list.each do |criterion| %>
           <li><%= criterion %></li>
         <% end %>
@@ -117,10 +117,10 @@
   </div>
 
   <!-- Tasks -->
-  <div class="bg-white rounded-lg shadow p-5">
-    <h2 class="text-lg font-semibold text-gray-900 mb-2">Tasks to complete</h2>
+  <div class="rounded-lg bg-white p-5 shadow">
+    <h2 class="mb-2 text-lg font-semibold text-gray-900">Tasks to complete</h2>
     <% if @grant.task_list.any? %>
-      <ul class="list-disc pl-5 space-y-1 text-sm text-gray-800">
+      <ul class="list-disc space-y-1 pl-5 text-sm text-gray-800">
         <% @grant.task_list.each do |task| %>
           <li><%= task %></li>
         <% end %>

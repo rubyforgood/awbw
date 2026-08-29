@@ -5,7 +5,7 @@
 <% payment = ce.payment_status_badge %>
 <% certificate = ce.certificate_badge %>
 
-<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:continuing_education) %> rounded-xl border border-gray-200 p-4 shadow sm:p-6">
+<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:continuing_education) %> border-primary/10 rounded-2xl border p-4 shadow-sm sm:p-6">
   <%# Top bar: back to the CE registrations index + Edit / Home. %>
   <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
     <%= link_to continuing_education_registrations_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>

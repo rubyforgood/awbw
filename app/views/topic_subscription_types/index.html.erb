@@ -1,13 +1,13 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<div class="max-w-5xl mx-auto <%= DomainTheme.bg_class_for(:topic_subscription_types) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="max-w-5xl mx-auto <%= DomainTheme.bg_class_for(:topic_subscription_types) %> border border-primary/10 rounded-2xl shadow-sm p-6">
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
     <%= link_to "← Subscriptions", topic_subscriptions_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
   <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
     <div>
-      <h1 class="text-2xl font-semibold text-gray-900">Subscription topics</h1>
+      <h1 class="font-display text-2xl font-semibold text-primary">Subscription topics</h1>
       <p class="text-gray-600 mt-1">The topics people can subscribe to. Archive a topic to retire it without losing existing subscriptions.</p>
     </div>
     <%= link_to new_topic_subscription_type_path, class: "btn btn-primary inline-flex items-center gap-1.5" do %>
@@ -16,7 +16,7 @@
     <% end %>
   </div>
 
-  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+  <div class="bg-white border border-primary/10 rounded-2xl shadow-sm overflow-hidden">
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
       <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Status filter">
         <%= link_to topic_subscription_types_path(status: "active"),

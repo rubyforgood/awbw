@@ -1,36 +1,36 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <% pending_email_change = @user.unconfirmed_email.present? %>
 <% target_email = pending_email_change ? @user.unconfirmed_email : @user.email %>
-<div class="<%= DomainTheme.bg_class_for(:users) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="max-w-2xl mx-auto">
-    <div class="flex items-center mb-6">
-      <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
+<div class="<%= DomainTheme.bg_class_for(:users) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+  <div class="mx-auto max-w-2xl">
+    <div class="mb-6 flex items-center">
+      <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
         <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
       </div>
-      <h1 class="ml-3 text-xl font-semibold text-gray-900">Confirm or resend email</h1>
+      <h1 class="text-primary ml-3 font-display text-xl font-semibold">Confirm or resend email</h1>
     </div>
 
-    <div class="bg-white rounded-lg p-4 mb-6">
+    <div class="mb-6 rounded-lg bg-white p-4">
       <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
         <dt class="text-gray-500">User</dt>
-        <dd class="text-gray-900 font-medium"><%= @user.name %></dd>
+        <dd class="font-medium text-gray-900"><%= @user.name %></dd>
         <dt class="text-gray-500">Current email</dt>
         <dd class="text-gray-900"><%= @user.email %></dd>
         <% if pending_email_change %>
           <dt class="text-gray-500">Pending email</dt>
-          <dd class="text-gray-900 font-medium"><%= @user.unconfirmed_email %></dd>
+          <dd class="font-medium text-gray-900"><%= @user.unconfirmed_email %></dd>
         <% end %>
         <dt class="text-gray-500">Status</dt>
         <dd>
           <% if pending_email_change %>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">
+            <span class="inline-flex items-center rounded bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700">
               Email change pending
             </span>
           <% else %>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">
+            <span class="inline-flex items-center rounded bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700">
               Unconfirmed
             </span>
           <% end %>
@@ -38,9 +38,9 @@
       </dl>
     </div>
 
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+    <div class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
       <div class="flex items-start gap-2">
-        <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
+        <i class="fa-solid fa-circle-info mt-0.5 text-blue-500"></i>
         <div class="text-sm text-blue-800">
           <p class="font-medium">Recommendation: Resend the confirmation email</p>
           <p class="mt-1">
@@ -52,7 +52,7 @@
       </div>
     </div>
 
-    <div class="bg-white rounded-lg p-4 mb-6 space-y-4">
+    <div class="mb-6 space-y-4 rounded-lg bg-white p-4">
       <%= form_with url: process_email_manual_user_path(@user),
                     method: :post,
                     data: { turbo: false } do %>
@@ -82,7 +82,7 @@
       <% end %>
     </div>
 
-    <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+    <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
       <%= link_to "Cancel", edit_user_path(@user), class: "btn btn-secondary-outline" %>
     </div>
   </div>

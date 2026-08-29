@@ -1,13 +1,13 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="min-h-screen py-8">
-  <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="admin-only bg-blue-100 rounded p-6">
-      <div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:category_types, intensity: 100) %>
-        border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+  <div class="mx-auto max-w-full px-4 sm:px-6 lg:px-8">
+    <div class="admin-only rounded bg-blue-100 p-6">
+      <div class="mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:category_types, intensity: 100) %>
+        border-primary/10 rounded-2xl border p-6 shadow-lg transition-shadow duration-200 hover:shadow-xl">
       <div class="space-y-6">
         <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-          <h1 class="text-2xl font-semibold text-gray-900">
+        <div class="mb-6 flex items-center justify-between">
+          <h1 class="text-primary font-display text-2xl font-semibold">
             <%= CategoryType.model_name.human.pluralize %> (<%= @count_display %>)
           </h1>
           <div class="flex gap-2">
@@ -17,7 +17,7 @@
           </div>
         </div>
 
-        <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm">
+        <div class="border-primary/10 overflow-x-auto rounded-2xl border bg-white shadow-sm">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
@@ -27,14 +27,14 @@
                 <th class="px-4 py-2 text-center text-sm font-medium text-gray-700">Story specific</th>
                 <th class="px-4 py-2 text-center text-sm font-medium text-gray-700">Profile specific</th>
                 <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Categories count</th>
-                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700 w-32">Actions</th>
+                <th class="w-32 px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
               </tr>
             </thead>
 
             <tbody class="divide-y divide-gray-100">
               <% @category_types.each do |category_type| %>
               <tr>
-                <td class="px-4 py-2 text-gray-700 text-base font-bold">
+                <td class="px-4 py-2 text-base font-bold text-gray-700">
                   <%= category_type.name %>
                 </td>
 
@@ -87,13 +87,13 @@
 
         <!-- Empty state -->
         <% unless @category_types.any? %>
-          <p class="text-gray-500 text-center py-6">
+          <p class="py-6 text-center text-gray-500">
             No <%= CategoryType.model_name.human.pluralize.downcase %> found.
           </p>
         <% end %>
 
         <!-- Pagination -->
-        <div class="pagination flex justify-center mt-12">
+        <div class="pagination mt-12 flex justify-center">
           <%= tailwind_paginate @category_types %>
         </div>
       </div>

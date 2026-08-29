@@ -1,6 +1,6 @@
 <% content_for(:page_title, "Bulk payments — #{@event.title}") %>
 <% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
-<div class="mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:events) %> rounded-xl border border-gray-200 p-4 shadow sm:p-6">
+<div class="mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:events) %> border-primary/10 rounded-2xl border p-4 shadow-sm sm:p-6">
   <%# Top bar: eyelash + sub-nav, matching the other event pages %>
   <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
     <% if params[:return_to] == "bulk_payments_index" %>
@@ -12,7 +12,7 @@
   </div>
 
   <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-    <h1 class="text-2xl font-semibold text-gray-900">Bulk payments</h1>
+    <h1 class="text-primary font-display text-2xl font-semibold">Bulk payments</h1>
     <div class="flex items-center gap-3">
       <%= link_to event_invoice_path(@event),
                   class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors" do %>
@@ -31,7 +31,7 @@
       <% end %>
     </div>
   <% else %>
-    <div class="rounded-lg border border-gray-200 bg-white py-16 text-center">
+    <div class="border-primary/10 rounded-2xl border bg-white py-16 text-center">
       <i class="fa-regular fa-receipt mb-3 text-4xl text-gray-300"></i>
       <p class="text-gray-500">No bulk payment submissions yet.</p>
     </div>

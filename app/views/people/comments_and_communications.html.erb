@@ -16,7 +16,7 @@
 
 <%# The page keeps the admin-only policy marker, but the card carries the people
     theme so the feed doesn't read as one flat blue wash. %>
-<div class="overflow-hidden rounded-xl border border-gray-200 shadow <%= DomainTheme.bg_class_for(:people, intensity: 50) %>">
+<div class="border-primary/10 overflow-hidden rounded-2xl border shadow-sm <%= DomainTheme.bg_class_for(:people, intensity: 50) %>">
   <div class="<%= DomainTheme.bg_class_for(:people, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:people) %> px-8 py-3">
     <div class="flex items-center gap-2">
       <i class="fa-solid fa-comments <%= DomainTheme.text_class_for(:people, intensity: 700) %>"></i>
@@ -26,7 +26,7 @@
 
   <div class="space-y-6 p-4 sm:p-8">
     <div class="flex flex-wrap items-baseline justify-between gap-2">
-      <h1 class="text-2xl font-semibold text-gray-900"><%= @person.full_name %></h1>
+      <h1 class="text-primary font-display text-2xl font-semibold"><%= @person.full_name %></h1>
       <p class="text-sm text-gray-500">
         <%= pluralize(@total_count, "entry", plural: "entries") %><% if @flagged_count.positive? %> · <span class="font-medium text-orange-600"><%= @flagged_count %> flagged</span><% end %>
       </p>

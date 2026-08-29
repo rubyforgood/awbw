@@ -1,10 +1,10 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="mx-auto w-full max-w-3xl rounded-xl border border-gray-200 bg-white p-6 shadow">
+<div class="border-primary/10 mx-auto w-full max-w-3xl rounded-2xl border bg-white p-6 shadow-sm">
   <div class="mb-4 flex flex-wrap justify-end gap-2">
     <%= link_to "Features & tips", features_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <%= link_to "View", feature_path(@feature), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
-  <h1 class="mb-6 text-2xl font-semibold text-gray-900">Edit feature</h1>
+  <h1 class="text-primary mb-6 font-display text-2xl font-semibold">Edit feature</h1>
   <%= render "form", feature: @feature %>
   <%= render "shared/audit_info", resource: @feature %>
   <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>

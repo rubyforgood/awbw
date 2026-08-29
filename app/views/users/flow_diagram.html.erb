@@ -1,180 +1,180 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex items-center justify-between mb-4">
-    <h1 class="text-2xl font-semibold text-gray-900">Account management flows</h1>
+<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+  <div class="mb-4 flex items-center justify-between">
+    <h1 class="text-primary font-display text-2xl font-semibold">Account management flows</h1>
     <div class="flex items-center gap-1">
       <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <%= link_to "Users", users_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     </div>
   </div>
-  <p class="text-sm text-gray-500 mb-6">How invitation, password reset, email change, lockout, and unlock work from an admin's perspective</p>
+  <p class="mb-6 text-sm text-gray-500">How invitation, password reset, email change, lockout, and unlock work from an admin's perspective</p>
 
   <%# Triage cheat sheet %>
-  <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-8 mb-6">
+  <div class="border-primary/10 mb-6 rounded-2xl border bg-white p-8 shadow-sm">
     <div data-controller="toggle-details">
-      <div class="flex items-center justify-between mb-4">
+      <div class="mb-4 flex items-center justify-between">
         <h2 class="text-base font-semibold text-gray-900">Admin triage cheat sheet</h2>
         <button type="button"
-                class="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
+                class="cursor-pointer text-xs text-blue-600 hover:text-blue-800"
                 data-action="click->toggle-details#toggleAll"
                 data-toggle-details-target="toggleBtn">Expand all</button>
       </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
-        <summary class="p-4 cursor-pointer select-none list-none flex items-start justify-between [&::-webkit-details-marker]:hidden">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <details class="rounded-lg border border-transparent bg-gray-50 text-sm leading-relaxed transition-colors hover:border-blue-200">
+        <summary class="flex cursor-pointer list-none items-start justify-between p-4 select-none [&::-webkit-details-marker]:hidden">
           <div>
             <span class="font-semibold text-gray-700">"I never got the invite email"</span>
-            <p class="text-xs text-gray-400 mt-1">Invite may not have been sent, or ended up in spam</p>
+            <p class="mt-1 text-xs text-gray-400">Invite may not have been sent, or ended up in spam</p>
           </div>
-          <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
+          <i class="fa-solid fa-chevron-down mt-1 text-xs text-gray-400 transition-transform [[open]>&]:rotate-180"></i>
         </summary>
         <div class="px-4 pb-4">
-          <p class="text-gray-600 mb-2">Check <strong>Confirmed</strong> column on <a href="<%= users_path %>" target="_blank" class="text-blue-600 underline">users index</a>:</p>
+          <p class="mb-2 text-gray-600">Check <strong>Confirmed</strong> column on <a href="<%= users_path %>" target="_blank" class="text-blue-600 underline">users index</a>:</p>
           <div class="space-y-2 text-xs">
-            <div class="bg-white rounded p-2 border border-gray-200">
+            <div class="rounded border border-gray-200 bg-white p-2">
               <span class="font-semibold text-gray-700"><strong>Invite</strong> button</span>
-              <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
+              <ul class="mt-1 list-disc space-y-0.5 pl-4 text-gray-600">
                 <li>No invite has been sent &mdash; click <strong>Invite</strong> to send</li>
               </ul>
               <div class="mt-1 pl-4"><a href="#flow-1" class="text-blue-500 hover:underline">flow 1 &darr;</a></div>
             </div>
-            <div class="bg-white rounded p-2 border border-gray-200">
+            <div class="rounded border border-gray-200 bg-white p-2">
               <span class="font-semibold text-gray-700"><i class="fa-solid fa-clock text-yellow-500"></i> Clock icon</span>
               <span class="text-gray-500">(hover on index for details)</span>
-              <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
+              <ul class="mt-1 list-disc space-y-0.5 pl-4 text-gray-600">
                 <li>Invite was sent &mdash; ask user to check spam</li>
                 <li>Otherwise click <strong>Resend invite email</strong> on user's Edit</li>
               </ul>
               <div class="mt-1 pl-4"><a href="#flow-2" class="text-blue-500 hover:underline">flow 2 &darr;</a></div>
             </div>
-            <div class="bg-white rounded p-2 border border-gray-200">
+            <div class="rounded border border-gray-200 bg-white p-2">
               <span class="font-semibold text-gray-700"><i class="fa-solid fa-check-circle text-gray-400"></i> Check icon</span>
               <span class="text-gray-500">(hover on index for details)</span>
-              <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
+              <ul class="mt-1 list-disc space-y-0.5 pl-4 text-gray-600">
                 <li>Already confirmed &mdash; user doesn't need an invite, they need a <strong>password reset</strong></li>
               </ul>
               <div class="mt-1 pl-4"><a href="#flow-3" class="text-blue-500 hover:underline">flow 3 &darr;</a></div>
             </div>
           </div>
-          <p class="text-xs text-gray-400 mt-2">Note: Confirmation and welcome tokens do not expire</p>
+          <p class="mt-2 text-xs text-gray-400">Note: Confirmation and welcome tokens do not expire</p>
         </div>
       </details>
-      <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
-        <summary class="p-4 cursor-pointer select-none list-none flex items-start justify-between [&::-webkit-details-marker]:hidden">
+      <details class="rounded-lg border border-transparent bg-gray-50 text-sm leading-relaxed transition-colors hover:border-blue-200">
+        <summary class="flex cursor-pointer list-none items-start justify-between p-4 select-none [&::-webkit-details-marker]:hidden">
           <div>
             <span class="font-semibold text-gray-700">"My invite link doesn't work"</span>
-            <p class="text-xs text-gray-400 mt-1">Confirmation link may be invalid or already used</p>
+            <p class="mt-1 text-xs text-gray-400">Confirmation link may be invalid or already used</p>
           </div>
-          <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
+          <i class="fa-solid fa-chevron-down mt-1 text-xs text-gray-400 transition-transform [[open]>&]:rotate-180"></i>
         </summary>
         <div class="px-4 pb-4">
-          <p class="text-gray-600 mb-2">Check <strong>Confirmed</strong> column on <a href="<%= users_path %>" target="_blank" class="text-blue-600 underline">users index</a>:</p>
+          <p class="mb-2 text-gray-600">Check <strong>Confirmed</strong> column on <a href="<%= users_path %>" target="_blank" class="text-blue-600 underline">users index</a>:</p>
           <div class="space-y-2 text-xs">
-            <div class="bg-white rounded p-2 border border-gray-200">
+            <div class="rounded border border-gray-200 bg-white p-2">
               <span class="font-semibold text-gray-700"><i class="fa-solid fa-clock text-yellow-500"></i> Clock icon</span>
               <span class="text-gray-500">(hover on index for details)</span>
-              <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
+              <ul class="mt-1 list-disc space-y-0.5 pl-4 text-gray-600">
                 <li>Invite was sent but not yet confirmed</li>
                 <li>Click <strong>Resend invite email</strong> on user's Edit</li>
               </ul>
-              <p class="text-xs text-gray-400 mt-1 pl-4">Note: This invalidates old links</p>
+              <p class="mt-1 pl-4 text-xs text-gray-400">Note: This invalidates old links</p>
               <div class="mt-1 pl-4"><a href="#flow-2" class="text-blue-500 hover:underline">flow 2 &darr;</a></div>
             </div>
-            <div class="bg-white rounded p-2 border border-gray-200">
+            <div class="rounded border border-gray-200 bg-white p-2">
               <span class="font-semibold text-gray-700"><i class="fa-solid fa-check-circle text-gray-400"></i> Check icon</span>
               <span class="text-gray-500">(hover on index for details)</span>
-              <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
+              <ul class="mt-1 list-disc space-y-0.5 pl-4 text-gray-600">
                 <li>Already confirmed &mdash; user doesn't need an invite, they need a <strong>password reset</strong></li>
               </ul>
               <div class="mt-1 pl-4"><a href="#flow-3" class="text-blue-500 hover:underline">flow 3 &darr;</a></div>
             </div>
           </div>
-          <p class="text-xs text-gray-400 mt-2">Note: Confirmation and welcome tokens do not expire</p>
+          <p class="mt-2 text-xs text-gray-400">Note: Confirmation and welcome tokens do not expire</p>
         </div>
       </details>
-      <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
-        <summary class="p-4 cursor-pointer select-none list-none flex items-start justify-between [&::-webkit-details-marker]:hidden">
+      <details class="rounded-lg border border-transparent bg-gray-50 text-sm leading-relaxed transition-colors hover:border-blue-200">
+        <summary class="flex cursor-pointer list-none items-start justify-between p-4 select-none [&::-webkit-details-marker]:hidden">
           <div>
             <span class="font-semibold text-gray-700">"I'm locked out"</span>
-            <p class="text-xs text-gray-400 mt-1">Account likely locked after too many failed attempts</p>
+            <p class="mt-1 text-xs text-gray-400">Account likely locked after too many failed attempts</p>
           </div>
-          <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
+          <i class="fa-solid fa-chevron-down mt-1 text-xs text-gray-400 transition-transform [[open]>&]:rotate-180"></i>
         </summary>
         <div class="px-4 pb-4">
-          <p class="text-gray-600 mb-2">Check <strong>Access</strong> column on <a href="<%= users_path %>" target="_blank" class="text-blue-600 underline">users index</a>:</p>
+          <p class="mb-2 text-gray-600">Check <strong>Access</strong> column on <a href="<%= users_path %>" target="_blank" class="text-blue-600 underline">users index</a>:</p>
           <div class="space-y-2 text-xs">
-            <div class="bg-white rounded p-2 border border-gray-200">
+            <div class="rounded border border-gray-200 bg-white p-2">
               <span class="font-semibold text-gray-700">No lock icon</span>
-              <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
+              <ul class="mt-1 list-disc space-y-0.5 pl-4 text-gray-600">
                 <li><i class="fa-solid fa-clock text-yellow-500"></i> Clock icon in Confirmed &mdash; email unconfirmed, <strong>Resend invite email</strong> on user's Edit</li>
                 <li><i class="fa-solid fa-ban text-red-400"></i> Ban icon &mdash; account is inactive, set to active on user's Edit under Account flags</li>
                 <li>Maybe they mean they forgot their password?</li>
               </ul>
               <div class="mt-1 pl-4"><a href="#flow-1" class="text-blue-500 hover:underline">flow 1 &darr;</a> &nbsp; <a href="#flow-3" class="text-blue-500 hover:underline">flow 3 &darr;</a></div>
             </div>
-            <div class="bg-white rounded p-2 border border-gray-200">
+            <div class="rounded border border-gray-200 bg-white p-2">
               <span class="font-semibold text-gray-700"><i class="fa-solid fa-lock text-red-400"></i> Lock icon</span>
-              <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
+              <ul class="mt-1 list-disc space-y-0.5 pl-4 text-gray-600">
                 <li>Account is locked &mdash; go to user's Edit and click <strong>Unlock account</strong> (sets failed attempts back to 0)</li>
                 <li>User may also need a <strong>password reset</strong></li>
               </ul>
               <div class="mt-1 pl-4"><a href="#flow-5" class="text-blue-500 hover:underline">flow 5 &darr;</a> &nbsp; <a href="#flow-6" class="text-blue-500 hover:underline">flow 6 &darr;</a></div>
             </div>
           </div>
-          <p class="text-xs text-gray-400 mt-2">Note: Accounts don't auto-unlock &mdash; needs an admin.</p>
+          <p class="mt-2 text-xs text-gray-400">Note: Accounts don't auto-unlock &mdash; needs an admin.</p>
         </div>
       </details>
-      <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
-        <summary class="p-4 cursor-pointer select-none list-none flex items-start justify-between [&::-webkit-details-marker]:hidden">
+      <details class="rounded-lg border border-transparent bg-gray-50 text-sm leading-relaxed transition-colors hover:border-blue-200">
+        <summary class="flex cursor-pointer list-none items-start justify-between p-4 select-none [&::-webkit-details-marker]:hidden">
           <div>
             <span class="font-semibold text-gray-700">"I forgot my password" / "My reset expired"</span>
-            <p class="text-xs text-gray-400 mt-1">User needs a password reset</p>
+            <p class="mt-1 text-xs text-gray-400">User needs a password reset</p>
           </div>
-          <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
+          <i class="fa-solid fa-chevron-down mt-1 text-xs text-gray-400 transition-transform [[open]>&]:rotate-180"></i>
         </summary>
         <div class="px-4 pb-4">
           <p class="text-gray-600">User clicks <strong>Forgot your password?</strong> from login <span class="text-gray-400">or</span> admin clicks <strong>Send reset password email</strong> from user's Edit</p>
           <div class="mt-1"><a href="#flow-3" class="text-xs text-blue-500 hover:underline">flow 3 &darr;</a></div>
-          <p class="text-xs text-gray-400 mt-2">Note: Reset links expire after <strong>7 days</strong>.<br>Note: Each new reset invalidates previous email links.<br>Note: User will be automatically signed in after reset.</p>
+          <p class="mt-2 text-xs text-gray-400">Note: Reset links expire after <strong>7 days</strong>.<br>Note: Each new reset invalidates previous email links.<br>Note: User will be automatically signed in after reset.</p>
         </div>
       </details>
-      <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
-        <summary class="p-4 cursor-pointer select-none list-none flex items-start justify-between [&::-webkit-details-marker]:hidden">
+      <details class="rounded-lg border border-transparent bg-gray-50 text-sm leading-relaxed transition-colors hover:border-blue-200">
+        <summary class="flex cursor-pointer list-none items-start justify-between p-4 select-none [&::-webkit-details-marker]:hidden">
           <div>
             <span class="font-semibold text-gray-700">"I confirmed my email but can't sign in"</span>
-            <p class="text-xs text-gray-400 mt-1">Email confirmed but user never set a password</p>
+            <p class="mt-1 text-xs text-gray-400">Email confirmed but user never set a password</p>
           </div>
-          <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
+          <i class="fa-solid fa-chevron-down mt-1 text-xs text-gray-400 transition-transform [[open]>&]:rotate-180"></i>
         </summary>
         <div class="px-4 pb-4">
-          <p class="text-gray-600 mb-2">User confirmed their email but never set a password. They see "Invalid email or password" because they never had one.</p>
-          <ul class="list-disc pl-4 text-gray-600 space-y-1 text-sm">
+          <p class="mb-2 text-gray-600">User confirmed their email but never set a password. They see "Invalid email or password" because they never had one.</p>
+          <ul class="list-disc space-y-1 pl-4 text-sm text-gray-600">
             <li>Check <strong>Confirmed</strong> column on <a href="<%= users_path %>" target="_blank" class="text-blue-600 underline">users index</a> &mdash; should show <i class="fa-solid fa-check-circle text-gray-400"></i> (confirmed)</li>
             <li>Admin clicks <strong>Send reset password email</strong> from user's Edit <span class="text-gray-400">or</span> user clicks <strong>Forgot your password?</strong> from login</li>
             <li>User sets a password via the reset link &mdash; this also auto-signs them in</li>
           </ul>
           <div class="mt-1 pl-4"><a href="#flow-3" class="text-xs text-blue-500 hover:underline">flow 3 &darr;</a></div>
-          <p class="text-xs text-gray-400 mt-2">Note: Accounts are created with a random password the user doesn't know. Ideally they set a real one during the welcome invite flow.<br>Note: Welcome tokens no longer expire, so this mainly applies to legacy accounts created before that change.</p>
+          <p class="mt-2 text-xs text-gray-400">Note: Accounts are created with a random password the user doesn't know. Ideally they set a real one during the welcome invite flow.<br>Note: Welcome tokens no longer expire, so this mainly applies to legacy accounts created before that change.</p>
         </div>
       </details>
-      <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
-        <summary class="p-4 cursor-pointer select-none list-none flex items-start justify-between [&::-webkit-details-marker]:hidden">
+      <details class="rounded-lg border border-transparent bg-gray-50 text-sm leading-relaxed transition-colors hover:border-blue-200">
+        <summary class="flex cursor-pointer list-none items-start justify-between p-4 select-none [&::-webkit-details-marker]:hidden">
           <div>
             <span class="font-semibold text-gray-700">"I changed my email but can't log in with it"</span>
-            <p class="text-xs text-gray-400 mt-1">New email needs confirmation to become active</p>
+            <p class="mt-1 text-xs text-gray-400">New email needs confirmation to become active</p>
           </div>
-          <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
+          <i class="fa-solid fa-chevron-down mt-1 text-xs text-gray-400 transition-transform [[open]>&]:rotate-180"></i>
         </summary>
         <div class="px-4 pb-4">
-          <p class="text-gray-600 mb-2">After an email change, the old email stays active until the new one is confirmed. User must sign in with the <strong>old email</strong> until then.</p>
-          <ul class="list-disc pl-4 text-gray-600 space-y-1 text-sm">
+          <p class="mb-2 text-gray-600">After an email change, the old email stays active until the new one is confirmed. User must sign in with the <strong>old email</strong> until then.</p>
+          <ul class="list-disc space-y-1 pl-4 text-sm text-gray-600">
             <li>Check if user has a <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> warning icon on users index or user show &mdash; means confirmation email wasn't sent</li>
             <li>Admin can resend confirmation email from the user show page</li>
             <li>Confirmation link does not expire &mdash; admin can resend if user lost the email</li>
           </ul>
           <div class="mt-1 pl-4"><a href="#flow-4" class="text-xs text-blue-500 hover:underline">flow 4 &darr;</a></div>
-          <p class="text-xs text-gray-400 mt-2">Note: User keeps signing in with old email until new email is confirmed.</p>
+          <p class="mt-2 text-xs text-gray-400">Note: User keeps signing in with old email until new email is confirmed.</p>
         </div>
       </details>
     </div>
@@ -182,9 +182,9 @@
   </div>
 
   <%# Flow index + Legend card %>
-  <div class="bg-slate-700 text-white rounded-xl shadow-sm p-6 mb-6">
-    <h3 class="text-sm font-semibold mb-3">Flows</h3>
-    <ol class="flex flex-wrap gap-x-6 gap-y-1 list-none text-sm mb-5">
+  <div class="mb-6 rounded-xl bg-slate-700 p-6 text-white shadow-sm">
+    <h3 class="mb-3 text-sm font-semibold">Flows</h3>
+    <ol class="mb-5 flex list-none flex-wrap gap-x-6 gap-y-1 text-sm">
       <li><a href="#flow-1" class="text-blue-300 hover:text-blue-100 hover:underline">1. Invite new user</a></li>
       <li><a href="#flow-2" class="text-blue-300 hover:text-blue-100 hover:underline">2. Resend invite email</a></li>
       <li><a href="#flow-3" class="text-blue-300 hover:text-blue-100 hover:underline">3. Reset password</a></li>
@@ -193,30 +193,30 @@
       <li><a href="#flow-6" class="text-blue-300 hover:text-blue-100 hover:underline">6. Manual lock / unlock</a></li>
     </ol>
 
-    <h3 class="text-sm font-semibold mb-3">Key</h3>
+    <h3 class="mb-3 text-sm font-semibold">Key</h3>
     <div class="flex flex-wrap gap-5 text-sm text-slate-300">
       <div class="flex items-center gap-2">
-        <span class="w-4 h-4 rounded bg-blue-100 border border-blue-200"></span> Admin action
+        <span class="h-4 w-4 rounded border border-blue-200 bg-blue-100"></span> Admin action
       </div>
       <div class="flex items-center gap-2">
-        <span class="w-4 h-4 rounded bg-green-100 border border-green-200"></span> System / email
+        <span class="h-4 w-4 rounded border border-green-200 bg-green-100"></span> System / email
       </div>
       <div class="flex items-center gap-2">
-        <span class="w-4 h-4 rounded bg-yellow-100 border border-yellow-200"></span> User action
+        <span class="h-4 w-4 rounded border border-yellow-200 bg-yellow-100"></span> User action
       </div>
       <div class="flex items-center gap-2">
-        <span class="w-4 h-4 rounded bg-red-100 border border-red-200"></span> Error / blocked state
+        <span class="h-4 w-4 rounded border border-red-200 bg-red-100"></span> Error / blocked state
       </div>
       <div class="flex items-center gap-2">
-        <span class="w-4 h-4 rounded bg-purple-100 border border-purple-200"></span> Decision point
+        <span class="h-4 w-4 rounded border border-purple-200 bg-purple-100"></span> Decision point
       </div>
     </div>
   </div>
 
   <%# Flow 1: Invite new user %>
-  <div id="flow-1" class="bg-white border border-gray-200 rounded-xl shadow-sm p-8 mb-6 scroll-mt-20">
+  <div id="flow-1" class="mb-6 scroll-mt-20 rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
     <h2 class="text-base font-semibold text-gray-900">1. Invite new user</h2>
-    <p class="text-xs text-gray-500 mb-5">Admin creates a user and sends welcome instructions &bull; Tokens do not expire</p>
+    <p class="mb-5 text-xs text-gray-500">Admin creates a user and sends welcome instructions &bull; Tokens do not expire</p>
     <pre class="mermaid flex justify-center">
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#93c5fd', 'secondaryColor': '#dcfce7', 'tertiaryColor': '#fef9c3', 'lineColor': '#94a3b8', 'fontSize': '14px' }}}%%
 flowchart TD
@@ -254,9 +254,9 @@ flowchart TD
   </div>
 
   <%# Flow 2: Resend invite %>
-  <div id="flow-2" class="bg-white border border-gray-200 rounded-xl shadow-sm p-8 mb-6 scroll-mt-20">
+  <div id="flow-2" class="mb-6 scroll-mt-20 rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
     <h2 class="text-base font-semibold text-gray-900">2. Resend invite email</h2>
-    <p class="text-xs text-gray-500 mb-5">Same endpoint as invite &bull; Button shows on users index and user edit page when user has not yet confirmed</p>
+    <p class="mb-5 text-xs text-gray-500">Same endpoint as invite &bull; Button shows on users index and user edit page when user has not yet confirmed</p>
     <pre class="mermaid flex justify-center">
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#93c5fd', 'secondaryColor': '#dcfce7', 'tertiaryColor': '#fef9c3', 'lineColor': '#94a3b8', 'fontSize': '14px' }}}%%
 flowchart TD
@@ -284,9 +284,9 @@ flowchart TD
   </div>
 
   <%# Flow 3: Reset password %>
-  <div id="flow-3" class="bg-white border border-gray-200 rounded-xl shadow-sm p-8 mb-6 scroll-mt-20">
+  <div id="flow-3" class="mb-6 scroll-mt-20 rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
     <h2 class="text-base font-semibold text-gray-900">3. Reset password</h2>
-    <p class="text-xs text-gray-500 mb-5">Admin or user can initiate &bull; Token valid 7 days &bull; User auto-signed in after reset</p>
+    <p class="mb-5 text-xs text-gray-500">Admin or user can initiate &bull; Token valid 7 days &bull; User auto-signed in after reset</p>
     <pre class="mermaid flex justify-center">
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#93c5fd', 'secondaryColor': '#dcfce7', 'tertiaryColor': '#fef9c3', 'lineColor': '#94a3b8', 'fontSize': '14px' }}}%%
 flowchart TD
@@ -324,9 +324,9 @@ flowchart TD
   </div>
 
   <%# Flow 4: Email change %>
-  <div id="flow-4" class="bg-white border border-gray-200 rounded-xl shadow-sm p-8 mb-6 scroll-mt-20">
+  <div id="flow-4" class="mb-6 scroll-mt-20 rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
     <h2 class="text-base font-semibold text-gray-900">4. Email change (admin-initiated)</h2>
-    <p class="text-xs text-gray-500 mb-5">Devise reconfirmable &bull; Old email stays active until new email is confirmed &bull; Confirmation token does not expire</p>
+    <p class="mb-5 text-xs text-gray-500">Devise reconfirmable &bull; Old email stays active until new email is confirmed &bull; Confirmation token does not expire</p>
     <pre class="mermaid flex justify-center">
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#93c5fd', 'secondaryColor': '#dcfce7', 'tertiaryColor': '#fef9c3', 'lineColor': '#94a3b8', 'fontSize': '14px' }}}%%
 flowchart TD
@@ -362,9 +362,9 @@ flowchart TD
   </div>
 
   <%# Flow 5: Failed passwords & lockout %>
-  <div id="flow-5" class="bg-white border border-gray-200 rounded-xl shadow-sm p-8 mb-6 scroll-mt-20">
+  <div id="flow-5" class="mb-6 scroll-mt-20 rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
     <h2 class="text-base font-semibold text-gray-900">5. Failed password attempts &amp; account lockout</h2>
-    <p class="text-xs text-gray-500 mb-5">10 attempts before lockout &bull; Unlock strategy: none (admin must unlock manually) &bull; Last attempt warning shown</p>
+    <p class="mb-5 text-xs text-gray-500">10 attempts before lockout &bull; Unlock strategy: none (admin must unlock manually) &bull; Last attempt warning shown</p>
     <pre class="mermaid flex justify-center">
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#93c5fd', 'secondaryColor': '#dcfce7', 'tertiaryColor': '#fef9c3', 'lineColor': '#94a3b8', 'fontSize': '14px' }}}%%
 flowchart TD
@@ -400,9 +400,9 @@ flowchart TD
   </div>
 
   <%# Flow 6: Admin manual lock/unlock %>
-  <div id="flow-6" class="bg-white border border-gray-200 rounded-xl shadow-sm p-8 mb-6 scroll-mt-20">
+  <div id="flow-6" class="mb-6 scroll-mt-20 rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
     <h2 class="text-base font-semibold text-gray-900">6. Admin manual lock / unlock</h2>
-    <p class="text-xs text-gray-500 mb-5">Admin can lock or unlock any account at any time, independent of failed attempts</p>
+    <p class="mb-5 text-xs text-gray-500">Admin can lock or unlock any account at any time, independent of failed attempts</p>
     <pre class="mermaid flex justify-center">
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#93c5fd', 'secondaryColor': '#dcfce7', 'tertiaryColor': '#fef9c3', 'lineColor': '#94a3b8', 'fontSize': '14px' }}}%%
 flowchart LR
@@ -425,7 +425,7 @@ flowchart LR
     </pre>
   </div>
 
-  <p class="text-center text-gray-400 text-xs mt-4">
+  <p class="mt-4 text-center text-xs text-gray-400">
     Source: UsersController, WelcomeController, ConfirmationsController, PasswordsController, User model, Devise config
   </p>
 </div>

@@ -1,10 +1,10 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<div class="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
+<div class="border-primary/10 mx-auto max-w-2xl rounded-2xl border bg-white p-6 shadow-sm">
   <div class="mb-6">
     <%= link_to "← Payment", payment_path(@refund.refundable), class: "text-sm #{eyebrow_link_class} mb-2 inline-block" %>
 
-    <h1 class="text-2xl font-semibold text-gray-900">Refund</h1>
+    <h1 class="text-primary font-display text-2xl font-semibold">Refund</h1>
   </div>
 
   <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
