@@ -1,5 +1,6 @@
 class Affiliation < ApplicationRecord
   include Communicable
+  include Timelineable
   # Standing title given to the "facilitator affiliation" we create on registration
   # and org linking. Matches the `facilitators` scope / `facilitator?` predicate
   # (both treat exactly "Facilitator" as canonical).
@@ -27,6 +28,10 @@ class Affiliation < ApplicationRecord
   # A communication logged on an affiliation is addressed to the affiliated person.
   def communications_email
     person&.preferred_email
+  end
+
+  def self.timeline_renderer_class
+    AffiliationTimelineRenderer
   end
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
@@ -138,6 +143,10 @@ class Affiliation < ApplicationRecord
 
   def name
     "#{person.name}" if person
+  end
+
+  def timeline_label
+    "Affiliation: #{person&.name} at #{organization&.name}"
   end
 
   private

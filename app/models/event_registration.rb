@@ -3,6 +3,8 @@ class EventRegistration < ApplicationRecord
   include Registerable
   include Certifiable
   include Communicable
+  include HasTimeline
+  include Timelineable
 
   # Sentinel for the roster's Payment method filter that matches buddy-system
   # registrations (someone_else_will_pay), which isn't an expected_payment_method
@@ -1112,6 +1114,19 @@ class EventRegistration < ApplicationRecord
       id: id,
       label: "#{registrant.full_name} - #{event.title} (##{id})"
     }
+  end
+
+  def timeline_label
+    return "Event Registration" unless event.present?
+    "Event Registration: #{event.name}"
+  end
+
+  def self.timeline_renderer_class
+    EventRegistrationTimelineRenderer
+  end
+
+  def timeline_also_log
+    [ registrant ].compact
   end
 
   private

@@ -1,4 +1,10 @@
 class ContactMethod < ApplicationRecord
+  include Timelineable
+
+  def self.timeline_renderer_class
+    NestedRecordTimelineRenderer
+  end
+
   CONTACT_TYPES = [ nil, "work", "personal" ].freeze
 
   belongs_to :contactable, polymorphic: true
@@ -12,4 +18,8 @@ class ContactMethod < ApplicationRecord
 
   validates :value, presence: true, length: { maximum: 255 }
   validates :kind, presence: true
+
+  def timeline_label
+    kind.humanize
+  end
 end

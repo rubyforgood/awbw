@@ -11,6 +11,13 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
     end
   end
 
+  describe "timeline" do
+    it "labels itself with the registrant" do
+      ce_reg = create(:continuing_education_registration)
+      expect(ce_reg.timeline_label).to eq("CE Registration: #{ce_reg.event_registration.registrant.name}")
+    end
+  end
+
   describe "#registrant" do
     it "is its event registration's registrant" do
       ce = create(:continuing_education_registration)

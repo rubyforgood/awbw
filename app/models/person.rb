@@ -1,6 +1,6 @@
 class Person < ApplicationRecord
-  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable, StaffTaggable
-  include Communicable
+  include Communicable, HasTimeline, RemoteSearchable, TagFilterable, Timelineable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable, StaffTaggable
+
 
   pay_customer default_payment_processor: :stripe
 
@@ -511,6 +511,10 @@ class Person < ApplicationRecord
   # shouldn't reshuffle them). Display surfaces lead with the primary instead.
   def age_range_items_ordered
     age_range_categorizable_items.sort_by { |item| [ item.category&.position || 0, item.category&.name.to_s ] }
+  end
+
+  def timeline_label
+    name
   end
 
   private

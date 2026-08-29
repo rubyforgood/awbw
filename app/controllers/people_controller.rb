@@ -241,6 +241,12 @@ class PeopleController < ApplicationController
       affiliations: { organization: [ :logo_attachment, :addresses ] }
     ).find(params[:id]).decorate
     authorize! @person
+
+    if turbo_frame_request? && params[:section] == "timeline"
+      @timeline_events = @person.timeline_events.includes(:actor, :subject).order(created_at: :desc).paginate(page: params[:page], per_page: 25)
+      return render partial: "people/sections/timeline", locals: { person: @person, timeline_events: @timeline_events }
+    end
+
     @membership = membership_for(@person)
     set_form_variables
   end

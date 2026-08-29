@@ -28,5 +28,13 @@
               </div>
             <% end %>
           </div>
+          <div class="rounded bg-white p-6">
+            <div class="mb-2 font-semibold text-gray-700">Activity timeline</div>
+            <%= turbo_frame_tag "organization_timeline_section",
+                src: edit_organization_path(@organization, section: "timeline"),
+                loading: :lazy do %>
+              <p class="text-gray-500 italic">Loading timeline...</p>
+            <% end %>
+          </div>
         </div>
 </div>

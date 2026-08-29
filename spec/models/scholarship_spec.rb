@@ -357,4 +357,16 @@ RSpec.describe Scholarship, type: :model do
       expect(Scholarship.from_funder(funder).event_ids).to contain_exactly(event.id)
     end
   end
+
+  describe "timeline" do
+    it "labels itself with the recipient" do
+      scholarship = create(:scholarship)
+      expect(scholarship.timeline_label).to eq("Scholarship: #{scholarship.recipient.name}")
+    end
+
+    it "labels itself without a recipient" do
+      scholarship = build(:scholarship, recipient: nil)
+      expect(scholarship.timeline_label).to eq("Scholarship")
+    end
+  end
 end

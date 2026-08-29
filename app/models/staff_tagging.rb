@@ -1,5 +1,12 @@
 class StaffTagging < ApplicationRecord
   include Communicable
+  include Timelineable
+
+  def self.timeline_renderer_class
+    NestedRecordTimelineRenderer
+  end
+
+  STAFF_TAGGING_TIMELINE_ATTRIBUTES = %w[ staff_tag_id ].freeze
 
   belongs_to :staff_tag
   belongs_to :staff_taggable, polymorphic: true, touch: true
@@ -20,6 +27,18 @@ class StaffTagging < ApplicationRecord
 
   before_create :stamp_created_by
   before_save :stamp_updated_by
+
+  def timeline_label
+    "Tag: #{staff_tag.name}"
+  end
+
+  # Only the tag assignment itself is a timeline-worthy change; reassigning the
+  # taggable or relying on the default `all saved_changes` would log noise.
+  def timeline_changes
+    saved_changes
+      .slice(*STAFF_TAGGING_TIMELINE_ATTRIBUTES)
+      .transform_values { |(old_value, new_value)| [ old_value.to_s, new_value.to_s ] }
+  end
 
   scope :for_staff_tag, ->(ids) {
     tag_ids = Array(ids).reject(&:blank?)

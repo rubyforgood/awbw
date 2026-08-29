@@ -1,4 +1,10 @@
 class ProfessionalLicense < ApplicationRecord
+  include Timelineable
+
+  def self.timeline_renderer_class
+    NestedRecordTimelineRenderer
+  end
+
   has_paper_trail
 
   belongs_to :person
@@ -69,6 +75,10 @@ class ProfessionalLicense < ApplicationRecord
   # any CE registration is locked to admins (see ProfessionalLicensePolicy).
   def used_for_ce?
     continuing_education_registrations.exists?
+  end
+
+  def timeline_label
+    model_name.human
   end
 
   private

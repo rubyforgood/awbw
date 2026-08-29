@@ -1,4 +1,6 @@
 class FormSubmission < ApplicationRecord
+  include Timelineable
+
   belongs_to :person
   belongs_to :form
   belongs_to :event, optional: true
@@ -330,6 +332,10 @@ class FormSubmission < ApplicationRecord
   # source via `quotable.title` and `polymorphic_path(quotable)`.
   def title
     "#{form&.display_name} submission ##{id}"
+  end
+
+  def timeline_label
+    "Form Submission: #{form.name}"
   end
 
   private

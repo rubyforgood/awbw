@@ -2,6 +2,7 @@ class ContinuingEducationRegistration < ApplicationRecord
   include Registerable
   include Certifiable
   include Communicable
+  include Timelineable
 
   # AWBW's continuing-education accreditation, referenced by the CE callout copy
   # and the completion certificate's CE clause. Kept here as the single source of
@@ -186,6 +187,15 @@ class ContinuingEducationRegistration < ApplicationRecord
     return "Paid" if paid_in_full?
     return "Partial" if partially_paid?
     "Due"
+  end
+
+  def timeline_label
+    return "CE Registration" unless event_registration&.registrant.present?
+    "CE Registration: #{event_registration.registrant.timeline_label}"
+  end
+
+  def self.timeline_renderer_class
+    ContinuingEducationRegistrationTimelineRenderer
   end
 
   private

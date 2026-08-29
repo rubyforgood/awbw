@@ -1595,6 +1595,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_160913) do
     t.index ["workshop_id"], name: "index_story_ideas_on_workshop_id"
   end
 
+  create_table "timeline_entries", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "owner_id", null: false
+    t.string "owner_type", null: false
+    t.bigint "timeline_event_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["owner_type", "owner_id", "created_at"], name: "idx_on_owner_type_owner_id_created_at_bcce77e0a0"
+    t.index ["owner_type", "owner_id"], name: "index_timeline_entries_on_owner"
+    t.index ["timeline_event_id", "owner_type", "owner_id"], name: "index_timeline_entries_on_event_and_owner_unique", unique: true
+    t.index ["timeline_event_id"], name: "index_timeline_entries_on_timeline_event_id"
+  end
+
+  create_table "timeline_events", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "action", null: false
+    t.bigint "actor_id"
+    t.string "actor_type"
+    t.datetime "created_at", null: false
+    t.json "snapshot", null: false
+    t.bigint "subject_id", null: false
+    t.string "subject_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["action"], name: "index_timeline_events_on_action"
+    t.index ["actor_type", "actor_id", "created_at"], name: "idx_on_actor_type_actor_id_created_at_9605fb09e6"
+    t.index ["actor_type", "actor_id"], name: "index_timeline_events_on_actor"
+    t.index ["subject_type", "subject_id", "created_at"], name: "idx_on_subject_type_subject_id_created_at_f744213dcc"
+    t.index ["subject_type", "subject_id"], name: "index_timeline_events_on_subject"
+  end
+
   create_table "topic_subscription_types", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "archived_at"
     t.datetime "created_at", null: false
@@ -2157,6 +2185,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_160913) do
   add_foreign_key "story_ideas", "users", column: "updated_by_id"
   add_foreign_key "story_ideas", "windows_types"
   add_foreign_key "story_ideas", "workshops"
+  add_foreign_key "timeline_entries", "timeline_events"
   add_foreign_key "topic_subscriptions", "events", column: "interested_event_id"
   add_foreign_key "topic_subscriptions", "organizations"
   add_foreign_key "topic_subscriptions", "people"
