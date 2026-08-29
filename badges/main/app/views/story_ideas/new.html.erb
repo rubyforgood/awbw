@@ -1,10 +1,10 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
-<div class="<%= DomainTheme.bg_class_for(:story_ideas, intensity: 200) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex items-center justify-between mb-3">
-    <h1 class="text-2xl font-semibold text-gray-900">New <%= @story_idea.class.model_name.human.downcase %></h1>
+<div class="<%= DomainTheme.bg_class_for(:story_ideas, intensity: 200) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+  <div class="mb-3 flex items-center justify-between">
+    <h1 class="text-primary font-display text-2xl font-semibold">New <%= @story_idea.class.model_name.human.downcase %></h1>
   </div>
 
-  <div class="mb-6 text-gray-700 leading-relaxed">
+  <div class="mb-6 leading-relaxed text-gray-700">
     At A Window Between Worlds, we value every story you share. Your voice helps paint a picture of the positive impact
     of art on people and communities, inspiring others to use art in similarly powerful and far reaching ways.
     <br><br>

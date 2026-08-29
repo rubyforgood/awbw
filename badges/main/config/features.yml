@@ -2526,3 +2526,27 @@
   pro_tips:
     - "FAQs and workshop variations join the brand palette, so every public listing now uses an official AWBW colour."
     - "The public event page, registration form and bulk payment pages lose the old purple header and green headline."
+
+- name: "Organization profile in the AWBW brand"
+  area: people
+  display_status: user_facing
+  released_on: 2026-08-28
+  summary: >-
+    The organization profile has been restyled to match awbw.org: a navy hero
+    carrying the logo, name, location and contact details, with the rest of the
+    page grouped into labelled cards on a warm cream background.
+  pro_tips:
+    - "Everything that was on the page is still there — description, affiliations, sectors, age groups, workshops, and events attended — just grouped into cards."
+    - "The organization's status chip still sits beside the name for admins."
+
+- name: "Admin pages in the AWBW brand"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-08-29
+  pr_number: 2404
+  summary: >-
+    The admin and staff-only pages now match the rest of the portal — softer
+    card corners, the brand's navy hairline border, and page titles in the brand
+    serif. Purely visual: no page changed what it shows or does.
+  pro_tips:
+    - "Each page keeps its own domain colour; only the card edges and the page title changed."

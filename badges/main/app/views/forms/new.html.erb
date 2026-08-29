@@ -13,7 +13,7 @@
         </div>
         <div>
           <p class="text-xs font-medium tracking-[0.2em] text-purple-200 uppercase">New form</p>
-          <h1 class="text-2xl leading-tight font-bold tracking-tight">Create a form</h1>
+          <h1 class="text-primary font-display text-2xl leading-tight font-bold tracking-tight">Create a form</h1>
         </div>
       </div>
       <div class="from-accent to-accent absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r via-amber-400"></div>
@@ -21,7 +21,7 @@
 
     <div class="px-4 py-6 sm:px-6">
       <%= form_with url: forms_path, method: :post, class: "space-y-6", data: { controller: "section-filter" } do |f| %>
-        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm">
           <div class="flex items-center gap-2.5 border-b border-purple-300 bg-purple-100 px-6 py-3">
             <i class="fa-solid fa-gear text-purple-700"></i>
             <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Form details</h2>
@@ -52,7 +52,7 @@
           </div>
         </div>
 
-        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm">
           <div class="flex items-center gap-2.5 border-b border-purple-300 bg-purple-100 px-6 py-3">
             <i class="fa-solid fa-list-check text-purple-700"></i>
             <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Sections to include</h2>
@@ -67,7 +67,7 @@
                      else "other"
                    end %>
                 <% field_names = FormBuilderService.section_field_names(key) %>
-                <div class="rounded-lg border border-gray-200 px-3 py-2" data-section-role="<%= section_role %>"
+                <div class="border-primary/10 rounded-2xl border px-3 py-2" data-section-role="<%= section_role %>"
                      data-controller="expandable-card" data-expandable-card-expanded-value="false">
                   <div class="flex items-center gap-2">
                     <label class="flex flex-1 cursor-pointer items-center gap-2">
@@ -89,7 +89,7 @@
           </div>
         </div>
 
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
           <div class="flex items-center gap-3">
             <%= f.submit "Submit", class: "btn btn-primary cursor-pointer" %>
             <%= link_to "Cancel", forms_path, class: "btn btn-secondary-outline" %>

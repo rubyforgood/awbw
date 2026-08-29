@@ -3,7 +3,7 @@
 <% grant_nav = grant.present? && params[:return_to].in?(%w[ grant_show grant_edit ]) %>
 <% theme = (grant_nav || (@allocatable.blank? && grant.present?)) ? :grants : :scholarships %>
 
-<div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(theme) %> rounded-xl border border-gray-200 p-4 shadow sm:p-6">
+<div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(theme) %> border-primary/10 rounded-2xl border p-4 shadow-sm sm:p-6">
   <%# Top bar: back link + secondary links, matching the registration edit page %>
   <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
     <% if grant_nav %>

@@ -19,7 +19,7 @@
       { title: "Payments & allocations (on the registration)",
         desc: "How money shows on the staff registration page.",
         out_text: "The normal payment history and allocations — payments listed, the amount due, and an editable expected payment method.",
-        out_mock: %(<div class="rounded-lg border border-gray-200 p-2.5 text-xs"><div class="text-[0.55rem] uppercase tracking-wide text-gray-400">Payment history</div><div class="mt-1 flex justify-between text-gray-800"><span>Scholarship</span><span class="font-semibold tabular-nums">$50</span></div><div class="mt-1.5 flex items-center justify-between border-t border-gray-100 pt-1.5"><span class="text-[0.55rem] uppercase text-gray-400">Amount due</span><span class="font-bold tabular-nums text-amber-700">$50</span></div></div>),
+        out_mock: %(<div class="rounded-2xl border border-primary/10 p-2.5 text-xs"><div class="text-[0.55rem] uppercase tracking-wide text-gray-400">Payment history</div><div class="mt-1 flex justify-between text-gray-800"><span>Scholarship</span><span class="font-semibold tabular-nums">$50</span></div><div class="mt-1.5 flex items-center justify-between border-t border-gray-100 pt-1.5"><span class="text-[0.55rem] uppercase text-gray-400">Amount due</span><span class="font-bold tabular-nums text-amber-700">$50</span></div></div>),
         in_text: "No own billing cards. Instead a read-only “Financials on the original registration” summary that links back to the source.",
         in_mock: %(<div class="rounded-lg border-2 border-teal-200 bg-teal-50/40 p-2.5 text-xs"><div class="font-semibold text-teal-900"><i class="fa-solid fa-right-to-bracket"></i> Financials on the original registration</div><div class="mt-1 text-[0.65rem] text-teal-700">Payments &amp; scholarship stay on Origin Training &middot; <u>View original registration</u></div></div>) },
       { title: "Attendance (days)",
@@ -31,13 +31,13 @@
       { title: "Continuing education (CE)",
         desc: "How staff manage a person's CE credit and payment.",
         out_text: "Keeps a paid $0-hours “stub” — the money already paid stays counted at this event.",
-        out_mock: %(<div class="rounded-lg border border-gray-200 p-2.5 text-xs"><div class="font-semibold text-gray-900">$40 <span class="font-normal text-gray-400">·</span> 0 hrs</div><div class="mt-0.5 text-[0.65rem] text-gray-500">Paid stub — settled here</div></div>),
+        out_mock: %(<div class="rounded-2xl border border-primary/10 p-2.5 text-xs"><div class="font-semibold text-gray-900">$40 <span class="font-normal text-gray-400">·</span> 0 hrs</div><div class="mt-0.5 text-[0.65rem] text-gray-500">Paid stub — settled here</div></div>),
         in_text: "Carries the hours and the remaining balance, with a link back to the paid original. New payments + the certificate happen here. If the original had no CE, staff can add fresh CE here normally.",
-        in_mock: %(<div class="rounded-lg border border-gray-200 p-2.5 text-xs"><div class="font-semibold text-gray-900">$60 <span class="font-normal text-gray-400">·</span> 6 hrs</div><div class="mt-0.5 text-[0.65rem] text-teal-700"><i class="fa-solid fa-right-to-bracket"></i> <u>From original registration</u></div></div>) },
+        in_mock: %(<div class="rounded-2xl border border-primary/10 p-2.5 text-xs"><div class="font-semibold text-gray-900">$60 <span class="font-normal text-gray-400">·</span> 6 hrs</div><div class="mt-0.5 text-[0.65rem] text-teal-700"><i class="fa-solid fa-right-to-bracket"></i> <u>From original registration</u></div></div>) },
       { title: "Scholarship (staff edit)",
         desc: "How staff manage a person's scholarship award.",
         out_text: "The award lives here — the amount, agreement, and tasks.",
-        out_mock: %(<div class="rounded-lg border border-gray-200 p-2.5 text-xs"><div class="text-[0.55rem] uppercase text-gray-400">Amount awarded</div><div class="font-semibold text-gray-900">$50</div></div>),
+        out_mock: %(<div class="rounded-2xl border border-primary/10 p-2.5 text-xs"><div class="text-[0.55rem] uppercase text-gray-400">Amount awarded</div><div class="font-semibold text-gray-900">$50</div></div>),
         in_text: "No separate award; the scholarship callout and edit link point back to the award on the original registration.",
         in_mock: banner.("border-teal-200 bg-teal-50 text-teal-900", "fa-graduation-cap text-teal-600", "Scholarship recipient — award held on the <u>original registration</u>.") },
       { title: "Manage transfer",
@@ -57,9 +57,9 @@
       { title: "Payment",
         desc: "Where a balance is paid.",
         out_text: "The “Pay” button is hidden — they pay at the new event. The balance still shows for reference.",
-        out_mock: %(<div class="rounded-lg border border-gray-200 p-2.5">#{due_badge}<p class="mt-2 text-center text-[0.65rem] italic text-gray-400">No pay button — paid at the new event</p></div>),
+        out_mock: %(<div class="rounded-2xl border border-primary/10 p-2.5">#{due_badge}<p class="mt-2 text-center text-[0.65rem] italic text-gray-400">No pay button — paid at the new event</p></div>),
         in_text: "Shows the balance and the “Pay” button.",
-        in_mock: %(<div class="rounded-lg border border-gray-200 p-2.5">#{due_badge}<div class="mt-2 text-center"><span class="inline-block rounded bg-red-800 px-3 py-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white">Pay with credit card</span></div></div>) },
+        in_mock: %(<div class="rounded-2xl border border-primary/10 p-2.5">#{due_badge}<div class="mt-2 text-center"><span class="inline-block rounded bg-red-800 px-3 py-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white">Pay with credit card</span></div></div>) },
       { title: "Scholarship",
         desc: "The registrant's scholarship details.",
         out_text: "Shows the award (it lives here).",
@@ -119,7 +119,7 @@
 
 <div class="mx-auto max-w-4xl space-y-6">
   <header>
-    <h1 class="text-2xl font-semibold text-gray-900">Transferring a registration — what changes</h1>
+    <h1 class="text-primary font-display text-2xl font-semibold">Transferring a registration — what changes</h1>
     <p class="mt-2 text-sm leading-relaxed text-gray-600">
       When you move a registrant from one event to another, the portal keeps
       <strong>two</strong> registrations. This page shows what each screen looks like on both
@@ -145,9 +145,9 @@
 
   <% groups.each do |group_title, rows| %>
     <section class="space-y-3">
-      <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-400"><%= group_title %></h2>
+      <h2 class="text-xs font-semibold tracking-wide text-gray-400 uppercase"><%= group_title %></h2>
       <% rows.each do |row| %>
-        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm">
           <div class="border-b border-gray-100 px-4 py-3">
             <h3 class="text-sm font-semibold text-gray-800"><%= row[:title] %></h3>
             <p class="text-xs text-gray-500"><%= row[:desc] %></p>

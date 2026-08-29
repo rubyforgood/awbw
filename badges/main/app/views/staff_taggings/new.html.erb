@@ -1,11 +1,11 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="min-h-screen py-8">
   <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-    <div class="mx-auto rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
+    <div class="border-primary/10 mx-auto rounded-2xl border bg-white p-6 shadow-lg">
       <div class="mb-4">
         <%= link_to "← Staff taggings", staff_taggings_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       </div>
-      <h1 class="mb-2 text-2xl font-semibold text-gray-900">New staff tagging</h1>
+      <h1 class="text-primary mb-2 font-display text-2xl font-semibold">New staff tagging</h1>
       <p class="mb-6 text-sm text-gray-600">Tag a person with a staff tag.</p>
 
       <%= simple_form_for @staff_tagging, url: staff_taggings_path do |f| %>

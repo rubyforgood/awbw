@@ -17,7 +17,7 @@
     <% end %>
   </div>
 
-  <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+  <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-primary/10">
     <%# Admin chrome wrapping the form preview below. The amber "Preview" badge
         signals this is not the live page (echoing the amber token note inside). %>
     <div class="bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 py-5">
@@ -70,7 +70,7 @@
         has_conditional = @form_fields.any?(&:conditional_visibility?)
       %>
 
-      <div class="mb-6 rounded-lg bg-gray-50 border border-gray-200 p-3">
+      <div class="mb-6 rounded-2xl bg-gray-50 border border-primary/10 p-3">
         <% if has_conditional %>
           <p class="text-xs text-gray-600">This preview shows every field. Highlighted fields are only asked under certain conditions — the conditional logic runs on the live registration form.</p>
         <% else %>

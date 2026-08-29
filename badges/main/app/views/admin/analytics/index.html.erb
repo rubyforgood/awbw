@@ -1,5 +1,5 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:admin_only) %> rounded-xl border border-gray-200 p-6 shadow">
+<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="mb-2 flex flex-wrap items-center gap-y-2">
     <% if allowed_to?(:index?, with: Admin::HomePolicy) %>
       <%= link_to admin_path, class: "inline-flex items-center gap-1 text-sm #{eyebrow_link_class} px-2 py-1" do %>
@@ -13,7 +13,7 @@
   </div>
 
   <div class="mb-6 flex items-baseline gap-3 leading-none">
-    <h1 class="text-2xl leading-none font-semibold text-gray-900">Counts</h1>
+    <h1 class="text-primary font-display text-2xl leading-none font-semibold">Counts</h1>
   </div>
 
   <div class="mb-6 flex min-h-10 flex-wrap items-start justify-between gap-3 text-sm">
@@ -44,7 +44,7 @@
 
       <!-- Summary -->
       <section>
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
           <h2 class="mb-4 text-lg font-semibold text-gray-800">
             View counts
           </h2>
@@ -52,7 +52,7 @@
           <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             <% @summary.each do |label, data| %>
               <%= link_to polymorphic_path(label.to_s.classify.constantize), class: "block group" do %>
-                <div class="<%= DomainTheme.bg_class_for(label) %> relative min-h-[120px] rounded-xl border border-gray-200 p-5 shadow-sm transition hover:shadow-md">
+                <div class="<%= DomainTheme.bg_class_for(label) %> border-primary/10 relative min-h-[120px] rounded-2xl border p-5 shadow-sm transition hover:shadow-md">
                   <i class="fa-solid fa-arrow-up-right-from-square text-2xs absolute top-3 right-3 text-gray-400 transition-colors group-hover:text-blue-600"></i>
                   <div class="pr-4 text-xs font-semibold tracking-wide text-gray-500 uppercase">
                     <%= label.to_s.humanize %>
@@ -78,7 +78,7 @@
       </section>
 
       <section class="mt-6">
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
           <h2 class="mb-4 text-lg font-semibold text-gray-800">Workshops</h2>
           <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
             <%= render "admin/analytics/popular_list",
@@ -101,7 +101,7 @@
       </section>
 
       <section class="mt-6">
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
           <h2 class="mb-4 text-lg font-semibold text-gray-800">Resources</h2>
           <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
             <%= render "admin/analytics/popular_list",
@@ -127,7 +127,7 @@
       </section>
 
       <section class="mt-6">
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
           <h2 class="mb-4 text-lg font-semibold text-gray-800"><%= CommunityNews.model_name.human.pluralize %></h2>
           <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
             <%= render "admin/analytics/popular_list",
@@ -150,7 +150,7 @@
       </section>
 
       <section class="mt-6">
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
           <h2 class="mb-4 text-lg font-semibold text-gray-800">Stories</h2>
           <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
             <%= render "admin/analytics/popular_list",
@@ -173,7 +173,7 @@
       </section>
 
       <section class="mt-6">
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
           <h2 class="mb-4 text-lg font-semibold text-gray-800">Other</h2>
           <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
             <%= render "admin/analytics/popular_list",
@@ -229,7 +229,7 @@
 
       <!-- Zero Engagement -->
       <section class="mt-6">
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
           <h2 class="mb-4 text-lg font-semibold text-gray-800">
             No engagement
           </h2>

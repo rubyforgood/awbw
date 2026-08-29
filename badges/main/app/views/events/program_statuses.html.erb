@@ -3,7 +3,7 @@
 <% content_for(:full_width, true) %>
 
 <div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8 py-6">
-  <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="<%= DomainTheme.bg_class_for(:events) %> border border-primary/10 rounded-2xl shadow-sm p-6">
     <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
       <% if params[:return_to] == "dashboard" && params[:event_id].present? %>
         <%= link_to "← Dashboard", dashboard_event_path(params[:event_id]), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>

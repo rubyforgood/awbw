@@ -3,7 +3,7 @@
 <% content_for(:full_width, true) %>
 
 <div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8 py-6">
-  <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="<%= DomainTheme.bg_class_for(:events) %> border border-primary/10 rounded-2xl shadow-sm p-6">
     <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
       <% label, return_path = participation_return_link %>
       <%= link_to label, return_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
@@ -74,7 +74,7 @@
           stacked column per year. %>
       <section class="mb-8">
         <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">Attendance by year</h2>
-        <div class="rounded-xl border border-gray-200 bg-white p-4">
+        <div class="rounded-2xl border border-primary/10 bg-white p-4">
           <%= column_chart @report.chart_series, stacked: true, thousands: ",",
                 colors: [ "#2563eb", "#d97706", "#dc2626" ], height: "260px", library: { borderRadius: 4 } %>
         </div>
@@ -147,13 +147,13 @@
                     <%# Each outcome links to this event's registrants filtered to that status.
                         Inline grid-template-columns (like the revenue table) so all seven
                         outcomes sit in one row without relying on a generated grid-cols-7. %>
-                    <div class="grid gap-x-4 gap-y-2 text-sm py-2"
+                    <div class="grid gap-x-4 gap-y-2 py-2 text-sm"
                          style="grid-template-columns: repeat(7, minmax(0, 1fr))">
                       <% EventParticipationReport::STATUS_LABELS.each do |status, label| %>
                         <%= link_to attendees_events_path(event_id: row.event.id, attendance_status: status, event_type: EventRegistration::FILTER_ALL, return_to: "participation"),
                               class: "flex items-baseline justify-between gap-2 rounded px-1 -mx-1 hover:bg-white transition-colors" do %>
-                          <span class="text-gray-500 whitespace-nowrap"><%= label %></span>
-                          <span class="tabular-nums text-gray-800"><%= number_with_delimiter(row.count_for(status)) %></span>
+                          <span class="whitespace-nowrap text-gray-500"><%= label %></span>
+                          <span class="text-gray-800 tabular-nums"><%= number_with_delimiter(row.count_for(status)) %></span>
                         <% end %>
                       <% end %>
                     </div>
@@ -175,19 +175,19 @@
           </details>
         <% end %>
 
-        <div class="grid items-center gap-x-3 px-3 py-3 mt-2 bg-gray-200 border border-gray-300 rounded-lg text-base font-bold text-gray-900"
+        <div class="mt-2 grid items-center gap-x-3 rounded-lg border border-gray-300 bg-gray-200 px-3 py-3 text-base font-bold text-gray-900"
              style="grid-template-columns: var(--part-cols)">
-          <div class="uppercase tracking-wide text-xs text-gray-600">All years</div>
+          <div class="text-xs tracking-wide text-gray-600 uppercase">All years</div>
           <div class="text-right tabular-nums">
             <%= number_with_delimiter(@report.unique_people) %>
             <% if @report.attended_seats != @report.unique_people %>
               <span class="text-xs font-normal text-gray-500">(<%= number_with_delimiter(@report.attended_seats) %> seats)</span>
             <% end %>
           </div>
-          <div class="text-right tabular-nums text-amber-700"><%= number_with_delimiter(@report.count_for("incomplete_attendance")) %></div>
-          <div class="text-right tabular-nums text-red-600"><%= number_with_delimiter(@report.count_for("no_show")) %></div>
-          <div class="text-right tabular-nums text-purple-700"><%= number_with_delimiter(@report.count_other) %></div>
-          <div class="text-right tabular-nums text-gray-700"><%= number_with_delimiter(@report.total_registrations) %></div>
+          <div class="text-right text-amber-700 tabular-nums"><%= number_with_delimiter(@report.count_for("incomplete_attendance")) %></div>
+          <div class="text-right text-red-600 tabular-nums"><%= number_with_delimiter(@report.count_for("no_show")) %></div>
+          <div class="text-right text-purple-700 tabular-nums"><%= number_with_delimiter(@report.count_other) %></div>
+          <div class="text-right text-gray-700 tabular-nums"><%= number_with_delimiter(@report.total_registrations) %></div>
         </div>
 
         <p class="mt-3 text-xs text-gray-500">
@@ -199,7 +199,7 @@
         </p>
       </section>
     <% else %>
-      <div class="text-center py-12 text-gray-500">
+      <div class="py-12 text-center text-gray-500">
         No events match this filter yet — once trainings run and attendance is recorded, you'll see participation by year here.
       </div>
     <% end %>

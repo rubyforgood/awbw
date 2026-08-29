@@ -5,7 +5,7 @@
 <% event = @event.decorate %>
 
 <div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-  <div class="<%= DomainTheme.bg_class_for(:events) %> rounded-xl border border-gray-200 p-6 shadow">
+  <div class="<%= DomainTheme.bg_class_for(:events) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
     <%# Sign-ins has no tab of its own, so nothing in the subnav is marked current. %>
     <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
       <% case params[:return_to] %>
@@ -93,7 +93,7 @@
               <span class="text-xs text-gray-400">Total <%= attendance_duration_label(@report.total_minutes(row)) %></span>
             </div>
 
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+            <div class="overflow-hidden rounded-2xl border border-primary/10 bg-white">
               <div class="grid items-center gap-x-3 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 border-b border-gray-100"
                    style="grid-template-columns: minmax(11rem,1.2fr) 3fr minmax(5rem,auto)">
                 <div>Day</div>
@@ -132,7 +132,7 @@
             <span class="text-xs text-gray-400"><%= @report.registrations_present_on(date) %> of <%= @report.reported_registrations.size %> signed in</span>
           </div>
 
-          <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <div class="overflow-hidden rounded-2xl border border-primary/10 bg-white">
             <div class="grid items-center gap-x-3 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 border-b border-gray-100"
                  style="grid-template-columns: <%= @report.ce_only? ? "minmax(9rem,1.2fr) minmax(6rem,0.8fr) 3fr minmax(5rem,auto)" : "minmax(9rem,1.4fr) 3fr minmax(5rem,auto)" %>">
               <div>Name</div>

@@ -1,6 +1,6 @@
 <%= turbo_frame_tag :forms_results do %>
   <% sort_link = sort_header_link(frame: "forms_results", path: ->(p) { forms_path(p) }) %>
-  <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+  <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm">
     <table class="w-full border-collapse">
       <thead class="bg-gray-100">
         <tr>
@@ -64,7 +64,7 @@
                 </button>
                 <div id="<%= dropdown_id %>"
                      data-dropdown-target="content"
-                     class="hidden absolute right-0 z-10 mt-1 min-w-[160px] rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                     class="absolute right-0 z-10 mt-1 hidden min-w-[160px] rounded-md border border-gray-200 bg-white py-1 shadow-lg">
                   <%= link_to "Results", results_form_path(form), class: item_class %>
                   <%= link_to "View", form_path(form), class: item_class %>
                   <%= link_to "Edit", edit_form_path(form), class: item_class %>

@@ -1,18 +1,18 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:workshops) %> border border-gray-200 rounded-xl shadow p-6">
-    <div class="flex flex-wrap justify-end gap-2 mb-4">
+<div class="<%= DomainTheme.bg_class_for(:workshops) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+    <div class="mb-4 flex flex-wrap justify-end gap-2">
       <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <%= link_to "Workshops", workshops_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <%= link_to "View", workshop_path(@workshop), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     </div>
-    <h1 class="text-2xl font-semibold text-gray-900 mb-4">Edit workshop: <%= @workshop.remote_search_label[:label] %></h1>
+    <h1 class="text-primary mb-4 font-display text-2xl font-semibold">Edit workshop: <%= @workshop.remote_search_label[:label] %></h1>
 
-    <div class="border-b border-gray-300 mb-6"></div>
+    <div class="mb-6 border-b border-gray-300"></div>
 
     <!-- Form -->
 
     <div class="space-y-6">
-        <div class="mt-4 bg-white rounded p-3">
+        <div class="mt-4 rounded bg-white p-3">
           <%= render "form", workshop: @workshop %>
           <%= render "shared/audit_info", resource: @workshop %>
         </div>
