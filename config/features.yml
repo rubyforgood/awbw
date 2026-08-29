@@ -2589,3 +2589,15 @@
     Organizations list it came from. Nothing moved on the page.
   pro_tips:
     - "People and Organizations now use official AWBW brand colours, so their lists, chips and profiles all match."
+
+- name: "Person and organization forms match the Create pages"
+  area: people
+  display_status: user_facing
+  released_on: 2026-08-29
+  pr_number: 2412
+  summary: >-
+    Adding or editing a person or an organization now uses the same page shell as
+    the Create menu's forms — icon badge, serif heading, and the form on its own
+    white card. Every field, link and section is unchanged.
+  pro_tips:
+    - "The edit pages keep their full width and their sticky heading, so long forms still work the way they did."

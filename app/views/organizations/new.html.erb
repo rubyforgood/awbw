@@ -1,14 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:organizations) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
-        <div class="mb-3 flex items-center justify-between">
-          <h1 class="text-primary font-display text-2xl font-semibold">
-            New <%= @organization.class.model_name.human.downcase %>
-          </h1>
-        </div>
-
-        <div class="rounded bg-white p-6">
-          <div class="mt-4">
-            <%= render "form" %>
-          </div>
-        </div>
-</div>
+<%= render layout: "shared/form_page",
+           locals: { domain: :organizations, icon: "fas fa-building",
+                     title: "New #{@organization.class.model_name.human.downcase}" } do %>
+  <%= render "form" %>
+<% end %>
