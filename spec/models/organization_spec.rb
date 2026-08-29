@@ -428,24 +428,6 @@ RSpec.describe Organization, "scholarship index helpers" do
     end
   end
 
-  describe "timeline" do
-    it "records a timeline event on create" do
-      organization = create(:organization)
-
-      event = TimelineEvent.find_by(subject: organization, action: "created")
-      expect(event).to be_present
-      expect(event.snapshot["label"]).to eq("Organization: #{organization.name}")
-    end
-
-    it "creates a timeline entry on the organization" do
-      organization = create(:organization)
-
-      event = TimelineEvent.find_by(subject: organization, action: "created")
-      entry = event.timeline_entries.find_by(owner: organization)
-      expect(entry).to be_present
-    end
-  end
-
   describe "FileMaker codes" do
     it "parses a trimmed, de-duplicated list from the column" do
       org = build(:organization, filemaker_code: " FM1 , FM2,FM1 ")

@@ -86,6 +86,52 @@ RSpec.describe TimelineServices::Router do
       )
     end
 
+    it "routes a Comment on a Person to the person" do
+      person = create(:person)
+      comment = build(:comment, commentable: person)
+
+      expect(described_class.targets_for(comment)).to eq([ person ])
+    end
+
+    it "routes a Comment on a User to their person" do
+      person = create(:person)
+      user = create(:user, person: person)
+      comment = build(:comment, commentable: user)
+
+      expect(described_class.targets_for(comment)).to eq([ person ])
+    end
+
+    it "routes a Comment on an EventRegistration to the registration and registrant" do
+      registration = create(:event_registration)
+      comment = build(:comment, commentable: registration)
+
+      expect(described_class.targets_for(comment)).to contain_exactly(
+        registration,
+        registration.registrant
+      )
+    end
+
+    it "routes a Comment on a ContinuingEducationRegistration to its registrant" do
+      ce_reg = create(:continuing_education_registration)
+      comment = build(:comment, commentable: ce_reg)
+
+      expect(described_class.targets_for(comment)).to contain_exactly(ce_reg.registrant)
+    end
+
+    it "routes a Comment on a Scholarship to its recipient" do
+      scholarship = create(:scholarship)
+      comment = build(:comment, commentable: scholarship)
+
+      expect(described_class.targets_for(comment)).to contain_exactly(scholarship.recipient)
+    end
+
+    it "routes a Comment on a TopicSubscription to the subscriber" do
+      topic_subscription = create(:topic_subscription)
+      comment = build(:comment, commentable: topic_subscription)
+
+      expect(described_class.targets_for(comment)).to contain_exactly(topic_subscription.person)
+    end
+
     it "routes a Comment on an Organization to the organization" do
       organization = create(:organization)
       comment = build(:comment, commentable: organization)

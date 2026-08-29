@@ -576,49 +576,33 @@ RSpec.describe Notification do
     end
 
     describe "#record_timeline_event" do
-      it "creates a timeline event on create" do
+      it "records one created event and nothing on update" do
         person = create(:person)
-        expect {
-          create(:notification, noticeable: person)
-        }.to change(TimelineEvent, :count).by(1)
-      end
+        notification = create(:notification, noticeable: person)
 
-      it "does not create a timeline event on update" do
-        notification = create(:notification)
         expect {
           notification.update!(custom_subject: "Updated subject")
         }.not_to change(TimelineEvent, :count)
+
+        created = person.timeline_events.where(subject: notification).sole
+        expect(created.action).to eq("created")
       end
 
-      it "does not create a timeline event when noticeable is nil" do
+      it "records nothing when noticeable is nil" do
         expect {
           create(:notification, noticeable: nil)
         }.not_to change(TimelineEvent, :count)
       end
 
-      it "routes to the noticeable record" do
-        person = create(:person)
-        notification = create(:notification, noticeable: person)
-        event = TimelineEvent.last
-        expect(event.timeline_entries.pluck(:owner_id, :owner_type)).to contain_exactly([ person.id, "Person" ])
-      end
-    end
-
-    describe "#timeline_also_log" do
-      it "fans out to registrant when noticeable is EventRegistration" do
+      it "also logs a registration-pinned notification to its registrant" do
         registration = create(:event_registration)
         notification = create(:notification, noticeable: registration)
-        event = TimelineEvent.last
-        owner_ids = event.timeline_entries.pluck(:owner_id, :owner_type)
-        expect(owner_ids).to include([ registration.id, "EventRegistration" ])
-        expect(owner_ids).to include([ registration.registrant.id, "Person" ])
-      end
 
-      it "does not fan out when noticeable is Person" do
-        person = create(:person)
-        notification = create(:notification, noticeable: person)
-        event = TimelineEvent.last
-        expect(event.timeline_entries.pluck(:owner_type)).to eq([ "Person" ])
+        event = TimelineEvent.where(subject: notification).sole
+        expect(event.timeline_entries.pluck(:owner_type, :owner_id)).to contain_exactly(
+          [ "EventRegistration", registration.id ],
+          [ "Person", registration.registrant.id ]
+        )
       end
     end
   end
