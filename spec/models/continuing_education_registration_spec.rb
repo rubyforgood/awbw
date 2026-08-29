@@ -151,6 +151,22 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce_reg_for(event: event, status: "attended").certificate_available?).to be(true)
     end
 
+    it "requires the CE callout's post-training form to be completed once one is set" do
+      event = create(:event, ce_hours_offered: 6, start_date: 3.days.ago, end_date: 1.day.ago)
+      form = create(:form, name: "CE Evaluation")
+      required_field = create(:form_field, form:, required: true)
+      callout = create(:registration_ticket_callout, event:, builtin_key: "ce_hours", title: "CE hours", form:)
+
+      ce_reg = ce_reg_for(event: event, status: "attended")
+      expect(ce_reg.certificate_available?).to be(false)
+
+      EventRegistrationServices::CalloutFormSubmission.call(
+        registration: ce_reg.event_registration, callout: callout,
+        form_params: { required_field.id.to_s => "Great" }
+      )
+      expect(ce_reg.reload.certificate_available?).to be(true)
+    end
+
     it "records delivery via certificate_sent_at" do
       ce_reg = create(:continuing_education_registration)
       expect(ce_reg.certificate_sent?).to be(false)
