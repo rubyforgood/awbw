@@ -22,7 +22,7 @@
       </div>
     </div>
     <%= link_to form_submissions_path(form_id: @form.id, return_to: "form_results"),
-                class: "whitespace-nowrap btn btn-secondary-outline" do %>
+                class: "inline-flex items-center whitespace-nowrap text-sm font-medium #{DomainTheme.text_class_for(:forms, intensity: 700)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} hover:underline" do %>
       <i class="fa-solid fa-table-list mr-1.5"></i>View submissions
     <% end %>
   </div>
