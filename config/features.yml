@@ -2625,3 +2625,26 @@
     email. Bulk payment now uses the same field names as every other form.
   pro_tips:
     - "Older bulk payment forms keep working — the payer, phone and organization fields are recognised whichever naming they were built with."
+
+- name: "Anonymous form submissions"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-08-29
+  action_path: "/forms"
+  pr_number: 2350
+  summary: >-
+    Public forms can now be submitted anonymously. Make the name and email
+    questions optional (uncheck "Required") and a respondent who skips them
+    submits without identifying themselves — shown as "Anonymous" in the
+    submissions index.
+  pro_tips:
+    - There's no separate setting — anonymity follows the required status of the
+      name and email questions. Required means everyone identifies; optional lets
+      them skip.
+    - A respondent who does fill name and email is still matched to a person as
+      before; only a skipped identity is anonymous.
+    - Agreement forms (registration, new job, reinstatement) are the exception —
+      they always require name and email, because every submission is processed
+      against a person.
+    - Anonymous responses send the team the usual FYI email but no confirmation
+      goes back (there's no email to send it to).

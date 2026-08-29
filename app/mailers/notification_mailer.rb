@@ -199,8 +199,9 @@ class NotificationMailer < ApplicationMailer
     @person = @submission.person
     @answers = @submission.form_answers.includes(:form_field)
 
+    submitter = @person&.full_name || "an anonymous respondent"
     mail(
-      subject: "#{FYI_PREFIX} New form submission: #{@form.display_name} by #{@person.full_name}"
+      subject: "#{FYI_PREFIX} New form submission: #{@form.display_name} by #{submitter}"
     )
   end
 

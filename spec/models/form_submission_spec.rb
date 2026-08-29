@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe FormSubmission do
   describe "associations" do
-    it { should belong_to(:person) }
+    it { should belong_to(:person).optional }
     it { should belong_to(:form) }
     it { should belong_to(:event).optional }
     it { should have_many(:form_answers).dependent(:destroy) }
@@ -87,6 +87,16 @@ RSpec.describe FormSubmission do
       submission = create(:form_submission, role: "registration")
 
       expect(submission.slug).to be_nil
+    end
+  end
+
+  describe "#anonymous?" do
+    it "is true when there is no person" do
+      expect(build(:form_submission, person: nil)).to be_anonymous
+    end
+
+    it "is false when a person is attached" do
+      expect(build(:form_submission, person: create(:person))).not_to be_anonymous
     end
   end
 

@@ -136,6 +136,7 @@
             <span class="text-sm text-gray-800">Publish this form at a public link (anyone can fill it out, no account needed)</span>
           </label>
           <p class="text-xs text-gray-500">Publishes the form at the public link below. A form connected to an event can't be published — event forms are filled out through their event.</p>
+          <p class="text-xs text-gray-500">To accept anonymous submissions, make the name and email questions optional (uncheck "Required" on those fields). A respondent who fills them is still identified; one who skips them submits anonymously. Agreement forms (registration, new job, reinstatement) always require name and email, since each submission is processed against a person.</p>
 
           <div>
             <label class="mb-1 block text-sm font-medium text-gray-700">Public link address</label>
@@ -144,7 +145,7 @@
               <%= f.text_field :slug, placeholder: "volunteer-interest",
                     class: "flex-1 border-0 px-3 py-2 text-sm focus:ring-0" %>
             </div>
-            <p class="mt-1 text-xs text-gray-500">Lowercase letters, numbers, and hyphens. Required to publish. Must include name and email questions to identify who submitted.</p>
+            <p class="mt-1 text-xs text-gray-500">Lowercase letters, numbers, and hyphens. Required to publish. Include name and email questions to identify who submitted — unless anonymous submissions are allowed.</p>
           </div>
 
           <% if @form.publicly_fillable? %>
