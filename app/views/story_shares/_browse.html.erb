@@ -1,10 +1,11 @@
-<div class="bg-gray-100 min-h-screen py-8">
-  <div class="max-w-6xl mx-auto px-6">
+<div class="bg-brand-cream -mx-2 min-h-screen py-10 sm:-mx-6 lg:-mx-8">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
 
-    <div class="flex items-baseline justify-between mb-6">
+    <p class="text-brand-orange-600 mb-1 text-sm font-semibold tracking-widest uppercase">Story share</p>
+    <div class="mb-8 flex items-baseline justify-between">
       <%# Sector/category names carry intentional casing ("LGBTQIA+",
           "Self-Care/Personal Growth"); render as stored, never .titleize. %>
-      <h1 class="text-2xl font-bold text-gray-900"><%= browse_title(params) %></h1>
+      <h1 class="text-brand-navy-900 font-display text-3xl tracking-tight"><%= browse_title(params) %></h1>
       <p class="text-sm text-gray-500"><%= pluralize(@count_display, "story") %></p>
     </div>
 
@@ -15,11 +16,11 @@
 
       <% if single_hero %>
         <% lead = @stories.first %>
-        <div class="rounded shadow-md overflow-hidden mb-12">
+        <div class="ring-brand-navy-900/10 mb-12 overflow-hidden rounded-2xl shadow-md ring-1">
           <%= link_to story_share_path(lead), class: "block" do %>
             <%= render "story_image", story: lead, aspect: "aspect-[16/6]" %>
-            <div class="bg-gray-700 text-white p-4">
-              <h2 class="font-telefon text-lg font-semibold"><%= lead.title %></h2>
+            <div class="bg-brand-navy-800 p-5 text-white">
+              <h2 class="font-display text-xl"><%= lead.title %></h2>
               <p class="text-sm opacity-80">
                 <%= lead.organization_name %><%= " – #{lead.organization.state}" if lead.organization&.state.present? %>
               </p>
@@ -31,15 +32,15 @@
       <% else %>
         <% hero_stories = @stories.first(5) %>
         <div data-controller="carousel"
-             class="relative swiper rounded-lg overflow-hidden shadow-lg mb-12"
+             class="swiper ring-brand-navy-900/10 relative mb-12 overflow-hidden rounded-2xl shadow-lg ring-1"
              data-carousel-options-value='{ "autoplay": { "delay": 5000, "pauseOnMouseEnter": true }, "slidesPerView": 1, "breakpoints": {} }'>
           <div class="swiper-wrapper">
             <% hero_stories.each do |story| %>
               <div class="swiper-slide">
                 <%= link_to story_share_path(story), class: "block relative" do %>
                   <%= render "story_image", story: story, aspect: "aspect-[16/6]" %>
-                  <div class="absolute bottom-0 left-0 right-0 bg-black/50 p-6 text-white">
-                    <h2 class="font-telefon text-2xl mb-1"><%= story.title %></h2>
+                  <div class="from-brand-navy-950/85 absolute right-0 bottom-0 left-0 bg-gradient-to-t to-transparent p-6 text-white">
+                    <h2 class="mb-1 font-display text-2xl"><%= story.title %></h2>
                     <p class="text-sm opacity-90">
                       <%= story.organization_name %><%= " – #{story.organization.state}" if story.organization&.state.present? %>
                     </p>
@@ -48,11 +49,11 @@
               </div>
             <% end %>
           </div>
-          <button aria-label="Previous story" class="swiper-button-prev-custom absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg z-20">
-            <i class="fa-solid fa-chevron-left text-gray-800"></i>
+          <button aria-label="Previous story" class="swiper-button-prev-custom text-brand-navy-900 absolute top-1/2 left-4 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white">
+            <i class="fa-solid fa-chevron-left"></i>
           </button>
-          <button aria-label="Next story" class="swiper-button-next-custom absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg z-20">
-            <i class="fa-solid fa-chevron-right text-gray-800"></i>
+          <button aria-label="Next story" class="swiper-button-next-custom text-brand-navy-900 absolute top-1/2 right-4 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white">
+            <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
         <% grid_stories = @stories.drop(5).first(3) %>
@@ -61,7 +62,7 @@
 
       <!-- 3-up featured grid -->
       <% if grid_stories.any? %>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <div class="mb-16 grid grid-cols-1 gap-8 md:grid-cols-3">
           <% grid_stories.each do |story| %>
             <%= render "browse_card", story: story %>
           <% end %>
@@ -77,7 +78,7 @@
 
       <div class="pagination mt-10"><%= tailwind_paginate @stories %></div>
     <% else %>
-      <div class="text-center text-gray-600 py-20">
+      <div class="py-20 text-center text-gray-600">
         No stories found.
       </div>
     <% end %>
