@@ -12,10 +12,7 @@
   </div>
 
   <div class="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
-    <%= render "shared/brand_accent_strip" %>
-    <div class="bg-primary px-6 py-5 text-white sm:px-8">
-      <h1 class="font-display text-2xl leading-tight font-semibold tracking-tight"><%= @form.display_name %></h1>
-    </div>
+    <%= render "forms/public_header", form: @form %>
 
     <div class="px-6 py-7 sm:px-8">
       <%= render "forms/header", form: @form %>
