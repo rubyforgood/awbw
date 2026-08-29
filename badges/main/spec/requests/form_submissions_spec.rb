@@ -138,6 +138,24 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include(CGI.escapeHTML(forms_path(anchor: "form_#{form.id}")))
       end
 
+      it "shows the form page subnav with Submissions active when filtered to a single form" do
+        form = create(:form, name: "Volunteer interest")
+        get form_submissions_path(form_id: form.id)
+
+        nav = Nokogiri::HTML(response.body).at_css("nav[aria-label='Form pages']")
+        expect(nav).to be_present
+        expect(nav.css("a").map { |a| a["href"] }).to include(results_form_path(form), edit_form_path(form))
+        expect(nav.at_css("[aria-current='page']")&.text&.strip).to eq("Submissions")
+      end
+
+      it "omits the form page subnav when several forms are selected" do
+        one = create(:form, name: "One")
+        two = create(:form, name: "Two")
+        get form_submissions_path(form_id: [ one.id, two.id ])
+
+        expect(response.body).not_to include("aria-label=\"Form pages\"")
+      end
+
       it "keeps the forms origin on the filter form so changing the filter doesn't lose it" do
         form = create(:form, name: "Volunteer interest")
         get form_submissions_path(form_id: form.id, return_to: "forms")

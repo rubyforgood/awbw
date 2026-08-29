@@ -15,8 +15,10 @@
       <tbody class="divide-y divide-gray-200">
         <% @forms.each do |form| %>
           <tr id="form_<%= form.id %>" class="scroll-mt-24 hover:bg-gray-50">
-            <td class="px-4 py-2 text-sm font-medium text-gray-900">
-              <%= form.display_name %>
+            <td class="px-4 py-2 text-sm">
+              <%= link_to form.display_name, edit_form_path(form),
+                          class: "font-medium text-gray-900 #{DomainTheme.text_class_for(:forms, intensity: 700, hover: true)} hover:underline",
+                          data: { turbo_frame: "_top" } %>
             </td>
             <td class="px-4 py-2 text-sm text-gray-600"><%= form_role_label(form) %></td>
             <%# A public link and an event form are mutually exclusive — an
@@ -34,7 +36,7 @@
                   <span class="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-2 py-0.5 text-xs text-gray-500">
                     <i class="fa-solid fa-calendar-day"></i>Event form
                   </span>
-                  <%= link_to pluralize(form.events.size, "event"), events_path(form_id: form.id), class: "inline-flex items-center rounded-md #{DomainTheme.bg_class_for(:forms)} px-2 py-0.5 #{DomainTheme.text_class_for(:forms, intensity: 700)} font-medium #{DomainTheme.bg_class_for(:forms, hover: true)}" %>
+                  <%= link_to pluralize(form.events.size, "event"), events_path(form_id: form.id), data: { turbo_frame: "_top" }, class: "inline-flex items-center rounded-md #{DomainTheme.bg_class_for(:forms)} px-2 py-0.5 #{DomainTheme.text_class_for(:forms, intensity: 700)} font-medium #{DomainTheme.bg_class_for(:forms, hover: true)}" %>
                 <% end %>
                 <% unless form.publicly_fillable? || form.events.size.positive? %>
                   <span class="inline-flex items-center rounded-md border border-gray-200 px-2 py-0.5 text-xs text-gray-500">Not published</span>
@@ -46,6 +48,7 @@
               <% submissions_count = form.form_submissions.size %>
               <% if submissions_count.positive? %>
                 <%= link_to submissions_count, form_submissions_path(form_id: form.id, return_to: "forms"),
+                            data: { turbo_frame: "_top" },
                             class: "inline-flex items-center rounded-md #{DomainTheme.bg_class_for(:forms)} px-2 py-0.5 #{DomainTheme.text_class_for(:forms, intensity: 700)} font-medium #{DomainTheme.bg_class_for(:forms, hover: true)}" %>
               <% else %>
                 0
@@ -65,12 +68,12 @@
                 <div id="<%= dropdown_id %>"
                      data-dropdown-target="content"
                      class="absolute right-0 z-10 mt-1 hidden min-w-[160px] rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-                  <%= link_to "Results", results_form_path(form), class: item_class %>
-                  <%= link_to "View", form_path(form), class: item_class %>
-                  <%= link_to "Edit", edit_form_path(form), class: item_class %>
+                  <%= link_to "Results", results_form_path(form), class: item_class, data: { turbo_frame: "_top" } %>
+                  <%= link_to "View", form_path(form), class: item_class, data: { turbo_frame: "_top" } %>
+                  <%= link_to "Edit", edit_form_path(form), class: item_class, data: { turbo_frame: "_top" } %>
                   <% if allowed_to?(:copy?, form) %>
-                    <%= link_to "Copy", copy_form_path(form), class: item_class,
-                                data: { turbo_method: :post, turbo_confirm: "Make a full copy of \"#{form.display_name}\"?" } %>
+                    <%= link_to "Duplicate form", copy_form_path(form), class: item_class,
+                                data: { turbo_frame: "_top", turbo_method: :post, turbo_confirm: "Make a full duplicate of \"#{form.display_name}\"?" } %>
                   <% end %>
                 </div>
               </div>

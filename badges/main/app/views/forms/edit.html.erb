@@ -1,18 +1,22 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="px-4 py-8">
+<div class="px-4 py-6">
   <div class="mb-4 flex flex-wrap items-center justify-end gap-2">
+    <%= link_to "Forms", forms_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <%= link_to "Smart fields", smart_form_settings_forms_path(form_id: @form.id, event_id: @dashboard_event&.id),
+                class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <%= form_page_subnav(@form, current: :edit, event: @dashboard_event) %>
     <% if @dashboard_event %>
       <%= link_to "Dashboard", dashboard_event_path(@dashboard_event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-    <% end %>
-    <%= link_to "Forms", forms_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-    <% if @dashboard_event %>
       <%= link_to "Edit event", edit_event_path(@dashboard_event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <% end %>
-    <%= link_to "Edit sections", edit_sections_form_path(@form, event_id: @dashboard_event&.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-    <%= link_to "Smart field settings", smart_form_settings_forms_path(form_id: @form.id, event_id: @dashboard_event&.id),
-                class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-    <%= form_editor_view_links(@form, @dashboard_event) %>
+    <%= form_live_view_link(@dashboard_event) %>
   </div>
+
+  <% if allowed_to?(:copy?, @form) %>
+    <div class="mb-4 flex justify-end">
+      <%= form_duplicate_button(@form) %>
+    </div>
+  <% end %>
 
   <%# Colored hero banner so the page reads at a glance instead of all-white %>
   <div class="overflow-hidden rounded-2xl bg-purple-900 shadow-lg ring-1 ring-black/5">

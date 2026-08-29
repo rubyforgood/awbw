@@ -2,22 +2,25 @@
 
 <div class="form-submissions-index mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:forms) %> rounded-2xl border border-primary/10 p-6 shadow-sm">
   <div class="w-full">
-    <% if params[:return_to] == "form_results" && @form %>
-      <div class="mb-4">
-        <%= link_to results_form_path(@form), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class}" do %>
-          <i class="fa-solid fa-arrow-left text-xs"></i> <%= @form.display_name %> results
-        <% end %>
-      </div>
-    <% elsif params[:return_to] == "forms" && @form %>
-      <div class="mb-4">
-        <%= link_to forms_path(anchor: "form_#{@form.id}"), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
-          <i class="fa-solid fa-arrow-left text-xs"></i> Forms
-        <% end %>
-      </div>
-    <% elsif @person %>
-      <div class="mb-4">
-        <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
-          <i class="fa-solid fa-arrow-left text-xs"></i> Edit <%= @person.name %>
+    <% if @form || @person %>
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <% if params[:return_to] == "form_results" && @form %>
+            <%= link_to results_form_path(@form), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class}" do %>
+              <i class="fa-solid fa-arrow-left text-xs"></i> <%= @form.display_name %> results
+            <% end %>
+          <% elsif params[:return_to] == "forms" && @form %>
+            <%= link_to forms_path(anchor: "form_#{@form.id}"), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+              <i class="fa-solid fa-arrow-left text-xs"></i> Forms
+            <% end %>
+          <% elsif @person %>
+            <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+              <i class="fa-solid fa-arrow-left text-xs"></i> Edit <%= @person.name %>
+            <% end %>
+          <% end %>
+        </div>
+        <% if @form %>
+          <%= form_page_subnav(@form, current: :submissions) %>
         <% end %>
       </div>
     <% end %>
