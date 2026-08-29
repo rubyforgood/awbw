@@ -363,9 +363,8 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       expect(person.affiliations.facilitators.active.where(organization: organization).count).to eq(1)
     end
 
-    # The end date is derived from the event's timestamp in the ambient zone, and a
-    # request runs in the signed-in user's — so the writer and the reader routinely
-    # disagree by a calendar day.
+    # Event#starts_on pins the projection, so the date this wrote and the date it
+    # compares are the same whoever reads them — no tolerance, no drift.
     it "still recognises its own ending when read back in another time zone" do
       event = create(:event, facilitator_training: true, start_date: 14.days.ago.change(hour: 5),
                              end_date: 12.days.ago.change(hour: 17), registration_close_date: 20.days.ago)
