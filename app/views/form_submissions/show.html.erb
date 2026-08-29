@@ -33,17 +33,17 @@
 
 <div class="mx-auto max-w-2xl px-4 pt-6 pb-12">
   <div class="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
-    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 px-6 py-5 text-white sm:px-8">
+    <%= render "shared/brand_accent_strip" %>
+    <div class="bg-primary px-6 py-5 text-white sm:px-8">
       <div class="flex items-center gap-5">
         <div class="shrink-0">
           <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
         </div>
         <div class="flex-1">
-          <h1 class="text-primary font-display text-xl leading-tight font-semibold tracking-wide">Form submission</h1>
-          <p class="text-sm text-blue-200"><%= @form_submission.form.name %></p>
+          <h1 class="font-display text-2xl leading-tight font-semibold tracking-tight">Form submission</h1>
+          <p class="text-sm text-white/70"><%= @form_submission.form.name %></p>
         </div>
       </div>
-      <div class="from-accent to-accent absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r via-amber-400"></div>
     </div>
     <div class="px-6 py-7 sm:px-8">
       <%= render "form_submissions/changes_link", submission: @form_submission, badge: true %>

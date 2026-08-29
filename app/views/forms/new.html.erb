@@ -5,26 +5,16 @@
   </div>
 
   <%# Colored hero banner so the page reads at a glance instead of all-white %>
-  <div class="overflow-hidden rounded-2xl bg-purple-900 shadow-lg ring-1 ring-black/5">
-    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 px-6 py-6 text-white sm:px-8">
-      <div class="flex items-center gap-4">
-        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15">
-          <i class="fa-solid fa-file-circle-plus text-xl"></i>
-        </div>
-        <div>
-          <p class="text-xs font-medium tracking-[0.2em] text-purple-200 uppercase">New form</p>
-          <h1 class="text-primary font-display text-2xl leading-tight font-bold tracking-tight">Create a form</h1>
-        </div>
-      </div>
-      <div class="from-accent to-accent absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r via-amber-400"></div>
-    </div>
+  <div class="<%= DomainTheme.bg_class_for(:forms, intensity: 50) %> border-primary/10 overflow-hidden rounded-2xl border shadow-sm">
+    <%= render "forms/page_header", icon: "fa-solid fa-file-circle-plus",
+                                    eyebrow: "New form", title: "Create a form" %>
 
     <div class="px-4 py-6 sm:px-6">
       <%= form_with url: forms_path, method: :post, class: "space-y-6", data: { controller: "section-filter" } do |f| %>
         <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm">
-          <div class="flex items-center gap-2.5 border-b border-purple-300 bg-purple-100 px-6 py-3">
-            <i class="fa-solid fa-gear text-purple-700"></i>
-            <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Form details</h2>
+          <div class="flex items-center gap-2.5 border-b <%= DomainTheme.border_class_for(:forms) %> <%= DomainTheme.bg_class_for(:forms, intensity: 100) %> px-6 py-3">
+            <i class="fa-solid fa-gear <%= DomainTheme.text_class_for(:forms, intensity: 700) %>"></i>
+            <h2 class="text-sm font-semibold tracking-wide <%= DomainTheme.text_class_for(:forms, intensity: 900) %> uppercase">Form details</h2>
           </div>
           <div class="space-y-4 p-6">
             <div class="flex flex-col gap-4 sm:flex-row">
@@ -53,9 +43,9 @@
         </div>
 
         <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm">
-          <div class="flex items-center gap-2.5 border-b border-purple-300 bg-purple-100 px-6 py-3">
-            <i class="fa-solid fa-list-check text-purple-700"></i>
-            <h2 class="text-sm font-semibold tracking-wide text-purple-900 uppercase">Sections to include</h2>
+          <div class="flex items-center gap-2.5 border-b <%= DomainTheme.border_class_for(:forms) %> <%= DomainTheme.bg_class_for(:forms, intensity: 100) %> px-6 py-3">
+            <i class="fa-solid fa-list-check <%= DomainTheme.text_class_for(:forms, intensity: 700) %>"></i>
+            <h2 class="text-sm font-semibold tracking-wide <%= DomainTheme.text_class_for(:forms, intensity: 900) %> uppercase">Sections to include</h2>
           </div>
           <div class="p-6">
             <div class="space-y-1.5">
@@ -72,7 +62,7 @@
                   <div class="flex items-center gap-2">
                     <label class="flex flex-1 cursor-pointer items-center gap-2">
                       <input type="checkbox" name="sections[]" value="<%= key %>"
-                             class="rounded border-gray-300 text-purple-600"
+                             class="rounded border-gray-300 <%= DomainTheme.text_class_for(:forms, intensity: 600) %>"
                              <%= "checked" if params.dig(:sections)&.include?(key.to_s) %>>
                       <span class="text-sm font-medium text-gray-800"><%= section[:label] %></span>
                     </label>

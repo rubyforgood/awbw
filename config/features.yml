@@ -2677,3 +2677,15 @@
     - "Counts edits to records that already existed, plus an org created through linking; a submitter's own brand-new records and tags aren't counted."
     - "Each row links to that record's edit page at the changed field."
     - "The admin submission view now links straight to the registrant's own public version of the form (opens in a new tab)."
+
+- name: "Form builder and public form redesigned"
+  area: registration
+  display_status: user_facing
+  released_on: 2026-08-29
+  pr_number: 2413
+  summary: >-
+    The form builder pages lose the heavy purple banner for the same light
+    identity band the rest of the portal uses, and the public form and its
+    preview now share one header so what you preview is what registrants see.
+  pro_tips:
+    - "The preview page and the live public form use the same header now, so the preview is a true likeness."
