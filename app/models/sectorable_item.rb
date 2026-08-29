@@ -5,8 +5,6 @@ class SectorableItem < ApplicationRecord
     NestedRecordTimelineRenderer
   end
 
-  SECTORABLE_TIMELINE_ATTRIBUTES = %w[ sector_id is_leader is_primary ].freeze
-
   belongs_to :sector
   belongs_to :sectorable, polymorphic: true, touch: true
   has_many :people, through: :sectorable_items, source: :sectorable, source_type: "Person"
@@ -28,12 +26,6 @@ class SectorableItem < ApplicationRecord
 
   def timeline_label
     "sector '#{sector.name}'"
-  end
-
-  def timeline_changes
-    saved_changes
-      .slice(*SECTORABLE_TIMELINE_ATTRIBUTES)
-      .transform_values { |(old_value, new_value)| [ old_value.to_s, new_value.to_s ] }
   end
 
   private

@@ -7,8 +7,6 @@ class ProfessionalLicense < ApplicationRecord
 
   has_paper_trail
 
-  LICENSE_TIMELINE_ATTRIBUTES = %w[ number kind issuing_state expires_on ].freeze
-
   belongs_to :person
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
@@ -81,12 +79,6 @@ class ProfessionalLicense < ApplicationRecord
 
   def timeline_label
     model_name.human
-  end
-
-  def timeline_changes
-    saved_changes
-      .slice(*LICENSE_TIMELINE_ATTRIBUTES)
-      .transform_values { |(old_value, new_value)| [ old_value.to_s, new_value.to_s ] }
   end
 
   private
