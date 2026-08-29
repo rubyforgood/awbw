@@ -110,14 +110,16 @@ class ContinuingEducationRegistration < ApplicationRecord
   end
 
   # CE certificate eligibility — its own rule (not shared): the event grants CE,
-  # the registrant attended, the training has ended, the CE balance is paid, and
-  # (when attendance was tracked) the logged time approximately covers the hours.
+  # the registrant attended, the training has ended, the CE balance is paid, the
+  # CE callout's post-training form (if one is set) is complete, and (when
+  # attendance was tracked) the logged time approximately covers the hours.
   # Everything is judged at this record's own event/registration — after a transfer
   # the hours ride on the destination reg's own record, so there's nothing to walk.
   def certificate_available?
     event = event_registration&.event
     return false unless event&.ce_eligible?
     return false unless event.end_date&.past? && event_registration.attended? && paid_in_full?
+    return false unless event_registration.ce_form_requirement_met?
 
     attendance_time_sufficient?
   end

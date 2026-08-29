@@ -302,16 +302,32 @@ class BuiltinCalloutCards
     # Once CE is paid, on a training day the badge becomes a live sign-in nudge
     # (like the payment card's "$X due"), overriding the resting CE status chip.
     reminder = ce_attendance_reminder
-    Card.new(icon_class: "fa-solid fa-graduation-cap", color: ce_card_color(due, reminder),
+    # Once the training's sign-outs are done, an outstanding post-training form
+    # becomes its own action nudge — but never over a live sign-in reminder.
+    form_pending = reminder.nil? && ce_form_pending?
+    badge = ce_hours_reminder_badge(reminder)
+    badge ||= "Complete your form" if form_pending
+    badge ||= ce_hours_badge(complete)
+    Card.new(icon_class: "fa-solid fa-graduation-cap", color: form_pending ? "orange" : ce_card_color(due, reminder),
              title: event.ce_hours_label,
              subtitle: ce_hours_subtitle,
              href: registration_ce_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right",
-             badge: ce_hours_reminder_badge(reminder) || ce_hours_badge(complete),
-             # Amber while money is due, hours/license are still needed, or it's time
-             # to sign in (nil badge_classes falls back to amber in _callout_card);
-             # teal once complete and paid, or while currently signed in.
-             badge_classes: ce_card_badge_classes(complete, due, reminder))
+             badge: badge,
+             # Amber while money is due, hours/license are still needed, the form is
+             # outstanding, or it's time to sign in (nil badge_classes falls back to
+             # amber in _callout_card); teal once complete and paid, or signed in.
+             badge_classes: form_pending ? nil : ce_card_badge_classes(complete, due, reminder))
+  end
+
+  # Whether the CE callout's post-training form is outstanding: sign-outs are done
+  # and a form with unanswered required fields is waiting. Skipped in preview — the
+  # sample ticket's event isn't over, and its unsaved registrant has no submission.
+  def ce_form_pending?
+    return false if @preview
+
+    ce_form = RegistrantCeForm.new(registration)
+    ce_form.present? && ce_form.available? && !ce_form.complete?
   end
 
   # The live attendance nudge for the CE card on a training day, once CE is paid —

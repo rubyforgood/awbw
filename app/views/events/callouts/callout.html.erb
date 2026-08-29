@@ -1,7 +1,13 @@
 <% content_for(:page_bg_class, "public") %>
 <% content_for(:page_title, "#{@callout.title} — #{@event.title}") %>
 
-<%= render layout: "events/callouts/callout_page", locals: { title: @callout.title } do %>
+<%# The CE callout's form is reached from the CE page, so its eyebrow returns
+    there rather than to the ticket. %>
+<% callout_eyebrow = if params[:return_to] == "ce"
+     { back_path: registration_ce_path(@event_registration.slug), back_label: "Back to #{@event.ce_hours_label}" }
+   end || {} %>
+
+<%= render layout: "events/callouts/callout_page", locals: { title: @callout.title, **callout_eyebrow } do %>
   <% if @callout.subtitle.present? %>
     <p class="mb-4 text-base text-gray-500"><%= @callout.subtitle %></p>
   <% end %>
