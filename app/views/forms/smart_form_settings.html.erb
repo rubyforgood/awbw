@@ -14,19 +14,9 @@
     <%= link_to "Forms", forms_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
-  <div class="rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5 bg-purple-900">
-    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-6">
-      <div class="flex items-center gap-4">
-        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15">
-          <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
-        </div>
-        <div>
-          <p class="text-xs font-medium uppercase tracking-[0.2em] text-purple-200">Reference</p>
-          <h1 class="font-display text-2xl font-bold tracking-tight leading-tight text-primary">Smart field settings</h1>
-        </div>
-      </div>
-      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
-    </div>
+  <div class="<%= DomainTheme.bg_class_for(:forms, intensity: 50) %> border-primary/10 overflow-hidden rounded-2xl border shadow-sm">
+    <%= render "forms/page_header", icon: "fa-solid fa-wand-magic-sparkles",
+                                    eyebrow: "Reference", title: "Smart field settings" %>
 
     <div class="bg-white px-4 sm:px-6 py-6 space-y-6">
       <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
@@ -50,14 +40,14 @@
       <nav class="flex flex-wrap gap-2" aria-label="Sections">
         <% @groups.each do |group| %>
           <%= link_to group.title, "##{group.key}",
-                      class: "inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-medium text-purple-900 hover:bg-purple-100" %>
+                      class: "inline-flex items-center rounded-full border #{DomainTheme.border_class_for(:forms, intensity: 200)} #{DomainTheme.bg_class_for(:forms, intensity: 50)} px-3 py-1 text-xs font-medium #{DomainTheme.text_class_for(:forms, intensity: 900)} #{DomainTheme.bg_class_for(:forms, intensity: 50, hover: true)}" %>
         <% end %>
       </nav>
 
       <% @groups.each do |group| %>
         <section id="<%= group.key %>" class="scroll-mt-8 rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div class="px-5 py-3 bg-purple-100 border-b border-purple-300">
-            <h2 class="text-sm font-semibold text-purple-900 uppercase tracking-wide"><%= group.title %></h2>
+          <div class="px-5 py-3 <%= DomainTheme.bg_class_for(:forms, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:forms) %>">
+            <h2 class="text-sm font-semibold <%= DomainTheme.text_class_for(:forms, intensity: 900) %> uppercase tracking-wide"><%= group.title %></h2>
           </div>
           <div class="px-5 py-4">
             <p class="text-sm text-gray-600 mb-4"><%= group.summary %></p>
