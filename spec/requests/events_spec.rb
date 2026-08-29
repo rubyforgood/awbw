@@ -3146,7 +3146,7 @@ RSpec.describe "Events", type: :request do
           teens = create(:category, name: "Teens", category_type: age_range)
           primary_field = create(:form_field, form: registration_form, field_identifier: "primary_age_group",
                                               answer_type: :multi_select_checkbox)
-          additional_field = create(:form_field, form: registration_form, field_identifier: "additional_age_group",
+          additional_field = create(:form_field, form: registration_form, field_identifier: "additional_age_groups",
                                                  answer_type: :multi_select_checkbox)
           submission = create(:form_submission, person: person, form: registration_form)
           create(:form_answer, form_submission: submission, form_field: primary_field, submitted_answer: adults.id.to_s)

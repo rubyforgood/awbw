@@ -30,10 +30,8 @@ module EventRegistrationServices
     ADDITIONAL_FORMS_W9 = "W-9".freeze
 
     # Well-known field_identifiers for the registrant's organization name and
-    # position on the registration form. New forms carry the canonical
-    # "organization_*" names; legacy "agency_*" forms still resolve because
-    # field_value expands both (see FormField.aliased_identifiers). Kept here so
-    # the service, controller, and specs agree on a single source.
+    # position on the registration form. Kept here so the service, controller,
+    # and specs agree on a single source.
     ORGANIZATION_NAME_IDENTIFIER = "organization_name".freeze
     ORGANIZATION_POSITION_IDENTIFIER = "organization_position".freeze
 
@@ -156,7 +154,7 @@ module EventRegistrationServices
     end
 
     def field_value(key)
-      field = @registration_form.form_fields.find_by(field_identifier: FormField.aliased_identifiers(key))
+      field = @registration_form.form_fields.find_by(field_identifier: key)
       return nil unless field
       @form_params[field.id.to_s]
     end

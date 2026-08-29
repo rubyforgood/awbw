@@ -84,7 +84,7 @@
                   <span class="<%= form_section_bar_class %>"></span><%= form_label_html(field.name) %>
                 </h3>
               </div>
-            <% elsif payer_fields.include?(field.canonical_identifier) %>
+            <% elsif payer_fields.include?(field.field_identifier) %>
               <%
                 submitted_value = @form_params&.dig(field.id.to_s)
                 error = @field_errors&.dig(field.id)
@@ -103,7 +103,7 @@
                     <p class="rich-label mb-1.5 text-xs text-gray-500"><%= form_label_html(field.subtitle) %></p>
                   <% end %>
                   <%
-                    html_type = case field.canonical_identifier
+                    html_type = case field.field_identifier
                                 when "primary_email" then "email"
                                 when "phone" then "tel"
                                 else field.number_integer? ? "number" : "text"

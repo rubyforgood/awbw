@@ -485,15 +485,6 @@ RSpec.describe FormField do
         expect(additional.answer_inclusion_error([ unpublished.id.to_s ])).to eq("has an invalid selection")
       end
 
-      it "backs the additional age group field under its legacy singular identifier too" do
-        type = create(:category_type, name: "AgeRange")
-        offered = create(:category, :published, category_type: type, name: "Teens (13-17)")
-        legacy = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_age_group")
-
-        expect(legacy.dynamic_categories).to contain_exactly(offered)
-        expect(legacy.answer_inclusion_error([ offered.id.to_s ])).to be_nil
-      end
-
       it "accepts a folded \"Other: <text>\" value for the additional sectors field" do
         create(:sector, :published, name: "Other")
         mental_health = create(:sector, :published, name: "Mental Health")
@@ -652,64 +643,6 @@ RSpec.describe FormField do
     it "falls back to a humanized label for unmapped types" do
       field = build(:form_field, form: form, answer_type: :free_form_input_one_line)
       expect(field.answer_type_label).to eq("One line")
-    end
-  end
-
-  describe ".aliased_identifiers" do
-    it "expands a canonical organization identifier to its canonical and legacy names" do
-      expect(described_class.aliased_identifiers("organization_name")).to eq(%w[organization_name agency_name payer_organization])
-    end
-
-    it "expands a legacy agency identifier to the same canonical and legacy names" do
-      expect(described_class.aliased_identifiers("agency_type")).to eq(%w[organization_type agency_type])
-    end
-
-    it "expands a canonical payer identifier to its canonical and legacy bulk-payment names" do
-      expect(described_class.aliased_identifiers("first_name")).to eq(%w[first_name payer_first_name])
-      expect(described_class.aliased_identifiers("primary_email")).to eq(%w[primary_email payer_email])
-    end
-
-    it "expands a legacy payer identifier to the same canonical and legacy names" do
-      expect(described_class.aliased_identifiers("payer_phone")).to eq(%w[phone payer_phone])
-    end
-
-    it "returns the identifier alone when it isn't a renamed field" do
-      expect(described_class.aliased_identifiers("payment_method")).to eq(%w[payment_method])
-    end
-  end
-
-  describe ".canonical_identifier" do
-    it "folds a legacy payer spelling into its canonical name" do
-      expect(described_class.canonical_identifier("payer_first_name")).to eq("first_name")
-      expect(described_class.canonical_identifier("payer_email")).to eq("primary_email")
-      expect(described_class.canonical_identifier("payer_organization")).to eq("organization_name")
-    end
-
-    it "folds a legacy agency spelling into its canonical name" do
-      expect(described_class.canonical_identifier("agency_city")).to eq("organization_city")
-    end
-
-    it "returns the identifier unchanged when it has no alias" do
-      expect(described_class.canonical_identifier("payment_method")).to eq("payment_method")
-    end
-  end
-
-  describe "#matches_identifier?" do
-    let(:form) { create(:form) }
-
-    it "matches a field carrying the canonical organization identifier" do
-      field = build(:form_field, form: form, field_identifier: "organization_website")
-      expect(field.matches_identifier?("organization_website")).to be(true)
-    end
-
-    it "matches a field carrying the legacy agency identifier against the canonical name" do
-      field = build(:form_field, form: form, field_identifier: "agency_website")
-      expect(field.matches_identifier?("organization_website")).to be(true)
-    end
-
-    it "does not match an unrelated identifier" do
-      field = build(:form_field, form: form, field_identifier: "phone")
-      expect(field.matches_identifier?("organization_website")).to be(false)
     end
   end
 end
