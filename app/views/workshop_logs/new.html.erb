@@ -1,38 +1,25 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
-<div class="<%= DomainTheme.bg_class_for(:workshop_logs) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
-
-      <!-- Header -->
-      <div class="mb-8 space-y-4">
-        <!-- Alert -->
-        <div id="notification_monthly"
-             class="relative flex hidden items-start justify-between rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-800">
-          <span>
-            A monthly report has already been submitted for this month.
-            To submit an additional workshop log, please contact your program manager.
-          </span>
-          <button type="button"
-                  class="ml-4 font-semibold text-green-700 hover:text-green-900"
-                  data-dismiss="alert"
-                  aria-label="Close">
-            &times;
-          </button>
-        </div>
-
-        <!-- Title -->
-        <h1 class="text-primary font-display text-2xl font-semibold">
-          New <%= @workshop_log.class.model_name.human.downcase %>
-        </h1>
-
-        <!-- Description -->
-        <p class="leading-relaxed text-gray-700">
-          An optional tool to track data from your art workshops. If you don't see the workshop you facilitated listed in the dropdown menu, you can type in a new title in the field below.
-        </p>
-      </div>
-
-      <div class="space-y-6">
-        <div class="mt-4 rounded bg-white p-6">
-          <%= render "form" %>
-        </div>
-      </div>
-
-</div>
+<% notice = capture do %>
+  <div id="notification_monthly"
+       class="relative mb-6 flex hidden items-start justify-between rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-800">
+    <span>
+      A monthly report has already been submitted for this month.
+      To submit an additional workshop log, please contact your program manager.
+    </span>
+    <button type="button"
+            class="ml-4 font-semibold text-green-700 hover:text-green-900"
+            data-dismiss="alert"
+            aria-label="Close">
+      &times;
+    </button>
+  </div>
+<% end %>
+<% intro = capture do %>
+  An optional tool to track data from your art workshops. If you don't see the workshop you facilitated listed in the dropdown menu, you can type in a new title in the field below.
+<% end %>
+<%= render layout: "shared/create_page",
+           locals: { domain: :workshop_logs, icon: "fas fa-clipboard-list",
+                     title: "New #{@workshop_log.class.model_name.human.downcase}",
+                     intro: intro, notice: notice } do %>
+  <%= render "form" %>
+<% end %>

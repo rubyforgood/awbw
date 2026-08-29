@@ -2550,3 +2550,15 @@
     serif. Purely visual: no page changed what it shows or does.
   pro_tips:
     - "Each page keeps its own domain colour; only the card edges and the page title changed."
+
+- name: "Create pages redesigned"
+  area: content
+  display_status: user_facing
+  released_on: 2026-08-29
+  summary: >-
+    Every page behind the Create menu — workshops, variations, ideas, stories
+    and workshop logs — now opens with the same icon you clicked, a serif
+    heading and its intro, with the form on its own white card below.
+  pro_tips:
+    - "The icon on the page matches the one in the Create menu, so you can see at a glance which form you landed on."
+    - "The intro explaining why a submission matters now sits above the form instead of beside the heading."

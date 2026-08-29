@@ -1,10 +1,5 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
-<div class="<%= DomainTheme.bg_class_for(:story_ideas, intensity: 200) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
-  <div class="mb-3 flex items-center justify-between">
-    <h1 class="text-primary font-display text-2xl font-semibold">New <%= @story_idea.class.model_name.human.downcase %></h1>
-  </div>
-
-  <div class="mb-6 leading-relaxed text-gray-700">
+<% intro = capture do %>
     At A Window Between Worlds, we value every story you share. Your voice helps paint a picture of the positive impact
     of art on people and communities, inspiring others to use art in similarly powerful and far reaching ways.
     <br><br>
@@ -20,11 +15,9 @@
       Please note: edits may be made, and not all stories
       will be published to the site, but may still be used in other places.
     </span>
-  </div>
-
-  <div class="space-y-6">
-    <div class="mt-4">
-      <%= render "form", story_idea: @story_idea %>
-    </div>
-  </div>
-</div>
+<% end %>
+<%= render layout: "shared/create_page",
+           locals: { domain: :story_ideas, icon: "fas fa-book-open",
+                     title: "New #{@story_idea.class.model_name.human.downcase}", intro: intro } do %>
+  <%= render "form", story_idea: @story_idea %>
+<% end %>
