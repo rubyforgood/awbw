@@ -15,6 +15,9 @@ RSpec.describe "People form loads", type: :system do
   scenario "edit person page loads" do
     visit edit_person_path(person)
 
-    expect(page).to have_content("Edit person: Jane Doe")
+    # the action is the eyebrow now (CSS-uppercased, so match loosely) and the
+    # heading is just the name
+    expect(page).to have_content(/edit person/i)
+    expect(page).to have_content("Jane Doe")
   end
 end

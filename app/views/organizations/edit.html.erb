@@ -17,8 +17,8 @@
   <%= link_to "Profile", organization_path(@organization), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
 <% end %>
 <%= render layout: "shared/form_page",
-           locals: { domain: :organizations, icon: "fas fa-building", eyebrow: "Edit",
-                     title: "Edit organization: #{truncate(@organization.name, length: 40)}",
+           locals: { domain: :organizations, icon: "fas fa-building", eyebrow: "Edit organization",
+                     title: truncate(@organization.name, length: 50),
                      back: back, actions: actions, width: "max-w-7xl" } do %>
   <%= render "form" %>
   <%= render "shared/audit_info", resource: @organization %>

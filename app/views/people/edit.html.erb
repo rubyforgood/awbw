@@ -41,8 +41,8 @@
   <%= link_to "Profile", person_path(@person), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
 <% end %>
 <%= render layout: "shared/form_page",
-           locals: { domain: :people, icon: "fas fa-user", eyebrow: "Edit",
-                     title: "Edit person: #{truncate(@person.name, length: 30)}",
+           locals: { domain: :people, icon: "fas fa-user", eyebrow: "Edit person",
+                     title: truncate(@person.name, length: 40),
                      back: back, actions: actions, width: "max-w-7xl",
                      sticky_header: true, card: false } do %>
   <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
