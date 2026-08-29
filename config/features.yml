@@ -2581,6 +2581,7 @@
   area: people
   display_status: user_facing
   released_on: 2026-08-29
+  pr_number: 2412
   summary: >-
     Adding or editing a person or an organization now uses the same page shell as
     the Create menu's forms — icon badge, serif heading, and the form on its own
