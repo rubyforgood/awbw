@@ -21,6 +21,17 @@
           opacity: 0;
       }
 
+      /* The menu opens below row 1's padding and bottom border, so the pointer
+         used to leave .nav-item crossing that gap and the menu closed before it
+         could be reached. Extend the trigger's hover area down across the gap;
+         the negative margin keeps the layout and the centring unchanged. A
+         bridge on .mega-menu itself would span the whole row and hold this menu
+         open while a *different* trigger was hovered. */
+      .nav-item.has-dropdown > button {
+          padding-bottom: 18px;
+          margin-bottom: -18px;
+      }
+
       .nav-item.has-dropdown:hover .mega-menu {
           visibility: visible;
           opacity: 1;
@@ -106,7 +117,9 @@
       }
   </style>
 
-  <div class="px-2 sm:px-6 lg:px-8">
+  <%# No gutters here: the rows and the mega menu anchored to them run full
+      bleed. The logo and right-hand controls set their own left-/right- insets. %>
+  <div>
     <!-- Row 1: Logo and Main Navigation -->
     <div class="nav-row row-1 border-brand-navy-800 relative flex items-center justify-center border-b-2 py-4">
       <!-- Logo (always visible) -->
