@@ -47,14 +47,14 @@
       <% end %>
     </div>
 
-    <%# Admin-only jump to the audit of the values this submission overwrote —
-        shown only once it has overwritten something (e.g. after linking an org
-        that wasn't a clean match writes onto it). %>
+    <%# Admin-only jump to the audit — always shown here, since this is where the
+        admin makes the org links/creates that produce those changes. %>
     <%= render "form_submissions/changes_link",
                submission: @form_submission,
                return_to: "form_submission_link_organization",
                wrapper_class: "-mt-4 mb-8",
-               turbo_top: true %>
+               turbo_top: true,
+               always: true %>
 
     <%# === The linked organization (an explicit link, or the registration-org row
         this submission is pinned to) + add actions — tinted
