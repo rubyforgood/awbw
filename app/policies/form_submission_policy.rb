@@ -10,6 +10,10 @@ class FormSubmissionPolicy < ApplicationPolicy
     admin? || (slug.present? && record.slug == slug)
   end
 
+  def changes?
+    admin?
+  end
+
   def ticket?
     admin? || (slug.present? && record.slug == slug)
   end

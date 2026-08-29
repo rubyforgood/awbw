@@ -46,6 +46,7 @@
       <div class="from-accent to-accent absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r via-amber-400"></div>
     </div>
     <div class="px-6 py-7 sm:px-8">
+      <%= render "form_submissions/changes_link", submission: @form_submission, badge: true %>
       <%= render "form_submissions/submission", submission: @form_submission %>
 
       <% if event && @form_submission.role == "bulk_payment" %>

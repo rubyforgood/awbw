@@ -1,0 +1,35 @@
+<%#
+  Admin-only bar linking to the "what this submission changed" audit for a form
+  submission. By default renders nothing unless the submission actually overwrote
+  something (edited?); pass always: true on the pages where an admin makes those
+  changes (the link-organization editors) so the audit is always reachable there.
+  Dropped wherever a submission is shown; only return_to/label/margins differ. locals:
+    submission:    FormSubmission (may be nil — renders nothing)
+    return_to:     eyebrow origin key for the changes page (optional)
+    extra_params:  extra query params the eyebrow needs, e.g. { event_registration_id: 1 } (optional)
+    label:         bar text (default "What this submission changed")
+    wrapper_class: margin/utility classes for the link (default "mb-5")
+    badge:         show the little "admin" lock chip (default false)
+    turbo_top:     break out of the enclosing turbo frame on click (default false)
+    always:        show the link even when nothing has changed yet (default false)
+%>
+<% submission = local_assigns[:submission] %>
+<% if submission && allowed_to?(:changes?, submission) %>
+  <% submission_changes = FormSubmissionChanges.new(submission) %>
+  <% if submission_changes.edited? || local_assigns[:always] %>
+    <% path_params = { return_to: local_assigns[:return_to] }.compact.merge(local_assigns[:extra_params] || {}) %>
+    <%= link_to changes_form_submission_path(submission, **path_params),
+                data: local_assigns[:turbo_top] ? { turbo_frame: "_top" } : {},
+                class: "group #{local_assigns.fetch(:wrapper_class, "mb-5")} flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-blue-100" do %>
+      <i class="fa-solid fa-circle-info text-blue-500"></i>
+      <%= local_assigns.fetch(:label, "What this submission changed") %>
+      <% if submission_changes.edited_count.positive? %>
+        <span class="text-2xs rounded-full bg-blue-200 px-1.5"><%= submission_changes.edited_count %></span>
+      <% end %>
+      <% if local_assigns[:badge] %>
+        <span class="text-2xs ml-1 rounded-full border border-blue-200 bg-white/70 px-1.5 py-0.5 font-normal text-blue-700"><i class="fa-solid fa-lock text-2xs mr-0.5"></i>admin</span>
+      <% end %>
+      <i class="fa-solid fa-arrow-right ml-auto text-xs text-blue-400 transition-transform group-hover:translate-x-0.5"></i>
+    <% end %>
+  <% end %>
+<% end %>
