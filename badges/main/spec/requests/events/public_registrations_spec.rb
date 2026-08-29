@@ -418,7 +418,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
     it "renders the agency website as a text input so bare domains pass validation" do
       website_field = create(:form_field, form: form, answer_type: :free_form_input_one_line,
-             field_identifier: "agency_website", name: "Organization website", required: false)
+             field_identifier: "organization_website", name: "Organization website", required: false)
 
       get new_event_public_registration_path(event)
 
@@ -880,9 +880,9 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     let!(:state_field) { field("mailing_state") }
     let!(:zip_field) { field("mailing_zip") }
     let!(:phone_field) { field("phone") }
-    let!(:name_field) { field("agency_name") }
-    let!(:website_field) { field("agency_website") }
-    let!(:position_field) { field("agency_position") }
+    let!(:name_field) { field("organization_name") }
+    let!(:website_field) { field("organization_website") }
+    let!(:position_field) { field("organization_position") }
     let!(:sector_field) do
       create(:form_field, form: form, answer_type: :multi_select_checkbox,
              field_identifier: "additional_sectors", name: "Sectors", required: false)

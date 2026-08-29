@@ -65,7 +65,7 @@ class EventRegistrationImporter
     form = event.registration_form
     return false unless form
 
-    form.form_fields.exists?(field_identifier: FormField.aliased_identifiers(ORGANIZATION_NAME_IDENTIFIER))
+    form.form_fields.exists?(field_identifier: ORGANIZATION_NAME_IDENTIFIER)
   end
 
   Result = Struct.new(
@@ -298,7 +298,7 @@ class EventRegistrationImporter
     return @form_field_cache[identifier] if @form_field_cache.key?(identifier)
 
     @form_field_cache[identifier] =
-      @registration_form.form_fields.find_by(field_identifier: FormField.aliased_identifiers(identifier))
+      @registration_form.form_fields.find_by(field_identifier: identifier)
   end
 
   def find_organization(name)

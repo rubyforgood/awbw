@@ -117,14 +117,12 @@ class FormSubmissionsController < ApplicationController
     ids_by_submission.transform_values { |ids| ids.filter_map { |id| orgs[id] } }
   end
 
-  # The org-related answers on this submission (canonical or legacy "agency_"
-  # identifiers), shaped like a registration submission entry.
+  # The org-related answers on this submission, shaped like a registration
+  # submission entry.
   def submission_org_entry
     @submission_org_entry ||= begin
       answers = @form_submission.answers_by_identifier
-      read = ->(identifier) do
-        FormField.aliased_identifiers(identifier).lazy.filter_map { |name| answers[name].presence }.first
-      end
+      read = ->(identifier) { answers[identifier].presence }
       {
         org_name: read.call("organization_name"),
         position: read.call("organization_position"),

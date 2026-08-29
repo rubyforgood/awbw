@@ -88,8 +88,7 @@ class SmartFormFields
                "below fill in the organization's profile. Both affiliations are connected to the " \
                "organization's address when it has exactly one; with several addresses the address is " \
                "left blank for an admin to set. When it doesn't match, nothing is written and " \
-               "an admin resolves it on the event registration's Link organization page. Older forms " \
-               "may carry the legacy \"agency_\" names for these questions; both spellings still work.",
+               "an admin resolves it on the event registration's Link organization page.",
       fields: [
         [ "organization_name", "Organization name", "Looked up against existing organizations by exact name. A match is linked to the registration; no match leaves the registration unlinked for an admin to resolve." ],
         [ "organization_position", "Position / title", "Becomes the job title on the registrant's Job Affiliation with that organization." ],
@@ -112,9 +111,7 @@ class SmartFormFields
         [ "primary_sector", "Primary sector", "Tags the person and organization with one primary sector. Offers no \"Other\" — a primary sector must be a real sector." ],
         [ "additional_sectors", "Additional sectors", "Tags the person and organization with any number of additional sectors. An \"Other\" answer goes to the Other responses review queue, where it can be promoted into a real sector." ],
         [ "primary_age_group", "Primary age group(s) served", "Tags the person and organization with the primary age range served." ],
-        [ "additional_age_groups", "Additional age group(s) served", "Tags the person and organization with additional age ranges served." ],
-        [ "primary_sector_single", "Primary sector (legacy)", "Older name for the primary sector question. Still honored; use primary_sector on new forms." ],
-        [ "additional_age_group", "Additional age group(s) served (legacy)", "Older singular name for the additional age groups question. Still honored; use additional_age_groups on new forms." ]
+        [ "additional_age_groups", "Additional age group(s) served", "Tags the person and organization with additional age ranges served." ]
       ]
     },
     {

@@ -1084,7 +1084,7 @@ class EventsController < ApplicationController
   # check, so both read the same resolved answer.
   def submitted_org_names_for(registrations)
     registration_form = @event.registration_form
-    field = registration_form&.form_fields&.find_by(field_identifier: FormField.aliased_identifiers("organization_name"))
+    field = registration_form&.form_fields&.find_by(field_identifier: "organization_name")
     return {} unless field
 
     FormAnswer.joins(:form_submission)

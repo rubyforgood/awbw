@@ -644,9 +644,8 @@ class EventRegistrationsController < ApplicationController
       organization_name organization_position organization_website organization_type
       organization_street organization_city organization_state organization_zip organization_country
     ]
-    accepted = organization_identifiers.flat_map { |identifier| FormField.aliased_identifiers(identifier) }
     field_ids = form.form_fields
-      .where(field_identifier: accepted)
+      .where(field_identifier: organization_identifiers)
       .pluck(:field_identifier, :id).to_h
 
     entries = registration.registrant.form_submissions
@@ -655,10 +654,8 @@ class EventRegistrationsController < ApplicationController
       .includes(:form_answers)
       .map do |submission|
         answers = submission.form_answers.index_by(&:form_field_id)
-        # Resolve the canonical identifier to whichever spelling this form used
-        # (canonical or legacy "agency_*"), then read its answer.
         answer = ->(identifier) do
-          id = FormField.aliased_identifiers(identifier).lazy.filter_map { |name| field_ids[name] }.first
+          id = field_ids[identifier]
           id && answers[id]&.submitted_answer
         end
         {

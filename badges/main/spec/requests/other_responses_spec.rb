@@ -175,7 +175,7 @@ RSpec.describe "OtherResponses", type: :request do
       org_response = create(:other_response, :organization_type, text: "Nonprofit collective")
 
       post curate_other_responses_path,
-           params: { kind: "organization_type", field_identifier: "agency_type", normalized_text: "nonprofit collective", status: "dismissed" }
+           params: { kind: "organization_type", field_identifier: "organization_type", normalized_text: "nonprofit collective", status: "dismissed" }
 
       expect(org_response.reload.status).to eq("dismissed")
     end

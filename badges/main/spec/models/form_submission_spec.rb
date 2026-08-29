@@ -109,17 +109,6 @@ RSpec.describe FormSubmission do
 
       expect(submission.answers_by_identifier["primary_email"]).to eq("pat@example.com")
     end
-
-    it "also indexes a legacy-spelled answer under its canonical identifier" do
-      form = create(:form)
-      field = create(:form_field, form: form, field_identifier: "payer_email", name: "Payer email")
-      submission = create(:form_submission, form: form)
-      submission.form_answers.create!(form_field: field, submitted_answer: "pat@example.com")
-
-      answers = submission.answers_by_identifier
-      expect(answers["payer_email"]).to eq("pat@example.com")
-      expect(answers["primary_email"]).to eq("pat@example.com")
-    end
   end
 
   describe "index filter scopes" do

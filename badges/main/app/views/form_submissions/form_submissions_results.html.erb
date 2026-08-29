@@ -69,7 +69,7 @@
                     A matching affiliation the person holds doesn't count; only an
                     explicit link made in the editor does. %>
                 <% answers = submission.answers_by_identifier %>
-                <% submitted_org = FormField.aliased_identifiers("organization_name").filter_map { |key| answers[key].presence }.first %>
+                <% submitted_org = answers["organization_name"].presence %>
                 <%# The chip doubles as the way into the submission's org-linking
                     editor, like the org chips on the registrants roster. %>
                 <% editor_path = link_organization_form_submission_path(submission, return_to: "form_submissions") %>
