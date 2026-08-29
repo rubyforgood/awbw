@@ -13,13 +13,13 @@
         </p>
         <div class="mt-5 flex items-center gap-2">
           <% social = [
-               [ "fa-brands fa-instagram", "Instagram" ],
-               [ "fa-brands fa-facebook-f", "Facebook" ],
-               [ "fa-brands fa-linkedin-in", "LinkedIn" ],
-               [ "fa-brands fa-youtube", "YouTube" ]
+               [ "fa-brands fa-instagram", "Instagram", "https://www.instagram.com/awbworg" ],
+               [ "fa-brands fa-facebook-f", "Facebook", "https://www.facebook.com/awbworg" ],
+               [ "fa-brands fa-linkedin-in", "LinkedIn", "https://www.linkedin.com/company/a-window-between-worlds" ],
+               [ "fa-brands fa-youtube", "YouTube", "https://www.youtube.com/@awbworg" ]
              ] %>
-          <% social.each do |icon, label| %>
-            <%= link_to "https://awbw.org", target: "_blank", rel: "noopener noreferrer",
+          <% social.each do |icon, label, url| %>
+            <%= link_to url, target: "_blank", rel: "noopener noreferrer",
                         aria: { label: label },
                         class: "hover:bg-brand-navy-800 flex size-9 items-center justify-center rounded-lg bg-white/10 text-white transition-colors" do %>
               <i class="<%= icon %>"></i>
@@ -68,7 +68,30 @@
       </div>
     </div>
 
-    <div class="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/60 sm:flex-row">
+    <!-- Recognized & supported by -->
+    <div class="mt-12 flex flex-col items-center gap-6 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:gap-8">
+      <span class="text-xs font-bold tracking-widest text-white/60 uppercase">Recognized &amp; supported by</span>
+      <div class="flex items-center gap-4">
+        <%= link_to "https://www.guidestar.org/profile/95-4448606", target: "_blank", rel: "noopener noreferrer",
+                    class: "rounded-sm bg-white p-1", aria: { label: "Candid Platinum Transparency #{Date.current.year}" } do %>
+          <span class="text-brand-navy-900 text-2xs block border-2 border-[#a9c5dd] px-4 py-2 text-center leading-tight">
+            <span class="block">Platinum</span>
+            <span class="block">Transparency</span>
+            <span class="block"><%= Date.current.year %></span>
+            <span class="mt-1 block font-bold">Candid.</span>
+          </span>
+        <% end %>
+        <span class="text-brand-navy-900 text-2xs rounded-sm bg-white px-4 py-3 text-center leading-tight font-semibold">
+          <span class="block">Los Angeles County</span>
+          <span class="block text-sm font-bold">Arts &amp; Culture</span>
+        </span>
+      </div>
+      <p class="max-w-md text-xs leading-relaxed text-white/60">
+        Supported, in part, by the LA County Board of Supervisors through the Department of Arts and Culture.
+      </p>
+    </div>
+
+    <div class="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/60 sm:flex-row">
       <p>© <%= Date.current.year %> A Window Between Worlds • Registered 501(c)(3) EIN: 95-448606</p>
       <p>Portal built with 🤍 by <%= link_to "Ruby for Good", "https://www.rubyforgood.org", class: "underline hover:text-white" %></p>
     </div>
