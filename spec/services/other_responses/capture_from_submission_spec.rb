@@ -28,8 +28,8 @@ RSpec.describe OtherResponses::CaptureFromSubmission do
     expect(person.other_responses).to be_empty
   end
 
-  it "does not capture the organization-owned agency_type Other" do
-    answer("agency_type", "Other: Nonprofit collective")
+  it "does not capture the organization-owned organization_type Other" do
+    answer("organization_type", "Other: Nonprofit collective")
 
     described_class.call(submission)
 

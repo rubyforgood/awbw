@@ -18,12 +18,10 @@ class FormField < ApplicationRecord
   # Multi-select "additional sectors" field identifier.
   ADDITIONAL_SECTOR_FIELD_IDENTIFIERS = %w[additional_sectors].freeze
 
-  # Single-select "primary sector" field identifiers. "primary_sector" is the
-  # canonical name; the legacy "primary_sector_single" is still accepted so
-  # existing forms keep resolving. Unlike the multi-select "additional" field,
-  # these omit the catch-all "Other" sector — a respondent's primary sector must
-  # be a concrete sector.
-  PRIMARY_SECTOR_FIELD_IDENTIFIERS = %w[primary_sector primary_sector_single].freeze
+  # Single-select "primary sector" field identifiers. Unlike the multi-select
+  # "additional" field, these omit the catch-all "Other" sector — a respondent's
+  # primary sector must be a concrete sector.
+  PRIMARY_SECTOR_FIELD_IDENTIFIERS = %w[primary_sector].freeze
 
   # Field identifiers whose selectable options are sourced dynamically from
   # Sector records rather than the field's own stored answer options. The
@@ -33,10 +31,8 @@ class FormField < ApplicationRecord
   # Single-select "primary age group" field identifier.
   PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS = %w[primary_age_group].freeze
 
-  # Multi-select "additional age groups" field identifiers. "additional_age_groups"
-  # is the canonical name new forms are built with; the legacy singular
-  # "additional_age_group" is still accepted so existing forms keep resolving.
-  ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS = %w[additional_age_groups additional_age_group].freeze
+  # Multi-select "additional age groups" field identifier.
+  ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS = %w[additional_age_groups].freeze
 
   # Both age group fields (the single-select "primary" and the multi-select
   # "additional"), backing the "All age groups" breakdown. The primary field
@@ -46,72 +42,11 @@ class FormField < ApplicationRecord
   # Field identifiers whose selectable options are sourced dynamically from a
   # CategoryType's published categories. The submitted value is a Category id
   # (as a string). Maps the field identifier to its backing CategoryType name.
-  # Every age group field (primary + additional, canonical and legacy) is backed
-  # by the published AgeRange categories. Unlike the sector fields, age groups have
+  # Every age group field (primary + additional) is backed by the published
+  # AgeRange categories. Unlike the sector fields, age groups have
   # no catch-all option — the additional sector field keeps "Other", but no age
   # field offers one.
   DYNAMIC_FIELD_CATEGORY_TYPES = AGE_GROUP_FIELD_IDENTIFIERS.index_with { "AgeRange" }.freeze
-
-  # Organization ("agency") contact-info field identifiers. New forms are built
-  # with the canonical "organization_" names; the legacy "agency_" names stay
-  # valid so existing forms — and the submissions already stored against them —
-  # keep resolving. Maps each canonical identifier to every identifier accepted
-  # for it (canonical first, legacy second). This is the single source of truth
-  # for the rename: a lookup keyed on either spelling matches a field carrying
-  # either one.
-  ORGANIZATION_FIELD_ALIASES = {
-    "organization_name" => %w[organization_name agency_name],
-    "organization_position" => %w[organization_position agency_position],
-    "organization_website" => %w[organization_website agency_website],
-    "organization_type" => %w[organization_type agency_type],
-    "organization_street" => %w[organization_street agency_street],
-    "organization_city" => %w[organization_city agency_city],
-    "organization_state" => %w[organization_state agency_state],
-    "organization_zip" => %w[organization_zip agency_zip],
-    "organization_country" => %w[organization_country agency_country]
-  }.freeze
-
-  # The bulk payment form once seeded its payer fields under bespoke "payer_"
-  # identifiers; new forms use the same canonical names every other form role
-  # already uses (so one catalog, validator, and set of consumers covers them).
-  # The legacy "payer_" spellings stay valid for forms and submissions already
-  # stored under them. Same shape as ORGANIZATION_FIELD_ALIASES: canonical first,
-  # legacy second.
-  PAYER_FIELD_ALIASES = {
-    "first_name" => %w[first_name payer_first_name],
-    "last_name" => %w[last_name payer_last_name],
-    "primary_email" => %w[primary_email payer_email],
-    "phone" => %w[phone payer_phone]
-  }.freeze
-
-  # Single source of truth mapping each canonical field identifier to every
-  # spelling that should match it. The organization "agency_" rename and the bulk
-  # payment "payer_" rename share one mechanism; "payer_organization" folds into
-  # the existing organization_name entry so the org field resolves the same on a
-  # bulk payment form as anywhere else.
-  FIELD_ALIASES = ORGANIZATION_FIELD_ALIASES
-    .merge("organization_name" => ORGANIZATION_FIELD_ALIASES["organization_name"] + %w[payer_organization])
-    .merge(PAYER_FIELD_ALIASES)
-    .freeze
-
-  # Every identifier that should match a field for the given identifier — a
-  # renamed field's canonical name plus its legacy alias(es), or just the
-  # identifier itself for everything else. Accepts either spelling as input, so
-  # callers can key on the canonical name and still match legacy data (or pass a
-  # legacy literal and still match a new form). Use it to build the
-  # `field_identifier IN (…)` set for a lookup, or to compare an identifier.
-  def self.aliased_identifiers(identifier)
-    FIELD_ALIASES[identifier] ||
-      FIELD_ALIASES.values.find { |names| names.include?(identifier) } ||
-      [ identifier ]
-  end
-
-  # The canonical identifier a given spelling folds into (itself when it has no
-  # alias). Lets consumers key submission answers on one canonical name whether
-  # the field was seeded under the new or the legacy spelling.
-  def self.canonical_identifier(identifier)
-    FIELD_ALIASES.find { |_canonical, names| names.include?(identifier) }&.first || identifier
-  end
 
   # The payment-method field. Its answer options ("Credit card (now)", etc.) are
   # wired to Stripe charge logic in the controllers, so they must not be edited
@@ -252,20 +187,6 @@ class FormField < ApplicationRecord
     answer_type.in?(SELECTABLE_ANSWER_TYPES)
   end
 
-  # True when this field's identifier matches the given identifier, treating a
-  # renamed field's canonical and legacy spellings as equivalent (see
-  # FIELD_ALIASES). Lets a caller compare against the canonical name and still
-  # match a field seeded under the legacy one.
-  def matches_identifier?(identifier)
-    field_identifier.in?(FormField.aliased_identifiers(identifier))
-  end
-
-  # This field's canonical identifier, folding a legacy "agency_"/"payer_"
-  # spelling into the shared canonical name.
-  def canonical_identifier
-    FormField.canonical_identifier(field_identifier)
-  end
-
   # True for fields whose answer options are tied to backend logic (currently the
   # payment-method field's Stripe wiring) and so should be shown read-only in the
   # form builder rather than freely edited.
@@ -308,13 +229,11 @@ class FormField < ApplicationRecord
   # Field identifiers (system-assigned by FormBuilderService) that collect an
   # email address, so a submitted value should be format-checked. The "*_type"
   # selector fields are deliberately excluded — this is an exact allowlist, not
-  # a name-pattern match, so an unrelated field can't opt in by accident. Matched
-  # against the canonical identifier, so a legacy "payer_email" field (now folded
-  # into primary_email) is still validated.
+  # a name-pattern match, so an unrelated field can't opt in by accident.
   EMAIL_FIELD_IDENTIFIERS = %w[primary_email confirm_email secondary_email].freeze
 
   def email_field?
-    canonical_identifier.in?(EMAIL_FIELD_IDENTIFIERS)
+    field_identifier.in?(EMAIL_FIELD_IDENTIFIERS)
   end
 
   # A quote smart field — its answer helps build a Quote on submission.

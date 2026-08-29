@@ -4,8 +4,8 @@
 <% scenario = submission.linking_scenario %>
 <% person = submission.person %>
 <% answers = submission.answers_by_identifier %>
-<% submitted_org = FormField.aliased_identifiers("organization_name").filter_map { |key| answers[key].presence }.first %>
-<% submitted_position = FormField.aliased_identifiers("organization_position").filter_map { |key| answers[key].presence }.first %>
+<% submitted_org = answers["organization_name"].presence %>
+<% submitted_position = answers["organization_position"].presence %>
 <% affiliations = person.affiliations.includes(:organization).order(Arel.sql("end_date IS NOT NULL, end_date DESC, start_date DESC")) %>
 <% guidance = {
      "on_demand" => "New facilitator from the on-demand training — link their organization below, then invite them to the portal.",

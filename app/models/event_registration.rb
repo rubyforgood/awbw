@@ -475,7 +475,7 @@ class EventRegistration < ApplicationRecord
   # OrganizationStatus: "linked" = at least one org linked; "unlinked" = none;
   # "pending" = an organization name was submitted but nothing is linked yet (the
   # Pending chip on the roster). Needs the event to resolve its organization-name
-  # field (canonical "organization_name" or the legacy "agency_name").
+  # field ("organization_name").
   scope :organization_linking_status, ->(value, event) {
     linked = EventRegistrationOrganization.select(:event_registration_id)
     case value
@@ -498,7 +498,7 @@ class EventRegistration < ApplicationRecord
   # "nobody answered" from "there was nothing to answer".
   def self.org_name_answer_person_ids(event)
     form = event.registration_form
-    field = form&.form_fields&.find_by(field_identifier: FormField.aliased_identifiers("organization_name"))
+    field = form&.form_fields&.find_by(field_identifier: "organization_name")
     return nil unless field
 
     FormAnswer.joins(:form_submission)

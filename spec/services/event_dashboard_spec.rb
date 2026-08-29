@@ -43,7 +43,7 @@ RSpec.describe EventDashboard do
                           name: "Primary Age Group(s) Served", answer_type: :multi_select_checkbox)
     end
     let(:additional_age_group_field) do
-      create(:form_field, form: registration_form, field_identifier: "additional_age_group",
+      create(:form_field, form: registration_form, field_identifier: "additional_age_groups",
                           name: "Additional Age Group(s) Served", answer_type: :multi_select_checkbox)
     end
 
@@ -108,7 +108,7 @@ RSpec.describe EventDashboard do
       create(:form_answer, form_field: age_group_field, submitted_answer: age_group_excluded.id.to_s,
                            form_submission: create(:form_submission, person: cancelled_person, form: registration_form))
 
-      # Additional age group(s) served, captured as "additional_age_group" answers.
+      # Additional age group(s) served, captured as "additional_age_groups" answers.
       # person1 → Adults + Teens (Adults dupes the primary answer, so it dedupes);
       # cancelled → Adults (ignored). This makes "All age groups" (primary +
       # additional) differ from the primary-only breakdown.

@@ -83,11 +83,11 @@ class FormSubmission < ApplicationRecord
     )
   }
 
-  # Answers stored against an organization-name field (canonical or legacy
-  # "agency_name"), the submitted-organization signal the index filters on.
+  # Answers stored against an organization-name field, the submitted-organization
+  # signal the index filters on.
   def self.org_name_answers
     FormAnswer.joins(:form_field)
-      .where(form_fields: { field_identifier: FormField.aliased_identifiers("organization_name") })
+      .where(form_fields: { field_identifier: "organization_name" })
       .where.not(submitted_answer: [ nil, "" ])
   end
 
@@ -229,11 +229,7 @@ class FormSubmission < ApplicationRecord
 
   # Answers keyed by their field's identifier. Bulk payment (and similar) forms
   # address fields by identifier rather than position. Reuses an already-loaded
-  # association so per-row calls on a preloaded index don't requery. Each answer
-  # is also indexed under its canonical identifier, so a consumer keying on the
-  # canonical name (e.g. "organization_name") finds an answer stored under a
-  # legacy spelling (e.g. "payer_organization") without every call site knowing
-  # both.
+  # association so per-row calls on a preloaded index don't requery.
   def answers_by_identifier
     answers = form_answers.loaded? ? form_answers : form_answers.includes(:form_field)
     answers.each_with_object({}) do |answer, map|
@@ -241,8 +237,6 @@ class FormSubmission < ApplicationRecord
       next if identifier.blank?
 
       map[identifier] = answer.submitted_answer
-      canonical = FormField.canonical_identifier(identifier)
-      map[canonical] = answer.submitted_answer unless canonical == identifier
     end
   end
 

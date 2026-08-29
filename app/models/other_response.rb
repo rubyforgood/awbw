@@ -25,9 +25,7 @@ class OtherResponse < ApplicationRecord
   PROMOTABLE_KINDS = %w[sector].freeze
 
   # The organization-type question. Its "Other" is org-owned (captured against
-  # the Organization in PublicRegistration#sync_organization_profile). The
-  # canonical identifier is "organization_type"; the legacy "agency_type" still
-  # resolves (see FormField.aliased_identifiers).
+  # the Organization in PublicRegistration#sync_organization_profile).
   ORGANIZATION_TYPE_FIELD_IDENTIFIER = "organization_type"
 
   # A response starts life as `pending` (awaiting a curator's decision) and is
@@ -68,7 +66,7 @@ class OtherResponse < ApplicationRecord
     identifier = field_identifier.to_s
     if identifier.in?(FormField::SECTOR_FIELD_IDENTIFIERS)
       "sector"
-    elsif identifier.in?(FormField.aliased_identifiers(ORGANIZATION_TYPE_FIELD_IDENTIFIER))
+    elsif identifier == ORGANIZATION_TYPE_FIELD_IDENTIFIER
       "organization_type"
     else
       "generic"

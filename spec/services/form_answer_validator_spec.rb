@@ -58,12 +58,6 @@ RSpec.describe FormAnswerValidator do
       expect(validate(field, "jane@example.com")).to eq({})
     end
 
-    it "checks payer_email the same way (unified across forms)" do
-      payer = create(:form_field, form: form, field_identifier: "payer_email")
-
-      expect(validate(payer, "nope")).to eq(payer.id => "must be a valid email address")
-    end
-
     it "does not email-validate the *_type selector field" do
       type_field = create(:form_field, form: form, field_identifier: "secondary_email_type")
 

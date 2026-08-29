@@ -28,11 +28,9 @@ class FormResponseAggregator
   # keyed by field_identifier regardless of the field's answer type — a state or
   # country captured as free text still maps. The map matches full state names or
   # USPS abbreviations / country names, and lists exact counts in the legend for
-  # anything it can't place. Legacy "agency_" spellings resolve via aliases.
-  US_STATE_IDENTIFIERS = (%w[mailing_state ce_license_issuing_state] +
-    FormField.aliased_identifiers("organization_state")).to_set
-  COUNTRY_IDENTIFIERS = (%w[mailing_country] +
-    FormField.aliased_identifiers("organization_country")).to_set
+  # anything it can't place.
+  US_STATE_IDENTIFIERS = %w[mailing_state ce_license_issuing_state organization_state].to_set
+  COUNTRY_IDENTIFIERS = %w[mailing_country organization_country].to_set
 
   def initialize(form)
     @form = form
