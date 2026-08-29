@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="max-w-2xl mx-auto py-6 px-4">
-  <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
+<div class="mx-auto max-w-2xl px-4 py-6">
+  <div class="mb-4 flex flex-wrap items-center justify-end gap-2">
     <%= link_to "Forms", forms_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <%= link_to "Events", events_path(form_id: @form.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <%= form_page_subnav(@form, current: :view, event: @dashboard_event) %>
@@ -13,30 +13,24 @@
     <% end %>
   </div>
 
-  <% if allowed_to?(:copy?, @form) %>
-    <div class="mb-4 flex justify-end">
+  <div class="mb-4 flex flex-wrap items-center justify-end gap-3">
+    <span class="<%= DomainTheme.bg_class_for(:forms, intensity: 100) %> <%= DomainTheme.text_class_for(:forms, intensity: 800) %> <%= DomainTheme.border_class_for(:forms, intensity: 200) %> inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
+      <i class="fa-solid fa-file-lines"></i><%= form_role_label(@form) %> form
+    </span>
+    <% if allowed_to?(:copy?, @form) %>
       <%= form_duplicate_button(@form) %>
-    </div>
-  <% end %>
+    <% end %>
+  </div>
 
-  <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-primary/10">
-    <%# Admin chrome wrapping the form preview below. The amber "Preview" badge
-        signals this is not the live page (echoing the amber token note inside). %>
-    <div class="bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 py-5">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
-          <%= image_tag("logo.png", alt: "Organization logo", class: "h-8 w-auto shrink-0") %>
-          <div class="h-8 w-px bg-white/20"></div>
-          <div>
-            <h2 class="text-xl font-semibold tracking-wide leading-tight"><%= @form.display_name %></h2>
-            <p class="mt-0.5 text-xs text-purple-200"><%= form_role_label(@form) %> form</p>
-          </div>
-        </div>
-        <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-400 px-3 py-1 text-xs font-bold uppercase tracking-[0.15em] text-purple-950 shadow-sm">
-          <i class="fa-solid fa-eye"></i>Preview
-        </span>
-      </div>
-    </div>
+  <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-lg">
+    <%# Renders the live form's own header so the preview is a true likeness —
+        only the amber badge marks it as not-live. %>
+    <% preview_badge = capture do %>
+      <span class="text-primary inline-flex items-center gap-1.5 rounded-full bg-amber-400 px-3 py-1 text-xs font-bold tracking-[0.15em] uppercase shadow-sm">
+        <i class="fa-solid fa-eye"></i>Preview
+      </span>
+    <% end %>
+    <%= render "forms/public_header", form: @form, badge: preview_badge %>
 
     <div class="px-6 py-6">
       <% if form_header_uses_tokens?(@form) %>
@@ -72,7 +66,7 @@
         has_conditional = @form_fields.any?(&:conditional_visibility?)
       %>
 
-      <div class="mb-6 rounded-2xl bg-gray-50 border border-primary/10 p-3">
+      <div class="border-primary/10 mb-6 rounded-2xl border bg-gray-50 p-3">
         <% if has_conditional %>
           <p class="text-xs text-gray-600">This preview shows every field. Highlighted fields are only asked under certain conditions — the conditional logic runs on the live registration form.</p>
         <% else %>
@@ -81,11 +75,11 @@
       </div>
 
       <fieldset disabled>
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
+        <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
           <% @form_fields.each do |field| %>
             <% conditional = field.conditional_visibility? %>
             <% if field.group_header? %>
-              <div class="md:col-span-12 pt-6 pb-2 border-b border-gray-200 mb-4">
+              <div class="mb-4 border-b border-gray-200 pt-6 pb-2 md:col-span-12">
                 <div class="flex flex-wrap items-center gap-2">
                   <span class="<%= form_section_bar_class %>"></span>
                   <h3 class="rich-label text-lg font-semibold text-gray-800"><%= form_label_html(field.name) %></h3>

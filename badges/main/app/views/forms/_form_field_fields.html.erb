@@ -76,7 +76,7 @@
               class: "flex-[2_1_9rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
               data: { answer_options_target: "type", action: "answer-options#typeChanged" } %>
         <label class="flex items-center gap-1 text-sm text-gray-600 shrink-0" data-answer-options-target="requiredLabel">
-          <%= f.check_box :required, class: "rounded border-gray-300 text-purple-600",
+          <%= f.check_box :required, class: "rounded border-gray-300 #{DomainTheme.text_class_for(:forms, intensity: 600)}",
                 data: { answer_options_target: "required" } %>
           Required
         </label>
