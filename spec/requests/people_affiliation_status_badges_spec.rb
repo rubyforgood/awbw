@@ -3,7 +3,11 @@ require "rails_helper"
 # The server-rendered half of the affiliation editor's status badges. The live
 # half (badges following the start date as it's edited) is spec/system/upcoming_badge_spec.rb.
 RSpec.describe "Affiliation status badges on the person edit form", type: :request do
-  let(:admin) { create(:user, :admin) }
+  # Requests render in the signed-in user's zone (ApplicationController
+  # #set_time_zone_from_user), so pin it to the spec process's own zone —
+  # otherwise "starts today" straddles a date boundary depending on the hour.
+  # Same guard as the live half in spec/system/upcoming_badge_spec.rb.
+  let(:admin) { create(:user, :admin, time_zone: Time.zone.name) }
   let(:person) { create(:person) }
   let(:org) { create(:organization) }
 
