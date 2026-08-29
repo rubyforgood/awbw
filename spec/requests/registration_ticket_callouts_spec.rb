@@ -13,6 +13,7 @@ RSpec.describe "Callout inline form", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("callout_form[form_fields][#{field.id}]")
+      expect(response.body).to include("Feedback")
     end
 
     it "redirects to the ticket when the callout has no form" do

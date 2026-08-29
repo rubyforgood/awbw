@@ -21,6 +21,14 @@
     </div>
   <% end %>
 
+  <%# A light header naming the form, above the questions (or the recorded answers). %>
+  <% unless @callout.dripping? %>
+    <div class="mb-4 flex items-center gap-2 rounded-lg <%= DomainTheme.bg_class_for(:forms, intensity: 50) %> px-4 py-2.5 <%= DomainTheme.text_class_for(:forms, intensity: 800) %>">
+      <i class="fa-solid fa-clipboard-list text-sm" aria-hidden="true"></i>
+      <h2 class="text-sm font-semibold"><%= @form.name %></h2>
+    </div>
+  <% end %>
+
   <% if @callout.dripping? %>
     <div class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
       This survey will open on <%= @callout.display_from.to_date.strftime("%B %-d, %Y") %>. Check back then.
