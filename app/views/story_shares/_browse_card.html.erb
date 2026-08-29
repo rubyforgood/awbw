@@ -1,4 +1,4 @@
-<article class="border-brand-navy-900/15 flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition-shadow hover:shadow-lg">
+<article class="border-brand-navy-900/15 flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl">
   <%= link_to story_share_path(story), class: "block" do %>
     <%= render "story_image", story: story, aspect: "aspect-[4/3]" %>
   <% end %>

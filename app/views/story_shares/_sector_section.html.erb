@@ -5,7 +5,7 @@
     <h2 class="font-display text-2xl <%= theme[:heading] %> mb-4"><%= title %></h2>
 
     <% featured = stories.first %>
-    <article class="ring-brand-navy-900/10 mb-4 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 transition-shadow hover:shadow-lg">
+    <article class="ring-brand-navy-900/10 mb-4 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl">
       <%= link_to story_share_path(featured), class: "block relative" do %>
         <div class="bg-brand-navy-50 relative aspect-[4/3]">
           <%= render "assets/display_image", resource: featured, variant: :hero %>

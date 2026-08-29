@@ -1,27 +1,76 @@
-<footer class="bg-black text-white print:hidden">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-    <div class="flex justify-center md:justify-start">
-      <%= link_to "Contact us", contact_us_path(from: "story_share"),
-                  class: "inline-block rounded border border-white px-6 py-2 text-sm font-bold uppercase tracking-wide hover:bg-white hover:text-black transition-colors" %>
+<footer class="bg-brand-navy-950 text-white print:hidden">
+  <!-- Rainbow accent strip (AWBW brand) -->
+  <div class="h-1.5 w-full bg-[linear-gradient(to_right,#4e8324,#d56027,#e0b528,#9b2c5e,#24479e,#3aa0a0)]"></div>
+
+  <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
+      <!-- Brand + social -->
+      <div>
+        <div class="font-display text-2xl leading-none font-bold text-white">A Window Between Worlds</div>
+        <div class="text-brand-yellow-400 mt-1 text-xs font-semibold tracking-widest uppercase">Art transforming trauma</div>
+        <p class="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
+          Trauma-informed healing arts, transforming individuals, teams, and communities for over 35 years.
+        </p>
+        <div class="mt-5 flex items-center gap-2">
+          <% social = [
+               [ "fa-brands fa-instagram", "Instagram" ],
+               [ "fa-brands fa-facebook-f", "Facebook" ],
+               [ "fa-brands fa-linkedin-in", "LinkedIn" ],
+               [ "fa-brands fa-youtube", "YouTube" ]
+             ] %>
+          <% social.each do |icon, label| %>
+            <%= link_to "https://awbw.org", target: "_blank", rel: "noopener noreferrer",
+                        aria: { label: label },
+                        class: "hover:bg-brand-navy-800 flex size-9 items-center justify-center rounded-lg bg-white/10 text-white transition-colors" do %>
+              <i class="<%= icon %>"></i>
+            <% end %>
+          <% end %>
+          <%= link_to "mailto:info@awbw.org", aria: { label: "Email" },
+                      class: "hover:bg-brand-navy-800 flex size-9 items-center justify-center rounded-lg bg-white/10 text-white transition-colors" do %>
+            <i class="fa-solid fa-envelope"></i>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Explore -->
+      <div>
+        <h3 class="text-brand-yellow-400 mb-4 text-xs font-bold tracking-widest uppercase">Explore</h3>
+        <ul class="space-y-3 text-sm text-white/80">
+          <li><%= awbw_menu_link "About", "/about-us/", html_class: "hover:text-white" %></li>
+          <li><%= awbw_menu_link "Program", "/programs/", html_class: "hover:text-white" %></li>
+          <li><%= awbw_menu_link "Training", "/programs/facilitator-trainings/", html_class: "hover:text-white" %></li>
+          <li><%= awbw_menu_link "News & Events", "/news/", html_class: "hover:text-white" %></li>
+          <li><%= awbw_menu_link "Get Involved", "/ways-to-give/", html_class: "hover:text-white" %></li>
+        </ul>
+      </div>
+
+      <!-- Connect -->
+      <div>
+        <h3 class="text-brand-yellow-400 mb-4 text-xs font-bold tracking-widest uppercase">Connect</h3>
+        <ul class="space-y-3 text-sm text-white/80">
+          <li><%= link_to "Facilitator Portal", root_url(host: ENV.fetch("APP_HOST", request.host)), class: "hover:text-white" %></li>
+          <li><%= link_to "Art in Action", story_shares_path, class: "hover:text-white" %></li>
+          <li><%= link_to "Contact Us", contact_us_path(from: "story_share"), class: "hover:text-white" %></li>
+          <li><%= awbw_menu_link "Newsletter Signup", "/news/enewsletter/", html_class: "hover:text-white" %></li>
+        </ul>
+      </div>
+
+      <!-- Get in touch -->
+      <div>
+        <h3 class="text-brand-yellow-400 mb-4 text-xs font-bold tracking-widest uppercase">Get in touch</h3>
+        <ul class="space-y-2 text-sm text-white/80">
+          <li><%= mail_to "info@awbw.org", "info@awbw.org", class: "hover:text-white" %></li>
+          <li><%= link_to "(310) 396-0317", "tel:+13103960317", class: "hover:text-white" %></li>
+          <li class="pt-1 text-white/70">1029 1/2 W 24th Street<br>Los Angeles, CA 90007</li>
+        </ul>
+        <%= awbw_menu_link "Donate", "/ways-to-give/",
+                           html_class: "bg-brand-yellow-400 hover:bg-brand-yellow-500 text-brand-navy-900 mt-5 inline-flex items-center rounded-full px-6 py-2 text-sm font-semibold transition-colors" %>
+      </div>
     </div>
 
-    <div class="text-center text-sm space-y-3">
-      <p>Registered 501(c)(3). EIN: 95-448606</p>
-      <p>© 2021–<%= Date.current.year %> A Window Between Worlds</p>
-    </div>
-
-    <div class="flex justify-center md:justify-end">
-      <a href="https://www.guidestar.org/profile/95-4448606"
-         target="_blank"
-         rel="noopener noreferrer"
-         class="bg-white p-1 rounded-sm border border-[#a9c5dd]">
-        <span class="block border-2 border-[#a9c5dd] px-5 py-4 text-black text-sm leading-tight">
-          <span class="block">Platinum</span>
-          <span class="block">Transparency</span>
-          <span class="block"><%= Date.current.year %></span>
-          <span class="block font-bold mt-3">Candid.</span>
-        </span>
-      </a>
+    <div class="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/60 sm:flex-row">
+      <p>© <%= Date.current.year %> A Window Between Worlds • Registered 501(c)(3) EIN: 95-448606</p>
+      <p>Portal built with 🤍 by <%= link_to "Ruby for Good", "https://www.rubyforgood.org", class: "underline hover:text-white" %></p>
     </div>
   </div>
 </footer>
