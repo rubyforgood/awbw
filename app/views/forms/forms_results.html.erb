@@ -72,8 +72,8 @@
                   <%= link_to "View", form_path(form), class: item_class, data: { turbo_frame: "_top" } %>
                   <%= link_to "Edit", edit_form_path(form), class: item_class, data: { turbo_frame: "_top" } %>
                   <% if allowed_to?(:copy?, form) %>
-                    <%= link_to "Copy", copy_form_path(form), class: item_class,
-                                data: { turbo_frame: "_top", turbo_method: :post, turbo_confirm: "Make a full copy of \"#{form.display_name}\"?" } %>
+                    <%= link_to "Duplicate form", copy_form_path(form), class: item_class,
+                                data: { turbo_frame: "_top", turbo_method: :post, turbo_confirm: "Make a full duplicate of \"#{form.display_name}\"?" } %>
                   <% end %>
                 </div>
               </div>

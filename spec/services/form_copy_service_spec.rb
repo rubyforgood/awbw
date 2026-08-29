@@ -2,12 +2,12 @@ require "rails_helper"
 
 RSpec.describe FormCopyService do
   describe "#call" do
-    it "names the copy \"COPY of [name]\"" do
+    it "names the copy \"Duplicate of [name]\"" do
       form = create(:form, name: "Volunteer Intake")
 
       copy = described_class.new(form).call
 
-      expect(copy.name).to eq("COPY of Volunteer Intake")
+      expect(copy.name).to eq("Duplicate of Volunteer Intake")
     end
 
     it "returns a persisted, distinct record" do

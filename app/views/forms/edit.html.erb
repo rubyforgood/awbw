@@ -12,6 +12,12 @@
     <%= form_live_view_link(@dashboard_event) %>
   </div>
 
+  <% if allowed_to?(:copy?, @form) %>
+    <div class="mb-4 flex justify-end">
+      <%= form_duplicate_button(@form) %>
+    </div>
+  <% end %>
+
   <%# Colored hero banner so the page reads at a glance instead of all-white %>
   <div class="overflow-hidden rounded-2xl bg-purple-900 shadow-lg ring-1 ring-black/5">
     <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 px-6 py-6 text-white sm:px-8">

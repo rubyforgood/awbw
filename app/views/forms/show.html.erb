@@ -13,6 +13,12 @@
     <% end %>
   </div>
 
+  <% if allowed_to?(:copy?, @form) %>
+    <div class="mb-4 flex justify-end">
+      <%= form_duplicate_button(@form) %>
+    </div>
+  <% end %>
+
   <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-primary/10">
     <%# Admin chrome wrapping the form preview below. The amber "Preview" badge
         signals this is not the live page (echoing the amber token note inside). %>

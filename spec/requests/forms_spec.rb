@@ -274,6 +274,15 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("First Name")
     end
 
+    it "shows the Duplicate form button posting to the copy action" do
+      form = create(:form, :standalone, name: "Test")
+      get edit_form_path(form)
+      doc = Nokogiri::HTML(response.body)
+      button = doc.css("a").find { |a| a.text.strip == "Duplicate form" }
+      expect(button&.[]("href")).to eq(copy_form_path(form))
+      expect(button["data-turbo-method"]).to eq("post")
+    end
+
     it "renders the collapsible per-field options controls" do
       form = FormBuilderService.new(name: "Test", sections: %i[person_identifier]).call
       get edit_form_path(form)
@@ -761,14 +770,14 @@ RSpec.describe "Forms", type: :request do
     context "as admin" do
       before { sign_in admin }
 
-      it "creates a full copy named \"COPY of [name]\" and redirects to its editor" do
+      it "creates a full copy named \"Duplicate of [name]\" and redirects to its editor" do
         form = create(:form, :standalone, name: "Volunteer")
         create(:form_field, form: form, name: "First name")
 
         expect { post copy_form_path(form) }.to change(Form, :count).by(1)
 
-        copy = Form.find_by(name: "COPY of Volunteer")
-        expect(copy.name).to eq("COPY of Volunteer")
+        copy = Form.find_by(name: "Duplicate of Volunteer")
+        expect(copy.name).to eq("Duplicate of Volunteer")
         expect(copy.form_fields.map(&:name)).to eq([ "First name" ])
         expect(response).to redirect_to(edit_form_path(copy))
       end
@@ -855,11 +864,18 @@ RSpec.describe "Forms", type: :request do
         expect(nav).to be_present
         hrefs = nav.css("a").map { |a| a["href"] }
         expect(hrefs).to include(
-          form_path(form), edit_form_path(form), edit_sections_form_path(form), copy_form_path(form)
+          form_path(form), edit_form_path(form), edit_sections_form_path(form)
         )
         expect(hrefs.any? { |h| h.start_with?(form_submissions_path) }).to be(true)
+        expect(hrefs).not_to include(copy_form_path(form))
         active = nav.at_css("[aria-current='page']")
         expect(active&.text&.strip).to eq("Results")
+      end
+
+      it "does not show the Duplicate form button on the results page" do
+        form = create(:form, :standalone, name: "Survey")
+        get results_form_path(form)
+        expect(response.body).not_to include("Duplicate form")
       end
     end
 
