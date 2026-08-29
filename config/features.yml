@@ -2555,6 +2555,7 @@
   area: content
   display_status: user_facing
   released_on: 2026-08-29
+  pr_number: 2405
   summary: >-
     Every page behind the Create menu — workshops, variations, ideas, stories
     and workshop logs — now opens with the same icon you clicked, a serif
