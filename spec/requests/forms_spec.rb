@@ -770,14 +770,14 @@ RSpec.describe "Forms", type: :request do
     context "as admin" do
       before { sign_in admin }
 
-      it "creates a full copy named \"Duplicate of [name]\" and redirects to its editor" do
+      it "creates a full copy named \"DUPLICATE of [name]\" and redirects to its editor" do
         form = create(:form, :standalone, name: "Volunteer")
         create(:form_field, form: form, name: "First name")
 
         expect { post copy_form_path(form) }.to change(Form, :count).by(1)
 
-        copy = Form.find_by(name: "Duplicate of Volunteer")
-        expect(copy.name).to eq("Duplicate of Volunteer")
+        copy = Form.find_by(name: "DUPLICATE of Volunteer")
+        expect(copy.name).to eq("DUPLICATE of Volunteer")
         expect(copy.form_fields.map(&:name)).to eq([ "First name" ])
         expect(response).to redirect_to(edit_form_path(copy))
       end
