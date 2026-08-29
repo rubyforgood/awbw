@@ -21,49 +21,54 @@
     </div>
   <% end %>
 
-  <%# A light header naming the form, above the questions (or the recorded answers). %>
-  <% unless @callout.dripping? %>
-    <div class="mb-4 flex items-center gap-2 rounded-lg <%= DomainTheme.bg_class_for(:forms, intensity: 50) %> px-4 py-2.5 <%= DomainTheme.text_class_for(:forms, intensity: 800) %>">
-      <i class="fa-solid fa-clipboard-list text-sm" aria-hidden="true"></i>
-      <h2 class="text-sm font-semibold"><%= @form.name %></h2>
-    </div>
-  <% end %>
-
   <% if @callout.dripping? %>
     <div class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
       This survey will open on <%= @callout.display_from.to_date.strftime("%B %-d, %Y") %>. Check back then.
     </div>
 
-  <% elsif @submission && !@editing %>
-    <div class="mb-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-      <i class="fa-solid fa-check mr-1"></i> Thanks — your responses are recorded.
-    </div>
-    <dl class="space-y-4">
-      <% @submission.form_answers.includes(:form_field).order(:id).each do |answer| %>
-        <div>
-          <dt class="text-sm font-semibold text-gray-900"><%= answer.question_name_when_answered.presence || answer.form_field&.name %></dt>
-          <dd class="text-sm whitespace-pre-line text-gray-700"><%= answer.submitted_answer.presence || "—" %></dd>
-        </div>
-      <% end %>
-    </dl>
-    <div class="mt-6">
-      <%= link_to "Edit responses", registration_callout_form_path(@event_registration.slug, @callout, edit: 1),
-            class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
-    </div>
-
   <% else %>
-    <%= form_with url: registration_callout_form_submit_path(@event_registration.slug, @callout), method: :post do %>
-      <div class="space-y-2">
-        <% @form.form_fields.order(:position).each do |field| %>
-          <% if field.group_header? %>
-            <h2 class="border-b border-gray-100 pt-2 pb-1 text-sm font-semibold tracking-wide text-gray-400 uppercase"><%= field.name %></h2>
-          <% else %>
-            <%= render "events/public_registrations/form_field", field: field, param_scope: "callout_form",
-                  value: @submission&.form_answers&.find_by(form_field: field)&.submitted_answer %>
+    <%# The form sits in a card: its name heads the panel, and the questions (or
+        the recorded answers) fill the body. %>
+    <div class="overflow-hidden rounded-xl border border-gray-200">
+      <div class="flex items-center gap-2 border-b <%= DomainTheme.border_class_for(:forms, intensity: 200) %> <%= DomainTheme.bg_class_for(:forms, intensity: 50) %> px-4 py-2.5 <%= DomainTheme.text_class_for(:forms, intensity: 800) %>">
+        <i class="fa-solid fa-clipboard-list text-sm" aria-hidden="true"></i>
+        <h2 class="text-sm font-semibold"><%= @form.name %></h2>
+      </div>
+
+      <div class="px-4 py-5 sm:px-6">
+        <% if @submission && !@editing %>
+          <div class="mb-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            <i class="fa-solid fa-check mr-1"></i> Thanks — your responses are recorded.
+          </div>
+          <dl class="space-y-4">
+            <% @submission.form_answers.includes(:form_field).order(:id).each do |answer| %>
+              <div>
+                <dt class="text-sm font-semibold text-gray-900"><%= answer.question_name_when_answered.presence || answer.form_field&.name %></dt>
+                <dd class="text-sm whitespace-pre-line text-gray-700"><%= answer.submitted_answer.presence || "—" %></dd>
+              </div>
+            <% end %>
+          </dl>
+          <div class="mt-6">
+            <%= link_to "Edit responses", registration_callout_form_path(@event_registration.slug, @callout, edit: 1),
+                  class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+          </div>
+
+        <% else %>
+          <%= form_with url: registration_callout_form_submit_path(@event_registration.slug, @callout), method: :post do %>
+            <div class="space-y-2">
+              <% @form.form_fields.order(:position).each do |field| %>
+                <% if field.group_header? %>
+                  <h2 class="border-b border-gray-100 pt-2 pb-1 text-sm font-semibold tracking-wide text-gray-400 uppercase"><%= field.name %></h2>
+                <% else %>
+                  <%= render "events/public_registrations/form_field", field: field, param_scope: "callout_form",
+                        value: @submission&.form_answers&.find_by(form_field: field)&.submitted_answer %>
+                <% end %>
+              <% end %>
+            </div>
+            <%= submit_tag "Submit", class: "mt-2 rounded-lg #{DomainTheme.bg_class_for(:forms, intensity: 600)} #{DomainTheme.bg_class_for(:forms, intensity: 600, hover: true)} px-4 py-2 text-sm font-semibold text-white cursor-pointer" %>
           <% end %>
         <% end %>
       </div>
-      <%= submit_tag "Submit", class: "mt-2 rounded-lg #{DomainTheme.bg_class_for(:forms, intensity: 600)} #{DomainTheme.bg_class_for(:forms, intensity: 600, hover: true)} px-4 py-2 text-sm font-semibold text-white cursor-pointer" %>
-    <% end %>
+    </div>
   <% end %>
 <% end %>
