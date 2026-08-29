@@ -45,8 +45,8 @@ class Organization < ApplicationRecord
   # "Organization Type" question, in display order. Any stored value not listed
   # (e.g. the legacy "Other (please specify below)") folds into "Other" for display
   # so an unmatched select can't silently save as the first option.
-  AGENCY_TYPE_OTHER = "Other"
-  AGENCY_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", AGENCY_TYPE_OTHER ].freeze
+  ORGANIZATION_TYPE_OTHER = "Other"
+  ORGANIZATION_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", ORGANIZATION_TYPE_OTHER ].freeze
 
   # The organization that runs this app. A grant it self-funds counts as subsidy
   # (unfunded), not external funding, in reports. Not memoized: the record can be
@@ -62,7 +62,7 @@ class Organization < ApplicationRecord
   validates :name, presence: true, length: { maximum: 255 }
   validates :organization_status_id, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
-  validates :agency_type_other, length: { maximum: 255 }
+  validates :organization_type_other, length: { maximum: 255 }
   validates :website_url, length: { maximum: 255 }
   validates :mission_vision_values, length: { maximum: 255 }
   validate :affiliation_dates_locked, if: -> { affiliations.any? && !Current.user&.super_user? }

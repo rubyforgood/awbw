@@ -43,24 +43,24 @@ RSpec.describe OrganizationServices::SyncProfile do
     end
   end
 
-  describe "agency_type" do
-    it "stores a non-'Other' classification with no agency_type_other" do
-      described_class.call(organization: organization, agency_type: "Government agency")
+  describe "organization_type" do
+    it "stores a non-'Other' classification with no organization_type_other" do
+      described_class.call(organization: organization, organization_type: "Government agency")
 
-      expect(organization.reload.agency_type).to eq("Government agency")
-      expect(organization.agency_type_other).to be_nil
+      expect(organization.reload.organization_type).to eq("Government agency")
+      expect(organization.organization_type_other).to be_nil
     end
 
-    it "folds an 'Other' answer into agency_type and the stripped free text into agency_type_other" do
-      described_class.call(organization: organization, agency_type: "Other: Equine therapy")
+    it "folds an 'Other' answer into organization_type and the stripped free text into organization_type_other" do
+      described_class.call(organization: organization, organization_type: "Other: Equine therapy")
 
-      expect(organization.reload.agency_type).to eq("Other")
-      expect(organization.agency_type_other).to eq("Equine therapy")
+      expect(organization.reload.organization_type).to eq("Other")
+      expect(organization.organization_type_other).to eq("Equine therapy")
     end
 
     it "captures the 'Other' free text as an OtherResponse for the curation queue" do
       expect {
-        described_class.call(organization: organization, agency_type: "Other: Equine therapy")
+        described_class.call(organization: organization, organization_type: "Other: Equine therapy")
       }.to change { organization.other_responses.count }.by(1)
 
       response = organization.other_responses.last
@@ -68,45 +68,45 @@ RSpec.describe OrganizationServices::SyncProfile do
       expect(response.text).to eq("Equine therapy")
     end
 
-    it "clears a stale agency_type_other when the latest answer is no longer 'Other'" do
-      organization.update!(agency_type: "Other", agency_type_other: "Equine therapy")
+    it "clears a stale organization_type_other when the latest answer is no longer 'Other'" do
+      organization.update!(organization_type: "Other", organization_type_other: "Equine therapy")
 
-      described_class.call(organization: organization, agency_type: "Government agency")
+      described_class.call(organization: organization, organization_type: "Government agency")
 
-      expect(organization.reload.agency_type).to eq("Government agency")
-      expect(organization.agency_type_other).to be_nil
+      expect(organization.reload.organization_type).to eq("Government agency")
+      expect(organization.organization_type_other).to be_nil
     end
 
-    it "does not clobber an existing agency_type with a blank answer" do
-      organization.update!(agency_type: "Government agency")
+    it "does not clobber an existing organization_type with a blank answer" do
+      organization.update!(organization_type: "Government agency")
 
-      described_class.call(organization: organization, agency_type: "")
+      described_class.call(organization: organization, organization_type: "")
 
-      expect(organization.reload.agency_type).to eq("Government agency")
+      expect(organization.reload.organization_type).to eq("Government agency")
     end
 
-    it "leaves an existing agency_type untouched when overwrite is false" do
-      organization.update!(agency_type: "Government agency")
+    it "leaves an existing organization_type untouched when overwrite is false" do
+      organization.update!(organization_type: "Government agency")
 
-      described_class.call(organization: organization, agency_type: "For-profit", overwrite: false)
+      described_class.call(organization: organization, organization_type: "For-profit", overwrite: false)
 
-      expect(organization.reload.agency_type).to eq("Government agency")
+      expect(organization.reload.organization_type).to eq("Government agency")
     end
 
-    it "fills a blank agency_type when overwrite is false" do
-      organization.update!(agency_type: nil)
+    it "fills a blank organization_type when overwrite is false" do
+      organization.update!(organization_type: nil)
 
-      described_class.call(organization: organization, agency_type: "For-profit", overwrite: false)
+      described_class.call(organization: organization, organization_type: "For-profit", overwrite: false)
 
-      expect(organization.reload.agency_type).to eq("For-profit")
+      expect(organization.reload.organization_type).to eq("For-profit")
     end
   end
 
   describe "the result" do
     it "reports the columns it filled" do
-      organization.update!(website_url: nil, agency_type: nil)
+      organization.update!(website_url: nil, organization_type: nil)
 
-      result = described_class.call(organization: organization, website: "acme.org", agency_type: "For-profit", overwrite: false)
+      result = described_class.call(organization: organization, website: "acme.org", organization_type: "For-profit", overwrite: false)
 
       expect(result.changes.map(&:label)).to contain_exactly("Website", "Type")
     end
@@ -134,17 +134,17 @@ RSpec.describe OrganizationServices::SyncProfile do
     end
 
     it "reports nothing filled when the answers match what is already stored" do
-      organization.update!(website_url: "https://curated.org", agency_type: "For-profit")
+      organization.update!(website_url: "https://curated.org", organization_type: "For-profit")
 
-      result = described_class.call(organization: organization, website: "https://curated.org", agency_type: "For-profit")
+      result = described_class.call(organization: organization, website: "https://curated.org", organization_type: "For-profit")
 
       expect(result.changes).to be_empty
     end
 
     it "reports nothing filled when the blanks were left as conflicts" do
-      organization.update!(website_url: "https://curated.org", agency_type: "For-profit")
+      organization.update!(website_url: "https://curated.org", organization_type: "For-profit")
 
-      result = described_class.call(organization: organization, website: "https://new.org", agency_type: "Government agency", overwrite: false)
+      result = described_class.call(organization: organization, website: "https://new.org", organization_type: "Government agency", overwrite: false)
 
       expect(result.changes).to be_empty
     end

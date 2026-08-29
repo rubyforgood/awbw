@@ -612,7 +612,7 @@ RSpec.describe "FormSubmissions", type: :request do
         it "fills blank org profile fields from the submission and flags conflicting ones" do
           add_answer("organization_name", "Harbor Family Shelter")
           add_answer("organization_website", "https://harbor.example.org")
-          organization = create(:organization, name: "Harbor Family Shelter", agency_type: "School")
+          organization = create(:organization, name: "Harbor Family Shelter", organization_type: "School")
           field = form.form_fields.find_by(field_identifier: "organization_type") ||
                   create(:form_field, form: form, field_identifier: "organization_type")
           create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Government Agency")
@@ -620,7 +620,7 @@ RSpec.describe "FormSubmissions", type: :request do
           post select_organization_form_submission_path(submission, organization_id: organization.id)
 
           expect(organization.reload.website_url).to eq("https://harbor.example.org")
-          expect(organization.agency_type).to eq("School")
+          expect(organization.organization_type).to eq("School")
           expect(flash[:warning]).to include("differ")
         end
       end

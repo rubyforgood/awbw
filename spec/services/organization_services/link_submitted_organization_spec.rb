@@ -8,7 +8,7 @@ RSpec.describe OrganizationServices::LinkSubmittedOrganization do
       org_name: "Harbor Family Shelter",
       position: "Counselor",
       website: "https://harbor.example.org",
-      agency_type: nil,
+      organization_type: nil,
       address: {}
     }
   end
@@ -42,13 +42,13 @@ RSpec.describe OrganizationServices::LinkSubmittedOrganization do
     end
 
     it "keeps a conflicting saved value and reports it as a warning" do
-      organization.update!(agency_type: "School")
-      conflicting = entry.merge(agency_type: "Government Agency")
+      organization.update!(organization_type: "School")
+      conflicting = entry.merge(organization_type: "Government Agency")
 
       result = described_class.call(person: person, organization: organization, entry: conflicting,
                                     scenario: "on_demand")
 
-      expect(organization.reload.agency_type).to eq("School")
+      expect(organization.reload.organization_type).to eq("School")
       expect(result.warning(organization: organization)).to include("differ", "Government Agency")
     end
 

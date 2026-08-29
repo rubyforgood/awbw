@@ -16,19 +16,19 @@ module OrganizationServices
   class ProfileDiff
     Discrepancy = Struct.new(:field, :label, :submitted, :saved, keyword_init: true)
 
-    def self.call(organization:, website: nil, agency_type: nil, address: {})
-      new(organization:, website:, agency_type:, address:).call
+    def self.call(organization:, website: nil, organization_type: nil, address: {})
+      new(organization:, website:, organization_type:, address:).call
     end
 
-    def initialize(organization:, website: nil, agency_type: nil, address: {})
+    def initialize(organization:, website: nil, organization_type: nil, address: {})
       @organization = organization
       @website = website
-      @agency_type = agency_type
+      @organization_type = organization_type
       @address = address || {}
     end
 
     def call
-      [ website_discrepancy, agency_type_discrepancy, *address_discrepancies ].compact
+      [ website_discrepancy, organization_type_discrepancy, *address_discrepancies ].compact
     end
 
     private
@@ -42,16 +42,16 @@ module OrganizationServices
       Discrepancy.new(field: :website_url, label: "Website", submitted: submitted, saved: saved)
     end
 
-    def agency_type_discrepancy
-      submitted_label, submitted_other = parse_agency_type(@agency_type)
+    def organization_type_discrepancy
+      submitted_label, submitted_other = parse_organization_type(@organization_type)
       return if submitted_label.blank?
-      return if @organization.agency_type.blank?
+      return if @organization.organization_type.blank?
 
       submitted = display_type(submitted_label, submitted_other)
-      saved = display_type(@organization.agency_type, @organization.agency_type_other)
+      saved = display_type(@organization.organization_type, @organization.organization_type_other)
       return if submitted.casecmp?(saved)
 
-      Discrepancy.new(field: :agency_type, label: "Type", submitted: submitted, saved: saved)
+      Discrepancy.new(field: :organization_type, label: "Type", submitted: submitted, saved: saved)
     end
 
     # Compare every address field against the org's corresponding address. A field
@@ -95,7 +95,7 @@ module OrganizationServices
 
     # Split an "Other: <text>" answer into [ label, free_text ] the same way
     # OrganizationServices::SyncProfile stores it, so we compare like for like.
-    def parse_agency_type(raw)
+    def parse_organization_type(raw)
       stripped = raw&.strip
       return [ nil, nil ] if stripped.blank?
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_28_160913) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_29_234350) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1034,8 +1034,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_160913) do
   end
 
   create_table "organizations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.string "agency_type"
-    t.string "agency_type_other"
     t.datetime "created_at", precision: nil, null: false
     t.text "description", size: :long
     t.string "email"
@@ -1050,6 +1048,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_160913) do
     t.string "name"
     t.text "notes", size: :long
     t.integer "organization_status_id"
+    t.string "organization_type"
+    t.string "organization_type_other"
     t.boolean "profile_show_age_ranges", default: true, null: false
     t.boolean "profile_show_description", default: true, null: false
     t.boolean "profile_show_email", default: true, null: false

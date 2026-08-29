@@ -10,10 +10,12 @@ class FormSubmissionChanges
   GROUP_ORDER = %w[Person Organization Affiliation].freeze
   IGNORED_ATTRIBUTES = %w[id created_at updated_at slug locality].freeze
   # Friendlier than humanizing the raw column (e.g. "value" on a phone contact).
+  # "agency_type" stays mapped for events written before the column was renamed to
+  # organization_type — historical Ahoy properties still carry the old name.
   ATTRIBUTE_LABELS = {
-    "website_url" => "Website", "agency_type" => "Type", "value" => "Phone",
-    "racial_ethnic_identity" => "Racial / ethnic identity", "zip_code" => "ZIP",
-    "street_address" => "Street address"
+    "website_url" => "Website", "organization_type" => "Type", "agency_type" => "Type",
+    "value" => "Phone", "racial_ethnic_identity" => "Racial / ethnic identity",
+    "zip_code" => "ZIP", "street_address" => "Street address"
   }.freeze
 
   # Sub-record attributes edit a section of the owner's edit page rather than a
