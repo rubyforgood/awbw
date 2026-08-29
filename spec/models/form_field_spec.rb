@@ -657,15 +657,40 @@ RSpec.describe FormField do
 
   describe ".aliased_identifiers" do
     it "expands a canonical organization identifier to its canonical and legacy names" do
-      expect(described_class.aliased_identifiers("organization_name")).to eq(%w[organization_name agency_name])
+      expect(described_class.aliased_identifiers("organization_name")).to eq(%w[organization_name agency_name payer_organization])
     end
 
     it "expands a legacy agency identifier to the same canonical and legacy names" do
       expect(described_class.aliased_identifiers("agency_type")).to eq(%w[organization_type agency_type])
     end
 
-    it "returns the identifier alone when it isn't a renamed organization field" do
-      expect(described_class.aliased_identifiers("first_name")).to eq(%w[first_name])
+    it "expands a canonical payer identifier to its canonical and legacy bulk-payment names" do
+      expect(described_class.aliased_identifiers("first_name")).to eq(%w[first_name payer_first_name])
+      expect(described_class.aliased_identifiers("primary_email")).to eq(%w[primary_email payer_email])
+    end
+
+    it "expands a legacy payer identifier to the same canonical and legacy names" do
+      expect(described_class.aliased_identifiers("payer_phone")).to eq(%w[phone payer_phone])
+    end
+
+    it "returns the identifier alone when it isn't a renamed field" do
+      expect(described_class.aliased_identifiers("payment_method")).to eq(%w[payment_method])
+    end
+  end
+
+  describe ".canonical_identifier" do
+    it "folds a legacy payer spelling into its canonical name" do
+      expect(described_class.canonical_identifier("payer_first_name")).to eq("first_name")
+      expect(described_class.canonical_identifier("payer_email")).to eq("primary_email")
+      expect(described_class.canonical_identifier("payer_organization")).to eq("organization_name")
+    end
+
+    it "folds a legacy agency spelling into its canonical name" do
+      expect(described_class.canonical_identifier("agency_city")).to eq("organization_city")
+    end
+
+    it "returns the identifier unchanged when it has no alias" do
+      expect(described_class.canonical_identifier("payment_method")).to eq("payment_method")
     end
   end
 

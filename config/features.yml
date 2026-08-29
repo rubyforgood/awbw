@@ -2613,3 +2613,15 @@
     and visibility controls when you need them.
   pro_tips:
     - "Click Admin mode to edit; click Exit admin mode to go back to the reader's view. Your current search and filters are kept."
+
+- name: "Organization name shows on bulk payment forms"
+  area: payments
+  display_status: user_facing
+  released_on: 2026-08-29
+  pr_number: 2415
+  summary: >-
+    The bulk payment form now shows its Organization field to the person paying,
+    so the organization is captured and appears on the invoice and confirmation
+    email. Bulk payment now uses the same field names as every other form.
+  pro_tips:
+    - "Older bulk payment forms keep working — the payer, phone and organization fields are recognised whichever naming they were built with."
