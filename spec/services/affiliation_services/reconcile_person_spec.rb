@@ -38,15 +38,26 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       expect(Affiliation.exists?(affiliation.id)).to be(false)
     end
 
-    %w[ incomplete_attendance cancelled ].each do |status|
-      it "deletes the minted row when the only registration is #{status}" do
-        reg = training_registration(status: status)
-        affiliation = owned_facilitator(registration: reg)
+    it "deletes the minted row when the only registration is cancelled" do
+      reg = training_registration(status: "cancelled")
+      affiliation = owned_facilitator(registration: reg)
 
-        reconcile(reg)
+      reconcile(reg)
 
-        expect(Affiliation.exists?(affiliation.id)).to be(false)
-      end
+      expect(Affiliation.exists?(affiliation.id)).to be(false)
+    end
+
+    # They were here for part of it. Deleting the row would erase that; ending it
+    # records a facilitator term that was brief rather than one that never began.
+    it "ends the minted row rather than deleting it for a partial attendance" do
+      reg = training_registration(status: "incomplete_attendance")
+      affiliation = owned_facilitator(registration: reg)
+
+      reconcile(reg)
+
+      expect(Affiliation.exists?(affiliation.id)).to be(true)
+      expect(affiliation.reload).not_to be_active
+      expect(affiliation.end_date).to be_present
     end
 
     # `registered` after the event means nobody filled the roster in. Acting on it

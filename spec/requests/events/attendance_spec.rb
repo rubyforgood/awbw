@@ -26,7 +26,7 @@ RSpec.describe "Events attendance report", type: :request do
       log_ce_time!
       get attendance_event_path(event, ce: "true")
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("CE sign-ins")
+      expect(response.body).to include("CE timesheets")
       expect(response.body).to include("Alice Adams")
       expect(response.body).to include("AAA111")
     end
@@ -34,8 +34,8 @@ RSpec.describe "Events attendance report", type: :request do
     it "renders the generic attendance report without CE scoping" do
       get attendance_event_path(event)
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Sign-ins")
-      expect(response.body).not_to include("CE sign-ins")
+      expect(response.body).to include("Timesheets")
+      expect(response.body).not_to include("CE timesheets")
     end
 
     it "makes each row link to the CE edit page and the name link to the CE callout" do
@@ -92,7 +92,7 @@ RSpec.describe "Events attendance report", type: :request do
       expect(response.body).to include("#{registration_ce_path(registration.slug)}?return_to=attendance")
 
       get registration_ce_path(registration.slug, return_to: "attendance")
-      expect(response.body).to include("Back to CE sign-ins")
+      expect(response.body).to include("Back to CE timesheets")
       expect(response.body).to include(attendance_event_path(event, ce: "true", anchor: "totals"))
     end
 

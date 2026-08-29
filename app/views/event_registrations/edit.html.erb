@@ -42,7 +42,7 @@
       <% end %>
     <% elsif params[:return_to] == "attendance" %>
       <%= link_to attendance_event_path(@event_registration.event), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
-        <i class="fa-solid fa-arrow-left text-xs"></i> Sign-ins
+        <i class="fa-solid fa-arrow-left text-xs"></i> Timesheets
       <% end %>
     <% else %>
       <%= link_to registrants_event_row_path(@event_registration.event, @event_registration.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>

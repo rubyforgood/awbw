@@ -261,13 +261,24 @@ module AffiliationServices
       elsif attendance_unrecorded?
         Decision.new(affiliation:, action: :noop, reason: ATTENDANCE_NOT_RECORDED)
       elsif deactivation_ready?(affiliation)
-        # The row this training minted recorded an assumption that never came true,
-        # so it goes rather than lingering as a zero-length row. Anything older
-        # records facilitation that really happened and is only ended (ADR-0003 D6).
-        Decision.new(affiliation:, action: minted_here?(affiliation) ? :delete : :deactivate)
+        # Deletion is only for a row whose training never happened for this person.
+        # Anything that did happen — an older row, or a partial attendance here —
+        # is ended instead, so the record keeps it (ADR-0003 D6).
+        Decision.new(affiliation:, action: discardable?(affiliation) ? :delete : :deactivate)
       else
         Decision.new(affiliation:, action: :noop, reason: TRAINING_PENDING)
       end
+    end
+
+    # Only the row this training minted, and only when the person didn't turn up at
+    # all. Partial attendance is something that happened: they were here for part of
+    # it, and deleting the row would erase that rather than record it as brief.
+    def discardable?(affiliation)
+      minted_here?(affiliation) && !partially_attended?
+    end
+
+    def partially_attended?
+      registration_here&.status == "incomplete_attendance"
     end
 
     # Waits for the governing training to end, so a pre-event run never deactivates.

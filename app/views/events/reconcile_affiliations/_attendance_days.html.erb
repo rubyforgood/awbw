@@ -1,18 +1,21 @@
 <%# Locals: registration, event.
 
-    Shown for a partial attendance: "incomplete" is a judgement someone made, and
-    the sign-in sheet is the evidence behind it. Day-by-day so an admin can see
-    which days were missed without leaving the page. %>
+    Shown for a partial attendance: "incomplete" is a judgement someone made, so
+    this shows what it rests on — which days are ticked as attended, and the
+    sign-in times behind them. The ticks are editable (shared onboarding cell), so
+    correcting the record here rolls the status forward without leaving the page. %>
 <% dates = event.event_dates %>
 <% if dates.any? %>
   <div class="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
     <p class="mb-1 text-xs font-medium text-amber-900">
-      Partial attendance — logged time by day
+      Partial attendance — days attended and logged time
     </p>
     <ul class="space-y-0.5 text-xs text-amber-900">
       <% dates.each_with_index do |date, index| %>
         <% entries = registration.attendance_entries_on(date) %>
-        <li class="flex flex-wrap items-baseline gap-x-2">
+        <li class="flex flex-wrap items-center gap-x-2">
+          <%= render "events/onboarding/cell", registration: registration,
+                     field: EventRegistration::DAY_FIELDS[index] %>
           <span class="font-medium whitespace-nowrap">Day <%= index + 1 %></span>
           <span class="text-amber-700"><%= date.strftime("%b %-d") %></span>
           <% if entries.any? %>

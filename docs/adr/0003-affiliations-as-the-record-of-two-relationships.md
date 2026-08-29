@@ -181,6 +181,13 @@ facilitator affiliation depends on what that row represents:
   never deleted. It records facilitation that really happened. Deleting it, or
   dating it back to its own start, would erase years of history and retroactively
   change the org's status at every training in between.
+- **The row this training minted, when the person attended *part* of it**
+  (`incomplete_attendance`) — **ended**, not deleted. Provenance is not the whole
+  test: the question is whether anything happened. A no-show or a cancellation means
+  the assumption never came true and there is nothing to keep; a partial attendance
+  means they were here, and deleting the row would erase that instead of recording a
+  facilitator term that was brief. It same-days (the end date can't precede its own
+  start), so it reads as a term that began and ended on the training's day.
 
 **Everything ends the day BEFORE the training. One rule, no exceptions**, matching
 `AffiliationServices::ApplyScenarioEndDating`

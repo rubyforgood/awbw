@@ -13,7 +13,8 @@
       <p>
         This step brings facilitator affiliations in line with who registered and attended. Before the training it
         <strong>creates</strong> any missing facilitator affiliations for linked organizations. After the training it
-        <strong>deletes</strong> the affiliation this training created for anyone who didn't attend. If that person is
+        <strong>deletes</strong> the affiliation this training created for anyone who didn't turn up at all, and
+        <strong>ends</strong> it for anyone who attended only part of it. If that person is
         later marked attended, an ending this step applied is <strong>undone</strong> rather than leaving them with a
         second affiliation for an engagement that never broke. A return after a real lapse is still a
         <strong>new</strong> affiliation, so the lapse stays visible. Anyone still marked <strong>Registered</strong> is left alone and listed
@@ -49,6 +50,9 @@
     </div>
   <% end %>
 
+  <%# One set of day ticks per registration, wherever it appears: the turbo replace
+      targets them by id, and a person with two linked orgs has rows in both sections. %>
+  <% ticked = Set.new %>
   <% if @person_groups.any? %>
     <% actionable_count = @person_groups.sum { |g| g[:rows].size } %>
     <% color_class = {
@@ -95,7 +99,7 @@
             <%= render "event_registrations/attendance_status_badge", registration: group[:registration], return_to: "reconcile_affiliations" %>
           </div>
 
-          <% if group[:registration]&.status == "incomplete_attendance" %>
+          <% if group[:registration]&.status == "incomplete_attendance" && ticked.add?(group[:registration].id) %>
             <%= render "attendance_days", registration: group[:registration], event: @event %>
           <% end %>
 
@@ -142,7 +146,6 @@
                 class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-normal text-blue-600 hover:underline">Collapse all</button>
       </summary>
       <div class="border-t border-gray-100 px-4 py-4 space-y-6">
-        <% ticked = Set.new %>
         <% @skipped_sections.each do |reason, rows| %>
           <details open class="rounded-lg border border-gray-200 overflow-hidden">
             <summary class="cursor-pointer select-none px-3 py-2 bg-gray-100 border-b border-gray-200 text-sm font-semibold text-gray-700 tracking-wide hover:bg-gray-200">
@@ -165,7 +168,7 @@
                     <%= render "attendance_day_ticks", registration: row.registration, event: @event %>
                   <% end %>
                   <%= render "event_registrations/attendance_status_badge", registration: row.registration, return_to: "reconcile_affiliations" %>
-                  <% if row.registration&.status == "incomplete_attendance" %>
+                  <% if row.registration&.status == "incomplete_attendance" && ticked.add?(row.registration.id) %>
                     <div class="w-full"><%= render "attendance_days", registration: row.registration, event: @event %></div>
                   <% end %>
                 </div>

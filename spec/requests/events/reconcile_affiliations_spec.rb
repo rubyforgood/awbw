@@ -108,6 +108,24 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       expect(response.body.scan("completed_day_1_event_registration_#{registration.id}").size).to eq(1)
     end
 
+    it "shows the day ticks as editable checkboxes on a partial attendance" do
+      person = create(:person)
+      reg = create(:event_registration, event: event, registrant: person, status: "incomplete_attendance")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+      create(:affiliation, person: person, organization: organization, title: "Facilitator",
+                           start_date: event.starts_on, event_registration: reg)
+
+      get reconcile_affiliations_event_path(event)
+
+      affiliation_id = person.affiliations.first.id
+      page = Nokogiri::HTML(response.body)
+
+      expect(response.body).to include("completed_day_1_event_registration_#{reg.id}")
+      # Ended by default, not deleted — Delete is still offered as an override.
+      expect(page.at_css("#outcome_aff\\:#{affiliation_id}_deactivate")["checked"]).to be_present
+      expect(page.at_css("#outcome_aff\\:#{affiliation_id}_delete")["checked"]).to be_nil
+    end
+
     it "asks for an outcome instead of acting when attendance was never recorded" do
       person, affiliation = registrant_with_affiliation(status: "registered")
 
