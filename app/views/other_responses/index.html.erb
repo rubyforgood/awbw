@@ -11,12 +11,12 @@
 <%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1 mb-2" do %>
   <i class="fa-solid fa-arrow-left text-xs"></i> <%= back_label %>
 <% end %>
-<div class="<%= DomainTheme.bg_class_for(:sectors) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:sectors) %> border border-primary/10 rounded-2xl shadow-sm p-6">
   <div class="space-y-6">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-semibold text-gray-900">Review “Other” responses</h1>
+        <h1 class="font-display text-2xl font-semibold text-primary">Review “Other” responses</h1>
         <p class="text-sm text-gray-600 mt-1">
           Free-text “Other” answers people typed on forms, grouped by value. Turn a sector into a
           real tag — <span class="font-medium text-gray-700">create</span> a new one or

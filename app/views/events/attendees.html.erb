@@ -1,7 +1,7 @@
 <% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
 <% content_for(:full_width, true) %>
 <div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8 py-6">
-  <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+  <div class="<%= DomainTheme.bg_class_for(:events) %> border border-primary/10 rounded-2xl shadow-sm p-4 sm:p-6">
     <%# The report KPIs drill in here carrying both return_to and (when scoped)
         event_id, so an explicit origin wins over the event fallback — otherwise a
         report drill-in would bounce the user to that event's dashboard instead of

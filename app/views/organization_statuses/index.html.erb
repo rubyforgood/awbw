@@ -1,9 +1,9 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:organizations) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:organizations) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="space-y-6">
         <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-          <h1 class="text-2xl font-semibold text-gray-900">
+        <div class="mb-6 flex items-center justify-between">
+          <h1 class="text-primary font-display text-2xl font-semibold">
             <%= OrganizationStatus.model_name.human.pluralize %> (<%= @count_display %>)
           </h1>
           <div class="flex gap-2">
@@ -20,7 +20,7 @@
               <tr>
                 <th class="px-4 py-2">Name</th>
                 <th class="px-4 py-2">Organization count</th>
-                <th class="px-4 py-2 w-32">Actions</th>
+                <th class="w-32 px-4 py-2">Actions</th>
               </tr>
             </thead>
 
@@ -55,13 +55,13 @@
 
         <!-- Empty state -->
         <% unless @organization_statuses.any? %>
-          <p class="text-gray-500 text-center py-6">
+          <p class="py-6 text-center text-gray-500">
             No <%= OrganizationStatus.model_name.human.pluralize.downcase %> found.
           </p>
         <% end %>
 
         <!-- Pagination -->
-        <div class="pagination flex justify-center mt-12">
+        <div class="pagination mt-12 flex justify-center">
           <%= tailwind_paginate @organization_statuses %>
         </div>
   </div>

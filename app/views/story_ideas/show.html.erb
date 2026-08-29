@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-or-owner") %>
-<div class="<%= DomainTheme.bg_class_for(:story_ideas) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex flex-wrap justify-end gap-2 mb-4">
+<div class="<%= DomainTheme.bg_class_for(:story_ideas) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+  <div class="mb-4 flex flex-wrap justify-end gap-2">
     <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <% if allowed_to?(:index?, StoryIdea) %>
       <%= link_to "Story Ideas", story_ideas_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
@@ -10,9 +10,9 @@
     <% end %>
   </div>
 
-  <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
-    <div class="font-semibold text-gray-900 mb-2">
-      <h1 class="text-3xl tracking-tight"><%= @story_idea.title %></h1>
+  <div class="space-y-6 rounded-lg bg-white p-6 shadow-md">
+    <div class="mb-2 font-semibold text-gray-900">
+      <h1 class="text-primary font-display text-3xl tracking-tight"><%= @story_idea.title %></h1>
     </div>
 
     <% if @story_idea.stories.any? %>
@@ -27,8 +27,8 @@
       </div>
     <% end %>
 
-    <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 text-sm text-gray-600">
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+    <div class="border-primary/10 rounded-2xl border bg-gray-50 p-4 text-sm text-gray-600">
+      <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
         <div>
           <span class="font-semibold text-gray-700">Story by:</span>
           <% if @story_idea.created_by&.person && allowed_to?(:show?, @story_idea.created_by.person) %>
@@ -96,9 +96,9 @@
       </div>
 
       <% if @story_idea.sectors.any? %>
-        <div class="mt-3 pt-3 border-t border-gray-200">
+        <div class="mt-3 border-t border-gray-200 pt-3">
           <span class="font-semibold text-gray-700">Sectors:</span>
-          <div class="flex flex-wrap gap-1 mt-1">
+          <div class="mt-1 flex flex-wrap gap-1">
             <% @story_idea.sectors.each do |sector| %>
               <%= render "sectors/tagging_label", sector: sector %>
             <% end %>
@@ -109,7 +109,7 @@
       <% if @story_idea.categories.any? %>
         <div class="mt-2">
           <span class="font-semibold text-gray-700">Categories:</span>
-          <div class="flex flex-wrap gap-1 mt-1">
+          <div class="mt-1 flex flex-wrap gap-1">
             <% @story_idea.categories.each do |cat| %>
               <%= render "categories/tagging_label", category: cat %>
             <% end %>

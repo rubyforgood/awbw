@@ -1,8 +1,8 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="max-w-xl mx-auto">
+<div class="mx-auto max-w-xl">
   <%= link_to "← Payment", payment_path(@payment), class: "text-sm #{eyebrow_link_class} mb-2 inline-block" %>
-  <h1 class="text-2xl font-bold mb-6">Edit Payment</h1>
-  <div class="bg-white rounded border border-gray-200 p-6">
+  <h1 class="text-primary mb-6 font-display text-2xl font-bold">Edit Payment</h1>
+  <div class="rounded border border-gray-200 bg-white p-6">
     <%= simple_form_for @payment, as: :payment, url: payment_path(@payment), method: :patch do |f| %>
       <% payer_label_data = @payment.selected_payer&.compound_search_label %>
       <% designation_label_data = @payment.selected_additional_designation&.compound_search_label %>

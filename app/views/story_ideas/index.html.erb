@@ -1,9 +1,9 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:story_ideas) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:story_ideas) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="space-y-6">
         <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-          <h1 class="text-2xl font-semibold text-gray-900">
+        <div class="mb-6 flex items-center justify-between">
+          <h1 class="text-primary font-display text-2xl font-semibold">
             <%= StoryIdea.model_name.human.pluralize %> (<%= @story_ideas_count %>)
           </h1>
           <div class="flex gap-2">
@@ -30,7 +30,7 @@
               <th class="px-4 py-2 text-center text-sm font-medium text-gray-700">Actions</th>
             </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
+            <tbody class="divide-y divide-gray-200 bg-white">
             <% @story_ideas.each do |story_idea| %>
               <tr class="hover:bg-gray-50">
                 <td>
@@ -51,16 +51,16 @@
                 <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.windows_type&.short_name %></td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.workshop_title %></td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.organization&.name %></td>
-                <td class="px-4 py-2 text-sm text-gray-500 text-center">
+                <td class="px-4 py-2 text-center text-sm text-gray-500">
                   <%= story_idea.updated_at.strftime("%b %d, %Y") %>
                 </td>
-                <td class="px-4 py-2 text-sm text-gray-500 text-center">
+                <td class="px-4 py-2 text-center text-sm text-gray-500">
                   <% if story_idea.stories.any? %>
                     <%= link_to "Story", story_path(story_idea.stories.last),
                                 class: "btn btn-secondary-outline" %>
                   <% end %>
                 </td>
-                <td class="px-4 py-2 text-sm text-gray-500 text-center">
+                <td class="px-4 py-2 text-center text-sm text-gray-500">
                   <%= link_to "Edit", edit_story_idea_path(story_idea), class: "btn btn-secondary-outline" %>
                 </td>
               </tr>
@@ -73,7 +73,7 @@
 
         <!-- Empty state -->
         <% unless @story_ideas.any? %>
-          <p class="text-gray-500 text-center py-6">
+          <p class="py-6 text-center text-gray-500">
             No <%= StoryIdea.model_name.human.pluralize.downcase %> found.
           </p>
         <% end %>

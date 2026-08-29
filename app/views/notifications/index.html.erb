@@ -15,7 +15,7 @@
   <% end %>
 </div>
 
-<div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+<div class="border border-primary/10 rounded-2xl shadow-sm overflow-hidden">
   <div class="<%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:notifications) %> px-8 py-3">
     <div class="flex items-center gap-2">
       <i class="fa-solid fa-bell <%= DomainTheme.text_class_for(:notifications, intensity: 700) %>"></i>
@@ -25,7 +25,7 @@
 
   <div class="p-4 sm:p-8 space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-2xl font-semibold text-gray-900"><%= t("communications.title") %></h1>
+      <h1 class="font-display text-2xl font-semibold text-primary"><%= t("communications.title") %></h1>
       <% if allowed_to?(:new?, with: NotificationPolicy) %>
         <%= link_to new_notification_path,
                     class: "inline-flex items-center gap-2 rounded-lg #{DomainTheme.bg_class_for(:notifications, intensity: 600)} #{DomainTheme.bg_class_for(:notifications, intensity: 600, hover: true)} px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors" do %>

@@ -1,14 +1,14 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<div class="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
+<div class="border-primary/10 mx-auto max-w-2xl rounded-2xl border bg-white p-6 shadow-sm">
   <div class="mb-6">
     <%= link_to "← Allocations", allocations_path, class: "text-sm #{eyebrow_link_class} mb-2 inline-block" %>
 
-    <h1 class="text-2xl font-semibold text-gray-900">Discount</h1>
+    <h1 class="text-primary font-display text-2xl font-semibold">Discount</h1>
 
     <% if @discount.allocations.first&.allocatable.present? %>
       <% alloc = @discount.allocations.first.allocatable %>
-      <p class="text-gray-600 mt-1"><%= alloc.registrant.full_name %> — <%= alloc.event.title %></p>
+      <p class="mt-1 text-gray-600"><%= alloc.registrant.full_name %> — <%= alloc.event.title %></p>
     <% end %>
   </div>
 

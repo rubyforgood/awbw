@@ -20,13 +20,13 @@
       <%= link_to back_label, back_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     </div>
 
-    <h1 class="mb-6 text-2xl font-semibold text-gray-900">Edit staff tagging</h1>
+    <h1 class="text-primary mb-6 font-display text-2xl font-semibold">Edit staff tagging</h1>
 
     <%= simple_form_for @staff_tagging,
           url: staff_tagging_path(@staff_tagging, return_to: params[:return_to].presence, origin_id: params[:origin_id].presence, admin: params[:admin].presence),
           method: :patch,
           html: { data: { turbo: false } } do |f| %>
-      <div class="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
+      <div class="border-primary/10 mb-6 rounded-2xl border bg-gray-50 p-4">
         <div class="flex flex-col gap-4 md:flex-row md:items-start">
           <div class="md:w-72">
             <span class="<%= search_label_class %>">Person</span>

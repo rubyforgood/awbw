@@ -1,29 +1,29 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
 
       <!-- Header -->
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-semibold text-gray-900">Activity detail</h1>
+      <div class="mb-6 flex items-center justify-between">
+        <h1 class="text-primary font-display text-2xl font-semibold">Activity detail</h1>
         <%= link_to "Back to Activities",
                     admin_activities_events_path,
                     class: "text-indigo-600 hover:underline text-sm" %>
       </div>
 
       <!-- Activity Info -->
-      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
+      <div class="border-primary/10 mb-6 rounded-2xl border bg-white p-6 shadow-sm">
         <dl class="divide-y divide-gray-100 text-sm">
-          <div class="py-3 flex items-baseline gap-4">
-            <dt class="text-gray-500 font-medium w-28 shrink-0">Activity name</dt>
+          <div class="flex items-baseline gap-4 py-3">
+            <dt class="w-28 shrink-0 font-medium text-gray-500">Activity name</dt>
             <dd class="text-gray-900"><%= @event.name %></dd>
           </div>
 
-          <div class="py-3 flex items-baseline gap-4">
-            <dt class="text-gray-500 font-medium w-28 shrink-0">Time</dt>
+          <div class="flex items-baseline gap-4 py-3">
+            <dt class="w-28 shrink-0 font-medium text-gray-500">Time</dt>
             <dd class="text-gray-900"><%= @event.time.in_time_zone.strftime("%Y-%m-%d %H:%M:%S %Z") %></dd>
           </div>
 
-          <div class="py-3 flex items-baseline gap-4">
-            <dt class="text-gray-500 font-medium w-28 shrink-0">User</dt>
+          <div class="flex items-baseline gap-4 py-3">
+            <dt class="w-28 shrink-0 font-medium text-gray-500">User</dt>
             <dd>
               <% if @event.user %>
                 <%= link_to @event.user.full_name,
@@ -35,8 +35,8 @@
             </dd>
           </div>
 
-          <div class="py-3 flex items-baseline gap-4">
-            <dt class="text-gray-500 font-medium w-28 shrink-0">Visit ID</dt>
+          <div class="flex items-baseline gap-4 py-3">
+            <dt class="w-28 shrink-0 font-medium text-gray-500">Visit ID</dt>
             <dd>
               <%= link_to @event.visit_id,
                           admin_activities_visits_path(visit_id: @event.visit_id),
@@ -45,8 +45,8 @@
           </div>
 
           <% if @event.resource_type.present? %>
-            <div class="py-3 flex items-baseline gap-4">
-              <dt class="text-gray-500 font-medium w-28 shrink-0">Resource</dt>
+            <div class="flex items-baseline gap-4 py-3">
+              <dt class="w-28 shrink-0 font-medium text-gray-500">Resource</dt>
               <dd class="text-gray-900">
                 <% if @resource_path %>
                   <%= link_to "#{@event.resource_type}.find(#{@event.resource_id})",
@@ -62,8 +62,8 @@
       </div>
 
       <!-- Properties -->
-      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Properties</h2>
+      <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
+        <h2 class="mb-4 text-lg font-semibold text-gray-900">Properties</h2>
 
         <% if @event.properties.present? && @event.properties.any? %>
           <%
@@ -77,15 +77,15 @@
           <dl class="divide-y divide-gray-100">
             <% ordered_keys.each do |key|
               value = @event.properties[key] %>
-              <div class="py-3 flex items-baseline gap-4">
-                <dt class="text-sm font-medium text-gray-500 w-36 shrink-0"><%= key %></dt>
+              <div class="flex items-baseline gap-4 py-3">
+                <dt class="w-36 shrink-0 text-sm font-medium text-gray-500"><%= key %></dt>
                 <dd class="text-sm text-gray-900">
                   <% if key == "resource_title" && @resource_path %>
                     <%= link_to value.to_s.delete('"'), @resource_path, class: "text-indigo-600 hover:underline" %>
                   <% elsif value.nil? %>
                     <span class="text-gray-400 italic">nil</span>
                   <% elsif value.is_a?(Hash) || value.is_a?(Array) %>
-                    <pre class="bg-gray-50 rounded-lg p-3 overflow-x-auto text-xs"><%= JSON.pretty_generate(value).delete('"') %></pre>
+                    <pre class="overflow-x-auto rounded-lg bg-gray-50 p-3 text-xs"><%= JSON.pretty_generate(value).delete('"') %></pre>
                   <% else %>
                     <%= value.to_s.delete('"') %>
                   <% end %>
@@ -94,7 +94,7 @@
             <% end %>
           </dl>
         <% else %>
-          <p class="text-gray-400 italic text-sm">No properties</p>
+          <p class="text-sm text-gray-400 italic">No properties</p>
         <% end %>
       </div>
 </div>

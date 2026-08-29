@@ -1,9 +1,9 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="border border-gray-200 rounded-xl shadow p-6">
+<div class="border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="space-y-6">
-    <div class="flex items-center justify-between mb-6">
+    <div class="mb-6 flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-semibold text-gray-900"><%= @record.class.name %></h1>
+        <h1 class="text-primary font-display text-2xl font-semibold"><%= @record.class.name %></h1>
         <p class="text-sm text-gray-500">FM ID: <%= @record.fm_id %> &middot; Key: <%= @record.fm_key_name %></p>
       </div>
       <%= link_to "Back to list", fm_archives_path(table: @record.class.table_name.sub("fm_", "")), class: "btn btn-primary-outline" %>
@@ -12,9 +12,9 @@
     <div class="rounded-xl bg-white p-6">
       <dl class="divide-y divide-gray-200">
         <% @record.data.each do |key, value| %>
-          <div class="py-3 grid grid-cols-3 gap-4">
+          <div class="grid grid-cols-3 gap-4 py-3">
             <dt class="text-sm font-medium text-gray-500"><%= key %></dt>
-            <dd class="text-sm text-gray-900 col-span-2 break-words">
+            <dd class="col-span-2 text-sm break-words text-gray-900">
               <% link_target = @record.class::FM_LINKS[key] %>
               <% if link_target && value.present? %>
                 <%= link_to value, fm_archive_path(value, table: link_target.sub("fm_", "")), class: "text-primary hover:underline" %>
@@ -31,10 +31,10 @@
 
     <% if @backlinks.any? %>
       <div class="rounded-xl bg-white p-6">
-        <h2 class="text-lg font-semibold mb-4">Related Records</h2>
+        <h2 class="mb-4 text-lg font-semibold">Related Records</h2>
         <% @backlinks.each do |label, info| %>
           <%= turbo_frame_tag "backlink_#{info[:table]}", class: "block py-3 border-b border-gray-200 last:border-0" do %>
-            <h3 class="text-sm font-medium text-gray-500 mb-2"><%= label %> (<%= info[:records].total_entries %>)</h3>
+            <h3 class="mb-2 text-sm font-medium text-gray-500"><%= label %> (<%= info[:records].total_entries %>)</h3>
             <div class="flex flex-wrap gap-1">
               <% info[:records].each do |record| %>
                 <%= link_to record.fm_id, fm_archive_path(record.fm_id, table: info[:table].sub("fm_", "")),

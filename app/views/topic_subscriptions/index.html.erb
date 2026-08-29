@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:topic_subscriptions) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:topic_subscriptions) %> border border-primary/10 rounded-2xl shadow-sm p-6">
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
     <%= link_to "← Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <div class="flex items-center gap-4">
@@ -17,7 +17,7 @@
 
   <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
     <div>
-      <h1 class="flex items-center gap-2 text-2xl font-semibold text-gray-900">
+      <h1 class="font-display flex items-center gap-2 text-2xl font-semibold text-primary">
         <i class="fa-solid fa-envelope-open-text <%= DomainTheme.text_class_for(:topic_subscriptions, intensity: 600) %>"></i>
         Subscriptions
       </h1>

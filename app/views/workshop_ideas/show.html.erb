@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-or-owner") %>
-<div class="<%= DomainTheme.bg_class_for(:workshop_ideas) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex flex-wrap justify-end gap-2 mb-4">
+<div class="<%= DomainTheme.bg_class_for(:workshop_ideas) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+  <div class="mb-4 flex flex-wrap justify-end gap-2">
     <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <% if allowed_to?(:index?, WorkshopIdea) %>
       <%= link_to "Workshop Ideas", workshop_ideas_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
@@ -10,9 +10,9 @@
     <% end %>
   </div>
 
-  <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
-    <div class="font-semibold text-gray-900 mb-2">
-      <h1 class="text-3xl tracking-tight"><%= @workshop_idea.title %></h1>
+  <div class="space-y-6 rounded-lg bg-white p-6 shadow-md">
+    <div class="mb-2 font-semibold text-gray-900">
+      <h1 class="text-primary font-display text-3xl tracking-tight"><%= @workshop_idea.title %></h1>
     </div>
 
     <% if @workshop_idea.workshops.any? %>
@@ -27,8 +27,8 @@
       </div>
     <% end %>
 
-    <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 text-sm text-gray-600">
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+    <div class="border-primary/10 rounded-2xl border bg-gray-50 p-4 text-sm text-gray-600">
+      <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
         <div>
           <span class="font-semibold text-gray-700">Author credit:</span>
           <%= credited_author_link(@workshop_idea) %>
@@ -54,7 +54,7 @@
       </div>
 
       <% if @workshop_idea.staff_notes.present? %>
-        <div class="mt-3 pt-3 border-t border-gray-200">
+        <div class="mt-3 border-t border-gray-200 pt-3">
           <span class="font-semibold text-gray-700">Staff notes:</span>
           <%= @workshop_idea.staff_notes %>
         </div>
@@ -89,7 +89,7 @@
     <% sections.each do |label, content| %>
       <% if content.present? %>
         <div class="mb-4">
-          <h3 class="text-sm font-semibold text-gray-700 mb-1"><%= label %></h3>
+          <h3 class="mb-1 text-sm font-semibold text-gray-700"><%= label %></h3>
           <div class="text-gray-900"><%= content %></div>
         </div>
       <% end %>

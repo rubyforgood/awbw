@@ -1,20 +1,20 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <% person = @membership.person %>
 
-<div class="mx-auto max-w-2xl bg-white border border-gray-200 rounded-xl shadow p-4 sm:p-6">
-  <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+<div class="border-primary/10 mx-auto max-w-2xl rounded-2xl border bg-white p-4 shadow-sm sm:p-6">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
     <%= link_to person_memberships_path(person), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Membership
     <% end %>
   </div>
 
-  <h1 class="text-2xl font-bold mb-1">Add membership invoice</h1>
-  <p class="text-sm text-gray-500 mb-6"><%= person.full_name %></p>
+  <h1 class="text-primary mb-1 font-display text-2xl font-bold">Add membership invoice</h1>
+  <p class="mb-6 text-sm text-gray-500"><%= person.full_name %></p>
 
   <%= simple_form_for @membership_invoice, url: membership_membership_invoices_path(@membership) do |f| %>
     <%= render "fields", f: f, include_end_date: false %>
 
-    <div class="flex items-center gap-3 border-t border-gray-200 pt-6 mt-6">
+    <div class="mt-6 flex items-center gap-3 border-t border-gray-200 pt-6">
       <div class="ml-auto flex items-center gap-3">
         <%= link_to "Cancel", person_memberships_path(person), class: "btn btn-secondary-outline" %>
         <%= f.button :submit, "Add invoice", class: "btn btn-primary" %>

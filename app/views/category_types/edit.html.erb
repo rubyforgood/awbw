@@ -1,13 +1,13 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="min-h-screen py-8">
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-5xl rounded-xl border border-gray-200 bg-white p-6 shadow-lg transition-shadow duration-200 hover:shadow-xl">
+    <div class="border-primary/10 mx-auto max-w-5xl rounded-2xl border bg-white p-6 shadow-lg transition-shadow duration-200 hover:shadow-xl">
       <div class="mb-4 flex flex-wrap justify-end gap-2">
         <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <%= link_to "Category Types", category_types_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <%= link_to "View", category_type_path(@category_type), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       </div>
-      <h1 class="mb-6 text-2xl font-semibold text-gray-900">Edit <%= @category_type.class.model_name.human.downcase %></h1>
+      <h1 class="text-primary mb-6 font-display text-2xl font-semibold">Edit <%= @category_type.class.model_name.human.downcase %></h1>
 
       <div class="space-y-6">
         <div class="mt-4">

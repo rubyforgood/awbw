@@ -1,12 +1,12 @@
 <% content_for(:page_bg_class, "admin-or-owner") %>
-<div class="admin-or-owner border border-gray-200 rounded-xl shadow overflow-hidden">
+<div class="admin-or-owner border-primary/10 overflow-hidden rounded-2xl border shadow-sm">
   <!-- Header -->
   <div class="<%= DomainTheme.bg_class_for(:workshop_logs, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:workshop_logs, intensity: 300) %> px-8 py-3">
     <div class="flex items-center gap-2">
-      <svg class="w-5 h-5 <%= DomainTheme.text_class_for(:workshop_logs, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="h-5 w-5 <%= DomainTheme.text_class_for(:workshop_logs, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
       </svg>
-      <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:workshop_logs, intensity: 900) %> uppercase tracking-wide">Workshop Logs for <%= @person.full_name %></span>
+      <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:workshop_logs, intensity: 900) %> tracking-wide uppercase">Workshop Logs for <%= @person.full_name %></span>
     </div>
   </div>
 
@@ -22,7 +22,7 @@
       <% first_log = @filtered_logs.first %>
       <% workshop_name = first_log.workshop_title.presence || "Workshop Log" %>
       <% workshop_name += " (#{first_log.windows_type_name})" if first_log.windows_type_name.present? %>
-      <h1 class="text-2xl font-bold text-gray-900 mb-6">
+      <h1 class="text-primary mb-6 font-display text-2xl font-bold">
         Workshop Logs for
         <% if first_log.workshop.present? %>
           <%= link_to workshop_name, workshop_path(first_log.workshop),
@@ -33,15 +33,15 @@
       </h1>
 
       <!-- Column headers -->
-      <div class="flex items-center gap-2 mb-2">
-        <div class="grid grid-cols-5 gap-2 flex-1 min-w-0">
-          <div class="px-2.5 text-left pl-6 text-xs font-medium text-gray-400">Date</div>
+      <div class="mb-2 flex items-center gap-2">
+        <div class="grid min-w-0 flex-1 grid-cols-5 gap-2">
+          <div class="px-2.5 pl-6 text-left text-xs font-medium text-gray-400">Date</div>
           <div class="px-1.5 text-center text-xs font-medium text-gray-400">Total</div>
           <div class="px-1.5 text-center text-xs font-medium text-gray-400">Adults</div>
           <div class="px-1.5 text-center text-xs font-medium text-gray-400">Teens</div>
           <div class="px-1.5 text-center text-xs font-medium text-gray-400">Children</div>
         </div>
-        <div class="shrink-0 w-20 ml-4"></div>
+        <div class="ml-4 w-20 shrink-0"></div>
       </div>
 
       <!-- Grand totals (top) -->
@@ -56,7 +56,7 @@
     <% else %>
       <!-- All workshops grouped -->
       <% if @grouped_logs.any? %>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <% @grouped_logs.each do |key, logs| %>
             <%= render "people/sections/workshop_log_grouped_card",
                        person: @person, logs: logs %>

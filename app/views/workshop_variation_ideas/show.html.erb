@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-or-owner") %>
-<div class="<%= DomainTheme.bg_class_for(:workshop_variation_ideas) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex flex-wrap justify-end gap-2 mb-4">
+<div class="<%= DomainTheme.bg_class_for(:workshop_variation_ideas) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+  <div class="mb-4 flex flex-wrap justify-end gap-2">
     <% if @workshop_variation_idea.workshop_variations.any? %>
       <% @workshop_variation_idea.workshop_variations.each do |workshop_variation| %>
         <%= link_to "View Variation", workshop_variation_path(workshop_variation),
@@ -17,9 +17,9 @@
     <% end %>
   </div>
 
-  <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
-    <div class="font-semibold text-gray-900 mb-2">
-      <h1 class="text-3xl tracking-tight"><%= @workshop_variation_idea.name %></h1>
+  <div class="space-y-6 rounded-lg bg-white p-6 shadow-md">
+    <div class="mb-2 font-semibold text-gray-900">
+      <h1 class="text-primary font-display text-3xl tracking-tight"><%= @workshop_variation_idea.name %></h1>
     </div>
 
     <% visible_variations = allowed_to?(:manage?, WorkshopVariation) ? @workshop_variation_idea.workshop_variations : @workshop_variation_idea.workshop_variations.where(published: true) %>
@@ -47,8 +47,8 @@
       </div>
     <% end %>
 
-    <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 text-sm text-gray-600">
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+    <div class="border-primary/10 rounded-2xl border bg-gray-50 p-4 text-sm text-gray-600">
+      <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
         <div>
           <span class="font-semibold text-gray-700">Submitted by:</span>
           <% if @workshop_variation_idea.created_by&.person && allowed_to?(:show?, @workshop_variation_idea.created_by.person) %>
