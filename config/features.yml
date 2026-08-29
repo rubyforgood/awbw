@@ -2568,6 +2568,7 @@
   area: people
   display_status: user_facing
   released_on: 2026-08-29
+  pr_number: 2409
   summary: >-
     The person and organization profiles swap their heavy navy banner for a light
     tint in the record's own colour, so a profile now matches the People or
