@@ -71,16 +71,46 @@ class FormField < ApplicationRecord
     "organization_country" => %w[organization_country agency_country]
   }.freeze
 
+  # The bulk payment form once seeded its payer fields under bespoke "payer_"
+  # identifiers; new forms use the same canonical names every other form role
+  # already uses (so one catalog, validator, and set of consumers covers them).
+  # The legacy "payer_" spellings stay valid for forms and submissions already
+  # stored under them. Same shape as ORGANIZATION_FIELD_ALIASES: canonical first,
+  # legacy second.
+  PAYER_FIELD_ALIASES = {
+    "first_name" => %w[first_name payer_first_name],
+    "last_name" => %w[last_name payer_last_name],
+    "primary_email" => %w[primary_email payer_email],
+    "phone" => %w[phone payer_phone]
+  }.freeze
+
+  # Single source of truth mapping each canonical field identifier to every
+  # spelling that should match it. The organization "agency_" rename and the bulk
+  # payment "payer_" rename share one mechanism; "payer_organization" folds into
+  # the existing organization_name entry so the org field resolves the same on a
+  # bulk payment form as anywhere else.
+  FIELD_ALIASES = ORGANIZATION_FIELD_ALIASES
+    .merge("organization_name" => ORGANIZATION_FIELD_ALIASES["organization_name"] + %w[payer_organization])
+    .merge(PAYER_FIELD_ALIASES)
+    .freeze
+
   # Every identifier that should match a field for the given identifier — a
-  # renamed organization field's canonical name plus its legacy "agency_" alias,
-  # or just the identifier itself for everything else. Accepts either spelling as
-  # input, so callers can key on the canonical name and still match legacy data
-  # (or pass a legacy literal and still match a new form). Use it to build the
+  # renamed field's canonical name plus its legacy alias(es), or just the
+  # identifier itself for everything else. Accepts either spelling as input, so
+  # callers can key on the canonical name and still match legacy data (or pass a
+  # legacy literal and still match a new form). Use it to build the
   # `field_identifier IN (…)` set for a lookup, or to compare an identifier.
   def self.aliased_identifiers(identifier)
-    ORGANIZATION_FIELD_ALIASES[identifier] ||
-      ORGANIZATION_FIELD_ALIASES.values.find { |names| names.include?(identifier) } ||
+    FIELD_ALIASES[identifier] ||
+      FIELD_ALIASES.values.find { |names| names.include?(identifier) } ||
       [ identifier ]
+  end
+
+  # The canonical identifier a given spelling folds into (itself when it has no
+  # alias). Lets consumers key submission answers on one canonical name whether
+  # the field was seeded under the new or the legacy spelling.
+  def self.canonical_identifier(identifier)
+    FIELD_ALIASES.find { |_canonical, names| names.include?(identifier) }&.first || identifier
   end
 
   # The payment-method field. Its answer options ("Credit card (now)", etc.) are
@@ -223,11 +253,17 @@ class FormField < ApplicationRecord
   end
 
   # True when this field's identifier matches the given identifier, treating a
-  # renamed organization field's canonical and legacy "agency_" spellings as
-  # equivalent (see ORGANIZATION_FIELD_ALIASES). Lets a caller compare against the
-  # canonical name and still match a field seeded under the legacy one.
+  # renamed field's canonical and legacy spellings as equivalent (see
+  # FIELD_ALIASES). Lets a caller compare against the canonical name and still
+  # match a field seeded under the legacy one.
   def matches_identifier?(identifier)
     field_identifier.in?(FormField.aliased_identifiers(identifier))
+  end
+
+  # This field's canonical identifier, folding a legacy "agency_"/"payer_"
+  # spelling into the shared canonical name.
+  def canonical_identifier
+    FormField.canonical_identifier(field_identifier)
   end
 
   # True for fields whose answer options are tied to backend logic (currently the
@@ -272,11 +308,13 @@ class FormField < ApplicationRecord
   # Field identifiers (system-assigned by FormBuilderService) that collect an
   # email address, so a submitted value should be format-checked. The "*_type"
   # selector fields are deliberately excluded — this is an exact allowlist, not
-  # a name-pattern match, so an unrelated field can't opt in by accident.
-  EMAIL_FIELD_IDENTIFIERS = %w[primary_email confirm_email secondary_email payer_email].freeze
+  # a name-pattern match, so an unrelated field can't opt in by accident. Matched
+  # against the canonical identifier, so a legacy "payer_email" field (now folded
+  # into primary_email) is still validated.
+  EMAIL_FIELD_IDENTIFIERS = %w[primary_email confirm_email secondary_email].freeze
 
   def email_field?
-    field_identifier.in?(EMAIL_FIELD_IDENTIFIERS)
+    canonical_identifier.in?(EMAIL_FIELD_IDENTIFIERS)
   end
 
   # A quote smart field — its answer helps build a Quote on submission.

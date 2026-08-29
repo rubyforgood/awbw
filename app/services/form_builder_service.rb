@@ -57,7 +57,7 @@ class FormBuilderService
     payment: %w[payment_method someone_else_will_pay],
     consent: %w[communication_consent],
     post_event_feedback: %w[event_rating most_valuable improvement_suggestions],
-    bulk_payment: %w[payer_first_name payer_last_name payer_email payer_phone payer_organization number_of_attendees payment_method bulk_payment_attendees]
+    bulk_payment: %w[first_name last_name primary_email phone organization_name number_of_attendees payment_method bulk_payment_attendees]
   }.freeze
 
   # Header questions created by each section's builder method
@@ -617,19 +617,19 @@ class FormBuilderService
     position = add_header(form, position, "Payer Information", group: "bulk_payment", visibility: :logged_out_only)
 
     position = add_field(form, position, "Payer first name", :free_form_input_one_line,
-                         key: "payer_first_name", group: "bulk_payment", required: true,
+                         key: "first_name", group: "bulk_payment", required: true,
                          width: :half, visibility: :logged_out_only)
     position = add_field(form, position, "Payer last name", :free_form_input_one_line,
-                         key: "payer_last_name", group: "bulk_payment", required: true,
+                         key: "last_name", group: "bulk_payment", required: true,
                          width: :half, visibility: :logged_out_only)
     position = add_field(form, position, "Payer email", :free_form_input_one_line,
-                         key: "payer_email", group: "bulk_payment", required: true,
+                         key: "primary_email", group: "bulk_payment", required: true,
                          width: :half, visibility: :logged_out_only)
     position = add_field(form, position, "Phone", :free_form_input_one_line,
-                         key: "payer_phone", group: "bulk_payment", required: false,
+                         key: "phone", group: "bulk_payment", required: false,
                          width: :half, visibility: :logged_out_only)
     position = add_field(form, position, "Organization", :free_form_input_one_line,
-                         key: "payer_organization", group: "bulk_payment", required: false,
+                         key: "organization_name", group: "bulk_payment", required: false,
                          visibility: :logged_out_only)
 
     position = add_header(form, position, "Payment Information", group: "bulk_payment")

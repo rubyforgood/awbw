@@ -127,9 +127,9 @@ RSpec.describe EventInvoice do
     end
 
     before do
-      add_answer("payer_first_name", "Helena")
-      add_answer("payer_last_name", "Lopez")
-      add_answer("payer_organization", "A Greater Hope")
+      add_answer("first_name", "Helena")
+      add_answer("last_name", "Lopez")
+      add_answer("organization_name", "A Greater Hope")
       add_answer("number_of_attendees", "8")
     end
 

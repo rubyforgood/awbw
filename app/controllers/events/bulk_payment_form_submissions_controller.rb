@@ -77,7 +77,7 @@ module Events
       authorize! @submission, to: :show?, context: { slug: params[:slug] }
 
       payer_email = @submission.person.preferred_email.presence ||
-                    @submission.answers_by_identifier["payer_email"]&.strip
+                    @submission.answers_by_identifier["primary_email"]&.strip
 
       if payer_email.present?
         NotificationServices::CreateNotification.call(

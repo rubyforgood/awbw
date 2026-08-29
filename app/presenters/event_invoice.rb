@@ -104,7 +104,7 @@ class EventInvoice
     event = submission.resolved_event
     answers = submission.answers_by_identifier
     payer = submission.person
-    payer_name = [ answers["payer_first_name"], answers["payer_last_name"] ]
+    payer_name = [ answers["first_name"], answers["last_name"] ]
       .map(&:presence).compact.join(" ").presence || payer&.full_name
     quantity = [ submission.bulk_payment_attendee_count, 1 ].max
 
@@ -113,9 +113,9 @@ class EventInvoice
       number: "B-#{submission.id}",
       date: submission.created_at.to_date,
       client_id: submission.id,
-      bill_to_name: answers["payer_organization"].presence || payer_name,
+      bill_to_name: answers["organization_name"].presence || payer_name,
       bill_to_address_lines: [],
-      bill_to_email: answers["payer_email"].presence || payer&.preferred_email,
+      bill_to_email: answers["primary_email"].presence || payer&.preferred_email,
       attention: payer_name,
       line_items: [
         LineItem.new(

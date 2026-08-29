@@ -136,23 +136,23 @@ RSpec.describe FormBuilderService do
     context "bulk_payment section" do
       let(:form) { described_class.new(name: "Test", sections: %i[bulk_payment], role: "bulk_payment").call }
 
-      it "creates payer fields including an optional phone field" do
+      it "creates payer fields using the shared canonical identifiers" do
         keys = form.form_fields.pluck(:field_identifier).compact
         expect(keys).to include(
-          "payer_first_name", "payer_last_name", "payer_email", "payer_phone", "payer_organization"
+          "first_name", "last_name", "primary_email", "phone", "organization_name"
         )
       end
 
       it "makes the phone and organization fields optional" do
-        phone = form.form_fields.find_by(field_identifier: "payer_phone")
-        organization = form.form_fields.find_by(field_identifier: "payer_organization")
+        phone = form.form_fields.find_by(field_identifier: "phone")
+        organization = form.form_fields.find_by(field_identifier: "organization_name")
         expect(phone.required).to be(false)
         expect(organization.required).to be(false)
       end
 
       it "lays payer name, email, and phone fields out as halves" do
         widths = form.form_fields.where(
-          field_identifier: %w[payer_first_name payer_last_name payer_email payer_phone]
+          field_identifier: %w[first_name last_name primary_email phone]
         ).pluck(:width)
         expect(widths).to all(eq("half"))
       end

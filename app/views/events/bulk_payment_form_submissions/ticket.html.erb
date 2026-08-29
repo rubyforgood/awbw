@@ -3,8 +3,8 @@
   attendees = @submission.bulk_payment_attendees
   total_cents = @payment&.amount_cents || @submission.bulk_payment_amount_cents(@event)
   answers = @submission.answers_by_identifier
-  payer_name = [ answers["payer_first_name"], answers["payer_last_name"] ].compact_blank.join(" ").presence || @submission.person.name
-  payer_organization = answers["payer_organization"]
+  payer_name = [ answers["first_name"], answers["last_name"] ].compact_blank.join(" ").presence || @submission.person.name
+  payer_organization = answers["organization_name"]
   attendee_count = @submission.bulk_payment_attendee_count
 %>
 

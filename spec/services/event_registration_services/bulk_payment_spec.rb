@@ -14,9 +14,9 @@ RSpec.describe EventRegistrationServices::BulkPayment do
 
   def base_form_params(overrides = {})
     {
-      field_id("payer_first_name") => "Pat",
-      field_id("payer_last_name") => "Payer",
-      field_id("payer_email") => "pat@example.com",
+      field_id("first_name") => "Pat",
+      field_id("last_name") => "Payer",
+      field_id("primary_email") => "pat@example.com",
       field_id("payment_method") => "Check",
       field_id("number_of_attendees") => "3"
     }.merge(overrides)
@@ -27,7 +27,7 @@ RSpec.describe EventRegistrationServices::BulkPayment do
       result = described_class.call(
         event: event,
         form: form,
-        form_params: base_form_params(field_id("payer_phone") => "555-123-4567")
+        form_params: base_form_params(field_id("phone") => "555-123-4567")
       )
 
       expect(result.success?).to be true
@@ -81,11 +81,11 @@ RSpec.describe EventRegistrationServices::BulkPayment do
 
       expect(result.success?).to be true
       submission = result.form_submission
-      expect(answer(submission, "payer_email")).to eq("logged.in@example.com")
-      expect(answer(submission, "payer_first_name")).to eq("Logged")
-      expect(answer(submission, "payer_last_name")).to eq("In")
-      expect(answer(submission, "payer_phone")).to eq("555-987-6543")
-      expect(answer(submission, "payer_organization")).to eq("Acme Co")
+      expect(answer(submission, "primary_email")).to eq("logged.in@example.com")
+      expect(answer(submission, "first_name")).to eq("Logged")
+      expect(answer(submission, "last_name")).to eq("In")
+      expect(answer(submission, "phone")).to eq("555-987-6543")
+      expect(answer(submission, "organization_name")).to eq("Acme Co")
     end
 
     it "falls back to the most recent active org when the payer has no facilitator affiliation" do
@@ -104,7 +104,7 @@ RSpec.describe EventRegistrationServices::BulkPayment do
         person: person
       )
 
-      expect(answer(result.form_submission, "payer_organization")).to eq("Newer Org")
+      expect(answer(result.form_submission, "organization_name")).to eq("Newer Org")
     end
 
     it "does not rewrite the payer's existing phone contact when backfilling" do
@@ -131,14 +131,14 @@ RSpec.describe EventRegistrationServices::BulkPayment do
         event: event,
         form: form,
         form_params: {
-          field_id("payer_email") => "typed@example.com",
+          field_id("primary_email") => "typed@example.com",
           field_id("payment_method") => "Check",
           field_id("number_of_attendees") => "3"
         },
         person: person
       )
 
-      expect(answer(result.form_submission, "payer_email")).to eq("typed@example.com")
+      expect(answer(result.form_submission, "primary_email")).to eq("typed@example.com")
     end
   end
 
