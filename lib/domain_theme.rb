@@ -12,8 +12,8 @@ module DomainTheme
     community_news:           :"brand-orange",
     stories:                  :"brand-magenta",
     events:                   :"brand-teal",
-    people:                   :"brand-coral",
-    organizations:            :"brand-olive",
+    people:                   :"brand-cyan",
+    organizations:            :"brand-emerald",
     quotes:                   :slate,
     grants:                   :green,
 
