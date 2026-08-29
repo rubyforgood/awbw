@@ -1,42 +1,36 @@
 <% content_for(:page_bg_class, "public") %>
 <%= render "shared/public_welcome_banner" %>
 
-<div class="w-full max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:faqs) %> border border-gray-200 rounded-xl shadow p-6">
-  <!-- Header Row -->
-  <div class="w-full">
-    <div class="flex items-start justify-between mb-4">
-      <div class="pr-6">
-        <h2 class="text-2xl font-semibold">FAQs</h2>
-        <p class="text-gray-600 mt-2">Find answers to common questions here. If you don't see what you need, please reach out to us at <%= mail_to ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"), class: "text-blue-600 hover:text-blue-800" %>.</p>
-      </div>
+<% actions = capture do %>
+  <% if allowed_to?(:new?, Faq) %>
+    <%= link_to "New FAQ",
+                new_faq_path,
+                class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+  <% end %>
+<% end %>
+<% subtitle = capture do %>
+  Find answers to common questions here. If you don't see what you need, please reach out to us at <%= mail_to ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"), class: "text-blue-600 hover:text-blue-800" %>.
+<% end %>
+<%= render layout: "shared/index_page",
+           locals: { domain: :faqs, eyebrow: "Support", title: "FAQs",
+                     subtitle: subtitle, actions: actions } do %>
+  <!-- Filter form -->
+  <div class="mt-4"><%= render "search_boxes" %></div>
 
-      <div class="text-right">
-        <% if allowed_to?(:new?, Faq) %>
-          <%= link_to "New FAQ",
-                      new_faq_path,
-                      class: "admin-only bg-blue-100 btn btn-primary-outline" %>
-        <% end %>
-      </div>
-    </div>
-
-    <!-- Filter form -->
-    <div class="mt-4"><%= render "search_boxes" %></div>
-
-    <!-- Inner White Card -->
-    <div class="bg-white rounded-lg shadow-md p-6 mt-4">
-      <div
-        class="animate-fade"
-        data-controller="sortable"
-        data-sortable-url-value="<%= faq_path(id: ":id") %>"
-        data-testid="faq-list"
-      >
-        <% if @faqs.present? %>
-          <%= render partial: "faq", collection: @faqs, as: :faq %>
-          <div class="pagination flex justify-center mt-12"><%= tailwind_paginate @faqs %></div>
-        <% else %>
-          <p class="text-start text-gray-500 mt-6">No FAQs found.</p>
-        <% end %>
-      </div>
+  <!-- Inner White Card -->
+  <div class="mt-4 rounded-lg bg-white p-6 shadow-md">
+    <div
+      class="animate-fade"
+      data-controller="sortable"
+      data-sortable-url-value="<%= faq_path(id: ":id") %>"
+      data-testid="faq-list"
+    >
+      <% if @faqs.present? %>
+        <%= render partial: "faq", collection: @faqs, as: :faq %>
+        <div class="pagination mt-12 flex justify-center"><%= tailwind_paginate @faqs %></div>
+      <% else %>
+        <p class="mt-6 text-start text-gray-500">No FAQs found.</p>
+      <% end %>
     </div>
   </div>
-</div>
+<% end %>

@@ -2,8 +2,9 @@
 <%= render "shared/public_welcome_banner" unless @from_story_share %>
 
 <% profile_return_path = (edit_person_path(current_user.person, anchor: "affiliations") if @return_to == "person_edit" && current_user&.person) %>
-<div class="px-4 py-8 sm:px-6 lg:px-8">
-<div class="mx-auto w-full max-w-7xl rounded-xl border border-gray-200 bg-white p-6 shadow" id="contact-us-container">
+<div class="border-primary/10 mx-auto w-full max-w-7xl overflow-hidden rounded-2xl border bg-white shadow-sm" id="contact-us-container">
+  <%= render "shared/brand_accent_strip" %>
+  <div class="p-6">
       <% if profile_return_path %>
         <div class="mb-3">
           <%= link_to profile_return_path, class: "text-sm #{eyebrow_link_class}" do %>
@@ -13,9 +14,9 @@
       <% end %>
       <!-- Header -->
       <header class="space-y-4">
-        <h2 class="text-3xl font-bold tracking-tight text-gray-900">
+        <h1 class="text-primary font-display text-3xl tracking-tight">
           Contact us
-        </h2>
+        </h1>
         <p class="max-w-2xl text-lg leading-relaxed text-gray-600">
           We welcome you to contact us with any questions. We are here to help.
         </p>
@@ -303,5 +304,5 @@
           <%= render "portal_contact_info" %>
         </div>
       <% end %>
+  </div>
     </div>
-</div>

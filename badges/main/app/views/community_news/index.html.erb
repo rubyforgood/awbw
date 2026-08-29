@@ -1,33 +1,26 @@
 <%= render "shared/public_welcome_banner" %>
 
 <% content_for(:page_bg_class, "public") %>
-<div class="w-full max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:community_news) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="w-full">
-    <div class="flex items-start justify-between mb-6">
-      <div class="pr-6">
-        <h2 class="text-2xl font-semibold mb-2">News</h2>
-        <p class="text-gray-600">Find recent newsletters and other community postings</p>
-      </div>
+<% actions = capture do %>
+  <% if allowed_to?(:new?, CommunityNews) %>
+    <%= link_to "New community news",
+                new_community_news_path,
+                class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+  <% end %>
+<% end %>
+<%= render layout: "shared/index_page",
+           locals: { domain: :community_news, eyebrow: "Community", title: "News",
+                     subtitle: "Find recent newsletters and other community postings",
+                     actions: actions } do %>
+  <%= render "search_boxes" %>
 
-      <div class="text-right">
-        <% if allowed_to?(:new?, CommunityNews) %>
-          <%= link_to "New community news",
-                      new_community_news_path,
-                      class: "admin-only bg-blue-100 btn btn-primary-outline" %>
-        <% end %>
-      </div>
-    </div>
+  <%= render "shared/filtered_to", record: @author, clear_path: community_news_index_path %>
 
-    <%= render "search_boxes" %>
+  <%= render "community_news_count" %>
 
-    <%= render "shared/filtered_to", record: @author, clear_path: community_news_index_path %>
+  <% result_src = community_news_index_path + "?" + request.query_string %>
 
-    <%= render "community_news_count" %>
-
-    <% result_src = community_news_index_path + "?" + request.query_string %>
-
-    <%= turbo_frame_tag "community_news_results", src: result_src do %>
-      <%= render "results_skeleton" %>
-    <% end %>
-  </div>
-</div>
+  <%= turbo_frame_tag "community_news_results", src: result_src do %>
+    <%= render "results_skeleton" %>
+  <% end %>
+<% end %>
