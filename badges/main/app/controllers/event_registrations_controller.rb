@@ -770,6 +770,9 @@ class EventRegistrationsController < ApplicationController
   def link_and_report(organization, verb:, record_fills:)
     link = @event_registration.event_registration_organizations.find_or_create_by!(organization: organization)
     entry = submission_entry_for(@event_registration, organization)
+    # Attribute the org writes below to the submission that named it, so linking an
+    # org that wasn't a clean match shows up in that submission's changes audit.
+    Current.form_submission_id = entry[:submission].id if entry
 
     result = OrganizationServices::LinkSubmittedOrganization.call(
       person: @event_registration.registrant,

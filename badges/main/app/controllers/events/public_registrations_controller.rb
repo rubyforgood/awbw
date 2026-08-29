@@ -70,6 +70,9 @@ module Events
 
       if result.success?
         registration = result.event_registration
+        # Stamp the just-created submission onto the request's buffered lifecycle
+        # events (flushed after this action) so every record it wrote is traceable.
+        Current.form_submission_id = result.form_submission&.id
 
         if !registration.scholarship_requested? && @event.cost_cents.to_i > 0 && credit_card_payment?(registration_params)
           checkout_session = create_stripe_checkout_session(registration, result.form_submission)
