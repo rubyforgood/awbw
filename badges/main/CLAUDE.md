@@ -240,6 +240,30 @@ reachable from several origins, the eyebrow must adapt to whichever one the user
   `EventHelper#bulk_payments_return_path` centralizes the expand + anchor logic for the bulk
   payments flow).
 
+## Form submission displays
+
+**A form submission's answers are shown on several different pages — know which is which
+before linking between them.** They share the answer-display partials
+(`form_submissions/submission`, `shared/form_answer_value`, the section grouping), so keep
+presentation in those partials, not forked per page.
+
+- **"Public submission" / "public form display" = the person's own slug-accessible view of
+  their submission, reached through the ticket** (and linkable from lists). Today that's the
+  event **public registration confirmation** (`events/public_registrations#show`,
+  `page_bg "public"`), accessed publicly via `?reg=<registration_slug>` (the unguessable
+  ticket token) or, for admins, `?person_id=` (gated by `person_form_submission?`). When
+  someone says "public form display," this is what they mean — **not** the admin `show`.
+- **Admin submission views** (both `page_bg admin-only`; both carry the admin-only "What this
+  submission changed" bar when `FormSubmissionChanges#edited?`):
+  - `form_submissions#show` — top-level `/form_submissions/:id` (admin-or-slug).
+  - `events/form_submissions#show` — event-scoped registrant submissions ("← Back to registrants").
+- **Link-organizations pages** (admin) also render a submission summary and the changes link:
+  `event_registrations/link_organization` and `form_submissions/link_organization`.
+- The **"What this submission changed"** audit page is `form_submissions#changes` (admin-only);
+  its eyebrow branches on `params[:return_to]` to return to whichever page linked in.
+- **Standalone (non-event) submissions currently have no submitter-facing view** — tracked in
+  rubyforgood/awbw#2407 (confirmation email → slug-based own-view reusing these partials).
+
 ## Page background class (`page_bg_class`)
 
 Every page view sets `<% content_for(:page_bg_class, "...") %>` at the top — the layout

@@ -80,7 +80,7 @@
     <div class="flex w-full flex-col items-center gap-4 md:w-1/6"><%= render "shared/form_image_field", f: f, field_name: :avatar %></div>
   </div>
 
-  <div class="phones">
+  <div class="phones scroll-mt-4" id="phones">
     <div class="form-group space-y-4">
       <div class="mb-2 font-semibold text-gray-700">
         Phones
@@ -104,7 +104,7 @@
     </div>
   </div>
 
-  <div class="addresses">
+  <div class="addresses scroll-mt-4" id="addresses">
     <!-- Primary Address Choice -->
     <div class="flex flex-col gap-4 md:flex-row"><%# = f.input :primary_address, collection: [['Work', 1], ['Home', 2]], prompt: "Select Primary Address" %></div>
 

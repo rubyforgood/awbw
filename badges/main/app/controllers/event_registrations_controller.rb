@@ -58,6 +58,10 @@ class EventRegistrationsController < ApplicationController
   def edit
     authorize! @event_registration
     set_form_variables
+    registration_form = @event_registration.event&.registration_form
+    @form_submission = registration_form && @event_registration.registrant.form_submissions
+      .where(form: registration_form, event: @event_registration.event)
+      .order(:created_at).first
 
     if @event_registration.checkout_session_id.present? &&
        @event_registration.payment_unresolved.nil? &&

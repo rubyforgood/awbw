@@ -164,6 +164,7 @@ Rails.application.routes.draw do
   end
   resources :form_submissions, only: [ :index, :show ] do
     member do
+      get :changes
       get :link_organization
       post :select_organization
       post :create_organization
