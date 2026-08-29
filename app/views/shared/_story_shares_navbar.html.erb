@@ -124,7 +124,7 @@
       <div class="hidden items-center space-x-8 lg:flex">
         <!-- WHO WE ARE Mega (accent: green) -->
         <div class="group nav-item has-dropdown" style="--accent: var(--color-brand-green-700);">
-          <button type="button" class="font-display text-brand-navy-900 hover:text-brand-green-700 inline-flex items-center gap-1.5 text-lg font-semibold transition-colors">
+          <button type="button" class="text-brand-navy-900 hover:text-brand-green-700 inline-flex items-center gap-1.5 font-display text-lg font-semibold transition-colors">
             Who We Are <i class="fa-solid fa-chevron-down text-xs"></i>
           </button>
 
@@ -174,7 +174,7 @@
 
         <!-- WHAT WE DO Mega (accent: teal) -->
         <div class="group nav-item has-dropdown" style="--accent: var(--color-brand-teal-700);">
-          <button type="button" class="font-display text-brand-navy-900 hover:text-brand-teal-700 inline-flex items-center gap-1.5 text-lg font-semibold transition-colors">
+          <button type="button" class="text-brand-navy-900 hover:text-brand-teal-700 inline-flex items-center gap-1.5 font-display text-lg font-semibold transition-colors">
             What We Do <i class="fa-solid fa-chevron-down text-xs"></i>
           </button>
 
@@ -224,7 +224,7 @@
 
         <!-- WAYS TO HELP Mega (accent: magenta) -->
         <div class="group nav-item has-dropdown" style="--accent: var(--color-brand-magenta-700);">
-          <button type="button" class="font-display text-brand-navy-900 hover:text-brand-magenta-700 inline-flex items-center gap-1.5 text-lg font-semibold transition-colors">
+          <button type="button" class="text-brand-navy-900 hover:text-brand-magenta-700 inline-flex items-center gap-1.5 font-display text-lg font-semibold transition-colors">
             Ways to Help <i class="fa-solid fa-chevron-down text-xs"></i>
           </button>
 
@@ -273,7 +273,7 @@
 
         <!-- OUR NEXT CHAPTER Mega (accent: orange) -->
         <div class="group nav-item has-dropdown" style="--accent: var(--color-brand-orange-700);">
-          <button type="button" class="font-display text-brand-navy-900 hover:text-brand-orange-700 inline-flex items-center gap-1.5 text-lg font-semibold transition-colors">
+          <button type="button" class="text-brand-navy-900 hover:text-brand-orange-700 inline-flex items-center gap-1.5 font-display text-lg font-semibold transition-colors">
             Our Next Chapter <i class="fa-solid fa-chevron-down text-xs"></i>
           </button>
 
@@ -336,7 +336,7 @@
         <div class="lg:hidden">
           <button
             type="button"
-            class="focus:ring-brand-navy-700 relative inline-flex items-center justify-center rounded-md p-2 text-brand-navy-800 hover:bg-brand-navy-100 focus:ring-2 focus:outline-2"
+            class="focus:ring-brand-navy-700 text-brand-navy-800 hover:bg-brand-navy-100 relative inline-flex items-center justify-center rounded-md p-2 focus:ring-2 focus:outline-2"
             data-action="dropdown#toggle"
             data-dropdown-payload-param='[{"story-shares-mobile-menu":"hidden"}]'>
             <span class="sr-only">Open main menu</span>
@@ -374,7 +374,7 @@
                 type="search"
                 name="query"
                 placeholder="Search keywords to find more stories..."
-                class="portal-search focus:ring-brand-magenta-500 w-80 rounded-full border border-brand-navy-900/15 bg-white py-2 pr-10 pl-4 text-sm text-gray-900 focus:ring-2 focus:outline-none"
+                class="portal-search focus:ring-brand-magenta-500 border-brand-navy-900/15 w-80 rounded-full border bg-white py-2 pr-10 pl-4 text-sm text-gray-900 focus:ring-2 focus:outline-none"
                 value="<%= params[:query] %>"/>
               <button type="submit" class="text-brand-navy-700 hover:text-brand-magenta-700 absolute top-1/2 right-3 -translate-y-1/2" aria-label="Search">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -389,7 +389,7 @@
 
     <!-- Mobile menu, hidden by default -->
     <div id="story-shares-mobile-menu" class="nav-row border-brand-navy-900/10 hidden border-t lg:hidden">
-      <div class="space-y-1 pb-3 pt-2">
+      <div class="space-y-1 pt-2 pb-3">
         <%= link_to "Home", story_shares_path, class: "text-brand-navy-900 hover:bg-brand-navy-50 block rounded-md px-3 py-2 text-base font-medium" %>
         <% story_share_nav_sectors.each_with_index do |sector, index| %>
           <%= link_to sector.name, story_shares_path(sector_names_all: sector.name),
@@ -414,7 +414,7 @@
               type="search"
               name="query"
               placeholder="Search stories..."
-              class="w-full rounded-full border border-brand-navy-900/15 px-4 py-2 text-sm text-gray-900"
+              class="border-brand-navy-900/15 w-full rounded-full border px-4 py-2 text-sm text-gray-900"
               value="<%= params[:query] %>"
               />
           <% end %>

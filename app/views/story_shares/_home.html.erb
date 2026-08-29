@@ -2,7 +2,7 @@
 <section class="bg-brand-cream -mx-2 pt-14 pb-10 sm:-mx-6 lg:-mx-8">
   <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
     <p class="text-brand-orange-600 mb-3 text-sm font-semibold tracking-widest uppercase">Story share</p>
-    <h1 class="font-display text-4xl leading-tight tracking-tight text-brand-navy-900 sm:text-5xl">
+    <h1 class="text-brand-navy-900 font-display text-4xl leading-tight tracking-tight sm:text-5xl">
       Stories of healing in action
     </h1>
     <div class="mt-5 max-w-3xl space-y-4 text-lg leading-relaxed text-gray-700">
@@ -11,9 +11,9 @@
         extensive network of art workshop facilitators — real stories and participant artwork
         from trained Windows Facilitators across the country and abroad.
       </p>
-      <blockquote class="border-brand-magenta-300 border-l-4 pl-4 font-display text-xl text-brand-navy-900 italic">
+      <blockquote class="border-brand-magenta-300 text-brand-navy-900 border-l-4 pl-4 font-display text-xl italic">
         “If we can share our story with someone who responds with empathy and understanding,
-        shame can’t survive.” <span class="text-base not-italic text-gray-500">— Brené Brown</span>
+        shame can’t survive.” <span class="text-base text-gray-500 not-italic">— Brené Brown</span>
       </blockquote>
     </div>
   </div>
@@ -24,13 +24,13 @@
   <section class="bg-brand-cream -mx-2 pb-14 sm:-mx-6 lg:-mx-8">
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
       <div data-controller="carousel"
-           class="swiper relative overflow-hidden rounded-2xl shadow-lg ring-1 ring-brand-navy-900/10"
+           class="swiper ring-brand-navy-900/10 relative overflow-hidden rounded-2xl shadow-lg ring-1"
            data-carousel-options-value='{ "autoplay": { "delay": 5000, "pauseOnMouseEnter": true }, "slidesPerView": 1, "breakpoints": {} }'>
         <div class="swiper-wrapper">
           <% @featured_stories.each do |story| %>
             <div class="swiper-slide">
               <%= link_to story_share_path(story), class: "block relative" do %>
-                <div class="h-72 overflow-hidden bg-brand-navy-100 sm:h-96">
+                <div class="bg-brand-navy-100 h-72 overflow-hidden sm:h-96">
                   <%= render "assets/display_image",
                              resource: story,
                              extra_image_classes: "!w-full h-full object-cover",
@@ -41,7 +41,7 @@
                     <%= story.sectors.first.name %>
                   </div>
                 <% end %>
-                <div class="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-brand-navy-950/85 to-transparent p-6 text-white sm:p-8">
+                <div class="from-brand-navy-950/85 absolute right-0 bottom-0 left-0 bg-gradient-to-t to-transparent p-6 text-white sm:p-8">
                   <h2 class="font-display text-2xl sm:text-3xl"><%= story.title %></h2>
                   <p class="mt-1 text-sm opacity-90">
                     <%= story.organization_name %>
@@ -53,10 +53,10 @@
           <% end %>
         </div>
 
-        <button aria-label="Previous story" class="swiper-button-prev-custom absolute top-1/2 left-4 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-brand-navy-900 shadow-lg hover:bg-white">
+        <button aria-label="Previous story" class="swiper-button-prev-custom text-brand-navy-900 absolute top-1/2 left-4 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white">
           <i class="fa-solid fa-chevron-left"></i>
         </button>
-        <button aria-label="Next story" class="swiper-button-next-custom absolute top-1/2 right-4 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-brand-navy-900 shadow-lg hover:bg-white">
+        <button aria-label="Next story" class="swiper-button-next-custom text-brand-navy-900 absolute top-1/2 right-4 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white">
           <i class="fa-solid fa-chevron-right"></i>
         </button>
       </div>
@@ -89,12 +89,12 @@
   <section class="bg-brand-cream -mx-2 py-14 sm:-mx-6 lg:-mx-8">
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
       <p class="text-brand-orange-600 mb-2 text-sm font-semibold tracking-widest uppercase">Story share</p>
-      <h2 class="font-display mb-8 text-3xl tracking-tight text-brand-navy-900">What others are reading</h2>
+      <h2 class="text-brand-navy-900 mb-8 font-display text-3xl tracking-tight">What others are reading</h2>
 
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <% @recent_stories.each do |story| %>
           <%= link_to story_share_path(story), class: "group block overflow-hidden rounded-2xl border border-brand-navy-900/15 bg-white shadow-sm transition-shadow hover:shadow-lg" do %>
-            <div class="aspect-[4/3] overflow-hidden bg-brand-navy-50">
+            <div class="bg-brand-navy-50 aspect-[4/3] overflow-hidden">
               <%= image_tag story.display_image, loading: "lazy", alt: story.title,
                             class: "h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" %>
             </div>
@@ -104,7 +104,7 @@
                   <%= story.sectors.first.name %>
                 </span>
               <% end %>
-              <h3 class="font-display text-lg leading-snug text-brand-navy-900 line-clamp-2"><%= story.title %></h3>
+              <h3 class="text-brand-navy-900 line-clamp-2 font-display text-lg leading-snug"><%= story.title %></h3>
             </div>
           <% end %>
         <% end %>

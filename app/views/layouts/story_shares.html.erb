@@ -29,14 +29,14 @@
     </style>
   </head>
 
-  <body class="stories share_portal flex flex-col min-h-screen bg-white overflow-x-hidden">
-    <div class="flex-grow min-w-0 w-full" id="main">
-      <div class="sticky top-0 left-0 w-full z-50 print:hidden" id="share-portal-header">
+  <body class="stories share_portal flex min-h-screen flex-col overflow-x-hidden bg-white">
+    <div class="w-full min-w-0 flex-grow" id="main">
+      <div class="sticky top-0 left-0 z-50 w-full print:hidden" id="share-portal-header">
         <!-- Story Share Portal Navbar -->
         <%= render "shared/story_shares_navbar" %>
       </div>
 
-      <div class="not-signed-in-user flex flex-col min-w-0 w-full <%= yield(:page_bg_class) %>">
+      <div class="not-signed-in-user flex w-full min-w-0 flex-col <%= yield(:page_bg_class) %>">
         <%= render "shared/flash_messages" %>
         <%= yield %>
         <%= render "story_shares/get_involved" %>
