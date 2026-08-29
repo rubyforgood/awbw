@@ -1,52 +1,49 @@
-<!-- Hero Section -->
-<section class="bg-white mt-12 pt-6 -mx-2 sm:-mx-6 lg:-mx-8">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-    <h1 class="font-telefon text-4xl sm:text-5xl text-black text-center mb-12">
-      Welcome to our Story Share
+<!-- Hero -->
+<section class="bg-brand-cream -mx-2 pt-14 pb-10 sm:-mx-6 lg:-mx-8">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <p class="text-brand-orange-600 mb-3 text-sm font-semibold tracking-widest uppercase">Story share</p>
+    <h1 class="font-display text-4xl leading-tight tracking-tight text-brand-navy-900 sm:text-5xl">
+      Stories of healing in action
     </h1>
-
-    <blockquote class="text-center mb-6">
-      <p class="text-lg text-gray-800 font-semibold">
-        "If we can share our story with someone who responds with empathy and understanding, shame can't survive." ~ Brené Brown
-      </p>
-    </blockquote>
-
-    <div class="text-gray-800 leading-relaxed space-y-4">
+    <div class="mt-5 max-w-3xl space-y-4 text-lg leading-relaxed text-gray-700">
       <p>
-        At A Window Between Worlds, we aim to uplift the voices and showcase the leadership of our extensive network of art workshop facilitators. We invite you to explore these impactful stories and accompanying participant artwork from trained Windows Facilitators across the country and abroad.
+        At A Window Between Worlds, we uplift the voices and showcase the leadership of our
+        extensive network of art workshop facilitators — real stories and participant artwork
+        from trained Windows Facilitators across the country and abroad.
       </p>
-      <p>
-        This evolving collection illustrates the transformative power of creative expression that is experienced by individuals and communities participating in our art workshops. As we share these powerful stories, we empower others facing their own challenges, helping facilitate their healing journey.
-      </p>
+      <blockquote class="border-brand-magenta-300 border-l-4 pl-4 font-display text-xl text-brand-navy-900 italic">
+        “If we can share our story with someone who responds with empathy and understanding,
+        shame can’t survive.” <span class="text-base not-italic text-gray-500">— Brené Brown</span>
+      </blockquote>
     </div>
   </div>
 </section>
 
-<!-- Featured Story Carousel -->
+<!-- Featured story carousel -->
 <% if @featured_stories.any? %>
-  <section class="bg-gray-50 py-12 -mx-2 sm:-mx-6 lg:-mx-8">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+  <section class="bg-brand-cream -mx-2 pb-14 sm:-mx-6 lg:-mx-8">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
       <div data-controller="carousel"
-           class="relative swiper rounded-lg overflow-hidden shadow-lg"
+           class="swiper relative overflow-hidden rounded-2xl shadow-lg ring-1 ring-brand-navy-900/10"
            data-carousel-options-value='{ "autoplay": { "delay": 5000, "pauseOnMouseEnter": true }, "slidesPerView": 1, "breakpoints": {} }'>
         <div class="swiper-wrapper">
           <% @featured_stories.each do |story| %>
             <div class="swiper-slide">
               <%= link_to story_share_path(story), class: "block relative" do %>
-                <div class="h-72 sm:h-96 bg-gray-200 overflow-hidden">
+                <div class="h-72 overflow-hidden bg-brand-navy-100 sm:h-96">
                   <%= render "assets/display_image",
                              resource: story,
                              extra_image_classes: "!w-full h-full object-cover",
                              variant: :hero %>
                 </div>
                 <% if story.sectors.first %>
-                  <div class="absolute top-6 left-6 bg-purple-700 text-white text-xs font-semibold uppercase px-4 py-2 z-10">
+                  <div class="<%= story_share_sector_chip_class(story.sectors.first.name) %> absolute top-5 left-5 z-10 rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide text-white uppercase">
                     <%= story.sectors.first.name %>
                   </div>
                 <% end %>
-                <div class="absolute bottom-0 left-0 right-0 bg-black/50 p-6 sm:p-8 text-white">
-                  <h2 class="font-telefon text-2xl sm:text-3xl mb-2"><%= story.title %></h2>
-                  <p class="text-sm opacity-90">
+                <div class="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-brand-navy-950/85 to-transparent p-6 text-white sm:p-8">
+                  <h2 class="font-display text-2xl sm:text-3xl"><%= story.title %></h2>
+                  <p class="mt-1 text-sm opacity-90">
                     <%= story.organization_name %>
                     <% if story.organization&.city_state.present? %>- <%= story.organization.city_state %><% end %>
                   </p>
@@ -56,21 +53,21 @@
           <% end %>
         </div>
 
-        <button aria-label="Previous story" class="swiper-button-prev-custom absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg z-20">
-          <i class="fa-solid fa-chevron-left text-gray-800"></i>
+        <button aria-label="Previous story" class="swiper-button-prev-custom absolute top-1/2 left-4 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-brand-navy-900 shadow-lg hover:bg-white">
+          <i class="fa-solid fa-chevron-left"></i>
         </button>
-        <button aria-label="Next story" class="swiper-button-next-custom absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg z-20">
-          <i class="fa-solid fa-chevron-right text-gray-800"></i>
+        <button aria-label="Next story" class="swiper-button-next-custom absolute top-1/2 right-4 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-brand-navy-900 shadow-lg hover:bg-white">
+          <i class="fa-solid fa-chevron-right"></i>
         </button>
       </div>
     </div>
   </section>
 <% end %>
 
-<!-- Sector Sections -->
-<section class="bg-white py-12 -mx-2 sm:-mx-6 lg:-mx-8">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Sector sections -->
+<section class="-mx-2 bg-white py-14 sm:-mx-6 lg:-mx-8">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 gap-10 md:grid-cols-3">
       <% @stories_by_sector.each_with_index do |(sector, stories), index| %>
         <%= render "sector_section",
                    title: sector.name,
@@ -89,24 +86,25 @@
 
 <!-- What others are reading -->
 <% if @recent_stories.any? %>
-  <section class="bg-white py-12 -mx-2 sm:-mx-6 lg:-mx-8">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-      <h2 class="font-telefon text-3xl text-black mb-8">What others are reading</h2>
+  <section class="bg-brand-cream -mx-2 py-14 sm:-mx-6 lg:-mx-8">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <p class="text-brand-orange-600 mb-2 text-sm font-semibold tracking-widest uppercase">Story share</p>
+      <h2 class="font-display mb-8 text-3xl tracking-tight text-brand-navy-900">What others are reading</h2>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
-        <% @recent_stories.each_with_index do |story, index| %>
-          <% theme = story_share_slot_theme(index) %>
-          <%= link_to story_share_path(story), class: "group block relative aspect-[3/4] overflow-hidden bg-gray-200" do %>
-            <%= image_tag story.display_image, loading: "lazy", alt: story.title,
-                          class: "absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" %>
-            <div class="absolute inset-0 <%= theme[:overlay] %>"></div>
-            <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <% @recent_stories.each do |story| %>
+          <%= link_to story_share_path(story), class: "group block overflow-hidden rounded-2xl border border-brand-navy-900/15 bg-white shadow-sm transition-shadow hover:shadow-lg" do %>
+            <div class="aspect-[4/3] overflow-hidden bg-brand-navy-50">
+              <%= image_tag story.display_image, loading: "lazy", alt: story.title,
+                            class: "h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" %>
+            </div>
+            <div class="p-4">
               <% if story.sectors.first %>
-                <div class="<%= story_share_sector_chip_class(story.sectors.first.name) %> text-white text-sm font-bold uppercase tracking-wide px-4 py-2 mb-4 text-center">
+                <span class="bg-brand-magenta-50 text-brand-magenta-700 mb-2 inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium">
                   <%= story.sectors.first.name %>
-                </div>
+                </span>
               <% end %>
-              <h3 class="font-telefon text-white text-base leading-tight line-clamp-2 min-h-[2.5rem]"><%= story.title %></h3>
+              <h3 class="font-display text-lg leading-snug text-brand-navy-900 line-clamp-2"><%= story.title %></h3>
             </div>
           <% end %>
         <% end %>
