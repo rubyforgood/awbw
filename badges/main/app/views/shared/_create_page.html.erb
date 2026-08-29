@@ -1,0 +1,30 @@
+<%# Shared shell for the Create menu's pages. Carries the same icon the menu item
+    uses, so clicking "New workshop idea" lands on a page wearing the same
+    lightbulb — the menu and the page read as one step. Follows the marketing
+    site's section shape: circular icon badge, domain-coloured eyebrow, serif
+    headline, a width-constrained intro, then the work itself on white.
+    locals: domain, icon, title; optional eyebrow, intro, notice (markup shown
+    above the header, e.g. an alert). %>
+<div class="<%= DomainTheme.bg_class_for(domain, intensity: 50) %> <%= DomainTheme.border_class_for(domain, intensity: 200) %> mx-auto w-full max-w-5xl rounded-2xl border shadow-sm">
+  <%= render "shared/brand_accent_strip", rounded: true %>
+  <div class="p-6 sm:p-8">
+    <%= local_assigns[:notice] %>
+    <div class="flex items-start gap-4">
+      <span class="<%= DomainTheme.bg_class_for(domain, intensity: 100) %> <%= DomainTheme.text_class_for(domain, intensity: 700) %> hidden h-14 w-14 shrink-0 items-center justify-center rounded-full sm:flex">
+        <i class="<%= icon %> text-2xl" aria-hidden="true"></i>
+      </span>
+      <div class="min-w-0">
+        <span class="text-2xs <%= DomainTheme.text_class_for(domain, intensity: 700) %> font-semibold tracking-widest uppercase">
+          <%= local_assigns.fetch(:eyebrow, "Create") %>
+        </span>
+        <h1 class="text-primary font-display text-3xl"><%= title %></h1>
+        <% if local_assigns[:intro].present? %>
+          <div class="mt-3 max-w-2xl leading-relaxed text-gray-700"><%= intro %></div>
+        <% end %>
+      </div>
+    </div>
+    <div class="border-primary/10 mt-8 rounded-2xl border bg-white p-6 shadow-sm">
+      <%= yield %>
+    </div>
+  </div>
+</div>

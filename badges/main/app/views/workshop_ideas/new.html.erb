@@ -1,18 +1,13 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
-<div class="<%= DomainTheme.bg_class_for(:workshop_ideas, intensity: 200) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
-      <div class="mb-3 flex items-center justify-between">
-        <h1 class="text-primary font-display text-2xl font-semibold">
-          New Workshop Idea
-        </h1>
-        <p>We encourage you to create your own workshop or a
-          <%= link_to "variation of an existing workshop",
-                      new_workshop_variation_idea_path,
-                      class: "text-blue-500 hover:underline" %>.
-          <br>Please enter the details of your creation below. Most fields are optional.</p>
-      </div>
-      <div class="space-y-6">
-        <div class="mt-4 rounded bg-white p-6">
-          <%= render "form" %>
-        </div>
-      </div>
-</div>
+<% intro = capture do %>
+  We encourage you to create your own workshop or a
+  <%= link_to "variation of an existing workshop",
+              new_workshop_variation_idea_path,
+              class: "text-blue-500 hover:underline" %>.
+  <br>Please enter the details of your creation below. Most fields are optional.
+<% end %>
+<%= render layout: "shared/create_page",
+           locals: { domain: :workshop_ideas, icon: "fas fa-lightbulb",
+                     title: "New workshop idea", intro: intro } do %>
+  <%= render "form" %>
+<% end %>
