@@ -1,13 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:workshops) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
-        <div class="mb-3 flex items-center justify-between">
-          <h1 class="text-primary font-display text-3xl font-semibold tracking-tight">
-            New <%= @workshop.class.model_name.human.downcase %>
-          </h1>
-        </div>
-        <div class="space-y-6">
-          <div class="mt-4 rounded bg-white p-6">
-            <%= render "form" %>
-          </div>
-        </div>
-</div>
+<%= render layout: "shared/create_page",
+           locals: { domain: :workshops, icon: "fas fa-chalkboard-teacher",
+                     title: "New #{@workshop.class.model_name.human.downcase}" } do %>
+  <%= render "form" %>
+<% end %>
