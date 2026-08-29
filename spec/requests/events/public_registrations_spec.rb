@@ -885,7 +885,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     let!(:position_field) { field("agency_position") }
     let!(:sector_field) do
       create(:form_field, form: form, answer_type: :multi_select_checkbox,
-             field_identifier: "primary_service_area", name: "Primary sector", required: false)
+             field_identifier: "additional_sectors", name: "Sectors", required: false)
     end
     let!(:age_field) do
       create(:form_field, form: form, answer_type: :multi_select_checkbox,
