@@ -4,7 +4,7 @@ module OtherResponses
   #
   # Captures the person-owned "Other" answers (sectors today). Organization-type
   # "Other" is owned by the org and captured separately, where the org is known
-  # (PublicRegistration#sync_agency_type). Questions whose "Other" will never
+  # (OrganizationServices::SyncProfile#capture_organization_type_other). Questions whose "Other" will never
   # become a tag are left in the form answers, which stay searchable, rather than
   # stored here — but the record still carries `field_identifier`, so switching a
   # new question on later is a one-line change. OtherOption.texts keys strictly
