@@ -67,7 +67,10 @@ module Events
       if params[:agreement] == "yes"
         newly_accepted = !scholarship.agreement_signed?
         scholarship.accept_agreement!(by: "recipient")
-        ScholarshipMailer.accepted_fyi(scholarship).deliver_later if newly_accepted
+        if newly_accepted
+          ScholarshipMailer.accepted_fyi(scholarship).deliver_later
+          ScholarshipMailer.accepted_confirmation(scholarship).deliver_later
+        end
         redirect_to registration_scholarship_path(@event_registration.slug), notice: "Thanks — your agreement has been recorded."
       else
         redirect_to registration_scholarship_path(@event_registration.slug), alert: "Something went wrong recording your agreement. Please try again."

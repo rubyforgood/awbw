@@ -64,4 +64,31 @@ RSpec.describe ScholarshipMailer, type: :mailer do
       expect(mail.subject).to include(scholarship.recipient.full_name)
     end
   end
+
+  describe "#accepted_confirmation" do
+    let(:event) { create(:event, cost_cents: 10_000, title: "Healing Circle Training") }
+    let(:registration) { create(:event_registration, event:) }
+    let(:scholarship) { create(:scholarship, recipient: registration.registrant, amount_cents: 5_000) }
+    let(:mail) { described_class.accepted_confirmation(scholarship) }
+
+    before do
+      create(:allocation, source: scholarship, allocatable: registration, amount: 5_000)
+      scholarship.reload.accept_agreement!
+    end
+
+    it "renders without raising" do
+      expect { mail.deliver_now }.not_to raise_error
+    end
+
+    it "sends to the recipient, not the trainings/programs team" do
+      expect(mail.to).to eq([ scholarship.recipient.preferred_email ])
+    end
+
+    it "confirms the agreement in the subject and shows the award and ticket link" do
+      expect(mail.subject).to include("Your scholarship agreement is confirmed")
+      body = mail.body.encoded
+      expect(body).to include("$50")
+      expect(body).to include(registration.slug)
+    end
+  end
 end

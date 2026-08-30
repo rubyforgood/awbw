@@ -22,6 +22,13 @@ class ScholarshipMailerPreview < ActionMailer::Preview
     ScholarshipMailer.accepted_fyi(scholarship)
   end
 
+  def accepted_confirmation
+    scholarship = a_scholarship
+    scholarship.accept_agreement! unless scholarship.agreement_signed?
+
+    ScholarshipMailer.accepted_confirmation(scholarship)
+  end
+
   private
 
   def a_scholarship

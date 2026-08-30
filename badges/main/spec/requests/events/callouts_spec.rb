@@ -722,14 +722,15 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(scholarship.reload.agreement_signed?).to be(false)
       end
 
-      it "emails the trainings team on a fresh acceptance, but not on a repeat" do
+      it "emails the trainings team and the recipient on a fresh acceptance, but not on a repeat" do
         expect {
           post registration_scholarship_agreement_path(registration.slug), params: { agreement: "yes" }
         }.to have_enqueued_mail(ScholarshipMailer, :accepted_fyi)
+          .and have_enqueued_mail(ScholarshipMailer, :accepted_confirmation)
 
         expect {
           post registration_scholarship_agreement_path(registration.slug), params: { agreement: "yes" }
-        }.not_to have_enqueued_mail(ScholarshipMailer, :accepted_fyi)
+        }.not_to have_enqueued_mail(ScholarshipMailer, :accepted_confirmation)
       end
 
       it "redirects to the scholarship page when there is no awarded scholarship" do
