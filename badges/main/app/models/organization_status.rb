@@ -1,4 +1,7 @@
 class OrganizationStatus < ApplicationRecord
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
+
   ORGANIZATION_STATUSES = [ "Active", "Inactive", "Pending", "Reinstate", "Suspended", "Unknown" ]
 
   # Legacy: nothing derives program status from these any more (ADR-0001 D3). The

@@ -54,4 +54,23 @@ RSpec.describe "data:backfill_user_stamps" do
 
     expect(log.reload.updated_by_id).to eq(existing.id)
   end
+
+  it "backfills created_by_id and updated_by_id on a newly-stamped table via dynamic discovery" do
+    payment = create(:payment)
+    payment.update_columns(created_by_id: nil, updated_by_id: nil)
+
+    # Payment is STI; Ahoy records the leaf class (e.g. CashPayment) as resource_type,
+    # which is what find_each yields — re-find to get the persisted subclass name.
+    resource_type = Payment.find(payment.id).class.name
+    create(:ahoy_event, name: "create.payment", user: early_editor, time: 2.days.ago,
+                        properties: { resource_type: resource_type, resource_id: payment.id })
+    create(:ahoy_event, name: "update.payment", user: late_editor, time: 1.hour.ago,
+                        properties: { resource_type: resource_type, resource_id: payment.id })
+
+    run_task
+    payment.reload
+
+    expect(payment.created_by_id).to eq(early_editor.id)
+    expect(payment.updated_by_id).to eq(late_editor.id)
+  end
 end

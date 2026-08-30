@@ -11,6 +11,8 @@ class EventRegistration < ApplicationRecord
 
   belongs_to :registrant, class_name: "Person"
   belongs_to :event
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :event_registration_organizations, dependent: :destroy
   has_many :organizations, through: :event_registration_organizations

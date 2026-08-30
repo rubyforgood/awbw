@@ -4,13 +4,8 @@
   return unless resource&.persisted?
 
   model = resource.respond_to?(:object) ? resource.object : resource
-  ahoy_scope = Ahoy::Event.where(resource_type: model.class.name, resource_id: model.id)
-
-  created_by_user = resource.try(:created_by) || resource.try(:user) ||
-    ahoy_scope.where("name LIKE 'create.%'").order(time: :asc).first&.user
-
-  updated_by_user = resource.try(:updated_by) || resource.try(:user) ||
-    ahoy_scope.where("name LIKE 'update.%'").order(time: :desc).first&.user
+  created_by_user = resource.try(:created_by)
+  updated_by_user = resource.try(:updated_by)
 %>
 
 <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">

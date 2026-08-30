@@ -53,6 +53,8 @@ class RegistrationTicketCallout < ApplicationRecord
   attribute :icon_class, :string, default: -> { DEFAULT_ICONS["action"] }
 
   belongs_to :event
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
 
   belongs_to :form, optional: true
 

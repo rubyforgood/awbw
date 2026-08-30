@@ -4,6 +4,8 @@ class FormSubmission < ApplicationRecord
   belongs_to :person, optional: true
   belongs_to :form
   belongs_to :event, optional: true
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
   has_many :form_answers, dependent: :destroy
   has_one :payment
   # A submission is a quote source: answers to a "quote" smart field are captured

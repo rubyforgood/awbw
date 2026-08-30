@@ -1,4 +1,7 @@
 class RegistrationTicketCalloutResource < ApplicationRecord
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
+
   # Ordered join between a callout and the resources it links to (e.g. the
   # Handouts card's worksheets, or a custom callout's supporting documents).
   # Reordered like the callouts themselves via the positioning gem.

@@ -1,6 +1,8 @@
 class EventStaff < ApplicationRecord
   belongs_to :event
   belongs_to :person
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
 
   validates :person_id, uniqueness: { scope: :event_id }
   validates :title, length: { maximum: 255 }

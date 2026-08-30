@@ -1,6 +1,9 @@
 class Asset < ApplicationRecord
   self.inheritance_column = :type
 
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
+
   ACCEPTED_CONTENT_TYPES = [
     "image/jpeg",
     "image/png",

@@ -3,6 +3,8 @@ class Allocation < ApplicationRecord
   belongs_to :source, polymorphic: true
   belongs_to :allocatable, polymorphic: true
   belongs_to :reverted, class_name: "Allocation", optional: true
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
 
   has_one :revert_record, class_name: "Allocation", foreign_key: "reverted_id", inverse_of: :reverted
 

@@ -1,4 +1,7 @@
 class OtherResponse < ApplicationRecord
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
+
   # A free-text "Other" someone typed on a form question whose "Other" can (or
   # will) become a real tag. Captured at submission time so a curator can
   # promote / keep / dismiss it. The `owner` is polymorphic because the answer's

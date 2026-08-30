@@ -1,6 +1,8 @@
 class FormFieldAnswerOption < ApplicationRecord
   belongs_to :form_field
   belongs_to :answer_option
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
 
   def name
     answer_option.name if answer_option

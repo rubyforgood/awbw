@@ -1,6 +1,8 @@
 class EventRegistrationOrganization < ApplicationRecord
   belongs_to :event_registration
   belongs_to :organization
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
   # The submission whose answers describe this org, pinned when the link is made.
   # Optional: an org an admin linked by hand matches no submission, and links
   # predate the column. Nullified rather than blocking if the submission is deleted.

@@ -1,6 +1,8 @@
 class EventForm < ApplicationRecord
   belongs_to :event
   belongs_to :form
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
 
   ROLES = %w[registration scholarship bulk_payment continuing_education].freeze
 

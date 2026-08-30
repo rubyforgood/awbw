@@ -7,6 +7,8 @@ class Payment < ApplicationRecord
   belongs_to :person, optional: true
   belongs_to :organization, optional: true
   belongs_to :form_submission, optional: true
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
 
   validates :amount_cents, numericality: { greater_than: 0 }
   validates :currency, presence: true
