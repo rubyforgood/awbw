@@ -7,6 +7,8 @@ class AddUserStampsToRemainingAuditedTables < ActiveRecord::Migration[8.1]
     payments forms sectors faqs categories category_types
     memberships membership_invoices organization_statuses video_recordings windows_types
     organizations affiliations scholarships event_registrations features
+    refunds discounts allocations registration_ticket_callouts form_submissions
+    scholarship_agreement_responses
   ].freeze
 
   def up

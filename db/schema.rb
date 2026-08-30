@@ -187,15 +187,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184319) do
     t.string "allocatable_type", null: false
     t.integer "amount", default: 0, null: false
     t.datetime "created_at", null: false
+    t.integer "created_by_id"
     t.bigint "reverted_id"
     t.bigint "source_id", null: false
     t.string "source_type", null: false
     t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
     t.index ["allocatable_type", "allocatable_id"], name: "index_allocations_on_allocatable"
     t.index ["allocatable_type", "allocatable_id"], name: "index_allocations_on_allocatable_type_and_allocatable_id"
+    t.index ["created_by_id"], name: "index_allocations_on_created_by_id"
     t.index ["reverted_id"], name: "fk_rails_4e7a74eb48"
     t.index ["source_type", "source_id"], name: "index_allocations_on_source"
     t.index ["source_type", "source_id"], name: "index_allocations_on_source_type_and_source_id"
+    t.index ["updated_by_id"], name: "index_allocations_on_updated_by_id"
   end
 
   create_table "answer_options", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -456,7 +460,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184319) do
   create_table "discounts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "amount_cents", default: 0, null: false
     t.datetime "created_at", null: false
+    t.integer "created_by_id"
     t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
+    t.index ["created_by_id"], name: "index_discounts_on_created_by_id"
+    t.index ["updated_by_id"], name: "index_discounts_on_updated_by_id"
   end
 
   create_table "event_attendance_time_entries", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -884,6 +892,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184319) do
 
   create_table "form_submissions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.integer "created_by_id"
     t.bigint "event_id"
     t.integer "form_id", null: false
     t.json "metadata"
@@ -891,10 +900,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184319) do
     t.string "role"
     t.string "slug"
     t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
+    t.index ["created_by_id"], name: "index_form_submissions_on_created_by_id"
     t.index ["event_id"], name: "index_form_submissions_on_event_id"
     t.index ["form_id"], name: "index_form_submissions_on_form_id"
     t.index ["person_id"], name: "index_form_submissions_on_person_id"
     t.index ["slug"], name: "index_form_submissions_on_slug", unique: true
+    t.index ["updated_by_id"], name: "index_form_submissions_on_updated_by_id"
   end
 
   create_table "forms", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1383,6 +1395,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184319) do
   create_table "refunds", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "amount_cents", null: false
     t.datetime "created_at", null: false
+    t.integer "created_by_id"
     t.string "method", null: false
     t.bigint "recipient_id", null: false
     t.string "recipient_type", null: false
@@ -1390,9 +1403,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184319) do
     t.string "refundable_type", null: false
     t.string "stripe_refund_id"
     t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
+    t.index ["created_by_id"], name: "index_refunds_on_created_by_id"
     t.index ["recipient_type", "recipient_id"], name: "index_refunds_on_recipient"
     t.index ["refundable_type", "refundable_id"], name: "index_refunds_on_refundable"
     t.index ["stripe_refund_id"], name: "index_refunds_on_stripe_refund_id", unique: true
+    t.index ["updated_by_id"], name: "index_refunds_on_updated_by_id"
   end
 
   create_table "registration_ticket_callout_resources", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1414,6 +1430,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184319) do
     t.boolean "ce_payment_access_gated", default: false, null: false
     t.string "color_class"
     t.datetime "created_at", null: false
+    t.integer "created_by_id"
     t.text "description"
     t.datetime "display_from"
     t.bigint "event_id", null: false
@@ -1425,10 +1442,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184319) do
     t.string "subtitle"
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
+    t.index ["created_by_id"], name: "index_registration_ticket_callouts_on_created_by_id"
     t.index ["event_id", "builtin_key"], name: "index_registration_ticket_callouts_on_event_id_and_builtin_key", unique: true
     t.index ["event_id", "position"], name: "index_registration_ticket_callouts_on_event_id_and_position"
     t.index ["event_id"], name: "index_registration_ticket_callouts_on_event_id"
     t.index ["form_id"], name: "index_registration_ticket_callouts_on_form_id"
+    t.index ["updated_by_id"], name: "index_registration_ticket_callouts_on_updated_by_id"
   end
 
   create_table "report_form_field_answers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1525,6 +1545,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184319) do
     t.integer "amount_cents"
     t.integer "contribution_cents"
     t.datetime "created_at", null: false
+    t.integer "created_by_id"
     t.text "reason"
     t.datetime "responded_at", null: false
     t.integer "responded_by_id"
@@ -1532,8 +1553,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184319) do
     t.bigint "scholarship_id", null: false
     t.string "status", null: false
     t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
+    t.index ["created_by_id"], name: "index_scholarship_agreement_responses_on_created_by_id"
     t.index ["responded_by_id"], name: "index_scholarship_agreement_responses_on_responded_by_id"
     t.index ["scholarship_id"], name: "index_scholarship_agreement_responses_on_scholarship_id"
+    t.index ["updated_by_id"], name: "index_scholarship_agreement_responses_on_updated_by_id"
   end
 
   create_table "scholarships", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -2133,6 +2157,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184319) do
   add_foreign_key "affiliations", "users", column: "updated_by_id"
   add_foreign_key "age_ranges", "windows_types"
   add_foreign_key "allocations", "allocations", column: "reverted_id"
+  add_foreign_key "allocations", "users", column: "created_by_id"
+  add_foreign_key "allocations", "users", column: "updated_by_id"
   add_foreign_key "banners", "users", column: "created_by_id"
   add_foreign_key "banners", "users", column: "updated_by_id"
   add_foreign_key "blazer_audits", "blazer_queries", column: "query_id"
@@ -2160,6 +2186,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184319) do
   add_foreign_key "contact_methods", "addresses"
   add_foreign_key "continuing_education_registrations", "event_registrations"
   add_foreign_key "continuing_education_registrations", "professional_licenses"
+  add_foreign_key "discounts", "users", column: "created_by_id"
+  add_foreign_key "discounts", "users", column: "updated_by_id"
   add_foreign_key "event_attendance_time_entries", "event_registrations"
   add_foreign_key "event_forms", "events"
   add_foreign_key "event_forms", "forms"
@@ -2191,6 +2219,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184319) do
   add_foreign_key "form_submissions", "events"
   add_foreign_key "form_submissions", "forms"
   add_foreign_key "form_submissions", "people"
+  add_foreign_key "form_submissions", "users", column: "created_by_id"
+  add_foreign_key "form_submissions", "users", column: "updated_by_id"
   add_foreign_key "forms", "form_builders"
   add_foreign_key "forms", "users", column: "created_by_id"
   add_foreign_key "forms", "users", column: "updated_by_id"
@@ -2230,10 +2260,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184319) do
   add_foreign_key "quotes", "users", column: "created_by_id"
   add_foreign_key "quotes", "users", column: "updated_by_id"
   add_foreign_key "quotes", "workshops"
+  add_foreign_key "refunds", "users", column: "created_by_id"
+  add_foreign_key "refunds", "users", column: "updated_by_id"
   add_foreign_key "registration_ticket_callout_resources", "registration_ticket_callouts", on_delete: :cascade
   add_foreign_key "registration_ticket_callout_resources", "resources", on_delete: :cascade
   add_foreign_key "registration_ticket_callouts", "events"
   add_foreign_key "registration_ticket_callouts", "forms"
+  add_foreign_key "registration_ticket_callouts", "users", column: "created_by_id"
+  add_foreign_key "registration_ticket_callouts", "users", column: "updated_by_id"
   add_foreign_key "report_form_field_answers", "answer_options"
   add_foreign_key "report_form_field_answers", "form_fields"
   add_foreign_key "report_form_field_answers", "reports"
@@ -2250,7 +2284,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184319) do
   add_foreign_key "resources", "windows_types"
   add_foreign_key "resources", "workshops"
   add_foreign_key "scholarship_agreement_responses", "scholarships"
+  add_foreign_key "scholarship_agreement_responses", "users", column: "created_by_id"
   add_foreign_key "scholarship_agreement_responses", "users", column: "responded_by_id"
+  add_foreign_key "scholarship_agreement_responses", "users", column: "updated_by_id"
   add_foreign_key "scholarships", "grants"
   add_foreign_key "scholarships", "people", column: "recipient_id"
   add_foreign_key "scholarships", "users", column: "created_by_id"
