@@ -16,10 +16,24 @@ RSpec.describe Form do
   end
 
   describe 'validations' do
-    # Add validation tests if any
-    # subject { build(:form) } # Requires owner
-    # it { should validate_presence_of(:owner_id) }
-    # it { should validate_presence_of(:owner_type) }
+    describe 'role' do
+      it 'accepts every value in Form::ROLES' do
+        Form::ROLES.each do |role|
+          expect(build(:form, role: role)).to be_valid, "expected role #{role.inspect} to be valid"
+        end
+      end
+
+      it 'rejects a role outside Form::ROLES' do
+        form = build(:form, role: "nonsense")
+        expect(form).not_to be_valid
+        expect(form.errors[:role]).to be_present
+      end
+
+      it 'allows a blank role (nil or "") so legacy forms save untouched' do
+        expect(build(:form, role: nil)).to be_valid
+        expect(build(:form, role: "")).to be_valid
+      end
+    end
   end
 
   # it 'is valid with valid attributes' do
@@ -43,6 +57,18 @@ RSpec.describe Form do
       create(:event_form, form: connected)
 
       expect(Form.agreement_forms).to be_empty
+    end
+  end
+
+  describe ".owned / .standalone" do
+    it "owned returns only owner-attached forms; standalone returns the rest" do
+      builder = create(:form_builder)
+      attached = create(:form, owner: builder)
+      loose = create(:form, :standalone)
+
+      expect(Form.owned).to contain_exactly(attached)
+      expect(Form.standalone).to include(loose)
+      expect(Form.standalone).not_to include(attached)
     end
   end
 

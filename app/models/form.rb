@@ -18,6 +18,12 @@ class Form < ApplicationRecord
   # The questions that identify a public respondent (used to build their Person).
   IDENTITY_IDENTIFIERS = %w[first_name last_name primary_email].freeze
 
+  # Every role a form can carry. "general" is a real role (the default), not a
+  # blank — creating a form always picks one. Legacy forms may still hold a blank
+  # role (nil or ""); the inclusion validation allows blank so they save
+  # untouched, while any role that is set must be one of these.
+  ROLES = %w[general registration new_job reinstatement scholarship bulk_payment continuing_education].freeze
+
   belongs_to :owner, polymorphic: true, optional: true
   has_many :form_fields, dependent: :destroy, inverse_of: :form
   has_many :event_forms, dependent: :destroy
@@ -32,6 +38,7 @@ class Form < ApplicationRecord
     reject_if: proc { |attrs| attrs["name"].blank? && attrs["id"].blank? }
 
   scope :standalone, -> { where(owner_id: nil, owner_type: nil) }
+  scope :owned, -> { where.not(owner_id: nil) }
   scope :published, -> { where(published: true) }
   scope :not_event_connected, -> { where.missing(:event_forms) }
   # The publicly fillable agreement forms — the ones the person-page panel
@@ -40,6 +47,7 @@ class Form < ApplicationRecord
 
   before_validation :normalize_slug
 
+  validates :role, inclusion: { in: ROLES }, allow_blank: true
   validates :slug, uniqueness: true, allow_nil: true
   validates :slug, format: { with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/,
     message: "may only contain lowercase letters, numbers, and hyphens" }, allow_blank: true
