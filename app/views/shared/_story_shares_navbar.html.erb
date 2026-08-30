@@ -52,7 +52,7 @@
           margin: 0 auto;
           padding: 0 24px;
           display: grid;
-          grid-template-columns: 1fr 1fr 0.9fr;
+          grid-template-columns: 1fr 1.35fr 0.85fr;
           gap: 40px;
           align-items: start;
       }
@@ -86,6 +86,7 @@
       .mega-visit:hover { text-decoration: underline; }
 
       .links-wrapper { display: flex; gap: 40px; }
+      .links-group { flex: 1 1 0; min-width: 0; }
       .links-group { margin-bottom: 18px; }
       .links-group h4 {
           font-size: 0.72rem;
@@ -152,8 +153,7 @@
                   service organizations across the country to bring creative expression into their
                   work with trauma survivors.
                 </p>
-                <%= awbw_menu_link "Visit the About page", "/about-us/", html_class: "mega-visit" %>
-                <i class="fa-solid fa-arrow-right text-brand-green-700 text-xs"></i>
+                <%= awbw_menu_link "Visit the About page", "/about-us/", html_class: "mega-visit", arrow: true %>
               </div>
 
               <!-- MIDDLE: links -->
@@ -202,8 +202,7 @@
                   trauma-informed art workshops, then supporting them as they bring the Windows model
                   to the people they serve.
                 </p>
-                <%= awbw_menu_link "Visit the Program page", "/programs/", html_class: "mega-visit" %>
-                <i class="fa-solid fa-arrow-right text-brand-teal-700 text-xs"></i>
+                <%= awbw_menu_link "Visit the Program page", "/programs/", html_class: "mega-visit", arrow: true %>
               </div>
 
               <!-- MIDDLE: links -->
@@ -251,8 +250,7 @@
                   Give, fund a scholarship, or leave a legacy — every path fuels accessible healing
                   for the individuals and communities our facilitators serve.
                 </p>
-                <%= awbw_menu_link "Visit the Get Involved page", "/ways-to-give/", html_class: "mega-visit" %>
-                <i class="fa-solid fa-arrow-right text-brand-magenta-700 text-xs"></i>
+                <%= awbw_menu_link "Visit the Get Involved page", "/ways-to-give/", html_class: "mega-visit", arrow: true %>
               </div>
 
               <!-- MIDDLE: links -->
@@ -301,8 +299,7 @@
                   staff, board member, and survivor — has created AWBW. Join us in carrying that work
                   into a sustainable future.
                 </p>
-                <%= awbw_menu_link "Learn more", "/key-initiatives/", html_class: "mega-visit" %>
-                <i class="fa-solid fa-arrow-right text-brand-orange-700 text-xs"></i>
+                <%= awbw_menu_link "Learn more", "/key-initiatives/", html_class: "mega-visit", arrow: true %>
               </div>
 
               <!-- MIDDLE: links -->
